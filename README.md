@@ -109,20 +109,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta)
-
-### Optional: built-in MCP server
-
-`agent-config` ships a built-in [MCP](https://modelcontextprotocol.io) server
-that exposes 174 skills + 104 commands as prompts, plus 60 rules + 69 guidelines
-+ 31 contexts as resources to MCP-aware clients (Claude Desktop, Cursor, Zed,
-Continue). Read-only, no shell exec, no file writes.
-
-```bash
-task mcp:setup            # one-line: creates .venv-mcp, installs mcp SDK
-```
-
-→ [MCP server setup & client config](docs/mcp-server.md) (experimental)
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — read-only access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`)
 
 ---
 

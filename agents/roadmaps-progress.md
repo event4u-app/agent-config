@@ -6,10 +6,10 @@
 
 ## Overall
 
-**12 / 145 steps done · 8%**
+**20 / 144 steps done · 14%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 17 | 12 | 0 | 0 | ████░░░░░░ 41% |
+| 3 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 8 | 20 | 0 | 1 | ███████░░░ 71% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -48,15 +48,15 @@
 
 ### [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md)
 
-**Road to MCP Server** — 12 / 29 done (41%)
+**Road to MCP Server** — 20 / 28 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | MVP Skeleton | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 2 | Full skill + command coverage | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 3 | Resources (rules, guidelines, contexts) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Resources (rules, guidelines, contexts) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Tools (engine helpers) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Real setup docs (the deliverable from option 3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Real setup docs (the deliverable from option 3) | ✅ done | 0 | 4 | 0 | 1 | 100% |
 | 6 | Distribution polish (deferred) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
 ### [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md)

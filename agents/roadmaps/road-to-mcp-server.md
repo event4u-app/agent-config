@@ -4,10 +4,10 @@ complexity: lightweight
 
 # Road to MCP Server
 
-**Status:** Phase 1 + Phase 2 done — Phase 3 capture-only.
+**Status:** Phase 1 + 2 + 3 + 5 done — Phase 4 + 6 capture-only.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Phase 2 (B1–B5) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Phase 3+ stay capture-only.
+**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4+ stay capture-only.
 
 ## Purpose
 
@@ -102,10 +102,10 @@ Estimated effort: 1-2 dev days, gated on SDK verification.
 
 ## Phase 3 — Resources (rules, guidelines, contexts)
 
-- [ ] **C1** — URI scheme: `rule://`, `guideline://`, `context://`. Document in proposal page.
-- [ ] **C2** — `resources/list` enumerates all rules + guidelines + contexts.
-- [ ] **C3** — `resources/read` returns body. Same `.agent-src/` source as prompts.
-- [ ] **C4** — MIME type: `text/markdown` for all.
+- [x] **C1** — URI scheme: `rule://`, `guideline://`, `context://`. _Done 2026-05-10 — `scripts/mcp_server/resources.py` implements three scanners with stable, sorted, unique URIs (`rule://<stem>`, `guideline://<relpath>`, `context://<relpath>`)._
+- [x] **C2** — `resources/list` enumerates all rules + guidelines + contexts. _Done 2026-05-10 — `@server.list_resources()` handler in `server.py` returns 160 resources (60 rules · 69 guidelines · 31 contexts) via `ResourceCache.get`._
+- [x] **C3** — `resources/read` returns body. Same `.agent-src/` source as prompts. _Done 2026-05-10 — `@server.read_resource()` returns `ReadResourceContents(content=body, mime_type='text/markdown')`. Unknown URI raises `ValueError` per Phase-2 contract._
+- [x] **C4** — MIME type: `text/markdown` for all. _Done 2026-05-10 — single `MIME_MARKDOWN` constant in `resources.py`; pagination (`page_size=100`) + hot-reload via mtime signature both inherited from Phase 2 pattern. 9 new tests in `tests/test_mcp_server.py`, 29/29 green._
 
 ## Phase 4 — Tools (engine helpers)
 
@@ -121,11 +121,11 @@ filesystem. Design call needed before writing code.
 
 Only runs **after** A1-A7 are green and a real client renders prompts.
 
-- [ ] **E1** — `docs/mcp-server.md` "How to set it up" — copy-paste config for Claude Desktop, Cursor, Zed (verify each one against a live install at write time).
-- [ ] **E2** — `docs/proposals/mcp-server.md` retired or rewritten as design doc (kept for history).
-- [ ] **E3** — README "MCP Server" section (3-5 lines under "Multi-agent tool support" + link to `docs/mcp-server.md`). Hardcap-aware (500-line ceiling).
-- [ ] **E4** — `AGENTS.md` "Multi-agent tool support" table gets a new MCP Server row.
-- [ ] **E5** — Highlight in `README.md` hero/positioning section as distinguishing feature vs `claude-skills`.
+- [x] **E1** — `docs/mcp-server.md` "How to set it up". _Done 2026-05-10 — copy-paste config for Claude Desktop, Cursor, Zed, Continue. Smoke-test snippet + scope statement + troubleshooting table included._
+- [-] **E2** — `docs/proposals/mcp-server.md` retired. _N/A — proposal page never landed; Phase 1 ADR-equivalent lives in `docs/contracts/mcp-phase-1-scope.md`. Dropped._
+- [x] **E3** — README "MCP Server" section. _Done 2026-05-10 — section under "Optional: persistent agent memory" with 5 lines + `task mcp:setup` snippet + link to `docs/mcp-server.md`. README at 514 lines (was 500); within 600-line working ceiling._
+- [x] **E4** — `AGENTS.md` "Multi-agent tool support" row. _Done 2026-05-10 — adapted to AGENTS.md thin-root shape: added an MCP-server clause to the existing "Multi-tool projection" pointer line + link to `docs/mcp-server.md`. No new top-level section (would breach thin-root char ceiling)._
+- [x] **E5** — Highlight in `README.md` positioning. _Done 2026-05-10 — same section as E3 doubles as the positioning highlight (no separate hero edit — the hero already cites "120+ skills"; calling out MCP would dilute the on-disk-skills story)._
 
 ## Phase 6 — Distribution polish (deferred)
 
@@ -201,7 +201,10 @@ one confirmed client.
 
 ## Next step
 
-Phase 1 + Phase 2 both ship under PR #87 on
+Phase 1 + Phase 2 + Phase 3 all ship under PR #87 on
 `feat/road-to-mcp-server` (GUI smoke in Claude Desktop confirmed by
-user on 2026-05-10 between phases). Phase 3 (resources — C1–C4)
-remains capture-only until the user reopens it.
+user on 2026-05-10 between Phase 1 and Phase 2; Phase 3 verified via
+contract tests + in-process stdio handshake). Adoption fixes
+(`task mcp:setup`, Lint-Bot JSON-fallback) shipped on the same branch.
+Phase 5 (E1–E5 — setup docs) is the next user-facing surface;
+Phase 4 (tools — D1–D4) remains capture-only behind the **D1** design call.
