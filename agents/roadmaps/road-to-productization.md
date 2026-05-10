@@ -50,8 +50,8 @@ Cross from **observable** to **steerable + provable + onboardable**:
 The two sibling-roadmap blocks (`proof-not-features` for showcases +
 memory consequence + hook debug, `better-skills-and-profiles` Block A
 for the persona spine) are the missing **proof + cognition layers**
-that the Level-6 jump requires; they live in their own plates with
-their own Hard Cap accounting.
+that the Level-6 jump requires; they live in their own roadmaps
+with their own Hard Cap accounting.
 
 ## Decisions (locked 2026-05-06)
 
@@ -85,11 +85,11 @@ their own Hard Cap accounting.
   via `git revert`. P4 multi-stack skills are additive (deletion = back
   to current state). No phase requires a forward-only migration.
 
-## Horizon
+## Scope
 
-Phases 1–5 = own work, **5/5 Hard Cap slots** for this plate.
+Phases 1–5 = own work, **5/5 Hard Cap slots**.
 Phases 6–7 = sibling-roadmap completion markers (no new slots — the
-siblings carry their own plates). Phase 8 = final validation.
+siblings carry their own scope). Phase 8 = final validation.
 
 ## Phase 1 — Release-trunk Sync (READY)
 
@@ -238,7 +238,7 @@ This phase flips to `[x]` automatically when
   roadmap: Core-tier 5-section spine (existing 6 personas + qa) and
   Specialist-tier 7-section spine (new specialists). Schema-locked
   per council iter-1 verdict. No expansion of distribution /
-  orchestration blocks here — they remain out-of-horizon for that
+  orchestration blocks here — they remain out of scope for that
   roadmap.
 
 This phase flips to `[x]` automatically when Block A of
@@ -266,7 +266,7 @@ This phase flips to `[x]` automatically when Block A of
 | 1 | Decision-engine config gates surprise existing users | Absent block = unchanged behaviour; enforcement opt-in only |
 | 2 | Symfony / Next.js skills become shallow checkbox tokens | Workflow-grade gate at SKILL.md ≤ 10 KB + calls real analysis surface; reject thin wrappers |
 | 3 | Cleanup phase scope-creeps into deletions | Hard rule: P5 is non-destructive; deletion candidates produce sibling roadmaps, not commits |
-| 4 | Sibling roadmaps stall and block this one indefinitely | Sibling-block phases (6, 7) carry their own plate slots in their own roadmaps; no Hard-Cap pressure on this plate |
+| 4 | Sibling roadmaps stall and block this one indefinitely | Sibling-block phases (6, 7) carry their own slots in their own roadmaps; no Hard-Cap pressure here |
 | 5 | Release-trunk CI gate fails contributors mid-PR | P1.3 fires only on the release-prep branch class, not feature branches |
 
 ## Out of scope (this roadmap)

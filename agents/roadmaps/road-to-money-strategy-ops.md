@@ -18,7 +18,7 @@ complexity: structural
 **Source map:** `agents/contexts/senior-personas-and-skills-map.md` v2
 (post-iter1). Wing 4 owner. 4 personas, 18 skills (largest wing,
 folds former Wing 5 per council Q2). Map is the universe; this
-roadmap is the plate-realistic slice.
+roadmap sequences delivery by dependency.
 
 ## Status
 
@@ -69,7 +69,7 @@ sanity-checks the chain, not re-orders it.
 | C | Strategy cluster (P1–P7) before people cluster (Q1–Q4) | People-strategist skills (org-design, comp-banding) compose strategist's `build-buy-partner` (insource-vs-outsource decisions) |
 | D | People cluster (Q1–Q4) before EM cluster (S1–S3) | EM skills cite people-strategist's perf-feedback-craft + hiring-loop-design (people-strategist owns generalized loops; EM owns eng-team-specific surfaces) |
 | E | Personas last (Block T) | Persona = composition of skills + workflows + identity; can only stabilize after skills land |
-| F | Two skills per persona in plate, two per persona in next plate | Plate-realism — full Wing 4 is 18 skills + 4 personas = 22 sub-steps; one plate fits ~6 |
+| F | Foundation skills (J1–J3 + O1 + P1) ship first, then T1; rest follow ICE order | ICE-ranked sequencing — foundation unblocks every persona |
 | G | No version-anchoring inside roadmap (per `scope-control`) | Roadmap plans work; release decisions live elsewhere |
 | H | Founder-mode stance not a sub-step | Per Q6 verdict — stance documents in map only, surfaces via `vision-articulation` (P4) + persona `## Stances` frontmatter |
 
@@ -110,12 +110,11 @@ money-vs-strategy-vs-people composition rules.
 - [ ] **J3** — Cite `docs/contracts/cross-wing-handoff.md` (suite-closure Phase 3.1) for the typed-handoff contract; ship `docs/guidelines/wing4-handoff.md` for **Wing-4-specific prose** documenting four load-bearing chains from the map: money→strategy (`unit-economics` → `scenario-modeling` → `build-buy-partner` — strategy decisions cite money cognition); strategy→people (`build-buy-partner` → `org-design` — insource-vs-outsource is the same decision shape); people→EM (`hiring-loop-design` (general) → `hiring-loop-design` × eng-context (S2) — EM specializes the generalized loop); finance→GTM (Wing-4 `forecasting` → Wing-3 `forecast-accuracy` H10 — finance owns forecasting cognition, RevOps owns the forecast-call loop). Each chain: when does cognition hand off, what artefact crosses the boundary, who owns the failure mode if the chain breaks. Cycle / dangling / tier-mismatch enforcement lives in `task lint-handoffs` (Phase 3.2), not duplicated here.
 
 
-### Block O — Money cognition skills (4 skills, 1 in plate)
+### Block O — Money cognition skills
 
-**Four skills** owned by `finance-partner`. **Only O1 in the
-plate** (council Q6 sibling-velocity-honest applied to Wing 4); O2–O4
-are *ready-to-start* but complete in following plates. Skill names
-are clean — `tier: senior` lives in frontmatter (council Q7
+**Four skills** owned by `finance-partner`. O1 is the foundation
+(council Q6 sibling-velocity-honest applied to Wing 4); O2–O4 follow
+ICE order. Skill names are clean — `tier: senior` lives in frontmatter (council Q7
 unified-iter1, FRONTMATTER-FIELD). Each skill ships with the same
 six artefacts as unified-senior-roles Block L: persona link (Block T),
 context-spine declaration (J1), related-skills block (K2 from
@@ -124,55 +123,53 @@ frontmatter, runnable example. **No skill ships without all six.**
 
 - [ ] **O** — Money cognition skills shipped (block marker; flips when O1–O4 are all done).
 - [ ] **O1** — `unit-economics` skill (`tier: senior`): CAC / LTV cognition, contribution-margin reasoning, payback-period analysis, burn-multiple judgment. Borrows mental-model `first-principles` + `second-order-thinking`. **Out:** accounting-system administration, P&L reporting tooling.
-- [ ] **O2** — `forecasting` skill (`tier: senior`, ships via interface-first-stub per iter-2 OQ4): forecast-construction reasoning (top-down vs bottom-up), confidence-band design, accuracy retro-loop. Cited by Wing-3 `forecast-accuracy` (H10) — finance owns the cognition, RevOps owns the call. **Sub-deliverable O2-interface (0.5 sub-steps, ships in plate):** `forecast-construction-shape` ADR locking the contract H10 composes against (top-down vs bottom-up enum, confidence-band signature, retro-loop signature). H10 starts after O2-interface ≥ 100 %, parallel to O2 implementation. Contract locked in J3 + G3 handoff guidelines; O2 drift breaks contract, not H10. **Out:** forecasting-tool plugins. **Implementation out-of-plate; interface in-plate.**
-- [ ] **O3** — `runway-cognition` skill (`tier: senior`): cash-flow-shape reasoning, runway-vs-burn modeling, fundraise-trigger heuristics, layoff-vs-cut-vs-grow decision tree. **Out:** banking-API integrations, cash-management SaaS. **Out-of-plate.**
-- [ ] **O4** — `scenario-modeling` skill (`tier: senior`): three-statement scenario construction, sensitivity analysis, optionality reasoning. Composes `unit-economics` (O1) + `forecasting` (O2). **Out:** spreadsheet-model authoring service. **Out-of-plate.**
+- [ ] **O2** — `forecasting` skill (`tier: senior`, ships via interface-first-stub per iter-2 OQ4): forecast-construction reasoning (top-down vs bottom-up), confidence-band design, accuracy retro-loop. Cited by Wing-3 `forecast-accuracy` (H10) — finance owns the cognition, RevOps owns the call. **Sub-deliverable O2-interface (0.5 sub-steps, ships first):** `forecast-construction-shape` ADR locking the contract H10 composes against (top-down vs bottom-up enum, confidence-band signature, retro-loop signature). H10 starts after O2-interface ≥ 100 %, parallel to O2 implementation. Contract locked in J3 + G3 handoff guidelines; O2 drift breaks contract, not H10. **Out:** forecasting-tool plugins.
+- [ ] **O3** — `runway-cognition` skill (`tier: senior`): cash-flow-shape reasoning, runway-vs-burn modeling, fundraise-trigger heuristics, layoff-vs-cut-vs-grow decision tree. **Out:** banking-API integrations, cash-management SaaS.
+- [ ] **O4** — `scenario-modeling` skill (`tier: senior`): three-statement scenario construction, sensitivity analysis, optionality reasoning. Composes `unit-economics` (O1) + `forecasting` (O2). **Out:** spreadsheet-model authoring service.
 
-### Block P — Strategy cognition skills (7 skills, 1 in plate, folds former legal per Q2)
+### Block P — Strategy cognition skills (folds former legal per Q2)
 
-**Seven skills** owned by `strategist`. **Only P1 in the
-plate**; P2–P7 are *ready-to-start* but complete in following plates.
-Per council Q2: legal-compliance persona absorbed into strategist —
+**Seven skills** owned by `strategist`. P1 is the foundation; P2–P7
+follow ICE order. Per council Q2: legal-compliance persona absorbed into strategist —
 contracts / privacy / data-handling cognition is strategy under
 regulatory constraint, not a separate persona. Each skill ships with
 the same six artefacts as Block O.
 
 - [ ] **P** — Strategy cognition skills shipped (block marker; flips when P1–P7 are all done).
 - [ ] **P1** — `build-buy-partner` skill (`tier: senior`): insource-vs-outsource-vs-acquire reasoning, integration-cost analysis, dependency-risk assessment, optionality preservation. Borrows mental-model `inversion` + `second-order-thinking`. **Out:** vendor-procurement tooling.
-- [ ] **P2** — `market-entry-analysis` skill (`tier: senior`): geo-vs-segment-vs-vertical entry reasoning, beachhead selection, expansion-sequencing, regulatory-delta analysis. Composes `competitive-positioning` (P3). **Out:** market-research-tool integrations. **Out-of-plate.**
-- [ ] **P3** — `competitive-positioning` skill (`tier: senior`, cites Wing-3 `positioning` for narrative surface): competitor-mapping reasoning, defensibility analysis, white-space identification. **Out:** competitive-intelligence-tool integrations. **Out-of-plate.**
-- [ ] **P4** — `vision-articulation` skill (`tier: senior`, cites founder-mode stance per Q6): "where we're going / why now / why us" framing distinct from Wing-3 `fundraising-narrative` (H7) — vision is internal-anchor, fundraising is external-pitch. **Out:** vision-deck-design tooling. **Out-of-plate.**
-- [ ] **P5** — `contracts-cognition` skill (`tier: senior`, folded from legal per Q2): contract-shape reading, risk-clause identification, redline-priority reasoning, "what does this contract actually constrain" framing. **Out:** contract-management-platform administration, e-signature integration. **Out-of-plate.**
-- [ ] **P6** — `privacy-review` skill (`tier: senior`, folded from legal per Q2): GDPR / CCPA / HIPAA cognition, data-flow review, consent-design reasoning, breach-impact triage. Cites J1 `regulatory-regime` slot. **Out:** privacy-tool SaaS administration, audit-platform plugins. **Out-of-plate.**
-- [ ] **P7** — `data-handling-judgment` skill (`tier: senior`, folded from legal per Q2): data-classification cognition (PII / PHI / financial / public), retention-policy reasoning, cross-border-transfer judgment, data-subject-rights workflow. Composes `privacy-review` (P6). **Out:** DLP-tool integrations. **Out-of-plate.**
+- [ ] **P2** — `market-entry-analysis` skill (`tier: senior`): geo-vs-segment-vs-vertical entry reasoning, beachhead selection, expansion-sequencing, regulatory-delta analysis. Composes `competitive-positioning` (P3). **Out:** market-research-tool integrations.
+- [ ] **P3** — `competitive-positioning` skill (`tier: senior`, cites Wing-3 `positioning` for narrative surface): competitor-mapping reasoning, defensibility analysis, white-space identification. **Out:** competitive-intelligence-tool integrations.
+- [ ] **P4** — `vision-articulation` skill (`tier: senior`, cites founder-mode stance per Q6): "where we're going / why now / why us" framing distinct from Wing-3 `fundraising-narrative` (H7) — vision is internal-anchor, fundraising is external-pitch. **Out:** vision-deck-design tooling.
+- [ ] **P5** — `contracts-cognition` skill (`tier: senior`, folded from legal per Q2): contract-shape reading, risk-clause identification, redline-priority reasoning, "what does this contract actually constrain" framing. **Out:** contract-management-platform administration, e-signature integration.
+- [ ] **P6** — `privacy-review` skill (`tier: senior`, folded from legal per Q2): GDPR / CCPA / HIPAA cognition, data-flow review, consent-design reasoning, breach-impact triage. Cites J1 `regulatory-regime` slot. **Out:** privacy-tool SaaS administration, audit-platform plugins.
+- [ ] **P7** — `data-handling-judgment` skill (`tier: senior`, folded from legal per Q2): data-classification cognition (PII / PHI / financial / public), retention-policy reasoning, cross-border-transfer judgment, data-subject-rights workflow. Composes `privacy-review` (P6). **Out:** DLP-tool integrations.
 
-### Block Q — People-strategy cognition skills (4 skills, 1 in plate, merges former people-ops + EM-generalist per Q2)
+### Block Q — People-strategy cognition skills (merges former people-ops + EM-generalist per Q2)
 
-**Four skills** owned by `people-strategist`. **Only Q1 in the
-plate**; Q2–Q4 are *ready-to-start* but complete in following plates.
-Per council Q2: former people-ops persona merged with generalist-EM
+**Four skills** owned by `people-strategist`. Q1 is the foundation;
+Q2–Q4 follow ICE order. Per council Q2: former people-ops persona merged with generalist-EM
 cognition into `people-strategist`; eng-team-specific surfaces
 stay under EM (Block S). Each skill ships with the same six artefacts.
 
 - [ ] **Q** — People-strategy cognition skills shipped (block marker; flips when Q1–Q4 are all done).
 - [ ] **Q1** — `org-design` skill (`tier: senior`): team-shape reasoning (functional vs cross-functional vs squad), span-of-control judgment, reorg-cost analysis, Conway's-law-aware structure. Composes `build-buy-partner` (P1) for insource-vs-outsource shape. Borrows mental-model `theory-of-constraints`. **Out:** org-chart software administration.
-- [ ] **Q2** — `comp-banding` skill (`tier: senior`): level-design, comp-band construction, equity-vs-cash tradeoff reasoning, geo-adjustment cognition, raise-vs-promotion vs market-correction judgment. **Out:** compensation-platform administration (Pave / Carta integrations). **Out-of-plate.**
-- [ ] **Q3** — `onboarding-program` skill (`tier: senior`, distinct from Wing-3 H11 `onboarding-design` which is customer-facing): time-to-productivity reasoning, role-by-role onboarding-shape, mentor-pairing logic, 30/60/90-day milestone design. **Out:** HRIS-onboarding-module configuration. **Out-of-plate.**
-- [ ] **Q4** — `perf-feedback-craft` skill (`tier: senior`, generalized from EM-only per Q2): feedback-shape reasoning (situation-behavior-impact, not generic), ladder-of-inference traversal, growth-vs-corrective separation, feedback-cadence design. **Out:** performance-review-software integrations. **Out-of-plate.**
+- [ ] **Q2** — `comp-banding` skill (`tier: senior`): level-design, comp-band construction, equity-vs-cash tradeoff reasoning, geo-adjustment cognition, raise-vs-promotion vs market-correction judgment. **Out:** compensation-platform administration (Pave / Carta integrations).
+- [ ] **Q3** — `onboarding-program` skill (`tier: senior`, distinct from Wing-3 H11 `onboarding-design` which is customer-facing): time-to-productivity reasoning, role-by-role onboarding-shape, mentor-pairing logic, 30/60/90-day milestone design. **Out:** HRIS-onboarding-module configuration.
+- [ ] **Q4** — `perf-feedback-craft` skill (`tier: senior`, generalized from EM-only per Q2): feedback-shape reasoning (situation-behavior-impact, not generic), ladder-of-inference traversal, growth-vs-corrective separation, feedback-cadence design. **Out:** performance-review-software integrations.
 
-### Block S — Engineering-manager skills (3 skills, 0 in plate)
+### Block S — Engineering-manager skills
 
-**Three skills** owned by `engineering-manager`. **None in the
-plate** — EM specializes generalist people-strategist surfaces for
-engineering teams; specialization comes after the generalized cognition
-ships. Each skill ships with the same six artefacts.
+**Three skills** owned by `engineering-manager`. EM specializes
+generalist people-strategist surfaces for engineering teams;
+specialization comes after the generalized cognition ships. Each
+skill ships with the same six artefacts.
 
 - [ ] **S** — Engineering-manager skills shipped (block marker; flips when S1–S3 are all done). Gated on Block Q ≥ 75 % (at least Q1 + Q4 done — EM specializes those).
-- [ ] **S1** — `one-on-one-cadence` skill (`tier: senior`): cadence reasoning (weekly vs biweekly), agenda-shape judgment, growth-vs-blocker-vs-trust mix, cancellation-anti-pattern detection. **Out:** 1:1-tooling integrations (Lattice / 15Five). **Out-of-plate.**
-- [ ] **S2** — `hiring-loop-design` skill (`tier: senior`, cites Q1 `org-design` + Q4 `perf-feedback-craft`): eng-specific hiring-loop construction (screen → take-home / system-design / coding / behavioral / leadership), calibration-session design, bar-raiser logic, signal-vs-noise audit. **Out:** ATS configuration, scheduling-tool integrations. **Out-of-plate.**
-- [ ] **S3** — `throughput-vs-morale-tradeoff` skill (`tier: senior`, eng-team-specific): velocity-vs-quality-vs-burnout cognition, on-call-load reasoning, focus-fragmentation analysis, reorg-shock vs steady-state framing. Cites `theory-of-constraints` mental model. **Out:** team-velocity-tool plugins. **Out-of-plate.**
+- [ ] **S1** — `one-on-one-cadence` skill (`tier: senior`): cadence reasoning (weekly vs biweekly), agenda-shape judgment, growth-vs-blocker-vs-trust mix, cancellation-anti-pattern detection. **Out:** 1:1-tooling integrations (Lattice / 15Five).
+- [ ] **S2** — `hiring-loop-design` skill (`tier: senior`, cites Q1 `org-design` + Q4 `perf-feedback-craft`): eng-specific hiring-loop construction (screen → take-home / system-design / coding / behavioral / leadership), calibration-session design, bar-raiser logic, signal-vs-noise audit. **Out:** ATS configuration, scheduling-tool integrations.
+- [ ] **S3** — `throughput-vs-morale-tradeoff` skill (`tier: senior`, eng-team-specific): velocity-vs-quality-vs-burnout cognition, on-call-load reasoning, focus-fragmentation analysis, reorg-shock vs steady-state framing. Cites `theory-of-constraints` mental model. **Out:** team-velocity-tool plugins.
 
-### Block T — Wing 4 personas (1 in-plate, 3 in next plate)
+### Block T — Wing 4 personas
 
 Per the universe map, Wing 4 has four personas. Persona = composition
 of skills + workflows + identity, override-friendly per the
@@ -180,10 +177,10 @@ unified-senior-roles council Q4 ABSORB pattern (defaults loaded,
 project overrides allowed via `agents/overrides/`).
 
 - [ ] **T** — Wing 4 personas shipped (block marker; flips when T1–T4 are all done). Gated on Block O ≥ 50 % AND Block P ≥ 50 % AND Block Q ≥ 50 % (at least the cluster lead-skills O1, P1, Q1 done).
-- [ ] **T1** — `finance-partner` persona (`tier: senior`): identity = "owns the cash and the model", capabilities (default-loaded, override-friendly per unified Q4) = O1 + O2 + O3 + O4. Mental-models = `first-principles` + `second-order-thinking` + `inversion`. Workflows = monthly-close-loop + scenario-update-loop. **In-plate** (last sub-step of plate).
-- [ ] **T2** — `strategist` persona (`tier: senior`, absorbs former legal-compliance per Q2): identity = "owns the second-order moves", capabilities = P1 + P2 + P3 + P4 + P5 + P6 + P7. Stances: founder-mode (cited via P4). Workflows = build-buy-partner-decision-loop + privacy-review-loop. **Out-of-plate.**
-- [ ] **T3** — `people-strategist` persona (`tier: senior`, merges former people-ops + EM-generalist per Q2): identity = "owns the org and the ladder", capabilities = Q1 + Q2 + Q3 + Q4. Workflows = org-review-loop + comp-cycle-loop + perf-feedback-loop. **Out-of-plate.**
-- [ ] **T4** — `engineering-manager` persona (`tier: senior`, eng-team-specific): identity = "owns the team's flow", capabilities = S1 + S2 + S3 + (cites Q4 perf-feedback-craft for eng-team specialization). Workflows = one-on-one-loop + hiring-calibration-loop. **Out-of-plate.**
+- [ ] **T1** — `finance-partner` persona (`tier: senior`): identity = "owns the cash and the model", capabilities (default-loaded, override-friendly per unified Q4) = O1 + O2 + O3 + O4. Mental-models = `first-principles` + `second-order-thinking` + `inversion`. Workflows = monthly-close-loop + scenario-update-loop.
+- [ ] **T2** — `strategist` persona (`tier: senior`, absorbs former legal-compliance per Q2): identity = "owns the second-order moves", capabilities = P1 + P2 + P3 + P4 + P5 + P6 + P7. Stances: founder-mode (cited via P4). Workflows = build-buy-partner-decision-loop + privacy-review-loop.
+- [ ] **T3** — `people-strategist` persona (`tier: senior`, merges former people-ops + EM-generalist per Q2): identity = "owns the org and the ladder", capabilities = Q1 + Q2 + Q3 + Q4. Workflows = org-review-loop + comp-cycle-loop + perf-feedback-loop.
+- [ ] **T4** — `engineering-manager` persona (`tier: senior`, eng-team-specific): identity = "owns the team's flow", capabilities = S1 + S2 + S3 + (cites Q4 perf-feedback-craft for eng-team specialization). Workflows = one-on-one-loop + hiring-calibration-loop.
 
 ## Sibling cross-references (locked)
 
@@ -206,25 +203,24 @@ this roadmap cites, the sibling owns.
 ## ICE table for Phase 1
 
 ICE-rank (Impact × Confidence ÷ Effort) for the 18 skills + 4
-personas + 3 foundation steps. Plate-pick = top 6 (J1–J3, O1, P1, T1).
+personas + 3 foundation steps. Foundation set = top 6 (J1–J3, O1, P1, T1).
 
-| ID | Title | I (1–10) | C (1–10) | E (1–10) | Score | Plate |
+| ID | Title | I (1–10) | C (1–10) | E (1–10) | Score | Order |
 |---|---|---|---|---|---|---|
-| J1 | wing4-context-spine extension | 9 | 9 | 2 | 40.5 | ✅ |
-| J2 | Wing-4 boundary linter | 9 | 8 | 3 | 24.0 | ✅ |
-| J3 | wing4-handoff guideline | 8 | 9 | 2 | 36.0 | ✅ |
-| O1 | unit-economics | 9 | 8 | 4 | 18.0 | ✅ |
-| P1 | build-buy-partner | 8 | 8 | 4 | 16.0 | ✅ |
-| T1 | finance-partner persona | 9 | 7 | 3 | 21.0 | ✅ |
+| J1 | wing4-context-spine extension | 9 | 9 | 2 | 40.5 | foundation |
+| J2 | Wing-4 boundary linter | 9 | 8 | 3 | 24.0 | foundation |
+| J3 | wing4-handoff guideline | 8 | 9 | 2 | 36.0 | foundation |
+| O1 | unit-economics | 9 | 8 | 4 | 18.0 | foundation |
+| P1 | build-buy-partner | 8 | 8 | 4 | 16.0 | foundation |
+| T1 | finance-partner persona | 9 | 7 | 3 | 21.0 | foundation |
 | Q1 | org-design | 8 | 8 | 5 | 12.8 | next |
 | O2 | forecasting | 8 | 8 | 4 | 16.0 | next |
 | P3 | competitive-positioning | 8 | 7 | 4 | 14.0 | next |
 | O3 | runway-cognition | 8 | 7 | 4 | 14.0 | next |
 | (rest) | … | — | — | — | — | tail |
 
-Plate volume: 6 sub-steps in 6 weeks = 1 per week. Matches sibling
-plate cadence (council Q6 unified-iter1, sibling-velocity-honest)
-and Wing 3 plate volume (parity preserved).
+Foundation set: J1 → J2 → J3 → O1 → P1 → T1 unblocks every persona;
+the rest follows ICE order.
 
 ## Risk register
 
@@ -235,7 +231,7 @@ This roadmap = R37–R45.
 - **R37** — Wing-4 boundary linter false-positives. Strategist's `contracts-cognition` and `privacy-review` could trip vendor-independence test if examples cite specific regulations (GDPR, CCPA). Mitigation: J2 ships with regulation-examples allow-list (regulations are not vendor-tools); ADR for any other carve-out. **Owner:** maintainer.
 - **R38** — `strategist` persona over-loaded (7 capabilities, ties Wing-3 `cmo` for largest). Per Q2 verdict the legal absorption is correct, but persona may feel heavy in practice. **Mitigation:** re-evaluate after T2 ships; split via override if a project consistently disables P5+P6+P7 (legal cluster). **Acceptance:** ≥ 80 % of consumer projects load all 7 capabilities without override.
 - **R39** — Q4 (`perf-feedback-craft`) double-ownership risk. Generalized in Q2 from EM-only to people-strategist + EM-cite per Q2. EM persona (T4) cites it without owning — fragile if council-iter2 reverses Q2 verdict and re-splits people-strategist + people-ops. **Mitigation:** lock Q2 in council-iter2 first question; if reversed, Block S re-bases on owned Q4-equivalent.
-- **R40** — Cross-Wing dependency on Wing-3 `forecast-accuracy` H10. O2 (`forecasting`) is cited by H10 — if Wing 3 plate races ahead and ships H10 before O2, H10 ships as stub-with-interface. **Mitigation:** cross-roadmap sequencing rule: H10 plate gated on O2 ≥ 100 % OR H10 explicitly stub-flagged with O2 interface contract. Council-iter2 to confirm.
+- **R40** — Cross-Wing dependency on Wing-3 `forecast-accuracy` H10. O2 (`forecasting`) is cited by H10 — if Wing 3 ships H10 before O2, H10 ships as stub-with-interface. **Mitigation:** cross-roadmap sequencing rule: H10 gated on O2 ≥ 100 % OR H10 explicitly stub-flagged with O2 interface contract. Council-iter2 to confirm.
 - **R41** — Compliance-creep pressure from real users. Users will ask "where is the SOC2-audit tooling?" or "where is the GDPR-compliance-platform integration?" — boundary holds, but messaging needs to be public-facing. **Mitigation:** README of this roadmap explains the cognition-vs-tooling line; out-of-scope table is locked, not draft.
 - **R42** — People-cognition surveillance pressure. Users will ask "where is the productivity-monitoring skill?" — out-of-scope table explicitly excludes for ethical-floor reasons (people cognition = trust-banking, not surveillance). **Mitigation:** scope language in this roadmap, plus the sibling-roadmap `non-destructive-by-default` rule already covers any agent action that monitors developers without consent. Cite both surfaces.
 - **R43** — Persona compositeness regression. If T2 (`strategist`) loads 7 skills as defaults, slow agent-init time may regress. **Mitigation:** persona load is lazy per existing persona infra; verify T2 measurement before merging (parity check with Wing-3 I1 `cmo` measurement).
@@ -253,13 +249,13 @@ re-litigation of locked items.
 - **OQ1 → CONFIRM** — Q2 Wing-5 absorption holds. Legal-into-strategist (contracts/privacy/data-handling = strategy under regulatory constraint) + people-ops-into-people-strategist (org-design/comp/onboarding/perf-feedback generalized from EM-only). Persona-overlap rule passes for all four T-personas; this is the lock-in moment.
 - **OQ2 → CONFIRM** — `strategist` persona stays at 7 capabilities, legal cluster (P5+P6+P7) folded. Same shape as 3A-OQ2: legal IS strategy under regulatory-constraint, not separate discipline. R38 mitigation = re-evaluate if ≥ 80 % of projects disable P5–P7 via override (has not happened).
 - **OQ3 → REFINE → applied** — J2 adds 4th linter test **stage-agnosticism**. Distinct from transferability: transferability = readable across stacks; stage-agnosticism = readable across org-stages.
-- **OQ4 → REFINE → applied** — Mirror of 3A-OQ4. Interface-first-stub: O2 ships `forecast-construction-shape` ADR (0.5 sub-steps in plate) before H10 starts; H10 then runs parallel to O2 implementation. Single answer applies both directions; locked in J3 + G3 handoff guidelines.
-- **OQ5 → CONFIRM** — Plate stays at 6 sub-steps (J1+J2+J3+O1+P1+T1). Adding O2 as 7th breaks parity AND creates interface-race with OQ4 (O2 must ship interface BEFORE full implementation if H10 runs parallel — interface ships in plate, full O2 implementation does not).
+- **OQ4 → REFINE → applied** — Mirror of 3A-OQ4. Interface-first-stub: O2 ships `forecast-construction-shape` ADR (0.5 sub-steps) before H10 starts; H10 then runs parallel to O2 implementation. Single answer applies both directions; locked in J3 + G3 handoff guidelines.
+- **OQ5 → CONFIRM** — Foundation set stays at 6 sub-steps (J1+J2+J3+O1+P1+T1). Adding O2 as 7th creates interface-race with OQ4 (O2 must ship interface BEFORE full implementation if H10 runs parallel — interface ships in foundation, full O2 implementation follows).
 - **OQ6 → REFINE → applied** — Filename = `{slug}.md` (no `senior-` prefix), frontmatter = `tier: senior`. T1–T4 already conform; map handles are internal-only and v3 of the map updates them to match. Converges with 3A-OQ6.
 
 **CC1** — Cross-citations now bidirectional. 3A H10 ↔ 3B O2 already two-way. 3A H1 + H7 added back-cites to 3B P3 + P4 (one-way fix applied in Wing-3 sibling).
 **CC2** — All 4 Wing-4 personas pass the ≥ 3 distinct-skills rule (finance-partner=4, strategist=7, people-strategist=4, engineering-manager=3 + cite Q4).
-**CC3** — Plate is realistic; tail (O2-impl + O3 + O4 + P2–P7 + Q1–Q4 + S1–S3 + T2–T4) = ~5-month horizon post-plate.
+**CC3** — Foundation set is realistic; tail (O2-impl + O3 + O4 + P2–P7 + Q1–Q4 + S1–S3 + T2–T4) follows ICE order after the foundation lands.
 
 **Synthesis** — Single biggest restructure across both wings: G2/J2 4th-test linter + O2-interface-first-stub + persona naming convergence. Single biggest residual risk: 7-capability personas (`cmo`, `strategist`) are an unproven pattern at this complexity; mitigation R35/R43 exists but acceptance-threshold is untested.
 
@@ -269,8 +265,8 @@ re-litigation of locked items.
 > verdicts folded in (J2 stage-agnosticism, O2 interface-first-stub,
 > persona naming locked).
 >
-> First plate (J1 → J2 → J3 → O1 → P1 → T1, plus the O2-interface
+> Foundation set (J1 → J2 → J3 → O1 → P1 → T1, plus the O2-interface
 > sub-deliverable) becomes runnable behind the unified-senior-roles
 > K-block + sibling Block-A gate. Cross-Wing sequencing: O2-interface
-> contract must ship in this plate before Wing-3 H10 starts (Wing-3
-> plate already gates on this).
+> contract must ship before Wing-3 H10 starts (Wing-3 already gates
+> on this).

@@ -15,7 +15,7 @@ complexity: structural
 
 **Source map:** `agents/contexts/senior-personas-and-skills-map.md` v2
 (post-iter1). Wing 3 owner. 4 personas, 16 skills. Map is the
-universe; this roadmap is the plate-realistic slice.
+universe; this roadmap sequences delivery by dependency.
 
 ## Status
 
@@ -67,7 +67,7 @@ sanity-checks the chain, not re-orders it.
 | C | Pipeline cluster (Q6–Q7) before funnel cluster (R1–R3) | Growth-PM funnel-analysis cites pipeline-stage reasoning; activation-design composes onboarding-design from CS lead |
 | D | Customer Success (R4–R6) before Growth PM (R1–R3) | Retention-loops compose churn-prevention and expansion-playbook; reverse-order forces stub references |
 | E | Personas last (Block I) | Persona = composition of skills + workflows + identity; can only stabilize after skills land |
-| F | One CMO skill in plate, two carry into next plate | Plate-realism — full Wing 3 is 16 skills + 4 personas = 20 sub-steps; one plate fits ~5 |
+| F | CMO cluster ships H1 + H2 first, H3–H7 follow | ICE-ranked sequencing — H1 (`positioning`) and H2 (`messaging-architecture`) are foundation for H3–H7 |
 | G | No version-anchoring inside roadmap (per `scope-control`) | Roadmap plans work; release decisions live elsewhere |
 | H | Founder-mode stance not a sub-step | Per Q6 verdict — stance documents in map only, surfaces via persona `## Stances` frontmatter |
 
@@ -104,11 +104,11 @@ brand-versus-pipeline composition rules.
 - [ ] **G2** — `lint-skills` extended for Wing-3 cognition tests: **stacks on top of suite-closure Phase 2.4 senior-tier floor** (Related Skills WHEN/NOT, Proactive Triggers, Output Artifacts — already shipped in `lint_senior_tier_blocks()`). G2 adds Wing-3-specific tests per council Q7 boundary linter + iter-2 OQ3 verdict — (a) **agent-operability** (skill executable inside agent surface, no external SaaS auth), (b) **vendor-independence** (no platform-specific scaffold — no `salesforce-*`, `hubspot-*`, `mailchimp-*` SDK), (c) **transferability** (skill text re-readable across stacks without rewrite), (d) **channel-agnosticism** (skill cannot prescribe channel-specific tactics — no "email subject lines," "ad creative specs," "LinkedIn-post cadence"; channels MAY appear as examples in runnable scenarios but MUST NOT be required for execution). Channel-agnosticism is distinct from transferability: transferability = readable across stacks; channel-agnosticism = readable across channels. One-fail-blocks-merge per `.agent-src.uncompressed/rules/skill-quality.md` (canonical contract; path corrected from `docs/contracts/skill-quality.md` in suite-closure Phase 2).
 - [ ] **G3** — Cite `docs/contracts/cross-wing-handoff.md` (suite-closure Phase 3.1) for the typed-handoff contract; ship `docs/guidelines/gtm-handoff.md` for **Wing-3-specific prose** documenting three load-bearing chains from the map: brand→channel (positioning → messaging → gtm-launch → editorial-calendar → content-funnel-design); discovery→pipeline (customer-research → ICP → pipeline-strategy → MEDDIC → forecast-accuracy); funnel→retention (funnel-analysis → activation-design → onboarding-design → retention-loops → churn-prevention → expansion-playbook). Each chain: when does cognition hand off, what artefact crosses the boundary, who owns the failure mode if the chain breaks. Cycle / dangling / tier-mismatch enforcement lives in `task lint-handoffs` (Phase 3.2), not duplicated here.
 
-### Block H — GTM cognition skills (3 weeks in plate, 6–8 weeks tail)
+### Block H — GTM cognition skills
 
-**Sixteen skills**, ICE-ranked. **Only H1 + H2 in the plate**
-(council Q6 sibling-velocity-honest applied to Wing 3); H3–H16 are
-*ready-to-start* but complete in following plates. Skill names are
+**Sixteen skills**, ICE-ranked. H1 + H2 are the foundation for the
+CMO cluster (council Q6 sibling-velocity-honest applied to Wing 3);
+H3–H16 follow ICE order. Skill names are
 clean — `tier: senior` lives in frontmatter (council Q7 unified-iter1,
 FRONTMATTER-FIELD). Each skill ships with the same six artefacts as
 unified-senior-roles Block L: persona link (Block I), context-spine
@@ -122,32 +122,32 @@ runnable example. **No skill ships without all six.**
 
 - [ ] **H1** — `positioning` skill (`tier: senior`): category framing, "we are X for Y, not Z" articulation, point-of-view sharpening, opposable-positioning audit. Borrows mental-model `first-principles` + `inversion`. Cited by Wing-4 `competitive-positioning` (P3) — H1 owns market-positioning narrative; P3 reuses for strategic differentiation. **Out:** category-creation theatre (where positioning is invented, not earned).
 - [ ] **H2** — `messaging-architecture` skill (`tier: senior`): primary message, supporting proofs, audience-by-message matrix, narrative-stack reasoning. Composes `positioning` (cites). **Out:** copy generation, ad-headline writing.
-- [ ] **H3** — `gtm-launch` skill (`tier: senior`): launch sequencing (alpha → beta → GA), audience-wave logic, narrative beats per wave, dependency on engineering readiness signals. Composes `messaging-architecture` + Block-L `release-comms` (unified-senior-roles). **Out-of-plate.**
-- [ ] **H4** — `editorial-calendar` skill (`tier: senior`, folded from former content-strategist per Q1): cadence reasoning (evergreen vs campaign vs reactive), beat-mapping, content-debt management. **Out:** content-management-system tooling. **Out-of-plate.**
-- [ ] **H5** — `content-funnel-design` skill (`tier: senior`, folded from former content-strategist per Q1): funnel-stage-to-content-shape mapping, conversion-pathway design, content-as-system thinking. Composes `editorial-calendar` + `funnel-analysis` (H14). **Out-of-plate.**
-- [ ] **H6** — `voice-and-tone-design` skill (`tier: senior`): voice attributes, tone-by-context matrix, brand-voice consistency review. **Out:** copy-editing service. **Out-of-plate.**
-- [ ] **H7** — `fundraising-narrative` skill (`tier: senior`, cites founder-mode stance per Q6): "why now / why us / why this" framing for capital-raising contexts, market-size reasoning, traction-story construction. Sibling to Wing-4 `vision-articulation` (P4) — H7 = external pitch under capital constraint, P4 = internal anchor for org alignment. **Out:** investor-CRM management, due-diligence-data-room tooling. **Out-of-plate.**
+- [ ] **H3** — `gtm-launch` skill (`tier: senior`): launch sequencing (alpha → beta → GA), audience-wave logic, narrative beats per wave, dependency on engineering readiness signals. Composes `messaging-architecture` + Block-L `release-comms` (unified-senior-roles).
+- [ ] **H4** — `editorial-calendar` skill (`tier: senior`, folded from former content-strategist per Q1): cadence reasoning (evergreen vs campaign vs reactive), beat-mapping, content-debt management. **Out:** content-management-system tooling.
+- [ ] **H5** — `content-funnel-design` skill (`tier: senior`, folded from former content-strategist per Q1): funnel-stage-to-content-shape mapping, conversion-pathway design, content-as-system thinking. Composes `editorial-calendar` + `funnel-analysis` (H14).
+- [ ] **H6** — `voice-and-tone-design` skill (`tier: senior`): voice attributes, tone-by-context matrix, brand-voice consistency review. **Out:** copy-editing service.
+- [ ] **H7** — `fundraising-narrative` skill (`tier: senior`, cites founder-mode stance per Q6): "why now / why us / why this" framing for capital-raising contexts, market-size reasoning, traction-story construction. Sibling to Wing-4 `vision-articulation` (P4) — H7 = external pitch under capital constraint, P4 = internal anchor for org alignment. **Out:** investor-CRM management, due-diligence-data-room tooling.
 
 **RevOps cluster (3 skills):**
 
-- [ ] **H8** — `pipeline-strategy` skill (`tier: senior`): stage-definition, conversion-rate-by-stage targets, pipeline-coverage reasoning, leak detection. **Out:** Salesforce / HubSpot configuration. **Out-of-plate.**
-- [ ] **H9** — `deal-qualification-meddic` skill (`tier: senior`): MEDDIC framework cognition (Metrics, Economic-buyer, Decision-criteria, Decision-process, Identify-pain, Champion), qualification-call structure, disqualification heuristics. **Out:** call-recording integrations. **Out-of-plate.**
-- [ ] **H10** — `forecast-accuracy` skill (`tier: senior`, cites finance-partner `forecasting` (Wing-4 O2) via interface-first-stub per iter-2 OQ4): forecast-call construction, commit / best-case / pipeline categorization, accuracy retro-loop. Composes against the `forecast-construction-shape` ADR shipped by O2 (top-down vs bottom-up, confidence-band, retro-loop signature) — H10 starts only after O2-interface ≥ 100 % but parallel to O2 implementation. If O2 drifts from interface, O2 breaks contract (not H10); contract locked in J3 + G3 handoff guidelines. **Out:** forecasting-tool plugins. **Out-of-plate.**
+- [ ] **H8** — `pipeline-strategy` skill (`tier: senior`): stage-definition, conversion-rate-by-stage targets, pipeline-coverage reasoning, leak detection. **Out:** Salesforce / HubSpot configuration.
+- [ ] **H9** — `deal-qualification-meddic` skill (`tier: senior`): MEDDIC framework cognition (Metrics, Economic-buyer, Decision-criteria, Decision-process, Identify-pain, Champion), qualification-call structure, disqualification heuristics. **Out:** call-recording integrations.
+- [ ] **H10** — `forecast-accuracy` skill (`tier: senior`, cites finance-partner `forecasting` (Wing-4 O2) via interface-first-stub per iter-2 OQ4): forecast-call construction, commit / best-case / pipeline categorization, accuracy retro-loop. Composes against the `forecast-construction-shape` ADR shipped by O2 (top-down vs bottom-up, confidence-band, retro-loop signature) — H10 starts only after O2-interface ≥ 100 % but parallel to O2 implementation. If O2 drifts from interface, O2 breaks contract (not H10); contract locked in J3 + G3 handoff guidelines. **Out:** forecasting-tool plugins.
 
 **Customer Success cluster (3 skills):**
 
-- [ ] **H11** — `onboarding-design` skill (`tier: senior`): time-to-first-value reasoning, milestone-design, friction-audit, drop-off diagnosis. Distinct from `onboarding-program` (Wing-4 employee-facing). **Out-of-plate.**
-- [ ] **H12** — `churn-prevention` skill (`tier: senior`): health-score signal design, churn-cause classification (involuntary / value / relationship / fit), early-warning loop. Feeds back into Wing-4 forecasting per cross-skill map. **Out-of-plate.**
-- [ ] **H13** — `expansion-playbook` skill (`tier: senior`): account-expansion patterns, upsell-vs-cross-sell reasoning, expansion-trigger signals, NRR-cognition. **Out:** PQL-tooling integrations. **Out-of-plate.**
+- [ ] **H11** — `onboarding-design` skill (`tier: senior`): time-to-first-value reasoning, milestone-design, friction-audit, drop-off diagnosis. Distinct from `onboarding-program` (Wing-4 employee-facing).
+- [ ] **H12** — `churn-prevention` skill (`tier: senior`): health-score signal design, churn-cause classification (involuntary / value / relationship / fit), early-warning loop. Feeds back into Wing-4 forecasting per cross-skill map.
+- [ ] **H13** — `expansion-playbook` skill (`tier: senior`): account-expansion patterns, upsell-vs-cross-sell reasoning, expansion-trigger signals, NRR-cognition. **Out:** PQL-tooling integrations.
 
 **Growth PM cluster (3 skills):**
 
-- [ ] **H14** — `funnel-analysis` skill (`tier: senior`): funnel-stage diagnostics, leaky-bucket vs growth-loop classification, leading-indicator selection, cohort-behavior reading. **Out:** Mixpanel / Amplitude SDK wrapping. **Out-of-plate.**
-- [ ] **H15** — `retention-loops` skill (`tier: senior`): habit-formation reasoning, trigger-action-reward design, network-effect vs single-user-loop classification. Composes `onboarding-design` (H11) + `churn-prevention` (H12). **Out-of-plate.**
-- [ ] **H16** — `activation-design` skill (`tier: senior`): aha-moment definition, activation-event selection, activation-funnel construction, leading-vs-lagging-indicator reasoning. **Out-of-plate.**
+- [ ] **H14** — `funnel-analysis` skill (`tier: senior`): funnel-stage diagnostics, leaky-bucket vs growth-loop classification, leading-indicator selection, cohort-behavior reading. **Out:** Mixpanel / Amplitude SDK wrapping.
+- [ ] **H15** — `retention-loops` skill (`tier: senior`): habit-formation reasoning, trigger-action-reward design, network-effect vs single-user-loop classification. Composes `onboarding-design` (H11) + `churn-prevention` (H12).
+- [ ] **H16** — `activation-design` skill (`tier: senior`): aha-moment definition, activation-event selection, activation-funnel construction, leading-vs-lagging-indicator reasoning.
 
 
-### Block I — Wing 3 personas (1 in-plate, 3 in next plate)
+### Block I — Wing 3 personas
 
 Per the universe map, Wing 3 has four personas. Persona = composition
 of skills + workflows + identity, override-friendly per the
@@ -155,10 +155,10 @@ unified-senior-roles council Q4 ABSORB pattern (defaults loaded,
 project overrides allowed via `agents/overrides/`).
 
 - [ ] **I** — Wing 3 personas shipped (block marker; flips when I1–I4 are all done). Gated on Block H ≥ 50 % (at least the cluster lead-skills H1, H8, H11, H14 done).
-- [ ] **I1** — `cmo` persona (`tier: senior`): identity = "owns the said and the seen", capabilities (default-loaded, override-friendly per unified Q4) = H1 + H2 + H3 + H4 + H5 + H6 + H7. Stances: founder-mode (cited via H7). Workflows = launch-sequence-loop + content-cadence-loop. **In-plate** (last sub-step of plate).
-- [ ] **I2** — `revops` persona (`tier: senior`): identity = "owns the pipeline and the forecast", capabilities = H8 + H9 + H10. Mental-models = `theory-of-constraints` + `leading-vs-lagging-indicators`. Workflows = pipeline-review-loop + forecast-call-loop. **Out-of-plate.**
-- [ ] **I3** — `customer-success-lead` persona (`tier: senior`): identity = "owns the post-signature value", capabilities = H11 + H12 + H13. Workflows = onboarding-design-loop + health-score-review-loop. **Out-of-plate.**
-- [ ] **I4** — `growth-pm` persona (`tier: senior`): identity = "owns the funnel and the loops", capabilities = H14 + H15 + H16. Composes `customer-research` (unified L1) + `north-star-metric` (unified Wing-2 cognition). Workflows = funnel-diagnostic-loop + activation-experiment-loop. **Out-of-plate.**
+- [ ] **I1** — `cmo` persona (`tier: senior`): identity = "owns the said and the seen", capabilities (default-loaded, override-friendly per unified Q4) = H1 + H2 + H3 + H4 + H5 + H6 + H7. Stances: founder-mode (cited via H7). Workflows = launch-sequence-loop + content-cadence-loop.
+- [ ] **I2** — `revops` persona (`tier: senior`): identity = "owns the pipeline and the forecast", capabilities = H8 + H9 + H10. Mental-models = `theory-of-constraints` + `leading-vs-lagging-indicators`. Workflows = pipeline-review-loop + forecast-call-loop.
+- [ ] **I3** — `customer-success-lead` persona (`tier: senior`): identity = "owns the post-signature value", capabilities = H11 + H12 + H13. Workflows = onboarding-design-loop + health-score-review-loop.
+- [ ] **I4** — `growth-pm` persona (`tier: senior`): identity = "owns the funnel and the loops", capabilities = H14 + H15 + H16. Composes `customer-research` (unified L1) + `north-star-metric` (unified Wing-2 cognition). Workflows = funnel-diagnostic-loop + activation-experiment-loop.
 
 ## Sibling cross-references (locked)
 
@@ -196,8 +196,8 @@ personas + 3 foundation steps. Plate-pick = top 6 (G1–G3, H1–H2, I1).
 | H3 | gtm-launch | 8 | 7 | 5 | 11.2 | next |
 | (rest) | … | — | — | — | — | tail |
 
-Plate volume: 6 sub-steps in 6 weeks = 1 per week. Matches sibling
-plate cadence (council Q6 unified-iter1, sibling-velocity-honest).
+Foundation set: G1 → G2 → G3 → H1 → H2 → I1 (6 sub-steps) is the
+unblocking sequence; the rest follows ICE order.
 
 ## Risk register
 
@@ -223,12 +223,12 @@ re-litigation of locked items.
 - **OQ2 → CONFIRM** — `cmo` persona stays at 7 capabilities, content cluster (H4+H5+H6) folded. Map iter-1 Q1 lock holds — content-strategy IS senior-brand-cognition at this level, not a separate discipline. Persona-overlap rule passes (≥ 3 distinct skills) but that is a floor, not a split-trigger.
 - **OQ3 → REFINE → applied** — G2 adds 4th linter test **channel-agnosticism**. Distinct from transferability: transferability = readable across stacks; channel-agnosticism = readable across channels.
 - **OQ4 → REFINE → applied** — Interface-first-stub pattern (not strict-gate, not loose-stub). O2 ships `forecast-construction-shape` ADR (top-down vs bottom-up, confidence-band, retro-loop signature) before H10 starts; H10 then runs parallel to O2 implementation. Contract locked in J3 + G3 handoff guidelines; if O2 drifts, O2 breaks contract.
-- **OQ5 → CONFIRM** — Plate stays at 6 sub-steps (G1+G2+G3+H1+H2+I1). H8 (`pipeline-strategy`) ICE = 12.8 < I1 = 21.0 — adding H8 as 7th breaks parity AND sequencing (H8 depends on G3, the last foundation step).
+- **OQ5 → CONFIRM** — Foundation set stays at 6 sub-steps (G1+G2+G3+H1+H2+I1). H8 (`pipeline-strategy`) ICE = 12.8 < I1 = 21.0 — adding H8 as 7th breaks sequencing (H8 depends on G3, the last foundation step).
 - **OQ6 → REFINE → applied** — Filename = `{slug}.md` (no `senior-` prefix), frontmatter = `tier: senior`. I1–I4 already conform; map handles (`senior-cmo`, etc.) are internal-only and v3 of the map updates them to match.
 
 **CC1** — Cross-citation back-references added to H1 (cited by P3) and H7 (sibling to P4). 3A H10 ↔ 3B O2 already bidirectional.
 **CC2** — All 4 Wing-3 personas pass the ≥ 3 distinct-skills rule (cmo=7, revops=3, customer-success-lead=3, growth-pm=3).
-**CC3** — Plate is realistic; tail (H3–H16 + I2–I4 + Wing-4 tail) = ~5-month horizon post-plate.
+**CC3** — Foundation set is realistic; tail (H3–H16 + I2–I4 + Wing-4 tail) follows ICE order after the foundation lands.
 
 **Synthesis** — Single biggest restructure across both wings: G2/J2 4th-test linter + O2-interface-first-stub + persona naming convergence; all three are cross-roadmap and cannot apply to one wing alone. Single biggest residual risk: 7-capability personas (`cmo`, `strategist`) are an unproven pattern at this complexity — slow agent-init if lazy-load regresses, conceptual overload for users; mitigation R35/R43 exists but acceptance-threshold is untested.
 
@@ -238,7 +238,7 @@ re-litigation of locked items.
 > verdicts folded in (G2 channel-agnosticism, H1+H7 back-cites,
 > H10 interface-first-stub, persona naming locked).
 >
-> First plate (G1 → G2 → G3 → H1 → H2 → I1) becomes runnable behind
+> Foundation set (G1 → G2 → G3 → H1 → H2 → I1) becomes runnable behind
 > the unified-senior-roles K-block + sibling Block-A gate. Cross-Wing
 > sequencing: O2-interface-contract (Wing 4) must ship before H10
 > starts; H1 + H7 back-cite Wing-4 P3 + P4 (no execution dependency).
