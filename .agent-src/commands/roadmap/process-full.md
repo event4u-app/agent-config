@@ -56,9 +56,12 @@ ignores them by construction. If the user wants narrower execution they
 invoke `/roadmap:process-phase` (scope = single phase) or
 `/roadmap:process-step` (scope = single step) instead.
 
-Time-boxed plate / horizon framing is forbidden in roadmaps by template
-rule 16 (`templates/roadmaps.md`). If a legacy roadmap still carries
-such phrasing, treat it as ordinary prose — never as a gate.
+Time-boxed plate / horizon framing is opt-in via
+`roadmap.horizon_weeks` in `.agent-settings.yml` (default `0` =
+forbidden, per template rule 16 in `templates/roadmaps.md`). If a
+roadmap carries such phrasing — whether by legacy or by an opt-in
+setting — treat it as ordinary prose during execution, never as a
+gate. Phase ordering and explicit dependency gates govern the loop.
 
 ## Iron Law — Real-time dashboard
 

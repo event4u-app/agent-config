@@ -164,6 +164,22 @@ roadmap:
   # is mandatory before any "roadmap complete" claim regardless of cadence.
   quality_cadence: end_of_roadmap
 
+  # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
+  # 0  = off (default). Time-boxed plate / horizon framing is forbidden:
+  #      no `## Horizon (N-week visible plate)` sections, no
+  #      "inside / outside the plate" phrasing, no `out-of-horizon` /
+  #      `out-of-plate` suffixes. Phase ordering and dependency gates
+  #      carry the deferral semantics. Enforced by
+  #      `task lint-roadmap-complexity`.
+  # > 0 = opt-in. Roadmaps may include a `## Horizon (N-week visible plate)`
+  #      section with that many weeks; the linter relaxes the plate-token
+  #      ban for files declaring the section. Pacing is still the user's
+  #      call — N is just the authoring window.
+  # 6 weeks proved too long for AI-paced work; the default is 0 so plans
+  # describe scope and ordering, not calendars. Flip to a positive integer
+  # only if your team genuinely commits work on a calendar plate.
+  horizon_weeks: 0
+
 # --- Subagent orchestration ---
 #
 # Controls model selection and parallelism for subagent-based workflows
@@ -320,3 +336,22 @@ commands:
   # /create-pr:description-only always previews — that is its sole purpose.
   create_pr:
     preview_description: false
+
+# --- Memory ---
+#
+# Engineering memory consolidation behaviour. See
+# docs/contracts/agent-memory-contract.md for the on-disk shape and
+# .augment/skills/memory-consolidation/ for the four-phase loop.
+memory:
+  # Inline-review threshold for /memory load.
+  # When the unreviewed intake stream contains more than this many
+  # entries, /memory load surfaces a top-3 preview block before the
+  # full curated load. Set to 0 to disable the inline review entirely.
+  review_threshold: 10
+
+  # Patterns redacted from transcripts before mining.
+  # The TranscriptAdapter applies these as a regex blocklist on every
+  # yielded turn. Add personal identifiers, project-internal tokens,
+  # or paths outside the repo root that must not land in intake JSONL.
+  # Example: ["api[_-]?key", "/Users/[a-z]+/Library"]
+  redact_patterns: []

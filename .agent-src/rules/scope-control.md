@@ -34,6 +34,21 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 
+## Authoring vs. implementation — verb discipline
+
+```
+"CREATE / DRAFT / WRITE A ROADMAP" AUTHORIZES THE ARTIFACT, NEVER ITS EXECUTION.
+A NEW TASK NEVER INHERITS A PRIOR TASK'S AUTONOMY DIRECTIVE.
+```
+
+Authoring verbs — `create`, `draft`, `write`, `author`, `prepare`, `outline`, `entwirf`, `erstelle`, `schreibe`, `vorbereite` — authorize **the artifact only** (roadmap file, plan, ADR, ticket, design doc, brief). They never authorize executing the content the artifact describes.
+
+- "Create the roadmap for X" / "Erstelle die Roadmap für X" → write the roadmap file, stop, hand back. Do **not** start implementing the steps it contains; do **not** create a feature branch for the work the roadmap describes.
+- "Implement / build / ship / setze um / baue / arbeite ab / arbeite die roadmap ab" → execution intent. Then the executing rules apply.
+- Mixed verbs ("create AND implement", "draft and start with phase 1") → ask which scope wins. Default to authoring-only.
+
+When the user names an artifact (roadmap, plan, ADR, ticket, design doc) and uses an authoring verb, the deliverable is the artifact. Stop after it lands; let the user pick the next move. A previous turn's standing autonomy for a **different task** does NOT carry over — see [`autonomous-execution § task-scope`](autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
+
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
 A subset is **never** autonomous, regardless of standing autonomy. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Triggers (prod-branch merges, deploys, prod data / infra, bulk-destructive) + this-turn-only clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).

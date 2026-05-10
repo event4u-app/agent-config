@@ -10,7 +10,10 @@ Enforces the measurable subset of
     headings, and contain no `## Council Round N` / `### Verdict`
     sections;
   - structural roadmaps have no upper cap, but the tag must be
-    declared.
+    declared;
+  - plate / horizon framing is forbidden when
+    `roadmap.horizon_weeks` in `.agent-settings.yml` is 0 (default)
+    and allowed when it is a positive integer.
 
 Cap: ≤ 150 LOC, stdlib only. Hooked into `task ci` via
 `task lint-roadmap-complexity`.
@@ -27,6 +30,10 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 ROADMAP_GLOB = "agents/roadmaps/*.md"
 LIGHTWEIGHT_LINE_CAP = 600
 LIGHTWEIGHT_PHASE_CAP = 6
+SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+HORIZON_WEEKS_PAT = re.compile(
+    r"^\s*horizon_weeks:\s*(\d+)\s*(?:#.*)?$", re.MULTILINE
+)
 
 PHASE_PAT = re.compile(r"^## Phase \d+\b", re.MULTILINE)
 COUNCIL_PAT = re.compile(r"^## Council Round \d+\b", re.MULTILINE)
@@ -66,6 +73,38 @@ def _frontmatter(text: str) -> str:
     return text[4:end] if end != -1 else ""
 
 
+def _read_horizon_weeks() -> int:
+    """Read roadmap.horizon_weeks from .agent-settings.yml.
+
+    Default 0 (off) when file or key is missing or unparseable.
+    Positive integer = horizon framing allowed.
+    """
+    if not SETTINGS_FILE.is_file():
+        return 0
+    try:
+        text = SETTINGS_FILE.read_text(encoding="utf-8")
+    except OSError:
+        return 0
+    in_roadmap = False
+    for raw in text.splitlines():
+        if not raw.strip() or raw.lstrip().startswith("#"):
+            continue
+        if raw.startswith("roadmap:"):
+            in_roadmap = True
+            continue
+        if in_roadmap and raw and not raw.startswith((" ", "\t")):
+            in_roadmap = False
+            continue
+        if in_roadmap:
+            m = HORIZON_WEEKS_PAT.match(raw)
+            if m:
+                try:
+                    return max(0, int(m.group(1)))
+                except ValueError:
+                    return 0
+    return 0
+
+
 def _read_complexity(fm: str) -> str | None:
     m = COMPLEXITY_PAT.search(fm)
     return m.group(1) if m else None
@@ -97,7 +136,11 @@ def _check_lightweight(text: str, line_count: int, problems: list[str]) -> None:
 
 
 def _check_no_plate(text: str, problems: list[str]) -> None:
-    """Detect time-boxed plate / horizon framing forbidden by template rule 16."""
+    """Detect time-boxed plate / horizon framing.
+
+    Forbidden by template rule 16 when `roadmap.horizon_weeks` is 0
+    (default). Allowed when the setting is a positive integer.
+    """
     for pat, label in PLATE_PATS:
         m = pat.search(text)
         if m is None:
@@ -105,11 +148,13 @@ def _check_no_plate(text: str, problems: list[str]) -> None:
         line = text.count("\n", 0, m.start()) + 1
         problems.append(
             f"plate/horizon convention detected ({label}) at line {line} — "
-            f"forbidden by templates/roadmaps.md rule 16"
+            f"forbidden by templates/roadmaps.md rule 16 when "
+            f"`roadmap.horizon_weeks` is 0; set a positive integer in "
+            f".agent-settings.yml to opt in"
         )
 
 
-def lint_roadmap(path: Path) -> list[str]:
+def lint_roadmap(path: Path, horizon_weeks: int) -> list[str]:
     text = path.read_text(encoding="utf-8")
     line_count = text.count("\n") + (1 if text and not text.endswith("\n") else 0)
     problems: list[str] = []
@@ -123,12 +168,14 @@ def lint_roadmap(path: Path) -> list[str]:
         return problems
     if complexity == "lightweight":
         _check_lightweight(text, line_count, problems)
-    _check_no_plate(text, problems)
+    if horizon_weeks <= 0:
+        _check_no_plate(text, problems)
     return problems
 
 
 def main() -> int:
     roadmaps = sorted(REPO_ROOT.glob(ROADMAP_GLOB))
+    horizon_weeks = _read_horizon_weeks()
     if not roadmaps:
         print(f"❌  no roadmaps matched {ROADMAP_GLOB}", file=sys.stderr)
         return 1
@@ -136,7 +183,7 @@ def main() -> int:
     summary: list[tuple[str, str]] = []
     for roadmap in roadmaps:
         rel = roadmap.relative_to(REPO_ROOT)
-        problems = lint_roadmap(roadmap)
+        problems = lint_roadmap(roadmap, horizon_weeks)
         text = roadmap.read_text(encoding="utf-8")
         complexity = _read_complexity(_frontmatter(text)) or "untagged"
         summary.append((str(rel), complexity))
