@@ -43,6 +43,58 @@ rejects entries missing any required field.
 | `owner` | yes | team slug | who keeps this entry fresh |
 | `last_validated` | yes | ISO date | stale check per type |
 | `review_after_days` | yes | integer | triggers staleness warning |
+| `priority` | no | `critical` \| `normal` \| `low` | tier-0 surfacing; defaults to `normal` |
+| `ts_week` | no | ISO-week string `YYYY-Www` | promotion week stamp; convention, not enforced |
+
+### Priority semantics (`critical` / `normal` / `low`)
+
+The `priority` field controls how aggressively `/memory:load` surfaces
+an entry. The three-tier enum is intentional — see
+`road-to-dream-skill-adoption.md` § B2 and the Phase 2 council brief
+for why a fourth `high` tier was rejected.
+
+| Value | Meaning | Reader behaviour |
+|---|---|---|
+| `critical` | Tier-0 — always surface regardless of query | `/memory:load` injects on every load, irrespective of key/query match |
+| `normal` (default) | Standard query-matched retrieval | Surfaced when the lookup key/query matches the entry |
+| `low` | Background — only surface on explicit full load | Skipped by query-matched retrieval; visible only via `/memory:load --type` full sweep |
+
+**Tier-0 governance.**
+`scripts/check_memory.py` enforces two soft guards on `critical` entries:
+
+- **Critical-stale warning** — a `priority: critical` entry whose
+  `last_validated` is older than 90 days emits a `critical-stale` warning
+  during validation (still exit 0; the curator decides whether to
+  re-validate or downgrade).
+- **Tier-0 inflation warning** — when a memory type accumulates more
+  than 10 active `critical` entries, the validator warns. The intent is
+  to keep the always-surface slice small enough to remain signal, not to
+  block writes; raise the threshold deliberately if the project's domain
+  genuinely needs more.
+
+Both are warnings, never errors. The curator stays in charge.
+
+### Temporal jitter (`ts_week`)
+
+`ts_week` stamps a curated entry with the **ISO week** it was promoted
+(`YYYY-Www`, e.g. `2026-W17`). It is optional and **convention-only** —
+the validator does not require it and does not reject entries without
+it. Promotion tooling (`/memory:promote`) writes it; manual edits are
+free to set or omit.
+
+**Why ISO-week, not date-time.** Curated YAML lives in the repo and is
+reviewable by anyone with access. A precise timestamp on every entry
+leaks session timing — "this rule appeared Tuesday 3pm" correlates with
+"the incident hit Tuesday 3pm". ISO-week granularity preserves long-
+term ordering (useful for audit) while removing intra-week inference.
+
+**When to use it.** Stamp on every promotion. Do not retroactively
+backfill — empty `ts_week` for older entries is fine and a deliberate
+non-signal.
+
+**Privacy carve-outs.** Highly sensitive entries (incident-learnings
+tied to active investigations) may omit `ts_week` entirely; the field
+is not a forensic record.
 
 ## Type-specific required fields
 
