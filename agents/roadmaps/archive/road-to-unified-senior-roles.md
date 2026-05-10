@@ -146,15 +146,15 @@ artefacts: (1) persona link (Block N), (2) context-spine declaration
 from K4, (5) frontmatter `tier: senior`, (6) at least one runnable
 example. **No skill ships without all six.**
 
-- [ ] **L** — Senior PO / discovery / marketing skills shipped (block marker; flips when L1–L8 are all done).
+- [x] **L** — Senior PO / discovery / marketing skills shipped (block marker; flips when L1–L8 are all done).
 - [x] **L1** — `customer-research` skill (`tier: senior`): discovery interviews, jobs-to-be-done framing, ICP synthesis, transcript-to-insight loop. Borrows hypothesis-loop pattern (P3) and mental-models JTBD/Pareto (K4). **Out:** persona-CRM enrichment, channel-targeting.
 - [x] **L2** — `release-comms` skill (`tier: senior`): changelog-to-narrative, what-changed-and-why-it-matters framing for our own releases (the package itself + consumer release notes). Adopts marketingskills' "value-not-feature" heuristic without the channel surface.
-- [ ] **L3** — `decision-record` skill (`tier: senior`): ADR-on-demand from a chat thread, includes context, options, decision, consequences, reversal-criteria. Replaces the ad-hoc ADR habit; cites mental-models second-order-thinking + theory-of-constraints.
-- [ ] **L4** — `stakeholder-tradeoff` skill (`tier: senior`): forces explicit trade-off naming when a request crosses two stakeholder lenses (engineering ↔ PO, PO ↔ ops, etc.). Output: trade-off matrix + recommendation + dissent log. Composes `code-review-multi-lens` (sibling C8) when the trade-off becomes code-shaped — boundary prose lives in K3 / `docs/guidelines/cross-role-handoff.md`.
-- [ ] **L5** — `discovery-interview` skill (`tier: senior`): interview-prep + question-bank + bias-audit + insight extraction. Subset of marketingskills' `customer-research-interviews`, scoped to product discovery (not market research).
-- [ ] **L6** — `competitive-positioning` skill (`tier: senior`): package-vs-package comparison framework (the existing AI-#4-style deep reads, formalized). Inputs: target repo URL + our package + comparison axes. Output: sibling-roadmap-style "ours vs theirs" decisions table.
-- [ ] **L7** — `voc-extract` skill (`tier: senior`, Voice of Customer): scans GitHub issues + PR discussions + Sentry error patterns and extracts recurring themes with citation per theme. **Bounded scope:** read-only on artefacts the host already has; no scrape, no SaaS API. **Chat-export sourcing (Discord / Slack) deferred to v2 pending privacy review (council Q5, SHIP-WITHOUT)** — see R30.
-- [ ] **L8** — `launch-readiness` skill (`tier: senior`): pre-merge checklist + rollout plan + rollback criteria + ops handoff for any sibling-Block-A persona's release. Composes `finishing-a-development-branch` and `requesting-code-review`.
+- [x] **L3** — `decision-record` skill (`tier: senior`): ADR-on-demand from a chat thread, includes context, options, decision, consequences, reversal-criteria. Replaces the ad-hoc ADR habit; cites mental-models second-order-thinking + theory-of-constraints.
+- [x] **L4** — `stakeholder-tradeoff` skill (`tier: senior`): forces explicit trade-off naming when a request crosses two stakeholder lenses (engineering ↔ PO, PO ↔ ops, etc.). Output: trade-off matrix + recommendation + dissent log. Composes `code-review-multi-lens` (sibling C8) when the trade-off becomes code-shaped — boundary prose lives in K3 / `docs/guidelines/cross-role-handoff.md`.
+- [x] **L5** — `discovery-interview` skill (`tier: senior`): interview-prep + question-bank + bias-audit + insight extraction. Subset of marketingskills' `customer-research-interviews`, scoped to product discovery (not market research).
+- [x] **L6** — `competitive-positioning` skill (`tier: senior`): package-vs-package comparison framework (the existing AI-#4-style deep reads, formalized). Inputs: target repo URL + our package + comparison axes. Output: sibling-roadmap-style "ours vs theirs" decisions table.
+- [x] **L7** — `voc-extract` skill (`tier: senior`, Voice of Customer): scans GitHub issues + PR discussions + Sentry error patterns and extracts recurring themes with citation per theme. **Bounded scope:** read-only on artefacts the host already has; no scrape, no SaaS API. **Chat-export sourcing (Discord / Slack) deferred to v2 pending privacy review (council Q5, SHIP-WITHOUT)** — see R30.
+- [x] **L8** — `launch-readiness` skill (`tier: senior`): pre-merge checklist + rollout plan + rollback criteria + ops handoff for any sibling-Block-A persona's release. Composes `finishing-a-development-branch` and `requesting-code-review`.
 
 ### Block N — Wave-2 senior personas
 
@@ -162,11 +162,11 @@ Wave-1 personas live in the sibling roadmap (Block A: senior-backend-architect, 
 Wave-2 personas are the **non-engineering counterparts** that compose
 the same persona spine. Same 6-section schema, same override surface.
 
-- [ ] **N** — Wave-2 personas shipped (block marker; flips when N1–N4 are all done). Gated on sibling Block A ≥ 100 % (A1–A6). Persona slugs stay clean (no `senior-` prefix); persona schema carries `tier: senior` per Q7.
+- [x] **N** — Wave-2 personas shipped (block marker; flips when N1–N4 are all done). Gated on sibling Block A ≥ 100 % (A1–A6). Persona slugs stay clean (no `senior-` prefix); persona schema carries `tier: senior` per Q7.
 - [x] **N1** — `product-owner` persona (`tier: senior`): identity = "owns the why and the what", critical rules = no AC drift / explicit trade-offs / decision-record on every scope change. **Capabilities (default-loaded, override-friendly per council Q4 — ABSORB):** `refine-ticket`, `estimate-ticket`, L3 (`decision-record`), L4 (`stakeholder-tradeoff`). Workflows = ticket-refinement-loop + roadmap-execution. Consistency rationale: matches sibling A2 (`backend-architect`) which absorbs `code-review-security` + `refactor-architect` as defaults.
-- [ ] **N2** — `discovery-lead` persona (`tier: senior`): identity = "owns the who and the problem", capabilities = L1 (`customer-research`) + L5 (`discovery-interview`) + L7 (`voc-extract`), mental-models = JTBD + first-principles + Pareto.
-- [ ] **N3** — `tech-writer` persona (`tier: senior`): identity = "owns the said and the read", capabilities = L2 (`release-comms`) + agent-docs-writing + readme-writing + readme-writing-package, workflows = release-comms-loop + docs-audit-loop.
-- [ ] **N4** — `revops-maintainer` persona (`tier: senior`): identity = "owns contributor-lifecycle and adoption-funnel for the package", capabilities = review-routing + receiving-code-review + L6 (`competitive-positioning`) + L8 (`launch-readiness`), workflows = triage-loop + release-loop. **Bounded:** package-internal RevOps only; no CRM / sales surface.
+- [x] **N2** — `discovery-lead` persona (`tier: senior`): identity = "owns the who and the problem", capabilities = L1 (`customer-research`) + L5 (`discovery-interview`) + L7 (`voc-extract`), mental-models = JTBD + first-principles + Pareto.
+- [x] **N3** — `tech-writer` persona (`tier: senior`): identity = "owns the said and the read", capabilities = L2 (`release-comms`) + agent-docs-writing + readme-writing + readme-writing-package, workflows = release-comms-loop + docs-audit-loop.
+- [x] **N4** — `revops-maintainer` persona (`tier: senior`): identity = "owns contributor-lifecycle and adoption-funnel for the package", capabilities = review-routing + receiving-code-review + L6 (`competitive-positioning`) + L8 (`launch-readiness`), workflows = triage-loop + release-loop. **Bounded:** package-internal RevOps only; no CRM / sales surface.
 
 ## Sibling cross-references (locked)
 

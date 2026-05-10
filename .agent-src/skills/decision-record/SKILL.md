@@ -1,12 +1,15 @@
 ---
 name: decision-record
 description: "Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`."
+status: active
+tier: senior
+source: package
+domain: process
+context_spine: [team]
 personas:
   - senior-engineer
   - critical-challenger
   - product-owner
-source: package
-domain: process
 ---
 
 # decision-record
@@ -36,6 +39,26 @@ Do NOT use when:
   are for choices that constrain future work.
 - The user wants a feature plan, not a decision — route to the
   planning command instead.
+
+## Cognition cluster
+
+- **Mental model 4 — Second-order thinking.** Every decision unlocks
+  some futures and locks out others; the consequences block names
+  what becomes harder, not just what becomes easier. See
+  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 4.
+- **Mental model 6 — Theory of constraints.** A decision that does
+  not move the binding constraint is theatre; if the trade-off matrix
+  scores every option the same on the constraint that matters, the
+  options are fungible — surface and stop. See `mental-models.md` § 6.
+- **Mental model 10 — Reversible vs irreversible.** Two-way doors
+  get a one-page record; one-way doors get the full options +
+  consequences + supersession chain. The reversibility row of the
+  matrix decides which template fires. See `mental-models.md` § 10.
+- **Team context-spine slot.** Read the **team** slot of the
+  [context-spine](../../../docs/contracts/context-spine.md) to
+  capture who is bound by the decision (review groups, on-call
+  rotation). Skip if the consumer project has not filled it; note in
+  the record.
 
 ## Procedure
 
@@ -93,7 +116,39 @@ If this decision overrides a prior ADR:
 Output the structured payload (below). The user — or
 `adr-create` — turns it into the file.
 
-## Output format
+## Related Skills
+
+**WHEN to use this**
+
+- The team is about to lock a non-trivial choice and the trade-offs
+  need to survive the conversation that produced them.
+- A prior ADR is being overridden and the supersession chain needs
+  explicit "what changed in the world" rationale.
+- A planning thread has surfaced ≥ 2 viable options and silence is
+  about to pick one by attrition.
+
+**WHEN NOT to use this**
+
+- The choice splits stakeholders along role lines (PO vs ops, eng vs
+  support) — start with [`stakeholder-tradeoff`](../stakeholder-tradeoff/SKILL.md);
+  this skill locks the choice **after** the human cost is mapped.
+- The output is the ADR file itself (numbering, index regen) — route
+  to [`adr-create`](../adr-create/SKILL.md); this skill produces the
+  payload, not the file.
+- The risk shape is the dominant question — route to
+  [`risk-officer`](../risk-officer/SKILL.md) first, then return.
+- The decision is reversible and cheap — write a one-line note and
+  move on; ADRs are for irreversible or expensive constraints.
+
+## When the agent should load this
+
+- "Lass uns das festzurren."
+- "Welche Option ziehen wir und warum?"
+- "Wir müssen ein ADR draus machen."
+- "Trade-off-Matrix für X vs Y."
+- "Diese Entscheidung überschreibt das alte ADR-NN."
+
+## Output
 
 ```
 Decision: <one sentence>
@@ -141,3 +196,23 @@ Next: /adr-create  with the payload above
 - Do NOT pad option counts to look thorough; two real options beat
   four straw men.
 - Do NOT silently update an old ADR; supersession is explicit.
+
+## Runnable example
+
+Replacing the in-house cron runner with a managed scheduler:
+
+- Decision: *"We need to decide between keeping the in-house cron
+  runner and migrating to the managed scheduler because the on-call
+  rotation has paged on missed-run incidents three times in 60 days."*
+- Options: (1) keep in-house + add monitoring; (2) migrate to
+  managed scheduler; (3) do nothing.
+- Matrix rows that **separate** options: implementation cost,
+  operational load, blast radius on outage, reversibility.
+- Locked: *"We pick the managed scheduler."*
+- Consequences: `+` on-call gets paged on scheduler infra, not
+  application code. `–` job definitions move to a vendor format,
+  raising migration cost if we leave. `✗` we cannot run jobs in the
+  app process anymore — assumes vendor uptime.
+- Supersedes: ADR-014 *"in-house cron runner"*; trigger = three
+  missed-run pages in 60 days now exceed the SLO budget.
+- Next: `/adr-create` with the payload, append `supersedes: ADR-014`.
