@@ -318,6 +318,36 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.36.0](https://github.com/event4u-app/agent-config/compare/1.35.0...1.36.0) (2026-05-10)
+
+### Features
+
+* **commands:** tier-0 surfacing on /memory:load and ts_week on /memory:promote ([85f4b63](https://github.com/event4u-app/agent-config/commit/85f4b63dc792488ba60af4da2b09d4fcaa58506c))
+* **memory:** add priority enum validator and tier-0 stale checks ([5d61328](https://github.com/event4u-app/agent-config/commit/5d61328fa1bc1ac38d9acb98a9f97d2dc0dab4a7))
+* **memory:** consolidation skill + /memory:mine-session + intake review hook ([7037a45](https://github.com/event4u-app/agent-config/commit/7037a45b2e63193a3289622784093f522c578158))
+
+### Bug Fixes
+
+* **check-refs:** skip agents/council-responses/ like council-sessions/ ([d18551e](https://github.com/event4u-app/agent-config/commit/d18551e896d747533f2aa4465b390b291c931c4a))
+* **check-refs:** skip agents/council-responses/ like council-sessions/ ([4faf5f8](https://github.com/event4u-app/agent-config/commit/4faf5f82c380222281b38213c38399187757840b))
+* **scope-control:** trim authoring section to fit kernel ceiling ([b436d0a](https://github.com/event4u-app/agent-config/commit/b436d0a8840b0498688ed9efe28eb76bbfc08a5a))
+* **roadmap:** suppress council-reference lint on dream-skill roadmap ([c355ca5](https://github.com/event4u-app/agent-config/commit/c355ca5d8b4e7e5f181f31efe057e2c0d5ff63eb))
+
+### Documentation
+
+* **roadmap:** close out dream-skill adoption — Phase 3 cancelled-deferred, archive ([63bedd0](https://github.com/event4u-app/agent-config/commit/63bedd02c7686e183acadebff742423ab0c258a6))
+* **roadmap:** mark Phase 2 partial shipped, B1 + Phase 3 deferred with rationale ([620d7f0](https://github.com/event4u-app/agent-config/commit/620d7f09372b866659f0a41f1690fdab904777bb))
+* **memory:** document priority enum and ts_week jitter convention ([f9f65d4](https://github.com/event4u-app/agent-config/commit/f9f65d4d9d699d7b65c496745e440f3fa7de1c54))
+
+### Chores
+
+* **roadmap:** mark Phase 1 of dream-skill adoption complete ([b46ce4c](https://github.com/event4u-app/agent-config/commit/b46ce4ca7737fd9f4d29692837680023d3fbf68d))
+* **meta:** regenerate ownership matrix after scope-control trim ([db14110](https://github.com/event4u-app/agent-config/commit/db14110b0aebf9acc178cd997d1e11d0d91fd382))
+* **meta:** regenerate ownership matrix ([a23604e](https://github.com/event4u-app/agent-config/commit/a23604ef031daf0ec5e9dfdce30baf3c0293340d))
+* **rules:** harden against unsolicited implementation + horizon opt-in ([00b5fa9](https://github.com/event4u-app/agent-config/commit/00b5fa96b93b41943559c4dac775069a2e14b0e3))
+
+Tests: 2621 (+15 since 1.35.0)
+
 ## [1.35.0](https://github.com/event4u-app/agent-config/compare/1.34.0...1.35.0) (2026-05-10)
 
 ### Features
