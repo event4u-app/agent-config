@@ -244,8 +244,11 @@ mining, OR Phase 1 measured yield > 5 promoted entries / cycle.
 ## Pinned references
 
 - Compare doc: `agents/analysis/compare-dream-skill.md`
-- Council brief: `agents/council-questions/dream-skill-adoption.md`
-- Council responses: `agents/council-responses/dream-skill-adoption.json`
+- Council brief: `agents/council-questions/dream-skill-adoption.md` <!-- council-ref-allowed: traceability for roadmap's adoption decisions -->
+- Council responses: `agents/council-responses/dream-skill-adoption.json` <!-- council-ref-allowed: traceability for roadmap's adoption decisions -->
+- Council convergence summary (inline): three external AIs reviewed
+  the import — keep extraction-guard, redact user names, treat upstream
+  as inspiration not dependency, ship as opt-in skill.
 - Upstream skill: https://github.com/grandamenium/dream-skill
   (commit `228634143517906e3407ecec827890aaf70d5a97`, 2026-03-24,
   no `LICENSE`)
