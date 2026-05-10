@@ -32,17 +32,30 @@ file mtime changes — edit a rule, reissue `resources/list`, see the update.
 ## Setup — one-line install
 
 ```bash
-task mcp:setup
+task mcp:setup            # maintainer / dev repo
+./agent-config mcp:setup  # consumer projects (uses the package CLI wrapper)
 ```
 
-That creates `.venv-mcp/` (Python 3.11+), installs the `mcp` SDK, and prints
-the client config snippet. Run once per checkout.
+Either form creates `.venv-mcp/` (Python 3.11+), installs the `mcp` SDK, and
+prints the client config snippet. Run once per checkout.
 
-If you do not have `task` installed:
+If you do not have `task` or the CLI wrapper available:
 
 ```bash
 bash scripts/mcp_setup.sh
 ```
+
+## Running the server
+
+```bash
+task mcp:run            # maintainer / dev repo
+./agent-config mcp:run  # consumer projects
+```
+
+Both forms launch `python -m scripts.mcp_server` over stdio against the
+local `.venv-mcp/`. Use these for ad-hoc smoke tests; long-running clients
+(Claude Desktop, Cursor, Zed, Continue) launch the server themselves via
+the config snippets below.
 
 ## Client configuration
 
@@ -118,7 +131,7 @@ After configuring a client, run a manual stdio handshake to verify the server
 boots cleanly:
 
 ```bash
-.venv-mcp/bin/python -m scripts.mcp_server < /dev/null
+./agent-config mcp:run < /dev/null
 # Expect stderr: "mcp-server: loaded N prompts (0 warnings)" and
 #                "mcp-server: loaded 160 resources (0 warnings)"
 ```

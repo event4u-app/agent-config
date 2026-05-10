@@ -44,6 +44,10 @@ Commands:
   mcp:render                 Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json
                              (pass --claude-desktop to also write user-scope config)
   mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
+  mcp:setup                  Create .venv-mcp/ and install the mcp SDK
+                             (one-line MCP server onboarding; idempotent)
+  mcp:run                    Run the built-in MCP server over stdio
+                             (requires `mcp:setup` first; see docs/mcp-server.md)
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   hooks:install              Install the pre-commit roadmap-progress hook
@@ -97,6 +101,8 @@ Examples:
   ./agent-config mcp:render
   ./agent-config mcp:render --claude-desktop
   ./agent-config mcp:check
+  ./agent-config mcp:setup
+  ./agent-config mcp:run
   ./agent-config roadmap:progress
   ./agent-config hooks:install
   ./agent-config keys:install-anthropic
@@ -196,6 +202,27 @@ cmd_mcp_check() {
   local script
   script="$(resolve_script "scripts/mcp_render.py")"
   exec python3 "$script" --check "$@"
+}
+
+cmd_mcp_setup() {
+  local script
+  script="$(resolve_script "scripts/mcp_setup.sh")" || return 1
+  exec bash "$script" "$@"
+}
+
+# Run the built-in stdio MCP server. The server module ships inside the
+# package (PACKAGE_ROOT/scripts/mcp_server/), but the venv is created by
+# `mcp_setup.sh` at CWD — keeping consumer projects in control of where
+# the SDK install lives. PYTHONPATH points at PACKAGE_ROOT so the
+# `scripts.mcp_server` import resolves regardless of CWD.
+cmd_mcp_run() {
+  local venv_py="$CONSUMER_ROOT/.venv-mcp/bin/python"
+  if [[ ! -x "$venv_py" ]]; then
+    echo "❌  agent-config: .venv-mcp/ not found at $CONSUMER_ROOT/.venv-mcp" >&2
+    echo "    Run \`./agent-config mcp:setup\` first to create it." >&2
+    exit 1
+  fi
+  exec env PYTHONPATH="$PACKAGE_ROOT" "$venv_py" -m scripts.mcp_server "$@"
 }
 
 cmd_roadmap_progress() {
@@ -484,6 +511,8 @@ main() {
   case "$cmd" in
     mcp:render)              cmd_mcp_render "$@" ;;
     mcp:check)               cmd_mcp_check "$@" ;;
+    mcp:setup)               cmd_mcp_setup "$@" ;;
+    mcp:run)                 cmd_mcp_run "$@" ;;
     roadmap:progress)        cmd_roadmap_progress "$@" ;;
     roadmap:progress-check)  cmd_roadmap_progress_check "$@" ;;
     hooks:install)           cmd_hooks_install "$@" ;;
