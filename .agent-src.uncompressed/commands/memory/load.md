@@ -41,6 +41,41 @@ in the entry count and the signal-to-noise degrades fast on large types.
 > 6. ownership
 ```
 
+### 1b. Surface the Tier-0 critical slice
+
+Before loading the requested type, emit every active entry with
+`priority: critical` across **all** memory types as a Tier-0 banner.
+The contract for `priority: critical` is *always-surface regardless of
+query*; this step honours it.
+
+```bash
+./agent-config memory:lookup --priority critical --status active --format yaml
+```
+
+Render the slice in a fenced block titled `Tier-0 (critical)`, ordered
+by `(type, id)`. If the slice is empty, skip the banner silently — do
+not announce absence.
+
+If the lookup helper does not yet support `--priority`, fall back to a
+file-only sweep:
+
+```bash
+python3 - <<'PY'
+import pathlib, yaml
+for f in sorted(pathlib.Path("agents/memory").rglob("*.yml")):
+    data = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    for e in data.get("entries", []) or []:
+        if e.get("priority") == "critical" and e.get("status") == "active":
+            print(f"--- {f.parent.name}/{e.get('id')}")
+            print(yaml.safe_dump(e, sort_keys=False), end="")
+PY
+```
+
+The Tier-0 slice is surfaced once per `/memory:load` invocation, even
+when the user picks a type with no critical entries — the slice spans
+types deliberately. Token cost is bounded by the soft cap of 10
+critical entries per type (warned by `scripts/check_memory.py`).
+
 ### 2. Warn about volume
 
 Before loading, count the entries:

@@ -156,30 +156,48 @@ real use, OR (c) the council surfaces a privacy gap not addressed
 above, **revert A4 and A6 only** (keep skill + sub-command + linter
 since they are independently useful) and re-run the council.
 
-## Phase 2 — Generated index + critical-priority tier + temporal jitter (deferred)
+## Phase 2 — Generated index + critical-priority tier + temporal jitter (partial)
 
-- [ ] **B1 — `agents/memory-index.md` generator.** New
-  `scripts/build_memory_index.py` walks all curated YAML and emits
-  the auto-generated index. 200-line cap; on overflow, summarise
-  the most-stale entries (by `last_validated` ascending) into a
-  trailing block. Fail-loud invariant: if cap is hit AND
-  summarisation cannot fit the trailing block, abort with exit 1
-  and a "raise the cap or prune entries" message. Read-only for
-  humans.
-- [ ] **B2 — `priority: critical | normal | low` field.** Add to
-  the shared YAML frontmatter (default `normal`); schema-gate via
-  `check_memory.py`. `/memory:load` emits a tier-0 slice of all
-  `priority: critical` entries on every load regardless of query.
-- [ ] **B3 — Temporal-jitter promotion.** `/memory:promote` rewrites
-  `ts: ISO8601` to `ts_week: YYYY-Www` when writing to curated YAML;
-  retains exact `ts` only on intake JSONL (which can be pruned).
-  Defeats the session-context inference attack from council Round 2.
-- [ ] **B4 — Phase 2 council.** Run a fresh council pass against
-  the Phase 2 design before shipping. The Phase 1 council was
-  scoped to Phase 1; B1–B3 carry their own failure modes.
+**Status:** B2 + B3 + B4 shipped 2026-05-10. B1 explicitly deferred —
+its sub-gate (≥ 100 curated entries OR measured `/memory:load` latency
+> 1.5 s) has not fired and the council confirmed that a static line-cap
+on a near-empty index ships theatre.
 
-**Gate:** Phase 1 ships AND ≥ 100 curated entries exist in any
+- [-] **B1 — generated memory-index artifact.** *Deferred.* Council
+  Round 2 (`anthropic/claude-sonnet-4-5`) flagged the 200-line line-cap
+  as the wrong metric: the index is a human-browse artifact, not a
+  token-budget problem. Section-based density caps (by priority + tag)
+  would replace raw line caps when this is reactivated. **Sub-gate:**
+  reactivate when ≥ 100 curated entries exist in any consumer project,
+  OR `/memory:load` measured latency exceeds 1.5 s. Until then, file
+  walks are O(n) on a small n.
+- [x] **B2 — `priority: critical | normal | low` field.** Added as
+  optional frontmatter (default `normal`) per Phase 2 council
+  convergence. `scripts/check_memory.py` validates the enum, warns on
+  `critical-stale` (>90 days since `last_validated`), and warns on
+  tier-0 inflation (>10 active critical entries per type).
+  `/memory:load` surfaces the Tier-0 critical slice across all types
+  before the requested type-load. `/memory:promote` documents
+  pass-through with curator override allowed. Council rejected a
+  fourth `high` tier — the three-tier enum is the smallest set that
+  solves the always-surface use case.
+- [x] **B3 — Temporal-jitter promotion.** `/memory:promote` writes
+  `ts_week: YYYY-Www` (ISO-week) on curated entries. **Convention,
+  not validator-enforced** per council convergence — manual edits and
+  legacy entries without `ts_week` are accepted; back-fill is
+  explicitly discouraged. Intake JSONL retains exact `ts:` for the
+  pruning window. Defeats the session-context inference attack from
+  Phase 1 council Round 2.
+- [x] **B4 — Phase 2 council.** Two-round council
+  (`anthropic/claude-sonnet-4-5` + `openai/gpt-4o`) ran 2026-05-10
+  against the Phase 2 question brief. Convergence summary in the
+  decision log below; raw response transcript stays gitignored under
+  `agents/council-responses/` (treat as session artifact, not source).
+
+**Gate (legacy):** Phase 1 ships AND ≥ 100 curated entries exist in any
 consumer project, OR `/memory:load` measured latency exceeds 1.5 s.
+This gate originally guarded all of Phase 2; with B2/B3/B4 shipped, it
+now governs only B1.
 
 ## Phase 3 — Second TranscriptAdapter implementation (deferred)
 
@@ -225,6 +243,45 @@ mining, OR Phase 1 measured yield > 5 promoted entries / cycle.
 - **2026-05-10 — Temporal jitter adopted for Phase 2** (not
   Phase 1) to address the session-context inference attack from
   anthropic Round 2 New Point 2.
+- **2026-05-10 — Phase 2 partial ship (B2 + B3 + B4, B1 deferred).**
+  Re-triage flagged the original "all Phase 2 deferred" gate as
+  over-coupled. B2 (priority field) is schema-additive and useful at
+  any scale; B3 (temporal jitter) closes the Round 2 security finding
+  and should not wait for the volume gate. B1 (index generator)
+  remains gated on the original ≥ 100 entries / 1.5 s latency
+  trigger; council Round 2 added that section-based density caps
+  replace the line-cap when reactivated.
+- **2026-05-10 — Three-tier `priority` enum (`critical | normal |
+  low`).** Phase 2 council rejected a fourth `high` tier as
+  contract drift. The three-tier set is the smallest enum that
+  encodes "always surface", "query-matched", and "background only".
+- **2026-05-10 — `priority` validator uses warnings, not hard caps.**
+  Phase 2 council convergence: hard-block at >10 critical entries
+  punishes legitimate domains (heavily regulated, high-tenant). Warn
+  loudly, let the curator raise the threshold deliberately. Same
+  rationale for the 90-day `critical-stale` warning.
+- **2026-05-10 — `ts_week` is convention, not validator-enforced.**
+  Phase 2 council split: anthropic wanted soft-required, openai
+  flagged back-compat risk for legacy entries. Convergence: tooling
+  writes it on every promotion; validator does not check; manual
+  edits free to omit. Back-filling old entries explicitly discouraged
+  (would re-introduce the inference signal jitter is meant to remove).
+- **2026-05-10 — Phase 2 shipout: B1 + Phase 3 stay deferred.**
+  Second council pass on the ship-vs-push-against-gate question.
+  Both members converged on Option A. anthropic flagged that B1
+  cannot ship even if the gate were ignored — the section-based
+  density redesign is a known-wrong → unimplemented pivot, not just
+  a "while we're here" speedup; shipping today would lock the
+  rejected raw-line-cap design into consumer contracts. openai
+  framed it as gate-integrity discipline: features designed by an
+  earlier council pass keep their gate unless evidence contradicts
+  the gate, not just the absence of demand. anthropic's open
+  follow-up: Phase 3's gate is a two-condition OR including
+  measured Phase 1 yield > 5 promoted entries / cycle; that
+  condition is currently unmeasured (Phase 1 has zero curated
+  entries in this repo since memory is in a sibling package), so
+  the gate stays closed by default and gets revisited when the
+  yield signal is observable.
 
 ## Out-of-scope
 

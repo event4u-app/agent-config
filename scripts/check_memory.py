@@ -49,6 +49,19 @@ REQUIRED_KEYS = {
 }
 VALID_STATUS = {"active", "deprecated", "archived"}
 VALID_CONFIDENCE = {"low", "medium", "high"}
+# `priority` is optional (default `normal`); enum is the smallest set that
+# solves the tier-0 surfacing use case. See `road-to-dream-skill-adoption.md`
+# § B2 and the Phase 2 council brief for why the `high` tier was rejected.
+VALID_PRIORITY = {"critical", "normal", "low"}
+# Soft-cap on `priority: critical` entries per memory type. Tier-0 inflation
+# is the failure mode: when too many entries claim "always surface", the
+# slice loses signal. Warn (not fail) when the cap is exceeded so curators
+# notice without being blocked.
+CRITICAL_WARN_THRESHOLD = 10
+# Stale-critical guard: a `priority: critical` entry that hasn't been
+# re-validated in this many days emits a warning. Surfaced separately
+# from the generic `stale:` info so reviewers see it before merge.
+CRITICAL_STALE_DAYS = 90
 KNOWN_TYPES = {
     "domain-invariants", "architecture-decisions",
     "incident-learnings", "product-rules",
@@ -118,7 +131,13 @@ def _memory_type(path: Path) -> str:
     return stem[:-len(".example")] if stem.endswith(".example") else stem
 
 
-def _validate_entry(entry: dict, path: Path, seen_ids: set, findings: List[Finding]):
+def _validate_entry(
+    entry: dict,
+    path: Path,
+    seen_ids: set,
+    findings: List[Finding],
+    critical_counts: Optional[dict] = None,
+):
     eid = entry.get("id", "")
     missing = REQUIRED_KEYS - set(entry.keys())
     for key in sorted(missing):
@@ -129,6 +148,14 @@ def _validate_entry(entry: dict, path: Path, seen_ids: set, findings: List[Findi
     if entry.get("confidence") and entry["confidence"] not in VALID_CONFIDENCE:
         findings.append(Finding(str(path), 0, "error",
                                 f"invalid confidence '{entry['confidence']}'", eid))
+    # Priority is optional (defaults to `normal` at read time). When present
+    # it MUST be one of the three-tier enum — see VALID_PRIORITY for the
+    # rationale on rejecting a fourth `high` tier.
+    priority = entry.get("priority")
+    if priority is not None and priority not in VALID_PRIORITY:
+        findings.append(Finding(str(path), 0, "error",
+                                f"invalid priority '{priority}' "
+                                f"(expected one of {sorted(VALID_PRIORITY)})", eid))
     sources = entry.get("source") or []
     if not isinstance(sources, list) or len(sources) < 1:
         findings.append(Finding(str(path), 0, "error",
@@ -144,6 +171,26 @@ def _validate_entry(entry: dict, path: Path, seen_ids: set, findings: List[Findi
         if age > days and entry.get("status") == "active":
             findings.append(Finding(str(path), 0, "info",
                                     f"stale: last_validated {age} days ago (limit {days})", eid))
+    # Critical-stale guard: a `priority: critical` entry that has not been
+    # re-validated within CRITICAL_STALE_DAYS surfaces as a warning, even
+    # when the entry's own `review_after_days` is more lenient. Critical
+    # entries surface on every /memory:load — they have a tighter SLA.
+    if (
+        priority == "critical"
+        and entry.get("status") == "active"
+        and isinstance(lv, _dt.date)
+    ):
+        crit_age = (_dt.date.today() - lv).days
+        if crit_age > CRITICAL_STALE_DAYS:
+            findings.append(Finding(
+                str(path), 0, "warning",
+                f"critical-stale: last_validated {crit_age} days ago "
+                f"(critical SLA is {CRITICAL_STALE_DAYS} days)", eid))
+    # Tier-0 inflation tracking — increment per memory type. The aggregate
+    # warning is emitted in main() after all files are validated.
+    if critical_counts is not None and priority == "critical" and entry.get("status") == "active":
+        mtype = _memory_type(path)
+        critical_counts[mtype] = critical_counts.get(mtype, 0) + 1
 
 
 def _check_redaction(path: Path, findings: List[Finding]):
@@ -183,7 +230,11 @@ def _check_date_discipline(path: Path, findings: List[Finding]):
                 f"within ±{DATE_ANCHOR_WINDOW} chars (re-anchor before commit)"))
 
 
-def _validate_file(path: Path, findings: List[Finding]):
+def _validate_file(
+    path: Path,
+    findings: List[Finding],
+    critical_counts: Optional[dict] = None,
+):
     mtype = _memory_type(path)
     if mtype not in KNOWN_TYPES:
         findings.append(Finding(str(path), 0, "warning",
@@ -203,7 +254,7 @@ def _validate_file(path: Path, findings: List[Finding]):
     seen_ids: set = set()
     for entry in data.get("entries") or []:
         if isinstance(entry, dict):
-            _validate_entry(entry, path, seen_ids, findings)
+            _validate_entry(entry, path, seen_ids, findings, critical_counts)
 
 
 INTAKE_GLOB = "agents/memory/intake/*.jsonl"
@@ -356,8 +407,19 @@ def main() -> int:
         else:
             print(f"ℹ️  {root} not found — nothing to validate")
         return 0
+    critical_counts: dict = {}
     for yml in sorted(root.rglob("*.yml")):
-        _validate_file(yml, findings)
+        _validate_file(yml, findings, critical_counts)
+    # Tier-0 inflation warning — soft cap on `priority: critical` per type.
+    # Council convergence (Phase 2 B2): warn rather than block, because the
+    # right answer to "too many criticals" is curator review, not CI failure.
+    for mtype, count in sorted(critical_counts.items()):
+        if count > CRITICAL_WARN_THRESHOLD:
+            findings.append(Finding(
+                f"agents/memory/{mtype}", 0, "warning",
+                f"tier-0 inflation: {count} active 'priority: critical' "
+                f"entries (threshold {CRITICAL_WARN_THRESHOLD}) — review "
+                f"whether all still warrant always-surface treatment"))
     return _emit(findings, args.format)
 
 
