@@ -6,9 +6,12 @@ stability: experimental
 
 > **Status:** Active · covers Phase 1 (A1–A7) + Phase 2 (B1–B5) +
 > Phase 3 (C1–C4) + Phase 4 (D1–D4) + Phase 6 F1/F3 of
-> `road-to-mcp-server.md`. Phase 6 F2 (SSE transport) is deferred to
-> [`road-to-mcp-distribution.md`](../../agents/roadmaps/road-to-mcp-distribution.md)
-> and remains out of scope here.
+> `road-to-mcp-server.md`. Phase 6 F2 (SSE transport) is owned by
+> [`mcp-cloud-scope.md`](mcp-cloud-scope.md) — the hosted Cloudflare
+> Worker bridge per
+> [`road-to-cloudflare-mcp-hosting.md`](../../agents/roadmaps/road-to-cloudflare-mcp-hosting.md)
+> — and remains out of scope here. This contract retains exclusive
+> ownership of `scripts/mcp_server/` (local stdio).
 > **Stability:** experimental — not linked from README, AGENTS.md, or
 > `docs/architecture.md`. Internal index reference only per `STABILITY.md`.
 
@@ -187,4 +190,8 @@ prompts end-to-end without a contract amendment.
 
 ## See also
 
+- [`mcp-cloud-scope.md`](mcp-cloud-scope.md) — hosted Worker contract
+  (sibling, not child). Extends the bridge pattern from
+  [`mcp-request-signing § Appendix`](../guidelines/agent-infra/mcp-request-signing.md#appendix--http-bridge-stdio-kernel-pattern-reference)
+  for multi-tenant SSE.
 - [`STABILITY.md`](STABILITY.md) — stability policy for `docs/contracts/`.
