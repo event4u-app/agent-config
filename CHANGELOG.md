@@ -318,6 +318,40 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.35.0](https://github.com/event4u-app/agent-config/compare/1.34.0...1.35.0) (2026-05-10)
+
+### Features
+
+* **personas:** add three Wave-2 specialist personas ([fafe78c](https://github.com/event4u-app/agent-config/commit/fafe78cd1d6ec4aa7edb9e6ebbe8bc61f661818d))
+* **skills:** add four senior product/strategy skills ([35e399d](https://github.com/event4u-app/agent-config/commit/35e399d4a805217d4e01a70b8795583eb11b046e))
+* **skills:** promote decision-record and stakeholder-tradeoff to tier:senior ([dec2369](https://github.com/event4u-app/agent-config/commit/dec2369ec8e273b29d701ba72c9283b47d545732))
+* **lint:** enforce context_spine slot citation in skill bodies ([2283472](https://github.com/event4u-app/agent-config/commit/22834723003ce515f6067ec228f273e13bf71cb2))
+* **lint:** detect plate/horizon convention in lint-roadmap-complexity ([8dcd6c1](https://github.com/event4u-app/agent-config/commit/8dcd6c1c4d9f772df2495e114a1b1a03c64022dc))
+* **personas:** upgrade product-owner to senior specialist ([e46fdad](https://github.com/event4u-app/agent-config/commit/e46fdadfd9645de6f07ee7516d265760f739ba73))
+* **skills:** add senior customer-research and release-comms ([fb17b8f](https://github.com/event4u-app/agent-config/commit/fb17b8f1641cd26ceeb405537711bacd1059317d))
+* **contracts:** add context-spine, mental-models, and cross-role-handoff ([a8bd106](https://github.com/event4u-app/agent-config/commit/a8bd106e77a092da385461aec508a8959179559d))
+
+### Bug Fixes
+
+* **skills:** cite team spine slot in customer-research ([9279606](https://github.com/event4u-app/agent-config/commit/9279606fedc60377306c80a14c6379577233ce3d))
+* **skill:** drop unused 'team' slot from customer-research context_spine ([e581c66](https://github.com/event4u-app/agent-config/commit/e581c664237f23c9804bce95fd0e8436d33d8bec))
+* **context-spine:** drop transient roadmap references ([a2e17c7](https://github.com/event4u-app/agent-config/commit/a2e17c7ef287b89a92aa296f8eb519ced78e3dcd))
+
+### Chores
+
+* **sync:** refresh compression hashes after main merge ([2689a99](https://github.com/event4u-app/agent-config/commit/2689a9959c0d8f5bb0b00a8b4cbc73485b81086d))
+* **generate-tools:** register new skills + personas in distribution layers ([1c8081d](https://github.com/event4u-app/agent-config/commit/1c8081d54b14214ac5163986784af1f4e505aa7d))
+* **roadmap:** archive road-to-unified-senior-roles, refresh dashboard ([0f7a203](https://github.com/event4u-app/agent-config/commit/0f7a203c9f3a6cb97837db52906fa7bd6ff9134a))
+* **sync:** refresh compression hash for customer-research ([5296bd1](https://github.com/event4u-app/agent-config/commit/5296bd13976e105ff128a90de05de78183745f67))
+* **sync:** refresh compression hashes after roadmap-plate removal ([75d06e1](https://github.com/event4u-app/agent-config/commit/75d06e1ec33d9472fd8ae4a08f5efd526b577905))
+* **roadmaps:** strip plate/horizon framing from 7 active roadmaps ([186f98e](https://github.com/event4u-app/agent-config/commit/186f98e8fa3405927e5543c41f4ce797b46eaedf))
+* **infra:** drop horizon-marker handling from process-loop and process-full ([9f9b968](https://github.com/event4u-app/agent-config/commit/9f9b9681f9b9d21305a69e3c413dc4b8ff7d5a9a))
+* **template:** forbid time-boxed plates in roadmap template (rule 16) ([12748c2](https://github.com/event4u-app/agent-config/commit/12748c2e3354e324b2d4b889ecda5655f3286738))
+* **ownership:** regenerate ownership matrix ([33d3775](https://github.com/event4u-app/agent-config/commit/33d37755e4af051df73cfae6b6c6ccc4981202e1))
+* **sync:** regenerate counts, hashes, and roadmap progress ([e4397f8](https://github.com/event4u-app/agent-config/commit/e4397f83bf5c5b10c47f926a4eb605d8e6074063))
+
+Tests: 2606 (+0 since 1.34.0)
+
 ## [1.34.0](https://github.com/event4u-app/agent-config/compare/1.33.0...1.34.0) (2026-05-10)
 
 ### Features
