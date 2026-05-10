@@ -67,6 +67,15 @@
       "enum": ["deep"],
       "description": "Optional reasoning-depth marker for AI Council invocations triggered by this skill. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis skills. See .agent-src.uncompressed/skills/ai-council/SKILL.md."
     },
+    "context_spine": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "enum": ["product", "team", "repo"]
+      },
+      "description": "Senior-skill opt-in for the tri-slot context spine. Declares which slots under agents/context-spine/ the skill expects to read (product, team, repo). Council Q1 (KEEP-3) locks the slot count at 3; additions require ≥ 2 citing skills + ADR per docs/contracts/context-spine.md § 5."
+    },
     "execution": {
       "type": "object",
       "additionalProperties": false,
