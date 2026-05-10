@@ -65,16 +65,16 @@ no consumer code execution surface · single deployment per release.
 
 ## Phase 1 — A0-cloud contract
 
-- [ ] **1.1** Write `docs/contracts/mcp-cloud-scope.md` with: Worker
+- [x] **1.1** Write `docs/contracts/mcp-cloud-scope.md` with: Worker
   invariants (allowlisted origins, no DO writes outside `releases/`,
   no `subrequest` to consumer infra), R2-key shape (`releases/v<X.Y.Z>-<sha>/`),
   immutability guarantee per versioned URL, cache-TTL policy (1h
   pinned, 5min `latest`), deprecated-tool stub contract, MVP-2 wake-up
   triggers.
-- [ ] **1.2** Amend `docs/contracts/mcp-phase-1-scope.md` with a
+- [x] **1.2** Amend `docs/contracts/mcp-phase-1-scope.md` with a
   one-line Phase-7 pointer to `mcp-cloud-scope.md`. Phase-1 contract
   retains local-stdio ownership; cloud doc owns hosted.
-- [ ] **1.3** Cross-link from `mcp-request-signing § Appendix` to
+- [x] **1.3** Cross-link from `mcp-request-signing § Appendix` to
   the cloud contract (the Worker is the bridge that appendix
   describes).
 
