@@ -1,12 +1,22 @@
 """MCP Server — registers `prompts/list` + `prompts/get` over stdio.
 
-Phase 1 boundary (A0 Hard Contract): read-only. No `tools/*`,
-`resources/*` (deferred to Phase 3), or filesystem writes. The server
-loads SKILL.md content once at boot — hot-reload is Phase 2.
+Phase 2 boundary (A0 Hard Contract still holds): read-only. No
+`tools/*`, no `resources/*` (deferred to Phase 3), no filesystem
+writes. New in Phase 2:
+
+- **B1/B2** full skills + commands coverage via `PromptCache`.
+- **B4** cursor-based pagination on `prompts/list`.
+- **B5** hot-reload — `PromptCache` re-scans on mtime change before
+  each `prompts/list` response.
+
+`build_server` still accepts a plain `list[SkillPrompt]` so the
+Phase-1 contract tests keep passing without touching their fixtures.
 """
 from __future__ import annotations
 
 import asyncio
+import sys
+from typing import Callable, Union
 
 import mcp.types as types
 from mcp.server import NotificationOptions, Server
@@ -15,45 +25,88 @@ from mcp.server.stdio import stdio_server
 
 from . import SERVER_NAME, __version__
 from .prompts import (
+    PromptCache,
     SkillPrompt,
-    load_phase_1_prompts,
     to_mcp_prompt_meta,
 )
 
-PROMPT_NAME_PREFIX = "skill."
+# Page size for cursor-based pagination. Conservative default —
+# Claude Desktop and Zed handle larger pages, but small pages keep
+# wire payloads under typical stdio frame limits.
+DEFAULT_PAGE_SIZE = 100
+
+PromptsSource = Union[
+    list[SkillPrompt],
+    Callable[[], tuple[list[SkillPrompt], list[str]]],
+]
 
 
-def _index_by_mcp_name(prompts: list[SkillPrompt]) -> dict[str, SkillPrompt]:
-    return {f"{PROMPT_NAME_PREFIX}{p.name}": p for p in prompts}
+def _make_loader(
+    source: PromptsSource,
+) -> Callable[[], tuple[list[SkillPrompt], list[str]]]:
+    """Normalise to a callable returning `(prompts, errors)`."""
+    if callable(source):
+        return source
+    static = list(source)
+    return lambda: (static, [])
 
 
-def build_server(prompts: list[SkillPrompt]) -> Server:
-    """Construct the MCP Server, registering Phase 1 handlers.
+def _decode_cursor(cursor: str | None, total: int) -> int:
+    """Cursor is a stringified integer offset. Invalid → start at 0."""
+    if cursor is None:
+        return 0
+    try:
+        offset = int(cursor)
+    except (TypeError, ValueError):
+        return 0
+    if offset < 0 or offset > total:
+        return 0
+    return offset
 
-    Pure factory — no I/O. Tests in `tests/test_mcp_server.py` call
-    this with a fixture-loaded prompt list to exercise handlers without
-    a stdio loop.
+
+def build_server(
+    source: PromptsSource,
+    *,
+    page_size: int = DEFAULT_PAGE_SIZE,
+) -> Server:
+    """Construct the MCP Server with the new-style paginated handler.
+
+    Pure factory — no I/O. Tests pass a static list; the stdio
+    entrypoint passes a `PromptCache.get` callable for hot-reload.
     """
+    loader = _make_loader(source)
     server: Server = Server(
         name=SERVER_NAME,
         version=__version__,
         instructions=(
-            "agent-config MCP server (Phase 1, experimental). Exposes "
-            "5 stack-agnostic skills as instructional prompts. Read-only."
+            "agent-config MCP server (Phase 2, experimental). Exposes "
+            "all skills + commands as instructional prompts. Read-only."
         ),
     )
-    by_name = _index_by_mcp_name(prompts)
 
     @server.list_prompts()
-    async def _list_prompts() -> list[types.Prompt]:
-        return [types.Prompt(**to_mcp_prompt_meta(p)) for p in prompts]
+    async def _list_prompts(
+        req: types.ListPromptsRequest,
+    ) -> types.ListPromptsResult:
+        prompts, _errors = loader()
+        cursor = req.params.cursor if req.params else None
+        start = _decode_cursor(cursor, len(prompts))
+        end = start + page_size
+        page = prompts[start:end]
+        next_cursor: str | None = str(end) if end < len(prompts) else None
+        return types.ListPromptsResult(
+            prompts=[types.Prompt(**to_mcp_prompt_meta(p)) for p in page],
+            nextCursor=next_cursor,
+        )
 
     @server.get_prompt()
     async def _get_prompt(
         name: str,
         arguments: dict[str, str] | None = None,
     ) -> types.GetPromptResult:
-        prompt = by_name.get(name)
+        prompts, _errors = loader()
+        index = {to_mcp_prompt_meta(p)["name"]: p for p in prompts}
+        prompt = index.get(name)
         if prompt is None:
             raise ValueError(f"Unknown prompt: {name}")
         return types.GetPromptResult(
@@ -73,9 +126,17 @@ def build_server(prompts: list[SkillPrompt]) -> Server:
 
 
 async def run_stdio() -> None:
-    """Entrypoint — load prompts, run server over stdio until EOF."""
-    prompts = load_phase_1_prompts()
-    server = build_server(prompts)
+    """Entrypoint — load prompts via cache, run server over stdio."""
+    cache = PromptCache()
+    prompts, errors = cache.get()
+    for line in errors:
+        print(f"mcp-server: warn: {line}", file=sys.stderr)
+    print(
+        f"mcp-server: loaded {len(prompts)} prompts "
+        f"({len(errors)} warnings)",
+        file=sys.stderr,
+    )
+    server = build_server(cache.get)
     init_options = InitializationOptions(
         server_name=SERVER_NAME,
         server_version=__version__,
