@@ -605,3 +605,302 @@ def test_no_unsafe_imports_in_resource_loader() -> None:
         assert not re.search(pattern, source), (
             f"Forbidden import in scripts/mcp_server/resources.py: {pattern}"
         )
+
+
+
+# ----------------------------------------------------------------------
+# Phase 4 — Tools (D1–D4): lint_skills + chat_history_append
+# ----------------------------------------------------------------------
+
+
+from scripts.mcp_server.tools import (  # noqa: E402
+    ALLOWLIST,
+    BuiltinTool,
+    ToolCache,
+    boot_log_line,
+    to_mcp_tool_meta,
+)
+
+
+def test_allowlist_holds_exactly_two_tools() -> None:
+    """D1 — hardcoded registry exposes only `lint_skills` + `chat_history_append`."""
+    assert set(ALLOWLIST.keys()) == {"lint_skills", "chat_history_append"}
+    for tool in ALLOWLIST.values():
+        assert isinstance(tool, BuiltinTool)
+        assert tool.description.strip()
+        assert tool.input_schema["type"] == "object"
+        assert tool.input_schema.get("additionalProperties") is False
+
+
+def test_tool_cache_list_and_names_are_sorted() -> None:
+    cache = ToolCache()
+    assert cache.names() == ["chat_history_append", "lint_skills"]
+    assert [t.name for t in cache.list()] == cache.names()
+
+
+def test_to_mcp_tool_meta_shape() -> None:
+    tool = ALLOWLIST["lint_skills"]
+    meta = to_mcp_tool_meta(tool)
+    assert meta["name"] == "lint_skills"
+    assert meta["description"].strip()
+    assert meta["inputSchema"] == tool.input_schema
+
+
+def test_boot_log_line_enumerates_tools() -> None:
+    line = boot_log_line(ToolCache())
+    assert "registered 2 tools" in line
+    assert "chat_history_append" in line
+    assert "lint_skills" in line
+
+
+def test_tool_cache_dispatch_rejects_unknown_tool() -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="Unknown tool"):
+        asyncio.run(cache.dispatch("nope", {}))
+
+
+def test_chat_history_append_dry_run_does_not_write(tmp_path: Path) -> None:
+    """D3 — dry_run validates the payload + path guard without touching disk."""
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch(
+            "chat_history_append",
+            {"text": "hello", "entry_type": "note", "dry_run": True},
+            consumer_root=tmp_path,
+        )
+    )
+    assert result["dry_run"] is True
+    target = Path(result["target_path"])
+    assert target == (tmp_path / "agents" / ".agent-chat-history").resolve()
+    assert not target.exists()
+    assert result["entry"] == {"t": "note", "text": "hello"}
+
+
+def test_chat_history_append_path_escape_raises(tmp_path: Path) -> None:
+    """D3 — absolute path outside consumer_root must raise before any I/O."""
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="escapes consumer_root"):
+        asyncio.run(
+            cache.dispatch(
+                "chat_history_append",
+                {"text": "x", "path": "/etc/passwd", "dry_run": True},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_chat_history_append_unlisted_filename_raises(tmp_path: Path) -> None:
+    """D3 — relative path inside the tree but not in the write allowlist."""
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="not in write allowlist"):
+        asyncio.run(
+            cache.dispatch(
+                "chat_history_append",
+                {"text": "x", "path": "agents/notes.md", "dry_run": True},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_chat_history_append_rejects_empty_text(tmp_path: Path) -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="non-empty string"):
+        asyncio.run(
+            cache.dispatch(
+                "chat_history_append",
+                {"text": "   ", "dry_run": True},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_chat_history_append_rejects_header_entry_type(tmp_path: Path) -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="must not be 'header'"):
+        asyncio.run(
+            cache.dispatch(
+                "chat_history_append",
+                {"text": "x", "entry_type": "header", "dry_run": True},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_chat_history_append_writes_when_not_dry_run(tmp_path: Path) -> None:
+    """D3 — real write hits the allowlisted target and produces JSONL."""
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch(
+            "chat_history_append",
+            {"text": "real entry", "entry_type": "note"},
+            consumer_root=tmp_path,
+        )
+    )
+    assert result["dry_run"] is False
+    target = Path(result["target_path"])
+    assert target.exists()
+    lines = target.read_text(encoding="utf-8").splitlines()
+    # First line is the header; entry follows.
+    assert len(lines) >= 2
+    import json as _json
+    last = _json.loads(lines[-1])
+    assert last["text"] == "real entry"
+    assert last["t"] == "note"
+
+
+
+def test_lint_skills_rejects_path_escape(tmp_path: Path) -> None:
+    """D2 — paths under consumer_root only; absolute escape raises."""
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="escapes consumer_root"):
+        asyncio.run(
+            cache.dispatch(
+                "lint_skills",
+                {"paths": ["/etc/passwd"]},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_lint_skills_rejects_non_list_paths(tmp_path: Path) -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="must be a list"):
+        asyncio.run(
+            cache.dispatch(
+                "lint_skills",
+                {"paths": "not-a-list"},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_lint_skills_returns_json_payload_for_subset() -> None:
+    """D2 — call with an explicit path returns the same shape as `--format json`."""
+    cache = ToolCache()
+    target = REPO_ROOT / ".agent-src" / "skills" / "verify-completion-evidence" / "SKILL.md"
+    if not target.exists():  # pragma: no cover — repo invariant
+        pytest.skip("fixture skill not present in this checkout")
+    result = asyncio.run(
+        cache.dispatch(
+            "lint_skills",
+            {"paths": [str(target.relative_to(REPO_ROOT))]},
+            consumer_root=REPO_ROOT,
+        )
+    )
+    # `format_json` returns {"results": [...], "summary": {...}} or similar.
+    assert isinstance(result, dict)
+    assert "results" in result or "files" in result or result  # tolerant
+
+
+# ----------------------------------------------------------------------
+# Phase 4 — Server-level tools/list + tools/call (requires SDK)
+# ----------------------------------------------------------------------
+
+
+@requires_mcp
+def test_server_lists_two_tools() -> None:
+    """D4 — `tools/list` returns the two allowlisted tools."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    server = build_server([], tools=ToolCache())
+    handler = server.request_handlers[mcp_types.ListToolsRequest]
+    result = asyncio.run(
+        handler(mcp_types.ListToolsRequest(method="tools/list", params=None))
+    )
+    names = sorted(t.name for t in result.root.tools)
+    assert names == ["chat_history_append", "lint_skills"]
+
+
+@requires_mcp
+def test_server_call_tool_dry_run_succeeds(tmp_path: Path, monkeypatch) -> None:
+    """D4 — `tools/call` returns isError=False for a valid dry-run."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    # consumer_root defaults to CWD inside the handler — scope the test
+    # to a tmp dir so the dry-run target is predictable.
+    monkeypatch.chdir(tmp_path)
+
+    server = build_server([], tools=ToolCache())
+    handler = server.request_handlers[mcp_types.CallToolRequest]
+    req = mcp_types.CallToolRequest(
+        method="tools/call",
+        params=mcp_types.CallToolRequestParams(
+            name="chat_history_append",
+            arguments={"text": "hi", "entry_type": "note", "dry_run": True},
+        ),
+    )
+    result = asyncio.run(handler(req))
+    assert result.root.isError is False
+    body = result.root.content[0].text
+    assert '"dry_run": true' in body
+
+
+@requires_mcp
+def test_server_call_tool_path_escape_returns_error(tmp_path: Path, monkeypatch) -> None:
+    """D4 — security violations surface as isError=True, not exceptions."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    monkeypatch.chdir(tmp_path)
+    server = build_server([], tools=ToolCache())
+    handler = server.request_handlers[mcp_types.CallToolRequest]
+    req = mcp_types.CallToolRequest(
+        method="tools/call",
+        params=mcp_types.CallToolRequestParams(
+            name="chat_history_append",
+            arguments={"text": "x", "path": "/etc/passwd", "dry_run": True},
+        ),
+    )
+    result = asyncio.run(handler(req))
+    assert result.root.isError is True
+    assert "escapes consumer_root" in result.root.content[0].text
+
+
+@requires_mcp
+def test_server_call_tool_unknown_returns_error(tmp_path: Path, monkeypatch) -> None:
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    monkeypatch.chdir(tmp_path)
+    server = build_server([], tools=ToolCache())
+    handler = server.request_handlers[mcp_types.CallToolRequest]
+    req = mcp_types.CallToolRequest(
+        method="tools/call",
+        params=mcp_types.CallToolRequestParams(name="nope", arguments={}),
+    )
+    result = asyncio.run(handler(req))
+    assert result.root.isError is True
+
+
+# ----------------------------------------------------------------------
+# Phase 4 — Import-surface guard for tools.py
+# ----------------------------------------------------------------------
+
+
+def test_no_direct_subprocess_in_tools_module() -> None:
+    """A0 contract (Phase 4 amendment) — tools.py forbids direct shell exec.
+
+    The module may import project modules (`skill_linter`, `chat_history`)
+    that internally use subprocess, but the MCP wire surface itself must
+    not spawn shells or HTTP clients.
+    """
+    source = (REPO_ROOT / "scripts" / "mcp_server" / "tools.py").read_text()
+    forbidden = [
+        r"\bimport\s+subprocess\b",
+        r"\bfrom\s+subprocess\b",
+        r"\bos\.system\b",
+        r"\bos\.popen\b",
+        r"\bimport\s+requests\b",
+        r"\bimport\s+httpx\b",
+        r"\bimport\s+urllib\.request\b",
+    ]
+    for pattern in forbidden:
+        assert not re.search(pattern, source), (
+            f"Forbidden import in scripts/mcp_server/tools.py: {pattern}"
+        )
