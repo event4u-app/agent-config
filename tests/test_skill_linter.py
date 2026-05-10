@@ -1830,3 +1830,21 @@ def test_persona_id_must_match_filename(tmp_path: Path) -> None:
     )
     result = lint_file(path)
     assert any(i.code == "id_filename_mismatch" for i in result.issues)
+
+
+def test_format_json_emits_valid_payload_for_empty_results() -> None:
+    """Regression: --changed --format json with no matching files must still
+    produce parseable JSON so PR-summary workflows don't fail with
+    'Could not parse lint results'."""
+    import json as _json
+
+    from skill_linter import format_json
+
+    payload = _json.loads(format_json([]))
+    assert payload["summary"] == {
+        "pass": 0,
+        "pass_with_warnings": 0,
+        "fail": 0,
+        "total": 0,
+    }
+    assert payload["results"] == []
