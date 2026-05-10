@@ -1981,7 +1981,7 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 - NEVER create / switch / delete a branch without explicit permission — includes spike, scratch, throwaway, worktree branches.
 - NEVER create, close, reopen, or change the target of a pull request without permission.
 - NEVER push a tag or create a release without permission.
-- NEVER include version numbers, target releases, deprecation dates, release-tied milestones, or git tags in roadmaps, plans, tickets, or any planning artifact. Roadmaps plan **work**; releases / tags are a separate decision. User pins by saying so explicitly.
+- NEVER pin versions, release targets, deprecation dates, or git tags in roadmaps / plans / tickets — they plan **work**, not releases. Detail: [`scope-mechanics § Roadmap shape`](../contexts/authority/scope-mechanics.md).
 - Task seems to need a separate branch / PR → STOP and **brief before asking** ([`scope-mechanics § Brief-before-asking`](../contexts/authority/scope-mechanics.md)).
 - BEFORE the first commit on related work, **inventory** existing branches and open PRs. Plausible base beyond the current branch → STOP and ask with numbered options — never improvise. Commands + 4-option template + diverging-stack failure mode: [`scope-mechanics § Branch-base inventory`](../contexts/authority/scope-mechanics.md).
 
@@ -2002,7 +2002,7 @@ A subset is **never** autonomous, regardless of standing autonomy. Canonical: [`
 
 ## Kernel-rule edits — slow-rollout guarantee
 
-Each kernel-rule edit ships in **its own PR**, ≥ 24 h between merges. Autonomous mandate does NOT lift this — soak guarantee, not preference. CI fails > 1 kernel rule per PR unless labeled `bundled-always-rules-acknowledged`. Trigger / scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
+Own PR, ≥ 24 h between merges. Autonomous mandate does not lift — soak guarantee. CI / labels / scope: [`kernel-rule-edits`](../contexts/authority/kernel-rule-edits.md).
 
 ## Decline = silence — no re-asking on the same task
 
@@ -2010,14 +2010,12 @@ After the user **declines** a proposal (branch switch, PR creation, tag/release,
 
 ## Fenced step — user-set review gates
 
-User fences next step (*"plan only"*, *"review first"*, German equivalents) → reply is **deliverable + handoff**, never *"shall we start?"*.
-
 ```
 USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
 NO "READY TO IMPLEMENT?" / "PHASE 1?" RE-ASK.
 ```
 
-Fence stands until reopened (like `Decline = silence`). Follow-ups cover **the deliverable**, never its execution. Failure modes + bypass: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
+Fence (*"plan only"*, *"review first"*, German equivalents) stands until reopened — like `Decline = silence`. Follow-ups cover the deliverable, not its execution. Failure modes + bypass: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
 
 ---
 
