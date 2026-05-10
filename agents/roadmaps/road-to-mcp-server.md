@@ -4,10 +4,10 @@ complexity: lightweight
 
 # Road to MCP Server
 
-**Status:** Phase 1 + 2 + 3 + 5 done — Phase 4 + 6 capture-only.
+**Status:** Phase 1 + 2 + 3 + 4 + 5 done — Phase 6 capture-only.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4+ stay capture-only.
+**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4 (D1–D4) executed 2026-05-10 after AI Council Design Call D1 locked the security boundary. Phase 6 stays capture-only.
 
 ## Purpose
 
@@ -112,10 +112,10 @@ Estimated effort: 1-2 dev days, gated on SDK verification.
 Highest-risk phase — exposing tools means real side effects on the consumer's
 filesystem. Design call needed before writing code.
 
-- [ ] **D1** — Decision call: which `work_engine` surface is safe to expose? Probably read-only first (`refine` step output without commit), never `apply`.
-- [ ] **D2** — `lint_skills` as MCP tool — pure read, safe.
-- [ ] **D3** — `chat_history.append` as MCP tool — writes a project file. Needs explicit user consent in MCP client UI.
-- [ ] **D4** — Allowlist enforced at server boot: tools not in allowlist are unreachable, not just unlisted.
+- [x] **D1** — Decision call: which `work_engine` surface is safe to expose? _Done 2026-05-10 — AI Council Design Call captured in `agents/council-questions/mcp-phase-4-tools.md` + verdict in `agents/council-responses/mcp-phase-4-tools-verdict.md`. **Verdict: `work_engine` not exposed in Phase 4.** Only two narrow, hardcoded tools land: `lint_skills` (D2) and `chat_history_append` (D3). `refine` step output stays out of scope — it would couple MCP wire to engine state, which is the exact coupling Phase 1 A0 forbade._
+- [x] **D2** — `lint_skills` as MCP tool — pure read, safe. _Done 2026-05-10 — `scripts/mcp_server/tools.py::_lint_skills_handler` wraps `scripts.skill_linter.lint_file` directly (no `--changed` git mode). Path-scoped via `_validate_in_tree_path`. Returns same JSON shape as `scripts/skill_linter.py --format json`._
+- [x] **D3** — `chat_history.append` as MCP tool — writes a project file. _Done 2026-05-10 — `_chat_history_append_handler` wraps `scripts.chat_history.append` with strict write allowlist (`agents/.agent-chat-history` or `.agent-chat-history` under `<consumer_root>` only). `dry_run=True` validates without touching the filesystem. Lazy-inits header when file missing. Explicit user consent surfaces via MCP client UI per protocol — no extra gate needed on server side._
+- [x] **D4** — Allowlist enforced at server boot: tools not in allowlist are unreachable, not just unlisted. _Done 2026-05-10 — `ALLOWLIST` is a hardcoded module-level tuple in `tools.py`; no settings flag, no env var, no dynamic registration. `tools/call` against an unlisted name returns `isError=True` from the dispatcher. `run_stdio` enumerates registered tools on stderr at boot. 9 new tests in `tests/test_mcp_server.py` (48/48 green) cover listing, dispatch, path-escape, unknown-tool, and import-surface guard. Contract amended in `docs/contracts/mcp-phase-1-scope.md` (Phase 4 amendment section)._
 
 ## Phase 5 — Real setup docs (the deliverable from option 3)
 
