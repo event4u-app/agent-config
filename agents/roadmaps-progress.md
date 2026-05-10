@@ -6,10 +6,10 @@
 
 ## Overall
 
-**8 / 160 steps done · 5%**
+**11 / 159 steps done · 7%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 13 | 13 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-dream-skill-adoption.md](roadmaps/road-to-dream-skill-adoption.md) | 3 | 15 | 7 | 8 | 0 | 0 | █████░░░░░ 53% |
+| 2 | [road-to-dream-skill-adoption.md](roadmaps/road-to-dream-skill-adoption.md) | 3 | 15 | 3 | 11 | 0 | 1 | ████████░░ 79% |
 | 3 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-mcp-server.md](roadmaps/road-to-mcp-server.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -41,12 +41,12 @@
 
 ### [road-to-dream-skill-adoption.md](roadmaps/road-to-dream-skill-adoption.md)
 
-**Road to dream-skill adoption** — 8 / 15 done (53%)
+**Road to dream-skill adoption** — 11 / 14 done (79%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Ship the skill + sub-command + date linter (READY) | ✅ done | 0 | 8 | 0 | 0 | 100% |
-| 2 | Generated index + critical-priority tier + temporal jitter (deferred) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | Generated index + critical-priority tier + temporal jitter (partial) | ✅ done | 0 | 3 | 0 | 1 | 100% |
 | 3 | Second TranscriptAdapter implementation (deferred) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md)
