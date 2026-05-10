@@ -23,9 +23,13 @@ import pytest
 
 from scripts.mcp_server.prompts import (
     PHASE_1_SKILLS,
+    PromptCache,
     SkillPrompt,
+    load_all_prompts,
     load_phase_1_prompts,
     load_skill,
+    scan_commands,
+    scan_skills,
     to_mcp_prompt_meta,
 )
 
@@ -72,19 +76,126 @@ def test_load_skill_missing_raises() -> None:
         load_skill("definitely-not-a-skill-12345")
 
 
-def test_to_mcp_prompt_meta_shape() -> None:
+def test_to_mcp_prompt_meta_shape_for_skill() -> None:
     prompt = SkillPrompt(
         name="example",
         description="desc",
         body="body",
         source="package",
+        kind="skill",
     )
     meta = to_mcp_prompt_meta(prompt)
     assert meta["name"] == "skill.example"
     assert meta["title"] == "example"
     assert meta["description"] == "desc"
     assert meta["arguments"] == []
-    assert meta["_meta"] == {"source": "package"}
+    assert meta["_meta"] == {"source": "package", "kind": "skill"}
+
+
+def test_to_mcp_prompt_meta_shape_for_command() -> None:
+    """Command names use `:` in frontmatter; wire form converts to `.`."""
+    prompt = SkillPrompt(
+        name="research:report",
+        description="desc",
+        body="body",
+        source="package",
+        kind="command",
+    )
+    meta = to_mcp_prompt_meta(prompt)
+    assert meta["name"] == "command.research.report"
+    assert meta["title"] == "research:report"
+    assert meta["_meta"] == {"source": "package", "kind": "command"}
+
+
+# ----------------------------------------------------------------------
+# Phase 2 — scan_skills, scan_commands, load_all_prompts, PromptCache
+# ----------------------------------------------------------------------
+
+
+def test_scan_skills_finds_all_skill_md() -> None:
+    prompts, errors = scan_skills()
+    assert errors == [], f"unexpected loader errors: {errors}"
+    assert len(prompts) > 100, "expected >100 skills under .agent-src/skills/"
+    for prompt in prompts:
+        assert prompt.kind == "skill"
+        assert prompt.description.strip()
+        assert prompt.body.strip()
+
+
+def test_scan_commands_finds_nested_commands() -> None:
+    prompts, errors = scan_commands()
+    assert errors == [], f"unexpected loader errors: {errors}"
+    assert len(prompts) > 50, "expected >50 commands under .agent-src/commands/"
+    names = {p.name for p in prompts}
+    # Nested commands keep the `cluster:sub` shape from frontmatter.
+    assert any(":" in n for n in names), "expected at least one nested command"
+    for prompt in prompts:
+        assert prompt.kind == "command"
+
+
+def test_load_all_prompts_returns_sorted_unique() -> None:
+    prompts, _errors = load_all_prompts()
+    wire_names = [to_mcp_prompt_meta(p)["name"] for p in prompts]
+    assert wire_names == sorted(wire_names), "prompts must be sorted by wire name"
+    assert len(wire_names) == len(set(wire_names)), "wire names must be unique"
+
+
+def test_load_all_prompts_skips_malformed(tmp_path: Path) -> None:
+    """B3 — malformed frontmatter is logged, not fatal."""
+    skills = tmp_path / ".agent-src" / "skills"
+    good = skills / "good-skill"
+    good.mkdir(parents=True)
+    (good / "SKILL.md").write_text(
+        '---\nname: good-skill\ndescription: "OK"\n---\nbody\n',
+        encoding="utf-8",
+    )
+    bad = skills / "no-description"
+    bad.mkdir(parents=True)
+    (bad / "SKILL.md").write_text(
+        "---\nname: no-description\n---\nbody\n",
+        encoding="utf-8",
+    )
+    prompts, errors = load_all_prompts(root=tmp_path)
+    assert [p.name for p in prompts] == ["good-skill"]
+    assert any("missing frontmatter description" in e for e in errors)
+
+
+def test_prompt_cache_hot_reloads_on_mtime_change(tmp_path: Path) -> None:
+    """B5 — PromptCache re-scans when SKILL.md mtime changes."""
+    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    skill_md = skill_dir / "SKILL.md"
+    skill_md.write_text(
+        '---\nname: demo\ndescription: "v1"\n---\nbody-v1\n',
+        encoding="utf-8",
+    )
+    cache = PromptCache(root=tmp_path)
+    prompts1, _ = cache.get()
+    assert prompts1[0].description == "v1"
+
+    # Bump mtime forward (filesystems on macOS / Linux have ≥1s resolution).
+    skill_md.write_text(
+        '---\nname: demo\ndescription: "v2"\n---\nbody-v2\n',
+        encoding="utf-8",
+    )
+    import os
+    future = skill_md.stat().st_mtime + 2
+    os.utime(skill_md, (future, future))
+
+    prompts2, _ = cache.get()
+    assert prompts2[0].description == "v2"
+
+
+def test_prompt_cache_lookup_uses_wire_name(tmp_path: Path) -> None:
+    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text(
+        '---\nname: demo\ndescription: "desc"\n---\nbody\n',
+        encoding="utf-8",
+    )
+    cache = PromptCache(root=tmp_path)
+    assert cache.lookup("skill.demo") is not None
+    assert cache.lookup("skill.missing") is None
 
 
 # ----------------------------------------------------------------------
@@ -206,3 +317,97 @@ def test_server_get_prompt_unknown_name_errors() -> None:
     # in-process handler boundary we observe the bare exception.
     with pytest.raises(ValueError, match="Unknown prompt"):
         asyncio.run(handler(request))
+
+
+# ----------------------------------------------------------------------
+# Phase 2 — full-coverage server, pagination (B4), cache-backed loader (B5)
+# ----------------------------------------------------------------------
+
+
+@requires_mcp
+def test_server_lists_all_prompts_skill_and_command() -> None:
+    """B1/B2 — full-coverage list includes both skills and commands."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    prompts, _ = load_all_prompts()
+    server = build_server(prompts, page_size=10_000)
+    handler = server.request_handlers[mcp_types.ListPromptsRequest]
+
+    request = mcp_types.ListPromptsRequest(method="prompts/list", params=None)
+    result = asyncio.run(handler(request))
+
+    names = [p.name for p in result.root.prompts]
+    assert any(n.startswith("skill.") for n in names)
+    assert any(n.startswith("command.") for n in names)
+    assert len(names) == len(prompts)
+
+
+@requires_mcp
+def test_server_list_prompts_paginates_with_cursor() -> None:
+    """B4 — cursor-based pagination returns nextCursor on the wire."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    prompts, _ = load_all_prompts()
+    server = build_server(prompts, page_size=5)
+    handler = server.request_handlers[mcp_types.ListPromptsRequest]
+
+    seen: list[str] = []
+    cursor: str | None = None
+    pages = 0
+    while True:
+        params = mcp_types.PaginatedRequestParams(cursor=cursor)
+        request = mcp_types.ListPromptsRequest(
+            method="prompts/list", params=params
+        )
+        result = asyncio.run(handler(request))
+        page = result.root.prompts
+        assert len(page) <= 5
+        seen.extend(p.name for p in page)
+        cursor = result.root.nextCursor
+        pages += 1
+        if cursor is None:
+            break
+        assert pages < 1000, "pagination did not terminate"
+    assert pages > 1, "expected multiple pages at page_size=5"
+    assert len(seen) == len(prompts)
+    assert len(set(seen)) == len(seen), "pages must not overlap"
+
+
+@requires_mcp
+def test_server_accepts_loader_callable_for_hot_reload(tmp_path: Path) -> None:
+    """build_server accepts a `() -> (prompts, errors)` callable (B5 hook)."""
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    skill_dir = tmp_path / ".agent-src" / "skills" / "demo"
+    skill_dir.mkdir(parents=True)
+    skill_md = skill_dir / "SKILL.md"
+    skill_md.write_text(
+        '---\nname: demo\ndescription: "v1"\n---\nbody-v1\n',
+        encoding="utf-8",
+    )
+    cache = PromptCache(root=tmp_path)
+    server = build_server(cache.get, page_size=100)
+    handler = server.request_handlers[mcp_types.ListPromptsRequest]
+
+    request = mcp_types.ListPromptsRequest(method="prompts/list", params=None)
+    result1 = asyncio.run(handler(request))
+    descriptions1 = [p.description for p in result1.root.prompts]
+    assert descriptions1 == ["v1"]
+
+    skill_md.write_text(
+        '---\nname: demo\ndescription: "v2"\n---\nbody-v2\n',
+        encoding="utf-8",
+    )
+    import os
+    future = skill_md.stat().st_mtime + 2
+    os.utime(skill_md, (future, future))
+
+    result2 = asyncio.run(handler(request))
+    descriptions2 = [p.description for p in result2.root.prompts]
+    assert descriptions2 == ["v2"]
