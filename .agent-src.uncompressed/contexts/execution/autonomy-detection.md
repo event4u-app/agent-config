@@ -12,15 +12,15 @@ when the user expresses **"stop asking on trivial steps, just work"**.
 The LLM recognizes the **intent**, not a literal substring, and
 understands the semantic equivalent in either language.
 
-## Litmus test — standing permission vs single-decision delegation
+## Litmus test — three shapes, only one flips standing mode
 
-| Question | Outcome |
-|---|---|
-| Would a reasonable reader interpret the message as **standing permission to skip trivial workflow questions**? | Yes → flip. |
-| Is it a **single-decision delegation** ("you decide for this step", "for this one let me know what you'd pick")? | Handle that step autonomously, do **not** flip standing mode. |
+| Question | Shape | Outcome |
+|---|---|---|
+| Standing permission to skip trivial workflow questions, **no deliverable named**? ("stop asking", "just work") | conversation-wide | Flip standing mode. Sticky for the rest of the conversation. |
+| Autonomous execution **bound to a named deliverable** ("arbeite Roadmap X ab", "work end-to-end on PROJ-123", "build feature Y autonomously")? | task-scoped | Execute that deliverable without per-step asks. Do **not** flip standing mode. Scope ends with the deliverable. New task → fresh confirmation, per [`autonomous-execution § task-scope`](../../rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task). |
+| Single-decision delegation ("you decide for this step", "for this one let me know what you'd pick")? | one-shot | Handle that step autonomously. Do **not** flip standing mode. |
 
-The flip is sticky for the rest of the conversation; single-decision
-delegation is one-shot.
+Only the first shape is sticky for the conversation. The second is sticky only for the named task. The third is one-shot.
 
 ## Speech-act check — meta-instruction or content?
 

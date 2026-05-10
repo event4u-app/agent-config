@@ -105,3 +105,39 @@ benefits from a spike branch). If in doubt, do not ask.
 A clear *"go ahead"*, *"start now"*, *"mach weiter"*, or an explicit
 *"approved, implement E1.1"* on a later turn lifts the fence. Until
 then: silence on execution.
+
+
+## Authoring vs. implementation — verb discipline
+
+Restated detail for [`scope-control § Authoring vs.
+implementation`](../../rules/scope-control.md). The Iron Law is in
+the kernel; this is the worked-out catalogue.
+
+**Authoring verbs** (artifact-only, never execution): `create`,
+`draft`, `write`, `author`, `prepare`, `outline`, `entwirf`,
+`erstelle`, `schreibe`, `vorbereite`. Deliverable: a roadmap file,
+plan, ADR, ticket, design doc, or brief. Stop after it lands; let
+the user pick the next move.
+
+**Execution verbs** (then the executing rules apply): `implement`,
+`build`, `ship`, `setze um`, `baue`, `arbeite ab`, `arbeite die
+roadmap ab`.
+
+**Worked examples**
+
+- *"Create the roadmap for X"* / *"Erstelle die Roadmap für X"* →
+  write the roadmap file, stop, hand back. Do **not** start
+  implementing the steps it contains; do **not** create a feature
+  branch for the work the roadmap describes.
+- *"Draft an ADR for the auth refactor"* → ADR lands; auth refactor
+  is a separate decision.
+- *"Write the migration plan, then start with phase 1"* → mixed
+  verbs. Default to authoring-only, ask which scope wins.
+
+**Task-scoped autonomy carry-over**
+
+A previous turn's standing autonomy for a *different task* does NOT
+carry over. Concretely: *"arbeite eigenständig"* given for
+"Roadmap A" is consumed when Roadmap A's deliverable lands. A new
+named task (Roadmap B, ticket Y, "next slice") needs fresh
+authorization. See [`autonomous-execution § task-scope`](../../rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).

@@ -140,6 +140,60 @@ def test_yaml_parse_error_is_reported(tmp_path):
     assert "YAML parse error" in result.stdout
 
 
+def test_relative_date_without_anchor_fails(tmp_path):
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: drift
+            status: active
+            confidence: high
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+            rule: "We fixed this yesterday after the outage hit prod."
+        """)
+    result = _run(root)
+    assert result.returncode == 1
+    assert "relative date 'yesterday'" in result.stdout
+    assert "ISO YYYY-MM-DD anchor" in result.stdout
+
+
+def test_relative_date_with_iso_anchor_passes(tmp_path):
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: anchored
+            status: active
+            confidence: high
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+            rule: "Fixed yesterday (2026-01-15) after the outage hit prod."
+        """)
+    result = _run(root)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_relative_date_in_last_validated_line_skipped(tmp_path):
+    # last_validated is a structured ISO field; the linter must not flag
+    # a comment or value on that key.
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: ok
+            status: active
+            confidence: high
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+        """)
+    result = _run(root)
+    assert result.returncode == 0
+
+
 def test_json_format_output(tmp_path):
     root = _write(tmp_path, "domain-invariants", """
         version: 1

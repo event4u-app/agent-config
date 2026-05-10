@@ -43,16 +43,20 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     or budget-invariant changes; multi-round council, file-ownership
     matrices, > 600 lines. Enforced by `task lint-roadmap-complexity`.
     Standard: [`docs/contracts/roadmap-complexity-standard.md`](../../docs/contracts/roadmap-complexity-standard.md).
-16. **No time-boxed plates, no visible-horizon sections.** Roadmaps describe
-    scope and phase ordering, not week-by-week commitments. Do not add
-    `## Horizon (N-week visible plate)` sections, "Inside / outside the
-    plate" framings, `In-plate?` columns in decision tables, or
-    `**Out-of-plate.**` / `**Out-of-horizon.**` / `(out-of-horizon, gated
-    on Phase N)` suffixes on steps or phase headers. AI execution does not
-    operate on calendar plates; scope ordering and dependency gates are
-    sufficient. Pacing is the user's call, decided per turn — never
-    encoded into the plan. Enforced by `task lint-roadmap-complexity`
-    (plate-token detection).
+16. **Time-boxed plates / visible-horizon sections — opt-in via
+    `roadmap.horizon_weeks` in `.agent-settings.yml`.** Default is `0`
+    (off): roadmaps describe scope and phase ordering, not week-by-week
+    commitments. With the default, do **not** add `## Horizon (N-week
+    visible plate)` sections, "Inside / outside the plate" framings,
+    `In-plate?` columns in decision tables, or `**Out-of-plate.**` /
+    `**Out-of-horizon.**` / `(out-of-horizon, gated on Phase N)`
+    suffixes on steps or phase headers. AI execution does not operate
+    on calendar plates by default; scope ordering and dependency gates
+    are sufficient. Pacing is the user's call, decided per turn —
+    never encoded into the plan unless they have explicitly set
+    `horizon_weeks` to a positive integer. Enforced by
+    `task lint-roadmap-complexity` (plate-token detection skipped when
+    `horizon_weeks > 0`).
 
 ---
 

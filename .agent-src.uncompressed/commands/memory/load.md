@@ -84,6 +84,40 @@ with its declared `confidence` — see
 [`memory-access`](../../docs/guidelines/agent-infra/memory-access.md) for
 how entries modulate edits.
 
+### 5. Inline-review hook (intake backlog)
+
+After step 4, count unreviewed intake entries for the same type:
+
+```bash
+./agent-config memory:lookup --types <type> --intake-only --format json | \
+  python3 -c "import sys, json; print(len(json.load(sys.stdin)))"
+```
+
+Read `memory.review_threshold` from `.agent-settings.yml` (default 10).
+If the count is **0** or **≤ threshold**, skip this step silently. If
+**> threshold**, surface a numbered preview of the top-3 highest-
+confidence intake signals (see
+[`memory-consolidation`](../../skills/memory-consolidation/SKILL.md)
+§ Phase 3 for the consolidation contract):
+
+```
+> ⚠️  {N} unreviewed intake signals for `{type}` (threshold {T}).
+>     Top 3 by confidence:
+>
+>     1. [conf=high] {sig-id} — {one-line observation}
+>     2. [conf=med ] {sig-id} — {one-line observation}
+>     3. [conf=med ] {sig-id} — {one-line observation}
+>
+> Review now?
+> 1. Promote — run /memory promote on a signal id
+> 2. Mine more — run /memory mine-session for fresh signals
+> s. Skip (default) — proceed with the loaded entries
+```
+
+Default action is **skip** — the load completes regardless. This is a
+nudge, not a gate. If `memory.review_threshold` is `0`, skip this
+step entirely (feature off). Never auto-promote.
+
 ## When to reject
 
 - User is mid-implementation and asks for the full load as a shortcut

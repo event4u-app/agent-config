@@ -34,6 +34,15 @@ The user decides the git shape. Never improvise. Commit specifics: canonical [`c
 
 "Explicit permission" = user said so **this turn or in a standing instruction not yet revoked**. Earlier permission for a different operation does not carry over.
 
+## Authoring vs. implementation
+
+```
+"CREATE / DRAFT" AUTHORIZES THE ARTIFACT, NOT ITS EXECUTION.
+NEW TASK NEVER INHERITS PRIOR AUTONOMY.
+```
+
+`create / draft / write / erstelle …` → artifact only. Execution verbs flip scope; mixed → ask. Detail: [`scope-mechanics`](../contexts/authority/scope-mechanics.md).
+
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
 A subset is **never** autonomous, regardless of standing autonomy. Canonical: [`non-destructive-by-default`](non-destructive-by-default.md). Triggers (prod-branch merges, deploys, prod data / infra, bulk-destructive) + this-turn-only clarification: [`scope-mechanics § Production, infrastructure, bulk-destructive`](../contexts/authority/scope-mechanics.md).
@@ -48,13 +57,11 @@ After the user **declines** a proposal (branch switch, PR creation, tag/release,
 
 ## Fenced step — user-set review gates
 
-User explicitly fences off the next step (*"plan only"*, *"review first"*, *"don't implement yet"*, German equivalents) — reply is **deliverable + handoff**, never deliverable + *"shall we start?"*.
+User fences next step (*"plan only"*, *"review first"*, German equivalents) → reply is **deliverable + handoff**, never *"shall we start?"*.
 
 ```
 USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
-NO NUMBERED OPTION OFFERING TO BEGIN WORK.
-NO "READY TO IMPLEMENT?" RE-ASK.
-NO "STARTEN WIR MIT PHASE 1?" PIVOT.
+NO "READY TO IMPLEMENT?" / "PHASE 1?" RE-ASK.
 ```
 
-Fence stands until reopened (like `Decline = silence`). Follow-ups cover **the deliverable** (scope, wording, sections), never its execution. Failure modes + bypass phrases: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).
+Fence stands until reopened (like `Decline = silence`). Follow-ups cover **the deliverable**, never its execution. Failure modes + bypass: [`scope-mechanics § Fenced step`](../contexts/authority/scope-mechanics.md).

@@ -32,6 +32,31 @@ In `auto` mode, flip to `on` for the rest of the conversation when the user expr
 
 Algorithm and speech-act heuristic: [`contexts/execution/autonomy-detection.md`](../contexts/execution/autonomy-detection.md). Anchor phrases (DE+EN), no-flip patterns, counter-examples, trivial-vs-blocking taxonomy, commit-policy summary, and named failure modes: [`contexts/execution/autonomy-mechanics.md`](../contexts/execution/autonomy-mechanics.md) + [`contexts/execution/autonomy-examples.md`](../contexts/execution/autonomy-examples.md).
 
+## Task-scope — autonomy is bound to the named task
+
+```
+A STANDING AUTONOMY DIRECTIVE TIED TO A NAMED DELIVERABLE
+DOES NOT CARRY OVER TO A DIFFERENT, LATER DELIVERABLE.
+NEW TASK → FRESH CONFIRMATION.
+```
+
+Two distinct autonomy shapes — keep them apart:
+
+| Shape | Trigger | Scope |
+|---|---|---|
+| **Conversation-wide trivial-question suppression** | "stop asking on trivial steps, just work" — no deliverable named. | Sticky for the rest of the conversation. Suppresses trivial workflow questions only; never lifts blocking, Hard Floor, or [`scope-control`](scope-control.md) gates. |
+| **Task-scoped autonomous execution** | "work autonomously on X", "arbeite die Roadmap Y komplett ab", "do PROJ-123 end-to-end" — a deliverable / artifact / ticket is named. | Bound to **that** task. Ends when the task ends. Does **not** authorize starting a new, distinct task autonomously. |
+
+Litmus test: does the directive name (or unambiguously point to) a single concrete deliverable? Yes → task-scoped, scope ends with the deliverable. No → conversation-wide, trivial-question suppression only.
+
+When the user later issues a **new** request — different ticket, different roadmap, different artifact, different feature — treat it as a fresh task. Re-confirm autonomy for the new scope before:
+
+- creating a branch / worktree / PR / tag for the new work,
+- implementing a roadmap whose **authoring** was the prior turn's deliverable (per [`scope-control § authoring vs implementation`](scope-control.md#authoring-vs-implementation--verb-discipline)),
+- expanding scope beyond the new task's literal ask.
+
+In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](scope-control.md) gates apply to every task regardless.
+
 ## See also
 
 - [`non-destructive-by-default`](non-destructive-by-default.md) — universal safety floor; never overridden by autonomy

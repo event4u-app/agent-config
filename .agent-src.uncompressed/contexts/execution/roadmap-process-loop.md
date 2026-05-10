@@ -120,8 +120,13 @@ The following are **authoring annotations**, never halt conditions. Do
 configured boundary anyway. `process-full` processes every open step
 regardless of these annotations — see
 [`/roadmap:process-full § Iron Law`](../../commands/roadmap/process-full.md#iron-law--full-is-full).
-Time-boxed plate / horizon framing is forbidden in roadmaps by template
-rule 16; if encountered in legacy text, treat as ordinary prose.
+Time-boxed plate / horizon framing is opt-in via
+`roadmap.horizon_weeks` in `.agent-settings.yml` (default `0` =
+forbidden, per template rule 16). When `0` and encountered in legacy
+text, treat as ordinary prose; never use it to gate execution. When
+`> 0`, plate framing is allowed in authoring but is still **not** a
+halt condition — phase ordering and explicit dependency gates govern
+execution either way.
 
 ## 6. Final report and archival
 
