@@ -6,10 +6,10 @@
 
 ## Overall
 
-**1 / 164 steps done · 1%**
+**8 / 164 steps done · 5%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
@@ -22,7 +22,7 @@
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 6 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 7 | [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md) | 1 | 19 | 18 | 1 | 0 | 0 | ░░░░░░░░░░ 5% |
+| 7 | [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md) | 1 | 19 | 11 | 8 | 0 | 0 | ████░░░░░░ 42% |
 
 ---
 
@@ -95,9 +95,9 @@
 
 ### [road-to-unified-senior-roles.md](roadmaps/road-to-unified-senior-roles.md)
 
-**Road to Unified Senior Roles** — 1 / 19 done (5%)
+**Road to Unified Senior Roles** — 8 / 19 done (42%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Unified Senior Roles execution | 🟡 in progress | 18 | 1 | 0 | 0 | 5% |
+| 1 | Unified Senior Roles execution | 🟡 in progress | 11 | 8 | 0 | 0 | 42% |
 
