@@ -25,6 +25,9 @@ includes:
   release:
     taskfile: ./taskfiles/release.yml
     flatten: true
+  mcp:
+    taskfile: ./taskfiles/mcp.yml
+    flatten: true
 
 tasks:
   _ci-start:

@@ -2948,6 +2948,13 @@ def main() -> int:
 
         paths = sorted(set(paths))
         if not paths:
+            # Emit a valid empty payload when a structured format was requested
+            # so downstream parsers (e.g. PR-summary workflows) don't fail on an
+            # empty stdout. stderr keeps the human-readable note.
+            if args.report:
+                print(format_report([]))
+            elif args.format == "json":
+                print(format_json([]))
             print("No matching skill/rule files found.", file=sys.stderr)
             return 0
 

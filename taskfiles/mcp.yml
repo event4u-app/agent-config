@@ -1,0 +1,22 @@
+version: '3'
+
+# MCP server tasks — setup, run, smoke.
+# The MCP server (`scripts/mcp_server/`) needs Python 3.11+ and the `mcp` SDK.
+# To keep consumers without that runtime unaffected, the SDK lives in an
+# opt-in venv under `.venv-mcp/` (gitignored).
+
+tasks:
+  mcp:setup:
+    desc: "Create .venv-mcp/ and install the mcp SDK (one-line MCP server onboarding)"
+    cmds:
+      - bash scripts/mcp_setup.sh
+
+  mcp:run:
+    desc: "Run the MCP server over stdio (requires `task mcp:setup` first)"
+    cmds:
+      - .venv-mcp/bin/python -m scripts.mcp_server
+
+  mcp:test:
+    desc: "Run the MCP server test suite inside .venv-mcp/ (full coverage incl. SDK-gated tests)"
+    cmds:
+      - .venv-mcp/bin/python -m pytest tests/test_mcp_server.py -v
