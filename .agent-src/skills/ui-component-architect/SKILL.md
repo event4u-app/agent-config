@@ -40,12 +40,14 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. State the responsibility in one sentence
+### 1. Inspect prior art, state the responsibility in one sentence
 
-Write the component's purpose: *"Renders a labelled input with
-inline error and hint."* If the sentence has an "and" joining
-two unrelated jobs, the component is two components. Reject the
-draft and split before continuing.
+Review existing components in the codebase for the same
+responsibility — extend rather than rebuild when a match is found.
+If none exists, write the new component's purpose: *"Renders a
+labelled input with inline error and hint."* If the sentence has an
+"and" joining two unrelated jobs, the component is two components.
+Reject the draft and split before continuing.
 
 ### 2. Pick composition over inheritance
 
@@ -100,6 +102,18 @@ implications (does the slot become the accessible name?). Slots
 without contracts become "stuff a div in there and pray".
 
 ## Output format
+
+Return:
+
+1. Responsibility + composition pick — single-sentence purpose, chosen
+   pattern (compound / slots / render-props / polymorphic) with the
+   one-line trade-off.
+2. State + prop API — controlled / uncontrolled / both per state piece,
+   prop list with type and purpose, slot inventory with a11y notes.
+3. Anti-case list — the combinations the component refuses to support
+   (the explicit "no" surface that callers can rely on).
+
+Concrete shape:
 
 ```
 Component:        <Name>

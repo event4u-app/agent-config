@@ -38,10 +38,10 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Capture the raw input
+### 1. Capture the raw input and identify the asker
 
-Read the user's text verbatim. Do NOT rephrase yet. Note: who is the
-asker (PO, support, eng, exec)? What artefact did they hand over
+Read the user's text verbatim. Do NOT rephrase yet. Identify: who is
+the asker (PO, support, eng, exec)? What artefact did they hand over
 (slack thread, screenshot, voice note transcript, free text)?
 
 ### 2. Frame the problem

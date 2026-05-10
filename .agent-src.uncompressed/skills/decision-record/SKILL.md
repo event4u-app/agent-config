@@ -44,7 +44,7 @@ Do NOT use when:
 *"We need to decide `X` because `Y`."* If you cannot, the decision
 is not ripe — surface that and stop.
 
-### 2. Enumerate options (≥ 2, usually ≤ 4)
+### 2. Identify and enumerate options (≥ 2, usually ≤ 4)
 
 Each option gets:
 

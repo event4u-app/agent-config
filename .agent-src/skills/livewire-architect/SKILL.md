@@ -102,6 +102,17 @@ design must be approved by the user before handing off to
 
 ## Output format
 
+Return:
+
+1. Component shape decision — full-page / parent+children / partial /
+   stack — with the one-sentence trade-off rationale.
+2. Component inventory — for each: public props (≤ 8), state islands
+   owned, events listened/dispatched, side-effects on mount and action.
+3. Boundary-risk list and tactical follow-up — prop bags > 8, event
+   chains > 3 hops, shared mutable state, and the next handoff.
+
+Concrete shape:
+
 ```
 Screen:           <route or feature>
 Component shape:  <full-page | parent+children | partial | stack>

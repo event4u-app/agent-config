@@ -39,9 +39,11 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Pick the locator philosophy
+### 1. Inspect the suite, pick the locator philosophy
 
-One philosophy per suite, written into `CONTRIBUTING-tests.md`:
+Review existing tests for current locator patterns; the established
+strategy wins unless it is the "last resort" tier. One philosophy
+per suite, written into `CONTRIBUTING-tests.md`:
 
 | Strategy | When |
 |---|---|
@@ -89,6 +91,17 @@ video-on-failure, Github reporter + HTML. Document both in
 `playwright.config.ts`; do not let local config leak into CI.
 
 ## Output format
+
+Return:
+
+1. Locator + Page Object plan — chosen strategy, PO list with surface
+   and action count, flow objects when ≥ 2 POs collaborate.
+2. Fixture composition — base / auth / domain layer with what each
+   layer sets up.
+3. Parallelism + flake budget — worker count, shard strategy,
+   isolation, target flake ceiling, CI-vs-local config delta.
+
+Concrete shape:
 
 ```
 Suite:            <name>

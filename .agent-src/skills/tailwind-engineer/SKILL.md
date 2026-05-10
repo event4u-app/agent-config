@@ -40,9 +40,9 @@ Do NOT use when:
 
 ### 1. Resolve to design tokens first
 
-Open `tailwind.config.{js,ts}` (or the equivalent `@theme` block).
-Map every requested colour, radius, spacing, shadow, font-size to
-a configured token. If the design hands you `#3B82F6`, use
+Inspect `tailwind.config.{js,ts}` (or the equivalent `@theme` block)
+and identify the configured tokens. Map every requested colour,
+radius, spacing, shadow, font-size to a configured token. If the design hands you `#3B82F6`, use
 `bg-blue-500` (or the project's named token). Arbitrary values
 (`bg-[#3B82F6]`, `mt-[17px]`) are a smell — accept only with a
 one-line comment naming the design source.
@@ -86,6 +86,17 @@ of responsive matches Tailwind's cascade and reads top-down.
 ## Output format
 
 When reviewing or proposing styles, return:
+
+1. Token map — every colour, spacing, radius, shadow, font-size mapped
+   to its configured token; arbitrary values flagged with the design
+   source they cite.
+2. Class list — ordered (layout → box-model → typography → colour →
+   state → responsive); inline-style use justified per element.
+3. Extraction + risk call-out — component / constant / `@apply` / none
+   with reason; risks named (arbitrary values, `!important`, dark-mode
+   gaps, non-token references).
+
+Concrete shape:
 
 ```
 Element:        <selector or component name>

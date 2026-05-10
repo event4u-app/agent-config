@@ -40,9 +40,11 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Pick validation timing
+### 1. Identify field types, pick validation timing
 
-Three knobs, picked per field:
+Inspect every field on the form (text, password, async-checked,
+file, multi-step) before choosing timing. Three knobs, picked per
+field:
 
 | Timing | When |
 |---|---|
@@ -96,6 +98,15 @@ per-step; submit at step N validates only that step's fields,
 final submit re-validates the whole payload server-side.
 
 ## Output format
+
+Return:
+
+1. Validation contract — per-field timing + error-display rules.
+2. Submit lifecycle — the 7-step sequence with any deviations called out.
+3. Risk surface — optimistic-UI rollback path, dirty guard, idempotency,
+   server contract (endpoint, status codes, error shape).
+
+Concrete shape:
 
 ```
 Form:               <name / route>
