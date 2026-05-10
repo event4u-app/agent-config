@@ -63,6 +63,7 @@ tasks:
       - task: check-portability
       - task: check-examples-shape
       - task: lint-roadmap-complexity
+      - task: lint-context-spine-usage
       - task: check-public-links
       - task: check-public-catalog-links
       - task: check-command-count
