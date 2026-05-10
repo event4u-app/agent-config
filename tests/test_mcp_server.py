@@ -117,10 +117,23 @@ def test_no_unsafe_imports_in_loader() -> None:
 # ----------------------------------------------------------------------
 # Server layer — requires the `mcp` SDK
 # ----------------------------------------------------------------------
+#
+# Module-level `importorskip` would skip the loader tests above when the
+# SDK is missing (CI installs only pytest + pytest-xdist + pyyaml per
+# `.github/workflows/tests.yml`). Use a per-test fixture instead so the
+# loader layer always runs.
 
-# Skip the entire server-layer block when the SDK is absent. CI installs
-# pytest + pytest-xdist + pyyaml only; loader tests above still run.
-mcp = pytest.importorskip("mcp", reason="mcp SDK not installed")
+try:  # pragma: no cover — import-time gate
+    import mcp as _mcp  # noqa: F401
+    import mcp.types as _mcp_types  # noqa: F401
+
+    _MCP_AVAILABLE = True
+except ImportError:
+    _MCP_AVAILABLE = False
+
+requires_mcp = pytest.mark.skipif(
+    not _MCP_AVAILABLE, reason="mcp SDK not installed"
+)
 
 
 def _build_server_with_fixtures():
@@ -130,11 +143,14 @@ def _build_server_with_fixtures():
     return build_server(prompts), prompts
 
 
+@requires_mcp
 def test_server_lists_5_prompts_with_skill_prefix() -> None:
-    server, prompts = _build_server_with_fixtures()
-    handler = server.request_handlers[mcp.types.ListPromptsRequest]
+    import mcp.types as mcp_types
 
-    request = mcp.types.ListPromptsRequest(method="prompts/list", params=None)
+    server, prompts = _build_server_with_fixtures()
+    handler = server.request_handlers[mcp_types.ListPromptsRequest]
+
+    request = mcp_types.ListPromptsRequest(method="prompts/list", params=None)
     result = asyncio.run(handler(request))
 
     listed = result.root.prompts
@@ -144,14 +160,17 @@ def test_server_lists_5_prompts_with_skill_prefix() -> None:
         assert prompt.description
 
 
+@requires_mcp
 def test_server_get_prompt_returns_skill_body() -> None:
+    import mcp.types as mcp_types
+
     server, prompts = _build_server_with_fixtures()
-    handler = server.request_handlers[mcp.types.GetPromptRequest]
+    handler = server.request_handlers[mcp_types.GetPromptRequest]
 
     target = prompts[0]
-    request = mcp.types.GetPromptRequest(
+    request = mcp_types.GetPromptRequest(
         method="prompts/get",
-        params=mcp.types.GetPromptRequestParams(
+        params=mcp_types.GetPromptRequestParams(
             name=f"skill.{target.name}",
             arguments=None,
         ),
@@ -167,13 +186,16 @@ def test_server_get_prompt_returns_skill_body() -> None:
     assert text == target.body
 
 
+@requires_mcp
 def test_server_get_prompt_unknown_name_errors() -> None:
-    server, _ = _build_server_with_fixtures()
-    handler = server.request_handlers[mcp.types.GetPromptRequest]
+    import mcp.types as mcp_types
 
-    request = mcp.types.GetPromptRequest(
+    server, _ = _build_server_with_fixtures()
+    handler = server.request_handlers[mcp_types.GetPromptRequest]
+
+    request = mcp_types.GetPromptRequest(
         method="prompts/get",
-        params=mcp.types.GetPromptRequestParams(
+        params=mcp_types.GetPromptRequestParams(
             name="skill.does-not-exist",
             arguments=None,
         ),
