@@ -318,6 +318,47 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.34.0](https://github.com/event4u-app/agent-config/compare/1.33.0...1.34.0) (2026-05-10)
+
+### Features
+
+* **skills:** block D — eval gate runner + ADR-006 pilot pass (D5) ([afbc4fb](https://github.com/event4u-app/agent-config/commit/afbc4fb6c23949df56376e40b3f0bdda12ee70b5))
+* **skills:** block D — discovery story trio score/audit/suggest (D2-D4) ([f79ff00](https://github.com/event4u-app/agent-config/commit/f79ff005555d84ca84aa5bda8dc4370547a135e9))
+* **skills:** block D — lint_skill_tools meta-linter + CI gate (D1) ([eff36a6](https://github.com/event4u-app/agent-config/commit/eff36a6a254dda61e8639c5d2a6782c0144ebb6c))
+* **skills:** block F UI engineers — tailwind, a11y, form-handler (F2, F3, F6) ([fb6c20a](https://github.com/event4u-app/agent-config/commit/fb6c20a6cbe2e4b6c7dc2f64ab8cad837a3a985a))
+* **skills:** block F UI architects — livewire, playwright, ui-component (F1, F4, F5) ([eeb0eaa](https://github.com/event4u-app/agent-config/commit/eeb0eaaebaf70d7efaba28057f70342745cd623d))
+* **skills:** block C architecture-review-lens — 5th judge in /review-changes (C8) ([197de6b](https://github.com/event4u-app/agent-config/commit/197de6b9687ee69803f53e13bdb9528aa95f4123))
+* **skills:** block C ops/risk — risk-officer, incident-commander, migration-architect (C2, C5, C6) ([24252f6](https://github.com/event4u-app/agent-config/commit/24252f6d754e4b5cdc9a98fd7afc2eaee225d4fb))
+* **skills:** block C product/discovery — po-discovery, decision-record, stakeholder-tradeoff, tech-debt-tracker (C1, C3, C4, C7) ([01a2725](https://github.com/event4u-app/agent-config/commit/01a27256ef175f4f25cde50f1d7b8a3d079855d3))
+* **personas:** discovery surface + public catalog (A5, A6) ([d905639](https://github.com/event4u-app/agent-config/commit/d9056397f4ce687aad65a8fdb75c100ef1d90c01))
+* **orchestration:** subagent mode 7 — do-in-worktrees competitive (A7) ([fa01033](https://github.com/event4u-app/agent-config/commit/fa0103303eaca0db1722a167e788c3a11b2f7ca7))
+* **skills:** cite specialist personas from 9 existing skills (A4) ([d123ac6](https://github.com/event4u-app/agent-config/commit/d123ac6608cf96e0971b3c71e06723e50a6f19fe))
+* **personas:** add 4 specialist personas + qa migration (A3) ([ec19dc5](https://github.com/event4u-app/agent-config/commit/ec19dc579cf69879c5fe339eb6f3d7eee6cf314d))
+* **personas:** lock specialist schema + extend linter (A1, A2) ([79a9ea2](https://github.com/event4u-app/agent-config/commit/79a9ea21202ded3ba848b1e18bf041fecef127c3))
+* **skills:** block B — lock 6-domain taxonomy + back-fill 153 skills ([dfc70fd](https://github.com/event4u-app/agent-config/commit/dfc70fdf8bf97ec30d53a3c81d0b5c4bb61291a9))
+
+### Bug Fixes
+
+* **test:** disable retention pruning in council save() artefact test ([e04de7d](https://github.com/event4u-app/agent-config/commit/e04de7d037e3dbfe7a96cf05369d6940e27298b0))
+* **refs:** post-archive ref fixes for road-to-better-skills + ADR-006 council carve-out ([b8922b7](https://github.com/event4u-app/agent-config/commit/b8922b736d40e370e1eef67500d752a028d7b1bf))
+
+### Chores
+
+* **skills:** clear missing_inspect_step + weak_output_format on Block-C/F skills ([07a72b3](https://github.com/event4u-app/agent-config/commit/07a72b3f91792e99c3acb7e3448f31b7cff7df0a))
+* **hooks:** gate command-count drift in pre-push ([7b0ff9e](https://github.com/event4u-app/agent-config/commit/7b0ff9e175bb59a9c4ca404f9b4b62149e2e8008))
+* **roadmap:** close road-to-better-skills-and-profiles (Block D pass, B4 deferred) ([f5d7170](https://github.com/event4u-app/agent-config/commit/f5d7170a8c5947be273089839f99aab6dc56a693))
+* **matrix:** regenerate file-ownership-matrix for block F skills ([83ad6a7](https://github.com/event4u-app/agent-config/commit/83ad6a777469ca0efe2da01a4d0173181356bbf1))
+* **catalog:** regenerate index + catalog for block F ([bd57d56](https://github.com/event4u-app/agent-config/commit/bd57d56d9226d2a60658dbac2b8d4b82bf48b519))
+* **sync:** refresh compression-hashes + marketplace for block F ([b45b8a9](https://github.com/event4u-app/agent-config/commit/b45b8a9cef1e74e1ee88f164f5f0cc6e92565fbc))
+* **roadmap:** close block F — flip F1-F6 + F marker to done ([e4bd5cc](https://github.com/event4u-app/agent-config/commit/e4bd5cca56e2f30234bc7833ce3650ccbe1634d8))
+* **roadmap:** flip Block C marker to done — 8 skills + 5th judge integrated ([cfd3ede](https://github.com/event4u-app/agent-config/commit/cfd3ede2cf3846570e410209df1ae18b96db2d18))
+* **matrix:** regenerate file-ownership-matrix for Block C skills ([ad89c8f](https://github.com/event4u-app/agent-config/commit/ad89c8fbb50c7bfa7b7031a21e522d5dd582c2a8))
+* **catalog:** regenerate index + catalog for Block C skills ([cfe94a5](https://github.com/event4u-app/agent-config/commit/cfe94a54d1ec448eabc4afa0810beb81e52471f0))
+* **sync:** refresh compression-hashes for review-changes after Block C ([c56dbe2](https://github.com/event4u-app/agent-config/commit/c56dbe25085255a2fb8b5cd85f75d8e471792137))
+* **roadmap:** close block C — flip C1-C8 to done, refresh counts ([954a2fd](https://github.com/event4u-app/agent-config/commit/954a2fd6205e493efd22619c73f8ff7f30b9121b))
+
+Tests: 2606 (+46 since 1.33.0)
+
 ## [1.33.0](https://github.com/event4u-app/agent-config/compare/1.32.0...1.33.0) (2026-05-09)
 
 ### Features
