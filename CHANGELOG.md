@@ -318,6 +318,18 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.36.1](https://github.com/event4u-app/agent-config/compare/1.36.0...1.36.1) (2026-05-10)
+
+### Refactoring
+
+* **scope-control:** extract roadmap-shape, kernel-rule-edits, fenced-step detail to scope-mechanics ([e52c834](https://github.com/event4u-app/agent-config/commit/e52c834a672e6f24b1b7c1608e481b7f45a46054))
+
+### Chores
+
+* **generate-tools:** regenerate .windsurfrules for scope-control extraction ([ee7664e](https://github.com/event4u-app/agent-config/commit/ee7664ee6cd0ec5aacdf95b5e4ec1000e01a0121))
+
+Tests: 2621 (+0 since 1.36.0)
+
 ## [1.36.0](https://github.com/event4u-app/agent-config/compare/1.35.0...1.36.0) (2026-05-10)
 
 ### Features
