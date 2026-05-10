@@ -70,6 +70,25 @@ hydrate the full frontmatter:
   and well-validated — then `high`).
 - `source:` — at minimum the intake jsonl file + line number.
 - `owner:`, `last_validated: <today>`, `review_after_days:`.
+- `priority:` — optional (`critical` | `normal` | `low`); defaults to
+  `normal` when omitted. Pass through from the intake signal if it
+  carries one. Mark `critical` only when the entry is meant to surface
+  on every `/memory:load` regardless of query — e.g. a tenant-isolation
+  invariant or a payment-flow rule. The validator warns when a type
+  accumulates more than 10 active critical entries; raise the bar
+  deliberately. See [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+  § Priority semantics for the full contract.
+- `ts_week:` — optional ISO-week stamp `YYYY-Www` (e.g. `2026-W17`).
+  **Convention, not enforced.** Stamp the curated entry with the week
+  it was promoted, never the day or hour. ISO-week granularity prevents
+  intra-week timing inference (e.g. "this rule was added Tuesday 3pm
+  → that's when the incident hit") while keeping useful long-term
+  ordering. Write it via:
+  ```bash
+  date -u +'%G-W%V'   # POSIX ISO week-numbering year + ISO week
+  ```
+  See [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
+  § Temporal jitter for rationale.
 - Type-specific fields (`rule`, `symptom`, `path`, …).
 
 If the intake signal carries `tags: [<one>, <two>]`, **resolve via tag
