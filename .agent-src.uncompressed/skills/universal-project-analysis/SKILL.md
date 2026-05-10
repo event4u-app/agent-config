@@ -2,6 +2,7 @@
 name: universal-project-analysis
 description: "ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills."
 source: package
+domain: discovery
 ---
 
 # universal-project-analysis

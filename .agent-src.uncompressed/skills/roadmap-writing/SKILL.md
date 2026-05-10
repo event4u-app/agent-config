@@ -2,6 +2,7 @@
 name: roadmap-writing
 description: "Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'."
 source: package
+domain: process
 ---
 
 <!-- cloud_safe: degrade -->

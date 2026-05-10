@@ -2,6 +2,7 @@
 name: mcp
 description: "Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows."
 source: package
+domain: process
 ---
 
 # MCP Skill

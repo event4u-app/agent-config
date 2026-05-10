@@ -2,6 +2,7 @@
 name: analysis-skill-router
 description: "Use when picking which analysis or project-analysis-* skill fits a request — routes by scope, framework, and symptom — even if the user just says 'analyze this' or 'dig into the codebase'."
 source: package
+domain: discovery
 ---
 
 # analysis-skill-router

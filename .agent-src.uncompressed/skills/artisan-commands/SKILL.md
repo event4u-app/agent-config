@@ -2,6 +2,7 @@
 name: artisan-commands
 description: "Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling."
 source: package
+domain: engineering
 ---
 
 # artisan-commands

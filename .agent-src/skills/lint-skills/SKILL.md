@@ -2,6 +2,7 @@
 name: lint-skills
 description: "Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata."
 source: package
+domain: process
 execution:
   type: assisted
   handler: shell

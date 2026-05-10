@@ -2,6 +2,7 @@
 name: data-flow-mapper
 description: "Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line."
 source: package
+domain: discovery
 ---
 
 # data-flow-mapper

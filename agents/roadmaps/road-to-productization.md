@@ -242,7 +242,7 @@ This phase flips to `[x]` automatically when
   roadmap.
 
 This phase flips to `[x]` automatically when Block A of
-`agents/roadmaps/road-to-better-skills-and-profiles.md` reaches 100 %.
+`agents/roadmaps/archive/road-to-better-skills-and-profiles.md` reaches 100 %.
 
 ## Phase 8 — Final Validation (gated on P1–P7)
 

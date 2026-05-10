@@ -24,6 +24,7 @@ def test_valid_skill_passes(tmp_path: Path) -> None:
 name: example
 description: "Use when testing a concrete workflow."
 source: project
+domain: process
 ---
 
 # example
@@ -67,6 +68,7 @@ def test_complete_skill_passes(tmp_path: Path) -> None:
 name: example
 description: "Use when testing."
 source: project
+domain: process
 ---
 
 # example
@@ -1708,3 +1710,123 @@ def test_non_senior_skill_skips_senior_checks(tmp_path: Path) -> None:
         "missing_senior_output_artifacts",
     }
     assert not any(i.code in senior_codes for i in result.issues)
+
+
+
+# ── Persona schema (Block A2) ─────────────────────────────────────
+
+
+CORE_PERSONA_TEMPLATE = """---
+id: {id}
+role: Test Role
+description: "Lens for testing the persona schema."
+tier: {tier}
+mode: developer
+version: "1.0"
+source: package
+---
+
+# Test Role
+
+## Focus
+
+One paragraph framing the lens.
+
+## Mindset
+
+- Default assumption.
+- Skepticism point.
+
+## Unique Questions
+
+- Question one.
+- Question two.
+- Question three.
+
+## Output Expectations
+
+Bullets, short.
+
+## Anti-Patterns
+
+- Do NOT do X.
+{extra}
+"""
+
+
+SPECIALIST_EXTRA = """
+## Critical Rules
+
+- Rule one.
+- Rule two.
+
+## Workflows
+
+1. Step one.
+2. Step two.
+"""
+
+
+def test_core_persona_passes_with_5_sections(tmp_path: Path) -> None:
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-core.md",
+        CORE_PERSONA_TEMPLATE.format(id="test-core", tier="core", extra=""),
+    )
+    result = lint_file(path)
+    assert not any(i.code == "missing_section" for i in result.issues)
+
+
+def test_specialist_persona_requires_critical_rules_and_workflows(tmp_path: Path) -> None:
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-spec.md",
+        CORE_PERSONA_TEMPLATE.format(id="test-spec", tier="specialist", extra=""),
+    )
+    result = lint_file(path)
+    missing = {i.message for i in result.issues if i.code == "missing_section"}
+    assert any("Critical Rules" in m for m in missing)
+    assert any("Workflows" in m for m in missing)
+
+
+def test_specialist_persona_passes_with_7_sections(tmp_path: Path) -> None:
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-spec.md",
+        CORE_PERSONA_TEMPLATE.format(id="test-spec", tier="specialist", extra=SPECIALIST_EXTRA),
+    )
+    result = lint_file(path)
+    assert not any(i.code == "missing_section" for i in result.issues)
+
+
+def test_specialist_size_budget_warns_above_100(tmp_path: Path) -> None:
+    body = CORE_PERSONA_TEMPLATE.format(id="test-spec", tier="specialist", extra=SPECIALIST_EXTRA)
+    # Pad to > 100 lines.
+    body = body + ("\n<!-- pad -->" * 80)
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-spec.md",
+        body,
+    )
+    result = lint_file(path)
+    assert any(i.code == "size_budget" for i in result.issues)
+
+
+def test_persona_invalid_tier_fails(tmp_path: Path) -> None:
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-bad.md",
+        CORE_PERSONA_TEMPLATE.format(id="test-bad", tier="reviewer", extra=""),
+    )
+    result = lint_file(path)
+    assert any(i.code == "invalid_tier" for i in result.issues)
+
+
+def test_persona_id_must_match_filename(tmp_path: Path) -> None:
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/personas/test-core.md",
+        CORE_PERSONA_TEMPLATE.format(id="other-id", tier="core", extra=""),
+    )
+    result = lint_file(path)
+    assert any(i.code == "id_filename_mismatch" for i in result.issues)

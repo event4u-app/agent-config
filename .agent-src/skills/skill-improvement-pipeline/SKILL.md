@@ -2,6 +2,7 @@
 name: skill-improvement-pipeline
 description: "ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply."
 source: package
+domain: process
 execution:
   type: assisted
   handler: internal

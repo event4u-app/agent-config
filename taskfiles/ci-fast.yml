@@ -86,6 +86,11 @@ tasks:
     desc: Lint .claude-plugin/marketplace.json against the Claude Code Plugin schema
     cmd: python3 scripts/lint_marketplace.py
 
+  lint-skill-tools:
+    silent: true
+    desc: Block D · D1 — meta-lint scripts/skill_tools/*.py (stdlib-only, --json, snake_case_verb_noun, ≤200 LOC, embedded sample)
+    cmd: python3 scripts/lint_skill_tools.py {{.QUIET_FLAG}}
+
   lint-agents-md:
     silent: true
     desc: Enforce the Thin-Root contract on AGENTS.md + templates/AGENTS.md (size caps, ≥40% pointer ratio, why-clause length, target resolution, emergency-triage block) — see .agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md

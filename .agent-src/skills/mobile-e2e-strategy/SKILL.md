@@ -2,6 +2,7 @@
 name: mobile-e2e-strategy
 description: "Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps."
 source: package
+domain: quality
 ---
 
 # mobile-e2e-strategy
@@ -27,7 +28,7 @@ source: package
 
 ## Procedure
 
-1. **Classify the app.** Is it native iOS, native Android, React Native, Expo, Flutter, or a web view inside a shell?
+1. **Inspect and classify the app.** Identify the stack: native iOS, native Android, React Native, Expo, Flutter, or a web view inside a shell?
 2. **Classify the goal.** Smoke (boots + login + key flow), regression (every release), visual diff, accessibility audit, or performance baseline.
 3. **Pick the framework** using the decision matrix below.
 4. **Confirm host availability.** macOS for iOS Simulator (mandatory); any OS for Android Emulator.

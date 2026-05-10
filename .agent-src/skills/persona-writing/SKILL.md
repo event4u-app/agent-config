@@ -2,6 +2,7 @@
 name: persona-writing
 description: "Use when creating or editing a persona in .agent-src.uncompressed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'."
 source: package
+domain: process
 ---
 
 <!-- cloud_safe: degrade -->

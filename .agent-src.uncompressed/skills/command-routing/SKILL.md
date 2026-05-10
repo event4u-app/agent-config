@@ -2,6 +2,7 @@
 name: command-routing
 description: "Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns."
 source: package
+domain: process
 execution:
   type: assisted
   handler: internal

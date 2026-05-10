@@ -2,6 +2,7 @@
 name: performance
 description: "Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design."
 source: package
+domain: engineering
 ---
 
 # performance

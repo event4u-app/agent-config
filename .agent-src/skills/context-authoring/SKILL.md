@@ -2,6 +2,7 @@
 name: context-authoring
 description: "Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel."
 source: package
+domain: process
 ---
 
 # context-authoring

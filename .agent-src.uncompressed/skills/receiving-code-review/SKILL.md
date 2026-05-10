@@ -4,6 +4,7 @@ description: "Use when processing code review feedback (bot or human) before cha
 personas:
   - critical-challenger
 source: package
+domain: process
 ---
 
 # receiving-code-review

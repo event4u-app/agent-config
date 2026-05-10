@@ -2,6 +2,7 @@
 name: command-writing
 description: "Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'."
 source: package
+domain: process
 ---
 
 <!-- cloud_safe: degrade -->

@@ -2,6 +2,7 @@
 name: subagent-orchestration
 description: "Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml."
 source: package
+domain: process
 ---
 
 # subagent-orchestration
@@ -158,6 +159,20 @@ end produces a single integration PR.
 step is under ~30 minutes. The branch-creation, context-switch, and
 worktree-cleanup cost dominates. Stick with mode 1 (do-and-judge)
 or mode 3 (do-in-steps) for those.
+
+**Competitive variant — per-candidate isolation.** When mode 5
+(`do-competitively`) is combined with worktrees, each candidate
+implementer runs in its own worktree (so candidates cannot read each
+other's open files or branch state). Selection rules:
+
+- **No auto-merge.** The orchestrator never merges a candidate
+  branch. Hard Floor per [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) —
+  applies even under standing autonomy. ADR-005 records the reasoning.
+- **Ranked presentation.** Judge ranks candidates (1..N) with a
+  one-line justification per rank; user picks the winner.
+- **Loser worktrees stay.** The orchestrator does not delete losing
+  worktrees automatically — the user keeps the option to harvest a
+  partial idea before cleanup.
 
 ## Status taxonomy — every subagent return uses one envelope
 

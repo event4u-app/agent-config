@@ -1,0 +1,57 @@
+{
+  "_comment": "Block D · D2 eval corpus. 10 tasks drawn from real event4u/agent-config conversation patterns (commits, council questions, roadmaps). For each task, `expected_top3` is the human-curated set of skills that should rank in D2's top-3. Pass = expected skill found in top-3.",
+  "_eval_target": "≥ 85% pass-rate (≥ 9 / 10)",
+  "_labelled": "before-d2-build",
+  "tasks": [
+    {
+      "id": "T01",
+      "task": "shape a livewire component before writing it — full-page vs partial, parent/child split, event flow, hydration cost",
+      "expected_top3": ["livewire-architect", "livewire", "ui-component-architect"]
+    },
+    {
+      "id": "T02",
+      "task": "write playwright e2e tests with page objects fixtures and ci config",
+      "expected_top3": ["playwright-testing", "playwright-architect", "e2e-plan"]
+    },
+    {
+      "id": "T03",
+      "task": "audit accessibility of a form — wcag aa keyboard navigation focus aria contrast screen reader",
+      "expected_top3": ["accessibility-auditor", "form-handler", "fe-design"]
+    },
+    {
+      "id": "T04",
+      "task": "design a database migration with rollout phases dual-write windows and cutover sequencing",
+      "expected_top3": ["migration-architect", "database", "decision-record"]
+    },
+    {
+      "id": "T05",
+      "task": "review authorization end-to-end route gate policy query scope before changing permissions",
+      "expected_top3": ["authz-review", "security", "judge-security-auditor"]
+    },
+    {
+      "id": "T06",
+      "task": "threat model a webhook endpoint enumerating abuse cases trust boundaries authorization gaps",
+      "expected_top3": ["threat-modeling", "security", "security-audit"]
+    },
+    {
+      "id": "T07",
+      "task": "build a tailwind utility-first ui with design tokens responsive variants dark mode",
+      "expected_top3": ["tailwind-engineer", "fe-design", "ui-component-architect"]
+    },
+    {
+      "id": "T08",
+      "task": "create an artisan command for a queued workflow with safe execution and helpful output",
+      "expected_top3": ["artisan-commands", "jobs-events", "laravel"]
+    },
+    {
+      "id": "T09",
+      "task": "write a form request with validation rules custom rule objects and message keys",
+      "expected_top3": ["laravel-validation", "form-handler", "update-form-request-messages"]
+    },
+    {
+      "id": "T10",
+      "task": "configure a grafana dashboard with loki logql queries red use golden signals",
+      "expected_top3": ["grafana", "dashboard-design", "logging-monitoring"]
+    }
+  ]
+}

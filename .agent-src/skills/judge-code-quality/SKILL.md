@@ -2,6 +2,7 @@
 name: judge-code-quality
 description: "Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge."
 source: package
+domain: quality
 ---
 
 # judge-code-quality

@@ -5,7 +5,7 @@
   "$comment": "Source: agents/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
   "type": "object",
   "additionalProperties": false,
-  "required": ["name", "description", "source"],
+  "required": ["name", "description", "source", "domain"],
   "properties": {
     "name": {
       "type": "string",
@@ -21,6 +21,11 @@
     "source": {
       "type": "string",
       "enum": ["package", "project"]
+    },
+    "domain": {
+      "type": "string",
+      "enum": ["engineering", "product", "quality", "devops", "process", "discovery"],
+      "description": "Skill classification axis; see docs/contracts/skill-domains.md. Required for every skill — exactly one of: engineering, product, quality, devops, process, discovery."
     },
     "status": {
       "type": "string",

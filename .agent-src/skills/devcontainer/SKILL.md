@@ -2,6 +2,7 @@
 name: devcontainer
 description: "Use when configuring DevContainers or GitHub Codespaces — devcontainer.json, custom images, secrets, VS Code features — even when the user just says 'why does my Codespace not start'."
 source: package
+domain: devops
 ---
 
 # devcontainer

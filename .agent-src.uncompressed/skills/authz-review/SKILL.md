@@ -1,7 +1,11 @@
 ---
 name: authz-review
 description: "Use when reviewing authorization end-to-end — route → gate → policy → query scope → response filter — before changes to permissions, tenants, ownership, or admin flows."
+personas:
+  - security-engineer
+  - backend-architect
 source: package
+domain: quality
 ---
 
 # authz-review

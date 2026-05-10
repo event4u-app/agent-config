@@ -2,6 +2,7 @@
 name: judge-bug-hunter
 description: "Use when a diff needs correctness review — null-safety, edge cases, off-by-one, races, error handling — dispatched by /review-changes, /do-and-judge, /judge, even without 'judge'."
 source: package
+domain: quality
 ---
 
 # judge-bug-hunter

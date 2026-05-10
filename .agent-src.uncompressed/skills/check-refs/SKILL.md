@@ -2,6 +2,7 @@
 name: check-refs
 description: "Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions."
 source: package
+domain: process
 execution:
   type: assisted
   handler: shell

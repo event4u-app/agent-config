@@ -2,6 +2,7 @@
 name: script-writing
 description: "Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'."
 source: package
+domain: process
 ---
 
 <!-- cloud_safe: degrade -->

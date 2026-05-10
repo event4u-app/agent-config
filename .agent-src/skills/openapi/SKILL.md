@@ -2,6 +2,7 @@
 name: openapi
 description: "Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI."
 source: package
+domain: engineering
 ---
 
 # openapi

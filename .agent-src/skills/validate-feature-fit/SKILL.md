@@ -2,6 +2,7 @@
 name: "validate-feature-fit"
 description: "Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit"
 source: package
+domain: quality
 execution:
   type: assisted
   handler: internal

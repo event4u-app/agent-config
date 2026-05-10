@@ -1,7 +1,10 @@
 ---
 name: fe-design
 description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py."
+personas:
+  - frontend-engineer
 source: package
+domain: engineering
 ---
 
 # Frontend Design Skill (Reference)
@@ -200,7 +203,7 @@ Step indicator (1 — 2 — 3)
 
 When `directives/ui/design.py` (or any caller) cites this skill:
 
-1. **Confirm the audit ran first** — `state.ui_audit` from [`existing-ui-audit`](../existing-ui-audit/SKILL.md) is mandatory. Stop and request the audit if missing.
+1. **Inspect `state.ui_audit` first** — review the audit produced by [`existing-ui-audit`](../existing-ui-audit/SKILL.md); it is mandatory. Stop and request the audit if missing.
 2. **Pick the smallest matching section** — Component Architecture, Form Design, Table Design, Responsive Strategy, Accessibility, or UX Principles. Cite by H2/H3 heading, never paste the whole skill.
 3. **Defer to audit findings** — when the audit pins a project pattern (token, primitive, layout convention), use it. The heuristics here are fallbacks for gaps, not overrides.
 4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched impl skill, never from this reference.

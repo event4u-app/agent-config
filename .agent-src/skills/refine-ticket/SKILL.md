@@ -9,6 +9,7 @@ personas:
   - critical-challenger
   - ai-agent
 source: package
+domain: product
 execution:
   type: assisted
   handler: internal

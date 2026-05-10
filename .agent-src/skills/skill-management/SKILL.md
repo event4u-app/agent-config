@@ -2,6 +2,7 @@
 name: skill-management
 description: "Use when compressing, decompressing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained."
 source: project
+domain: process
 execution:
   type: assisted
   handler: internal

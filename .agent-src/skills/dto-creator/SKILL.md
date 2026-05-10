@@ -2,6 +2,7 @@
 name: dto-creator
 description: "Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping."
 source: package
+domain: engineering
 ---
 
 # dto-creator

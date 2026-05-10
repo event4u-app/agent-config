@@ -4,6 +4,7 @@ description: "Use when diagnosing where a SaaS or product funnel leaks — visit
 status: active
 tier: senior
 source: package
+domain: product
 ---
 
 # funnel-analysis

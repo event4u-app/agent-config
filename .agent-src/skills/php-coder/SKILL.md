@@ -2,6 +2,7 @@
 name: php-coder
 description: "Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts."
 source: package
+domain: engineering
 ---
 
 # coder

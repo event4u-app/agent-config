@@ -39,6 +39,7 @@ def test_save_writes_three_artefacts(tmp_path: Path) -> None:
         responses=[_r("anthropic")],
         sessions_dir=tmp_path,
         timestamp="2026-05-02T20-00-00Z",
+        retention_days=0,
     )
     assert session_dir == tmp_path / "2026-05-02T20-00-00Z"
     assert (session_dir / "manifest.json").exists()

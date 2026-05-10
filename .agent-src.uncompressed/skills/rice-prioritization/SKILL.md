@@ -4,6 +4,7 @@ description: "Use when ranking competing initiatives for a roadmap, breaking a t
 status: active
 tier: senior
 source: package
+domain: product
 ---
 
 # rice-prioritization

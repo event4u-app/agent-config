@@ -2,6 +2,7 @@
 name: context-document
 description: "Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation."
 source: package
+domain: process
 ---
 
 # context

@@ -813,7 +813,19 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/_template-specialist/persona.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/ai-agent.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/backend-architect.md": {
       "kind": "persona",
       "rule_type": null,
       "load_context": [],
@@ -831,6 +843,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/eloquent-tamer.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/frontend-engineer.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/product-owner.md": {
       "kind": "persona",
       "rule_type": null,
@@ -838,6 +862,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/personas/qa.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/security-engineer.md": {
       "kind": "persona",
       "rule_type": null,
       "load_context": [],
@@ -1242,6 +1272,12 @@
       ],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/adr-create/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1297,6 +1333,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/api-testing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1434,6 +1476,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/decision-record/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1542,6 +1590,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/form-handler/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1567,6 +1621,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/guideline-writing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/incident-commander/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1680,6 +1740,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/livewire-architect/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/livewire/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -1717,6 +1783,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/merge-conflicts/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/migration-architect/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1806,7 +1878,19 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/playwright-architect/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/playwright-testing/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/po-discovery/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -1962,6 +2046,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/risk-officer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/roadmap-management/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2052,6 +2142,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2112,6 +2208,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/technical-specification/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2167,6 +2275,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/traefik/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3457,6 +3571,13 @@
     },
     {
       "source": ".agent-src.uncompressed/commands/review-changes.md",
+      "target": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/review-changes.md",
       "target": ".agent-src.uncompressed/skills/code-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -4633,14 +4754,35 @@
     },
     {
       "source": ".agent-src.uncompressed/personas/README.md",
+      "target": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/README.md",
       "target": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "target": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/ai-agent.md",
       "target": ".agent-src.uncompressed/personas/ai-agent.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/backend-architect.md",
+      "target": ".agent-src.uncompressed/personas/backend-architect.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -4660,6 +4802,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/personas/eloquent-tamer.md",
+      "target": ".agent-src.uncompressed/personas/eloquent-tamer.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/frontend-engineer.md",
+      "target": ".agent-src.uncompressed/personas/frontend-engineer.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/product-owner.md",
       "target": ".agent-src.uncompressed/personas/product-owner.md",
       "type": "WRITE",
@@ -4669,6 +4825,13 @@
     {
       "source": ".agent-src.uncompressed/personas/qa.md",
       "target": ".agent-src.uncompressed/personas/qa.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/security-engineer.md",
+      "target": ".agent-src.uncompressed/personas/security-engineer.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -5815,6 +5978,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/adr-create/SKILL.md",
       "target": ".agent-src.uncompressed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",
@@ -5946,6 +6137,41 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-code-quality/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/architecture-review-lens/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/artisan-commands/SKILL.md",
@@ -6340,6 +6566,20 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/adr-create/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md",
       "target": ".agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md",
       "type": "WRITE",
@@ -6662,6 +6902,41 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/form-handler/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/funnel-analysis/SKILL.md",
       "target": ".agent-src.uncompressed/skills/dcf-modeling/SKILL.md",
       "type": "READ_ONLY",
@@ -6751,6 +7026,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/incident-commander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/jira-integration/SKILL.md",
@@ -7082,6 +7378,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/livewire/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/livewire-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/livewire/SKILL.md",
       "target": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
       "type": "READ_ONLY",
@@ -7192,6 +7516,34 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/data-flow-mapper/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
@@ -7362,11 +7714,46 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
       "target": ".agent-src.uncompressed/skills/playwright-testing/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/po-discovery/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/refine-ticket/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/project-analysis-core/SKILL.md",
@@ -7831,6 +8218,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/judge-security-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/roadmap-management/SKILL.md",
       "target": ".agent-src.uncompressed/commands/roadmap/create.md",
       "type": "READ_ONLY",
@@ -8181,6 +8596,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/decision-record/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/risk-officer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/commands/judge.md",
       "type": "READ_ONLY",
@@ -8190,6 +8626,13 @@
     {
       "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
       "target": ".agent-src.uncompressed/contexts/subagent-configuration.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/subagent-orchestration/SKILL.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -8447,6 +8890,48 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/accessibility-auditor/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tech-debt-tracker/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/skills/technical-specification/SKILL.md",
       "target": ".agent-src.uncompressed/skills/technical-specification/SKILL.md",
       "type": "WRITE",
@@ -8701,6 +9186,27 @@
     {
       "source": ".agent-src.uncompressed/skills/traefik/SKILL.md",
       "target": ".agent-src.uncompressed/skills/traefik/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/existing-ui-audit/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/tailwind-engineer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/ui-component-architect/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

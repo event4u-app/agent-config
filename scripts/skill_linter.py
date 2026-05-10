@@ -41,15 +41,22 @@ from validate_frontmatter import (  # noqa: E402
 Severity = Literal["error", "warning", "info"]
 ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "unknown"]
 
-REQUIRED_PERSONA_SECTIONS = [
+REQUIRED_PERSONA_SECTIONS_CORE = [
     "Focus",
     "Mindset",
     "Unique Questions",
     "Output Expectations",
     "Anti-Patterns",
 ]
+REQUIRED_PERSONA_SECTIONS_SPECIALIST = REQUIRED_PERSONA_SECTIONS_CORE + [
+    "Critical Rules",
+    "Workflows",
+]
+# Back-compat alias — used by tier-agnostic callers; defaults to the core spine.
+REQUIRED_PERSONA_SECTIONS = REQUIRED_PERSONA_SECTIONS_CORE
 VALID_PERSONA_TIERS = {"core", "specialist"}
-PERSONA_LINE_BUDGETS = {"core": 120, "specialist": 80}
+# Locked in docs/contracts/persona-schema.md § 4: core ≤ 120, specialist ≤ 100.
+PERSONA_LINE_BUDGETS = {"core": 120, "specialist": 100}
 
 
 REQUIRED_SKILL_SECTIONS = [
@@ -1437,9 +1444,17 @@ def lint_persona(path: Path, text: str) -> LintResult:
             f"Persona description is {len(parsed['description'])} chars (target ≤ 160)",
         ))
 
-    # Required sections
+    # Required sections — tier-aware (per docs/contracts/persona-schema.md § 3).
+    # Core: 5 sections. Specialist: Core-5 + Critical Rules + Workflows.
     sections = extract_sections(text)
-    for required_section in REQUIRED_PERSONA_SECTIONS:
+    tier = parsed.get("tier")
+    if tier == "specialist":
+        required_sections = REQUIRED_PERSONA_SECTIONS_SPECIALIST
+    else:
+        # Default to core sections when tier is missing or invalid; the
+        # tier-enum check above already raised an error in that case.
+        required_sections = REQUIRED_PERSONA_SECTIONS_CORE
+    for required_section in required_sections:
         if required_section not in sections:
             issues.append(Issue(
                 "error",

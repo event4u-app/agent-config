@@ -2,6 +2,7 @@
 name: readme-writing
 description: "Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience."
 source: package
+domain: process
 execution:
   type: assisted
   handler: internal
