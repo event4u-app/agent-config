@@ -5,8 +5,9 @@ detail behind the Hard Floor restatement, the brief-before-asking
 flow for separate-branch proposals, and the failure modes / bypass
 rules around fenced steps.
 
-**Size budget:** ≤ 4,000 chars. Tracked under Phase 6 of
-`road-to-pr-34-followups`.
+**Size budget:** soft cap ≤ 8,000 chars (context layer, on-demand
+loaded). The mechanics file absorbs growth so `scope-control` stays
+under the 4,000-char kernel ceiling.
 
 ## Production, infrastructure, bulk-destructive — Hard Floor
 
@@ -39,6 +40,23 @@ Earlier permission for a different operation does **not** carry over —
 permission is per-operation, this-turn. Standing autonomy directives
 narrow other rules but never grant permission for items in this Hard
 Floor subset.
+
+## Roadmap shape — no release language
+
+Forbidden in roadmaps / plans / tickets / any planning artifact:
+version numbers (`v2.0`, `1.4.x`), target releases (`Q4 release`,
+`Sprint 23`), deprecation dates tied to release calendars,
+release-tied milestones (`launch milestone`, `GA`), and git tags
+(`tag v1.2.0`).
+
+Roadmaps plan **work**. Releases / tags / version pins are a
+**separate decision** the user pins explicitly on the artifact that
+owns release shape — changelog, release PR, tag annotation — not
+buried inside a planning document. Authoring verbs (`create / draft /
+write the roadmap`) authorize the planning artifact, not version
+pinning inside it. If the user names a version in a planning
+request, ask whether the artifact tracks the work or the release;
+default to work.
 
 ## Brief-before-asking — separate branch / PR / worktree
 
