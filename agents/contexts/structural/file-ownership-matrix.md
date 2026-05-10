@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **383**
-- Edges (incl. self-WRITE): **999**
+- Files indexed: **385**
+- Edges (incl. self-WRITE): **1013**
 
 ## READ_ONLY edges
 
@@ -225,6 +225,8 @@
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/personas/_template-specialist/persona.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/personas/product-owner.md` | `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/personas/product-owner.md` | `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
@@ -369,6 +371,11 @@
 | `.agent-src.uncompressed/skills/context-authoring/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/conventional-commits-writing/SKILL.md` | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `.agent-src.uncompressed/personas/product-owner.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `.agent-src.uncompressed/skills/po-discovery/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
@@ -498,6 +505,11 @@
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/adversarial-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `.agent-src.uncompressed/personas/product-owner.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `.agent-src.uncompressed/skills/incident-commander/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/repomix-packer/SKILL.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
@@ -637,5 +649,5 @@
 | `context` | 31 |
 | `persona` | 13 |
 | `rule` | 60 |
-| `skill` | 176 |
+| `skill` | 178 |
 
