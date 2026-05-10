@@ -60,7 +60,7 @@ After the user **declines** a proposal (branch switch, PR creation, tag/release,
 User fences next step (*"plan only"*, *"review first"*, German equivalents) → reply is **deliverable + handoff**, never *"shall we start?"*.
 
 ```
-FENCE → DELIVER + HAND BACK.
+USER FENCED OFF EXECUTION → DELIVER + HAND BACK.
 NO "READY TO IMPLEMENT?" / "PHASE 1?" RE-ASK.
 ```
 

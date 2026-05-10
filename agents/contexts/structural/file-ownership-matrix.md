@@ -175,6 +175,7 @@
 | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/kernel-rule-edits.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
@@ -319,7 +320,6 @@
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/contexts/authority/kernel-rule-edits.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `contexts/authority/kernel-rule-edits.md` | `load_context` | 1 |

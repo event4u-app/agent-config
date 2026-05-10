@@ -4302,6 +4302,13 @@
     },
     {
       "source": ".agent-src.uncompressed/contexts/authority/scope-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/authority/scope-mechanics.md",
       "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -5920,13 +5927,6 @@
     {
       "source": ".agent-src.uncompressed/rules/scope-control.md",
       "target": ".agent-src.uncompressed/contexts/authority/scope-mechanics.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/scope-control.md",
-      "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
