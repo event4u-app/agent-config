@@ -59,7 +59,7 @@ $ .venv-mcp/bin/python -m scripts.mcp_server._smoke
 ← clean exit
 ```
 
-## Phase 1 acceptance check
+## Acceptance check — A1–A7 evidence
 
 | Roadmap step | Evidence |
 |---|---|
