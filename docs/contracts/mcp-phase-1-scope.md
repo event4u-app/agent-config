@@ -2,9 +2,10 @@
 stability: experimental
 ---
 
-# MCP Server — Phase 1 + Phase 2 Scope (A0 Hard Contract)
+# MCP Server — Phase 1–4 Scope (A0 Hard Contract)
 
-> **Status:** Active · covers Phase 1 (A1–A7) + Phase 2 (B1–B5) of `road-to-mcp-server.md`
+> **Status:** Active · covers Phase 1 (A1–A7) + Phase 2 (B1–B5) +
+> Phase 3 (C1–C4) + Phase 4 (D1–D4) of `road-to-mcp-server.md`
 > **Stability:** experimental — not linked from README, AGENTS.md, or
 > `docs/architecture.md`. Internal index reference only per `STABILITY.md`.
 
@@ -38,15 +39,20 @@ phase with its own design-call gate.
 
 ## Out-of-scope (Phase 1 + Phase 2)
 
-- **`tools/*`** — no `tools/list`, no `tools/call`. Engine helpers
-  (`work_engine.refine`, `lint_skills`, `chat_history.append`) are
-  Phase 4 (D1–D4) gated on a separate design call.
-- **`resources/*`** — `resources/list` + `resources/read` are Phase 3.
-  Rules / guidelines / contexts must not be exposed yet.
-- **Filesystem writes** — the server only reads. No log files, no
+- **`tools/*` beyond the Phase 4 allowlist** — only the two
+  built-in tools listed below in *Phase 4 amendment* are reachable.
+  Any other name raises `ValueError`. `work_engine` is not exposed.
+- **`resources/*` beyond rules / guidelines / contexts** — no model
+  outputs, no roadmaps, no chat history surfaced as resources.
+- **Filesystem writes outside the Phase 4 write allowlist** — the only
+  writable targets are `agents/.agent-chat-history` and
+  `.agent-chat-history` under `<consumer_root>`. No log files, no
   telemetry writes, no `.work-state.json` mutation.
-- **Shell execution** — no `subprocess.*`, no `os.system`, no engine
-  spawn.
+- **Direct shell execution from `mcp_server/*`** — modules under
+  `scripts/mcp_server/` do not `import subprocess`, `os.system`, or
+  `os.popen` directly. Project helpers that internally spawn shells
+  (`skill_linter`'s `--changed` git mode, etc.) may be called only via
+  read-only wrappers that bypass those code paths.
 - **Network egress** — the server does not call external APIs;
   the AI Council, anthropic SDK, and openai SDK are not imported by
   any module under `scripts/mcp_server/`.
@@ -70,8 +76,44 @@ phase with its own design-call gate.
 6. `PromptCache` re-scans on mtime change (hot-reload).
 7. Malformed frontmatter is skipped with an error line, not crashed.
 
-A future regression that adds a `tools/*` handler or a write path
-fails assertion (4) and the contract review in code review.
+A future regression that adds a `tools/*` handler outside the
+allowlist or writes outside the Phase 4 write allowlist fails the
+import-surface + behaviour assertions and the contract review in code
+review.
+
+## Phase 4 amendment — tool allowlist (D1–D4)
+
+Phase 4 lifts the read-only line for **exactly** the two built-in
+tools registered in `scripts/mcp_server/tools.py::ALLOWLIST`. Every
+other tool name is unreachable: `tools/call` against an unlisted name
+returns `isError=True`.
+
+| Tool name | Mode | Side effects |
+|---|---|---|
+| `lint_skills` | read-only | Wraps `scripts.skill_linter.lint_file`. Never spawns `git` (no `--changed`). Returns the same JSON shape as `scripts/skill_linter.py --format json`. |
+| `chat_history_append` | path-scoped write | Wraps `scripts.chat_history.append`. Writes are allowed only when the resolved target is `agents/.agent-chat-history` or `.agent-chat-history` under `<consumer_root>`. `dry_run=True` validates the payload without touching the filesystem. |
+
+**Path-scoping invariant** — any tool that writes must resolve its
+target through `_validate_in_tree_path` before the underlying writer
+runs. Escapes (absolute paths outside the root, relative paths that
+resolve outside, or filenames not in the write allowlist) raise
+`ValueError` and surface as `isError=True` in `tools/call`.
+
+**Boot-time enumeration** — `run_stdio` prints one stderr line
+listing the registered tool names so operators see the surface at
+launch. Adding a tool to `ALLOWLIST` is a code-review event; no
+settings flag can enable an unlisted tool.
+
+Additional tool tests in `tests/test_mcp_server.py`:
+
+8. `tools/list` returns exactly the allowlisted names.
+9. `tools/call` against a valid `dry_run` payload returns
+   `isError=False` with a JSON-serialized result.
+10. `tools/call` with a path escape returns `isError=True` referencing
+    the escape — no exception propagates past the handler.
+11. `tools/call` against an unknown tool name returns `isError=True`.
+12. `scripts.mcp_server.tools` does not import `subprocess`,
+    `os.system`, `os.popen`, or any HTTP client directly.
 
 ## Revision policy
 
