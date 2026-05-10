@@ -108,10 +108,9 @@ extends the `context_spine` enum) and a CHANGELOG entry under
 `### Breaking` if the new enum value tightens an existing skill's
 declaration.
 
-This policy is the R22 mitigation from the roadmap risk register
-(`agents/roadmaps/road-to-unified-senior-roles.md`): slot sprawl is
-the failure mode; "tri-slot locked at 3 + ADR-gated growth" is the
-brake.
+This policy mitigates the slot-sprawl failure mode: "tri-slot locked
+at 3 + ADR-gated growth" is the brake. The ADR is the single growth
+lever; no consumer-side override exists.
 
 ## § 6 — Author checklist
 
@@ -132,5 +131,3 @@ Before shipping a senior skill that opts into the spine:
   ships independently of spine opt-in.
 - `docs/contracts/cross-wing-handoff.md` — typed handoffs between
   senior skills; orthogonal to the spine (composition vs context).
-- `agents/roadmaps/road-to-unified-senior-roles.md` § Block K1 —
-  the roadmap step that ships this contract.
