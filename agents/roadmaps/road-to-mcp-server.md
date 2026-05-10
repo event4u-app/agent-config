@@ -4,11 +4,10 @@ complexity: lightweight
 
 # Road to MCP Server
 
-**Status:** READY FOR EXECUTION (Phase 1 only) — decisions synthesized 2026-05-01.
+**Status:** Phase 1 + Phase 2 done — Phase 3 capture-only.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Phase 1 (A1–A7, MVP skeleton) approved as a spike, gated on A1 + A2.
-Phases 2+ stay capture-only until Phase 1 lands a working stdio prompt fetch.
+**Mode:** Phase 2 (B1–B5) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Phase 3+ stay capture-only.
 
 ## Purpose
 
@@ -95,11 +94,11 @@ Estimated effort: 1-2 dev days, gated on SDK verification.
 
 ## Phase 2 — Full skill + command coverage
 
-- [ ] **B1** — `prompts/list` iterates all skills + commands from `.agent-src/`.
-- [ ] **B2** — Filter by `source: package` vs `source: project` (overrides) — clients see merged view.
-- [ ] **B3** — Frontmatter validation: skip prompts with malformed YAML, log warning.
-- [ ] **B4** — Pagination — MCP clients may not handle 200+ prompts in one list response.
-- [ ] **B5** — Hot-reload on file change (dev convenience, not production requirement).
+- [x] **B1** — `prompts/list` iterates all skills + commands from `.agent-src/`. _Done 2026-05-10 — `scripts/mcp_server/prompts.py::scan_skills` + `scan_commands` + `load_all_prompts`; 278 prompts (174 skills + 104 commands) at HEAD._
+- [x] **B2** — Filter by `source: package` vs `source: project` (overrides) — clients see merged view. _Done 2026-05-10 — frontmatter `source:` forwarded into MCP `_meta` alongside `kind`; `.agent-src/` is the already-merged tree so the runtime loader inherits override resolution from `task sync`._
+- [x] **B3** — Frontmatter validation: skip prompts with malformed YAML, log warning. _Done 2026-05-10 — entries missing `name` / `description` are surfaced in the loader's `errors` tuple and printed to stderr at server boot (`mcp-server: warn: …`); they do not crash the boot path._
+- [x] **B4** — Pagination — MCP clients may not handle 200+ prompts in one list response. _Done 2026-05-10 — new-style `list_prompts` handler returns `ListPromptsResult` with cursor-based `nextCursor`; default `page_size=100`. Verified end-to-end via `stdio_client` handshake (page 1 → 100 prompts, nextCursor='100')._
+- [x] **B5** — Hot-reload on file change (dev convenience, not production requirement). _Done 2026-05-10 — `PromptCache` tracks mtime + path-set signature; re-scan triggers on every `prompts/list` when any tracked file changes. No background thread, no inotify; the list request is the rate-limiter._
 
 ## Phase 3 — Resources (rules, guidelines, contexts)
 
@@ -202,6 +201,7 @@ one confirmed client.
 
 ## Next step
 
-Phase 1 promoted out of capture-only 2026-05-02. Active: A1 (SDK verification)
-and A2 (free-tier client confirmation) running as parallel hard gates. A3+
-unblock once both gates land green.
+Phase 1 + Phase 2 both ship under PR #87 on
+`feat/road-to-mcp-server` (GUI smoke in Claude Desktop confirmed by
+user on 2026-05-10 between phases). Phase 3 (resources — C1–C4)
+remains capture-only until the user reopens it.
