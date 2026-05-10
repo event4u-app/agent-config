@@ -4,10 +4,10 @@ complexity: lightweight
 
 # Road to MCP Server
 
-**Status:** Phase 1 + 2 + 3 + 4 + 5 + Phase 6 F1/F3 done — F2 deferred to a successor roadmap, F4 blocked on the upstream identity decision.
+**Status:** Phase 1 + 2 + 3 + 4 + 5 + Phase 6 F1/F3 done — F2 + F4 deferred to `road-to-mcp-distribution.md`. Roadmap closed at 26/26 countable.
 **Started:** 2026-05-01
 **Trigger:** User asked whether agent-config is available as an MCP server. Answer: no — only consumer-side MCP usage docs exist. No server, no JSON-RPC surface.
-**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4 (D1–D4) executed 2026-05-10 after AI Council Design Call D1 locked the security boundary. Phase 6 F1/F3 executed 2026-05-10 after AI Council 3-round convergence on the distribution verdict; F2 deferred to `road-to-mcp-distribution.md`.
+**Mode:** Phase 2 (B1–B5) and Phase 3 (C1–C4) executed on `feat/road-to-mcp-server` after Phase 1 GUI smoke confirmed in Claude Desktop 2026-05-10. Adoption-barrier fixes (`task mcp:setup`, Lint-Bot JSON-fallback) shipped alongside Phase 3. Phase 4 (D1–D4) executed 2026-05-10 after AI Council Design Call D1 locked the security boundary. Phase 6 F1/F3 executed 2026-05-10 after AI Council 3-round convergence on the distribution verdict; F2 and F4 deferred to `road-to-mcp-distribution.md` after the F4 closure call (2026-05-10) confirmed F4 is a deployment primitive, not Phase-1 polish.
 
 ## Purpose
 
@@ -155,7 +155,16 @@ Council verdict 2026-05-10:
   [`docs/setup/mcp-server-docker.md`](../../docs/setup/mcp-server-docker.md).
   Smoke-tested: `docker build` + `docker run -i` + initialize
   round-trip green.
-- [ ] **F4** — Plugin marketplace listing (tied to identity decision in `road-to-better-skills-and-profiles.md`).
+- [-] **F4** — Plugin marketplace listing — **deferred to
+  [`road-to-mcp-distribution.md`](road-to-mcp-distribution.md) (G5)**.
+  Council closure verdict 2026-05-10:
+  [`agents/council-responses/mcp-phase-6-f4-marketplace-verdict.md`](../council-responses/mcp-phase-6-f4-marketplace-verdict.md).
+  Public marketplace listing implies production-readiness the Phase 1
+  scope contract (`docs/contracts/mcp-phase-1-scope.md`) deliberately
+  does not promise (server stays *experimental*). Same shape as F2:
+  deployment primitive, not protocol polish. Original "identity
+  decision" blocker is stale — `road-to-better-skills-and-profiles.md`
+  is archived and the OSS-light verdict was reached.
 
 ## Risk register
 

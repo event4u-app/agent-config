@@ -1,6 +1,6 @@
 # MCP Phase 1 — stdio smoke transcript
 
-> **Roadmap:** `agents/roadmaps/road-to-mcp-server.md` · A6
+> **Roadmap:** `agents/roadmaps/archive/road-to-mcp-server.md` · A6
 > **Date:** 2026-05-10
 > **Branch:** `feat/road-to-mcp-server`
 > **Server:** `python -m scripts.mcp_server` · Python 3.11.15 · `mcp` SDK v1.27.1
