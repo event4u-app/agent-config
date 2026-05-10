@@ -194,6 +194,102 @@ def test_relative_date_in_last_validated_line_skipped(tmp_path):
     assert result.returncode == 0
 
 
+def test_priority_optional_default_passes(tmp_path):
+    # No priority field → entry is valid (defaults to `normal` at read time).
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: ok
+            status: active
+            confidence: high
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+        """)
+    result = _run(root)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_priority_valid_enum_passes(tmp_path):
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: c
+            status: active
+            confidence: high
+            priority: critical
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+        """)
+    result = _run(root)
+    assert result.returncode == 0, result.stdout + result.stderr
+
+
+def test_priority_invalid_enum_fails(tmp_path):
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: bad
+            status: active
+            confidence: high
+            priority: high
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2026-01-01
+            review_after_days: 90
+        """)
+    result = _run(root)
+    assert result.returncode == 1
+    assert "invalid priority 'high'" in result.stdout
+
+
+def test_critical_stale_warns(tmp_path):
+    # Critical entry not validated in >90 days emits critical-stale warning.
+    root = _write(tmp_path, "domain-invariants", """
+        version: 1
+        entries:
+          - id: stale-crit
+            status: active
+            confidence: high
+            priority: critical
+            source: ["https://example.com"]
+            owner: team-x
+            last_validated: 2020-01-01
+            review_after_days: 3650
+        """)
+    result = _run(root)
+    # Warning is non-fatal — exit 0 unless other errors.
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "critical-stale:" in result.stdout
+
+
+def test_tier_zero_inflation_warns(tmp_path):
+    # 11 active critical entries → soft-cap warning (threshold is 10).
+    root = tmp_path / "memory" / "domain-invariants"
+    root.mkdir(parents=True)
+    entries = "\n".join(
+        f"  - id: crit-{i}\n"
+        f"    status: active\n"
+        f"    confidence: high\n"
+        f"    priority: critical\n"
+        f"    source: [\"https://example.com\"]\n"
+        f"    owner: team-x\n"
+        f"    last_validated: 2026-01-01\n"
+        f"    review_after_days: 90"
+        for i in range(11)
+    )
+    (root / "entries.yml").write_text(
+        "version: 1\nentries:\n" + entries + "\n", encoding="utf-8"
+    )
+    result = _run(tmp_path / "memory")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "tier-0 inflation:" in result.stdout
+    assert "11 active" in result.stdout
+
+
 def test_json_format_output(tmp_path):
     root = _write(tmp_path, "domain-invariants", """
         version: 1
