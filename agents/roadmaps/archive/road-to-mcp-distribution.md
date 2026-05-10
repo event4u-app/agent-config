@@ -4,11 +4,16 @@ complexity: lightweight
 
 # Road to MCP Distribution
 
-**Status:** Not started — successor roadmap, dormant until a real consumer ask surfaces.
+**Status:** Archived 2026-05-10 — fully superseded by
+[`road-to-cloudflare-mcp-hosting.md`](../road-to-cloudflare-mcp-hosting.md).
+Bridge work (G1–G4) absorbed by Cloudflare Phases 1–5; registry
+listing (G5) absorbed by Cloudflare Phase 6 (experimental-label
+listing — the "wait for beta" gate was self-imposed and dropped).
 **Started:** 2026-05-10 (stub only)
 **Trigger:** AI Council 3-round verdict on Phase 6 of `road-to-mcp-server.md` deferred F2 (SSE transport) out of "distribution polish" because it is a deployment primitive with its own A0 amendment, not polish. The follow-up F4 closure call (2026-05-10) deferred-in F4 (marketplace listing) by the same logic — same deployment-primitive shape, blocked on the *experimental* stability label. Predecessors:
 [`mcp-phase-6-distribution-verdict.md`](../council-responses/mcp-phase-6-distribution-verdict.md),
-[`mcp-phase-6-f4-marketplace-verdict.md`](../council-responses/mcp-phase-6-f4-marketplace-verdict.md).
+[`mcp-phase-6-f4-marketplace-verdict.md`](../council-responses/mcp-phase-6-f4-marketplace-verdict.md),
+[`cloudflare-mcp-hosting-verdict.md`](../council-responses/cloudflare-mcp-hosting-verdict.md).
 
 ## Purpose
 
@@ -55,22 +60,33 @@ inside the kernel.
 
 ## Phases (skeleton)
 
-- [ ] **G1** — Bridge spec + A0 amendment review (network surface,
-  auth model, rate limits).
-- [ ] **G2** — Bridge implementation in a separate module
+- [-] **G1** — Bridge spec + A0 amendment review (network surface,
+  auth model, rate limits). **Superseded** by
+  [`road-to-cloudflare-mcp-hosting.md`](road-to-cloudflare-mcp-hosting.md)
+  Phase 1 (`mcp-cloud-scope.md` is the bridge spec + A0 amendment for
+  the Worker shape). No separate `scripts/mcp_bridge/` module — the
+  Worker IS the bridge.
+- [-] **G2** — Bridge implementation in a separate module
   (`scripts/mcp_bridge/`), import-surface guarded the same way
-  `scripts/mcp_server/` is.
-- [ ] **G3** — Operator doc + Docker image for the bridge.
-- [ ] **G4** — Smoke harness: end-to-end test that signs a request,
+  `scripts/mcp_server/` is. **Superseded** by `workers/mcp/` in
+  the Cloudflare roadmap (TS, Cloudflare Worker).
+- [-] **G3** — Operator doc + Docker image for the bridge.
+  **Superseded** by `docs/setup/mcp-cloud-endpoints.md` in the
+  Cloudflare roadmap; no Docker image because Workers are the
+  runtime.
+- [-] **G4** — Smoke harness: end-to-end test that signs a request,
   posts it through the bridge, observes the kernel response.
-- [ ] **G5** — Plugin marketplace listing (deferred-in from
-  `road-to-mcp-server.md` F4; closure verdict
-  [`agents/council-responses/mcp-phase-6-f4-marketplace-verdict.md`](../council-responses/mcp-phase-6-f4-marketplace-verdict.md)).
-  Gated on G1–G4 *and* the server graduating from *experimental*.
-  Listing must be congruent with the stability label at submission
-  time; no submission while the Phase 1 scope contract still reads
-  "experimental, not linked from README". Target picks (MCP catalog,
-  `awesome-mcp-servers`, npm launcher) decided at G5 kick-off.
+  **Superseded** by the live-replay smoke against the deployed
+  Worker in Cloudflare-roadmap Phase 5 (no HMAC for MVP-1 because
+  content is OSS + read-only; HMAC moves to MVP-2 alongside tool
+  restoration).
+- [-] **G5** — Plugin marketplace listing. **Superseded** by
+  [`road-to-cloudflare-mcp-hosting.md`](../road-to-cloudflare-mcp-hosting.md)
+  Phase 6 (Registry Listing). The "experimental → beta" gate that
+  blocked G5 in this roadmap was self-imposed — MCP catalog and
+  `awesome-mcp-servers` accept experimental servers when the label
+  is honestly declared. npm-launcher listing (wrapping the local
+  stdio server) is out of scope there too.
 
 ## What stays out of this roadmap
 
