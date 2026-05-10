@@ -80,81 +80,95 @@ no consumer code execution surface · single deployment per release.
 
 ## Phase 2 — TS Worker scaffold (read-only)
 
-- [ ] **2.1** New directory `workers/mcp/` with `wrangler.toml`, TS
+- [x] **2.1** New directory `workers/mcp/` with `wrangler.toml`, TS
   config, `@modelcontextprotocol/sdk` (TS) dep. Single Worker module
   with `fetch` handler for HTTP + SSE.
-- [ ] **2.2** Reimplement `prompts.py` in TS: load prompts from bundled
+- [x] **2.2** Reimplement `prompts.py` in TS: load prompts from bundled
   content blob, return `prompts/list` and `prompts/get` MCP responses.
   Test against the live-replay baseline already used by the Python
   server (parity test in CI).
-- [ ] **2.3** Reimplement `resources.py` in TS: load resources from
+- [x] **2.3** Reimplement `resources.py` in TS: load resources from
   bundled content blob, return `resources/list` and `resources/read`.
   URI shape stays identical (`agent-config://skills/...` etc.).
-- [ ] **2.4** Identity surface: `serverInfo.version` reads from
+- [x] **2.4** Identity surface: `serverInfo.version` reads from
   Worker-bundled constant, `_meta.packageVersion` reads from
   `wrangler.toml` env var, `_meta.skillSetSignature` reads from the
   prebaked manifest JSON shipped with the content blob (never
   computed at runtime in the Worker).
-- [ ] **2.5** Deprecated tool stubs: `tools/list` returns the two
+- [x] **2.5** Deprecated tool stubs: `tools/list` returns the two
   stubs exactly as specified in `mcp-cloud-scope.md`, with
   `deprecated: true` and the local-server hint in the description.
-- [ ] **2.6** Worker-local smoke: `wrangler dev` + a small TS test
+- [x] **2.6** Worker-local smoke: `wrangler dev` + a small TS test
   harness that runs the live-replay baseline against the local dev
   Worker and diffs against the Python server's recorded output.
 
 ## Phase 3 — Content sync (R2)
 
-- [ ] **3.1** New R2 bucket `agent-config-mcp` (Terraform-managed if
+- [x] **3.1** New R2 bucket `agent-config-mcp` (Terraform-managed if
   the repo already has TF; otherwise a one-time wrangler bootstrap
-  doc + bucket-name pin in `mcp-cloud-scope.md`).
-- [ ] **3.2** Content packer script (`scripts/pack_mcp_content.py`)
+  doc + bucket-name pin in `mcp-cloud-scope.md`). *Bootstrap doc:
+  `docs/setup/mcp-r2-bootstrap.md`.*
+- [x] **3.2** Content packer script (`scripts/pack_mcp_content.py`)
   that walks `.agent-src/` + `docs/guidelines/` at a given git ref,
   emits a single gzipped JSON blob with `(uri, body)` pairs, plus a
   sidecar `signature.json` with the precomputed
   `skillSetSignature`. Local-stdio remains untouched.
-- [ ] **3.3** Wrangler bundle step: pack-script output is committed
+- [x] **3.3** Wrangler bundle step: pack-script output is committed
   to the Worker bundle at deploy time. Worker reads bundled blob, not
   R2 at runtime. (R2 is the **archive of past releases** + the
   pointer store; the live Worker serves from its bundle.)
-- [ ] **3.4** R2 archival upload: deploy-time GitHub Action uploads
+- [x] **3.4** R2 archival upload: deploy-time GitHub Action uploads
   the same blob to `releases/v<X.Y.Z>-<sha>/content.json.gz`
   alongside `releases/v<X.Y.Z>-<sha>/signature.json`. Past releases
   remain inspectable, future tooling can serve from R2 directly.
-- [ ] **3.5** `latest` pointer: `releases/latest.txt` in R2 holds
+  *Wired in Phase 4.2.*
+- [x] **3.5** `latest` pointer: `releases/latest.txt` in R2 holds
   the current `v<X.Y.Z>-<sha>` string, repointed atomically by the
-  release pipeline post-smoke.
+  release pipeline post-smoke. *Wired in Phase 4.2.*
 
 ## Phase 4 — Release auto-deploy pipeline
 
-- [ ] **4.1** `.github/workflows/deploy-mcp-worker.yml` triggered on
+- [x] **4.1** `.github/workflows/deploy-mcp-worker.yml` triggered on
   `release: published`. Inputs: tag name, target environment.
   Secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
-- [ ] **4.2** Pipeline steps: checkout tag → install deps → run
+- [x] **4.2** Pipeline steps: checkout tag → install deps → run
   `pack_mcp_content.py` against the tag worktree → upload blob to
   R2 `releases/<tag>-<sha>/` → `wrangler deploy` Worker with
   `PACKAGE_VERSION=<tag>` and `RELEASE_KEY=<tag>-<sha>` → run
   Phase-5 smoke against the new deployment → repoint
   `releases/latest.txt` to `<tag>-<sha>` → comment on the GH
   release with the deploy URLs.
-- [ ] **4.3** `workflow_dispatch` manual path for hotfix-without-
+- [x] **4.3** `workflow_dispatch` manual path for hotfix-without-
   release. Same steps, no `release: published` trigger.
-- [ ] **4.4** Failure mode: if smoke fails post-deploy, the pipeline
+- [x] **4.4** Failure mode: if smoke fails post-deploy, the pipeline
   rolls back by **not** repointing `latest`. Version-pinned URL stays
   live for inspection; `latest` keeps serving the previous release.
+  *Implemented via step ordering: smoke runs before `latest.txt`
+  repoint; a non-zero exit aborts the job before the repoint step.*
 
 ## Phase 5 — Smoke & cutover
 
-- [ ] **5.1** Live-replay smoke: same baseline that
+- [x] **5.1** Live-replay smoke: same baseline that
   `road-to-mcp-server.md` Phase 4 introduced, but pointed at the
   deployed Worker URL. Diff against the recorded local-stdio output.
-- [ ] **5.2** Public DNS — `mcp.<chosen-domain>` CNAME to the Worker
+  *Implemented as `scripts/mcp_parity_smoke.py` — replays
+  `prompts/list` + `resources/list` + `tools/list` against an HTTP
+  target, diffs against the in-process Python loaders. Validated
+  locally against `wrangler dev`; pipeline runs it post-deploy
+  before repointing `latest.txt`.*
+- [x] **5.2** Public DNS — `mcp.<chosen-domain>` CNAME to the Worker
   route, documented in `docs/setup/mcp-cloud-endpoints.md`. Pin the
   two URL shapes (`/latest/sse`, `/v<X.Y.Z>/sse`).
-- [ ] **5.3** Stability label remains *experimental* per
+  *URL shapes + Custom-Domain setup pinned. Actual DNS provisioning
+  is operator-side (one-time Cloudflare dashboard step).*
+- [x] **5.3** Stability label remains *experimental* per
   `mcp-phase-1-scope.md`. Add a one-line readme section
   ("Remote MCP: experimental") with the endpoint URL.
-- [ ] **5.4** Update `STABILITY.md` (if it tracks wire-surface) with
+- [x] **5.4** Update `STABILITY.md` (if it tracks wire-surface) with
   the hosted endpoint URL shape and the immutability promise.
+  *No `STABILITY.md` exists in this repo — wire-surface promise
+  lives in `docs/mcp-server.md` § Three channels and the A0-cloud
+  contract instead.*
 
 ## Phase 6 — Registry listing (adoption multiplier)
 
@@ -165,20 +179,23 @@ The `experimental` stability label is **not** a blocker — MCP
 catalog and `awesome-mcp-servers` accept experimental servers when
 the label is honestly declared in the listing.
 
-- [ ] **6.1** Submission package — draft a single source file
+- [x] **6.1** Submission package — draft a single source file
   `docs/setup/mcp-cloud-registry-listing.md` containing: project
   one-liner, hosted endpoint URLs (`/latest/sse` + `/v<X.Y.Z>/sse`
   shape), stability statement (*experimental*), wire surface
   (prompts + resources, no tools in MVP-1), license, contact, and
   the link to `mcp-phase-1-scope.md` + `mcp-cloud-scope.md`. Reuse
   this file for every registry submission.
-- [ ] **6.2** PR to `awesome-mcp-servers` — lowest friction, widest
+- [~] **6.2** PR to `awesome-mcp-servers` — lowest friction, widest
   reach. List under the appropriate category with the
   `experimental` tag. Link the hosted `/latest/sse` URL.
-- [ ] **6.3** PR / submission to the `modelcontextprotocol.io`
+  *Submission package ready (6.1). External-repo PR is operator-
+  side — the upstream package does not run a public reference
+  deployment; consumers list their own Worker URL.*
+- [~] **6.3** PR / submission to the `modelcontextprotocol.io`
   catalog — higher curation bar. Submit only after 6.2 has merged
   (gives evidence of community uptake). Same submission package
-  from 6.1.
+  from 6.1. *Gated on 6.2; same operator-side caveat.*
 
 npm-launcher listing (would wrap the **local stdio** server, not
 the hosted Worker) is out of scope for this roadmap — different
