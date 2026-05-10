@@ -9,7 +9,7 @@ complexity: lightweight
 after AI #5 review).
 **Trigger:** Multi-AI review identified marketing, multi-tool expansion,
 orchestration DSL, and audit-as-memory as Block H/I/G/Q. AI #5 flagged
-these as scope creep relative to the Thinking Layer's 6-week horizon.
+these as scope creep relative to the Thinking Layer's foundation set.
 **Mode:** Four phases (H · I · G · Q), one per block. Recommended
 sequencing in pre-conditions section — not enforced; the user picks
 the active phase.
@@ -20,7 +20,7 @@ Track the four distribution / adoption / orchestration blocks
 (Marketing · Multi-tool expansion · Orchestration DSL · Audit-as-Memory)
 that were originally synthesised under
 `road-to-better-skills-and-profiles.md` and split out 2026-05-01 to
-keep the Thinking Layer roadmap inside its 6-week plate.
+keep the Thinking Layer roadmap focused on its core scope.
 
 ## Out of scope (this roadmap)
 
@@ -29,31 +29,21 @@ keep the Thinking Layer roadmap inside its 6-week plate.
   `road-to-governance-cleanup.md`.
 - MCP server — `road-to-mcp-server.md`.
 
-## Horizon (6-week visible plate)
+## Phase ordering
 
-Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
-6 weeks is the visible commitment plate; anything outside is **out-of-horizon** (beyond 6 weeks).
-
-**Inside the plate (this 6-week window):**
-
-- **Phase 2 (I — Multi-tool expansion)** *if* sibling Block B
-  (projection-layer review) finishes within the window. I1–I3 are
-  cheap once the abstraction is clean; estimate 1–2 weeks once
-  unblocked.
-
-**Outside the plate (out-of-horizon, gated on dependencies):**
-
-- **Phase 1 (H — Marketing)** — four pre-conditions stacked
+- **Phase 2 (I — Multi-tool expansion)** — next-in-line once sibling
+  Block B (projection-layer review) finishes. I1–I3 are cheap once
+  the abstraction is clean.
+- **Phase 1 (H — Marketing)** — gated on four pre-conditions stacked
   (Thinking A+C ≥80% shipped, post-pr29 1.15.0, `docs/contracts/`
-  policy, named owner with 1 day/week cap). None due in 6 weeks.
+  policy, named owner with 1 day/week cap).
 - **Phase 3 (G — Orchestration DSL)** — gated on Thinking Layer A + C
-  ≥80% shipped. C alone is 4–6 weeks after A; not realistic in plate.
+  ≥80% shipped.
 - **Phase 4 (Q — Audit-as-Memory)** — gated on Phase 3 (G) shipping.
-  Two phases out from the plate.
 
 The dashboard treats every phase as ready (per "Phase pre-conditions"
-section); this block makes the realistic timing explicit so reviewers
-know which phase is the next-in-window candidate.
+section); this block makes dependency ordering explicit so reviewers
+know which phase is the next-in-line candidate.
 
 ## Phase pre-conditions (recommended sequencing)
 

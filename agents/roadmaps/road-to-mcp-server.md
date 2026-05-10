@@ -23,20 +23,12 @@ This is positioned as a **distinguishing feature** — `claude-skills` does not
 ship an MCP server today. agent-config has the architectural advantage
 (single source of truth) needed to do this cleanly.
 
-## Horizon (6-week visible plate)
-
-Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
-6 weeks is the visible commitment plate; anything outside is **out-of-horizon** (beyond 6 weeks).
-
-**Inside the plate (this 6-week window):**
+## Phase ordering
 
 - Phase 1 (A1–A7) — MVP skeleton: SDK verify (A1), free-tier client confirm
   (A2), `scripts/mcp_server/` entrypoint, `prompts/list` + `prompts/get` for
   5 hand-picked stack-agnostic skills, smoke test in one client, base test
-  suite. Estimated effort 1–2 dev days; gated on A1 + A2 succeeding.
-
-**Outside the plate (out-of-horizon, gated on Phase 1 evidence):**
-
+  suite. Gated on A1 + A2 succeeding.
 - Phase 2 (B1–B5) — full skill + command coverage, pagination, hot-reload.
 - Phase 3 (C1–C4) — resources (rules · guidelines · contexts).
 - Phase 4 (D1–D4) — tools (engine helpers, allowlist) — design call required first.

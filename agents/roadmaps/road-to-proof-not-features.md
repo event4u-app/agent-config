@@ -59,18 +59,14 @@ Phase 2 + 3 do not start until Phase 1 ships P1.4.
 - Test-redundancy audit on the 2,318-test suite — long-tail,
   separate roadmap when prioritised.
 
-## Horizon (6-week visible plate)
-
-**Inside the plate:**
+## Phase ordering
 
 - Phase 1 (P1.1–P1.4) — three showcase sessions captured.
 - Phase 2 (P2.1–P2.4) — memory consequence + README split + hook doctor.
-
-**Outside the plate (gated on Phase 1 + 2 evidence):**
-
 - Phase 3 (P3.1–P3.4) — settings-sync hardening, concern budget,
-  AI Council scoping. Intentionally deferred so real session data
-  informs the budget thresholds rather than guesswork.
+  AI Council scoping. Gated on Phase 1 + 2 evidence — intentionally
+  deferred so real session data informs the budget thresholds rather
+  than guesswork.
 
 ## Phase 1 — Beweis (3 real showcase sessions)
 
@@ -295,7 +291,7 @@ new evidence).
 | Iron Law 2 (no impersonation): the agent cannot author authentic host-agent transcripts itself | High | Phase 1 sessions must be run by the user as host-agent operator. Agent only assists capture / lint — the conversation itself is real. Documented in `docs/showcase.md`. |
 | `affected` set in P2.1 turns into a leaky abstraction (every memory call claims to affect everything) | Medium | Anchor on decision-trace key diff, not on memory metadata. Unit tests cover the "consulted but ignored" case explicitly. |
 | README split (P2.2) breaks existing inbound links from blog posts / READMEs of other projects | Low | Keep anchor IDs stable; new headings get IDs that match prior link targets where reasonable. |
-| Hook concern budget thresholds (P3.3) chosen too tight, breaks legitimate flows | Medium | Defer until Phase 1 + 2 produce real concern-count data. Phase 3 is explicitly out-of-plate. |
+| Hook concern budget thresholds (P3.3) chosen too tight, breaks legitimate flows | Medium | Defer until Phase 1 + 2 produce real concern-count data. Phase 3 is explicitly gated on Phase 1 + 2 evidence. |
 | Phase 1 sessions reveal the system fails on real tickets in ways internal tests didn't catch | High (but desired) | This is the point of the roadmap. A red Phase 1 produces a follow-up roadmap, not a hidden retry. |
 | P1.1 / P1.2 run against production data by accident ("Beweis Theater" critique) | High | Hard rule: non-production target only (staging tenant, sandbox DB, throwaway branch, synthetic ticket). P1.1 captures the target classification in frontmatter; lint rejects `target: production`. |
 | Memory consequence model is binary (key-diverged / not) and under-explains real outcomes | Medium | Captured in P2.1 "out of scope" note. Revisit after Phase 1 produces session evidence; do not pre-build gradations without data. |

@@ -28,8 +28,8 @@ with the **scope delta below**.
 ## Scope delta
 
 - **Working set:** every open step across every phase, in document
-  order. **Horizon markers do not narrow the working set** — see
-  Iron Law below.
+  order. Phase-internal annotations like `(deferred)` / `(optional)` /
+  "gated on Phase N" do not narrow the working set.
 - **Stop after:** the entire roadmap reaches `count_open == 0`, or a
   halt condition fires (Hard-Floor, council-off + ambiguity,
   security-sensitive, scope-out-of-roadmap, test/quality red).
@@ -45,18 +45,20 @@ with the **scope delta below**.
 
 ```
 /roadmap:process-full PROCESSES EVERY OPEN STEP IN THE FILE.
-HORIZON MARKERS, "OUT-OF-HORIZON" LABELS, "GATED ON PHASE X"
-NOTES, AND PHASE-INTERNAL "OPTIONAL" TAGS DO NOT NARROW THE
-WORKING SET. ONLY THE FIVE HALT CONDITIONS STOP THE RUN.
+PHASE-INTERNAL "(DEFERRED)" / "(OPTIONAL)" / "GATED ON PHASE X"
+NOTES DO NOT NARROW THE WORKING SET. ONLY THE FIVE HALT CONDITIONS
+STOP THE RUN.
 ```
 
-Roadmaps frequently carry a "Horizon (N-week visible plate)" section
-or "(out-of-horizon, gated on Phase N)" sub-headings as an authoring
-device. Those are **archival annotations**, not execution gates.
-`/roadmap:process-full` ignores them by construction. If the user
-wants horizon-respecting execution, they invoke `/roadmap:process-phase`
-(scope = single phase) or `/roadmap:process-step` (scope = single
-step) instead.
+Phase-internal `(deferred)` / `(optional)` / `gated on Phase N` tags are
+authoring annotations, not execution gates. `/roadmap:process-full`
+ignores them by construction. If the user wants narrower execution they
+invoke `/roadmap:process-phase` (scope = single phase) or
+`/roadmap:process-step` (scope = single step) instead.
+
+Time-boxed plate / horizon framing is forbidden in roadmaps by template
+rule 16 (`templates/roadmaps.md`). If a legacy roadmap still carries
+such phrasing, treat it as ordinary prose — never as a gate.
 
 ## Iron Law — Real-time dashboard
 
@@ -79,9 +81,9 @@ step 5.
 
 - **No silent acceleration past a halt.** Every halt condition stops
   the run; the user resumes on the next turn.
-- **No silent stop at a horizon marker.** Encountering "out-of-horizon",
-  "gated on Phase N", "deferred", or any equivalent annotation is
-  **not** a halt condition. Continue.
+- **No silent stop at an authoring annotation.** Encountering
+  "gated on Phase N", "deferred", "optional", or any equivalent
+  phase-internal annotation is **not** a halt condition. Continue.
 - **No silent batch flip.** Each step's checkbox flips in the same
   reply that lands its work — never deferred to the archive commit.
 - **Phase quality pipeline runs at every phase boundary** when cadence

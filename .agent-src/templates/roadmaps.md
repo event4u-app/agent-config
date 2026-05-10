@@ -43,6 +43,15 @@ Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module
     or budget-invariant changes; multi-round council, file-ownership
     matrices, > 600 lines. Enforced by `task lint-roadmap-complexity`.
     Standard: [`docs/contracts/roadmap-complexity-standard.md`](../docs/contracts/roadmap-complexity-standard.md).
+16. **No time-boxed plates, no visible-horizon sections.** Roadmaps describe
+    scope and phase ordering, not week-by-week commitments. No
+    `## Horizon (N-week visible plate)` sections, "Inside / outside the
+    plate" framings, `In-plate?` columns, or `**Out-of-plate.**` /
+    `**Out-of-horizon.**` / `(out-of-horizon, gated on Phase N)` suffixes.
+    AI execution does not operate on calendar plates; scope ordering and
+    dependency gates suffice. Pacing is the user's call, decided per turn
+    — never encoded into the plan. Enforced by `task lint-roadmap-complexity`
+    (plate-token detection).
 
 ---
 
