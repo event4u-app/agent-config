@@ -34,7 +34,7 @@ this skill is about depth-5-to-10 interviews, not statistics.
 ### Step 0: Frame the job
 
 1. Write one sentence: *"Users hire \<thing\> to make progress in \<situation\>, when motivated by \<pressure\>, expecting \<outcome\>."* If you cannot finish the sentence, the discovery slice is not yet shaped — stop and route to `po-discovery`.
-2. Read `agents/context-spine/product.md` (if present) for the bounded scope. Skip slot if absent — note in the brief.
+2. Read the **product** slot of the [context-spine](../../../docs/contracts/context-spine.md) (if the consumer project has filled it) for bounded scope. Skip if absent — note in the brief.
 3. Identify **one** competing solution the user might fire. Multiple competitors per session blurs the switch event.
 
 ### Step 1: Recruit the right 5–8

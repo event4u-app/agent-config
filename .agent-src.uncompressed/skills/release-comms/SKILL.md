@@ -34,7 +34,7 @@ discovery — this skill assumes the change is **shipped**.
 ### Step 0: Ground the release
 
 1. Read the merged PR list / changelog block / release branch diff. The release is the **what**; comms is the **so what**. Conflate the two and you ship marketing.
-2. Read `agents/context-spine/product.md` (if present) for the bounded scope and `team.md` for the release cadence — surface choice depends on cadence (weekly: in-app + log; quarterly: email + post; major: all four).
+2. Read the **product** and **team** slots of the [context-spine](../../../docs/contracts/context-spine.md) (if the consumer project has filled them) for bounded scope and release cadence — surface choice depends on cadence (weekly: in-app + log; quarterly: email + post; major: all four).
 3. Identify the **single dominant change** the release ships. A release with three "headliners" reads as three half-announcements.
 
 ### Step 1: Audience-segment
