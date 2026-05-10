@@ -63,13 +63,13 @@ convergence, and the rationale for what we **do not** ship lives at
 
 ## Phase 1 — Ship the skill + sub-command + date linter (READY)
 
-- [ ] **A1 — Cluster contract update.** Add `mine-session` to the
+- [x] **A1 — Cluster contract update.** Add `mine-session` to the
   `memory` cluster row in
   [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md):
   `add · load · promote · propose · mine-session`. No legacy atomic
   to deprecate (new sub-command). Bump `lint_no_new_atomic_commands.py`
   expected-set if it caches the row.
-- [ ] **A2 — `memory-consolidation` skill.** Author at
+- [x] **A2 — `memory-consolidation` skill.** Author at
   `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md`,
   senior-tier, Wing-1 engineering. Body documents the four phases
   (`ORIENT → GATHER SIGNAL → CONSOLIDATE → PRUNE & INDEX`) with the
@@ -81,7 +81,7 @@ convergence, and the rationale for what we **do not** ship lives at
   `dream-skill` as concept source, never vendors text or code.
   Frontmatter trigger covers "consolidate memory", "mine my
   sessions", "review intake signals".
-- [ ] **A3 — `/memory:mine-session` sub-command.** Author at
+- [x] **A3 — `/memory:mine-session` sub-command.** Author at
   `.agent-src.uncompressed/commands/memory/mine-session.md`,
   cluster `memory`, sub `mine-session`. Default behaviour
   `--preview`; explicit `--commit-intake` writes JSONL.
@@ -92,7 +92,7 @@ convergence, and the rationale for what we **do not** ship lives at
   14 days. Single-host implementation against
   `~/.claude/projects/*/sessions/*.jsonl`; other hosts emit
   `not-supported-on-this-host` with manual `/memory:propose` fallback.
-- [ ] **A4 — `/memory:load` inline-review hook.** Update
+- [x] **A4 — `/memory:load` inline-review hook.** Update
   `.agent-src.uncompressed/commands/memory/load.md` so a load
   action that finds > 10 unreviewed intake entries surfaces a
   numbered-options preview of the top-3 signals (highest-confidence
@@ -102,27 +102,27 @@ convergence, and the rationale for what we **do not** ship lives at
   `10` lives in `.agent-settings.yml` under
   `memory.inline_review_threshold` (default 10, settable by
   consumers).
-- [ ] **A5 — Date-discipline linter rule.** Add
+- [x] **A5 — Date-discipline linter rule.** Add
   `scripts/check_memory.py` (new file) with one rule for Phase 1:
   reject curated YAML body fields containing `yesterday|last
   week|last month|tomorrow|today` without an ISO anchor
   (`YYYY-MM-DD`) within ±5 chars. Wire into `task lint-memory` and
   the existing `task ci` aggregator.
-- [ ] **A6 — Intake `tags` field.** Update
+- [x] **A6 — Intake `tags` field.** Update
   [`docs/contracts/agent-memory-contract.md`](../../docs/contracts/agent-memory-contract.md)
   to add `tags: string[]` (optional, default `[]`) to the intake
   JSONL shape. Update `/memory:propose` and `/memory:mine-session`
   to emit; `/memory:promote` to read tag intersection when picking
   the destination schema. Schema-mapping table in the skill body
   documents the routing.
-- [ ] **A7 — Marketplace + counts sync.** Run `task sync` +
+- [x] **A7 — Marketplace + counts sync.** Run `task sync` +
   `task generate-tools` to project the new skill and command into
   `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`,
   `.clinerules/`, `.windsurfrules`. Update
   `.claude-plugin/marketplace.json`, `README.md` skill / command
   counts, `docs/architecture.md`, and the skills-count line in
   `AGENTS.md` to match.
-- [ ] **A8 — Smoke-test fixture + `task ci`.** Author
+- [x] **A8 — Smoke-test fixture + `task ci`.** Author
   `tests/fixtures/dream-skill/` with one minimal Claude-Code-format
   JSONL session containing one of each signal class (corrections,
   preferences, decisions, patterns). Add
