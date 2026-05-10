@@ -5,7 +5,7 @@ status: active
 tier: senior
 source: package
 domain: product
-context_spine: [product, team]
+context_spine: [product]
 ---
 
 # customer-research
