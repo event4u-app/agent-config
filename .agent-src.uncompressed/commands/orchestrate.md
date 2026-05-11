@@ -1,5 +1,6 @@
 ---
 name: orchestrate
+cluster: orchestrate
 skills: [subagent-orchestration]
 description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
 disable-model-invocation: true
