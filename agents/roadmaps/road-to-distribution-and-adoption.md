@@ -83,6 +83,13 @@ backfires (no depth to point at).
       on eval thresholds producing numbers).
 - [ ] **H4** — Medium / dev.to articles, conference CFP — owner +
       budget assigned first, then content.
+- [ ] **H5** — Screencasts / asciinema casts per primary surface
+      (Claude Code, Cursor, Windsurf, Claude Desktop), each embedded in
+      its `docs/setup/per-ide/<surface>.md` page. Substrate ready: the
+      `## Verification` block in every per-IDE doc is the cast script.
+      Moved from archived `road-to-simplicity-and-everywhere.md` S33
+      (engineering phase was the wrong home — terminal capture is
+      marketing output).
 
 ## Phase 2: Block I — Multi-tool expansion
 

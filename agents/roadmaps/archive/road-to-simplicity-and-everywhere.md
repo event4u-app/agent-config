@@ -287,10 +287,13 @@ broken paths.
       section stays as the install-machinery deep-dive.
 - [-] **S33** — Add a screencast / asciinema cast per primary surface
       (Claude Code, Cursor, Windsurf, Claude Desktop) embedded in the
-      per-IDE page. **Deferred** — out-of-band recording session
-      required (terminal capture cannot run inside an autonomous agent
-      session). Tracked separately; per-IDE pages already have
-      `## Verification` blocks that double as the cast script.
+      per-IDE page. **Moved** to
+      `agents/roadmaps/road-to-distribution-and-adoption.md` Phase 1
+      (Block H — Marketing, **H5**). Rationale: terminal capture is
+      marketing output, not engineering; belongs in the distribution
+      roadmap next to README rewrite and landing pages. Per-IDE pages
+      already carry `## Verification` blocks that double as the cast
+      script.
 
 ## Phase 7: Marketplace Listings + Discoverability
 
