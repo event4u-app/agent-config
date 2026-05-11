@@ -263,6 +263,7 @@
         "./.claude/skills/subagent-orchestration",
         "./.claude/skills/sync-agent-settings",
         "./.claude/skills/sync-gitignore",
+        "./.claude/skills/sync-gitignore-fix",
         "./.claude/skills/systematic-debugging",
         "./.claude/skills/tailwind-engineer",
         "./.claude/skills/tech-debt-tracker",
