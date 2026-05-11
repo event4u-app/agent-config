@@ -21,6 +21,11 @@ tasks:
     cmds:
       - .venv-mcp/bin/python -m pytest tests/test_mcp_server.py -v
 
+  mcp:health:
+    desc: "Phase 1 J6 telemetry healthcheck — exits non-zero if no tools/call logged in past 24h"
+    cmds:
+      - python3 scripts/mcp_telemetry_health.py {{.CLI_ARGS}}
+
   # ---------------------------------------------------------------------------
   # Cloudflare hosted MCP — one-time operator setup.
   #
