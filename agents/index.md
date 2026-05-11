@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **408 artefacts** in this package.
+Maintainer-facing index of all **409 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -251,7 +251,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (105)
+## Commands (106)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -352,7 +352,8 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`rule-compliance-audit`](../.agent-src.uncompressed/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src.uncompressed/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`sync-agent-settings`](../.agent-src.uncompressed/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
-| command | [`sync-gitignore`](../.agent-src.uncompressed/commands/sync-gitignore.md) |  | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
+| command | [`sync-gitignore:fix`](../.agent-src.uncompressed/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
+| command | [`sync-gitignore`](../.agent-src.uncompressed/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
 | command | [`tests:create`](../.agent-src.uncompressed/commands/tests/create.md) | cluster: tests | Write meaningful tests for the changes in the current branch |
 | command | [`tests:execute`](../.agent-src.uncompressed/commands/tests/execute.md) | cluster: tests | Run PHP tests inside the Docker container |
 | command | [`tests`](../.agent-src.uncompressed/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
