@@ -13,12 +13,20 @@ settings.py``):
 * Chat-history hooks gate on **two** switches: ``hooks.chat_history.
   enabled`` AND the global ``chat_history.enabled``. Either off → no
   chat-history hook registers.
+
+Per road-to-portable-dev-preferences P3, the YAML read goes through
+:func:`work_engine._lib.agent_settings.load_agent_settings`, which
+cascades the whitelisted ``cost_profile`` (and other DX-comfort keys)
+from ``~/.config/agent-config/agent-settings.yml`` when the project
+file omits them. Project values always win.
 """
 from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+
+from work_engine._lib.agent_settings import load_agent_settings
 
 DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
 DEFAULT_CHAT_HISTORY_SCRIPT = "scripts/chat_history.py"
@@ -52,34 +60,25 @@ _DEFAULT = HookSettings()
 
 def load_hook_settings(
     settings_path: Path | str | None = None,
+    user_global_path: Path | str | None = None,
 ) -> HookSettings:
     """Return :class:`HookSettings` hydrated from ``.agent-settings.yml``.
 
     ``settings_path`` defaults to ``./.agent-settings.yml`` relative to
     the current working directory — same convention as chat-history.
+    ``user_global_path`` defaults to
+    ``~/.config/agent-config/agent-settings.yml`` and only cascades the
+    whitelisted DX-comfort keys (currently ``cost_profile``) when the
+    project file omits them. See road-to-portable-dev-preferences P3.
     """
     path = Path(settings_path) if settings_path else Path(DEFAULT_SETTINGS_FILE)
-    raw = _read_yaml(path)
-    if raw is None:
+    raw = load_agent_settings(
+        project_path=path,
+        user_global_path=user_global_path,
+    )
+    if not raw:
         return _DEFAULT
     return _settings_from_raw(raw)
-
-
-def _read_yaml(path: Path) -> dict[str, Any] | None:
-    if not path.is_file():
-        return None
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return None
-    try:
-        with path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return None
-    if not isinstance(data, dict):
-        return None
-    return data
 
 
 def _settings_from_raw(data: dict[str, Any]) -> HookSettings:

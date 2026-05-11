@@ -197,3 +197,43 @@ def test_decision_trace_off_when_master_off(tmp_path: Path) -> None:
         "decision_engine:\n  surface_traces: true\n",
     )
     assert load_hook_settings(cfg).decision_trace is False
+
+
+# --- portable dev preferences P3: user-global cascade ----------------------
+
+def test_cost_profile_cascades_from_user_global(tmp_path: Path) -> None:
+    """``cost_profile`` is whitelisted; absent in project → user-global wins."""
+    project = _write(tmp_path / "project.yml", "hooks:\n  enabled: true\n")
+    user_global = _write(
+        tmp_path / "user.yml",
+        "cost_profile: minimal\n",
+    )
+    settings = load_hook_settings(project, user_global_path=user_global)
+    assert settings.cost_profile == "minimal"
+
+
+def test_project_cost_profile_wins_over_user_global(tmp_path: Path) -> None:
+    """Project always wins; user-global only fills gaps."""
+    project = _write(
+        tmp_path / "project.yml",
+        "hooks:\n  enabled: true\ncost_profile: aggressive\n",
+    )
+    user_global = _write(
+        tmp_path / "user.yml",
+        "cost_profile: minimal\n",
+    )
+    settings = load_hook_settings(project, user_global_path=user_global)
+    assert settings.cost_profile == "aggressive"
+
+
+def test_non_whitelisted_user_global_keys_ignored(tmp_path: Path) -> None:
+    """Only the agent-settings whitelist cascades — ``hooks:`` is not on it."""
+    project = _write(tmp_path / "project.yml", "")
+    user_global = _write(
+        tmp_path / "user.yml",
+        "hooks:\n  enabled: true\n  trace: true\n",
+    )
+    settings = load_hook_settings(project, user_global_path=user_global)
+    # Non-whitelisted keys are silently dropped → defaults still apply.
+    assert settings.enabled is False
+    assert settings.trace is False
