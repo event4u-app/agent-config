@@ -4,7 +4,10 @@ complexity: lightweight
 
 # Road to Distribution and Adoption
 
-**Status:** READY FOR EXECUTION — split out of `road-to-better-skills-and-profiles.md` 2026-05-01.
+**Status:** PARTIALLY DEFERRED — see "Post process-full audit
+(2026-05-11)" below. Active scope = G1, G2, Q1, Q2, Q3 (separate-PR
+shipping). Sibling-roadmap-gated steps (`[~]`) and human-gated steps
+(`[-]`) excluded from this PR per AI Council convergence.
 **Started:** 2026-05-01 (split out of `road-to-better-skills-and-profiles.md`
 after AI #5 review).
 **Trigger:** Multi-AI review identified marketing, multi-tool expansion,
@@ -75,21 +78,27 @@ locked from the Thinking Layer decisions.
 **Risk if started early:** marketing eats engineering, depth narrative
 backfires (no depth to point at).
 
-- [ ] **H1** — README rewrite for OSS-light positioning (waits on
-      sibling roadmap F7 shipping).
-- [ ] **H2** — Skill-bundle landing pages (waits on sibling roadmap
-      Block A personas shipping).
-- [ ] **H3** — Comparison page vs `alirezarezvani/claude-skills` (waits
-      on eval thresholds producing numbers).
-- [ ] **H4** — Medium / dev.to articles, conference CFP — owner +
-      budget assigned first, then content.
-- [ ] **H5** — Screencasts / asciinema casts per primary surface
-      (Claude Code, Cursor, Windsurf, Claude Desktop), each embedded in
-      its `docs/setup/per-ide/<surface>.md` page. Substrate ready: the
-      `## Verification` block in every per-IDE doc is the cast script.
-      Moved from archived `road-to-simplicity-and-everywhere.md` S33
-      (engineering phase was the wrong home — terminal capture is
-      marketing output).
+- [~] **H1** — README rewrite for OSS-light positioning. **Deferred
+      2026-05-11**: waits on sibling roadmap F7 shipping; that
+      roadmap is not present in this branch. Promote to `[ ]` when
+      the sibling roadmap exists and F7 ships.
+- [~] **H2** — Skill-bundle landing pages. **Deferred 2026-05-11**:
+      waits on sibling roadmap Block A personas; sibling roadmap not
+      present in this branch.
+- [~] **H3** — Comparison page vs `alirezarezvani/claude-skills`.
+      **Deferred 2026-05-11**: waits on eval thresholds producing
+      numbers (sibling roadmap not present).
+- [-] **H4** — Medium / dev.to articles, conference CFP. **Cancelled
+      2026-05-11** via AI Council convergence (category error: "owner
+      + budget assigned first" is non-agent action). Moved to
+      [`docs/DISTRIBUTION_CHECKLIST.md`](../../docs/DISTRIBUTION_CHECKLIST.md)
+      § "Medium / dev.to articles + conference CFP".
+- [-] **H5** — Screencasts / asciinema casts per primary surface.
+      **Cancelled 2026-05-11** via AI Council convergence (terminal
+      capture on a maintainer machine is non-agent action; substrate
+      already shipped via archived `road-to-simplicity-and-everywhere.md`).
+      Moved to [`docs/DISTRIBUTION_CHECKLIST.md`](../../docs/DISTRIBUTION_CHECKLIST.md)
+      § "Screencasts / asciinema casts per primary surface".
 
 ## Phase 2: Block I — Multi-tool expansion
 
@@ -101,11 +110,15 @@ projection-layer review.
 Block B (projection-layer review) must produce a clean abstraction;
 otherwise each new tool re-implements the projection logic.
 
-- [ ] **I1** — Per-tool projection scripts for Aider, Kilo Code,
-      OpenCode, Codex (one script per target).
-- [ ] **I2** — Integration tests against each tool's loader.
-- [ ] **I3** — Installation docs in `docs/installation.md` under
-      `advanced`.
+- [~] **I1** — Per-tool projection scripts for Aider, Kilo Code,
+      OpenCode, Codex (one script per target). **Deferred 2026-05-11**:
+      sibling-roadmap Block B (projection-layer review) is not
+      present in this branch; without the abstraction each new tool
+      re-implements emitter logic in `scripts/compress.py`.
+- [~] **I2** — Integration tests against each tool's loader.
+      **Deferred 2026-05-11**: gates on I1.
+- [~] **I3** — Installation docs in `docs/installation.md` under
+      `advanced`. **Deferred 2026-05-11**: gates on I1.
 
 ## Phase 3: Block G — Orchestration DSL
 
@@ -119,10 +132,16 @@ personas to compose.
 **Risk if started early:** DSL ships without enough personas to
 compose → becomes a prettier `/work`.
 
-- [ ] **G1** — DSL schema + linter.
+- [ ] **G1** — DSL schema + linter. **Scope note**: own PR; no
+      external dep, but ships orphan-schema unless paired with G2
+      (its consumer) in the same review window.
 - [ ] **G2** — `/orchestrate` command + state machine in `work_engine`.
-- [ ] **G3** — Reference pipelines for the 4 demo scenarios from
-      `road-to-post-pr29-optimize.md` (Phase 2 demo-track).
+      **Scope note**: own PR; multi-week design + implementation
+      surface. Pair with G1 for review.
+- [~] **G3** — Reference pipelines for the 4 demo scenarios.
+      **Deferred 2026-05-11**: referenced `road-to-post-pr29-optimize.md`
+      does not exist in this repo; demo-track substrate is missing.
+      Promote to `[ ]` when the demo-track roadmap lands.
 
 ## Phase 4: Block Q — Audit-as-Memory
 
@@ -136,12 +155,17 @@ patterns to mine.
 
 - [ ] **Q1** — Append-only audit log schema (extends existing
       chat-history split). **Input feed:** consumes the memory-visibility
-      line shipped by `road-to-feedback-consolidation.md` Phase 4
-      (contract: [`memory-visibility-v1.md`](../../docs/contracts/memory-visibility-v1.md)) —
-      counts + ids only, no bodies, redaction floor preserved.
+      line shipped by archived `road-to-feedback-consolidation.md`
+      Phase 4 (contract:
+      [`memory-visibility-v1.md`](../../docs/contracts/memory-visibility-v1.md))
+      — counts + ids only, no bodies, redaction floor preserved.
+      **Scope note**: own PR; substrate dependencies present
+      (memory-visibility contract shipped, chat-history split shipped).
 - [ ] **Q2** — Pattern-extraction script + human review gate (no
-      auto-promotion).
+      auto-promotion). **Scope note**: own PR; gates on Q1 + G-phase
+      (no patterns to mine without orchestrated pipelines).
 - [ ] **Q3** — Integration with `learning-to-rule-or-skill` skill.
+      **Scope note**: own PR; gates on Q1.
 
 ## Risk register (delta from sibling roadmap)
 
@@ -154,10 +178,11 @@ patterns to mine.
 
 ## External distribution (human-gated, not agent-executable)
 
-Marketplace submissions, npm publish, GitHub repo settings, and other
-permission-gated distribution actions are **deliberately not** tracked
-as roadmap steps. They cannot be shipped by a code change and would
-pollute the dashboard step counter if listed here. They live in
+Marketplace submissions, npm publish, GitHub repo settings, content
+authoring (Medium / dev.to / CFP), and terminal screencast recording
+are **deliberately not** tracked as roadmap steps. They cannot be
+shipped by a code change and would pollute the dashboard step counter
+if listed here. They live in
 [`docs/DISTRIBUTION_CHECKLIST.md`](../../docs/DISTRIBUTION_CHECKLIST.md)
 with their own status vocabulary (`Prepared` / `Submitted` /
 `In Review` / `Live` / `Blocked`), owner field, and `Last Reviewed`
@@ -169,6 +194,35 @@ archived [`road-to-simplicity-and-everywhere.md`](archive/road-to-simplicity-and
 [`road-to-mcp-full-coverage.md`](road-to-mcp-full-coverage.md)
 Phase 3. See the "Post-merge addendum" of the archived roadmap for
 the lessons-learned that led to this split.
+
+## Post process-full audit (2026-05-11)
+
+Triggered by `/roadmap:process-full` invocation against this roadmap.
+AI Council (Anthropic Sonnet 4.5 + OpenAI GPT-4o, two rounds) reached
+convergent verdict on roadmap-shape issues before step execution:
+
+| Council Q | Verdict | Applied to |
+|---|---|---|
+| Q1 — H4/H5 outside agent scope | unanimous **B** (move to checklist) | H4, H5 → `[-]` cancelled, entries added to `DISTRIBUTION_CHECKLIST.md` |
+| Q2 — "waits on sibling roadmap" steps | unanimous **B** (block on external gates) | H1–H3 → `[~]` deferred; I1–I3 → `[~]` deferred (Block B abstraction missing); G3 → `[~]` deferred (referenced roadmap absent) |
+| Q3 — PR scope | split (Anthropic: 3 PRs · OpenAI: stack on #102) | Pragmatic compromise: shape-fix on #102, G/Q phases reserved for own-PR shipping |
+| Q4 — commit cadence | split (1/PR vs 1/phase) | One logical commit per chunk on #102 |
+
+**Lesson reinforced:** before the loop processes a single step, the
+roadmap shape must pass the same agent-executable filter that
+produced `DISTRIBUTION_CHECKLIST.md`. Half of this roadmap's steps
+referenced sibling roadmaps that don't exist in this branch
+(`road-to-better-skills-and-profiles.md`, `road-to-post-pr29-optimize.md`)
+— a pre-flight ref check should be added to
+[`/roadmap:process-full`](../../.agent-src.uncompressed/commands/roadmap/process-full.md).
+
+**Active scope after audit:** G1, G2 (own PR, paired review), Q1, Q2,
+Q3 (own PR, Q-phase cluster). Five `[ ]` steps remain; the rest are
+parked as `[~]` (sibling-gated) or `[-]` (human-gated, moved to
+checklist).
+
+**Council artefact:** `.tmp/council/distribution-strategy.md` (not
+committed — derived).
 
 ## Reference
 

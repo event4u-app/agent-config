@@ -1,10 +1,11 @@
 # Distribution Checklist
 
-External marketplace and registry submissions for `event4u/agent-config`.
-**Human-gated work.** Items here cannot be executed by an autonomous
-agent — they require credentials, manual web-form submissions, and
-external approval processes. Tracked separately from the roadmap
-dashboard so the agent step counter stays honest.
+External marketplace, registry, and marketing actions for
+`event4u/agent-config`. **Human-gated work.** Items here cannot be
+executed by an autonomous agent — they require credentials, manual
+web-form submissions, terminal-recording on a maintainer's machine,
+content authoring, or external approval processes. Tracked separately
+from the roadmap dashboard so the agent step counter stays honest.
 
 ## Origin
 
@@ -106,6 +107,48 @@ are not roadmap steps.
 - **Notes:** Per `scope-control` rule, repo-settings changes are
   permission-gated and run by the maintainer.
 
+### Medium / dev.to articles + conference CFP
+
+- **Status:** Blocked
+- **Owner:** unassigned
+- **Last Reviewed:** 2026-05-12
+- **Substrate:** none — copy authored per submission.
+- **Doc anchor:** none yet.
+- **Action:** Owner authors articles (Medium / dev.to), submits CFP
+  to relevant conferences. Cadence aligned to the 1 day/week
+  marketing cap from `road-to-distribution-and-adoption.md` Phase 1.
+- **Pre-conditions:** owner + budget assigned; Phase 1 pre-conditions
+  1–4 from the distribution roadmap met (Thinking A+C ≥80%,
+  post-pr29 1.15.0, `docs/contracts/` policy active).
+- **Notes:** Origin: `road-to-distribution-and-adoption.md` H4 (moved
+  here 2026-05-11 after AI Council convergence on category-error
+  filter: "owner + budget assigned first" is non-agent action). The
+  roadmap step is `[-]` cancelled with a back-reference.
+
+### Screencasts / asciinema casts per primary surface
+
+- **Status:** Blocked
+- **Owner:** unassigned
+- **Last Reviewed:** 2026-05-12
+- **Substrate:** the `## Verification` block in every
+  [`docs/setup/per-ide/<surface>.md`](setup/per-ide/) page is the
+  cast script — agent-shipped, ready to record against.
+- **Doc anchor:** [`docs/setup/per-ide/claude-code.md`](setup/per-ide/claude-code.md),
+  [`docs/setup/per-ide/cursor.md`](setup/per-ide/cursor.md),
+  [`docs/setup/per-ide/windsurf.md`](setup/per-ide/windsurf.md),
+  [`docs/setup/per-ide/claude-desktop.md`](setup/per-ide/claude-desktop.md).
+- **Action:** Record asciinema cast on a real maintainer machine
+  following each surface's Verification block; embed under the
+  surface doc.
+- **Pre-conditions:** all four per-IDE docs landed with stable
+  Verification blocks (shipped via archived
+  `road-to-simplicity-and-everywhere.md`).
+- **Notes:** Origin: `road-to-distribution-and-adoption.md` H5
+  (moved here 2026-05-11 after AI Council convergence — terminal
+  capture on a real machine is non-agent action; substrate was
+  already shipped, the cast itself is the human-gated step). The
+  roadmap step is `[-]` cancelled with a back-reference.
+
 ## Review cadence
 
 Refresh `Last Reviewed` each time an item is revisited or its status
@@ -119,6 +162,8 @@ loop.
 - [`agents/roadmaps/archive/road-to-simplicity-and-everywhere.md`](../agents/roadmaps/archive/road-to-simplicity-and-everywhere.md)
   — origin (Phase 7, S34–S38) and lessons-learned addendum.
 - [`agents/roadmaps/road-to-distribution-and-adoption.md`](../agents/roadmaps/road-to-distribution-and-adoption.md)
-  § "External distribution (human-gated)" — sibling roadmap reference.
+  § "External distribution (human-gated, not agent-executable)" —
+  sibling roadmap. H4 (Medium / CFP) and H5 (screencasts) are
+  `[-]` cancelled there with back-references to the entries above.
 - [`agents/roadmaps/road-to-mcp-full-coverage.md`](../agents/roadmaps/road-to-mcp-full-coverage.md)
   Phase 3 — pre-condition for the Smithery item.
