@@ -1,0 +1,1 @@
+../../.agent-src/commands/bug-fix.md

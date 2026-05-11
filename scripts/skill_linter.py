@@ -1605,6 +1605,15 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             if path.is_symlink():
                 continue
             norm = raw.replace("\\", "/")
+            # Only lint source-of-truth and source-mirror dirs. Projection
+            # dirs (.windsurf/, .cursor/, .clinerules/, .claude/) use
+            # tool-native frontmatter (e.g. Windsurf's trigger/globs) that
+            # the linter does not validate — they regenerate from source.
+            if not (
+                norm.startswith(".agent-src.uncompressed/")
+                or norm.startswith(".agent-src/")
+            ):
+                continue
             if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
                 files.append(path)
         return sorted(set(files))

@@ -21,6 +21,11 @@ Use this skill when:
 * Reviewing post-task learnings or retrospectives
 * Deciding whether a learning belongs in a rule or a skill
 * After completing a task — reflecting on what worked or caused friction
+* Mining the audit log (`agents/state/audit/<YYYY-MM>.jsonl`,
+  [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)) surfaced
+  a repeated phase pattern via
+  [`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
+  — the pattern's `count` ≥ 2 already satisfies the repetition gate
 
 Do not use this skill when:
 
@@ -206,8 +211,10 @@ Mandatory fields the draft MUST fill:
 * `source_learning` — path to the `agents/learnings/<date>-<slug>.md`
   file this proposal was captured from
 * `evidence` — **at least two independent** references (PR, issue,
-  incident, review-comment, test-failure); entries that all resolve
-  to the same PR are rejected by the gate
+  incident, review-comment, test-failure, **or audit-log line ids**
+  per [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md));
+  entries that all resolve to the same PR or the same audit-log
+  `run_id` are rejected by the gate (independence floor)
 * `Proposed artefact` (§4) — the full draft body, no `TODO` / `TBD`
 * `Success signal` (§7) — one metric, one baseline, one target, one
   evaluation date
@@ -294,6 +301,27 @@ extractors. Non-text ingestion (PDF / DOCX / XLSX / PPTX / image /
 audio) goes through the upstream `markitdown-mcp` server first; only
 write a custom extractor if `markitdown` cannot handle the format and
 the gap is documented in its skill body.
+
+## Audit-derived learnings (optional source)
+
+When the input is a pattern surfaced by
+[`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
+mining `agents/state/audit/<YYYY-MM>.jsonl`
+([`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)):
+
+1. Treat the script's pattern record as the **State the learning**
+   step input (§1) — `pattern.summary` is the one-sentence
+   statement, `pattern.line_ids` is the evidence.
+2. The repetition gate is already satisfied for `count ≥ 2`. Skip
+   to §3 (decide the target) — overlap check (§4) and proposal
+   draft (§8) remain mandatory.
+3. Independence floor still applies: two line ids from the same
+   `run_id` count as **one** piece of evidence. The mining script
+   already de-duplicates by `run_id`; the gate trusts that output.
+4. Audit-derived proposals MUST set
+   `source_learning: agents/state/audit/<YYYY-MM>.jsonl#<line_ids>`
+   and link the mining-script run id, so the human reviewer can
+   reproduce the pattern from the raw audit log.
 
 ## Environment notes
 

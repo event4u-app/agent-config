@@ -9,6 +9,8 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - "install.sh"
+      - "setup.sh"
+      - "packages/create-agent-config/**"
       - ".agent-src.uncompressed/skills/lint-skills/**"
       - ".agent-src.uncompressed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
@@ -20,6 +22,8 @@ on:
       - "Taskfile.yml"
       - "taskfiles/**"
       - "install.sh"
+      - "setup.sh"
+      - "packages/create-agent-config/**"
       - ".agent-src.uncompressed/skills/lint-skills/**"
       - ".agent-src.uncompressed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
@@ -51,6 +55,20 @@ jobs:
 
       - name: Run install_anthropic_key.sh contract tests
         run: bash tests/test_install_anthropic_key.sh
+
+      - name: One-liner entrypoint smoke tests (setup.sh + npx wrapper)
+        # Phase-2 smoke test for road-to-simplicity-and-everywhere.
+        # Builds a local tarball, points both setup.sh and the npm wrapper
+        # at it via AGENT_CONFIG_TARBALL_URL=file://, and asserts that
+        # `.claude/` populates and `.agent-settings.yml` renders.
+        run: bash tests/test_one_liner_entrypoints.sh
+
+      - name: Global install smoke tests (--global / --uninstall)
+        # Phase-3 smoke test for road-to-simplicity-and-everywhere (S16).
+        # Points HOME at a throwaway dir and verifies --global ships
+        # kernel rules + curated skills under each surface's user-scope
+        # path, then --uninstall removes the event4u/ namespace cleanly.
+        run: bash tests/test_global_install.sh
 
   python-tests:
     name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})

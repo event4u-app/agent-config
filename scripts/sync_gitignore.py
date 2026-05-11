@@ -14,7 +14,13 @@ are preserved). Call with `--replace` for a destructive full rewrite.
 
 Usage:
     python3 scripts/sync_gitignore.py [--path .gitignore] [--template config/gitignore-block.txt]
-                                      [--dry-run] [--replace] [--quiet]
+                                      [--dry-run] [--replace] [--cleanup-legacy] [--quiet]
+
+`--cleanup-legacy` additionally scrubs legacy patterns (pre-/agents/ layout
+runtime artefacts) from anywhere in the target file — inside the managed
+block and outside, where older installers or hand-edits dropped them.
+Runs before the regular sync, so a single invocation removes garbage and
+re-adds the current canonical entries.
 
 Exit codes:
     0 — no changes needed (or --dry-run ran successfully)
@@ -33,6 +39,20 @@ SECTION_HEADER = "# event4u/agent-config"
 SECTION_FOOTER = "# event4u/agent-config — END"
 DEFAULT_GITIGNORE = ".gitignore"
 DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent / "config" / "gitignore-block.txt"
+
+# Legacy patterns that lived in older versions of config/gitignore-block.txt
+# before runtime artefacts moved under /agents/ (May 2026). They get stripped
+# wherever they appear in the consumer's .gitignore — inside the managed block
+# or outside (older installers / hand-edits). Current canonical equivalents
+# (e.g. /agents/.agent-chat-history) come from the template and are NOT
+# affected. Leading-slash variants are matched defensively.
+LEGACY_PATTERNS: tuple[str, ...] = (
+    ".agent-chat-history",
+    ".agent-chat-history.bak",
+    ".agent-chat-history.*.bak",
+    ".agent-prices.md",
+    ".council-tmp/",
+)
 
 
 def _strip(ln: str) -> str:
@@ -149,6 +169,26 @@ def sync_block(existing_lines: list[str],
     return head + new_block + tail, missing
 
 
+def cleanup_legacy(lines: list[str]) -> tuple[list[str], list[str]]:
+    """Strip legacy entries from anywhere in the file.
+
+    A line is legacy when its stripped, leading-whitespace-trimmed content
+    matches a `LEGACY_PATTERNS` entry — with or without a leading slash.
+    Comments and blank lines are untouched; current managed entries (e.g.
+    `/agents/.agent-chat-history`) are not in the legacy set and survive.
+    """
+    legacy = set(LEGACY_PATTERNS)
+    kept: list[str] = []
+    removed: list[str] = []
+    for ln in lines:
+        s = _strip(ln).lstrip()
+        if s in legacy or (s.startswith("/") and s[1:] in legacy):
+            removed.append(s)
+            continue
+        kept.append(ln)
+    return kept, removed
+
+
 def format_file(lines: list[str]) -> str:
     """Join lines with newlines and enforce exactly one trailing newline."""
     text = "\n".join(lines)
@@ -174,6 +214,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--replace", action="store_true",
                     help="rewrite the block in full (discards user-added "
                          "lines inside the block)")
+    ap.add_argument("--cleanup-legacy", action="store_true",
+                    help="strip legacy patterns (pre-/agents/ layout) from "
+                         "anywhere in the file before syncing the block")
     ap.add_argument("--quiet", action="store_true",
                     help="suppress summary on success")
     args = ap.parse_args(argv)
@@ -193,6 +236,10 @@ def main(argv: list[str] | None = None) -> int:
         existing_text = ""
         existing_lines = []
 
+    removed_legacy: list[str] = []
+    if args.cleanup_legacy:
+        existing_lines, removed_legacy = cleanup_legacy(existing_lines)
+
     new_lines, added = sync_block(
         existing_lines, template_lines, replace=args.replace,
     )
@@ -211,6 +258,10 @@ def main(argv: list[str] | None = None) -> int:
             print(f"\n(dry-run) would add {len(added)} entr"
                   f"{'y' if len(added) == 1 else 'ies'} to {target}",
                   file=sys.stderr)
+            if removed_legacy:
+                print(f"(dry-run) would remove {len(removed_legacy)} legacy "
+                      f"entr{'y' if len(removed_legacy) == 1 else 'ies'}: "
+                      f"{', '.join(removed_legacy)}", file=sys.stderr)
         return 0
 
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -219,6 +270,10 @@ def main(argv: list[str] | None = None) -> int:
         action = "replaced" if args.replace else "updated"
         print(f"✅  {target}: {action} block "
               f"({len(added)} entr{'y' if len(added) == 1 else 'ies'} added)")
+        if removed_legacy:
+            print(f"   removed {len(removed_legacy)} legacy "
+                  f"entr{'y' if len(removed_legacy) == 1 else 'ies'}: "
+                  f"{', '.join(removed_legacy)}")
     return 0
 
 

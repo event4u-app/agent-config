@@ -159,6 +159,84 @@ test_postinstall_exits_zero_even_on_failure() {
     rm -rf "$fake"
 }
 
+# --- Phase 1 (--tools selector) ---
+
+test_list_tools_prints_catalog() {
+    local out
+    out="$(bash "$INSTALL" --list-tools 2>&1)"
+    if echo "$out" | grep -q "claude-code" && \
+       echo "$out" | grep -q "cursor" && \
+       echo "$out" | grep -q "windsurf" && \
+       echo "$out" | grep -q "all"; then
+        pass "--list-tools prints catalog with known IDs"
+    else
+        fail "--list-tools missing catalog entries"
+    fi
+}
+
+test_unknown_tool_id_rejected() {
+    local rc
+    bash "$INSTALL" --target "$(mktemp -d)" --tools=not-a-tool --quiet >/dev/null 2>&1
+    rc=$?
+    assert_true "unknown --tools ID exits non-zero (rc=$rc)" test $rc -ne 0
+}
+
+test_empty_tools_value_rejected() {
+    local rc
+    bash "$INSTALL" --target "$(mktemp -d)" --tools= --quiet >/dev/null 2>&1
+    rc=$?
+    assert_true "--tools= (empty) exits non-zero (rc=$rc)" test $rc -ne 0
+}
+
+test_tools_cursor_only_excludes_claude_and_windsurf() {
+    setup
+    bash "$INSTALL" --target "$TMPDIR" --tools=cursor --quiet
+    assert_true "cursor: .cursor/rules populated" test -d "$TMPDIR/.cursor/rules"
+    assert_false "cursor: no .claude/rules" test -d "$TMPDIR/.claude/rules"
+    assert_false "cursor: no .clinerules" test -d "$TMPDIR/.clinerules"
+    assert_false "cursor: no .windsurfrules" test -f "$TMPDIR/.windsurfrules"
+    assert_false "cursor: no GEMINI.md" test -e "$TMPDIR/GEMINI.md"
+    assert_false "cursor: no .github/copilot-instructions.md" test -f "$TMPDIR/.github/copilot-instructions.md"
+    # Substrate is always written.
+    assert_true "cursor: .augment/ substrate present" test -d "$TMPDIR/.augment/rules"
+    assert_true "cursor: AGENTS.md universal contract present" test -f "$TMPDIR/AGENTS.md"
+    teardown
+}
+
+test_tools_claude_code_only_excludes_others() {
+    setup
+    bash "$INSTALL" --target "$TMPDIR" --tools=claude-code --quiet
+    assert_true "claude-code: .claude/rules populated" test -d "$TMPDIR/.claude/rules"
+    assert_true "claude-code: .claude/skills populated" test -d "$TMPDIR/.claude/skills"
+    assert_false "claude-code: no .cursor/rules" test -d "$TMPDIR/.cursor/rules"
+    assert_false "claude-code: no .clinerules" test -d "$TMPDIR/.clinerules"
+    assert_false "claude-code: no .windsurfrules" test -f "$TMPDIR/.windsurfrules"
+    assert_false "claude-code: no GEMINI.md" test -e "$TMPDIR/GEMINI.md"
+    teardown
+}
+
+test_tools_all_matches_default() {
+    setup
+    bash "$INSTALL" --target "$TMPDIR" --tools=all --quiet
+    assert_true "tools=all: .claude/rules" test -d "$TMPDIR/.claude/rules"
+    assert_true "tools=all: .cursor/rules" test -d "$TMPDIR/.cursor/rules"
+    assert_true "tools=all: .clinerules" test -d "$TMPDIR/.clinerules"
+    assert_true "tools=all: .windsurfrules" test -f "$TMPDIR/.windsurfrules"
+    assert_true "tools=all: GEMINI.md" test -L "$TMPDIR/GEMINI.md"
+    assert_true "tools=all: .github/copilot-instructions.md" test -f "$TMPDIR/.github/copilot-instructions.md"
+    teardown
+}
+
+test_tools_combination_cursor_plus_windsurf() {
+    setup
+    bash "$INSTALL" --target "$TMPDIR" --tools=cursor,windsurf --quiet
+    assert_true "combo: .cursor/rules" test -d "$TMPDIR/.cursor/rules"
+    assert_true "combo: .windsurfrules" test -f "$TMPDIR/.windsurfrules"
+    assert_false "combo: no .claude/rules" test -d "$TMPDIR/.claude/rules"
+    assert_false "combo: no .clinerules" test -d "$TMPDIR/.clinerules"
+    teardown
+}
+
 # --- Runner ---
 TESTS=(
     test_full_run_creates_payload_and_bridges
@@ -172,6 +250,13 @@ TESTS=(
     test_unknown_flag_errors
     test_bin_install_php_routes_through_orchestrator
     test_postinstall_exits_zero_even_on_failure
+    test_list_tools_prints_catalog
+    test_unknown_tool_id_rejected
+    test_empty_tools_value_rejected
+    test_tools_cursor_only_excludes_claude_and_windsurf
+    test_tools_claude_code_only_excludes_others
+    test_tools_all_matches_default
+    test_tools_combination_cursor_plus_windsurf
 )
 
 if [[ "${1:-}" == "--list" ]]; then

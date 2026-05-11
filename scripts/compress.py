@@ -26,6 +26,8 @@ import shutil
 import sys
 from pathlib import Path
 
+import yaml
+
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.script_output import info, success, flush_summary, resolve_level  # noqa: E402
 
@@ -503,6 +505,149 @@ def generate_windsurfrules() -> int:
     return len(rules)
 
 
+# ── Modern editor formats (road-to-simplicity-and-everywhere Phase 5) ─
+# Cursor `.cursor/rules/*.mdc` (frontmatter: description, globs,
+# alwaysApply) and Windsurf `.windsurf/rules/*.md` (frontmatter:
+# trigger, description, globs) are the formats current editors prefer.
+# Legacy `.windsurfrules` aggregate stays for users who prefer it.
+
+CURSOR_RULES_MDC_DIR = PROJECT_ROOT / ".cursor" / "rules"
+WINDSURF_RULES_DIR = PROJECT_ROOT / ".windsurf" / "rules"
+WINDSURF_WORKFLOWS_DIR = PROJECT_ROOT / ".windsurf" / "workflows"
+CURSOR_COMMANDS_DIR = PROJECT_ROOT / ".cursor" / "commands"
+
+
+def _parse_frontmatter(content: str) -> tuple[dict, str]:
+    """Split a `---`-delimited YAML frontmatter from the body."""
+    if not content.startswith("---"):
+        return {}, content
+    end = content.find("\n---", 3)
+    if end == -1:
+        return {}, content
+    raw = content[3:end].strip()
+    body = content[end + 4:].lstrip("\n")
+    try:
+        meta = yaml.safe_load(raw) or {}
+    except yaml.YAMLError:
+        meta = {}
+    return meta if isinstance(meta, dict) else {}, body
+
+
+def _emit_cursor_mdc(source: Path, target: Path) -> None:
+    """Write a Cursor `.mdc` file with Cursor-shaped frontmatter."""
+    meta, body = _parse_frontmatter(source.read_text())
+    description = (meta.get("description") or "").replace("\n", " ").strip()
+    always_apply = bool(meta.get("alwaysApply") or meta.get("type") == "always")
+    lines = [
+        "---",
+        f"description: {description}",
+        "globs: ",
+        f"alwaysApply: {'true' if always_apply else 'false'}",
+        "---",
+        "",
+        body.rstrip() + "\n",
+    ]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines))
+
+
+def _emit_windsurf_rule(source: Path, target: Path) -> None:
+    """Write a Windsurf rule with Wave-8 frontmatter (trigger/description/globs)."""
+    meta, body = _parse_frontmatter(source.read_text())
+    description = (meta.get("description") or "").replace("\n", " ").strip()
+    always_apply = bool(meta.get("alwaysApply") or meta.get("type") == "always")
+    trigger = "always_on" if always_apply else "model_decision"
+    lines = [
+        "---",
+        f"trigger: {trigger}",
+        f"description: {description}",
+        "globs: ",
+        "---",
+        "",
+        body.rstrip() + "\n",
+    ]
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("\n".join(lines))
+
+
+def _clean_modern_dir(target_dir: Path, valid_names: set[str]) -> None:
+    """Drop files in `target_dir` whose names are not in `valid_names`."""
+    if not target_dir.exists():
+        return
+    for item in target_dir.iterdir():
+        if item.name == "README.md":
+            continue
+        if item.name not in valid_names:
+            if item.is_dir() and not item.is_symlink():
+                shutil.rmtree(item)
+            else:
+                item.unlink()
+
+
+def generate_cursor_mdc_rules() -> int:
+    """Emit `.cursor/rules/*.mdc` per source rule (alongside legacy `.md` symlinks)."""
+    rules = sorted(RULES_SOURCE.glob("*.md"))
+    valid = {f"{r.stem}.mdc" for r in rules}
+    _clean_modern_dir(CURSOR_RULES_MDC_DIR, valid | {r.name for r in rules})
+    for rule in rules:
+        _emit_cursor_mdc(rule, CURSOR_RULES_MDC_DIR / f"{rule.stem}.mdc")
+    info(f"  ✅  Wrote {len(rules)} `.cursor/rules/*.mdc` files")
+    return len(rules)
+
+
+def generate_windsurf_modern_rules() -> int:
+    """Emit `.windsurf/rules/*.md` per source rule (Wave-8 frontmatter)."""
+    rules = sorted(RULES_SOURCE.glob("*.md"))
+    valid = {r.name for r in rules}
+    _clean_modern_dir(WINDSURF_RULES_DIR, valid)
+    for rule in rules:
+        _emit_windsurf_rule(rule, WINDSURF_RULES_DIR / rule.name)
+    info(f"  ✅  Wrote {len(rules)} `.windsurf/rules/*.md` files")
+    return len(rules)
+
+
+def generate_cursor_commands() -> int:
+    """Symlink `.cursor/commands/<slug>.md` per source command."""
+    if not COMMANDS_SOURCE.exists():
+        return 0
+    cmds = list(_iter_commands())
+    valid = {f"{slug}.md" for _, slug in cmds}
+    _clean_modern_dir(CURSOR_COMMANDS_DIR, valid)
+    CURSOR_COMMANDS_DIR.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for source_file, slug in cmds:
+        link = CURSOR_COMMANDS_DIR / f"{slug}.md"
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        rel = Path("../../.agent-src/commands") / source_file.relative_to(COMMANDS_SOURCE)
+        link.symlink_to(rel)
+        count += 1
+    info(f"  ✅  Linked {count} `.cursor/commands/*.md` files")
+    return count
+
+
+def generate_windsurf_workflows() -> int:
+    """Symlink `.windsurf/workflows/<slug>.md` per source command."""
+    if not COMMANDS_SOURCE.exists():
+        return 0
+    cmds = list(_iter_commands())
+    valid = {f"{slug}.md" for _, slug in cmds}
+    _clean_modern_dir(WINDSURF_WORKFLOWS_DIR, valid)
+    WINDSURF_WORKFLOWS_DIR.mkdir(parents=True, exist_ok=True)
+    count = 0
+    for source_file, slug in cmds:
+        link = WINDSURF_WORKFLOWS_DIR / f"{slug}.md"
+        if link.exists() or link.is_symlink():
+            link.unlink()
+        rel = Path("../../.agent-src/commands") / source_file.relative_to(COMMANDS_SOURCE)
+        link.symlink_to(rel)
+        count += 1
+    info(f"  ✅  Linked {count} `.windsurf/workflows/*.md` files")
+    return count
+
+
+
+
 def generate_gemini_md() -> None:
     """Create GEMINI.md symlink to AGENTS.md."""
     link = PROJECT_ROOT / "GEMINI.md"
@@ -695,9 +840,15 @@ def generate_tools() -> None:
     skills = generate_claude_skills()
     commands = generate_claude_commands()
     personas = generate_persona_symlinks()
+    cursor_mdc = generate_cursor_mdc_rules()
+    windsurf_modern = generate_windsurf_modern_rules()
+    cursor_cmds = generate_cursor_commands()
+    windsurf_wf = generate_windsurf_workflows()
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
-        f"commands={commands} personas={personas}"
+        f"commands={commands} personas={personas} "
+        f"cursor_mdc={cursor_mdc} windsurf_rules={windsurf_modern} "
+        f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf}"
     )
     if resolve_level() == "verbose":
         print(f"\n{summary}")
@@ -806,6 +957,7 @@ def clean_tools() -> None:
         PROJECT_ROOT / ".claude",
         PROJECT_ROOT / ".cursor",
         PROJECT_ROOT / ".clinerules",
+        PROJECT_ROOT / ".windsurf",
         PROJECT_ROOT / ".windsurfrules",
         PROJECT_ROOT / "GEMINI.md",
     ]

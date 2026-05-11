@@ -1,0 +1,64 @@
+# marketing-copy.yml — single source of truth for all marketplace
+# listings, GitHub repo metadata, npm package descriptions, and
+# README taglines. Edit here once; downstream surfaces sync on
+# `task generate-tools` (Phase 7 / S38 of road-to-simplicity-and-everywhere).
+
+tagline: >-
+  Shared agent configuration — skills, rules, and slash commands for
+  AI coding tools (Claude Code, Cursor, Windsurf, Cline, Aider,
+  Codex, Gemini CLI, Copilot, Augment).
+
+short_description: >-
+  Project-installable + global agent skill suite — works across
+  every major AI coding tool. One install, every editor.
+
+# GitHub repo topics (set via `gh repo edit --add-topic ...`).
+# Keep this list short and high-signal; GitHub caps display at ~6.
+github_topics:
+  - agent
+  - claude-code
+  - cursor
+  - windsurf
+  - cline
+  - mcp
+  - agents-md
+  - skill-files
+  - copilot
+  - aider
+
+# Marketplace listings (Anthropic, Cursor, Smithery) read these.
+listing:
+  name: event4u/agent-config
+  category: agent-tooling
+  primary_surface: claude-code
+  also_supports:
+    - claude-desktop
+    - cursor
+    - windsurf
+    - cline
+    - aider
+    - codex
+    - gemini-cli
+    - copilot
+    - augment
+
+# npm package metadata (synced into packages/create-agent-config/package.json
+# and any future @event4u/agent-config packages).
+npm:
+  package: "@event4u/create-agent-config"
+  description: >-
+    Zero-config installer for event4u/agent-config — picks tools,
+    runs the install, works in any directory.
+  keywords:
+    - agent
+    - claude
+    - cursor
+    - windsurf
+    - skills
+    - mcp
+
+# Authoritative URLs.
+urls:
+  homepage: https://github.com/event4u-app/agent-config
+  bugs: https://github.com/event4u-app/agent-config/issues
+  docs: https://github.com/event4u-app/agent-config/blob/main/docs/installation.md

@@ -73,6 +73,56 @@ class TestParseOptions(unittest.TestCase):
         self.assertEqual(opts.project, "/tmp/p")
         self.assertEqual(opts.package, "/tmp/pkg")
 
+    def test_tools_default_all(self) -> None:
+        opts = install.parse_options([])
+        self.assertEqual(opts.tools, "all")
+
+    def test_tools_explicit_value(self) -> None:
+        opts = install.parse_options(["--tools=cursor,claude-code"])
+        self.assertEqual(opts.tools, "cursor,claude-code")
+
+
+# --- _parse_tools / _is_tool_enabled ---
+
+class TestParseTools(SilentTest):
+    def test_all_expands_to_concrete_ids(self) -> None:
+        result = install._parse_tools("all")
+        self.assertNotIn("all", result)
+        self.assertIn("claude-code", result)
+        self.assertIn("cursor", result)
+        self.assertIn("copilot", result)
+
+    def test_single_tool(self) -> None:
+        self.assertEqual(install._parse_tools("cursor"), {"cursor"})
+
+    def test_comma_list(self) -> None:
+        self.assertEqual(
+            install._parse_tools("cursor,claude-code,windsurf"),
+            {"cursor", "claude-code", "windsurf"},
+        )
+
+    def test_whitespace_tolerant(self) -> None:
+        self.assertEqual(
+            install._parse_tools(" cursor , claude-code "),
+            {"cursor", "claude-code"},
+        )
+
+    def test_empty_rejected(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._parse_tools("")
+
+    def test_unknown_id_rejected(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._parse_tools("cursor,not-a-tool")
+
+    def test_is_tool_enabled(self) -> None:
+        tools = install._parse_tools("cursor,claude-code")
+        self.assertTrue(install._is_tool_enabled(tools, "cursor"))
+        self.assertTrue(install._is_tool_enabled(tools, "claude-code"))
+        self.assertFalse(install._is_tool_enabled(tools, "windsurf"))
+
 
 # --- deep_merge ---
 

@@ -1,5 +1,6 @@
 ---
 name: sync-gitignore
+cluster: sync-gitignore
 description: Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 disable-model-invocation: true
 suggestion:
@@ -8,6 +9,28 @@ suggestion:
 ---
 
 # /sync-gitignore
+
+Top-level entry point for the `/sync-gitignore` family. Bare `/sync-gitignore`
+runs the interactive append-only sync described below. The `:fix`
+sub-command additionally scrubs legacy patterns (pre-`/agents/` layout)
+from anywhere in the consumer's `.gitignore` before re-syncing.
+
+## Sub-commands
+
+| Sub-command | Routes to | Purpose |
+|---|---|---|
+| `/sync-gitignore` (bare) | this file (`## Default flow`) | Interactive — append-only sync of the managed block, dry-run preview, confirm before write |
+| `/sync-gitignore:fix` | `commands/sync-gitignore/fix.md` | Cleanup — strip legacy root-level patterns (pre-`/agents/` layout) wherever they appear, then sync |
+
+## Dispatch
+
+1. Parse the user's argument: `/sync-gitignore[:<sub>] [args]`.
+2. Bare `/sync-gitignore` → run the `## Default flow` below verbatim.
+3. `/sync-gitignore:fix` → load `commands/sync-gitignore/fix.md` and follow
+   its `## Steps` section verbatim.
+4. Unknown sub-command → print the table above and ask which one.
+
+## Default flow
 
 Ensures the consumer project's `.gitignore` contains every entry the
 package expects to be ignored (symlinked `.augment/` subdirectories,
@@ -23,7 +46,7 @@ Use when:
   setup, or installer ran with `--skip-gitignore`).
 - You want to audit what the block **should** look like without writing.
 
-## When NOT to use
+### When NOT to use
 
 - To disable logging or change what is logged → that is
   `chat_history.enabled` in `.agent-settings.yml`, not `.gitignore`.
@@ -31,8 +54,8 @@ Use when:
   re-remove its own entries.
 - To change what the block contains → edit
   `config/gitignore-block.txt` in the package repo and re-release.
-
-## Steps
+- To clean up legacy garbage from older installs → use
+  [`/sync-gitignore:fix`](sync-gitignore/fix.md) instead.
 
 ### 1. Locate script and target
 
@@ -88,9 +111,11 @@ Free-text replies (`"nö"`, `"leave it"`, unrecognized input) count as
 Do **not** suggest `--replace` by default. It rewrites the block in
 full and drops user-added lines inside the block — destructive.
 Mention it only if the user explicitly asks to clean up or reset the
-block, and confirm once more before running it.
+block, and confirm once more before running it. For removing legacy
+root-level patterns (not user-added lines), prefer
+[`/sync-gitignore:fix`](sync-gitignore/fix.md).
 
-## Gotchas
+## Rules
 
 - The script honors the explicit `# event4u/agent-config — END` marker.
   Legacy blocks without it get the marker added automatically on the
@@ -99,6 +124,7 @@ block, and confirm once more before running it.
   They do not survive `--replace`.
 - Changes to `config/gitignore-block.txt` require a package update in
   the consumer project before this command can apply them.
+- **Do NOT chain sub-commands.** One `/sync-gitignore <sub>` per turn.
 
 ## See also
 

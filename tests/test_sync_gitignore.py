@@ -262,3 +262,179 @@ def test_sync_real_config_template_works_on_package_repo():
     entries = sg.template_entries(lines)
     assert len(entries) >= 5
     assert "/agents/.agent-chat-history" in entries
+
+
+# ---------- --cleanup-legacy ----------------------------------------------
+
+def test_cleanup_legacy_removes_root_level_entries_outside_block():
+    """Legacy patterns sitting outside the managed block are stripped."""
+    lines = [
+        "/vendor/",
+        ".agent-chat-history",
+        ".agent-chat-history.bak",
+        ".agent-prices.md",
+        "user-stuff/",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == ["/vendor/", "user-stuff/"]
+    assert set(removed) == {
+        ".agent-chat-history", ".agent-chat-history.bak", ".agent-prices.md",
+    }
+
+
+def test_cleanup_legacy_removes_entries_with_leading_slash():
+    """Defensive: leading `/` variant is treated as legacy too."""
+    lines = ["/.agent-chat-history", "/.agent-prices.md", "/vendor/"]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == ["/vendor/"]
+    assert set(removed) == {"/.agent-chat-history", "/.agent-prices.md"}
+
+
+def test_cleanup_legacy_preserves_current_managed_paths():
+    """Current canonical /agents/ paths are NOT legacy."""
+    lines = [
+        "/agents/.agent-chat-history",
+        "/agents/.agent-chat-history.bak",
+        "/agents/.agent-prices.md",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == lines
+    assert removed == []
+
+
+def test_cleanup_legacy_preserves_comments_and_blanks():
+    lines = [
+        "# event4u/agent-config",
+        "",
+        "# Agent config — chat history",
+        ".agent-chat-history",
+        "",
+        "# event4u/agent-config — END",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == [
+        "# event4u/agent-config",
+        "",
+        "# Agent config — chat history",
+        "",
+        "# event4u/agent-config — END",
+    ]
+    assert removed == [".agent-chat-history"]
+
+
+def test_cleanup_legacy_noop_when_no_legacy_present():
+    lines = ["/vendor/", "/node_modules/", "/agents/.agent-chat-history"]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == lines
+    assert removed == []
+
+
+def test_main_cleanup_legacy_strips_outside_block_and_syncs(
+    gitignore: Path, template: Path,
+):
+    """End-to-end: legacy outside block removed AND managed block synced."""
+    existing = (
+        "/vendor/\n"
+        ".agent-chat-history\n"
+        ".agent-chat-history.bak\n"
+        ".agent-prices.md\n"
+        "user-stuff/\n"
+    )
+    gitignore.write_text(existing, encoding="utf-8")
+    rc = _run([
+        "--path", str(gitignore), "--template", str(template),
+        "--cleanup-legacy",
+    ])
+    assert rc == 0
+    text = gitignore.read_text(encoding="utf-8")
+    # Legacy root-level entries gone
+    assert "\n.agent-chat-history\n" not in text
+    assert "\n.agent-chat-history.bak\n" not in text
+    assert "\n.agent-prices.md\n" not in text
+    # Managed block present with new /agents/ paths
+    assert "/agents/.agent-chat-history" in text
+    assert sg.SECTION_HEADER in text
+    assert sg.SECTION_FOOTER in text
+    # User content survives
+    assert "/vendor/" in text
+    assert "user-stuff/" in text
+
+
+def test_main_cleanup_legacy_strips_inside_block(
+    gitignore: Path, template: Path,
+):
+    """Legacy entries inside an old managed block are removed."""
+    existing = (
+        "# event4u/agent-config\n"
+        "# Agent config — chat history\n"
+        ".agent-chat-history\n"
+        ".agent-chat-history.bak\n"
+        ".agent-chat-history.*.bak\n"
+        "# event4u/agent-config — END\n"
+    )
+    gitignore.write_text(existing, encoding="utf-8")
+    rc = _run([
+        "--path", str(gitignore), "--template", str(template),
+        "--cleanup-legacy",
+    ])
+    assert rc == 0
+    text = gitignore.read_text(encoding="utf-8")
+    # Legacy paths gone from block
+    assert "\n.agent-chat-history\n" not in text
+    assert "\n.agent-chat-history.bak\n" not in text
+    # Current canonical paths added by sync step
+    assert "/agents/.agent-chat-history" in text
+
+
+def test_main_cleanup_legacy_preserves_user_added_lines(
+    gitignore: Path, template: Path,
+):
+    """Non-legacy user-added lines survive cleanup."""
+    existing = (
+        "/vendor/\n"
+        ".agent-chat-history\n"
+        "my-custom-ignore.local\n"
+    )
+    gitignore.write_text(existing, encoding="utf-8")
+    rc = _run([
+        "--path", str(gitignore), "--template", str(template),
+        "--cleanup-legacy",
+    ])
+    assert rc == 0
+    text = gitignore.read_text(encoding="utf-8")
+    assert "my-custom-ignore.local" in text
+    assert "\n.agent-chat-history\n" not in text
+
+
+def test_main_cleanup_legacy_dry_run_shows_removed_in_diff(
+    gitignore: Path, template: Path, capsys,
+):
+    """Dry-run prints the diff AND a summary line listing removed legacy."""
+    gitignore.write_text(".agent-chat-history\n.agent-prices.md\n",
+                         encoding="utf-8")
+    mtime_before = gitignore.stat().st_mtime_ns
+    rc = _run([
+        "--path", str(gitignore), "--template", str(template),
+        "--cleanup-legacy", "--dry-run",
+    ])
+    assert rc == 0
+    # File untouched
+    assert gitignore.stat().st_mtime_ns == mtime_before
+    captured = capsys.readouterr()
+    assert "-.agent-chat-history" in captured.out
+    assert "would remove 2 legacy" in captured.err
+
+
+def test_main_cleanup_legacy_noop_when_clean(
+    gitignore: Path, template: Path,
+):
+    """No legacy + block already in sync → no rewrite."""
+    # Establish block first
+    _run(["--path", str(gitignore), "--template", str(template)])
+    mtime_before = gitignore.stat().st_mtime_ns
+    rc = _run([
+        "--path", str(gitignore), "--template", str(template),
+        "--cleanup-legacy",
+    ])
+    assert rc == 0
+    assert gitignore.stat().st_mtime_ns == mtime_before

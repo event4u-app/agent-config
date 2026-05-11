@@ -230,6 +230,14 @@ subagents:
   # Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
 
+# --- Git worktrees ---
+worktrees:
+  # off | on | ask  (default: ask)
+  # off = no autonomous worktree creation (explicit user request overrides)
+  # on  = standing permission (skill skips the per-creation ask)
+  # ask = status quo — skill asks before creating
+  mode: ask
+
 # --- Role modes (see guidelines/agent-infra/role-contracts.md) ---
 roles:
   # Role the agent defaults to at the start of a session.
@@ -442,6 +450,7 @@ the canonical narrative lives in
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |
+| `worktrees.mode` | `off`, `on`, `ask` | `ask` | Controls autonomous `git worktree` usage. `off` = skill refuses unless the user explicitly asks for a worktree that turn (then it runs); `subagent-orchestration` mode 6 falls back to mode 3. `on` = standing permission (skill skips the per-creation ask; ignore-check and clean-baseline gates still apply). `ask` = status quo — `scope-control` permission gate runs every time. |
 | `roles.default_role` | `""`, `developer`, `reviewer`, `tester`, `po`, `incident`, `planner` | _(empty)_ | Role the agent defaults to at the start of a session. See [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md). |
 | `roles.active_role` | same as `default_role` | _(empty)_ | Role currently active; set by `/mode <name>`, cleared by `/mode none`. Enables the `role-mode-adherence` rule. |
 | `personas.override` | list of persona ids | `[]` | Developer-local override of the team default lens cast. Empty = inherit `personas.default` from `.agent-project-settings.yml`. See [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md). |

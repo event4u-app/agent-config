@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>174 Skills</strong> · <strong>60 Rules</strong> · <strong>104 Commands</strong> · <strong>69 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>174 Skills</strong> · <strong>60 Rules</strong> · <strong>106 Commands</strong> · <strong>69 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -122,8 +122,8 @@ Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` 
 > of the ~112 Python scripts that ship with the package (linters,
 > audits, `task ci`, work-engine hooks, …). Those require the full
 > local install per [Quickstart](#quickstart). See
-> [`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md)
-> for the execution-safety boundary.
+> `docs/contracts/mcp-cloud-scope.md` (internal reference only per
+> `STABILITY.md`) for the execution-safety boundary.
 
 ### Optional: persistent agent memory
 
@@ -378,7 +378,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 104 active commands](.agent-src/commands/)
+→ [Browse all 106 active commands](.agent-src/commands/)
 
 ---
 
@@ -403,7 +403,7 @@ Every developer gets the same behavior. No per-user setup needed.
 native slash-commands)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 174 skills + 104 native commands). Cursor, Cline, Windsurf,
+> package (rules + 174 skills + 106 native commands). Cursor, Cline, Windsurf,
 > Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
 > commands are available to them as documentation the agent can read, not as
 > first-class features.

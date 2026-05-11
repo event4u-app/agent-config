@@ -3,6 +3,41 @@
 **Principle:** Project-installed by default, plugin-enhanced when available.
 No Task, no Make, no build tools required for installation.
 
+## Per-IDE setup — quick index
+
+Pick your editor, follow the linked page, done. Each page lists its
+own one-liner, verification, and troubleshooting. The mechanisms
+section below this index is reference material for advanced installs
+(Composer, npm, manual, plugin marketplaces).
+
+| Surface | One-liner | Per-IDE page |
+|---|---|---|
+| **Claude Code** | `npx @event4u/create-agent-config init --tools=claude-code` | [`per-ide/claude-code.md`](setup/per-ide/claude-code.md) |
+| **Claude Desktop** | (uses `~/.claude/skills/` from Claude Code global install) | [`per-ide/claude-desktop.md`](setup/per-ide/claude-desktop.md) |
+| **Cursor** | `npx @event4u/create-agent-config init --tools=cursor` | [`per-ide/cursor.md`](setup/per-ide/cursor.md) |
+| **Windsurf** | `npx @event4u/create-agent-config init --tools=windsurf` | [`per-ide/windsurf.md`](setup/per-ide/windsurf.md) |
+| **Cline** | `npx @event4u/create-agent-config init --tools=cline` | [`per-ide/cline.md`](setup/per-ide/cline.md) |
+| **Aider** | `npx @event4u/create-agent-config init --tools=aider` | [`per-ide/aider.md`](setup/per-ide/aider.md) |
+| **Codex CLI** | `npx @event4u/create-agent-config init --tools=codex` | [`per-ide/codex.md`](setup/per-ide/codex.md) |
+| **Gemini CLI** | `npx @event4u/create-agent-config init --tools=gemini` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
+| **GitHub Copilot** | `npx @event4u/create-agent-config init --tools=copilot` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
+| **All surfaces** | `npx @event4u/create-agent-config init` (default) | (each page above applies) |
+
+Combine surfaces by comma-separating: `--tools=claude-code,cursor,windsurf`.
+
+> Looking for **global** (cross-project) install? Each per-IDE page
+> documents its own `npx @event4u/agent-config global --tools=<ide>`
+> command.
+
+---
+
+## Mechanisms reference
+
+The rest of this page documents the underlying install mechanisms
+(Composer, npm, manual clone, plugin marketplaces). Most users want
+the per-IDE index above.
+
+
 > **Primary installer:** `scripts/install` — a small bash orchestrator that
 > runs the two real installer stages in order:
 >
@@ -39,6 +74,63 @@ No Task, no Make, no build tools required for installation.
 | `advanced` | Supported fallback — works, expects familiarity with the toolchain | Git submodule, manual clone, VS Code Git URL |
 | `experimental` | Shipped but evolving — interface may shift between minor releases | Claude.ai Web Skills UI |
 | `staged` | Shipped, narrow surface area — kept for users who already use the platform | Linear AI workspace guidance |
+
+---
+
+## Quickstart — one-liner entrypoints
+
+Try `@event4u/agent-config` in any directory in under 30 seconds, without
+`composer require` or `git clone` first. Both entrypoints are thin
+wrappers around `scripts/install` — same payload, same flags, no extra
+state.
+
+### `npx` (Node ≥ 18)
+
+```bash
+# Pick tools interactively (TTY checkbox prompt)
+npx @event4u/create-agent-config init
+
+# Pick tools explicitly, non-interactive
+npx @event4u/create-agent-config init --tools=claude-code,cursor --yes
+
+# Install everything (the default — backward-compatible)
+npx @event4u/create-agent-config init --tools=all --yes
+
+# Test a specific git ref (branch, tag, sha) instead of the latest npm tag
+npx @event4u/create-agent-config init --ref=main --yes
+```
+
+The `@event4u/create-agent-config` package is a thin wrapper: it
+downloads the latest `@event4u/agent-config` tarball into a temp
+directory, runs `bash scripts/install --target <cwd> ...`, and cleans
+up after itself. The project-local payload package
+(`@event4u/agent-config`) is unchanged.
+
+### `curl | bash` (no Node required)
+
+```bash
+# Defaults (interactive picker if your terminal is a TTY, else --tools=all)
+curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
+
+# Explicit tools, non-interactive (same flags as scripts/install)
+curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
+  | bash -s -- --tools=claude-code,cursor --yes
+
+# Install from a specific git ref
+curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \
+  | bash -s -- --ref=v1.39.0 --tools=cursor --yes
+```
+
+Requires `bash`, `tar`, `curl` (or `wget`), and Python ≥ 3.10 on the
+host. Mirrors the agent-os `setup.sh` pattern.
+
+### Interactive `--tools` picker
+
+When `scripts/install` runs without an explicit `--tools` flag in an
+interactive terminal (stdin + stdout both TTYs, `--yes` not passed), it
+prompts for a comma-separated tool selection. In CI / piped invocations
+the picker is skipped and the backward-compatible `all` default is
+used. Pass `--yes` (or `-y`) to force non-interactive mode anywhere.
 
 ---
 
@@ -426,11 +518,51 @@ Options:
   --quiet           Suppress non-error output
   --skip-sync       Skip payload sync (install.sh)
   --skip-bridges    Skip bridge files (install.py)
+  --global          Ship kernel rules + curated skills to user-scope dirs
+  --uninstall       With --global: remove the event4u/ namespace dir
   --help, -h        Show this help
 ```
 
 The underlying stages keep their own CLI surfaces:
 `bash scripts/install.sh --help` and `python3 scripts/install.py --help`.
+
+---
+
+## Global user-level install (`--global`)
+
+`--global` ships a curated subset of kernel rules + top-N skills into
+**per-tool user-scope directories**, so the agent has them in every
+project on the machine without a per-project install.
+
+```bash
+# Default: every supported surface, namespaced under event4u/.
+bash scripts/install --global
+
+# Scope to specific surfaces (mirrors the project install --tools flag).
+bash scripts/install --global --tools=claude-code,cursor
+
+# Remove only what we put there — never touches user files.
+bash scripts/install --global --uninstall
+```
+
+| Surface       | Target directory                                                |
+| ------------- | --------------------------------------------------------------- |
+| Claude Code   | `~/.claude/rules/event4u/`, `~/.claude/skills/event4u/`         |
+| Cursor        | `~/.cursor/rules/imported/event4u/{rules,skills}/`              |
+| Windsurf      | `~/.codeium/windsurf/global_workflows/event4u/{rules,skills}/`  |
+| Fallback      | `~/.config/agent-config/{rules,skills}/event4u/`                |
+
+The fallback path is always written so an editor we don't yet know
+about can still pick the files up.
+
+**Curation source:** `templates/global-install-manifest.yml`. Edit
+post-install to grow or shrink the global set; re-run `--global` to
+re-project. `--uninstall` only removes the `event4u/` namespace —
+user-added rules / skills under sibling paths stay untouched.
+
+**When to use:** running multiple unrelated projects where a per-project
+install is overkill, or wiring up a new editor (Claude Desktop, Cursor)
+that benefits from a baseline set of skills out of the box.
 
 ---
 

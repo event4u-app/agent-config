@@ -197,6 +197,27 @@ subagents:
   # Integer, default 3. Set to 1 to serialize. Hard cap enforced by runtime.
   max_parallel: 3
 
+# --- Git worktrees ---
+#
+# Controls how the `using-git-worktrees` skill and `subagent-orchestration`
+# mode 6 (`do-in-worktrees`) behave. Mechanical layer on top of the
+# existing `scope-control` permission gate — narrows, never widens.
+worktrees:
+  # off | on | ask  (default: ask)
+  #
+  # ask = status quo. Skill asks before creating any worktree; mode 6 is
+  #       selectable when the chain shape warrants it. Matches the
+  #       behaviour required by `scope-control` and `autonomous-execution`.
+  # off = no autonomous worktree creation. Skill refuses; mode 6 falls
+  #       back to mode 3 (do-in-steps). Explicit user request in the
+  #       chat ("do this in a worktree", "use mode 6") overrides for
+  #       that single task — the setting suppresses *unprompted* usage,
+  #       not the tool itself.
+  # on  = standing permission. Skill skips the per-creation permission
+  #       ask; mode 6 may be picked without prompting. Iron-Law gates
+  #       (ignore-check, clean baseline) still apply.
+  mode: ask
+
 # --- AI Council (external second-opinion network) ---
 #
 # When enabled, the /council command lets the agent poll independent

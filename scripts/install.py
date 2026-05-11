@@ -1217,6 +1217,189 @@ def _smoke_test_hooks(project_root: Path, package_root: Path) -> int:
     return 1 if failed else 0
 
 
+# --- Global user-level install (Phase 3 — road-to-simplicity-and-everywhere) ---
+#
+# `scripts/install --global` ships kernel rules + a curated top-N of skills
+# into per-tool user-scope directories so the agent has them in every
+# project on the machine. Curation lives in templates/global-install-manifest.yml.
+#
+# Files are written under an `event4u/` namespace so `--global --uninstall`
+# can wipe the namespace dir without touching user-added files.
+
+GLOBAL_NAMESPACE = "event4u"
+GLOBAL_MANIFEST_REL = Path("templates") / "global-install-manifest.yml"
+
+# Per-tool global directories. Each surface gets a `rules/` and `skills/`
+# bucket under the event4u/ namespace. claude-desktop reuses claude-code's
+# ~/.claude/ (the two surfaces share the dir per Anthropic's docs).
+GLOBAL_TOOL_DIRS: dict[str, dict[str, Path]] = {
+    "claude-code": {
+        "rules":  Path.home() / ".claude" / "rules"  / GLOBAL_NAMESPACE,
+        "skills": Path.home() / ".claude" / "skills" / GLOBAL_NAMESPACE,
+    },
+    "cursor": {
+        "rules":  Path.home() / ".cursor" / "rules"  / "imported" / GLOBAL_NAMESPACE / "rules",
+        "skills": Path.home() / ".cursor" / "rules"  / "imported" / GLOBAL_NAMESPACE / "skills",
+    },
+    "windsurf": {
+        "rules":  Path.home() / ".codeium" / "windsurf" / "global_workflows" / GLOBAL_NAMESPACE / "rules",
+        "skills": Path.home() / ".codeium" / "windsurf" / "global_workflows" / GLOBAL_NAMESPACE / "skills",
+    },
+    "fallback": {
+        "rules":  Path.home() / ".config" / "agent-config" / "rules"  / GLOBAL_NAMESPACE,
+        "skills": Path.home() / ".config" / "agent-config" / "skills" / GLOBAL_NAMESPACE,
+    },
+}
+
+
+def _load_global_manifest(package_root: Path) -> dict:
+    """Parse templates/global-install-manifest.yml without a YAML dep.
+
+    Tiny hand-rolled parser — only handles the manifest's flat shape:
+    `key: value`, `- item`, and `- key: value` indented under a parent
+    list. We avoid pulling in PyYAML so install.py stays zero-dep.
+    """
+    path = package_root / GLOBAL_MANIFEST_REL
+    if not path.is_file():
+        fail(f"global manifest missing: {path}")
+    out: dict = {"kernel_rules": [], "top_skills": []}
+    section: str | None = None
+    pending: dict | None = None
+    for raw in path.read_text(encoding="utf-8").splitlines():
+        line = raw.split("#", 1)[0].rstrip()
+        if not line.strip():
+            continue
+        if line.startswith("kernel_rules:"):
+            section = "kernel_rules"; pending = None; continue
+        if line.startswith("top_skills:"):
+            section = "top_skills"; pending = None; continue
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+        if section == "kernel_rules" and stripped.startswith("- "):
+            out["kernel_rules"].append(stripped[2:].strip())
+        elif section == "top_skills":
+            if stripped.startswith("- id:"):
+                if pending is not None:
+                    out["top_skills"].append(pending)
+                pending = {"id": stripped.split(":", 1)[1].strip(), "surfaces": []}
+            elif pending is not None and stripped.startswith("surfaces:"):
+                raw_list = stripped.split(":", 1)[1].strip()
+                if raw_list.startswith("[") and raw_list.endswith("]"):
+                    pending["surfaces"] = [s.strip() for s in raw_list[1:-1].split(",") if s.strip()]
+            elif indent == 0 and not stripped.startswith("-"):
+                section = None
+    if pending is not None:
+        out["top_skills"].append(pending)
+    return out
+
+
+def _resolve_skill_source(package_root: Path, skill_id: str) -> Path | None:
+    """Locate a skill's SKILL.md in the package. Prefers .claude/skills/."""
+    for base in (package_root / ".claude" / "skills",
+                 package_root / ".agent-src" / "skills"):
+        candidate = base / skill_id / "SKILL.md"
+        if candidate.is_file():
+            return candidate.parent
+    return None
+
+
+def _resolve_rule_source(package_root: Path, rule_id: str) -> Path | None:
+    """Locate a rule's .md in the package. Prefers .agent-src/rules/."""
+    for base in (package_root / ".agent-src" / "rules",
+                 package_root / ".augment" / "rules"):
+        candidate = base / f"{rule_id}.md"
+        if candidate.is_file():
+            return candidate
+    return None
+
+
+def _global_targets(tools: set[str]) -> dict[str, dict[str, Path]]:
+    """Return the subset of GLOBAL_TOOL_DIRS to write to. Fallback always on."""
+    targets: dict[str, dict[str, Path]] = {"fallback": GLOBAL_TOOL_DIRS["fallback"]}
+    for tool_id, dirs in GLOBAL_TOOL_DIRS.items():
+        if tool_id == "fallback":
+            continue
+        # claude-desktop shares claude-code's dir — both flip the same target.
+        if tool_id == "claude-code" and ("claude-code" in tools or "claude-desktop" in tools):
+            targets[tool_id] = dirs
+        elif tool_id in tools:
+            targets[tool_id] = dirs
+    return targets
+
+
+def install_global(package_root: Path, tools: set[str], force: bool) -> int:
+    """S13/S14: ship kernel rules + curated skills to user-scope dirs."""
+    import shutil
+    manifest = _load_global_manifest(package_root)
+    targets = _global_targets(tools)
+
+    if not QUIET:
+        info(f"Global install — surfaces: {', '.join(sorted(targets))}")
+        info(f"  rules:  {len(manifest['kernel_rules'])}")
+        info(f"  skills: {len(manifest['top_skills'])}")
+
+    for surface, dirs in targets.items():
+        for kind in ("rules", "skills"):
+            dirs[kind].mkdir(parents=True, exist_ok=True)
+        # Rules: copy each kernel rule (file).
+        for rule_id in manifest["kernel_rules"]:
+            src = _resolve_rule_source(package_root, rule_id)
+            if src is None:
+                warn(f"global: rule '{rule_id}' missing in package — skipped")
+                continue
+            dst = dirs["rules"] / f"{rule_id}.md"
+            if dst.exists() and not force and dst.read_bytes() == src.read_bytes():
+                continue
+            dst.write_bytes(src.read_bytes())
+        # Skills: copy each curated skill (directory).
+        for entry in manifest["top_skills"]:
+            if surface != "fallback" and surface not in entry.get("surfaces", []):
+                continue
+            src_dir = _resolve_skill_source(package_root, entry["id"])
+            if src_dir is None:
+                warn(f"global: skill '{entry['id']}' missing in package — skipped")
+                continue
+            dst_dir = dirs["skills"] / entry["id"]
+            if dst_dir.exists() and not force:
+                shutil.rmtree(dst_dir)
+            shutil.copytree(src_dir, dst_dir)
+        if not QUIET:
+            success(f"  {surface}: {dirs['rules']}, {dirs['skills']}")
+    return 0
+
+
+def uninstall_global(tools: set[str]) -> int:
+    """S15: remove the event4u/ namespace dir from each enabled surface."""
+    import shutil
+    targets = _global_targets(tools)
+    removed: list[str] = []
+    # Collect ancestor dirs named GLOBAL_NAMESPACE so we can drop the
+    # shared parent (e.g. cursor/windsurf put rules + skills as siblings
+    # under one event4u/ dir; removing both leaves a stranded namespace
+    # dir). We never delete anything not literally named event4u/.
+    namespace_parents: set[Path] = set()
+    for surface, dirs in targets.items():
+        for kind in ("rules", "skills"):
+            d = dirs[kind]
+            if d.exists():
+                shutil.rmtree(d)
+                removed.append(str(d))
+            for ancestor in d.parents:
+                if ancestor.name == GLOBAL_NAMESPACE:
+                    namespace_parents.add(ancestor)
+    for parent in namespace_parents:
+        if parent.is_dir() and not any(parent.iterdir()):
+            parent.rmdir()
+            removed.append(str(parent))
+    if not QUIET:
+        if removed:
+            for r in removed:
+                success(f"removed {r}")
+        else:
+            skip("global uninstall: nothing to remove")
+    return 0
+
+
 # --- Argument parsing ---
 
 def parse_options(argv: list[str]) -> argparse.Namespace:
@@ -1261,11 +1444,67 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--package", default=None, help="package root (default: auto-detect under project)")
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
     parser.add_argument(
+        "--tools",
+        default="all",
+        help=(
+            "comma-separated tool IDs to install bridges for "
+            "(claude-code,cursor,windsurf,cline,gemini-cli,copilot,augment,aider,codex,all). "
+            "Default: all (backward-compatible)."
+        ),
+    )
+    parser.add_argument(
         "--no-smoke",
         action="store_true",
         help="skip the post-install hook smoke test (default: dry-fire dispatch:hook against every installed bridge)",
     )
+    parser.add_argument(
+        "--global",
+        dest="global_install",
+        action="store_true",
+        help=(
+            "Phase-3 mode: ship kernel rules + curated top-N skills to user-scope "
+            "dirs (~/.claude/, ~/.cursor/, ~/.codeium/windsurf/, ~/.config/agent-config/) "
+            "so the agent has them in every project. Curation: templates/global-install-manifest.yml."
+        ),
+    )
+    parser.add_argument(
+        "--uninstall",
+        action="store_true",
+        help="With --global: remove the event4u/ namespace dir from each enabled surface.",
+    )
     return parser.parse_args(argv)
+
+
+# Mapping of --tools IDs accepted by install.py. Mirrors VALID_TOOLS in
+# scripts/install. Bridges keyed off these IDs are gated; substrate
+# bridges (vscode, augment) always run.
+_VALID_TOOLS = {
+    "claude-code", "claude-desktop", "cursor", "windsurf", "cline",
+    "gemini-cli", "copilot", "augment", "aider", "codex", "all",
+}
+
+
+def _parse_tools(raw: str) -> set[str]:
+    """Parse and validate --tools value. Returns set of normalized IDs.
+
+    "all" expands to every concrete ID. Empty input is rejected.
+    Unknown IDs raise SystemExit so the caller's message reaches stderr.
+    """
+    if not raw or not raw.strip():
+        fail("--tools requires a non-empty value")
+    items = [s.strip() for s in raw.split(",") if s.strip()]
+    if not items:
+        fail("--tools requires at least one ID")
+    unknown = [s for s in items if s not in _VALID_TOOLS]
+    if unknown:
+        fail(f"--tools: unknown ID(s): {', '.join(unknown)} (valid: {', '.join(sorted(_VALID_TOOLS))})")
+    if "all" in items:
+        return {t for t in _VALID_TOOLS if t != "all"}
+    return set(items)
+
+
+def _is_tool_enabled(tools: set[str], tool_id: str) -> bool:
+    return tool_id in tools
 
 
 # --- Main ---
@@ -1300,31 +1539,52 @@ def main(argv: list[str]) -> int:
         info(f"Profile:  {opts.profile}")
         print()
 
+    # --global: short-circuits the project-bridge path. Ships kernel rules
+    # + curated skills to user-scope dirs and exits. --uninstall pairs
+    # with --global to remove the namespace dir.
+    if opts.global_install:
+        tools = _parse_tools(opts.tools)
+        if opts.uninstall:
+            return uninstall_global(tools)
+        return install_global(package_root, tools, opts.force)
+    if opts.uninstall:
+        fail("--uninstall is only valid combined with --global")
+
     ensure_agent_settings(project_root, package_root, opts.profile, opts.force)
 
+    tools = _parse_tools(opts.tools)
+
     if not opts.skip_bridges:
+        # Substrate bridges (always written; other tools symlink/depend on them).
         ensure_vscode_bridge(project_root, package_type, opts.force)
         ensure_augment_bridge(project_root, opts.force)
-        ensure_claude_bridge(project_root, opts.force)
-        ensure_cursor_bridge(project_root, opts.force)
-        ensure_cline_bridge(project_root, opts.force)
-        ensure_windsurf_bridge(project_root, opts.force)
-        ensure_gemini_bridge(project_root, opts.force)
-        ensure_copilot_bridge(project_root, opts.force)
+        # Tool-specific bridges (gated by --tools selection).
+        if _is_tool_enabled(tools, "claude-code"):
+            ensure_claude_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "cursor"):
+            ensure_cursor_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "cline"):
+            ensure_cline_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "windsurf"):
+            ensure_windsurf_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "gemini-cli"):
+            ensure_gemini_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "copilot"):
+            ensure_copilot_bridge(project_root, opts.force)
 
     if opts.augment_user_hooks:
         ensure_augment_user_hooks(package_root, opts.force)
 
-    if opts.cursor_user_hooks:
+    if opts.cursor_user_hooks and _is_tool_enabled(tools, "cursor"):
         ensure_cursor_user_hooks(package_root, opts.force)
 
-    if opts.cline_user_hooks:
+    if opts.cline_user_hooks and _is_tool_enabled(tools, "cline"):
         ensure_cline_user_hooks(package_root, opts.force)
 
-    if opts.windsurf_user_hooks:
+    if opts.windsurf_user_hooks and _is_tool_enabled(tools, "windsurf"):
         ensure_windsurf_user_hooks(package_root, opts.force)
 
-    if opts.gemini_user_hooks:
+    if opts.gemini_user_hooks and _is_tool_enabled(tools, "gemini-cli"):
         ensure_gemini_user_hooks(package_root, opts.force)
 
     if not opts.skip_bridges and not opts.no_smoke:

@@ -12,12 +12,19 @@ declare(strict_types=1);
  * invoke it via `php vendor/bin/install.php` without knowing about bash.
  *
  * Usage:
- *   php vendor/bin/install.php                     # full install
- *   php vendor/bin/install.php --profile=balanced  # pick cost profile
- *   php vendor/bin/install.php --force             # overwrite existing bridges
- *   php vendor/bin/install.php --skip-bridges      # payload only
- *   php vendor/bin/install.php --skip-sync         # bridges only
- *   php vendor/bin/install.php --help              # full option list
+ *   php vendor/bin/install.php                              # full install (every tool)
+ *   php vendor/bin/install.php --profile=balanced           # pick cost profile
+ *   php vendor/bin/install.php --tools=claude-code,cursor   # only those two surfaces
+ *   php vendor/bin/install.php --tools=cursor --yes         # CI-friendly, single tool
+ *   php vendor/bin/install.php --list-tools                 # show valid tool IDs
+ *   php vendor/bin/install.php --force                      # overwrite existing bridges
+ *   php vendor/bin/install.php --skip-bridges               # payload only
+ *   php vendor/bin/install.php --skip-sync                  # bridges only
+ *   php vendor/bin/install.php --help                       # full option list
+ *
+ * Valid --tools IDs (default: all):
+ *   claude-code, claude-desktop, cursor, windsurf, cline,
+ *   gemini-cli, copilot, augment, aider, codex, all
  */
 
 $packageRoot = dirname(__DIR__);

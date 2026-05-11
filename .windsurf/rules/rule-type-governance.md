@@ -1,0 +1,12 @@
+---
+trigger: model_decision
+description: Creating or editing rules, or auditing rule types — decides when a rule should be always vs auto
+globs: 
+---
+
+# Rule Type Governance
+
+**Iron Law.** Choose `always` vs `auto` per the governance table; over-broad `always` rules degrade the kernel budget.
+
+Body migrated to `guideline:agent-infra/rule-type-governance` (per P4 of `road-to-kernel-and-router.md`).
+Trigger-set above activates this routing under the `balanced` and `full` profiles.
