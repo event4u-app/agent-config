@@ -4,13 +4,21 @@
 
 `agent-config` ships a built-in [Model Context Protocol](https://modelcontextprotocol.io)
 server that exposes the package's read-only governance surface to MCP-aware
-clients (Claude Desktop, Cursor, Zed, Continue, Codex via MCP). Two channels
+clients (Claude Desktop, Cursor, Zed, Continue, Codex via MCP). Three channels
 coexist:
 
 - **File projection** — `task generate-tools` writes `.claude/`, `.cursor/`,
   `.clinerules/`, `.windsurfrules`. Used by Aider, Cline, Windsurf, Gemini CLI.
-- **MCP server** — `scripts/mcp_server/` exposes the same content over
-  JSON-RPC. Used by clients that speak MCP natively.
+- **Local stdio MCP server** — `scripts/mcp_server/` exposes the same content
+  over JSON-RPC. Used by clients that speak MCP natively. Default for personal
+  installs.
+- **Remote MCP** *(experimental, opt-in)* — a Cloudflare-hosted TypeScript
+  Worker (`workers/mcp/`) serves the same wire surface over HTTP/SSE for
+  hosted-agent platforms. URL shapes pinned in
+  [`docs/setup/mcp-cloud-endpoints.md`](setup/mcp-cloud-endpoints.md);
+  safety contract in
+  [`docs/contracts/mcp-cloud-scope.md`](contracts/mcp-cloud-scope.md).
+  Wire-parity-checked against the local stdio kernel on every release.
 
 The MCP server **never executes engine code, never writes files, never spawns
 shells**. It is a read-only instructional surface — see

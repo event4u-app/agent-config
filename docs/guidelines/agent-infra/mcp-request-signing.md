@@ -194,3 +194,7 @@ out-of-scope until a consumer surfaces a tenancy requirement.
   starts here; the upstream link is the authoritative source.
 - `road-to-ruflo-adoption.md` **P2.1** — landed this appendix; full
   bridge fork stays out-of-scope unless the dual trigger fires.
+- [`mcp-cloud-scope.md`](../../contracts/mcp-cloud-scope.md) —
+  operationalizes this pattern as a TypeScript Cloudflare Worker (no
+  spawned stdio child; R2 blob replaces the child process). HMAC
+  `verifyRequest` is deferred to MVP-2 alongside auth.

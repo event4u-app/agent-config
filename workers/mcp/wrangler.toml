@@ -1,0 +1,34 @@
+# Cloudflare Worker — agent-config MCP bridge.
+#
+# Governed by docs/contracts/mcp-cloud-scope.md (A0-cloud contract).
+# Bundle inlines the content blob; R2 is archival-only — no runtime binding.
+
+name = "agent-config-mcp"
+main = "src/index.ts"
+
+# Frozen — never floats. Bump in lockstep with a tested SDK upgrade.
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Pipeline sets PACKAGE_VERSION and RELEASE_KEY via `wrangler deploy --var`.
+# Local `wrangler dev` falls back to these placeholders.
+[vars]
+PACKAGE_VERSION = "0.0.0-dev"
+RELEASE_KEY = "v0.0.0-dev"
+
+# Routes declared here so deploys from CI are idempotent (no click-ops).
+# Uncomment after DNS cutover (Phase 5.2).
+# routes = [
+#   { pattern = "mcp.example.com/*", custom_domain = true }
+# ]
+
+# Smart Placement: disabled. The Worker has no upstream subrequests in MVP-1
+# (per mcp-cloud-scope.md §A0-cloud) — placement smarts add latency without
+# benefit. Re-evaluate when MVP-2 adds R2 reads.
+# [placement]
+# mode = "off"
+
+# Observability: enabled. Cloudflare logs cover the failure surface
+# (Worker errors + invocation count). Logpush deferred until traffic warrants.
+[observability]
+enabled = true

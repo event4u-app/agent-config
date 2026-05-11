@@ -1,0 +1,26 @@
+{
+  "name": "@event4u/agent-config-mcp-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker — read-only MCP bridge serving prompts and resources from a release-pinned bundle.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "smoke:dev": "tsx test/dev-smoke.ts"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250507.0",
+    "@types/node": "^20.19.40",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "vitest": "^2.0.5",
+    "wrangler": "^4.90.0"
+  }
+}

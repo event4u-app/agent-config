@@ -109,7 +109,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — read-only access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`)
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — read-only access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`) · [Remote MCP](docs/setup/mcp-cloud-endpoints.md) (experimental — Cloudflare-hosted Worker for hosted-agent platforms)
 
 ---
 
