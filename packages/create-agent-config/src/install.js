@@ -65,6 +65,11 @@ Options:
 }
 
 async function downloadTarball(url, destPath) {
+    if (url.startsWith("file://")) {
+        const { copyFileSync } = await import("node:fs");
+        copyFileSync(url.slice(7), destPath);
+        return;
+    }
     const res = await fetch(url, { redirect: "follow" });
     if (!res.ok) throw new Error(`Download failed: ${res.status} ${res.statusText} (${url})`);
     if (!res.body) throw new Error(`Download failed: empty body (${url})`);
@@ -72,6 +77,10 @@ async function downloadTarball(url, destPath) {
 }
 
 async function resolveTarballUrl(ref) {
+    // AGENT_CONFIG_TARBALL_URL — test-only override. When set, returned
+    // verbatim. Used by tests/test_one_liner_entrypoints.sh against a
+    // local file:// URL so the smoke test stays offline.
+    if (process.env.AGENT_CONFIG_TARBALL_URL) return process.env.AGENT_CONFIG_TARBALL_URL;
     if (ref) return `https://codeload.github.com/${REPO}/tar.gz/${encodeURIComponent(ref)}`;
     const res = await fetch(`https://registry.npmjs.org/${PACKAGE.replace("/", "%2F")}/latest`);
     if (!res.ok) throw new Error(`npm registry lookup failed: ${res.status} ${res.statusText}`);

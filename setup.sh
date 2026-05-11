@@ -77,12 +77,24 @@ trap 'rm -rf "$TMPDIR_ROOT"' EXIT
 
 EXTRACT_DIR="$TMPDIR_ROOT/src"
 TARBALL="$TMPDIR_ROOT/package.tgz"
-URL="https://codeload.github.com/${REPO}/tar.gz/${REF}"
+
+# AGENT_CONFIG_TARBALL_URL — test-only override. When set, skips the
+# codeload URL build and downloads from there instead. Used by
+# tests/test_one_liner_entrypoints.sh against a local file:// URL so
+# the smoke test stays offline.
+URL="${AGENT_CONFIG_TARBALL_URL:-https://codeload.github.com/${REPO}/tar.gz/${REF}}"
 
 echo "  ⬇️   Downloading ${URL}"
-case "$DOWNLOADER" in
-    curl) curl -sSL --fail "$URL" -o "$TARBALL" ;;
-    wget) wget -q "$URL" -O "$TARBALL" ;;
+case "$URL" in
+    file://*)
+        cp "${URL#file://}" "$TARBALL"
+        ;;
+    *)
+        case "$DOWNLOADER" in
+            curl) curl -sSL --fail "$URL" -o "$TARBALL" ;;
+            wget) wget -q "$URL" -O "$TARBALL" ;;
+        esac
+        ;;
 esac
 
 mkdir -p "$EXTRACT_DIR"

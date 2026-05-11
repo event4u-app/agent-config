@@ -31,8 +31,9 @@ setup() {
     local stage="$TMPDIR/stage"
     mkdir -p "$stage/agent-config"
     local src
-    for src in scripts templates .agent-src .agent-src.uncompressed \
-               AGENTS.md router.json .agent-settings.yml; do
+    for src in scripts templates config .agent-src .agent-src.uncompressed \
+               AGENTS.md router.json .agent-settings.yml package.json \
+               composer.json bin docker .augment; do
         if [[ -e "$REPO_ROOT/$src" ]]; then
             cp -R "$REPO_ROOT/$src" "$stage/agent-config/"
         fi
