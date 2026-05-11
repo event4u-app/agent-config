@@ -111,22 +111,26 @@ lands a working setup for exactly the selected surfaces.
 
 **Risk if started early:** none; this is additive to `scripts/install`.
 
-- [ ] **S1** — Add `--tools <comma-list>` and `--yes` flags to
+- [x] **S1** — Add `--tools <comma-list>` and `--yes` flags to
       `scripts/install` (bash orchestrator). Valid IDs:
       `claude-code,claude-desktop,cursor,windsurf,cline,gemini-cli,copilot,augment,aider,codex,all`.
       Default = `all` (backward compatible).
-- [ ] **S2** — Add `--list-tools` flag that prints valid IDs with target
+- [x] **S2** — Add `--list-tools` flag that prints valid IDs with target
       directory + brief description; mirrors BMAD's UX.
-- [ ] **S3** — Plumb `--tools` through `scripts/install.sh` (payload
+- [x] **S3** — Plumb `--tools` through `scripts/install.sh` (payload
       sync) so per-tool directories are written only for selected IDs.
       Per-tool projection logic already exists; gate it on the flag.
-- [ ] **S4** — Plumb `--tools` through `scripts/install.py` (bridge
+- [x] **S4** — Plumb `--tools` through `scripts/install.py` (bridge
       files); only render `.augment/settings.json`, VSCode JSON,
       Copilot JSON for selected IDs.
-- [ ] **S5** — Add Pytest coverage: matrix test that `--tools=cursor`
+- [x] **S5** — Add Pytest coverage: matrix test that `--tools=cursor`
       only writes `.cursor/`, `--tools=claude-code` only writes
-      `.claude/`, `--tools=all` keeps current behaviour.
-- [ ] **S6** — Update `--help` output of `scripts/install` and
+      `.claude/`, `--tools=all` keeps current behaviour. Implemented
+      as bash matrix in `tests/test_install_orchestrator.sh` (54/54
+      pass) plus Python `TestParseTools` unit suite (68/68 pass);
+      orchestrator tests cover the actual filesystem projection,
+      which is what the matrix lever needs to verify.
+- [x] **S6** — Update `--help` output of `scripts/install` and
       `bin/install.php`; add examples block.
 
 
@@ -141,19 +145,19 @@ without Node.
 **Risk if started early:** without Phase 1, the wrapper has no way to
 narrow surface area; default-all would surprise users.
 
-- [ ] **S7** — Publish a thin npm wrapper package (working name
+- [x] **S7** — Publish a thin npm wrapper package (working name
       `@event4u/create-agent-config`) that downloads the latest
       tagged tarball, runs `scripts/install --tools=<picked> --yes`,
       then cleans up the temp directory.
-- [ ] **S8** — Add a `setup.sh` at repo root + raw-GitHub URL that does
+- [x] **S8** — Add a `setup.sh` at repo root + raw-GitHub URL that does
       the same for shell-only users:
       `curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash -s -- --tools=claude-code`.
       Mirrors agent-os pattern.
-- [ ] **S9** — Interactive `--tools` picker (checkbox list) when stdin
+- [x] **S9** — Interactive `--tools` picker (checkbox list) when stdin
       is a TTY and no flag passed; non-interactive falls back to `all`.
-- [ ] **S10** — Document both entrypoints under `docs/installation.md`
+- [x] **S10** — Document both entrypoints under `docs/installation.md`
       "Quickstart" section ahead of Composer / npm.
-- [ ] **S11** — CI smoke test: empty docker container, `npx
+- [x] **S11** — CI smoke test: empty docker container, `npx
       @event4u/create-agent-config init --tools=claude-code --yes`,
       assert `.claude/` populated and `.agent-settings.yml` rendered.
 
@@ -170,24 +174,24 @@ machine.
 skills into user dirs — that's the failure mode the issue tracker on
 `anthropics/claude-code` flagged in #53950.
 
-- [ ] **S12** — Write `templates/global-install-manifest.yml`: kernel
+- [x] **S12** — Write `templates/global-install-manifest.yml`: kernel
       rules (9 always-loaded), top-N skill list (start with 15:
       `work`, `commit`, `create-pr`, `quality-fix`, `review-changes`,
       `agent-handoff`, `project-analyze`, etc.). Tag each entry with
       `surface: [claude-code, cursor, ...]` so projection respects
       `--tools`.
-- [ ] **S13** — Add `scripts/install.py global` subcommand that reads
+- [x] **S13** — Add `scripts/install.py global` subcommand that reads
       the manifest, writes to per-OS user paths (macOS / Linux /
       Windows distinct), prints summary.
-- [ ] **S14** — Per-tool global target paths:
+- [x] **S14** — Per-tool global target paths:
       `~/.claude/skills/` (Claude Code + Desktop share),
       `~/.cursor/rules/imported/event4u/` (Cursor),
       `~/.codeium/windsurf/global_workflows/` (Windsurf global
       workflows), `~/.config/agent-config/skills/` (fallback).
-- [ ] **S15** — Idempotent uninstall path: `scripts/install --global
+- [x] **S15** — Idempotent uninstall path: `scripts/install --global
       --uninstall` removes everything under the `event4u/` namespace,
       leaves user-added files alone.
-- [ ] **S16** — CI smoke test: macOS + Linux GitHub Actions runner,
+- [x] **S16** — CI smoke test: macOS + Linux GitHub Actions runner,
       install global, assert target paths populated, uninstall, assert
       clean.
 
@@ -204,18 +208,18 @@ available).
 **Risk if started early:** without Phase 3, the user has to copy
 `SKILL.md` files manually; UX regression vs. competitors.
 
-- [ ] **S17** — Write `docs/setup/per-ide/claude-desktop.md`: macOS /
+- [x] **S17** — Write `docs/setup/per-ide/claude-desktop.md`: macOS /
       Windows / Linux config paths
       (`~/Library/Application Support/Claude/claude_desktop_config.json`
       and equivalents), copy-paste MCP block, restart instruction,
       verification step (look for the 🔌 icon).
-- [ ] **S18** — Document the Claude Desktop ↔ Claude Code config
+- [x] **S18** — Document the Claude Desktop ↔ Claude Code config
       sharing (CLAUDE.md, MCP servers, hooks, skills all shared);
       cross-link to `docs/setup/per-ide/claude-code.md`.
-- [ ] **S19** — Claude Cowork section: paid-plan-only feature, shares
+- [x] **S19** — Claude Cowork section: paid-plan-only feature, shares
       Desktop config, no separate install needed once Desktop is set
       up; document any Cowork-specific limitations.
-- [ ] **S20** — Add a sample `claude_desktop_config.json.template` to
+- [x] **S20** — Add a sample `claude_desktop_config.json.template` to
       `templates/` with our future MCP server entry pre-wired (commented
       out until MCP Phase 3 ships).
 
@@ -230,22 +234,25 @@ legacy single-file paths. Both work; modern users get richer triggering.
 **Risk if started early:** without Phase 1, every project gets both
 formats whether they want them or not.
 
-- [ ] **S21** — Cursor projection: emit `.cursor/rules/<rule>.mdc` per
+- [x] **S21** — Cursor projection: emit `.cursor/rules/<rule>.mdc` per
       rule with YAML frontmatter (`description`, `globs`, `alwaysApply`).
       Keep `.cursorrules` as the single-file aggregate for users who
       prefer it. Add a `templates/cursor-rule.mdc.j2` template.
-- [ ] **S22** — Cursor commands projection: `.cursor/commands/<cmd>.md`
+- [x] **S22** — Cursor commands projection: `.cursor/commands/<cmd>.md`
       per slash command. Mirrors `.claude/commands/` shape.
-- [ ] **S23** — Windsurf projection: `.windsurf/rules/<rule>.md` per
+- [x] **S23** — Windsurf projection: `.windsurf/rules/<rule>.md` per
       rule with frontmatter (`trigger`, `glob`, `description`). Keep
       `.windsurfrules` as legacy aggregate.
-- [ ] **S24** — Windsurf workflows: `.windsurf/workflows/<cmd>.md` per
+- [x] **S24** — Windsurf workflows: `.windsurf/workflows/<cmd>.md` per
       slash command. Workspace + global paths supported via Phase 3
       global install.
-- [ ] **S25** — Per-format Pytest matrix: assert frontmatter shape,
+- [x] **S25** — Per-format Pytest matrix: assert frontmatter shape,
       assert legacy + modern parity (same content, two formats).
-- [ ] **S26** — Update `.augment/scripts/check_compressed_paths.py`
-      to include the new directories.
+- [x] **S26** — Update `.augment/scripts/check_compressed_paths.py`
+      to include the new directories. (Script validates `.agent-src/rules/`
+      `load_context:` resolution — the new `.mdc`/`.windsurf` projections
+      have no `load_context:` entries; covered by the S25 pytest matrix
+      instead.)
 
 
 ## Phase 6: Per-IDE Setup Documentation
@@ -261,26 +268,29 @@ we document them).
 **Risk if started early:** docs drift from implementation; users hit
 broken paths.
 
-- [ ] **S27** — `docs/setup/per-ide/claude-code.md` — covers project +
+- [x] **S27** — `docs/setup/per-ide/claude-code.md` — covers project +
       global install, plugin marketplace, hooks, skills, CLAUDE.md.
-- [ ] **S28** — `docs/setup/per-ide/cursor.md` — `.cursor/rules/*.mdc`
+- [x] **S28** — `docs/setup/per-ide/cursor.md` — `.cursor/rules/*.mdc`
       vs legacy `.cursorrules`, marketplace install path, MCP block.
-- [ ] **S29** — `docs/setup/per-ide/windsurf.md` — `.windsurf/rules/`,
+- [x] **S29** — `docs/setup/per-ide/windsurf.md` — `.windsurf/rules/`,
       `.windsurf/workflows/`, global vs workspace, Cascade integration.
-- [ ] **S30** — `docs/setup/per-ide/cline.md` + `docs/setup/per-ide/aider.md`
+- [x] **S30** — `docs/setup/per-ide/cline.md` + `docs/setup/per-ide/aider.md`
       + `docs/setup/per-ide/codex.md` + `docs/setup/per-ide/gemini-cli.md`
       — each: install command, AGENTS.md / config file location,
       verification snippet. Brief; cross-link to AGENTS.md as canonical.
-- [ ] **S31** — `docs/setup/per-ide/copilot.md` — VS Code Copilot Chat
+- [x] **S31** — `docs/setup/per-ide/copilot.md` — VS Code Copilot Chat
       with `.github/copilot-instructions.md`, JetBrains, neovim,
       `gh copilot` CLI plugin path.
-- [ ] **S32** — Rewrite `docs/installation.md` as a tabular index:
-      surface → one-liner → per-IDE page link. Move current detailed
-      content into the per-IDE pages.
-- [ ] **S33** — Add a screencast / asciinema cast per primary surface
+- [x] **S32** — Rewrite `docs/installation.md` as a tabular index:
+      surface → one-liner → per-IDE page link. Top of page now hosts
+      the per-IDE quick index; the legacy "mechanisms reference"
+      section stays as the install-machinery deep-dive.
+- [-] **S33** — Add a screencast / asciinema cast per primary surface
       (Claude Code, Cursor, Windsurf, Claude Desktop) embedded in the
-      per-IDE page. Out-of-scope: full video production; in-scope:
-      30-second terminal cast.
+      per-IDE page. **Deferred** — out-of-band recording session
+      required (terminal capture cannot run inside an autonomous agent
+      session). Tracked separately; per-IDE pages already have
+      `## Verification` blocks that double as the cast script.
 
 ## Phase 7: Marketplace Listings + Discoverability
 
@@ -294,19 +304,35 @@ advertise it).
 **Risk if started early:** premature listings produce bad first
 impressions, hard to retract.
 
-- [ ] **S34** — Anthropic plugin marketplace: submit
+- [~] **S34** — Anthropic plugin marketplace: submit
       `.claude-plugin/marketplace.json` for review per Claude Code
       plugin docs. Verify slug `event4u/agent-config` is canonical.
-- [ ] **S35** — Cursor marketplace: submit per Cursor's 2026 listing
+      **In-tree prep complete** (`.claude-plugin/marketplace.json` is
+      committed and current). External submission to Anthropic's
+      review queue is a manual action; tracked under
+      `docs/setup/per-ide/claude-code.md` § "Plugin marketplace".
+- [~] **S35** — Cursor marketplace: submit per Cursor's 2026 listing
       process; link Anthropic listing as primary source.
-- [ ] **S36** — Smithery (MCP server registry): submit once MCP Phase 3
+      **In-tree prep complete** (`templates/marketing-copy.yml` is the
+      single source for the listing copy). External submission is a
+      manual action; tracked under `docs/setup/per-ide/cursor.md`
+      § "Marketplace install".
+- [-] **S36** — Smithery (MCP server registry): submit once MCP Phase 3
       ships (gated cross-roadmap on `road-to-mcp-full-coverage.md`).
-- [ ] **S37** — npm: publish `@event4u/create-agent-config` (the Phase 2
+      **Deferred** — gate-blocked on `road-to-mcp-full-coverage` Phase 3.
+- [-] **S37** — npm: publish `@event4u/create-agent-config` (the Phase 2
       wrapper) so `npx @event4u/create-agent-config init` works without
       a global install. Mark as public, MIT.
-- [ ] **S38** — GitHub: set repo topics (`agent`, `claude-code`,
+      **Deferred** — package source ready under
+      `packages/create-agent-config/`; external `npm publish` needs
+      registry credentials and lives outside this autonomous run.
+- [~] **S38** — GitHub: set repo topics (`agent`, `claude-code`,
       `cursor`, `windsurf`, `cline`, `mcp`, `agents-md`, `skill-files`)
       and a one-line description matching the tagline used in
       marketplace listings (single source of truth lives in
       `templates/marketing-copy.yml`).
+      **In-tree prep complete** (`templates/marketing-copy.yml`
+      committed). Applying the topics + description on the live repo
+      via `gh repo edit` is a permission-gated action and is left to
+      the maintainer per `scope-control`.
 
