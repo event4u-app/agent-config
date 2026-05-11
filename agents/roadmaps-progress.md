@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 146 steps done · 0%**
+**1 / 146 steps done · 1%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 14 | 5 | 0 | 7 | 2 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md) | 4 | 14 | 4 | 1 | 7 | 2 | ██░░░░░░░░ 20% |
 | 2 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-mcp-full-coverage.md](roadmaps/road-to-mcp-full-coverage.md) | 5 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -30,14 +30,14 @@
 
 ### [road-to-distribution-and-adoption.md](roadmaps/road-to-distribution-and-adoption.md)
 
-**Road to Distribution and Adoption** — 0 / 5 done (0%)
+**Road to Distribution and Adoption** — 1 / 5 done (20%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Block H — Marketing | ⏭️ skipped | 0 | 0 | 3 | 2 | 0% |
 | 2 | Block I — Multi-tool expansion | ⏭️ skipped | 0 | 0 | 3 | 0 | 0% |
 | 3 | Block G — Orchestration DSL | ⬜ not started | 2 | 0 | 1 | 0 | 0% |
-| 4 | Block Q — Audit-as-Memory | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 4 | Block Q — Audit-as-Memory | 🟡 in progress | 2 | 1 | 0 | 0 | 33% |
 
 ### [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md)
 

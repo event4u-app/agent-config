@@ -153,14 +153,16 @@ version of the "self-improving agent" claim that AI #2 ruled out.
 ship first; without orchestrated pipelines there are no repeated
 patterns to mine.
 
-- [ ] **Q1** — Append-only audit log schema (extends existing
+- [x] **Q1** — Append-only audit log schema (extends existing
       chat-history split). **Input feed:** consumes the memory-visibility
       line shipped by archived `road-to-feedback-consolidation.md`
       Phase 4 (contract:
       [`memory-visibility-v1.md`](../../docs/contracts/memory-visibility-v1.md))
       — counts + ids only, no bodies, redaction floor preserved.
-      **Scope note**: own PR; substrate dependencies present
-      (memory-visibility contract shipped, chat-history split shipped).
+      *Shipped 2026-05-11 in
+      [`audit-log-v1.md`](../../docs/contracts/audit-log-v1.md) — JSONL
+      append-only, monthly files under `agents/state/audit/`, producer
+      hook on phase boundary, supersede semantics for corrections.*
 - [ ] **Q2** — Pattern-extraction script + human review gate (no
       auto-promotion). **Scope note**: own PR; gates on Q1 + G-phase
       (no patterns to mine without orchestrated pipelines).
