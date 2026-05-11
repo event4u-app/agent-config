@@ -16,12 +16,12 @@ task ci                # full pipeline — green before PR
 
 ## Pointers
 
-- **Package self-orientation** — identity, four-wing cognition map, repo layout, tech stack, key-rules table, telemetry, command-suggester: [`docs/contracts/package-self-orientation.md`](docs/contracts/package-self-orientation.md).
-- **Kernel + Router** — 9 always-loaded Iron-Law rules, tier-1 / tier-2 routing, cost profiles, per-rule char caps enforced by `task lint-rule-budget`: [`kernel-membership`](docs/contracts/kernel-membership.md) + [`rule-router`](docs/contracts/rule-router.md).
+- **Package self-orientation** (beta) — identity, four-wing cognition map, repo layout, tech stack, key-rules table, telemetry, command-suggester: [`docs/contracts/package-self-orientation.md`](docs/contracts/package-self-orientation.md).
+- **Kernel + Router** (beta) — 9 always-loaded Iron-Law rules, tier-1 / tier-2 routing, cost profiles, per-rule char caps enforced by `task lint-rule-budget`: [`kernel-membership`](docs/contracts/kernel-membership.md) + [`rule-router`](docs/contracts/rule-router.md).
 - **Multi-tool projection** — Augment, Claude Code, Cursor, Cline, Windsurf, Gemini CLI, Claude.ai bundle pipeline that ships from `.agent-src/` to consumer surfaces: [`docs/architecture.md`](docs/architecture.md#cloud-bundle-pipeline).
 - **Editing this repo** — Iron-Law rules (portability, source-of-truth, skill-quality) and the Thin-Root contract (caps · pointer-ratio · triage block) governing AGENTS.md: [`augment-portability`](.agent-src/rules/augment-portability.md), [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md), [`skill-quality`](.agent-src/rules/skill-quality.md), [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
-- **Consumer story + architecture deep-dive** — what the package does for installers and how it ships: [`README.md`](README.md), [`docs/architecture.md`](docs/architecture.md).
-- **Personas** — 11 review-lens cast (6 core · 5 specialist), `personas:` vs `/mode` axes, citation map, override pattern: [`docs/personas.md`](docs/personas.md), schema [`docs/contracts/persona-schema.md`](docs/contracts/persona-schema.md).
+- **Consumer story + architecture deep-dive** — install story + ship pipeline: [`README.md`](README.md), [`docs/architecture.md`](docs/architecture.md).
+- **Personas** — 11 review-lens cast (6 core · 5 specialist), `personas:` vs `/mode` axes, citation map, override pattern: [`docs/personas.md`](docs/personas.md), schema [`docs/contracts/persona-schema.md`](docs/contracts/persona-schema.md) (beta).
 
 ## Emergency triage — read this when nothing else is reachable
 
