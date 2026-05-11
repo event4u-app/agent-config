@@ -112,6 +112,22 @@ The Worker code must satisfy all of:
    Concurrent deployments are not supported; the release pipeline
    serializes through `release: published` + `workflow_dispatch`
    hotfix paths.
+8. **Ingress protection = edge cache + platform rate limit.** MVP-1
+   is auth-less by design; the public surface is shielded by two
+   layers Cloudflare provides without code: (a) edge caching per
+   invariant 4 (1 h on pinned URLs, 5 min on `latest`) absorbs
+   read-loop traffic before it reaches the Worker, and (b)
+   Cloudflare's account-level anti-abuse + DDoS shielding caps
+   per-IP burst on `*.workers.dev`. These two together **are** the
+   MVP-1 auth surrogate. **Promotion triggers** — any of these
+   flips HMAC (currently MVP-2 §Out-of-scope) from deferred to
+   active before the wake-up triggers below would otherwise fire:
+   sustained 429 spikes from origin (cache miss storm), Workers
+   request-cost line item exceeding the free-tier budget for two
+   consecutive billing periods, or a CVE-class abuse report
+   against the endpoint. A per-Worker `[[unsafe.bindings]]`
+   rate-limiter in `wrangler.toml` is **not** configured in MVP-1
+   — adding one is a contract amendment, not a free hand.
 
 ## Deprecated tool stub contract
 

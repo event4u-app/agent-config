@@ -1,4 +1,5 @@
 {
+  "_comment": "DEV STUB — packer (scripts/pack_mcp_content.py) overwrites this entire file at deploy time. Zero URIs + sentinel signature '000000000000' are expected here on a clean checkout. See workers/mcp/README.md.",
   "schema_version": 1,
   "uris": {},
   "manifest": {
