@@ -16,6 +16,24 @@ Clients that only support stdio (Claude Desktop, Zed) need the
 [`mcp-remote`](https://www.npmjs.com/package/mcp-remote) bridge from
 npm — invoked via `npx`, no install required.
 
+## Where settings live — `.agent-settings.yml` vs. MCP config
+
+These are **two different files** for two different layers. Don't
+look for MCP server config inside `.agent-settings.yml`.
+
+| File | Where | Who reads it | Purpose |
+|---|---|---|---|
+| MCP client config (this page) | client-specific path per section above | the MCP client at startup | which MCP servers to talk to (name + URL / command) |
+| `.agent-settings.yml` | consumer project root (`<repo>/.agent-settings.yml`) | the agent at runtime (Claude / Cursor / …) | per-developer preferences: `name`, `ide`, `cost_profile`, `personal.autonomy`, `pipelines.skill_improvement`, `caveman.speak_scope`, … |
+
+The hosted MCP is **stateless** and **project-agnostic** — it serves
+the same skill / rule / command catalog to every client. Personalization
+happens agent-side after the MCP delivers its content blob; the Worker
+itself does not read `.agent-settings.yml`.
+
+First-time setup of `.agent-settings.yml` runs through `/onboard`;
+template drift is handled by `/sync-agent-settings`.
+
 ## Claude Desktop
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json`
