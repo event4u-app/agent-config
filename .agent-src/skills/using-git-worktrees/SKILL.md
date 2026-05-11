@@ -44,6 +44,31 @@ work and makes it impossible to tell what you broke.
 
 ## Procedure
 
+### 0. Pre-flight — read `worktrees.mode`
+
+Before anything else, read `worktrees.mode` from `.agent-settings.yml`
+(default: `ask`). The setting is a **mechanical layer on top of**
+`scope-control`'s permission gate — it narrows, never widens.
+
+| `worktrees.mode` | Behaviour |
+|---|---|
+| `ask` | Status quo. Continue to step 1; `scope-control` permission gate applies for every worktree creation. |
+| `on` | Standing permission. Skip the per-creation permission ask; continue to step 1. Iron-Law gates (ignore-check, clean baseline) still apply. |
+| `off` | No autonomous worktree creation. **Refuse** unless the user explicitly asked **this turn** for a worktree ("do this in a worktree", "use mode 6", "spawn a worktree for X"). |
+
+**Off, no explicit request** → stop. Tell the user the setting is `off`,
+suggest the in-place alternative (`subagent-orchestration` mode 3
+`do-in-steps`, or just stay on the current branch). Do not re-ask on
+the same task.
+
+**Off, with explicit request this turn** → acknowledge once
+("`worktrees.mode` is `off`; running this on your explicit request
+for this task") and continue to step 1. The override is for this one
+task — it does not flip the setting.
+
+The setting only suppresses **unprompted** usage. The tool stays
+available when the user wants it.
+
 ### 1. Inspect current state
 
 Before creating anything, check existing conventions — do not assume:
