@@ -22,6 +22,70 @@ distribution gap identified in the audit. Phases 1–2 are foundation
 (installer ergonomics); 3–5 unlock specific surfaces; 6–7 close docs
 and marketplace publication. Phase 1 is the next-in-line candidate.
 
+## Post-merge addendum — provenance & lessons (2026-05-12)
+
+Recorded after PR #102 merged so the archive carries the delta
+between **planned** and **shipped**, plus the process lessons
+surfaced by an external AI critique pass.
+
+**Phase delivery shape:** all seven phases shipped inside a single
+PR (#102, 7 commits, one author, one day). Pre-conditions were
+respected in commit order within the PR, but **not** validated in
+production between phases — i.e. Phase 4 was committed before Phase 3's
+global-install seeding had been exercised by any external user. This
+is "Big-Bang merge" velocity, intentional for this roadmap (the
+phases are tightly coupled and a 7-PR staircase would have multiplied
+review cost without unlocking earlier value), and explicitly **not**
+the default pattern. Future roadmaps with looser phase coupling
+should ship phase-by-phase with green CI between each.
+
+**Phase reordering (silent during execution):** the original plan
+had P4 = Claude Desktop, P5 = Cursor / Windsurf modern format. During
+execution these were swapped — P4 became Modern Editor Formats, P5
+became Claude Desktop — because the modern-format projection landed
+the prerequisite plumbing for the Desktop config snippet. Step IDs
+S20–S26 (Cursor / Windsurf) and S27–S29 (Claude Desktop) kept their
+original numbers; only the phase wrappers swapped. The archive
+sections below show the as-shipped order, not the original plan.
+
+**Marketplace work (S34–S38) shape:** "Phase 7: Marketplace Listings"
+shipped **in-tree prep only** — `templates/marketing-copy.yml`,
+`.claude-plugin/marketplace.json`, `packages/create-agent-config/`
+source, GitHub-topic copy. The **external submissions themselves**
+(Anthropic queue, Cursor 2026 listing process, Smithery, `npm
+publish`, `gh repo edit`) are permission-gated work that an
+autonomous agent cannot perform; S34–S38 are marked `[~]` / `[-]` in
+the body below for that reason. The actual submission work is
+tracked under [`docs/DISTRIBUTION_CHECKLIST.md`](../../../docs/DISTRIBUTION_CHECKLIST.md)
+(see lessons-learned point 5 below for why a checklist and not a
+roadmap block).
+
+**Category error in original S34–S38 framing.** S34–S38 conflated
+**substrate preparation** (agent-executable: write the JSON, the
+copy, the package source) with **external submission** (human-gated:
+own credentials, click submit, wait for review). They were tracked
+in the same roadmap with the same `[ ]`/`[x]` markers, which would
+have polluted the dashboard's step counter (155-step denominator vs.
+"155 code changes shipped + 5 manual TODOs"). The follow-up review
+flagged this; the fix is a separate
+[`docs/DISTRIBUTION_CHECKLIST.md`](../../../docs/DISTRIBUTION_CHECKLIST.md)
+with its own status vocabulary (`Prepared` / `Submitted` /
+`In Review` / `Live`), owner field, and `Last Reviewed` timestamp.
+The agent dashboard counts only agent-executable work. **Lesson for
+future roadmaps:** if a step requires credentials the agent does not
+hold, an external review queue, or a manual UI click, it does not
+belong in a roadmap step block — it belongs in a separate human
+checklist linked from the roadmap.
+
+**Cross-roadmap follow-ups created post-merge:**
+
+- `road-to-distribution-and-adoption.md` **H5** — screencasts /
+  asciinema casts per primary surface (moved from S33 here;
+  marketing output, not engineering).
+- [`docs/DISTRIBUTION_CHECKLIST.md`](../../../docs/DISTRIBUTION_CHECKLIST.md)
+  — external marketplace submissions (moved from S34–S38 here;
+  human-gated, deliberately outside the dashboard step count).
+
 ## Purpose
 
 Cross from **project-installable** to **everywhere-installable** without

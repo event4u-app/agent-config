@@ -152,12 +152,31 @@ patterns to mine.
 | Phase 1 (H, marketing) consumes engineering capacity | 1 day/week cap is non-negotiable |
 | Phase 4 (Q) rebrands as "self-improving agent" | Title locked at "Audit-as-Memory"; AI #2 explicit non-goal |
 
+## External distribution (human-gated, not agent-executable)
+
+Marketplace submissions, npm publish, GitHub repo settings, and other
+permission-gated distribution actions are **deliberately not** tracked
+as roadmap steps. They cannot be shipped by a code change and would
+pollute the dashboard step counter if listed here. They live in
+[`docs/DISTRIBUTION_CHECKLIST.md`](../../docs/DISTRIBUTION_CHECKLIST.md)
+with their own status vocabulary (`Prepared` / `Submitted` /
+`In Review` / `Live` / `Blocked`), owner field, and `Last Reviewed`
+timestamp.
+
+The checklist gates on engineering substrate shipped via the
+archived [`road-to-simplicity-and-everywhere.md`](archive/road-to-simplicity-and-everywhere.md)
+(in-tree prep) and, for the Smithery item, on
+[`road-to-mcp-full-coverage.md`](road-to-mcp-full-coverage.md)
+Phase 3. See the "Post-merge addendum" of the archived roadmap for
+the lessons-learned that led to this split.
+
 ## Reference
 
 - Thinking Layer: `road-to-better-skills-and-profiles.md`
 - Engine + governance: `road-to-post-pr29-optimize.md`,
   `road-to-governance-cleanup.md`
 - MCP: `road-to-mcp-server.md`
+- External distribution: [`docs/DISTRIBUTION_CHECKLIST.md`](../../docs/DISTRIBUTION_CHECKLIST.md)
 
 ## Next step
 
