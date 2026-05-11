@@ -141,9 +141,15 @@ compose → becomes a prettier `/work`.
       + 12-case pytest suite. YAML pipelines under
       `.agent-config/orchestrations/`, kinds: `skill` · `command` ·
       `persona` · `subagent`, two-namespace interpolation.*
-- [ ] **G2** — `/orchestrate` command + state machine in `work_engine`.
+- [x] **G2** — `/orchestrate` command + state machine in `work_engine`.
       **Scope note**: own PR; multi-week design + implementation
       surface. Pair with G1 for review.
+      *Shipped 2026-05-11 in
+      [`.agent-src.uncompressed/commands/orchestrate.md`](../../.agent-src.uncompressed/commands/orchestrate.md)
+      + [`work_engine/orchestration.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/orchestration.py)
+      + 9-case pytest suite. State machine: lazy step iteration,
+      two-namespace interpolation, `when` guards (`success` / `failure` /
+      equality), halt-on-failure.*
 - [~] **G3** — Reference pipelines for the 4 demo scenarios.
       **Deferred 2026-05-11**: referenced `road-to-post-pr29-optimize.md`
       does not exist in this repo; demo-track substrate is missing.

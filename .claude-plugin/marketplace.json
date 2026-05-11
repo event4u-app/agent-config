@@ -184,6 +184,7 @@
         "./.claude/skills/optimize-prompt",
         "./.claude/skills/optimize-rtk",
         "./.claude/skills/optimize-skills",
+        "./.claude/skills/orchestrate",
         "./.claude/skills/override",
         "./.claude/skills/override-create",
         "./.claude/skills/override-manage",
