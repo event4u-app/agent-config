@@ -318,6 +318,48 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.40.0](https://github.com/event4u-app/agent-config/compare/1.39.0...1.40.0) (2026-05-11)
+
+### Features
+
+* **settings:** add worktrees.mode (off/on/ask) to gate autonomous worktree usage ([a07080f](https://github.com/event4u-app/agent-config/commit/a07080f28113dfa2452830b660deb4cb467256ec))
+* **commands:** add /sync-gitignore:fix subcommand for legacy cleanup ([5b058b0](https://github.com/event4u-app/agent-config/commit/5b058b0a8a5b451eac89c4905076e4cc9773e299))
+* **audit:** add pattern-extraction script for audit-log-v1 (roadmap Q2) ([966e472](https://github.com/event4u-app/agent-config/commit/966e47215eb80cfff6e2229b90c6e28b806c7dff))
+* **learning-skill:** wire audit-log-v1 into learning-to-rule-or-skill (roadmap Q3) ([f53d129](https://github.com/event4u-app/agent-config/commit/f53d12947b41334c58952b3a6017962507abbe45))
+* **orchestrate:** add /orchestrate command + state machine (roadmap G2) ([4b39691](https://github.com/event4u-app/agent-config/commit/4b396910c0c7078430aa11958f121d49ddda766c))
+* **contracts:** add orchestration-dsl-v1 + linter (roadmap G1) ([5cb2801](https://github.com/event4u-app/agent-config/commit/5cb2801f14a06d2dabe9f2dc57b7ca424d7e4d4d))
+* **contracts:** add audit-log-v1 schema (roadmap Q1) ([e0849b2](https://github.com/event4u-app/agent-config/commit/e0849b2305949ad5409ff9981970922ec702c68e))
+* **install:** one-liner setup.sh + npm wrapper refinements ([aee688f](https://github.com/event4u-app/agent-config/commit/aee688fcbf9bb18b0253bc7ce96192cc7e5afe2e))
+* **compress:** project Cursor .mdc + Windsurf .md rules + flatten commands ([486bafd](https://github.com/event4u-app/agent-config/commit/486bafd83c1f5224ee61b29b46cc827b21440623))
+* **install:** multi-tool installer + global user-level install ([6113872](https://github.com/event4u-app/agent-config/commit/6113872b146321b784b01a428c5c2abcbad9e08d))
+
+### Bug Fixes
+
+* **ci:** bump README command count and exclude projection dirs from skill-lint ([c5a1493](https://github.com/event4u-app/agent-config/commit/c5a1493d4ef31b2e9af16e0945330cccaa02576c))
+* **clusters:** register /orchestrate as new cluster head ([fb73e58](https://github.com/event4u-app/agent-config/commit/fb73e58c7eb72d53e6ee111a18fe8f5a1f1e053b))
+* **roadmap:** annotate council reference with allowed-marker ([e2997d0](https://github.com/event4u-app/agent-config/commit/e2997d00b5e7dc2625367f87dab3bc611b9cf8e5))
+* **readme:** unlink experimental mcp-cloud-scope contract ([c7ac883](https://github.com/event4u-app/agent-config/commit/c7ac883be116e6f92f2125d5334f38f17b97da27))
+
+### Documentation
+
+* bump command count to 105 for /orchestrate ([df49c6c](https://github.com/event4u-app/agent-config/commit/df49c6c268e08df7567128c97cc267fed9e38694))
+
+### Refactoring
+
+* **roadmap:** apply council shape-fix to distribution roadmap ([4c7f770](https://github.com/event4u-app/agent-config/commit/4c7f770d66b07107164c2eafcc886ddf6bf29aa6))
+* **distribution:** extract marketplace listings to docs/DISTRIBUTION_CHECKLIST.md ([5fc6075](https://github.com/event4u-app/agent-config/commit/5fc607567a96bc5e3d9a38d276ce85f88dae7015))
+* **roadmap:** move S33 (screencasts) to distribution roadmap H5 ([95d27f6](https://github.com/event4u-app/agent-config/commit/95d27f65b577824d9c330478af5c7c7acddfe9f3))
+
+### Chores
+
+* **ownership:** regenerate ownership matrix for new files ([f728343](https://github.com/event4u-app/agent-config/commit/f728343cd4bc9a7340bb19a218d1ccdc6b5bfb9e))
+* **index:** tag orchestrate command with cluster in catalogs ([c4ed9ee](https://github.com/event4u-app/agent-config/commit/c4ed9ee9eaca972bc35549330131c98dd6b05966))
+* **index:** regenerate catalog for /orchestrate command ([c6fe13a](https://github.com/event4u-app/agent-config/commit/c6fe13ae9d83e142154226235bf65d1d2f72cacd))
+* **roadmaps:** regen dashboard after distribution-roadmap shape-fix ([e0ad5b3](https://github.com/event4u-app/agent-config/commit/e0ad5b3554d34a4eaaf747b0955cc16e32f5c8e2))
+* **roadmaps:** archive road-to-simplicity-and-everywhere + regen dashboard ([d2d5c31](https://github.com/event4u-app/agent-config/commit/d2d5c310db1ec8fd3cd44111400b098c4d99c856))
+
+Tests: 3141 (+442 since 1.39.0)
+
 ## [1.39.0](https://github.com/event4u-app/agent-config/compare/1.38.0...1.39.0) (2026-05-11)
 
 ### Features
