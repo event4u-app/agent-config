@@ -1,9 +1,14 @@
-"""MCP Server — Phase 4 tools layer.
+"""MCP Server — Phase 4 tools layer + Phase 1 discovery stubs.
 
-A0 contract amendment: Phase 4 lifts the read-only line for exactly the
-tools listed in ``ALLOWLIST`` (`lint_skills` + `chat_history_append`).
-Every other tool name is unreachable — `tools/call` against an unknown
-name raises ``ValueError``, not just "unlisted".
+A0 contract amendment: real handlers run only for the tools listed in
+``ALLOWLIST`` (`lint_skills` + `chat_history_append`). All other names
+in ``scripts/mcp_server/consumer_tool_catalog.json`` are surfaced via
+``tools/list`` as discovery stubs; ``tools/call`` against them returns
+the ``not_implemented`` envelope defined in
+``docs/contracts/mcp-tool-stub-envelope.md`` (a successful result with
+``code: not_implemented``, an ``install_hint`` and an ``alternative``).
+Names that are neither implemented nor catalog-listed raise
+``ValueError`` (rendered by the SDK as JSON-RPC error).
 
 Path-scoping is mandatory for any tool that writes: the resolved target
 path must stay under ``<consumer_root>`` and within the allowlist of
@@ -25,6 +30,18 @@ import json
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Awaitable, Callable
+
+from .catalog import (
+    CatalogEntry,
+    install_hint as _catalog_install_hint,
+    load_catalog,
+    not_implemented_envelope,
+)
+from .telemetry import Outcome, record_call
+
+# Stable transport tag for the stub envelope. Mirrored verbatim by
+# `workers/mcp/src/stubs.ts` with ``"worker"``.
+STDIO_TRANSPORT = "stdio"
 
 # Allowlisted directories (relative to consumer_root) where tool writes
 # are permitted. ``chat_history_append`` resolves its path through this
@@ -321,17 +338,72 @@ def to_mcp_tool_meta(tool: BuiltinTool) -> dict[str, Any]:
     }
 
 
-class ToolCache:
-    """Hardcoded registry view of ``ALLOWLIST`` with a stable interface.
+# ---------------------------------------------------------------------
+# Phase 1 discovery stubs — catalog entries with no real handler.
+# Loaded at module import time. The Worker reads the same catalog via
+# `content.json` so `tools/list` returns identical metadata on both
+# transports apart from `implemented_on`.
+# ---------------------------------------------------------------------
 
-    Kept as a class for symmetry with ``PromptCache`` / ``ResourceCache``.
-    No mtime check needed — the allowlist lives in source and changes
-    require a deploy.
+
+def _make_stub_handler(entry: CatalogEntry, install_hint_value: str) -> ToolHandler:
+    """Closure that returns the `not_implemented` envelope for a stub."""
+
+    async def _stub(
+        _arguments: dict[str, Any],
+        _consumer_root: Path,
+    ) -> dict[str, Any]:
+        return not_implemented_envelope(
+            entry.name,
+            transport=STDIO_TRANSPORT,
+            install_hint_value=install_hint_value,
+        )
+
+    return _stub
+
+
+def _build_catalog_registry() -> tuple[dict[str, BuiltinTool], frozenset[str]]:
+    """Build the stub registry from the catalog. ALLOWLIST wins on overlap.
+
+    Returns (registry, stub_names). `registry` contains every catalog
+    entry not already in ALLOWLIST, each wired to a closure that emits
+    the envelope.
+    """
+    install_hint_value = _catalog_install_hint()
+    entries = load_catalog()
+    registry: dict[str, BuiltinTool] = {}
+    stub_names: set[str] = set()
+    for entry in entries:
+        if entry.name in ALLOWLIST:
+            continue
+        registry[entry.name] = BuiltinTool(
+            name=entry.name,
+            description=entry.description,
+            input_schema=entry.input_schema,
+            handler=_make_stub_handler(entry, install_hint_value),
+        )
+        stub_names.add(entry.name)
+    return registry, frozenset(stub_names)
+
+
+CATALOG_STUBS, STUB_NAMES = _build_catalog_registry()
+
+# Full wire-surface registry — implemented + stubs. `tools/list` reads
+# from this; `tools/call` dispatches against it.
+REGISTRY: dict[str, BuiltinTool] = {**ALLOWLIST, **CATALOG_STUBS}
+
+
+class ToolCache:
+    """Registry view backing the MCP `tools/*` handlers.
+
+    Default registry is ``REGISTRY`` (implemented + catalog stubs).
+    Tests can pass a narrower dict (e.g. ``ALLOWLIST`` alone) to isolate
+    the implemented surface.
     """
 
     def __init__(self, registry: dict[str, BuiltinTool] | None = None) -> None:
         self._registry: dict[str, BuiltinTool] = dict(
-            registry if registry is not None else ALLOWLIST
+            registry if registry is not None else REGISTRY
         )
 
     def names(self) -> list[str]:
@@ -343,21 +415,49 @@ class ToolCache:
     def get(self, name: str) -> BuiltinTool | None:
         return self._registry.get(name)
 
+    def is_stub(self, name: str) -> bool:
+        """True when `name` is a catalog stub on this cache."""
+        return name in STUB_NAMES and name in self._registry
+
+    def implemented_names(self) -> list[str]:
+        """Subset of `names()` whose handlers run real logic."""
+        return sorted(n for n in self._registry if n in ALLOWLIST)
+
     async def dispatch(
         self,
         name: str,
         arguments: dict[str, Any],
         consumer_root: Path | None = None,
     ) -> dict[str, Any]:
+        root = _resolve_consumer_root(consumer_root)
         tool = self.get(name)
         if tool is None:
+            # Sonnet's latent-demand pattern: log the unknown name before
+            # surfacing the JSON-RPC error so Phase 2 can rank the gap.
+            self._record(name, "latent_demand", root)
             raise ValueError(f"Unknown tool: {name}")
-        root = _resolve_consumer_root(consumer_root)
+        outcome: Outcome = "stub" if self.is_stub(name) else "implemented"
+        self._record(name, outcome, root)
         return await tool.handler(arguments or {}, root)
+
+    @staticmethod
+    def _record(tool_name: str, outcome: Outcome, consumer_root: Path) -> None:
+        """Best-effort JSONL write — failures never break the wire surface."""
+        record_call(
+            tool_name=tool_name,
+            outcome=outcome,
+            transport=STDIO_TRANSPORT,
+            consumer_root=consumer_root,
+        )
 
 
 def boot_log_line(cache: ToolCache) -> str:
     """Single-line stderr enumeration of the registered tools."""
-    names = cache.names()
-    return f"mcp-server: registered {len(names)} tools: {names}"
+    total = len(cache.names())
+    implemented = len(cache.implemented_names())
+    stubs = total - implemented
+    return (
+        f"mcp-server: registered {total} tools "
+        f"({implemented} implemented, {stubs} stubs): {cache.names()}"
+    )
 

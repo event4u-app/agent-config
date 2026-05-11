@@ -1,0 +1,275 @@
+{
+  "schema_version": 1,
+  "description": "Source-of-truth catalog of consumer-relevant MCP tools. Read by the stdio server (scripts/mcp_server/) and packed into the Cloud Worker bundle (workers/mcp/). Phase 1 of road-to-mcp-full-coverage: tools without 'implemented' transports return the 'not_implemented' envelope defined in docs/contracts/mcp-tool-stub-envelope.md. The 'implemented_on' field lists transports where the real handler is wired; everything else is a discovery stub. See agents/roadmaps/road-to-mcp-full-coverage.md.",
+  "install_hint_stdio": "pip install agent-config[mcp] && ./agent-config mcp:run",
+  "tools": [
+    {
+      "name": "lint_skills",
+      "description": "Lint skill / rule / command / guideline / persona markdown files. Returns the same JSON payload as `scripts/skill_linter.py --format json`. Read-only — never writes or spawns git. Pass `paths` to lint a subset, omit for a full tree scan.",
+      "side_effect": "ro",
+      "implemented_on": ["stdio"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {"type": "string"},
+            "description": "Repo-relative paths to lint. Empty / missing → full tree scan."
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chat_history_append",
+      "description": "Append one entry to the consumer's chat-history JSONL (`agents/.agent-chat-history`). Path-scoped — writes outside the allowlist raise ValueError. Use `dry_run` to preview the payload without touching the filesystem.",
+      "side_effect": "fs-write",
+      "implemented_on": ["stdio"],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "text": {"type": "string"},
+          "entry_type": {"type": "string", "description": "Short `t` tag (e.g. note, decision). Defaults to `note`."},
+          "path": {"type": "string", "description": "Optional path override. Must resolve to `agents/.agent-chat-history` or `.agent-chat-history` under consumer_root."},
+          "session": {"type": "string"},
+          "dry_run": {"type": "boolean", "default": false},
+          "min_schema_version": {"type": "integer"}
+        },
+        "required": ["text"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "chat_history_read",
+      "description": "Read recent chat-history entries from `agents/.agent-chat-history`. Filter by session, limit, or entry-type. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "last": {"type": "integer", "description": "Return only the last N entries.", "minimum": 1},
+          "session": {"type": "string", "description": "Filter by 16-char session id."},
+          "entry_type": {"type": "string", "description": "Filter by `t` field."},
+          "path": {"type": "string"}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "memory_lookup",
+      "description": "Hybrid memory retrieval over `agents/memory/<type>/*.yml` and `agents/memory/intake/*.jsonl`. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "types": {"type": "array", "items": {"type": "string"}, "description": "Memory types to scan (e.g. ownership, historical-patterns)."},
+          "keys": {"type": "array", "items": {"type": "string"}, "description": "Path / glob keys to match."},
+          "limit": {"type": "integer", "minimum": 1, "default": 5}
+        },
+        "required": ["types"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "memory_signal",
+      "description": "Append an engineering-memory signal to `agents/memory/intake/signals-YYYY-MM.jsonl`. Rate-limited per `(type, path)` within a rolling window.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "type": {"type": "string", "description": "Memory type (historical-patterns, incident-learnings, ownership, ...)."},
+          "path": {"type": "string", "description": "Anchor path the signal is about."},
+          "body": {"type": "string", "description": "Free-form signal body."}
+        },
+        "required": ["type", "path", "body"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "memory_status",
+      "description": "Report whether the optional `@event4u/agent-memory` package is reachable, and surface its routing metadata. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "skill_trigger_eval",
+      "description": "Score a user message against the compiled router and return the matching skills with their trigger reasons. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "message": {"type": "string"},
+          "context": {"type": "string", "description": "Optional recent-turn context."},
+          "limit": {"type": "integer", "minimum": 1, "default": 5}
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "suggest_command",
+      "description": "Run the command-suggestion engine: score commands against a user message + context and return the numbered options block. Read-only, deterministic.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "message": {"type": "string"},
+          "context": {"type": "string"}
+        },
+        "required": ["message"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "suggest_skill_for_task",
+      "description": "Match a free-form task description to the most relevant skills with frontmatter triggers. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "task": {"type": "string"},
+          "limit": {"type": "integer", "minimum": 1, "default": 5}
+        },
+        "required": ["task"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "mine_session",
+      "description": "Extract patterns, decisions, and learnings from a chat-history session JSONL. Read-only.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "session": {"type": "string", "description": "Session id to mine."},
+          "path": {"type": "string", "description": "Optional path to a chat-history JSONL."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "update_form_request_messages",
+      "description": "Sync the `messages()` method of a Laravel FormRequest class — add missing entries, link to language keys, drop stale ones.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "request_class": {"type": "string", "description": "Fully-qualified FormRequest class FQN or repo-relative file path."},
+          "dry_run": {"type": "boolean", "default": false}
+        },
+        "required": ["request_class"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sync_gitignore",
+      "description": "Synchronise the `event4u/agent-config` block in the consumer project's `.gitignore` — adds missing entries, preserves user-added lines.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "dry_run": {"type": "boolean", "default": false}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "sync_agent_settings",
+      "description": "Synchronise `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values.",
+      "side_effect": "fs-write",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "profile": {"type": "string", "description": "Override the profile pinned in the settings file."},
+          "dry_run": {"type": "boolean", "default": false}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "run_tests",
+      "description": "Execute the consumer project's test suite via the project's standard test runner. Returns the exit code, runner name, and a structured tail of the output.",
+      "side_effect": "shell",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "filter": {"type": "string", "description": "Restrict to tests matching this pattern."},
+          "path": {"type": "string", "description": "Restrict to tests under this directory."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "run_quality_checks",
+      "description": "Run the configured quality gate (PHPStan / Rector / ECS / equivalent) and return a structured per-tool result.",
+      "side_effect": "shell",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "tool": {"type": "string", "description": "Restrict to a single tool name."}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "list_skills",
+      "description": "Enumerate every skill currently exposed as a prompt, with name + description + source. Read-only manifest view.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "list_commands",
+      "description": "Enumerate every slash command currently exposed as a prompt. Read-only manifest view.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "list_rules",
+      "description": "Enumerate every rule currently exposed as a resource. Read-only manifest view.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
+    },
+    {
+      "name": "compile_router",
+      "description": "Regenerate the compiled router (`router.compiled.json`) from the current rule / skill / command frontmatter. Shell-bound — wraps `scripts/compile_router.py`.",
+      "side_effect": "shell",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "dry_run": {"type": "boolean", "default": false}
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "read_resource_body",
+      "description": "Fetch the rendered body of any resource URI (rule, guideline, context) without going through `resources/read`. Convenience for clients that want to inline content into a tool call result.",
+      "side_effect": "ro",
+      "implemented_on": [],
+      "input_schema": {
+        "type": "object",
+        "properties": {
+          "uri": {"type": "string", "description": "Resource URI like `rule://commit-policy`."}
+        },
+        "required": ["uri"],
+        "additionalProperties": false
+      }
+    }
+  ]
+}

@@ -41,6 +41,7 @@ from typing import Any
 _SCRIPTS_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPTS_DIR))
 
+from mcp_server.catalog import load_raw as load_tool_catalog_raw  # noqa: E402
 from mcp_server.prompts import scan_commands, scan_skills  # noqa: E402
 from mcp_server.resources import scan_contexts, scan_guidelines, scan_rules  # noqa: E402
 
@@ -130,11 +131,15 @@ def _collect_entries(root: Path) -> tuple[dict[str, dict[str, Any]], list[str]]:
     return uris, errors
 
 
-def _content_signature(uris: dict[str, dict[str, Any]]) -> tuple[str, str]:
-    """SHA-256 over sorted (uri, body) pairs.
+def _content_signature(
+    uris: dict[str, dict[str, Any]],
+    tool_catalog: dict[str, Any],
+) -> tuple[str, str]:
+    """SHA-256 over sorted (uri, body) pairs plus the tool catalog JSON.
 
     Returns (full_hex, 12-char prefix). The prefix is the wire-surface
     `skillSetSignature`; the full hex is the diagnostic `content_hash_sha256`.
+    Including the catalog ensures a stub edit produces a new release_key.
     """
     hasher = hashlib.sha256()
     for uri in sorted(uris):
@@ -142,6 +147,10 @@ def _content_signature(uris: dict[str, dict[str, Any]]) -> tuple[str, str]:
         hasher.update(b"\x00")
         hasher.update(uris[uri]["body"].encode("utf-8"))
         hasher.update(b"\x1e")
+    hasher.update(b"\x1d")
+    hasher.update(
+        json.dumps(tool_catalog, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    )
     digest = hasher.hexdigest()
     return digest, digest[:12]
 
@@ -164,6 +173,7 @@ def _build_manifest(
     git_sha: str,
     built_at: str,
     counts: dict[str, int],
+    tool_count: int,
 ) -> dict[str, Any]:
     short = git_sha[:7] if git_sha and git_sha != "0" * 40 else "unknown"
     return {
@@ -176,6 +186,7 @@ def _build_manifest(
         "built_at": built_at,
         "packer_version": PACKER_VERSION,
         "content_uri_count": counts,
+        "tool_count": tool_count,
     }
 
 
@@ -188,7 +199,8 @@ def pack(root: Path, out_dir: Path) -> dict[str, Any]:
             sys.stderr.write(f"  - {line}\n")
         raise SystemExit(2)
 
-    content_hash, signature = _content_signature(uris)
+    tool_catalog = load_tool_catalog_raw()
+    content_hash, signature = _content_signature(uris, tool_catalog)
     counts = _count_kinds(uris)
     built_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     manifest = _build_manifest(
@@ -198,11 +210,13 @@ def pack(root: Path, out_dir: Path) -> dict[str, Any]:
         git_sha=_git_sha(root),
         built_at=built_at,
         counts=counts,
+        tool_count=len(tool_catalog.get("tools", [])),
     )
 
     blob = {
         "schema_version": SCHEMA_VERSION,
         "uris": uris,
+        "tool_catalog": tool_catalog,
         "manifest": manifest,
     }
     # Compact JSON for the bundle (saves ~20 KB vs indent=2). The R2
@@ -265,7 +279,7 @@ def main(argv: list[str] | None = None) -> int:
             f"release={manifest['release_key']} "
             f"skills={c['skill']} commands={c['command']} "
             f"rules={c['rule']} guidelines={c['guideline']} "
-            f"contexts={c['context']}\n"
+            f"contexts={c['context']} tools={manifest['tool_count']}\n"
         )
     return 0
 

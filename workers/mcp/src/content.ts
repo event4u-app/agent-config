@@ -33,9 +33,31 @@ export type ContentEntry = {
   mime_type?: string;
 };
 
+export type ToolSideEffect = "ro" | "fs-write" | "shell";
+
+export type ToolCatalogEntry = {
+  name: string;
+  description: string;
+  side_effect: ToolSideEffect;
+  /** Transports where the real handler is wired. Anything else → stub. */
+  implemented_on: readonly string[];
+  /** JSON Schema draft-7 — passed through verbatim to `tools/list`. */
+  input_schema: Record<string, unknown>;
+};
+
+export type ToolCatalog = {
+  schema_version: 1;
+  /** Free-text — surfaced to humans only, not wire-meaningful. */
+  description?: string;
+  /** Stable shell command surfaced in the `not_implemented` envelope. */
+  install_hint_stdio: string;
+  tools: readonly ToolCatalogEntry[];
+};
+
 export type ContentBlob = {
   schema_version: 1;
   uris: Record<string, ContentEntry>;
+  tool_catalog: ToolCatalog;
   manifest: Manifest;
 };
 
@@ -60,6 +82,46 @@ export function assertContentBlob(value: unknown): asserts value is ContentBlob 
     throw new Error("content: 'manifest' missing");
   }
   assertManifest(b.manifest);
+  assertToolCatalog(b.tool_catalog);
+}
+
+function assertToolCatalog(value: unknown): asserts value is ToolCatalog {
+  if (typeof value !== "object" || value === null) {
+    throw new Error("content: 'tool_catalog' missing");
+  }
+  const c = value as Partial<ToolCatalog>;
+  if (c.schema_version !== 1) {
+    throw new Error(
+      `tool_catalog: unsupported schema_version=${String(c.schema_version)}; expected 1`,
+    );
+  }
+  if (typeof c.install_hint_stdio !== "string") {
+    throw new Error("tool_catalog: 'install_hint_stdio' must be a string");
+  }
+  if (!Array.isArray(c.tools)) {
+    throw new Error("tool_catalog: 'tools' must be an array");
+  }
+  for (const t of c.tools) {
+    if (typeof t !== "object" || t === null) {
+      throw new Error("tool_catalog: every tool must be an object");
+    }
+    const e = t as Partial<ToolCatalogEntry>;
+    if (typeof e.name !== "string" || !e.name) {
+      throw new Error("tool_catalog: tool 'name' must be a non-empty string");
+    }
+    if (typeof e.description !== "string") {
+      throw new Error(`tool_catalog: tool ${e.name} missing description`);
+    }
+    if (e.side_effect !== "ro" && e.side_effect !== "fs-write" && e.side_effect !== "shell") {
+      throw new Error(`tool_catalog: tool ${e.name} has invalid side_effect`);
+    }
+    if (!Array.isArray(e.implemented_on)) {
+      throw new Error(`tool_catalog: tool ${e.name} missing implemented_on array`);
+    }
+    if (typeof e.input_schema !== "object" || e.input_schema === null) {
+      throw new Error(`tool_catalog: tool ${e.name} missing input_schema`);
+    }
+  }
 }
 
 /**
@@ -79,6 +141,11 @@ export function entriesOfKind(blob: ContentBlob, kinds: readonly EntryKind[]): C
 export const STUB_BLOB: ContentBlob = {
   schema_version: 1,
   uris: {},
+  tool_catalog: {
+    schema_version: 1,
+    install_hint_stdio: "pip install agent-config[mcp] && ./agent-config mcp:run",
+    tools: [],
+  },
   manifest: {
     schema_version: 1,
     signature: "000000000000",
@@ -90,5 +157,6 @@ export const STUB_BLOB: ContentBlob = {
     built_at: "1970-01-01T00:00:00Z",
     packer_version: "0.0.0",
     content_uri_count: { skill: 0, command: 0, rule: 0, guideline: 0, context: 0 },
+    tool_count: 0,
   },
 };

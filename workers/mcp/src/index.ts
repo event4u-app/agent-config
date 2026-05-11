@@ -21,6 +21,7 @@ import {
   type JsonRpcRequest,
 } from "./handlers.js";
 import { assertContentBlob, STUB_BLOB, type ContentBlob } from "./content.js";
+import { hashClientId } from "./telemetry.js";
 
 type Env = {
   PACKAGE_VERSION: string;
@@ -101,7 +102,10 @@ export default {
       return jsonResponse(parsed, 200);
     }
 
-    const response = dispatch(CONTENT, parsed);
+    // Hash client identity at the server boundary so dispatch stays sync
+    // and the queryable store never sees raw IP / UA. Per J4 contract.
+    const clientIdHash = await hashClientId(request);
+    const response = dispatch(CONTENT, parsed, { clientIdHash });
     return jsonResponse(response, 200);
   },
 };
