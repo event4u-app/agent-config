@@ -318,6 +318,36 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.38.0](https://github.com/event4u-app/agent-config/compare/1.37.0...1.38.0) (2026-05-11)
+
+### Features
+
+* **mcp:** add cloud setup tasks + operator README ([c5aebba](https://github.com/event4u-app/agent-config/commit/c5aebba37a608d0a41b1586acacdb055996a961d))
+* **scripts:** MCP content packer + cloud parity smoke ([e0d132a](https://github.com/event4u-app/agent-config/commit/e0d132afb487b720386bd54b68e10f1a342d6b0c))
+
+### Documentation
+
+* **readme:** surface hosted Remote MCP as zero-install option ([de6161e](https://github.com/event4u-app/agent-config/commit/de6161e3660b81a460f057bc46c1b75e6fe8693c))
+* **mcp:** add A0-cloud invariant 8 — ingress protection via edge cache + platform rate-limit ([c4b9371](https://github.com/event4u-app/agent-config/commit/c4b9371da2db55958bca29a7d10291626d13782f))
+* **mcp:** drop archived-roadmap refs from stable contracts ([15418de](https://github.com/event4u-app/agent-config/commit/15418de5a65c3cd5968bbeecc20ed5ad5c4a4958))
+* **mcp:** surface experimental hosted-MCP channel ([cecae08](https://github.com/event4u-app/agent-config/commit/cecae08ad647c7e28931e7328047fdef5ca3d3a3))
+* **setup:** MCP cloud endpoints, R2 bootstrap, registry listing ([7cb3341](https://github.com/event4u-app/agent-config/commit/7cb334110ff940d3703ada013ef5163c899d96b2))
+* **mcp:** add A0-cloud contract + cross-links (Phase 1 of cloudflare-mcp-hosting) ([2fc5084](https://github.com/event4u-app/agent-config/commit/2fc50845c3b194e861b54f82c852ba4bb9fc406a))
+* **roadmap:** add Cloudflare-hosted MCP roadmap, archive distribution ([fd1c437](https://github.com/event4u-app/agent-config/commit/fd1c437ea8a918eebc8604ee7958d8c842c7aac8))
+
+### CI
+
+* **deploy-mcp-worker:** release-tag triggered Worker deploy ([4297514](https://github.com/event4u-app/agent-config/commit/4297514b80457852511ad90674f4d633a75a92bf))
+
+### Chores
+
+* **linter:** raise README overloaded threshold to 750 lines ([1e3fbb7](https://github.com/event4u-app/agent-config/commit/1e3fbb7c649398ba56bc32677c7b588131f7e949))
+* **mcp:** mark dev content.json stub with explanatory _comment ([8f6c7ff](https://github.com/event4u-app/agent-config/commit/8f6c7ffe493b72ccb2d0ec66121a9d32d0b2fe8c))
+* **roadmap:** archive road-to-cloudflare-mcp-hosting (100% complete) ([99e07f9](https://github.com/event4u-app/agent-config/commit/99e07f92293e62841ff87f315e41c5ceabd7b277))
+* **workers/mcp:** scaffold TypeScript Cloudflare Worker ([447e071](https://github.com/event4u-app/agent-config/commit/447e071984f86fc084058d05f22d0e0a7c936a5e))
+
+Tests: 2679 (+0 since 1.37.0)
+
 ## [1.37.0](https://github.com/event4u-app/agent-config/compare/1.36.1...1.37.0) (2026-05-10)
 
 ### Features
