@@ -49,18 +49,20 @@ def _skip_intake_when_present() -> bool:
     Default: False — intake JSONL is always written as debug trail even
     when the `agent-memory` backend is present (see
     `road-to-memory-merge-safety.md` Phase 3).
+
+    Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    contract handles missing file / malformed YAML / no PyYAML uniformly.
     """
-    if not SETTINGS_FILE.is_file():
-        return False
     try:
-        import yaml  # type: ignore
-    except ImportError:
-        return False
-    try:
-        data = yaml.safe_load(SETTINGS_FILE.read_text(encoding="utf-8")) or {}
-    except Exception:
-        return False
-    mem = data.get("memory") if isinstance(data, dict) else None
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    data = load_agent_settings(project_path=SETTINGS_FILE)
+    mem = data.get("memory")
     if not isinstance(mem, dict):
         return False
     intake = mem.get("intake")
