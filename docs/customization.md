@@ -42,6 +42,51 @@ The `.agent-settings.yml` file in the consumer project configures agent behavior
 It is written as YAML with section-level grouping; dotted keys below reference
 those sections.
 
+### User-global DX-comfort defaults (cross-project)
+
+Six **DX-comfort** keys can be carried across every project that uses
+`event4u/agent-config` by storing them once in a user-global file at:
+
+```
+~/.config/agent-config/agent-settings.yml
+```
+
+The path is XDG-style and matches the existing
+`~/.config/agent-config/` directory used for `anthropic.key`,
+`openai.key`, and `council-spend.jsonl`.
+
+**Whitelist (locked, exact dotted paths)** — only these six keys are
+mergeable from the user-global file; every other key is silently ignored:
+
+```
+name
+ide
+cost_profile
+personal.bot_icon
+personal.autonomy
+caveman.speak_scope
+```
+
+**Merge order** (lowest → highest precedence):
+
+```
+1. Package defaults                                   (shipped by event4u/agent-config)
+2. ~/.config/agent-config/agent-settings.yml          (user-global · whitelist-filtered)
+3. <project>/.agent-settings.yml                      (project-local · always wins)
+```
+
+Project-local values **always win**. The user-global file is a
+fallback, never a lock. Non-whitelisted keys in the user-global file
+are dropped without error — adding `personal.theme` there has no
+effect.
+
+The file is created **only on explicit opt-in via `/onboard`**. The
+loader at [`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py)
+is **read-only** — no script can create or mutate it without an
+explicit `/onboard` confirmation. Edit the file by hand for mid-life
+changes; `/sync-agent-settings` stays project-scoped and never touches
+user-global state.
+
 ### Available settings
 
 | Setting | Default | Description |

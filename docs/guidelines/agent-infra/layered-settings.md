@@ -1,37 +1,74 @@
 # Layered Settings
 
-Two-file settings model: **team defaults** (committed) and
-**developer overrides** (git-ignored). Lets a project pin decisions
-without forcing every developer to work the same way.
+Three-file settings model: **team defaults** (committed),
+**user-global DX-comfort defaults** (per-developer, cross-project), and
+**developer overrides** (per-project, git-ignored). Lets a project pin
+decisions, a developer carry DX preferences across every project, and
+project-local choices always win.
 
-Referenced by `road-to-project-memory.md` Phase 0. Consumed by the
-settings loader, the `/onboard` command, and any agent that edits
-`.agent-settings.yml` on user request.
+Referenced by `road-to-project-memory.md` Phase 0 and
+`road-to-portable-dev-preferences.md`. Consumed by the centralized
+settings loader at
+[`scripts/_lib/agent_settings.py`](../../../scripts/_lib/agent_settings.py),
+the `/onboard` command, and any agent that edits `.agent-settings.yml`
+on user request.
 
-## The two files
+## The three files
 
 | File | Git | Scope | Owner | Example values |
 |---|---|---|---|---|
 | `.agent-project-settings.yml` | **committed** | team / repo | lead maintainer | `project.stack`, `quality.php.tools`, `memory.dogfood` |
-| `.agent-settings.yml` | **gitignored** | developer workstation | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel` |
+| `~/.config/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `cost_profile`, `personal.bot_icon`, `personal.autonomy`, `caveman.speak_scope` |
+| `.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` |
 
-Both are YAML. Schema is documented in
-[`agent-settings.md`](../../templates/agent-settings.md) (dev layer)
-and [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml)
-(team layer).
+All three are YAML. Schemas:
+
+- Developer (project-local): [`agent-settings.md`](../../templates/agent-settings.md).
+- Team: [`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml).
+- User-global: six exact dotted paths — whitelist in
+  [`scripts/_lib/agent_settings.py`](../../../scripts/_lib/agent_settings.py).
 
 ## Merge order
 
 Lowest priority → highest priority:
 
 ```
-1. Package defaults       (shipped by event4u/agent-config)
-2. .agent-project-settings.yml   (team file, committed)
-3. .agent-settings.yml           (developer file, gitignored)
+1. Package defaults                                   (shipped by event4u/agent-config)
+2. ~/.config/agent-config/agent-settings.yml          (user-global · whitelist-filtered)
+3. .agent-project-settings.yml                        (team file, committed)
+4. .agent-settings.yml                                (developer file, gitignored)
 ```
 
-Keys from higher layers win unless the lower layer marks them
-`locked`. Locked keys cannot be shadowed by a higher layer.
+Keys from higher layers win unless a lower layer marks them
+`locked` (team file only). The user-global file does **not** support
+`locked` — its purpose is cross-project comfort, never policy.
+
+## User-global whitelist
+
+Only these exact dotted paths are mergeable from the user-global file;
+every other key is silently dropped by the loader. The whitelist is
+intentionally tiny — adding a key requires an ADR.
+
+```
+name
+ide
+cost_profile
+personal.bot_icon
+personal.autonomy
+caveman.speak_scope
+```
+
+Loader contract:
+
+- **Read-only.** The loader never creates, modifies, or deletes the
+  user-global file. Writes are the exclusive responsibility of the
+  `/onboard` command on explicit user opt-in.
+- **Tolerant.** Missing file, malformed YAML, empty file — all fall
+  back to the next tier without raising.
+- **Silent on out-of-whitelist keys.** `verbose=True` logs which keys
+  were dropped for debugging; default mode is silent.
+- **Never auto-creates `~/.config/agent-config/`.** That directory
+  pre-exists from key installation; `/onboard` `mkdir -p`s on opt-in.
 
 ## Lock semantics
 

@@ -6,13 +6,20 @@
 #
 # Precedence (lowest → highest):
 #   1. Package defaults (shipped by event4u/agent-config)
-#   2. This file (.agent-project-settings.yml) — team defaults
-#   3. .agent-settings.yml — developer overrides (gitignored)
+#   2. ~/.config/agent-config/agent-settings.yml — user-global DX-comfort
+#      defaults (whitelist: name, ide, cost_profile, personal.bot_icon,
+#      personal.autonomy, caveman.speak_scope). Created on opt-in via
+#      /onboard; project-local files always win.
+#   3. This file (.agent-project-settings.yml) — team defaults
+#   4. .agent-settings.yml — developer overrides (gitignored)
 #
 # Any key marked `locked: true` in this file CANNOT be overridden by
 # .agent-settings.yml. Use sparingly — locked keys reduce developer
 # autonomy. Reserve for compliance or correctness concerns (e.g.
 # forcing a test framework, pinning a coding style).
+#
+# Full precedence model + user-global whitelist contract:
+#   docs/guidelines/agent-infra/layered-settings.md
 #
 # Copy this file to `.agent-project-settings.yml` (drop the `.example`)
 # and commit it.
