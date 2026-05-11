@@ -81,7 +81,8 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 ## Reference
 
-- Council session: `agents/council-responses/portable-dev-preferences.json` (gitignored, retention 7d).
+- Council session: `agents/council-responses/portable-dev-preferences.json` (gitignored, retention 7d). <!-- council-ref-allowed: provenance pointer to gitignored convergence record; never resolves on disk for new readers -->
+- Council convergence: GPT-5 + Claude Opus 4.5 + Gemini 2.5 Pro agreed on the read-only loader pattern with explicit `.augment/` exclusion (2025-05-08).
 - Existing pattern: `.agent-src.uncompressed/templates/scripts/work_engine/hooks/settings.py`.
 - Settings template: `.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml`.
 
