@@ -178,8 +178,14 @@ patterns to mine.
 - [ ] **Q2** — Pattern-extraction script + human review gate (no
       auto-promotion). **Scope note**: own PR; gates on Q1 + G-phase
       (no patterns to mine without orchestrated pipelines).
-- [ ] **Q3** — Integration with `learning-to-rule-or-skill` skill.
+- [x] **Q3** — Integration with `learning-to-rule-or-skill` skill.
       **Scope note**: own PR; gates on Q1.
+      *Shipped 2026-05-11 in
+      [`learning-to-rule-or-skill/SKILL.md`](../../.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md).
+      New "Audit-derived learnings" section: maps audit-log line
+      ids to `evidence:` and `source_learning:`, repetition gate
+      auto-satisfied for `count ≥ 2`, independence floor enforced
+      via de-dup by `run_id`.*
 
 ## Risk register (delta from sibling roadmap)
 
