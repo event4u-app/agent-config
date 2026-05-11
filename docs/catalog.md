@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **404 public artefacts** shipped by
+Consumer-facing catalog of all **405 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -248,7 +248,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (104)
+## Commands (105)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -324,6 +324,7 @@ are excluded.
 | command | [`optimize:skills`](../.agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
+| command | [`orchestrate`](../.agent-src/commands/orchestrate.md) |  | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
 | command | [`override:create`](../.agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
 | command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |

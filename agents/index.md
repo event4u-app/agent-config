@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **407 artefacts** in this package.
+Maintainer-facing index of all **408 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -251,7 +251,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (104)
+## Commands (105)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -327,6 +327,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`optimize:skills`](../.agent-src.uncompressed/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
 | command | [`optimize-prompt`](../.agent-src.uncompressed/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
 | command | [`optimize`](../.agent-src.uncompressed/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
+| command | [`orchestrate`](../.agent-src.uncompressed/commands/orchestrate.md) |  | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
 | command | [`override:create`](../.agent-src.uncompressed/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src.uncompressed/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
 | command | [`override`](../.agent-src.uncompressed/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
