@@ -16,6 +16,7 @@ enforces the A0 contract documented in
 from __future__ import annotations
 
 import asyncio
+import json
 import re
 from pathlib import Path
 
@@ -615,6 +616,9 @@ def test_no_unsafe_imports_in_resource_loader() -> None:
 
 from scripts.mcp_server.tools import (  # noqa: E402
     ALLOWLIST,
+    CATALOG_STUBS,
+    REGISTRY,
+    STUB_NAMES,
     BuiltinTool,
     ToolCache,
     boot_log_line,
@@ -632,10 +636,29 @@ def test_allowlist_holds_exactly_two_tools() -> None:
         assert tool.input_schema.get("additionalProperties") is False
 
 
-def test_tool_cache_list_and_names_are_sorted() -> None:
-    cache = ToolCache()
+def test_implemented_only_tool_cache_lists_allowlist() -> None:
+    """Passing ALLOWLIST narrows the cache to just the real handlers."""
+    cache = ToolCache(registry=dict(ALLOWLIST))
     assert cache.names() == ["chat_history_append", "lint_skills"]
     assert [t.name for t in cache.list()] == cache.names()
+
+
+def test_default_tool_cache_lists_catalog_plus_allowlist() -> None:
+    """J2 — default cache exposes ALLOWLIST + discovery stubs."""
+    cache = ToolCache()
+    names = cache.names()
+    assert "chat_history_append" in names
+    assert "lint_skills" in names
+    assert "memory_lookup" in names
+    assert names == sorted(REGISTRY.keys())
+    assert cache.implemented_names() == ["chat_history_append", "lint_skills"]
+
+
+def test_catalog_stubs_exclude_allowlist() -> None:
+    """ALLOWLIST tools must not be re-registered as stubs."""
+    assert "lint_skills" not in CATALOG_STUBS
+    assert "chat_history_append" not in CATALOG_STUBS
+    assert set(STUB_NAMES) == set(CATALOG_STUBS.keys())
 
 
 def test_to_mcp_tool_meta_shape() -> None:
@@ -648,7 +671,9 @@ def test_to_mcp_tool_meta_shape() -> None:
 
 def test_boot_log_line_enumerates_tools() -> None:
     line = boot_log_line(ToolCache())
-    assert "registered 2 tools" in line
+    total = len(REGISTRY)
+    assert f"registered {total} tools" in line
+    assert "2 implemented" in line
     assert "chat_history_append" in line
     assert "lint_skills" in line
 
@@ -657,6 +682,26 @@ def test_tool_cache_dispatch_rejects_unknown_tool() -> None:
     cache = ToolCache()
     with pytest.raises(ValueError, match="Unknown tool"):
         asyncio.run(cache.dispatch("nope", {}))
+
+
+def test_stub_dispatch_returns_not_implemented_envelope() -> None:
+    """J2 — invoking a catalog stub returns the structured envelope."""
+    cache = ToolCache()
+    result = asyncio.run(cache.dispatch("memory_lookup", {"types": ["ownership"]}))
+    assert result["code"] == "not_implemented"
+    assert result["tool"] == "memory_lookup"
+    assert result["transport"] == "stdio"
+    assert result["alternative"] == "stdio"
+    assert result["install_hint"]
+    assert "discovery catalog" in result["message"]
+
+
+def test_every_catalog_stub_is_marked_as_stub() -> None:
+    cache = ToolCache()
+    for name in STUB_NAMES:
+        assert cache.is_stub(name) is True
+    assert cache.is_stub("lint_skills") is False
+    assert cache.is_stub("nope") is False
 
 
 def test_chat_history_append_dry_run_does_not_write(tmp_path: Path) -> None:
@@ -798,8 +843,8 @@ def test_lint_skills_returns_json_payload_for_subset() -> None:
 
 
 @requires_mcp
-def test_server_lists_two_tools() -> None:
-    """D4 — `tools/list` returns the two allowlisted tools."""
+def test_server_lists_full_catalog_plus_allowlist() -> None:
+    """D4 + J2 — `tools/list` returns ALLOWLIST plus catalog stubs."""
     import mcp.types as mcp_types
 
     from scripts.mcp_server.server import build_server
@@ -810,7 +855,37 @@ def test_server_lists_two_tools() -> None:
         handler(mcp_types.ListToolsRequest(method="tools/list", params=None))
     )
     names = sorted(t.name for t in result.root.tools)
-    assert names == ["chat_history_append", "lint_skills"]
+    assert names == sorted(REGISTRY.keys())
+    assert "chat_history_append" in names
+    assert "lint_skills" in names
+    assert "memory_lookup" in names
+
+
+@requires_mcp
+def test_server_call_tool_stub_returns_envelope(tmp_path: Path, monkeypatch) -> None:
+    """J2 — `tools/call` on a stub returns the envelope as a successful result."""
+    import json as _json
+
+    import mcp.types as mcp_types
+
+    from scripts.mcp_server.server import build_server
+
+    monkeypatch.chdir(tmp_path)
+    server = build_server([], tools=ToolCache())
+    handler = server.request_handlers[mcp_types.CallToolRequest]
+    req = mcp_types.CallToolRequest(
+        method="tools/call",
+        params=mcp_types.CallToolRequestParams(
+            name="memory_lookup",
+            arguments={"types": ["ownership"]},
+        ),
+    )
+    result = asyncio.run(handler(req))
+    assert result.root.isError is False
+    payload = _json.loads(result.root.content[0].text)
+    assert payload["code"] == "not_implemented"
+    assert payload["tool"] == "memory_lookup"
+    assert payload["transport"] == "stdio"
 
 
 @requires_mcp
@@ -1017,3 +1092,335 @@ def test_resource_cache_signature_property_exposes_tracked_files() -> None:
     assert len(sig) > 0
     for entry in sig:
         assert len(entry) == 2
+
+
+
+# ----------------------------------------------------------------------
+# Phase 1 J4 + J5 — Telemetry instrumentation acceptance tests
+# ----------------------------------------------------------------------
+
+
+def _read_telemetry_jsonl(consumer_root: Path) -> list[dict[str, object]]:
+    """Read the per-call JSONL written by `scripts/mcp_server/telemetry.py`."""
+    target = (
+        consumer_root
+        / "agents"
+        / ".mcp-telemetry"
+        / "calls.jsonl"
+    )
+    if not target.exists():
+        return []
+    return [
+        json.loads(line)
+        for line in target.read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+
+
+def test_record_call_writes_jsonl_under_consumer_root(tmp_path: Path) -> None:
+    """J4 — `record_call` appends one JSONL record under `<root>/agents/.mcp-telemetry/`."""
+    import json as _json
+
+    from scripts.mcp_server.telemetry import record_call
+
+    record = record_call(
+        tool_name="memory_lookup",
+        outcome="stub",
+        transport="stdio",
+        consumer_root=tmp_path,
+        client_id_hash_value="abc123abc123",
+    )
+    assert record is not None
+    target = tmp_path / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    assert target.exists()
+    lines = target.read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 1
+    payload = _json.loads(lines[0])
+    assert payload == {
+        "tool_name": "memory_lookup",
+        "client_id_hash": "abc123abc123",
+        "ts": record["ts"],
+        "transport": "stdio",
+        "outcome": "stub",
+    }
+
+
+def test_record_call_appends_without_overwriting(tmp_path: Path) -> None:
+    """Sequential calls must extend the JSONL file, never truncate it."""
+    from scripts.mcp_server.telemetry import record_call
+
+    for name in ("memory_lookup", "lint_skills", "nope"):
+        record_call(
+            tool_name=name,
+            outcome="stub",
+            transport="stdio",
+            consumer_root=tmp_path,
+            client_id_hash_value="abc123abc123",
+        )
+    records = _read_telemetry_jsonl(tmp_path)
+    assert [r["tool_name"] for r in records] == ["memory_lookup", "lint_skills", "nope"]
+
+
+def test_record_call_swallows_write_errors(tmp_path: Path, capsys) -> None:
+    """Telemetry must never break the wire — IO failures degrade to a warn line."""
+    from scripts.mcp_server import telemetry
+
+    blocker = tmp_path / "agents"
+    blocker.write_text("not a directory", encoding="utf-8")
+
+    record = telemetry.record_call(
+        tool_name="memory_lookup",
+        outcome="stub",
+        transport="stdio",
+        consumer_root=tmp_path,
+        client_id_hash_value="abc123abc123",
+    )
+    assert record is None
+    captured = capsys.readouterr()
+    assert "telemetry write failed" in captured.err
+
+
+def test_hash_client_id_is_deterministic_and_truncated() -> None:
+    """SHA-256 + 12-hex truncation — same seed → same hash, different seed → different."""
+    from scripts.mcp_server.telemetry import hash_client_id
+
+    a = hash_client_id("user|host|/repo")
+    b = hash_client_id("user|host|/repo")
+    c = hash_client_id("user|host|/other-repo")
+    assert a == b
+    assert a != c
+    assert len(a) == 12
+    assert re.fullmatch(r"[0-9a-f]{12}", a)
+
+
+def test_dispatch_logs_implemented_for_allowlist_tool(tmp_path: Path) -> None:
+    """J4 — dispatch on a real handler records `outcome: implemented`."""
+    cache = ToolCache()
+    asyncio.run(
+        cache.dispatch(
+            "chat_history_append",
+            {"text": "hi", "entry_type": "note", "dry_run": True},
+            consumer_root=tmp_path,
+        )
+    )
+    records = _read_telemetry_jsonl(tmp_path)
+    assert len(records) == 1
+    assert records[0]["tool_name"] == "chat_history_append"
+    assert records[0]["outcome"] == "implemented"
+    assert records[0]["transport"] == "stdio"
+
+
+def test_dispatch_logs_stub_for_catalog_entry(tmp_path: Path) -> None:
+    """J4 — dispatch on a catalog stub records `outcome: stub`."""
+    cache = ToolCache()
+    asyncio.run(cache.dispatch("memory_lookup", {}, consumer_root=tmp_path))
+    records = _read_telemetry_jsonl(tmp_path)
+    assert len(records) == 1
+    assert records[0]["tool_name"] == "memory_lookup"
+    assert records[0]["outcome"] == "stub"
+
+
+def test_dispatch_logs_latent_demand_for_unknown_tool(tmp_path: Path) -> None:
+    """J4 — unknown names log `latent_demand` BEFORE the ValueError surfaces."""
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="Unknown tool"):
+        asyncio.run(cache.dispatch("nope", {}, consumer_root=tmp_path))
+    records = _read_telemetry_jsonl(tmp_path)
+    assert len(records) == 1
+    assert records[0]["tool_name"] == "nope"
+    assert records[0]["outcome"] == "latent_demand"
+
+
+def test_dispatch_telemetry_records_have_full_envelope(tmp_path: Path) -> None:
+    """Every record carries the five J4 fields, no payload body."""
+    cache = ToolCache()
+    asyncio.run(cache.dispatch("memory_lookup", {"types": ["secret"]}, consumer_root=tmp_path))
+    records = _read_telemetry_jsonl(tmp_path)
+    assert len(records) == 1
+    record = records[0]
+    assert set(record.keys()) == {
+        "tool_name",
+        "client_id_hash",
+        "ts",
+        "transport",
+        "outcome",
+    }
+    # Payload values must never leak into telemetry.
+    assert "secret" not in json.dumps(record)
+
+
+# ----------------------------------------------------------------------
+# Phase 1 J5 — Cross-transport catalog parity (offline)
+# ----------------------------------------------------------------------
+
+
+def _worker_content_path() -> Path:
+    return REPO_ROOT / "workers" / "mcp" / "content.json"
+
+
+def test_worker_content_bundles_catalog_when_packed() -> None:
+    """J3 — packed Worker `content.json` carries the same catalog set as stdio."""
+    from scripts.mcp_server.catalog import load_catalog
+
+    content_path = _worker_content_path()
+    if not content_path.exists():
+        pytest.skip("Worker content.json not packed in this checkout")
+    blob = json.loads(content_path.read_text(encoding="utf-8"))
+    tool_catalog = blob.get("tool_catalog") or {}
+    worker_names = sorted(t["name"] for t in tool_catalog.get("tools", []))
+    stdio_names = sorted(c.name for c in load_catalog())
+    assert worker_names == stdio_names, (
+        f"Worker bundle drift: only-in-worker={set(worker_names) - set(stdio_names)}, "
+        f"only-in-stdio={set(stdio_names) - set(worker_names)}"
+    )
+
+
+def test_worker_content_implemented_on_matches_catalog() -> None:
+    """`implemented_on` must round-trip from source-of-truth catalog to bundle."""
+    from scripts.mcp_server.catalog import load_catalog
+
+    content_path = _worker_content_path()
+    if not content_path.exists():
+        pytest.skip("Worker content.json not packed in this checkout")
+    blob = json.loads(content_path.read_text(encoding="utf-8"))
+    tool_catalog = blob.get("tool_catalog") or {}
+    worker = {t["name"]: tuple(t.get("implemented_on") or ()) for t in tool_catalog.get("tools", [])}
+    for entry in load_catalog():
+        assert worker.get(entry.name) == entry.implemented_on, (
+            f"implemented_on drift for {entry.name}: "
+            f"worker={worker.get(entry.name)} vs catalog={entry.implemented_on}"
+        )
+
+
+# ----------------------------------------------------------------------
+# Phase 1 J6 — Telemetry healthcheck acceptance tests
+# ----------------------------------------------------------------------
+
+
+def _write_telemetry_record(consumer_root: Path, ts: str, tool_name: str = "memory_lookup") -> None:
+    """Materialise a single JSONL record at the canonical sink path."""
+    target = consumer_root / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    with target.open("a", encoding="utf-8") as fh:
+        fh.write(
+            json.dumps(
+                {
+                    "tool_name": tool_name,
+                    "client_id_hash": "abc123abc123",
+                    "ts": ts,
+                    "transport": "stdio",
+                    "outcome": "stub",
+                }
+            )
+            + "\n"
+        )
+
+
+def test_health_evaluate_reports_missing_when_no_sink(tmp_path: Path) -> None:
+    """J6 — silent default: no sink file → status=missing, exit 1 unless allowed."""
+    from scripts.mcp_telemetry_health import evaluate
+
+    report = evaluate(consumer_root=tmp_path)
+    assert report.status == "missing"
+    assert report.records_in_window == 0
+    assert report.last_ts is None
+
+
+def test_health_evaluate_reports_silent_when_only_old_records(tmp_path: Path) -> None:
+    """J6 — older-than-window records do not count → status=silent."""
+    import time as _time
+
+    from scripts.mcp_telemetry_health import evaluate
+
+    # Forge a record 48h before "now".
+    fake_now = _time.time()
+    old_iso = _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(fake_now - 48 * 3600))
+    _write_telemetry_record(tmp_path, old_iso)
+
+    report = evaluate(consumer_root=tmp_path, window_hours=24, now=fake_now)
+    assert report.status == "silent"
+    assert report.records_in_window == 0
+    assert report.last_ts == old_iso
+
+
+def test_health_evaluate_reports_healthy_with_recent_record(tmp_path: Path) -> None:
+    """J6 — ≥1 record in window → status=healthy, exit 0."""
+    import time as _time
+
+    from scripts.mcp_telemetry_health import evaluate
+
+    fake_now = _time.time()
+    fresh_iso = _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(fake_now - 60))
+    _write_telemetry_record(tmp_path, fresh_iso, "memory_lookup")
+    _write_telemetry_record(tmp_path, fresh_iso, "lint_skills")
+
+    report = evaluate(consumer_root=tmp_path, window_hours=24, now=fake_now)
+    assert report.status == "healthy"
+    assert report.records_in_window == 2
+    assert report.last_ts == fresh_iso
+
+
+def test_health_evaluate_skips_malformed_lines(tmp_path: Path) -> None:
+    """Malformed JSON or missing ts must not crash the check."""
+    import time as _time
+
+    from scripts.mcp_telemetry_health import evaluate
+
+    target = tmp_path / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fake_now = _time.time()
+    fresh_iso = _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(fake_now - 60))
+    target.write_text(
+        "\n".join(
+            [
+                "not json at all",
+                json.dumps({"tool_name": "x"}),  # no ts
+                json.dumps({"tool_name": "x", "ts": 12345}),  # ts not a string
+                json.dumps({"tool_name": "x", "ts": "garbage"}),  # ts not iso
+                json.dumps(
+                    {
+                        "tool_name": "memory_lookup",
+                        "client_id_hash": "abc",
+                        "ts": fresh_iso,
+                        "transport": "stdio",
+                        "outcome": "stub",
+                    }
+                ),
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    report = evaluate(consumer_root=tmp_path, window_hours=24, now=fake_now)
+    assert report.status == "healthy"
+    assert report.records_in_window == 1
+
+
+def test_health_main_exits_zero_on_missing_with_allow_missing(
+    tmp_path: Path, capsys
+) -> None:
+    """CLI smoke — --allow-missing flips status=missing to exit 0."""
+    from scripts.mcp_telemetry_health import main
+
+    rc = main(["--consumer-root", str(tmp_path), "--allow-missing"])
+    assert rc == 0
+
+
+def test_health_main_exits_one_on_missing_without_flag(tmp_path: Path) -> None:
+    """CLI smoke — default missing → exit 1 so the alert sink fires."""
+    from scripts.mcp_telemetry_health import main
+
+    rc = main(["--consumer-root", str(tmp_path)])
+    assert rc == 1
+
+
+def test_health_main_emits_machine_readable_json(tmp_path: Path, capsys) -> None:
+    """--json must emit a single-line HealthReport for cron consumption."""
+    from scripts.mcp_telemetry_health import main
+
+    main(["--consumer-root", str(tmp_path), "--json", "--allow-missing"])
+    out = capsys.readouterr().out.strip()
+    payload = json.loads(out)
+    assert payload["status"] == "missing"
+    assert payload["records_in_window"] == 0
+    assert payload["window_hours"] == 24
