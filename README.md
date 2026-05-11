@@ -122,8 +122,8 @@ Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` 
 > of the ~112 Python scripts that ship with the package (linters,
 > audits, `task ci`, work-engine hooks, …). Those require the full
 > local install per [Quickstart](#quickstart). See
-> [`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md)
-> for the execution-safety boundary.
+> `docs/contracts/mcp-cloud-scope.md` (internal reference only per
+> `STABILITY.md`) for the execution-safety boundary.
 
 ### Optional: persistent agent memory
 
