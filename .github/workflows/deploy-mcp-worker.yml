@@ -24,7 +24,7 @@ on:
         default: ""
 
 permissions:
-  contents: read
+  contents: write  # needed by "Comment on release" step to PATCH the release body
 
 concurrency:
   group: deploy-mcp-worker
