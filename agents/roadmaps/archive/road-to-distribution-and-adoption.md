@@ -175,9 +175,19 @@ patterns to mine.
       [`audit-log-v1.md`](../../docs/contracts/audit-log-v1.md) — JSONL
       append-only, monthly files under `agents/state/audit/`, producer
       hook on phase boundary, supersede semantics for corrections.*
-- [ ] **Q2** — Pattern-extraction script + human review gate (no
+- [x] **Q2** — Pattern-extraction script + human review gate (no
       auto-promotion). **Scope note**: own PR; gates on Q1 + G-phase
       (no patterns to mine without orchestrated pipelines).
+      *Shipped 2026-05-11 in
+      [`scripts/extract_audit_patterns.py`](../../scripts/extract_audit_patterns.py).
+      Read-only consumer of `audit-log-v1`: groups by
+      `(phase, outcome, sorted(rules_applied))`, enforces the
+      independence floor by counting distinct `work_id`s, applies
+      supersede chains, skips unknown `schema_version` (forward-compat).
+      CLI rejects `--min-count < 2`. Human review gate = no
+      auto-promotion: output is a table or JSON; the
+      `learning-to-rule-or-skill` skill (Q3) consumes it manually.
+      Covered by `tests/test_extract_audit_patterns.py` (8 tests).*
 - [x] **Q3** — Integration with `learning-to-rule-or-skill` skill.
       **Scope note**: own PR; gates on Q1.
       *Shipped 2026-05-11 in
