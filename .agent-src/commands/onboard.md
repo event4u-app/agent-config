@@ -12,35 +12,68 @@ suggestion:
 
 # /onboard
 
-Centralized first-run flow. Bundles what used to be scattered "ask once"
-prompts (user_name, IDE, rtk install, cost profile, learning loop) into a
-single interactive setup. Ends by setting `onboarding.onboarded: true` in
-`.agent-settings.yml`.
+Centralized first-run flow. Bundles scattered "ask once" prompts (user_name,
+IDE, rtk install, cost profile, learning loop) into one interactive setup.
+Ends by setting `onboarding.onboarded: true` in `.agent-settings.yml`.
 
-Triggered by the [`onboarding-gate`](../rules/onboarding-gate.md) rule when
-`onboarding.onboarded` is `false` or by the user explicitly re-running it.
+Triggered by [`onboarding-gate`](../rules/onboarding-gate.md) when
+`onboarding.onboarded` is `false`, or by explicit re-run.
 
 ## When NOT to use
 
 - Change cost profile only → [`/set-cost-profile`](set-cost-profile.md).
-- Single-value edit → ask the agent to change it, or edit
-  `.agent-settings.yml` directly. The agent follows the merge rules in
-  [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md).
+- Single-value edit → ask agent to change it, or edit `.agent-settings.yml`
+  directly per [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md).
 
 ## Preconditions
 
-`.agent-settings.yml` exists. If missing, tell the user to run
-`scripts/install` (or `python3 scripts/install.py`) first and stop — this
-command assumes the file and its template-derived defaults are in place.
+`.agent-settings.yml` exists. If missing, tell user to run `scripts/install`
+(or `python3 scripts/install.py`) first and stop — command assumes file +
+template defaults are in place.
 
 ## Steps
 
 ### 1. Greet and set expectations
 
-Keep it short. One line explaining this is the one-time setup, six
-questions, one at a time, following the iron law (`user-interaction`).
+One line: one-time setup, six questions, one at a time (iron law from
+`user-interaction`).
 
-### 2. Capture `personal.user_name`
+### 2. Offer user-global cross-project defaults
+
+Detect whether `~/.config/agent-config/agent-settings.yml` exists. Path is
+XDG-style, matches existing `~/.config/agent-config/` dir used for
+`anthropic.key`, `openai.key`, `council-spend.jsonl`.
+
+- **File exists** → skip step entirely. Re-onboarding never overwrites
+  user-global file silently.
+- **File missing AND first-time setup heuristic** — heuristic for "first
+  machine setup": no other `.agent-settings.yml` in any sibling project on
+  disk. Conservative shell probe:
+  `find $(dirname "$PWD") -maxdepth 3 -name .agent-settings.yml 2>/dev/null | grep -v "^$PWD/" | head -1`
+  → non-empty → developer done this before, **skip**.
+  → empty → first-time setup, ask:
+
+```
+> A user-global config at ~/.config/agent-config/agent-settings.yml lets
+> you carry your DX-comfort defaults (name, IDE, autonomy, cost profile,
+> communication style) across every project that uses event4u/agent-config.
+>
+> Project-local .agent-settings.yml always wins. Only six keys are
+> mergeable from the user-global file:
+>   name · ide · cost_profile · personal.bot_icon · personal.autonomy · caveman.speak_scope
+>
+> 1. Yes — create it after this onboarding finishes
+> 2. No — keep settings project-local only
+```
+
+If user picks `1`, **defer write** to tail step (see step 9). Capture choice
+in working memory only; do **not** create file here. File gets written
+**after** project-local values are confirmed, so initial values mirror
+what developer just chose for this project.
+
+If user picks `2`, set working-memory flag to skip step 9.
+
+### 3. Capture `personal.user_name`
 
 Skip if already set (non-empty). Otherwise:
 
@@ -51,11 +84,11 @@ Skip if already set (non-empty). Otherwise:
 > 2. Skip — stay anonymous
 ```
 
-Free-text answer → write to `personal.user_name`. `2` → leave empty.
+Free-text → write to `personal.user_name`. `2` → leave empty.
 
-### 3. Capture `personal.ide` (with auto-detect)
+### 4. Capture `personal.ide` (with auto-detect)
 
-Skip if already set. Otherwise auto-detect first:
+Skip if set. Otherwise auto-detect first:
 
 ```bash
 ps aux | grep -iE '(Visual Studio Code|Code Helper|phpstorm|cursor)' | grep -v grep
@@ -73,13 +106,13 @@ ps aux | grep -iE '(Visual Studio Code|Code Helper|phpstorm|cursor)' | grep -v g
 > 4. Skip — I'll configure it later
 ```
 
-If IDE is set, also ask about `personal.open_edited_files` (`true`/`false`).
+If IDE set, also ask `personal.open_edited_files` (`true`/`false`).
 
-### 4. Capture `personal.pr_comment_bot_icon`
+### 5. Capture `personal.pr_comment_bot_icon`
 
-Personal preference — each developer decides how their own PR replies
-should look. Skip only if the user has already set a non-default value
-deliberately (agent can't tell, so always ask on first run):
+Personal preference — each developer decides how own PR replies look. Skip
+only if user already set non-default deliberately (agent can't tell, so
+always ask on first run):
 
 ```
 > When I reply to PR review comments on your behalf, should I prefix each
@@ -91,7 +124,7 @@ deliberately (agent can't tell, so always ask on first run):
 
 `1` → write `personal.pr_comment_bot_icon: true`. `2` → leave `false`.
 
-### 5. Detect `personal.rtk_installed`
+### 6. Detect `personal.rtk_installed`
 
 Silent `which rtk`.
 
@@ -108,16 +141,17 @@ Silent `which rtk`.
 ```
 
 `1` or `2` → run install, on success set `rtk_installed: true` and apply
-rtk post-install steps (telemetry off, init --global) per the
-[`rtk-output-filtering`](../skills/rtk-output-filtering/SKILL.md) skill.
-`3` → leave `rtk_installed: false` and move on. No "ask again tomorrow"
-logic — `/onboard` is one-shot.
+rtk post-install steps (telemetry off, init --global) per
+[`rtk-output-filtering`](../skills/rtk-output-filtering/SKILL.md).
+`3` → leave `rtk_installed: false`, move on. No "ask again tomorrow" —
+`/onboard` is one-shot.
 
-### 6. Confirm `cost_profile` and learning loop
+
+### 7. Confirm `cost_profile` and learning loop
 
 Read current `cost_profile` and `pipelines.skill_improvement` values.
-Present them plainly (they already have sensible defaults from the
-template — `minimal` + `skill_improvement: true`):
+Present plainly (sensible defaults from template — `minimal` +
+`skill_improvement: true`):
 
 ```
 > Cost profile: {current} (minimal by default — includes the learning loop)
@@ -128,16 +162,54 @@ template — `minimal` + `skill_improvement: true`):
 > 3. Disable learning loop — sets pipelines.skill_improvement=false
 ```
 
-`2` → defer to `/set-cost-profile` and return here. `3` → flip the toggle.
+`2` → defer to `/set-cost-profile` and return here. `3` → flip toggle.
 
-### 7. Mark onboarded
+### 8. Mark onboarded
 
-Write `onboarding.onboarded: true` to `.agent-settings.yml` using the
+Write `onboarding.onboarded: true` to `.agent-settings.yml` using
 section-aware merge rules from
 [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
-(preserve comments, key order, touch only the changed fields).
+(preserve comments, key order, touch only changed fields).
 
-### 8. Summary
+### 9. Write user-global file (only if opted in at step 2)
+
+Skip unless step 2 captured explicit "yes". Re-confirm intent in one line —
+never silent-write a file outside project tree:
+
+```
+> Writing ~/.config/agent-config/agent-settings.yml with the six
+> mergeable keys mirrored from this project's choices:
+>
+>   name: {personal.user_name or ""}
+>   ide: {personal.ide or ""}
+>   cost_profile: {cost_profile}
+>   personal.bot_icon: {personal.pr_comment_bot_icon}
+>   personal.autonomy: {personal.autonomy or "ask"}
+>   caveman.speak_scope: {caveman.speak_scope or "prose_only"}
+>
+> 1. Yes, write it
+> 2. Cancel — keep settings project-local only
+```
+
+`1` → ensure `~/.config/agent-config/` exists (`mkdir -p`, mode `0700`),
+then write file with mode `0600`. Schema is **flat-or-nested YAML keyed on
+dotted paths** in whitelist documented in
+[`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py).
+Use same section-aware merge rules from
+[`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
+**only if file unexpectedly already exists** between step 2 and this step
+(race condition); otherwise create from scratch with exact six keys above
+and a one-line file header comment:
+
+```yaml
+# event4u/agent-config — user-global DX-comfort defaults
+# Whitelist: name · ide · cost_profile · personal.bot_icon · personal.autonomy · caveman.speak_scope
+# Project-local .agent-settings.yml always wins. See docs/customization.md.
+```
+
+`2` → no write, no error, no second ask. Move on.
+
+### 10. Summary
 
 Echo what was captured, in one block:
 
@@ -152,18 +224,19 @@ Echo what was captured, in one block:
   cost_profile: {value}
   pipelines.skill_improvement: {value}
   onboarding.onboarded: true
+  user-global: {"written" if step 9 wrote · "—" otherwise}
 
 You can re-run this with /onboard anytime, or edit .agent-settings.yml
 directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
 
-### 9. Maintainer-only feature pointer
+### 11. Maintainer-only feature pointer
 
-Print a one-screen hint after the summary — no question, no prompt, just a
-pointer for maintainers who want to opt into the artefact-engagement
-telemetry layer. Consumers can ignore it; the feature is **default-off**
-and stays off unless explicitly enabled.
+Print one-screen hint after summary — no question, no prompt, just pointer
+for maintainers who want to opt into artefact-engagement telemetry layer.
+Consumers can ignore; feature is **default-off** and stays off unless
+explicitly enabled.
 
 ```
 ℹ️  Maintainer telemetry (opt-in)
@@ -181,20 +254,27 @@ Skip this block in cloud surfaces (no settings file, no log path).
 
 ## Gotchas
 
-- `.agent-settings.yml` is git-ignored. This command never commits.
-- One question per turn. The iron law from `ask-when-uncertain` applies;
-  do not stack questions 2–6 into a single prompt.
+- `.agent-settings.yml` is git-ignored. Command never commits.
+- One question per turn. Iron law from `ask-when-uncertain` applies; do
+  not stack questions 2–9 into single prompt.
 - Re-running `/onboard` when `onboarded: true` is allowed — walk through
-  all steps again and rewrite the values the user confirms.
-- Never overwrite a non-empty value without asking (applies to `user_name`
-  and `ide`).
+  all steps again and rewrite values user confirms.
+- Never overwrite non-empty value without asking (applies to `user_name`,
+  `ide`).
+- **User-global file is opt-in, one-shot, never silent.** Step 2 captures
+  intent, step 9 re-confirms before actual write. If
+  `~/.config/agent-config/agent-settings.yml` already exists when
+  `/onboard` starts, step 2 is skipped entirely — re-onboarding never
+  silently rewrites developer's cross-project defaults. Use
+  `/sync-agent-settings` (project-scoped only) or edit file manually for
+  mid-life changes.
 
 ## Cloud Behavior
 
 On cloud surfaces (Claude.ai Web, Skills API) this command is **fully inert** —
-there is no `.agent-settings.yml` to write, no `onboarding.onboarded` key to
-flip, and no local IDE/rtk environment to capture. First-run setup is a
-local-agent concern; the cloud agent should proceed without invoking it.
+no `.agent-settings.yml` to write, no `onboarding.onboarded` key to flip,
+no local IDE/rtk env to capture. First-run setup is local-agent concern;
+cloud agent should proceed without invoking it.
 
 ## See also
 
@@ -202,3 +282,4 @@ local-agent concern; the cloud agent should proceed without invoking it.
 - [`set-cost-profile`](set-cost-profile.md) — isolated profile change
 - [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — settings reference
+- [`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py) — centralized loader + whitelist that consumes the user-global file
