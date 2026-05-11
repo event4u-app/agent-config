@@ -10,6 +10,21 @@ by `docs/contracts/mcp-cloud-scope.md` (A0-cloud) and Phase 5.2 of
 shapes below are pinned for the lifetime of the *experimental* window;
 breaking changes require a stability-label bump.
 
+## Scope — Lite surface
+
+The hosted endpoint exposes the **read-only governance surface**
+(skills, commands, rules, guidelines, contexts) as MCP prompts +
+resources. `tools/list` returns two **deprecated stubs**
+(`lint_skills`, `chat_history_append`) that point at their local-stdio
+successors; `tools/call` against either returns `isError=true`. No
+script execution, no FS access, no shell.
+
+Full power — the ~112 Python scripts (linters, audits, `task ci`,
+work-engine hooks) — requires the local install. See
+[`../contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md)
+for the execution-safety boundary and the Phase-7-DEFERRED gate that
+governs any future tool restoration.
+
 ## URL shapes (pinned)
 
 Two surfaces, both serve identical wire contracts (JSON-RPC over POST,

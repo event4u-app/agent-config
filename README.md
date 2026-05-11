@@ -114,6 +114,15 @@ shapes (latest vs. pinned `/v<X.Y.Z>`) live in
 Operator setup (account, R2, secrets) — [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
 Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` (internal reference only per `STABILITY.md`).
 
+> **Scope — Lite, not Full.** The hosted MCP endpoint serves the
+> read-only governance surface (skills · commands · rules · guidelines
+> · contexts) as MCP prompts and resources. It does **not** execute any
+> of the ~112 Python scripts that ship with the package (linters,
+> audits, `task ci`, work-engine hooks, …). Those require the full
+> local install per [Quickstart](#quickstart). See
+> [`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md)
+> for the execution-safety boundary.
+
 ### Optional: persistent agent memory
 
 `agent-config` integrates with [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory)
