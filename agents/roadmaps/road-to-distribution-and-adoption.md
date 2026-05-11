@@ -132,9 +132,15 @@ personas to compose.
 **Risk if started early:** DSL ships without enough personas to
 compose → becomes a prettier `/work`.
 
-- [ ] **G1** — DSL schema + linter. **Scope note**: own PR; no
+- [x] **G1** — DSL schema + linter. **Scope note**: own PR; no
       external dep, but ships orphan-schema unless paired with G2
       (its consumer) in the same review window.
+      *Shipped 2026-05-11 in
+      [`orchestration-dsl-v1.md`](../../docs/contracts/orchestration-dsl-v1.md)
+      + [`scripts/lint_orchestration_dsl.py`](../../scripts/lint_orchestration_dsl.py)
+      + 12-case pytest suite. YAML pipelines under
+      `.agent-config/orchestrations/`, kinds: `skill` · `command` ·
+      `persona` · `subagent`, two-namespace interpolation.*
 - [ ] **G2** — `/orchestrate` command + state machine in `work_engine`.
       **Scope note**: own PR; multi-week design + implementation
       surface. Pair with G1 for review.
