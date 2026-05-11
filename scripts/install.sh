@@ -37,9 +37,25 @@ DRY_RUN=false
 VERBOSE=false
 QUIET=false
 SKIP_GITIGNORE=false
+# Comma-separated tool IDs (default: all). Set by --tools or the
+# orchestrator (scripts/install). The .augment/ substrate is always
+# synced because every other tool symlinks back into it.
+TOOLS="all"
 # Resolved from <TARGET>/.agent-settings.yml in resolve_settings(); when
 # true, .augment/rules/ files are symlinked instead of copied.
 USE_RULES_SYMLINKS=false
+
+# Return 0 if a tool ID is enabled by the current --tools selection.
+# "all" matches everything; otherwise match the comma list exactly.
+is_tool_enabled() {
+    local id="$1"
+    [[ "$TOOLS" == "all" ]] && return 0
+    case ",$TOOLS," in
+        *,"$id",*) return 0 ;;
+        *,all,*)   return 0 ;;
+    esac
+    return 1
+}
 
 # --- Logging ---
 log_info()    { $QUIET || echo "  ✅  $*"; }
@@ -57,10 +73,14 @@ parse_args() {
             --verbose) VERBOSE=true; shift ;;
             --quiet)   QUIET=true; shift ;;
             --skip-gitignore) SKIP_GITIGNORE=true; shift ;;
+            --tools)   TOOLS="$2"; shift 2 ;;
+            --tools=*) TOOLS="${1#*=}"; shift ;;
             --help|-h) show_help; exit 0 ;;
             *) log_error "Unknown argument: $1"; show_help; exit 1 ;;
         esac
     done
+
+    [[ -z "$TOOLS" ]] && TOOLS="all"
 
     # Auto-detect source: directory where this script lives (../  = package root)
     if [[ -z "$SOURCE_DIR" ]]; then
@@ -106,6 +126,10 @@ Syncs agent-config to target project. Copies rules, symlinks everything else.
 Options:
   --source <dir>   Package source directory (default: auto-detect from script location)
   --target <dir>   Target project root (default: $PROJECT_ROOT or cwd)
+  --tools <list>   Comma-separated tool IDs (default: all). Filters tool-specific
+                   payload (.claude/, .cursor/, .clinerules/, .windsurfrules,
+                   GEMINI.md, copilot-instructions.md). The .augment/ substrate
+                   and AGENTS.md are always written.
   --dry-run        Show what would happen without making changes
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
@@ -409,15 +433,25 @@ clean_stale() {
 }
 
 
-# Create tool-specific rule symlinks
+# Create tool-specific rule symlinks (filtered by --tools selection).
+# Map: tool ID → (target dir, relative prefix from target → .augment/rules).
 create_tool_symlinks() {
     local project_root="$1"
     local rules_dir="$project_root/.augment/rules"
 
     [[ -d "$rules_dir" ]] || return
 
-    local -a tool_dirs=(".claude/rules" ".cursor/rules" ".clinerules")
-    local -a rel_prefixes=("../../.augment/rules" "../../.augment/rules" "../.augment/rules")
+    local -a tool_ids=()
+    local -a tool_dirs=()
+    local -a rel_prefixes=()
+    is_tool_enabled "claude-code" && { tool_ids+=("claude-code"); tool_dirs+=(".claude/rules");  rel_prefixes+=("../../.augment/rules"); }
+    is_tool_enabled "cursor"      && { tool_ids+=("cursor");      tool_dirs+=(".cursor/rules");  rel_prefixes+=("../../.augment/rules"); }
+    is_tool_enabled "cline"       && { tool_ids+=("cline");       tool_dirs+=(".clinerules");    rel_prefixes+=("../.augment/rules"); }
+
+    if [[ ${#tool_dirs[@]} -eq 0 ]]; then
+        log_verbose "no tool rule directories selected (--tools=$TOOLS)"
+        return 0
+    fi
 
     local count=0
     for i in "${!tool_dirs[@]}"; do
@@ -467,15 +501,16 @@ create_tool_symlinks() {
         done
     done
 
-    log_info "Created $count rule symlinks across ${#tool_dirs[@]} tool directories"
+    log_info "Created $count rule symlinks across ${#tool_dirs[@]} tool directories (${tool_ids[*]})"
 }
 
-# Create .claude/skills/ directory symlinks
+# Create .claude/skills/ directory symlinks (claude-code only).
 create_skill_symlinks() {
     local project_root="$1"
     local skills_dir="$project_root/.augment/skills"
 
     [[ -d "$skills_dir" ]] || return
+    is_tool_enabled "claude-code" || { log_verbose "skip .claude/skills/ (claude-code not selected)"; return 0; }
 
     local target_dir="$project_root/.claude/skills"
     mkdir -p "$target_dir"
@@ -528,6 +563,7 @@ generate_windsurfrules() {
     local rules_dir="$project_root/.augment/rules"
 
     [[ -d "$rules_dir" ]] || return
+    is_tool_enabled "windsurf" || { log_verbose "skip .windsurfrules (windsurf not selected)"; return 0; }
 
     local output="$project_root/.windsurfrules"
     local count=0
@@ -561,10 +597,12 @@ generate_windsurfrules() {
 }
 
 
-# Create GEMINI.md symlink
+# Create GEMINI.md symlink (gemini-cli only).
 create_gemini_md() {
     local project_root="$1"
     local link="$project_root/GEMINI.md"
+
+    is_tool_enabled "gemini-cli" || { log_verbose "skip GEMINI.md (gemini-cli not selected)"; return 0; }
 
     if [[ -L "$link" ]] || [[ -f "$link" ]]; then
         return  # Don't overwrite
@@ -726,8 +764,15 @@ main() {
     #    own root AGENTS.md / copilot-instructions.md — those are meta docs
     #    about the package itself and would leak package-specific content
     #    into consumer projects.
+    #    AGENTS.md is the universal cross-tool contract (aider, codex, claude,
+    #    etc.) and is always written. copilot-instructions.md is gated on the
+    #    copilot tool selection.
     copy_if_missing "$SOURCE_PAYLOAD/templates/AGENTS.md" "$TARGET_DIR/AGENTS.md"
-    copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    if is_tool_enabled "copilot"; then
+        copy_if_missing "$SOURCE_PAYLOAD/templates/copilot-instructions.md" "$TARGET_DIR/.github/copilot-instructions.md"
+    else
+        log_verbose "skip .github/copilot-instructions.md (copilot not selected)"
+    fi
 
     # 3. Create tool-specific symlinks
     create_tool_symlinks "$TARGET_DIR"

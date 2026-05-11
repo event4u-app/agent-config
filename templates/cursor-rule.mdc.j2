@@ -1,0 +1,7 @@
+---
+description: {{ description }}
+globs: {{ globs | default("") }}
+alwaysApply: {{ "true" if always_apply else "false" }}
+---
+
+{{ body }}

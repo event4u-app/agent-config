@@ -15,13 +15,30 @@
 #   --source <dir>    Package source directory (default: auto-detect)
 #   --target <dir>    Target project root (default: cwd)
 #   --profile <name>  Cost profile for bridges (minimal|balanced|full)
+#   --tools <list>    Comma-separated tool IDs to install (default: all).
+#                     Valid: claude-code,claude-desktop,cursor,windsurf,
+#                            cline,gemini-cli,copilot,augment,aider,codex,all
+#   --list-tools      Print supported tool IDs with descriptions, then exit
+#   --yes, -y         Non-interactive mode: do not prompt (default for non-TTY)
 #   --force           Overwrite existing bridge files
 #   --dry-run         Show what payload sync would do (does not run bridges)
 #   --verbose         Detailed payload sync output
 #   --quiet           Suppress non-error output
 #   --skip-sync       Skip payload sync (install.sh)
 #   --skip-bridges    Skip bridge files (install.py)
+#   --global          Phase-3: ship kernel rules + curated skills to user-scope
+#                     dirs (~/.claude/, ~/.cursor/, ~/.codeium/windsurf/,
+#                     ~/.config/agent-config/) so the agent has them in every
+#                     project. Pair with --tools to scope surfaces; default = all.
+#   --uninstall       With --global: remove the event4u/ namespace dir from each
+#                     enabled surface (no effect on user-added files).
 #   --help, -h        Show this help
+#
+# Examples:
+#   bash scripts/install                                # everything (default)
+#   bash scripts/install --tools=claude-code,cursor     # only those two
+#   bash scripts/install --tools=cursor --yes           # CI-friendly
+#   bash scripts/install --list-tools                   # show catalog
 
 set -uo pipefail
 
@@ -32,18 +49,66 @@ INSTALL_PY="$SCRIPT_DIR/install.py"
 SOURCE_DIR=""
 TARGET_DIR=""
 PROFILE=""
+TOOLS=""
+TOOLS_EXPLICIT=false
+YES=false
 FORCE=false
 DRY_RUN=false
 VERBOSE=false
 QUIET=false
 SKIP_SYNC=false
 SKIP_BRIDGES=false
+LIST_TOOLS=false
+GLOBAL_INSTALL=false
+UNINSTALL=false
+
+# Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
+VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex all"
 
 show_help() {
-    sed -n '3,25p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+}
+
+list_tools() {
+    cat <<'EOF'
+Supported --tools IDs (default: all):
+
+  claude-code      .claude/rules, .claude/skills, .claude/commands, .claude/settings.json
+  claude-desktop   ~/Library/Application Support/Claude/ (global, see Phase 4 docs)
+  cursor           .cursor/rules, .cursor/commands (legacy .cursorrules also written)
+  windsurf         .windsurf/rules, .windsurf/workflows (legacy .windsurfrules also written)
+  cline            .clinerules/ symlinks
+  gemini-cli       GEMINI.md, .gemini/settings.json
+  copilot          .github/copilot-instructions.md, .vscode/settings.json
+  augment          .augment/ payload + settings (substrate — recommended for every install)
+  aider            AGENTS.md (Linux Foundation cross-tool contract; always written)
+  codex            AGENTS.md (same as aider — no extra action)
+  all              every ID above (the default; backward-compatible)
+
+Examples:
+  --tools=claude-code,cursor       project-local install for those two surfaces
+  --tools=all                      equivalent to omitting the flag
+EOF
 }
 
 err() { echo "  ❌  $*" >&2; }
+
+# Validate a comma-separated tool list against $VALID_TOOLS. Empty input is
+# rejected so a stray --tools= does not silently behave like --tools=all.
+validate_tools() {
+    local raw="$1"
+    [[ -z "$raw" ]] && { err "--tools requires a non-empty value (use --list-tools to see options)"; return 1; }
+    local IFS=','
+    local item
+    for item in $raw; do
+        [[ -z "$item" ]] && { err "--tools contains an empty entry"; return 1; }
+        if [[ " $VALID_TOOLS " != *" $item "* ]]; then
+            err "Unknown tool ID: $item (run --list-tools for the catalog)"
+            return 1
+        fi
+    done
+    return 0
+}
 
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -53,16 +118,83 @@ while [[ $# -gt 0 ]]; do
         --target=*)      TARGET_DIR="${1#*=}"; shift ;;
         --profile)       PROFILE="$2"; shift 2 ;;
         --profile=*)     PROFILE="${1#*=}"; shift ;;
+        --tools)         TOOLS="$2"; TOOLS_EXPLICIT=true; shift 2 ;;
+        --tools=*)       TOOLS="${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
+        --list-tools)    LIST_TOOLS=true; shift ;;
+        --yes|-y)        YES=true; shift ;;
         --force)         FORCE=true; shift ;;
         --dry-run)       DRY_RUN=true; shift ;;
         --verbose)       VERBOSE=true; shift ;;
         --quiet)         QUIET=true; shift ;;
         --skip-sync)     SKIP_SYNC=true; shift ;;
         --skip-bridges)  SKIP_BRIDGES=true; shift ;;
+        --global)        GLOBAL_INSTALL=true; shift ;;
+        --uninstall)     UNINSTALL=true; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
 done
+
+if $LIST_TOOLS; then
+    list_tools
+    exit 0
+fi
+
+# Interactive --tools picker (S9). Fires only when:
+#   - --tools was not explicitly passed
+#   - --yes / -y was not passed (CI / non-interactive opt-out)
+#   - stdin AND stdout are both TTYs (so we're not in a pipe / curl|bash flow)
+#   - --dry-run, --quiet, --skip-sync, --skip-bridges did not opt out of UX
+# Otherwise we fall through to the backward-compatible "all" default.
+prompt_tools() {
+    local choice picked tool i=0
+    local -a menu=(claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex)
+    echo ""
+    echo "  📦 Pick the tools to install (comma-separated numbers, blank = all):"
+    for tool in "${menu[@]}"; do
+        i=$((i+1))
+        printf "    %2d) %s\n" "$i" "$tool"
+    done
+    echo "    a)  all (default)"
+    echo ""
+    printf "  Selection: "
+    IFS= read -r choice || choice=""
+    choice="${choice// /}"
+    if [[ -z "$choice" || "$choice" == "a" || "$choice" == "all" ]]; then
+        TOOLS="all"; return
+    fi
+    picked=""
+    local IFS=','
+    for n in $choice; do
+        if ! [[ "$n" =~ ^[0-9]+$ ]] || (( n < 1 || n > ${#menu[@]} )); then
+            err "Invalid selection: $n (expected 1-${#menu[@]} or 'a')"; exit 1
+        fi
+        picked+="${menu[$((n-1))]},"
+    done
+    TOOLS="${picked%,}"
+    echo "  ✅  Selected: $TOOLS"
+}
+
+if ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && ! $GLOBAL_INSTALL && [[ -t 0 && -t 1 ]]; then
+    prompt_tools
+    TOOLS_EXPLICIT=true
+fi
+
+if $UNINSTALL && ! $GLOBAL_INSTALL; then
+    err "--uninstall is only valid combined with --global"
+    exit 1
+fi
+
+# Default = "all": backward compatible with pre-Phase-1 invocations. An
+# explicit --tools= (empty value) is rejected by validate_tools — only an
+# absent flag falls through to "all".
+if ! $TOOLS_EXPLICIT && [[ -z "$TOOLS" ]]; then
+    TOOLS="all"
+fi
+
+if ! validate_tools "$TOOLS"; then
+    exit 1
+fi
 
 # Auto-detect source: directory above this script
 if [[ -z "$SOURCE_DIR" ]]; then
@@ -103,6 +235,7 @@ run_sync() {
     $DRY_RUN && args+=(--dry-run)
     $VERBOSE && args+=(--verbose)
     $QUIET   && args+=(--quiet)
+    args+=(--tools="$TOOLS")
     bash "$INSTALL_SH" "${args[@]}"
 }
 
@@ -123,10 +256,32 @@ run_bridges() {
     [[ -n "$PROFILE" ]] && args+=(--profile="$PROFILE")
     $FORCE && args+=(--force)
     $QUIET && args+=(--quiet)
+    args+=(--tools="$TOOLS")
     "$python_bin" "$INSTALL_PY" "${args[@]}"
 }
 
 RC=0
+
+# --global: dedicated user-scope path. Skips the project-bridge sync entirely
+# and forwards to install.py --global (Phase 3 / S13). --uninstall pairs with
+# --global to wipe the event4u/ namespace dir under each surface.
+if $GLOBAL_INSTALL; then
+    if ! python_bin="$(find_python)"; then
+        err "Python 3 not found — required for --global install"
+        exit 1
+    fi
+    if [[ ! -f "$INSTALL_PY" ]]; then
+        err "Missing $INSTALL_PY"
+        exit 1
+    fi
+    args=(--package "$SOURCE_DIR" --global --tools="$TOOLS")
+    $FORCE     && args+=(--force)
+    $QUIET     && args+=(--quiet)
+    $UNINSTALL && args+=(--uninstall)
+    "$python_bin" "$INSTALL_PY" "${args[@]}"
+    exit $?
+fi
+
 if ! $SKIP_SYNC; then
     if [[ ! -f "$INSTALL_SH" ]]; then
         err "Missing $INSTALL_SH"

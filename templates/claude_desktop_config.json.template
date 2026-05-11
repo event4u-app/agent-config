@@ -1,0 +1,21 @@
+{
+  "//": "Claude Desktop config template — agent-config",
+  "//1": "Copy this to one of:",
+  "//2": "  macOS   ~/Library/Application Support/Claude/claude_desktop_config.json",
+  "//3": "  Windows %APPDATA%\\Claude\\claude_desktop_config.json",
+  "//4": "  Linux   ~/.config/Claude/claude_desktop_config.json",
+  "//5": "Strip the leading '_disabled_' prefix on the mcpServers entry below to enable the MCP connector.",
+  "//6": "Hosted endpoint is read-only and identity-stable per release; full client setup details in docs/setup/mcp-client-config.md.",
+  "//7": "Restart Claude Desktop fully (Cmd+Q on macOS) after editing — the menubar process keeps the old config cached otherwise.",
+
+  "_disabled_mcpServers": {
+    "agent-config": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://agent-config-mcp.event4u.workers.dev"
+      ]
+    }
+  }
+}
