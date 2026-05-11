@@ -20,3 +20,110 @@ tasks:
     desc: "Run the MCP server test suite inside .venv-mcp/ (full coverage incl. SDK-gated tests)"
     cmds:
       - .venv-mcp/bin/python -m pytest tests/test_mcp_server.py -v
+
+  # ---------------------------------------------------------------------------
+  # Cloudflare hosted MCP — one-time operator setup.
+  #
+  # End-to-end walkthrough + troubleshooting:
+  #   docs/setup/mcp-cloud-setup.md
+  #
+  # The deploy itself is owned by .github/workflows/deploy-mcp-worker.yml
+  # (release: published) per A0-cloud invariant 7 — never run `wrangler deploy`
+  # from a developer machine.
+  # ---------------------------------------------------------------------------
+
+  mcp:cloud:check:
+    desc: "Preflight — node/npx/wrangler available + Cloudflare login status. Run this first."
+    silent: true
+    cmds:
+      - |
+        echo "→ node:    $(node --version 2>/dev/null || echo 'MISSING — install Node ≥ 20')"
+        echo "→ npx:     $(npx --version 2>/dev/null || echo 'MISSING')"
+        echo "→ wrangler: $(npx --offline wrangler --version 2>/dev/null | tail -1 || echo 'not cached — first run will fetch')"
+        echo ""
+        if npx --offline wrangler whoami 2>/dev/null | grep -q "associated with the email"; then
+          echo "✅  Logged in to Cloudflare:"
+          npx --offline wrangler whoami 2>/dev/null | grep -E "(email|Account ID)" | head -4
+        else
+          echo "❌  Not logged in. Run: task mcp:cloud:login"
+        fi
+
+  mcp:cloud:login:
+    desc: "Interactive `wrangler login` (opens browser). One-time per machine."
+    cmds:
+      - npx wrangler login
+
+  mcp:cloud:whoami:
+    desc: "Show the Cloudflare account id — the value for the CLOUDFLARE_ACCOUNT_ID GitHub secret."
+    cmds:
+      - npx wrangler whoami
+
+  mcp:cloud:r2-create:
+    desc: "Create the `agent-config-mcp` R2 bucket (idempotent; hints if R2 is not enabled)."
+    silent: true
+    cmds:
+      - |
+        set +e
+        out=$(npx wrangler r2 bucket create agent-config-mcp 2>&1)
+        rc=$?
+        echo "$out"
+        if [ $rc -ne 0 ]; then
+          if echo "$out" | grep -q "code: 10042"; then
+            echo ""
+            echo "⚠️  R2 is not enabled on this Cloudflare account."
+            echo "    1. Open: https://dash.cloudflare.com/?to=/:account/r2/overview"
+            echo "    2. Click 'Purchase R2 Plan' (free tier — credit card required, \$0 within quota)"
+            echo "    3. Re-run: task mcp:cloud:r2-create"
+            echo ""
+            echo "    Full walkthrough: docs/setup/mcp-cloud-setup.md § Enable R2"
+          elif echo "$out" | grep -qi "already exists"; then
+            echo ""
+            echo "✅  Bucket already exists — nothing to do."
+            exit 0
+          fi
+          exit $rc
+        fi
+
+  mcp:cloud:r2-verify:
+    desc: "Verify the `agent-config-mcp` R2 bucket is present and listable."
+    silent: true
+    cmds:
+      - |
+        if npx wrangler r2 bucket list 2>/dev/null | grep -qE "(^|[[:space:]])agent-config-mcp([[:space:]]|$)"; then
+          echo "✅  bucket 'agent-config-mcp' present"
+        else
+          echo "❌  bucket 'agent-config-mcp' not found — run: task mcp:cloud:r2-create"
+          exit 1
+        fi
+
+  mcp:cloud:setup:
+    desc: "Run the full one-time Cloudflare setup (check → r2-create → r2-verify → whoami)."
+    silent: true
+    cmds:
+      - task: mcp:cloud:check
+      - task: mcp:cloud:r2-create
+      - task: mcp:cloud:r2-verify
+      - task: mcp:cloud:whoami
+      - |
+        echo ""
+        echo "✅  Cloudflare setup complete."
+        echo "    Next: add CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID to GitHub Secrets."
+        echo "    Walkthrough: docs/setup/mcp-cloud-setup.md § GitHub Secrets"
+
+  mcp:cloud:dev:
+    desc: "Run the Cloudflare Worker locally on :8787 (`wrangler dev`)."
+    dir: workers/mcp
+    cmds:
+      - npm install --silent
+      - npm run dev
+
+  mcp:cloud:deploy-dispatch:
+    desc: "Manually trigger the deploy-mcp-worker.yml workflow for a tag (validation, not first release)."
+    cmds:
+      - |
+        if [ -z "{{.TAG}}" ]; then
+          echo "❌  Usage: task mcp:cloud:deploy-dispatch TAG=v1.37.0"
+          exit 1
+        fi
+        gh workflow run deploy-mcp-worker.yml -f tag={{.TAG}}
+        echo "→ Watch: gh run watch"

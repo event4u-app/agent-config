@@ -90,6 +90,30 @@ Install directly in your agent for global, cross-project use:
 → [Full getting started guide](docs/getting-started.md) ·
 [More examples & expected behavior](docs/showcase.md)
 
+### Remote MCP — zero install
+
+Skills, commands, rules, and guidelines are also served as a hosted MCP
+endpoint. No clone, no `task mcp:setup`, no Python venv — point any
+MCP-capable client (Claude Desktop, Cursor, Zed, Continue, hosted agents)
+at:
+
+```
+https://agent-config-mcp.event4u.workers.dev
+```
+
+Verify it's live:
+
+```bash
+curl https://agent-config-mcp.event4u.workers.dev
+# → { "ok": true, "name": "agent-config-mcp", "release_key": "v…", … }
+```
+
+Read-only, identity-stable per release. Client config snippets and URL
+shapes (latest vs. pinned `/v<X.Y.Z>`) live in
+[`docs/setup/mcp-cloud-endpoints.md`](docs/setup/mcp-cloud-endpoints.md).
+Operator setup (account, R2, secrets) — [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
+Experimental — A0-cloud contract in [`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md).
+
 ### Optional: persistent agent memory
 
 `agent-config` integrates with [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory)
@@ -109,7 +133,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — read-only access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`) · [Remote MCP](docs/setup/mcp-cloud-endpoints.md) (experimental — Cloudflare-hosted Worker for hosted-agent platforms)
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — local stdio access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`)
 
 ---
 

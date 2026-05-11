@@ -231,7 +231,7 @@ class TestSectionOrder:
 class TestOverloaded:
     def test_warns_on_very_long_readme(self, tmp_repo):
         readme = tmp_repo / "README.md"
-        readme.write_text("# Pkg\n\nSummary.\n\n## Requirements\n\n- PHP\n\n## Installation\n\n```bash\nx\n```\n\n" + "line\n" * 600)
+        readme.write_text("# Pkg\n\nSummary.\n\n## Requirements\n\n- PHP\n\n## Installation\n\n```bash\nx\n```\n\n" + "line\n" * 800)
         result = lint_readme(readme, tmp_repo)
         codes = [i.code for i in result.issues]
         assert "readme_overloaded" in codes
