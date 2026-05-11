@@ -24,6 +24,13 @@ workers/mcp/
     └── content.ts        # bundled blob types + STUB_BLOB
 ```
 
+## Operator setup
+
+First-time Cloudflare onboarding (account, R2, API token, GitHub
+secrets) lives in
+[`docs/setup/mcp-cloud-setup.md`](../../docs/setup/mcp-cloud-setup.md).
+Run `task mcp:cloud:setup` for the guided chain.
+
 ## Local dev
 
 ```bash
@@ -34,6 +41,8 @@ npm run dev        # wrangler dev on :8787
 # in another shell:
 npm run smoke:dev  # quick HTTP probes
 ```
+
+Or from the repo root: `task mcp:cloud:dev`.
 
 The committed `content.json` is the dev stub (zero entries). The pipeline
 (`scripts/pack_mcp_content.py`, Phase 3) overwrites it before
