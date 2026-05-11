@@ -318,6 +318,40 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.39.0](https://github.com/event4u-app/agent-config/compare/1.38.0...1.39.0) (2026-05-11)
+
+### Features
+
+* **onboard,docs:** wire user-global DX defaults into onboarding + docs ([761a969](https://github.com/event4u-app/agent-config/commit/761a96979c42b880d83f72ccd2ac2d752ae47f0b))
+* **settings:** add centralized agent-settings loader ([d5699be](https://github.com/event4u-app/agent-config/commit/d5699bee9ebb47dd2f1d78716e1ff84a7139b5da))
+
+### Bug Fixes
+
+* **ci:** grant contents:write to deploy-mcp-worker for release comment ([fb5c895](https://github.com/event4u-app/agent-config/commit/fb5c89537daef55e5dde12bfe85cc703bfa181ed))
+
+### Documentation
+
+* **roadmap:** add road-to-simplicity-and-everywhere (highest prio) ([417a8fa](https://github.com/event4u-app/agent-config/commit/417a8fa9b7059dac783d3bc9423c64a994a9421a))
+* **roadmap:** add road-to-mcp-full-coverage (Discovery-First) ([fabf897](https://github.com/event4u-app/agent-config/commit/fabf89761322a437b39178366e45f68efbdd7924))
+* **mcp-cloud:** clarify Lite-vs-Full scope at endpoint surface ([97c4684](https://github.com/event4u-app/agent-config/commit/97c4684d07be4fe49c248a1ee0a60cd36b82e071))
+* **stability:** align public surface with stability markers ([d9afe4a](https://github.com/event4u-app/agent-config/commit/d9afe4ad67aad80e2bb12b1c707189f3ee8f47c2))
+* **mcp:** clarify .agent-settings.yml vs. MCP client config ([27a77b2](https://github.com/event4u-app/agent-config/commit/27a77b2459cad1faff12cd8a237e59091ec687de))
+* **mcp:** add per-client setup guide for hosted Remote MCP ([179da38](https://github.com/event4u-app/agent-config/commit/179da38631ea9693a94f259fb1edd2746b89425d))
+
+### Refactoring
+
+* **work-engine:** centralize agent-settings loading in shared _lib ([3c548bb](https://github.com/event4u-app/agent-config/commit/3c548bb72d3c2022362050a4c88ebe412bf7a897))
+
+### Chores
+
+* **compress:** regenerate commands/onboard.md after onboard,docs source edit ([e676915](https://github.com/event4u-app/agent-config/commit/e67691564405f05fba033f29b0df696e25788dd0))
+
+### Other
+
+* add portable-dev-preferences (3 phases, refined via AI council) ([7468a4c](https://github.com/event4u-app/agent-config/commit/7468a4cd2d352d6bfcd7797a8dd8b6ed8ec8f27a))
+
+Tests: 2699 (+20 since 1.38.0)
+
 ## [1.38.0](https://github.com/event4u-app/agent-config/compare/1.37.0...1.38.0) (2026-05-11)
 
 ### Features
