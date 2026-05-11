@@ -108,8 +108,10 @@ curl https://agent-config-mcp.event4u.workers.dev
 # → { "ok": true, "name": "agent-config-mcp", "release_key": "v…", … }
 ```
 
-Read-only, identity-stable per release. Client config snippets and URL
-shapes (latest vs. pinned `/v<X.Y.Z>`) live in
+Read-only, identity-stable per release. Per-client setup snippets
+(Claude Desktop, Claude Code, Cursor, Zed, Continue) —
+[`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md).
+URL shapes (latest vs. pinned `/v<X.Y.Z>`) —
 [`docs/setup/mcp-cloud-endpoints.md`](docs/setup/mcp-cloud-endpoints.md).
 Operator setup (account, R2, secrets) — [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
 Experimental — A0-cloud contract in [`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md).
