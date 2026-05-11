@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **394**
-- Edges (incl. self-WRITE): **1045**
+- Files indexed: **395**
+- Edges (incl. self-WRITE): **1047**
 
 ## READ_ONLY edges
 
@@ -97,6 +97,7 @@
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/override-management/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/orchestrate.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -668,7 +669,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 104 |
+| `command` | 105 |
 | `context` | 31 |
 | `persona` | 16 |
 | `rule` | 60 |
