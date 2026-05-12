@@ -5,6 +5,18 @@
 # values here directly or ask the agent (it follows the merge rules in
 # .augment/guidelines/agent-infra/layered-settings.md).
 
+# --- Agent config version pin ---
+#
+# Exact semver of the @event4u/agent-config release this project is
+# pinned to. Used by `npx @event4u/agent-config <cmd>` to re-exec at
+# the pinned version when the developer's local resolution differs.
+# Empty string = unpinned (resolver picks the latest release; only safe
+# for greenfield projects). Ranges (^, ~, >=) are NOT supported — the
+# pin replaces lockfile determinism, so it must be exact.
+# See docs/customization.md § "Agent config version pin" and
+# docs/architecture.md § "npx-only distribution + version-pin governance".
+agent_config_version: ""
+
 # --- Cost profile ---
 #
 # Master switch that controls which rule tiers load each session.
@@ -376,3 +388,16 @@ memory:
   # or paths outside the repo root that must not land in intake JSONL.
   # Example: ["api[_-]?key", "/Users/[a-z]+/Library"]
   redact_patterns: []
+
+# --- Update check ---
+#
+# Daily background check against the npm registry for a newer
+# @event4u/agent-config release. When enabled the dispatcher writes a
+# two-line banner to stderr **after** the subcommand finishes; CI,
+# non-TTY stdout, and `AGENT_CONFIG_NO_UPDATE_CHECK=1` always suppress
+# it regardless of this flag. State is persisted at
+# `~/.config/agent-config/update-check.json` (mode 0600) with a 24 h
+# cadence. See docs/customization.md § "Update check" for the suppression
+# matrix and the road-to-portable-runtime-and-update-check roadmap (P2).
+update_check:
+  enabled: true
