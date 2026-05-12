@@ -6,9 +6,18 @@ complexity: lightweight
 
 > Reach a measured, demand-driven MCP tool surface — discovery first, port last — so the long-term endpoint (consumer agents reach every relevant agent-config capability through MCP) is achieved without burning weeks on a speculative 112-script TypeScript port.
 
-**Status:** READY FOR EXECUTION — created 2026-05-11 after AI Council
+**Status:** COMPLETE (Phases 1–3 shipped · Phases 4–5 dormant under
+their wake-up triggers per [`mcp-coverage-cut-2026-05-12.md`](../../decisions/mcp-coverage-cut-2026-05-12.md)).
+Originally READY FOR EXECUTION — created 2026-05-11 after AI Council
 3-round convergence on the Discovery-First strategy.
 **Started:** 2026-05-11
+**Closed:** 2026-05-12 — Phase 3 shipped 7 RO tools via PR #106; the
+council verdict on the same day reconfirmed Phase 4 + Phase 5 stay
+dormant until their named wake-up triggers fire (≥2 weeks of
+production RO-tool usage with named consumer + A0 amendment for
+Phase 4; measured latency / distribution failure for Phase 5).
+Re-opening requires a fresh roadmap (`road-to-mcp-write-tools.md` /
+`road-to-mcp-native-ts-port.md`) per Phase 5's N0 forcing function.
 **Trigger:** Inventory of `scripts/` showed ~112 Python scripts vs. 2
 reachable MCP tools. User asked to "plan the complete transition and
 expansion" toward full MCP coverage with a possible TS port.
@@ -312,12 +321,12 @@ are on the table; the council surfaced both but did not pick.
 2. A named consumer (internal or external) requests a specific
    write-tool by name with a concrete workflow, AND
 3. The named consumer accepts the contract review burden of an
-   A0-amendment ([`docs/contracts/mcp-phase-1-scope.md`](../../docs/contracts/mcp-phase-1-scope.md) § A0).
+   A0-amendment ([`docs/contracts/mcp-phase-1-scope.md`](../../../docs/contracts/mcp-phase-1-scope.md) § A0).
 
 Without all three, this phase stays dormant. Speculative write-tool
 infrastructure pulls A0-amendment review time it has not earned.
 
-- [ ] **M1** — Design call (council, 1 round, $0.10 budget):
+- [~] **M1** — Design call (council, 1 round, $0.10 budget):
       decide between
       (a) **direct writes with path-allowlist** (server enforces
       `${CONSUMER_ROOT}/agents/**` boundary; transport client UI
@@ -326,13 +335,18 @@ infrastructure pulls A0-amendment review time it has not earned.
       return *proposed changes* as structured data; the consumer
       agent's pre-commit hook applies them locally; MCP server
       stays read-only forever).
-- [ ] **M2** — A0 amendment in `docs/contracts/mcp-phase-1-scope.md`
+      *Deferred:* dormant until the three wake-up triggers above
+      fire. Re-opens as `road-to-mcp-write-tools.md`.
+- [~] **M2** — A0 amendment in `docs/contracts/mcp-phase-1-scope.md`
       reflecting the chosen design. Reviewed before any code lands.
-- [ ] **M3** — Implementation of the first write tool under the
+      *Deferred:* gated on M1.
+- [~] **M3** — Implementation of the first write tool under the
       chosen envelope.
-- [ ] **M4** — Contract test: write-tool side effect is bounded by
+      *Deferred:* gated on M2.
+- [~] **M4** — Contract test: write-tool side effect is bounded by
       the allowlist (design (a)) OR returns a proposal payload with
       no FS access (design (b)).
+      *Deferred:* gated on M3.
 
 The reason this is its own phase is the council's hard line: the
 read-only / write asymmetry is structural. Mixing them into Phase 3
@@ -355,7 +369,7 @@ maintenance burden of two implementations.
    pattern cannot meet (e.g., a hosted endpoint that must serve
    < 50 ms p95 with zero cold-start).
 
-- [ ] **N0** — Forcing function (mandatory first step): if
+- [~] **N0** — Forcing function (mandatory first step): if
       a TS-native implementation is proposed for ≥ 3 tools in the
       same iteration (PR, design doc, decision file), STOP. Open
       `agents/roadmaps/road-to-mcp-native-ts-port.md` instead and
@@ -364,15 +378,20 @@ maintenance burden of two implementations.
       enter via the new-roadmap door. This is the loophole-closer
       against "Phase 5 expanded into mass-port by accumulation"
       (Sonnet finding, 2026-05-11 review).
-- [ ] **N1** — Per-tool port: TypeScript implementation alongside
+      *Deferred:* dormant until the latency / distribution
+      wake-up trigger fires. The N0 prohibition remains binding.
+- [~] **N1** — Per-tool port: TypeScript implementation alongside
       the Python implementation, with the contract test (`L3`) now
       asserting parity across *three* paths (stdio-Python,
       Worker-Python-subprocess, Worker-TS-native).
-- [ ] **N2** — Decision in `agents/decisions/`: which path becomes
+      *Deferred:* gated on N0.
+- [~] **N2** — Decision in `agents/decisions/`: which path becomes
       the primary, which becomes deprecated, and the deprecation
       window.
-- [ ] **N3** — Sunset the deprecated path once telemetry shows zero
+      *Deferred:* gated on N1.
+- [~] **N3** — Sunset the deprecated path once telemetry shows zero
       traffic on it for ≥ 4 weeks.
+      *Deferred:* gated on N2.
 
 Mass-port (all 112 scripts → TS) is rejected by this roadmap and
 will not become a phase here. If the future demands it, that is a
@@ -382,19 +401,35 @@ accumulation cannot route around this prohibition.
 
 ## Acceptance Criteria (whole roadmap)
 
-- [ ] At least one of Phase 1 / Phase 2 / Phase 3 executes; Phases
+- [x] At least one of Phase 1 / Phase 2 / Phase 3 executes; Phases
       4 and 5 remain DEFERRED unless their wake-up triggers fire.
-- [ ] If Phase 3 ships any tool, the contract test (`L3`) protects
+      *Satisfied:* Phases 1–3 shipped (PR #106); Phase 4 + 5 dormant.
+- [x] If Phase 3 ships any tool, the contract test (`L3`) protects
       it against version skew (hermetic fixtures + FS-diff + env
       control).
-- [ ] If Phase 2 closes no-go, the roadmap archives with that
+      *Satisfied:* 10 hermetic shape tests in
+      `tests/test_mcp_server.py` plus
+      `test_worker_content_implemented_on_matches_catalog` for the
+      stdio↔Worker manifest parity (reduced cross-transport scope
+      per L3 waiver — Worker dispatch stays stub-only).
+- [-] If Phase 2 closes no-go, the roadmap archives with that
       verdict and a written rationale linking the dashboard query.
-- [ ] At no point does the MCP server's A0 contract weaken without
+      *N/A:* Phase 2 closed **go** under the waiver verdict
+      (`mcp-coverage-cut-2026-05-12.md`); the no-go archival
+      branch did not fire.
+- [x] At no point does the MCP server's A0 contract weaken without
       a fresh amendment + council design call (Phase 4 / M1).
-- [ ] Discovery-First strategy is retired only via an explicit
+      *Satisfied:* the 7 RO tools ship under the existing A0
+      contract (`docs/contracts/mcp-phase-1-scope.md`); no A0
+      amendment was made. Phase 4 / M1 remains the only gate that
+      can amend A0, and stays deferred.
+- [x] Discovery-First strategy is retired only via an explicit
       verdict in `agents/decisions/mcp-strategy-retirement-<date>.md`
       with a fresh council call; until then, every phase decision
       defers to the original convergence.
+      *Satisfied:* no retirement verdict exists; the strategy is
+      preserved across the closure. Phase 4 + 5 deferral is itself
+      a reaffirmation of the convergence.
 
 ## Risk register
 
@@ -413,16 +448,29 @@ accumulation cannot route around this prohibition.
 ## Reference
 
 - Council inputs (durable): linked in the Status block above.
-- MCP scope contract: [`docs/contracts/mcp-phase-1-scope.md`](../../docs/contracts/mcp-phase-1-scope.md).
-- MCP cloud-tool scope: [`docs/contracts/mcp-cloud-scope.md`](../../docs/contracts/mcp-cloud-scope.md).
+- MCP scope contract: [`docs/contracts/mcp-phase-1-scope.md`](../../../docs/contracts/mcp-phase-1-scope.md).
+- MCP cloud-tool scope: [`docs/contracts/mcp-cloud-scope.md`](../../../docs/contracts/mcp-cloud-scope.md).
 - Predecessor MCP roadmaps (archived):
-  [`road-to-mcp-server.md`](archive/road-to-mcp-server.md) ·
-  [`road-to-mcp-distribution.md`](archive/road-to-mcp-distribution.md) ·
-  [`road-to-cloudflare-mcp-hosting.md`](archive/road-to-cloudflare-mcp-hosting.md).
+  [`road-to-mcp-server.md`](road-to-mcp-server.md) ·
+  [`road-to-mcp-distribution.md`](road-to-mcp-distribution.md) ·
+  [`road-to-cloudflare-mcp-hosting.md`](road-to-cloudflare-mcp-hosting.md).
 
 ## Next step
 
-Start Phase 1 (`J1` — inventory cut). The catalog data file is the
-single artefact every later phase depends on; getting it right early
-is cheap. Do not start Phase 1 work until the user explicitly opens
-the phase — this roadmap is READY, not running.
+Closed 2026-05-12. No further step is owed by this roadmap.
+
+Re-opening paths (each requires a fresh roadmap, not a phase
+extension here):
+
+- **Phase 4 trigger fires** (named consumer + ≥2 weeks RO usage +
+  A0-amendment acceptance) → open `road-to-mcp-write-tools.md` with
+  a fresh council design call (M1 inputs).
+- **Phase 5 trigger fires** (measured latency budget failure OR
+  hosted-endpoint distribution requirement) → open
+  `road-to-mcp-native-ts-port.md`. The N0 forcing function still
+  forbids batched mass-ports.
+- **K3 telemetry refresh** (≥ 4 weeks real data, ≥ 500 attempts,
+  ≥ 50 distinct request-IDs) — when reached, append a follow-up
+  verdict file (`mcp-coverage-cut-<date>.md`) validating or
+  revising the 2026-05-12 waiver cut. This is observability, not
+  new roadmap work.

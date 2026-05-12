@@ -69,7 +69,7 @@ are not roadmap steps.
 - **Doc anchor:** none yet.
 - **Action:** Submit to Smithery once the MCP server can be installed
   and exercised end-to-end.
-- **Pre-conditions:** [`road-to-mcp-full-coverage.md`](../agents/roadmaps/road-to-mcp-full-coverage.md)
+- **Pre-conditions:** [`road-to-mcp-full-coverage.md`](../agents/roadmaps/archive/road-to-mcp-full-coverage.md)
   Phase 3 (Selective Implementation) shipped.
 - **Notes:** **Do not submit before the gate.** Premature listing
   produces a bad first impression and is hard to retract.
@@ -165,5 +165,5 @@ loop.
   § "External distribution (human-gated, not agent-executable)" —
   sibling roadmap. H4 (Medium / CFP) and H5 (screencasts) are
   `[-]` cancelled there with back-references to the entries above.
-- [`agents/roadmaps/road-to-mcp-full-coverage.md`](../agents/roadmaps/road-to-mcp-full-coverage.md)
+- [`agents/roadmaps/road-to-mcp-full-coverage.md`](../agents/roadmaps/archive/road-to-mcp-full-coverage.md)
   Phase 3 — pre-condition for the Smithery item.

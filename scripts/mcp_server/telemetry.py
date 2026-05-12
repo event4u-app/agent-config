@@ -1,6 +1,6 @@
 """MCP telemetry sink — Phase 1 J4 instrumentation.
 
-Per ``agents/roadmaps/road-to-mcp-full-coverage.md`` §Phase 1 J4 +
+Per ``agents/roadmaps/archive/road-to-mcp-full-coverage.md`` §Phase 1 J4 +
 ``docs/contracts/mcp-tool-stub-envelope.md``, both transports log every
 ``tools/call`` with ``{tool_name, client_id_hash, ts, transport,
 outcome}``. Payload bodies are never logged; the client identifier is
