@@ -626,9 +626,24 @@ from scripts.mcp_server.tools import (  # noqa: E402
 )
 
 
-def test_allowlist_holds_exactly_two_tools() -> None:
-    """D1 — hardcoded registry exposes only `lint_skills` + `chat_history_append`."""
-    assert set(ALLOWLIST.keys()) == {"lint_skills", "chat_history_append"}
+def test_allowlist_holds_phase_3_l2_implemented_tools() -> None:
+    """D1 / L2 — allowlist exposes exactly the 9 implemented tools.
+
+    Phase 1 shipped ``lint_skills`` + ``chat_history_append``. Phase 3 L2
+    (council waiver, 2026-05-12) added the 7 read-only handlers below.
+    Adding a tool here is a code-review event.
+    """
+    assert set(ALLOWLIST.keys()) == {
+        "lint_skills",
+        "chat_history_append",
+        "chat_history_read",
+        "memory_lookup",
+        "memory_status",
+        "list_skills",
+        "list_commands",
+        "list_rules",
+        "read_resource_body",
+    }
     for tool in ALLOWLIST.values():
         assert isinstance(tool, BuiltinTool)
         assert tool.description.strip()
@@ -639,7 +654,7 @@ def test_allowlist_holds_exactly_two_tools() -> None:
 def test_implemented_only_tool_cache_lists_allowlist() -> None:
     """Passing ALLOWLIST narrows the cache to just the real handlers."""
     cache = ToolCache(registry=dict(ALLOWLIST))
-    assert cache.names() == ["chat_history_append", "lint_skills"]
+    assert cache.names() == sorted(ALLOWLIST.keys())
     assert [t.name for t in cache.list()] == cache.names()
 
 
@@ -651,13 +666,13 @@ def test_default_tool_cache_lists_catalog_plus_allowlist() -> None:
     assert "lint_skills" in names
     assert "memory_lookup" in names
     assert names == sorted(REGISTRY.keys())
-    assert cache.implemented_names() == ["chat_history_append", "lint_skills"]
+    assert cache.implemented_names() == sorted(ALLOWLIST.keys())
 
 
 def test_catalog_stubs_exclude_allowlist() -> None:
     """ALLOWLIST tools must not be re-registered as stubs."""
-    assert "lint_skills" not in CATALOG_STUBS
-    assert "chat_history_append" not in CATALOG_STUBS
+    for name in ALLOWLIST:
+        assert name not in CATALOG_STUBS, name
     assert set(STUB_NAMES) == set(CATALOG_STUBS.keys())
 
 
@@ -672,8 +687,11 @@ def test_to_mcp_tool_meta_shape() -> None:
 def test_boot_log_line_enumerates_tools() -> None:
     line = boot_log_line(ToolCache())
     total = len(REGISTRY)
+    implemented_count = len(ALLOWLIST)
+    stub_count = total - implemented_count
     assert f"registered {total} tools" in line
-    assert "2 implemented" in line
+    assert f"{implemented_count} implemented" in line
+    assert f"{stub_count} stubs" in line
     assert "chat_history_append" in line
     assert "lint_skills" in line
 
@@ -685,11 +703,20 @@ def test_tool_cache_dispatch_rejects_unknown_tool() -> None:
 
 
 def test_stub_dispatch_returns_not_implemented_envelope() -> None:
-    """J2 — invoking a catalog stub returns the structured envelope."""
+    """J2 — invoking a catalog stub returns the structured envelope.
+
+    ``memory_signal`` is still a stub (Phase 4 — write-tool envelope is
+    DEFERRED). The shape assertion holds for every catalog stub.
+    """
     cache = ToolCache()
-    result = asyncio.run(cache.dispatch("memory_lookup", {"types": ["ownership"]}))
+    result = asyncio.run(
+        cache.dispatch(
+            "memory_signal",
+            {"type": "ownership", "path": "x", "body": "y"},
+        )
+    )
     assert result["code"] == "not_implemented"
-    assert result["tool"] == "memory_lookup"
+    assert result["tool"] == "memory_signal"
     assert result["transport"] == "stdio"
     assert result["alternative"] == "stdio"
     assert result["install_hint"]
@@ -1211,12 +1238,22 @@ def test_dispatch_logs_implemented_for_allowlist_tool(tmp_path: Path) -> None:
 
 
 def test_dispatch_logs_stub_for_catalog_entry(tmp_path: Path) -> None:
-    """J4 — dispatch on a catalog stub records `outcome: stub`."""
+    """J4 — dispatch on a catalog stub records `outcome: stub`.
+
+    Phase 3 L2 (2026-05-12) implemented seven RO tools; ``memory_signal``
+    stays a stub because writes belong to Phase 4 (DEFERRED).
+    """
     cache = ToolCache()
-    asyncio.run(cache.dispatch("memory_lookup", {}, consumer_root=tmp_path))
+    asyncio.run(
+        cache.dispatch(
+            "memory_signal",
+            {"type": "ownership", "path": "x", "body": "y"},
+            consumer_root=tmp_path,
+        )
+    )
     records = _read_telemetry_jsonl(tmp_path)
     assert len(records) == 1
-    assert records[0]["tool_name"] == "memory_lookup"
+    assert records[0]["tool_name"] == "memory_signal"
     assert records[0]["outcome"] == "stub"
 
 
@@ -1234,7 +1271,13 @@ def test_dispatch_logs_latent_demand_for_unknown_tool(tmp_path: Path) -> None:
 def test_dispatch_telemetry_records_have_full_envelope(tmp_path: Path) -> None:
     """Every record carries the five J4 fields, no payload body."""
     cache = ToolCache()
-    asyncio.run(cache.dispatch("memory_lookup", {"types": ["secret"]}, consumer_root=tmp_path))
+    asyncio.run(
+        cache.dispatch(
+            "memory_signal",
+            {"type": "ownership", "path": "secret", "body": "secret"},
+            consumer_root=tmp_path,
+        )
+    )
     records = _read_telemetry_jsonl(tmp_path)
     assert len(records) == 1
     record = records[0]
@@ -1247,6 +1290,158 @@ def test_dispatch_telemetry_records_have_full_envelope(tmp_path: Path) -> None:
     }
     # Payload values must never leak into telemetry.
     assert "secret" not in json.dumps(record)
+
+
+# ----------------------------------------------------------------------
+# Phase 3 L3 — Hermetic per-tool shape contracts for the RO handlers
+# added under agents/decisions/mcp-coverage-cut-2026-05-12.md (waiver
+# verdict). Each test exercises the stdio handler against a hermetic
+# fixture and asserts the on-wire envelope keys. Worker parity is N/A
+# this iteration — `implemented_on=["stdio"]` is asserted separately by
+# `test_worker_content_implemented_on_matches_catalog` below.
+# ----------------------------------------------------------------------
+
+
+def _seed_chat_history(root: Path) -> Path:
+    target = root / "agents" / ".agent-chat-history"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    header = {"v": 4, "started": "2026-05-12T00:00:00Z", "freq": "per_phase"}
+    rows = [
+        {"t": "phase", "s": "abc1234567890def", "text": "row-1"},
+        {"t": "tool", "s": "abc1234567890def", "text": "row-2"},
+        {"t": "phase", "s": "ffff000011112222", "text": "row-3"},
+    ]
+    target.write_text(
+        json.dumps(header) + "\n"
+        + "\n".join(json.dumps(r) for r in rows) + "\n",
+        encoding="utf-8",
+    )
+    return target
+
+
+def test_l3_chat_history_read_shape(tmp_path: Path) -> None:
+    """L3 — `chat_history_read` returns the path / entries / count envelope."""
+    cache = ToolCache()
+    _seed_chat_history(tmp_path)
+    result = asyncio.run(
+        cache.dispatch("chat_history_read", {"last": 2}, consumer_root=tmp_path)
+    )
+    assert set(result.keys()) == {"path", "entries", "count"}
+    assert result["count"] == 2
+    assert all(isinstance(e, dict) for e in result["entries"])
+
+
+def test_l3_chat_history_read_filters_by_entry_type(tmp_path: Path) -> None:
+    cache = ToolCache()
+    _seed_chat_history(tmp_path)
+    result = asyncio.run(
+        cache.dispatch(
+            "chat_history_read",
+            {"entry_type": "tool"},
+            consumer_root=tmp_path,
+        )
+    )
+    assert result["count"] == 1
+    assert result["entries"][0]["t"] == "tool"
+
+
+def test_l3_memory_status_shape(tmp_path: Path) -> None:
+    """L3 — `memory_status` returns the v1 status envelope keys."""
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch("memory_status", {}, consumer_root=tmp_path)
+    )
+    assert {"status", "backend", "reason", "elapsed_ms", "features"} <= set(result)
+    assert result["status"] in {"absent", "misconfigured", "present"}
+    assert isinstance(result["features"], list)
+
+
+def test_l3_memory_lookup_returns_v1_envelope(tmp_path: Path) -> None:
+    """L3 — `memory_lookup` returns the v1 retrieval envelope."""
+    cache = ToolCache()
+    (tmp_path / "agents" / "memory" / "ownership").mkdir(parents=True)
+    result = asyncio.run(
+        cache.dispatch(
+            "memory_lookup",
+            {"types": ["ownership"], "limit": 5},
+            consumer_root=tmp_path,
+        )
+    )
+    assert {"contract_version", "status", "entries", "slices"} <= set(result)
+
+
+def test_l3_memory_lookup_rejects_empty_types(tmp_path: Path) -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="non-empty"):
+        asyncio.run(
+            cache.dispatch(
+                "memory_lookup",
+                {"types": []},
+                consumer_root=tmp_path,
+            )
+        )
+
+
+def test_l3_list_skills_shape() -> None:
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch("list_skills", {}, consumer_root=REPO_ROOT)
+    )
+    assert set(result.keys()) == {"count", "skills", "errors"}
+    assert result["count"] >= 1
+    sample = result["skills"][0]
+    assert {"name", "description", "source", "wire_name"} <= set(sample)
+
+
+def test_l3_list_commands_shape() -> None:
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch("list_commands", {}, consumer_root=REPO_ROOT)
+    )
+    assert set(result.keys()) == {"count", "commands", "errors"}
+    assert result["count"] >= 1
+
+
+def test_l3_list_rules_shape() -> None:
+    cache = ToolCache()
+    result = asyncio.run(
+        cache.dispatch("list_rules", {}, consumer_root=REPO_ROOT)
+    )
+    assert set(result.keys()) == {"count", "rules", "errors"}
+    assert result["count"] >= 1
+    sample = result["rules"][0]
+    assert sample["uri"].startswith("rule://")
+
+
+def test_l3_read_resource_body_shape() -> None:
+    cache = ToolCache()
+    listing = asyncio.run(
+        cache.dispatch("list_rules", {}, consumer_root=REPO_ROOT)
+    )
+    sample_uri = listing["rules"][0]["uri"]
+    body = asyncio.run(
+        cache.dispatch(
+            "read_resource_body",
+            {"uri": sample_uri},
+            consumer_root=REPO_ROOT,
+        )
+    )
+    assert body["uri"] == sample_uri
+    assert {"name", "description", "mime_type", "kind", "source", "body"} <= set(body)
+    assert isinstance(body["body"], str)
+    assert len(body["body"]) > 0
+
+
+def test_l3_read_resource_body_unknown_uri_raises() -> None:
+    cache = ToolCache()
+    with pytest.raises(ValueError, match="resource not found"):
+        asyncio.run(
+            cache.dispatch(
+                "read_resource_body",
+                {"uri": "rule://does-not-exist"},
+                consumer_root=REPO_ROOT,
+            )
+        )
 
 
 # ----------------------------------------------------------------------
