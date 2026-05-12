@@ -43,7 +43,7 @@
       "name": "chat_history_read",
       "description": "Read recent chat-history entries from `agents/.agent-chat-history`. Filter by session, limit, or entry-type. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -59,7 +59,7 @@
       "name": "memory_lookup",
       "description": "Hybrid memory retrieval over `agents/memory/<type>/*.yml` and `agents/memory/intake/*.jsonl`. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {
@@ -91,7 +91,7 @@
       "name": "memory_status",
       "description": "Report whether the optional `@event4u/agent-memory` package is reachable, and surface its routing metadata. Read-only.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
@@ -227,21 +227,21 @@
       "name": "list_skills",
       "description": "Enumerate every skill currently exposed as a prompt, with name + description + source. Read-only manifest view.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
       "name": "list_commands",
       "description": "Enumerate every slash command currently exposed as a prompt. Read-only manifest view.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
       "name": "list_rules",
       "description": "Enumerate every rule currently exposed as a resource. Read-only manifest view.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {"type": "object", "properties": {}, "additionalProperties": false}
     },
     {
@@ -261,7 +261,7 @@
       "name": "read_resource_body",
       "description": "Fetch the rendered body of any resource URI (rule, guideline, context) without going through `resources/read`. Convenience for clients that want to inline content into a tool call result.",
       "side_effect": "ro",
-      "implemented_on": [],
+      "implemented_on": ["stdio"],
       "input_schema": {
         "type": "object",
         "properties": {

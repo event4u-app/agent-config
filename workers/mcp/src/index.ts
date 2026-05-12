@@ -26,6 +26,11 @@ import { hashClientId } from "./telemetry.js";
 type Env = {
   PACKAGE_VERSION: string;
   RELEASE_KEY: string;
+  // Optional bearer token for self-hosted deploys. Set via
+  // `wrangler secret put MCP-Token` (or `task mcp:cloud:secret-put`).
+  // When present, every POST must carry `Authorization: Bearer <token>`.
+  // Unset → no auth (default; backward-compat for the dev stub).
+  "MCP-Token"?: string;
 };
 
 /** Frozen at module init — the bundle IS the truth. */
@@ -76,9 +81,10 @@ function parseRequestBody(raw: string): JsonRpcRequest | JsonRpcError {
 }
 
 export default {
-  async fetch(request: Request, _env: Env): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     if (request.method === "GET") {
       // Liveness probe — returns release identity, no MCP semantics.
+      // Intentionally un-gated so health checks work without the token.
       return jsonResponse({
         ok: true,
         name: "agent-config-mcp",
@@ -94,6 +100,30 @@ export default {
         status: 405,
         headers: { allow: "GET, POST" },
       });
+    }
+
+    // Optional bearer auth — only enforced when the operator set the
+    // `MCP-Token` secret. Wrong/missing token → JSON-RPC envelope with
+    // HTTP 401 + WWW-Authenticate per RFC 6750.
+    const requiredToken = env["MCP-Token"];
+    if (requiredToken) {
+      const auth = request.headers.get("authorization") ?? "";
+      if (auth !== `Bearer ${requiredToken}`) {
+        return new Response(
+          JSON.stringify({
+            jsonrpc: "2.0",
+            id: null,
+            error: { code: -32001, message: "Unauthorized" },
+          }),
+          {
+            status: 401,
+            headers: {
+              "content-type": "application/json",
+              "www-authenticate": 'Bearer realm="agent-config-mcp"',
+            },
+          },
+        );
+      }
     }
 
     const raw = await request.text();

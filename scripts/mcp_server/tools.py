@@ -259,7 +259,249 @@ async def _chat_history_append_handler(
 
 
 # ---------------------------------------------------------------------
-# Allowlist — hardcoded per AI Council Q1-a verdict (2026-05-10).
+# Phase 3 L2 — read-only handlers added under the
+# `agents/decisions/mcp-coverage-cut-2026-05-12.md` waiver verdict.
+# Each handler wraps an existing project module via lazy import so the
+# module-level import surface stays small.
+# ---------------------------------------------------------------------
+
+
+async def _chat_history_read_handler(
+    arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — read entries from the consumer's chat-history JSONL.
+
+    Arguments:
+        last: optional trailing-N filter (positive integer).
+        session: optional 16-char session id.
+        entry_type: optional ``t`` field exact-match filter.
+        path: optional override; must resolve under
+            ``agents/.agent-chat-history`` or ``.agent-chat-history``.
+    """
+    from scripts.chat_history import read_entries  # noqa: PLC0415
+
+    raw_path = arguments.get("path")
+    target = _validate_in_tree_path(raw_path, consumer_root)
+
+    last = arguments.get("last")
+    if last is not None and (not isinstance(last, int) or last < 1):
+        raise ValueError("'last' must be a positive integer when provided")
+    session = arguments.get("session")
+    if session is not None and not isinstance(session, str):
+        raise ValueError("'session' must be a string when provided")
+    entry_type = arguments.get("entry_type")
+    if entry_type is not None and not isinstance(entry_type, str):
+        raise ValueError("'entry_type' must be a string when provided")
+
+    if not target.exists():
+        return {
+            "path": str(target),
+            "entries": [],
+            "count": 0,
+        }
+
+    entries = read_entries(last=last, path=target, session=session)
+    if entry_type:
+        entries = [e for e in entries if e.get("t") == entry_type]
+    return {
+        "path": str(target),
+        "entries": entries,
+        "count": len(entries),
+    }
+
+
+async def _memory_lookup_handler(
+    arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — hybrid memory retrieval over ``agents/memory/``.
+
+    Wraps ``scripts/memory_lookup.retrieve_v1`` to keep the v1 envelope
+    on the wire. File-only fallback by default; ``with_package=true``
+    enables the optional ``@event4u/agent-memory`` provider when
+    reachable.
+    """
+    import os  # noqa: PLC0415
+
+    from scripts.memory_lookup import (  # noqa: PLC0415
+        package_operational_provider,
+        retrieve_v1,
+    )
+
+    types = arguments.get("types")
+    if not isinstance(types, list) or not types or not all(
+        isinstance(t, str) for t in types
+    ):
+        raise ValueError("'types' must be a non-empty list of strings")
+    keys = arguments.get("keys") or []
+    if not isinstance(keys, list) or not all(isinstance(k, str) for k in keys):
+        raise ValueError("'keys' must be a list of strings")
+    limit_raw = arguments.get("limit", 5)
+    if not isinstance(limit_raw, int) or limit_raw < 1:
+        raise ValueError("'limit' must be a positive integer")
+
+    provider = None
+    if arguments.get("with_package"):
+        provider = package_operational_provider()
+
+    prev_cwd = Path.cwd()
+    try:
+        os.chdir(consumer_root)
+        envelope = retrieve_v1(
+            types=list(types),
+            keys=list(keys),
+            limit=limit_raw,
+            operational_provider=provider,
+        )
+    finally:
+        os.chdir(prev_cwd)
+    return envelope
+
+
+async def _memory_status_handler(
+    _arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — surface ``scripts/memory_status.status()`` as JSON."""
+    import os  # noqa: PLC0415
+
+    from dataclasses import asdict  # noqa: PLC0415
+
+    from scripts.memory_status import status  # noqa: PLC0415
+
+    prev_cwd = Path.cwd()
+    try:
+        os.chdir(consumer_root)
+        result = status()
+    finally:
+        os.chdir(prev_cwd)
+    payload = asdict(result)
+    payload["features"] = list(result.features)
+    return payload
+
+
+# Module-level prompt / resource caches reused across handler calls so
+# repeated `list_*` / `read_resource_body` calls share mtime tracking.
+_PROMPT_CACHES: dict[str, Any] = {}
+_RESOURCE_CACHES: dict[str, Any] = {}
+
+
+def _get_prompt_cache(consumer_root: Path) -> Any:
+    from .prompts import PromptCache  # noqa: PLC0415
+
+    key = str(consumer_root.resolve())
+    cache = _PROMPT_CACHES.get(key)
+    if cache is None:
+        cache = PromptCache(root=consumer_root)
+        _PROMPT_CACHES[key] = cache
+    return cache
+
+
+def _get_resource_cache(consumer_root: Path) -> Any:
+    from .resources import ResourceCache  # noqa: PLC0415
+
+    key = str(consumer_root.resolve())
+    cache = _RESOURCE_CACHES.get(key)
+    if cache is None:
+        cache = ResourceCache(root=consumer_root)
+        _RESOURCE_CACHES[key] = cache
+    return cache
+
+
+async def _list_skills_handler(
+    _arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — enumerate skill prompts (kind=='skill')."""
+    from .prompts import to_mcp_prompt_meta  # noqa: PLC0415
+
+    cache = _get_prompt_cache(consumer_root)
+    prompts, errors = cache.get()
+    items = [
+        {
+            "name": p.name,
+            "description": p.description,
+            "source": p.source,
+            "wire_name": to_mcp_prompt_meta(p)["name"],
+        }
+        for p in prompts
+        if p.kind == "skill"
+    ]
+    items.sort(key=lambda r: r["name"])
+    return {"count": len(items), "skills": items, "errors": list(errors)}
+
+
+async def _list_commands_handler(
+    _arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — enumerate command prompts (kind=='command')."""
+    from .prompts import to_mcp_prompt_meta  # noqa: PLC0415
+
+    cache = _get_prompt_cache(consumer_root)
+    prompts, errors = cache.get()
+    items = [
+        {
+            "name": p.name,
+            "description": p.description,
+            "source": p.source,
+            "wire_name": to_mcp_prompt_meta(p)["name"],
+        }
+        for p in prompts
+        if p.kind == "command"
+    ]
+    items.sort(key=lambda r: r["name"])
+    return {"count": len(items), "commands": items, "errors": list(errors)}
+
+
+async def _list_rules_handler(
+    _arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — enumerate rule resources (kind=='rule')."""
+    cache = _get_resource_cache(consumer_root)
+    resources, errors = cache.get()
+    items = [
+        {
+            "uri": r.uri,
+            "name": r.name,
+            "description": r.description,
+            "source": r.source,
+        }
+        for r in resources
+        if r.kind == "rule"
+    ]
+    items.sort(key=lambda r: r["uri"])
+    return {"count": len(items), "rules": items, "errors": list(errors)}
+
+
+async def _read_resource_body_handler(
+    arguments: dict[str, Any],
+    consumer_root: Path,
+) -> dict[str, Any]:
+    """Phase 3 L2 — fetch the rendered body of a resource URI."""
+    uri = arguments.get("uri")
+    if not isinstance(uri, str) or not uri:
+        raise ValueError("'uri' must be a non-empty string")
+    cache = _get_resource_cache(consumer_root)
+    resource = cache.lookup(uri)
+    if resource is None:
+        raise ValueError(f"resource not found: {uri}")
+    return {
+        "uri": resource.uri,
+        "name": resource.name,
+        "description": resource.description,
+        "mime_type": resource.mime_type,
+        "kind": resource.kind,
+        "source": resource.source,
+        "body": resource.body,
+    }
+
+
+# ---------------------------------------------------------------------
+# Allowlist — hardcoded per AI Council Q1-a verdict (2026-05-10),
+# extended Phase 3 L2 (2026-05-12) under the council-waiver verdict.
 # Adding a tool here is a code-review event; settings cannot enable an
 # unlisted tool. Boot-time stderr log enumerates the registered set.
 # ---------------------------------------------------------------------
@@ -325,6 +567,123 @@ ALLOWLIST: dict[str, BuiltinTool] = {
             "additionalProperties": False,
         },
         handler=_chat_history_append_handler,
+    ),
+    "chat_history_read": BuiltinTool(
+        name="chat_history_read",
+        description=(
+            "Read recent chat-history entries from "
+            "`agents/.agent-chat-history`. Filter by session, "
+            "trailing-N, or entry-type. Read-only."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "last": {"type": "integer", "minimum": 1},
+                "session": {"type": "string"},
+                "entry_type": {"type": "string"},
+                "path": {"type": "string"},
+            },
+            "additionalProperties": False,
+        },
+        handler=_chat_history_read_handler,
+    ),
+    "memory_lookup": BuiltinTool(
+        name="memory_lookup",
+        description=(
+            "Hybrid memory retrieval over `agents/memory/<type>/*.yml` "
+            "and `agents/memory/intake/*.jsonl`. Returns the v1 "
+            "retrieval envelope. Read-only."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "types": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                },
+                "keys": {
+                    "type": "array",
+                    "items": {"type": "string"},
+                },
+                "limit": {"type": "integer", "minimum": 1, "default": 5},
+                "with_package": {"type": "boolean", "default": False},
+            },
+            "required": ["types"],
+            "additionalProperties": False,
+        },
+        handler=_memory_lookup_handler,
+    ),
+    "memory_status": BuiltinTool(
+        name="memory_status",
+        description=(
+            "Report whether the optional `@event4u/agent-memory` "
+            "package is reachable, and surface its routing metadata. "
+            "Read-only."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        },
+        handler=_memory_status_handler,
+    ),
+    "list_skills": BuiltinTool(
+        name="list_skills",
+        description=(
+            "Enumerate every skill currently exposed as a prompt, with "
+            "name + description + source. Read-only manifest view."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        },
+        handler=_list_skills_handler,
+    ),
+    "list_commands": BuiltinTool(
+        name="list_commands",
+        description=(
+            "Enumerate every slash command currently exposed as a "
+            "prompt. Read-only manifest view."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        },
+        handler=_list_commands_handler,
+    ),
+    "list_rules": BuiltinTool(
+        name="list_rules",
+        description=(
+            "Enumerate every rule currently exposed as a resource. "
+            "Read-only manifest view."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {},
+            "additionalProperties": False,
+        },
+        handler=_list_rules_handler,
+    ),
+    "read_resource_body": BuiltinTool(
+        name="read_resource_body",
+        description=(
+            "Fetch the rendered body of any resource URI (rule, "
+            "guideline, context) without going through "
+            "`resources/read`. Convenience for clients that want to "
+            "inline content into a tool call result."
+        ),
+        input_schema={
+            "type": "object",
+            "properties": {
+                "uri": {"type": "string"},
+            },
+            "required": ["uri"],
+            "additionalProperties": False,
+        },
+        handler=_read_resource_body_handler,
     ),
 }
 

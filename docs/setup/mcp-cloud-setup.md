@@ -15,6 +15,7 @@ machine.
 ```sh
 task mcp:cloud:login        # one-time, opens browser
 task mcp:cloud:setup        # check → r2-create → r2-verify → whoami
+task mcp:cloud:secret-put   # optional but recommended — sets MCP-Token (Bearer auth)
 # Copy account id from output → GitHub Secrets (see § GitHub Secrets)
 # Create scoped API token (see § API Token) → GitHub Secrets
 # Done. First `release: published` triggers the deploy.
@@ -114,7 +115,36 @@ Green smoke step → `latest.txt` repoints → release is live on
 `*.workers.dev`. A red smoke step leaves `latest.txt` on the previous
 release.
 
-## Step 7 — DNS (optional, Phase 5.2)
+## Step 7 — Bearer auth (recommended)
+
+Without auth, anyone who knows your `*.workers.dev` URL can read the
+catalog. The Worker checks for an `MCP-Token` secret and, when set,
+gates every POST behind `Authorization: Bearer <token>`. The `GET /`
+liveness probe stays open so health checks keep working.
+
+Generate a token (any high-entropy random string — `openssl rand -hex 32`
+or your password manager) and set it on the Worker:
+
+```sh
+task mcp:cloud:secret-put
+# wrangler prompts for the value interactively (stdin) — never passed
+# via argv, never written to shell history.
+```
+
+This wraps `npx wrangler secret put MCP-Token --name agent-config-mcp`.
+The secret is encrypted in Cloudflare and injected as `env["MCP-Token"]`
+at request time; the source repo never sees the value.
+
+Once set, every MCP client config needs the header — per-client
+snippets (Claude Desktop, Claude Code, Cursor, Zed, Continue) live in
+[`mcp-client-config.md`](mcp-client-config.md) § Bearer auth.
+
+Rotate by re-running `task mcp:cloud:secret-put` with a fresh value;
+the new secret takes effect on the next request (no redeploy needed).
+To remove auth entirely, run
+`npx wrangler secret delete MCP-Token --name agent-config-mcp`.
+
+## Step 8 — DNS (optional, Phase 5.2)
 
 Custom domain `mcp.<your-domain>` setup lives in
 [`docs/setup/mcp-cloud-endpoints.md`](mcp-cloud-endpoints.md) § DNS
@@ -141,6 +171,7 @@ setup. Until cutover, the Worker serves on the free
 | `task mcp:cloud:r2-create` | Create R2 bucket (idempotent) |
 | `task mcp:cloud:r2-verify` | Verify R2 bucket exists |
 | `task mcp:cloud:setup` | Full chain — check → r2 → whoami |
+| `task mcp:cloud:secret-put` | Set the `MCP-Token` Bearer-auth secret (interactive) |
 | `task mcp:cloud:dev` | Local `wrangler dev` on :8787 |
 | `task mcp:cloud:deploy-dispatch TAG=v…` | Manual workflow trigger |
 

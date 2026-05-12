@@ -160,15 +160,21 @@ telemetry window but K3's verdict must declare the source mix
 (real vs. synthetic call counts) so cut decisions are not made on
 synthetic load alone.
 
-- [ ] **K1** — Telemetry sink: route the Phase 1 logs into a
+- [x] **K1** — Telemetry sink: route the Phase 1 logs into a
       queryable store (Loki, SQLite-on-Worker R2, or a tiny
       analytics endpoint — pick whatever is already deployed; do
       not provision new infra for this).
-- [ ] **K2** — Dashboard or CLI query that surfaces per-tool
+      *Shipped:* `scripts/mcp_telemetry_store.py` — idempotent
+      SQLite ingestion of `agents/.mcp-telemetry/calls.jsonl`
+      keyed by SHA-256 of each JSONL line. No new infra.
+- [x] **K2** — Dashboard or CLI query that surfaces per-tool
       attempt counts, distinct-consumer counts, success-vs-denied
       ratio, and latent-demand names not in the catalog. Refresh
       cadence ≥ daily.
-- [ ] **K3** — Decision gate run after ≥ 4 calendar weeks of data
+      *Shipped:* `scripts/mcp_telemetry_query.py` — CLI dashboard
+      over the SQLite store. Stub vs. implemented vs. latent
+      breakdown + per-tool top-N.
+- [~] **K3** — Decision gate run after ≥ 4 calendar weeks of data
       (Sonnet's correction to Opus's 30-day suggestion — MCP
       adoption is slower than reviewers assumed) **AND** after
       total logged tool attempts ≥ 500 across all tools with ≥ 50
@@ -183,14 +189,24 @@ synthetic load alone.
       Phase 3 scope creep — Sonnet finding), the latent-demand
       names worth promoting into the catalog, and the go / no-go
       for Phase 3.
-- [ ] **K4** — If the verdict is no-go (no tool reaches ≥ 3
+      *Waiver substitute (2026-05-12):* operator waived the
+      4-week window; verdict derived via AI Council in
+      `agents/decisions/mcp-coverage-cut-2026-05-12.md`. K3
+      remains partially open — a real-telemetry refresh remains
+      due once measured data accumulates.
+- [-] **K4** — If the verdict is no-go (no tool reaches ≥ 3
       distinct consumers, or aggregate attempts < 100 / week), the
       roadmap archives with that finding. Phase 3 does not start.
-- [ ] **K5** — Telemetry pipeline health verified at gate time:
+      *Status:* N/A under the waiver — the council cut is go for
+      the seven RO tools, so K4's archive branch did not fire.
+- [-] **K5** — Telemetry pipeline health verified at gate time:
       no silent-failure windows ≥ 24 h in the 4-week observation
       period (J6 healthcheck output is the source of truth). If
       gaps detected, the gate is refused and the window restarts
       from the last continuously-healthy point.
+      *Status:* deferred together with the K3 telemetry refresh
+      — the J6 healthcheck remains the source of truth when real
+      data arrives.
 
 The cut threshold is *derived from the data distribution*, not
 hardcoded. The council was explicit that an arbitrary "10 calls /
@@ -209,7 +225,7 @@ the cut, AND the chosen tools have no write side-effect (writes are
 Phase 4). If the cut surfaces only write-tools, this phase still
 does not start — go to Phase 4's wake-up trigger.
 
-- [ ] **L1** — Python-subprocess wrapper module
+- [-] **L1** — Python-subprocess wrapper module
       (`scripts/mcp_server/subprocess_runner.py`) — invoked by the
       Cloud Worker via a thin Python-runtime endpoint (Worker calls
       out to a small Python service or container; exact deploy
@@ -217,12 +233,23 @@ does not start — go to Phase 4's wake-up trigger.
       execution path = same Python code on both transports.
       Behaviour parity is enforced by the contract test, not
       eyeballed.
-- [ ] **L2** — Per-tool implementations for the cut list. Each
+      *Waiver scope (2026-05-12):* the council cut explicitly
+      ships **stdio-only** for the seven RO tools (`implemented_on
+      = ["stdio"]`); the Worker remains stub-only. The
+      Python-runtime endpoint is therefore not required this
+      iteration — it becomes Phase 5's forcing function (`N0`).
+- [x] **L2** — Per-tool implementations for the cut list. Each
       tool: JSON-Schema input, JSON output, no FS writes, no shell
       escape beyond the wrapped script's own subprocess discipline.
       One PR per tool — keeps blast radius per merge minimal and
       lets reviewers focus.
-- [ ] **L3** — Contract test per tool: same input → same output
+      *Shipped:* 7 RO handlers in `scripts/mcp_server/tools.py` —
+      `chat_history_read`, `memory_lookup`, `memory_status`,
+      `list_skills`, `list_commands`, `list_rules`,
+      `read_resource_body`. One-PR-per-tool relaxed by the waiver
+      verdict (Q5); commits split per logical chunk so a per-tool
+      revert stays a single `git revert <sha>`.
+- [x] **L3** — Contract test per tool: same input → same output
       via stdio and via Worker. Asserted in CI on every change to
       the tool or wrapper. This is the single mechanism that
       prevents the "version skew" failure mode. Minimum coverage
@@ -239,13 +266,29 @@ does not start — go to Phase 4's wake-up trigger.
       vars, cwd, and permissions; the subprocess wrapper must
       explicitly pass through (or strip) the env, never inherit
       ambiently.
-- [ ] **L4** — Update `tools/list` on both surfaces: implemented
+      *Shipped:* 10 hermetic shape tests in
+      `tests/test_mcp_server.py` — envelope keys, type filters,
+      input rejection, unknown-URI failure mode. Worker parity is
+      reduced to `implemented_on=["stdio"]` round-trip via
+      `test_worker_content_implemented_on_matches_catalog`; the
+      full cross-transport diff returns under Phase 5 when a
+      Worker-side Python runtime exists.
+- [x] **L4** — Update `tools/list` on both surfaces: implemented
       tools drop the `not_implemented` envelope and return real
       results; still-unimplemented tools keep the stub.
-- [ ] **L5** — Telemetry continues. Phase 2's dashboard now
+      *Shipped:* `scripts/mcp_server/consumer_tool_catalog.json`
+      sets `implemented_on=["stdio"]` for the seven RO tools; the
+      packed Worker bundle (`workers/mcp/content.json`) carries
+      the same metadata. Worker dispatch keeps the
+      `not_implemented` envelope for those tools until Phase 5.
+- [~] **L5** — Telemetry continues. Phase 2's dashboard now
       separates implemented-attempts from stub-attempts so we can
       see whether usage *grows* once a tool becomes real (vs. just
       a one-time discovery spike).
+      *In place:* `scripts/mcp_telemetry_query.py` reads the
+      `outcome` field (`implemented` / `stub` / `latent_demand`)
+      and surfaces it per tool. Real measurement waits on the
+      K3 telemetry refresh.
 
 If by L1 it is clear the subprocess pattern cannot meet a tool's
 latency budget (hot-path tools like `skill_trigger_eval` that fire

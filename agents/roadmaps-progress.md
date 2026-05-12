@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 132 steps done · 0%**
+**11 / 127 steps done · 9%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-mcp-full-coverage.md](roadmaps/road-to-mcp-full-coverage.md) | 5 | 29 | 23 | 6 | 0 | 0 | ██░░░░░░░░ 21% |
+| 2 | [road-to-mcp-full-coverage.md](roadmaps/road-to-mcp-full-coverage.md) | 5 | 29 | 13 | 11 | 2 | 3 | █████░░░░░ 46% |
 | 3 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -36,13 +36,13 @@
 
 ### [road-to-mcp-full-coverage.md](roadmaps/road-to-mcp-full-coverage.md)
 
-**Road to MCP Full Coverage** — 6 / 29 done (21%)
+**Road to MCP Full Coverage** — 11 / 24 done (46%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Discovery Stubs | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Telemetry Window + Decision Gate | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Selective Implementation (read-only first) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Telemetry Window + Decision Gate | ✅ done | 0 | 2 | 1 | 2 | 100% |
+| 3 | Selective Implementation (read-only first) | ✅ done | 0 | 3 | 1 | 1 | 100% |
 | 4 | Write-Tool Envelope (DEFERRED) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | TypeScript Port (DEFERRED) | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
 

@@ -5,8 +5,9 @@
   "//3": "  Windows %APPDATA%\\Claude\\claude_desktop_config.json",
   "//4": "  Linux   ~/.config/Claude/claude_desktop_config.json",
   "//5": "Strip the leading '_disabled_' prefix on the mcpServers entry below to enable the MCP connector.",
-  "//6": "Hosted endpoint is read-only and identity-stable per release; full client setup details in docs/setup/mcp-client-config.md.",
-  "//7": "Restart Claude Desktop fully (Cmd+Q on macOS) after editing — the menubar process keeps the old config cached otherwise.",
+  "//6": "Replace https://your-worker.workers.dev with the URL of your own deployed Cloudflare Worker (see docs/setup/mcp-cloud-setup.md). The Worker is read-only and identity-stable per release; full client setup details in docs/setup/mcp-client-config.md.",
+  "//7": "If your Worker has MCP-Token set (recommended), uncomment the --header / env lines below and paste the token. Otherwise drop them.",
+  "//8": "Restart Claude Desktop fully (Cmd+Q on macOS) after editing — the menubar process keeps the old config cached otherwise.",
 
   "_disabled_mcpServers": {
     "agent-config": {
@@ -14,7 +15,7 @@
       "args": [
         "-y",
         "mcp-remote",
-        "https://agent-config-mcp.event4u.workers.dev"
+        "https://your-worker.workers.dev"
       ]
     }
   }
