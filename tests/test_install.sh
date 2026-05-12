@@ -360,9 +360,12 @@ test_cli_wrapper_delegates_to_master() {
 
 test_cli_wrapper_errors_without_install() {
     setup; run_install
-    # No node_modules / vendor exists → wrapper must fail clearly, exit 127.
+    # No local install AND no npx on PATH → wrapper must fail clearly, exit 127.
+    # Sanitize PATH so the npx fallback (added in v2) cannot fire and download
+    # the latest tarball during the test.
+    local sanitized_path="/usr/bin:/bin"
     local out rc
-    out="$(cd "$TMPDIR" && ./agent-config help 2>&1)" && rc=0 || rc=$?
+    out="$(cd "$TMPDIR" && env -i HOME="$HOME" PATH="$sanitized_path" ./agent-config help 2>&1)" && rc=0 || rc=$?
     assert_true "wrapper exits 127 when master missing" test "$rc" -eq 127
     if printf '%s' "$out" | grep -q "master CLI not found"; then
         echo "  ✅  wrapper prints actionable error"
