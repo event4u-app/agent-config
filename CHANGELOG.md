@@ -9,6 +9,23 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 ## [Unreleased]
 
+Four roadmaps land in this release.
+
+**Global-First Install (R4)** — `npx @event4u/create-agent-config init`
+now defaults to a **global** install (`~/.claude/`, `~/.cursor/`, …)
+when run outside a project, and a **project** install when run inside
+one. A new global lockfile at `~/.config/agent-config/installed.lock`
+records `agent_config_version` + `tools[]` and refuses mismatched
+re-installs (exit 1) until `update` or `--force` realigns it. New
+`agent-config export --tool=<id> --output=<path>` subcommand ejects a
+named tool's resolved content into the project tree (idempotent;
+`--force` overrides drift). 12 supported tool ids (claude-code,
+cursor, windsurf, cline, aider, codex, gemini, copilot,
+claude-desktop, continue, kilocode, zed, jetbrains, kiro). Windows
+CI matrix added for the lockfile + export paths. See
+[`docs/decisions/ADR-007-agent-discovery-scopes.md`](docs/decisions/ADR-007-agent-discovery-scopes.md)
+and [`docs/decisions/ADR-008-installed-tools-manifest.md`](docs/decisions/ADR-008-installed-tools-manifest.md).
+
 Three roadmaps land in this release.
 
 **Universal Execution Engine (R1)** — the `/implement-ticket` runtime is

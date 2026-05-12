@@ -33,6 +33,18 @@ tasks:
       - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/test_install_py.py -n auto -q
 
+  test-install-local:
+    silent: true
+    desc: |
+      End-to-end smoke test of the local installation flow. Packs the
+      current checkout into a tarball, points setup.sh and the npx
+      wrapper at it via AGENT_CONFIG_TARBALL_URL=file://..., runs both
+      installers into temp dirs, and asserts .claude/ + .agent-settings.yml
+      are populated. Offline (no network, no npm publish). Exits non-zero
+      if any sub-test fails. Usage:
+      task test-install-local
+    cmd: bash tests/test_one_liner_entrypoints.sh
+
   test-python:
     silent: true
     desc: Run all Python unit tests (pytest-discovered)

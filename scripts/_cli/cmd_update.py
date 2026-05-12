@@ -36,7 +36,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from scripts._lib import update_check
+from scripts._lib import installed_lock, update_check
 from scripts._lib.agent_settings import (
     DEFAULT_PROJECT_FILE,
     _resolve_cascade_paths,
@@ -205,7 +205,29 @@ def main(
 
     cache_warmer(latest)
     _refresh_state(latest, latest, state_path)
+    _refresh_global_lockfile(latest, out=out)
     return 0
+
+
+def _refresh_global_lockfile(version: str, *, out=sys.stdout) -> None:
+    """Update ``~/.config/agent-config/installed.lock`` if it exists.
+
+    Phase 1.6 — the lockfile is only present when the user has run a
+    global install; we never create one here, but we keep it in lockstep
+    when ``update`` flips the pin. Atomic write goes through
+    ``installed_lock.write_lockfile``.
+    """
+    lock_path = installed_lock.lockfile_path()
+    existing = installed_lock.read_lockfile(path=lock_path)
+    if existing is None:
+        return
+    recorded = existing.get("agent_config_version")
+    tools = list(existing.get("tools", []))
+    if recorded == version:
+        print(f"ℹ️  {lock_path} already records {version}.", file=out)
+        return
+    installed_lock.write_lockfile(version, tools, path=lock_path)
+    print(f"✅  Refreshed global lockfile at {lock_path}.", file=out)
 
 
 def _detect_installed_version() -> str:

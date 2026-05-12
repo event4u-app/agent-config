@@ -1106,6 +1106,326 @@ def ensure_copilot_bridge(project_root: Path, force: bool) -> None:
     success(".github/plugin/marketplace.json created")
 
 
+# Roo Code (https://docs.roocode.com/) is a Cline-derived VS Code extension
+# that auto-discovers `.roo/rules/*.md` as system-level instructions per
+# project. No hook protocol is exposed yet (2026-05), so the bridge is a
+# minimal marker file pointing the user at the canonical rule source. Phase
+# 2.0 validation gate — keep imperative and minimal; revisit when Roo Code
+# ships a programmatic hook surface.
+ROOCODE_MARKER = """# Agent Config bridge
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Roo Code reads `.roo/rules/*.md` as system-level instructions. The
+canonical rule and skill source lives under `.augment/` (Augment
+portability mirror — see `AGENTS.md` for orientation).
+
+Run `./agent-config --help` for available commands.
+"""
+
+
+def ensure_roocode_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.roo/rules/agent-config.md` (project scope) marker.
+
+    Roo Code auto-discovers `.roo/rules/*.md` as system instructions — no
+    hook protocol exposed yet. Bridge is intentionally minimal: a single
+    marker file pointing developers at the canonical rule source. Phase
+    2.0 validation gate (road-to-global-first-install § 2.0).
+    """
+    target = project_root / ".roo" / "rules" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".roo/rules/agent-config.md already exists")
+        return
+
+    write_file(target, ROOCODE_MARKER)
+    success(".roo/rules/agent-config.md created")
+
+
+# Claude Desktop (https://claude.ai/download) reads config from
+# `~/Library/Application Support/Claude/` on macOS — no project-local
+# discovery. The project bridge is informational only: a marker file that
+# documents the link and tells humans where the canonical rules live.
+# Phase 2.3 will formalize this as scope=global-only via SCOPE_SUPPORT.
+CLAUDE_DESKTOP_MARKER = """# Agent Config bridge — Claude Desktop
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Claude Desktop is a **global-scope** tool — it reads config from
+`~/Library/Application Support/Claude/` (macOS) and does not
+auto-discover project files. This marker is informational only.
+
+To wire Claude Desktop to this project's rules, run:
+`npx @event4u/agent-config init --ai claude-desktop --global`
+
+Canonical rule and skill source: `.augment/` (see `AGENTS.md`).
+"""
+
+
+def ensure_claude_desktop_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.claude-desktop/agent-config.md` informational marker.
+
+    Claude Desktop has no project-local discovery (global config only,
+    macOS path `~/Library/Application Support/Claude/`). The marker is
+    informational — Phase 2.3 will gate this bridge behind scope=global.
+    """
+    target = project_root / ".claude-desktop" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".claude-desktop/agent-config.md already exists")
+        return
+
+    write_file(target, CLAUDE_DESKTOP_MARKER)
+    success(".claude-desktop/agent-config.md created")
+
+
+# Aider (https://aider.chat) reads `.aider.conf.yml` per project and a
+# `CONVENTIONS.md` (or any path declared in `read:`) for system-level
+# instructions. The bridge drops a marker and documents the `read:`
+# wiring; we do not mutate `.aider.conf.yml` to avoid clobbering user
+# overrides. Phase 2.5 may upgrade this to a declarative emitter.
+AIDER_MARKER = """# Agent Config bridge — Aider
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Aider does not auto-discover this file. To activate it, add the
+following to `.aider.conf.yml` (create if missing):
+
+```yaml
+read:
+  - .aider/agent-config.md
+```
+
+Or pass `--read .aider/agent-config.md` on the command line.
+
+Canonical rule and skill source: `.augment/` (see `AGENTS.md`).
+"""
+
+
+def ensure_aider_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.aider/agent-config.md` marker; do not touch `.aider.conf.yml`.
+
+    Aider reads `read:` entries from `.aider.conf.yml`. We intentionally
+    avoid mutating that file — the marker documents the manual wiring so
+    user overrides stay intact. Phase 2.5 may declarative-emit if needed.
+    """
+    target = project_root / ".aider" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".aider/agent-config.md already exists")
+        return
+
+    write_file(target, AIDER_MARKER)
+    success(".aider/agent-config.md created")
+
+
+# OpenAI Codex CLI (https://github.com/openai/codex) auto-discovers
+# `AGENTS.md` at the project root as system instructions. The repo
+# already ships an `AGENTS.md` (Thin-Root contract), so the bridge is a
+# secondary marker confirming agent-config ownership — Codex will read
+# `AGENTS.md` directly regardless. Phase 2.5 may collapse if redundant.
+CODEX_MARKER = """# Agent Config bridge — Codex CLI
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Codex CLI auto-discovers `AGENTS.md` at the project root — that file
+is the canonical entry point. This marker is informational and tells
+developers where the rules and skills live.
+
+Canonical rule and skill source: `.augment/` (see project `AGENTS.md`).
+"""
+
+
+def ensure_codex_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.codex/agent-config.md` informational marker.
+
+    Codex CLI reads `AGENTS.md` at project root directly — the marker
+    is informational. Phase 2.5 may collapse if redundant with AGENTS.md.
+    """
+    target = project_root / ".codex" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".codex/agent-config.md already exists")
+        return
+
+    write_file(target, CODEX_MARKER)
+    success(".codex/agent-config.md created")
+
+
+# Continue.dev (https://continue.dev) auto-discovers `.continue/rules/*.md`
+# as system-level rules per project — same pattern as Roo Code. Bridge is
+# a single marker file in the rules directory; Continue will read it
+# directly on every session.
+CONTINUE_MARKER = """# Agent Config bridge — Continue.dev
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Continue.dev auto-discovers `.continue/rules/*.md` as system-level
+rules per session. The canonical rule and skill source lives under
+`.augment/` (Augment portability mirror — see `AGENTS.md` for
+orientation).
+"""
+
+
+def ensure_continue_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.continue/rules/agent-config.md` (project scope) marker.
+
+    Continue.dev auto-discovers `.continue/rules/*.md` per project —
+    mirror of the Roo Code pattern. Single marker file pointing
+    developers at the canonical rule source under `.augment/`.
+    """
+    target = project_root / ".continue" / "rules" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".continue/rules/agent-config.md already exists")
+        return
+
+    write_file(target, CONTINUE_MARKER)
+    success(".continue/rules/agent-config.md created")
+
+
+# Kilo Code (https://kilocode.ai/) is a Cline-derived VS Code extension —
+# Roo Code's fork-cousin. Auto-discovers `.kilocode/rules/*.md` as
+# system-level instructions per project. Marker-only bridge in the same
+# spirit as Roo Code / Continue.dev.
+KILOCODE_MARKER = """# Agent Config bridge — Kilo Code
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Kilo Code auto-discovers `.kilocode/rules/*.md` as system-level rules
+per session. The canonical rule and skill source lives under
+`.augment/` (Augment portability mirror — see `AGENTS.md` for
+orientation).
+"""
+
+
+def ensure_kilocode_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.kilocode/rules/agent-config.md` (project scope) marker.
+
+    Kilo Code auto-discovers `.kilocode/rules/*.md` per project — Cline
+    fork pattern mirroring Roo Code. Single marker file pointing
+    developers at the canonical rule source under `.augment/`.
+    """
+    target = project_root / ".kilocode" / "rules" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".kilocode/rules/agent-config.md already exists")
+        return
+
+    write_file(target, KILOCODE_MARKER)
+    success(".kilocode/rules/agent-config.md created")
+
+
+# Zed (https://zed.dev) reads `.rules` at the project root as the
+# canonical system-instruction file. The bridge drops an informational
+# marker under `.zed/` documenting agent-config ownership — Zed itself
+# does not auto-discover `.zed/agent-config.md`. Phase 2.5 may upgrade
+# to a `.rules` emitter, but mirrors the AGENTS.md story until then.
+ZED_MARKER = """# Agent Config bridge — Zed
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Zed reads `.rules` at the project root as system-level instructions —
+that file is the canonical entry point. This marker is informational
+and tells developers where the rules and skills live.
+
+To activate agent-config under Zed, point Zed's `.rules` at the
+canonical source (or symlink it):
+
+```
+# Append to .rules at project root
+@.augment/AGENTS.md
+```
+
+Canonical rule and skill source: `.augment/` (see `AGENTS.md`).
+"""
+
+
+def ensure_zed_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.zed/agent-config.md` informational marker.
+
+    Zed reads `.rules` at the project root directly — the marker is
+    informational and documents the wiring. Phase 2.5 may upgrade to a
+    declarative `.rules` emitter.
+    """
+    target = project_root / ".zed" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".zed/agent-config.md already exists")
+        return
+
+    write_file(target, ZED_MARKER)
+    success(".zed/agent-config.md created")
+
+
+# JetBrains AI Assistant (https://www.jetbrains.com/ai/) reads guidelines
+# from project-level config files under `.idea/`. To avoid colliding with
+# the team-shared `.idea/` workspace, the bridge writes to
+# `.jetbrains/agent-config.md` (informational marker) and documents the
+# manual wiring step. Phase 2.5 may automate the `.idea/` write behind a
+# `--force` gate.
+JETBRAINS_MARKER = """# Agent Config bridge — JetBrains AI Assistant
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+JetBrains AI Assistant reads custom prompts and guidelines from
+project-level config (`.idea/`) and user-scope settings. This marker
+is informational — to wire agent-config into JetBrains AI, point the
+assistant's custom-prompts path at `.augment/` or copy the relevant
+rules into your JetBrains profile.
+
+Canonical rule and skill source: `.augment/` (see `AGENTS.md`).
+"""
+
+
+def ensure_jetbrains_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.jetbrains/agent-config.md` informational marker.
+
+    JetBrains AI reads config from `.idea/` and user-scope paths — we
+    avoid mutating `.idea/` (team-shared workspace) and ship a marker
+    documenting the manual wiring instead.
+    """
+    target = project_root / ".jetbrains" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".jetbrains/agent-config.md already exists")
+        return
+
+    write_file(target, JETBRAINS_MARKER)
+    success(".jetbrains/agent-config.md created")
+
+
+# Kiro (https://kiro.dev) is Amazon's agentic IDE. It auto-discovers
+# `.kiro/steering/*.md` as steering documents per project — same pattern
+# as Roo Code / Continue.dev / Kilo Code. Bridge is a single marker
+# under the steering directory.
+KIRO_MARKER = """# Agent Config bridge — Kiro
+
+This file marks the project as an `event4u/agent-config` consumer.
+
+Kiro auto-discovers `.kiro/steering/*.md` as steering documents per
+session. The canonical rule and skill source lives under `.augment/`
+(Augment portability mirror — see `AGENTS.md` for orientation).
+"""
+
+
+def ensure_kiro_bridge(project_root: Path, force: bool) -> None:
+    """Deploy `.kiro/steering/agent-config.md` (project scope) marker.
+
+    Kiro auto-discovers `.kiro/steering/*.md` per project — Cline /
+    Continue.dev pattern. Single marker file pointing developers at
+    the canonical rule source under `.augment/`.
+    """
+    target = project_root / ".kiro" / "steering" / "agent-config.md"
+
+    if target.exists() and not force:
+        skip(".kiro/steering/agent-config.md already exists")
+        return
+
+    write_file(target, KIRO_MARKER)
+    success(".kiro/steering/agent-config.md created")
+
+
 # --- Post-install smoke test ---
 
 # (platform, native event used for the dry-fire). Probe events are
@@ -1207,15 +1527,546 @@ def _smoke_test_hooks(project_root: Path, package_root: Path) -> int:
     return 1 if failed else 0
 
 
-# --- Global user-level install — RETIRED (road-to-portable-runtime P0.5) ---
+# --- Global user-level install — re-introduced under ADR-007 ---
 #
-# The `--global` symlink-install scheme was retired under the npx-only
-# distribution model. The curated manifest (templates/global-install-manifest.yml)
-# and its helpers/dispatch are gone. The replacement is `npx @event4u/agent-config`
-# resolving the runtime per-invocation; the project's `.agent-settings.yml`
-# carries the version pin.
+# The pre-`5388de25` `--global` was an in-project symlink scheme driven by
+# `templates/global-install-manifest.yml`. ADR-007 (2026-05-12) rebuilds the
+# flag as a real-file user-scope install — writes to `~/.claude/`,
+# `~/.cursor/`, `~/.augment/`, etc. per the per-agent discovery matrix. No
+# symlinks; no manifest revival. This module currently exposes the dispatch
+# scaffold; concrete file writes are owned by later roadmap tasks
+# (export subcommand, lockfile lifecycle).
+
+# Per-tool user-scope anchor paths per ADR-007 matrix. Listed in tool-ID
+# order matching `_VALID_TOOLS` so the scaffold output stays predictable.
+USER_SCOPE_PATHS = {
+    "claude-code":    "~/.claude/",
+    "claude-desktop": "~/Library/Application Support/Claude/",
+    "cursor":         "~/.cursor/",
+    "windsurf":       "~/.codeium/windsurf/",
+    "cline":          "~/Documents/Cline/Rules/",
+    "gemini-cli":     "~/.gemini/",
+    "copilot":        "~/.copilot/",
+    "augment":        "~/.augment/",
+    "aider":          "~/.aider.conf.yml",
+    "codex":          "~/.codex/",
+    "roocode":        "~/.roo/",
+    "continue":       "~/.continue/",
+    "kilocode":       "~/.kilocode/",
+    "zed":            "~/.config/zed/",
+    "jetbrains":      "~/.config/JetBrains/",
+    "kiro":           "~/.kiro/",
+}
+
+
+# Per-tool scope support per ADR-007 matrix + Tier-1/2 verification.
+# Values: "both" · "project" · "global". Used by _validate_scope() to
+# reject explicit `--tools=X` selections that conflict with the chosen
+# scope (project default or `--global`). `--tools=all` silently filters
+# incompatible IDs so the default install path stays backward-compatible.
+#
+# Rationale:
+#   - claude-desktop has no project discovery (informational marker only
+#     in project trees); --project rejects it explicitly.
+#   - jetbrains avoids mutating team-shared .idea/; --project marker is
+#     informational only; canonical scope is global.
+#   - roocode / kilocode auto-discover `.roo/rules/` and `.kilocode/rules/`
+#     per project; no user-scope discovery convention; --global rejects.
+SCOPE_SUPPORT = {
+    "claude-code":    "both",
+    "claude-desktop": "global",
+    "cursor":         "both",
+    "windsurf":       "both",
+    "cline":          "both",
+    "gemini-cli":     "both",
+    "copilot":        "both",
+    "augment":        "both",
+    "aider":          "both",
+    "codex":          "both",
+    "roocode":        "project",
+    "continue":       "both",
+    "kilocode":       "project",
+    "zed":            "both",
+    "jetbrains":      "global",
+    "kiro":           "both",
+}
+
+
+# Per-tool bridge marker paths used by the project-scope manifest (ADR-008
+# Phase 3.2). The value is the relative path inside the project tree (for
+# `scope=project`) or the absolute / `~`-prefixed user-scope path (for
+# `scope=global`). `validate` (Phase 3.4) checks that this file exists; the
+# manifest stores the path verbatim so a relocation of a bridge stays visible
+# in the lockfile.
+PROJECT_BRIDGE_MARKERS = {
+    "claude-code":    ".claude/settings.json",
+    "claude-desktop": ".claude-desktop/agent-config.md",
+    "cursor":         ".cursor/hooks.json",
+    "windsurf":       ".windsurf/hooks.json",
+    "cline":          ".clinerules/hooks",
+    "gemini-cli":     ".gemini/settings.json",
+    "copilot":        ".github/plugin/marketplace.json",
+    "augment":        ".augment/settings.json",
+    "aider":          ".aider/agent-config.md",
+    "codex":          ".codex/agent-config.md",
+    "roocode":        ".roo/rules/agent-config.md",
+    "continue":       ".continue/rules/agent-config.md",
+    "kilocode":       ".kilocode/rules/agent-config.md",
+    "zed":            ".zed/agent-config.md",
+    "jetbrains":      ".jetbrains/agent-config.md",
+    "kiro":           ".kiro/steering/agent-config.md",
+}
+
+
+def _bridge_marker(tool_id: str, scope: str) -> str:
+    """Return the canonical bridge-marker path for ``(tool_id, scope)``.
+
+    Project scope returns the repo-relative marker (e.g. ``.roo/rules/agent-
+    config.md``). Global scope returns the user-scope anchor from
+    :data:`USER_SCOPE_PATHS` (e.g. ``~/.claude/``). ADR-008 stores both as
+    opaque strings; `validate` (Phase 3.4) handles the existence check.
+    """
+    if scope == "global":
+        return USER_SCOPE_PATHS.get(tool_id, "")
+    return PROJECT_BRIDGE_MARKERS.get(tool_id, "")
+
+
+def _validate_scope(tools: set[str], scope: str, was_all: bool) -> set[str]:
+    """Validate tools against requested scope per SCOPE_SUPPORT.
+
+    `scope` is "project" or "global". When `was_all` is True (user passed
+    `--tools=all` or omitted the flag), incompatible tools are silently
+    filtered so the default install stays backward-compatible. Explicit
+    tool lists hard-reject with a directive error per Phase 2.3.
+    """
+    if scope not in ("project", "global"):
+        fail(f"_validate_scope: unknown scope '{scope}'")
+    incompatible = sorted(
+        t for t in tools
+        if SCOPE_SUPPORT.get(t, "both") not in ("both", scope)
+    )
+    if not incompatible:
+        return tools
+    if was_all:
+        return {t for t in tools if t not in incompatible}
+    hint = (
+        "drop --global (project is the default scope)"
+        if scope == "global" else "use --global"
+    )
+    fail(
+        f"--tools: {', '.join(incompatible)} does not support "
+        f"--{scope} scope ({hint})"
+    )
+    return tools  # unreachable; fail() exits
+
+
+def _resolve_scope(
+    opts: "argparse.Namespace",
+    detected: str,
+    detect_reason: str,
+    custom_path: "Path | None",
+) -> str:
+    """Phase 1.4 — turn flags + detection into a concrete scope.
+
+    Precedence:
+
+    1. ``--scope=project|global`` — explicit override; ``--custom-path``
+       may steer the project root.
+    2. ``--scope=prompt`` — force the interactive chooser; ``--custom-path``
+       pre-fills the Custom branch.
+    3. ``--scope=auto`` — honor detection; trigger the prompt on
+       ``"prompt"``.
+    4. ``--global`` — legacy alias for ``--scope=global``.
+    5. No flag — backward-compatible default of ``project``, EXCEPT
+       when detection returns ``"prompt"``, in which case the
+       interactive chooser fires (matches ADR-007 D2 collision UX).
+
+    Returns ``"project"`` or ``"global"``. Never returns ``"prompt"`` —
+    that intermediate state is resolved here. Aborts via ``fail()`` if
+    a prompt is required but stdin is not a TTY.
+    """
+    # Explicit --scope wins.
+    if opts.scope == "project":
+        return "project"
+    if opts.scope == "global":
+        return "global"
+    if opts.scope == "prompt":
+        return _run_scope_prompt(opts, detect_reason or "forced by --scope=prompt", custom_path)
+    if opts.scope == "auto":
+        if detected == "prompt":
+            return _run_scope_prompt(opts, detect_reason, custom_path)
+        if not QUIET:
+            info(f"Scope: {detected} (auto-detected; {detect_reason})")
+        return detected
+
+    # --global legacy alias.
+    if opts.global_install:
+        return "global"
+
+    # No flag — legacy default with collision auto-prompt.
+    if detected == "prompt":
+        return _run_scope_prompt(opts, detect_reason, custom_path)
+    if not QUIET:
+        info(f"Scope detection: {detected} ({detect_reason}). Using project default for backward compatibility; pass --scope=auto to honor detection.")
+    return "project"
+
+
+def _run_scope_prompt(
+    opts: "argparse.Namespace",
+    reason: str,
+    custom_path: "Path | None",
+) -> str:
+    """Drive the interactive scope chooser, mutating ``opts.custom_path``
+    when the user picks the Custom branch.
+
+    Fails fast (no prompt) when stdin is not a TTY and ``--custom-path``
+    was not pre-supplied — CI callers must use ``--scope=project|global``.
+    """
+    if not sys.stdin.isatty() and custom_path is None:
+        fail(
+            "Ambiguous install scope detected and stdin is not a TTY. "
+            "Pass --scope=project|global (or --custom-path=<dir>) to override."
+        )
+    choice = prompt_scope_choice(reason)
+    if choice == "project":
+        return "project"
+    if choice == "global":
+        return "global"
+    # SCOPE_CUSTOM — resolve a destination path.
+    if custom_path is None:
+        try:
+            raw = _read_line("Custom destination path: ")
+        except EOFError:
+            fail("Custom-path prompt aborted (EOF on stdin)")
+        if not raw:
+            fail("Custom-path prompt requires a non-empty path")
+        custom_path = Path(raw).expanduser().resolve()
+        opts.custom_path = str(custom_path)
+    if not QUIET:
+        info(f"Custom destination: {custom_path}")
+    return "project"
+
+
+# Manifest files used by multi-signal scope detection (Phase 1.3). Listed
+# in the order they are most commonly the canonical project signal; the
+# detector short-circuits on the first hit. `.git/` is intentionally
+# absent — monorepos, dotfile-git repos and Hg/SVN workspaces all break
+# that signal (ADR-007 D2).
+SCOPE_DETECT_MANIFESTS = (
+    "package.json", "composer.json", "pyproject.toml",
+    "Cargo.toml", "go.mod", "Gemfile",
+)
+
+# Project-local AI-tool config that, if present alongside a manifest,
+# triggers the ambiguity prompt. Directories first, then well-known
+# top-level files. Conservative on purpose: false negatives (skip prompt,
+# install global) are recoverable via `--project`; false positives (prompt
+# in an empty dir) are a UX paper-cut.
+SCOPE_DETECT_AI_DIRS = (
+    ".claude", ".cursor", ".windsurf", ".augment",
+    ".clinerules", ".copilot", ".gemini", ".codex",
+    ".aider", ".continue", ".roo", ".kilocode",
+)
+SCOPE_DETECT_AI_FILES = (
+    "CLAUDE.md", "AGENTS.md", "GEMINI.md",
+    ".windsurfrules", ".aider.conf.yml",
+)
+
+
+def detect_scope(cwd: Path) -> tuple[str, str]:
+    """Multi-signal scope detection per ADR-007 D2 / Phase 1.3.
+
+    Returns ``(scope, reason)`` where ``scope`` is one of:
+
+    * ``"project"`` — install into ``cwd`` (current behaviour preserved).
+      Triggered by an existing ``.agent-settings.yml`` in ``cwd``.
+    * ``"prompt"`` — caller MUST resolve the ambiguity (interactive
+      prompt in 1.4 / ``--scope=<x>`` override for CI). Triggered by
+      a manifest file (``package.json`` / ``composer.json`` / etc.)
+      combined with at least one project-local AI-tool config marker.
+    * ``"global"`` — install to user-scope paths. Default when no other
+      signal fires (including ``cwd == ~``, empty dir, dotfile-git).
+
+    ``.git/`` is explicitly NOT a signal — monorepos, dotfile managers,
+    and non-Git workspaces all break it. Pure function; no side effects.
+    """
+    if (cwd / SETTINGS_FILE).exists():
+        return "project", f"existing {SETTINGS_FILE}"
+
+    has_manifest = next(
+        (m for m in SCOPE_DETECT_MANIFESTS if (cwd / m).exists()),
+        None,
+    )
+    has_ai_dir = next(
+        (d for d in SCOPE_DETECT_AI_DIRS if (cwd / d).is_dir()),
+        None,
+    )
+    has_ai_file = next(
+        (f for f in SCOPE_DETECT_AI_FILES if (cwd / f).exists()),
+        None,
+    )
+
+    if has_manifest and (has_ai_dir or has_ai_file):
+        marker = has_ai_dir or has_ai_file
+        return "prompt", f"manifest ({has_manifest}) + AI-tool config ({marker})"
+
+    return "global", "no project-scope signals"
+
+
+# --- Interactive prompts (Phase 1.4) ---
+
+# Sentinel returned by `prompt_scope_choice` for the "Custom path" branch.
+# The caller must follow up by reading a path (CLI: `--custom-path`; TTY:
+# a second prompt line). Kept as a constant so call sites can match on
+# identity rather than the string literal.
+SCOPE_CUSTOM = "custom"
+
+
+def _read_line(prompt_text: str) -> str:
+    """Thin wrapper over `input()` so tests can monkey-patch a single point.
+
+    Returns the user's stripped reply. Raises ``EOFError`` on Ctrl-D so
+    callers can fail-fast rather than loop on closed stdin.
+    """
+    return input(prompt_text).strip()
+
+
+def prompt_scope_choice(reason: str) -> str:
+    """Interactive 3-option scope chooser per ADR-007 D2 / Phase 1.4.
+
+    Returns one of ``"project"``, ``"global"``, ``SCOPE_CUSTOM``. The
+    caller is responsible for resolving ``SCOPE_CUSTOM`` to an actual
+    path (e.g. by reading ``--custom-path`` or a follow-up prompt).
+
+    Loops on invalid input; aborts the install via ``fail()`` on EOF
+    (Ctrl-D) or three consecutive invalid replies so a stuck CI run
+    cannot hang the parent process.
+    """
+    print()
+    info(f"Ambiguous install scope: {reason}.")
+    info("Choose where to install:")
+    print("  1) Project — install into the current directory")
+    print("  2) User    — install into ~/ (recommended; one install per machine)")
+    print("  3) Custom  — specify an explicit destination path")
+    print()
+    attempts = 0
+    while attempts < 3:
+        try:
+            reply = _read_line("Choose [1/2/3]: ")
+        except EOFError:
+            fail("Scope prompt aborted (EOF on stdin); pass --scope=project|global to override")
+        if reply in ("1", "project", "p"):
+            return "project"
+        if reply in ("2", "global", "user", "u", "g"):
+            return "global"
+        if reply in ("3", "custom", "c"):
+            return SCOPE_CUSTOM
+        attempts += 1
+        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
+    fail("Scope prompt aborted (3 invalid replies); pass --scope=project|global to override")
+    return "project"  # unreachable; fail() exits
+
+
+def prompt_collision_choice(path: Path) -> str:
+    """Hard-Floor 3-option prompt for an existing user-scope config file.
+
+    Returns one of ``"merge"``, ``"backup"``, ``"abort"``. Used by future
+    write code paths (1.5 export, 1.6 lockfile) before clobbering an
+    existing ``~/.claude/CLAUDE.md`` / ``~/.codex/AGENTS.md`` / etc. The
+    helper itself does not touch the filesystem; the caller owns the
+    merge / rename-to-`.bak.<ts>` / exit-1 action.
+    """
+    print()
+    warn(f"Existing file at {path}")
+    info("Choose how to handle the collision:")
+    print("  1) Merge              — append our content, preserve theirs")
+    print("  2) Backup and replace — rename existing to .bak.<ts>, write fresh")
+    print("  3) Abort              — leave the file untouched, exit non-zero")
+    print()
+    attempts = 0
+    while attempts < 3:
+        try:
+            reply = _read_line("Choose [1/2/3]: ")
+        except EOFError:
+            fail(f"Collision prompt aborted (EOF on stdin) for {path}")
+        if reply in ("1", "merge", "m"):
+            return "merge"
+        if reply in ("2", "backup", "b"):
+            return "backup"
+        if reply in ("3", "abort", "a"):
+            return "abort"
+        attempts += 1
+        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
+    fail(f"Collision prompt aborted (3 invalid replies) for {path}")
+    return "abort"  # unreachable
+
+
+def _load_installed_lock_module():
+    """Lazy-import ``scripts._lib.installed_lock`` regardless of load mode.
+
+    ``install.py`` runs both as a top-level script (``python3 scripts/install.py``)
+    and as ``scripts.install`` (via ``from scripts.install import …``). The
+    repo root has to be on ``sys.path`` for the package-qualified import to
+    resolve in the script case.
+    """
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    from scripts._lib import installed_lock  # noqa: WPS433 — lazy by design
+    return installed_lock
+
+
+def _load_installed_tools_module():
+    """Lazy-import ``scripts._lib.installed_tools`` (ADR-008 manifest)."""
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    from scripts._lib import installed_tools  # noqa: WPS433 — lazy by design
+    return installed_tools
+
+
+def _update_installed_tools_manifest(
+    project_root: Path,
+    tools: set[str],
+    scope: str,
+    force: bool,
+) -> int:
+    """Append / refresh project-scope manifest entries (ADR-008 Phase 3.2).
+
+    Called after the bridge-write phase succeeds. The manifest lives at
+    ``<project_root>/agents/installed-tools.lock`` and tracks which AI tools
+    this project expects, separate from ``.agent-project-settings.yml``
+    (behaviour). Idempotent on (name, scope) match; refuses scope changes
+    without ``--force`` per ADR-008 § Lifecycle.
+
+    Returns 0 on success, 1 on refusal (scope mismatch without ``--force``).
+    """
+    tools_mod = _load_installed_tools_module()
+    target = tools_mod.manifest_path(project_root)
+    existing = tools_mod.read_manifest(target) or {}
+    entries = list(existing.get("tools", []))
+
+    lock_mod = _load_installed_lock_module()
+    version = lock_mod.current_package_version()
+
+    for tool_id in sorted(tools):
+        marker = _bridge_marker(tool_id, scope)
+        if not marker:
+            # Substrate (vscode) or unknown — not tracked in the manifest.
+            continue
+        try:
+            entries = tools_mod.upsert_tool(
+                entries,
+                name=tool_id,
+                scope=scope,
+                bridge_marker=marker,
+                force=force,
+            )
+        except tools_mod.ScopeMismatchError as exc:
+            if not QUIET:
+                warn(str(exc))
+                info(f"  Manifest: {target}")
+                info("  Override: re-run with `--force` to rewrite the entry")
+            return 1
+
+    tools_mod.write_manifest(target, version, entries)
+    if not QUIET:
+        info(f"Manifest updated: {target.relative_to(project_root) if target.is_relative_to(project_root) else target}")
+    return 0
+
+
+def install_global(
+    tools: set[str],
+    force: bool,
+    project_root: Path | None = None,
+) -> int:
+    """User-scope install path (ADR-007 + Phase 1.6 lockfile lifecycle).
+
+    Reads ``~/.config/agent-config/installed.lock`` first. A recorded
+    version that does not match the running package version refuses the
+    install with a remediation hint unless ``--force`` is passed. On
+    success the lockfile is rewritten atomically with the current
+    package version + the union of previously-recorded and now-installed
+    tool IDs. Concrete per-tool file writes still belong to later tasks
+    (export remains the documented escape for project-local content).
+
+    When ``project_root`` points at a project tree (detected by the
+    presence of ``.agent-settings.yml``), the project-scope manifest at
+    ``agents/installed-tools.lock`` is also refreshed with ``scope=global``
+    entries per ADR-008 Phase 3.2.
+    """
+    lock_mod = _load_installed_lock_module()
+    installed_version = lock_mod.current_package_version()
+    lock_path = lock_mod.lockfile_path()
+    ok, recorded = lock_mod.check_version(installed_version, path=lock_path)
+
+    if not ok and not force:
+        if not QUIET:
+            print()
+            warn("Refusing global install: lockfile version mismatch.")
+            info(f"  Lockfile:           {lock_path}")
+            info(f"  Recorded version:   {recorded}")
+            info(f"  Current package:    {installed_version}")
+            info("  Fix:                run `agent-config update`")
+            info("  Override:           re-run with `--force` (replaces the lockfile)")
+            print()
+        return 1
+
+    if not QUIET:
+        print()
+        info("Agent Config — Global (user-scope) install [ADR-007]")
+        info("Planned per-tool anchor paths:")
+        for tool_id in sorted(tools):
+            anchor = USER_SCOPE_PATHS.get(tool_id)
+            if anchor is None:
+                continue
+            print(f"      {tool_id:<15} → {anchor}")
+
+    existing = lock_mod.read_lockfile(path=lock_path) or {}
+    existing_tools = list(existing.get("tools", []))
+    merged_tools = sorted(set(existing_tools) | set(tools))
+    written = lock_mod.write_lockfile(installed_version, merged_tools, path=lock_path)
+
+    if not QUIET:
+        print()
+        info(f"Lockfile written: {written}")
+        info(f"  schema_version=1, agent_config_version={installed_version}")
+        info(f"  tools={','.join(merged_tools)}")
+
+    # Refresh the project-scope manifest when running inside a project tree
+    # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
+    # manifest to write and the global lockfile alone is the source of truth.
+    if project_root is not None and (project_root / SETTINGS_FILE).exists():
+        rc = _update_installed_tools_manifest(project_root, tools, "global", force)
+        if rc != 0:
+            return rc
+
+    if not QUIET:
+        print()
+        success("Global install recorded.")
+        print()
+    return 0
 
 # --- Argument parsing ---
+
+def _merge_tools_aliases(tools: str | None, ai: str | None) -> str:
+    """Merge --tools and --ai into a single comma-separated value.
+
+    `--ai` is an alias for `--tools` (Phase 2.4 of the global-first
+    roadmap). Both accepted; when both are passed the comma-separated
+    values are unioned (order-preserving, deduplicated). When neither
+    is passed the default `all` keeps the backward-compatible behaviour.
+    """
+    items: list[str] = []
+    for raw in (tools, ai):
+        if not raw:
+            continue
+        for piece in raw.split(","):
+            stripped = piece.strip()
+            if stripped and stripped not in items:
+                items.append(stripped)
+    return ",".join(items) if items else "all"
+
 
 def parse_options(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -1260,11 +2111,21 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--quiet", action="store_true", help="suppress info/success output (warnings/errors still shown)")
     parser.add_argument(
         "--tools",
-        default="all",
+        default=None,
         help=(
             "comma-separated tool IDs to install bridges for "
-            "(claude-code,cursor,windsurf,cline,gemini-cli,copilot,augment,aider,codex,all). "
+            "(claude-code,claude-desktop,cursor,windsurf,cline,gemini-cli,"
+            "copilot,augment,aider,codex,roocode,continue,kilocode,zed,"
+            "jetbrains,kiro,all). "
             "Default: all (backward-compatible)."
+        ),
+    )
+    parser.add_argument(
+        "--ai",
+        default=None,
+        help=(
+            "alias for --tools (same IDs accepted). When both are passed "
+            "the comma-separated values are unioned. Default: all."
         ),
     )
     parser.add_argument(
@@ -1272,7 +2133,42 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         action="store_true",
         help="skip the post-install hook smoke test (default: dry-fire dispatch:hook against every installed bridge)",
     )
-    return parser.parse_args(argv)
+    parser.add_argument(
+        "--global",
+        dest="global_install",
+        action="store_true",
+        help="install to user-scope paths (~/.claude/, ~/.cursor/, …) per ADR-007 instead of project-locally",
+    )
+    parser.add_argument(
+        "--scope",
+        choices=("project", "global", "prompt", "auto"),
+        default=None,
+        help=(
+            "force install scope (overrides --global and detection): "
+            "project = install into cwd; global = install into user-scope paths; "
+            "prompt = force the interactive 3-option chooser; "
+            "auto = honor detect_scope() output. Default: legacy "
+            "(project unless --global, with auto-prompt on collision detection)."
+        ),
+    )
+    parser.add_argument(
+        "--custom-path",
+        default=None,
+        help=(
+            "destination root for --scope=project when not the cwd "
+            "(used by the 'Custom' branch of the scope chooser; ignored "
+            "for --scope=global)."
+        ),
+    )
+    opts = parser.parse_args(argv)
+    opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
+    if opts.scope == "global" and opts.custom_path:
+        fail("--custom-path is incompatible with --scope=global")
+    if opts.global_install and opts.custom_path:
+        fail("--custom-path is incompatible with --global")
+    if opts.scope is not None and opts.global_install and opts.scope != "global":
+        fail(f"--scope={opts.scope} conflicts with --global; pick one")
+    return opts
 
 
 # Mapping of --tools IDs accepted by install.py. Mirrors VALID_TOOLS in
@@ -1280,7 +2176,8 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
 # bridges (vscode, augment) always run.
 _VALID_TOOLS = {
     "claude-code", "claude-desktop", "cursor", "windsurf", "cline",
-    "gemini-cli", "copilot", "augment", "aider", "codex", "all",
+    "gemini-cli", "copilot", "augment", "aider", "codex", "roocode",
+    "continue", "kilocode", "zed", "jetbrains", "kiro", "all",
 }
 
 
@@ -1303,6 +2200,18 @@ def _parse_tools(raw: str) -> set[str]:
     return set(items)
 
 
+def _tools_was_all(raw: str) -> bool:
+    """True when the raw --tools value is the implicit/explicit `all` set.
+
+    Used by _validate_scope() to decide between silent-filter (default
+    install backward-compatible) and hard-reject (explicit list).
+    """
+    if not raw or not raw.strip():
+        return False
+    items = [s.strip() for s in raw.split(",") if s.strip()]
+    return "all" in items
+
+
 def _is_tool_enabled(tools: set[str], tool_id: str) -> bool:
     return tool_id in tools
 
@@ -1318,7 +2227,30 @@ def main(argv: list[str]) -> int:
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
 
-    project_root = Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+    # Multi-signal scope detection (Phase 1.3) + scope resolution
+    # (Phase 1.4). Order of precedence (highest first):
+    #   1. --scope=<x>  — explicit user override (CI-friendly; auto = honor detection)
+    #   2. --global     — legacy alias for --scope=global
+    #   3. detect_scope() == "prompt" → interactive 3-option chooser (TTY only)
+    #   4. Legacy default → project (preserved for backward compatibility)
+    detect_root = Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+    detected, detect_reason = detect_scope(detect_root)
+    custom_path: Path | None = Path(opts.custom_path).resolve() if opts.custom_path else None
+    scope = _resolve_scope(opts, detected, detect_reason, custom_path)
+
+    # Scope validation runs before filesystem / package detection so
+    # --tools=X / --scope conflicts fail fast with a directive error
+    # instead of partial-state side effects (Phase 2.3).
+    parsed_tools = _parse_tools(opts.tools)
+    tools_was_all = _tools_was_all(opts.tools)
+    parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all)
+
+    if scope == "global":
+        # Pass detect_root so the manifest refresh runs when --global is
+        # invoked from within a project tree (ADR-008 Phase 3.2).
+        return install_global(parsed_tools, opts.force, project_root=detect_root)
+
+    project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
     is_first_run = not (project_root / SETTINGS_FILE).exists()
 
     if opts.package:
@@ -1341,7 +2273,7 @@ def main(argv: list[str]) -> int:
 
     ensure_agent_settings(project_root, package_root, opts.profile, opts.force)
 
-    tools = _parse_tools(opts.tools)
+    tools = parsed_tools
 
     if not opts.skip_bridges:
         # Substrate bridges (always written; other tools symlink/depend on them).
@@ -1360,6 +2292,24 @@ def main(argv: list[str]) -> int:
             ensure_gemini_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "copilot"):
             ensure_copilot_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "roocode"):
+            ensure_roocode_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "claude-desktop"):
+            ensure_claude_desktop_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "aider"):
+            ensure_aider_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "codex"):
+            ensure_codex_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "continue"):
+            ensure_continue_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "kilocode"):
+            ensure_kilocode_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "zed"):
+            ensure_zed_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "jetbrains"):
+            ensure_jetbrains_bridge(project_root, opts.force)
+        if _is_tool_enabled(tools, "kiro"):
+            ensure_kiro_bridge(project_root, opts.force)
 
     if opts.augment_user_hooks:
         ensure_augment_user_hooks(package_root, opts.force)
@@ -1381,6 +2331,17 @@ def main(argv: list[str]) -> int:
             print()
             info("Smoke-testing installed hook bridges (dry-run)")
         _smoke_test_hooks(project_root, package_root)
+
+    # Refresh the project-scope installed-tools manifest (ADR-008 Phase 3.2).
+    # Runs after bridges are on disk so the manifest only lists tools whose
+    # markers actually exist. Skipped when `--skip-bridges` was used (the
+    # caller is exercising the install plan, not committing to it).
+    if not opts.skip_bridges:
+        rc = _update_installed_tools_manifest(
+            project_root, parsed_tools, "project", opts.force,
+        )
+        if rc != 0:
+            return rc
 
     if not QUIET:
         print()

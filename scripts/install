@@ -17,7 +17,10 @@
 #   --profile <name>  Cost profile for bridges (minimal|balanced|full)
 #   --tools <list>    Comma-separated tool IDs to install (default: all).
 #                     Valid: claude-code,claude-desktop,cursor,windsurf,
-#                            cline,gemini-cli,copilot,augment,aider,codex,all
+#                            cline,gemini-cli,copilot,augment,aider,codex,
+#                            roocode,continue,kilocode,zed,jetbrains,kiro,all
+#   --ai <list>       Alias for --tools (same IDs). When both are passed
+#                     the comma-separated values are unioned.
 #   --list-tools      Print supported tool IDs with descriptions, then exit
 #   --yes, -y         Non-interactive mode: do not prompt (default for non-TTY)
 #   --force           Overwrite existing bridge files
@@ -26,12 +29,22 @@
 #   --quiet           Suppress non-error output
 #   --skip-sync       Skip payload sync (install.sh)
 #   --skip-bridges    Skip bridge files (install.py)
+#   --global          Install to user-scope paths (~/.claude/, ~/.cursor/, …)
+#                     instead of project-locally. Implies --skip-sync (the
+#                     payload sync stage is project-only). See ADR-007.
+#   --scope <mode>    Override scope detection: auto | project | global | prompt.
+#                     auto   = honor multi-signal detection (Phase 1.3)
+#                     project = force project-local install
+#                     global = force user-scope install (same as --global)
+#                     prompt = always show the 3-option chooser
+#   --custom-path <d> Use <d> as the project root when prompted; rejected with
+#                     --scope=global / --global.
 #   --help, -h        Show this help
 #
 # Examples:
 #   bash scripts/install                                # everything (default)
 #   bash scripts/install --tools=claude-code,cursor     # only those two
-#   bash scripts/install --tools=cursor --yes           # CI-friendly
+#   bash scripts/install --ai=cursor --yes              # alias form (CI-friendly)
 #   bash scripts/install --list-tools                   # show catalog
 
 set -uo pipefail
@@ -53,12 +66,15 @@ QUIET=false
 SKIP_SYNC=false
 SKIP_BRIDGES=false
 LIST_TOOLS=false
+GLOBAL=false
+SCOPE=""
+CUSTOM_PATH=""
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
-VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex all"
+VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
-    sed -n '3,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,48p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -66,19 +82,26 @@ list_tools() {
 Supported --tools IDs (default: all):
 
   claude-code      .claude/rules, .claude/skills, .claude/commands, .claude/settings.json
-  claude-desktop   ~/Library/Application Support/Claude/ (global, see Phase 4 docs)
+  claude-desktop   .claude-desktop/agent-config.md marker (global-scope tool — see ADR-007)
   cursor           .cursor/rules, .cursor/commands (legacy .cursorrules also written)
   windsurf         .windsurf/rules, .windsurf/workflows (legacy .windsurfrules also written)
   cline            .clinerules/ symlinks
   gemini-cli       GEMINI.md, .gemini/settings.json
   copilot          .github/copilot-instructions.md, .vscode/settings.json
   augment          .augment/ payload + settings (substrate — recommended for every install)
-  aider            AGENTS.md (Linux Foundation cross-tool contract; always written)
-  codex            AGENTS.md (same as aider — no extra action)
+  aider            .aider/agent-config.md marker (wire via `read:` in .aider.conf.yml)
+  codex            .codex/agent-config.md marker (Codex reads AGENTS.md directly)
+  roocode          .roo/rules/agent-config.md marker (Roo Code auto-discovery)
+  continue         .continue/rules/agent-config.md marker (Continue.dev auto-discovery)
+  kilocode         .kilocode/rules/agent-config.md marker (Kilo Code auto-discovery)
+  zed              .zed/agent-config.md marker (Zed reads .rules at project root)
+  jetbrains        .jetbrains/agent-config.md marker (JetBrains AI Assistant)
+  kiro             .kiro/steering/agent-config.md marker (Kiro auto-discovery)
   all              every ID above (the default; backward-compatible)
 
 Examples:
   --tools=claude-code,cursor       project-local install for those two surfaces
+  --ai=cursor                      alias for --tools=cursor
   --tools=all                      equivalent to omitting the flag
 EOF
 }
@@ -110,8 +133,10 @@ while [[ $# -gt 0 ]]; do
         --target=*)      TARGET_DIR="${1#*=}"; shift ;;
         --profile)       PROFILE="$2"; shift 2 ;;
         --profile=*)     PROFILE="${1#*=}"; shift ;;
-        --tools)         TOOLS="$2"; TOOLS_EXPLICIT=true; shift 2 ;;
-        --tools=*)       TOOLS="${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
+        --tools)         TOOLS="${TOOLS:+$TOOLS,}$2"; TOOLS_EXPLICIT=true; shift 2 ;;
+        --tools=*)       TOOLS="${TOOLS:+$TOOLS,}${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
+        --ai)            TOOLS="${TOOLS:+$TOOLS,}$2"; TOOLS_EXPLICIT=true; shift 2 ;;
+        --ai=*)          TOOLS="${TOOLS:+$TOOLS,}${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
         --list-tools)    LIST_TOOLS=true; shift ;;
         --yes|-y)        YES=true; shift ;;
         --force)         FORCE=true; shift ;;
@@ -120,6 +145,11 @@ while [[ $# -gt 0 ]]; do
         --quiet)         QUIET=true; shift ;;
         --skip-sync)     SKIP_SYNC=true; shift ;;
         --skip-bridges)  SKIP_BRIDGES=true; shift ;;
+        --global)        GLOBAL=true; SKIP_SYNC=true; shift ;;
+        --scope)         SCOPE="$2"; shift 2 ;;
+        --scope=*)       SCOPE="${1#*=}"; shift ;;
+        --custom-path)   CUSTOM_PATH="$2"; shift 2 ;;
+        --custom-path=*) CUSTOM_PATH="${1#*=}"; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -138,7 +168,7 @@ fi
 # Otherwise we fall through to the backward-compatible "all" default.
 prompt_tools() {
     local choice picked tool i=0
-    local -a menu=(claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex)
+    local -a menu=(claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro)
     echo ""
     echo "  📦 Pick the tools to install (comma-separated numbers, blank = all):"
     for tool in "${menu[@]}"; do
@@ -263,6 +293,9 @@ run_bridges() {
     [[ -n "$PROFILE" ]] && args+=(--profile="$PROFILE")
     $FORCE && args+=(--force)
     $QUIET && args+=(--quiet)
+    $GLOBAL && args+=(--global)
+    [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
+    [[ -n "$CUSTOM_PATH" ]] && args+=(--custom-path="$CUSTOM_PATH")
     args+=(--tools="$TOOLS")
     "$python_bin" "$INSTALL_PY" "${args[@]}"
 }
