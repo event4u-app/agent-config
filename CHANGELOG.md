@@ -318,6 +318,14 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.41.2](https://github.com/event4u-app/agent-config/compare/1.41.1...1.41.2) (2026-05-12)
+
+### Documentation
+
+* **roadmap:** invert portable-runtime to npx-only distribution ([f8f6594](https://github.com/event4u-app/agent-config/commit/f8f65944490f69528616d21f4aa008c7c3d0bfa9))
+
+Tests: 3173 (+0 since 1.41.1)
+
 ## [1.41.1](https://github.com/event4u-app/agent-config/compare/1.41.0...1.41.1) (2026-05-12)
 
 ### Documentation
