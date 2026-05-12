@@ -46,9 +46,9 @@ the per-IDE index above.
 > 2. `scripts/install.py` — bridge files (`.agent-settings.yml`, VSCode /
 >    Augment / Copilot JSON descriptors).
 >
-> `bin/install.php` and `scripts/postinstall.sh` are thin wrappers that
-> delegate to `scripts/install`. Both underlying stages remain callable
-> directly for advanced use; see their `--help`.
+> `npx @event4u/create-agent-config init` and `setup.sh` (curl-based)
+> are thin wrappers that delegate to `scripts/install`. Both underlying
+> stages remain callable directly for advanced use; see their `--help`.
 >
 > Python 3.10+ is required for bridges. If it is missing, the orchestrator
 > prints a warning and continues with the payload sync only.
@@ -80,9 +80,9 @@ the per-IDE index above.
 ## Quickstart — one-liner entrypoints
 
 Try `@event4u/agent-config` in any directory in under 30 seconds, without
-`composer require` or `git clone` first. Both entrypoints are thin
-wrappers around `scripts/install` — same payload, same flags, no extra
-state.
+adding it as a dev dependency or cloning the repo first. Both
+entrypoints are thin wrappers around `scripts/install` — same payload,
+same flags, no extra state.
 
 ### `npx` (Node ≥ 18)
 
@@ -139,41 +139,26 @@ used. Pass `--yes` (or `-y`) to force non-interactive mode anywhere.
 Install once in the project — available to everyone working on it.
 The package is versioned with the project. Settings are committed once.
 
-### Composer (PHP projects)
+### npx (recommended for any project)
 
 ```bash
-composer require --dev event4u/agent-config
-php vendor/bin/install.php
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 ```
 
-Composer does **not** run a post-install hook for this package — the
-installer is an explicit step. `bin/install.php` is a thin wrapper that
-calls `scripts/install` (the bash orchestrator). To pick a non-default
-profile:
+The wrapper downloads the latest `@event4u/agent-config` tarball into a
+temp dir, runs `scripts/install` with the selected tools, and cleans up
+afterwards. Nothing is added to `package.json`.
+
+### Global CLI (one install per machine)
 
 ```bash
-php vendor/bin/install.php --profile=balanced
+npm install -g @event4u/agent-config
+agent-config --help
 ```
 
-The `--profile` flag controls the initial `cost_profile` value written
-to `.agent-settings.yml`.
-
-### npm (JavaScript/TypeScript projects)
-
-```bash
-npm install --save-dev @event4u/agent-config
-```
-
-npm runs `scripts/postinstall.sh` automatically, which invokes
-`scripts/install` — the same orchestrator every other entry point uses.
-
-If your setup disables install scripts (`npm config set ignore-scripts
-true` or similar), nothing happens and the command prints no warning.
-Re-run the installer manually in that case:
-
-```bash
-bash node_modules/@event4u/agent-config/scripts/install
-```
+The global install puts `agent-config` on `$PATH` so the project
+wrapper (`./agent-config`) can fall through to it when no
+`node_modules/@event4u/agent-config/` exists.
 
 ### Installer orchestrator (`scripts/install`)
 
@@ -186,12 +171,6 @@ bash scripts/install --force          # overwrite existing bridges
 bash scripts/install --skip-bridges   # payload only
 bash scripts/install --skip-sync      # bridges only
 bash scripts/install --dry-run        # show payload sync plan, skip bridges
-```
-
-PHP users can use the Composer wrapper, which forwards all flags:
-
-```bash
-php vendor/bin/install.php --profile=balanced
 ```
 
 Under the hood:
@@ -544,15 +523,12 @@ for the upgrade path.
 When a new version of the package is published:
 
 ```bash
-composer update event4u/agent-config
-php vendor/bin/install.php          # refresh bridges + symlinks
-```
+# npx (one-shot, recommended) — always uses the latest tarball
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 
-Or for npm projects:
-
-```bash
-npm update @event4u/agent-config
-bash node_modules/@event4u/agent-config/scripts/install
+# Global CLI
+npm install -g @event4u/agent-config@latest
+agent-config --help
 ```
 
 The installer is idempotent — re-running it after an update refreshes

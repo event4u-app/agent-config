@@ -30,11 +30,11 @@ If any of these are missing or empty, the installer either didn't run or
 was interrupted. Re-run it:
 
 ```bash
-php vendor/bin/install.php --verbose
-# or
 bash scripts/install --verbose
 # or, to regenerate everything (overwrites existing bridge files):
 bash scripts/install --force
+# or, for one-shot installs without a local node_modules tree:
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 ```
 
 ### Check 2: Does your agent actually read these directories?
@@ -61,44 +61,34 @@ version explicitly and reinstall the plugin.
 
 ---
 
-## `composer require` / `npm install` runs, but no files were created
+## Installer ran but no files appeared
 
-Several security-conscious setups disable post-install hooks:
-
-```bash
-composer config allow-plugins.false
-# or in ~/.npmrc:
-ignore-scripts=true
-```
-
-In that case, the post-install hook never runs. Execute the installer
-manually:
+The v2 distribution does **not** ship a `postinstall` hook — installing
+`@event4u/agent-config` via `npm install -g` only puts the `agent-config`
+binary on `$PATH`; it does not seed any project files. Run the
+orchestrator explicitly inside the project root:
 
 ```bash
-php vendor/bin/install.php          # for Composer
-# or for npm — invoke the orchestrator directly:
-bash node_modules/@event4u/agent-config/scripts/install
-```
+# One-shot, no local checkout required (recommended)
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 
-The [`scripts/postinstall.sh`](../scripts/postinstall.sh) wrapper prints a
-loud error block when the underlying installer fails, so if you saw no
-output at all, scripts are likely disabled on your side.
+# When the global CLI is installed
+agent-config install --tools=claude-code,cursor
+```
 
 ---
 
-## Broken symlinks after `composer update` / `npm update`
+## Broken symlinks after upgrading the package
 
 When the package version changes, symlinks that pointed to the old
-vendor path may break. Re-run the installer — it is idempotent:
+package path may break. Re-run the installer — it is idempotent:
 
 ```bash
-php vendor/bin/install.php
-# or
-bash scripts/install
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 ```
 
 The installer replaces stale symlinks with fresh ones pointing at the
-current vendor path.
+current package path.
 
 ---
 
@@ -108,8 +98,8 @@ Native Windows is not a first-class target. The installer relies on Bash
 and Unix-style symlinks. Recommended setup:
 
 1. **WSL2** (preferred): install Ubuntu or a distribution of your choice,
-   clone the project inside the WSL filesystem, and run `composer
-   install` / `npm install` from WSL.
+   clone the project inside the WSL filesystem, and run
+   `npx @event4u/create-agent-config init` from WSL.
 2. **Git Bash**: works for the basic install, but symlinks require
    Developer Mode (Windows 10 1703+) or admin privileges. Without either,
    Git Bash falls back to copies, which means updates will not propagate
@@ -142,15 +132,13 @@ There is no dedicated uninstall command yet. Remove the package and
 clean up manually:
 
 ```bash
-# 1. Remove the dependency
-composer remove event4u/agent-config
-# or
+# 1. Remove the dependency (skip when installed via npx / -g)
 npm uninstall @event4u/agent-config
 
 # 2. Remove generated content from the project
 rm -rf .augment .claude .cursor .clinerules .windsurfrules GEMINI.md
 rm -f .agent-settings .agent-settings.yml .agent-settings.backup.key-value
-rm -f .github/copilot-instructions.md
+rm -f .github/copilot-instructions.md agent-config
 # Remove the "# event4u/agent-config" block from .gitignore manually
 ```
 
@@ -163,5 +151,5 @@ Keep `AGENTS.md` if you customized it — it is yours, not the package's.
 Open an [issue](https://github.com/event4u-app/agent-config/issues) with:
 
 - your OS and shell,
-- PHP / Node / Python versions,
+- Node / Python versions,
 - full output of `bash scripts/install --verbose --dry-run`.
