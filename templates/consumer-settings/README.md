@@ -28,7 +28,7 @@ instead of copying files via `install.sh`.
 These tools do **not** support plugins yet. Use the classic installer:
 
 ```bash
-npx @event4u/create-agent-config init --tools=cursor,cline,windsurf,augment
+npx @event4u/agent-config init --tools=cursor,cline,windsurf,augment
 ```
 
 ## What the plugin provides

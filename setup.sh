@@ -4,7 +4,7 @@
 # Mirrors agent-os: downloads the latest GitHub tarball into a temp dir,
 # runs scripts/install with the user's tool selection, then cleans up.
 # Use this when Node.js is not available (otherwise prefer
-# `npx @event4u/create-agent-config init`).
+# `npx @event4u/agent-config init`).
 #
 # Usage:
 #   curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash

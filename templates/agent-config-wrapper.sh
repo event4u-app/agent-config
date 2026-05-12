@@ -56,7 +56,7 @@ cat >&2 <<EOF
       - npx @event4u/agent-config@latest (npx not installed)
 
     Install via:
-      npx @event4u/create-agent-config init     # one-shot setup
+      npx @event4u/agent-config init            # one-shot setup
       npm install -g @event4u/agent-config      # global CLI
 EOF
 exit 127

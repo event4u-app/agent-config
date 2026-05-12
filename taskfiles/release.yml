@@ -55,23 +55,12 @@ tasks:
       Open the interactive npm login flow scoped to the @event4u org
       against the public registry. Web-auth (browser) + 2FA. Verifies
       with `npm whoami` and prints the org access list afterwards.
-      Required once before `task npm:publish-installer`. Usage:
+      Required for manual npm publishing fallback; routine releases run
+      through publish-npm.yml on tag push. Usage:
       task npm:login
     cmds:
       - npm login --scope=@event4u --registry=https://registry.npmjs.org
       - cmd: npm whoami
       - cmd: npm access list packages @event4u
 
-  npm:publish-installer:
-    desc: |
-      Publish the @event4u/create-agent-config wrapper from
-      packages/create-agent-config/ to the public npm registry. Forces
-      --provenance=false because OIDC provenance is only available in
-      CI; for provenance-enabled releases use the GitHub Actions
-      release workflow. Requires a prior `task npm:login`; npm will
-      prompt for a 2FA OTP via browser web-auth. Pass --dry-run to
-      preview without uploading. Usage:
-      task npm:publish-installer
-      task npm:publish-installer -- --dry-run
-    dir: packages/create-agent-config
-    cmd: npm publish --access public --provenance=false {{.CLI_ARGS}}
+

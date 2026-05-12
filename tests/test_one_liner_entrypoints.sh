@@ -3,20 +3,21 @@
 # road-to-simplicity-and-everywhere).
 #
 # Covers:
-#   - setup.sh   — `curl | bash` shell entrypoint
-#   - packages/create-agent-config — `npx` Node wrapper
+#   - setup.sh                  — `curl | bash` shell entrypoint
+#   - scripts/agent-config init — npm/npx bin entry for `@event4u/agent-config`
 #
-# Both entrypoints download a tarball, extract it, and run scripts/install.
-# To stay offline, we build a local tarball from the current checkout and
-# point both entrypoints at it via AGENT_CONFIG_TARBALL_URL=file://...
+# setup.sh downloads a tarball and runs scripts/install; the npx entrypoint
+# is the package bin (`scripts/agent-config`) which forwards `init` to
+# scripts/install. To stay offline we build a local tarball, extract it,
+# and invoke the bin from there — mirroring what npx does after fetch.
 
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETUP_SH="$REPO_ROOT/setup.sh"
-NPX_BIN="$REPO_ROOT/packages/create-agent-config/bin/create-agent-config.js"
 TMPDIR=""
 TARBALL=""
+NPX_EXTRACT=""
 PASS=0
 FAIL=0
 
@@ -40,6 +41,11 @@ setup() {
     done
     (cd "$stage" && tar -czf "$TARBALL" agent-config) \
         || { echo "  ❌  setup: failed to pack tarball" >&2; exit 1; }
+    # Extract once for npx-style invocations (simulates `npx` post-fetch).
+    NPX_EXTRACT="$TMPDIR/npx-extract"
+    mkdir -p "$NPX_EXTRACT"
+    (cd "$NPX_EXTRACT" && tar -xzf "$TARBALL") \
+        || { echo "  ❌  setup: failed to extract tarball" >&2; exit 1; }
 }
 
 teardown() {
@@ -83,34 +89,32 @@ test_setup_local_install() {
     assert_file "setup.sh: .agent-settings.yml rendered" "$target/.agent-settings.yml"
 }
 
-# --- Test 3: create-agent-config wrapper --help ---
+# --- Test 3: `agent-config init --help` (npm bin entry) ---
 test_npx_help() {
-    if ! command -v node >/dev/null 2>&1; then
-        echo "  ⏭️  skip: node not available"; return
-    fi
-    if node "$NPX_BIN" --help >/dev/null 2>&1; then pass "npx wrapper --help exits 0"
-    else fail "npx wrapper --help exits non-zero"
+    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
+    if AGENT_CONFIG_NO_PIN_REEXEC=1 bash "$bin" help >/dev/null 2>&1; then
+        pass "agent-config bin help exits 0"
+    else
+        fail "agent-config bin help exits non-zero"
     fi
 }
 
-# --- Test 4: create-agent-config wrapper installs from local tarball ---
+# --- Test 4: `agent-config init` installs from extracted tarball ---
 test_npx_local_install() {
-    if ! command -v node >/dev/null 2>&1; then
-        echo "  ⏭️  skip: node not available"; return
-    fi
+    local bin="$NPX_EXTRACT/agent-config/scripts/agent-config"
     local target
     target="$TMPDIR/npx-target"
     mkdir -p "$target"
-    AGENT_CONFIG_TARBALL_URL="file://$TARBALL" \
-        node "$NPX_BIN" init --target "$target" --tools=claude-code --yes >"$TMPDIR/npx.log" 2>&1
+    AGENT_CONFIG_NO_PIN_REEXEC=1 \
+        bash "$bin" init --target "$target" --tools=claude-code --yes >"$TMPDIR/npx.log" 2>&1
     local rc=$?
     if [[ $rc -ne 0 ]]; then
-        fail "npx wrapper local install exit 0 (got $rc; tail: $(tail -5 "$TMPDIR/npx.log" | tr '\n' ' '))"
+        fail "agent-config init local install exit 0 (got $rc; tail: $(tail -5 "$TMPDIR/npx.log" | tr '\n' ' '))"
         return
     fi
-    pass "npx wrapper local install exit 0"
-    assert_dir  "npx: .claude/ populated"           "$target/.claude"
-    assert_file "npx: .agent-settings.yml rendered" "$target/.agent-settings.yml"
+    pass "agent-config init local install exit 0"
+    assert_dir  "agent-config init: .claude/ populated"           "$target/.claude"
+    assert_file "agent-config init: .agent-settings.yml rendered" "$target/.agent-settings.yml"
 }
 
 # --- Test 5: setup.sh dry-run-style (--help only, no network) ---

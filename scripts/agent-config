@@ -98,6 +98,9 @@ Commands:
                              Flags: --check (read-only) | --to <version> (explicit pin)
   migrate                    One-shot migration off legacy composer / npm install paths
                              Flags: --dry-run (detect only)
+  init                       One-shot project install. Forwards to `scripts/install`
+                             with all args. Entry point for `npx @event4u/agent-config init`.
+                             Flags: --tools=<list> | --ai=<list> | --yes | --force
   global                     Install to user-scope paths (~/.claude/, ~/.cursor/, …)
                              Forwards to `scripts/install --global` (ADR-007).
                              Flags: --tools=<list> | --ai=<list> | --yes | --force
@@ -139,6 +142,7 @@ Examples:
   ./agent-config council:estimate prompt.txt
   ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
   ./agent-config council:render agents/council-sessions/out.json
+  ./agent-config init --tools=claude-code,cursor --yes
   ./agent-config global --tools=claude-code --yes
   ./agent-config global --ai=cursor,windsurf
   ./agent-config export --list
@@ -545,6 +549,16 @@ cmd_migrate() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_migrate "$@"
 }
 
+# `agent-config init` — project-scope install entry point. Forwards
+# unmodified args to the bash installer. This is the canonical
+# `npx @event4u/agent-config init` consumer entry point (replaces the
+# deprecated @event4u/create-agent-config wrapper package).
+cmd_init() {
+  local script
+  script="$(resolve_script "scripts/install")" || return 1
+  exec bash "$script" "$@"
+}
+
 # `agent-config global` — user-scope install entry point. Forwards to the
 # bash installer with `--global` set (ADR-007). Phase 1.2 of
 # road-to-global-first-install.md. The bash wrapper handles option parsing
@@ -622,6 +636,7 @@ main() {
     council:render)          cmd_council render "$@" ;;
     update)                  cmd_update "$@" ;;
     migrate)                 cmd_migrate "$@" ;;
+    init)                    cmd_init "$@" ;;
     global)                  cmd_global "$@" ;;
     export)                  cmd_export "$@" ;;
     sync)                    cmd_sync "$@" ;;
@@ -646,7 +661,7 @@ main() {
 maybe_pin_reexec() {
   local cmd="${1-}"
   case "$cmd" in
-    help|--help|-h|--version|-V|update|migrate|"") return 0 ;;
+    help|--help|-h|--version|-V|update|migrate|init|"") return 0 ;;
   esac
   if ! command -v python3 >/dev/null 2>&1; then
     return 0

@@ -107,7 +107,7 @@ def detect_package_root(project_root: Path) -> Path:
 
     fail(
         "Could not find agent-config package. Install via "
-        "`npx @event4u/create-agent-config init` or `npm install --save-dev @event4u/agent-config`."
+        "`npx @event4u/agent-config init` or `npm install -g @event4u/agent-config`."
     )
     return project_root  # unreachable
 
@@ -2355,7 +2355,7 @@ def main(argv: list[str]) -> int:
             print()
             print("  Next steps:")
             print("    • Commit .agent-settings.yml and bridge files to your repo")
-            print("    • New team members run `npx @event4u/create-agent-config init` — done")
+            print("    • New team members run `npx @event4u/agent-config init` — done")
             print("    • Inspect hook coverage: ./agent-config hooks:status")
             print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
             print()

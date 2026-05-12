@@ -42,13 +42,14 @@ listing:
     - copilot
     - augment
 
-# npm package metadata (synced into packages/create-agent-config/package.json
-# and any future @event4u/agent-config packages).
+# npm package metadata (synced into the root @event4u/agent-config
+# package.json on release).
 npm:
-  package: "@event4u/create-agent-config"
+  package: "@event4u/agent-config"
   description: >-
-    Zero-config installer for event4u/agent-config — picks tools,
-    runs the install, works in any directory.
+    Shared agent configuration — skills, rules, slash commands, and
+    one-shot installer (`npx @event4u/agent-config init`) for every
+    major AI coding tool.
   keywords:
     - agent
     - claude
