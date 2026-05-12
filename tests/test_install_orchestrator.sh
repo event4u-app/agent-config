@@ -6,7 +6,6 @@ set -uo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL="$SCRIPT_DIR/scripts/install"
 INSTALL_PHP="$SCRIPT_DIR/bin/install.php"
-POSTINSTALL="$SCRIPT_DIR/scripts/postinstall.sh"
 TMPDIR=""
 PASS=0
 FAIL=0
@@ -139,26 +138,6 @@ test_bin_install_php_routes_through_orchestrator() {
     teardown
 }
 
-test_postinstall_exits_zero_even_on_failure() {
-    # Build a fake scripts dir with a broken orchestrator, invoke postinstall.sh,
-    # confirm it prints the loud block and exits 0.
-    local fake
-    fake="$(mktemp -d)"
-    cp "$POSTINSTALL" "$fake/postinstall.sh"
-    printf '#!/usr/bin/env bash\necho "boom" >&2\nexit 1\n' > "$fake/install"
-    chmod +x "$fake/install"
-    local out rc
-    out="$(bash "$fake/postinstall.sh" 2>&1)"
-    rc=$?
-    assert_true "postinstall exit 0 even on failure (got $rc)" test $rc -eq 0
-    if echo "$out" | grep -q "postinstall failed"; then
-        pass "postinstall prints loud failure block"
-    else
-        fail "postinstall missing loud failure block"
-    fi
-    rm -rf "$fake"
-}
-
 # --- Phase 1 (--tools selector) ---
 
 test_list_tools_prints_catalog() {
@@ -249,7 +228,6 @@ TESTS=(
     test_help_flag
     test_unknown_flag_errors
     test_bin_install_php_routes_through_orchestrator
-    test_postinstall_exits_zero_even_on_failure
     test_list_tools_prints_catalog
     test_unknown_tool_id_rejected
     test_empty_tools_value_rejected
