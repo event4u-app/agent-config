@@ -30,6 +30,7 @@ import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -1556,6 +1557,16 @@ USER_SCOPE_PATHS = {
     "zed":            "~/.config/zed/",
     "jetbrains":      "~/.config/JetBrains/",
     "kiro":           "~/.kiro/",
+    # Phase 2.4 expansion — anchors lifted from
+    # nextlevelbuilder/ui-ux-pro-max-skill (cli/assets/templates/platforms/*.json)
+    # so `--global` covers every tool that ships a markdown-skills convention.
+    "qoder":          "~/.qoder/",
+    "opencode":       "~/.opencode/",
+    "trae":           "~/.trae/",
+    "antigravity":    "~/.agents/",
+    "codebuddy":      "~/.codebuddy/",
+    "droid":          "~/.factory/",
+    "warp":           "~/.warp/",
 }
 
 
@@ -1583,12 +1594,24 @@ SCOPE_SUPPORT = {
     "augment":        "both",
     "aider":          "both",
     "codex":          "both",
-    "roocode":        "project",
+    # Phase 2.4: roocode / kilocode lifted to "both" — global deploys
+    # write to `~/.roo/skills/` and `~/.kilocode/skills/` matching the
+    # nextlevelbuilder/ui-ux-pro-max-skill anchors.
+    "roocode":        "both",
     "continue":       "both",
-    "kilocode":       "project",
+    "kilocode":       "both",
     "zed":            "both",
     "jetbrains":      "global",
     "kiro":           "both",
+    # Phase 2.4 expansion — global-only for new anchors; project bridges
+    # are not yet implemented for these IDs.
+    "qoder":          "global",
+    "opencode":       "global",
+    "trae":           "global",
+    "antigravity":    "global",
+    "codebuddy":      "global",
+    "droid":          "global",
+    "warp":           "global",
 }
 
 
@@ -1616,6 +1639,103 @@ PROJECT_BRIDGE_MARKERS = {
     "jetbrains":      ".jetbrains/agent-config.md",
     "kiro":           ".kiro/steering/agent-config.md",
 }
+
+
+# Per-tool content deployment plan for `--global` installs. Each entry is a
+# list of ``(package_src_relative, dest_subpath)`` tuples. ``package_src_relative``
+# resolves against the agent-config package root; ``dest_subpath`` is appended
+# to ``USER_SCOPE_PATHS[tool_id]`` (expanded). Symlinks in the source are
+# dereferenced so the user-scope copy stays valid after npx cache eviction
+# (Council Round 3 Q1 rejected cross-scope symlinks).
+#
+# Tools absent from this map have no deployable content yet in global scope:
+# - ``copilot`` has no user-scope convention (rules live in
+#   ``.github/copilot-instructions.md`` per project); users export per-project
+#   via ``agent-config export --tool=copilot``.
+# - ``aider`` config is a single YAML file (``~/.aider.conf.yml``), not a
+#   directory; --global prints a hint rather than synthesizing a file.
+# - ``zed`` / ``jetbrains`` have no markdown-skills convention; --global
+#   prints a hint.
+# - ``claude-desktop`` is a marker-only deployment, handled in
+#   ``_write_claude_desktop_marker`` rather than via this map.
+#
+# Tools that follow the markdown-skills convention (anchors lifted from
+# nextlevelbuilder/ui-ux-pro-max-skill) deploy ``.claude/skills`` —
+# the universal Anthropic-shaped skill bundle — into ``<anchor>/skills/``
+# (or ``<anchor>/steering/`` for kiro). ``.claude/rules`` is also copied
+# where the destination is a true rules-aware tool root.
+_CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
+    (".claude/rules",    "rules"),
+    (".claude/skills",   "skills"),
+    (".claude/personas", "personas"),
+]
+GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
+    "claude-code": _CLAUDE_SKILL_BUNDLE,
+    "augment": [
+        (".augment/rules",     "rules"),
+        (".augment/skills",    "skills"),
+        (".augment/commands",  "commands"),
+        (".augment/contexts",  "contexts"),
+        (".augment/personas",  "personas"),
+        (".augment/templates", "templates"),
+    ],
+    "cursor": [
+        (".cursor/rules",    "rules"),
+        (".cursor/commands", "commands"),
+        (".cursor/personas", "personas"),
+    ],
+    "windsurf": [
+        (".windsurf/rules",     "rules"),
+        (".windsurf/workflows", "workflows"),
+    ],
+    "cline": [
+        (".clinerules", ""),
+    ],
+    # Markdown-skills tools — mirror the universal skill bundle into the
+    # tool-specific anchor. Subpath matches the reference repo's
+    # platform JSON `folderStructure.skillPath` (with the skill-name
+    # tail stripped — we deploy the entire bundle, not a single skill).
+    "gemini-cli":  _CLAUDE_SKILL_BUNDLE,
+    "codex":       _CLAUDE_SKILL_BUNDLE,
+    "continue":    _CLAUDE_SKILL_BUNDLE,
+    "roocode":     _CLAUDE_SKILL_BUNDLE,
+    "kilocode":    _CLAUDE_SKILL_BUNDLE,
+    "qoder":       _CLAUDE_SKILL_BUNDLE,
+    "opencode":    _CLAUDE_SKILL_BUNDLE,
+    "trae":        _CLAUDE_SKILL_BUNDLE,
+    "antigravity": _CLAUDE_SKILL_BUNDLE,
+    "codebuddy":   _CLAUDE_SKILL_BUNDLE,
+    "droid":       _CLAUDE_SKILL_BUNDLE,
+    "warp":        _CLAUDE_SKILL_BUNDLE,
+    # Kiro reads from `steering/` not `skills/` (per
+    # platforms/kiro.json#folderStructure.skillPath).
+    "kiro": [
+        (".claude/rules",    "rules"),
+        (".claude/skills",   "steering"),
+        (".claude/personas", "personas"),
+    ],
+}
+
+
+# Marker body written to the Claude Desktop user-scope directory. Claude
+# Desktop has no rules/skills filesystem convention; the marker advertises
+# the agent-config install for downstream tooling and gives users a stable
+# pointer to the lockfile.
+_CLAUDE_DESKTOP_MARKER_TEMPLATE = """\
+# agent-config — Claude Desktop marker
+
+Installed by `@event4u/agent-config` (user scope, ADR-007).
+
+- Lockfile: `{lockfile}`
+- Anchor:   `{anchor}`
+
+Claude Desktop has no native rules / skills filesystem convention; this
+file is informational. Rules and skills for AI coding tools are deployed
+to their respective user-scope directories (`~/.claude/`, `~/.augment/`,
+`~/.cursor/`, `~/.codeium/windsurf/`, `~/Documents/Cline/Rules/`).
+
+To remove this marker, delete this file.
+"""
 
 
 def _bridge_marker(tool_id: str, scope: str) -> str:
@@ -1975,6 +2095,142 @@ def _update_installed_tools_manifest(
     return 0
 
 
+# --- Global content deployment (ADR-007 user-scope file writes) ---
+
+
+def _resolve_package_root_for_global() -> Path:
+    """Locate the agent-config package root for global content deployment.
+
+    Resolves relative to ``scripts/install.py`` (one level up). Verified by
+    the presence of ``config/profiles/minimal.ini`` so a misplaced copy of
+    install.py outside the package fails loudly instead of writing nothing.
+    """
+    here = Path(__file__).resolve()
+    candidate = here.parent.parent
+    if not (candidate / "config" / "profiles" / "minimal.ini").exists():
+        fail(
+            f"Could not locate agent-config package root from {here}. "
+            "Expected config/profiles/minimal.ini at the parent directory."
+        )
+    return candidate
+
+
+def _copy_dir_dereferencing_symlinks(src: Path, dest: Path, force: bool) -> tuple[int, int]:
+    """Recursively copy ``src`` into ``dest``, dereferencing every symlink.
+
+    Returns ``(files_written, files_skipped)``. ``dest`` is created if
+    missing. Existing files at ``dest`` are overwritten only when
+    ``force=True``; otherwise skipped silently and counted as ``skipped``.
+    Symlinks in ``src`` are resolved so the user-scope copy survives npx
+    cache eviction (the source tree under ``~/.npm/_npx/<hash>/`` is
+    transient).
+    """
+    written = 0
+    skipped = 0
+    if not src.exists():
+        return (0, 0)
+    if not src.is_dir():
+        # Single-file source (e.g. .windsurfrules): copy as one file.
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if dest.exists() and not force:
+            return (0, 1)
+        shutil.copyfile(src, dest, follow_symlinks=True)
+        return (1, 0)
+    dest.mkdir(parents=True, exist_ok=True)
+    for entry in src.rglob("*"):
+        rel = entry.relative_to(src)
+        target = dest / rel
+        if entry.is_dir() and not entry.is_symlink():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+        # Resolve symlinks to their real targets. ``follow_symlinks=True``
+        # on copyfile produces a real file at the destination.
+        resolved = entry.resolve()
+        if resolved.is_dir():
+            # Symlinked subdir — recurse into the resolved path.
+            target.mkdir(parents=True, exist_ok=True)
+            sub_w, sub_s = _copy_dir_dereferencing_symlinks(resolved, target, force)
+            written += sub_w
+            skipped += sub_s
+            continue
+        if target.exists() and not force:
+            skipped += 1
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(resolved, target, follow_symlinks=True)
+        written += 1
+    return (written, skipped)
+
+
+def _write_claude_desktop_marker(force: bool, lockfile_path: Path) -> tuple[int, int]:
+    """Write the Claude Desktop user-scope marker file.
+
+    Returns ``(written, skipped)`` for symmetry with the tree copier. The
+    marker is a single Markdown file; existing files are preserved unless
+    ``force=True``.
+    """
+    anchor = Path(USER_SCOPE_PATHS["claude-desktop"]).expanduser()
+    target = anchor / "agent-config.md"
+    if target.exists() and not force:
+        return (0, 1)
+    anchor.mkdir(parents=True, exist_ok=True)
+    body = _CLAUDE_DESKTOP_MARKER_TEMPLATE.format(
+        lockfile=str(lockfile_path),
+        anchor=str(anchor),
+    )
+    target.write_text(body, encoding="utf-8")
+    return (1, 0)
+
+
+def _deploy_global_content(
+    tools: set[str],
+    force: bool,
+    package_root: Path,
+    lockfile_path: Path,
+) -> dict[str, tuple[int, int, str]]:
+    """Deploy per-tool content into user-scope anchors for ``tools``.
+
+    For each tool in ``tools`` that has a ``GLOBAL_DEPLOY_SOURCES`` entry,
+    copies the listed package subtrees into ``USER_SCOPE_PATHS[tool_id]``
+    (expanded). For ``claude-desktop`` writes the marker file. For tools
+    without a deployment plan (e.g. ``copilot``), records a ``hint`` status
+    so the caller can print an actionable next step.
+
+    Returns ``{tool_id: (written, skipped, status)}`` where ``status`` is
+    one of ``deployed``, ``marker``, ``hint``, ``unsupported``.
+    """
+    results: dict[str, tuple[int, int, str]] = {}
+    for tool_id in sorted(tools):
+        if tool_id == "claude-desktop":
+            w, s = _write_claude_desktop_marker(force, lockfile_path)
+            results[tool_id] = (w, s, "marker")
+            continue
+        plan = GLOBAL_DEPLOY_SOURCES.get(tool_id)
+        if plan is None:
+            # No deployable content yet for this tool in global scope.
+            # `copilot` has no user-scope convention. `aider` is a single
+            # YAML file (not a directory). `zed` / `jetbrains` have no
+            # markdown-skills convention. Each prints an actionable hint.
+            status = "hint" if tool_id in {"copilot", "aider", "zed", "jetbrains"} else "unsupported"
+            results[tool_id] = (0, 0, status)
+            continue
+        anchor_raw = USER_SCOPE_PATHS.get(tool_id)
+        if not anchor_raw:
+            results[tool_id] = (0, 0, "unsupported")
+            continue
+        anchor = Path(anchor_raw).expanduser()
+        written_total = 0
+        skipped_total = 0
+        for src_rel, dest_sub in plan:
+            src = package_root / src_rel
+            dest = anchor / dest_sub if dest_sub else anchor
+            w, s = _copy_dir_dereferencing_symlinks(src, dest, force)
+            written_total += w
+            skipped_total += s
+        results[tool_id] = (written_total, skipped_total, "deployed")
+    return results
+
+
 def install_global(
     tools: set[str],
     force: bool,
@@ -1987,8 +2243,11 @@ def install_global(
     install with a remediation hint unless ``--force`` is passed. On
     success the lockfile is rewritten atomically with the current
     package version + the union of previously-recorded and now-installed
-    tool IDs. Concrete per-tool file writes still belong to later tasks
-    (export remains the documented escape for project-local content).
+    tool IDs, then per-tool content (rules / skills / personas / etc.) is
+    copied from the agent-config package into each tool's user-scope
+    anchor (``GLOBAL_DEPLOY_SOURCES``). ``copilot`` is the lone headline
+    exception — it has no user-scope convention, so it is reported with a
+    hint pointing at ``agent-config export --tool=copilot``.
 
     When ``project_root`` points at a project tree (detected by the
     presence of ``.agent-settings.yml``), the project-scope manifest at
@@ -2015,7 +2274,7 @@ def install_global(
     if not QUIET:
         print()
         info("Agent Config — Global (user-scope) install [ADR-007]")
-        info("Planned per-tool anchor paths:")
+        info("Per-tool anchor paths:")
         for tool_id in sorted(tools):
             anchor = USER_SCOPE_PATHS.get(tool_id)
             if anchor is None:
@@ -2032,6 +2291,29 @@ def install_global(
         info(f"Lockfile written: {written}")
         info(f"  schema_version=1, agent_config_version={installed_version}")
         info(f"  tools={','.join(merged_tools)}")
+
+    # Deploy per-tool content into user-scope anchors. Sources resolve from
+    # the agent-config package root (located via `__file__`, not the
+    # caller's CWD); destinations are `USER_SCOPE_PATHS[tool_id]` (expanded).
+    package_root = _resolve_package_root_for_global()
+    deploy_results = _deploy_global_content(tools, force, package_root, written)
+
+    if not QUIET:
+        print()
+        info("Deployed per-tool content:")
+        for tool_id in sorted(deploy_results):
+            w, s, status = deploy_results[tool_id]
+            anchor = USER_SCOPE_PATHS.get(tool_id, "")
+            if status == "deployed":
+                print(f"      {tool_id:<15} → {anchor} ({w} files, {s} skipped)")
+            elif status == "marker":
+                print(f"      {tool_id:<15} → {anchor}agent-config.md ({'written' if w else 'skipped'})")
+            elif status == "hint":
+                print(f"      {tool_id:<15} → no user-scope convention; use `agent-config export --tool={tool_id}`")
+            else:
+                print(f"      {tool_id:<15} → no global-scope content yet (project-scope install supported)")
+        if not force and any(s > 0 for _, s, _ in deploy_results.values()):
+            info("  Re-run with --force to overwrite existing files.")
 
     # Refresh the project-scope manifest when running inside a project tree
     # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
@@ -2050,7 +2332,7 @@ def install_global(
 
     if not QUIET:
         print()
-        success("Global install recorded.")
+        success("Global install completed.")
         print()
     return 0
 
@@ -2184,7 +2466,10 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
 _VALID_TOOLS = {
     "claude-code", "claude-desktop", "cursor", "windsurf", "cline",
     "gemini-cli", "copilot", "augment", "aider", "codex", "roocode",
-    "continue", "kilocode", "zed", "jetbrains", "kiro", "all",
+    "continue", "kilocode", "zed", "jetbrains", "kiro",
+    # Phase 2.4 expansion (nextlevelbuilder/ui-ux-pro-max-skill anchors).
+    "qoder", "opencode", "trae", "antigravity", "codebuddy", "droid", "warp",
+    "all",
 }
 
 

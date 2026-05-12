@@ -178,10 +178,11 @@ class TestValidateScope(SilentTest):
         )
         self.assertEqual(result, {"claude-code", "cursor"})
 
-    def test_project_only_tool_rejects_global(self) -> None:
-        with redirect_stderr(io.StringIO()):
-            with self.assertRaises(SystemExit):
-                install._validate_scope({"roocode"}, "global", was_all=False)
+    def test_roocode_accepts_global(self) -> None:
+        # Phase 2.4: roocode lifted to scope="both" — global deploys
+        # the universal skill bundle to ~/.roo/skills/.
+        result = install._validate_scope({"roocode"}, "global", was_all=False)
+        self.assertIn("roocode", result)
 
     def test_global_only_tool_rejects_project(self) -> None:
         with redirect_stderr(io.StringIO()):
@@ -190,10 +191,11 @@ class TestValidateScope(SilentTest):
                     {"claude-desktop"}, "project", was_all=False,
                 )
 
-    def test_kilocode_rejects_global(self) -> None:
-        with redirect_stderr(io.StringIO()):
-            with self.assertRaises(SystemExit):
-                install._validate_scope({"kilocode"}, "global", was_all=False)
+    def test_kilocode_accepts_global(self) -> None:
+        # Phase 2.4: kilocode lifted to scope="both" — global deploys
+        # the universal skill bundle to ~/.kilocode/skills/.
+        result = install._validate_scope({"kilocode"}, "global", was_all=False)
+        self.assertIn("kilocode", result)
 
     def test_jetbrains_rejects_project(self) -> None:
         with redirect_stderr(io.StringIO()):
@@ -201,6 +203,12 @@ class TestValidateScope(SilentTest):
                 install._validate_scope(
                     {"jetbrains"}, "project", was_all=False,
                 )
+
+    def test_qoder_rejects_project(self) -> None:
+        # Phase 2.4 expansion tools are global-only until project bridges land.
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope({"qoder"}, "project", was_all=False)
 
     def test_all_silent_filters_global_only_under_project(self) -> None:
         result = install._validate_scope(
@@ -213,14 +221,17 @@ class TestValidateScope(SilentTest):
         self.assertIn("claude-code", result)
         self.assertIn("cursor", result)
 
-    def test_all_silent_filters_project_only_under_global(self) -> None:
+    def test_all_silent_filters_phase24_tools_under_project(self) -> None:
+        # Phase 2.4 expansion tools (qoder, opencode, ...) are global-only
+        # and must be filtered out of `--tools=all --project`.
         result = install._validate_scope(
-            {"roocode", "kilocode", "claude-code", "cursor"},
-            "global",
+            {"qoder", "opencode", "warp", "claude-code", "cursor"},
+            "project",
             was_all=True,
         )
-        self.assertNotIn("roocode", result)
-        self.assertNotIn("kilocode", result)
+        self.assertNotIn("qoder", result)
+        self.assertNotIn("opencode", result)
+        self.assertNotIn("warp", result)
         self.assertIn("claude-code", result)
         self.assertIn("cursor", result)
 
