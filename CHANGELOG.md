@@ -343,6 +343,14 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.2.2](https://github.com/event4u-app/agent-config/compare/2.2.1...2.2.2) (2026-05-12)
+
+### Bug Fixes
+
+* allow --global installs from agent-config source repo ([1be1b44](https://github.com/event4u-app/agent-config/commit/1be1b4429e8fa3ff3fb2981a1368138aa34186ac))
+
+Tests: 3350 (+0 since 2.2.1)
+
 ## [2.2.1](https://github.com/event4u-app/agent-config/compare/2.2.0...2.2.1) (2026-05-12)
 
 ### Documentation
