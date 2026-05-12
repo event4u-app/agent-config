@@ -81,6 +81,51 @@ class TestParseOptions(unittest.TestCase):
         opts = install.parse_options(["--tools=cursor,claude-code"])
         self.assertEqual(opts.tools, "cursor,claude-code")
 
+    def test_ai_alias_alone(self) -> None:
+        opts = install.parse_options(["--ai=cursor"])
+        self.assertEqual(opts.tools, "cursor")
+
+    def test_ai_alias_long_form(self) -> None:
+        opts = install.parse_options(["--ai", "cursor,augment"])
+        self.assertEqual(opts.tools, "cursor,augment")
+
+    def test_ai_and_tools_union(self) -> None:
+        opts = install.parse_options(["--ai=cursor", "--tools=claude-code"])
+        self.assertEqual(set(opts.tools.split(",")), {"cursor", "claude-code"})
+
+    def test_ai_and_tools_dedupe(self) -> None:
+        opts = install.parse_options(["--ai=cursor", "--tools=cursor"])
+        self.assertEqual(opts.tools, "cursor")
+
+
+# --- _merge_tools_aliases (Phase 2.4) ---
+
+class TestMergeToolsAliases(unittest.TestCase):
+    def test_both_none_returns_all(self) -> None:
+        self.assertEqual(install._merge_tools_aliases(None, None), "all")
+
+    def test_tools_only(self) -> None:
+        self.assertEqual(
+            install._merge_tools_aliases("cursor", None), "cursor",
+        )
+
+    def test_ai_only(self) -> None:
+        self.assertEqual(
+            install._merge_tools_aliases(None, "cursor"), "cursor",
+        )
+
+    def test_union_preserves_first_seen_order(self) -> None:
+        result = install._merge_tools_aliases("cursor,claude-code", "augment")
+        self.assertEqual(result, "cursor,claude-code,augment")
+
+    def test_dedupes_across_sources(self) -> None:
+        result = install._merge_tools_aliases("cursor,claude-code", "cursor")
+        self.assertEqual(result, "cursor,claude-code")
+
+    def test_strips_whitespace(self) -> None:
+        result = install._merge_tools_aliases(" cursor , claude-code ", None)
+        self.assertEqual(result, "cursor,claude-code")
+
 
 # --- _parse_tools / _is_tool_enabled ---
 
@@ -122,6 +167,302 @@ class TestParseTools(SilentTest):
         self.assertTrue(install._is_tool_enabled(tools, "cursor"))
         self.assertTrue(install._is_tool_enabled(tools, "claude-code"))
         self.assertFalse(install._is_tool_enabled(tools, "windsurf"))
+
+
+# --- _validate_scope / _tools_was_all (Phase 2.3) ---
+
+class TestValidateScope(SilentTest):
+    def test_compatible_tools_pass_through(self) -> None:
+        result = install._validate_scope(
+            {"claude-code", "cursor"}, "project", was_all=False,
+        )
+        self.assertEqual(result, {"claude-code", "cursor"})
+
+    def test_project_only_tool_rejects_global(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope({"roocode"}, "global", was_all=False)
+
+    def test_global_only_tool_rejects_project(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope(
+                    {"claude-desktop"}, "project", was_all=False,
+                )
+
+    def test_kilocode_rejects_global(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope({"kilocode"}, "global", was_all=False)
+
+    def test_jetbrains_rejects_project(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope(
+                    {"jetbrains"}, "project", was_all=False,
+                )
+
+    def test_all_silent_filters_global_only_under_project(self) -> None:
+        result = install._validate_scope(
+            {"claude-desktop", "jetbrains", "claude-code", "cursor"},
+            "project",
+            was_all=True,
+        )
+        self.assertNotIn("claude-desktop", result)
+        self.assertNotIn("jetbrains", result)
+        self.assertIn("claude-code", result)
+        self.assertIn("cursor", result)
+
+    def test_all_silent_filters_project_only_under_global(self) -> None:
+        result = install._validate_scope(
+            {"roocode", "kilocode", "claude-code", "cursor"},
+            "global",
+            was_all=True,
+        )
+        self.assertNotIn("roocode", result)
+        self.assertNotIn("kilocode", result)
+        self.assertIn("claude-code", result)
+        self.assertIn("cursor", result)
+
+
+class TestToolsWasAll(unittest.TestCase):
+    def test_all_keyword(self) -> None:
+        self.assertTrue(install._tools_was_all("all"))
+
+    def test_mixed_with_all_treated_as_all(self) -> None:
+        self.assertTrue(install._tools_was_all("cursor,all"))
+
+    def test_explicit_list(self) -> None:
+        self.assertFalse(install._tools_was_all("cursor,claude-code"))
+
+    def test_empty_value(self) -> None:
+        self.assertFalse(install._tools_was_all(""))
+
+
+class TestScopeSupportMatrix(unittest.TestCase):
+    """Every concrete _VALID_TOOLS ID must declare a SCOPE_SUPPORT entry."""
+
+    def test_every_valid_tool_has_scope_declared(self) -> None:
+        for tool in install._VALID_TOOLS:
+            if tool == "all":
+                continue
+            self.assertIn(
+                tool,
+                install.SCOPE_SUPPORT,
+                f"SCOPE_SUPPORT missing entry for tool '{tool}'",
+            )
+
+    def test_scope_values_in_allowed_set(self) -> None:
+        allowed = {"both", "project", "global"}
+        for tool, scope in install.SCOPE_SUPPORT.items():
+            self.assertIn(
+                scope,
+                allowed,
+                f"SCOPE_SUPPORT['{tool}'] has invalid value '{scope}'",
+            )
+
+
+# --- detect_scope (Phase 1.3) ---
+
+class TestDetectScope(unittest.TestCase):
+    """Multi-signal scope detection per ADR-007 D2 / Phase 1.3."""
+
+    def test_existing_settings_yml_returns_project(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / install.SETTINGS_FILE).write_text("cost_profile: minimal\n")
+            scope, reason = install.detect_scope(cwd)
+            self.assertEqual(scope, "project")
+            self.assertIn(install.SETTINGS_FILE, reason)
+
+    def test_empty_directory_returns_global(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            scope, reason = install.detect_scope(Path(tmp))
+            self.assertEqual(scope, "global")
+            self.assertIn("no project-scope signals", reason)
+
+    def test_manifest_alone_returns_global(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / "package.json").write_text("{}")
+            scope, _ = install.detect_scope(cwd)
+            self.assertEqual(scope, "global")
+
+    def test_ai_config_alone_returns_global(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / ".claude").mkdir()
+            scope, _ = install.detect_scope(cwd)
+            self.assertEqual(scope, "global")
+
+    def test_manifest_plus_ai_dir_returns_prompt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / "package.json").write_text("{}")
+            (cwd / ".cursor").mkdir()
+            scope, reason = install.detect_scope(cwd)
+            self.assertEqual(scope, "prompt")
+            self.assertIn("package.json", reason)
+            self.assertIn(".cursor", reason)
+
+    def test_manifest_plus_ai_file_returns_prompt(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / "composer.json").write_text("{}")
+            (cwd / "CLAUDE.md").write_text("# CLAUDE")
+            scope, reason = install.detect_scope(cwd)
+            self.assertEqual(scope, "prompt")
+            self.assertIn("composer.json", reason)
+            self.assertIn("CLAUDE.md", reason)
+
+    def test_settings_yml_wins_over_manifest_and_ai(self) -> None:
+        # `.agent-settings.yml` is the strongest signal — short-circuit
+        # before manifest+AI even gets evaluated.
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / install.SETTINGS_FILE).write_text("cost_profile: minimal\n")
+            (cwd / "package.json").write_text("{}")
+            (cwd / ".claude").mkdir()
+            scope, _ = install.detect_scope(cwd)
+            self.assertEqual(scope, "project")
+
+    def test_git_dir_is_not_a_signal(self) -> None:
+        # ADR-007 D2: `.git/` presence is explicitly NOT a signal.
+        with tempfile.TemporaryDirectory() as tmp:
+            cwd = Path(tmp)
+            (cwd / ".git").mkdir()
+            scope, _ = install.detect_scope(cwd)
+            self.assertEqual(scope, "global")
+
+
+# --- prompt_scope_choice / prompt_collision_choice (Phase 1.4) ---
+
+class TestPromptScopeChoice(SilentTest):
+    """Interactive 3-option chooser per ADR-007 D2 / Phase 1.4."""
+
+    def _patch_input(self, replies: list[str]) -> None:
+        it = iter(replies)
+        install._read_line = lambda _prompt: next(it)  # type: ignore[assignment]
+
+    def setUp(self) -> None:
+        super().setUp()
+        self._orig = install._read_line
+
+    def tearDown(self) -> None:
+        install._read_line = self._orig  # type: ignore[assignment]
+        super().tearDown()
+
+    def test_returns_project_on_choice_1(self) -> None:
+        self._patch_input(["1"])
+        self.assertEqual(install.prompt_scope_choice("test"), "project")
+
+    def test_returns_global_on_choice_2(self) -> None:
+        self._patch_input(["2"])
+        self.assertEqual(install.prompt_scope_choice("test"), "global")
+
+    def test_returns_custom_sentinel_on_choice_3(self) -> None:
+        self._patch_input(["3"])
+        self.assertEqual(install.prompt_scope_choice("test"), install.SCOPE_CUSTOM)
+
+    def test_accepts_word_aliases(self) -> None:
+        self._patch_input(["project"])
+        self.assertEqual(install.prompt_scope_choice("test"), "project")
+        self._patch_input(["user"])
+        self.assertEqual(install.prompt_scope_choice("test"), "global")
+        self._patch_input(["custom"])
+        self.assertEqual(install.prompt_scope_choice("test"), install.SCOPE_CUSTOM)
+
+    def test_retries_on_invalid_then_accepts(self) -> None:
+        self._patch_input(["?", "x", "1"])
+        self.assertEqual(install.prompt_scope_choice("test"), "project")
+
+    def test_aborts_after_three_invalid(self) -> None:
+        self._patch_input(["?", "x", "z"])
+        with self.assertRaises(SystemExit):
+            install.prompt_scope_choice("test")
+
+    def test_aborts_on_eof(self) -> None:
+        def raise_eof(_prompt: str) -> str:
+            raise EOFError
+        install._read_line = raise_eof  # type: ignore[assignment]
+        with self.assertRaises(SystemExit):
+            install.prompt_scope_choice("test")
+
+
+class TestPromptCollisionChoice(SilentTest):
+    """Hard-Floor 3-option collision prompt per ADR-007 D2."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self._orig = install._read_line
+
+    def tearDown(self) -> None:
+        install._read_line = self._orig  # type: ignore[assignment]
+        super().tearDown()
+
+    def _patch(self, replies: list[str]) -> None:
+        it = iter(replies)
+        install._read_line = lambda _p: next(it)  # type: ignore[assignment]
+
+    def test_merge_backup_abort(self) -> None:
+        for reply, expected in (
+            ("1", "merge"), ("merge", "merge"),
+            ("2", "backup"), ("backup", "backup"),
+            ("3", "abort"), ("abort", "abort"),
+        ):
+            self._patch([reply])
+            self.assertEqual(
+                install.prompt_collision_choice(Path("/tmp/x")),
+                expected,
+            )
+
+    def test_aborts_after_three_invalid(self) -> None:
+        self._patch(["?", "x", "z"])
+        with self.assertRaises(SystemExit):
+            install.prompt_collision_choice(Path("/tmp/x"))
+
+
+# --- _resolve_scope (Phase 1.4) ---
+
+class TestResolveScope(SilentTest):
+    """Flag + detection → concrete scope, per ADR-007 D1/D2."""
+
+    def _opts(self, **overrides: object) -> "object":
+        # Minimal namespace with the fields _resolve_scope reads.
+        base = {
+            "scope": None,
+            "global_install": False,
+            "custom_path": None,
+            "quiet": True,
+        }
+        base.update(overrides)
+        return type("Opts", (), base)()
+
+    def test_explicit_project_wins(self) -> None:
+        scope = install._resolve_scope(self._opts(scope="project"), "global", "x", None)
+        self.assertEqual(scope, "project")
+
+    def test_explicit_global_wins(self) -> None:
+        scope = install._resolve_scope(self._opts(scope="global"), "project", "x", None)
+        self.assertEqual(scope, "global")
+
+    def test_global_flag_alias(self) -> None:
+        scope = install._resolve_scope(self._opts(global_install=True), "project", "x", None)
+        self.assertEqual(scope, "global")
+
+    def test_legacy_default_is_project_on_detected_global(self) -> None:
+        # Backward-compat: no flag + detection says "global" still installs project
+        # (until npx entry-point flips the default in a later phase).
+        scope = install._resolve_scope(self._opts(), "global", "no signals", None)
+        self.assertEqual(scope, "project")
+
+    def test_auto_honors_detection_global(self) -> None:
+        scope = install._resolve_scope(self._opts(scope="auto"), "global", "no signals", None)
+        self.assertEqual(scope, "global")
+
+    def test_auto_honors_detection_project(self) -> None:
+        scope = install._resolve_scope(self._opts(scope="auto"), "project", "settings", None)
+        self.assertEqual(scope, "project")
 
 
 # --- deep_merge ---
