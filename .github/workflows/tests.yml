@@ -89,6 +89,16 @@ jobs:
         # the tests invoke via subprocess.
         run: pip install pytest pytest-xdist pyyaml
 
+      - name: Bootstrap generated projection (.augment/, .cursor/, …)
+        # The Phase-2.4 install_global tests deploy content from
+        # `.augment/rules`, `.cursor/rules`, etc. into a fake user-scope
+        # home. Those dirs are git-ignored and rebuilt by `task sync`
+        # from `.agent-src/` on developer machines. CI checkouts skip
+        # that step, so without this bootstrap `_copy_dir_dereferencing
+        # _symlinks` returns 0 written files (src missing) and the
+        # tests fail with "rules dir does not exist".
+        run: python3 scripts/compress.py --sync
+
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
         # sub-second PR feedback. A failure here means the refactor
@@ -146,7 +156,13 @@ jobs:
           python-version: '3.12'
 
       - name: Install test deps
-        run: pip install pytest
+        run: pip install pytest pyyaml
+
+      - name: Bootstrap generated projection (.augment/, .cursor/, …)
+        # Same reason as the python-tests job: install_global content
+        # tests need the projected `.augment/` etc. trees, which are
+        # git-ignored and rebuilt from `.agent-src/` by sync.
+        run: python scripts/compress.py --sync
 
       - name: Run lockfile + export tests
         run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v
