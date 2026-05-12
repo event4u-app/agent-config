@@ -120,6 +120,11 @@ Commands:
                              --purge is passed (destructive).
                              Flags: --global | --tools=<list> | --dry-run
                                     | --purge | --force | --project=<path>
+  prune                      Remove project bridge markers not declared in
+                             agents/installed-tools.lock (npm-prune style).
+                             Hard-floors when lockfile is absent.
+                             Flags: --dry-run | --json | --project=<path>
+                                    | --all-missing-lock
   versions                   List available @event4u/agent-config versions
                              on npm. Marks the current pin and latest.
                              Flags: --offline | --limit=N | --json
@@ -162,6 +167,8 @@ Examples:
   ./agent-config validate
   ./agent-config uninstall --tools=cursor --dry-run
   ./agent-config uninstall --global --tools=windsurf --purge
+  ./agent-config prune --dry-run
+  ./agent-config prune --json
   ./agent-config versions
   ./agent-config versions --limit=10
   ./agent-config versions --json
@@ -621,6 +628,16 @@ cmd_uninstall() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_uninstall "$@"
 }
 
+# `agent-config prune` — remove orphaned project bridge markers.
+# Drift-cleanup sibling to `uninstall`: compares on-disk markers
+# against agents/installed-tools.lock and unlinks anything not
+# declared. Hard-floors when lockfile is absent. See
+# scripts/_cli/cmd_prune.py.
+cmd_prune() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_prune "$@"
+}
+
 # `agent-config versions` — list available @event4u/agent-config versions
 # on the npm registry. Marks the current pin (from .agent-settings.yml)
 # and the latest published version. Offline-tolerant. See
@@ -676,6 +693,7 @@ main() {
     sync)                    cmd_sync "$@" ;;
     validate)                cmd_validate "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
+    prune)                   cmd_prune "$@" ;;
     versions)                cmd_versions "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
