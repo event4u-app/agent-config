@@ -114,6 +114,15 @@ Commands:
   validate                   Read-only drift detection on the manifest
                              (marker missing, scope divergence, version drift).
                              Exits 1 on drift. Flags: --quiet | --skip-version-check
+  uninstall                  Remove bridge markers (project) or lockfile
+                             entries (global). Idempotent. User-deployed
+                             content under ~/.<tool>/ is preserved unless
+                             --purge is passed (destructive).
+                             Flags: --global | --tools=<list> | --dry-run
+                                    | --purge | --force | --project=<path>
+  versions                   List available @event4u/agent-config versions
+                             on npm. Marks the current pin and latest.
+                             Flags: --offline | --limit=N | --json
   help                       Show this help
   --version, -V              Print package version
 
@@ -151,6 +160,13 @@ Examples:
   ./agent-config sync --dry-run
   ./agent-config sync
   ./agent-config validate
+  ./agent-config uninstall --tools=cursor --dry-run
+  ./agent-config uninstall --global --tools=windsurf --purge
+  ./agent-config versions
+  ./agent-config versions --limit=10
+  ./agent-config versions --json
+  ./agent-config init --offline --tools=claude-code,cursor --yes
+  ./agent-config update --offline --to=2.2.0
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -596,6 +612,24 @@ cmd_validate() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_validate "$@"
 }
 
+# `agent-config uninstall` — remove bridge markers (project) or lockfile
+# entries (global). Idempotent. Pass `--purge` to also delete deployed
+# content directories under user-scope anchors (destructive). See
+# scripts/_cli/cmd_uninstall.py.
+cmd_uninstall() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_uninstall "$@"
+}
+
+# `agent-config versions` — list available @event4u/agent-config versions
+# on the npm registry. Marks the current pin (from .agent-settings.yml)
+# and the latest published version. Offline-tolerant. See
+# scripts/_cli/cmd_versions.py.
+cmd_versions() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_versions "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -641,6 +675,8 @@ main() {
     export)                  cmd_export "$@" ;;
     sync)                    cmd_sync "$@" ;;
     validate)                cmd_validate "$@" ;;
+    uninstall)               cmd_uninstall "$@" ;;
+    versions)                cmd_versions "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)

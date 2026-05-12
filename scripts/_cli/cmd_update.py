@@ -27,6 +27,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -158,21 +159,40 @@ def main(
                         help="Print the latest available version and exit. No file is written.")
     parser.add_argument("--to", metavar="VERSION",
                         help="Pin to an explicit version (registry-existence checked).")
+    parser.add_argument("--offline", action="store_true",
+                        help="Skip the npm registry check; requires --to <version> "
+                             "(without --to there is no source for 'latest').")
     args = parser.parse_args(argv)
 
     cwd = (cwd or Path.cwd()).resolve()
     installed_version = installed_version or _detect_installed_version()
     state_path = state_path or update_check.DEFAULT_STATE_PATH
 
+    # AGENT_CONFIG_OFFLINE=1 (set by `install.py --offline`) is honored
+    # as an env-level kill-switch. Mirrors cmd_versions.py.
+    offline = args.offline or os.environ.get("AGENT_CONFIG_OFFLINE") == "1"
+
+    if offline and not args.to:
+        print(
+            "❌  agent-config: --offline requires --to <version> "
+            "(no registry, no 'latest' to fetch).",
+            file=err,
+        )
+        return 1
+
     if args.to:
         target = _normalize(args.to)
-        if not version_checker(target):
+        if offline:
+            # Trust the caller; air-gapped env can't reach the registry.
+            latest = target
+        elif not version_checker(target):
             print(
                 f"❌  agent-config: version {target} not found on the npm registry.",
                 file=err,
             )
             return 1
-        latest = target
+        else:
+            latest = target
     else:
         latest = fetcher()
         if not latest:
@@ -203,7 +223,10 @@ def main(
     else:
         print(f"ℹ️  {rel} already pins to {latest}.", file=out)
 
-    cache_warmer(latest)
+    # `npx --yes <pkg>@<v> --version` would hit the registry; skip it
+    # offline so the air-gap guarantee holds end-to-end.
+    if not offline:
+        cache_warmer(latest)
     _refresh_state(latest, latest, state_path)
     _refresh_global_lockfile(latest, out=out)
     return 0

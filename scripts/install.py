@@ -2489,6 +2489,18 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "for --scope=global)."
         ),
     )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "skip every network call: suppress the post-install update "
+            "banner and set AGENT_CONFIG_OFFLINE=1 for downstream "
+            "subprocesses (versions / update / future fetchers). "
+            "All bridge content is bundled in the package, so install "
+            "itself never touches the network — this flag is the "
+            "explicit guarantee for air-gapped / CI runs."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -2555,6 +2567,15 @@ def main(argv: list[str]) -> int:
 
     opts = parse_options(argv)
     QUIET = opts.quiet
+
+    # --offline: propagate via env so child subprocesses (versions /
+    # update / check_update_banner) honor the air-gap guarantee
+    # without each one needing its own flag. AGENT_CONFIG_NO_UPDATE_CHECK
+    # is the canonical kill-switch for the post-install banner; the
+    # broader AGENT_CONFIG_OFFLINE signals intent to future fetchers.
+    if opts.offline:
+        os.environ["AGENT_CONFIG_OFFLINE"] = "1"
+        os.environ["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1"
 
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
