@@ -6,7 +6,7 @@
   },
   "metadata": {
     "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
   "plugins": [
     {
