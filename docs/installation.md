@@ -31,6 +31,41 @@ Combine surfaces by comma-separating: `--tools=claude-code,cursor,windsurf`.
 
 ---
 
+## Upgrading from v1
+
+v2 is a breaking change: the local-install scheme (Composer
+`require-dev`, npm `devDependency`, the `--global` symlink namespace
+under `~/.claude/`, `~/.cursor/`, `~/.codeium/windsurf/`,
+`~/.config/agent-config/`) is **retired**. v2 is npx-only — the
+runtime is resolved per invocation, pinned by
+`agent_config_version` in `.agent-settings.yml`.
+
+One command does the cutover, idempotently:
+
+```bash
+./agent-config migrate              # remove legacy install signals
+./agent-config migrate --dry-run    # detect only, no writes
+```
+
+What `migrate` cleans up:
+
+| What | Action |
+|---|---|
+| `package.json` → `devDependencies.@event4u/agent-config` | Removed (lockfile updated on next `npm install`). |
+| `composer.json` → `require*.event4u/agent-config` | Removed (lockfile updated on next `composer update`). |
+| Symlinks `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` pointing into `vendor/` or `node_modules/` | Deleted. User-owned links are preserved with a warning. |
+| `.agent-settings.yml` | Written fresh if missing, with `agent_config_version` pinned. |
+| `.gitignore` agent-config block | Refreshed. |
+
+After `migrate` runs, you can drop the now-unreferenced
+`node_modules/@event4u/agent-config/` and `vendor/event4u/agent-config/`
+directories with `npm prune` and `composer update` respectively.
+
+Full contract sketch + the retired `--global` namespace teardown:
+[`docs/migration/v1-to-v2.md`](migration/v1-to-v2.md).
+
+---
+
 ## Mechanisms reference
 
 The rest of this page documents the underlying install mechanisms
