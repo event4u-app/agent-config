@@ -117,11 +117,12 @@ def isolated_lock(tmp_path, monkeypatch):
     monkeypatch.setenv("AGENT_CONFIG_INSTALLED_LOCK", str(target))
     # Redirect HOME so content deployment in `install_global` writes into
     # `tmp_path` instead of the developer's real `~/.claude`, `~/.augment`,
-    # etc. `Path.home()` honours `$HOME` on POSIX; `~/Library/...` resolves
-    # below tmp_path via the same expansion.
+    # etc. `Path.home()` / `expanduser()` honour `$HOME` on POSIX and
+    # `%USERPROFILE%` on Windows — patch both so the fixture is portable.
     fake_home = tmp_path / "home"
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     install.QUIET = True
     yield target
     install.QUIET = False
