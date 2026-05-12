@@ -46,28 +46,31 @@ def _read_augment_rules_use_symlinks() -> bool:
     """Read augment.rules_use_symlinks from .agent-settings.yml.
 
     Returns True only when the setting is present under the top-level
-    ``augment:`` block and resolves to a truthy YAML scalar
-    (true/yes/on/1, case-insensitive). Missing file, missing block, or
-    any other value → False (preserve copy default).
+    ``augment:`` block and resolves to a truthy value. Missing file,
+    missing block, or any other value → False (preserve copy default).
+
+    Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    contract handles missing file / malformed YAML / no PyYAML uniformly.
     """
-    if not SETTINGS_FILE.exists():
-        return False
     try:
-        text = SETTINGS_FILE.read_text(encoding="utf-8")
-    except OSError:
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    data = load_agent_settings(project_path=SETTINGS_FILE)
+    augment = data.get("augment")
+    if not isinstance(augment, dict):
         return False
-    in_augment = False
-    for line in text.splitlines():
-        stripped = line.lstrip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if not line.startswith((" ", "\t")):
-            in_augment = stripped.startswith("augment:")
-            continue
-        if in_augment:
-            m = re.match(r"^\s+rules_use_symlinks\s*:\s*([^\s#]+)", line)
-            if m:
-                return m.group(1).strip().lower() in ("true", "yes", "on", "1")
+    value = augment.get("rules_use_symlinks")
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in ("true", "yes", "on", "1")
+    if isinstance(value, int):
+        return value == 1
     return False
 
 
