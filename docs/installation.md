@@ -1,7 +1,32 @@
 # Installation
 
-**Principle:** Project-installed by default, plugin-enhanced when available.
-No Task, no Make, no build tools required for installation.
+**Principle:** Global-first install (cross-project, in `~/.claude/`,
+`~/.cursor/`, …), opt-in project export when a team wants the config
+committed to a repo. No Task, no Make, no build tools required.
+
+> **v2.1+** — the installer detects intent. Running `npx
+> @event4u/create-agent-config init` in `~/` or any directory without a
+> project manifest defaults to **global**. Running it inside a project
+> (`package.json` / `composer.json` / `pyproject.toml` / etc.) defaults
+> to **project**. Pass `--scope=global` or `--scope=project` to override
+> detection. See `--scope` in the CLI help for the full matrix.
+
+A global install records itself in `~/.config/agent-config/installed.lock`
+(schema_version, agent_config_version, installed_at, tools[]). `npx
+@event4u/create-agent-config update` keeps that manifest in lockstep
+with the project pin in `.agent-settings.yml`. A version-mismatched
+re-run of `init --scope=global` is refused with exit code 1 until you
+`update` or pass `--force`.
+
+To commit a specific tool's config into a project repo, use:
+
+```bash
+agent-config export --tool=<id> --output=<path>
+```
+
+(Idempotent; `--force` overrides drift. `--list` enumerates supported
+tool ids. See [`docs/contracts/command-clusters.md`](contracts/command-clusters.md)
+for the export contract.)
 
 ## Per-IDE setup — quick index
 
@@ -248,6 +273,7 @@ After initial setup, commit these files:
 
 ```
 .agent-settings.yml                ← shared profile (e.g., cost_profile: minimal)
+agents/installed-tools.lock        ← AI bill of materials (ADR-008, Phase 3)
 .augment/                          ← rules, skills, commands (symlinks)
 .cursor/rules/                     ← Cursor rules (symlinks)
 .claude/                           ← Claude rules, skills (symlinks)
@@ -255,7 +281,37 @@ AGENTS.md                          ← Copilot/Gemini instructions
 .github/copilot-instructions.md   ← GitHub Copilot instructions
 ```
 
-New team members: run `composer install` (or `npm install`) → open editor → done.
+`agents/installed-tools.lock` lists every AI tool the project expects,
+its scope (`global` or `project`), and its bridge marker path. Written
+by `init`, replayed by `sync`, checked by `validate`. Schema and
+workflow: [`docs/guidelines/agent-infra/installed-tools-manifest.md`](guidelines/agent-infra/installed-tools-manifest.md).
+
+### Team onboarding — clone → sync → done
+
+New team members get every AI bridge online with a single command:
+
+```bash
+git clone <repo>
+cd <repo>
+npx @event4u/agent-config sync
+```
+
+`sync` reads `agents/installed-tools.lock` and re-runs the installer
+for every tool whose bridge marker is missing locally. Idempotent —
+re-running after every clone is safe. Tools with markers already in
+place are skipped.
+
+Pair it with a CI gate to catch drift in PRs:
+
+```bash
+npx @event4u/agent-config validate
+```
+
+`validate` is read-only. Exit 1 on any of: marker missing, scope
+divergence (manifest says `project` but marker only exists at the
+global anchor, or vice versa), version drift (manifest's
+`agent_config_version` ≠ installed package). Full drift catalog and
+fix table: [`installed-tools-manifest.md § Drift detection`](guidelines/agent-infra/installed-tools-manifest.md#drift-detection-ci-gate).
 
 ---
 

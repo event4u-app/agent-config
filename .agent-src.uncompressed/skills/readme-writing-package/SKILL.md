@@ -146,6 +146,30 @@ install, first example, or requirements.
 deep-link-table pattern, collapsibles, and anti-patterns (premature
 splitting, duplication between README and `/docs/`).
 
+#### Per-AI catalog pattern (multi-platform AI / CLI packages)
+
+For packages that target many AI assistants or platforms (CLI installers,
+agent-config tools, language SDKs with 10+ targets), prefer a flat per-AI
+catalog over a giant matrix. One line per target, install command on the
+left, aligned trailing comment naming the platform:
+
+```bash
+npx <package> init --tools=claude-code      # Claude Code
+npx <package> init --tools=cursor           # Cursor
+npx <package> init --tools=windsurf         # Windsurf
+# ... one line per supported target
+```
+
+Pair the catalog with a separate "Global install" subsection (same flags
+plus `--global`) and an "Other commands" subsection. Reference example:
+[`README.md § Pick specific AIs`](../../../README.md#pick-specific-ais) in
+this repository. Inspiration:
+[`ui-ux-pro-max-skill § Installation`](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill#installation).
+
+Use the catalog when the package's primary install action varies by
+platform; use a matrix table (Tool / Rules / Skills / Commands) for
+capability comparison. They serve different jobs — install vs. coverage.
+
 README = enough to adopt. Docs = enough to master.
 
 ### 8. Validate

@@ -3,10 +3,14 @@
 The fastest path to running our skills, rules, and (optionally) the MCP
 server inside Claude Desktop. macOS / Windows / Linux. ~5 minutes.
 
-> **TL;DR** — run `npx @event4u/agent-config init --tools=claude-code`
-> inside each project that should expose the skills/rules to Claude
-> Desktop. The package now ships as an npx-resolved runtime; the
-> retired `--global` symlink scheme has been removed.
+> **TL;DR** — Claude Desktop reads from `~/.claude/` (global only, no
+> project-local discovery on macOS). Run `npx @event4u/agent-config
+> global --tools=claude-desktop` once per user, or
+> `npx @event4u/agent-config init --tools=claude-code` per project
+> (Claude Code's project install also covers Desktop on macOS via the
+> shared `~/.claude/` location seeded during `init`). The v1 npm /
+> composer install scheme is retired; the new global-first scheme is
+> ADR-007 and writes through `~/.config/agent-config/installed.lock`.
 
 ## Prerequisites
 

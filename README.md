@@ -14,7 +14,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>174 Skills</strong> · <strong>60 Rules</strong> · <strong>106 Commands</strong> · <strong>69 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>174 Skills</strong> · <strong>60 Rules</strong> · <strong>106 Commands</strong> · <strong>70 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -35,6 +35,14 @@ If none of those apply yet — start with the [Quickstart](#quickstart) and pick
 
 Two minutes from `npx` to a better-behaved agent — no install, no
 vendored package, no postinstall hook.
+
+**v2.1+ — global-first by default.** Running `init` outside a project
+defaults to a user-scope install (`~/.claude/`, `~/.cursor/`, …) and
+records itself in `~/.config/agent-config/installed.lock`. Running it
+inside a project (a `package.json` / `composer.json` / `pyproject.toml`
+manifest is present) defaults to a project-scope install. Override with
+`--scope=global` or `--scope=project`. See
+[`docs/installation.md`](docs/installation.md) for the full matrix.
 
 ### For teams (recommended)
 
@@ -76,6 +84,48 @@ Copilot fallback) is wired through one universal dispatcher per
 `./agent-config hooks:status` for the matrix (`--strict` for CI,
 `--format json` for tooling). The installer also dry-fires the
 dispatcher per bridge as a post-install smoke test (skip: `--no-smoke`).
+
+### Pick specific AIs
+
+Default `init` wires every supported AI. To install just one, pass
+`--tools=<name>`:
+
+```bash
+npx @event4u/agent-config init --tools=claude-code      # Claude Code
+npx @event4u/agent-config init --tools=cursor           # Cursor
+npx @event4u/agent-config init --tools=windsurf         # Windsurf
+npx @event4u/agent-config init --tools=cline            # Cline
+npx @event4u/agent-config init --tools=gemini-cli       # Gemini CLI
+npx @event4u/agent-config init --tools=copilot          # GitHub Copilot
+npx @event4u/agent-config init --tools=augment          # Augment Code
+npx @event4u/agent-config init --tools=roocode          # Roo Code
+npx @event4u/agent-config init --tools=aider            # Aider
+npx @event4u/agent-config init --tools=codex            # Codex CLI
+npx @event4u/agent-config init --tools=claude-desktop   # Claude Desktop
+npx @event4u/agent-config init --tools=continue         # Continue
+```
+
+Multiple AIs in one shot: `--tools=claude-code,cursor,augment`.
+
+#### Global install (user-scope, available across projects)
+
+Add `--global` to write to the user-scope paths from
+[`ADR-007`](docs/decisions/ADR-007-agent-discovery-scopes.md) (`~/.claude/`,
+`~/.cursor/`, …) instead of the current project:
+
+```bash
+npx @event4u/agent-config init --global                       # all tools, user-scope
+npx @event4u/agent-config init --tools=claude-code --global   # → ~/.claude/
+npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
+```
+
+Per-AI scope support varies — Claude Desktop, for example, is
+global-only (no project-local discovery on macOS), while Roo Code and
+Continue.dev are project-local. The Supported Tools table below
+documents per-AI scope. Incompatible combinations (e.g.
+`--tools=roocode --global` or `--tools=claude-desktop` without
+`--global`) are rejected with a directive error; `--tools=all`
+silently filters to the scope's compatible subset.
 
 ### For individual use (optional)
 
@@ -431,16 +481,31 @@ Every developer gets the same behavior. No per-user setup needed —
 | **Windsurf** | ✅ | — | ☑️ | Reads `.windsurfrules` + commands via AGENTS.md |
 | **Gemini CLI** | ✅ | — | ☑️ | Reads `GEMINI.md` (includes commands reference) |
 | **GitHub Copilot** | ✅ | — | ☑️ | Reads `.github/copilot-instructions.md` (includes commands) |
+| **Roo Code** | ✅ | — | ☑️ | Auto-discovers `.roo/rules/*.md` + AGENTS.md |
+| **Codex CLI** | ✅ | — | ☑️ | Auto-discovers `AGENTS.md` at project root |
+| **Continue.dev** | ✅ | — | ☑️ | Auto-discovers `.continue/rules/*.md` + AGENTS.md |
+| **Aider** | 📌 | — | — | Marker + manual `read:` in `.aider.conf.yml` |
+| **Claude Desktop** | 📌 | — | — | Global-only — install with `--global` (see ADR-007) |
 
 ✅ = native support &nbsp; — = not available &nbsp; ☑️ = text reference only
-(commands are listed in `AGENTS.md`, but the tool cannot invoke them as
-native slash-commands)
+(commands listed in `AGENTS.md`, tool cannot invoke them as native
+slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
+or manual wiring required)
 
 > **What this means in practice:** Augment Code and Claude Code get the full
 > package (rules + 174 skills + 106 native commands). Cursor, Cline, Windsurf,
-> Gemini CLI, and GitHub Copilot only get the **rules** natively; skills and
-> commands are available to them as documentation the agent can read, not as
-> first-class features.
+> Gemini CLI, GitHub Copilot, Roo Code, Codex CLI, and Continue.dev only get
+> the **rules** natively; skills and commands are available as documentation
+> the agent can read, not as first-class features. Aider and Claude Desktop
+> ship marker-only bridges — Aider needs a one-line `read:` entry in
+> `.aider.conf.yml`; Claude Desktop is global-scope and pairs with `--global`.
+
+> **Team reproducibility (ADR-008):** every tool you `init` is also recorded in
+> `agents/installed-tools.lock` — committed, machine-managed. New team members
+> run `npx @event4u/agent-config sync` after cloning and every bridge in the
+> table above is replayed locally. CI can gate drift with `agent-config validate`.
+> Schema, workflow, and drift catalog:
+> [`docs/guidelines/agent-infra/installed-tools-manifest.md`](docs/guidelines/agent-infra/installed-tools-manifest.md).
 
 ### Plugin-installed (optional, for global use)
 
