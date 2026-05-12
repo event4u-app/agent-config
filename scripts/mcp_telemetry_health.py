@@ -6,7 +6,7 @@ one record inside a configurable window (default 24 h). Exits non-zero
 on silence so the caller's alert sink — Sentry, email, GitHub Actions
 failure, cron mailer — fires.
 
-Per ``agents/roadmaps/road-to-mcp-full-coverage.md`` §Phase 1 J6, the
+Per ``agents/roadmaps/archive/road-to-mcp-full-coverage.md`` §Phase 1 J6, the
 healthcheck protects Phase 2 K1 against waking to an empty dataset: a
 silent telemetry pipeline must be visible *during* Phase 1, not after
 the observation window closes.
