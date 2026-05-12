@@ -67,30 +67,76 @@ personal.autonomy
 caveman.speak_scope
 ```
 
-**Merge order** (lowest → highest precedence):
+**Merge order** (lowest → highest precedence; every layer optional):
 
 ```
 1. Package defaults                                   (shipped by event4u/agent-config)
 2. ~/.config/agent-config/agent-settings.yml          (user-global · whitelist-filtered)
-3. <project>/.agent-settings.yml                      (project-local · always wins)
+3. <repo-root>/.agent-settings.yml                    (project-wide · all keys)
+4. <intermediate-dir>/.agent-settings.yml             (subsystem-scoped · all keys · optional)
+5. <CWD>/.agent-settings.yml                          (deepest · all keys · wins)
 ```
 
-Project-local values **always win**. The user-global file is a
-fallback, never a lock. Non-whitelisted keys in the user-global file
-are dropped without error — adding `personal.theme` there has no
-effect.
+`<repo-root>` is the nearest ancestor of the CWD that contains a `.git`
+directory **or** file (submodule support). The walk stops there — it
+never drifts into a parent repo or `$HOME`. Callers that omit the
+``cwd`` argument get the legacy two-layer behaviour (user-global +
+single project file) — back-compat is hard.
 
-The file is created **only on explicit opt-in via `/onboard`**. The
-loader at [`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py)
+Project-local values **always win** over user-global. The user-global
+file is a fallback, never a lock. Non-whitelisted keys in the
+user-global file are dropped without error — adding `personal.theme`
+there has no effect.
+
+**Whitelist asymmetry.** The six-key whitelist applies **only** to the
+user-global layer. Non-root in-project layers (intermediate +
+``<CWD>``) carry arbitrary keys — they live inside the project
+boundary, are tracked in git, and reviewed in PRs like any other
+config. Use a subdirectory `.agent-settings.yml` to scope a single
+field (e.g. a `cost_profile` override for `services/heavy-ml/`) without
+duplicating the root file.
+
+The user-global file is created **only on explicit opt-in via
+`/onboard`**. The loader at
+[`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py)
 is **read-only** — no script can create or mutate it without an
 explicit `/onboard` confirmation. Edit the file by hand for mid-life
 changes; `/sync-agent-settings` stays project-scoped and never touches
 user-global state.
 
+### Agent config version pin
+
+The top-level `agent_config_version` key pins the project to an exact
+release of `@event4u/agent-config`. Under the npx-only distribution
+model (see [`docs/architecture.md`](architecture.md) §
+*"npx-only distribution + version-pin governance"*), there is no
+local `node_modules/` or `vendor/` lockfile to anchor the runtime —
+the pin is the substitute mechanism.
+
+```yaml
+agent_config_version: "2.0.3"   # exact semver, no ranges
+```
+
+Rules:
+
+- **Exact semver only.** Ranges (`^2.0`, `~2.0.3`, `>=2.0`) are
+  rejected — the pin must be reproducible across the team.
+- **Empty string = unpinned.** The resolver picks the latest release
+  on every invocation. Only safe for greenfield projects; production
+  consumers should pin.
+- **Owned by the project, not the developer.** Lives in
+  `.agent-settings.yml` (committed), reviewed in PRs like any other
+  config change. Never merged from `~/.config/agent-config/agent-settings.yml`.
+- **Resolver enforcement.** `npx @event4u/agent-config <cmd>`
+  compares the resolved CLI version against the pin; mismatch
+  triggers a re-exec at the pinned version
+  (`npx @event4u/agent-config@<pin> <cmd>`).
+
 ### Available settings
 
 | Setting | Default | Description |
 |---|---|---|
+| `agent_config_version` | *(empty)* | Exact semver pin of the agent-config release (see above). Empty = unpinned. |
 | `cost_profile` | `minimal` | Token budget (`minimal`, `balanced`, `full`, `custom`) |
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
 | `personal.minimal_output` | `true` | Suppress intermediate output |
@@ -253,6 +299,76 @@ agents/
 ```
 
 Module-level documentation goes into `app/Modules/*/agents/`.
+
+### `agents/` overlay cascade
+
+A subset of `agents/` subdirs participates in the same deepest-wins
+cascade as `.agent-settings.yml` (see *"User-global DX-comfort
+defaults"* above). The cascade is **per-file** by basename — the
+deepest existing `agents/<kind>/<name>.md` wins; the rest are silently
+shadowed.
+
+| Subdir | Cascade? | User-global allowed? | Why |
+|---|---|---|---|
+| `agents/overrides/` | ✅ Yes — deepest wins by basename. | ✅ Yes — weakest layer. | Personal developer overrides. |
+| `agents/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
+| `agents/decisions/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped ADRs. | Decisions are repo-bound. |
+| `agents/roadmaps/` | ❌ No — project-rooted only. | ❌ No. | Active delivery plans. |
+| `agents/state/`, `agents/memory/`, `agents/work_engine/`, `agents/.agent-prices.md`, `agents/council-*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
+
+**User-global asymmetry.** `~/.config/agent-config/agents/overrides/`
+is the only user-global overlay path consulted by the loader. Files
+under `~/.config/agent-config/agents/contexts/` or
+`.../agents/decisions/` are silently skipped — these kinds are
+project-shaped and must not leak across projects.
+
+The resolver lives at
+[`scripts/_lib/agents_overlay.py`](../scripts/_lib/agents_overlay.py)
+and is enforced by `scripts/check_overlay_cascade_subdirs.py` — drift
+between the code constants (`CASCADE_ELIGIBLE_KINDS`,
+`USER_GLOBAL_OVERLAY_KINDS`) and the table above breaks the build.
+
+---
+
+## Update check
+
+`npx @event4u/agent-config <cmd>` checks the npm registry once per
+24 h for a newer release of the package and, when one is available,
+writes a two-line banner to **stderr** *after* the subcommand has
+finished. There is no prompt — the user updates when they want with
+`npx @event4u/agent-config update` (Phase 3).
+
+```
+ℹ️  agent-config 1.42.0 available (you have 1.38.0).
+    Update: npx @event4u/agent-config update
+```
+
+State is persisted at `~/.config/agent-config/update-check.json`
+(mode `0600`) — sibling of `anthropic.key`, `council-spend.jsonl`.
+The fetch is hard-capped at 1 s and silent on any error.
+
+### Suppression matrix
+
+The banner is silently skipped when **any** of the following match:
+
+| Condition | Reason |
+|---|---|
+| `CI=1` / `CI=true` / `GITHUB_ACTIONS=true` | CI noise, breaks log scrapers. |
+| `stdout` is not a TTY | Piped / redirected output must stay clean. |
+| `AGENT_CONFIG_NO_UPDATE_CHECK=1` | Per-invocation escape hatch. |
+| `update_check.enabled: false` in `.agent-settings.yml` | Project / user opt-out. |
+| Registry call exceeds 1 s | Network must never delay `npx`. |
+| Registry call raises any exception | Best-effort — failure is silent. |
+
+`update_check.enabled` is a **project-scoped** key — it is *not* on
+the user-global whitelist (see [§ Agent Settings](#agent-settings)).
+Each project decides; the user-global file cannot flip it on or off
+for unrelated projects.
+
+The decision logic lives at
+[`scripts/_lib/update_check.py`](../scripts/_lib/update_check.py); the
+dispatcher integration lives in [`scripts/agent-config`](../scripts/agent-config)
+(`run_update_check_banner`).
 
 ---
 
