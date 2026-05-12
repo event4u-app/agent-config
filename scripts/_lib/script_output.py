@@ -43,20 +43,24 @@ def _read_settings_level(settings_path: Path) -> str | None:
     """Read verbosity.script_output from .agent-settings.yml.
 
     Returns None when the file is missing, PyYAML is unavailable, or
-    the key is absent. Errors fall through to the default level.
+    the key is absent. Errors fall through to the default level. Goes
+    through the centralized loader (road-to-portable-dev-preferences P3)
+    so the tolerance contract — missing file, malformed YAML, no PyYAML
+    — degrades uniformly across scripts. ``verbosity.script_output`` is
+    not on the user-global whitelist, so a value there is silently
+    ignored; the project file is the only source for this knob.
     """
-    if not settings_path.is_file():
-        return None
+    # Lazy import — supports both `python3 scripts/foo.py` (sys.path
+    # contains scripts/) and `pytest` (scripts._lib is a proper package).
     try:
-        import yaml  # type: ignore[import-untyped]
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]  # noqa: PLC0415
     except ImportError:
-        return None
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return None
-    section = data.get("verbosity") if isinstance(data, dict) else None
+        from scripts._lib.agent_settings import (  # noqa: PLC0415
+            load_agent_settings,
+        )
+
+    data = load_agent_settings(project_path=settings_path)
+    section = data.get("verbosity")
     if not isinstance(section, dict):
         return None
     value = section.get("script_output")

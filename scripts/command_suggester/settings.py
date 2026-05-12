@@ -42,20 +42,22 @@ def load_settings(settings_path: Path | str | None = None) -> Settings:
 
 
 def _read_section(path: Path) -> dict[str, Any] | None:
-    """Return the ``commands.suggestion`` mapping or ``None`` on any miss."""
-    if not path.is_file():
-        return None
+    """Return the ``commands.suggestion`` mapping or ``None`` on any miss.
+
+    Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    contract handles missing file / malformed YAML / no PyYAML uniformly.
+    No ``commands.*`` keys are whitelisted, so user-global cannot cascade
+    into this section.
+    """
     try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return None
-    try:
-        with path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return None
-    if not isinstance(data, dict):
-        return None
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    data = load_agent_settings(project_path=path)
     commands = data.get("commands")
     if not isinstance(commands, dict):
         return None

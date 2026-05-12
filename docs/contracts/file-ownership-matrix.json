@@ -591,6 +591,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/sync-gitignore/fix.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/tests.md": {
       "kind": "command",
       "rule_type": null,
@@ -4071,6 +4077,27 @@
     {
       "source": ".agent-src.uncompressed/commands/sync-gitignore.md",
       "target": ".agent-src.uncompressed/commands/sync-gitignore.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/sync-gitignore.md",
+      "target": ".agent-src.uncompressed/commands/sync-gitignore/fix.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/sync-gitignore/fix.md",
+      "target": ".agent-src.uncompressed/commands/sync-gitignore.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/sync-gitignore/fix.md",
+      "target": ".agent-src.uncompressed/commands/sync-gitignore/fix.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
