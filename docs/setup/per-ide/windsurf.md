@@ -35,17 +35,6 @@ Combine with other surfaces:
 npx @event4u/create-agent-config init --tools=windsurf,claude-code,cursor
 ```
 
-## Global install
-
-```bash
-npx @event4u/agent-config global --tools=windsurf
-```
-
-Seeds `~/.codeium/windsurf/global_workflows/` with the curated
-workflow set (see [`templates/global-install-manifest.yml`](../../../templates/global-install-manifest.yml)).
-Available across every project; per-workspace `.windsurf/workflows/`
-takes precedence on slug collisions.
-
 ## Wave-8 frontmatter
 
 Each rule under `.windsurf/rules/` has the Windsurf-shaped header:

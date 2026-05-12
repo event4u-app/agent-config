@@ -3,56 +3,46 @@
 The fastest path to running our skills, rules, and (optionally) the MCP
 server inside Claude Desktop. macOS / Windows / Linux. ~5 minutes.
 
-> **TL;DR** — install the package globally with `--global` so the
-> kernel rules and the curated top-N skills land in `~/.claude/`,
-> then restart Claude Desktop. The slash-command menu picks them up
-> automatically.
+> **TL;DR** — run `npx @event4u/agent-config init --tools=claude-code`
+> inside each project that should expose the skills/rules to Claude
+> Desktop. The package now ships as an npx-resolved runtime; the
+> retired `--global` symlink scheme has been removed.
 
 ## Prerequisites
 
 - Claude Desktop installed (free or paid plan — same install path).
-- Node ≥ 18 *or* a clone of the `event4u/agent-config` repo
-  (either route can run `--global`).
+- Node ≥ 18 (`npx` resolves the package per-project).
 - 5 minutes.
 
-## Step 1 — global install
+## Step 1 — project-local install
 
-Pick whichever entrypoint matches your environment. Both seed the same
-files under `~/.claude/`.
+Run inside each project that should be visible to Claude Desktop:
 
 ```bash
-# Node — no clone needed.
-npx @event4u/create-agent-config --global --tools=claude-code
-
-# Or via curl (no Node).
-curl -fsSL https://raw.githubusercontent.com/event4u/agent-config/main/setup.sh \
-  | bash -s -- --global --tools=claude-code
-
-# Or from a local clone.
-bash scripts/install --global --tools=claude-code
+npx @event4u/agent-config init --tools=claude-code
 ```
 
 > `--tools=claude-code` covers both Claude Code **and** Claude
-> Desktop — the two surfaces share `~/.claude/`. Pass
-> `--tools=claude-code,cursor,windsurf` if you want Cursor / Windsurf
-> globally seeded in the same run.
+> Desktop — the two surfaces share the project's `.claude/`
+> directory. Pass `--tools=claude-code,cursor,windsurf` to seed
+> additional surfaces in the same run.
 
-After the install you'll have:
+The init writes:
 
 ```
-~/.claude/
-├── rules/event4u/      # 9 kernel rules (Iron-Law set)
-└── skills/event4u/     # 15 curated top-N skills
+.claude/
+├── rules/      # active rules for the project
+├── skills/     # active skills for the project
+└── commands/   # slash commands
 ```
 
-Curation lives in
-[`templates/global-install-manifest.yml`](../../../templates/global-install-manifest.yml).
-Edit and re-run `--global` to grow or shrink the set.
+`.agent-settings.yml` carries the `agent_config_version` pin so every
+`npx` invocation resolves the same runtime.
 
 ## Step 2 — verify
 
 1. Restart Claude Desktop (full quit, not just window close).
-2. Open a new conversation.
+2. Open the project folder in a new conversation.
 3. Type `/` — the curated skills (`/work`, `/commit`, `/create-pr`,
    `/quality-fix`, `/review-changes`, `/agent-handoff`,
    `/project-analyze`, …) appear in the slash-command menu.
@@ -61,7 +51,8 @@ Edit and re-run `--global` to grow or shrink the set.
 
 If the menu is empty:
 
-- Check `ls ~/.claude/skills/event4u/` — should list 15 directories.
+- Check `ls .claude/skills/` inside the project — should list the
+  curated skills.
 - Quit Claude Desktop (`Cmd+Q` on macOS, **not** just close the
   window — the menubar process keeps the old skills cached).
 - Re-open and try `/` again.
@@ -123,22 +114,23 @@ native HTTP) and per-client Bearer-auth snippets live in
 
 ## Claude Desktop ↔ Claude Code config sharing
 
-Both surfaces read **the same `~/.claude/` directory**. Anything you
-install for one is automatically available in the other:
+Both surfaces read **the same project `.claude/` directory**. Anything
+the `npx … init` writes for one is automatically picked up by the
+other when the project folder is opened:
 
 | File / dir                       | Shared by Desktop & Code? |
 | -------------------------------- | ------------------------- |
-| `~/.claude/CLAUDE.md`            | yes — global system prompt |
-| `~/.claude/rules/event4u/`       | yes — installed by `--global` |
-| `~/.claude/skills/event4u/`      | yes — installed by `--global` |
-| `~/.claude/commands/`            | yes — slash commands      |
-| `~/.claude/hooks/`               | yes — lifecycle hooks     |
+| `<project>/.claude/CLAUDE.md`    | yes — project system prompt |
+| `<project>/.claude/rules/`       | yes — written by `npx … init` |
+| `<project>/.claude/skills/`      | yes — written by `npx … init` |
+| `<project>/.claude/commands/`    | yes — slash commands      |
+| `<project>/.claude/hooks/`       | yes — lifecycle hooks     |
 | `claude_desktop_config.json`     | Desktop only (MCP)        |
 | `~/.claude.json` (CLI config)    | Code only                 |
 
-Translation: run `--global` once, both clients pick the files up.
-Cross-link to [`claude-code.md`](claude-code.md) for the CLI-side
-view.
+Translation: run `npx @event4u/agent-config init` once per project,
+both clients pick the files up. Cross-link to
+[`claude-code.md`](claude-code.md) for the CLI-side view.
 
 ## Claude Cowork
 
@@ -158,16 +150,11 @@ client-side feature set.
 
 ## Uninstall
 
-```bash
-bash scripts/install --global --uninstall --tools=claude-code
-```
-
-Removes only `~/.claude/{rules,skills}/event4u/`. Anything you added
-under sibling paths (custom rules, your own slash commands) stays.
+Remove the project's `.claude/`, `.agent-settings.yml`, and any bridge
+files written by `npx … init`. Nothing lives under `~/.claude/` from
+this package any more.
 
 ## See also
 
 - Project-local install — [`../../installation.md`](../../installation.md)
-- Global install reference — [`../../installation.md#global-user-level-install---global`](../../installation.md#global-user-level-install---global)
 - MCP client transports — [`../mcp-client-config.md`](../mcp-client-config.md)
-- Curation manifest — [`../../../templates/global-install-manifest.yml`](../../../templates/global-install-manifest.yml)

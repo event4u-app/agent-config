@@ -29,23 +29,6 @@ Either form populates:
 - `CLAUDE.md`               — agent root pointer (auto-loaded by Claude Code)
 - `.agent-settings.yml`     — your per-project knobs (kept out of git)
 
-## Global install (cross-project skills)
-
-```bash
-npx @event4u/agent-config global --tools=claude-code
-```
-
-Seeds `~/.claude/skills/` with the curated top-N skills from
-[`templates/global-install-manifest.yml`](../../../templates/global-install-manifest.yml).
-Available across every project on the machine; project-level files
-always take precedence.
-
-Uninstall:
-
-```bash
-npx @event4u/agent-config global --uninstall
-```
-
 ## Plugin marketplace (Claude Code 2026+)
 
 Claude Code 2026 supports plugin marketplaces via

@@ -26,12 +26,6 @@
 #   --quiet           Suppress non-error output
 #   --skip-sync       Skip payload sync (install.sh)
 #   --skip-bridges    Skip bridge files (install.py)
-#   --global          Phase-3: ship kernel rules + curated skills to user-scope
-#                     dirs (~/.claude/, ~/.cursor/, ~/.codeium/windsurf/,
-#                     ~/.config/agent-config/) so the agent has them in every
-#                     project. Pair with --tools to scope surfaces; default = all.
-#   --uninstall       With --global: remove the event4u/ namespace dir from each
-#                     enabled surface (no effect on user-added files).
 #   --help, -h        Show this help
 #
 # Examples:
@@ -59,14 +53,12 @@ QUIET=false
 SKIP_SYNC=false
 SKIP_BRIDGES=false
 LIST_TOOLS=false
-GLOBAL_INSTALL=false
-UNINSTALL=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex all"
 
 show_help() {
-    sed -n '3,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,29p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -128,8 +120,6 @@ while [[ $# -gt 0 ]]; do
         --quiet)         QUIET=true; shift ;;
         --skip-sync)     SKIP_SYNC=true; shift ;;
         --skip-bridges)  SKIP_BRIDGES=true; shift ;;
-        --global)        GLOBAL_INSTALL=true; shift ;;
-        --uninstall)     UNINSTALL=true; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -175,14 +165,9 @@ prompt_tools() {
     echo "  ✅  Selected: $TOOLS"
 }
 
-if ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && ! $GLOBAL_INSTALL && [[ -t 0 && -t 1 ]]; then
+if ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && [[ -t 0 && -t 1 ]]; then
     prompt_tools
     TOOLS_EXPLICIT=true
-fi
-
-if $UNINSTALL && ! $GLOBAL_INSTALL; then
-    err "--uninstall is only valid combined with --global"
-    exit 1
 fi
 
 # Default = "all": backward compatible with pre-Phase-1 invocations. An
@@ -261,26 +246,6 @@ run_bridges() {
 }
 
 RC=0
-
-# --global: dedicated user-scope path. Skips the project-bridge sync entirely
-# and forwards to install.py --global (Phase 3 / S13). --uninstall pairs with
-# --global to wipe the event4u/ namespace dir under each surface.
-if $GLOBAL_INSTALL; then
-    if ! python_bin="$(find_python)"; then
-        err "Python 3 not found — required for --global install"
-        exit 1
-    fi
-    if [[ ! -f "$INSTALL_PY" ]]; then
-        err "Missing $INSTALL_PY"
-        exit 1
-    fi
-    args=(--package "$SOURCE_DIR" --global --tools="$TOOLS")
-    $FORCE     && args+=(--force)
-    $QUIET     && args+=(--quiet)
-    $UNINSTALL && args+=(--uninstall)
-    "$python_bin" "$INSTALL_PY" "${args[@]}"
-    exit $?
-fi
 
 if ! $SKIP_SYNC; then
     if [[ ! -f "$INSTALL_SH" ]]; then

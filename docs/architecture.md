@@ -70,6 +70,52 @@ them to the relative form when writing into `.agent-src/`. Hardcoding
 `.agent-src.uncompressed/` in source frontmatter or body links is
 forbidden and caught by `scripts/check_compressed_paths.py`.
 
+### Distribution model — npx-only + version-pin governance
+
+Starting with the road-to-portable-runtime cutover, the package ships
+exclusively as a **runtime resolved by `npx @event4u/agent-config`**.
+There is no Composer dependency, no `npm install` step, no `--global`
+symlink scheme. Consumers run:
+
+```bash
+npx @event4u/agent-config init      # bootstrap a project
+npx @event4u/agent-config <cmd>     # any subsequent command
+```
+
+**Why local installs are gone.** Vendoring the package into every
+consumer's `vendor/` or `node_modules/` created three problems: stale
+runtimes diverging from the published version, build-system coupling
+(Composer post-install hooks, npm postinstall scripts), and a parallel
+"global install" scheme that copied curated skills into `~/.claude/`,
+`~/.cursor/`, `~/.codeium/windsurf/` under an `event4u/` namespace.
+Maintenance cost was high, the abstractions leaked across surfaces, and
+debugging "which version is loaded" was non-trivial. `npx` resolves the
+runtime per invocation against a single npm registry source, which
+collapses all three failure modes.
+
+**How the pin replaces lockfile determinism.** A consumer-managed
+`composer.lock` / `package-lock.json` previously froze the runtime
+version per repo. Under npx-only, the equivalent role is played by the
+`agent_config_version` field in the consumer's `.agent-settings.yml`
+(see `config/agent-settings.template.yml`). The dispatcher reads the
+pin on every invocation and re-execs `npx @event4u/agent-config@<pin>`
+if the resolved version diverges (P3.2 pin-resolver). The pin lives in
+the consumer's repo, is reviewed in PRs, and survives `npx`'s own
+cache eviction.
+
+**Q1 council rejection + override + pin as substitute.** During Q1
+planning, the architecture council rejected the npx-only proposal on
+the grounds that `npx` resolution introduces a "09:00 vs 09:15
+release skew" window where two developers running the same command
+minutes apart could see different runtimes. The user overrode the
+rejection on the condition that an explicit version pin replaces
+lockfile determinism — the council's concern is real, but the pin
+collapses the skew window to whatever the project's PR cadence is.
+Pin drift across developers becomes a reviewable config change in
+`.agent-settings.yml` rather than an invisible registry-resolution
+race. ADR-pending entry will record the trade-off in full once P3 is
+green.
+
 ### Cloud-bundle pipeline
 
 `task build-cloud-bundles-all` produces one ZIP per skill at

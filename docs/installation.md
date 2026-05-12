@@ -518,8 +518,6 @@ Options:
   --quiet           Suppress non-error output
   --skip-sync       Skip payload sync (install.sh)
   --skip-bridges    Skip bridge files (install.py)
-  --global          Ship kernel rules + curated skills to user-scope dirs
-  --uninstall       With --global: remove the event4u/ namespace dir
   --help, -h        Show this help
 ```
 
@@ -528,41 +526,16 @@ The underlying stages keep their own CLI surfaces:
 
 ---
 
-## Global user-level install (`--global`)
+## Global user-level install — retired
 
-`--global` ships a curated subset of kernel rules + top-N skills into
-**per-tool user-scope directories**, so the agent has them in every
-project on the machine without a per-project install.
-
-```bash
-# Default: every supported surface, namespaced under event4u/.
-bash scripts/install --global
-
-# Scope to specific surfaces (mirrors the project install --tools flag).
-bash scripts/install --global --tools=claude-code,cursor
-
-# Remove only what we put there — never touches user files.
-bash scripts/install --global --uninstall
-```
-
-| Surface       | Target directory                                                |
-| ------------- | --------------------------------------------------------------- |
-| Claude Code   | `~/.claude/rules/event4u/`, `~/.claude/skills/event4u/`         |
-| Cursor        | `~/.cursor/rules/imported/event4u/{rules,skills}/`              |
-| Windsurf      | `~/.codeium/windsurf/global_workflows/event4u/{rules,skills}/`  |
-| Fallback      | `~/.config/agent-config/{rules,skills}/event4u/`                |
-
-The fallback path is always written so an editor we don't yet know
-about can still pick the files up.
-
-**Curation source:** `templates/global-install-manifest.yml`. Edit
-post-install to grow or shrink the global set; re-run `--global` to
-re-project. `--uninstall` only removes the `event4u/` namespace —
-user-added rules / skills under sibling paths stay untouched.
-
-**When to use:** running multiple unrelated projects where a per-project
-install is overkill, or wiring up a new editor (Claude Desktop, Cursor)
-that benefits from a baseline set of skills out of the box.
+The previous `--global` symlink scheme (kernel rules + curated skills
+copied into `~/.claude/`, `~/.cursor/`, `~/.codeium/windsurf/`, and
+`~/.config/agent-config/` under an `event4u/` namespace) has been
+**retired** under the npx-only distribution model. Run
+`npx @event4u/agent-config init` per project instead; the
+`agent_config_version` pin in `.agent-settings.yml` keeps every
+invocation reproducible. See [`migration/v1-to-v2.md`](migration/v1-to-v2.md)
+for the upgrade path.
 
 ---
 

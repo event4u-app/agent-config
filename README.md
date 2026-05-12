@@ -1,5 +1,12 @@
 # Agent Config — Governed Agent System
 
+> ⚠️ **Breaking change in vX.0** — `agent-config` now ships as an
+> **npx-only runtime**. `composer require` / `npm install --save-dev`
+> are gone, the `--global` symlink scheme is retired. Existing
+> consumers: run `npx @event4u/agent-config migrate`
+> ([guide](docs/migration/v1-to-v2.md)). New consumers: jump to
+> [Quickstart](#quickstart).
+
 > **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
 
 Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
@@ -26,39 +33,40 @@ If none of those apply yet — start with the [Quickstart](#quickstart) and pick
 
 ## Quickstart
 
-Two minutes from `composer require` to a better-behaved agent.
+Two minutes from `npx` to a better-behaved agent — no install, no
+vendored package, no postinstall hook.
 
 ### For teams (recommended)
 
-Install once in the project — available to everyone who works on it:
+Run once in the project root — `npx` resolves the runtime against the
+npm registry on every invocation, and the version pin in
+`.agent-settings.yml` keeps it reproducible:
 
 ```bash
-# PHP
-composer require --dev event4u/agent-config
+# Bootstrap (writes .agent-settings.yml, .augment/, .claude/, …):
+npx @event4u/agent-config init
 
-# JavaScript/TypeScript
-npm install --save-dev @event4u/agent-config
+# Any subsequent command:
+npx @event4u/agent-config <command>
 ```
 
-After installing the package, run the installer to sync the payload and
-create `.agent-settings.yml`, `.vscode/settings.json`, `.augment/settings.json`,
-and the tool-specific glue:
+The init writes:
 
-```bash
-# PHP / Composer projects — explicit step (Composer does not auto-run it):
-php vendor/bin/install.php
-# or directly (any environment):
-bash vendor/event4u/agent-config/scripts/install
+- `.agent-settings.yml` (including the `agent_config_version` pin)
+- `.vscode/settings.json`, `.augment/settings.json`
+- per-tool glue: `.claude/`, `.cursor/`, `.clinerules/`,
+  `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`
 
-# npm projects run the installer automatically via postinstall.
-# To re-run or override the default profile:
-bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
-```
+→ Migrating from a pre-vX.0 install? See
+[`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md). The one-shot
+`npx @event4u/agent-config migrate` removes the legacy
+`composer.json` entry / `node_modules/@event4u/agent-config`,
+deletes the retired `~/.claude/{rules,skills}/event4u/` namespace if
+present, and writes the new `.agent-settings.yml` shape.
 
-**To install:** no Task / Make / build tools — `scripts/install` runs a
-bash payload sync plus a Python 3 bridge generator (stdlib only, default
-on macOS 12.3+ / major Linux distros). Python missing → orchestrator
-warns and continues payload-only. Task is needed only for *contributors*
+**To run:** Node ≥ 18 and Python 3 (stdlib only — default on macOS
+12.3+ / major Linux distros). Python missing → orchestrator warns and
+continues payload-only. Task is needed only for *contributors*
 rebuilding compressed content — see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 **Verify hook coverage** after installing — every supported platform
@@ -410,9 +418,10 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ## Supported Tools
 
-### Project-installed (Composer / npm)
+### Project-installed (`npx`)
 
-Every developer gets the same behavior. No per-user setup needed.
+Every developer gets the same behavior. No per-user setup needed —
+`npx @event4u/agent-config init` writes the per-tool glue listed below.
 
 | Tool | Rules | Skills | Commands | How it works |
 |---|---|---|---|---|

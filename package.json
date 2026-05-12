@@ -16,7 +16,6 @@
         ".agent-src/",
         ".augment-plugin/",
         ".claude-plugin/",
-        "bin/",
         "config/",
         "docs/",
         "scripts/",
@@ -26,14 +25,10 @@
         "CONTRIBUTING.md",
         "LICENSE",
         "README.md",
-        "composer.json",
         "llms.txt"
     ],
     "bin": {
         "agent-config": "scripts/agent-config"
-    },
-    "scripts": {
-        "postinstall": "bash scripts/postinstall.sh"
     },
     "publishConfig": {
         "access": "public",

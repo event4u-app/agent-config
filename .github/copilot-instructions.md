@@ -12,8 +12,7 @@ Next.js, etc.).
 
 ## ✅ What this repo contains
 
-- **Bash** scripts under `scripts/install.sh`, `scripts/compress.sh`, and the
-  `postinstall.sh` wrapper.
+- **Bash** scripts under `scripts/install.sh` and `scripts/compress.sh`.
 - **Python 3.10+** tooling under `scripts/` — compression driver, linters
   (skills, references, portability, readme), installer bridge.
 - **Markdown** content under `.agent-src.uncompressed/` (authoring layer) and

@@ -139,6 +139,16 @@ tasks:
     desc: "Validate compressed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
     cmd: python3 scripts/check_compressed_paths.py {{.QUIET_FLAG}}
 
+  check-overlay-cascade-subdirs:
+    silent: true
+    desc: "Verify agents_overlay constants ↔ docs/customization.md table (road-to-portable-runtime P1.6)"
+    cmd: python3 scripts/check_overlay_cascade_subdirs.py
+
+  check-template-pin-drift:
+    silent: true
+    desc: "Verify package.json version ↔ agent_config_version in project-settings template (road-to-portable-runtime P3.3)"
+    cmd: python3 scripts/check_template_pin_drift.py
+
   generate-ownership-matrix:
     silent: true
     desc: Regenerate the file-ownership matrix JSON + MD (docs/contracts/file-ownership-matrix.md)
