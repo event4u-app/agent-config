@@ -1121,6 +1121,19 @@ Roo Code reads `.roo/rules/*.md` as system-level instructions. The
 canonical rule and skill source lives under `.augment/` (Augment
 portability mirror — see `AGENTS.md` for orientation).
 
+## How to use
+
+- These rules load automatically on every Roo Code session — no
+  manual action required.
+- Switch Roo Code modes (Architect / Code / Ask / Debug / Custom)
+  via the mode switcher to invoke different cognition profiles;
+  every mode still sees these rules.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Roo Code does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/roocode.md` for the full activation guide.
+
 Run `./agent-config --help` for available commands.
 """
 
@@ -1297,6 +1310,19 @@ Kilo Code auto-discovers `.kilocode/rules/*.md` as system-level rules
 per session. The canonical rule and skill source lives under
 `.augment/` (Augment portability mirror — see `AGENTS.md` for
 orientation).
+
+## How to use
+
+- These rules load automatically on every Kilo Code session — no
+  manual action required.
+- Switch Kilo Code modes (Architect / Code / Ask / Debug /
+  Orchestrator) via the mode switcher to invoke different
+  cognition profiles; every mode still sees these rules.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Kilo Code does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/kilocode.md` for the full activation guide.
 """
 
 
@@ -1407,6 +1433,20 @@ This file marks the project as an `event4u/agent-config` consumer.
 Kiro auto-discovers `.kiro/steering/*.md` as steering documents per
 session. The canonical rule and skill source lives under `.augment/`
 (Augment portability mirror — see `AGENTS.md` for orientation).
+
+## How to use
+
+- Steering documents load automatically on every Kiro session — no
+  manual action required.
+- For structured, plan-first work, use Kiro's **Spec** workflow
+  (the agent produces a spec → tasks → implementation under your
+  review). For free-form work, use **Vibe**. Both honor these
+  steering documents.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Kiro does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/kiro.md` for the full activation guide.
 """
 
 

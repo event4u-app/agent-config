@@ -25,11 +25,18 @@ This repository contains {{project_description_oneline}}.
 > rules, guidelines) and `AGENTS.md`. The instructions below are
 > self-contained for Copilot Code Review.
 >
+> For multi-step workflows (refactors, new features, bug investigations),
+> switch Copilot Chat to **Agent mode** — it can read this file plus
+> `.augment/` and orchestrate tools. **Ask mode** and inline **Edit mode**
+> stay local to the current selection.
+>
 > For most tickets — feature, bug fix, or refactor — start with
 > `/implement-ticket` (see `.augment/commands/implement-ticket.md`). It drives
 > the linear flow `refine → memory → analyze → plan → implement → test →
 > verify → report`, blocks on ambiguity instead of guessing, and never
 > commits, pushes, or opens PRs on its own.
+>
+> See `docs/setup/per-ide/copilot.md` for the full activation guide.
 
 ## ✅ Scope Control
 
