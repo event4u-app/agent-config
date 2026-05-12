@@ -473,6 +473,42 @@
       "routes_to": []
     },
     {
+      "id": "external-reference-deep-dive",
+      "triggers": [
+        {
+          "intent": "look at how X does it"
+        },
+        {
+          "intent": "compare with reference repo"
+        },
+        {
+          "intent": "use as template / vorlage"
+        },
+        {
+          "intent": "wie macht es X"
+        },
+        {
+          "intent": "vergleiche mit Y"
+        },
+        {
+          "intent": "schau dir Z an"
+        },
+        {
+          "intent": "study this competitor"
+        },
+        {
+          "keyword": "github.com/"
+        },
+        {
+          "keyword": "source of truth"
+        },
+        {
+          "phrase": "reference repo"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "improve-before-implement",
       "triggers": [
         {
