@@ -181,9 +181,6 @@ class TestReadJsonFile(SilentTest):
 # --- detect_package_type ---
 
 class TestDetectPackageType(unittest.TestCase):
-    def test_composer(self) -> None:
-        self.assertEqual(install.detect_package_type(Path("/p/vendor/event4u/agent-config")), "composer")
-
     def test_npm(self) -> None:
         self.assertEqual(install.detect_package_type(Path("/p/node_modules/@event4u/agent-config")), "npm")
 
@@ -203,22 +200,10 @@ class TestDetectPackageRoot(SilentTest):
         shutil.rmtree(self.tmpdir)
         super().tearDown()
 
-    def test_finds_composer_layout(self) -> None:
-        package = self.tmpdir / "vendor" / "event4u" / "agent-config"
-        package.mkdir(parents=True)
-        self.assertEqual(install.detect_package_root(self.tmpdir), package.resolve())
-
     def test_finds_npm_layout(self) -> None:
         package = self.tmpdir / "node_modules" / "@event4u" / "agent-config"
         package.mkdir(parents=True)
         self.assertEqual(install.detect_package_root(self.tmpdir), package.resolve())
-
-    def test_composer_preferred_over_npm(self) -> None:
-        composer = self.tmpdir / "vendor" / "event4u" / "agent-config"
-        npm = self.tmpdir / "node_modules" / "@event4u" / "agent-config"
-        composer.mkdir(parents=True)
-        npm.mkdir(parents=True)
-        self.assertEqual(install.detect_package_root(self.tmpdir), composer.resolve())
 
     def test_local_dev_mode(self) -> None:
         (self.tmpdir / "config" / "profiles").mkdir(parents=True)
@@ -377,11 +362,6 @@ class TestBridges(SilentTest):
     def tearDown(self) -> None:
         shutil.rmtree(self.tmpdir)
         super().tearDown()
-
-    def test_vscode_composer_plugin_path(self) -> None:
-        install.ensure_vscode_bridge(self.project, "composer", force=False)
-        data = json.loads((self.project / ".vscode" / "settings.json").read_text())
-        self.assertIn("./vendor/event4u/agent-config/plugin/agent-config", data["chat.pluginLocations"])
 
     def test_vscode_npm_plugin_path(self) -> None:
         install.ensure_vscode_bridge(self.project, "npm", force=False)
