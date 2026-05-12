@@ -25,10 +25,10 @@ instead of copying files via `install.sh`.
 
 ### Cursor / Cline / Windsurf / Augment VSCode
 
-These tools do **not** support plugins yet. Use the classic `install.sh` approach:
+These tools do **not** support plugins yet. Use the classic installer:
 
 ```bash
-bash vendor/event4u/agent-config/scripts/install.sh --target .
+npx @event4u/create-agent-config init --tools=cursor,cline,windsurf,augment
 ```
 
 ## What the plugin provides

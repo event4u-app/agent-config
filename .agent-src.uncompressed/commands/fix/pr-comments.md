@@ -1,7 +1,7 @@
 ---
-name: fix:pr
+name: fix:pr-comments
 cluster: fix
-sub: pr
+sub: pr-comments
 skills: [php-coder]
 description: Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
 disable-model-invocation: true
@@ -11,8 +11,8 @@ suggestion:
   trigger_context: "open PR with unresolved comments (bot + human)"
 ---
 
-# /fix pr
-This command runs `/fix pr-bots` and `/fix pr-developers` in sequence on the same PR.
+# /fix pr-comments
+This command runs `/fix pr-bot-comments` and `/fix pr-developer-comments` in sequence on the same PR.
 
 ## Input
 
@@ -45,14 +45,14 @@ The chosen mode applies to **both** phases.
 
 ### Phase 1: Bot comments
 
-Follow the full `/fix pr-bots` instructions (see `commands/fix/pr-bots.md`).
+Follow the full `/fix pr-bot-comments` instructions (see `commands/fix/pr-bot-comments.md`).
 Use the already-confirmed PR and mode — do not ask again.
 
 Report when done: "Bot comments done. Continuing with reviewer comments..."
 
 ### Phase 2: Developer comments
 
-Follow the full `/fix pr-developers` instructions (see `commands/fix/pr-developers.md`).
+Follow the full `/fix pr-developer-comments` instructions (see `commands/fix/pr-developer-comments.md`).
 Use the same PR and mode.
 
 ### After both phases

@@ -54,7 +54,7 @@ tree where:
   `.agent-src/<subdir>/`. Reading a context follows the symlink to
   the package payload.
 - `.augment/docs/guidelines/` — **symlink** into the package's
-  `docs/guidelines/` (consumer side: `vendor/event4u/agent-config/docs/guidelines/`;
+  `docs/guidelines/` (consumer side: `node_modules/@event4u/agent-config/docs/guidelines/`;
   package self-projection: `../docs/guidelines/`). This is the only
   `docs/` subdirectory exposed in `.augment/`; `docs/contracts/` and
   `docs/decisions/` are package-internal — rules that reference

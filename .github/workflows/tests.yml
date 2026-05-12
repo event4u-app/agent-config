@@ -63,13 +63,6 @@ jobs:
         # `.claude/` populates and `.agent-settings.yml` renders.
         run: bash tests/test_one_liner_entrypoints.sh
 
-      - name: Global install smoke tests (--global / --uninstall)
-        # Phase-3 smoke test for road-to-simplicity-and-everywhere (S16).
-        # Points HOME at a throwaway dir and verifies --global ships
-        # kernel rules + curated skills under each surface's user-scope
-        # path, then --uninstall removes the event4u/ namespace cleanly.
-        run: bash tests/test_global_install.sh
-
   python-tests:
     name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}

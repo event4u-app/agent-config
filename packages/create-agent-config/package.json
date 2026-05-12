@@ -1,6 +1,6 @@
 {
     "name": "@event4u/create-agent-config",
-    "version": "0.1.0",
+    "version": "0.2.0",
     "description": "One-liner installer for @event4u/agent-config — downloads the latest tarball and runs scripts/install with the selected tools.",
     "license": "MIT",
     "private": false,

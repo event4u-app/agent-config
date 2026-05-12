@@ -11,7 +11,7 @@ stability: beta
 The agent-config command surface collapses related atomic commands
 into **verb clusters**. A cluster is a single top-level command
 (e.g. `/fix`) that dispatches to sub-commands (e.g. `/fix ci`,
-`/fix pr`). Old atomic commands stay one release as deprecation
+`/fix pr-comments`). Old atomic commands stay one release as deprecation
 shims, then disappear.
 
 This file is the **locked source of truth** for which clusters
@@ -27,7 +27,7 @@ column 1 of this table.
 
 | Cluster | Phase | Sub-commands | Replaces |
 |---|:-:|---|---|
-| `fix` | 1 | `ci` · `pr` · `pr-bots` · `pr-developers` · `portability` · `refs` · `seeder` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder` |
+| `fix` | 1 | `ci` · `pr-comments` · `pr-bot-comments` · `pr-developer-comments` · `portability` · `refs` · `seeder` | `fix-ci` · `fix-pr-comments` · `fix-pr-bot-comments` · `fix-pr-developer-comments` · `fix-portability` · `fix-references` · `fix-seeder` |
 | `optimize` | 1 | `agents-dir` · `augmentignore` · `rtk` · `skills` | `optimize-augmentignore` · `optimize-rtk-filters` · `optimize-skills` · former `/optimize agents` and `/optimize agents-md` moved to the `/agents` file-family cluster 2026-05-09; `/agents prepare/audit/cleanup` collapsed into the single `/optimize agents-dir` (flags or wizard) per the agent-doc consolidation |
 | `feature` | 1 | `explore` · `plan` · `refactor` · `roadmap` · `dev` | `feature-explore` · `feature-plan` · `feature-refactor` · `feature-roadmap` · `feature-dev` |
 | `chat-history` | 2 | `show` · `import` · `learn` | `chat-history` (legacy status) — `resume` / `clear` / `checkpoint` removed in `road-to-chat-history-hook-only` (auto-adopt + structural hooks); `import` (verbatim cross-session render) and `learn` (project-improving learning extraction) added in the v4 stateless schema |
@@ -84,7 +84,7 @@ every new sub-command added to an existing cluster.
    cluster's primary verb (e.g. `/roadmap:create` + `process-*`
    composites).
 
-3. **Sub-name format.** kebab-case (`pr-bots`, `process-phase`),
+3. **Sub-name format.** kebab-case (`pr-bot-comments`, `process-phase`),
    ≤ 24 chars, no leading verb that duplicates the cluster name
    (use `/fix:ci`, not `/fix:fix-ci`).
 

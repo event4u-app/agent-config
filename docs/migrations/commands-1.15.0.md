@@ -15,9 +15,9 @@ invocation and are removed in `1.16.0`.
 | Old command | New invocation | Removed in |
 |---|---|---|
 | `/fix-ci` | `/fix ci` | 1.16.0 |
-| `/fix-pr-comments` | `/fix pr` | 1.16.0 |
-| `/fix-pr-bot-comments` | `/fix pr-bots` | 1.16.0 |
-| `/fix-pr-developer-comments` | `/fix pr-developers` | 1.16.0 |
+| `/fix-pr-comments` | `/fix pr-comments` | 1.16.0 |
+| `/fix-pr-bot-comments` | `/fix pr-bot-comments` | 1.16.0 |
+| `/fix-pr-developer-comments` | `/fix pr-developer-comments` | 1.16.0 |
 | `/fix-portability` | `/fix portability` | 1.16.0 |
 | `/fix-references` | `/fix refs` | 1.16.0 |
 | `/fix-seeder` | `/fix seeder` | 1.16.0 |

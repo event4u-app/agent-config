@@ -1,33 +1,23 @@
 # Getting Started
 
 `agent-config` is a stack-agnostic orchestration contract for coding
-agents. The installer detects the project shape (Composer / npm / both /
-neither) and wires the matching glue. **Pick the entrypoint that
-matches the project**, not the language you happen to prefer.
+agents. Installation is npx-first; the package itself is npm-published
+and works in any project regardless of language.
 
 ## Installation
 
-The installer is the same orchestrator across stacks — it reads
-`composer.json` and/or `package.json`, syncs the payload, and generates
-the tool-specific glue. Pick one entrypoint:
+Pick one entrypoint:
 
 ```bash
-# Composer-based projects (PHP / Laravel / Symfony / Zend / Laminas)
-composer require --dev event4u/agent-config
-php vendor/bin/install.php
-# Equivalent: bash vendor/event4u/agent-config/scripts/install
+# Recommended — one-shot, no local dependency
+npx @event4u/create-agent-config init --tools=claude-code,cursor
 
-# npm-based projects (Next.js / React / Node / Vue / plain JS/TS)
-npm install --save-dev @event4u/agent-config
-# Postinstall runs the orchestrator. Re-run or pick a profile:
-# bash node_modules/@event4u/agent-config/scripts/install --profile=balanced
+# No-Node fallback — curl | bash entrypoint (downloads a tarball)
+curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash
 
-# Mixed Composer + npm projects (Laravel + Inertia, Symfony + Vue, …)
-# Run both — the orchestrator merges results, no double-write.
-
-# Stack-less or polyglot repos (no Composer, no npm)
-git clone https://github.com/event4u-app/agent-config /tmp/agent-config
-bash /tmp/agent-config/scripts/install --target "$PWD"
+# Global CLI (one install per machine, all projects)
+npm install -g @event4u/agent-config
+agent-config --help
 ```
 
 That's it. Your agent now follows your team's standards. The orchestrator
@@ -49,9 +39,10 @@ so you can run a few package scripts without installing `go-task`,
 ./agent-config help                # full command list
 ```
 
-The wrapper is regenerated on every `npm install` / `composer install`
-and delegates to the copy under `node_modules/@event4u/agent-config/`
-or `vendor/event4u/agent-config/`.
+The wrapper is regenerated on every install and delegates to (in order):
+`$AGENT_CONFIG_MASTER`, `./node_modules/@event4u/agent-config/`,
+`agent-config` on `$PATH` (global npm install), or
+`npx @event4u/agent-config@latest`.
 
 ## First Run
 

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # install.sh — Agent-config payload sync (one of two installer stages).
 #
-# Reads from vendor's .agent-src/ (fallback: .augment/ for pre-2.0 packages) and
-# writes the target project's .augment/ tree: copies rules, symlinks everything
-# else. When augment.rules_use_symlinks: true is set in the target's
+# Reads from the package's .agent-src/ and writes the target project's
+# .augment/ tree: copies rules, symlinks everything else. When
+# augment.rules_use_symlinks: true is set in the target's
 # .agent-settings.yml, rules are symlinked instead of copied.
 # Creates tool-specific directories for Claude Code, Cursor, Cline, Windsurf, Gemini.
 #
@@ -91,9 +91,6 @@ parse_args() {
     if [[ -z "$TARGET_DIR" ]]; then
         if [[ -n "${PROJECT_ROOT:-}" ]]; then
             TARGET_DIR="$PROJECT_ROOT"
-        elif [[ "$SOURCE_DIR" == */vendor/event4u/agent-config ]]; then
-            # Composer: vendor/event4u/agent-config → project root is 3 levels up
-            TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
         elif [[ "$SOURCE_DIR" == */node_modules/@event4u/agent-config ]]; then
             # npm (scoped): node_modules/@event4u/agent-config → project root is 3 levels up
             TARGET_DIR="$(cd "$SOURCE_DIR/../../.." && pwd)"
@@ -106,13 +103,11 @@ parse_args() {
         fi
     fi
 
-    # Resolve source layout: prefer .agent-src/ (v2.0+), fallback to .augment/ (pre-2.0).
+    # Resolve source layout. .agent-src/ is the only supported source since v2.0.
     if [[ -d "$SOURCE_DIR/.agent-src" ]]; then
         SOURCE_PAYLOAD="$SOURCE_DIR/.agent-src"
-    elif [[ -d "$SOURCE_DIR/.augment" ]]; then
-        SOURCE_PAYLOAD="$SOURCE_DIR/.augment"
     else
-        log_error "Source payload not found: $SOURCE_DIR/.agent-src (or .augment)"
+        log_error "Source payload not found: $SOURCE_DIR/.agent-src"
         exit 1
     fi
 }
@@ -706,7 +701,7 @@ ensure_gitignore() {
 
 # Install the consumer-facing CLI wrapper `./agent-config` at the project
 # root. Gitignored, overwritten on every install, delegates to the master
-# CLI shipped in the package (node_modules or vendor).
+# CLI shipped in the package (node_modules) or fetched on demand via npx.
 install_cli_wrapper() {
     local project_root="$1"
     local template="$SOURCE_DIR/templates/agent-config-wrapper.sh"

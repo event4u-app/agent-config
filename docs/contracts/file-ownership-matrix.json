@@ -261,19 +261,19 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/fix/pr-bots.md": {
+    ".agent-src.uncompressed/commands/fix/pr-bot-comments.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/fix/pr-developers.md": {
+    ".agent-src.uncompressed/commands/fix/pr-comments.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/fix/pr.md": {
+    ".agent-src.uncompressed/commands/fix/pr-developer-comments.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -3088,22 +3088,22 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/fix/pr-bots.md",
-      "target": ".agent-src.uncompressed/commands/fix/pr-bots.md",
+      "source": ".agent-src.uncompressed/commands/fix/pr-bot-comments.md",
+      "target": ".agent-src.uncompressed/commands/fix/pr-bot-comments.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/fix/pr-developers.md",
-      "target": ".agent-src.uncompressed/commands/fix/pr-developers.md",
+      "source": ".agent-src.uncompressed/commands/fix/pr-comments.md",
+      "target": ".agent-src.uncompressed/commands/fix/pr-comments.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/fix/pr.md",
-      "target": ".agent-src.uncompressed/commands/fix/pr.md",
+      "source": ".agent-src.uncompressed/commands/fix/pr-developer-comments.md",
+      "target": ".agent-src.uncompressed/commands/fix/pr-developer-comments.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

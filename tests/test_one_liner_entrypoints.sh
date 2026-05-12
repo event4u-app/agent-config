@@ -33,7 +33,7 @@ setup() {
     local src
     for src in scripts templates config .agent-src .agent-src.uncompressed \
                AGENTS.md router.json .agent-settings.yml package.json \
-               composer.json bin docker .augment; do
+               bin docker .augment; do
         if [[ -e "$REPO_ROOT/$src" ]]; then
             cp -R "$REPO_ROOT/$src" "$stage/agent-config/"
         fi
