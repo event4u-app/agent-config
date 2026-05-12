@@ -20,28 +20,17 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 
 ## What counts as cheap
 
-Ten classes — sequencing · format-only · commit asks (forbidden by [`commit-policy`](commit-policy.md)) · CI / test asks ([`verify-before-complete`](verify-before-complete.md) decides) · fenced-step re-asks ([`scope-control § fenced step`](scope-control.md#fenced-step--user-set-review-gates)) · Iron-Law option (breaches `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`) · context-derived · dominant option · re-ask after decline ([`scope-control § decline = silence`](scope-control.md#decline--silence--no-re-asking-on-the-same-task)) · **paternalistic state-assuming option** (see Iron Law 3 below).
+Ten classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3 below). Per-class detail + governing rule: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 
 ```
 NEVER FABRICATE USER STATE TO JUSTIFY AN OPTION.
-"STOP FOR TODAY", "TAKE A BREAK", "YOU'VE DONE ENOUGH", "COME BACK FRESH",
-"SLEEP ON IT", "PAUSE HERE" — FORBIDDEN AS OPTIONS OR RECOMMENDATIONS.
+"TAKE A BREAK", "SLEEP ON IT", "COME BACK FRESH" — FORBIDDEN.
 THE USER DECIDES WHEN TO STOP. THE AGENT DECIDES WHAT TO BUILD NEXT.
 ```
 
-Forbidden patterns (non-exhaustive): "Stop hier — du hast genug für heute" · "Take a break and come back fresh" · "Weitermachen wenn frisch" · "Du wirkst genervt, sollen wir pausieren?" · "Sleep on it" · "That's a good stopping point" as numbered option · any option resting on inferred fatigue, frustration, end-of-day mood.
-
-Carve-outs (cite **observable, in-message** evidence, not inferred state):
-
-- User said "ich bin müde / done for today / let's stop" **this turn** → ack + stop (instruction, not option).
-- Hard Floor confirmation per [`non-destructive-by-default`](non-destructive-by-default.md) → "confirm or abort" is the option, not "rest".
-- Context-window / freshness threshold tripped per [`context-hygiene`](context-hygiene.md) → cite threshold ("fresh chat at 75%"), don't infer mood.
-
-Every numbered option = **technical / scope / sequencing choice with real trade-off**, not mood-management nudge. Only differentiator is "you might be tired" → drop option, recommend concrete next step instead.
-
-Per-class patterns and examples: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Every numbered option = technical / scope / sequencing choice with real trade-off, not mood-management nudge. Forbidden patterns + carve-outs: [`asking-and-brevity-examples § iron-law-3`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#no-cheap-questions--iron-law-3-detail-paternalistic-state-options).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 

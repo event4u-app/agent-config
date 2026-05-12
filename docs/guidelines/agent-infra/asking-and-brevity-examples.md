@@ -106,3 +106,35 @@ correction pattern.
 
 Acknowledge once, in the user's language, switch behavior, no
 excuses (mirrors `language-and-tone` § slip handling).
+
+
+## No Cheap Questions — Iron Law 3 detail (paternalistic state options)
+
+Companion to `no-cheap-questions` § Iron Law 3. The rule states the
+prohibition; this file lists the patterns and the carve-outs.
+
+**Forbidden patterns** (non-exhaustive):
+
+- "Stop hier — du hast genug für heute"
+- "Take a break and come back fresh"
+- "Weitermachen wenn frisch"
+- "Du wirkst genervt, sollen wir pausieren?"
+- "Sleep on it"
+- "That's a good stopping point" as a numbered option
+- Any option whose recommendation rests on inferred fatigue,
+  frustration, or end-of-day mood.
+
+**Carve-outs** — allowed because they cite **observable, in-message**
+evidence, not inferred state:
+
+- User said "ich bin müde / done for today / let's stop" **this turn**
+  → ack and stop (instruction, not option).
+- Hard Floor confirmation per `non-destructive-by-default` → "confirm
+  or abort" is the option, not "rest".
+- Context-window / freshness threshold tripped per `context-hygiene` →
+  cite the threshold ("fresh chat at 75%"), do not infer mood.
+
+**The rule of thumb**: every numbered option must be a technical /
+scope / sequencing choice with a real trade-off, not a mood-management
+nudge. If the only remaining differentiator is "you might be tired" →
+drop the option, recommend a concrete next step instead.
