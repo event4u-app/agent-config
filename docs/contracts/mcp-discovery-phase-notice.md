@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # MCP Discovery-Phase Notice
 
 **Audience:** MCP consumers integrating with `event4u/agent-config` — host
