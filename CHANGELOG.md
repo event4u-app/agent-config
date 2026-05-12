@@ -318,6 +318,37 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.1.0](https://github.com/event4u-app/agent-config/compare/2.0.0...2.1.0) (2026-05-12)
+
+### Features
+
+* **wrapper:** add npx fallback and sanitize wrapper error test ([9f4326b](https://github.com/event4u-app/agent-config/commit/9f4326bffc59d79e4421b0cd8966c99348afe1e6))
+* **installer:** add source-repo guard and drop composer/global paths ([5388de2](https://github.com/event4u-app/agent-config/commit/5388de2598ea668a8671f49bd7bacd4866ed1c33))
+
+### Documentation
+
+* **installation:** add Upgrading from v1 section ([f35df4b](https://github.com/event4u-app/agent-config/commit/f35df4b9667eb848ce2ec47f4a7c550b1bba4054))
+* align install guides with v2 npx-only flow ([e841a14](https://github.com/event4u-app/agent-config/commit/e841a14cdbb6691433976c57ff9b28b3ec4992ad))
+* **readme:** collapse plugin-install table to one-liner ([b3407bb](https://github.com/event4u-app/agent-config/commit/b3407bb2fda39a8a57c0e2f72c8b430bed4fd012))
+
+### Refactoring
+
+* **cli:** rename fix:pr sub-commands for clarity ([fbdf636](https://github.com/event4u-app/agent-config/commit/fbdf636a50a06f3b35fe5c3d5fb108e9c15e6266))
+
+### Tests
+
+* **install:** drop composer-detection tests retired in v2 ([e37ad99](https://github.com/event4u-app/agent-config/commit/e37ad99beaebbb5f6a98b41e02ecefd6b0d39453))
+
+### Build
+
+* **tasks:** add npm:login + npm:publish-installer ([22639f8](https://github.com/event4u-app/agent-config/commit/22639f877feee33a3cbadb9147941cfb32fb6c9e))
+
+### Chores
+
+* remove retired setup.sh and global-install test surface ([3eebcf7](https://github.com/event4u-app/agent-config/commit/3eebcf72bcc45af168df4fd4b172a2484901a793))
+
+Tests: 3253 (-4 since 2.0.0)
+
 ## [2.0.0](https://github.com/event4u-app/agent-config/compare/1.41.2...2.0.0) (2026-05-12)
 
 ### BREAKING CHANGES
