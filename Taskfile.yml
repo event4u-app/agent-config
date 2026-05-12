@@ -28,6 +28,9 @@ includes:
   mcp:
     taskfile: ./taskfiles/mcp.yml
     flatten: true
+  dev:
+    taskfile: ./taskfiles/dev.yml
+    flatten: true
 
 tasks:
   _ci-start:
