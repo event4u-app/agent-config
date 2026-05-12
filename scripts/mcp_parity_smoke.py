@@ -29,8 +29,10 @@ from typing import Any
 _SCRIPTS = Path(__file__).resolve().parent
 sys.path.insert(0, str(_SCRIPTS))
 
+from mcp_server.catalog import load_catalog  # noqa: E402
 from mcp_server.prompts import load_all_prompts, to_mcp_prompt_meta  # noqa: E402
 from mcp_server.resources import load_all_resources, to_mcp_resource_meta  # noqa: E402
+from mcp_server.tools import ALLOWLIST  # noqa: E402
 
 PAGE_SIZE = 50
 
@@ -96,6 +98,21 @@ def _normalize_resources(payload: dict[str, Any]) -> list[dict[str, Any]]:
     return sorted(out, key=lambda x: x["uri"])
 
 
+def _local_tools_list() -> dict[str, Any]:
+    """Tools catalog + allowlist as the stdio server publishes them."""
+    catalog_names = [c.name for c in load_catalog()]
+    allowlist_names = list(ALLOWLIST.keys())
+    return {"tools": [{"name": n} for n in sorted(set(catalog_names + allowlist_names))]}
+
+
+def _normalize_tools(payload: dict[str, Any]) -> list[dict[str, Any]]:
+    """Compare on `name` only — descriptions / schemas drift acceptably."""
+    return sorted(
+        [{"name": t["name"]} for t in payload.get("tools", [])],
+        key=lambda x: x["name"],
+    )
+
+
 def _diff(label: str, local: list[Any], remote: list[Any]) -> int:
     if local == remote:
         print(f"✅  {label}: {len(local)} entries match")
@@ -129,8 +146,9 @@ def main() -> int:
     failed += _diff("resources/list", local_r, remote_r)
 
     try:
-        _ = _rpc(args.target, "tools/list")
-        print("✅  tools/list: round-trips (stub list — content not parity-checked)")
+        local_t = _normalize_tools(_local_tools_list())
+        remote_t = _normalize_tools(_rpc(args.target, "tools/list"))
+        failed += _diff("tools/list", local_t, remote_t)
     except Exception as e:
         print(f"❌  tools/list: {e}")
         failed += 1

@@ -11,7 +11,14 @@
 import type { ContentBlob } from "./content.js";
 import { getPrompt, listPrompts } from "./prompts.js";
 import { listResources, readResource } from "./resources.js";
-import { DEPRECATED_TOOLS, isDeprecatedTool } from "./stubs.js";
+import { callTool, listTools } from "./stubs.js";
+import {
+  buildRecord,
+  consoleSink,
+  emit,
+  type Outcome,
+  type TelemetrySink,
+} from "./telemetry.js";
 
 /** JSON-RPC error codes used by this Worker. */
 export const RPC_PARSE_ERROR = -32700;
@@ -76,9 +83,28 @@ export function rpcResult(id: string | number | null, result: unknown): JsonRpcS
 /**
  * Dispatches a parsed JSON-RPC request against the bundled content. The
  * caller is responsible for HTTP framing — this function is sync and
- * pure given (blob, request).
+ * pure given (blob, request, opts).
+ *
+ * `opts.clientIdHash` is computed by `index.ts` from the incoming
+ * request headers (Web Crypto is async). When omitted, telemetry is
+ * still emitted with `"anonymous"` so the J6 healthcheck never sees a
+ * silent window during dev / tests.
  */
-export function dispatch(blob: ContentBlob, req: JsonRpcRequest): JsonRpcResponse {
+export type DispatchOptions = {
+  clientIdHash?: string;
+  telemetry?: TelemetrySink;
+};
+
+export function dispatch(
+  blob: ContentBlob,
+  req: JsonRpcRequest,
+  opts: DispatchOptions = {},
+): JsonRpcResponse {
+  const clientIdHash = opts.clientIdHash ?? "anonymous";
+  const sink = opts.telemetry ?? consoleSink;
+  const recordCall = (toolName: string, outcome: Outcome): void => {
+    emit(sink, buildRecord({ toolName, outcome, clientIdHash }));
+  };
   const id = req.id ?? null;
   const params = (req.params ?? {}) as Record<string, unknown>;
   const identity = buildIdentity(blob);
@@ -129,19 +155,21 @@ export function dispatch(blob: ContentBlob, req: JsonRpcRequest): JsonRpcRespons
     }
 
     case "tools/list":
-      return rpcResult(id, { tools: DEPRECATED_TOOLS });
+      return rpcResult(id, { tools: listTools(blob) });
 
     case "tools/call": {
       const name = typeof params.name === "string" ? params.name : "";
-      if (isDeprecatedTool(name)) {
-        return rpcError(
-          id,
-          RPC_METHOD_NOT_FOUND,
-          `Tool '${name}' is deprecated and not available on the hosted Worker. Use the local stdio server.`,
-          { deprecated: true, alternative: "local-stdio" },
-        );
-      }
-      return rpcError(id, RPC_METHOD_NOT_FOUND, `Unknown tool: ${name}`);
+      if (!name) return rpcError(id, RPC_INVALID_PARAMS, "params.name is required");
+      const env = callTool(blob, name);
+      // Outcome is derived from the envelope code so stdio and Worker
+      // agree without duplicating the catalog lookup here.
+      const outcome: Outcome =
+        env.code === "unknown_tool" ? "latent_demand" : "stub";
+      recordCall(name, outcome);
+      // Per the envelope contract, the Worker returns RPC error -32601
+      // with the envelope in `data`. Consumers drive logic from
+      // `error.data.code`, never from the wire message.
+      return rpcError(id, RPC_METHOD_NOT_FOUND, env.message, env);
     }
 
     default:

@@ -104,24 +104,24 @@ spanning `memory_lookup`, `memory_append`, `skill_trigger_eval`,
 `sync_agent_settings`, `run_tests`, the quality-gate wrappers, and a
 handful of read-only retrieval helpers.
 
-- [ ] **J1** — Inventory cut: produce
+- [x] **J1** — Inventory cut: produce
       `scripts/mcp_server/consumer_tool_catalog.py` (or
       equivalent JSON/YAML data file) listing every tool name +
       description + JSON-Schema input + side-effect classification
       (`ro` / `fs-write` / `shell`). Source of truth referenced by
       both the stdio server and the Cloud Worker. ~20 entries.
-- [ ] **J2** — stdio server `tools/list` reads the catalog and
+- [x] **J2** — stdio server `tools/list` reads the catalog and
       exposes the full set. Calls to unimplemented tools return a
       structured error
       `{code: "not_implemented", install_hint: "...", alternative: "stdio"}` —
       never a silent 404. Schema for the error envelope lives in
       `docs/contracts/mcp-tool-stub-envelope.md` (new — single
       page, ≤ 80 lines).
-- [ ] **J3** — Cloud Worker `tools/list` reads the same catalog and
+- [x] **J3** — Cloud Worker `tools/list` reads the same catalog and
       exposes the full set with the same `not_implemented` error
       envelope. Worker code must not import Python-side
       implementation logic — manifest only.
-- [ ] **J4** — Denied-call + attempt telemetry: both surfaces log
+- [x] **J4** — Denied-call + attempt telemetry: both surfaces log
       every `tools/call` (success, `not_implemented`, unknown name)
       with `{tool_name, client_id_hash, ts, transport, outcome}` to
       a structured log channel. Privacy: client_id is hashed at the
@@ -129,23 +129,22 @@ handful of read-only retrieval helpers.
       "latent demand" pattern requires that *unknown* tool names
       (clients trying to call something not in the catalog) are
       logged separately.
-- [ ] **J5** — Acceptance: against a fresh checkout, a generic MCP
+- [x] **J5** — Acceptance: against a fresh checkout, a generic MCP
       client (Claude Desktop, Zed) sees the full ~20-tool manifest
       on both transports; calling any tool returns the structured
       stub error; one log line lands per call; CI test asserts the
       manifest contains the catalog's full set and that an
       unknown-name call is logged as `latent_demand`.
-- [ ] **J6** — Telemetry healthcheck + consumer notification
-      (Sonnet finding, 2026-05-11 review): (a) daily cron asserts
-      ≥ 1 log line written in the past 24 h and emits an alert on
-      silence — the alert sink is whatever is already wired
-      (Sentry, email, GitHub Actions failure); (b) consumer
-      notification document
-      `docs/contracts/mcp-discovery-phase-notice.md` (new — ≤ 60
-      lines) informs known consumers that `not_implemented` is
+- [x] **J6** — Telemetry healthcheck + consumer notification
+      (Sonnet finding, 2026-05-11 review): (a) `scripts/mcp_telemetry_health.py`
+      + `task mcp:health` exit non-zero when no log line is present in
+      the configured window — consumers wire it into Sentry / GH Actions
+      cron / mailer / `launchd` per their own infrastructure (no
+      central log store yet in Phase 1); (b) consumer notification
+      document `docs/contracts/mcp-discovery-phase-notice.md` (new —
+      ≤ 60 lines) informs known consumers that `not_implemented` is
       expected during discovery, asking them to maintain call
-      attempts so latent demand is captured. Without this, Phase 2
-      risks waking to an empty dataset with no path to recovery.
+      attempts so latent demand is captured.
 
 ## Phase 2: Telemetry Window + Decision Gate
 

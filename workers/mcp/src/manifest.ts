@@ -37,6 +37,8 @@ export type Manifest = {
   packer_version: string;
   /** Per-kind URI count for diagnostics. Not on wire. */
   content_uri_count: ContentUriCount;
+  /** Number of tools in the discovery catalog. Diagnostic. */
+  tool_count: number;
 };
 
 /**
@@ -70,5 +72,8 @@ export function assertManifest(value: unknown): asserts value is Manifest {
   }
   if (typeof m.content_uri_count !== "object" || m.content_uri_count === null) {
     throw new Error("manifest: content_uri_count must be an object");
+  }
+  if (typeof m.tool_count !== "number" || !Number.isFinite(m.tool_count) || m.tool_count < 0) {
+    throw new Error("manifest: tool_count must be a non-negative number");
   }
 }

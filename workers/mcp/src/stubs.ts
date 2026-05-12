@@ -1,44 +1,102 @@
 /**
- * Deprecated tool stubs — surfaces hosted-incompatible tools as
- * discoverable-but-uncallable entries.
+ * Tool catalog dispatch — Worker side of the Phase 1 discovery contract.
  *
- * Per `docs/contracts/mcp-cloud-scope.md` §A0-cloud invariant 3 and the
- * Phase 2-5 council verdict (D5):
- *   - `tools/list` returns the stubs with `_meta.deprecated: true`.
- *   - `tools/call` for either name returns JSON-RPC error -32601
- *     (method not found) — from the Worker's perspective the tool
- *     genuinely is not implemented.
+ * Source of truth: `scripts/mcp_server/consumer_tool_catalog.json`,
+ * inlined into the bundled `content.json` by `scripts/pack_mcp_content.py`.
+ * Both transports return identical metadata on `tools/list`; what differs
+ * is per-tool `implemented_on`.
  *
- * The stubs are intentionally hard-coded, not derived from content,
- * because deprecation is a Worker-runtime decision, not a content one.
+ * Contract: `docs/contracts/mcp-tool-stub-envelope.md`.
+ *   - Catalog entry with this transport in `implemented_on` → real handler.
+ *     None are wired on the Worker yet (Phase 1 is discovery-only).
+ *   - Catalog entry missing this transport → `code: not_implemented`
+ *     envelope, returned as `error.data` alongside RPC error -32601.
+ *   - Unknown name → `code: unknown_tool` envelope, same shape.
  */
 
-export type DeprecatedTool = {
+import type { ContentBlob, ToolCatalogEntry } from "./content.js";
+
+export const WORKER_TRANSPORT = "worker" as const;
+
+export type ToolListing = {
   name: string;
   description: string;
-  inputSchema: { type: "object"; properties: Record<string, never> };
-  _meta: { deprecated: true; alternative: "local-stdio" };
+  inputSchema: Record<string, unknown>;
+  _meta: {
+    side_effect: ToolCatalogEntry["side_effect"];
+    implemented_on: readonly string[];
+    /** `true` when this transport is missing from implemented_on. */
+    stub: boolean;
+  };
 };
 
-export const DEPRECATED_TOOLS: readonly DeprecatedTool[] = [
-  {
-    name: "lint_skills",
-    description:
-      "DEPRECATED — local-only. Use the local stdio MCP server (scripts/mcp_server/) for skill linting; the hosted Worker cannot execute consumer code.",
-    inputSchema: { type: "object", properties: {} },
-    _meta: { deprecated: true, alternative: "local-stdio" },
-  },
-  {
-    name: "chat_history_append",
-    description:
-      "DEPRECATED — filesystem-bound. Use the local stdio MCP server; the hosted Worker has no consumer filesystem access.",
-    inputSchema: { type: "object", properties: {} },
-    _meta: { deprecated: true, alternative: "local-stdio" },
-  },
-] as const;
+/** Build the `tools/list` payload from the bundled catalog. */
+export function listTools(blob: ContentBlob): ToolListing[] {
+  return blob.tool_catalog.tools.map((t) => ({
+    name: t.name,
+    description: t.description,
+    inputSchema: t.input_schema,
+    _meta: {
+      side_effect: t.side_effect,
+      implemented_on: t.implemented_on,
+      stub: !t.implemented_on.includes(WORKER_TRANSPORT),
+    },
+  }));
+}
 
-const DEPRECATED_NAMES = new Set(DEPRECATED_TOOLS.map((t) => t.name));
+export type NotImplementedEnvelope = {
+  code: "not_implemented" | "unknown_tool";
+  tool: string;
+  transport: typeof WORKER_TRANSPORT;
+  install_hint: string;
+  alternative: "stdio";
+  message: string;
+};
 
-export function isDeprecatedTool(name: string): boolean {
-  return DEPRECATED_NAMES.has(name);
+function envelope(
+  code: NotImplementedEnvelope["code"],
+  tool: string,
+  blob: ContentBlob,
+  message: string,
+): NotImplementedEnvelope {
+  return {
+    code,
+    tool,
+    transport: WORKER_TRANSPORT,
+    install_hint: blob.tool_catalog.install_hint_stdio,
+    alternative: "stdio",
+    message,
+  };
+}
+
+/** Dispatch a `tools/call` against the catalog. Phase 1: never executes. */
+export function callTool(blob: ContentBlob, name: string): NotImplementedEnvelope {
+  const entry = blob.tool_catalog.tools.find((t) => t.name === name);
+  if (!entry) {
+    return envelope(
+      "unknown_tool",
+      name,
+      blob,
+      `Tool '${name}' is not in the discovery catalog. See ` +
+        "docs/contracts/mcp-tool-stub-envelope.md.",
+    );
+  }
+  if (entry.implemented_on.includes(WORKER_TRANSPORT)) {
+    // Phase 1 invariant — no Worker handlers are wired. Treat as stub
+    // until Phase 3 promotes a tool to the worker transport.
+    return envelope(
+      "not_implemented",
+      name,
+      blob,
+      `Tool '${name}' is marked implemented on the worker transport but ` +
+        "no handler is wired yet. Run via the local stdio server.",
+    );
+  }
+  return envelope(
+    "not_implemented",
+    name,
+    blob,
+    `Tool '${name}' is in the discovery catalog but not implemented on ` +
+      "the worker transport. See the install hint to wire it up locally.",
+  );
 }

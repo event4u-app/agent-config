@@ -104,6 +104,11 @@ evals/results/
 # Cloud bundle output
 /dist/
 
+# MCP telemetry sink — per-call JSONL written by the stdio server
+# (scripts/mcp_server/telemetry.py) for Phase 1 J4. Phase 2 routes the
+# records into a queryable store; the local file is dev-time scratch.
+/agents/.mcp-telemetry/
+
 # AI Council runtime price cache (refreshed weekly by
 # `python3 scripts/update_prices.py`; bootstrapped on first /council
 # call from scripts/ai_council/_default_prices.py). User-editable —
