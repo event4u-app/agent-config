@@ -318,6 +318,39 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.41.0](https://github.com/event4u-app/agent-config/compare/1.40.0...1.41.0) (2026-05-12)
+
+### Features
+
+* **mcp/worker:** add optional MCP-Token Bearer auth ([134c6ee](https://github.com/event4u-app/agent-config/commit/134c6ee34ee5fc1f1809f5be72df1ac82ad0cca6))
+* **mcp:** L2+L4 — implement 7 read-only tools + catalog sync ([44a0082](https://github.com/event4u-app/agent-config/commit/44a00827a7e19051e58e2a5866a37e8c6e4fb1a6))
+* **mcp:** K1+K2 — telemetry SQLite store + CLI dashboard ([e53f321](https://github.com/event4u-app/agent-config/commit/e53f321d3d6a7fb5c95a97232898fbda15cd129b))
+* **mcp:** J6 — telemetry healthcheck + consumer discovery notice ([41f02f7](https://github.com/event4u-app/agent-config/commit/41f02f773feb6248ea315e0820d2a81d960b98c9))
+* **mcp:** J1-J4 — discovery catalog + stub envelope + telemetry ([38aff65](https://github.com/event4u-app/agent-config/commit/38aff651138d8c20929cab88ac437f3106ba44c3))
+
+### Documentation
+
+* **mcp:** remove public endpoint, document self-hosting + Bearer auth ([6c5d7b0](https://github.com/event4u-app/agent-config/commit/6c5d7b04231e9e274265e7f0481502455085f748))
+
+### Refactoring
+
+* **scripts:** migrate readers to centralized agent_settings loader ([7849c03](https://github.com/event4u-app/agent-config/commit/7849c03f282cdaf344ac56056d55cb1c63e17eba))
+
+### Tests
+
+* **mcp:** L3 — hermetic shape contracts for 7 RO tools ([0d3edc9](https://github.com/event4u-app/agent-config/commit/0d3edc9fb1f98df80a4eb503a0dd4c868d2f85f2))
+* **mcp:** J5 — acceptance tests for catalog, envelope, telemetry ([806e4bb](https://github.com/event4u-app/agent-config/commit/806e4bb2bdd2292dfb75eddd9b4eff6073f16a00))
+
+### Chores
+
+* **mcp/taskfile:** add mcp:cloud:secret-put task ([dcffef5](https://github.com/event4u-app/agent-config/commit/dcffef5c384bf75261189b035417593418c8c36c))
+* **roadmap:** flip Phase 2 + Phase 3 of road-to-mcp-full-coverage ([2ce23bc](https://github.com/event4u-app/agent-config/commit/2ce23bcaf7482aeb095cc85d106a78ac5c0d2682))
+* **roadmap:** flip Phase 1 of road-to-mcp-full-coverage (J1–J6) ([707f5c0](https://github.com/event4u-app/agent-config/commit/707f5c002f827b2600cfcf6019d3d22166b46fc2))
+* **ci:** regenerate derived artifacts and fix command-count drift ([dd4eeac](https://github.com/event4u-app/agent-config/commit/dd4eeac96094d99bae318b2160a914be46caead9))
+* **roadmaps:** archive road-to-portable-dev-preferences ([77f4cf1](https://github.com/event4u-app/agent-config/commit/77f4cf1825962503891973800450c3ca769e2adc))
+
+Tests: 3173 (+32 since 1.40.0)
+
 ## [1.40.0](https://github.com/event4u-app/agent-config/compare/1.39.0...1.40.0) (2026-05-11)
 
 ### Features
