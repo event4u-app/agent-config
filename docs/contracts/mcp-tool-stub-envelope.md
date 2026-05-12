@@ -5,7 +5,7 @@ stability: experimental
 # MCP Tool Stub Envelope — Phase 1 Discovery Contract
 
 > **Status:** Active · governs Phase 1 (J1–J6) of
-> [`road-to-mcp-full-coverage.md`](../../agents/roadmaps/road-to-mcp-full-coverage.md).
+> [`road-to-mcp-full-coverage.md`](../../agents/roadmaps/archive/road-to-mcp-full-coverage.md).
 > **Stability:** experimental — internal index reference only per
 > `STABILITY.md`.
 
