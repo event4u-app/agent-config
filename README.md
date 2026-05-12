@@ -79,13 +79,12 @@ dispatcher per bridge as a post-install smoke test (skip: `--no-smoke`).
 
 ### For individual use (optional)
 
-Install directly in your agent for global, cross-project use:
+Skills-only, global across projects — installs into the agent itself,
+no per-repo `init`:
 
-| Tool | Install |
-|---|---|
-| **Augment CLI** | `auggie plugin install agent-config@event4u-agent-config` |
-| **Claude Code** | `claude plugin install agent-config@event4u-agent-config` |
-| **Copilot CLI** | `copilot plugin install agent-config@event4u-agent-config` |
+```bash
+<auggie|claude|copilot> plugin install agent-config@event4u-agent-config
+```
 
 → [All install options & project bridge setup](docs/installation.md)
 
