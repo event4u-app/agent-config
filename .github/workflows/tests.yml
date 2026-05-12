@@ -131,3 +131,24 @@ jobs:
         # show up in the PR UI with their stderr tail.
         if: always()
         run: python3 scripts/ci_summary.py --runs agents/reports/runs
+
+  windows-lockfile-export:
+    # Phase 1.7 of road-to-global-first-install — guards the global-
+    # install lockfile lifecycle and the `agent-config export` path on
+    # Windows. Scoped narrowly to two test modules; the wider suite
+    # exercises POSIX-specific symlink paths that don't apply on
+    # Windows (per ADR-007 D5 "no symlink work to test" carve-out).
+    name: Windows lockfile + export tests
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install test deps
+        run: pip install pytest
+
+      - name: Run lockfile + export tests
+        run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v
