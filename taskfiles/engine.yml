@@ -169,6 +169,15 @@ tasks:
     desc: Replay only the smoke-tagged Golden Transcripts — sub-second PR feedback (P2.4)
     cmd: python3 -m pytest tests/golden/test_replay.py -m smoke -v
 
+  doctor-smoke:
+    silent: true
+    desc: |
+      Manifest-correctness smoke test (P4.4). Runs the doctor command
+      against the current repo's project lockfile and asserts the
+      filesystem is in sync. Opt-in: not part of `task ci`. Useful
+      after install / sync to verify manifest fidelity.
+    cmd: python3 -m pytest tests/test_cmd_doctor.py -q
+
   build-cloud-bundle:
     silent: true
     desc: "Build one cloud-skill ZIP (Anthropic Skills format) — usage: task build-cloud-bundle -- SKILL=name"

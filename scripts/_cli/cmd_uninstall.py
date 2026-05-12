@@ -10,16 +10,35 @@ directories (opt-in, destructive).
 
 Idempotent: removing an already-absent marker is a no-op success.
 Refuses to operate on a non-empty drift unless ``--force`` is passed.
+
+Schema v2 (P2.2): when the manifest carries per-tool ``files[]`` and
+``merged_keys[]`` inventories, uninstall walks them instead of the
+hardcoded ``PROJECT_BRIDGE_MARKERS`` map. JSON merges are subtracted
+key-by-key so neighbour packages' contributions to the same shared
+file (e.g. ``.cursor/hooks.json``) survive. Bridge files that are JSON
+documents are deleted only when subtraction left them empty; if a
+sibling tool still owns keys there, the file stays.
+
+Two-phase commit: the tool entry is rewritten with ``status:
+"uninstalling"`` before any deletion, deletions / subtractions run,
+then the entry is removed on success. A crash between the two phases
+leaves the manifest in a state ``cmd_prune`` recognises (the orphaned
+``files[]`` of an ``uninstalling`` tool resurface for cleanup).
+Manifests without ``files[]`` fall back to the legacy v1 path
+unchanged.
 """
 from __future__ import annotations
 
 import argparse
+import json
 import shutil
 import sys
+from collections import defaultdict
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
 
-from scripts._lib import installed_lock, installed_tools
+from scripts._lib import fs_atomic, installed_lock, installed_tools
+from scripts._lib.json_pointers import subtract_pointers
 from scripts.install import PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS
 
 
@@ -74,6 +93,205 @@ def _remove_global_content(tool: str, *, dry_run: bool, purge: bool) -> tuple[st
         return (f"{tool}: ❌ failed to purge {anchor} ({exc})", False)
 
 
+# ---------------------------------------------------------------------------
+# Schema v2 helpers (P2.2 — manifest-driven uninstall)
+# ---------------------------------------------------------------------------
+
+
+def _is_v2_entry(entry: dict[str, Any]) -> bool:
+    """Whether ``entry`` carries v2 per-tool inventories.
+
+    A tool entry counts as v2 when at least one of ``files[]`` or
+    ``merged_keys[]`` is non-empty. Tools written by older installers
+    have neither and fall through to the legacy ``PROJECT_BRIDGE_MARKERS``
+    path so a manifest written by a v1 ``init`` stays uninstallable.
+    """
+    return bool(entry.get("files")) or bool(entry.get("merged_keys"))
+
+
+def _resolve_recorded_path(project_root: Path, recorded: str) -> Path:
+    """Resolve a manifest-recorded path against the project root.
+
+    ``files[].path`` and ``merged_keys[].file`` are written as absolute
+    paths by the installer (user-scope content lives outside the
+    project tree) but a relative path is accepted for portability and
+    resolved against ``project_root``. Returns the absolute path.
+    """
+    p = Path(recorded)
+    if p.is_absolute():
+        return p
+    return (project_root / p).resolve()
+
+
+def _set_tool_status(
+    manifest_path: Path,
+    version: str,
+    tools: list[dict[str, Any]],
+    name: str,
+    status: str,
+    *,
+    deploy_roots: list[str] | None,
+) -> list[dict[str, Any]]:
+    """Persist ``status`` on the named tool entry and return the new list.
+
+    Two-phase commit anchor (P2.2): writing ``status: uninstalling``
+    before any deletion gives ``cmd_prune`` a stable signal to clean
+    up after a crash mid-uninstall.
+    """
+    new_tools: list[dict[str, Any]] = []
+    for entry in tools:
+        if entry.get("name") == name:
+            entry = {**entry, "status": status}
+        new_tools.append(entry)
+    installed_tools.write_manifest(
+        manifest_path, version, new_tools, deploy_roots=deploy_roots,
+    )
+    return new_tools
+
+
+def _subtract_merged_keys(
+    entry: dict[str, Any],
+    project_root: Path,
+    *,
+    dry_run: bool,
+) -> tuple[list[str], set[str], set[str]]:
+    """Subtract this tool's ``merged_keys`` from every referenced JSON file.
+
+    Returns ``(warnings, emptied_files, touched_files)``:
+
+    * ``touched_files`` — absolute path strings of every JSON file this
+      tool recorded merge contributions for (regardless of subtraction
+      outcome). Used by :func:`_delete_tool_files` to decide whether a
+      JSON bridge is shared (touched + non-empty) or owned solely
+      (untouched → delete with the rest).
+    * ``emptied_files`` — subset of ``touched_files`` whose document is
+      now ``{}`` after subtraction. Foreign keys from neighbour
+      packages are preserved by :func:`subtract_pointers`.
+    """
+    warnings: list[str] = []
+    emptied: set[str] = set()
+    touched: set[str] = set()
+    merged_keys = entry.get("merged_keys") or []
+    if not merged_keys:
+        return warnings, emptied, touched
+    by_file: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for record in merged_keys:
+        by_file[record["file"]].append(record)
+    for file_label, records in by_file.items():
+        target = _resolve_recorded_path(project_root, file_label)
+        touched.add(str(target))
+        if not target.exists():
+            warnings.append(
+                f"{file_label}: absent — skipping {len(records)} pointer(s)"
+            )
+            continue
+        try:
+            doc = json.loads(target.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            warnings.append(f"{file_label}: unparseable JSON ({exc}); skipped")
+            continue
+        if not isinstance(doc, dict):
+            warnings.append(f"{file_label}: not a JSON object; skipped")
+            continue
+        new_doc, sub_warnings = subtract_pointers(doc, records)
+        for w in sub_warnings:
+            warnings.append(
+                f"{file_label}{w['pointer']}: {w['reason']}"
+            )
+        if dry_run:
+            if not new_doc:
+                emptied.add(str(target))
+            continue
+        if new_doc:
+            fs_atomic.write_atomic(
+                target, json.dumps(new_doc, indent=2) + "\n",
+            )
+        else:
+            emptied.add(str(target))
+    return warnings, emptied, touched
+
+
+def _delete_tool_files(
+    entry: dict[str, Any],
+    project_root: Path,
+    *,
+    dry_run: bool,
+    purge: bool,
+    emptied_files: set[str],
+    touched_files: set[str],
+) -> tuple[list[str], list[str]]:
+    """Delete ``files[]`` entries by kind; honour --purge for deployed.
+
+    ``touched_files`` is the set of JSON paths this tool recorded
+    ``merged_keys`` against. A JSON bridge is preserved only when it
+    was touched (shared with neighbour tools) AND subtraction left
+    foreign keys behind. Untouched JSON bridges are owned solely by
+    this tool and removed with the rest.
+    """
+    deleted: list[str] = []
+    skipped: list[str] = []
+    for record in entry.get("files") or []:
+        path = _resolve_recorded_path(project_root, record["path"])
+        kind = record.get("kind")
+        label = str(path)
+        if kind == "bridge":
+            # Shared JSON bridges with foreign keys are kept; otherwise
+            # the tool owns the file outright and we remove it.
+            is_shared_json = (
+                path.exists()
+                and path.suffix == ".json"
+                and label in touched_files
+                and label not in emptied_files
+            )
+            if is_shared_json:
+                skipped.append(f"bridge {label}: foreign keys preserved")
+                continue
+            if not path.exists():
+                skipped.append(f"bridge {label}: already absent")
+                continue
+            if dry_run:
+                deleted.append(f"would remove bridge {label}")
+                continue
+            try:
+                path.unlink()
+                deleted.append(f"removed bridge {label}")
+            except OSError as exc:
+                skipped.append(f"bridge {label}: ❌ {exc}")
+        elif kind == "marker":
+            if not path.exists():
+                skipped.append(f"marker {label}: already absent")
+                continue
+            if dry_run:
+                deleted.append(f"would remove marker {label}")
+                continue
+            try:
+                path.unlink()
+                deleted.append(f"removed marker {label}")
+            except OSError as exc:
+                skipped.append(f"marker {label}: ❌ {exc}")
+        elif kind == "deployed":
+            if not purge:
+                skipped.append(f"deployed {label}: preserved (pass --purge)")
+                continue
+            if not path.exists():
+                skipped.append(f"deployed {label}: already absent")
+                continue
+            if dry_run:
+                deleted.append(f"would purge deployed {label}")
+                continue
+            try:
+                if path.is_dir():
+                    shutil.rmtree(path)
+                else:
+                    path.unlink()
+                deleted.append(f"purged deployed {label}")
+            except OSError as exc:
+                skipped.append(f"deployed {label}: ❌ {exc}")
+        else:
+            skipped.append(f"{label}: unknown kind={kind!r}")
+    return deleted, skipped
+
+
 def _parse(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="agent-config uninstall",
@@ -113,15 +331,91 @@ def _uninstall_project(opts: argparse.Namespace) -> int:
         print("ℹ️   no tools to uninstall")
         return 0
     print(f"{'[dry-run] ' if opts.dry_run else ''}uninstalling {len(tools)} tool(s) from {project_root}:")
+
+    # --force path without a manifest falls straight to the legacy
+    # bridge-marker map; v2 inventories are not available off-manifest.
+    if manifest is None:
+        for tool in tools:
+            line, _ = _remove_project_marker(project_root, tool, dry_run=opts.dry_run)
+            print(f"  · {line}")
+        return 0
+
+    version = manifest.get("agent_config_version", "")
+    deploy_roots = manifest.get("deploy_roots") or None
+    tool_entries = list(manifest.get("tools", []))
     removed_names: list[str] = []
+
     for tool in tools:
-        line, removed = _remove_project_marker(project_root, tool, dry_run=opts.dry_run)
-        print(f"  · {line}")
-        if removed and not opts.dry_run:
+        entry = next((e for e in tool_entries if e.get("name") == tool), None)
+        if entry is None:
+            # Tool requested but not in the manifest — legacy marker fallback.
+            line, removed = _remove_project_marker(
+                project_root, tool, dry_run=opts.dry_run,
+            )
+            print(f"  · {line}")
+            if removed and not opts.dry_run:
+                removed_names.append(tool)
+            continue
+
+        if not _is_v2_entry(entry):
+            # v1 entry — keep the legacy single-marker behaviour.
+            line, removed = _remove_project_marker(
+                project_root, tool, dry_run=opts.dry_run,
+            )
+            print(f"  · {line}")
+            if removed and not opts.dry_run:
+                removed_names.append(tool)
+            continue
+
+        files_n = len(entry.get("files") or [])
+        merges_n = len(entry.get("merged_keys") or [])
+        print(
+            f"  · {tool}: v2 uninstall "
+            f"({files_n} file(s), {merges_n} merge pointer(s))"
+        )
+
+        # Phase 1: flag the entry as uninstalling so a crash here is
+        # recoverable by ``cmd_prune`` (P2.1).
+        if not opts.dry_run:
+            tool_entries = _set_tool_status(
+                manifest_path, version, tool_entries, tool, "uninstalling",
+                deploy_roots=deploy_roots,
+            )
+            entry = next(
+                (e for e in tool_entries if e.get("name") == tool), entry,
+            )
+
+        # Phase 2: subtract this tool's JSON merge contributions.
+        warnings, emptied, touched = _subtract_merged_keys(
+            entry, project_root, dry_run=opts.dry_run,
+        )
+        for w in warnings:
+            print(f"      ⚠️  {w}")
+
+        # Phase 3: delete files[] entries — bridge files are kept when
+        # subtraction left foreign keys behind.
+        deleted, skipped = _delete_tool_files(
+            entry, project_root,
+            dry_run=opts.dry_run, purge=opts.purge,
+            emptied_files=emptied,
+            touched_files=touched,
+        )
+        for d in deleted:
+            print(f"      ✓  {d}")
+        for s in skipped:
+            print(f"      ↷  {s}")
+
+        if not opts.dry_run:
             removed_names.append(tool)
-    if removed_names and manifest is not None and not opts.dry_run:
-        manifest["tools"] = [e for e in manifest.get("tools", []) if e.get("name") not in removed_names]
-        installed_tools.write_manifest(manifest_path, manifest)
+
+    # Phase 4: drop uninstalled entries; persist the manifest atomically.
+    if removed_names and not opts.dry_run:
+        remaining = [
+            e for e in tool_entries if e.get("name") not in removed_names
+        ]
+        installed_tools.write_manifest(
+            manifest_path, version, remaining, deploy_roots=deploy_roots,
+        )
         print(f"✅  manifest updated ({len(removed_names)} entries removed)")
     return 0
 

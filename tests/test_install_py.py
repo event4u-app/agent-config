@@ -1038,5 +1038,161 @@ class TestPostInstallSmoke(unittest.TestCase):
         self.assertNotIn("Smoke-testing", buf.getvalue())
 
 
+class FilesByToolHelpers(unittest.TestCase):
+    """P1.4 — v2 ``files[]`` inventory helpers in install.py.
+
+    Pure functions; tested without touching the install flow so the
+    contract is locked independently of orchestration plumbing.
+    """
+
+    def test_sha256_of_file_returns_hex_digest(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "sample.txt"
+            target.write_text("hello", encoding="utf-8")
+            digest = install._sha256_of_file(target)
+        # SHA-256 of "hello" is well known and 64 hex chars long.
+        self.assertEqual(
+            digest,
+            "2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c1fa7425e73043362938b9824",
+        )
+
+    def test_sha256_of_file_handles_unreadable_path(self) -> None:
+        # Missing file → None, not an OSError.
+        self.assertIsNone(install._sha256_of_file(Path("/no/such/file")))
+
+    def test_files_by_tool_from_bridges_records_kind_bridge(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            mapping = install._files_by_tool_from_bridges(
+                {"cursor"}, project, "project",
+            )
+        self.assertIn("cursor", mapping)
+        entries = mapping["cursor"]
+        self.assertEqual(len(entries), 1)
+        self.assertEqual(entries[0]["kind"], "bridge")
+        # Bridge entries carry no sha256 (they point at agent-config content).
+        self.assertIsNone(entries[0]["sha256"])
+        # Path resolves to the canonical project-scope marker for cursor.
+        expected = install.PROJECT_BRIDGE_MARKERS["cursor"]
+        self.assertTrue(entries[0]["path"].endswith(expected))
+
+    def test_files_by_tool_from_deploy_splits_kinds(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            deployed_a = root / "a.md"
+            deployed_a.write_text("a", encoding="utf-8")
+            marker = root / "agent-config.md"
+            marker.write_text("m", encoding="utf-8")
+            results = {
+                "claude-code": (1, 0, "deployed", [deployed_a]),
+                "claude-desktop": (1, 0, "marker", [marker]),
+                "copilot": (0, 0, "hint", []),
+            }
+            mapping = install._files_by_tool_from_deploy(results, root)
+        self.assertEqual(mapping["claude-code"][0]["kind"], "deployed")
+        self.assertIsNotNone(mapping["claude-code"][0]["sha256"])
+        self.assertEqual(mapping["claude-desktop"][0]["kind"], "marker")
+        # Hint / unsupported tools record an empty inventory (not absent).
+        self.assertEqual(mapping["copilot"], [])
+
+
+class TestInjectPackageTag(unittest.TestCase):
+    """P5.1 — frontmatter package/source tag injection."""
+
+    def setUp(self) -> None:
+        self.tmp = Path(tempfile.mkdtemp(prefix="agc-tag-"))
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmp, ignore_errors=True)
+
+    def test_injects_into_existing_frontmatter(self) -> None:
+        pkg = self.tmp / "pkg"
+        src = pkg / "config" / "rules" / "general.md"
+        src.parent.mkdir(parents=True)
+        src.write_text("---\ntitle: t\n---\nbody\n")
+        target = self.tmp / "out" / "general.md"
+        target.parent.mkdir()
+        shutil.copyfile(src, target)
+        install._inject_package_tag(target, src, pkg)
+        text = target.read_text()
+        self.assertIn(f"package: {install.PACKAGE_TAG_ID}", text)
+        self.assertIn("source_path: config/rules/general.md", text)
+        self.assertIn("body", text)
+
+    def test_idempotent(self) -> None:
+        pkg = self.tmp / "pkg"
+        src = pkg / "rules" / "x.md"
+        src.parent.mkdir(parents=True)
+        src.write_text("---\ntitle: t\n---\nbody\n")
+        target = self.tmp / "out" / "x.md"
+        target.parent.mkdir()
+        shutil.copyfile(src, target)
+        install._inject_package_tag(target, src, pkg)
+        first = target.read_text()
+        install._inject_package_tag(target, src, pkg)
+        self.assertEqual(first, target.read_text())
+
+    def test_no_frontmatter_left_alone(self) -> None:
+        target = self.tmp / "plain.md"
+        target.write_text("# heading\nbody\n")
+        install._inject_package_tag(target, target, None)
+        self.assertEqual(target.read_text(), "# heading\nbody\n")
+
+    def test_open_frontmatter_left_alone(self) -> None:
+        # Missing closing fence — treat as no frontmatter, never synthesise.
+        target = self.tmp / "open.md"
+        target.write_text("---\nnoclose: true\nbody\n")
+        install._inject_package_tag(target, target, None)
+        self.assertEqual(target.read_text(), "---\nnoclose: true\nbody\n")
+
+    def test_non_md_files_ignored(self) -> None:
+        target = self.tmp / "data.json"
+        target.write_text("---\nkey: val\n---\n{}\n")
+        install._inject_package_tag(target, target, None)
+        self.assertEqual(target.read_text(), "---\nkey: val\n---\n{}\n")
+
+    def test_updates_existing_package_key(self) -> None:
+        target = self.tmp / "tagged.md"
+        target.write_text(
+            "---\ntitle: t\npackage: other/pkg\n---\nbody\n",
+        )
+        install._inject_package_tag(target, target, None)
+        text = target.read_text()
+        self.assertIn(f"package: {install.PACKAGE_TAG_ID}", text)
+        self.assertNotIn("package: other/pkg", text)
+
+    def test_preserves_existing_source_origin_key(self) -> None:
+        # Regression: 200+ rule files use ``source: package`` as an
+        # origin-type marker. The injector must not clobber it; we
+        # write ``source_path:`` instead.
+        target = self.tmp / "rule.md"
+        target.write_text(
+            "---\ntype: auto\nsource: package\n---\nbody\n",
+        )
+        pkg = self.tmp
+        install._inject_package_tag(target, target, pkg)
+        text = target.read_text()
+        self.assertIn("source: package", text)
+        self.assertIn(f"package: {install.PACKAGE_TAG_ID}", text)
+        self.assertIn("source_path: rule.md", text)
+
+    def test_copy_helper_injects_into_deployed_md(self) -> None:
+        pkg = self.tmp / "pkg"
+        src_dir = pkg / "config" / "rules"
+        src_dir.mkdir(parents=True)
+        (src_dir / "a.md").write_text("---\ntitle: a\n---\nA body\n")
+        (src_dir / "b.md").write_text("plain no frontmatter\n")
+        dest = self.tmp / "deploy"
+        install._copy_dir_dereferencing_symlinks(
+            src_dir, dest, force=True, package_root=pkg,
+        )
+        a_text = (dest / "a.md").read_text()
+        self.assertIn(f"package: {install.PACKAGE_TAG_ID}", a_text)
+        self.assertIn("source_path: config/rules/a.md", a_text)
+        self.assertEqual(
+            (dest / "b.md").read_text(), "plain no frontmatter\n",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
