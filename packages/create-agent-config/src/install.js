@@ -31,17 +31,38 @@ const SELF_PACKAGE_NAMES = new Set([
     "@event4u/create-agent-config",
 ]);
 
+// Phase 2.4 — --ai is an alias for --tools. Both accepted; when both
+// are passed the comma-separated values are unioned (order-preserving,
+// deduplicated). The merged string is forwarded to scripts/install via
+// --tools=, so the Python validator (_parse_tools / _validate_scope)
+// sees a single canonical value.
+function mergeToolsValue(existing, addition) {
+    if (!addition) return existing;
+    const items = [];
+    for (const raw of [existing, addition]) {
+        if (!raw) continue;
+        for (const piece of String(raw).split(",")) {
+            const trimmed = piece.trim();
+            if (trimmed && !items.includes(trimmed)) items.push(trimmed);
+        }
+    }
+    return items.join(",");
+}
+
 function parseArgs(argv) {
-    const args = { subcommand: "init", tools: undefined, yes: false, ref: undefined, dryRun: false, target: process.cwd() };
+    const args = { subcommand: "init", tools: undefined, yes: false, ref: undefined, dryRun: false, global: false, target: process.cwd() };
     const rest = [];
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
         if (a === "init") { args.subcommand = a; continue; }
         if (a === "--yes" || a === "-y") { args.yes = true; continue; }
         if (a === "--dry-run") { args.dryRun = true; continue; }
+        if (a === "--global") { args.global = true; continue; }
         if (a === "--help" || a === "-h") { args.help = true; continue; }
-        if (a.startsWith("--tools=")) { args.tools = a.slice(8); continue; }
-        if (a === "--tools") { args.tools = argv[++i]; continue; }
+        if (a.startsWith("--tools=")) { args.tools = mergeToolsValue(args.tools, a.slice(8)); continue; }
+        if (a === "--tools") { args.tools = mergeToolsValue(args.tools, argv[++i]); continue; }
+        if (a.startsWith("--ai=")) { args.tools = mergeToolsValue(args.tools, a.slice(5)); continue; }
+        if (a === "--ai") { args.tools = mergeToolsValue(args.tools, argv[++i]); continue; }
         if (a.startsWith("--ref=")) { args.ref = a.slice(6); continue; }
         if (a === "--ref") { args.ref = argv[++i]; continue; }
         if (a.startsWith("--target=")) { args.target = a.slice(9); continue; }
@@ -61,11 +82,17 @@ Subcommands:
 Options:
   --tools <list>   Comma-separated tool IDs (default: all). Forwarded to
                    scripts/install. Valid: claude-code,claude-desktop,cursor,
-                   windsurf,cline,gemini-cli,copilot,augment,aider,codex,all.
+                   windsurf,cline,gemini-cli,copilot,augment,roocode,aider,
+                   codex,continue,kilocode,zed,jetbrains,kiro,all.
+  --ai <list>      Alias for --tools (same IDs). Both flags may be
+                   combined; values are unioned.
   --yes, -y        Non-interactive mode. Skip prompts.
   --ref <git-ref>  Install a specific git ref (branch, tag, sha) instead of
                    the latest npm release. Useful for testing.
-  --target <dir>   Target project directory (default: cwd).
+  --target <dir>   Target project directory (default: cwd). Ignored under
+                   --global; user-scope paths come from the ADR-007 matrix.
+  --global         Install to user-scope paths (~/.claude/, ~/.cursor/, …)
+                   instead of project-locally. See ADR-007.
   --dry-run        Print the command that would be run; do not execute.
   --help, -h       Show this help.
 `);
@@ -150,6 +177,7 @@ export async function run(argv) {
         const cmd = ["bash", installer, "--target", args.target];
         if (args.tools) cmd.push(`--tools=${args.tools}`);
         if (args.yes) cmd.push("--yes");
+        if (args.global) cmd.push("--global");
 
         if (args.dryRun) { process.stdout.write(`  🔍  [dry-run] ${cmd.join(" ")}\n`); return; }
 
