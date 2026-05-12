@@ -1,7 +1,7 @@
 ---
-name: fix:pr-developers
+name: fix:pr-developer-comments
 cluster: fix
-sub: pr-developers
+sub: pr-developer-comments
 skills: [php-coder]
 description: Fix and reply to human reviewer comments on a GitHub PR
 disable-model-invocation: true
@@ -11,7 +11,7 @@ suggestion:
   trigger_context: "open PR with unresolved human-reviewer comments"
 ---
 
-# /fix pr-developers
+# /fix pr-developer-comments
 ## Input
 
 The user may or may not provide a PR URL.

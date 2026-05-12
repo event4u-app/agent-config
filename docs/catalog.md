@@ -294,9 +294,9 @@ are excluded.
 | command | [`feature`](../.agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
 | command | [`fix:ci`](../.agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix:portability`](../.agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
-| command | [`fix:pr-bots`](../.agent-src/commands/fix/pr-bots.md) | cluster: fix | Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR |
-| command | [`fix:pr-developers`](../.agent-src/commands/fix/pr-developers.md) | cluster: fix | Fix and reply to human reviewer comments on a GitHub PR |
-| command | [`fix:pr`](../.agent-src/commands/fix/pr.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix:pr-bot-comments`](../.agent-src/commands/fix/pr-bot-comments.md) | cluster: fix | Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR |
+| command | [`fix:pr-comments`](../.agent-src/commands/fix/pr-comments.md) | cluster: fix | Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR |
+| command | [`fix:pr-developer-comments`](../.agent-src/commands/fix/pr-developer-comments.md) | cluster: fix | Fix and reply to human reviewer comments on a GitHub PR |
 | command | [`fix:refs`](../.agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix:seeder`](../.agent-src/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |

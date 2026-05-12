@@ -22,9 +22,9 @@ with a single entry point + sub-command dispatch.
 | `/fix refs` | `commands/fix/refs.md` | Find and fix broken cross-references in `.augment/` and `agents/` |
 | `/fix portability` | `commands/fix/portability.md` | Find and fix project-specific references in shared `.augment/` files |
 | `/fix seeder` | `commands/fix/seeder.md` | Scan seeder data files for broken FK references |
-| `/fix pr` | `commands/fix/pr.md` | Fix and reply to **all** open review comments (bots + humans) |
-| `/fix pr-bots` | `commands/fix/pr-bots.md` | Fix and reply to **bot** review comments only |
-| `/fix pr-developers` | `commands/fix/pr-developers.md` | Fix and reply to **human** reviewer comments only |
+| `/fix pr-comments` | `commands/fix/pr-comments.md` | Fix and reply to **all** open review comments (bots + humans) |
+| `/fix pr-bot-comments` | `commands/fix/pr-bot-comments.md` | Fix and reply to **bot** review comments only |
+| `/fix pr-developer-comments` | `commands/fix/pr-developer-comments.md` | Fix and reply to **human** reviewer comments only |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md).
@@ -41,9 +41,9 @@ Sub-command names match the locked contract in
    > 2. refs — fix broken cross-refs in agent docs
    > 3. portability — purge project-specific refs from shared package
    > 4. seeder — scan seeders for broken FK references
-   > 5. pr — address all open review comments
-   > 6. pr-bots — address bot reviewer comments only
-   > 7. pr-developers — address human reviewer comments only
+   > 5. pr-comments — address all open review comments
+   > 6. pr-bot-comments — address bot reviewer comments only
+   > 7. pr-developer-comments — address human reviewer comments only
 
 ## Rules
 

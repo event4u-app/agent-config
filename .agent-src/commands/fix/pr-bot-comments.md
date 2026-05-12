@@ -1,7 +1,7 @@
 ---
-name: fix:pr-bots
+name: fix:pr-bot-comments
 cluster: fix
-sub: pr-bots
+sub: pr-bot-comments
 skills: [php-coder, quality-tools]
 description: Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
 disable-model-invocation: true
@@ -11,7 +11,7 @@ suggestion:
   trigger_context: "open PR with bot review comments unresolved"
 ---
 
-# /fix pr-bots
+# /fix pr-bot-comments
 ## Input
 
 The user may or may not provide a PR URL.
