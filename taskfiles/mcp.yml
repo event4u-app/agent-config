@@ -122,6 +122,11 @@ tasks:
       - npm install --silent
       - npm run dev
 
+  mcp:cloud:secret-put:
+    desc: "Set the `MCP-Token` secret on the `agent-config-mcp` Worker (interactive — prompts for the value)."
+    cmds:
+      - npx wrangler secret put MCP-Token --name agent-config-mcp
+
   mcp:cloud:deploy-dispatch:
     desc: "Manually trigger the deploy-mcp-worker.yml workflow for a tag (validation, not first release)."
     cmds:
