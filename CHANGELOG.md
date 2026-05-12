@@ -318,6 +318,29 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.0.0](https://github.com/event4u-app/agent-config/compare/1.41.2...2.0.0) (2026-05-12)
+
+### BREAKING CHANGES
+
+* **install:** drop composer + npm postinstall, go npx-only ([6bc6c99](https://github.com/event4u-app/agent-config/commit/6bc6c99f57d2a2bcdab03bfacab429ce146dd9b9))
+
+### Features
+
+* **cli:** add update + migrate commands, version-pin resolver, CI drift guard ([b1e34fc](https://github.com/event4u-app/agent-config/commit/b1e34fcd7a03d38266e40dd053414fc9d20c9024))
+* **update-check:** add daily npm-registry version probe + banner ([2c4d752](https://github.com/event4u-app/agent-config/commit/2c4d752d5eb28f1c460470668704f5cf403c4046))
+* **settings:** add hierarchical project-settings cascade + agents overlay ([3296885](https://github.com/event4u-app/agent-config/commit/32968855ca17210b1594cea2e79778acb0476f0a))
+
+### Tests
+
+* **install:** drop postinstall.sh test cases removed in P0 ([d4e7750](https://github.com/event4u-app/agent-config/commit/d4e7750bcd13b021caa4ccaccff821dc0ae8e537))
+
+### Chores
+
+* **template:** mirror agent_settings cascade into work_engine template ([92f4716](https://github.com/event4u-app/agent-config/commit/92f471662c463efec0df591099a3507919396d77))
+* **roadmap:** archive completed portable-runtime-and-update-check ([91e2e4e](https://github.com/event4u-app/agent-config/commit/91e2e4ef75042d2d19a528874ebcac4b94c4046a))
+
+Tests: 3257 (+84 since 1.41.2)
+
 ## [1.41.2](https://github.com/event4u-app/agent-config/compare/1.41.1...1.41.2) (2026-05-12)
 
 ### Documentation
