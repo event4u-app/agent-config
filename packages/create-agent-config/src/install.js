@@ -2,19 +2,19 @@
 //
 // Flow:
 //   1. Parse argv (subcommand + flags).
-//   2. Resolve the source tarball (npm registry latest by default; --ref for
+//   2. Reject if --target points at the agent-config source checkout itself
+//      (running `init` inside the dev tree corrupts .augment/ symlinks).
+//   3. Resolve the source tarball (npm registry latest by default; --ref for
 //      a specific git ref via codeload).
-//   3. Download + extract into a temp dir under os.tmpdir().
-//   4. Spawn `bash scripts/install --tools=<picked> [--yes] [--target=<cwd>]`.
-//   5. Clean up the temp dir.
+//   4. Download + extract into a temp dir under os.tmpdir().
+//   5. Spawn `bash scripts/install --tools=<picked> [--yes] [--target=<cwd>]`.
+//   6. Clean up the temp dir.
 //
 // Subcommands:
 //   init    — install into the current working directory (default)
-//   global  — placeholder for Phase 3 (`scripts/install.py global`); prints
-//             a "not yet shipped" notice and exits 2.
 
 import { spawnSync } from "node:child_process";
-import { mkdtempSync, rmSync, existsSync, createWriteStream } from "node:fs";
+import { mkdtempSync, rmSync, existsSync, readFileSync, createWriteStream } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -23,12 +23,20 @@ import { pipeline } from "node:stream/promises";
 const PACKAGE = "@event4u/agent-config";
 const REPO = "event4u-app/agent-config";
 
+// Names that identify the agent-config source checkout. Matching either the
+// directory's package.json::name OR the presence of .agent-src.uncompressed/
+// is enough to bail — false-positive risk against any consumer is zero.
+const SELF_PACKAGE_NAMES = new Set([
+    "@event4u/agent-config",
+    "@event4u/create-agent-config",
+]);
+
 function parseArgs(argv) {
     const args = { subcommand: "init", tools: undefined, yes: false, ref: undefined, dryRun: false, target: process.cwd() };
     const rest = [];
     for (let i = 0; i < argv.length; i++) {
         const a = argv[i];
-        if (a === "init" || a === "global") { args.subcommand = a; continue; }
+        if (a === "init") { args.subcommand = a; continue; }
         if (a === "--yes" || a === "-y") { args.yes = true; continue; }
         if (a === "--dry-run") { args.dryRun = true; continue; }
         if (a === "--help" || a === "-h") { args.help = true; continue; }
@@ -49,7 +57,6 @@ function showHelp() {
 
 Subcommands:
   init       Install agent-config into the current directory (default)
-  global     Reserved for Phase 3 (global per-user install). Not yet shipped.
 
 Options:
   --tools <list>   Comma-separated tool IDs (default: all). Forwarded to
@@ -62,6 +69,24 @@ Options:
   --dry-run        Print the command that would be run; do not execute.
   --help, -h       Show this help.
 `);
+}
+
+// Source-repo guard: refuse to install into the agent-config dev tree.
+// Returns a string reason on hit, null when the target is a real consumer.
+function detectSourceRepo(targetDir) {
+    if (existsSync(join(targetDir, ".agent-src.uncompressed"))) {
+        return ".agent-src.uncompressed/ — this is the agent-config source tree";
+    }
+    const pkgPath = join(targetDir, "package.json");
+    if (existsSync(pkgPath)) {
+        try {
+            const pkg = JSON.parse(readFileSync(pkgPath, "utf8"));
+            if (pkg && typeof pkg.name === "string" && SELF_PACKAGE_NAMES.has(pkg.name)) {
+                return `package.json::name === "${pkg.name}"`;
+            }
+        } catch { /* malformed package.json — treat as not-source */ }
+    }
+    return null;
 }
 
 async function downloadTarball(url, destPath) {
@@ -94,8 +119,16 @@ export async function run(argv) {
     const args = parseArgs(argv);
     if (args.help) { showHelp(); return; }
 
-    if (args.subcommand === "global") {
-        process.stderr.write("  ⚠️  `global` subcommand is reserved for Phase 3 of road-to-simplicity-and-everywhere. Not yet shipped.\n");
+    const sourceMarker = detectSourceRepo(args.target);
+    if (sourceMarker) {
+        process.stderr.write(
+            `  ❌  Refusing to install agent-config into its own source checkout.\n` +
+            `      Target:   ${args.target}\n` +
+            `      Detected: ${sourceMarker}\n` +
+            `      Run \`task sync\` to regenerate .agent-src/ + .augment/ from\n` +
+            `      .agent-src.uncompressed/ instead. To install into a different\n` +
+            `      directory, pass --target <dir>.\n`
+        );
         process.exit(2);
     }
 

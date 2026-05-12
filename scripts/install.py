@@ -97,43 +97,34 @@ def fail(msg: str) -> "None":
 # --- Package detection ---
 
 def detect_package_root(project_root: Path) -> Path:
-    candidates = [
-        project_root / "vendor" / "event4u" / "agent-config",
-        project_root / "node_modules" / "@event4u" / "agent-config",
-    ]
-    for path in candidates:
-        if path.is_dir():
-            return path.resolve()
+    npm_path = project_root / "node_modules" / "@event4u" / "agent-config"
+    if npm_path.is_dir():
+        return npm_path.resolve()
 
     # Running from within the package itself (development mode)
     if (project_root / "config" / "profiles" / "minimal.ini").exists():
         return project_root
 
-    fail("Could not find agent-config package. Run from a project with composer/npm install.")
+    fail(
+        "Could not find agent-config package. Install via "
+        "`npx @event4u/create-agent-config init` or `npm install --save-dev @event4u/agent-config`."
+    )
     return project_root  # unreachable
 
 
 def detect_package_type(package_root: Path) -> str:
-    parts = package_root.parts
-    if "vendor" in parts:
-        return "composer"
-    if "node_modules" in parts:
+    if "node_modules" in package_root.parts:
         return "npm"
     return "local"
 
 
 def detect_package_type_for_project(project_root: Path, package_root: Path) -> str:
     """Determine package type based on where the package lives relative to the project."""
-    composer_path = (project_root / "vendor" / "event4u" / "agent-config").resolve()
     npm_path = (project_root / "node_modules" / "@event4u" / "agent-config").resolve()
     package_resolved = package_root.resolve()
 
-    if package_resolved == composer_path or composer_path.exists():
-        if package_resolved == composer_path:
-            return "composer"
-    if package_resolved == npm_path or npm_path.exists():
-        if package_resolved == npm_path:
-            return "npm"
+    if package_resolved == npm_path:
+        return "npm"
     return detect_package_type(package_root)
 
 
@@ -446,7 +437,6 @@ def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, 
 
 def ensure_vscode_bridge(project_root: Path, package_type: str, force: bool) -> None:
     plugin_paths = {
-        "composer": "./vendor/event4u/agent-config/plugin/agent-config",
         "npm": "./node_modules/@event4u/agent-config/plugin/agent-config",
     }
     plugin_path = plugin_paths.get(package_type, "./plugin/agent-config")
@@ -1404,7 +1394,7 @@ def main(argv: list[str]) -> int:
             print()
             print("  Next steps:")
             print("    • Commit .agent-settings.yml and bridge files to your repo")
-            print("    • New team members just run composer install / npm install — done")
+            print("    • New team members run `npx @event4u/create-agent-config init` — done")
             print("    • Inspect hook coverage: ./agent-config hooks:status")
             print("    • Full walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
             print()
