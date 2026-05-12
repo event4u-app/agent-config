@@ -90,38 +90,64 @@ Install directly in your agent for global, cross-project use:
 → [Full getting started guide](docs/getting-started.md) ·
 [More examples & expected behavior](docs/showcase.md)
 
-### Remote MCP — zero install
+### Self-hosted MCP on Cloudflare — zero local install
 
-Skills, commands, rules, and guidelines are also served as a hosted MCP
-endpoint. No clone, no `task mcp:setup`, no Python venv — point any
-MCP-capable client (Claude Desktop, Cursor, Zed, Continue, hosted agents)
-at:
+Skills, commands, rules, and guidelines can be served as an MCP endpoint
+from your own Cloudflare Worker — no clone, no `task mcp:setup`, no
+Python venv on the consumer machine, just an HTTP URL any MCP client
+(Claude Desktop, Claude Code, Cursor, Zed, Continue, hosted agents)
+talks to.
 
-```
-https://agent-config-mcp.event4u.workers.dev
-```
-
-Verify it's live:
+The Worker source lives in `workers/mcp/`; deploying it to your own
+Cloudflare account takes ~5 minutes:
 
 ```bash
-curl https://agent-config-mcp.event4u.workers.dev
+task mcp:cloud:login         # one-time, opens browser
+task mcp:cloud:setup         # check → r2-create → r2-verify → whoami
+task mcp:cloud:secret-put    # set MCP-Token (Bearer auth, recommended)
+# Then deploy via CI — see operator guide below.
+```
+
+After deploy your Worker lives at
+`https://agent-config-mcp.<your-account>.workers.dev` (or a custom
+domain you wire in Step 7 of the operator guide). Verify:
+
+```bash
+curl https://agent-config-mcp.<your-account>.workers.dev
 # → { "ok": true, "name": "agent-config-mcp", "release_key": "v…", … }
 ```
 
-Read-only, identity-stable per release. Per-client setup snippets
-(Claude Desktop, Claude Code, Cursor, Zed, Continue) —
-[`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md).
-URL shapes (latest vs. pinned `/v<X.Y.Z>`) —
-[`docs/setup/mcp-cloud-endpoints.md`](docs/setup/mcp-cloud-endpoints.md).
-Operator setup (account, R2, secrets) — [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
+Per-client setup snippets (Claude Desktop, Claude Code, Cursor, Zed,
+Continue) — [`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md).
+URL shapes (latest vs. pinned `/v<X.Y.Z>`) — [`docs/setup/mcp-cloud-endpoints.md`](docs/setup/mcp-cloud-endpoints.md).
+Full operator walkthrough (account, R2, GitHub secrets, deploy) —
+[`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
 Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` (internal reference only per `STABILITY.md`).
 
-> **Scope — Lite, not Full.** The hosted MCP endpoint serves the
-> read-only governance surface (skills · commands · rules · guidelines
-> · contexts) as MCP prompts and resources. It does **not** execute any
-> of the ~112 Python scripts that ship with the package (linters,
-> audits, `task ci`, work-engine hooks, …). Those require the full
-> local install per [Quickstart](#quickstart). See
+#### Lock your Worker behind a Bearer token
+
+Without auth, any MCP client that knows your `*.workers.dev` URL can
+read the catalog. For private deploys, set the `MCP-Token` secret and
+the Worker will require `Authorization: Bearer <token>` on every POST:
+
+```bash
+task mcp:cloud:secret-put          # wraps `npx wrangler secret put MCP-Token --name agent-config-mcp`
+# wrangler prompts for the value interactively — never passed via argv.
+```
+
+Once the secret is set, every client config block needs the token in
+its headers — see [`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md) § Bearer auth for the
+per-client snippets (Claude Desktop, Claude Code, Cursor, Zed,
+Continue). The `GET /` liveness probe stays open so health checks keep
+working without the token.
+
+> **Scope — Lite, not Full.** The Worker serves the read-only governance
+> surface (skills · commands · rules · guidelines · contexts) as MCP
+> prompts and resources, plus a small set of read-only tools (`memory_lookup`,
+> `chat_history_read`, `list_*`, `read_resource_body`). It does **not**
+> execute any of the ~112 Python scripts that ship with the package
+> (linters, audits, `task ci`, work-engine hooks, …). Those require the
+> full local install per [Quickstart](#quickstart). See
 > `docs/contracts/mcp-cloud-scope.md` (internal reference only per
 > `STABILITY.md`) for the execution-safety boundary.
 

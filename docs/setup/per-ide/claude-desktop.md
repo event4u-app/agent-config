@@ -68,9 +68,15 @@ If the menu is empty:
 
 ## Step 3 — optional MCP server
 
-Claude Desktop also speaks MCP. Wiring up the hosted `agent-config-mcp`
-Worker exposes the **full** skill / rule / command catalog (~480 items)
-on demand, on top of the 15 you installed in Step 1.
+Claude Desktop also speaks MCP. Wiring up your own self-hosted
+`agent-config-mcp` Cloudflare Worker exposes the **full** skill / rule /
+command catalog (~480 items) on demand, on top of the 15 you installed
+in Step 1.
+
+Deploy the Worker first per [`../mcp-cloud-setup.md`](../mcp-cloud-setup.md) — your
+URL will be `https://agent-config-mcp.<your-account>.workers.dev`
+(or a custom domain you wire up in Step 7). Replace
+`https://your-worker.workers.dev` below with that URL.
 
 Edit `~/Library/Application Support/Claude/claude_desktop_config.json`
 (macOS) or `%APPDATA%\Claude\claude_desktop_config.json` (Windows /
@@ -81,7 +87,25 @@ Linux is `~/.config/Claude/claude_desktop_config.json`):
   "mcpServers": {
     "agent-config": {
       "command": "npx",
-      "args": ["-y", "mcp-remote", "https://agent-config-mcp.event4u.workers.dev"]
+      "args": ["-y", "mcp-remote", "https://your-worker.workers.dev"]
+    }
+  }
+}
+```
+
+If you set the `MCP-Token` secret on the Worker (recommended — see
+[`../mcp-cloud-setup.md`](../mcp-cloud-setup.md) § Bearer auth), add the header:
+
+```json
+{
+  "mcpServers": {
+    "agent-config": {
+      "command": "npx",
+      "args": [
+        "-y", "mcp-remote", "https://your-worker.workers.dev",
+        "--header", "Authorization: Bearer ${MCP_TOKEN}"
+      ],
+      "env": { "MCP_TOKEN": "paste-token-here" }
     }
   }
 }
@@ -89,11 +113,12 @@ Linux is `~/.config/Claude/claude_desktop_config.json`):
 
 A pre-wired template ships at
 [`templates/claude_desktop_config.json.template`](../../../templates/claude_desktop_config.json.template) —
-copy + uncomment the MCP block.
+copy, swap the placeholder URL for your deploy, and uncomment the MCP
+block.
 
 Restart Claude Desktop. The 🔌 icon shows the connector under
 **Settings → Connectors**. Full transport details (mcp-remote vs.
-native HTTP) live in
+native HTTP) and per-client Bearer-auth snippets live in
 [`../mcp-client-config.md`](../mcp-client-config.md).
 
 ## Claude Desktop ↔ Claude Code config sharing
@@ -125,7 +150,7 @@ Desktop config**. Once Step 1 + Step 3 are done in Desktop:
   inside Cowork sessions without a separate install.
 - Cowork-specific limit (per Anthropic docs): MCP tools that write to
   the local filesystem are sandboxed — read-only tools (the entire
-  hosted `agent-config-mcp` surface) work fine.
+  `agent-config-mcp` Worker surface) work fine.
 
 If a feature works in Desktop but not in Cowork, check that you're on
 a paid plan — Cowork is gated, Desktop's free tier has the full
