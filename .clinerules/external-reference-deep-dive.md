@@ -1,0 +1,1 @@
+../.agent-src/rules/external-reference-deep-dive.md

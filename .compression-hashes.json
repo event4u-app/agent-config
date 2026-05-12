@@ -174,6 +174,7 @@
   "rules/domain-adoption-policy.md": "1cda223835ed763664d5109693843ef5cfbb6285588c19433c64508cceb22996",
   "rules/downstream-changes.md": "ef0ba48d15656ffd32a1d86e84ffe838bd36c7fb8a7d0e7f06f8b36361c657ba",
   "rules/e2e-testing.md": "1cfd2aafaee121ad823ebcc4c7ca769e955c3a27a436d428b01ce572bd5c8a6c",
+  "rules/external-reference-deep-dive.md": "8be974850c7801bf23c908054a207d7375100b301db614eaf4448bfa130f433a",
   "rules/guidelines.md": "9063f247112da1d518ca5ec543a204f54fb67ef7ec4f8a60740de264789e4bbe",
   "rules/improve-before-implement.md": "e2b318324afd210edeea46a8de1c7e40c64c45be689910d36a110369aed7742a",
   "rules/invite-challenge.md": "9ddc1c0c92c54c98118b423ca54faefaf02f2c7edd46fdf65a7b8494aa12874a",
