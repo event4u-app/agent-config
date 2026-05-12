@@ -94,6 +94,10 @@ Commands:
                              Usage: council:run <question> --output <path> --confirm
   council:render             Re-render a saved council responses JSON to markdown
                              Usage: council:render <responses.json>
+  update                     Update the agent_config_version pin in .agent-settings.yml
+                             Flags: --check (read-only) | --to <version> (explicit pin)
+  migrate                    One-shot migration off legacy composer / npm install paths
+                             Flags: --dry-run (detect only)
   help                       Show this help
   --version, -V              Print package version
 
@@ -504,6 +508,22 @@ cmd_council() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 "$script" "$sub" "$@"
 }
 
+# `agent-config update` — flip the agent_config_version pin in
+# .agent-settings.yml. See scripts/_cli/cmd_update.py (P3.1 of
+# road-to-portable-runtime-and-update-check.md).
+cmd_update() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_update "$@"
+}
+
+# `agent-config migrate` — one-shot migration off legacy composer / npm
+# install paths onto the npx-only runtime. See scripts/_cli/cmd_migrate.py
+# (P3.5 of road-to-portable-runtime-and-update-check.md).
+cmd_migrate() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_migrate "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -542,6 +562,8 @@ main() {
     council:estimate)        cmd_council estimate "$@" ;;
     council:run)             cmd_council run "$@" ;;
     council:render)          cmd_council render "$@" ;;
+    update)                  cmd_update "$@" ;;
+    migrate)                 cmd_migrate "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)
@@ -552,4 +574,54 @@ main() {
   esac
 }
 
-main "$@"
+# Pre-flight pin resolver: when `.agent-settings.yml` carries a
+# non-empty `agent_config_version` that differs from the running
+# package version, re-exec via `npx @event4u/agent-config@<pin>`.
+# Skipped for `--version`, `help`, `update` and `migrate` (so consumers
+# can escape a bad pin or run the legacy-cleanup before a pin exists),
+# and when `AGENT_CONFIG_NO_PIN_REEXEC=1`. See P3.2 of
+# road-to-portable-runtime-and-update-check.md.
+maybe_pin_reexec() {
+  local cmd="${1-}"
+  case "$cmd" in
+    help|--help|-h|--version|-V|update|migrate|"") return 0 ;;
+  esac
+  if ! command -v python3 >/dev/null 2>&1; then
+    return 0
+  fi
+  local installed
+  installed="$(print_version)"
+  [[ -z "$installed" || "$installed" == "unknown" ]] && return 0
+  env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._lib.pin_resolver \
+    --cwd "$CONSUMER_ROOT" --installed "$installed" -- "$@" || true
+}
+
+# Post-subcommand banner: best-effort daily update-check notice on
+# stderr. Runs after the dispatch returns (subshell wrapper below)
+# so the banner appears post-output and never delays the subcommand.
+# Suppressed in CI, on non-TTY stdout, by AGENT_CONFIG_NO_UPDATE_CHECK=1,
+# or by `update_check.enabled: false` in settings. See P2 of
+# road-to-portable-runtime-and-update-check.md.
+run_update_check_banner() {
+  local cmd="${1-}"
+  case "$cmd" in
+    help|--help|-h|--version|-V|"") return 0 ;;
+  esac
+  if ! command -v python3 >/dev/null 2>&1; then
+    return 0
+  fi
+  local banner_script="$PACKAGE_ROOT/scripts/check_update_banner.py"
+  [[ -f "$banner_script" ]] || return 0
+  python3 "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
+}
+
+# Pin re-exec runs before dispatch — if it triggers, the process is
+# replaced and nothing else here matters.
+maybe_pin_reexec "$@"
+
+# Dispatch in a subshell so internal ``exec`` calls do not replace this
+# process — we still get to run the post-subcommand banner.
+( main "$@" )
+rc=$?
+run_update_check_banner "${1-}"
+exit "$rc"
