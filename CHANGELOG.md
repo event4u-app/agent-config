@@ -335,6 +335,37 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.2.0](https://github.com/event4u-app/agent-config/compare/2.1.0...2.2.0) (2026-05-12)
+
+### Features
+
+* **npx:** expand --tools validator to 13 supported AI ids ([7af69a7](https://github.com/event4u-app/agent-config/commit/7af69a766f575c30d8f29ea04052647b6a1b8a19))
+* **cli:** add sync and validate subcommands for installed-tools manifest ([62a5c66](https://github.com/event4u-app/agent-config/commit/62a5c66a131bcf8866be2a8c0e76ba6e054017af))
+* **cli:** add export subcommand and update version-drift handling ([6110f3b](https://github.com/event4u-app/agent-config/commit/6110f3b0ee454ca215c569d8f42ca38ffce577e8))
+* **install:** global-first install with lockfile + installed-tools manifest engine ([6200d42](https://github.com/event4u-app/agent-config/commit/6200d42225d5712a10d5458dc608da3f5cd0164c))
+
+### Bug Fixes
+
+* **rules:** trim no-cheap-questions to satisfy 12% concentration cap ([4abf946](https://github.com/event4u-app/agent-config/commit/4abf94628838c027da13d190e5e7b27738070db2))
+
+### Documentation
+
+* **rules:** add no-cheap-questions Iron Law 3 against paternalistic state options ([b98687b](https://github.com/event4u-app/agent-config/commit/b98687bd397d39eae6811e54eb743a095fa33b8b))
+* README + installation + manifest guideline for global-first install ([cdc52ff](https://github.com/event4u-app/agent-config/commit/cdc52ffc5abb9cff6fda9133dd0b8dc524794d18))
+* **contracts:** add tier-3 contrib plugin contract ([2dbf9cd](https://github.com/event4u-app/agent-config/commit/2dbf9cd2ec772dc2248de2b8f17248e97a67a60b))
+* **adr:** add ADR-007 global-first install + ADR-008 installed-tools manifest ([e214de2](https://github.com/event4u-app/agent-config/commit/e214de27bd8d19858fdc16cecc4ebfeaaebce136))
+
+### CI
+
+* **windows:** add lockfile + export tests on Windows runner ([e5802a5](https://github.com/event4u-app/agent-config/commit/e5802a56f45bcfd5eb845c7af816bb12a0b4492b))
+
+### Chores
+
+* **taskfile:** add test-install-local for offline one-liner smoke test ([594ac69](https://github.com/event4u-app/agent-config/commit/594ac69c8682f106dee9ebc9ce3e55bb0083e254))
+* **roadmap:** archive road-to-global-first-install (24/24 complete) ([71d8cf2](https://github.com/event4u-app/agent-config/commit/71d8cf2966976c286ffecc1646cb7990255cccd1))
+
+Tests: 3350 (+97 since 2.1.0)
+
 ## [2.1.0](https://github.com/event4u-app/agent-config/compare/2.0.0...2.1.0) (2026-05-12)
 
 ### Features
