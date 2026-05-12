@@ -343,6 +343,19 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.2.1](https://github.com/event4u-app/agent-config/compare/2.2.0...2.2.1) (2026-05-12)
+
+### Documentation
+
+* changelog + ADR-007 note for package consolidation ([1d0d6fb](https://github.com/event4u-app/agent-config/commit/1d0d6fb8882431ee11a6b034f6157ae9f8ccea4d))
+* update install commands to npx @event4u/agent-config init ([b9956c6](https://github.com/event4u-app/agent-config/commit/b9956c6ff827433bff7dc9aa1f40ba3454ef5154))
+
+### Chores
+
+* consolidate npm package into @event4u/agent-config init ([d3188ce](https://github.com/event4u-app/agent-config/commit/d3188ced3edac5b670b68e22f51295ef831471d6))
+
+Tests: 3350 (+0 since 2.2.0)
+
 ## [2.2.0](https://github.com/event4u-app/agent-config/compare/2.1.0...2.2.0) (2026-05-12)
 
 ### Features
