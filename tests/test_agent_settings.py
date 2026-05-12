@@ -212,3 +212,169 @@ def test_mergeable_keys_are_documented_exact_paths() -> None:
         "personal.autonomy",
         "caveman.speak_scope",
     )
+
+
+
+# --- in-project cascade (road-to-portable-runtime-and-update-check P1) -----
+
+def _init_git_dir(repo_root: Path) -> None:
+    (repo_root / ".git").mkdir()
+
+
+def _init_git_file(repo_root: Path) -> None:
+    """Simulate a submodule pointer — ``.git`` is a file, not a directory."""
+    (repo_root / ".git").write_text("gitdir: ../.git/modules/sub\n", encoding="utf-8")
+
+
+def test_find_project_root_finds_git_directory(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    nested = tmp_path / "sub" / "deep"
+    nested.mkdir(parents=True)
+    assert ags.find_project_root(nested) == tmp_path.resolve()
+
+
+def test_find_project_root_finds_git_file_submodule(tmp_path: Path) -> None:
+    _init_git_file(tmp_path)
+    nested = tmp_path / "sub"
+    nested.mkdir()
+    assert ags.find_project_root(nested) == tmp_path.resolve()
+
+
+def test_find_project_root_returns_none_when_no_git(tmp_path: Path) -> None:
+    nested = tmp_path / "sub" / "deep"
+    nested.mkdir(parents=True)
+    # No .git anywhere under tmp_path; walk hits / without finding one.
+    assert ags.find_project_root(nested) is None
+
+
+def test_cascade_disabled_by_default_back_compat(tmp_path: Path) -> None:
+    """``cwd=None`` (default) preserves the pre-cascade two-layer contract."""
+    _init_git_dir(tmp_path)
+    project = _write(tmp_path / "project.yml", "name: ProjectMatze\n")
+    user = _write(tmp_path / "user.yml", "ide: vscode\n")
+    result = ags.load_agent_settings(project_path=project, user_global_path=user)
+    # No cwd → no ancestor walk; only project_path is read.
+    assert result == {"name": "ProjectMatze", "ide": "vscode"}
+
+
+def test_cascade_no_intermediate_file(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    _write(tmp_path / ".agent-settings.yml", "name: RootMatze\nide: phpstorm\n")
+    deep = tmp_path / "sub" / "deep"
+    deep.mkdir(parents=True)
+    result = ags.load_agent_settings(
+        user_global_path=tmp_path / "no-user.yml", cwd=deep,
+    )
+    assert result == {"name": "RootMatze", "ide": "phpstorm"}
+
+
+def test_cascade_one_intermediate_file_deeper_wins(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    _write(tmp_path / ".agent-settings.yml", "name: Root\nide: vscode\n")
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    _write(sub / ".agent-settings.yml", "ide: phpstorm\n")
+    result = ags.load_agent_settings(
+        user_global_path=tmp_path / "no-user.yml", cwd=sub,
+    )
+    # Intermediate (== cwd here) wins for `ide`; root provides `name`.
+    assert result == {"name": "Root", "ide": "phpstorm"}
+
+
+def test_cascade_cwd_file_only_deeper_wins(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    _write(tmp_path / ".agent-settings.yml", "name: Root\nide: vscode\n")
+    deep = tmp_path / "a" / "b" / "c"
+    deep.mkdir(parents=True)
+    _write(deep / ".agent-settings.yml", "ide: nvim\n")
+    result = ags.load_agent_settings(
+        user_global_path=tmp_path / "no-user.yml", cwd=deep,
+    )
+    assert result == {"name": "Root", "ide": "nvim"}
+
+
+def test_cascade_user_global_whitelist_still_applies(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    user = _write(
+        tmp_path / "user.yml",
+        "name: UserMatze\npipelines:\n  ci: true\n",
+    )
+    _write(tmp_path / ".agent-settings.yml", "ide: vscode\n")
+    deep = tmp_path / "sub"
+    deep.mkdir()
+    result = ags.load_agent_settings(user_global_path=user, cwd=deep)
+    # `pipelines.ci` is not whitelisted → silently dropped from user-global.
+    assert result == {"name": "UserMatze", "ide": "vscode"}
+    assert "pipelines" not in result
+
+
+def test_cascade_non_root_layer_not_whitelist_filtered(tmp_path: Path) -> None:
+    """Non-root in-project layers carry arbitrary keys — they live inside the boundary."""
+    _init_git_dir(tmp_path)
+    _write(tmp_path / ".agent-settings.yml", "name: Root\n")
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    _write(sub / ".agent-settings.yml", "pipelines:\n  ci: false\nroles:\n  active: dev\n")
+    result = ags.load_agent_settings(
+        user_global_path=tmp_path / "no-user.yml", cwd=sub,
+    )
+    assert result["pipelines"] == {"ci": False}
+    assert result["roles"] == {"active": "dev"}
+
+
+def test_cascade_full_chain_deepest_wins(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    user = _write(tmp_path / "user.yml", "name: UserName\nide: vscode\n")
+    _write(tmp_path / ".agent-settings.yml", "name: RootName\ncost_profile: lean\n")
+    mid = tmp_path / "mid"
+    mid.mkdir()
+    _write(mid / ".agent-settings.yml", "cost_profile: balanced\n")
+    deep = mid / "deep"
+    deep.mkdir()
+    _write(deep / ".agent-settings.yml", "ide: nvim\n")
+    result = ags.load_agent_settings(user_global_path=user, cwd=deep)
+    # name: root wins over user-global; cost_profile: mid wins over root;
+    # ide: deep wins over user-global.
+    assert result == {"name": "RootName", "cost_profile": "balanced", "ide": "nvim"}
+
+
+def test_cascade_submodule_git_file_works(tmp_path: Path) -> None:
+    _init_git_file(tmp_path)  # `.git` is a file, not a directory.
+    _write(tmp_path / ".agent-settings.yml", "name: SubmoduleRoot\n")
+    deep = tmp_path / "sub"
+    deep.mkdir()
+    result = ags.load_agent_settings(
+        user_global_path=tmp_path / "no-user.yml", cwd=deep,
+    )
+    assert result == {"name": "SubmoduleRoot"}
+
+
+def test_cascade_no_git_falls_back_to_legacy(tmp_path: Path) -> None:
+    """No ``.git`` reached → loader behaves like the legacy two-layer contract."""
+    deep = tmp_path / "sub"
+    deep.mkdir()
+    _write(deep / ".agent-settings.yml", "name: Local\n")
+    # No `.git` anywhere → cascade resolves to the single legacy default path.
+    result = ags.load_agent_settings(
+        project_path=deep / ".agent-settings.yml",
+        user_global_path=tmp_path / "no-user.yml",
+        cwd=deep,
+    )
+    assert result == {"name": "Local"}
+
+
+def test_iter_setting_overrides_groups_by_key(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    user = _write(tmp_path / "user.yml", "ide: vscode\n")
+    _write(tmp_path / ".agent-settings.yml", "ide: phpstorm\nname: Root\n")
+    sub = tmp_path / "sub"
+    sub.mkdir()
+    _write(sub / ".agent-settings.yml", "ide: nvim\n")
+    tuples = list(
+        ags.iter_setting_overrides(user_global_path=user, cwd=sub),
+    )
+    # Three `ide` observations (user-global, root, sub) in order.
+    ide_obs = [(v, p) for k, v, p in tuples if k == "ide"]
+    assert [v for v, _ in ide_obs] == ["vscode", "phpstorm", "nvim"]
+    # The last observation wins — same as load_agent_settings.
+    assert ide_obs[-1][1] == sub / ".agent-settings.yml"

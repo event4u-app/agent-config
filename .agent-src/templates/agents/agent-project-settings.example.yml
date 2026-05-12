@@ -26,6 +26,20 @@
 
 schema_version: 1
 
+# --- Agent config version pin (project-shared) ---
+#
+# Exact semver of @event4u/agent-config this project commits to. The
+# `npx @event4u/agent-config` dispatcher re-execs at this version when
+# the developer's locally-resolved version differs — so every
+# contributor runs the same agent surface regardless of their npm
+# cache state. Bump this together with a tested upgrade. Empty string
+# disables the pin (resolver picks the latest release; only safe for
+# greenfield projects). Ranges (^, ~, >=) are NOT supported.
+# CI guard: a release bump of `package.json` must update this value
+# in lockstep — see scripts/check_template_pin_drift.py (road-to-
+# portable-runtime-and-update-check P3.3).
+agent_config_version: "1.41.2"
+
 # --- Project identity ---
 project:
   # Short slug used in agent output, prompts, and PR metadata. Keep it
