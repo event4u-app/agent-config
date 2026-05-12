@@ -90,45 +90,45 @@ surface. **Breaking change — next release is semver-major.**
 
 **Pre-conditions:** None. P3 depends on this phase's pin field.
 
-- [ ] **P0.1** — Delete `composer.json` and `composer.lock` from the
+- [x] **P0.1** — Delete `composer.json` and `composer.lock` from the
       repo root. PHP `require: php: ">=8.0"` was the only entry; no
       internal PHP tooling depends on Composer (verified
       2026-05-12: no `phpstan`, `pest`, `ecs`, `rector` in
       `require-dev`; `.phpunit.cache` is a leftover directory and is
-      removed in the same commit).
-- [ ] **P0.2** — Delete `bin/install.php` (Composer post-install
+      removed in the same commit). _Done 2026-05-12: composer.json + .phpunit.cache removed (composer.lock was not present)._
+- [x] **P0.2** — Delete `bin/install.php` (Composer post-install
       hook that materialised the in-project symlinks). The npx
       bootstrap covers the equivalent setup work via P3.5
-      (`migrate`).
-- [ ] **P0.3** — `package.json` (package-repo, not consumer): keep
+      (`migrate`). _Done 2026-05-12: bin/install.php removed; empty bin/ dir removed too._
+- [x] **P0.3** — `package.json` (package-repo, not consumer): keep
       `name`, `version`, `description`, `bin`
       (`{"agent-config": "scripts/agent-config"}`), `files`
       (whitelist what `npm publish` ships). Remove anything that
-      only made sense for `npm install --save-dev` in a consumer.
-- [ ] **P0.4** — Define the version-pin field in
+      only made sense for `npm install --save-dev` in a consumer. _Done 2026-05-12: removed `composer.json` + `bin/` from `files`, removed `scripts.postinstall` + `scripts/postinstall.sh`._
+- [x] **P0.4** — Define the version-pin field in
       `.agent-settings.yml`: top-level
       `agent_config_version: <semver-pin>` (string, exact version,
       no ranges). Document in `docs/customization.md` and the
       example template
-      `templates/agents/agent-project-settings.example.yml`.
-- [ ] **P0.5** — Retire `templates/global-install-manifest.yml`. The
+      `templates/agents/agent-project-settings.example.yml`. _Done 2026-05-12: added `agent_config_version` (empty string default) to `config/agent-settings.template.yml` (real template path; roadmap path was a typo) and "Agent config version pin" section to `docs/customization.md` with the exact-semver/empty/resolver rules._
+- [x] **P0.5** — Retire `templates/global-install-manifest.yml`. The
       file existed for the symlink-install scheme; under npx-only
       it is obsolete. Replacement (if any) is decided in P3 — likely
       a slim `.agent-settings.yml` template only.
-- [ ] **P0.6** — Rewrite `docs/architecture.md` § "Distribution
+- [x] **P0.6** — Rewrite `docs/architecture.md` § "Distribution
       model": new section *"npx-only distribution + version-pin
       governance"* that documents (a) why local installs are gone,
       (b) how the pin replaces lockfile determinism, (c) the
       council's Q1 rejection + the user's override + the pin's
       role as the substitute mechanism. ≤ 80 lines.
-- [ ] **P0.7** — Rewrite `README.md` § "Installation": single
+- [x] **P0.7** — Rewrite `README.md` § "Installation": single
       `npx @event4u/agent-config <cmd>` example, link to the
       `agent-config init` bootstrap and the `migrate` flow (P3) for
       existing consumers. Remove every `composer require` /
       `npm install` reference. Add a one-line "Breaking change in
       vX.0" banner to the top of the README until the migration
       window closes.
-- [ ] **P0.8** — Migration-doc skeleton in `docs/migration/vX.0.md`
+- [x] **P0.8** — Migration-doc skeleton in `docs/migration/vX.0.md`
       (filled in alongside P3.5 `migrate`). Lists: files that
       disappear from the consumer (`composer.json` entry, symlinks,
       old `.gitignore` block lines), files that appear
@@ -170,21 +170,21 @@ N-2. <intermediate-dir>/.agent-settings.yml         (subsystem-scoped, optional;
 **or** a `.git` file (submodule). The walk stops there — it never
 drifts into a parent repo or `$HOME`.
 
-- [ ] **P1.1** — `scripts/_lib/agent_settings.py`: add
+- [x] **P1.1** — `scripts/_lib/agent_settings.py`: add
       `find_project_root(start: Path) -> Path | None` that walks up
       from `start` looking for `.git` (file or directory) and returns
       the first match or `None` if none reached before `/`.
-- [ ] **P1.2** — Extend `load_agent_settings(...)` with an optional
+- [x] **P1.2** — Extend `load_agent_settings(...)` with an optional
       `cwd: Path | None = None` parameter. When provided and
       `find_project_root(cwd)` succeeds, build the merge list as
       `[user_global] + ancestors-from-repo-root-down-to-cwd`; merge in
       order, deeper wins. When `cwd` is `None` (or no `.git` reached),
       the loader behaves identically to today — back-compat hard.
-- [ ] **P1.3** — Non-root layers (intermediate + CWD) are **not**
+- [x] **P1.3** — Non-root layers (intermediate + CWD) are **not**
       whitelist-filtered (they live inside the project boundary).
       User-global keeps the existing six-key whitelist. Document the
       asymmetry in the loader docstring and `docs/customization.md`.
-- [ ] **P1.4** — Conflict-detector helper `iter_setting_overrides()`:
+- [x] **P1.4** — Conflict-detector helper `iter_setting_overrides()`:
       yields `(key, value, source_path)` tuples so callers /
       diagnostics can surface "key `personal.autonomy` overridden in
       `subdir/.agent-settings.yml`" when the user runs
@@ -219,7 +219,7 @@ N-2. <intermediate-dir>/agents/overrides/<name>.md      (optional)
 For `contexts/` and `decisions/` the cascade starts at `<repo-root>` —
 the user-global layer is silently skipped (P1.8).
 
-- [ ] **P1.5** — `scripts/_lib/agents_overlay.py`: new module with
+- [x] **P1.5** — `scripts/_lib/agents_overlay.py`: new module with
       `resolve_overlay(name: str, kind: str, cwd: Path) -> Path | None`.
       Walks the ancestor list from P1.2 (CWD → repo-root) **plus**
       `~/.config/agent-config/agents/` as the weakest layer when the
@@ -227,19 +227,19 @@ the user-global layer is silently skipped (P1.8).
       at each layer, returns the deepest match. `kind` is one of the
       cascade-eligible subdirs above — anything else raises
       `ValueError`.
-- [ ] **P1.6** — CI guard `scripts/check_overlay_cascade_subdirs.py`:
+- [x] **P1.6** — CI guard `scripts/check_overlay_cascade_subdirs.py`:
       asserts the cascade-eligible list **and** the user-global kind
       whitelist (P1.8) in `agents_overlay.py` match the documented
       table in `docs/customization.md`. Drift between code and docs
       breaks the build.
-- [ ] **P1.7** — Test suite covering all branches: no intermediate
+- [x] **P1.7** — Test suite covering all branches: no intermediate
       file, one intermediate file, CWD file only, user-global
       `overrides/` resolves, user-global `contexts/` / `decisions/`
       silently skipped, full five-layer cascade
       (CWD → intermediate → repo-root → user-global). Includes a
       submodule fixture (`.git` is a file, not a directory) and a
       no-`.git` fixture (walk hits filesystem root → `None`).
-- [ ] **P1.8** — User-global overlay whitelist: define
+- [x] **P1.8** — User-global overlay whitelist: define
       `USER_GLOBAL_OVERLAY_KINDS = frozenset({'overrides'})` in
       `agents_overlay.py`. `resolve_overlay()` consults the user-global
       layer only when `kind in USER_GLOBAL_OVERLAY_KINDS`. Document the
@@ -310,25 +310,26 @@ The banner is **silently skipped** when any of:
 
 ### Implementation
 
-- [ ] **P2.1** — `scripts/_lib/update_check.py`: pure function
+- [x] **P2.1** — `scripts/_lib/update_check.py`: pure function
       `check_for_update(installed_version: str, now: datetime, state_path: Path) -> str | None`.
       Returns the banner string or `None` (already checked, no
       update, or suppressed). No side effects beyond writing the
       state file.
-- [ ] **P2.2** — Network helper `fetch_latest_from_npm()` with 1 s
+- [x] **P2.2** — Network helper `fetch_latest_from_npm()` with 1 s
       hard timeout via `urllib.request` (no new deps — match the
       package's "stdlib-only Python" floor). Failure → returns
       `None`, never raises.
-- [ ] **P2.3** — Wire `check_for_update()` into the entrypoint of
+- [x] **P2.3** — Wire `check_for_update()` into the entrypoint of
       `scripts/agent-config` (the dispatcher) **after** the
       subcommand has finished, so the banner appears post-output and
       never delays the work. `CI` and `--no-update-check` flags
       suppress in one place.
-- [ ] **P2.4** — Settings flag `update_check.enabled: true` (default
-      `true`) in `templates/agents/agent-project-settings.example.yml`.
-      Documented in `docs/customization.md`.
+- [x] **P2.4** — Settings flag `update_check.enabled: true` (default
+      `true`) in `config/agent-settings.template.yml` (the canonical
+      source rendered into every consumer install). Documented in
+      `docs/customization.md`.
       (`templates/global-install-manifest.yml` is retired in P0.5.)
-- [ ] **P2.5** — Test suite: 24h gate (mock `now`), all six
+- [x] **P2.5** — Test suite: 24h gate (mock `now`), all six
       suppression branches, registry-error tolerance, state-file
       shape, mode 0600 persistence.
 
@@ -356,7 +357,7 @@ not required — P3 banner integration is additive.
 
 `npx @event4u/agent-config update [--check] [--to <version>]`
 
-- [ ] **P3.1** — `scripts/_cli/cmd_update.py`: implementation.
+- [x] **P3.1** — `scripts/_cli/cmd_update.py`: implementation.
       1. Resolve current pin from `.agent-settings.yml` (project-rooted;
          honour the P1 cascade for read-only resolution).
       2. Fetch latest stable from the npm registry via
@@ -373,20 +374,20 @@ not required — P3 banner integration is additive.
          file) — `last_check_utc` + `installed_version`.
       6. `--to <version>` → pin to an explicit version (downgrade
          supported, registry-existence checked).
-- [ ] **P3.2** — `scripts/_lib/pin_resolver.py`: pure module that the
+- [x] **P3.2** — `scripts/_lib/pin_resolver.py`: pure module that the
       `scripts/agent-config` dispatcher consults before doing any
       work. Reads `agent_config_version` from the cascaded settings
       and, if the running process's version mismatches, re-execs via
       `npx @event4u/agent-config@<pin> <argv>`. Skipped when
       `AGENT_CONFIG_NO_PIN_REEXEC=1` (escape hatch for local
       development of the package itself).
-- [ ] **P3.3** — CI guard: a workflow that fails when `package.json`
+- [x] **P3.3** — CI guard: a workflow that fails when `package.json`
       `version` is bumped without a corresponding update of the
       `agent_config_version` in
       `templates/agents/agent-project-settings.example.yml`. Keeps
       the template's pin current across releases so a fresh `init`
       bootstraps onto the latest version.
-- [ ] **P3.4** — Test suite for P3.1 + P3.2: pin read from cascade,
+- [x] **P3.4** — Test suite for P3.1 + P3.2: pin read from cascade,
       `--check` is read-only, `--to` downgrade path, registry-error
       tolerance, re-exec guard via the `NO_PIN_REEXEC` env var,
       no-pin-found fallback to repo-root.
@@ -395,7 +396,7 @@ not required — P3 banner integration is additive.
 
 `npx @event4u/create-agent-config migrate`
 
-- [ ] **P3.5** — `scripts/_cli/cmd_migrate.py` (shipped via the
+- [x] **P3.5** — `scripts/_cli/cmd_migrate.py` (shipped via the
       `create-agent-config` bootstrap so consumers without a working
       package install can run it). On invocation:
       1. Detect existing install paths (`composer.json` lists
@@ -420,9 +421,9 @@ not required — P3 banner integration is additive.
          `agents/` (the only files that survive locally).
       6. Print a summary + git-friendly diff so the developer
          can commit the cutover.
-- [ ] **P3.6** — `migrate` is **idempotent**. Re-runs on an
+- [x] **P3.6** — `migrate` is **idempotent**. Re-runs on an
       already-migrated repo do nothing and print "already migrated".
-- [ ] **P3.7** — Test suite for P3.5 + P3.6: pre-migration fixtures
+- [x] **P3.7** — Test suite for P3.5 + P3.6: pre-migration fixtures
       for npm-installed, composer-installed, dual-installed, and
       already-migrated cases. Mode 0644 for `.agent-settings.yml`,
       mode 0600 for any state files touched.
