@@ -10,6 +10,14 @@ phase: post-v2.1.0 · simplicity-and-everywhere
 
 # ADR-007 — Agent Discovery Scopes: Global-Default Install Model
 
+> **Note (post-acceptance):** the one-shot installer command was later
+> renamed from `npx @event4u/create-agent-config init` to
+> `npx @event4u/agent-config init` when the standalone wrapper package
+> was retired. References to the old command name below are preserved
+> for historical accuracy; the discovery-scope decision itself is
+> unchanged. See `CHANGELOG.md` → `[Unreleased]` → "Package
+> consolidation".
+
 ## Status
 
 **Accepted** · 2026-05-12 · signed off by Matze after Council Round 3 convergence. Implementation tracked in `agents/roadmaps/road-to-global-first-install.md`.

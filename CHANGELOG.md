@@ -11,7 +11,15 @@ versioning policy is documented in [CONTRIBUTING.md](CONTRIBUTING.md#versioning-
 
 Four roadmaps land in this release.
 
-**Global-First Install (R4)** — `npx @event4u/create-agent-config init`
+**Package consolidation** — the standalone wrapper package
+`@event4u/create-agent-config` is retired. `npx @event4u/agent-config init`
+is now the canonical one-shot entrypoint; the bundle package gains an
+`init` subcommand that delegates to `scripts/install`. `packages/create-agent-config/`
+is removed from the repo, and every doc / template / help string is
+updated to the new command. Existing users running the old wrapper
+should switch — the old package name will stop receiving releases.
+
+**Global-First Install (R4)** — `npx @event4u/agent-config init`
 now defaults to a **global** install (`~/.claude/`, `~/.cursor/`, …)
 when run outside a project, and a **project** install when run inside
 one. A new global lockfile at `~/.config/agent-config/installed.lock`
