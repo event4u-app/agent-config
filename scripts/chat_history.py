@@ -609,27 +609,36 @@ def status(*, path: Path | None = None) -> dict[str, Any]:
     }
 
 
+def _load_chat_history_section(settings_path: Path) -> dict | None:
+    """Return the ``chat_history`` mapping from .agent-settings.yml or None.
+
+    Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    contract handles missing file / malformed YAML / no PyYAML uniformly.
+    No ``chat_history.*`` keys are whitelisted, so user-global cannot
+    leak into this section — the project file remains authoritative.
+    """
+    try:
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    data = load_agent_settings(project_path=settings_path)
+    section = data.get("chat_history")
+    return section if isinstance(section, dict) else None
+
+
 def _read_chat_history_enabled(settings_path: Path) -> bool:
     """Read chat_history.enabled from .agent-settings.yml.
 
     Returns False when the file is missing, malformed, lacks the
     `chat_history` section, or sets enabled to false. Default-deny so
     `turn-check` is safe to run from projects that have not opted in.
-    PyYAML is imported lazily — the rest of this module works without it.
     """
-    if not settings_path.is_file():
-        return False
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return True  # fail open: settings file present but no parser
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return False
-    section = data.get("chat_history") if isinstance(data, dict) else None
-    if not isinstance(section, dict):
+    section = _load_chat_history_section(settings_path)
+    if section is None:
         return False
     return bool(section.get("enabled", False))
 
@@ -739,19 +748,8 @@ VALID_PLATFORMS = tuple(PLATFORM_EVENT_MAP.keys())
 
 def _read_chat_history_frequency(settings_path: Path) -> str:
     """Read chat_history.frequency from .agent-settings.yml. Default per_phase."""
-    if not settings_path.is_file():
-        return "per_phase"
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return "per_phase"
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return "per_phase"
-    section = data.get("chat_history") if isinstance(data, dict) else None
-    if not isinstance(section, dict):
+    section = _load_chat_history_section(settings_path)
+    if section is None:
         return "per_phase"
     val = str(section.get("frequency", "per_phase")).lower()
     return val if val in VALID_FREQS else "per_phase"
@@ -764,19 +762,8 @@ def _read_chat_history_max_sessions(settings_path: Path) -> int:
     Used by ``prune_sessions`` to decide how many distinct ``s`` tags
     survive in the body.
     """
-    if not settings_path.is_file():
-        return DEFAULT_MAX_SESSIONS
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return DEFAULT_MAX_SESSIONS
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return DEFAULT_MAX_SESSIONS
-    section = data.get("chat_history") if isinstance(data, dict) else None
-    if not isinstance(section, dict):
+    section = _load_chat_history_section(settings_path)
+    if section is None:
         return DEFAULT_MAX_SESSIONS
     try:
         n = int(section.get("max_sessions", DEFAULT_MAX_SESSIONS))
@@ -794,19 +781,8 @@ def _read_text_limits(settings_path: Path) -> dict[str, int]:
     values are clamped to 0. Non-int values are silently dropped.
     """
     out = dict(DEFAULT_TEXT_LIMITS)
-    if not settings_path.is_file():
-        return out
-    try:
-        import yaml  # type: ignore[import-untyped]
-    except ImportError:
-        return out
-    try:
-        with settings_path.open(encoding="utf-8") as fh:
-            data = yaml.safe_load(fh) or {}
-    except (OSError, yaml.YAMLError):
-        return out
-    section = data.get("chat_history") if isinstance(data, dict) else None
-    if not isinstance(section, dict):
+    section = _load_chat_history_section(settings_path)
+    if section is None:
         return out
     overrides = section.get("text_limits")
     if not isinstance(overrides, dict):

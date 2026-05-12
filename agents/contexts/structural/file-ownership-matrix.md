@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **395**
-- Edges (incl. self-WRITE): **1047**
+- Files indexed: **396**
+- Edges (incl. self-WRITE): **1050**
 
 ## READ_ONLY edges
 
@@ -153,6 +153,8 @@
 | `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/sync-agent-settings.md` | `.agent-src.uncompressed/commands/sync-gitignore.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/sync-gitignore.md` | `.agent-src.uncompressed/commands/sync-gitignore/fix.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/sync-gitignore/fix.md` | `.agent-src.uncompressed/commands/sync-gitignore.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/rules/minimal-safe-diff.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
@@ -669,7 +671,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 105 |
+| `command` | 106 |
 | `context` | 31 |
 | `persona` | 16 |
 | `rule` | 60 |

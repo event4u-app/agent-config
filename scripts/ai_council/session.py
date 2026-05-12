@@ -88,15 +88,21 @@ def _load_retention_days(settings_path: Path | None = None) -> int:
     file, invalid YAML, missing key, non-int value). Pruning never
     blocks the council on a settings error.
     """
-    path = settings_path or SETTINGS_FILE
-    if not path.exists():
-        return DEFAULT_RETENTION_DAYS
+    # Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    # contract handles missing file / malformed YAML / no PyYAML uniformly.
+    # ``ai_council.session_retention_days`` is not whitelisted, so the
+    # user-global file cannot override the project value.
     try:
-        import yaml  # type: ignore[import-not-found]
-        data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception:  # noqa: BLE001 - never block on settings parse
-        return DEFAULT_RETENTION_DAYS
-    ai = data.get("ai_council") if isinstance(data, dict) else None
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent.parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    path = settings_path or SETTINGS_FILE
+    data = load_agent_settings(project_path=path)
+    ai = data.get("ai_council")
     if not isinstance(ai, dict):
         return DEFAULT_RETENTION_DAYS
     raw = ai.get("session_retention_days", DEFAULT_RETENTION_DAYS)

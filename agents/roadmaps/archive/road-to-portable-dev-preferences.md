@@ -45,10 +45,10 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 **Pre-conditions:** None.
 
-- [ ] **P1.1** — `scripts/_lib/agent_settings.py` with `load_agent_settings(project_path=None, user_global_path=None, verbose=False)`. Merge order: project → user-global (whitelisted keys only) → built-in defaults. Lazy PyYAML import (matches existing pattern in `work_engine/hooks/settings.py`).
-- [ ] **P1.2** — `MERGEABLE_KEYS` as explicit list of dotted paths. Non-whitelisted keys in user-global silently ignored; `verbose=True` logs ignored keys via `logging.info`.
-- [ ] **P1.3** — Tolerance contract: missing project file → user-global + defaults; missing user-global file → project + defaults; both missing → defaults; malformed YAML → defaults, log warning. **No file creation, no writes**, ever.
-- [ ] **P1.4** — Test suite covering all five tolerance branches, whitelist filtering, dotted-path merge depth, type coercion (booleans, strings, ints). Golden fixtures for project-only, user-global-only, both-present, both-missing, malformed.
+- [x] **P1.1** — `scripts/_lib/agent_settings.py` with `load_agent_settings(project_path=None, user_global_path=None, verbose=False)`. Merge order: project → user-global (whitelisted keys only) → built-in defaults. Lazy PyYAML import (matches existing pattern in `work_engine/hooks/settings.py`).
+- [x] **P1.2** — `MERGEABLE_KEYS` as explicit list of dotted paths. Non-whitelisted keys in user-global silently ignored; `verbose=True` logs ignored keys via `logging.info`.
+- [x] **P1.3** — Tolerance contract: missing project file → user-global + defaults; missing user-global file → project + defaults; both missing → defaults; malformed YAML → defaults, log warning. **No file creation, no writes**, ever.
+- [x] **P1.4** — Test suite covering all five tolerance branches, whitelist filtering, dotted-path merge depth, type coercion (booleans, strings, ints). Golden fixtures for project-only, user-global-only, both-present, both-missing, malformed.
 
 ## Phase 2: Onboarding writes user-global
 
@@ -56,8 +56,8 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 **Pre-conditions:** Phase 1 shipped.
 
-- [ ] **P2.1** — `/onboard` detects whether `~/.config/agent-config/agent-settings.yml` exists. If absent **and** the user is doing first-time setup on this machine (heuristic: no `.agent-settings.yml` in any sibling project), offer to create user-global with the six whitelisted keys. User confirms explicitly; never auto-create.
-- [ ] **P2.2** — Document the user-global path in `docs/customization.md` and the onboarding completion message. Cross-link from `.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml`.
+- [x] **P2.1** — `/onboard` detects whether `~/.config/agent-config/agent-settings.yml` exists. If absent **and** the user is doing first-time setup on this machine (heuristic: no `.agent-settings.yml` in any sibling project), offer to create user-global with the six whitelisted keys. User confirms explicitly; never auto-create.
+- [x] **P2.2** — Document the user-global path in `docs/customization.md` and the onboarding completion message. Cross-link from `.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml`.
 
 ## Phase 3: Atomic loader migration
 
@@ -65,9 +65,9 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 **Pre-conditions:** Phase 1 shipped and merged. Phase 2 not required (loader works without `/onboard` changes).
 
-- [ ] **P3.1** — Inventory all current direct readers (≈15 scripts surfaced by `grep -rln "agent-settings.yml\|agent_settings" scripts/ .agent-src.uncompressed/templates/`). Tag each as `keep` (pure project-scoped, no DX-comfort keys) or `migrate` (touches at least one whitelisted key).
-- [ ] **P3.2** — Migrate every `migrate`-tagged loader to the centralized helper in a single PR. Existing per-script settings dataclasses can wrap the merged dict — no API breakage required.
-- [ ] **P3.3** — Regression test pass: golden replays for `work_engine`, telemetry recorder, chat-history hook, onboarding gate, council CLI, sync-agent-settings.
+- [x] **P3.1** — Inventory all current direct readers (≈15 scripts surfaced by `grep -rln "agent-settings.yml\|agent_settings" scripts/ .agent-src.uncompressed/templates/`). Tag each as `keep` (pure project-scoped, no DX-comfort keys) or `migrate` (touches at least one whitelisted key).
+- [x] **P3.2** — Migrate every `migrate`-tagged loader to the centralized helper in a single PR. Existing per-script settings dataclasses can wrap the merged dict — no API breakage required.
+- [x] **P3.3** — Regression test pass: golden replays for `work_engine`, telemetry recorder, chat-history hook, onboarding gate, council CLI, sync-agent-settings.
 
 ## Risk register
 

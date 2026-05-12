@@ -53,9 +53,15 @@ class CouncilDisabledError(RuntimeError):
 
 
 def load_settings(path: Path = SETTINGS_FILE) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+    """Load merged settings via the centralized loader.
+
+    road-to-portable-dev-preferences P3 migration: tolerance contract
+    (missing file / malformed YAML / no PyYAML) is handled uniformly by
+    ``load_agent_settings``. ``ai_council.*`` keys are not whitelisted,
+    so the project file remains authoritative for council config.
+    """
+    from scripts._lib.agent_settings import load_agent_settings
+    return load_agent_settings(project_path=path)
 
 
 def build_members(

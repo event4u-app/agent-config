@@ -100,16 +100,20 @@ def _normalize_trigger(item) -> dict | None:
 
 
 def _load_settings() -> dict:
-    """Read .agent-settings.yml for compile-time toggles. Stdlib-only fallback."""
-    if not SETTINGS_PATH.exists():
-        return {}
-    text = SETTINGS_PATH.read_text(encoding="utf-8")
+    """Read .agent-settings.yml for compile-time toggles.
+
+    Centralized loader (road-to-portable-dev-preferences P3): tolerance
+    contract handles missing file / malformed YAML / no PyYAML uniformly.
+    """
     try:
-        import yaml  # type: ignore
-        data = yaml.safe_load(text) or {}
-        return data if isinstance(data, dict) else {}
-    except ImportError:
-        return {}
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+
+    return load_agent_settings(project_path=SETTINGS_PATH)
 
 
 def _collect(rules_dir: Path) -> dict:
