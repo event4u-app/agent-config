@@ -318,6 +318,21 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [1.41.1](https://github.com/event4u-app/agent-config/compare/1.41.0...1.41.1) (2026-05-12)
+
+### Documentation
+
+* **mcp:** promote durable strategy to agents/contexts; unhook contracts from roadmap ([f9e7278](https://github.com/event4u-app/agent-config/commit/f9e727895e75aa74c712ce628811527a5b982f98))
+* **mcp:** add stability frontmatter to discovery-phase-notice contract ([0aacd0b](https://github.com/event4u-app/agent-config/commit/0aacd0b69849029db19985aa08591d52bb5a677b))
+* **mcp:** re-anchor roadmap links to archive path ([cbbd77c](https://github.com/event4u-app/agent-config/commit/cbbd77c29a2847db8e69e7e56457dcc1b794b307))
+
+### Chores
+
+* **mcp:** re-anchor roadmap citations in scripts to archive path ([71cac67](https://github.com/event4u-app/agent-config/commit/71cac67cc90b2e42bfa3455f0429791e4bedc60f))
+* **roadmap:** close road-to-mcp-full-coverage and archive ([32c2542](https://github.com/event4u-app/agent-config/commit/32c25424fd5b078074c703cb03fb57731ae78f6f))
+
+Tests: 3173 (+0 since 1.41.0)
+
 ## [1.41.0](https://github.com/event4u-app/agent-config/compare/1.40.0...1.41.0) (2026-05-12)
 
 ### Features
