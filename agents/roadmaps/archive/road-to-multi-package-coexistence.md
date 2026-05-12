@@ -313,7 +313,7 @@ schema v2 + conflict detection cannot resolve cleanly.
   uninstalling one leaves the other untouched, prune on the
   survivor reports zero orphans, doctor reports clean
   (`tests/test_e2e_multi_package_coexistence.py`).
-- [ ] PR #121 carries all of the above as additional commits on
+- [x] PR #121 carries all of the above as additional commits on
   `feat/global-content-deployment` (no stacked PR, no side-branch).
 
 ## Out of scope
