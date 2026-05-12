@@ -2036,7 +2036,14 @@ def install_global(
     # Refresh the project-scope manifest when running inside a project tree
     # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
     # manifest to write and the global lockfile alone is the source of truth.
-    if project_root is not None and (project_root / SETTINGS_FILE).exists():
+    # Skipped inside the agent-config source repo (detected by
+    # `.agent-src.uncompressed/`) — maintainers dogfood with their own
+    # `.agent-settings.yml` and the manifest would be untracked noise.
+    if (
+        project_root is not None
+        and (project_root / SETTINGS_FILE).exists()
+        and not (project_root / ".agent-src.uncompressed").is_dir()
+    ):
         rc = _update_installed_tools_manifest(project_root, tools, "global", force)
         if rc != 0:
             return rc

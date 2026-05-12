@@ -216,6 +216,57 @@ test_tools_combination_cursor_plus_windsurf() {
     teardown
 }
 
+# Source-repo guard — defense-in-depth so a project install into the
+# agent-config dev tree itself cannot corrupt .augment/ symlinks. The guard
+# is skipped for --global because user-scope installs never touch the source
+# tree, and bypassable via AGENT_CONFIG_ALLOW_SELF_INSTALL=1 for self-tests.
+test_source_repo_guard_blocks_project_install() {
+    setup
+    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    local out exit_code
+    out="$(bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+    assert_true "guard: exit 2 on project install into source tree" test "$exit_code" -eq 2
+    assert_true "guard: 'Refusing' message printed" grep -q "Refusing to install agent-config" <<<"$out"
+    assert_false "guard: no .augment/ created in source tree" test -d "$TMPDIR/.augment"
+    teardown
+}
+
+test_source_repo_guard_allows_global_install() {
+    setup
+    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    local out exit_code
+    out="$(AGENT_CONFIG_INSTALLED_LOCK="$TMPDIR/installed.lock" \
+        bash "$INSTALL" --target "$TMPDIR" --global --tools=claude-code --quiet 2>&1)"; exit_code=$?
+    assert_true "guard: exit 0 on --global into source tree" test "$exit_code" -eq 0
+    assert_false "guard: no 'Refusing' message on --global" grep -q "Refusing to install agent-config" <<<"$out"
+    assert_true "guard: lockfile written to redirected path" test -f "$TMPDIR/installed.lock"
+    teardown
+}
+
+test_source_repo_guard_override_env_bypasses() {
+    setup
+    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    local out exit_code
+    out="$(AGENT_CONFIG_ALLOW_SELF_INSTALL=1 \
+        bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+    assert_true "guard: exit 0 with AGENT_CONFIG_ALLOW_SELF_INSTALL=1" test "$exit_code" -eq 0
+    assert_false "guard: no 'Refusing' message with override" grep -q "Refusing to install agent-config" <<<"$out"
+    teardown
+}
+
+test_source_repo_guard_package_json_marker() {
+    setup
+    # No .agent-src.uncompressed/, but package.json declares the source name.
+    cat >"$TMPDIR/package.json" <<'JSON'
+{ "name": "@event4u/agent-config", "version": "0.0.0" }
+JSON
+    local out exit_code
+    out="$(bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
+    assert_true "guard: exit 2 on package.json name marker" test "$exit_code" -eq 2
+    assert_true "guard: 'package.json::name' in detected reason" grep -q 'package.json::name' <<<"$out"
+    teardown
+}
+
 # --- Runner ---
 TESTS=(
     test_full_run_creates_payload_and_bridges
@@ -235,6 +286,10 @@ TESTS=(
     test_tools_claude_code_only_excludes_others
     test_tools_all_matches_default
     test_tools_combination_cursor_plus_windsurf
+    test_source_repo_guard_blocks_project_install
+    test_source_repo_guard_allows_global_install
+    test_source_repo_guard_override_env_bypasses
+    test_source_repo_guard_package_json_marker
 )
 
 if [[ "${1:-}" == "--list" ]]; then
