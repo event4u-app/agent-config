@@ -13,7 +13,7 @@ falls back to `AGENTS.md` where supported.
 ## Install
 
 ```bash
-npx @event4u/create-agent-config init --tools=copilot
+npx @event4u/agent-config init --tools=copilot
 ```
 
 Populates:
@@ -69,7 +69,7 @@ gh copilot --version             # if you want CLI plugin
 | Symptom | Fix |
 |---|---|
 | Copilot ignores the file | Reload the IDE window after install. |
-| File missing after install | Re-run `npx @event4u/create-agent-config init --tools=copilot`. |
+| File missing after install | Re-run `npx @event4u/agent-config init --tools=copilot`. |
 | Copilot PR review too noisy | See the `copilot-config` skill for suppression patterns. |
 
 ## Cross-references

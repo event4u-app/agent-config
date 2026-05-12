@@ -11,7 +11,7 @@ in the package's projection) for project context.
 ## Install
 
 ```bash
-npx @event4u/create-agent-config init --tools=gemini
+npx @event4u/agent-config init --tools=gemini
 ```
 
 Populates:

@@ -5,7 +5,7 @@
 committed to a repo. No Task, no Make, no build tools required.
 
 > **v2.1+** — the installer detects intent. Running `npx
-> @event4u/create-agent-config init` in `~/` or any directory without a
+> @event4u/agent-config init` in `~/` or any directory without a
 > project manifest defaults to **global**. Running it inside a project
 > (`package.json` / `composer.json` / `pyproject.toml` / etc.) defaults
 > to **project**. Pass `--scope=global` or `--scope=project` to override
@@ -13,7 +13,7 @@ committed to a repo. No Task, no Make, no build tools required.
 
 A global install records itself in `~/.config/agent-config/installed.lock`
 (schema_version, agent_config_version, installed_at, tools[]). `npx
-@event4u/create-agent-config update` keeps that manifest in lockstep
+@event4u/agent-config update` keeps that manifest in lockstep
 with the project pin in `.agent-settings.yml`. A version-mismatched
 re-run of `init --scope=global` is refused with exit code 1 until you
 `update` or pass `--force`.
@@ -37,16 +37,16 @@ section below this index is reference material for advanced installs
 
 | Surface | One-liner | Per-IDE page |
 |---|---|---|
-| **Claude Code** | `npx @event4u/create-agent-config init --tools=claude-code` | [`per-ide/claude-code.md`](setup/per-ide/claude-code.md) |
+| **Claude Code** | `npx @event4u/agent-config init --tools=claude-code` | [`per-ide/claude-code.md`](setup/per-ide/claude-code.md) |
 | **Claude Desktop** | (uses `~/.claude/skills/` from Claude Code global install) | [`per-ide/claude-desktop.md`](setup/per-ide/claude-desktop.md) |
-| **Cursor** | `npx @event4u/create-agent-config init --tools=cursor` | [`per-ide/cursor.md`](setup/per-ide/cursor.md) |
-| **Windsurf** | `npx @event4u/create-agent-config init --tools=windsurf` | [`per-ide/windsurf.md`](setup/per-ide/windsurf.md) |
-| **Cline** | `npx @event4u/create-agent-config init --tools=cline` | [`per-ide/cline.md`](setup/per-ide/cline.md) |
-| **Aider** | `npx @event4u/create-agent-config init --tools=aider` | [`per-ide/aider.md`](setup/per-ide/aider.md) |
-| **Codex CLI** | `npx @event4u/create-agent-config init --tools=codex` | [`per-ide/codex.md`](setup/per-ide/codex.md) |
-| **Gemini CLI** | `npx @event4u/create-agent-config init --tools=gemini` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
-| **GitHub Copilot** | `npx @event4u/create-agent-config init --tools=copilot` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
-| **All surfaces** | `npx @event4u/create-agent-config init` (default) | (each page above applies) |
+| **Cursor** | `npx @event4u/agent-config init --tools=cursor` | [`per-ide/cursor.md`](setup/per-ide/cursor.md) |
+| **Windsurf** | `npx @event4u/agent-config init --tools=windsurf` | [`per-ide/windsurf.md`](setup/per-ide/windsurf.md) |
+| **Cline** | `npx @event4u/agent-config init --tools=cline` | [`per-ide/cline.md`](setup/per-ide/cline.md) |
+| **Aider** | `npx @event4u/agent-config init --tools=aider` | [`per-ide/aider.md`](setup/per-ide/aider.md) |
+| **Codex CLI** | `npx @event4u/agent-config init --tools=codex` | [`per-ide/codex.md`](setup/per-ide/codex.md) |
+| **Gemini CLI** | `npx @event4u/agent-config init --tools=gemini` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
+| **GitHub Copilot** | `npx @event4u/agent-config init --tools=copilot` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
+| **All surfaces** | `npx @event4u/agent-config init` (default) | (each page above applies) |
 
 Combine surfaces by comma-separating: `--tools=claude-code,cursor,windsurf`.
 
@@ -106,7 +106,7 @@ the per-IDE index above.
 > 2. `scripts/install.py` — bridge files (`.agent-settings.yml`, VSCode /
 >    Augment / Copilot JSON descriptors).
 >
-> `npx @event4u/create-agent-config init` and `setup.sh` (curl-based)
+> `npx @event4u/agent-config init` and `setup.sh` (curl-based)
 > are thin wrappers that delegate to `scripts/install`. Both underlying
 > stages remain callable directly for advanced use; see their `--help`.
 >
@@ -148,23 +148,23 @@ same flags, no extra state.
 
 ```bash
 # Pick tools interactively (TTY checkbox prompt)
-npx @event4u/create-agent-config init
+npx @event4u/agent-config init
 
 # Pick tools explicitly, non-interactive
-npx @event4u/create-agent-config init --tools=claude-code,cursor --yes
+npx @event4u/agent-config init --tools=claude-code,cursor --yes
 
 # Install everything (the default — backward-compatible)
-npx @event4u/create-agent-config init --tools=all --yes
+npx @event4u/agent-config init --tools=all --yes
 
 # Test a specific git ref (branch, tag, sha) instead of the latest npm tag
-npx @event4u/create-agent-config init --ref=main --yes
+npx @event4u/agent-config init --ref=main --yes
 ```
 
-The `@event4u/create-agent-config` package is a thin wrapper: it
-downloads the latest `@event4u/agent-config` tarball into a temp
-directory, runs `bash scripts/install --target <cwd> ...`, and cleans
-up after itself. The project-local payload package
-(`@event4u/agent-config`) is unchanged.
+`npx @event4u/agent-config init` fetches the latest tarball, runs
+`bash scripts/install --target <cwd> …`, and the install script handles
+its own cleanup. The same package exposes every other `agent-config`
+subcommand (`sync`, `validate`, `mcp:render`, `roadmap:progress`, …) —
+see `npx @event4u/agent-config help`.
 
 ### `curl | bash` (no Node required)
 
@@ -202,12 +202,12 @@ The package is versioned with the project. Settings are committed once.
 ### npx (recommended for any project)
 
 ```bash
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 ```
 
-The wrapper downloads the latest `@event4u/agent-config` tarball into a
-temp dir, runs `scripts/install` with the selected tools, and cleans up
-afterwards. Nothing is added to `package.json`.
+`npx` fetches the latest `@event4u/agent-config` tarball and runs
+`scripts/install` with the selected tools. Nothing is added to
+`package.json`.
 
 ### Global CLI (one install per machine)
 
@@ -615,7 +615,7 @@ When a new version of the package is published:
 
 ```bash
 # npx (one-shot, recommended) — always uses the latest tarball
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 
 # Global CLI
 npm install -g @event4u/agent-config@latest

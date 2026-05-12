@@ -19,7 +19,7 @@ The package ships **both** so you don't have to pick.
 ## Project install
 
 ```bash
-npx @event4u/create-agent-config init --tools=cursor
+npx @event4u/agent-config init --tools=cursor
 ```
 
 This populates:
@@ -32,7 +32,7 @@ This populates:
 Combine surfaces if you use both Cursor and Claude Code:
 
 ```bash
-npx @event4u/create-agent-config init --tools=cursor,claude-code
+npx @event4u/agent-config init --tools=cursor,claude-code
 ```
 
 ## Global install

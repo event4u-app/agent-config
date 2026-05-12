@@ -15,7 +15,7 @@ projects to those paths during install.
 
 ```bash
 # Inside an existing repo:
-npx @event4u/create-agent-config init --tools=claude-code
+npx @event4u/agent-config init --tools=claude-code
 
 # Or with the curl entrypoint:
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh \

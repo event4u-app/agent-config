@@ -11,7 +11,7 @@ from the repo root for project conventions.
 ## Install
 
 ```bash
-npx @event4u/create-agent-config init --tools=aider
+npx @event4u/agent-config init --tools=aider
 ```
 
 Populates:

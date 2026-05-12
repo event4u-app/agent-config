@@ -11,7 +11,7 @@ and `AGENTS.md`.
 ## Install
 
 ```bash
-npx @event4u/create-agent-config init --tools=cline
+npx @event4u/agent-config init --tools=cline
 ```
 
 Populates:
@@ -35,7 +35,7 @@ automatically. Run `/help` in the chat to verify rule loading.
 | Symptom | Fix |
 |---|---|
 | Rules not picked up | Reload VS Code window after `task generate-tools`. |
-| `.clinerules` missing | Re-run `npx @event4u/create-agent-config init --tools=cline`. |
+| `.clinerules` missing | Re-run `npx @event4u/agent-config init --tools=cline`. |
 
 ## Cross-references
 

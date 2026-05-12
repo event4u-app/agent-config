@@ -10,7 +10,7 @@ Pick one entrypoint:
 
 ```bash
 # Recommended — one-shot, no local dependency
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 
 # No-Node fallback — curl | bash entrypoint (downloads a tarball)
 curl -sSL https://raw.githubusercontent.com/event4u-app/agent-config/main/setup.sh | bash

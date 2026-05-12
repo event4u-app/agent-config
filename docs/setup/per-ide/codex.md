@@ -11,7 +11,7 @@ repo root for project context.
 ## Install
 
 ```bash
-npx @event4u/create-agent-config init --tools=codex
+npx @event4u/agent-config init --tools=codex
 ```
 
 Populates:

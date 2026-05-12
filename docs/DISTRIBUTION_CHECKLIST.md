@@ -74,21 +74,22 @@ are not roadmap steps.
 - **Notes:** **Do not submit before the gate.** Premature listing
   produces a bad first impression and is hard to retract.
 
-### npm: `@event4u/create-agent-config`
+### npm: `@event4u/agent-config`
 
 - **Status:** Prepared
 - **Owner:** maintainer
 - **Last Reviewed:** 2026-05-12
-- **Substrate:** [`packages/create-agent-config/`](../packages/create-agent-config/)
-  source is ready; the wrapper clones the repo to a temp dir, runs
-  `scripts/install`, then deletes the temp dir.
+- **Substrate:** root `package.json` — `bin: scripts/agent-config` exposes
+  `init`, `sync`, `validate`, `mcp:render`, `roadmap:progress`, …
 - **Doc anchor:** [`docs/installation.md`](installation.md) §
   "npx one-liner".
-- **Action:** `npm publish --access public` from `packages/create-agent-config/`.
+- **Action:** routine releases auto-publish via `publish-npm.yml` on tag
+  push; manual fallback is `npm publish --access public` after
+  `task npm:login`.
 - **Pre-conditions:** npm registry credentials for the `@event4u`
   scope.
 - **Notes:** Public scope, MIT-licensed. Verify `npx
-  @event4u/create-agent-config init` in an empty directory before
+  @event4u/agent-config init` in an empty directory before
   declaring Live.
 
 ### GitHub repo topics + tagline

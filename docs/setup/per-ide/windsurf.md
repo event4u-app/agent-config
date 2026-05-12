@@ -19,7 +19,7 @@ The package ships **both**.
 ## Project install
 
 ```bash
-npx @event4u/create-agent-config init --tools=windsurf
+npx @event4u/agent-config init --tools=windsurf
 ```
 
 Populates:
@@ -32,7 +32,7 @@ Populates:
 Combine with other surfaces:
 
 ```bash
-npx @event4u/create-agent-config init --tools=windsurf,claude-code,cursor
+npx @event4u/agent-config init --tools=windsurf,claude-code,cursor
 ```
 
 ## Wave-8 frontmatter

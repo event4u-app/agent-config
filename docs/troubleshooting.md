@@ -34,7 +34,7 @@ bash scripts/install --verbose
 # or, to regenerate everything (overwrites existing bridge files):
 bash scripts/install --force
 # or, for one-shot installs without a local node_modules tree:
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 ```
 
 ### Check 2: Does your agent actually read these directories?
@@ -70,7 +70,7 @@ orchestrator explicitly inside the project root:
 
 ```bash
 # One-shot, no local checkout required (recommended)
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 
 # When the global CLI is installed
 agent-config install --tools=claude-code,cursor
@@ -84,7 +84,7 @@ When the package version changes, symlinks that pointed to the old
 package path may break. Re-run the installer — it is idempotent:
 
 ```bash
-npx @event4u/create-agent-config init --tools=claude-code,cursor
+npx @event4u/agent-config init --tools=claude-code,cursor
 ```
 
 The installer replaces stale symlinks with fresh ones pointing at the
@@ -99,7 +99,7 @@ and Unix-style symlinks. Recommended setup:
 
 1. **WSL2** (preferred): install Ubuntu or a distribution of your choice,
    clone the project inside the WSL filesystem, and run
-   `npx @event4u/create-agent-config init` from WSL.
+   `npx @event4u/agent-config init` from WSL.
 2. **Git Bash**: works for the basic install, but symlinks require
    Developer Mode (Windows 10 1703+) or admin privileges. Without either,
    Git Bash falls back to copies, which means updates will not propagate
