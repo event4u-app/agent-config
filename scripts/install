@@ -230,17 +230,18 @@ if [[ -z "$TARGET_DIR" ]]; then
 fi
 
 # Source-repo guard: refuse to install into the agent-config dev tree itself.
-# Mirrors packages/create-agent-config/src/install.js — defense-in-depth so a
-# direct `bash scripts/install` from inside the source checkout (without the
-# Node wrapper) cannot corrupt .augment/ symlinks. Override for self-tests:
+# Defense-in-depth so a direct `bash scripts/install` from inside the source
+# checkout cannot corrupt .augment/ symlinks. Skipped for --global because
+# global installs only write to user-scope paths (~/.config/agent-config/,
+# ~/.claude/, …) and never touch the source tree. Override for self-tests:
 # AGENT_CONFIG_ALLOW_SELF_INSTALL=1.
-if [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
+if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
     self_marker=""
     if [[ -d "$TARGET_DIR/.agent-src.uncompressed" ]]; then
         self_marker=".agent-src.uncompressed/"
     elif [[ -f "$TARGET_DIR/package.json" ]] && \
-         grep -qE '"name"[[:space:]]*:[[:space:]]*"@event4u/(create-)?agent-config"' "$TARGET_DIR/package.json" 2>/dev/null; then
-        self_marker='package.json::name === "@event4u/(create-)agent-config"'
+         grep -qE '"name"[[:space:]]*:[[:space:]]*"@event4u/agent-config"' "$TARGET_DIR/package.json" 2>/dev/null; then
+        self_marker='package.json::name === "@event4u/agent-config"'
     fi
     if [[ -n "$self_marker" ]]; then
         err "Refusing to install agent-config into its own source checkout."
