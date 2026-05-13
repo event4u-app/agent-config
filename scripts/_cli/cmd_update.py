@@ -243,17 +243,18 @@ def _refresh_global_lockfile(version: str, *, out=sys.stdout) -> None:
     when ``update`` flips the pin. Atomic write goes through
     ``installed_lock.write_lockfile``.
     """
-    lock_path = installed_lock.lockfile_path()
-    existing = installed_lock.read_lockfile(path=lock_path)
+    read_path = installed_lock.lockfile_path()
+    write_path = installed_lock.lockfile_write_path()
+    existing = installed_lock.read_lockfile(path=read_path)
     if existing is None:
         return
     recorded = existing.get("agent_config_version")
     tools = list(existing.get("tools", []))
-    if recorded == version:
-        print(f"ℹ️  {lock_path} already records {version}.", file=out)
+    if recorded == version and read_path == write_path:
+        print(f"ℹ️  {write_path} already records {version}.", file=out)
         return
-    installed_lock.write_lockfile(version, tools, path=lock_path)
-    print(f"✅  Refreshed global lockfile at {lock_path}.", file=out)
+    installed_lock.write_lockfile(version, tools, path=write_path)
+    print(f"✅  Refreshed global lockfile at {write_path}.", file=out)
 
 
 def _detect_installed_version() -> str:

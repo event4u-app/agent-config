@@ -2,7 +2,7 @@
 
 Claude Desktop has no filesystem convention for skills; the Customize →
 Skills UI accepts a ZIP per skill via the Upload button. This module
-walks ``<package_root>/.claude/skills/*`` and produces one
+walks ``<package_root>/.agent-src/skills/*`` and produces one
 ``<skill-name>.zip`` per directory into ``dest_dir``.
 
 Contract:
@@ -51,8 +51,8 @@ def _walk_skill_files(skill_dir: Path) -> list[tuple[Path, tuple[str, ...]]]:
     """Return ``[(abs_path, rel_parts), ...]`` for every file in the skill.
 
     Symlinks are followed (``os.walk(..., followlinks=True)``) so a
-    bundle from a symlinked entry under ``.claude/skills/`` contains the
-    actual target content, not a dangling symlink.
+    bundle from a symlinked entry under ``.agent-src/skills/`` contains
+    the actual target content, not a dangling symlink.
     """
     out: list[tuple[Path, tuple[str, ...]]] = []
     resolved = skill_dir.resolve()
@@ -121,7 +121,7 @@ def build_skill_bundles(
     ``curation`` optionally restricts the build to the given skill
     names; ``None`` bundles every skill folder containing ``SKILL.md``.
     """
-    skills_root = package_root / ".claude" / "skills"
+    skills_root = package_root / ".agent-src" / "skills"
     if not skills_root.is_dir():
         return []
     dest_dir.mkdir(parents=True, exist_ok=True)

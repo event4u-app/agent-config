@@ -422,6 +422,7 @@ def _uninstall_project(opts: argparse.Namespace) -> int:
 
 def _uninstall_global(opts: argparse.Namespace) -> int:
     lock_path = installed_lock.lockfile_path()
+    write_path = installed_lock.lockfile_write_path()
     lock = installed_lock.read_lockfile(lock_path)
     if lock is None and not opts.force:
         print(f"❌  no global lockfile at {lock_path}", file=sys.stderr)
@@ -442,15 +443,24 @@ def _uninstall_global(opts: argparse.Namespace) -> int:
             removed_names.append(tool)
     if lock is not None and not opts.dry_run:
         remaining = [t for t in lock.get("tools", []) if t not in tools]
+        version = lock.get("agent_config_version", "")
         if remaining:
-            installed_lock.write_lockfile(remaining, version=lock.get("agent_config_version", ""))
+            installed_lock.write_lockfile(version, remaining, path=write_path)
+            # Drop the legacy file if it differs from the canonical write
+            # target so the namespace migration completes on uninstall.
+            if lock_path != write_path:
+                try:
+                    lock_path.unlink()
+                except OSError:
+                    pass
             print(f"✅  lockfile updated ({len(tools)} entries removed, {len(remaining)} kept)")
         else:
-            try:
-                lock_path.unlink()
-                print(f"✅  lockfile deleted ({lock_path})")
-            except OSError as exc:
-                print(f"⚠️   could not delete lockfile: {exc}")
+            for target in {lock_path, write_path}:
+                try:
+                    target.unlink()
+                except OSError:
+                    pass
+            print(f"✅  lockfile deleted ({write_path})")
     return 0
 
 

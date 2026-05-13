@@ -29,8 +29,8 @@ def _make_skill(
     extras: dict[str, str] | None = None,
     junk: dict[str, str] | None = None,
 ) -> Path:
-    """Create a fake skill folder under ``<package_root>/.claude/skills/``."""
-    skill_dir = package_root / ".claude" / "skills" / name
+    """Create a fake skill folder under ``<package_root>/.agent-src/skills/``."""
+    skill_dir = package_root / ".agent-src" / "skills" / name
     skill_dir.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text(skill_md, encoding="utf-8")
     for rel, content in (extras or {}).items():
@@ -125,7 +125,7 @@ def test_force_rewrites_unchanged_bundle(tmp_path: Path) -> None:
 
 def test_skill_without_skill_md_is_skipped(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
-    not_a_skill = pkg / ".claude" / "skills" / "orphan"
+    not_a_skill = pkg / ".agent-src" / "skills" / "orphan"
     not_a_skill.mkdir(parents=True)
     (not_a_skill / "notes.md").write_text("no SKILL.md here\n", encoding="utf-8")
     dest = tmp_path / "bundles"

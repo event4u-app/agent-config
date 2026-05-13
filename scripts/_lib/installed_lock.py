@@ -50,7 +50,7 @@ _TOOL_RE = re.compile(r"^\s*-\s*([A-Za-z0-9_\-.]+)\s*$")
 
 
 def lockfile_path(env: Optional[dict] = None) -> Path:
-    """Return the active lockfile path, honoring the env override.
+    """Return the active lockfile path for **reads**, honoring overrides.
 
     Resolution order:
 
@@ -59,9 +59,10 @@ def lockfile_path(env: Optional[dict] = None) -> Path:
     3. ``~/.config/agent-config/installed.lock``  (legacy fallback, read-only).
     4. Canonical write target under the new namespace (Step 2 fallthrough).
 
-    Writers always end up at (4) when no lockfile exists yet; readers
-    benefit from (3) so pre-2.4 installs keep working while the
-    migration shim has not yet run.
+    Readers benefit from (3) so pre-2.4 installs keep working while the
+    migration shim has not yet run. Writers must use
+    :func:`lockfile_write_path` so a stale legacy file does not anchor
+    subsequent writes to the deprecated location.
     """
     env = env if env is not None else os.environ
     override = env.get(LOCKFILE_ENV)
@@ -70,6 +71,24 @@ def lockfile_path(env: Optional[dict] = None) -> Path:
     resolved = user_global_paths.resolve_with_fallback("installed.lock", env=env)
     if resolved is not None:
         return resolved
+    return user_global_paths.write_target("installed.lock", env=env)
+
+
+def lockfile_write_path(env: Optional[dict] = None) -> Path:
+    """Return the canonical write target for the lockfile.
+
+    Unlike :func:`lockfile_path`, this never falls back to the legacy
+    ``~/.config/agent-config/`` location. Honors the
+    ``$AGENT_CONFIG_INSTALLED_LOCK`` override for tests, otherwise pins
+    to ``~/.event4u/agent-config/installed.lock``. Callers in
+    ``init``, ``update``, and ``uninstall`` use this so writes always
+    land in the new namespace regardless of whether a stale legacy
+    lockfile is still present.
+    """
+    env = env if env is not None else os.environ
+    override = env.get(LOCKFILE_ENV)
+    if override:
+        return Path(override).expanduser()
     return user_global_paths.write_target("installed.lock", env=env)
 
 
