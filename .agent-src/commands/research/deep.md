@@ -1,5 +1,6 @@
 ---
 name: research:deep
+tier: 2
 cluster: research
 sub: deep
 description: "Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths."

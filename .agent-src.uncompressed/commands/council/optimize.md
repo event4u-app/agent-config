@@ -1,5 +1,6 @@
 ---
 name: council:optimize
+tier: 2
 cluster: council
 sub: optimize
 skills: [ai-council]

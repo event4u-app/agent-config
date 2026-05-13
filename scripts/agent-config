@@ -34,13 +34,89 @@ CONSUMER_ROOT="$(pwd)"
 VERSION_FILE="$PACKAGE_ROOT/package.json"
 
 usage() {
+  # Tier filter — see docs/contracts/command-surface-tiers.md.
+  # Default prints Tier-0 only; --tier=1 adds Tier-1; --tier=all adds Tier-2.
+  local tier="${1:-0}"
+
   cat <<'EOF'
 agent-config — event4u/agent-config CLI
 
 Usage:
   ./agent-config <command> [options]
+  ./agent-config --help [--tier=0|1|all]
+EOF
 
-Commands:
+  cat <<'EOF'
+
+Tier 0 — daily-driver (init → sync → validate → work):
+  init                       One-shot project install. Forwards to `scripts/install`
+                             with all args. Entry point for `npx @event4u/agent-config init`.
+                             Flags: --tools=<list> | --ai=<list> | --yes | --force
+  sync                       Replay agents/installed-tools.lock — re-installs any
+                             tool whose bridge marker is missing locally (ADR-008).
+                             Flags: --dry-run | --force | --project=<path>
+  validate                   Read-only drift detection on the manifest
+                             (marker missing, scope divergence, version drift).
+                             Exits 1 on drift. Flags: --quiet | --skip-version-check
+  work                       Drive the work_engine Python engine on a free-form prompt
+                             (Option-A loop; called by the /work command)
+  implement-ticket           Drive the work_engine Python engine on a ticket envelope
+                             (Option-A loop; called by the /implement-ticket command)
+  first-run                  Guided first-run setup — cost profile, settings, tooling
+  keys:install-anthropic     Install the Anthropic API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
+  keys:install-openai        Install the OpenAI API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/openai.key 0600)
+  council:estimate           Pre-call council cost preview (no API call, no spend)
+                             Usage: council:estimate <question> [--input-mode prompt|roadmap]
+  council:run                Run the council. Requires --confirm to spend.
+                             Usage: council:run <question> --output <path> --confirm
+  council:render             Re-render a saved council responses JSON to markdown
+                             Usage: council:render <responses.json>
+  help                       Show this help (default Tier-0; --tier=1|all expands)
+  --version, -V              Print package version
+EOF
+
+  if [[ "$tier" == "1" || "$tier" == "all" ]]; then
+    cat <<'EOF'
+
+Tier 1 — power-user (release shape, audit, migration):
+  update                     Update the agent_config_version pin in .agent-settings.yml
+                             Flags: --check (read-only) | --to <version> (explicit pin)
+  versions                   List available @event4u/agent-config versions
+                             on npm. Marks the current pin and latest.
+                             Flags: --offline | --limit=N | --json
+  global                     Install to user-scope paths (~/.claude/, ~/.cursor/, …)
+                             Forwards to `scripts/install --global` (ADR-007).
+                             Flags: --tools=<list> | --ai=<list> | --yes | --force
+  export                     Eject a tool's canonical content into a chosen path
+                             (real file, no symlink). Idempotent; --force overrides
+                             content drift. See `./agent-config export --list`.
+                             Flags: --tool=<id> | --output=<path> | --force | --list
+  uninstall                  Remove bridge markers (project) or lockfile
+                             entries (global). Idempotent. User-deployed
+                             content under ~/.<tool>/ is preserved unless
+                             --purge is passed (destructive).
+                             Flags: --global | --tools=<list> | --dry-run
+                                    | --purge | --force | --project=<path>
+  prune                      Remove project bridge markers not declared in
+                             agents/installed-tools.lock (npm-prune style).
+                             Hard-floors when lockfile is absent.
+                             Flags: --dry-run | --json | --project=<path>
+                                    | --all-missing-lock
+  doctor                     Read-only drift report: manifest ↔ filesystem.
+                             Lists missing, modified, and foreign files.
+                             Exits 1 on drift, 2 on missing lockfile.
+                             Flags: --json | --project=<path>
+  migrate                    One-shot migration off legacy composer / npm install paths
+                             Flags: --dry-run (detect only)
+EOF
+  fi
+
+  if [[ "$tier" == "all" ]]; then
+    cat <<'EOF'
+
+Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   mcp:render                 Render mcp.json → .cursor/mcp.json, .windsurf/mcp.json
                              (pass --claude-desktop to also write user-scope config)
   mcp:check                  Dry-run mcp:render; exit non-zero if targets are stale
@@ -52,15 +128,8 @@ Commands:
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
-  keys:install-anthropic     Install the Anthropic API key for the AI Council
-                             (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
-  keys:install-openai        Install the OpenAI API key for the AI Council
-                             (interactive, /dev/tty only, writes ~/.config/agent-config/openai.key 0600)
-  first-run                  Guided first-run setup — cost profile, settings, tooling
-  implement-ticket           Drive the work_engine Python engine on a ticket envelope
-                             (Option-A loop; called by the /implement-ticket command)
-  work                       Drive the work_engine Python engine on a free-form prompt
-                             (Option-A loop; called by the /work command)
+  hooks:status               Print the runtime hook matrix (per-platform install + bindings)
+                             Flags: --format json|table, --strict (CI), --project-root <path>
   migrate-state              Migrate a legacy .implement-ticket-state.json file
                              to the v1 .work-state.json schema (preserves .bak)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
@@ -83,92 +152,46 @@ Commands:
   dispatch:hook              Universal hook dispatcher (Phase 7, hook-architecture-v1.md)
                              Usage: dispatch:hook --platform <name> --event <event> [--native-event <native>]
                              Reads scripts/hook_manifest.yaml and runs the resolved concern chain.
-  hooks:status               Print the runtime hook matrix (per-platform install + bindings)
-                             Flags: --format json|table, --strict (CI), --project-root <path>
   telemetry:record           Append one artefact-engagement event (default-off)
   telemetry:status           Print artefact-engagement telemetry status (read-only)
   telemetry:report           Aggregate the engagement log into a quartile report
-  council:estimate           Pre-call council cost preview (no API call, no spend)
-                             Usage: council:estimate <question> [--input-mode prompt|roadmap]
-  council:run                Run the council. Requires --confirm to spend.
-                             Usage: council:run <question> --output <path> --confirm
-  council:render             Re-render a saved council responses JSON to markdown
-                             Usage: council:render <responses.json>
-  update                     Update the agent_config_version pin in .agent-settings.yml
-                             Flags: --check (read-only) | --to <version> (explicit pin)
-  migrate                    One-shot migration off legacy composer / npm install paths
-                             Flags: --dry-run (detect only)
-  init                       One-shot project install. Forwards to `scripts/install`
-                             with all args. Entry point for `npx @event4u/agent-config init`.
-                             Flags: --tools=<list> | --ai=<list> | --yes | --force
-  global                     Install to user-scope paths (~/.claude/, ~/.cursor/, …)
-                             Forwards to `scripts/install --global` (ADR-007).
-                             Flags: --tools=<list> | --ai=<list> | --yes | --force
-  export                     Eject a tool's canonical content into a chosen path
-                             (real file, no symlink). Idempotent; --force overrides
-                             content drift. See `./agent-config export --list`.
-                             Flags: --tool=<id> | --output=<path> | --force | --list
-  sync                       Replay agents/installed-tools.lock — re-installs any
-                             tool whose bridge marker is missing locally (ADR-008).
-                             Flags: --dry-run | --force | --project=<path>
-  validate                   Read-only drift detection on the manifest
-                             (marker missing, scope divergence, version drift).
-                             Exits 1 on drift. Flags: --quiet | --skip-version-check
-  uninstall                  Remove bridge markers (project) or lockfile
-                             entries (global). Idempotent. User-deployed
-                             content under ~/.<tool>/ is preserved unless
-                             --purge is passed (destructive).
-                             Flags: --global | --tools=<list> | --dry-run
-                                    | --purge | --force | --project=<path>
-  prune                      Remove project bridge markers not declared in
-                             agents/installed-tools.lock (npm-prune style).
-                             Hard-floors when lockfile is absent.
-                             Flags: --dry-run | --json | --project=<path>
-                                    | --all-missing-lock
-  doctor                     Read-only drift report: manifest ↔ filesystem.
-                             Lists missing, modified, and foreign files.
-                             Exits 1 on drift, 2 on missing lockfile.
-                             Flags: --json | --project=<path>
-  versions                   List available @event4u/agent-config versions
-                             on npm. Marks the current pin and latest.
-                             Flags: --offline | --limit=N | --json
-  help                       Show this help
-  --version, -V              Print package version
+EOF
+  fi
 
-Examples:
-  ./agent-config mcp:render
-  ./agent-config mcp:render --claude-desktop
-  ./agent-config mcp:check
-  ./agent-config mcp:setup
-  ./agent-config mcp:run
-  ./agent-config roadmap:progress
-  ./agent-config hooks:install
+  if [[ "$tier" == "0" ]]; then
+    cat <<'EOF'
+
+(Hidden: 9 Tier-1 + 26 Tier-2 commands. Run `./agent-config --help --tier=1`
+or `--tier=all` to see them. Tier criteria: docs/contracts/command-surface-tiers.md.)
+EOF
+  fi
+
+  cat <<'EOF'
+
+Examples (Tier 0):
+  ./agent-config init --tools=claude-code,cursor --yes
+  ./agent-config sync --dry-run
+  ./agent-config sync
+  ./agent-config validate
+  ./agent-config first-run
+  ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
+  ./agent-config implement-ticket --state-file .work-state.json
   ./agent-config keys:install-anthropic
   ./agent-config keys:install-openai
-  ./agent-config first-run
-  ./agent-config implement-ticket --state-file .work-state.json
-  ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
-  ./agent-config migrate-state
-  ./agent-config memory:lookup --types domain-invariants --key billing
-  ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
-  ./agent-config memory:check --path agents/memory
-  ./agent-config refine-ticket:detect ticket-body.txt
-  ./agent-config telemetry:status
-  ./agent-config telemetry:status --format json
-  ./agent-config telemetry:report --since 30d --top 20
-  ./agent-config telemetry:report --since 7d --format json --top 0
   ./agent-config council:estimate prompt.txt
   ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
   ./agent-config council:render agents/council-sessions/out.json
-  ./agent-config init --tools=claude-code,cursor --yes
+EOF
+
+  if [[ "$tier" == "1" || "$tier" == "all" ]]; then
+    cat <<'EOF'
+
+Examples (Tier 1):
   ./agent-config global --tools=claude-code --yes
   ./agent-config global --ai=cursor,windsurf
   ./agent-config export --list
   ./agent-config export --tool=agents-md --output=AGENTS.md
   ./agent-config export --tool=copilot-instructions --output=.github/copilot-instructions.md
-  ./agent-config sync --dry-run
-  ./agent-config sync
-  ./agent-config validate
   ./agent-config uninstall --tools=cursor --dry-run
   ./agent-config uninstall --global --tools=windsurf --purge
   ./agent-config prune --dry-run
@@ -180,6 +203,33 @@ Examples:
   ./agent-config versions --json
   ./agent-config init --offline --tools=claude-code,cursor --yes
   ./agent-config update --offline --to=2.2.0
+EOF
+  fi
+
+  if [[ "$tier" == "all" ]]; then
+    cat <<'EOF'
+
+Examples (Tier 2):
+  ./agent-config mcp:render
+  ./agent-config mcp:render --claude-desktop
+  ./agent-config mcp:check
+  ./agent-config mcp:setup
+  ./agent-config mcp:run
+  ./agent-config roadmap:progress
+  ./agent-config hooks:install
+  ./agent-config migrate-state
+  ./agent-config memory:lookup --types domain-invariants --key billing
+  ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
+  ./agent-config memory:check --path agents/memory
+  ./agent-config refine-ticket:detect ticket-body.txt
+  ./agent-config telemetry:status
+  ./agent-config telemetry:status --format json
+  ./agent-config telemetry:report --since 30d --top 20
+  ./agent-config telemetry:report --since 7d --format json --top 0
+EOF
+  fi
+
+  cat <<'EOF'
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -710,7 +760,20 @@ main() {
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
     versions)                cmd_versions "$@" ;;
-    help|--help|-h|"")        usage ;;
+    help|--help|-h|"")
+      # Optional `--tier=0|1|all` filter (default 0).
+      local tier_arg="0"
+      for arg in "$@"; do
+        case "$arg" in
+          --tier=0|--tier=1|--tier=all) tier_arg="${arg#--tier=}" ;;
+          --tier|-t) ;; # next arg
+          0|1|all)
+            # Positional after --tier/-t.
+            tier_arg="$arg" ;;
+          --all) tier_arg="all" ;;
+        esac
+      done
+      usage "$tier_arg" ;;
     --version|-V)            print_version ;;
     *)
       echo "❌  agent-config: unknown command: $cmd" >&2

@@ -1,5 +1,6 @@
 ---
 name: optimize:rtk
+tier: 2
 cluster: optimize
 sub: rtk
 skills: [agent-docs-writing]

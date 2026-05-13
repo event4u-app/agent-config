@@ -1,5 +1,6 @@
 ---
 name: override:manage
+tier: 2
 cluster: override
 sub: manage
 description: Reviews, updates, and refactors existing project-level overrides.

@@ -1,5 +1,6 @@
 ---
 name: quality-fix
+tier: 1
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
 disable-model-invocation: true

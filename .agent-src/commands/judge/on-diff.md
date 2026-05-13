@@ -1,5 +1,6 @@
 ---
 name: judge:on-diff
+tier: 2
 cluster: judge
 sub: on-diff
 skills: [subagent-orchestration, verify-completion-evidence]

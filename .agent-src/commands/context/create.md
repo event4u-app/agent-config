@@ -1,5 +1,6 @@
 ---
 name: context:create
+tier: 2
 cluster: context
 sub: create
 skills: [agent-docs-writing]

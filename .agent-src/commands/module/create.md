@@ -1,5 +1,6 @@
 ---
 name: module:create
+tier: 2
 cluster: module
 sub: create
 skills: [laravel]

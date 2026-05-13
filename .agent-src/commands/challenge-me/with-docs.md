@@ -1,5 +1,6 @@
 ---
 name: challenge-me:with-docs
+tier: 2
 cluster: challenge-me
 sub: with-docs
 description: "Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch."

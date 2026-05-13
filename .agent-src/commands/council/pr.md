@@ -1,5 +1,6 @@
 ---
 name: council:pr
+tier: 2
 cluster: council
 sub: pr
 skills: [ai-council]

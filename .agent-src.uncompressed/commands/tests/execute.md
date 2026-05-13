@@ -1,5 +1,6 @@
 ---
 name: tests:execute
+tier: 2
 cluster: tests
 sub: execute
 skills: [pest-testing]

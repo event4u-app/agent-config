@@ -1,5 +1,6 @@
 ---
 name: roadmap:process-full
+tier: 2
 cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]

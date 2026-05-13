@@ -1,5 +1,6 @@
 ---
 name: fix:pr-bot-comments
+tier: 2
 cluster: fix
 sub: pr-bot-comments
 skills: [php-coder, quality-tools]

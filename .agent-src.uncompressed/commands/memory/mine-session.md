@@ -1,5 +1,6 @@
 ---
 name: memory:mine-session
+tier: 2
 cluster: memory
 sub: mine-session
 description: Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter.

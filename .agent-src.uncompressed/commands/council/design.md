@@ -1,5 +1,6 @@
 ---
 name: council:design
+tier: 2
 cluster: council
 sub: design
 skills: [ai-council]

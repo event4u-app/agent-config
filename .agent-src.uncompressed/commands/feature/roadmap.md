@@ -1,5 +1,6 @@
 ---
 name: feature:roadmap
+tier: 2
 cluster: feature
 sub: roadmap
 skills: [agent-docs-writing]

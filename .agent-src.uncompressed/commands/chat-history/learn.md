@@ -1,5 +1,6 @@
 ---
 name: chat-history:learn
+tier: 2
 cluster: chat-history
 sub: learn
 skills: [learning-to-rule-or-skill]

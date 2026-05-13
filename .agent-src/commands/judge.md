@@ -1,5 +1,6 @@
 ---
 name: judge
+tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff
 cluster: judge
 disable-model-invocation: true

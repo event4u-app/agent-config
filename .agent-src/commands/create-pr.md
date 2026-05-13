@@ -1,5 +1,6 @@
 ---
 name: create-pr
+tier: 1
 cluster: create-pr
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes

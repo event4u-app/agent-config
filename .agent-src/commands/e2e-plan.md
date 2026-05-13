@@ -1,5 +1,6 @@
 ---
 name: e2e-plan
+tier: 2
 skills: [playwright-testing]
 description: Explore the application and create a structured E2E test plan in Markdown
 disable-model-invocation: true

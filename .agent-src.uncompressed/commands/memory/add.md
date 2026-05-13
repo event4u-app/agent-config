@@ -1,5 +1,6 @@
 ---
 name: memory:add
+tier: 2
 cluster: memory
 sub: add
 description: Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)

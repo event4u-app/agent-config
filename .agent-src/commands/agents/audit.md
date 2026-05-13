@@ -1,5 +1,6 @@
 ---
 name: agents:audit
+tier: 2
 cluster: agents
 sub: audit
 description: Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.

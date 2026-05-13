@@ -1,5 +1,6 @@
 ---
 name: review-routing
+tier: 2
 skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
 disable-model-invocation: true

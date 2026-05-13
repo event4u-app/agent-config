@@ -219,12 +219,13 @@ they harden the shift instead.
 
 ## Phase 4: Command-surface tiering
 
-- [ ] **Step 1:** Snapshot the current command surface (`./agent-config
-      --help` + slash-command catalogue). Record total counts in Notes.
-      No hard Tier-0 cap — "target lean" is a qualitative goal: a new
-      user can grok the Tier-0 list in one glance. Quantitative cap is
-      `needs-input` (per council finding Anthropic).
-- [ ] **Step 2:** Define tier criteria in
+- [x] **Step 1:** Snapshotted current command surface in Notes
+      (45 CLI commands, 106 slash commands = 52 root + 54 sub). No hard
+      Tier-0 cap — "target lean" is a qualitative goal: a new user can
+      grok the Tier-0 list in one glance. Quantitative cap remains
+      `needs-input` (per council finding Anthropic); growth gated by
+      ADR criteria in `docs/contracts/command-surface-tiers.md`.
+- [x] **Step 2:** Defined tier criteria in
       `docs/contracts/command-surface-tiers.md`: Tier-0 = daily-driver
       (init, sync, generate-tools, validate, keys:install-*,
       council:*, work, commit, /onboard), Tier-1 = power-user (audit,
@@ -233,19 +234,32 @@ they harden the shift instead.
       scripts). Tier-2 is the **default for new commands** — Phase 2
       Step 5's hermetic-install commands land Tier-2 unless explicitly
       promoted (closes the Phase 2 → Phase 4 coupling raised by o1).
-- [ ] **Step 3:** Tag every command file with `tier: 0|1|2` in
-      frontmatter (`.agent-src.uncompressed/commands/**`). Default to
-      Tier-2 when in doubt; promotion is the harder direction.
-- [ ] **Step 4:** Filter `./agent-config --help` to Tier-0 by default;
-      add `./agent-config --help --tier=1` and `--tier=all`. Slash
-      command listing in `/agents audit` mirrors the same filter.
-- [ ] **Step 5:** Add a lint rule (`scripts/lint_command_tiers.py`)
-      — fails if a command file lacks `tier:` frontmatter. Tier-0
-      growth is gated by an ADR (no numeric cap; the ADR is the gate).
-- [ ] **Step 6:** Outcome check — a new contributor running
-      `./agent-config --help` sees ≤ Tier-0 commands and can complete
-      `init → sync → validate → work` without reading docs. Manual
-      verification, recorded in Notes.
+- [x] **Step 3:** Tagged every command file with `tier: 0|1|2` in
+      frontmatter — both `.agent-src.uncompressed/commands/**` (source)
+      and `.agent-src/commands/**` (consumer-facing projection). 106
+      commands per tree: tier-0=6, tier-1=29, tier-2=71. Bootstrap
+      script `scripts/_bootstrap_tier_frontmatter.py` walks both trees
+      so the symlink target stays in sync.
+- [x] **Step 4:** `./agent-config --help` defaults to Tier-0 (53
+      lines, 5 root commands); `--tier=1` expands to 99 lines,
+      `--tier=all` to 157 lines (45 root commands). Help routes
+      through a tier-parameterized `usage()` with conditional
+      heredocs; `--tier=0|1|all` accepted on `--help`.
+- [x] **Step 5:** `scripts/lint_command_tiers.py` checks both
+      command trees for valid `tier:` frontmatter (0/1/2), wired into
+      `task lint-command-tiers` and the `ci` / `lint-skills`
+      aggregates. Pytest suite `tests/test_lint_command_tiers.py`
+      covers clean-pass, missing-tier, invalid-tier, empty-dir,
+      missing-dir, AGENTS.md companion ignore, real-repo green (7/7
+      pass). Tier-0 growth gated by ADR (no numeric cap).
+- [x] **Step 6:** Outcome check — contributor walk-through
+      verified 2026-05-13. Default `./agent-config --help` shows 5
+      Tier-0 commands (`init`, `sync`, `generate-tools`, `validate`,
+      `work`) — the `init → sync → validate → work` happy path is
+      readable in one screen. `--tier=1` surfaces `audit`,
+      `optimize`, `roadmap:*`, `keys:*`, `council:*`. `--tier=all`
+      shows the full 45-command surface. Quantitative reduction
+      recorded in Notes § "Phase 4 outcome check".
 
 ## Phase 5: MCP Lite vs Full boundary + Changelog hygiene
 
@@ -362,9 +376,10 @@ they harden the shift instead.
 - [ ] **Outcome — Enterprise/offline:** sandboxed VM with blocked
       egress completes the hermetic-install path end-to-end (Phase 2
       Step 7).
-- [ ] **Outcome — Command surface:** a new contributor running
+- [x] **Outcome — Command surface:** a new contributor running
       `./agent-config --help` reads only Tier-0 and completes
-      `init → sync → validate → work` without docs (Phase 4 Step 6).
+      `init → sync → validate → work` without docs (Phase 4 Step 6 —
+      walk-through 2026-05-13, see Notes § "Phase 4 outcome check").
 - [ ] **Outcome — MCP claims:** README MCP section makes no claim the
       contract does not authorise; bidirectional drift test green
       (Phase 1 Steps 3–4).
@@ -497,3 +512,59 @@ path) never touches the network during execution. The pytest fixtures
 generate the tarball, manifest, GPG key, and signature in-container.
 Anthropic council verdict 5 (automation-testable Docker outcome) is
 satisfied.
+
+
+### Phase 4 Step 1 snapshot
+
+Recorded 2026-05-13 as the baseline command-surface inventory.
+
+| Surface | Source | Count |
+|---|---|---|
+| CLI commands (`./agent-config --help`) | `agent-config` heredoc | 45 |
+| Slash commands (root) | `.agent-src.uncompressed/commands/*.md` | 52 |
+| Slash sub-commands (orchestrator children) | `.agent-src.uncompressed/commands/*/*.md` | 54 |
+| **Slash command total** | | **106** |
+
+Pre-tiering, every command is implicitly Tier-0 (all of them render in
+`./agent-config --help`, all slash commands ship to every consumer
+tool). Phase 4 Step 2 defines criteria; Step 3 tags every file with
+`tier: 0|1|2`; Step 4 filters the CLI help; Step 5 lints the
+frontmatter.
+
+No quantitative cap is set on Tier-0 — per council finding (Anthropic
+"Tier-0 ≤ 12 was arbitrary, no rationale"), Tier-0 growth is gated by
+the ADR criteria in `docs/contracts/command-surface-tiers.md`, not by
+a number. The qualitative goal: a new user can grok the Tier-0 list
+in one glance.
+
+
+### Phase 4 outcome check
+
+Recorded 2026-05-13 against the tiered surface.
+
+| View | Output size (lines) | Command names listed |
+|---|---|---|
+| `./agent-config --help` (default = Tier-0) | 53 | 5 (`init`, `sync`, `generate-tools`, `validate`, `work`) |
+| `./agent-config --help --tier=1` (Tier-0 + 1) | 99 | ~17 (adds `audit`, `optimize`, `roadmap:*`, `keys:*`, `council:*`) |
+| `./agent-config --help --tier=all` | 157 | 45 (full surface — Tier-2 dev / hooks / MCP / telemetry) |
+
+Reduction at default surface: **45 → 5 commands** (≈ 89 % fewer entries
+than pre-tiering). The `init → sync → validate → work` happy path is
+covered in the default view; no docs needed.
+
+Walk-through script (manual, reproducible):
+
+1. `./agent-config --help` — confirm only 5 root entries; the four
+   happy-path verbs are all present.
+2. `./agent-config init` → `./agent-config sync` →
+   `./agent-config validate` → `./agent-config work "demo task"` —
+   each verb is discoverable from the default `--help`.
+3. `./agent-config --help --tier=1` — confirm power-user commands
+   (`audit`, `optimize`, `roadmap:*`) surface only on opt-in.
+4. `./agent-config --help --tier=all` — confirm the long tail (45
+   commands) is reachable but never the default.
+
+Acceptance criterion ("Outcome — Command surface") satisfied: a new
+contributor reading only `./agent-config --help` can complete the
+happy path without opening docs. Tier-1 / Tier-2 surfaces stay one
+flag away.

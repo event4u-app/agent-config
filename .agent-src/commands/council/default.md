@@ -1,5 +1,6 @@
 ---
 name: council:default
+tier: 2
 cluster: council
 sub: default
 skills: [ai-council]

@@ -1,5 +1,6 @@
 ---
 name: optimize:skills
+tier: 2
 cluster: optimize
 sub: skills
 description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.

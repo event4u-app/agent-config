@@ -1,5 +1,6 @@
 ---
 name: fix:ci
+tier: 2
 cluster: fix
 sub: ci
 skills: [github-ci, quality-tools]

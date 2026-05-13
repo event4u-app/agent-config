@@ -1,5 +1,6 @@
 ---
 name: chat-history
+tier: 2
 description: Chat-history orchestrator — routes to show, import, learn
 cluster: chat-history
 disable-model-invocation: true

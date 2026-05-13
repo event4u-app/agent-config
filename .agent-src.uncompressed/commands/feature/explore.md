@@ -1,5 +1,6 @@
 ---
 name: feature:explore
+tier: 2
 cluster: feature
 sub: explore
 skills: [laravel]

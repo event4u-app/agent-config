@@ -1,5 +1,6 @@
 ---
 name: create-pr:description-only
+tier: 1
 cluster: create-pr
 sub: description-only
 skills: [git-workflow]

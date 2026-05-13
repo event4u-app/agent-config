@@ -1,5 +1,6 @@
 ---
 name: challenge-me:vision
+tier: 2
 cluster: challenge-me
 sub: vision
 description: "Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff."

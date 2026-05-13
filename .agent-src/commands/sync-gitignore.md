@@ -1,5 +1,6 @@
 ---
 name: sync-gitignore
+tier: 1
 cluster: sync-gitignore
 description: Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 disable-model-invocation: true

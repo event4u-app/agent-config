@@ -1,5 +1,6 @@
 ---
 name: chat-history:import
+tier: 2
 cluster: chat-history
 sub: import
 description: Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import

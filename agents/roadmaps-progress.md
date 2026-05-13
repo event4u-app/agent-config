@@ -6,17 +6,17 @@
 
 ## Overall
 
-**56 / 184 steps done · 30%**
+**63 / 184 steps done · 34%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 10 | 45 | 20 | 25 | 0 | 0 | ██████░░░░ 56% |
+| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 12 | 45 | 13 | 32 | 0 | 0 | ███████░░░ 71% |
 | 2 | [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md) | 6 | 36 | 5 | 31 | 0 | 0 | █████████░ 86% |
 | 3 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,7 +29,7 @@
 
 ### [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md)
 
-**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 25 / 45 done (56%)
+**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 32 / 45 done (71%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -37,12 +37,14 @@
 | 1 | MCP contract ↔ README auth-surface sync | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Enterprise / offline fallback story | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 3 | Architecture-docs split (four-pipeline clarity) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 4 | Command-surface tiering | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | MCP Lite vs Full boundary + Changelog hygiene | 🟡 in progress | 14 | 1 | 0 | 0 | 7% |
+| 4 | Command-surface tiering | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 5 | MCP Lite vs Full boundary + Changelog hygiene | 🟡 in progress | 13 | 2 | 0 | 0 | 13% |
 | 1 | Step 1 drift catalog | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 2 | council verdicts | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 2 | lock-schema extension — ADR candidate | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 | 2 | outcome check | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 4 | Step 1 snapshot | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 4 | outcome check | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
 ### [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md)
 

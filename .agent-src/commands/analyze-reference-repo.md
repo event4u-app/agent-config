@@ -1,5 +1,6 @@
 ---
 name: analyze-reference-repo
+tier: 2
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 disable-model-invocation: true

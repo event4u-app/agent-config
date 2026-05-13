@@ -1,5 +1,6 @@
 ---
 name: commit
+tier: 0
 cluster: commit
 skills: [git-workflow]
 description: Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits

@@ -1,5 +1,6 @@
 ---
 name: tests:create
+tier: 2
 cluster: tests
 sub: create
 skills: [pest-testing]

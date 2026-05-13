@@ -1,5 +1,6 @@
 ---
 name: judge:steps
+tier: 2
 cluster: judge
 sub: steps
 skills: [subagent-orchestration, verify-completion-evidence]

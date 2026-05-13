@@ -1,5 +1,6 @@
 ---
 name: roadmap:ai-council
+tier: 2
 cluster: roadmap
 sub: ai-council
 skills: [ai-council, agent-docs-writing, roadmap-management]
