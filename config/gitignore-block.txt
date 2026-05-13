@@ -36,3 +36,8 @@
 /agents/council-questions/
 /agents/council-responses/
 /agents/council-sessions/
+
+# Agent config — Tier 1 hook runtime state (context-hygiene.json,
+# onboarding-gate.json). Written by SessionStart / PostToolUse hooks
+# on Augment + Claude Code; regenerated on demand, never commit.
+/agents/state/
