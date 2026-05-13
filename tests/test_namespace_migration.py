@@ -164,3 +164,35 @@ def test_migration_skips_pre_existing_target_entry(tmp_path: Path) -> None:
     assert migrated is False
     assert (new_root / "agent-settings.yml").read_text(encoding="utf-8") == "new: 1\n"
     assert not (new_root / "extra.yml").exists()
+
+
+def test_migration_recovers_from_partial_copy_leftover(tmp_path: Path) -> None:
+    """Crash mid-copytree → next run cleans the .event4u-partial-* debris and retries."""
+    new_root, env = _new_root_env(tmp_path)
+    new_root.mkdir(parents=True)
+    # Simulate a prior interrupted run: only partial-suffixed debris exists,
+    # no real entries. The next migration must treat this as "no content"
+    # and complete the copy.
+    debris = new_root / f"agents{user_global_paths._PARTIAL_SUFFIX}12345"
+    debris.mkdir()
+    (debris / "halfwritten.md").write_text("partial\n", encoding="utf-8")
+
+    legacy = _legacy(tmp_path)
+    (legacy / "agent-settings.yml").write_text("once: 1\n", encoding="utf-8")
+    nested = legacy / "agents" / "global"
+    nested.mkdir(parents=True)
+    (nested / "note.md").write_text("# note\n", encoding="utf-8")
+
+    migrated = user_global_paths.migrate_legacy_namespace(
+        env=env, legacy_root_override=legacy
+    )
+
+    assert migrated is True
+    # Debris from the prior run is purged.
+    assert not debris.exists()
+    # Real migration completed.
+    assert (new_root / "agent-settings.yml").read_text(encoding="utf-8") == "once: 1\n"
+    assert (new_root / "agents" / "global" / "note.md").read_text(encoding="utf-8") == "# note\n"
+    # No partial siblings remain after success.
+    remaining = [p for p in new_root.iterdir() if user_global_paths._PARTIAL_SUFFIX in p.name]
+    assert remaining == []

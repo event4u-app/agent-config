@@ -25,6 +25,12 @@ import shutil
 from pathlib import Path
 from typing import Optional
 
+#: Marker suffix for in-progress entry copies during migration. A copy
+#: that crashes mid-flight leaves ``<name><suffix><pid>`` behind so the
+#: next run can clean it up before retrying — instead of treating a
+#: partial subdir as a completed copy.
+_PARTIAL_SUFFIX = ".event4u-partial-"
+
 #: Environment variable that overrides ``event4u_root()`` outright.
 #: Accepts a full path (``~`` expanded). Primarily used by tests; power
 #: users may also point this at a custom location.
@@ -162,6 +168,12 @@ def migrate_legacy_namespace(
       treats it as already-done and only writes the breadcrumb (if
       missing) — never overwrites new-namespace state.
     - If the legacy root is missing or empty, the function is a no-op.
+    - Per-entry atomic write: each entry is copied to a sibling
+      ``<name>.event4u-partial-<pid>`` and then ``os.replace``'d into
+      the final name. If a previous run crashed mid-``copytree``, the
+      leftover ``*.event4u-partial-*`` siblings are cleaned up at the
+      top of the next run before retrying — a partial directory is
+      never mistaken for a completed copy.
 
     ``legacy_root_override`` is for tests; production callers leave it ``None``.
     """
@@ -181,23 +193,52 @@ def migrate_legacy_namespace(
     if not legacy_entries:
         return False
 
-    new_has_content = new_root.exists() and any(new_root.iterdir())
+    # Real content check ignores partial-copy debris from a prior
+    # interrupted run; otherwise the breadcrumb would be written for
+    # a half-finished migration and retry would never run.
+    new_has_content = new_root.exists() and any(
+        not _is_partial_entry(p) for p in new_root.iterdir()
+    )
     if new_has_content:
         _ensure_breadcrumb(legacy_root)
         return False
 
     new_root.mkdir(parents=True, exist_ok=True)
+    _purge_partial_entries(new_root)
+
     for entry in legacy_entries:
         target = new_root / entry.name
         if target.exists():
             continue
+        staging = new_root / f"{entry.name}{_PARTIAL_SUFFIX}{os.getpid()}"
+        if staging.exists():
+            _remove_path(staging)
         if entry.is_dir():
-            shutil.copytree(entry, target, copy_function=shutil.copy2)
+            shutil.copytree(entry, staging, copy_function=shutil.copy2)
         else:
-            shutil.copy2(entry, target)
+            shutil.copy2(entry, staging)
+        os.replace(staging, target)
 
     _ensure_breadcrumb(legacy_root)
     return True
+
+
+def _is_partial_entry(path: Path) -> bool:
+    return _PARTIAL_SUFFIX in path.name
+
+
+def _purge_partial_entries(new_root: Path) -> None:
+    """Remove ``*.event4u-partial-*`` leftovers from a previous interrupted run."""
+    for entry in new_root.iterdir():
+        if _is_partial_entry(entry):
+            _remove_path(entry)
+
+
+def _remove_path(path: Path) -> None:
+    if path.is_dir() and not path.is_symlink():
+        shutil.rmtree(path)
+    else:
+        path.unlink(missing_ok=True)
 
 
 def _ensure_breadcrumb(legacy_root: Path) -> None:
