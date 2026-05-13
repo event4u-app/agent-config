@@ -18,6 +18,12 @@ DEFAULT_LOG_PATH = Path(".agent-engagement.jsonl")
 DEFAULT_GRANULARITY = "task"
 ALLOWED_GRANULARITIES = ("task", "phase-step", "tool-call")
 
+#: Defaults for the tier-usage signal (Phase 5 of road-to-surface-discipline).
+#: Separate file, separate opt-in, same default-off posture. Contract:
+#: ``docs/contracts/command-clusters.md#tier-usage-signal-contract``.
+DEFAULT_TIER_USAGE_LOG_PATH = Path(".agent-tier-usage.jsonl")
+DEFAULT_TIER_USAGE_RETIER = {"window_days": 30, "min_invocations": 20, "min_distinct_users": 3}
+
 
 @dataclass(frozen=True)
 class TelemetrySettings:
@@ -104,9 +110,68 @@ def read_settings(path: Path) -> TelemetrySettings:
     return settings
 
 
+@dataclass(frozen=True)
+class TierUsageSettings:
+    enabled: bool
+    log_path: Path
+    window_days: int
+    min_invocations: int
+    min_distinct_users: int
+
+
+def read_tier_usage_settings(path: Path) -> TierUsageSettings:
+    """Return parsed tier-usage settings — never raises on missing data.
+
+    Sibling of :func:`read_settings`; reads the
+    ``telemetry.tier_usage`` namespace from ``.agent-settings.yml``.
+    Default-off, same parse-tolerant shape — a missing file, a missing
+    section, or PyYAML being absent all collapse to ``enabled=False``.
+    """
+    section: dict[str, Any] = {}
+    if path.is_file():
+        try:
+            import yaml  # type: ignore[import-not-found]
+        except ImportError:
+            yaml = None  # type: ignore[assignment]
+        if yaml is not None:
+            try:
+                raw = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
+            except Exception:
+                raw = {}
+            if isinstance(raw, dict):
+                tele = raw.get("telemetry")
+                if isinstance(tele, dict):
+                    tu = tele.get("tier_usage")
+                    if isinstance(tu, dict):
+                        section = tu
+
+    output = section.get("output") if isinstance(section.get("output"), dict) else {}
+    retier = section.get("retier") if isinstance(section.get("retier"), dict) else {}
+    defaults = DEFAULT_TIER_USAGE_RETIER
+
+    def _coerce_int(value: Any, default: int) -> int:
+        if isinstance(value, bool):
+            return default
+        if isinstance(value, int) and value >= 0:
+            return value
+        return default
+
+    return TierUsageSettings(
+        enabled=_coerce_bool(section.get("enabled"), default=False),
+        log_path=_coerce_path(output.get("path"), DEFAULT_TIER_USAGE_LOG_PATH),
+        window_days=_coerce_int(retier.get("window_days"), defaults["window_days"]),
+        min_invocations=_coerce_int(retier.get("min_invocations"), defaults["min_invocations"]),
+        min_distinct_users=_coerce_int(retier.get("min_distinct_users"), defaults["min_distinct_users"]),
+    )
+
+
 __all__ = [
     "DEFAULT_GRANULARITY",
     "DEFAULT_LOG_PATH",
+    "DEFAULT_TIER_USAGE_LOG_PATH",
+    "DEFAULT_TIER_USAGE_RETIER",
     "TelemetrySettings",
+    "TierUsageSettings",
     "read_settings",
+    "read_tier_usage_settings",
 ]
