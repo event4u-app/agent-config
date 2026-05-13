@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>174 Skills</strong> · <strong>61 Rules</strong> · <strong>106 Commands</strong> · <strong>70 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>176 Skills</strong> · <strong>61 Rules</strong> · <strong>106 Commands</strong> · <strong>71 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -510,7 +510,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 174 skills + 106 native commands); Augment Code gets the
+> package (rules + 176 skills + 106 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
