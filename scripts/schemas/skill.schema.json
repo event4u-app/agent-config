@@ -72,9 +72,9 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["product", "team", "repo", "channel-stage", "funnel-stage", "customer-segment"]
+        "enum": ["product", "team", "repo", "channel-stage", "funnel-stage", "customer-segment", "fiscal-period", "org-stage", "regulatory-regime"]
       },
-      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots (channel-stage, funnel-stage, customer-segment — Wing-3 GTM) follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 slots authorized by docs/contracts/adr-gtm-context-spine.md."
+      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
     },
     "execution": {
       "type": "object",

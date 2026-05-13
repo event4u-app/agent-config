@@ -211,6 +211,48 @@ WING3_CHANNEL_TACTIC_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+# --- Wing-4 Money/Strategy/Ops cognition-boundary patterns (council Q7 / J2) ---
+# Triggered only when a skill's context_spine declares a Wing-4 slot.
+# See docs/contracts/adr-wing4-context-spine.md and
+# agents/roadmaps/road-to-money-strategy-ops.md § J2.
+WING4_SPINE_SLOTS = {"fiscal-period", "org-stage", "regulatory-regime"}
+
+# agent-operability: external finance / HR / legal SaaS URLs
+WING4_SAAS_URL_PATTERN = re.compile(
+    r"https?://[\w.-]*\.(quickbooks|intuit|netsuite|xero|sage|"
+    r"carta|pulley|gusto|bamboohr|lattice|15five|justworks|"
+    r"docusign|ironclad|onetrust|rippling|workday|deel|"
+    r"namely|adp|paychex|trinet|hibob|cultureamp)\.(com|io|co)\b",
+    re.IGNORECASE,
+)
+
+# vendor-independence: finance / HR / legal brand / SDK slugs
+WING4_VENDOR_BLACKLIST = re.compile(
+    r"\b(quickbooks|netsuite|xero|sage intacct|"
+    r"carta|pulley|gusto|bamboohr|lattice|15five|justworks|"
+    r"docusign|ironclad|onetrust|rippling|workday|deel|"
+    r"namely|adp|paychex|trinet|hibob|culture amp)\b",
+    re.IGNORECASE,
+)
+
+# stage-agnosticism: prescriptive stage-specific thresholds that lock cognition
+# Catches hardcoded runway / ARR / burn / team-size prescriptions tied to a
+# specific funding stage. Framework-style framing ("read the org-stage slot",
+# "applies across seed and public") passes; hard prescriptions ("18 months of
+# runway", "Series A teams must hire") fire.
+WING4_STAGE_AGNOSTIC_PATTERN = re.compile(
+    r"(?:"
+    r"\b\d+\s+months?\s+of\s+runway\b"
+    r"|\brunway\s+of\s+at\s+least\s+\d+\s+months?\b"
+    r"|\bminimum\s+runway\s+of\s+\d+\b"
+    r"|\b(?:seed|series\s+[a-d]|growth|pre-?ipo|post-?ipo)[-\s]stage\s+"
+    r"(?:companies|startups|teams|founders|orgs)\s+(?:must|should|always|never)\b"
+    r"|\bteam\s+of\s+\d+\s+(?:or\s+more|or\s+fewer)\b"
+    r"|\b(?:arr|mrr|burn\s+rate)\s+(?:of|over|under|above|below)\s+\$\d+"
+    r")",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class Issue:
@@ -619,9 +661,9 @@ def lint_skill(path: Path, text: str) -> LintResult:
     skill_name = path.parent.name if path.name == "SKILL.md" else path.stem
     if skill_name and "-" not in skill_name and len(skill_name) >= 3:
         # Single word without qualifier — likely too generic
-        ALLOWED_BARE_NOUNS = {"database", "devcontainer", "docker", "eloquent", "flux", "grafana",
-                              "laravel", "livewire", "mcp", "openapi", "performance", "security",
-                              "terraform", "terragrunt", "traefik", "websocket"}
+        ALLOWED_BARE_NOUNS = {"database", "devcontainer", "docker", "eloquent", "flux", "forecasting",
+                              "grafana", "laravel", "livewire", "mcp", "openapi", "performance",
+                              "security", "terraform", "terragrunt", "traefik", "websocket"}
         if skill_name.lower() not in ALLOWED_BARE_NOUNS:
             issues.append(Issue("warning", "bare_noun_name",
                                 f"Bare-noun skill name `{skill_name}` — consider adding a qualifier (e.g., `{skill_name}-management`)"))
@@ -659,6 +701,10 @@ def lint_skill(path: Path, text: str) -> LintResult:
         spine_slots = parse_context_spine(frontmatter)
         if spine_slots and any(s in WING3_SPINE_SLOTS for s in spine_slots):
             issues.extend(lint_wing3_boundaries(text))
+
+        # --- Wing-4 Money/Strategy/Ops cognition-boundary check (council Q7 / J2) ---
+        if spine_slots and any(s in WING4_SPINE_SLOTS for s in spine_slots):
+            issues.extend(lint_wing4_boundaries(text))
 
     procedure_block = find_procedure_block(text)
     if procedure_block is not None:
@@ -1135,6 +1181,64 @@ def lint_wing3_boundaries(text: str) -> List[Issue]:
             f"Wing-3 skill prescribes channel-specific tactic "
             f"`{match.group(0)}` outside carve-outs — keep cognition "
             f"channel-agnostic (council Q7 boundary)",
+        ))
+
+    return issues
+
+
+def lint_wing4_boundaries(text: str) -> List[Issue]:
+    """Four Wing-4 Money/Strategy/Ops cognition-boundary checks.
+
+    Triggered when a skill's ``context_spine`` declares at least one
+    Wing-4 slot (fiscal-period, org-stage, regulatory-regime). Enforces
+    council Q7 / J2 verdict that Money/Strategy/Ops cognition stays:
+
+    - **agent-operability** — no external finance/HR/legal SaaS URLs.
+    - **vendor-independence** — no QuickBooks/Carta/Gusto-class brand slugs.
+    - **transferability** — no stack-locked tooling instructions.
+    - **stage-agnosticism** — no prescriptive stage-specific thresholds.
+
+    Carve-outs are identical to Wing-3: fenced code, inline backticks,
+    the ``## Do NOT`` block, and ``**WHEN NOT to use this**`` lists.
+    Regulatory regime names (GDPR / HIPAA / SOC2 / PCI / CCPA) are
+    cognition-relevant constraints, not vendors — they pass.
+    """
+    issues: List[Issue] = []
+    body = _strip_wing3_carve_outs(text)
+
+    match = WING4_SAAS_URL_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing4_agent_operability",
+            f"Wing-4 skill cites external SaaS URL `{match.group(0)}` outside "
+            f"carve-outs — cognition skills must operate without SaaS auth "
+            f"(council Q7 boundary)",
+        ))
+
+    match = WING4_VENDOR_BLACKLIST.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing4_vendor_independence",
+            f"Wing-4 skill names vendor `{match.group(0)}` outside carve-outs "
+            f"— keep cognition vendor-agnostic (council Q7 boundary)",
+        ))
+
+    match = WING3_STACK_LOCKED_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing4_transferability",
+            f"Wing-4 skill includes stack-locked instruction `{match.group(0)}` "
+            f"outside carve-outs — cognition should transfer across stacks "
+            f"(council Q7 boundary)",
+        ))
+
+    match = WING4_STAGE_AGNOSTIC_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing4_stage_agnosticism",
+            f"Wing-4 skill prescribes stage-locked threshold "
+            f"`{match.group(0)}` outside carve-outs — cognition must "
+            f"transfer across seed and public (council Q7 boundary)",
         ))
 
     return issues

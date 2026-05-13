@@ -2178,3 +2178,230 @@ domain: process
         "wing3_transferability", "wing3_channel_agnosticism",
     }
     assert not any(i.code in boundary_codes for i in result.issues)
+
+
+# --- Wing-4 cognition-boundary linter tests (J2, council Q7) ---
+
+
+def _wing4_skill(slots: str, procedure: str, related: str = "", do_not: str = "") -> str:
+    """Build a senior Wing-4 skill body with configurable procedure / carve-outs."""
+    related_block = related or (
+        "**WHEN to use this**\n- Money/Strategy/Ops cognition framing\n\n"
+        "**WHEN NOT to use this**\n- Off-wing engineering work\n"
+    )
+    do_not_block = do_not or "- Do NOT retrofit existing off-wing skills"
+    return f"""---
+name: wing4-test
+description: "Use when applying Wing-4 Money/Strategy/Ops cognition framing."
+source: project
+domain: process
+tier: senior
+context_spine: [{slots}]
+---
+
+# wing4-test
+
+## When to use
+
+- Wing-4 cognition framing for a brief
+
+## Procedure
+
+{procedure}
+
+## Related Skills
+
+{related_block}
+
+## When the agent should load this
+
+- "frame this for Wing-4 cognition"
+
+## Output
+
+1. **finance-brief.md** — runway frame + fiscal cadence + stage posture
+
+## Output format
+
+1. finance-brief.md
+2. trace-log.md
+
+## Gotchas
+
+- Wing-4 boundary failure mode example
+
+## Do NOT
+
+{do_not_block}
+"""
+
+
+def test_wing4_vendor_in_body_fires(tmp_path: Path) -> None:
+    """Naming a vendor in the procedure body triggers vendor-independence."""
+    procedure = (
+        "1. Frame the fiscal cadence.\n"
+        "2. We pull P&L data from QuickBooks for the close window.\n"
+        "3. Validate against runway model.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("fiscal-period, product", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing4_vendor_independence" for i in result.issues)
+
+
+def test_wing4_vendor_in_do_not_carved_out(tmp_path: Path) -> None:
+    """Vendor name inside ## Do NOT block does NOT trip the linter."""
+    procedure = (
+        "1. Frame the fiscal cadence.\n"
+        "2. Read the close-window cognition.\n"
+        "3. Validate against the runway model.\n"
+    )
+    do_not = "- Do NOT route to QuickBooks-specific configuration flows"
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("fiscal-period", procedure, do_not=do_not),
+    )
+    result = lint_file(path)
+    assert not any(i.code == "wing4_vendor_independence" for i in result.issues)
+
+
+def test_wing4_saas_url_fires_agent_operability(tmp_path: Path) -> None:
+    """External SaaS URL in body triggers agent-operability."""
+    procedure = (
+        "1. Frame the cap-table model.\n"
+        "2. Pull shareholder records from https://api.carta.com/v1/holders.\n"
+        "3. Validate the ownership math.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("org-stage", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing4_agent_operability" for i in result.issues)
+
+
+def test_wing4_stage_threshold_fires_stage_agnosticism(tmp_path: Path) -> None:
+    """Hardcoded stage-specific runway threshold triggers stage-agnosticism."""
+    procedure = (
+        "1. Frame the runway cognition.\n"
+        "2. Every plan must keep at least 18 months of runway in reserve.\n"
+        "3. Validate the burn-trajectory against the model.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("org-stage", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing4_stage_agnosticism" for i in result.issues)
+
+
+def test_wing4_stack_locked_fires_transferability(tmp_path: Path) -> None:
+    """Stack-locked install instruction triggers transferability."""
+    procedure = (
+        "1. Frame the runway cognition.\n"
+        "2. Then run pip install runway-model to wire it up.\n"
+        "3. Validate.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("fiscal-period", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing4_transferability" for i in result.issues)
+
+
+def test_wing4_regulatory_regime_passes(tmp_path: Path) -> None:
+    """Naming a regulatory regime (GDPR / HIPAA / SOC2) is a cognition-relevant
+    constraint, not a vendor — it must NOT trip vendor-independence."""
+    procedure = (
+        "1. Read the regulatory-regime slot for active regimes.\n"
+        "2. For GDPR data, scope data-residency requirements per the slot.\n"
+        "3. For HIPAA, scope the breach-notification timer per the slot.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("regulatory-regime", procedure),
+    )
+    result = lint_file(path)
+    boundary_codes = {
+        "wing4_agent_operability", "wing4_vendor_independence",
+        "wing4_transferability", "wing4_stage_agnosticism",
+    }
+    assert not any(i.code in boundary_codes for i in result.issues)
+
+
+def test_wing4_clean_cognition_skill_passes_boundaries(tmp_path: Path) -> None:
+    """Stack-agnostic, vendor-free, stage-agnostic cognition skill passes."""
+    procedure = (
+        "1. Frame the runway cognition against the org-stage slot.\n"
+        "2. Score scenarios against the fiscal-period cadence.\n"
+        "3. Validate the framing with the finance-partner persona.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        _wing4_skill("fiscal-period, org-stage, regulatory-regime", procedure),
+    )
+    result = lint_file(path)
+    boundary_codes = {
+        "wing4_agent_operability", "wing4_vendor_independence",
+        "wing4_transferability", "wing4_stage_agnosticism",
+    }
+    assert not any(i.code in boundary_codes for i in result.issues)
+
+
+def test_wing4_boundary_dormant_for_off_wing_skills(tmp_path: Path) -> None:
+    """Skill without a Wing-4 slot is NOT subject to Wing-4 boundary checks
+    even if its body mentions QuickBooks — off-wing skills stay free.
+    """
+    body = """---
+name: off-wing-w4-test
+description: "Use when integrating with QuickBooks as part of off-wing engineering."
+source: project
+domain: process
+---
+
+# off-wing-w4-test
+
+## When to use
+
+- QuickBooks integration outside Wing-4
+
+## Procedure
+
+1. Wire the QuickBooks SDK into the integration layer.
+2. Apply the schema mapping.
+3. Validate the round-trip.
+
+## Output format
+
+1. integration-report.md
+2. validation-log.md
+
+## Gotchas
+
+- Schema drift between QuickBooks orgs
+
+## Do NOT
+
+- Do NOT call the API without rate-limit guards
+"""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/off-wing-w4-test/SKILL.md",
+        body,
+    )
+    result = lint_file(path)
+    boundary_codes = {
+        "wing4_agent_operability", "wing4_vendor_independence",
+        "wing4_transferability", "wing4_stage_agnosticism",
+    }
+    assert not any(i.code in boundary_codes for i in result.issues)
