@@ -357,6 +357,33 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.7.0](https://github.com/event4u-app/agent-config/compare/2.6.1...2.7.0) (2026-05-13)
+
+### Features
+
+* **install:** make augment global-only per ADR-007 amendment ([ea9a82f](https://github.com/event4u-app/agent-config/commit/ea9a82f2305a2a178b058ee66c40859790620d63))
+* **mcp:** define mcp_scope lite vs full boundary in cloud-scope contract ([15a268c](https://github.com/event4u-app/agent-config/commit/15a268c9f86fabe677b4d70db9fd4e3d1726ef8a))
+* **commands:** tier the slash + CLI command surface (Phase 4 of road-to-distribution-maturity) ([cc0102f](https://github.com/event4u-app/agent-config/commit/cc0102fe9677c936f703fd6e08b75cc99f758071))
+* **distribution:** roadmap phases 1+2 — MCP auth-surface sync + verified-offline install ([a85c1af](https://github.com/event4u-app/agent-config/commit/a85c1afdc457c5fa4d939afc2d91649c67926501))
+
+### Bug Fixes
+
+* **refs:** point evaluation-2-2-2-followups at archived roadmap location ([cde02e6](https://github.com/event4u-app/agent-config/commit/cde02e6fd3bfbb2d67e2a8e3976fe6794ea4de6c))
+
+### Documentation
+
+* **architecture:** split docs/architecture.md into four pipeline sub-pages + drift test ([4f13cf5](https://github.com/event4u-app/agent-config/commit/4f13cf504c0b2d9b92661234a597b5515a7c54e8))
+* **roadmap:** add distribution-maturity roadmap with council verdicts folded in ([14145cf](https://github.com/event4u-app/agent-config/commit/14145cff75ef34065358a2e99ee8c220ab0e59a0))
+
+### Chores
+
+* **ci:** refresh compression hashes after cc0102fe tiering pass ([ca06729](https://github.com/event4u-app/agent-config/commit/ca06729d03bb8bd8d1536b7aecef1d1b134d8333))
+* finalize roadmaps ([bb156ea](https://github.com/event4u-app/agent-config/commit/bb156ea4f52741d511c3e54cd87e3bcab2fbf107))
+* **roadmap:** close road-to-distribution-maturity, archive ([d48e5d6](https://github.com/event4u-app/agent-config/commit/d48e5d64f9396f6b75b47bf336fd6ac129c8e254))
+* **changelog:** split into eras, archive pre-2.2.0 entries ([e54c5cb](https://github.com/event4u-app/agent-config/commit/e54c5cbf0222de7f0f4c84a379118f4ea30b5a07))
+
+Tests: 3566 (+36 since 2.6.1)
+
 ## [2.6.1](https://github.com/event4u-app/agent-config/compare/2.6.0...2.6.1) (2026-05-13)
 
 ### Chores
