@@ -1,1 +1,0 @@
-../.agent-src/rules/invite-challenge.md

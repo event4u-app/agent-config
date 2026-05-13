@@ -19,6 +19,8 @@ Usage:
     python scripts/compress.py --project-augment            # rebuild .augment/ projection
 """
 
+from __future__ import annotations
+
 import hashlib
 import json
 import re
@@ -37,6 +39,40 @@ TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
 SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
+
+# Self-projection tool toggle — see .agent-tools.yml. When the file is
+# absent (e.g. tests run in tmp dirs, consumer projects), `_active_tools`
+# returns ``None`` which is treated as "emit every tool".
+_ALL_TOOLS = frozenset({
+    "claude-code", "claude-desktop", "augment", "copilot",
+    "cursor", "windsurf", "cline", "gemini",
+})
+
+
+def _active_tools() -> frozenset[str] | None:
+    """Return the set of active self-projection tools, or None for "all".
+
+    Reads `.agent-tools.yml` relative to the current `PROJECT_ROOT` so
+    test fixtures that monkey-patch `compress.PROJECT_ROOT` see their own
+    (empty) project root and get the default "all tools" behaviour.
+    """
+    tools_file = PROJECT_ROOT / ".agent-tools.yml"
+    if not tools_file.exists():
+        return None
+    try:
+        data = yaml.safe_load(tools_file.read_text()) or {}
+    except yaml.YAMLError:
+        return None
+    tools = data.get("tools") if isinstance(data, dict) else None
+    if not isinstance(tools, list):
+        return None
+    return frozenset(str(t) for t in tools if isinstance(t, str))
+
+
+def _tool_active(tool_id: str) -> bool:
+    """True when ``tool_id`` should be emitted by self-projection."""
+    active = _active_tools()
+    return True if active is None else tool_id in active
 
 # Files to copy as-is even if .md (not compressed by agent)
 COPY_AS_IS = {"README.md"}
@@ -306,6 +342,24 @@ PERSONA_TOOL_DIRS = {
     ".cursor/personas": "../../.agent-src/personas",
 }
 
+# Map tool-projection directories to the canonical tool ID used by
+# `.agent-tools.yml`. Directories not in this map are always emitted.
+_DIR_TOOL_ID = {
+    ".claude/rules": "claude-code",
+    ".cursor/rules": "cursor",
+    ".clinerules": "cline",
+    ".claude/personas": "claude-code",
+    ".cursor/personas": "cursor",
+}
+
+
+def _filter_tool_dirs(mapping: dict[str, str]) -> dict[str, str]:
+    """Drop entries whose tool ID is not active in `.agent-tools.yml`."""
+    return {
+        d: p for d, p in mapping.items()
+        if _tool_active(_DIR_TOOL_ID.get(d, "claude-code"))
+    }
+
 
 def strip_frontmatter(content: str) -> str:
     """Remove YAML frontmatter (between --- markers) from content."""
@@ -461,8 +515,9 @@ def generate_rule_symlinks() -> int:
     """
     # All .md files in .agent-src/rules/ — not just universal ones
     rules = sorted([f.name for f in RULES_SOURCE.glob("*.md")])
+    tool_dirs = _filter_tool_dirs(TOOL_DIRS)
     total = 0
-    for tool_dir, rel_prefix in TOOL_DIRS.items():
+    for tool_dir, rel_prefix in tool_dirs.items():
         target_dir = PROJECT_ROOT / tool_dir
         target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -481,13 +536,13 @@ def generate_rule_symlinks() -> int:
 
     # Verify counts match across all tool directories
     source_count = len(rules)
-    for tool_dir in TOOL_DIRS:
+    for tool_dir in tool_dirs:
         target_dir = PROJECT_ROOT / tool_dir
         tool_count = len([f for f in target_dir.iterdir() if f.is_symlink() and f.suffix == ".md"])
         if tool_count != source_count:
             print(f"  ⚠️  {tool_dir}: {tool_count} rules (expected {source_count})")
 
-    info(f"  ✅  Created {total} rule symlinks across {len(TOOL_DIRS)} tool directories ({source_count} rules each)")
+    info(f"  ✅  Created {total} rule symlinks across {len(tool_dirs)} tool directories ({source_count} rules each)")
     return total
 
 
@@ -812,8 +867,9 @@ def generate_persona_symlinks() -> int:
     personas = sorted([
         f.name for f in PERSONAS_SOURCE.glob("*.md") if f.stem != "README"
     ])
+    tool_dirs = _filter_tool_dirs(PERSONA_TOOL_DIRS)
     total = 0
-    for tool_dir, rel_prefix in PERSONA_TOOL_DIRS.items():
+    for tool_dir, rel_prefix in tool_dirs.items():
         target_dir = PROJECT_ROOT / tool_dir
         target_dir.mkdir(parents=True, exist_ok=True)
 
@@ -830,28 +886,35 @@ def generate_persona_symlinks() -> int:
             link.symlink_to(target)
             total += 1
 
-    info(f"  ✅  Created {total} persona symlinks across {len(PERSONA_TOOL_DIRS)} tool directories ({len(personas)} personas each)")
+    info(f"  ✅  Created {total} persona symlinks across {len(tool_dirs)} tool directories ({len(personas)} personas each)")
     return total
 
 
 def generate_tools() -> None:
-    """Generate all tool-specific directories and files."""
+    """Generate all tool-specific directories and files.
+
+    `.agent-tools.yml` (top-level) gates per-tool emission. When the file
+    is missing, every tool is emitted (preserves test fixtures and
+    pre-gating behaviour). See `_active_tools()` and `_tool_active()`.
+    """
     info("🔧  Generating multi-agent tool directories...\n")
     rules = generate_rule_symlinks()
-    generate_windsurfrules()
-    generate_gemini_md()
-    skills = generate_claude_skills()
-    commands = generate_claude_commands()
+    windsurfrules = generate_windsurfrules() if _tool_active("windsurf") else 0
+    if _tool_active("gemini"):
+        generate_gemini_md()
+    skills = generate_claude_skills() if _tool_active("claude-code") else 0
+    commands = generate_claude_commands() if _tool_active("claude-code") else 0
     personas = generate_persona_symlinks()
-    cursor_mdc = generate_cursor_mdc_rules()
-    windsurf_modern = generate_windsurf_modern_rules()
-    cursor_cmds = generate_cursor_commands()
-    windsurf_wf = generate_windsurf_workflows()
+    cursor_mdc = generate_cursor_mdc_rules() if _tool_active("cursor") else 0
+    windsurf_modern = generate_windsurf_modern_rules() if _tool_active("windsurf") else 0
+    cursor_cmds = generate_cursor_commands() if _tool_active("cursor") else 0
+    windsurf_wf = generate_windsurf_workflows() if _tool_active("windsurf") else 0
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
         f"commands={commands} personas={personas} "
         f"cursor_mdc={cursor_mdc} windsurf_rules={windsurf_modern} "
-        f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf}"
+        f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf} "
+        f"windsurfrules={windsurfrules}"
     )
     if resolve_level() == "verbose":
         print(f"\n{summary}")

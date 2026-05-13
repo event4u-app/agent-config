@@ -1,1 +1,0 @@
-../../.agent-src/commands/optimize/augmentignore.md

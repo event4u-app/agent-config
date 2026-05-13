@@ -1,1 +1,0 @@
-../../.agent-src/commands/challenge-me/with-docs.md

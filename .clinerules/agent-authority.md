@@ -1,1 +1,0 @@
-../.agent-src/rules/agent-authority.md

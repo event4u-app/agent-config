@@ -1,1 +1,0 @@
-../../.agent-src/commands/sync-agent-settings.md

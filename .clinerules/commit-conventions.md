@@ -1,1 +1,0 @@
-../.agent-src/rules/commit-conventions.md

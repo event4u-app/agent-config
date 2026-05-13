@@ -1,1 +1,0 @@
-../../.agent-src/commands/threat-model.md

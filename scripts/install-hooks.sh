@@ -119,7 +119,9 @@ if [ -x ./agent-config ]; then
     ./agent-config chat-history:checkpoint --payload "\$payload" \
         >/dev/null 2>&1 || true
 fi
-exit 0
+# NOTE: no explicit exit 0 here — the auto-sync block (appended below
+# for post-merge / post-checkout) needs to run after this. Every
+# command above is guarded by "|| true", so the implicit exit is 0.
 EOF
     chmod +x "$HOOKS_DIR/$name"
     echo "✅  $name hook installed."
@@ -129,3 +131,54 @@ write_chat_history_hook "post-commit"   "git:post-commit"
 write_chat_history_hook "post-merge"    "git:post-merge"
 write_chat_history_hook "post-checkout" "git:post-checkout"
 write_chat_history_hook "post-rewrite"  "git:post-rewrite"
+
+# Auto-sync agent-tool projections after pull / branch-switch ---------------
+#
+# When `.agent-src.uncompressed/`, `.agent-src/`, `scripts/compress.py`,
+# `.agent-tools.yml`, or `Taskfile.yml` change between the previous and
+# new HEAD, the developer's working tree has stale `.claude/`,
+# `.augment/`, etc. projections until they remember to run `task sync`.
+# These hooks bridge that gap: fast idempotent re-projection.
+#
+# Bypass: `git pull --no-verify` does not exist, but devs can disable the
+# hooks per-command via `git -c core.hooksPath=/dev/null ...` or by
+# editing the file. Runtime ~200 ms when nothing relevant changed
+# (path-diff check exits early); ~2 s on full re-projection.
+
+append_auto_sync_block() {
+    local name="$1"
+    local arg_offset="$2"   # post-merge: $1=is_squash; post-checkout: $3=is_branch
+    cat >> "$HOOKS_DIR/$name" << EOF
+
+# --- auto-sync agent-tool projections ---------------------------------------
+# Skip when this is a file-checkout (post-checkout \$3 = 0) — only fire on
+# branch switches and merges, where source files realistically changed.
+if [ "$name" = "post-checkout" ] && [ "\${3:-1}" = "0" ]; then
+    exit 0
+fi
+
+# Range: prev..new. For post-merge git provides ORIG_HEAD; for
+# post-checkout the previous SHA is \$1.
+if [ "$name" = "post-merge" ]; then
+    prev="\$(git rev-parse ORIG_HEAD 2>/dev/null || echo)"
+    new="\$(git rev-parse HEAD 2>/dev/null || echo)"
+elif [ "$name" = "post-checkout" ]; then
+    prev="\${1:-}"
+    new="\${2:-}"
+fi
+
+if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
+    if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
+        grep -qE '^(\\.agent-src(\\.uncompressed)?/|scripts/compress\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
+        if command -v task >/dev/null 2>&1; then
+            task sync >/dev/null 2>&1 || true
+            task generate-tools >/dev/null 2>&1 || true
+        fi
+    fi
+fi
+EOF
+}
+
+append_auto_sync_block "post-merge"    "1"
+append_auto_sync_block "post-checkout" "3"
+echo "✅  Auto-sync block appended to post-merge / post-checkout hooks."

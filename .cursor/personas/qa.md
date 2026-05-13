@@ -1,1 +1,0 @@
-../../.agent-src/personas/qa.md

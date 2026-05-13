@@ -1,1 +1,0 @@
-../../.agent-src/commands/grill-me.md

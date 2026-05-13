@@ -1,1 +1,0 @@
-../../.agent-src/rules/laravel-translations.md

@@ -1,1 +1,0 @@
-../.agent-src/rules/reviewer-awareness.md

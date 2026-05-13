@@ -1,1 +1,0 @@
-../../.agent-src/rules/e2e-testing.md
