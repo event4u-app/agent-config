@@ -1,0 +1,1 @@
+../../.agent-src/personas/cmo.md
