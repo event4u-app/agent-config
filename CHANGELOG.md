@@ -343,6 +343,51 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.3.0](https://github.com/event4u-app/agent-config/compare/2.2.2...2.3.0) (2026-05-13)
+
+### Features
+
+* **dev:** add dev:install-global and dev:link tasks for local development ([db4bdc9](https://github.com/event4u-app/agent-config/commit/db4bdc9794752791bb93235cc9cc3179df9b88df))
+* **install:** manifest schema v2 + doctor + conflict detection + inline tag ([50c0892](https://github.com/event4u-app/agent-config/commit/50c0892bf01eb904e48dd786ef03c519f82be485))
+* **cli:** add prune command for orphaned bridge markers ([d16abff](https://github.com/event4u-app/agent-config/commit/d16abff8ac9fd55ccd501d319785f463eb7cbeee))
+* **cli:** add uninstall/versions subcommands and --offline mode ([12a8e75](https://github.com/event4u-app/agent-config/commit/12a8e75945f1d26c1412d17331788c8e51601cea))
+* **install:** add workflow-mode activation hints to IDE bridges ([5e09e17](https://github.com/event4u-app/agent-config/commit/5e09e17f0de62b4113bd68839d6ce55a1527d4b1))
+* **rules:** add external-reference-deep-dive hardening rule ([0d2c80c](https://github.com/event4u-app/agent-config/commit/0d2c80c0f418b80a67d08c4577cfe67ab6abe3db))
+* **install:** expand global content deployment to 23 AI tools ([3ef13a7](https://github.com/event4u-app/agent-config/commit/3ef13a7c2ae16b95da9e5a49ec3a19c5cb211357))
+
+### Bug Fixes
+
+* **test:** patch USERPROFILE in isolated_lock fixture for Windows ([ac1c924](https://github.com/event4u-app/agent-config/commit/ac1c924e08822e09471c0cf0077ad69be531d7b5))
+
+### Documentation
+
+* **roadmap:** sharpen Phase 6 deferred trigger — name the collision ([d0a6dd2](https://github.com/event4u-app/agent-config/commit/d0a6dd28294c011d4135b4047e4e5252008fcf05))
+* **roadmap:** close + archive multi-package coexistence ([3ef464f](https://github.com/event4u-app/agent-config/commit/3ef464fd6123ead7ca755542a1459e6a9e8e270b))
+* **roadmap:** plan + close phases 1-5 of multi-package coexistence ([34967a5](https://github.com/event4u-app/agent-config/commit/34967a5e6525d4d742155ee3bd3fe0bb80d852bf))
+* **install:** add installed-tools-lockfile wire contract ([c352db3](https://github.com/event4u-app/agent-config/commit/c352db383f6bf6dc328159289fa4d96abb2594c4))
+* **setup:** add per-IDE activation guides for 14 tools ([6379a49](https://github.com/event4u-app/agent-config/commit/6379a49fed6ac3256c23ac8e04c69fa0d4f85aa2))
+
+### Tests
+
+* **install:** e2e multi-package coexistence scenario ([081318e](https://github.com/event4u-app/agent-config/commit/081318ea8e3c872548839d100117cbd9b4a1343a))
+* **cli:** cover prune — orphans, dry-run, json, hard-floor ([0261ea2](https://github.com/event4u-app/agent-config/commit/0261ea2e1687e6904bdcb3083cb0d700b6ef82e5))
+
+### CI
+
+* **tests:** bump per-shard parallelism explicitly to beat macOS nproc=3 ([83a3b4d](https://github.com/event4u-app/agent-config/commit/83a3b4d3bf6eefe10963d84525469aeb8e3b8abe))
+* **tests:** bump install-tests shards 3→4 to keep macOS under 2min ([dd4d5bc](https://github.com/event4u-app/agent-config/commit/dd4d5bc385282d344809a057d015a968811d4a3b))
+* **tests:** shard install-tests matrix to hit 1-2min/job target ([6a56416](https://github.com/event4u-app/agent-config/commit/6a564161f0a74601fe077d34c76f2f5a27657893))
+* **tests:** parallelize install-tests + fix Windows UTF-8 encoding ([e346a26](https://github.com/event4u-app/agent-config/commit/e346a26e91be633a63e8c7d46fb09a3a6cdf800e))
+* **tests:** bootstrap .augment/ projection before pytest ([e40371e](https://github.com/event4u-app/agent-config/commit/e40371ea7b0c345ee59eba8ba5e47328bf6aebe9))
+
+### Chores
+
+* finalize changes ([7cbbe68](https://github.com/event4u-app/agent-config/commit/7cbbe6881e040d67fd0598df73b82b3fbd1278c0))
+* regenerate router.json after kernel/tier rebuild ([ff5f10e](https://github.com/event4u-app/agent-config/commit/ff5f10e0589f46782ec6381a84377f22b90d7edc))
+* **marketplace:** refresh marketplace.json manifest ([eb9b934](https://github.com/event4u-app/agent-config/commit/eb9b934f5b4573ec1fcde19f91f6a20637b8dbeb))
+
+Tests: 3482 (+132 since 2.2.2)
+
 ## [2.2.2](https://github.com/event4u-app/agent-config/compare/2.2.1...2.2.2) (2026-05-12)
 
 ### Bug Fixes
