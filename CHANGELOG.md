@@ -429,6 +429,40 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.9.0](https://github.com/event4u-app/agent-config/compare/2.8.0...2.9.0) (2026-05-13)
+
+### Features
+
+* tier-usage telemetry settings + report template ([22172f2](https://github.com/event4u-app/agent-config/commit/22172f2a59b530034633ff72226506006c5fd81b))
+* mcp beta-readiness criteria with pending gate tests ([3653788](https://github.com/event4u-app/agent-config/commit/36537880e03546e9baf424b2fdd70aa69d41eb03))
+* expand doctor diagnostic hub to 10 checks ([372c193](https://github.com/event4u-app/agent-config/commit/372c19362f8037c76f919a2d918780ae5ec9cb40))
+* **roadmap:** add road-to-surface-discipline (council-reviewed) ([d9da987](https://github.com/event4u-app/agent-config/commit/d9da9870989ccdb7594cd693e9b18608b957ab79))
+* **linter:** wing-4 cognition-boundary checks + spine slot vocab ([c4d9a4b](https://github.com/event4u-app/agent-config/commit/c4d9a4ba8e5c7184b9be0a58d4d8b220a60cab7c))
+
+### Bug Fixes
+
+* **skills:** clear missing_inspect_step + bare_noun warnings ([0c88c6e](https://github.com/event4u-app/agent-config/commit/0c88c6ee45873e47fd8c7d356ec82b28b63b12c5))
+* **docs:** drop roadmap-file pointers from wing-4 ADRs and handoff ([ccd7624](https://github.com/event4u-app/agent-config/commit/ccd7624127094d0a01eda0901fa41c31319f7bc5))
+* **template:** bump agent_config_version pin to 2.8.0 ([f21e916](https://github.com/event4u-app/agent-config/commit/f21e916c6bb793fa6efe7d264a1e069e11ab4c62))
+* **skills:** spine slot citations + finance-partner polish ([9072783](https://github.com/event4u-app/agent-config/commit/90727831b223bd970d8425d158940bf3e3bc104f))
+
+### Documentation
+
+* archive surface-discipline roadmap + 2.8.0 changelog ([551e306](https://github.com/event4u-app/agent-config/commit/551e306e43fa82fffda9178bdaa690b19d8bec4e))
+* 6-layer architecture refresh + thin-root sync ([91d25a8](https://github.com/event4u-app/agent-config/commit/91d25a80b37fb1c1782c2d5f00f23925ba6ec1b3))
+* **roadmap:** complete road-to-money-strategy-ops phase 1 ([83cf9fe](https://github.com/event4u-app/agent-config/commit/83cf9fe99c034b71e146099eddc9ce5b3137f434))
+* **contracts:** register wing-4 spine slots + marketplace entries ([75b829d](https://github.com/event4u-app/agent-config/commit/75b829d162bc18ab3dc2dda6614d15a087a4f32a))
+
+### Refactoring
+
+* trim tier-0 surface from 13 to 7 commands ([a9eafd1](https://github.com/event4u-app/agent-config/commit/a9eafd1c5226c10209e3dee2b972f38d9c0f3dd9))
+
+### Chores
+
+* **generated:** regenerate derived outputs for wing-4 additions ([54f3779](https://github.com/event4u-app/agent-config/commit/54f3779a6d2161ed06bfb327c3e416ec107b4016))
+
+Tests: 3603 (+26 since 2.8.0)
+
 ## [2.8.0](https://github.com/event4u-app/agent-config/compare/2.7.0...2.8.0) (2026-05-13)
 
 ### Features
