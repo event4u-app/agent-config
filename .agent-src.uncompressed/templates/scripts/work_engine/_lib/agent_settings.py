@@ -10,10 +10,12 @@ N-1. ``<repo-root>/.agent-settings.yml``            (project-wide; all keys)
 N-2. ``<intermediate-dir>/.agent-settings.yml``     (subsystem-scoped; all keys)
   1. ``<CWD>/.agent-settings.yml``                  (deepest, wins; all keys)
 
-The user-global path is resolved via
-:mod:`scripts._lib.user_global_paths` with a read-fallback to the
-legacy ``~/.config/agent-config/agent-settings.yml`` so pre-2.4
-installs keep working during the namespace migration.
+The user-global path is resolved via the sibling
+:mod:`work_engine._lib.user_global_paths` module (vendored from
+``scripts/_lib/user_global_paths.py`` so the engine stays self-contained
+when shipped into consumer projects) with a read-fallback to the legacy
+``~/.config/agent-config/agent-settings.yml`` so pre-2.4 installs keep
+working during the namespace migration.
 
 ``<repo-root>`` is the nearest ancestor that contains ``.git`` (directory
 **or** file — submodule support). The walk stops there — it never drifts
@@ -42,13 +44,7 @@ import logging
 from pathlib import Path
 from typing import Any, Iterator
 
-try:
-    from scripts._lib import user_global_paths  # type: ignore[import-not-found]
-except ModuleNotFoundError:  # pragma: no cover — direct-script invocation
-    # `scripts/chat_history.py` and friends are invoked without the repo
-    # root on sys.path; fall back to a sibling import so the module loads
-    # in both packaged (`scripts._lib...`) and standalone (`_lib...`) modes.
-    from _lib import user_global_paths  # type: ignore[no-redef,import-not-found]
+from . import user_global_paths
 
 logger = logging.getLogger(__name__)
 
