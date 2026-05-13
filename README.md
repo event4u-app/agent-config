@@ -1,12 +1,5 @@
 # Agent Config — Governed Agent System
 
-> ⚠️ **Breaking change in vX.0** — `agent-config` now ships as an
-> **npx-only runtime**. `composer require` / `npm install --save-dev`
-> are gone, the `--global` symlink scheme is retired. Existing
-> consumers: run `npx @event4u/agent-config migrate`
-> ([guide](docs/migration/v1-to-v2.md)). New consumers: jump to
-> [Quickstart](#quickstart).
-
 > **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
 
 Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
