@@ -41,6 +41,11 @@ tasks:
     desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
     cmd: python3 scripts/lint_rule_tiers.py {{.QUIET_FLAG}}
 
+  lint-command-tiers:
+    silent: true
+    desc: Validate that every slash command under .agent-src.uncompressed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
+    cmd: python3 scripts/lint_command_tiers.py {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1

@@ -1,10 +1,18 @@
 # Augment Code Setup
 
-Augment Code is the **substrate** for this package — every other tool
-mirrors content from the canonical `.augment/` tree. The Augment
-extension (VS Code, JetBrains) reads `.augment/rules/`,
-`.augment/skills/`, `.augment/commands/`, `.augment/personas/`, and
-`.augment/contexts/` directly.
+Augment Code is **global-only** in this package — content ships from a
+single user-scope tree at `~/.augment/` and the Augment extension
+(VS Code, JetBrains) reads it on every workspace. Per-project
+`.augment/` content is not installed; project `init` writes only the
+`.augment/settings.json` marker that authorizes the plugin for the
+workspace.
+
+> **Why global-only?** Augment counts the full body of every file in
+> `.augment/rules/` against its 49,512-char workspace-guidelines limit.
+> The package-wide rule set exceeds that limit on every workspace, so
+> a single user-scope install is the canonical surface and the
+> overflow is a known, accepted trade-off. See
+> [`ADR-007 § Amendment 2026-05-13 — global-only`](../../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only).
 
 ## Prerequisites
 
@@ -13,28 +21,31 @@ extension (VS Code, JetBrains) reads `.augment/rules/`,
 
 ## Install
 
-Project scope (default):
-
-```bash
-npx @event4u/agent-config init --tools=augment
-```
-
-Global scope (cross-project, deploys the full bundle to `~/.augment/`):
+Global scope (the only supported path — deploys the full bundle to
+`~/.augment/`):
 
 ```bash
 npx @event4u/agent-config init --tools=augment --global
 ```
 
-Populates (project):
+`--tools=augment` without `--global` is rejected with a directive
+error; `--tools=all` (project scope) silently filters `augment` out.
 
-- `.augment/rules/`     — kernel (9 Iron-Law rules) + tier-1/2 routed rules
-- `.augment/skills/`    — domain skills
-- `.augment/commands/`  — slash commands
-- `.augment/personas/`  — review-lens personas
-- `.augment/contexts/`  — knowledge-layer contexts
-- `.augment/templates/` — scaffolds for AGENTS.md, copilot-instructions, etc.
-- `AGENTS.md`           — canonical agent self-orientation
-- `.agent-settings.yml` — per-project knobs
+Populates (`~/.augment/`):
+
+- `~/.augment/rules/`     — kernel (9 Iron-Law rules) + tier-1/2 routed rules
+- `~/.augment/skills/`    — domain skills
+- `~/.augment/commands/`  — slash commands
+- `~/.augment/personas/`  — review-lens personas
+- `~/.augment/contexts/`  — knowledge-layer contexts
+- `~/.augment/templates/` — scaffolds for AGENTS.md, copilot-instructions, etc.
+
+A project-scope `init` (any `--tools=…` selection except `augment`)
+still writes:
+
+- `.augment/settings.json` — plugin activation marker for the workspace
+- `AGENTS.md`              — canonical agent self-orientation
+- `.agent-settings.yml`    — per-project knobs
 
 ## How to use
 
@@ -53,9 +64,9 @@ Populates (project):
 ## Verification
 
 ```bash
-test -d .augment/rules
-test -d .augment/skills
-test -d .augment/commands
+test -d ~/.augment/rules
+test -d ~/.augment/skills
+test -d ~/.augment/commands
 test -f AGENTS.md
 ```
 
@@ -67,8 +78,9 @@ should cite the AGENTS.md emergency triage block.
 | Symptom | Fix |
 |---|---|
 | Skills not surfaced | Reload the Augment workspace; skills are indexed on session start. |
-| Symlinked sub-dirs missing | `.augment/skills` is a symlink to `.agent-src/skills`; run `task sync` to rebuild. |
-| Iron Laws not firing | Confirm `.augment/rules/` contains 9 kernel files (`task ci` validates the kernel count). |
+| `~/.augment/rules/` missing | Re-run `npx @event4u/agent-config init --tools=augment --global`. |
+| Workspace-guidelines overflow warning | Expected — the package rule set exceeds Augment's 49,512-char budget. See [`ADR-007 § Amendment 2026-05-13`](../../decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only). |
+| Iron Laws not firing | Confirm `~/.augment/rules/` contains 9 kernel files. |
 
 ## Cross-references
 

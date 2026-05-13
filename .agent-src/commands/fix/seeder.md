@@ -1,5 +1,6 @@
 ---
 name: fix:seeder
+tier: 2
 cluster: fix
 sub: seeder
 skills: [eloquent]

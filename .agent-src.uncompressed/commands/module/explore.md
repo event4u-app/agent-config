@@ -1,5 +1,6 @@
 ---
 name: module:explore
+tier: 2
 cluster: module
 sub: explore
 skills: [laravel]

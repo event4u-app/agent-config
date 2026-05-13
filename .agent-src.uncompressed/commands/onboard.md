@@ -1,5 +1,6 @@
 ---
 name: onboard
+tier: 0
 description: First-run setup for a developer on this project — captures name, IDE, bot-icon preference, rtk, cost_profile, and learning opt-out, then sets onboarding.onboarded=true
 skills: [file-editor]
 disable-model-invocation: true

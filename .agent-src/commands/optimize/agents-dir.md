@@ -1,5 +1,6 @@
 ---
 name: optimize:agents-dir
+tier: 2
 cluster: optimize
 sub: agents-dir
 description: Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard.

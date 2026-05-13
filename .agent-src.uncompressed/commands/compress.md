@@ -1,5 +1,6 @@
 ---
 name: compress
+tier: 1
 skills: []
 description: Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/
 disable-model-invocation: true

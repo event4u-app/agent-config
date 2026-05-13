@@ -1,5 +1,6 @@
 ---
 name: override:create
+tier: 2
 cluster: override
 sub: create
 description: Creates a project-level override for a shared skill, rule, or command.

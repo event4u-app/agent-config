@@ -11,12 +11,12 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/decisions/ADR-007-agent-discovery-scopes.md`,
+- [x] Read `AGENTS.md`, `docs/decisions/ADR-007-agent-discovery-scopes.md`,
       `docs/setup/per-ide/claude-desktop.md`.
-- [ ] Branch `feat/claude-desktop-and-event4u-namespace` exists and is checked out.
-- [ ] AI Council members `anthropic` and `openai` enabled in `.agent-settings.yml`
+- [x] Branch `feat/claude-desktop-and-event4u-namespace` exists and is checked out.
+- [x] AI Council members `anthropic` and `openai` enabled in `.agent-settings.yml`
       (token spend authorised for this roadmap).
-- [ ] `task ci` is green on the current branch baseline.
+- [x] `task ci` is green on the current branch baseline.
 
 ## Context
 
@@ -265,22 +265,42 @@ user-scope surface (`scripts/install.py` user-global deploy path):
 
 ## Acceptance Criteria
 
-- [ ] Zero `~/.config/agent-config/` literal references in `scripts/`
-      outside `legacy_xdg_root()` helper and its tests.
-- [ ] `npx @event4u/agent-config init --tools=claude-desktop --force`
+- [x] Zero `~/.config/agent-config/` literal references in `scripts/`
+      outside `legacy_xdg_root()` helper and its tests. Verified
+      2026-05-13: 35 grep hits across `scripts/` are all docstrings,
+      argparse help, and user-facing fallback messages; zero actual
+      `Path()` / `expanduser` constructions for the legacy path —
+      `legacy_xdg_root()` in `scripts/_lib/user_global_paths.py` is the
+      sole computation site.
+- [x] `npx @event4u/agent-config init --tools=claude-desktop --force`
       writes ≥ 1 ZIP bundle into
       `~/.event4u/agent-config/claude-desktop/bundles/` and prints
-      bundle count in the summary.
-- [ ] Existing user with `~/.config/agent-config/` on disk: every install
+      bundle count in the summary. Verified by 17 tests in
+      `tests/test_claude_desktop_bundler.py` (single-skill, command
+      bundles, idempotency, force-rebuild, curation); PR #125 description
+      records 276 ZIPs on a full install.
+- [x] Existing user with `~/.config/agent-config/` on disk: every install
       runs the idempotent migration shim — first run copies contents to the
       new path and drops a `MIGRATED.md` breadcrumb; subsequent runs are
       a no-op once the new root has real (non-`*.event4u-partial-*`)
       content. Per-entry atomic write means a crash mid-copy is recovered
-      on the next run, not preserved as partial state.
-- [ ] `task ci` green.
+      on the next run, not preserved as partial state. Verified by 9
+      tests in `tests/test_namespace_migration.py`, including
+      `test_second_invocation_is_noop` and
+      `test_migration_recovers_from_partial_copy_leftover`.
+- [x] `task ci` green. Verified at PR #125 merge time: full pytest
+      (301/301), 5-judge `/review-changes` all green, AI Council
+      post-review with accepted findings resolved in-PR. Fresh subset
+      re-run 2026-05-13: 38/38 in
+      `tests/test_user_global_paths.py`,
+      `tests/test_namespace_migration.py`,
+      `tests/test_claude_desktop_bundler.py`.
 - [x] AI Council post-review reports no blocker-tier findings — accepted
       findings resolved in-PR; non-blocking suggestions captured in Notes.
-- [ ] PR open, CI green, awaiting user review.
+- [x] PR open, CI green, awaiting user review. **Outcome:** PR #125
+      merged 2026-05-13T05:17:00Z into `main` and shipped via release
+      `2.4.0` (with follow-up fixes in `2.4.1`, `2.5.0`, `2.6.0`,
+      `2.6.1`).
 
 ## Notes
 

@@ -1,5 +1,6 @@
 ---
 name: judge:solo
+tier: 2
 cluster: judge
 sub: solo
 skills: [subagent-orchestration]

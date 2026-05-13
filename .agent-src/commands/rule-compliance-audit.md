@@ -1,5 +1,6 @@
 ---
 name: rule-compliance-audit
+tier: 1
 description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 disable-model-invocation: true
 suggestion:

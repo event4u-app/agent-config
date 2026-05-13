@@ -1,5 +1,6 @@
 ---
 name: agents:init
+tier: 2
 cluster: agents
 sub: init
 description: Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers.

@@ -1,5 +1,6 @@
 ---
 name: threat-model
+tier: 1
 skills: [threat-modeling, authz-review, security-sensitive-stop]
 description: Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 disable-model-invocation: true

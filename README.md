@@ -90,7 +90,7 @@ npx @event4u/agent-config init --tools=windsurf         # Windsurf
 npx @event4u/agent-config init --tools=cline            # Cline
 npx @event4u/agent-config init --tools=gemini-cli       # Gemini CLI
 npx @event4u/agent-config init --tools=copilot          # GitHub Copilot
-npx @event4u/agent-config init --tools=augment          # Augment Code
+npx @event4u/agent-config init --tools=augment --global # Augment Code (global-only)
 npx @event4u/agent-config init --tools=roocode          # Roo Code
 npx @event4u/agent-config init --tools=aider            # Aider
 npx @event4u/agent-config init --tools=codex            # Codex CLI
@@ -112,13 +112,16 @@ npx @event4u/agent-config init --tools=claude-code --global   # → ~/.claude/
 npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
 ```
 
-Per-AI scope support varies — Claude Desktop, for example, is
-global-only (no project-local discovery on macOS), while Roo Code and
-Continue.dev are project-local. The Supported Tools table below
-documents per-AI scope. Incompatible combinations (e.g.
-`--tools=roocode --global` or `--tools=claude-desktop` without
-`--global`) are rejected with a directive error; `--tools=all`
-silently filters to the scope's compatible subset.
+Per-AI scope support varies — Claude Desktop and Augment Code, for
+example, are global-only (Claude Desktop has no project-local
+discovery on macOS; Augment ships from a single user-scope tree
+(`~/.augment/`) — see [`ADR-007 § Amendment 2026-05-13 — global-only`](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)),
+while Roo Code and Continue.dev are project-local. The Supported
+Tools table below documents per-AI scope. Incompatible combinations
+(e.g. `--tools=roocode --global`, `--tools=claude-desktop` without
+`--global`, or `--tools=augment` without `--global`) are rejected
+with a directive error; `--tools=all` silently filters to the scope's
+compatible subset.
 
 ### For individual use (optional)
 
@@ -154,9 +157,25 @@ Cloudflare account takes ~5 minutes:
 ```bash
 task mcp:cloud:login         # one-time, opens browser
 task mcp:cloud:setup         # check → r2-create → r2-verify → whoami
-task mcp:cloud:secret-put    # set MCP-Token (Bearer auth, recommended)
+task mcp:cloud:secret-put    # opt in to bearer-auth mode (recommended for private deploys)
 # Then deploy via CI — see operator guide below.
 ```
+
+The Worker ships **two MVP-1 auth modes** the operator picks at deploy
+time (per `docs/contracts/mcp-cloud-scope.md` § `Auth surface`):
+
+- **`public`** — default. No per-request auth. Edge cache plus
+  Cloudflare account-level DDoS shielding are the ingress controls.
+  Use only for OSS, read-only deploys where the URL is shared widely.
+- **`bearer-auth`** — operator opt-in. Set the `MCP-Token` Wrangler
+  secret with `task mcp:cloud:secret-put`. Every `POST /` then
+  requires `Authorization: Bearer <MCP-Token>`. `GET /` liveness
+  stays open. Use this for private deploys.
+
+HMAC and Cloudflare Access modes are declared but **deferred** in the
+contract (`hmac-deferred`, `cf-access-deferred`) — wake-up triggers
+listed there. The README intentionally names no mode the contract
+has not declared (bidirectional drift test enforces this).
 
 After deploy your Worker lives at
 `https://agent-config-mcp.<your-account>.workers.dev` (or a custom
@@ -174,11 +193,13 @@ Full operator walkthrough (account, R2, GitHub secrets, deploy) —
 [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
 Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` (internal reference only per `STABILITY.md`).
 
-#### Lock your Worker behind a Bearer token
+#### Lock your Worker behind a Bearer token (`bearer-auth` mode)
 
-Without auth, any MCP client that knows your `*.workers.dev` URL can
-read the catalog. For private deploys, set the `MCP-Token` secret and
-the Worker will require `Authorization: Bearer <token>` on every POST:
+In `bearer-auth` mode the Worker requires `Authorization: Bearer
+<MCP-Token>` on every `POST /` and returns HTTP 401 + RFC 6750
+`WWW-Authenticate` on mismatch. The `GET /` liveness probe stays open
+so health checks keep working without the token. Switch modes by
+setting (or clearing) the `MCP-Token` secret:
 
 ```bash
 task mcp:cloud:secret-put          # wraps `npx wrangler secret put MCP-Token --name agent-config-mcp`
@@ -188,18 +209,21 @@ task mcp:cloud:secret-put          # wraps `npx wrangler secret put MCP-Token --
 Once the secret is set, every client config block needs the token in
 its headers — see [`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md) § Bearer auth for the
 per-client snippets (Claude Desktop, Claude Code, Cursor, Zed,
-Continue). The `GET /` liveness probe stays open so health checks keep
-working without the token.
+Continue). Mode contract is normative: `docs/contracts/mcp-cloud-scope.md`
+§ `Auth surface` § `bearer-auth`.
 
-> **Scope — Lite, not Full.** The Worker serves the read-only governance
-> surface (skills · commands · rules · guidelines · contexts) as MCP
-> prompts and resources, plus a small set of read-only tools (`memory_lookup`,
-> `chat_history_read`, `list_*`, `read_resource_body`). It does **not**
-> execute any of the ~112 Python scripts that ship with the package
-> (linters, audits, `task ci`, work-engine hooks, …). Those require the
-> full local install per [Quickstart](#quickstart). See
+> **Scope — Lite, not Full.** The Worker serves the **MCP Lite
+> scope** (`mcp_scope: lite` per `docs/contracts/mcp-cloud-scope.md`):
+> the read-only governance surface (skills · commands · rules ·
+> guidelines · contexts) as MCP prompts and resources, plus a small
+> set of read-only tools (`memory_lookup`, `chat_history_read`,
+> `list_*`, `read_resource_body`). It does **not** execute any of the
+> ~112 Python scripts that ship with the package (linters, audits,
+> `task ci`, work-engine hooks, …) — those require the **MCP Full
+> scope** (`mcp_scope: full` — local install per [Quickstart](#quickstart)).
+> The Lite vs Full boundary is normative in
 > `docs/contracts/mcp-cloud-scope.md` (internal reference only per
-> `STABILITY.md`) for the execution-safety boundary.
+> `STABILITY.md`).
 
 ### Optional: persistent agent memory
 
@@ -467,7 +491,6 @@ Every developer gets the same behavior. No per-user setup needed —
 
 | Tool | Rules | Skills | Commands | How it works |
 |---|---|---|---|---|
-| **Augment VSCode/IntelliJ** | ✅ | ✅ | ✅ | Reads `.augment/` from project |
 | **Claude Code** | ✅ | ✅ | ✅ | Reads `.claude/` (skills + commands as skills) |
 | **Cursor** | ✅ | — | ☑️ | Reads `.cursor/rules/` + commands via AGENTS.md |
 | **Cline** | ✅ | — | ☑️ | Reads `.clinerules/` + commands via AGENTS.md |
@@ -478,6 +501,7 @@ Every developer gets the same behavior. No per-user setup needed —
 | **Codex CLI** | ✅ | — | ☑️ | Auto-discovers `AGENTS.md` at project root |
 | **Continue.dev** | ✅ | — | ☑️ | Auto-discovers `.continue/rules/*.md` + AGENTS.md |
 | **Aider** | 📌 | — | — | Marker + manual `read:` in `.aider.conf.yml` |
+| **Augment VSCode/IntelliJ** | 📌 | — | — | Global-only — install with `--global` (see [ADR-007 Amendment 2026-05-13](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)); project writes `.augment/settings.json` marker only |
 | **Claude Desktop** | 📌 | — | — | Global-only — install with `--global` (see ADR-007) |
 
 ✅ = native support &nbsp; — = not available &nbsp; ☑️ = text reference only
@@ -485,13 +509,15 @@ Every developer gets the same behavior. No per-user setup needed —
 slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
-> **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 174 skills + 106 native commands). Cursor, Cline, Windsurf,
-> Gemini CLI, GitHub Copilot, Roo Code, Codex CLI, and Continue.dev only get
-> the **rules** natively; skills and commands are available as documentation
-> the agent can read, not as first-class features. Aider and Claude Desktop
-> ship marker-only bridges — Aider needs a one-line `read:` entry in
-> `.aider.conf.yml`; Claude Desktop is global-scope and pairs with `--global`.
+> **What this means in practice:** Claude Code gets the full project-scoped
+> package (rules + 174 skills + 106 native commands); Augment Code gets the
+> same content but only from a single global install at `~/.augment/`.
+> Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
+> and Continue.dev only get the **rules** natively; skills and commands are
+> available as documentation the agent can read, not as first-class features.
+> Aider, Augment, and Claude Desktop ship marker-only bridges in projects —
+> Aider needs a one-line `read:` entry in `.aider.conf.yml`; Augment and
+> Claude Desktop are global-scope and pair with `--global`.
 
 > **Team reproducibility (ADR-008):** every tool you `init` is also recorded in
 > `agents/installed-tools.lock` — committed, machine-managed. New team members

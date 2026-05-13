@@ -1,5 +1,6 @@
 ---
 name: agents:optimize
+tier: 2
 cluster: agents
 sub: optimize
 description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.

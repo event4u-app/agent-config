@@ -1,5 +1,6 @@
 ---
 name: memory:promote
+tier: 2
 cluster: memory
 sub: promote
 description: Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.

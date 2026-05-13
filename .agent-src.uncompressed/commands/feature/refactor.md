@@ -1,5 +1,6 @@
 ---
 name: feature:refactor
+tier: 2
 cluster: feature
 sub: refactor
 skills: [laravel, php-coder]

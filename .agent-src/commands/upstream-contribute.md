@@ -1,5 +1,6 @@
 ---
 name: upstream-contribute
+tier: 1
 skills: [upstream-contribute, skill-writing, learning-to-rule-or-skill]
 description: Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
 disable-model-invocation: true

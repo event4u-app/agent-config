@@ -1,5 +1,6 @@
 ---
 name: research:report
+tier: 2
 cluster: research
 sub: report
 description: "Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime."

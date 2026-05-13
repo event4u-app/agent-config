@@ -1,5 +1,6 @@
 ---
 name: memory:propose
+tier: 2
 cluster: memory
 sub: propose
 description: Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.

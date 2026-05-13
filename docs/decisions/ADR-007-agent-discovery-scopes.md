@@ -262,6 +262,73 @@ maintainer manifest).
   road-to-simplicity-and-everywhere" is **never built**. Roadmap
   entry should be updated to point at `export` instead.
 
+## Amendment 2026-05-13 — Augment global-only
+
+**Status:** Accepted · 2026-05-13 · signed off by Matze.
+
+### Trigger
+
+Real install measurement: the full body of every file in
+`~/.augment/rules/` counts against Augment's **49,512-char
+workspace-guidelines limit** (not just the description stubs that
+`scripts/measure_augment_budget.py` assumes for `type: auto` rules).
+A populated `~/.augment/rules/` deterministically exceeds the budget
+on every workspace (~138k chars observed — ~89k over limit).
+
+The competing pressure: a per-project deploy of the same content
+would still overflow Augment's limit (the limit is per-workspace,
+not per-scope) **and** would scatter the content across every repo
+the developer opens, multiplying the maintenance surface.
+
+### Decision
+
+`augment` becomes **global-only** in `SCOPE_SUPPORT`:
+
+- `npx @event4u/agent-config init --tools=augment --global` — supported.
+- `npx @event4u/agent-config init --tools=augment` (project) — **rejected**
+  with a directive error pointing at this amendment.
+- `npx @event4u/agent-config init` (default `--tools=all` at project
+  scope) — silently filters `augment` out (matching the
+  `claude-desktop` / `jetbrains` pattern).
+
+Project-scope `init` still writes `.augment/settings.json` as a
+substrate bridge (plugin activation marker for the workspace) — but
+**no** rules, skills, commands, contexts, personas, or templates are
+written into `.augment/` at project scope.
+
+### Trade-off accepted
+
+The Augment workspace-guidelines overflow is a **known, surfaced
+trade-off**, not a defect to fix. The package owner accepts that the
+IDE will report the budget exceeded; the content shape is the
+source of value, and chunking it to fit the limit would dilute that
+value below the threshold that justifies the tool. The overflow
+warning is documented in
+[`docs/setup/per-ide/augment.md`](../setup/per-ide/augment.md#troubleshooting).
+
+### Supersedes
+
+The earlier `fix/augment-project-scope-only` branch (commit
+`158f9912`, never merged) — which inverted the scope to
+**project-only** — is hereby superseded. The project-only direction
+solved the overflow at the cost of fragmenting content across every
+repo; this amendment trades that cost for a single global surface
+plus an explicit overflow tolerance.
+
+### Consequences
+
+- `GLOBAL_DEPLOY_SOURCES['augment']` carries the 6 source-to-dest
+  mappings (rules, skills, commands, contexts, personas, templates)
+  and remains the canonical Augment install surface.
+- `_validate_scope` hard-rejects explicit `augment` at project scope
+  and silently filters under `--tools=all --project`.
+- Tests: `test_augment_rejects_project`,
+  `test_all_silent_filters_augment_under_project`, and the existing
+  `test_install_global_deploys_augment_content` pin the contract.
+- The Supported Tools table in `README.md` moves Augment out of the
+  project-installed category into the global-only (marker-in-project)
+  category, alongside Claude Desktop.
+
 ## Implementation Plan (deferred to roadmap)
 
 Out of scope for this ADR. Sequencing target for a separate roadmap:

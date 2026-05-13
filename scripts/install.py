@@ -2023,7 +2023,14 @@ SCOPE_SUPPORT = {
     "cline":          "both",
     "gemini-cli":     "both",
     "copilot":        "both",
-    "augment":        "both",
+    # `augment` is global-only by design: a single user-scope deploy to
+    # `~/.augment/` is the canonical surface. The package owner accepts
+    # that the full rule set exceeds Augment's 49,512-char workspace-
+    # guidelines limit — the overflow is a known, surfaced trade-off
+    # (see ADR-007 § Amendment 2026-05-13 — global-only). Project-scope
+    # installs are rejected so the per-repo `.augment/` surface stays
+    # out of the install matrix entirely.
+    "augment":        "global",
     "aider":          "both",
     "codex":          "both",
     # Phase 2.4: roocode / kilocode lifted to "both" — global deploys

@@ -94,6 +94,7 @@ tasks:
       - task: lint-rule-budget
       - task: lint-skills
       - task: lint-rule-tiers
+      - task: lint-command-tiers
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-showcase-sessions

@@ -1,5 +1,6 @@
 ---
 name: feature:plan
+tier: 2
 cluster: feature
 sub: plan
 skills: [feature-planning]

@@ -1,5 +1,6 @@
 ---
 name: fix:portability
+tier: 2
 cluster: fix
 sub: portability
 description: Find and fix project-specific references in shared .augment/ package files

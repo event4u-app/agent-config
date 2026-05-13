@@ -1,5 +1,6 @@
 ---
 name: package-test
+tier: 2
 skills: [composer, npm]
 description: /package-test
 disable-model-invocation: true

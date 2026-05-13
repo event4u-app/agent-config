@@ -1,5 +1,6 @@
 ---
 name: roadmap
+tier: 1
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 cluster: roadmap
 disable-model-invocation: true

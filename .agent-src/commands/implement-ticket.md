@@ -1,5 +1,6 @@
 ---
 name: implement-ticket
+tier: 0
 skills: [refine-ticket, feature-planning]
 description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
 disable-model-invocation: true

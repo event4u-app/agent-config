@@ -1,4 +1,8 @@
 /**
+ * mcp_scope: lite — read-only governance surface (skills · commands ·
+ * rules · guidelines · contexts) plus deprecated tool stubs. Tool
+ * execution lives in `mcp_scope: full` (scripts/mcp_server/).
+ *
  * Cloudflare Worker entry — HTTP/JSON-RPC transport for the agent-config
  * MCP bridge.
  *

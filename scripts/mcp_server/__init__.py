@@ -1,5 +1,10 @@
 """MCP server for agent-config — Phase 1 MVP.
 
+mcp_scope: full — local stdio access can be extended to tool execution
+under the Phase 7 wake-up triggers in `docs/contracts/mcp-cloud-scope.md`.
+The hosted Worker (`workers/mcp/`) is `mcp_scope: lite` and is
+intentionally narrower.
+
 Exposes a hand-picked subset of `.agent-src/skills/` as MCP `prompts`
 over stdio. Read-only and instructional per the A0 execution-safety
 boundary in `agents/roadmaps/road-to-mcp-server.md`. No `tools`

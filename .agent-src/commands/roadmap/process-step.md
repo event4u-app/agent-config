@@ -1,5 +1,6 @@
 ---
 name: roadmap:process-step
+tier: 2
 cluster: roadmap
 sub: process-step
 skills: [agent-docs-writing, ai-council, roadmap-management]

@@ -1,5 +1,6 @@
 ---
 name: context:refactor
+tier: 2
 cluster: context
 sub: refactor
 skills: [agent-docs-writing]

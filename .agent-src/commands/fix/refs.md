@@ -1,5 +1,6 @@
 ---
 name: fix:refs
+tier: 2
 cluster: fix
 sub: refs
 description: Find and fix broken cross-references in .augment/ and agents/ files

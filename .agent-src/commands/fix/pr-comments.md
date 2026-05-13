@@ -1,5 +1,6 @@
 ---
 name: fix:pr-comments
+tier: 2
 cluster: fix
 sub: pr-comments
 skills: [php-coder]

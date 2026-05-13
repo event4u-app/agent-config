@@ -21,44 +21,36 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 > The previous "observability, feedback, lifecycle" layers were removed in
 > 1.5 — they were scaffolds without production consumers.
 
-## Content pipeline
+## Content pipelines
+
+The end-to-end flow from source authoring to distributed surfaces
+is four discrete pipelines, each owned by one sub-page. Each page
+documents input → transform → output, invariants, failure modes,
+and cites the script, Taskfile target, and test file that prove
+the pipeline.
 
 ```
-.agent-src.uncompressed/          ← Source of truth (verbose, human-readable)
-    ↓ /compress command
-.agent-src/                     ← Compressed output (token-efficient, shipped in the package)
-    ↓ project_to_augment() — copies rules by default, symlinks rest
-                              (toggle: augment.rules_use_symlinks)
-.augment/                       ← Local projection for Augment Code (gitignored)
-    ↓ install.sh (Cursor, Cline, Windsurf, Augment VSCode) / plugin system
-.claude/ .cursor/ .clinerules/  ← Tool-specific symlinks/copies (auto-generated)
-.windsurfrules  GEMINI.md
-    ↓ scripts/build_cloud_bundle.py    (Phase 1 — cloud distribution)
-dist/cloud/<skill>.zip          ← Anthropic Skills bundles (Claude.ai Web / Skills API)
+.agent-src.uncompressed/   ──Pipeline A──▶  .agent-src/
+                                              │
+                                              ├──Pipeline B──▶  .augment/
+                                              │
+                                              ├──Pipeline C──▶  .claude/ · .cursor/ · .clinerules/
+                                              │                  .windsurfrules · GEMINI.md
+                                              │
+                                              └──Pipeline D──▶  dist/cloud/<skill>.zip
 ```
 
-### Installer layout
+| Pipeline | Page | Output |
+|---|---|---|
+| **A.** Compression | [`architecture/compression.md`](architecture/compression.md) | `.agent-src/` |
+| **B.** Augment projection | [`architecture/augment-projection.md`](architecture/augment-projection.md) | `.augment/` |
+| **C.** Multi-tool projection | [`architecture/multi-tool-projection.md`](architecture/multi-tool-projection.md) | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
+| **D.** Claude.ai bundle | [`architecture/claude-bundle.md`](architecture/claude-bundle.md) | `dist/cloud/<skill>.zip` |
 
-In a consumer project, the installer (`scripts/install.sh`) and the
-package's own `project_to_augment()` projection produce a `.augment/`
-tree where:
-
-- `.augment/rules/` — **copies** of compressed rule files by default.
-  Augment Code historically does not load symlinked rules, so each
-  rule is a real file. Set `augment.rules_use_symlinks: true` in
-  `.agent-settings.yml` to switch them to symlinks once Augment Code
-  supports it (the toggle is honored by both `scripts/install.sh` on
-  the consumer side and `project_to_augment()` in the package).
-- `.augment/skills/`, `.augment/commands/`, `.augment/personas/`,
-  `.augment/contexts/`, `.augment/templates/` — **symlinks** into
-  `.agent-src/<subdir>/`. Reading a context follows the symlink to
-  the package payload.
-- `.augment/docs/guidelines/` — **symlink** into the package's
-  `docs/guidelines/` (consumer side: `node_modules/@event4u/agent-config/docs/guidelines/`;
-  package self-projection: `../docs/guidelines/`). This is the only
-  `docs/` subdirectory exposed in `.augment/`; `docs/contracts/` and
-  `docs/decisions/` are package-internal — rules that reference
-  contracts inline a 2–3 line excerpt instead of linking out.
+The drift check
+[`tests/test_architecture_docs_pipelines.py`](../tests/test_architecture_docs_pipelines.py)
+fails if any of the four sub-pages exists without its cited script /
+Taskfile target — or vice versa.
 
 Cross-references inside `.agent-src/rules/*.md` are written
 **relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
@@ -118,25 +110,10 @@ green.
 
 ### Cloud-bundle pipeline
 
-`task build-cloud-bundles-all` produces one ZIP per skill at
-`dist/cloud/<skill>.zip`, ready for upload to Claude.ai Web (Settings →
-Customize → Skills) or the Anthropic Skills API. Per-skill behavior
-follows the cloud-tier classification from `scripts/audit_cloud_compatibility.py`:
-
-| Tier  | Bundle action                                                     |
-|-------|-------------------------------------------------------------------|
-| T1    | Bundle as-is — pure guidance, sandbox-safe                        |
-| T2    | Bundle with prepended sandbox note + package-internal path-swap   |
-| T3-S  | Same as T2; optional script calls degrade gracefully on cloud     |
-| T3-H  | **Skipped** — Phase 2 cloud-aware variant required before bundling |
-
-Cloud-side caps enforced by the builder: `description` ≤ 200 chars
-(Claude.ai Web) with a 1024-char hard cap (Anthropic spec). The sandbox
-note explains to the agent that `.agent-src/`, `agents/`, and `task …`
-references are descriptive — the host has no filesystem access.
-
-CI gate: `task ci-cloud-bundle` runs the builder in `--check` mode and
-fails on any source-side violation, without producing artifacts.
+See [`architecture/claude-bundle.md`](architecture/claude-bundle.md)
+for the full Pipeline D documentation — tier classification, sandbox
+note, package-internal path-swap, description budget, and the
+`task ci-cloud-bundle` dry-run gate.
 
 ## What's inside
 

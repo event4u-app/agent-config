@@ -1,5 +1,6 @@
 ---
 name: roadmap:create
+tier: 2
 cluster: roadmap
 sub: create
 skills: [agent-docs-writing]

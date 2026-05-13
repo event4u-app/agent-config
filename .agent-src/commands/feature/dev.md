@@ -1,5 +1,6 @@
 ---
 name: feature:dev
+tier: 2
 cluster: feature
 sub: dev
 description: Full 7-phase feature development workflow for complex features.

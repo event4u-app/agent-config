@@ -1,5 +1,6 @@
 ---
 name: module
+tier: 2
 description: Module orchestrator — routes to create, explore
 cluster: module
 disable-model-invocation: true

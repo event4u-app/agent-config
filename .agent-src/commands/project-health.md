@@ -1,5 +1,6 @@
 ---
 name: project-health
+tier: 1
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
 disable-model-invocation: true

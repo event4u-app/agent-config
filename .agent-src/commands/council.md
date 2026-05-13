@@ -1,5 +1,6 @@
 ---
 name: council
+tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize
 cluster: council
 disable-model-invocation: true

@@ -1,5 +1,6 @@
 ---
 name: memory:load
+tier: 2
 cluster: memory
 sub: load
 description: Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
