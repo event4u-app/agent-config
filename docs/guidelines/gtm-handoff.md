@@ -109,6 +109,6 @@ the contract (O2 owns the interface; H10 only consumes it).
 - [`docs/contracts/context-spine.md`](../contracts/context-spine.md)
   § Wing-3 slots — `channel-stage`, `funnel-stage`,
   `customer-segment`; every chain step opts into ≥ 1 slot.
-- `agents/roadmaps/road-to-gtm-and-growth.md` § Block H — the
+- `agents/roadmaps/` § Block H (archived after merge) — the
   sixteen H-skills this guideline maps; pending skills appear here
   as backtick slugs until shipped.

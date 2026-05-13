@@ -5,7 +5,7 @@ stability: beta
 # ADR — GTM context-spine: Wing-3 slot extension
 
 > **Status:** Decided · 2026-05-13
-> **Roadmap:** [`agents/roadmaps/road-to-gtm-and-growth.md`](../../agents/roadmaps/road-to-gtm-and-growth.md) § Block G — G1
+> **Roadmap origin:** `agents/roadmaps/` (Block G — G1, archived after merge)
 > **Builds on:** [`context-spine.md`](context-spine.md) — tri-slot
 > contract (`product`, `team`, `repo`) locked at 3 by council Q1
 > (2026-05-05 KEEP-3, unified-senior-roles iter 1).
@@ -108,8 +108,8 @@ Three signals that this decision is wrong and the ADR needs revisiting:
   § 5 (slot-add policy — wing-bounded extension clause).
 - [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
   — `context_spine.items.enum` extended in this ADR.
-- [`agents/roadmaps/road-to-gtm-and-growth.md`](../../agents/roadmaps/road-to-gtm-and-growth.md)
-  § Block G — the authorising roadmap.
+- `agents/roadmaps/` § Block G — the authorising roadmap (archived
+  after merge; this ADR is the durable record).
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
   § Senior-Tier Required Structure — the four blocks every senior
   skill ships independently of spine opt-in.
