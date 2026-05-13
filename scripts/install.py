@@ -2092,36 +2092,41 @@ PROJECT_BRIDGE_MARKERS = {
 #   ``_write_claude_desktop_marker`` rather than via this map.
 #
 # Tools that follow the markdown-skills convention (anchors lifted from
-# nextlevelbuilder/ui-ux-pro-max-skill) deploy ``.claude/skills`` —
-# the universal Anthropic-shaped skill bundle — into ``<anchor>/skills/``
-# (or ``<anchor>/steering/`` for kiro). ``.claude/rules`` is also copied
+# nextlevelbuilder/ui-ux-pro-max-skill) deploy the universal Anthropic-
+# shaped skill bundle — sourced from ``.agent-src/`` (the npm-shipped
+# canonical asset tree) — into ``<anchor>/skills/`` (or
+# ``<anchor>/steering/`` for kiro). ``.agent-src/rules`` is also copied
 # where the destination is a true rules-aware tool root.
+#
+# All source paths reference ``.agent-src/<subdir>`` because that is the
+# only asset tree included in the npm tarball (see ``package.json#files``).
+# The legacy ``.augment/``, ``.claude/``, ``.cursor/`` projections only
+# exist in the development checkout — they are not shipped.
 _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
-    (".claude/rules",    "rules"),
-    (".claude/skills",   "skills"),
-    (".claude/personas", "personas"),
+    (".agent-src/rules",    "rules"),
+    (".agent-src/skills",   "skills"),
+    (".agent-src/personas", "personas"),
 ]
 GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
     "claude-code": _CLAUDE_SKILL_BUNDLE,
     "augment": [
-        (".augment/rules",     "rules"),
-        (".augment/skills",    "skills"),
-        (".augment/commands",  "commands"),
-        (".augment/contexts",  "contexts"),
-        (".augment/personas",  "personas"),
-        (".augment/templates", "templates"),
+        (".agent-src/rules",     "rules"),
+        (".agent-src/skills",    "skills"),
+        (".agent-src/commands",  "commands"),
+        (".agent-src/contexts",  "contexts"),
+        (".agent-src/personas",  "personas"),
+        (".agent-src/templates", "templates"),
     ],
     "cursor": [
-        (".cursor/rules",    "rules"),
-        (".cursor/commands", "commands"),
-        (".cursor/personas", "personas"),
+        (".agent-src/rules",    "rules"),
+        (".agent-src/commands", "commands"),
+        (".agent-src/personas", "personas"),
     ],
     "windsurf": [
-        (".windsurf/rules",     "rules"),
-        (".windsurf/workflows", "workflows"),
+        (".agent-src/rules", "rules"),
     ],
     "cline": [
-        (".clinerules", ""),
+        (".agent-src/rules", ""),
     ],
     # Markdown-skills tools — mirror the universal skill bundle into the
     # tool-specific anchor. Subpath matches the reference repo's
@@ -2142,9 +2147,9 @@ GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
     # Kiro reads from `steering/` not `skills/` (per
     # platforms/kiro.json#folderStructure.skillPath).
     "kiro": [
-        (".claude/rules",    "rules"),
-        (".claude/skills",   "steering"),
-        (".claude/personas", "personas"),
+        (".agent-src/rules",    "rules"),
+        (".agent-src/skills",   "steering"),
+        (".agent-src/personas", "personas"),
     ],
 }
 
@@ -2988,14 +2993,15 @@ def install_global(
 
     lock_mod = _load_installed_lock_module()
     installed_version = lock_mod.current_package_version()
-    lock_path = lock_mod.lockfile_path()
-    ok, recorded = lock_mod.check_version(installed_version, path=lock_path)
+    read_path = lock_mod.lockfile_path()
+    write_path = lock_mod.lockfile_write_path()
+    ok, recorded = lock_mod.check_version(installed_version, path=read_path)
 
     if not ok and not force:
         if not QUIET:
             print()
             warn("Refusing global install: lockfile version mismatch.")
-            info(f"  Lockfile:           {lock_path}")
+            info(f"  Lockfile:           {read_path}")
             info(f"  Recorded version:   {recorded}")
             info(f"  Current package:    {installed_version}")
             info("  Fix:                run `agent-config update`")
@@ -3013,10 +3019,10 @@ def install_global(
                 continue
             print(f"      {tool_id:<15} → {anchor}")
 
-    existing = lock_mod.read_lockfile(path=lock_path) or {}
+    existing = lock_mod.read_lockfile(path=read_path) or {}
     existing_tools = list(existing.get("tools", []))
     merged_tools = sorted(set(existing_tools) | set(tools))
-    written = lock_mod.write_lockfile(installed_version, merged_tools, path=lock_path)
+    written = lock_mod.write_lockfile(installed_version, merged_tools, path=write_path)
 
     if not QUIET:
         print()
