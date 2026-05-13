@@ -1,4 +1,4 @@
-"""Global-install lockfile at ``~/.config/agent-config/installed.lock``.
+"""Global-install lockfile at ``~/.event4u/agent-config/installed.lock``.
 
 Phase 1.6 of road-to-global-first-install (ADR-007 D5). Records the
 package version that performed the most recent user-scope install plus
@@ -10,6 +10,12 @@ flip in ``.agent-settings.yml``.
 The schema is intentionally minimal YAML so the module can read and
 write without depending on ``pyyaml``. Atomic writes go through
 ``tempfile + os.replace`` per ADR-007 risk-mitigation row.
+
+Path resolution is delegated to :mod:`scripts._lib.user_global_paths`
+(Phase 1 of road-to-event4u-namespace-and-claude-desktop.md): writes
+land at ``~/.event4u/agent-config/installed.lock``; reads fall back to
+the legacy ``~/.config/agent-config/installed.lock`` if the new path
+is missing, so pre-2.4 installs keep working during the transition.
 """
 from __future__ import annotations
 
@@ -21,9 +27,21 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
+from scripts._lib import user_global_paths
+
 LOCKFILE_ENV = "AGENT_CONFIG_INSTALLED_LOCK"
-DEFAULT_LOCKFILE = Path.home() / ".config" / "agent-config" / "installed.lock"
 SCHEMA_VERSION = 1
+
+
+def _default_lockfile() -> Path:
+    """Canonical write target for the lockfile (new namespace)."""
+    return user_global_paths.write_target("installed.lock")
+
+
+# Module-level constant retained for back-compat with importers that read
+# ``installed_lock.DEFAULT_LOCKFILE`` directly. Derived from the helper so
+# the path tracks any future override of ``event4u_root()``.
+DEFAULT_LOCKFILE = _default_lockfile()
 
 _VERSION_RE = re.compile(r'^\s*agent_config_version\s*:\s*"?([^"\s]+)"?\s*$')
 _SCHEMA_RE = re.compile(r"^\s*schema_version\s*:\s*(\d+)\s*$")
@@ -32,12 +50,27 @@ _TOOL_RE = re.compile(r"^\s*-\s*([A-Za-z0-9_\-.]+)\s*$")
 
 
 def lockfile_path(env: Optional[dict] = None) -> Path:
-    """Return the active lockfile path, honoring the env override."""
+    """Return the active lockfile path, honoring the env override.
+
+    Resolution order:
+
+    1. ``$AGENT_CONFIG_INSTALLED_LOCK``  — explicit full-path override.
+    2. ``~/.event4u/agent-config/installed.lock`` if it exists on disk.
+    3. ``~/.config/agent-config/installed.lock``  (legacy fallback, read-only).
+    4. Canonical write target under the new namespace (Step 2 fallthrough).
+
+    Writers always end up at (4) when no lockfile exists yet; readers
+    benefit from (3) so pre-2.4 installs keep working while the
+    migration shim has not yet run.
+    """
     env = env if env is not None else os.environ
     override = env.get(LOCKFILE_ENV)
     if override:
         return Path(override).expanduser()
-    return DEFAULT_LOCKFILE
+    resolved = user_global_paths.resolve_with_fallback("installed.lock", env=env)
+    if resolved is not None:
+        return resolved
+    return user_global_paths.write_target("installed.lock", env=env)
 
 
 def read_lockfile(path: Optional[Path] = None) -> Optional[dict]:

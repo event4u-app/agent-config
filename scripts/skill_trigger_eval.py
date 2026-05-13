@@ -46,7 +46,16 @@ PRICE_PER_MTOK_OUT = {"claude-sonnet-4-5": 15.0, "claude-opus-4": 75.0}
 
 # On-disk key file. Companion: scripts/install_anthropic_key.sh writes it
 # with mode 0600; load_anthropic_key() refuses to read anything else.
-ANTHROPIC_KEY_PATH = Path.home() / ".config" / "agent-config" / "anthropic.key"
+# Resolution prefers the new namespace (``~/.event4u/agent-config/``) and
+# falls back to the legacy ``~/.config/agent-config/`` so pre-2.4 keys
+# stay usable until the user runs the migration shim.
+from scripts._lib import user_global_paths  # noqa: E402
+
+ANTHROPIC_KEY_FILENAME = "anthropic.key"
+ANTHROPIC_KEY_PATH = (
+    user_global_paths.resolve_with_fallback(ANTHROPIC_KEY_FILENAME)
+    or user_global_paths.write_target(ANTHROPIC_KEY_FILENAME)
+)
 # Token heuristics used for the *pre-run* cost preview. Real billing
 # comes from the API response once the user has confirmed.
 TOKENS_PER_CHAR = 0.25          # ~4 chars per token, industry rule of thumb.
@@ -569,7 +578,9 @@ def build_arg_parser() -> argparse.ArgumentParser:
         default=ANTHROPIC_KEY_PATH,
         help=(
             "Override the key file location. Default: "
-            "~/.config/agent-config/anthropic.key. Mode 0600 required."
+            "~/.event4u/agent-config/anthropic.key (legacy "
+            "~/.config/agent-config/anthropic.key read as fallback). "
+            "Mode 0600 required."
         ),
     )
     return parser

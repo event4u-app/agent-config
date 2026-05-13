@@ -1,65 +1,97 @@
 # Claude Desktop — agent-config setup
 
 The fastest path to running our skills, rules, and (optionally) the MCP
-server inside Claude Desktop. macOS / Windows / Linux. ~5 minutes.
+server inside Claude Desktop. macOS / Windows / Linux. ~10 minutes.
 
-> **TL;DR** — Claude Desktop reads from `~/.claude/` (global only, no
-> project-local discovery on macOS). Run `npx @event4u/agent-config
-> global --tools=claude-desktop` once per user, or
-> `npx @event4u/agent-config init --tools=claude-code` per project
-> (Claude Code's project install also covers Desktop on macOS via the
-> shared `~/.claude/` location seeded during `init`). The v1 npm /
-> composer install scheme is retired; the new global-first scheme is
-> ADR-007 and writes through `~/.config/agent-config/installed.lock`.
+> **TL;DR** — Claude Desktop does **not** auto-discover skills from any
+> filesystem path. It loads skills only after they are uploaded through
+> **Settings → Customize → Skills → Upload**. The package generates one
+> ZIP per skill under
+> `~/.event4u/agent-config/claude-desktop/bundles/` so you can drag /
+> drop them into the Customize panel. The v1 npm / composer install
+> scheme is retired; the new global-first scheme is ADR-007 and writes
+> through `~/.event4u/agent-config/installed.lock` (legacy
+> `~/.config/agent-config/installed.lock` read as fallback).
 
 ## Prerequisites
 
 - Claude Desktop installed (free or paid plan — same install path).
 - Node ≥ 18 (`npx` resolves the package per-project).
-- 5 minutes.
+- 10 minutes (most of it is clicking through the Customize panel once).
 
-## Step 1 — project-local install
+## Step 1 — generate the ZIP bundles
 
-Run inside each project that should be visible to Claude Desktop:
+Run once per user. Writes the per-skill ZIPs into the namespace dir:
+
+```bash
+npx @event4u/agent-config init --tools=claude-desktop --global
+```
+
+The init writes:
+
+```
+~/.event4u/agent-config/
+├── claude-desktop/
+│   ├── bundles/          # one <skill-name>.zip per .claude/skills/* folder
+│   └── claude-desktop.md # human-readable marker with the import flow
+├── agent-settings.yml
+├── installed.lock
+└── installed-tools.yml
+```
+
+Re-running is safe: each ZIP carries a SHA-256 sidecar. Bundles whose
+content didn't change are skipped (idempotent).
+
+## Step 1b — import skills into Customize
+
+Claude Desktop does not read the bundle dir directly — you upload each
+ZIP through the **Customize** panel.
+
+1. Open Claude Desktop → **Settings** (`Cmd+,` on macOS).
+2. Pick **Customize** in the left sidebar, then the **Skills** tab.
+3. Click **Upload** (the button shown next to the search box).
+4. Navigate to `~/.event4u/agent-config/claude-desktop/bundles/` and
+   either:
+   - drag-drop the ZIPs you want into the upload zone, or
+   - select multiple ZIPs in the file picker (`Cmd-click` on macOS,
+     `Ctrl-click` on Windows / Linux) and confirm.
+5. The skills appear in the Customize list. Toggle each one **On**
+   (the toggle is the gate Claude Desktop uses at runtime, not the
+   upload itself).
+
+> The bundles dir prints in the install summary so you can paste-copy
+> it into Finder / Explorer. The marker file at the same path
+> (`claude-desktop.md`) repeats the click-through instructions.
+
+## Step 2 — verify
+
+1. Restart Claude Desktop (full quit, not just window close — `Cmd+Q`
+   on macOS).
+2. Open a new conversation.
+3. Type `/` — the uploaded skills appear in the slash-command menu.
+4. **Settings → Customize → Skills** should list every skill you
+   uploaded, each with its **On** toggle live.
+
+If a skill is missing from `/`:
+
+- Confirm the **On** toggle is enabled in Customize → Skills.
+- Re-upload that specific ZIP — partial uploads can show up listed but
+  disabled.
+- Quit Claude Desktop fully (the menubar process on macOS caches old
+  skill state). Re-open and re-check.
+
+## Step 2b — optional: project-local install for Claude Code
+
+If you also use **Claude Code** in the same project, install the
+project-local config in the same run:
 
 ```bash
 npx @event4u/agent-config init --tools=claude-code
 ```
 
-> `--tools=claude-code` covers both Claude Code **and** Claude
-> Desktop — the two surfaces share the project's `.claude/`
-> directory. Pass `--tools=claude-code,cursor,windsurf` to seed
-> additional surfaces in the same run.
-
-The init writes:
-
-```
-.claude/
-├── rules/      # active rules for the project
-├── skills/     # active skills for the project
-└── commands/   # slash commands
-```
-
-`.agent-settings.yml` carries the `agent_config_version` pin so every
-`npx` invocation resolves the same runtime.
-
-## Step 2 — verify
-
-1. Restart Claude Desktop (full quit, not just window close).
-2. Open the project folder in a new conversation.
-3. Type `/` — the curated skills (`/work`, `/commit`, `/create-pr`,
-   `/quality-fix`, `/review-changes`, `/agent-handoff`,
-   `/project-analyze`, …) appear in the slash-command menu.
-4. Open Settings → Connectors. The kernel rules count appears under
-   "rules loaded".
-
-If the menu is empty:
-
-- Check `ls .claude/skills/` inside the project — should list the
-  curated skills.
-- Quit Claude Desktop (`Cmd+Q` on macOS, **not** just close the
-  window — the menubar process keeps the old skills cached).
-- Re-open and try `/` again.
+Claude Code reads `.claude/` directly from the project — no upload
+step required. Pass `--tools=claude-code,claude-desktop,cursor,…` to
+seed multiple surfaces with one invocation.
 
 ## Step 3 — optional MCP server
 
@@ -116,34 +148,39 @@ Restart Claude Desktop. The 🔌 icon shows the connector under
 native HTTP) and per-client Bearer-auth snippets live in
 [`../mcp-client-config.md`](../mcp-client-config.md).
 
-## Claude Desktop ↔ Claude Code config sharing
+## Claude Desktop ↔ Claude Code — what is shared, what is not
 
-Both surfaces read **the same project `.claude/` directory**. Anything
-the `npx … init` writes for one is automatically picked up by the
-other when the project folder is opened:
+Claude Code reads `.claude/` directly from the project. Claude Desktop
+does **not** auto-discover from any filesystem path — skills must be
+uploaded through Customize → Skills (Step 1b). MCP configuration is
+shared via `claude_desktop_config.json`.
 
-| File / dir                       | Shared by Desktop & Code? |
-| -------------------------------- | ------------------------- |
-| `<project>/.claude/CLAUDE.md`    | yes — project system prompt |
-| `<project>/.claude/rules/`       | yes — written by `npx … init` |
-| `<project>/.claude/skills/`      | yes — written by `npx … init` |
-| `<project>/.claude/commands/`    | yes — slash commands      |
-| `<project>/.claude/hooks/`       | yes — lifecycle hooks     |
-| `claude_desktop_config.json`     | Desktop only (MCP)        |
-| `~/.claude.json` (CLI config)    | Code only                 |
+| Surface                          | Loaded by Desktop?           | Loaded by Code?            |
+| -------------------------------- | ---------------------------- | -------------------------- |
+| `<project>/.claude/CLAUDE.md`    | no                           | yes — project system prompt |
+| `<project>/.claude/rules/`       | no                           | yes — written by `npx … init` |
+| `<project>/.claude/skills/`      | no (upload via Customize)    | yes — written by `npx … init` |
+| `<project>/.claude/commands/`    | no                           | yes — slash commands       |
+| `<project>/.claude/hooks/`       | no                           | yes — lifecycle hooks      |
+| `~/.event4u/agent-config/claude-desktop/bundles/*.zip` | imported via Customize → Skills | not used                  |
+| `claude_desktop_config.json`     | yes — MCP servers            | no                          |
+| `~/.claude.json` (CLI config)    | no                           | yes — CLI session state    |
 
-Translation: run `npx @event4u/agent-config init` once per project,
-both clients pick the files up. Cross-link to
-[`claude-code.md`](claude-code.md) for the CLI-side view.
+Translation: run `npx @event4u/agent-config init --tools=claude-desktop
+--global` once per user to refresh the bundles, then re-upload through
+Customize → Skills whenever a bundle is rebuilt. Run
+`npx @event4u/agent-config init --tools=claude-code` per project for
+the Code-side files. Cross-link to [`claude-code.md`](claude-code.md)
+for the CLI-side view.
 
 ## Claude Cowork
 
-Claude Cowork (paid plans only — Pro / Max / Team) **shares the
-Desktop config**. Once Step 1 + Step 3 are done in Desktop:
+Claude Cowork (paid plans only — Pro / Max / Team) **inherits the
+Desktop session**. Once Steps 1 + 1b + 3 are done in Desktop:
 
-- Skills and rules under `~/.claude/` are picked up automatically.
-- MCP servers under `claude_desktop_config.json` are available
-  inside Cowork sessions without a separate install.
+- Uploaded skills from Customize are available inside Cowork.
+- MCP servers under `claude_desktop_config.json` are available inside
+  Cowork sessions without a separate install.
 - Cowork-specific limit (per Anthropic docs): MCP tools that write to
   the local filesystem are sandboxed — read-only tools (the entire
   `agent-config-mcp` Worker surface) work fine.
@@ -154,9 +191,14 @@ client-side feature set.
 
 ## Uninstall
 
-Remove the project's `.claude/`, `.agent-settings.yml`, and any bridge
-files written by `npx … init`. Nothing lives under `~/.claude/` from
-this package any more.
+1. Open Claude Desktop → Settings → Customize → Skills, toggle off and
+   delete each skill you uploaded.
+2. Delete `~/.event4u/agent-config/claude-desktop/` to remove the local
+   bundles. The legacy `~/.config/agent-config/` path can stay; the
+   loader treats it as read-only fallback.
+3. Run `npx @event4u/agent-config uninstall --tools=claude-desktop` to
+   refresh `installed.lock` (or `--all` to fully remove the user-scope
+   state).
 
 ## See also
 

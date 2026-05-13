@@ -302,7 +302,7 @@ def _parse(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument("--global", dest="global_mode", action="store_true",
-                        help="operate on user-scope lockfile (~/.config/agent-config/installed.lock)")
+                        help="operate on user-scope lockfile (~/.event4u/agent-config/installed.lock; legacy ~/.config/agent-config/installed.lock read as fallback)")
     parser.add_argument("--tools", default=None,
                         help="comma-separated tool IDs to uninstall (default: all in lockfile)")
     parser.add_argument("--project", default=None, help="project root (default: cwd)")

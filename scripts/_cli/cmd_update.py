@@ -233,7 +233,10 @@ def main(
 
 
 def _refresh_global_lockfile(version: str, *, out=sys.stdout) -> None:
-    """Update ``~/.config/agent-config/installed.lock`` if it exists.
+    """Update the global ``installed.lock`` if it exists.
+
+    Resolution prefers ``~/.event4u/agent-config/installed.lock`` and
+    falls back to the legacy ``~/.config/agent-config/installed.lock``.
 
     Phase 1.6 — the lockfile is only present when the user has run a
     global install; we never create one here, but we keep it in lockstep

@@ -18,7 +18,7 @@ on user request.
 | File | Git | Scope | Owner | Example values |
 |---|---|---|---|---|
 | `.agent-project-settings.yml` | **committed** | team / repo | lead maintainer | `project.stack`, `quality.php.tools`, `memory.dogfood` |
-| `~/.config/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `cost_profile`, `personal.bot_icon`, `personal.autonomy`, `caveman.speak_scope` |
+| `~/.event4u/agent-config/agent-settings.yml` | **n/a** (outside repo) | individual developer · cross-project | individual | `name`, `ide`, `cost_profile`, `personal.bot_icon`, `personal.autonomy`, `caveman.speak_scope` (legacy `~/.config/agent-config/agent-settings.yml` read as fallback) |
 | `.agent-settings.yml` | **gitignored** | individual developer · this project | individual | `personal.ide`, `personal.user_name`, `subagents.max_parallel`, `onboarding.onboarded` |
 
 All three are YAML. Schemas:
@@ -34,7 +34,7 @@ Lowest priority → highest priority:
 
 ```
 1. Package defaults                                   (shipped by event4u/agent-config)
-2. ~/.config/agent-config/agent-settings.yml          (user-global · whitelist-filtered)
+2. ~/.event4u/agent-config/agent-settings.yml         (user-global · whitelist-filtered · legacy ~/.config/agent-config/ read as fallback)
 3. .agent-project-settings.yml                        (team file, committed)
 4. .agent-settings.yml                                (developer file, gitignored)
 ```
@@ -67,8 +67,10 @@ Loader contract:
   back to the next tier without raising.
 - **Silent on out-of-whitelist keys.** `verbose=True` logs which keys
   were dropped for debugging; default mode is silent.
-- **Never auto-creates `~/.config/agent-config/`.** That directory
-  pre-exists from key installation; `/onboard` `mkdir -p`s on opt-in.
+- **Never auto-creates `~/.event4u/agent-config/`** (nor the legacy
+  `~/.config/agent-config/`). The new directory is created by the
+  migration shim or by `/onboard` on opt-in; key installation also
+  `mkdir -p`s as needed.
 
 ## Lock semantics
 

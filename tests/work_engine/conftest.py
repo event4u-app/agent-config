@@ -7,8 +7,9 @@ duration of the test run.
 
 The ``_isolate_user_global_settings`` autouse fixture redirects the
 agent-settings loader's user-global path to a non-existent file so the
-developer's real ``~/.config/agent-config/agent-settings.yml`` cannot
-leak into ``load_hook_settings`` tests (road-to-portable-dev-prefs P3).
+developer's real ``~/.event4u/agent-config/agent-settings.yml`` (or the
+legacy ``~/.config/agent-config/agent-settings.yml``) cannot leak into
+``load_hook_settings`` tests (road-to-portable-dev-prefs P3).
 """
 from __future__ import annotations
 
@@ -32,7 +33,8 @@ def _isolate_user_global_settings(
     """Redirect the agent-settings user-global path away from ``$HOME``.
 
     Without this, a developer with a real
-    ``~/.config/agent-config/agent-settings.yml`` would see test
+    ``~/.event4u/agent-config/agent-settings.yml`` (or legacy
+    ``~/.config/agent-config/agent-settings.yml``) would see test
     assertions flip whenever their global config sets e.g.
     ``cost_profile``. Pointing the default at an empty tmp_path keeps
     every test deterministic and machine-portable.

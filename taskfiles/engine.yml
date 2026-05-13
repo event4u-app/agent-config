@@ -64,8 +64,9 @@ tasks:
     desc: |
       Install the Anthropic API key used by live trigger evals and the
       AI Council `anthropic` member. Interactive: key is read with no
-      echo and stored in ~/.config/agent-config/anthropic.key (mode
-      0600). Piped stdin is refused. Rerun to rotate.
+      echo and stored in ~/.event4u/agent-config/anthropic.key (mode
+      0600; legacy ~/.config/agent-config/anthropic.key read as
+      fallback). Piped stdin is refused. Rerun to rotate.
     cmd: bash scripts/install_anthropic_key.sh
     interactive: true
 
@@ -73,15 +74,17 @@ tasks:
     desc: |
       Install the OpenAI API key used by the AI Council `openai`
       member. Interactive: key is read with no echo and stored in
-      ~/.config/agent-config/openai.key (mode 0600). Piped stdin is
-      refused. Rerun to rotate.
+      ~/.event4u/agent-config/openai.key (mode 0600; legacy
+      ~/.config/agent-config/openai.key read as fallback). Piped stdin
+      is refused. Rerun to rotate.
     cmd: bash scripts/install_openai_key.sh
     interactive: true
 
   test-triggers-live:
     desc: |
       Run trigger eval against Claude API. The runner enforces:
-        1) key file ~/.config/agent-config/anthropic.key (mode 0600)
+        1) key file ~/.event4u/agent-config/anthropic.key (mode 0600;
+           legacy ~/.config/agent-config/anthropic.key read as fallback)
         2) interactive tty stdin
         3) explicit 'yes' at the pre-run cost preview
       Bootstrap once:        task setup-evals

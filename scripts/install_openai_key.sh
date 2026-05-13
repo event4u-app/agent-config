@@ -3,10 +3,12 @@
 #
 # Reads the key with `read -s` so it never echoes to the terminal and
 # never lands in shell history or scrollback. Writes atomically to
-# ~/.config/agent-config/openai.key with mode 0600.
+# ~/.event4u/agent-config/openai.key with mode 0600. The legacy
+# ~/.config/agent-config/openai.key is read as a fallback by the loaders
+# so pre-2.4 installs keep working until the namespace shim runs.
 #
 # Contract — companion to scripts/ai_council/clients.py:
-#   - File path:  $HOME/.config/agent-config/openai.key
+#   - File path:  $HOME/.event4u/agent-config/openai.key
 #   - File mode:  0600 (owner read/write only)
 #   - Key format: must start with `sk-`
 #   - No --force, no --yes, no env-var bypass. Piped stdin is rejected.
@@ -16,7 +18,7 @@
 
 set -euo pipefail
 
-TARGET_DIR="${HOME}/.config/agent-config"
+TARGET_DIR="${HOME}/.event4u/agent-config"
 TARGET_FILE="${TARGET_DIR}/openai.key"
 
 # ── controlling-terminal requirement ─────────────────────────────────────

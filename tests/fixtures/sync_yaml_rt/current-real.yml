@@ -156,8 +156,9 @@ subagents:
 # roadmap, diff, prompt, or file set. Council members never see the
 # host agent's reasoning — only the artefact + a neutral system prompt.
 #
-# Tokens are NEVER stored here. They live in ~/.config/agent-config/
-# <provider>.key (mode 0600), installed via:
+# Tokens are NEVER stored here. They live in ~/.event4u/agent-config/
+# <provider>.key (mode 0600; legacy ~/.config/agent-config/<provider>.key
+# is read as a fallback), installed via:
 #   bash scripts/install_anthropic_key.sh
 #   bash scripts/install_openai_key.sh
 #

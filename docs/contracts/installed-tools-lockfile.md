@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Installed-Tools Lockfile — Wire Contract
 
 Canonical wire-format spec for `agents/installed-tools.lock` — the

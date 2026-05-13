@@ -11,8 +11,9 @@ committed to a repo. No Task, no Make, no build tools required.
 > to **project**. Pass `--scope=global` or `--scope=project` to override
 > detection. See `--scope` in the CLI help for the full matrix.
 
-A global install records itself in `~/.config/agent-config/installed.lock`
-(schema_version, agent_config_version, installed_at, tools[]). `npx
+A global install records itself in `~/.event4u/agent-config/installed.lock`
+(schema_version, agent_config_version, installed_at, tools[]; the legacy
+`~/.config/agent-config/installed.lock` is read as a fallback). `npx
 @event4u/agent-config update` keeps that manifest in lockstep
 with the project pin in `.agent-settings.yml`. A version-mismatched
 re-run of `init --scope=global` is refused with exit code 1 until you

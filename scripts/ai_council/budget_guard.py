@@ -2,8 +2,12 @@
 
 Adds a 24h-rolling-window USD limit on top of the per-session caps in
 `orchestrator.CostBudget`. Persists a small JSONL ledger in
-``~/.config/agent-config/council-spend.jsonl`` (mode 0600, same
-permission discipline as the API keys).
+``~/.event4u/agent-config/council-spend.jsonl`` (mode 0600, same
+permission discipline as the API keys). The legacy
+``~/.config/agent-config/council-spend.jsonl`` is read as a fallback so
+spend history accumulated under a pre-2.4 install is preserved across
+the namespace migration; new entries are always appended to the new
+path.
 
 Contract
 - The ledger is **append-only**. Each line is ``{"ts": ISO-8601 UTC,
@@ -31,8 +35,32 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-LEDGER_PATH = Path.home() / ".config" / "agent-config" / "council-spend.jsonl"
+from scripts._lib import user_global_paths
+
+LEDGER_FILENAME = "council-spend.jsonl"
+
+#: Canonical write target under the new namespace. Reads route via
+#: :func:`_resolve_ledger_path` so a ledger still sitting in the legacy
+#: ``~/.config/agent-config/`` tree keeps contributing to the rolling
+#: window until the user migrates.
+LEDGER_PATH = user_global_paths.write_target(LEDGER_FILENAME)
 ROLLING_WINDOW_HOURS = 24
+
+
+def _resolve_ledger_path(path: Path | None) -> Path:
+    """Return the active ledger path, preferring the new namespace.
+
+    A caller-supplied ``path`` always wins (tests pin a tmp file). When
+    no override is given we prefer the new namespace, then fall back to
+    the legacy location if a ledger file already exists there. New
+    writes always target the new namespace via :data:`LEDGER_PATH`.
+    """
+    if path is not None:
+        return path
+    found = user_global_paths.resolve_with_fallback(LEDGER_FILENAME)
+    if found is not None:
+        return found
+    return LEDGER_PATH
 
 
 @dataclass
@@ -87,8 +115,10 @@ def read_entries(path: Path | None = None) -> list[SpendEntry]:
     """Read every well-formed entry from the ledger.
 
     Malformed lines are skipped silently. Empty/missing ledger → [].
+    Reads route through :func:`_resolve_ledger_path` so a legacy ledger
+    keeps contributing to the rolling window until the user migrates.
     """
-    p = path or LEDGER_PATH
+    p = _resolve_ledger_path(path)
     if not p.exists():
         return []
     out: list[SpendEntry] = []

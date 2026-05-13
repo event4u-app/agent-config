@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **406 public artefacts** shipped by
+Consumer-facing catalog of all **408 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -186,7 +186,7 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (57)
+## Rules (58)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -210,6 +210,7 @@ are excluded.
 | rule | [`domain-adoption-policy`](../.agent-src/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
 | rule | [`downstream-changes`](../.agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
+| rule | [`external-reference-deep-dive`](../.agent-src/rules/external-reference-deep-dive.md) | auto | When the user names an external repo, file, URL, or artifact as a reference — fetch the actual tree and inspect, never summarize from README or metadata |
 | rule | [`guidelines`](../.agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
@@ -359,7 +360,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (69)
+## Guidelines (70)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -374,6 +375,7 @@ are excluded.
 | guideline | [`direct-answers-demos`](../docs/guidelines/agent-infra/direct-answers-demos.md) | agent-infra |  |
 | guideline | [`engineering-memory-data-format`](../docs/guidelines/agent-infra/engineering-memory-data-format.md) | agent-infra |  |
 | guideline | [`first-principles`](../docs/guidelines/agent-infra/first-principles.md) | agent-infra |  |
+| guideline | [`installed-tools-manifest`](../docs/guidelines/agent-infra/installed-tools-manifest.md) | agent-infra |  |
 | guideline | [`inversion-thinking`](../docs/guidelines/agent-infra/inversion-thinking.md) | agent-infra |  |
 | guideline | [`ios-simulator-guide`](../docs/guidelines/agent-infra/ios-simulator-guide.md) | agent-infra |  |
 | guideline | [`language-and-tone-examples`](../docs/guidelines/agent-infra/language-and-tone-examples.md) | agent-infra |  |
