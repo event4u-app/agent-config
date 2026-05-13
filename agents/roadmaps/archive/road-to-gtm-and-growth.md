@@ -116,12 +116,12 @@ declaration (G1), related-skills block (K2 from unified), one
 mental-model citation (K4 from unified), `tier: senior` frontmatter,
 runnable example. **No skill ships without all six.**
 
-- [ ] **H** — GTM cognition skills shipped (block marker; flips when H1–H16 are all done).
+- [x] **H** — GTM cognition skills shipped (block marker; flips when H1–H16 are all done).
 
 **CMO cluster (7 skills — folds former content-strategist per Q1):**
 
-- [ ] **H1** — `positioning` skill (`tier: senior`): category framing, "we are X for Y, not Z" articulation, point-of-view sharpening, opposable-positioning audit. Borrows mental-model `first-principles` + `inversion`. Cited by Wing-4 `competitive-positioning` (P3) — H1 owns market-positioning narrative; P3 reuses for strategic differentiation. **Out:** category-creation theatre (where positioning is invented, not earned).
-- [ ] **H2** — `messaging-architecture` skill (`tier: senior`): primary message, supporting proofs, audience-by-message matrix, narrative-stack reasoning. Composes `positioning` (cites). **Out:** copy generation, ad-headline writing.
+- [x] **H1** — `positioning` skill (`tier: senior`): category framing, "we are X for Y, not Z" articulation, point-of-view sharpening, opposable-positioning audit. Borrows mental-model `first-principles` + `inversion`. Cited by Wing-4 `competitive-positioning` (P3) — H1 owns market-positioning narrative; P3 reuses for strategic differentiation. **Out:** category-creation theatre (where positioning is invented, not earned).
+- [x] **H2** — `messaging-architecture` skill (`tier: senior`): primary message, supporting proofs, audience-by-message matrix, narrative-stack reasoning. Composes `positioning` (cites). **Out:** copy generation, ad-headline writing.
 - [x] **H3** — `gtm-launch` skill (`tier: senior`): launch sequencing (alpha → beta → GA), audience-wave logic, narrative beats per wave, dependency on engineering readiness signals. Composes `messaging-architecture` + Block-L `release-comms` (unified-senior-roles).
 - [x] **H4** — `editorial-calendar` skill (`tier: senior`, folded from former content-strategist per Q1): cadence reasoning (evergreen vs campaign vs reactive), beat-mapping, content-debt management. **Out:** content-management-system tooling.
 - [x] **H5** — `content-funnel-design` skill (`tier: senior`, folded from former content-strategist per Q1): funnel-stage-to-content-shape mapping, conversion-pathway design, content-as-system thinking. Composes `editorial-calendar` + `funnel-analysis` (H14).
