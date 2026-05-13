@@ -343,6 +343,36 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.4.0](https://github.com/event4u-app/agent-config/compare/2.3.0...2.4.0) (2026-05-13)
+
+### Features
+
+* **install:** Claude Desktop ZIP bundle deployment ([9f2a00c](https://github.com/event4u-app/agent-config/commit/9f2a00cfd752232abdcf16c6e3440c46f5c9d596))
+* **install:** event4u namespace and auto-migration shim ([a58570e](https://github.com/event4u-app/agent-config/commit/a58570ecff885a7d50350c4281e675d7ff34f912))
+
+### Bug Fixes
+
+* **agent_settings:** align source with template via relative import ([a85b6c8](https://github.com/event4u-app/agent-config/commit/a85b6c82284310876d075a924918052fc7dbabdb))
+* **work_engine:** vendor user_global_paths into template for self-contained import ([f111c4e](https://github.com/event4u-app/agent-config/commit/f111c4e60de6cd60fbe81635029f9f34437a5ead))
+* **migrate:** atomic per-entry write with partial-debris purge ([5bd5aad](https://github.com/event4u-app/agent-config/commit/5bd5aadf0085657ec98eee049dda440d05b06801))
+
+### Documentation
+
+* **roadmap:** mark Steps 5-6 done (commit + PR opened) ([8492b7f](https://github.com/event4u-app/agent-config/commit/8492b7fd3cfd76075a64d5de770db2c5013e02dd))
+* **adr:** ADR-009 rollback section + AI Council convergence ([cc78adc](https://github.com/event4u-app/agent-config/commit/cc78adc0a9d0fbc51b2a65f35d8e0f13c1456a2f))
+* **contracts:** mark installed-tools-lockfile as beta ([90991da](https://github.com/event4u-app/agent-config/commit/90991da2f840ebae978fc4df9996c01324816404))
+* **adr:** ADR-009 event4u namespace + Claude Desktop ZIP bundles ([c707bd3](https://github.com/event4u-app/agent-config/commit/c707bd31211f94ace858738b7aee8d3898f0da88))
+* **roadmap:** add road-to-event4u-namespace-and-claude-desktop ([d92706b](https://github.com/event4u-app/agent-config/commit/d92706bd53621ff3a225db6eb9ee490f17f613d2))
+
+### Chores
+
+* **onboard:** rephrase 'event4u-owned' as 'package-owned' ([4bdd43b](https://github.com/event4u-app/agent-config/commit/4bdd43b7a6637a36cfa377045b6cd0f3f51b0fd1))
+* **template:** bump agent_config_version pin to 2.3.0 ([1180bf2](https://github.com/event4u-app/agent-config/commit/1180bf263f2f33fb5b41b13439c92cfbdc3a70d8))
+* **index:** regenerate index + catalog for accurate counts ([655a5eb](https://github.com/event4u-app/agent-config/commit/655a5eb81ce6744548a6f50451f66576a7c2b5ac))
+* **sync:** regenerate derived outputs for event4u namespace ([c277a94](https://github.com/event4u-app/agent-config/commit/c277a94f881ad4702ed2e97cebf6c5a7c8471a35))
+
+Tests: 3521 (+31 since 2.3.0)
+
 ## [2.3.0](https://github.com/event4u-app/agent-config/compare/2.2.2...2.3.0) (2026-05-13)
 
 ### Features
