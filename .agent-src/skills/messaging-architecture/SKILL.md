@@ -42,7 +42,7 @@ launch sequencing (route to `gtm-launch`).
 
 ### Step 0: Inherit the positioning frame
 
-Open the `positioning.md` artefact ([`positioning`](../positioning/SKILL.md)
+Open the `positioning.md` artefact ([`positioning-strategy`](../positioning-strategy/SKILL.md)
 Step 1 output). If the four anchors are missing or contested, stop
 and route back. Messaging architecture without a locked positioning
 frame is decoration — it will be rewritten the next quarter.
@@ -114,7 +114,7 @@ production is a downstream artefact.
 **WHEN NOT to use this**
 
 - Locking the four-anchor positioning frame — route to
-  [`positioning`](../positioning/SKILL.md).
+  [`positioning-strategy`](../positioning-strategy/SKILL.md).
 - Peer-vs-peer ours-vs-theirs verdict table — route to
   [`competitive-positioning`](../competitive-positioning/SKILL.md).
 - Launch-wave audience sequencing — route to

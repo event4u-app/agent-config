@@ -101,10 +101,10 @@ mirrors `lint_skills` (`file:line:reason`).
 
 Three shipped chains across the suite illustrate the contract:
 
-### W3 launch chain — `positioning` → `messaging-architecture` → `gtm-launch`
+### W3 launch chain — `positioning-strategy` → `messaging-architecture` → `gtm-launch`
 
-- `positioning` (H1) owns category framing.
-- `messaging-architecture` (H2) **composes** `positioning` — primary
+- `positioning-strategy` (H1) owns category framing.
+- `messaging-architecture` (H2) **composes** `positioning-strategy` — primary
   message + supporting proofs derive from H1's point-of-view output.
 - `gtm-launch` (H3) **composes** `messaging-architecture` plus
   `release-comms` (unified-senior-roles Block L) — launch sequencing

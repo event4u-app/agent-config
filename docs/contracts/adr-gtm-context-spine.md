@@ -29,7 +29,7 @@ and Money / Strategy / Ops wings do not opt into them.
 
 | Slot | Path | Typical content |
 |---|---|---|
-| `channel-stage` | `agents/context-spine/channel-stage.md` | Which channels the GTM motion uses (awareness · consideration · decision · retention · expansion), per-channel maturity, channel-cost band. Read by H1 (`positioning`), H2 (`messaging-architecture`), H3 (`gtm-launch`), H6 (`editorial-calendar`). |
+| `channel-stage` | `agents/context-spine/channel-stage.md` | Which channels the GTM motion uses (awareness · consideration · decision · retention · expansion), per-channel maturity, channel-cost band. Read by H1 (`positioning-strategy`), H2 (`messaging-architecture`), H3 (`gtm-launch`), H6 (`editorial-calendar`). |
 | `funnel-stage` | `agents/context-spine/funnel-stage.md` | Funnel topology (top / mid / bottom / activation / retention), per-stage definition, exit-criteria for each. Read by H8 (`pipeline-strategy`), R1 (`funnel-analysis`), R2 (`activation-design`), R3 (`onboarding-design`). |
 | `customer-segment` | `agents/context-spine/customer-segment.md` | ICP, persona-by-segment, ARR-band-by-segment. Read by H7 (`ICP`), H8 (`pipeline-strategy`), H9 (`MEDDIC`), R4 (`retention-loops`). |
 

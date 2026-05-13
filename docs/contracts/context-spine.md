@@ -48,7 +48,7 @@ locks the cross-wing slot count at 3. Per-wing extensions follow § 5.
 
 | Slot | Path under `agents/context-spine/` | Owner | Typical content |
 |---|---|---|---|
-| `channel-stage` | `channel-stage.md` | GTM / Marketing wing | Which channels the GTM motion uses (awareness · consideration · decision · retention · expansion), per-channel maturity, channel-cost band. Read by `positioning`, `messaging-architecture`, `gtm-launch`, `editorial-calendar`. |
+| `channel-stage` | `channel-stage.md` | GTM / Marketing wing | Which channels the GTM motion uses (awareness · consideration · decision · retention · expansion), per-channel maturity, channel-cost band. Read by `positioning-strategy`, `messaging-architecture`, `gtm-launch`, `editorial-calendar`. |
 | `funnel-stage` | `funnel-stage.md` | Growth / RevOps wing | Funnel topology (top / mid / bottom / activation / retention), per-stage definition, exit-criteria for each. Read by `pipeline-strategy`, `funnel-analysis`, `activation-design`, `onboarding-design`. |
 | `customer-segment` | `customer-segment.md` | Sales / CS wing | ICP, persona-by-segment, ARR-band-by-segment. Read by `ICP`, `pipeline-strategy`, `MEDDIC`, `retention-loops`. |
 

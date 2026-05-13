@@ -1,6 +1,6 @@
 ---
-name: positioning
-description: "Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable positioning audit'."
+name: positioning-strategy
+description: "Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'."
 status: active
 tier: senior
 source: package
@@ -8,7 +8,7 @@ domain: product
 context_spine: [product, customer-segment]
 ---
 
-# positioning
+# positioning-strategy
 
 ## When to use
 

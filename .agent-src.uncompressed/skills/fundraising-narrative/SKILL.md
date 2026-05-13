@@ -55,7 +55,7 @@ are siblings, not the same artefact).
 ### Step 0: Inherit the positioning frame and vision anchor
 
 Identify the locked positioning anchors from
-[`positioning`](../positioning/SKILL.md) and the internal vision
+[`positioning-strategy`](../positioning-strategy/SKILL.md) and the internal vision
 anchor from `vision-articulation` if it exists. The fundraising
 narrative is the *external pitch under capital constraint*; it
 inherits the internal frame, it does not re-invent it. A pitch
@@ -147,7 +147,7 @@ contradictions surfaced.
 
 - Internal vision-anchor authoring for org alignment — route to Wing-4 `vision-articulation`.
 - Message-stack work post-round — route to [`messaging-architecture`](../messaging-architecture/SKILL.md).
-- Positioning the category and segment — route to [`positioning`](../positioning/SKILL.md) first.
+- Positioning the category and segment — route to [`positioning-strategy`](../positioning-strategy/SKILL.md) first.
 - Investor-CRM pipeline or data-room operations — out of scope.
 
 ## When the agent should load this

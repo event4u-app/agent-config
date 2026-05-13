@@ -44,7 +44,7 @@ subject lines or ad creative formats (channel-agnostic skill).
 ### Step 0: Inherit the positioning frame and audience matrix
 
 Identify the locked positioning anchors from
-[`positioning`](../positioning/SKILL.md) and the audience matrix
+[`positioning-strategy`](../positioning-strategy/SKILL.md) and the audience matrix
 from [`messaging-architecture`](../messaging-architecture/SKILL.md).
 Voice without positioning is style; voice without an audience matrix
 is broadcast.

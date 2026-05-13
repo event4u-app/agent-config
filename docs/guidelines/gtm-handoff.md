@@ -21,7 +21,7 @@ Five-step chain that turns a category point-of-view into a shipped
 funnel of channel artifacts. CMO cluster owns every step.
 
 ```
-positioning (H1)
+positioning-strategy (H1)
   → messaging-architecture (H2)
     → gtm-launch (H3)
       → editorial-calendar (H4)
