@@ -2158,16 +2158,33 @@ _CLAUDE_DESKTOP_MARKER_TEMPLATE = """\
 
 Installed by `@event4u/agent-config` (user scope, ADR-007).
 
-- Lockfile: `{lockfile}`
-- Anchor:   `{anchor}`
+- Lockfile:    `{lockfile}`
+- Anchor:      `{anchor}`
+- Skill bundles: `{bundles_dir}` ({bundle_count} ZIPs)
 
-Claude Desktop has no native rules / skills filesystem convention; this
-file is informational. Rules and skills for AI coding tools are deployed
-to their respective user-scope directories (`~/.claude/`, `~/.augment/`,
-`~/.cursor/`, `~/.codeium/windsurf/`, `~/Documents/Cline/Rules/`).
+## Import skills into Claude Desktop
+
+Claude Desktop has no filesystem skill-discovery convention — skills are
+imported manually via the Customize → Skills UI.
+
+1. Open Claude Desktop → **Settings → Customize → Skills**.
+2. Click the **Upload skill** button.
+3. Browse to `{bundles_dir}` and pick the `<skill-name>.zip` files you
+   want to install. One ZIP = one skill.
+4. Repeat per skill. Claude Desktop keeps each upload until you remove it.
+
+The bundle directory is regenerated on every
+`npx @event4u/agent-config init --tools=claude-desktop` run (only
+changed skills are rewritten — content-hash idempotency).
 
 To remove this marker, delete this file.
 """
+
+#: Subpath under ``~/.event4u/agent-config/`` where Claude Desktop ZIP
+#: bundles are written. Kept separate from the per-tool USER_SCOPE_PATHS
+#: anchor (which is the Claude Desktop config dir) because bundles are
+#: package-owned, not Claude-owned, content.
+_CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles"
 
 
 def _bridge_marker(tool_id: str, scope: str) -> str:
@@ -2475,6 +2492,24 @@ def _load_installed_tools_module():
         sys.path.insert(0, pkg_root)
     from scripts._lib import installed_tools  # noqa: WPS433 — lazy by design
     return installed_tools
+
+
+def _load_user_global_paths_module():
+    """Lazy-import ``scripts._lib.user_global_paths`` (Phase 3 migration shim)."""
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    from scripts._lib import user_global_paths  # noqa: WPS433 — lazy by design
+    return user_global_paths
+
+
+def _load_claude_desktop_bundler_module():
+    """Lazy-import ``scripts._lib.claude_desktop_bundler`` (Phase 4 ZIP bundler)."""
+    pkg_root = str(Path(__file__).resolve().parents[1])
+    if pkg_root not in sys.path:
+        sys.path.insert(0, pkg_root)
+    from scripts._lib import claude_desktop_bundler  # noqa: WPS433 — lazy by design
+    return claude_desktop_bundler
 
 
 def _sha256_of_file(path: Path) -> Optional[str]:
@@ -2794,27 +2829,66 @@ def _copy_dir_dereferencing_symlinks(
     return (written, skipped, written_paths)
 
 
+def _claude_desktop_bundles_dir() -> Path:
+    """Return the canonical bundle output dir under the event4u namespace.
+
+    Located via :func:`user_global_paths.write_target` so the path
+    honours the ``EVENT4U_HOME`` env override used by tests.
+    """
+    paths_mod = _load_user_global_paths_module()
+    return paths_mod.write_target(_CLAUDE_DESKTOP_BUNDLES_SUBPATH)
+
+
 def _write_claude_desktop_marker(
-    force: bool, lockfile_path: Path,
+    force: bool,
+    lockfile_path: Path,
+    *,
+    bundles_dir: Path,
+    bundle_count: int,
 ) -> tuple[int, int, list[Path]]:
     """Write the Claude Desktop user-scope marker file.
 
     Returns ``(written, skipped, written_paths)`` for symmetry with the
-    tree copier (P1.4). The marker is a single Markdown file; existing
-    files are preserved unless ``force=True``.
+    tree copier (P1.4). The marker points users at ``bundles_dir`` for
+    the Customize → Skills import flow (Phase 4). Existing markers are
+    overwritten unconditionally because the bundle count is part of the
+    body and we want it to stay current.
     """
     anchor = Path(USER_SCOPE_PATHS["claude-desktop"]).expanduser()
     target = anchor / "agent-config.md"
-    decision = _resolve_file_conflict(target, force_hint=force)
-    if decision == "skip":
-        return (0, 1, [])
     anchor.mkdir(parents=True, exist_ok=True)
     body = _CLAUDE_DESKTOP_MARKER_TEMPLATE.format(
         lockfile=str(lockfile_path),
         anchor=str(anchor),
+        bundles_dir=str(bundles_dir),
+        bundle_count=bundle_count,
     )
     target.write_text(body, encoding="utf-8")
     return (1, 0, [target])
+
+
+def _deploy_claude_desktop(
+    force: bool, package_root: Path, lockfile_path: Path,
+) -> tuple[int, int, str, list[Path]]:
+    """Build skill ZIP bundles + write the marker for ``claude-desktop``.
+
+    Phase 4 of road-to-event4u-namespace-and-claude-desktop. Bundles
+    land in ``~/.event4u/agent-config/claude-desktop/bundles/``; the
+    marker file in the Claude Desktop config dir points at them with
+    Customize → Skills import instructions.
+
+    Returns ``(bundle_count, 0, "deployed", [bundles_dir, marker])``.
+    The ``deployed`` status replaces the v2.3 ``marker``-only status.
+    """
+    bundler = _load_claude_desktop_bundler_module()
+    bundles_dir = _claude_desktop_bundles_dir()
+    bundler.build_skill_bundles(package_root, bundles_dir, force=force)
+    # Count total existing ZIPs (idempotent runs may not rewrite any).
+    bundle_count = sum(1 for _ in bundles_dir.glob("*.zip")) if bundles_dir.is_dir() else 0
+    _, _, marker_paths = _write_claude_desktop_marker(
+        force, lockfile_path, bundles_dir=bundles_dir, bundle_count=bundle_count,
+    )
+    return (bundle_count, 0, "deployed", [bundles_dir, *marker_paths])
 
 
 def _deploy_global_content(
@@ -2827,20 +2901,21 @@ def _deploy_global_content(
 
     For each tool in ``tools`` that has a ``GLOBAL_DEPLOY_SOURCES`` entry,
     copies the listed package subtrees into ``USER_SCOPE_PATHS[tool_id]``
-    (expanded). For ``claude-desktop`` writes the marker file. For tools
-    without a deployment plan (e.g. ``copilot``), records a ``hint`` status
-    so the caller can print an actionable next step.
+    (expanded). For ``claude-desktop`` builds per-skill ZIP bundles under
+    ``~/.event4u/agent-config/claude-desktop/bundles/`` and writes the
+    marker file pointing at them (Phase 4). For tools without a deployment
+    plan (e.g. ``copilot``), records a ``hint`` status so the caller can
+    print an actionable next step.
 
     Returns ``{tool_id: (written, skipped, status, written_paths)}``
-    where ``status`` is one of ``deployed``, ``marker``, ``hint``,
-    ``unsupported`` and ``written_paths`` is the absolute path list of
-    every file the deploy actually wrote (P1.4).
+    where ``status`` is one of ``deployed``, ``hint``, ``unsupported``
+    and ``written_paths`` is the absolute path list of every file the
+    deploy actually wrote (P1.4).
     """
     results: dict[str, tuple[int, int, str, list[Path]]] = {}
     for tool_id in sorted(tools):
         if tool_id == "claude-desktop":
-            w, s, paths = _write_claude_desktop_marker(force, lockfile_path)
-            results[tool_id] = (w, s, "marker", paths)
+            results[tool_id] = _deploy_claude_desktop(force, package_root, lockfile_path)
             continue
         plan = GLOBAL_DEPLOY_SOURCES.get(tool_id)
         if plan is None:
@@ -2879,8 +2954,9 @@ def install_global(
 ) -> int:
     """User-scope install path (ADR-007 + Phase 1.6 lockfile lifecycle).
 
-    Reads ``~/.config/agent-config/installed.lock`` first. A recorded
-    version that does not match the running package version refuses the
+    Reads ``~/.event4u/agent-config/installed.lock`` first (with a read
+    fallback to the legacy ``~/.config/agent-config/installed.lock``). A
+    recorded version that does not match the running package version refuses the
     install with a remediation hint unless ``--force`` is passed. On
     success the lockfile is rewritten atomically with the current
     package version + the union of previously-recorded and now-installed
@@ -2894,7 +2970,22 @@ def install_global(
     presence of ``.agent-settings.yml``), the project-scope manifest at
     ``agents/installed-tools.lock`` is also refreshed with ``scope=global``
     entries per ADR-008 Phase 3.2.
+
+    Phase 3 namespace migration: before any lockfile read, the legacy
+    ``~/.config/agent-config/`` tree (pre-2.4 installs) is migrated into
+    ``~/.event4u/agent-config/`` so subsequent reads land on the canonical
+    path. The migration is idempotent and leaves a ``MIGRATED.md``
+    breadcrumb behind; the legacy tree is never auto-deleted.
     """
+    paths_mod = _load_user_global_paths_module()
+    migrated = paths_mod.migrate_legacy_namespace()
+    if migrated and not QUIET:
+        info(
+            "🔁 Migrated user-global config to "
+            f"{paths_mod.event4u_root()} (legacy "
+            f"{paths_mod.legacy_xdg_root()} preserved as fallback)"
+        )
+
     lock_mod = _load_installed_lock_module()
     installed_version = lock_mod.current_package_version()
     lock_path = lock_mod.lockfile_path()
@@ -2945,7 +3036,10 @@ def install_global(
         for tool_id in sorted(deploy_results):
             w, s, status, _ = deploy_results[tool_id]
             anchor = USER_SCOPE_PATHS.get(tool_id, "")
-            if status == "deployed":
+            if status == "deployed" and tool_id == "claude-desktop":
+                bundles_dir = _claude_desktop_bundles_dir()
+                print(f"      {tool_id:<15} → {bundles_dir} ({w} bundles)")
+            elif status == "deployed":
                 print(f"      {tool_id:<15} → {anchor} ({w} files, {s} skipped)")
             elif status == "marker":
                 print(f"      {tool_id:<15} → {anchor}agent-config.md ({'written' if w else 'skipped'})")
