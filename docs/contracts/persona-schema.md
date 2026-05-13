@@ -22,6 +22,7 @@ tiers, a 5-section spine for Core, and a 7-section spine for Specialist
 | `role` | string | yes | human-readable role name |
 | `description` | string | yes | one sentence, ≤ 160 chars |
 | `tier` | enum | yes | `core` \| `specialist` |
+| `wing` | int | optional | `1`\|`2`\|`3`\|`4` — cognition cluster per [`package-self-orientation § The four wings`](package-self-orientation.md#the-four-wings); raises the specialist size cap for denser wings |
 | `mode` | string | optional | advisory link to a role-contract workflow mode |
 | `version` | string | yes | semver; bump on breaking changes |
 | `source` | enum | yes | `package` \| `project` |
@@ -77,13 +78,28 @@ beyond the global line cap).
 
 ## § 4 — Size budgets
 
+Base caps by tier:
+
 | Tier | Section count | Line cap | Rationale |
 |---|---|---|---|
 | `core` | 5 | ≤ 120 | always-loaded, stay lean |
 | `specialist` | 7 | ≤ 100 | opt-in, denser per section |
 
-The line cap is enforced by `lint-skills` against the full file
-including frontmatter and trailing blank line.
+Wing-scoped overrides for the `specialist` tier (Wings 3 and 4 carry
+denser cognition than Wings 1 and 2 — funnel × channel × lifecycle for
+GTM, finance × org × strategy for Money/Ops — so the seven-section
+spine needs more room to land without amputating Workflows):
+
+| Tier | Wing | Line cap |
+|---|---|---|
+| `specialist` | 1 (Engineering) | ≤ 100 |
+| `specialist` | 2 (Product + Foundation) | ≤ 100 |
+| `specialist` | 3 (GTM + Growth) | ≤ 140 |
+| `specialist` | 4 (Money + Strategy + Ops) | ≤ 140 |
+
+Personas without a `wing:` field fall back to the tier baseline. The
+line cap is enforced by `lint-skills` against the full file including
+frontmatter and trailing blank line.
 
 ## § 5 — Schema enforcement
 
@@ -91,8 +107,9 @@ The linter (A2 work) enforces:
 
 - frontmatter shape (table in § 1)
 - tier enum
+- wing enum (when present)
 - required sections per tier (§ 3)
-- size budget per tier (§ 4)
+- size budget per tier — wing override applied when `wing:` is set (§ 4)
 - ≥ 3 bullets in `Unique Questions`
 - `id` matches filename stem
 - description ≤ 160 chars

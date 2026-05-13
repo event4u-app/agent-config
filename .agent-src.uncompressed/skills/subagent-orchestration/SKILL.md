@@ -149,7 +149,7 @@ worktree → delegated-skill consumes the input shape declared in its
 `## Input` (or `## When the agent should load this`) block. The
 handoff is auditable; `lint_handoffs.py` validates the chain.
 
-**Example chain (W3 launch):** `positioning` (worktree A) →
+**Example chain (W3 launch):** `positioning-strategy` (worktree A) →
 `messaging-architecture` (worktree B, consumes positioning's
 `positioning-statement.md`) → `gtm-launch` (worktree C, consumes
 both prior artifacts). Each worktree carries one branch; the chain

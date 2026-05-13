@@ -31,7 +31,10 @@ SKILL_GLOBS = (
     ".agent-src.uncompressed/skills/**/SKILL.md",
     ".agent-src/skills/**/SKILL.md",
 )
-VALID_SLOTS = ("product", "team", "repo")
+VALID_SLOTS = (
+    "product", "team", "repo",
+    "channel-stage", "funnel-stage", "customer-segment",
+)
 
 CONTEXT_SPINE_PAT = re.compile(
     r"^context_spine:\s*\[([^\]]*)\]\s*$", re.MULTILINE
