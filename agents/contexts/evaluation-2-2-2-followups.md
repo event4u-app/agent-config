@@ -1,7 +1,7 @@
 # Evaluation 2.2.2 — Follow-ups (verbatim user brief)
 
 > Captured from the user message that triggered
-> `agents/roadmaps/road-to-distribution-maturity.md`. Recorded verbatim,
+> `agents/roadmaps/archive/road-to-distribution-maturity.md`. Recorded verbatim,
 > no editorialising. This is the source-of-truth for the roadmap's
 > phases.
 
@@ -79,7 +79,7 @@ The user explicitly authorised council token spend for two passes:
    roadmap. Question file at
    `agents/council-questions/composer-fallback-feasibility.md`.
 2. **Roadmap review** — gates Phase 1 start. Reviews
-   `agents/roadmaps/road-to-distribution-maturity.md` itself.
+   `agents/roadmaps/archive/road-to-distribution-maturity.md` itself.
 
 Per `/council default` Step 3, the cost gate is still surfaced
 per-call even with the standing authorisation — the user picks `1`
