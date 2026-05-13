@@ -290,3 +290,33 @@ Out of scope for this ADR. Sequencing target for a separate roadmap:
 - Prior latent global code: `scripts/install.py` (~280 LOC, never
   reachable from npx entry).
 - Related rule: [`non-destructive-by-default`](../../.augment/rules/non-destructive-by-default.md) — Hard Floor on overwrite of user's existing `~/.claude/CLAUDE.md`.
+
+## Amendment 2026-05-13 — Augment downgraded to scope=project-only
+
+`SCOPE_SUPPORT["augment"]` flipped from `"both"` to `"project"`; the
+`augment` entry in `GLOBAL_DEPLOY_SOURCES` is removed.
+
+**Empirical trigger.** A global install of the standard rule set
+(`~/.augment/rules/` = 9 `always` + 48 `auto` + 4 `manual` = 61 files,
+138 557 chars total) lights up Augment's workspace UI with
+"Total rules and workspace guidelines (155 149 chars) exceeds the
+limit of 49 512 characters" on the first session. The kernel-+-router
+design (`docs/contracts/kernel-membership.md`,
+`docs/contracts/rule-router.md`) assumes Augment counts only the
+description-stub for `type: auto` rules; the actual UI measurement
+counts the full body of every file under `~/.augment/rules/`.
+
+**Decision.** Reject global Augment installs at `_validate_scope()`:
+- `--tools=augment --global` → hard reject (remediation: drop --global).
+- `--tools=all --global` → silent filter; `augment` drops out.
+- `--tools=augment --project` / default → unchanged.
+
+Updated matrix row (§ Verified per-agent discovery matrix):
+
+| Agent | User-scope (global) | Project-scope | Precedence |
+|---|---|---|---|
+| Augment Code | _not supported (scope=project-only)_ | `.augment/{rules,commands,skills,…}` + `AGENTS.md` | project only |
+
+D1 (Install scope: global is the default) still holds for the rest of
+the matrix — `~/.augment/` is removed from the global-default anchor
+list. Project installs are unchanged.

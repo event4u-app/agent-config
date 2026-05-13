@@ -210,6 +210,15 @@ class TestValidateScope(SilentTest):
             with self.assertRaises(SystemExit):
                 install._validate_scope({"qoder"}, "project", was_all=False)
 
+    def test_augment_rejects_global(self) -> None:
+        # Augment is project-only: `~/.augment/rules/` loads on every
+        # workspace and the 48 auto-rules exceed Augment's 49,512-char
+        # workspace-guidelines limit. Explicit `--tools=augment --global`
+        # must hard-reject with a remediation hint.
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope({"augment"}, "global", was_all=False)
+
     def test_all_silent_filters_global_only_under_project(self) -> None:
         result = install._validate_scope(
             {"claude-desktop", "jetbrains", "claude-code", "cursor"},
@@ -218,6 +227,17 @@ class TestValidateScope(SilentTest):
         )
         self.assertNotIn("claude-desktop", result)
         self.assertNotIn("jetbrains", result)
+        self.assertIn("claude-code", result)
+        self.assertIn("cursor", result)
+
+    def test_all_silent_filters_augment_under_global(self) -> None:
+        # `--tools=all --global` must drop `augment` silently (project-only).
+        result = install._validate_scope(
+            {"augment", "claude-code", "cursor"},
+            "global",
+            was_all=True,
+        )
+        self.assertNotIn("augment", result)
         self.assertIn("claude-code", result)
         self.assertIn("cursor", result)
 

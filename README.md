@@ -113,11 +113,13 @@ npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
 ```
 
 Per-AI scope support varies — Claude Desktop, for example, is
-global-only (no project-local discovery on macOS), while Roo Code and
-Continue.dev are project-local. The Supported Tools table below
-documents per-AI scope. Incompatible combinations (e.g.
-`--tools=roocode --global` or `--tools=claude-desktop` without
-`--global`) are rejected with a directive error; `--tools=all`
+global-only (no project-local discovery on macOS), while Augment Code
+is project-only (`~/.augment/rules/` loads on every workspace and the
+full rule set exceeds Augment's 49,512-char workspace-guidelines
+limit — see [`ADR-007 § Amendment 2026-05-13`](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-downgraded-to-scopeproject-only)).
+The Supported Tools table below documents per-AI scope. Incompatible
+combinations (e.g. `--tools=augment --global` or `--tools=claude-desktop`
+without `--global`) are rejected with a directive error; `--tools=all`
 silently filters to the scope's compatible subset.
 
 ### For individual use (optional)

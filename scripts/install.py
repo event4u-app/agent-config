@@ -2023,7 +2023,13 @@ SCOPE_SUPPORT = {
     "cline":          "both",
     "gemini-cli":     "both",
     "copilot":        "both",
-    "augment":        "both",
+    # `augment` is project-only: `~/.augment/rules/` loads on every project
+    # the developer opens, and Augment counts the full body of every rule
+    # file against its 49,512-char workspace-guidelines limit (not just the
+    # description stub for `type: auto` rules). A global install of the 48
+    # auto-rules deterministically exceeds the limit across every workspace.
+    # Project scope keeps `.augment/rules/` per-repo where it belongs.
+    "augment":        "project",
     "aider":          "both",
     "codex":          "both",
     # Phase 2.4: roocode / kilocode lifted to "both" — global deploys
@@ -2109,14 +2115,12 @@ _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
 ]
 GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
     "claude-code": _CLAUDE_SKILL_BUNDLE,
-    "augment": [
-        (".agent-src/rules",     "rules"),
-        (".agent-src/skills",    "skills"),
-        (".agent-src/commands",  "commands"),
-        (".agent-src/contexts",  "contexts"),
-        (".agent-src/personas",  "personas"),
-        (".agent-src/templates", "templates"),
-    ],
+    # `augment` is intentionally absent: scope=project-only per
+    # SCOPE_SUPPORT. `~/.augment/rules/` would load on every workspace
+    # and Augment counts the full body of every rule file against its
+    # 49,512-char workspace-guidelines limit — the 48 auto-rules alone
+    # exceed it. Project-scope deploy (via scripts/install.sh) keeps
+    # `.augment/` per-repo where the budget is manageable.
     "cursor": [
         (".agent-src/rules",    "rules"),
         (".agent-src/commands", "commands"),

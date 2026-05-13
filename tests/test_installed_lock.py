@@ -195,14 +195,21 @@ def test_install_global_deploys_claude_code_content(
     assert skills, "expected at least one skill in ~/.claude/skills/"
 
 
-def test_install_global_deploys_augment_content(
+def test_install_global_does_not_deploy_augment(
     isolated_lock: Path, tmp_path: Path
 ) -> None:
+    # ADR-007 Amendment 2026-05-13: Augment is project-only. A global
+    # install must not populate `~/.augment/rules/` (would load on every
+    # workspace and exceed Augment's 49,512-char workspace-guidelines
+    # limit). `_validate_scope` rejects `--tools=augment --global` at the
+    # CLI gate; install_global() is defensive — augment has no
+    # GLOBAL_DEPLOY_SOURCES entry, so the deploy is a no-op.
     rc = _silent_install_global(["augment"])
     assert rc == 0
     home = tmp_path / "home"
-    assert (home / ".augment" / "rules").is_dir()
-    assert list((home / ".augment" / "rules").glob("*.md"))
+    assert not (home / ".augment" / "rules").exists(), (
+        "augment is project-only; global deploy must not create ~/.augment/rules/"
+    )
 
 
 def test_install_global_writes_claude_desktop_marker(
