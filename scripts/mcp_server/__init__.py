@@ -11,6 +11,7 @@ boundary in `agents/roadmaps/road-to-mcp-server.md`. No `tools`
 primitive, no engine spawn, no shell execution.
 
 Stability: experimental. Contract: `docs/contracts/mcp-phase-1-scope.md`.
+Promotion to beta gated on `docs/contracts/mcp-beta-criteria.md`.
 """
 from __future__ import annotations
 
