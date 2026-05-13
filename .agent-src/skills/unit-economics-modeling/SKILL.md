@@ -1,10 +1,11 @@
 ---
 name: unit-economics-modeling
-description: "Use when modeling CAC, LTV, gross-margin payback, or contribution margin per customer — for SaaS, marketplace, or transactional businesses."
+description: "Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'."
 status: active
 tier: senior
 source: package
 domain: product
+context_spine: [product, fiscal-period]
 ---
 
 # unit-economics-modeling
@@ -14,8 +15,29 @@ domain: product
 - A board ask: "is this business unit-economic?" — needs CAC / LTV / payback, not vibes.
 - A new channel is scaling and the question is whether the CAC payback period is sustainable.
 - A pricing or packaging change needs to be tested against contribution margin per cohort.
+- A finance-partner needs to construct burn-multiple cognition before the next forecast or scenario pass.
 
 Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage diagnosis, or backlog ranking (see Related Skills).
+
+## Cognition cluster
+
+- **Mental model 1 — First principles.** Strip the unit to one paying
+  customer and one fully-loaded acquisition dollar. Aggregate ratios
+  ride on per-unit truth; if the unit is mis-defined (trial vs paid,
+  household vs seat), every ratio downstream is decoration. See
+  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 1.
+- **Mental model 8 — Second-order thinking.** A CAC drop driven by
+  discounting lifts LTV/CAC on paper while shortening cohort
+  retention — the second-order effect lands two quarters later in
+  churn. Score the second-order cost of every lever, not just the
+  first-order ratio. See `mental-models.md` § 8.
+- **Context-spine — product + fiscal-period.** Read the **product**
+  slot for what a "customer" actually is in this scope (seat vs
+  household vs paid trial vs activated free), and the
+  **fiscal-period** slot for the close-window the ratios must
+  reconcile against (monthly close vs quarterly board pack vs
+  annual plan). See
+  [`context-spine`](../../../docs/contracts/context-spine.md).
 
 ## Procedure
 
@@ -51,13 +73,30 @@ Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage
 2. **LTV / CAC ratio**: target ≥ 3.0. Below 1.5 is acquisition-loss territory; above 5.0 means under-investment in growth (or bad LTV math).
 3. Both numbers, not one. Payback drives capital efficiency; ratio drives long-run economics.
 
-### Step 5: Cohort the answer
+### Step 5: Compute burn-multiple judgment
 
-1. Run Steps 1–4 by signup-quarter cohort. Trends matter more than the point estimate.
+1. **Burn multiple** = `net burn / net new ARR` over the fiscal-period
+   slot's reporting window (monthly close / quarterly / annual).
+   It answers *"how many dollars of cash do we burn to add one
+   dollar of recurring revenue?"* — a single ratio that compresses
+   CAC, gross margin, and churn into capital efficiency.
+2. Compute on **net** new ARR (gross new − churn − contraction).
+   Burn-multiple on gross new ARR flatters the picture by exactly
+   the churn rate; auditors and acquirers will recompute.
+3. Read the ratio against the org-stage colour from the
+   **fiscal-period** + product spine — do not hardcode a band here.
+   The cognition is *"smaller is better, and the direction across
+   cohorts matters more than the point estimate."* Bands belong in
+   `runway-cognition` (O3) where stage context is the load-bearing
+   input.
+
+### Step 6: Cohort the answer
+
+1. Run Steps 1–5 by signup-quarter cohort. Trends matter more than the point estimate.
 2. If LTV/CAC is improving but payback is lengthening, you are buying retention with discounting — flag.
 3. If both deteriorate, the channel mix has shifted to a worse channel — segment by channel to find the leak.
 
-### Step 6: Validate
+### Step 7: Validate
 
 1. Sanity-check LTV against revenue retention. If implied LTV > 8× annual revenue per customer with monthly churn > 2%, the math is wrong.
 2. Sanity-check CAC against fully-loaded P&L. If channel CACs sum to less than total acquisition spend, allocations are missing.
@@ -88,6 +127,13 @@ Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage
 - Diagnosing where conversion drops — route to [`funnel-analysis`](../funnel-analysis/SKILL.md).
 - Ranking competing initiatives — route to [`rice-prioritization`](../rice-prioritization/SKILL.md).
 - Setting team objectives that move these metrics — route to [`okr-tree-modeling`](../okr-tree-modeling/SKILL.md).
+- Cash-runway shape, fundraise-trigger heuristics, or layoff-vs-cut-vs-grow framing — route to [`runway-cognition`](../runway-cognition/SKILL.md) (O3).
+- Multi-statement scenario construction over base / upside / downside — route to [`scenario-modeling`](../scenario-modeling/SKILL.md) (O4).
+- Forecast-call construction (commit / best-case / pipeline) — route to [`forecasting`](../forecasting/SKILL.md) (O2).
+
+Wing-4 handoff: this skill ships the `unit-economics-frame.md`
+artifact that `scenario-modeling` (O4) reads as its money input
+(`docs/guidelines/wing4-handoff.md` § Chain 1).
 
 ## When the agent should load this
 
@@ -99,7 +145,8 @@ Do NOT use for full-business intrinsic-value modeling, OKR setting, funnel-stage
 
 ## Output
 
-1. **`unit-econ-table.md`** — table per channel and blended: CAC · ARPA · gross margin · payback months · LTV · LTV/CAC. With cohort columns (last 4 quarters).
+1. **`unit-econ-table.md`** — table per channel and blended: CAC · ARPA · gross margin · payback months · LTV · LTV/CAC · burn-multiple. With cohort columns (last 4 quarters).
 2. **`assumptions.md`** — formula chosen (SaaS / marketplace / transactional), churn definition, COGS allocation method, lifetime cap. One bullet per choice.
-3. **`cohort-trend.md`** — trend chart (ASCII or markdown table) of CAC, payback, LTV/CAC over the last 4–8 cohorts. Annotate channel-mix shifts.
+3. **`cohort-trend.md`** — trend chart (ASCII or markdown table) of CAC, payback, LTV/CAC, burn-multiple over the last 4–8 cohorts. Annotate channel-mix shifts.
 4. **`sanity-checks.md`** — explicit cross-checks (LTV vs annual revenue, channel CAC sum vs P&L). Flag any that fail with a one-line investigation pointer.
+5. **`unit-economics-frame.md`** *(Wing-4 handoff)* — the typed artifact `scenario-modeling` (O4) reads: CAC / LTV ratio, contribution margin, payback band, burn-multiple verdict, segment scope, fiscal-period the frame reconciles against. Per `docs/guidelines/wing4-handoff.md` § Chain 1.

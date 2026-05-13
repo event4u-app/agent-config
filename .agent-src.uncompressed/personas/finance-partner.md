@@ -1,8 +1,8 @@
 ---
 id: finance-partner
 role: Finance Partner
-description: "The senior voice that owns the cash and the model — unit economics named, runway sized, scenarios stressed, the next 18 months legible to founder and board alike."
-tier: senior
+description: "The senior voice that owns the cash and the model — unit economics named, runway sized, scenarios stressed, the next 18 months legible."
+tier: specialist
 wing: 4
 mode: planner
 version: "1.0"
