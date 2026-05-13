@@ -41,17 +41,15 @@ The path a new contributor walks on day one. Visible in
    commitment to two-release stability).
 3. **No prerequisite tooling beyond `bash` + `python3`.** Docker,
    GPG, jq, gh CLI, npm globals are all Tier-1+ territory.
-4. **Cited in the `init → sync → validate → work` outcome path**
-   OR cited by a Hard-Floor safety rule
-   (`commit`, `keys:install-*`) OR is the AI-Council entry point
-   that the daily workflow depends on (`council:*`).
+4. **Cited in the `init → sync → validate → work` outcome path.**
+   Setup helpers (`first-run`, `keys:install-*`) and AI-Council entry
+   points (`council:*`) are **not** Tier-0 — they are run once-per-
+   project or on-demand, not in the daily loop. They live at Tier-1.
 
-**Canonical Tier-0 members (2026-05-13):**
+**Canonical Tier-0 members (2026-05-13, post-`road-to-surface-discipline`):**
 
-- CLI: `init`, `sync`, `validate`, `work`, `first-run`,
-  `keys:install-anthropic`, `keys:install-openai`,
-  `council:estimate`, `council:run`, `council:render`,
-  `implement-ticket`, `help`, `--version`.
+- CLI: `init`, `sync`, `validate`, `work`, `implement-ticket`,
+  `help`, `--version`.
 - Slash: `/onboard`, `/commit`, `/work`, `/implement-ticket`,
   `/agent-status`, `/agent-handoff`.
 
@@ -73,6 +71,24 @@ view. Documented in the same surface as Tier-0.
 3. **Orchestrator dispatch surface.** Top-level slash orchestrators
    whose children carry the actual work (`/roadmap`, `/feature`,
    `/fix`, `/judge`, `/memory`, `/optimize`, `/council`).
+4. **Once-per-project or on-demand setup helper.** Commands invoked
+   to bootstrap or rotate credentials, not in the daily loop
+   (`first-run`, `keys:install-anthropic`, `keys:install-openai`,
+   `council:estimate`, `council:run`, `council:render`).
+
+**Canonical Tier-1 CLI members (2026-05-13, post-`road-to-surface-discipline`):**
+
+`update`, `versions`, `global`, `export`, `uninstall`, `prune`,
+`doctor`, `migrate`, `first-run`, `keys:install-anthropic`,
+`keys:install-openai`, `council:estimate`, `council:run`,
+`council:render`.
+
+**Surface-trim changelog (2026-05-13):** Six CLI commands moved
+Tier-0 → Tier-1: `first-run` (run once per project), `keys:install-anthropic` /
+`keys:install-openai` (one-time credential setup), `council:estimate` /
+`council:run` / `council:render` (on-demand review tool, not daily
+driver). Commands stay invokable by full name; only `--help`
+surfacing changed.
 
 ### Tier-2 — maintenance / internal
 

@@ -194,7 +194,48 @@ future cluster expansion.
   steps, `## Migration` notice, `## Rules` block.
 - Fails CI if a new cluster invents a different dispatch shape.
 
+## Tier-usage signal contract
+
+Empirical retiering needs evidence; evidence needs a signal. The minimum signal the package collects to validate command tiering, with **zero new external surface** and the same privacy floor as artefact-engagement telemetry:
+
+| Field | Type | Source | Notes |
+|---|---|---|---|
+| `ts_bucket` | str (ISO-8601 UTC, hour-resolution) | clock at invocation | hour-bucket, not raw timestamp — limits re-identification |
+| `command` | str | dispatcher | the cluster + sub-command (`fix:ci`, `commit`, `work`) — never argv |
+| `tier` | int (0/1/2/3) | `command-surface-tiers.md` lookup at invocation | the tier the command had **at the time of the call** |
+| `outcome` | str | dispatcher exit shape | one of `success` / `error` / `blocked` — no message bodies |
+| `user_hash` | str (sha256 first 16 hex chars) | hash of `$USER` + machine-id salt | distinct-user counting **without** identity recovery — never raw login |
+
+**Forbidden — never recorded, enforced at the four privacy layers:**
+
+- argv, flags, file paths, file contents.
+- error messages, stdout, stderr.
+- tickets, branch names, repo slugs.
+- exact timestamps (only hour-buckets), exact env-var values.
+- the user's name, email, or IP.
+
+**Storage.** Append to `.agent-tier-usage.jsonl` (consumer-project root; configurable via `telemetry.tier_usage.output.path`). Separate file from `.agent-engagement.jsonl` — orthogonal signals, separate retention defaults, separate opt-in.
+
+**Settings gate.** `telemetry.tier_usage.enabled` (default `false`, same opt-in posture as artefact-engagement). When disabled, the dispatcher records nothing and incurs zero file IO — the default-off doctrine carries over.
+
+**Aggregation.** Local-only, hour-bucketed counts: `(command, tier) → invocation_count` and `(command, tier) → distinct_user_count`. No remote upload anywhere in scope.
+
+## Empirical retiering rule
+
+A command **stays at Tier-0** at the next minor release only if **both** floors clear:
+
+- **Frequency floor.** ≥ N invocations across the trailing W-day window — defaults `N = 20`, `W = 30` (tunable via `.agent-settings.yml` `telemetry.tier_usage.retier`).
+- **Distinct-user floor.** ≥ K distinct `user_hash` values across the same window — default `K = 3`.
+
+A command that fails either floor drops to **Tier-1** at the next minor release; the release notes cite the floor that failed. Promotion the other way (Tier-1 → Tier-0) follows the same rule symmetrically and additionally requires explicit listing in `command-surface-tiers.md`.
+
+**Authority.** This is a maintainer decision aid, not an autonomous rule — the dispatcher records, `scripts/telemetry/tier_usage_report.py` reports, the maintainer files the move in the next minor release. No runtime tier-flipping.
+
+**Floor governance.** N / W / K live in `.agent-settings.yml`; bumping them is a contract change (this file), not a settings change.
+
 ## See also
 
 - [`docs/migrations/commands-1.15.0.md`](../migrations/commands-1.15.0.md) — user-facing migration notes.
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — `beta` level rules apply.
+- [`docs/contracts/command-surface-tiers.md`](command-surface-tiers.md) — what each tier means and what `--help` surfaces.
+- [`.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md`](../../.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) — sibling telemetry surface; same privacy floor and four-layer enforcement model.
