@@ -30,29 +30,63 @@ on:
   # even when scripts/** or tests/** changed (observed on PR #34).
   workflow_dispatch:
 
+# Cancel superseded runs on the same ref. Saves ~7min per re-push on
+# the install-tests matrix and keeps the queue depth low so fresh
+# pushes don't sit behind stale ones.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   install-tests:
-    name: Install Script Tests (${{ matrix.os }})
+    # test_install.sh runs each of 35 tests in its own mktemp dir,
+    # invoking install.sh which symlinks hundreds of skill/rule/command
+    # files. Wall-clock dominated by fs ops — sharded across 4 matrix
+    # jobs so each shard runs ~9 tests, then --parallel 9 fans those
+    # out concurrently within the shard. Default nproc on macOS-arm64
+    # runners returns only 3, leaving cycles on the table; with only
+    # 9 tests/shard the fs contention that hurt at the un-sharded
+    # -P 8 setting is no longer a concern.
+    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-
+        shard: [1, 2, 3, 4]
+    env:
+      SHARD: ${{ matrix.shard }}/4
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run install.sh integration tests
-        run: bash tests/test_install.sh --parallel
+      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
+        run: bash tests/test_install.sh --parallel 9
+
+  install-aux-tests:
+    # Orchestrator + key-contract + one-liner smoke. Smaller suites
+    # (orchestrator ~40 tests, keys <2s each, one-liner ~15s) so a
+    # single job per OS hits the 1–2 min target without sharding.
+    name: Install Aux Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Run install orchestrator integration tests
-        run: bash tests/test_install_orchestrator.sh --parallel
+        # Default nproc on macOS-arm64 runners returns 3, bottlenecking
+        # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock
+        # under 90s without the fs contention seen in larger suites.
+        run: bash tests/test_install_orchestrator.sh --parallel 8
 
-      - name: Run install_openai_key.sh contract tests
-        run: bash tests/test_install_openai_key.sh
-
-      - name: Run install_anthropic_key.sh contract tests
-        run: bash tests/test_install_anthropic_key.sh
+      - name: Run install_openai_key.sh + install_anthropic_key.sh contract tests
+        # Tiny suites (<2s each) — folded into one step so the per-step
+        # overhead doesn't dwarf the actual work.
+        run: |
+          bash tests/test_install_openai_key.sh
+          bash tests/test_install_anthropic_key.sh
 
       - name: One-liner entrypoint smoke tests (setup.sh + npx wrapper)
         # Phase-2 smoke test for road-to-simplicity-and-everywhere.
@@ -88,6 +122,16 @@ jobs:
         # tooling (check_memory / check_proposal / memory_lookup) that
         # the tests invoke via subprocess.
         run: pip install pytest pytest-xdist pyyaml
+
+      - name: Bootstrap generated projection (.augment/, .cursor/, …)
+        # The Phase-2.4 install_global tests deploy content from
+        # `.augment/rules`, `.cursor/rules`, etc. into a fake user-scope
+        # home. Those dirs are git-ignored and rebuilt by `task sync`
+        # from `.agent-src/` on developer machines. CI checkouts skip
+        # that step, so without this bootstrap `_copy_dir_dereferencing
+        # _symlinks` returns 0 written files (src missing) and the
+        # tests fail with "rules dir does not exist".
+        run: python3 scripts/compress.py --sync
 
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for
@@ -138,6 +182,12 @@ jobs:
     # Windows (per ADR-007 D5 "no symlink work to test" carve-out).
     name: Windows lockfile + export tests
     runs-on: windows-latest
+    # PYTHONIOENCODING forces stdout/stderr to UTF-8 so the ✅/❌
+    # markers compress.py prints survive Windows' default cp1252
+    # encoding (otherwise the bootstrap step crashes with
+    # UnicodeEncodeError on '\u2705').
+    env:
+      PYTHONIOENCODING: utf-8
     steps:
       - uses: actions/checkout@v4
 
@@ -146,7 +196,13 @@ jobs:
           python-version: '3.12'
 
       - name: Install test deps
-        run: pip install pytest
+        run: pip install pytest pyyaml
+
+      - name: Bootstrap generated projection (.augment/, .cursor/, …)
+        # Same reason as the python-tests job: install_global content
+        # tests need the projected `.augment/` etc. trees, which are
+        # git-ignored and rebuilt from `.agent-src/` by sync.
+        run: python scripts/compress.py --sync
 
       - name: Run lockfile + export tests
         run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v

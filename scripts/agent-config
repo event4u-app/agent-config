@@ -114,6 +114,24 @@ Commands:
   validate                   Read-only drift detection on the manifest
                              (marker missing, scope divergence, version drift).
                              Exits 1 on drift. Flags: --quiet | --skip-version-check
+  uninstall                  Remove bridge markers (project) or lockfile
+                             entries (global). Idempotent. User-deployed
+                             content under ~/.<tool>/ is preserved unless
+                             --purge is passed (destructive).
+                             Flags: --global | --tools=<list> | --dry-run
+                                    | --purge | --force | --project=<path>
+  prune                      Remove project bridge markers not declared in
+                             agents/installed-tools.lock (npm-prune style).
+                             Hard-floors when lockfile is absent.
+                             Flags: --dry-run | --json | --project=<path>
+                                    | --all-missing-lock
+  doctor                     Read-only drift report: manifest ↔ filesystem.
+                             Lists missing, modified, and foreign files.
+                             Exits 1 on drift, 2 on missing lockfile.
+                             Flags: --json | --project=<path>
+  versions                   List available @event4u/agent-config versions
+                             on npm. Marks the current pin and latest.
+                             Flags: --offline | --limit=N | --json
   help                       Show this help
   --version, -V              Print package version
 
@@ -151,6 +169,17 @@ Examples:
   ./agent-config sync --dry-run
   ./agent-config sync
   ./agent-config validate
+  ./agent-config uninstall --tools=cursor --dry-run
+  ./agent-config uninstall --global --tools=windsurf --purge
+  ./agent-config prune --dry-run
+  ./agent-config prune --json
+  ./agent-config doctor
+  ./agent-config doctor --json
+  ./agent-config versions
+  ./agent-config versions --limit=10
+  ./agent-config versions --json
+  ./agent-config init --offline --tools=claude-code,cursor --yes
+  ./agent-config update --offline --to=2.2.0
 
 All commands operate on the CURRENT DIRECTORY (your project root).
 The CLI is strictly consumer-facing. Maintainer tasks live in Taskfile.yml.
@@ -596,6 +625,42 @@ cmd_validate() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_validate "$@"
 }
 
+# `agent-config uninstall` — remove bridge markers (project) or lockfile
+# entries (global). Idempotent. Pass `--purge` to also delete deployed
+# content directories under user-scope anchors (destructive). See
+# scripts/_cli/cmd_uninstall.py.
+cmd_uninstall() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_uninstall "$@"
+}
+
+# `agent-config prune` — remove orphaned project bridge markers.
+# Drift-cleanup sibling to `uninstall`: compares on-disk markers
+# against agents/installed-tools.lock and unlinks anything not
+# declared. Hard-floors when lockfile is absent. See
+# scripts/_cli/cmd_prune.py.
+cmd_prune() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_prune "$@"
+}
+
+# `agent-config doctor` — read-only drift report against the manifest.
+# Surfaces missing / modified / foreign files. Exit 0 clean, 1 drift,
+# 2 manifest-absent. See scripts/_cli/cmd_doctor.py.
+cmd_doctor() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_doctor "$@"
+}
+
+# `agent-config versions` — list available @event4u/agent-config versions
+# on the npm registry. Marks the current pin (from .agent-settings.yml)
+# and the latest published version. Offline-tolerant. See
+# scripts/_cli/cmd_versions.py.
+cmd_versions() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_versions "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -641,6 +706,10 @@ main() {
     export)                  cmd_export "$@" ;;
     sync)                    cmd_sync "$@" ;;
     validate)                cmd_validate "$@" ;;
+    uninstall)               cmd_uninstall "$@" ;;
+    prune)                   cmd_prune "$@" ;;
+    doctor)                  cmd_doctor "$@" ;;
+    versions)                cmd_versions "$@" ;;
     help|--help|-h|"")        usage ;;
     --version|-V)            print_version ;;
     *)

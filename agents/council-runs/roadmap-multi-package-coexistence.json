@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "mode": "roadmap",
+  "artefact": "agents/roadmaps/road-to-multi-package-coexistence.md",
+  "original_ask": "Sanity-check the multi-package-coexistence roadmap before we execute 20 structural refactor steps inside PR #121. Find weaknesses, missing acceptance, ordering risks, sequencing dead-ends.",
+  "members": [
+    "anthropic/claude-opus-4-1",
+    "openai/o1"
+  ],
+  "rounds": 3,
+  "cost_usd_estimated": 0.24138,
+  "cost_usd_actual": 0.29235,
+  "responses": [
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4-1",
+      "text": "## Critical Review of Multi-Package Coexistence Roadmap\n\n### Agreement with Prior Reviewers\n\n**Strongly agree with Reviewer A on:**\n\n1. **P1.5 \u2192 P2.2 coupling** is indeed a critical vulnerability. Installing with pre-P1.5 code creates manifests without `merged_keys[]`, then P2.2's uninstall will fail to preserve foreign keys. The roadmap needs explicit version guards or a migration step.\n\n2. **P3.1 breaking P1.4's tests** - While the reviewer correctly notes temp directories avoid conflicts on first run, the real issue is that P1.4's acceptance criteria don't specify behavior for re-installation. Once P3.1 lands, re-running the same install becomes a different operation (conflict detection vs overwrite).\n\n3. **Implementation underspecification** - \"collect the list of paths\" in P1.4 is dangerously vague. Without specifying the collection mechanism (decorator/return values/context manager), we can't reason about partial failure scenarios.\n\n**Agree with Reviewer B on:**\n\n1. **SHA256 timing race condition** - Recording SHA256 \"after write\" but before OS flush creates a window where the hash might not match the actual disk content. This needs atomic write-then-hash or explicit fsync.\n\n2. **P4 boundary definition gap** - \"foreign file under a deploy path\" is undefined. Without knowing which directories constitute \"deploy paths,\" the doctor command can't distinguish between legitimate project files and actual foreign deployments.\n\n### Disagreements with Prior Reviewers\n\n**Disagree with Reviewer B on:**\n\n1. **\"Symlink dereference breaks incremental updates\"** - The reviewer misunderstands the model. P1.4 records SHA256 of deployed content, not source content. When upstream changes, we *expect* the SHA256 to mismatch (that's drift detection working correctly). The roadmap's P2.3 explicitly handles this as \"modified\" with a re-install hint.\n\n2. **\"Phase 5 contradicts core design\"** - The selective frontmatter injection (only if already present) is intentional product design, not a contradiction. It preserves files that intentionally lack frontmatter while enhancing those that use it. This is a UX choice, not a technical flaw.\n\n### New Critical Issues\n\n**1. Atomic Write Assumption Throughout**\n\nThe roadmap assumes atomic writes everywhere (P1.3 mentions it once) but never specifies the mechanism. On Windows, atomic file replacement requires specific APIs. On network filesystems, atomicity guarantees vary. Without explicit implementation guidance (temp file + rename? write-through? fsync?), each phase might implement differently, creating corruption windows.\n\n**2. P2.1 Breaks During Partial Uninstall Failure**\n\nP2.1's orphan detection is `manifest_files - still_installed_tool_files`. But if an uninstall fails partway through (some files deleted, manifest not updated), the next prune will see those partially-deleted files as \"still owned\" and skip them. Need two-phase commit: mark tool as \"uninstalling\" in manifest, delete files, then remove from manifest.\n\n**3. JSON Pointer Edge Cases Unaddressed**\n\nP1.5/P2.2 use JSON pointers to track merged keys but don't handle:\n- Array indices that shift when other tools modify the array\n- Keys containing `/` or `~` that require escaping\n- Nested objects where parent and child are both tracked\n\nExample: Tool A writes `/skills/0`, Tool B writes `/skills/1`. Tool A uninstalls, removing index 0. Now Tool B's pointer is wrong.\n\n**4. P3.3 Has No Merge Strategy**\n\nFor JSON merge conflicts, the roadmap offers \"numbered options\" but doesn't specify what happens to the conflicting value. Does `--force` replace the entire key? Merge objects? Append to arrays? Without a merge strategy, users can't predict the outcome.\n\n**5. No Checkpoint/Recovery Mechanism**\n\nEvery phase modifies multiple files (deployed content + manifest) but has no checkpoint mechanism. If installation fails after writing 50% of files, there's no way to roll back or resume. The manifest shows a partially-installed state that neither install nor uninstall can handle cleanly.\n\n### Structural Sequencing Issues\n\n**The \"Single-PR scope\" decision is the root flaw.** Landing all phases in PR #121 means:\n\n1. No incremental validation",
+      "input_tokens": 5502,
+      "output_tokens": 1024,
+      "latency_ms": 43451,
+      "error": null,
+      "metadata": {}
+    },
+    {
+      "provider": "openai",
+      "model": "o1",
+      "text": "",
+      "input_tokens": 4772,
+      "output_tokens": 1024,
+      "latency_ms": 16711,
+      "error": null,
+      "metadata": {}
+    }
+  ]
+}

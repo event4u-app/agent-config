@@ -471,6 +471,24 @@ TESTS=(
 # --list: print test names (used by parallel runner). --single NAME: run one
 # test (used by parallel runner). --parallel [N]: dispatch all tests via
 # xargs -P, default jobs = nproc. No args: sequential (legacy behaviour).
+#
+# SHARD=N/M env var (optional): keep only the Nth slice of M (1-indexed)
+# before running. Applied before --list/--single/--parallel dispatch so
+# matrix-level sharding composes with within-job xargs parallelism.
+if [[ -n "${SHARD:-}" ]]; then
+    _shard_n="${SHARD%/*}"
+    _shard_m="${SHARD#*/}"
+    _shard_total="${#TESTS[@]}"
+    _filtered=()
+    for _i in "${!TESTS[@]}"; do
+        if (( _i % _shard_m == _shard_n - 1 )); then
+            _filtered+=("${TESTS[$_i]}")
+        fi
+    done
+    TESTS=("${_filtered[@]}")
+    echo "🧪  SHARD=$SHARD → running ${#TESTS[@]} of $_shard_total tests"
+fi
+
 if [[ "${1:-}" == "--list" ]]; then
     printf '%s\n' "${TESTS[@]}"
     exit 0

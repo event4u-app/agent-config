@@ -115,6 +115,14 @@ def test_lockfile_env_override(tmp_path: Path, monkeypatch) -> None:
 def isolated_lock(tmp_path, monkeypatch):
     target = tmp_path / "installed.lock"
     monkeypatch.setenv("AGENT_CONFIG_INSTALLED_LOCK", str(target))
+    # Redirect HOME so content deployment in `install_global` writes into
+    # `tmp_path` instead of the developer's real `~/.claude`, `~/.augment`,
+    # etc. `Path.home()` / `expanduser()` honour `$HOME` on POSIX and
+    # `%USERPROFILE%` on Windows — patch both so the fixture is portable.
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setenv("USERPROFILE", str(fake_home))
     install.QUIET = True
     yield target
     install.QUIET = False
@@ -164,6 +172,88 @@ def test_install_global_force_overrides_mismatch(isolated_lock: Path) -> None:
     # force still merges existing tools
     assert "claude-code" in data["tools"]
     assert "cursor" in data["tools"]
+
+
+# --- install.install_global: per-tool content deployment ---
+
+
+def test_install_global_deploys_claude_code_content(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    rc = _silent_install_global(["claude-code"])
+    assert rc == 0
+    home = tmp_path / "home"
+    # `.claude/rules/` and `.claude/skills/` must be populated from the
+    # package; symlinks in the source must be dereferenced into real files.
+    assert (home / ".claude" / "rules").is_dir()
+    rules_files = list((home / ".claude" / "rules").glob("*.md"))
+    assert rules_files, "expected at least one rule file in ~/.claude/rules/"
+    for rule in rules_files:
+        assert not rule.is_symlink(), f"{rule} should be a real file, not a symlink"
+    assert (home / ".claude" / "skills").is_dir()
+    skills = list((home / ".claude" / "skills").iterdir())
+    assert skills, "expected at least one skill in ~/.claude/skills/"
+
+
+def test_install_global_deploys_augment_content(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    rc = _silent_install_global(["augment"])
+    assert rc == 0
+    home = tmp_path / "home"
+    assert (home / ".augment" / "rules").is_dir()
+    assert list((home / ".augment" / "rules").glob("*.md"))
+
+
+def test_install_global_writes_claude_desktop_marker(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    rc = _silent_install_global(["claude-desktop"])
+    assert rc == 0
+    home = tmp_path / "home"
+    marker = home / "Library" / "Application Support" / "Claude" / "agent-config.md"
+    assert marker.is_file()
+    body = marker.read_text(encoding="utf-8")
+    assert "agent-config" in body
+    assert "ADR-007" in body
+
+
+def test_install_global_skips_existing_files_without_force(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    rc = _silent_install_global(["claude-code"])
+    assert rc == 0
+    home = tmp_path / "home"
+    sample = next((home / ".claude" / "rules").glob("*.md"))
+    sample.write_text("USER_OVERRIDE\n", encoding="utf-8")
+    rc = _silent_install_global(["claude-code"])
+    assert rc == 0
+    assert sample.read_text(encoding="utf-8") == "USER_OVERRIDE\n"
+
+
+def test_install_global_force_overwrites_existing_files(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    rc = _silent_install_global(["claude-code"])
+    assert rc == 0
+    home = tmp_path / "home"
+    sample = next((home / ".claude" / "rules").glob("*.md"))
+    sample.write_text("USER_OVERRIDE\n", encoding="utf-8")
+    rc = _silent_install_global(["claude-code"], force=True)
+    assert rc == 0
+    assert sample.read_text(encoding="utf-8") != "USER_OVERRIDE\n"
+
+
+def test_install_global_copilot_reports_hint(
+    isolated_lock: Path, tmp_path: Path
+) -> None:
+    # `copilot` has no user-scope convention; deploy must not error and
+    # must not create `~/.copilot/` content.
+    rc = _silent_install_global(["copilot"])
+    assert rc == 0
+    home = tmp_path / "home"
+    # No content directory should be populated.
+    assert not (home / ".copilot").exists() or not any((home / ".copilot").iterdir())
 
 
 # --- cmd_update._refresh_global_lockfile ---

@@ -26,17 +26,31 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 import re
 import shlex
+import shutil
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, Optional
+
+try:
+    from scripts._lib.json_pointers import build_merge_entries  # noqa: PLC0415
+except ImportError:  # pragma: no cover — alt sys.path layout
+    from _lib.json_pointers import build_merge_entries  # type: ignore[no-redef]  # noqa: PLC0415
 
 DEFAULT_PROFILE = "minimal"
 SUPPORTED_PROFILES = ("minimal", "balanced", "full")
 COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
+
+# Env-var equivalent of --force for CI / scripted installs (P3.4).
+# When set to "1" the install run treats every conflict as
+# force-overwrite; never enabled by default to keep destructive writes
+# explicit.
+ALLOW_OVERWRITE_ENV = "AGENT_CONFIG_ALLOW_OVERWRITE"
 
 SETTINGS_FILE = ".agent-settings.yml"
 LEGACY_SETTINGS_FILE = ".agent-settings"
@@ -128,6 +142,214 @@ def detect_package_type_for_project(project_root: Path, package_root: Path) -> s
     return detect_package_type(package_root)
 
 
+# --- Conflict detection (P3.1 / P3.3) ---
+
+class ConflictAbort(SystemExit):
+    """Raised when a conflict resolution chose 'abort'.
+
+    Inherits ``SystemExit`` so an unhandled abort terminates the
+    install with a non-zero exit code without an opaque traceback.
+    """
+
+    def __init__(self, message: str):
+        super().__init__(1)
+        self.message = message
+
+
+class ConflictPolicy:
+    """Per-install conflict resolution policy (P3.1).
+
+    Aggregates the inputs the resolver needs to decide whether to
+    overwrite a target that exists on disk:
+
+    * ``force``         — true when ``--force`` was passed OR the
+      ``AGENT_CONFIG_ALLOW_OVERWRITE=1`` env-var is set (P3.4).
+    * ``interactive``   — true when stdin AND stdout are TTYs; the
+      only context where the 3-option prompt is meaningful.
+    * ``known_paths``   — absolute path strings recorded as ours by
+      the project-scope manifest (``files[]`` entries). A target at a
+      known path is **not** a foreign collision — we own it and the
+      existing skip/force behaviour applies.
+    * ``known_pointers``— ``(file_label, json_pointer)`` pairs we
+      previously merged into shared JSON files (P3.3). A pointer in
+      this set is ours; one not in it that exists in the target is a
+      foreign merge collision.
+    """
+
+    __slots__ = ("force", "interactive", "known_paths", "known_pointers")
+
+    def __init__(
+        self,
+        *,
+        force: bool,
+        interactive: bool,
+        known_paths: set[str],
+        known_pointers: set[tuple[str, str]],
+    ) -> None:
+        self.force = force
+        self.interactive = interactive
+        self.known_paths = known_paths
+        self.known_pointers = known_pointers
+
+
+# Module-level singleton: configured once in main() (after --force +
+# env-var resolution), consulted by every writer. When ``None`` the
+# install runs in **legacy mode**: writers honor their local ``force``
+# flag and skip-otherwise, no foreign-pointer detection. Set only by
+# :func:`main` after loading the manifest so test callers that exercise
+# writers directly keep the pre-P3 contract.
+_CONFLICT_POLICY: Optional[ConflictPolicy] = None
+
+
+def _conflict_policy_active() -> bool:
+    return _CONFLICT_POLICY is not None
+
+
+def _get_conflict_policy() -> ConflictPolicy:
+    if _CONFLICT_POLICY is None:
+        # Legacy-mode fallback: no manifest loaded, no foreign detection
+        # surface. ``force=False`` here so the local ``force_hint`` from
+        # the caller is the only signal; ``known_*`` stay empty.
+        return ConflictPolicy(
+            force=False, interactive=False,
+            known_paths=set(), known_pointers=set(),
+        )
+    return _CONFLICT_POLICY
+
+
+def _set_conflict_policy(policy: Optional[ConflictPolicy]) -> None:
+    global _CONFLICT_POLICY
+    _CONFLICT_POLICY = policy
+
+
+def _allow_overwrite_env() -> bool:
+    return os.environ.get(ALLOW_OVERWRITE_ENV) == "1"
+
+
+def _is_interactive() -> bool:
+    try:
+        return sys.stdin.isatty() and sys.stdout.isatty()
+    except (AttributeError, ValueError):  # pragma: no cover — closed streams
+        return False
+
+
+def _load_conflict_policy(project_root: Path, force: bool) -> ConflictPolicy:
+    """Build a :class:`ConflictPolicy` from the on-disk manifest.
+
+    Reads ``agents/installed-tools.lock`` once and folds every recorded
+    ``files[].path`` into ``known_paths`` and every
+    ``merged_keys[].{file, json_pointer}`` into ``known_pointers``. The
+    manifest is the only source of truth for "this is ours"; if it's
+    missing both sets stay empty and every existing target is treated
+    as foreign.
+    """
+    known_paths: set[str] = set()
+    known_pointers: set[tuple[str, str]] = set()
+    try:
+        tools_mod = _load_installed_tools_module()
+        target = tools_mod.manifest_path(project_root)
+        existing = tools_mod.read_manifest(target) or {}
+        for tool in existing.get("tools", []) or []:
+            for entry in tool.get("files", []) or []:
+                path_val = entry.get("path")
+                if isinstance(path_val, str):
+                    known_paths.add(path_val)
+            for entry in tool.get("merged_keys", []) or []:
+                file_label = entry.get("file")
+                pointer = entry.get("json_pointer")
+                if isinstance(file_label, str) and isinstance(pointer, str):
+                    known_pointers.add((file_label, pointer))
+    except Exception:  # pragma: no cover — fail-open on corrupt manifest
+        # Don't block the install if the manifest is malformed; just
+        # report nothing as ours so foreign-file detection stays strict.
+        pass
+    return ConflictPolicy(
+        force=force or _allow_overwrite_env(),
+        interactive=_is_interactive(),
+        known_paths=known_paths,
+        known_pointers=known_pointers,
+    )
+
+
+def prompt_file_conflict_choice(path: Path) -> str:
+    """3-option resolution prompt for a foreign file at ``path``.
+
+    Returns ``"force"`` / ``"skip"`` / ``"abort"``. Mirrors
+    :func:`prompt_collision_choice` (loops on invalid input, aborts on
+    EOF or 3 invalid replies). Only called when the policy is
+    interactive AND ``--force`` was not specified.
+    """
+    print()
+    warn(f"Foreign file at {path}")
+    info("This path exists but is not recorded as ours in the manifest.")
+    info("Choose how to handle the conflict:")
+    print("  1) Force   — overwrite the file with our content")
+    print("  2) Skip    — leave the file untouched, continue install")
+    print("  3) Abort   — stop the install, exit non-zero")
+    print()
+    attempts = 0
+    while attempts < 3:
+        try:
+            reply = _read_line("Choose [1/2/3]: ")
+        except EOFError:
+            fail(f"File-conflict prompt aborted (EOF on stdin) for {path}")
+        if reply in ("1", "force", "f"):
+            return "force"
+        if reply in ("2", "skip", "s"):
+            return "skip"
+        if reply in ("3", "abort", "a"):
+            return "abort"
+        attempts += 1
+        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
+    fail(f"File-conflict prompt aborted (3 invalid replies) for {path}")
+    return "abort"  # unreachable
+
+
+def _resolve_file_conflict(target: Path, *, force_hint: bool) -> str:
+    """Decide what to do when ``target`` already exists on disk.
+
+    Returns ``"write"`` (proceed with overwrite), ``"skip"`` (leave the
+    target alone), or raises :class:`ConflictAbort`. ``force_hint`` is
+    the caller's local ``force`` flag — typically the install-level
+    ``--force``; we OR it with the global policy's ``force`` to honor
+    ``AGENT_CONFIG_ALLOW_OVERWRITE=1`` in callers that have not yet
+    been refactored to read the policy directly.
+
+    Decision matrix:
+
+    * target does not exist          → ``"write"``
+    * target IS in ``known_paths``   → ``"write"`` if force else ``"skip"``
+      (legacy behaviour — we own it, skip silently without --force)
+    * target NOT in ``known_paths`` (foreign):
+        * force                       → ``"write"`` (overwrite)
+        * interactive                 → prompt → translate to write/skip/abort
+        * non-interactive             → raise ``ConflictAbort``
+    """
+    if not target.exists():
+        return "write"
+    if not _conflict_policy_active():
+        # Legacy mode (no manifest loaded): preserve the pre-P3 contract
+        # — force overwrites, otherwise skip. No prompt, no abort.
+        return "write" if force_hint else "skip"
+    policy = _get_conflict_policy()
+    effective_force = force_hint or policy.force
+    if str(target) in policy.known_paths:
+        return "write" if effective_force else "skip"
+    if effective_force:
+        return "write"
+    if policy.interactive:
+        choice = prompt_file_conflict_choice(target)
+        if choice == "force":
+            return "write"
+        if choice == "skip":
+            return "skip"
+        raise ConflictAbort(f"User aborted on foreign file at {target}")
+    raise ConflictAbort(
+        f"Foreign file at {target}: refusing to overwrite. "
+        f"Re-run with --force or set {ALLOW_OVERWRITE_ENV}=1 to allow."
+    )
+
+
 # --- File utilities ---
 
 def ensure_directory(path: Path) -> None:
@@ -167,25 +389,177 @@ def deep_merge(base: dict, overlay: dict) -> dict:
     return result
 
 
-def merge_json_file(path: Path, new_data: dict, force: bool, label: str) -> None:
+def _pointer_target_exists(doc: dict, pointer: str) -> bool:
+    """Return True when ``pointer`` resolves to an existing key in ``doc``.
+
+    Walks the RFC-6901 segments without descending into lists (per the
+    array-index ban in :mod:`scripts._lib.json_pointers`). Missing
+    intermediate segments short-circuit to False.
+    """
+    if not pointer.startswith("/"):
+        return False
+    cursor: Any = doc
+    segments = pointer.split("/")[1:]
+    segments = [s.replace("~1", "/").replace("~0", "~") for s in segments]
+    for seg in segments[:-1]:
+        if not isinstance(cursor, dict) or seg not in cursor:
+            return False
+        cursor = cursor[seg]
+    if not isinstance(cursor, dict):
+        return False
+    return segments[-1] in cursor
+
+
+def _detect_foreign_pointers(
+    existing: dict,
+    overlay_entries: list[dict[str, Any]],
+    label: str,
+    policy: ConflictPolicy,
+) -> list[str]:
+    """Return overlay pointers that exist in ``existing`` but aren't ours.
+
+    P3.3 — pointer-level foreign-merge detection. A pointer is foreign
+    when it would overwrite a value already on disk that the manifest
+    does NOT record as ours (``(label, pointer) not in known_pointers``).
+    Returns the list of foreign pointer strings (sorted, deduped) for
+    use in the conflict-resolution prompt. In legacy mode (no manifest
+    loaded) the function returns an empty list so callers fall back to
+    the pre-P3 update flow.
+    """
+    if not _conflict_policy_active():
+        return []
+    foreign: list[str] = []
+    seen: set[str] = set()
+    for entry in overlay_entries:
+        pointer = entry.get("json_pointer")
+        if not isinstance(pointer, str) or pointer in seen:
+            continue
+        seen.add(pointer)
+        if not _pointer_target_exists(existing, pointer):
+            continue
+        if (label, pointer) in policy.known_pointers:
+            continue
+        foreign.append(pointer)
+    foreign.sort()
+    return foreign
+
+
+def prompt_json_conflict_choice(path: Path, foreign: list[str]) -> str:
+    """3-option resolution prompt for foreign JSON pointers at ``path``.
+
+    Returns ``"force"`` / ``"skip"`` / ``"abort"``. Shows the foreign
+    pointer list so the user knows what will be overwritten.
+    """
+    print()
+    warn(f"Foreign JSON keys at {path}")
+    info("The following pointers exist in the file but are not recorded as ours:")
+    for pointer in foreign[:10]:
+        print(f"      {pointer}")
+    if len(foreign) > 10:
+        print(f"      ... and {len(foreign) - 10} more")
+    info("Choose how to handle the conflict:")
+    print("  1) Force   — overwrite the listed pointers with our values")
+    print("  2) Skip    — leave the file untouched, continue install")
+    print("  3) Abort   — stop the install, exit non-zero")
+    print()
+    attempts = 0
+    while attempts < 3:
+        try:
+            reply = _read_line("Choose [1/2/3]: ")
+        except EOFError:
+            fail(f"JSON-conflict prompt aborted (EOF on stdin) for {path}")
+        if reply in ("1", "force", "f"):
+            return "force"
+        if reply in ("2", "skip", "s"):
+            return "skip"
+        if reply in ("3", "abort", "a"):
+            return "abort"
+        attempts += 1
+        warn(f"Invalid choice '{reply}'. Enter 1, 2, or 3.")
+    fail(f"JSON-conflict prompt aborted (3 invalid replies) for {path}")
+    return "abort"  # unreachable
+
+
+def _resolve_json_conflict(
+    path: Path, label: str, foreign: list[str], *, force_hint: bool,
+) -> str:
+    """Decide what to do when ``label`` has foreign pointers (P3.3).
+
+    Returns ``"write"`` or ``"skip"``; raises :class:`ConflictAbort`.
+    Same resolution matrix as :func:`_resolve_file_conflict` but with a
+    pointer-aware prompt.
+    """
+    policy = _get_conflict_policy()
+    effective_force = force_hint or policy.force
+    if effective_force:
+        return "write"
+    if policy.interactive:
+        choice = prompt_json_conflict_choice(path, foreign)
+        if choice == "force":
+            return "write"
+        if choice == "skip":
+            return "skip"
+        raise ConflictAbort(f"User aborted on foreign JSON pointers at {path}")
+    raise ConflictAbort(
+        f"Foreign JSON pointers at {path}: refusing to overwrite "
+        f"({len(foreign)} key(s)). Re-run with --force or set "
+        f"{ALLOW_OVERWRITE_ENV}=1 to allow."
+    )
+
+
+def merge_json_file(
+    path: Path, new_data: dict, force: bool, label: str,
+) -> list[dict[str, Any]]:
+    """Merge ``new_data`` into ``path``; return v2 ``merged_keys[]`` entries.
+
+    P1.5 + P3.2 + P3.3 of road-to-multi-package-coexistence: every JSON
+    pointer the install writes lands in the manifest so uninstall can
+    subtract it cleanly. The merge uses leaf-level pointer-replace
+    semantics (``deep_merge`` recurses into dicts, replaces at leaves)
+    so sibling keys owned by neighbour packages survive. Before any
+    write that would overwrite a pre-existing pointer NOT recorded as
+    ours, the conflict policy is consulted (force / interactive prompt
+    / non-interactive abort).
+
+    Returns the v2 entries on a successful create / update; returns
+    ``[]`` when the file was already in sync or the update was
+    suppressed without ``--force`` / on a skip choice.
+    """
+    new_entries = build_merge_entries(label, new_data)
+
     if not path.exists():
         write_json_file(path, new_data)
         success(f"{label} created")
-        return
+        return new_entries
 
     existing = read_json_file(path)
     merged = deep_merge(existing, new_data)
 
     if merged == existing:
         skip(f"{label} already configured")
-        return
+        return new_entries
 
-    if not force:
+    policy = _get_conflict_policy()
+    foreign = _detect_foreign_pointers(existing, new_entries, label, policy)
+
+    if foreign:
+        # Foreign-pointer collision: ask the policy. On "write" we fall
+        # through and let deep_merge produce the leaf-level pointer-
+        # replace; on "skip" we bail without changing the file.
+        decision = _resolve_json_conflict(path, label, foreign, force_hint=force)
+        if decision == "skip":
+            skip(f"{label} has foreign keys, skipped")
+            return []
+    elif not (force or policy.force):
+        # No foreign collision but file needs an update — preserve the
+        # legacy "needs --force" contract so existing test expectations
+        # and the project-bridge flow stay intact.
         skip(f"{label} exists, needs update (use --force)")
-        return
+        return []
 
     write_json_file(path, merged)
     success(f"{label} updated")
+    return new_entries
 
 
 # --- Legacy settings migration ---
@@ -442,12 +816,16 @@ def ensure_vscode_bridge(project_root: Path, package_type: str, force: bool) -> 
     plugin_path = plugin_paths.get(package_type, "./plugin/agent-config")
 
     bridge = {"chat.pluginLocations": {plugin_path: True}}
+    # Substrate bridge — not tracked in the manifest, so merged_keys
+    # are computed but discarded.
     merge_json_file(project_root / ".vscode" / "settings.json", bridge, force, ".vscode/settings.json")
 
 
-def ensure_augment_bridge(project_root: Path, force: bool) -> None:
+def ensure_augment_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     bridge = {"enabledPlugins": {"agent-config@event4u": True}}
-    merge_json_file(project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json")
+    return merge_json_file(
+        project_root / ".augment" / "settings.json", bridge, force, ".augment/settings.json",
+    )
 
 
 # Augment lifecycle hooks live at user scope (~/.augment/settings.json) per
@@ -520,7 +898,7 @@ def _remove_legacy_augment_trampolines() -> None:
             pass
 
 
-def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
+def ensure_augment_user_hooks(package_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy the Augment universal-dispatcher trampoline at user scope.
 
     Phase 7.3 (hook-architecture-v1.md): one trampoline replaces the
@@ -543,7 +921,7 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
     """
     dst = _deploy_augment_trampoline(package_root, AUGMENT_DISPATCHER_TRAMPOLINE, force)
     if dst is None:
-        return
+        return []
 
     _remove_legacy_augment_trampolines()
 
@@ -556,7 +934,7 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> None:
         per_event.setdefault(native, []).append(entry)
 
     settings_patch: dict = {"hooks": per_event}
-    merge_json_file(
+    return merge_json_file(
         AUGMENT_USER_DIR / "settings.json",
         settings_patch,
         force,
@@ -597,7 +975,7 @@ def _claude_dispatch_block(ac_event: str, native: str) -> dict:
     }
 
 
-def ensure_claude_bridge(project_root: Path, force: bool) -> None:
+def ensure_claude_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy .claude/settings.json with plugin enablement and the Phase 7
     universal dispatcher hooks.
 
@@ -619,7 +997,9 @@ def ensure_claude_bridge(project_root: Path, force: bool) -> None:
         "enabledPlugins": {"agent-conf@event4u": True},
         "hooks": per_event,
     }
-    merge_json_file(project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json")
+    return merge_json_file(
+        project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json",
+    )
 
 
 # Cursor lifecycle events → agent-config event vocabulary.
@@ -651,7 +1031,7 @@ def _cursor_dispatch_command(ac_event: str, native: str) -> str:
     )
 
 
-def ensure_cursor_bridge(project_root: Path, force: bool) -> None:
+def ensure_cursor_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy `.cursor/hooks.json` (project scope) with the Phase 7
     universal dispatcher hooks.
 
@@ -669,7 +1049,9 @@ def ensure_cursor_bridge(project_root: Path, force: bool) -> None:
         )
 
     bridge = {"version": 1, "hooks": hooks}
-    merge_json_file(project_root / ".cursor" / "hooks.json", bridge, force, ".cursor/hooks.json")
+    return merge_json_file(
+        project_root / ".cursor" / "hooks.json", bridge, force, ".cursor/hooks.json",
+    )
 
 
 # Cursor user-scope hooks fire across every project the developer opens
@@ -682,7 +1064,7 @@ CURSOR_USER_HOOKS_DIR = CURSOR_USER_DIR / "hooks"
 CURSOR_DISPATCHER_TRAMPOLINE = "cursor-dispatcher.sh"
 
 
-def ensure_cursor_user_hooks(package_root: Path, force: bool) -> None:
+def ensure_cursor_user_hooks(package_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy the Cursor universal-dispatcher trampoline at user scope.
 
     Phase 7.5 (hook-architecture-v1.md): mirrors ensure_augment_user_hooks
@@ -697,7 +1079,7 @@ def ensure_cursor_user_hooks(package_root: Path, force: bool) -> None:
     src = package_root / "scripts" / "hooks" / CURSOR_DISPATCHER_TRAMPOLINE
     if not src.exists():
         skip(f"cursor trampoline missing in package: {src}")
-        return
+        return []
 
     CURSOR_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
     dst = CURSOR_USER_HOOKS_DIR / CURSOR_DISPATCHER_TRAMPOLINE
@@ -716,7 +1098,7 @@ def ensure_cursor_user_hooks(package_root: Path, force: bool) -> None:
         )
 
     settings_patch: dict = {"version": 1, "hooks": hooks}
-    merge_json_file(
+    return merge_json_file(
         CURSOR_USER_DIR / "hooks.json",
         settings_patch,
         force,
@@ -882,7 +1264,7 @@ def _windsurf_dispatch_command(ac_event: str, native: str) -> str:
     )
 
 
-def ensure_windsurf_bridge(project_root: Path, force: bool) -> None:
+def ensure_windsurf_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy `.windsurf/hooks.json` (project scope) with the Phase 7
     universal dispatcher hooks.
 
@@ -902,7 +1284,7 @@ def ensure_windsurf_bridge(project_root: Path, force: bool) -> None:
         })
 
     bridge = {"hooks": hooks}
-    merge_json_file(
+    return merge_json_file(
         project_root / ".windsurf" / "hooks.json",
         bridge,
         force,
@@ -921,7 +1303,7 @@ WINDSURF_USER_HOOKS_DIR = WINDSURF_USER_DIR / "hooks"
 WINDSURF_DISPATCHER_TRAMPOLINE = "windsurf-dispatcher.sh"
 
 
-def ensure_windsurf_user_hooks(package_root: Path, force: bool) -> None:
+def ensure_windsurf_user_hooks(package_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy the Windsurf universal-dispatcher trampoline at user scope.
 
     Phase 7.7 (hook-architecture-v1.md): mirrors ensure_cursor_user_hooks
@@ -936,7 +1318,7 @@ def ensure_windsurf_user_hooks(package_root: Path, force: bool) -> None:
     src = package_root / "scripts" / "hooks" / WINDSURF_DISPATCHER_TRAMPOLINE
     if not src.exists():
         skip(f"windsurf trampoline missing in package: {src}")
-        return
+        return []
 
     WINDSURF_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
     dst = WINDSURF_USER_HOOKS_DIR / WINDSURF_DISPATCHER_TRAMPOLINE
@@ -956,7 +1338,7 @@ def ensure_windsurf_user_hooks(package_root: Path, force: bool) -> None:
         })
 
     settings_patch: dict = {"hooks": hooks}
-    merge_json_file(
+    return merge_json_file(
         WINDSURF_USER_DIR / "hooks.json",
         settings_patch,
         force,
@@ -1014,7 +1396,7 @@ def _gemini_hooks_dict(command_factory) -> dict[str, list]:
     return out
 
 
-def ensure_gemini_bridge(project_root: Path, force: bool) -> None:
+def ensure_gemini_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy `.gemini/settings.json` (project scope) with the Phase 7
     universal dispatcher hooks.
 
@@ -1025,7 +1407,7 @@ def ensure_gemini_bridge(project_root: Path, force: bool) -> None:
     rather than appending duplicates.
     """
     bridge = {"hooks": _gemini_hooks_dict(_gemini_dispatch_command)}
-    merge_json_file(
+    return merge_json_file(
         project_root / ".gemini" / "settings.json",
         bridge,
         force,
@@ -1043,7 +1425,7 @@ GEMINI_USER_HOOKS_DIR = GEMINI_USER_DIR / "hooks"
 GEMINI_DISPATCHER_TRAMPOLINE = "gemini-dispatcher.sh"
 
 
-def ensure_gemini_user_hooks(package_root: Path, force: bool) -> None:
+def ensure_gemini_user_hooks(package_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy the Gemini universal-dispatcher trampoline at user scope.
 
     Phase 7.8 (hook-architecture-v1.md): mirrors ensure_windsurf_user_hooks
@@ -1058,7 +1440,7 @@ def ensure_gemini_user_hooks(package_root: Path, force: bool) -> None:
     src = package_root / "scripts" / "hooks" / GEMINI_DISPATCHER_TRAMPOLINE
     if not src.exists():
         skip(f"gemini trampoline missing in package: {src}")
-        return
+        return []
 
     GEMINI_USER_HOOKS_DIR.mkdir(parents=True, exist_ok=True)
     dst = GEMINI_USER_HOOKS_DIR / GEMINI_DISPATCHER_TRAMPOLINE
@@ -1075,7 +1457,7 @@ def ensure_gemini_user_hooks(package_root: Path, force: bool) -> None:
             lambda ac_event, native: f"{dst} {ac_event} {native}",
         ),
     }
-    merge_json_file(
+    return merge_json_file(
         GEMINI_USER_DIR / "settings.json",
         settings_patch,
         force,
@@ -1119,6 +1501,19 @@ This file marks the project as an `event4u/agent-config` consumer.
 Roo Code reads `.roo/rules/*.md` as system-level instructions. The
 canonical rule and skill source lives under `.augment/` (Augment
 portability mirror — see `AGENTS.md` for orientation).
+
+## How to use
+
+- These rules load automatically on every Roo Code session — no
+  manual action required.
+- Switch Roo Code modes (Architect / Code / Ask / Debug / Custom)
+  via the mode switcher to invoke different cognition profiles;
+  every mode still sees these rules.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Roo Code does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/roocode.md` for the full activation guide.
 
 Run `./agent-config --help` for available commands.
 """
@@ -1296,6 +1691,19 @@ Kilo Code auto-discovers `.kilocode/rules/*.md` as system-level rules
 per session. The canonical rule and skill source lives under
 `.augment/` (Augment portability mirror — see `AGENTS.md` for
 orientation).
+
+## How to use
+
+- These rules load automatically on every Kilo Code session — no
+  manual action required.
+- Switch Kilo Code modes (Architect / Code / Ask / Debug /
+  Orchestrator) via the mode switcher to invoke different
+  cognition profiles; every mode still sees these rules.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Kilo Code does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/kilocode.md` for the full activation guide.
 """
 
 
@@ -1406,6 +1814,20 @@ This file marks the project as an `event4u/agent-config` consumer.
 Kiro auto-discovers `.kiro/steering/*.md` as steering documents per
 session. The canonical rule and skill source lives under `.augment/`
 (Augment portability mirror — see `AGENTS.md` for orientation).
+
+## How to use
+
+- Steering documents load automatically on every Kiro session — no
+  manual action required.
+- For structured, plan-first work, use Kiro's **Spec** workflow
+  (the agent produces a spec → tasks → implementation under your
+  review). For free-form work, use **Vibe**. Both honor these
+  steering documents.
+- Slash commands and skills live under `.augment/commands/` and
+  `.augment/skills/`. Kiro does not register them natively —
+  invoke them by name in chat (e.g. *"run the create-pr command"*).
+
+See `docs/setup/per-ide/kiro.md` for the full activation guide.
 """
 
 
@@ -1556,6 +1978,16 @@ USER_SCOPE_PATHS = {
     "zed":            "~/.config/zed/",
     "jetbrains":      "~/.config/JetBrains/",
     "kiro":           "~/.kiro/",
+    # Phase 2.4 expansion — anchors lifted from
+    # nextlevelbuilder/ui-ux-pro-max-skill (cli/assets/templates/platforms/*.json)
+    # so `--global` covers every tool that ships a markdown-skills convention.
+    "qoder":          "~/.qoder/",
+    "opencode":       "~/.opencode/",
+    "trae":           "~/.trae/",
+    "antigravity":    "~/.agents/",
+    "codebuddy":      "~/.codebuddy/",
+    "droid":          "~/.factory/",
+    "warp":           "~/.warp/",
 }
 
 
@@ -1583,12 +2015,24 @@ SCOPE_SUPPORT = {
     "augment":        "both",
     "aider":          "both",
     "codex":          "both",
-    "roocode":        "project",
+    # Phase 2.4: roocode / kilocode lifted to "both" — global deploys
+    # write to `~/.roo/skills/` and `~/.kilocode/skills/` matching the
+    # nextlevelbuilder/ui-ux-pro-max-skill anchors.
+    "roocode":        "both",
     "continue":       "both",
-    "kilocode":       "project",
+    "kilocode":       "both",
     "zed":            "both",
     "jetbrains":      "global",
     "kiro":           "both",
+    # Phase 2.4 expansion — global-only for new anchors; project bridges
+    # are not yet implemented for these IDs.
+    "qoder":          "global",
+    "opencode":       "global",
+    "trae":           "global",
+    "antigravity":    "global",
+    "codebuddy":      "global",
+    "droid":          "global",
+    "warp":           "global",
 }
 
 
@@ -1616,6 +2060,103 @@ PROJECT_BRIDGE_MARKERS = {
     "jetbrains":      ".jetbrains/agent-config.md",
     "kiro":           ".kiro/steering/agent-config.md",
 }
+
+
+# Per-tool content deployment plan for `--global` installs. Each entry is a
+# list of ``(package_src_relative, dest_subpath)`` tuples. ``package_src_relative``
+# resolves against the agent-config package root; ``dest_subpath`` is appended
+# to ``USER_SCOPE_PATHS[tool_id]`` (expanded). Symlinks in the source are
+# dereferenced so the user-scope copy stays valid after npx cache eviction
+# (Council Round 3 Q1 rejected cross-scope symlinks).
+#
+# Tools absent from this map have no deployable content yet in global scope:
+# - ``copilot`` has no user-scope convention (rules live in
+#   ``.github/copilot-instructions.md`` per project); users export per-project
+#   via ``agent-config export --tool=copilot``.
+# - ``aider`` config is a single YAML file (``~/.aider.conf.yml``), not a
+#   directory; --global prints a hint rather than synthesizing a file.
+# - ``zed`` / ``jetbrains`` have no markdown-skills convention; --global
+#   prints a hint.
+# - ``claude-desktop`` is a marker-only deployment, handled in
+#   ``_write_claude_desktop_marker`` rather than via this map.
+#
+# Tools that follow the markdown-skills convention (anchors lifted from
+# nextlevelbuilder/ui-ux-pro-max-skill) deploy ``.claude/skills`` —
+# the universal Anthropic-shaped skill bundle — into ``<anchor>/skills/``
+# (or ``<anchor>/steering/`` for kiro). ``.claude/rules`` is also copied
+# where the destination is a true rules-aware tool root.
+_CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
+    (".claude/rules",    "rules"),
+    (".claude/skills",   "skills"),
+    (".claude/personas", "personas"),
+]
+GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
+    "claude-code": _CLAUDE_SKILL_BUNDLE,
+    "augment": [
+        (".augment/rules",     "rules"),
+        (".augment/skills",    "skills"),
+        (".augment/commands",  "commands"),
+        (".augment/contexts",  "contexts"),
+        (".augment/personas",  "personas"),
+        (".augment/templates", "templates"),
+    ],
+    "cursor": [
+        (".cursor/rules",    "rules"),
+        (".cursor/commands", "commands"),
+        (".cursor/personas", "personas"),
+    ],
+    "windsurf": [
+        (".windsurf/rules",     "rules"),
+        (".windsurf/workflows", "workflows"),
+    ],
+    "cline": [
+        (".clinerules", ""),
+    ],
+    # Markdown-skills tools — mirror the universal skill bundle into the
+    # tool-specific anchor. Subpath matches the reference repo's
+    # platform JSON `folderStructure.skillPath` (with the skill-name
+    # tail stripped — we deploy the entire bundle, not a single skill).
+    "gemini-cli":  _CLAUDE_SKILL_BUNDLE,
+    "codex":       _CLAUDE_SKILL_BUNDLE,
+    "continue":    _CLAUDE_SKILL_BUNDLE,
+    "roocode":     _CLAUDE_SKILL_BUNDLE,
+    "kilocode":    _CLAUDE_SKILL_BUNDLE,
+    "qoder":       _CLAUDE_SKILL_BUNDLE,
+    "opencode":    _CLAUDE_SKILL_BUNDLE,
+    "trae":        _CLAUDE_SKILL_BUNDLE,
+    "antigravity": _CLAUDE_SKILL_BUNDLE,
+    "codebuddy":   _CLAUDE_SKILL_BUNDLE,
+    "droid":       _CLAUDE_SKILL_BUNDLE,
+    "warp":        _CLAUDE_SKILL_BUNDLE,
+    # Kiro reads from `steering/` not `skills/` (per
+    # platforms/kiro.json#folderStructure.skillPath).
+    "kiro": [
+        (".claude/rules",    "rules"),
+        (".claude/skills",   "steering"),
+        (".claude/personas", "personas"),
+    ],
+}
+
+
+# Marker body written to the Claude Desktop user-scope directory. Claude
+# Desktop has no rules/skills filesystem convention; the marker advertises
+# the agent-config install for downstream tooling and gives users a stable
+# pointer to the lockfile.
+_CLAUDE_DESKTOP_MARKER_TEMPLATE = """\
+# agent-config — Claude Desktop marker
+
+Installed by `@event4u/agent-config` (user scope, ADR-007).
+
+- Lockfile: `{lockfile}`
+- Anchor:   `{anchor}`
+
+Claude Desktop has no native rules / skills filesystem convention; this
+file is informational. Rules and skills for AI coding tools are deployed
+to their respective user-scope directories (`~/.claude/`, `~/.augment/`,
+`~/.cursor/`, `~/.codeium/windsurf/`, `~/Documents/Cline/Rules/`).
+
+To remove this marker, delete this file.
+"""
 
 
 def _bridge_marker(tool_id: str, scope: str) -> str:
@@ -1925,11 +2466,98 @@ def _load_installed_tools_module():
     return installed_tools
 
 
+def _sha256_of_file(path: Path) -> Optional[str]:
+    """Return the hex SHA-256 of ``path`` content, or ``None`` if unreadable.
+
+    Used by the v2 manifest (P1.4) to record content hashes for
+    ``deployed`` and ``marker`` files so drift can be detected later.
+    Bridge files intentionally pass ``None`` (their content is a
+    pointer, not committed bytes).
+    """
+    try:
+        data = path.read_bytes()
+    except OSError:
+        return None
+    return hashlib.sha256(data).hexdigest()
+
+
+def _file_entry(path: Path, kind: str, *, hash_content: bool) -> dict[str, Any]:
+    """Build a v2 ``files[]`` entry from an absolute path.
+
+    ``hash_content`` toggles SHA-256 computation; bridges pass ``False``
+    (sha256 stays ``None``), deployed / marker files pass ``True``.
+    The manifest is path-only at the wire level — we serialise the
+    absolute path because user-scope files are not under ``project_root``.
+    """
+    return {
+        "path": str(path),
+        "kind": kind,
+        "sha256": _sha256_of_file(path) if hash_content else None,
+    }
+
+
+def _files_by_tool_from_deploy(
+    deploy_results: dict[str, tuple[int, int, str, list[Path]]],
+    project_root: Path,
+) -> dict[str, list[dict[str, Any]]]:
+    """Translate ``_deploy_global_content`` output into v2 manifest entries.
+
+    Returns ``{tool_id: [files[]]}``. ``status=deployed`` paths get
+    ``kind=deployed``; ``status=marker`` paths get ``kind=marker``.
+    ``hint`` / ``unsupported`` tools produce no entries (nothing was
+    written). Empty path lists are emitted as empty lists so the
+    inventory replaces rather than preserves a stale prior set.
+    """
+    out: dict[str, list[dict[str, Any]]] = {}
+    for tool_id, (_, _, status, paths) in deploy_results.items():
+        if status == "deployed":
+            out[tool_id] = [
+                _file_entry(p, "deployed", hash_content=True) for p in paths
+            ]
+        elif status == "marker":
+            out[tool_id] = [
+                _file_entry(p, "marker", hash_content=True) for p in paths
+            ]
+        else:
+            # No files written — record empty list so a re-install with
+            # a smaller set actually shrinks the recorded inventory.
+            out[tool_id] = []
+    return out
+
+
+def _files_by_tool_from_bridges(
+    tools: set[str],
+    project_root: Path,
+    scope: str,
+) -> dict[str, list[dict[str, Any]]]:
+    """Build v2 ``files[]`` entries from project-scope bridge markers.
+
+    Each project-scope tool contributes a single ``kind=bridge`` entry
+    pointing at its marker file. Bridges are pointers (not content we
+    own bytes-for-bytes), so ``sha256`` stays ``None`` per the schema.
+    """
+    out: dict[str, list[dict[str, Any]]] = {}
+    for tool_id in sorted(tools):
+        marker = _bridge_marker(tool_id, scope)
+        if not marker:
+            continue
+        marker_path = Path(marker)
+        if not marker_path.is_absolute():
+            marker_path = project_root / marker_path
+        out[tool_id] = [
+            _file_entry(marker_path, "bridge", hash_content=False),
+        ]
+    return out
+
+
 def _update_installed_tools_manifest(
     project_root: Path,
     tools: set[str],
     scope: str,
     force: bool,
+    *,
+    files_by_tool: Optional[dict[str, list[dict[str, Any]]]] = None,
+    merged_keys_by_tool: Optional[dict[str, list[dict[str, Any]]]] = None,
 ) -> int:
     """Append / refresh project-scope manifest entries (ADR-008 Phase 3.2).
 
@@ -1938,6 +2566,14 @@ def _update_installed_tools_manifest(
     this project expects, separate from ``.agent-project-settings.yml``
     (behaviour). Idempotent on (name, scope) match; refuses scope changes
     without ``--force`` per ADR-008 § Lifecycle.
+
+    ``files_by_tool`` (P1.4) is the per-tool inventory of paths the
+    install just wrote. When omitted the manifest preserves any prior
+    ``files[]`` on idempotent re-installs and emits none on first write.
+
+    ``merged_keys_by_tool`` (P1.5) is the per-tool inventory of JSON
+    pointers the install merged into shared files (e.g. ``.cursor/hooks.json``).
+    Same idempotency contract as ``files_by_tool``.
 
     Returns 0 on success, 1 on refusal (scope mismatch without ``--force``).
     """
@@ -1954,6 +2590,10 @@ def _update_installed_tools_manifest(
         if not marker:
             # Substrate (vscode) or unknown — not tracked in the manifest.
             continue
+        files = files_by_tool.get(tool_id) if files_by_tool else None
+        merged_keys = (
+            merged_keys_by_tool.get(tool_id) if merged_keys_by_tool else None
+        )
         try:
             entries = tools_mod.upsert_tool(
                 entries,
@@ -1961,6 +2601,8 @@ def _update_installed_tools_manifest(
                 scope=scope,
                 bridge_marker=marker,
                 force=force,
+                files=files,
+                merged_keys=merged_keys,
             )
         except tools_mod.ScopeMismatchError as exc:
             if not QUIET:
@@ -1975,6 +2617,250 @@ def _update_installed_tools_manifest(
     return 0
 
 
+# --- Global content deployment (ADR-007 user-scope file writes) ---
+
+
+def _resolve_package_root_for_global() -> Path:
+    """Locate the agent-config package root for global content deployment.
+
+    Resolves relative to ``scripts/install.py`` (one level up). Verified by
+    the presence of ``config/profiles/minimal.ini`` so a misplaced copy of
+    install.py outside the package fails loudly instead of writing nothing.
+    """
+    here = Path(__file__).resolve()
+    candidate = here.parent.parent
+    if not (candidate / "config" / "profiles" / "minimal.ini").exists():
+        fail(
+            f"Could not locate agent-config package root from {here}. "
+            "Expected config/profiles/minimal.ini at the parent directory."
+        )
+    return candidate
+
+
+#: Inline package identifier injected into deployed Markdown
+#: frontmatter (P5.1). Human-readable provenance only; the manifest
+#: remains the authoritative ownership source (see P5.3).
+PACKAGE_TAG_ID = "event4u/agent-config"
+
+
+def _inject_package_tag(
+    target: Path, source: Path | None, package_root: Path | None,
+) -> None:
+    """Inject ``package:`` / ``source_path:`` keys into existing frontmatter.
+
+    No-ops for files that don't end in ``.md`` or that lack a leading
+    ``---`` frontmatter block (P5.1: don't synthesise frontmatter where
+    none exists). Idempotent: running on an already-tagged file
+    rewrites the same values without growing the block.
+
+    ``source`` is the file we copied **from** (post-symlink-resolution
+    when applicable); when ``package_root`` is supplied and contains
+    ``source``, the recorded value is the path relative to the package
+    root, otherwise the absolute path. ``source=None`` skips the
+    ``source_path`` key but still maintains the ``package`` key.
+
+    The injected key is ``source_path:`` (not ``source:``) to avoid
+    colliding with the established ``source: package`` origin-type
+    convention used by 200+ rule files in this and downstream packages.
+    """
+    if target.suffix != ".md":
+        return
+    try:
+        text = target.read_text(encoding="utf-8")
+    except OSError:
+        return
+    if not text.startswith("---\n") and not text.startswith("---\r\n"):
+        return
+    # Locate the closing fence — second ``---`` on its own line.
+    lines = text.splitlines(keepends=True)
+    close_idx: int | None = None
+    for i in range(1, len(lines)):
+        if lines[i].rstrip("\r\n") == "---":
+            close_idx = i
+            break
+    if close_idx is None:
+        return
+    fm_lines = lines[1:close_idx]
+    body_lines = lines[close_idx:]
+
+    source_value: str | None = None
+    if source is not None:
+        try:
+            resolved_src = source.resolve()
+        except OSError:
+            resolved_src = source
+        if package_root is not None:
+            try:
+                source_value = str(
+                    resolved_src.relative_to(package_root.resolve()),
+                )
+            except ValueError:
+                source_value = str(resolved_src)
+        else:
+            source_value = str(resolved_src)
+
+    def _set_key(block: list[str], key: str, value: str) -> list[str]:
+        prefix = f"{key}:"
+        rendered = f"{key}: {value}\n"
+        for idx, line in enumerate(block):
+            if line.startswith(prefix):
+                block[idx] = rendered
+                return block
+        block.append(rendered)
+        return block
+
+    fm_lines = _set_key(fm_lines, "package", PACKAGE_TAG_ID)
+    if source_value is not None:
+        fm_lines = _set_key(fm_lines, "source_path", source_value)
+    new_text = "".join(lines[:1] + fm_lines + body_lines)
+    if new_text != text:
+        target.write_text(new_text, encoding="utf-8")
+
+
+def _copy_dir_dereferencing_symlinks(
+    src: Path, dest: Path, force: bool,
+    *,
+    package_root: Path | None = None,
+) -> tuple[int, int, list[Path]]:
+    """Recursively copy ``src`` into ``dest``, dereferencing every symlink.
+
+    Returns ``(files_written, files_skipped, written_paths)``. The third
+    element is the absolute path list of every file the copy actually
+    wrote (P1.4 — manifest needs to record the inventory). ``dest`` is
+    created if missing. Existing files at ``dest`` are overwritten only
+    when ``force=True``; otherwise skipped silently and counted as
+    ``skipped``. Symlinks in ``src`` are resolved so the user-scope copy
+    survives npx cache eviction (the source tree under
+    ``~/.npm/_npx/<hash>/`` is transient).
+
+    When ``package_root`` is supplied, deployed ``.md`` files get an
+    inline package tag injected into their frontmatter (P5.1).
+    """
+    written = 0
+    skipped = 0
+    written_paths: list[Path] = []
+    if not src.exists():
+        return (0, 0, written_paths)
+    if not src.is_dir():
+        # Single-file source (e.g. .windsurfrules): copy as one file.
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        decision = _resolve_file_conflict(dest, force_hint=force)
+        if decision == "skip":
+            return (0, 1, written_paths)
+        shutil.copyfile(src, dest, follow_symlinks=True)
+        _inject_package_tag(dest, src, package_root)
+        written_paths.append(dest)
+        return (1, 0, written_paths)
+    dest.mkdir(parents=True, exist_ok=True)
+    for entry in src.rglob("*"):
+        rel = entry.relative_to(src)
+        target = dest / rel
+        if entry.is_dir() and not entry.is_symlink():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+        # Resolve symlinks to their real targets. ``follow_symlinks=True``
+        # on copyfile produces a real file at the destination.
+        resolved = entry.resolve()
+        if resolved.is_dir():
+            # Symlinked subdir — recurse into the resolved path.
+            target.mkdir(parents=True, exist_ok=True)
+            sub_w, sub_s, sub_p = _copy_dir_dereferencing_symlinks(
+                resolved, target, force, package_root=package_root,
+            )
+            written += sub_w
+            skipped += sub_s
+            written_paths.extend(sub_p)
+            continue
+        decision = _resolve_file_conflict(target, force_hint=force)
+        if decision == "skip":
+            skipped += 1
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(resolved, target, follow_symlinks=True)
+        _inject_package_tag(target, resolved, package_root)
+        written += 1
+        written_paths.append(target)
+    return (written, skipped, written_paths)
+
+
+def _write_claude_desktop_marker(
+    force: bool, lockfile_path: Path,
+) -> tuple[int, int, list[Path]]:
+    """Write the Claude Desktop user-scope marker file.
+
+    Returns ``(written, skipped, written_paths)`` for symmetry with the
+    tree copier (P1.4). The marker is a single Markdown file; existing
+    files are preserved unless ``force=True``.
+    """
+    anchor = Path(USER_SCOPE_PATHS["claude-desktop"]).expanduser()
+    target = anchor / "agent-config.md"
+    decision = _resolve_file_conflict(target, force_hint=force)
+    if decision == "skip":
+        return (0, 1, [])
+    anchor.mkdir(parents=True, exist_ok=True)
+    body = _CLAUDE_DESKTOP_MARKER_TEMPLATE.format(
+        lockfile=str(lockfile_path),
+        anchor=str(anchor),
+    )
+    target.write_text(body, encoding="utf-8")
+    return (1, 0, [target])
+
+
+def _deploy_global_content(
+    tools: set[str],
+    force: bool,
+    package_root: Path,
+    lockfile_path: Path,
+) -> dict[str, tuple[int, int, str, list[Path]]]:
+    """Deploy per-tool content into user-scope anchors for ``tools``.
+
+    For each tool in ``tools`` that has a ``GLOBAL_DEPLOY_SOURCES`` entry,
+    copies the listed package subtrees into ``USER_SCOPE_PATHS[tool_id]``
+    (expanded). For ``claude-desktop`` writes the marker file. For tools
+    without a deployment plan (e.g. ``copilot``), records a ``hint`` status
+    so the caller can print an actionable next step.
+
+    Returns ``{tool_id: (written, skipped, status, written_paths)}``
+    where ``status`` is one of ``deployed``, ``marker``, ``hint``,
+    ``unsupported`` and ``written_paths`` is the absolute path list of
+    every file the deploy actually wrote (P1.4).
+    """
+    results: dict[str, tuple[int, int, str, list[Path]]] = {}
+    for tool_id in sorted(tools):
+        if tool_id == "claude-desktop":
+            w, s, paths = _write_claude_desktop_marker(force, lockfile_path)
+            results[tool_id] = (w, s, "marker", paths)
+            continue
+        plan = GLOBAL_DEPLOY_SOURCES.get(tool_id)
+        if plan is None:
+            # No deployable content yet for this tool in global scope.
+            # `copilot` has no user-scope convention. `aider` is a single
+            # YAML file (not a directory). `zed` / `jetbrains` have no
+            # markdown-skills convention. Each prints an actionable hint.
+            status = "hint" if tool_id in {"copilot", "aider", "zed", "jetbrains"} else "unsupported"
+            results[tool_id] = (0, 0, status, [])
+            continue
+        anchor_raw = USER_SCOPE_PATHS.get(tool_id)
+        if not anchor_raw:
+            results[tool_id] = (0, 0, "unsupported", [])
+            continue
+        anchor = Path(anchor_raw).expanduser()
+        written_total = 0
+        skipped_total = 0
+        written_paths: list[Path] = []
+        for src_rel, dest_sub in plan:
+            src = package_root / src_rel
+            dest = anchor / dest_sub if dest_sub else anchor
+            w, s, paths = _copy_dir_dereferencing_symlinks(
+                src, dest, force, package_root=package_root,
+            )
+            written_total += w
+            skipped_total += s
+            written_paths.extend(paths)
+        results[tool_id] = (written_total, skipped_total, "deployed", written_paths)
+    return results
+
+
 def install_global(
     tools: set[str],
     force: bool,
@@ -1987,8 +2873,11 @@ def install_global(
     install with a remediation hint unless ``--force`` is passed. On
     success the lockfile is rewritten atomically with the current
     package version + the union of previously-recorded and now-installed
-    tool IDs. Concrete per-tool file writes still belong to later tasks
-    (export remains the documented escape for project-local content).
+    tool IDs, then per-tool content (rules / skills / personas / etc.) is
+    copied from the agent-config package into each tool's user-scope
+    anchor (``GLOBAL_DEPLOY_SOURCES``). ``copilot`` is the lone headline
+    exception — it has no user-scope convention, so it is reported with a
+    hint pointing at ``agent-config export --tool=copilot``.
 
     When ``project_root`` points at a project tree (detected by the
     presence of ``.agent-settings.yml``), the project-scope manifest at
@@ -2015,7 +2904,7 @@ def install_global(
     if not QUIET:
         print()
         info("Agent Config — Global (user-scope) install [ADR-007]")
-        info("Planned per-tool anchor paths:")
+        info("Per-tool anchor paths:")
         for tool_id in sorted(tools):
             anchor = USER_SCOPE_PATHS.get(tool_id)
             if anchor is None:
@@ -2033,6 +2922,29 @@ def install_global(
         info(f"  schema_version=1, agent_config_version={installed_version}")
         info(f"  tools={','.join(merged_tools)}")
 
+    # Deploy per-tool content into user-scope anchors. Sources resolve from
+    # the agent-config package root (located via `__file__`, not the
+    # caller's CWD); destinations are `USER_SCOPE_PATHS[tool_id]` (expanded).
+    package_root = _resolve_package_root_for_global()
+    deploy_results = _deploy_global_content(tools, force, package_root, written)
+
+    if not QUIET:
+        print()
+        info("Deployed per-tool content:")
+        for tool_id in sorted(deploy_results):
+            w, s, status, _ = deploy_results[tool_id]
+            anchor = USER_SCOPE_PATHS.get(tool_id, "")
+            if status == "deployed":
+                print(f"      {tool_id:<15} → {anchor} ({w} files, {s} skipped)")
+            elif status == "marker":
+                print(f"      {tool_id:<15} → {anchor}agent-config.md ({'written' if w else 'skipped'})")
+            elif status == "hint":
+                print(f"      {tool_id:<15} → no user-scope convention; use `agent-config export --tool={tool_id}`")
+            else:
+                print(f"      {tool_id:<15} → no global-scope content yet (project-scope install supported)")
+        if not force and any(s > 0 for _, s, _, _ in deploy_results.values()):
+            info("  Re-run with --force to overwrite existing files.")
+
     # Refresh the project-scope manifest when running inside a project tree
     # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
     # manifest to write and the global lockfile alone is the source of truth.
@@ -2044,13 +2956,21 @@ def install_global(
         and (project_root / SETTINGS_FILE).exists()
         and not (project_root / ".agent-src.uncompressed").is_dir()
     ):
-        rc = _update_installed_tools_manifest(project_root, tools, "global", force)
+        # Collect deployed/marker paths per tool so the manifest records
+        # the v2 ``files[]`` inventory (P1.4).
+        files_by_tool = _files_by_tool_from_deploy(
+            deploy_results, project_root,
+        )
+        rc = _update_installed_tools_manifest(
+            project_root, tools, "global", force,
+            files_by_tool=files_by_tool,
+        )
         if rc != 0:
             return rc
 
     if not QUIET:
         print()
-        success("Global install recorded.")
+        success("Global install completed.")
         print()
     return 0
 
@@ -2167,6 +3087,18 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "for --scope=global)."
         ),
     )
+    parser.add_argument(
+        "--offline",
+        action="store_true",
+        help=(
+            "skip every network call: suppress the post-install update "
+            "banner and set AGENT_CONFIG_OFFLINE=1 for downstream "
+            "subprocesses (versions / update / future fetchers). "
+            "All bridge content is bundled in the package, so install "
+            "itself never touches the network — this flag is the "
+            "explicit guarantee for air-gapped / CI runs."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -2184,7 +3116,10 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
 _VALID_TOOLS = {
     "claude-code", "claude-desktop", "cursor", "windsurf", "cline",
     "gemini-cli", "copilot", "augment", "aider", "codex", "roocode",
-    "continue", "kilocode", "zed", "jetbrains", "kiro", "all",
+    "continue", "kilocode", "zed", "jetbrains", "kiro",
+    # Phase 2.4 expansion (nextlevelbuilder/ui-ux-pro-max-skill anchors).
+    "qoder", "opencode", "trae", "antigravity", "codebuddy", "droid", "warp",
+    "all",
 }
 
 
@@ -2231,6 +3166,15 @@ def main(argv: list[str]) -> int:
     opts = parse_options(argv)
     QUIET = opts.quiet
 
+    # --offline: propagate via env so child subprocesses (versions /
+    # update / check_update_banner) honor the air-gap guarantee
+    # without each one needing its own flag. AGENT_CONFIG_NO_UPDATE_CHECK
+    # is the canonical kill-switch for the post-install banner; the
+    # broader AGENT_CONFIG_OFFLINE signals intent to future fetchers.
+    if opts.offline:
+        os.environ["AGENT_CONFIG_OFFLINE"] = "1"
+        os.environ["AGENT_CONFIG_NO_UPDATE_CHECK"] = "1"
+
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
 
@@ -2252,14 +3196,42 @@ def main(argv: list[str]) -> int:
     tools_was_all = _tools_was_all(opts.tools)
     parsed_tools = _validate_scope(parsed_tools, scope, tools_was_all)
 
-    if scope == "global":
-        # Pass detect_root so the manifest refresh runs when --global is
-        # invoked from within a project tree (ADR-008 Phase 3.2).
-        return install_global(parsed_tools, opts.force, project_root=detect_root)
+    # Conflict policy: load known paths/pointers from the manifest once
+    # so every writer can ask "is this ours?" before clobbering (P3.1 /
+    # P3.3). Built from the project-scope manifest because that's the
+    # only on-disk source of truth across both install scopes.
+    policy_root = detect_root if scope == "global" else (
+        custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+    )
+    _set_conflict_policy(_load_conflict_policy(policy_root, opts.force))
 
-    project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
-    is_first_run = not (project_root / SETTINGS_FILE).exists()
+    try:
+        if scope == "global":
+            # Pass detect_root so the manifest refresh runs when --global is
+            # invoked from within a project tree (ADR-008 Phase 3.2).
+            return install_global(parsed_tools, opts.force, project_root=detect_root)
 
+        project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
+        is_first_run = not (project_root / SETTINGS_FILE).exists()
+        return _main_project_install(opts, project_root, parsed_tools, is_first_run)
+    except ConflictAbort as exc:
+        warn(exc.message)
+        return 1
+    finally:
+        _set_conflict_policy(None)
+
+
+def _main_project_install(
+    opts: argparse.Namespace,
+    project_root: Path,
+    parsed_tools: set[str],
+    is_first_run: bool,
+) -> int:
+    """Project-scope install body extracted from :func:`main`.
+
+    Kept as a private helper so ``main()`` can wrap the entire install
+    in a ``try/except ConflictAbort`` without rewriting indentation.
+    """
     if opts.package:
         package_root = Path(opts.package).resolve()
         if not (package_root / "config" / "profiles" / "minimal.ini").exists():
@@ -2282,21 +3254,24 @@ def main(argv: list[str]) -> int:
 
     tools = parsed_tools
 
+    # Per-tool merged_keys collected from JSON bridge merges (P1.5).
+    merged_keys_by_tool: dict[str, list[dict[str, Any]]] = {}
+
     if not opts.skip_bridges:
         # Substrate bridges (always written; other tools symlink/depend on them).
         ensure_vscode_bridge(project_root, package_type, opts.force)
-        ensure_augment_bridge(project_root, opts.force)
+        merged_keys_by_tool["augment"] = ensure_augment_bridge(project_root, opts.force)
         # Tool-specific bridges (gated by --tools selection).
         if _is_tool_enabled(tools, "claude-code"):
-            ensure_claude_bridge(project_root, opts.force)
+            merged_keys_by_tool["claude-code"] = ensure_claude_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "cursor"):
-            ensure_cursor_bridge(project_root, opts.force)
+            merged_keys_by_tool["cursor"] = ensure_cursor_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "cline"):
             ensure_cline_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "windsurf"):
-            ensure_windsurf_bridge(project_root, opts.force)
+            merged_keys_by_tool["windsurf"] = ensure_windsurf_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "gemini-cli"):
-            ensure_gemini_bridge(project_root, opts.force)
+            merged_keys_by_tool["gemini-cli"] = ensure_gemini_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "copilot"):
             ensure_copilot_bridge(project_root, opts.force)
         if _is_tool_enabled(tools, "roocode"):
@@ -2318,20 +3293,31 @@ def main(argv: list[str]) -> int:
         if _is_tool_enabled(tools, "kiro"):
             ensure_kiro_bridge(project_root, opts.force)
 
+    # User-scope hook bridges contribute additional merged_keys to the
+    # same tool entry (P1.5) — the manifest tracks every JSON pointer
+    # the install wrote, regardless of which file owns it.
     if opts.augment_user_hooks:
-        ensure_augment_user_hooks(package_root, opts.force)
+        merged_keys_by_tool.setdefault("augment", []).extend(
+            ensure_augment_user_hooks(package_root, opts.force),
+        )
 
     if opts.cursor_user_hooks and _is_tool_enabled(tools, "cursor"):
-        ensure_cursor_user_hooks(package_root, opts.force)
+        merged_keys_by_tool.setdefault("cursor", []).extend(
+            ensure_cursor_user_hooks(package_root, opts.force),
+        )
 
     if opts.cline_user_hooks and _is_tool_enabled(tools, "cline"):
         ensure_cline_user_hooks(package_root, opts.force)
 
     if opts.windsurf_user_hooks and _is_tool_enabled(tools, "windsurf"):
-        ensure_windsurf_user_hooks(package_root, opts.force)
+        merged_keys_by_tool.setdefault("windsurf", []).extend(
+            ensure_windsurf_user_hooks(package_root, opts.force),
+        )
 
     if opts.gemini_user_hooks and _is_tool_enabled(tools, "gemini-cli"):
-        ensure_gemini_user_hooks(package_root, opts.force)
+        merged_keys_by_tool.setdefault("gemini-cli", []).extend(
+            ensure_gemini_user_hooks(package_root, opts.force),
+        )
 
     if not opts.skip_bridges and not opts.no_smoke:
         if not QUIET:
@@ -2344,8 +3330,13 @@ def main(argv: list[str]) -> int:
     # markers actually exist. Skipped when `--skip-bridges` was used (the
     # caller is exercising the install plan, not committing to it).
     if not opts.skip_bridges:
+        files_by_tool = _files_by_tool_from_bridges(
+            parsed_tools, project_root, "project",
+        )
         rc = _update_installed_tools_manifest(
             project_root, parsed_tools, "project", opts.force,
+            files_by_tool=files_by_tool,
+            merged_keys_by_tool=merged_keys_by_tool,
         )
         if rc != 0:
             return rc

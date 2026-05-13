@@ -292,6 +292,22 @@ TESTS=(
     test_source_repo_guard_package_json_marker
 )
 
+# SHARD=N/M env var: keep only Nth slice of M (1-indexed) before dispatch.
+# Composes with --parallel so workflow can run matrix shards in parallel.
+if [[ -n "${SHARD:-}" ]]; then
+    _shard_n="${SHARD%/*}"
+    _shard_m="${SHARD#*/}"
+    _shard_total="${#TESTS[@]}"
+    _filtered=()
+    for _i in "${!TESTS[@]}"; do
+        if (( _i % _shard_m == _shard_n - 1 )); then
+            _filtered+=("${TESTS[$_i]}")
+        fi
+    done
+    TESTS=("${_filtered[@]}")
+    echo "🧪  SHARD=$SHARD → running ${#TESTS[@]} of $_shard_total tests"
+fi
+
 if [[ "${1:-}" == "--list" ]]; then
     printf '%s\n' "${TESTS[@]}"
     exit 0

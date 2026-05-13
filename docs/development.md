@@ -115,6 +115,43 @@ task install -- --target <dir> # Run the installer orchestrator on a target
 task install-hooks             # Install git hooks (pre-commit marketplace lint, pre-push sync check, chat-history bridges)
 ```
 
+### Local dev install (no release)
+
+Use these tasks to run the working tree as if it were a published
+release — useful for testing changes before `task release` cuts an npm
+version.
+
+```bash
+task dev:install-global        # Refresh ~/.claude, ~/.cursor, ~/.augment, … from this working tree (--force)
+task dev:link                  # Symlink this repo as the global @event4u/agent-config (npm link)
+task dev:unlink                # Remove the global symlink
+```
+
+**Typical flow:**
+
+1. In this repo: `task dev:link` — once. The `agent-config` bin on PATH
+   now resolves into the working tree.
+2. In this repo: `task dev:install-global` — every time you want
+   user-scope content (`~/.claude/rules`, `~/.cursor/`, …) refreshed.
+3. In a consumer project that uses `@event4u/agent-config` from npm,
+   opt in to the linked dev tree:
+
+   ```bash
+   cd /path/to/consumer-project
+   npm link @event4u/agent-config
+   ```
+
+   `npx @event4u/agent-config …` and `node_modules/.bin/agent-config`
+   in that project now resolve into the dev tree. Undo with
+   `npm unlink @event4u/agent-config` (project) and `task dev:unlink`
+   (this repo).
+
+**Caveat — npx outside a linked project:** `npx @event4u/agent-config`
+in a directory without a linked `node_modules/@event4u/agent-config`
+fetches the published version from the registry. Either run `npm link
+@event4u/agent-config` in that project first, or call the global
+`agent-config` bin directly (which `task dev:link` puts on PATH).
+
 ---
 
 ## Project Structure

@@ -46,6 +46,20 @@ section below this index is reference material for advanced installs
 | **Codex CLI** | `npx @event4u/agent-config init --tools=codex` | [`per-ide/codex.md`](setup/per-ide/codex.md) |
 | **Gemini CLI** | `npx @event4u/agent-config init --tools=gemini` | [`per-ide/gemini-cli.md`](setup/per-ide/gemini-cli.md) |
 | **GitHub Copilot** | `npx @event4u/agent-config init --tools=copilot` | [`per-ide/copilot.md`](setup/per-ide/copilot.md) |
+| **Augment Code** | `npx @event4u/agent-config init --tools=augment` | [`per-ide/augment.md`](setup/per-ide/augment.md) |
+| **Roo Code** | `npx @event4u/agent-config init --tools=roocode` | [`per-ide/roocode.md`](setup/per-ide/roocode.md) |
+| **Kilo Code** | `npx @event4u/agent-config init --tools=kilocode` | [`per-ide/kilocode.md`](setup/per-ide/kilocode.md) |
+| **Continue.dev** | `npx @event4u/agent-config init --tools=continue` | [`per-ide/continue.md`](setup/per-ide/continue.md) |
+| **Kiro** | `npx @event4u/agent-config init --tools=kiro` | [`per-ide/kiro.md`](setup/per-ide/kiro.md) |
+| **Zed** | `npx @event4u/agent-config init --tools=zed` | [`per-ide/zed.md`](setup/per-ide/zed.md) |
+| **JetBrains AI** | `npx @event4u/agent-config init --tools=jetbrains --global` | [`per-ide/jetbrains.md`](setup/per-ide/jetbrains.md) |
+| **Qoder** | `npx @event4u/agent-config init --tools=qoder --global` | [`per-ide/qoder.md`](setup/per-ide/qoder.md) |
+| **OpenCode** | `npx @event4u/agent-config init --tools=opencode --global` | [`per-ide/opencode.md`](setup/per-ide/opencode.md) |
+| **Trae** | `npx @event4u/agent-config init --tools=trae --global` | [`per-ide/trae.md`](setup/per-ide/trae.md) |
+| **Antigravity** | `npx @event4u/agent-config init --tools=antigravity --global` | [`per-ide/antigravity.md`](setup/per-ide/antigravity.md) |
+| **CodeBuddy** | `npx @event4u/agent-config init --tools=codebuddy --global` | [`per-ide/codebuddy.md`](setup/per-ide/codebuddy.md) |
+| **Droid (Factory)** | `npx @event4u/agent-config init --tools=droid --global` | [`per-ide/droid.md`](setup/per-ide/droid.md) |
+| **Warp** | `npx @event4u/agent-config init --tools=warp --global` | [`per-ide/warp.md`](setup/per-ide/warp.md) |
 | **All surfaces** | `npx @event4u/agent-config init` (default) | (each page above applies) |
 
 Combine surfaces by comma-separating: `--tools=claude-code,cursor,windsurf`.

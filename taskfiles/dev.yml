@@ -1,0 +1,39 @@
+version: '3'
+
+# Local dev workflow — run the working tree as if it were a release,
+# without going through `task release` + npm publish. See
+# docs/development.md → "Local dev install (no release)" for the full
+# story (consumer-side `npm link @event4u/agent-config` lives there).
+
+tasks:
+  dev:install-global:
+    desc: |
+      Refresh the user-scope install (~/.claude/, ~/.cursor/, ~/.augment/, …)
+      from this working tree. Force-overwrites existing files so dev
+      changes land immediately. Equivalent to a global install of the
+      published package, but sourced from the local repo.
+      Usage:
+      task dev:install-global
+    cmd: python3 scripts/install.py --global --tools all --force
+
+  dev:link:
+    desc: |
+      Symlink this working tree as the global @event4u/agent-config
+      package via `npm link`. After this the `agent-config` bin on PATH
+      resolves into this repo. Consumer projects opt in with
+      `npm link @event4u/agent-config` (see docs/development.md).
+      Usage:
+      task dev:link
+    cmds:
+      - npm link
+      - 'echo "→ global bin \"agent-config\" now points at $(pwd)"'
+      - 'echo "→ in a consumer project: npm link @event4u/agent-config"'
+
+  dev:unlink:
+    desc: |
+      Remove the global symlink created by `task dev:link`. After this
+      the `agent-config` bin resolves to whatever is published on the
+      registry (or is unavailable if no global install exists).
+      Usage:
+      task dev:unlink
+    cmd: npm unlink -g @event4u/agent-config

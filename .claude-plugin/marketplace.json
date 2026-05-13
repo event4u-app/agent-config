@@ -6,12 +6,38 @@
   },
   "metadata": {
     "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
-    "version": "2.2.2"
+    "version": "2.2.2",
+    "keywords": [
+      "agent-config",
+      "skills",
+      "rules",
+      "claude-code",
+      "augment",
+      "cursor",
+      "cline",
+      "windsurf",
+      "gemini",
+      "copilot",
+      "laravel",
+      "php",
+      "ai-coding"
+    ]
   },
   "plugins": [
     {
       "name": "agent-config",
       "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "keywords": [
+        "skills",
+        "rules",
+        "commands",
+        "laravel",
+        "php",
+        "review",
+        "testing",
+        "infrastructure",
+        "documentation"
+      ],
       "source": "./",
       "strict": false,
       "skills": [

@@ -39,6 +39,11 @@
 #                     prompt = always show the 3-option chooser
 #   --custom-path <d> Use <d> as the project root when prompted; rejected with
 #                     --scope=global / --global.
+#   --offline         Skip every network call (post-install update banner +
+#                     downstream registry fetchers). Sets AGENT_CONFIG_OFFLINE=1
+#                     for child subprocesses. All bridge content is bundled
+#                     in the package, so install itself is already offline-safe;
+#                     this flag is the explicit air-gap / CI guarantee.
 #   --help, -h        Show this help
 #
 # Examples:
@@ -69,6 +74,7 @@ LIST_TOOLS=false
 GLOBAL=false
 SCOPE=""
 CUSTOM_PATH=""
+OFFLINE=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
@@ -150,6 +156,7 @@ while [[ $# -gt 0 ]]; do
         --scope=*)       SCOPE="${1#*=}"; shift ;;
         --custom-path)   CUSTOM_PATH="$2"; shift 2 ;;
         --custom-path=*) CUSTOM_PATH="${1#*=}"; shift ;;
+        --offline)       OFFLINE=true; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -297,6 +304,7 @@ run_bridges() {
     $GLOBAL && args+=(--global)
     [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
     [[ -n "$CUSTOM_PATH" ]] && args+=(--custom-path="$CUSTOM_PATH")
+    $OFFLINE && args+=(--offline)
     args+=(--tools="$TOOLS")
     "$python_bin" "$INSTALL_PY" "${args[@]}"
 }
