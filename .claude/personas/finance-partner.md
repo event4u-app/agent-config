@@ -1,0 +1,1 @@
+../../.agent-src/personas/finance-partner.md

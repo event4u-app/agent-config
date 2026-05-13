@@ -1,0 +1,1 @@
+../../.agent-src/personas/engineering-manager.md

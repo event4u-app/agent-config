@@ -34,6 +34,7 @@ SKILL_GLOBS = (
 VALID_SLOTS = (
     "product", "team", "repo",
     "channel-stage", "funnel-stage", "customer-segment",
+    "fiscal-period", "org-stage", "regulatory-regime",
 )
 
 CONTEXT_SPINE_PAT = re.compile(
