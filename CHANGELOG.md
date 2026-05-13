@@ -343,6 +343,18 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.6.0](https://github.com/event4u-app/agent-config/compare/2.4.1...2.6.0) (2026-05-13)
+
+### Features
+
+* **claude-desktop:** bundle commands as desktop skills ([50cd319](https://github.com/event4u-app/agent-config/commit/50cd31988ac571ecdf883c5d2c6d62c209820ebc))
+
+### Other
+
+* 2.5.0 ([1da0e10](https://github.com/event4u-app/agent-config/commit/1da0e1014b9cf24cf41d820795f96f2668ce738c))
+
+Tests: 3530 (+9 since 2.4.1)
+
 ## [2.5.0](https://github.com/event4u-app/agent-config/compare/2.4.1...2.5.0) (2026-05-13)
 
 ### Features
