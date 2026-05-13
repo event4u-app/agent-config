@@ -3,6 +3,7 @@ id: customer-success-lead
 role: Customer Success Lead
 description: "The senior voice that owns the post-signature value — time-to-first-value falsifiable, churn cause split four ways, expansion pulled, NRR dilution named."
 tier: specialist
+wing: 3
 mode: planner
 version: "1.0"
 source: package

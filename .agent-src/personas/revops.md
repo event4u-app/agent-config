@@ -3,6 +3,7 @@ id: revops
 role: RevOps
 description: "The senior voice that owns the pipeline and the forecast — stage exit criteria evidence-bound, MEDDIC slots filled, forecast falsifiable, leaks named."
 tier: specialist
+wing: 3
 mode: planner
 version: "1.0"
 source: package

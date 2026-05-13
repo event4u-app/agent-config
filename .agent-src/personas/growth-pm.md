@@ -3,6 +3,7 @@ id: growth-pm
 role: Growth PM
 description: "The senior voice that owns the funnel and the loops — leaky-bucket vs growth-loop classified, activation correlated not assumed, loops closed not hopeful."
 tier: specialist
+wing: 3
 mode: planner
 version: "1.0"
 source: package

@@ -57,6 +57,15 @@ REQUIRED_PERSONA_SECTIONS = REQUIRED_PERSONA_SECTIONS_CORE
 VALID_PERSONA_TIERS = {"core", "specialist"}
 # Locked in docs/contracts/persona-schema.md § 4: core ≤ 120, specialist ≤ 100.
 PERSONA_LINE_BUDGETS = {"core": 120, "specialist": 100}
+# Wing-scoped overrides — Wing-3 (GTM) and Wing-4 (Money/Strategy/Ops) carry
+# denser cognition (funnel × channel × lifecycle, or finance × org × strategy)
+# than Wing-1/2 specialists, so the line cap rises to keep the seven-section
+# spine intact without amputating workflows. Persona-schema.md § 4 wing matrix.
+VALID_PERSONA_WINGS = {1, 2, 3, 4}
+PERSONA_LINE_BUDGETS_BY_WING = {
+    ("specialist", 3): 140,
+    ("specialist", 4): 140,
+}
 
 
 REQUIRED_SKILL_SECTIONS = [
@@ -1574,6 +1583,27 @@ def lint_persona(path: Path, text: str) -> LintResult:
             f"Persona tier `{parsed['tier']}` must be one of {sorted(VALID_PERSONA_TIERS)}",
         ))
 
+    # wing — optional; when present must be one of {1,2,3,4} (per
+    # docs/contracts/package-self-orientation.md § The four wings).
+    wing_match = re.search(r'^wing:\s*"?(\d+)"?\s*$', frontmatter, re.MULTILINE)
+    if wing_match:
+        try:
+            wing_value = int(wing_match.group(1))
+            if wing_value in VALID_PERSONA_WINGS:
+                parsed["wing"] = wing_value
+            else:
+                issues.append(Issue(
+                    "error",
+                    "invalid_wing",
+                    f"Persona wing `{wing_value}` must be one of {sorted(VALID_PERSONA_WINGS)}",
+                ))
+        except ValueError:
+            issues.append(Issue(
+                "error",
+                "invalid_wing",
+                f"Persona wing `{wing_match.group(1)}` must be an integer 1–4",
+            ))
+
     # description length
     if "description" in parsed and len(parsed["description"]) > 160:
         issues.append(Issue(
@@ -1611,15 +1641,21 @@ def lint_persona(path: Path, text: str) -> LintResult:
                 f"Persona has {bullet_count} unique questions (target ≥ 3)",
             ))
 
-    # Size budget by tier
+    # Size budget by tier — wing-overrides apply when the persona declares a
+    # `wing:` field; defaults to the tier baseline otherwise.
     if "tier" in parsed and parsed["tier"] in PERSONA_LINE_BUDGETS:
-        budget = PERSONA_LINE_BUDGETS[parsed["tier"]]
+        tier_value = parsed["tier"]
+        wing_value = parsed.get("wing")
+        budget = PERSONA_LINE_BUDGETS_BY_WING.get(
+            (tier_value, wing_value), PERSONA_LINE_BUDGETS[tier_value]
+        )
         line_count = len(text.splitlines())
         if line_count > budget:
+            scope = f"{tier_value}" if wing_value is None else f"{tier_value}, wing {wing_value}"
             issues.append(Issue(
                 "warning",
                 "size_budget",
-                f"Persona has {line_count} lines ({parsed['tier']} budget ≤ {budget})",
+                f"Persona has {line_count} lines ({scope} budget ≤ {budget})",
             ))
 
     # H1 heading

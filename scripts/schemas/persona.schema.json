@@ -26,6 +26,11 @@
       "type": "string",
       "enum": ["core", "specialist"]
     },
+    "wing": {
+      "type": "integer",
+      "enum": [1, 2, 3, 4],
+      "description": "Cognition wing per docs/contracts/package-self-orientation.md § The four wings. Optional. Raises the specialist size cap (persona-schema § 4)."
+    },
     "mode": {
       "type": "string",
       "enum": ["developer", "reviewer", "tester", "product-owner", "incident", "planner"]
