@@ -252,8 +252,17 @@ def _load_conflict_policy(project_root: Path, force: bool) -> ConflictPolicy:
         for tool in existing.get("tools", []) or []:
             for entry in tool.get("files", []) or []:
                 path_val = entry.get("path")
-                if isinstance(path_val, str):
-                    known_paths.add(path_val)
+                if isinstance(path_val, str) and path_val:
+                    # Manifest paths may be absolute (production writers
+                    # use ``str(Path)`` for ``files[].path``) or relative
+                    # (portable manifests). Writers always pass absolute
+                    # ``Path`` objects to ``_resolve_file_conflict``, so
+                    # normalise here against ``project_root`` to keep the
+                    # known-path silent-skip branch reachable.
+                    p = Path(path_val)
+                    if not p.is_absolute():
+                        p = (project_root / p).resolve()
+                    known_paths.add(str(p))
             for entry in tool.get("merged_keys", []) or []:
                 file_label = entry.get("file")
                 pointer = entry.get("json_pointer")
@@ -346,7 +355,8 @@ def _resolve_file_conflict(target: Path, *, force_hint: bool) -> str:
         raise ConflictAbort(f"User aborted on foreign file at {target}")
     raise ConflictAbort(
         f"Foreign file at {target}: refusing to overwrite. "
-        f"Re-run with --force or set {ALLOW_OVERWRITE_ENV}=1 to allow."
+        f"Re-run with --force or set {ALLOW_OVERWRITE_ENV}=1 to allow. "
+        f"Run `agent-config doctor` to inspect orphaned files first."
     )
 
 
@@ -503,7 +513,8 @@ def _resolve_json_conflict(
     raise ConflictAbort(
         f"Foreign JSON pointers at {path}: refusing to overwrite "
         f"({len(foreign)} key(s)). Re-run with --force or set "
-        f"{ALLOW_OVERWRITE_ENV}=1 to allow."
+        f"{ALLOW_OVERWRITE_ENV}=1 to allow. "
+        f"Run `agent-config doctor` to inspect orphaned pointers first."
     )
 
 

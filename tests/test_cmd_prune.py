@@ -325,3 +325,114 @@ def test_v1_fallback_when_no_files_in_manifest(
     assert rc == 0
     assert (tmp_path / ".cursor" / "hooks.json").exists()
     assert not (tmp_path / ".windsurf" / "hooks.json").exists()
+
+
+# ---------------------------------------------------------------------------
+# P2.2 — --resume-uninstall (crash recovery)
+# ---------------------------------------------------------------------------
+
+
+def test_resume_uninstall_only_touches_uninstalling_tools(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """--resume-uninstall sweeps only files of tools with status='uninstalling';
+    unmanaged drift (legacy disk scan) and undeclared markers are left alone."""
+    _touch(tmp_path, ".cursor/hooks.json")
+    _touch(tmp_path, ".roo/rules/agent-config.md")  # would be a disk-scan orphan
+    _write_manifest(tmp_path, [
+        _entry_v2(
+            "cursor", ".cursor/hooks.json",
+            status="uninstalling",
+            files=[{"path": ".cursor/hooks.json", "kind": "bridge", "sha256": None}],
+        ),
+    ])
+    rc = cmd_prune.main([f"--project={tmp_path}", "--resume-uninstall"])
+    assert rc == 0
+    # Half-uninstalled file: removed.
+    assert not (tmp_path / ".cursor" / "hooks.json").exists()
+    # Unmanaged drift: not touched.
+    assert (tmp_path / ".roo" / "rules" / "agent-config.md").exists()
+
+
+def test_resume_uninstall_leaves_healthy_tools_alone(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """A healthy v2 entry (status=installed) is invisible to --resume-uninstall
+    even when its tool is *not* in `declared` (e.g. removed from spec but not
+    yet uninstalled). Recovery must not silently complete a half-spec'd uninstall."""
+    _touch(tmp_path, ".cursor/hooks.json")
+    _write_manifest(tmp_path, [
+        _entry_v2(
+            "cursor", ".cursor/hooks.json",
+            files=[{"path": ".cursor/hooks.json", "kind": "bridge", "sha256": None}],
+        ),
+    ])
+    rc = cmd_prune.main([f"--project={tmp_path}", "--resume-uninstall"])
+    assert rc == 0
+    assert (tmp_path / ".cursor" / "hooks.json").exists()
+    out = capsys.readouterr().out
+    assert "no orphaned bridges" in out
+
+
+def test_resume_uninstall_no_op_when_nothing_uninstalling(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """No tool in uninstalling state → zero candidates, exit 0, even when
+    a legacy disk-scan would have flagged orphans."""
+    _write_manifest(tmp_path, [])  # nothing declared
+    _touch(tmp_path, ".roo/rules/agent-config.md")  # legacy disk-scan orphan
+    rc = cmd_prune.main([f"--project={tmp_path}", "--resume-uninstall"])
+    assert rc == 0
+    # Legacy disk scan is skipped under --resume-uninstall.
+    assert (tmp_path / ".roo" / "rules" / "agent-config.md").exists()
+    out = capsys.readouterr().out
+    assert "no orphaned bridges" in out
+
+
+def test_resume_uninstall_respects_drift_detection(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """Drift on a deployed file of an uninstalling tool is still surfaced as
+    modified and skipped — recovery never deletes user-edited content."""
+    _touch(tmp_path, ".augment/rules/r1.md")
+    _write_manifest(tmp_path, [
+        _entry_v2(
+            "augment", ".augment/PROJECT_MANAGED_BY_AGENT_CONFIG",
+            status="uninstalling",
+            files=[{"path": ".augment/rules/r1.md", "kind": "deployed",
+                    "sha256": "00" * 32}],
+        ),
+    ])
+    rc = cmd_prune.main([f"--project={tmp_path}", "--resume-uninstall"])
+    assert rc == 0
+    assert (tmp_path / ".augment" / "rules" / "r1.md").exists()
+    out = capsys.readouterr().out
+    assert "modified" in out
+    assert "skipped" in out
+
+
+def test_resume_uninstall_dry_run_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    """--resume-uninstall composes with --dry-run --json: payload lists the
+    uninstalling tool's files, nothing else, and disk is untouched."""
+    _touch(tmp_path, ".cursor/hooks.json")
+    _touch(tmp_path, ".roo/rules/agent-config.md")
+    _write_manifest(tmp_path, [
+        _entry_v2(
+            "cursor", ".cursor/hooks.json",
+            status="uninstalling",
+            files=[{"path": ".cursor/hooks.json", "kind": "bridge", "sha256": None}],
+        ),
+    ])
+    rc = cmd_prune.main([
+        f"--project={tmp_path}",
+        "--resume-uninstall", "--dry-run", "--json",
+    ])
+    assert rc == 0
+    payload = json.loads(capsys.readouterr().out)
+    paths = [o["path"] for o in payload["orphans"]]
+    assert paths == [".cursor/hooks.json"]
+    # Dry-run: both files still present.
+    assert (tmp_path / ".cursor" / "hooks.json").exists()
+    assert (tmp_path / ".roo" / "rules" / "agent-config.md").exists()
