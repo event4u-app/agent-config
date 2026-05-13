@@ -357,6 +357,41 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.8.0](https://github.com/event4u-app/agent-config/compare/2.7.0...2.8.0) (2026-05-13)
+
+### Features
+
+* **linter:** wing-scoped persona line budgets ([81c8cda](https://github.com/event4u-app/agent-config/commit/81c8cdaf08f243a61f848b2e53fad73305ec173d))
+* **personas:** GTM roadmap I1-I4 — Wing-3 personas (CMO, RevOps, CS, Growth-PM) ([a05d49e](https://github.com/event4u-app/agent-config/commit/a05d49e1fd2076effd68dabce7a0789676b2bbf5))
+* **skills:** GTM roadmap H8-H16 — RevOps, CS, Growth-PM clusters ([f79e7a1](https://github.com/event4u-app/agent-config/commit/f79e7a11f5447466c05c6be613a618b9c564a4b1))
+* **gtm:** H3–H7 — complete CMO cluster skills (gtm-launch, editorial-calendar, content-funnel-design, voice-and-tone-design, fundraising-narrative) ([a905bea](https://github.com/event4u-app/agent-config/commit/a905bea811a02d973a682465525ca39d274d3342))
+* **gtm:** H1+H2 — positioning + messaging-architecture senior skills ([00aeb27](https://github.com/event4u-app/agent-config/commit/00aeb279be9924c01dea998df7ee91442fd3ff88))
+* **gtm:** G3 — Wing-3 handoff guideline + Block G closed ([15643da](https://github.com/event4u-app/agent-config/commit/15643da3e2e96a6b00a738e8f4b7ba10edd18187))
+* **gtm:** G2 — Wing-3 cognition-boundary linter ([8445921](https://github.com/event4u-app/agent-config/commit/84459218a914dd5d39c524824e9e0a597c28daec))
+* **gtm:** G1 — extend context-spine with Wing-3 slots ([853e653](https://github.com/event4u-app/agent-config/commit/853e6538fff24429ab0f4136f5eec5d4b992dda4))
+
+### Bug Fixes
+
+* **refs:** drop roadmap-file citations from GTM ADR + handoff guideline ([092a01d](https://github.com/event4u-app/agent-config/commit/092a01d7bcd6b51c85d12bfcf83dc973b35c0fcc))
+* **contracts:** add stability frontmatter to command-surface-tiers.md ([3ab2ffd](https://github.com/event4u-app/agent-config/commit/3ab2ffde4345b4ca30cc4d64926f571bce5ce7dd))
+* **lint:** teach context-spine linter the Wing-3 GTM slots ([5bf81d5](https://github.com/event4u-app/agent-config/commit/5bf81d51864b652301d890eafb0574641d05b71a))
+* **refs:** replace dangling skill backticks with plain phrasing in GTM skills ([9f20b06](https://github.com/event4u-app/agent-config/commit/9f20b0612b58f8ef0273bfbe5f830793f4dca131))
+* **template:** bump agent_config_version to 2.7.0 in agent-project-settings template ([ac65734](https://github.com/event4u-app/agent-config/commit/ac657343a81879c3aee4664728e15233863016a5))
+
+### Refactoring
+
+* **skill:** rename positioning → positioning-strategy ([be1a5c9](https://github.com/event4u-app/agent-config/commit/be1a5c9019ac18fabde14469784db42aa7588a14))
+
+### Chores
+
+* **index:** regenerate after positioning → positioning-strategy rename ([9f42d91](https://github.com/event4u-app/agent-config/commit/9f42d9148f196d30635ae8288e9bba0feda66067))
+* **changelog:** split era 2.2.x → pre-2.7.0 ([7158c30](https://github.com/event4u-app/agent-config/commit/7158c30db391f3464fd74f3c7e193698b869b82d))
+* **generated:** refresh agents/index.md and docs/catalog.md for GTM skills/personas ([649b86e](https://github.com/event4u-app/agent-config/commit/649b86e287ecef7d0d28ce23ed2b0cbf43f2adc6))
+* **generated:** regenerate .claude/ tool output + marketplace + compression hashes for GTM skills/personas ([bb7d56c](https://github.com/event4u-app/agent-config/commit/bb7d56cd8e7cafb9037a4e6ec0078e56154f9d5c))
+* **roadmap:** archive road-to-gtm-and-growth — G+H+I all shipped ([dc48cdd](https://github.com/event4u-app/agent-config/commit/dc48cdd29e236c745e98b5f5fb8b45fa716a4c07))
+
+Tests: 3577 (+11 since 2.7.0)
+
 ## [2.7.0](https://github.com/event4u-app/agent-config/compare/2.6.1...2.7.0) (2026-05-13)
 
 ### Features
