@@ -256,9 +256,9 @@ user-scope surface (`scripts/install.py` user-global deploy path):
       migration shim". Manual Claude Desktop upload verification + end-
       to-end `install.py --global --tools=claude-desktop` integration
       test logged as post-merge TODOs in this Notes section.
-- [ ] **Step 5:** Commit in logical chunks via `/commit:in-chunks` per
+- [x] **Step 5:** Commit in logical chunks via `/commit:in-chunks` per
       Conventional Commits (one commit per phase boundary or smaller).
-- [ ] **Step 6:** Push branch + open PR via `/create-pr`. PR description:
+- [x] **Step 6:** Push branch + open PR via `/create-pr`. PR description:
       goal, decision summary, migration safety note, screenshots of
       Customize → Skills import flow (text-only — emit instructions for
       the user since the agent cannot screenshot).
