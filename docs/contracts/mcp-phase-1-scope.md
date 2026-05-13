@@ -1,5 +1,6 @@
 ---
 stability: experimental
+mcp_scope: full
 ---
 
 # MCP Server — Phase 1–6 Scope (A0 Hard Contract)

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**36 / 184 steps done · 20%**
+**51 / 184 steps done · 28%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   20%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 6 | 45 | 40 | 5 | 0 | 0 | █░░░░░░░░░ 11% |
+| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 10 | 45 | 25 | 20 | 0 | 0 | ████░░░░░░ 44% |
 | 2 | [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md) | 6 | 36 | 5 | 31 | 0 | 0 | █████████░ 86% |
 | 3 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,16 +29,20 @@
 
 ### [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md)
 
-**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 5 / 45 done (11%)
+**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 20 / 45 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Council passes (gate the rest of the roadmap) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
-| 1 | MCP contract ↔ README auth-surface sync | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Enterprise / offline fallback story | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 0 | Council passes (gate the rest of the roadmap) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 1 | MCP contract ↔ README auth-surface sync | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Enterprise / offline fallback story | ✅ done | 0 | 7 | 0 | 0 | 100% |
 | 3 | Architecture-docs split (four-pipeline clarity) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Command-surface tiering | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | MCP Lite vs Full boundary + Changelog hygiene | 🟡 in progress | 14 | 1 | 0 | 0 | 7% |
+| 1 | Step 1 drift catalog | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 2 | council verdicts | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 2 | lock-schema extension — ADR candidate | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
+| 2 | outcome check | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
 
 ### [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md)
 

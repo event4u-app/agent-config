@@ -154,9 +154,25 @@ Cloudflare account takes ~5 minutes:
 ```bash
 task mcp:cloud:login         # one-time, opens browser
 task mcp:cloud:setup         # check → r2-create → r2-verify → whoami
-task mcp:cloud:secret-put    # set MCP-Token (Bearer auth, recommended)
+task mcp:cloud:secret-put    # opt in to bearer-auth mode (recommended for private deploys)
 # Then deploy via CI — see operator guide below.
 ```
+
+The Worker ships **two MVP-1 auth modes** the operator picks at deploy
+time (per `docs/contracts/mcp-cloud-scope.md` § `Auth surface`):
+
+- **`public`** — default. No per-request auth. Edge cache plus
+  Cloudflare account-level DDoS shielding are the ingress controls.
+  Use only for OSS, read-only deploys where the URL is shared widely.
+- **`bearer-auth`** — operator opt-in. Set the `MCP-Token` Wrangler
+  secret with `task mcp:cloud:secret-put`. Every `POST /` then
+  requires `Authorization: Bearer <MCP-Token>`. `GET /` liveness
+  stays open. Use this for private deploys.
+
+HMAC and Cloudflare Access modes are declared but **deferred** in the
+contract (`hmac-deferred`, `cf-access-deferred`) — wake-up triggers
+listed there. The README intentionally names no mode the contract
+has not declared (bidirectional drift test enforces this).
 
 After deploy your Worker lives at
 `https://agent-config-mcp.<your-account>.workers.dev` (or a custom
@@ -174,11 +190,13 @@ Full operator walkthrough (account, R2, GitHub secrets, deploy) —
 [`docs/setup/mcp-cloud-setup.md`](docs/setup/mcp-cloud-setup.md).
 Experimental — A0-cloud contract lives at `docs/contracts/mcp-cloud-scope.md` (internal reference only per `STABILITY.md`).
 
-#### Lock your Worker behind a Bearer token
+#### Lock your Worker behind a Bearer token (`bearer-auth` mode)
 
-Without auth, any MCP client that knows your `*.workers.dev` URL can
-read the catalog. For private deploys, set the `MCP-Token` secret and
-the Worker will require `Authorization: Bearer <token>` on every POST:
+In `bearer-auth` mode the Worker requires `Authorization: Bearer
+<MCP-Token>` on every `POST /` and returns HTTP 401 + RFC 6750
+`WWW-Authenticate` on mismatch. The `GET /` liveness probe stays open
+so health checks keep working without the token. Switch modes by
+setting (or clearing) the `MCP-Token` secret:
 
 ```bash
 task mcp:cloud:secret-put          # wraps `npx wrangler secret put MCP-Token --name agent-config-mcp`
@@ -188,18 +206,21 @@ task mcp:cloud:secret-put          # wraps `npx wrangler secret put MCP-Token --
 Once the secret is set, every client config block needs the token in
 its headers — see [`docs/setup/mcp-client-config.md`](docs/setup/mcp-client-config.md) § Bearer auth for the
 per-client snippets (Claude Desktop, Claude Code, Cursor, Zed,
-Continue). The `GET /` liveness probe stays open so health checks keep
-working without the token.
+Continue). Mode contract is normative: `docs/contracts/mcp-cloud-scope.md`
+§ `Auth surface` § `bearer-auth`.
 
-> **Scope — Lite, not Full.** The Worker serves the read-only governance
-> surface (skills · commands · rules · guidelines · contexts) as MCP
-> prompts and resources, plus a small set of read-only tools (`memory_lookup`,
-> `chat_history_read`, `list_*`, `read_resource_body`). It does **not**
-> execute any of the ~112 Python scripts that ship with the package
-> (linters, audits, `task ci`, work-engine hooks, …). Those require the
-> full local install per [Quickstart](#quickstart). See
+> **Scope — Lite, not Full.** The Worker serves the **MCP Lite
+> scope** (`mcp_scope: lite` per `docs/contracts/mcp-cloud-scope.md`):
+> the read-only governance surface (skills · commands · rules ·
+> guidelines · contexts) as MCP prompts and resources, plus a small
+> set of read-only tools (`memory_lookup`, `chat_history_read`,
+> `list_*`, `read_resource_body`). It does **not** execute any of the
+> ~112 Python scripts that ship with the package (linters, audits,
+> `task ci`, work-engine hooks, …) — those require the **MCP Full
+> scope** (`mcp_scope: full` — local install per [Quickstart](#quickstart)).
+> The Lite vs Full boundary is normative in
 > `docs/contracts/mcp-cloud-scope.md` (internal reference only per
-> `STABILITY.md`) for the execution-safety boundary.
+> `STABILITY.md`).
 
 ### Optional: persistent agent memory
 
