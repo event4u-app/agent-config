@@ -161,6 +161,47 @@ VALID_EXECUTION_HANDLERS = {"none", "shell", "php", "node", "internal"}
 VALID_EXECUTION_SAFETY_MODES = {"strict"}
 VALID_EXECUTION_FIELDS = {"type", "handler", "timeout_seconds", "safety_mode", "allowed_tools", "command"}
 
+# --- Wing-3 GTM cognition-boundary patterns (council Q7 / iter-2 OQ3) ---
+# Triggered only when a skill's context_spine declares a Wing-3 slot.
+# See docs/contracts/adr-gtm-context-spine.md and
+# agents/roadmaps/road-to-gtm-and-growth.md § G2.
+WING3_SPINE_SLOTS = {"channel-stage", "funnel-stage", "customer-segment"}
+
+CONTEXT_SPINE_INLINE_PATTERN = re.compile(
+    r'^context_spine:\s*\[(.*?)\]\s*$', re.MULTILINE
+)
+
+# agent-operability: external SaaS URLs the agent would have to auth against
+WING3_SAAS_URL_PATTERN = re.compile(
+    r"https?://[\w.-]*\.(salesforce|hubspot|marketo|pardot|mailchimp|"
+    r"intercom|amplitude|mixpanel|segment|klaviyo|sendgrid|mailgun|"
+    r"pendo|gong|outreach|salesloft|apollo)\.(com|io)\b",
+    re.IGNORECASE,
+)
+
+# vendor-independence: brand / SDK / platform slugs that lock cognition
+WING3_VENDOR_BLACKLIST = re.compile(
+    r"\b(salesforce|hubspot|marketo|pardot|mailchimp|intercom|drift|"
+    r"klaviyo|sendgrid|mailgun|amplitude|mixpanel|pendo|gong|"
+    r"outreach\.io|salesloft|apollo\.io|zendesk|freshworks)\b",
+    re.IGNORECASE,
+)
+
+# transferability: stack-locked tooling instructions
+WING3_STACK_LOCKED_PATTERN = re.compile(
+    r"\b(npm install|pip install|composer require|gem install|"
+    r"cargo add|yarn add|pnpm add|bundle add)\s+[\w@/.-]+",
+    re.IGNORECASE,
+)
+
+# channel-agnosticism: channel-specific tactical prescriptions
+WING3_CHANNEL_TACTIC_PATTERN = re.compile(
+    r"\b(email subject line|tweet length|linkedin (post|ad)|"
+    r"facebook ad|google ads?|tiktok (post|video)|instagram (post|reel)|"
+    r"sms character limit|cold email template)\b",
+    re.IGNORECASE,
+)
+
 
 @dataclass
 class Issue:
@@ -605,6 +646,11 @@ def lint_skill(path: Path, text: str) -> LintResult:
         if tier_match and tier_match.group(1) == "senior":
             issues.extend(lint_senior_tier_blocks(text))
 
+        # --- Wing-3 GTM cognition-boundary check (council Q7 / adr-gtm-context-spine.md) ---
+        spine_slots = parse_context_spine(frontmatter)
+        if spine_slots and any(s in WING3_SPINE_SLOTS for s in spine_slots):
+            issues.extend(lint_wing3_boundaries(text))
+
     procedure_block = find_procedure_block(text)
     if procedure_block is not None:
         if not procedure_block:
@@ -988,6 +1034,98 @@ def lint_senior_tier_blocks(text: str) -> List[Issue]:
             "error",
             "missing_senior_output_artifacts",
             "Senior-tier skill missing `## Output` block declaring artifact name + shape",
+        ))
+
+    return issues
+
+
+def parse_context_spine(frontmatter: str) -> Optional[List[str]]:
+    """Parse `context_spine:` from frontmatter.
+
+    Supports the inline form `context_spine: [a, b, c]` (most skills) and
+    the block form via `_parse_yaml_list`. Returns the slot list, ``[]``
+    for an explicitly empty array, or ``None`` if the key is absent.
+    """
+    match = CONTEXT_SPINE_INLINE_PATTERN.search(frontmatter)
+    if match is not None:
+        inner = match.group(1).strip()
+        if not inner:
+            return []
+        return [s.strip().strip('"').strip("'") for s in inner.split(",") if s.strip()]
+    block = _parse_yaml_list(frontmatter, "context_spine")
+    return block
+
+
+def _strip_wing3_carve_outs(text: str) -> str:
+    """Remove fenced code, inline backticks, the ``## Do NOT`` block, and
+    ``**WHEN NOT to use this**`` bullets so legitimate citations of vendor
+    names (as off-scope examples) do not trip Wing-3 boundary checks.
+    """
+    text = re.sub(r"```[^\n]*\n.*?```", "", text, flags=re.DOTALL)
+    text = re.sub(r"`[^`]+`", "", text)
+    text = re.sub(
+        r"^##\s+Do NOT\s*$.*?(?=^##\s+|\Z)",
+        "", text, flags=re.MULTILINE | re.DOTALL,
+    )
+    text = re.sub(
+        r"\*\*WHEN NOT to use this\*\*.*?(?=\*\*WHEN|^##\s+|\Z)",
+        "", text, flags=re.DOTALL | re.IGNORECASE,
+    )
+    return text
+
+
+def lint_wing3_boundaries(text: str) -> List[Issue]:
+    """Four Wing-3 GTM cognition-boundary checks.
+
+    Triggered when a skill's ``context_spine`` declares at least one
+    Wing-3 slot (channel-stage, funnel-stage, customer-segment). Enforces
+    council Q7 / iter-2 OQ3 verdict that GTM cognition stays:
+
+    - **agent-operability** — no external SaaS URLs the agent would auth against.
+    - **vendor-independence** — no platform / SDK / brand slugs.
+    - **transferability** — no stack-locked tooling instructions.
+    - **channel-agnosticism** — no channel-specific tactical prescriptions.
+
+    Carve-outs: fenced code, inline backticks, the ``## Do NOT`` block,
+    and ``**WHEN NOT to use this**`` lists — so authors can cite a vendor
+    as off-scope without tripping the linter.
+    """
+    issues: List[Issue] = []
+    body = _strip_wing3_carve_outs(text)
+
+    match = WING3_SAAS_URL_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing3_agent_operability",
+            f"Wing-3 skill cites external SaaS URL `{match.group(0)}` outside "
+            f"carve-outs — cognition skills must operate without SaaS auth "
+            f"(council Q7 boundary)",
+        ))
+
+    match = WING3_VENDOR_BLACKLIST.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing3_vendor_independence",
+            f"Wing-3 skill names vendor `{match.group(0)}` outside carve-outs "
+            f"— keep cognition vendor-agnostic (council Q7 boundary)",
+        ))
+
+    match = WING3_STACK_LOCKED_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing3_transferability",
+            f"Wing-3 skill includes stack-locked instruction `{match.group(0)}` "
+            f"outside carve-outs — cognition should transfer across stacks "
+            f"(council Q7 boundary)",
+        ))
+
+    match = WING3_CHANNEL_TACTIC_PATTERN.search(body)
+    if match:
+        issues.append(Issue(
+            "warning", "wing3_channel_agnosticism",
+            f"Wing-3 skill prescribes channel-specific tactic "
+            f"`{match.group(0)}` outside carve-outs — keep cognition "
+            f"channel-agnostic (council Q7 boundary)",
         ))
 
     return issues

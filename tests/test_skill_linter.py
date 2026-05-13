@@ -1952,3 +1952,229 @@ def test_unknown_spine_slot_rejected(tmp_path: Path) -> None:
         )
         for i in result.issues
     )
+
+
+# --- Wing-3 cognition-boundary linter tests (G2, council Q7 / iter-2 OQ3) ---
+
+
+def _wing3_skill(slots: str, procedure: str, related: str = "", do_not: str = "") -> str:
+    """Build a senior Wing-3 skill body with configurable procedure / carve-outs."""
+    related_block = related or (
+        "**WHEN to use this**\n- GTM cognition framing\n\n"
+        "**WHEN NOT to use this**\n- Off-wing engineering work\n"
+    )
+    do_not_block = do_not or "- Do NOT retrofit existing off-wing skills"
+    return f"""---
+name: wing3-test
+description: "Use when applying Wing-3 GTM cognition framing to a brief."
+source: project
+domain: product
+tier: senior
+context_spine: [{slots}]
+---
+
+# wing3-test
+
+## When to use
+
+- Wing-3 cognition framing for a brief
+
+## Procedure
+
+{procedure}
+
+## Related Skills
+
+{related_block}
+
+## When the agent should load this
+
+- "frame this for Wing-3 cognition"
+
+## Output
+
+1. **cognition-brief.md** — JTBD framing + segment ICP + funnel stage
+
+## Output format
+
+1. cognition-brief.md
+2. trace-log.md
+
+## Gotchas
+
+- Wing-3 boundary failure mode example
+
+## Do NOT
+
+{do_not_block}
+"""
+
+
+def test_wing3_vendor_in_body_fires(tmp_path: Path) -> None:
+    """Naming a vendor in the procedure body triggers vendor-independence."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. We integrate with Salesforce CRM to score leads.\n"
+        "3. Validate against ICP.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("channel-stage, product", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing3_vendor_independence" for i in result.issues)
+
+
+def test_wing3_vendor_in_do_not_carved_out(tmp_path: Path) -> None:
+    """Vendor name inside ## Do NOT block does NOT trip the linter."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. Score the lead against the segment ICP.\n"
+        "3. Validate against the funnel stage.\n"
+    )
+    do_not = "- Do NOT route to Salesforce-specific configuration flows"
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("channel-stage", procedure, do_not=do_not),
+    )
+    result = lint_file(path)
+    assert not any(i.code == "wing3_vendor_independence" for i in result.issues)
+
+
+def test_wing3_vendor_in_when_not_carved_out(tmp_path: Path) -> None:
+    """Vendor name inside **WHEN NOT to use this** does NOT trip the linter."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. Score the lead against the segment ICP.\n"
+        "3. Validate against the funnel stage.\n"
+    )
+    related = (
+        "**WHEN to use this**\n- Cognition framing for a Wing-3 brief\n\n"
+        "**WHEN NOT to use this**\n- Configuring HubSpot or Marketo pipelines\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("funnel-stage", procedure, related=related),
+    )
+    result = lint_file(path)
+    assert not any(i.code == "wing3_vendor_independence" for i in result.issues)
+
+
+def test_wing3_saas_url_fires_agent_operability(tmp_path: Path) -> None:
+    """External SaaS URL in body triggers agent-operability."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. Pull contact records from https://api.intercom.io/v2/contacts.\n"
+        "3. Validate the segment.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("customer-segment", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing3_agent_operability" for i in result.issues)
+
+
+def test_wing3_channel_tactic_fires_channel_agnosticism(tmp_path: Path) -> None:
+    """Channel-specific tactical prescription triggers channel-agnosticism."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. Draft a cold email template tuned to the persona.\n"
+        "3. Validate the framing against ICP.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("channel-stage", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing3_channel_agnosticism" for i in result.issues)
+
+
+def test_wing3_stack_locked_fires_transferability(tmp_path: Path) -> None:
+    """Stack-locked install instruction triggers transferability."""
+    procedure = (
+        "1. Frame the JTBD.\n"
+        "2. Then run npm install acme-segmentation to wire it up.\n"
+        "3. Validate.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("customer-segment", procedure),
+    )
+    result = lint_file(path)
+    assert any(i.code == "wing3_transferability" for i in result.issues)
+
+
+def test_wing3_clean_cognition_skill_passes_boundaries(tmp_path: Path) -> None:
+    """Stack-agnostic, vendor-free cognition skill triggers none of the four checks."""
+    procedure = (
+        "1. Frame the JTBD against the customer segment.\n"
+        "2. Score positioning against the funnel stage.\n"
+        "3. Validate the framing with the proof-line owner.\n"
+    )
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        _wing3_skill("channel-stage, funnel-stage, customer-segment", procedure),
+    )
+    result = lint_file(path)
+    boundary_codes = {
+        "wing3_agent_operability", "wing3_vendor_independence",
+        "wing3_transferability", "wing3_channel_agnosticism",
+    }
+    assert not any(i.code in boundary_codes for i in result.issues)
+
+
+def test_wing3_boundary_dormant_for_off_wing_skills(tmp_path: Path) -> None:
+    """Skill without a Wing-3 slot is NOT subject to boundary checks even if
+    its body mentions Salesforce — off-wing skills stay free of GTM guards.
+    """
+    body = """---
+name: off-wing-test
+description: "Use when integrating with Salesforce as part of off-wing engineering."
+source: project
+domain: process
+---
+
+# off-wing-test
+
+## When to use
+
+- Salesforce integration outside Wing-3
+
+## Procedure
+
+1. Wire the Salesforce SDK into the integration layer.
+2. Apply the schema mapping.
+3. Validate the round-trip.
+
+## Output format
+
+1. integration-report.md
+2. validation-log.md
+
+## Gotchas
+
+- Schema drift between Salesforce orgs
+
+## Do NOT
+
+- Do NOT call the API without rate-limit guards
+"""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/off-wing-test/SKILL.md",
+        body,
+    )
+    result = lint_file(path)
+    boundary_codes = {
+        "wing3_agent_operability", "wing3_vendor_independence",
+        "wing3_transferability", "wing3_channel_agnosticism",
+    }
+    assert not any(i.code in boundary_codes for i in result.issues)
