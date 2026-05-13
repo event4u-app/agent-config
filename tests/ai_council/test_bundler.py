@@ -33,6 +33,8 @@ REDACTION_CASES = [
     ("Authorization: Bearer xyz", "Authorization header"),
     ("path = ~/.config/agent-config/anthropic.key", "agent-config key path"),
     ("/Users/me/.config/agent-config/openai.key was used", "agent-config key path"),
+    ("path = ~/.event4u/agent-config/anthropic.key", "agent-config key path"),
+    ("/Users/me/.event4u/agent-config/openai.key was used", "agent-config key path"),
     ("found sk-ant-AAAAAAAAAAAAAAAAA in log", "anthropic-key-like token"),
 ]
 

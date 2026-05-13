@@ -10,7 +10,10 @@ Design constraints (see roadmap P2):
 
 - Stdlib only (no new deps); the package's Python floor is stdlib-only.
 - 1 s hard timeout on the registry call; network failure is silent.
-- 24 h cadence gated by ``~/.config/agent-config/update-check.json``.
+- 24 h cadence gated by ``~/.event4u/agent-config/update-check.json``
+  (legacy ``~/.config/agent-config/update-check.json`` is read once as
+  a fallback so the cadence is not reset on the first run after the
+  Phase-1 namespace migration).
 - Suppress in CI, on non-TTY stdout, when ``AGENT_CONFIG_NO_UPDATE_CHECK=1``,
   or when ``update_check.enabled: false`` in settings.
 - State file mode is ``0600``.
@@ -30,12 +33,29 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
+from scripts._lib import user_global_paths
+
 PACKAGE_NAME = "@event4u/agent-config"
 NPM_REGISTRY_URL = f"https://registry.npmjs.org/{PACKAGE_NAME}/latest"
 FETCH_TIMEOUT_S = 1.0
 CHECK_WINDOW = timedelta(hours=24)
 
-DEFAULT_STATE_PATH = Path.home() / ".config" / "agent-config" / "update-check.json"
+STATE_FILENAME = "update-check.json"
+
+#: Canonical write target. Reads are routed via
+#: :func:`_resolve_state_path` with a read-fallback to the legacy
+#: ``~/.config/agent-config/update-check.json`` so a fresh install
+#: under the new namespace does not lose the 24 h cadence window
+#: established by a pre-2.4 install.
+DEFAULT_STATE_PATH = user_global_paths.write_target(STATE_FILENAME)
+
+
+def _resolve_state_path() -> Path:
+    """Return the active state path, preferring the new namespace."""
+    found = user_global_paths.resolve_with_fallback(STATE_FILENAME)
+    if found is not None:
+        return found
+    return DEFAULT_STATE_PATH
 
 
 def _now_utc() -> datetime:
@@ -159,8 +179,12 @@ def check_for_update(
         return None
 
     now = now or _now_utc()
-    state_path = state_path or DEFAULT_STATE_PATH
-    state = _read_state(state_path)
+    # When the caller does not pin a state path, route through the
+    # fallback resolver so a pre-2.4 install's cadence file is still
+    # consulted before we decide to re-check npm.
+    read_path = state_path or _resolve_state_path()
+    write_path = state_path or DEFAULT_STATE_PATH
+    state = _read_state(read_path)
     if not _should_check(state, now):
         latest = state.get("last_seen_version")
         if isinstance(latest, str) and _is_newer(latest, installed_version):
@@ -174,7 +198,7 @@ def check_for_update(
         "installed_version": installed_version,
     }
     try:
-        _write_state(state_path, payload)
+        _write_state(write_path, payload)
     except OSError:
         pass
 

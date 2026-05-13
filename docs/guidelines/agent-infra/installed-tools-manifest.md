@@ -105,7 +105,7 @@ the next commit.
 |---|---|---|
 | `agents/installed-tools.lock` | **which AIs?** (this guideline) | bill of materials |
 | `.agent-project-settings.yml` | **how do agents behave?** | layered-settings (team file) |
-| `~/.config/agent-config/installed.lock` | **which package version did I install globally?** | per-developer global lockfile (Phase 1) |
+| `~/.event4u/agent-config/installed.lock` | **which package version did I install globally?** | per-developer global lockfile (Phase 1; legacy `~/.config/agent-config/installed.lock` read as fallback) |
 | `.agent-settings.yml` | **what are my personal preferences in this project?** | layered-settings (developer file) |
 
 Each file has one job. They never overlap. The two `.lock` files look

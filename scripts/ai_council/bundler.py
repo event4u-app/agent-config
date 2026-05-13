@@ -38,6 +38,8 @@ class CouncilContext:
 # placeholder. Order matters — the most specific pattern goes first.
 
 _REDACTION_LINE_PATTERNS: list[tuple[re.Pattern[str], str]] = [
+    (re.compile(r"~?/?\.event4u/agent-config/[^/\s]+\.key"),
+     "[redacted: agent-config key path]"),
     (re.compile(r"~?/?\.config/agent-config/[^/\s]+\.key"),
      "[redacted: agent-config key path]"),
     (re.compile(r"^\s*Authorization:\s", re.IGNORECASE),

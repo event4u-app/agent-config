@@ -3,10 +3,12 @@
 #
 # Reads the key with `read -s` so it never echoes to the terminal and
 # never lands in shell history or scrollback. Writes atomically to
-# ~/.config/agent-config/anthropic.key with mode 0600.
+# ~/.event4u/agent-config/anthropic.key with mode 0600. The legacy
+# ~/.config/agent-config/anthropic.key is read as a fallback by the
+# loaders so pre-2.4 installs keep working until the namespace shim runs.
 #
 # Contract — companion to scripts/skill_trigger_eval.py:
-#   - File path:  $HOME/.config/agent-config/anthropic.key
+#   - File path:  $HOME/.event4u/agent-config/anthropic.key
 #   - File mode:  0600 (owner read/write only)
 #   - Key format: must start with `sk-ant-`
 #   - No --force, no --yes, no env-var bypass. Piped stdin is rejected.
@@ -16,7 +18,7 @@
 
 set -euo pipefail
 
-TARGET_DIR="${HOME}/.config/agent-config"
+TARGET_DIR="${HOME}/.event4u/agent-config"
 TARGET_FILE="${TARGET_DIR}/anthropic.key"
 
 # ── controlling-terminal requirement ─────────────────────────────────────

@@ -46,7 +46,7 @@ test_safe_bash_flags() {
 }
 
 test_target_path_contract() {
-    assert_grep "TARGET_DIR is ~/.config/agent-config" 'TARGET_DIR=.*\.config/agent-config'
+    assert_grep "TARGET_DIR is ~/.event4u/agent-config" 'TARGET_DIR=.*\.event4u/agent-config'
     assert_grep "TARGET_FILE is openai.key" 'TARGET_FILE=.*openai\.key'
 }
 

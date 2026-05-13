@@ -237,8 +237,9 @@ worktrees:
 # roadmap, diff, prompt, or file set. Council members never see the
 # host agent's reasoning — only the artefact + a neutral system prompt.
 #
-# Tokens are NEVER stored here. They live in ~/.config/agent-config/
-# <provider>.key (mode 0600), installed via:
+# Tokens are NEVER stored here. They live in ~/.event4u/agent-config/
+# <provider>.key (mode 0600; legacy ~/.config/agent-config/<provider>.key
+# is read as a fallback), installed via:
 #   bash scripts/install_anthropic_key.sh
 #   bash scripts/install_openai_key.sh
 #
@@ -396,7 +397,8 @@ memory:
 # two-line banner to stderr **after** the subcommand finishes; CI,
 # non-TTY stdout, and `AGENT_CONFIG_NO_UPDATE_CHECK=1` always suppress
 # it regardless of this flag. State is persisted at
-# `~/.config/agent-config/update-check.json` (mode 0600) with a 24 h
+# `~/.event4u/agent-config/update-check.json` (mode 0600; legacy
+# `~/.config/agent-config/update-check.json` read as fallback) with a 24 h
 # cadence. See docs/customization.md § "Update check" for the suppression
 # matrix and the road-to-portable-runtime-and-update-check roadmap (P2).
 update_check:

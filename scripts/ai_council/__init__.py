@@ -13,9 +13,10 @@ Architecture:
     prompts.py      — Neutrality system-prompt templates per input mode.
 
 Trust boundary: this module makes networked, paid calls. Tokens come
-exclusively from ~/.config/agent-config/<provider>.key (mode 0600). The
-module never edits files, never opens PRs, never merges — output is
-text only, advisory.
+exclusively from ``~/.event4u/agent-config/<provider>.key`` (mode 0600;
+legacy ``~/.config/agent-config/<provider>.key`` is read as a fallback
+for pre-2.4 installs). The module never edits files, never opens PRs,
+never merges — output is text only, advisory.
 """
 
 from scripts.ai_council.clients import (

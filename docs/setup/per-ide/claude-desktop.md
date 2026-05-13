@@ -10,7 +10,8 @@ server inside Claude Desktop. macOS / Windows / Linux. ~5 minutes.
 > (Claude Code's project install also covers Desktop on macOS via the
 > shared `~/.claude/` location seeded during `init`). The v1 npm /
 > composer install scheme is retired; the new global-first scheme is
-> ADR-007 and writes through `~/.config/agent-config/installed.lock`.
+> ADR-007 and writes through `~/.event4u/agent-config/installed.lock`
+> (legacy `~/.config/agent-config/installed.lock` read as fallback).
 
 ## Prerequisites
 

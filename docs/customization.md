@@ -48,12 +48,14 @@ Six **DX-comfort** keys can be carried across every project that uses
 `event4u/agent-config` by storing them once in a user-global file at:
 
 ```
-~/.config/agent-config/agent-settings.yml
+~/.event4u/agent-config/agent-settings.yml
 ```
 
-The path is XDG-style and matches the existing
-`~/.config/agent-config/` directory used for `anthropic.key`,
-`openai.key`, and `council-spend.jsonl`.
+The path namespaces every event4u-owned user-global artefact under one
+root — same place where `anthropic.key`, `openai.key`, and
+`council-spend.jsonl` now live. Pre-2.4 installs that still keep these
+files under `~/.config/agent-config/` are read as a fallback until the
+namespace migration shim moves them.
 
 **Whitelist (locked, exact dotted paths)** — only these six keys are
 mergeable from the user-global file; every other key is silently ignored:
@@ -71,7 +73,7 @@ caveman.speak_scope
 
 ```
 1. Package defaults                                   (shipped by event4u/agent-config)
-2. ~/.config/agent-config/agent-settings.yml          (user-global · whitelist-filtered)
+2. ~/.event4u/agent-config/agent-settings.yml         (user-global · whitelist-filtered · legacy ~/.config/agent-config/ read as fallback)
 3. <repo-root>/.agent-settings.yml                    (project-wide · all keys)
 4. <intermediate-dir>/.agent-settings.yml             (subsystem-scoped · all keys · optional)
 5. <CWD>/.agent-settings.yml                          (deepest · all keys · wins)
@@ -126,7 +128,7 @@ Rules:
   consumers should pin.
 - **Owned by the project, not the developer.** Lives in
   `.agent-settings.yml` (committed), reviewed in PRs like any other
-  config change. Never merged from `~/.config/agent-config/agent-settings.yml`.
+  config change. Never merged from `~/.event4u/agent-config/agent-settings.yml`.
 - **Resolver enforcement.** `npx @event4u/agent-config <cmd>`
   compares the resolved CLI version against the pin; mismatch
   triggers a re-exec at the pinned version
@@ -150,22 +152,23 @@ Rules:
 | `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether `/onboard` has run. The `onboarding-gate` rule prompts for `/onboard` while this is `false`. |
 | `ai_council.enabled` | `false` | Master switch for the `/council` command. Even when enabled, every consultation asks before spending tokens. |
-| `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.config/agent-config/<provider>.key` (mode 0600), never in this file. |
+| `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.event4u/agent-config/<provider>.key` (mode 0600), never in this file. Legacy `~/.config/agent-config/<provider>.key` is read as a fallback. |
 | `ai_council.members.<provider>.model` | per provider | Which model the provider sends the query to (e.g. `claude-sonnet-4-5`, `gpt-4o`). |
 | `ai_council.cost_budget.max_input_tokens` | `50000` | Hard cap on summed input tokens per `/council` invocation. |
 | `ai_council.cost_budget.max_output_tokens` | `20000` | Hard cap on summed output tokens per `/council` invocation. |
 | `ai_council.cost_budget.max_calls` | `10` | Maximum council members per invocation. |
 | `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
-| `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.config/agent-config/council-spend.jsonl` (mode 0600). |
+| `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.event4u/agent-config/council-spend.jsonl` (mode 0600). |
 | `ai_council.session_retention_days` | `14` | Auto-prune for `agents/council-sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
 Council API tokens are installed via `./agent-config keys:install-anthropic`
 and `./agent-config keys:install-openai` — they prompt on `/dev/tty`, write to
-`~/.config/agent-config/<provider>.key` with mode `0600`, and never accept env
-vars. The `/council` command refuses to run if the key file's permissions
-drift.
+`~/.event4u/agent-config/<provider>.key` with mode `0600`, and never accept env
+vars. Pre-2.4 installs at `~/.config/agent-config/<provider>.key` are still
+honoured by the loaders as a fallback. The `/council` command refuses to run
+if the key file's permissions drift.
 
 ### Cost profiles
 
@@ -316,9 +319,10 @@ shadowed.
 | `agents/roadmaps/` | ❌ No — project-rooted only. | ❌ No. | Active delivery plans. |
 | `agents/state/`, `agents/memory/`, `agents/work_engine/`, `agents/.agent-prices.md`, `agents/council-*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
 
-**User-global asymmetry.** `~/.config/agent-config/agents/overrides/`
-is the only user-global overlay path consulted by the loader. Files
-under `~/.config/agent-config/agents/contexts/` or
+**User-global asymmetry.** `~/.event4u/agent-config/agents/overrides/`
+is the only user-global overlay path consulted by the loader (the
+legacy `~/.config/agent-config/agents/overrides/` tree is read as a
+fallback). Files under `~/.event4u/agent-config/agents/contexts/` or
 `.../agents/decisions/` are silently skipped — these kinds are
 project-shaped and must not leak across projects.
 
@@ -343,9 +347,11 @@ finished. There is no prompt — the user updates when they want with
     Update: npx @event4u/agent-config update
 ```
 
-State is persisted at `~/.config/agent-config/update-check.json`
-(mode `0600`) — sibling of `anthropic.key`, `council-spend.jsonl`.
-The fetch is hard-capped at 1 s and silent on any error.
+State is persisted at `~/.event4u/agent-config/update-check.json`
+(mode `0600`; the legacy `~/.config/agent-config/update-check.json`
+is read as a fallback) — sibling of `anthropic.key`,
+`council-spend.jsonl`. The fetch is hard-capped at 1 s and silent on
+any error.
 
 ### Suppression matrix
 

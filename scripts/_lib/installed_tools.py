@@ -4,7 +4,7 @@ Phase 3 of road-to-global-first-install (ADR-008). Committed
 bill-of-materials for AI tooling a project depends on. Sibling to the
 global lockfile (``installed_lock.py``) but architecturally distinct:
 
-- ``installed_lock.py`` lives in ``~/.config/agent-config/`` and tracks
+- ``installed_lock.py`` lives in ``~/.event4u/agent-config/`` and tracks
   the user-scope environment (a single ``agent_config_version`` and a
   flat ``tools[]`` list).
 - ``installed_tools.py`` lives in ``agents/`` and tracks **per-project**

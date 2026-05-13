@@ -8,9 +8,12 @@ user-global directory (when the ``kind`` is whitelisted).
 
 Resolution order (deepest wins, every layer optional):
 
-  N. ``~/.config/agent-config/agents/<kind>/<name>.md``  (user-global; weakest;
+  N. ``~/.event4u/agent-config/agents/<kind>/<name>.md`` (user-global; weakest;
                                                           ``kind`` must be in
-                                                          ``USER_GLOBAL_OVERLAY_KINDS``)
+                                                          ``USER_GLOBAL_OVERLAY_KINDS``;
+                                                          legacy
+                                                          ``~/.config/agent-config/agents/``
+                                                          tree read as fallback)
 N-1. ``<repo-root>/agents/<kind>/<name>.md``
 N-2. ``<intermediate-dir>/agents/<kind>/<name>.md``      (optional)
   1. ``<CWD>/agents/<kind>/<name>.md``                   (deepest, wins)
@@ -34,6 +37,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from scripts._lib import user_global_paths
 from scripts._lib.agent_settings import find_project_root
 
 logger = logging.getLogger(__name__)
@@ -50,13 +54,17 @@ CASCADE_ELIGIBLE_KINDS: frozenset[str] = frozenset({
 })
 
 #: Subset of :data:`CASCADE_ELIGIBLE_KINDS` allowed to live at the
-#: user-global layer (``~/.config/agent-config/agents/<kind>/``).
+#: user-global layer (``~/.event4u/agent-config/agents/<kind>/``).
 #: ``contexts/`` and ``decisions/`` are project-shaped and must not leak
 #: across projects; only ``overrides/`` — the developer's personal
 #: layer — is whitelisted.
 USER_GLOBAL_OVERLAY_KINDS: frozenset[str] = frozenset({"overrides"})
 
-USER_GLOBAL_AGENTS_DIR = Path.home() / ".config" / "agent-config" / "agents"
+#: Canonical write target under the new vendor namespace. The probe in
+#: :func:`resolve_overlay` adds the legacy ``~/.config/agent-config/agents/``
+#: tree as a read-only fallback for pre-2.4 installs.
+USER_GLOBAL_AGENTS_DIR = user_global_paths.write_target("agents")
+_LEGACY_USER_GLOBAL_AGENTS_DIR = user_global_paths.legacy_xdg_root() / "agents"
 
 
 def resolve_overlay(name: str, kind: str, cwd: Path) -> Path | None:
@@ -83,6 +91,9 @@ def resolve_overlay(name: str, kind: str, cwd: Path) -> Path | None:
     candidates: list[Path] = []
 
     if kind in USER_GLOBAL_OVERLAY_KINDS:
+        # Legacy first, new last — deepest wins, so the new namespace
+        # overrides the legacy path when both happen to exist mid-migration.
+        candidates.append(_LEGACY_USER_GLOBAL_AGENTS_DIR / kind / f"{name}.md")
         candidates.append(USER_GLOBAL_AGENTS_DIR / kind / f"{name}.md")
 
     root = find_project_root(cwd)

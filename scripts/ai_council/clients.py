@@ -1,7 +1,10 @@
 """External-AI clients for the council.
 
 Mirrors the contract from `scripts/skill_trigger_eval.py`:
-- Tokens come exclusively from ~/.config/agent-config/<provider>.key.
+- Tokens come exclusively from ``~/.event4u/agent-config/<provider>.key``
+  (legacy ``~/.config/agent-config/<provider>.key`` is read as a
+  fallback so pre-2.4 installs keep working until the user moves the
+  files into the new namespace).
 - File mode must be exactly 0o600. Drift is a hard abort.
 - No environment-variable fallback. No keychain fallback.
 - Real SDKs (`anthropic`, `openai`) are *soft* dependencies — the
@@ -28,8 +31,24 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TextIO
 
-ANTHROPIC_KEY_PATH = Path.home() / ".config" / "agent-config" / "anthropic.key"
-OPENAI_KEY_PATH = Path.home() / ".config" / "agent-config" / "openai.key"
+from scripts._lib import user_global_paths
+
+ANTHROPIC_KEY_FILENAME = "anthropic.key"
+OPENAI_KEY_FILENAME = "openai.key"
+
+#: Canonical write target under the new namespace. Reads route via
+#: :func:`_resolve_key_path` so a key still sitting in the legacy
+#: ``~/.config/agent-config/`` tree keeps working.
+ANTHROPIC_KEY_PATH = user_global_paths.write_target(ANTHROPIC_KEY_FILENAME)
+OPENAI_KEY_PATH = user_global_paths.write_target(OPENAI_KEY_FILENAME)
+
+
+def _resolve_key_path(filename: str) -> Path:
+    """Return the active key path, preferring the new namespace."""
+    found = user_global_paths.resolve_with_fallback(filename)
+    if found is not None:
+        return found
+    return user_global_paths.write_target(filename)
 
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 DEFAULT_OPENAI_MODEL = "gpt-4o"
@@ -87,12 +106,14 @@ def _load_key(path: Path, prefix: str, install_script: str) -> str:
     return key
 
 
-def load_anthropic_key(path: Path = ANTHROPIC_KEY_PATH) -> str:
-    return _load_key(path, "sk-ant-", "scripts/install_anthropic_key.sh")
+def load_anthropic_key(path: Path | None = None) -> str:
+    resolved = path if path is not None else _resolve_key_path(ANTHROPIC_KEY_FILENAME)
+    return _load_key(resolved, "sk-ant-", "scripts/install_anthropic_key.sh")
 
 
-def load_openai_key(path: Path = OPENAI_KEY_PATH) -> str:
-    return _load_key(path, "sk-", "scripts/install_openai_key.sh")
+def load_openai_key(path: Path | None = None) -> str:
+    resolved = path if path is not None else _resolve_key_path(OPENAI_KEY_FILENAME)
+    return _load_key(resolved, "sk-", "scripts/install_openai_key.sh")
 
 
 class ExternalAIClient(ABC):
