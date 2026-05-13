@@ -186,28 +186,30 @@ user-scope surface (`scripts/install.py` user-global deploy path):
 
 ## Phase 5: Tests + Docs + ADR
 
-- [ ] **Step 1:** Update `tests/work_engine/conftest.py` (lines 10 + 35)
-      and `tests/ai_council/test_bundler.py` (lines 34 + 35) so test
-      fixtures and redaction tests cover both paths during transition.
-- [ ] **Step 2:** Update `docs/customization.md`,
+- [x] **Step 1:** Update `tests/work_engine/conftest.py` and
+      `tests/ai_council/test_bundler.py` so test fixtures and redaction
+      tests cover both paths during transition. Landed with Phase 1-3.
+- [x] **Step 2:** Update `docs/customization.md`,
       `docs/installation.md`, `docs/setup/per-ide/claude-desktop.md`,
       `docs/guidelines/agent-infra/layered-settings.md`,
       `docs/guidelines/agent-infra/installed-tools-manifest.md` — every
       `~/.config/agent-config/` reference becomes `~/.event4u/agent-config/`
       with a "legacy path read for back-compat" footnote where relevant.
-- [ ] **Step 3:** Update `docs/migration/v1-to-v2.md` — add a v2→v2.4
+      Landed with Phase 1-3.
+- [x] **Step 3:** Update `docs/migration/v1-to-v2.md` — added the v2→v2.4
       sub-section documenting the namespace migration (auto-shim covers
       it; no manual action required).
-- [ ] **Step 4:** Rewrite `docs/setup/per-ide/claude-desktop.md`
-      end-to-end. The TL;DR drops the false "reads from `~/.claude/`"
-      claim. Add a "Step 1b — Import skills into Customize" section that
-      walks through the bundle path, the Upload button, and the per-skill
-      ZIP that v2.4 now generates. Keep MCP server section unchanged.
-- [ ] **Step 5:** Create `docs/decisions/ADR-NNN-event4u-namespace.md`
-      (use `adr-create` skill conventions; auto-numbered). Status:
-      Accepted. Documents the namespace move, the legacy-fallback
-      contract, and the Claude Desktop bundler decision (ZIP over API).
-      Add top-banner to `ADR-007` linking to the successor.
+- [x] **Step 4:** Rewrote `docs/setup/per-ide/claude-desktop.md`
+      end-to-end. TL;DR drops the false "reads from `~/.claude/`" claim.
+      Added "Step 1 — generate the ZIP bundles" + "Step 1b — Import
+      skills into Customize" walking through bundle path, Upload button,
+      and the per-skill ZIP that v2.4 generates. MCP server section
+      preserved.
+- [x] **Step 5:** Created `docs/decisions/ADR-009-event4u-namespace.md`
+      (Accepted, 2026-05-13). Documents the namespace move, the
+      legacy-fallback contract, and the Claude Desktop bundler decision
+      (ZIP over API). Top-banner added to `ADR-007` linking to the
+      successor. ADR index regenerated.
 
 ## Phase 6: Quality pipeline + AI Council post-review + PR
 

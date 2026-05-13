@@ -10,6 +10,12 @@ phase: post-v2.1.0 · simplicity-and-everywhere
 
 # ADR-007 — Agent Discovery Scopes: Global-Default Install Model
 
+> **Update (v2.4, 2026-05-13):** the user-scope dir was relocated from
+> `~/.config/agent-config/` to `~/.event4u/agent-config/` by
+> [`ADR-009`](ADR-009-event4u-namespace.md). The legacy path is still
+> read as a back-compat fallback. The discovery-scope contract in this
+> ADR is otherwise unchanged.
+>
 > **Note (post-acceptance):** the one-shot installer command was later
 > renamed from `npx @event4u/create-agent-config init` to
 > `npx @event4u/agent-config init` when the standalone wrapper package

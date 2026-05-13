@@ -91,8 +91,53 @@ npx @event4u/agent-config doctor    # P3 — runtime sanity check
 
 Expected: pin resolved, no v1 markers detected, `update_check` reachable.
 
+## v2 → v2.4 — `~/.event4u/agent-config/` namespace move
+
+v2.4 relocates package-owned user-scope state from
+`~/.config/agent-config/` to `~/.event4u/agent-config/`. Tool anchors
+(`~/.claude/`, `~/.augment/`, `~/.cursor/`, `~/.codeium/windsurf/`) are
+**not** moved — those belong to their host tools.
+
+### What moves
+
+| Old path                                            | New path                                                |
+|-----------------------------------------------------|---------------------------------------------------------|
+| `~/.config/agent-config/agent-settings.yml`         | `~/.event4u/agent-config/agent-settings.yml`            |
+| `~/.config/agent-config/installed.lock`             | `~/.event4u/agent-config/installed.lock`                |
+| `~/.config/agent-config/installed-tools.yml`        | `~/.event4u/agent-config/installed-tools.yml`           |
+| `~/.config/agent-config/update-check.json`          | `~/.event4u/agent-config/update-check.json`             |
+| `~/.config/agent-config/ai-council/`                | `~/.event4u/agent-config/ai-council/`                   |
+
+### Migration — zero action required
+
+A one-shot auto-migration shim runs on the first `init` / `update` /
+`uninstall` after upgrading to ≥ 2.4:
+
+1. If `~/.event4u/agent-config/` already exists → no-op.
+2. Otherwise, copy every file from `~/.config/agent-config/` to the new
+   path, preserving mtimes.
+3. Drop a `MIGRATED.md` breadcrumb in the legacy dir pointing at the new
+   home. Legacy files stay readable; loaders fall back to them until a
+   subsequent install overwrites the new path.
+
+Override the target dir with `EVENT4U_HOME=/some/path` if you keep a
+non-standard home (`$HOME` substitute) or want to test the migration
+against a sandbox.
+
+### Claude Desktop — new bundle output
+
+v2.4 ships a real Claude Desktop deployment instead of the
+marker-only stub. Running `npx @event4u/agent-config init
+--tools=claude-desktop` (or any superset that includes it) now produces
+one ZIP per `.claude/skills/<name>/` under
+`~/.event4u/agent-config/claude-desktop/bundles/`. Import them via
+Claude Desktop → Customize → Skills → Upload. See
+[`docs/setup/per-ide/claude-desktop.md`](../setup/per-ide/claude-desktop.md)
+for the click-through.
+
 ## See also
 
 - [`docs/architecture.md` § Distribution model](../architecture.md#distribution-model--npx-only--version-pin-governance) — Q1 council rejection + override + pin substitution.
 - [`agents/roadmaps/road-to-portable-runtime-and-update-check.md`](../../agents/roadmaps/road-to-portable-runtime-and-update-check.md) — full delivery plan and acceptance criteria.
+- [`agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md`](../../agents/roadmaps/road-to-event4u-namespace-and-claude-desktop.md) — v2.4 namespace + bundle delivery plan.
 - [`docs/installation.md`](../installation.md) — v2 install reference.
