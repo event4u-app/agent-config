@@ -343,6 +343,14 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
+## [2.6.1](https://github.com/event4u-app/agent-config/compare/2.6.0...2.6.1) (2026-05-13)
+
+### Chores
+
+* **gitignore:** add /agents/state/ to consumer template ([80449c4](https://github.com/event4u-app/agent-config/commit/80449c4fa13ca847f8af925d4b7e472658c60aef))
+
+Tests: 3530 (+0 since 2.6.0)
+
 ## [2.6.0](https://github.com/event4u-app/agent-config/compare/2.4.1...2.6.0) (2026-05-13)
 
 ### Features
