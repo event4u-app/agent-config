@@ -52,6 +52,14 @@ locks the cross-wing slot count at 3. Per-wing extensions follow § 5.
 | `funnel-stage` | `funnel-stage.md` | Growth / RevOps wing | Funnel topology (top / mid / bottom / activation / retention), per-stage definition, exit-criteria for each. Read by `pipeline-strategy`, `funnel-analysis`, `activation-design`, `onboarding-design`. |
 | `customer-segment` | `customer-segment.md` | Sales / CS wing | ICP, persona-by-segment, ARR-band-by-segment. Read by `ICP`, `pipeline-strategy`, `MEDDIC`, `retention-loops`. |
 
+### Wing-4 slots (Money / Strategy / Ops — added 2026-05-13 per [`adr-wing4-context-spine.md`](adr-wing4-context-spine.md))
+
+| Slot | Path under `agents/context-spine/` | Owner | Typical content |
+|---|---|---|---|
+| `fiscal-period` | `fiscal-period.md` | Finance wing | Reporting cadence (monthly · quarterly · annual · multi-year-plan), fiscal-year start, close-window timing. Read by `unit-economics`, `forecasting`, `runway-cognition`, `scenario-modeling`. |
+| `org-stage` | `org-stage.md` | Strategy / People wing | Stage label (seed · series-A · series-B · growth · public), funding posture, headcount band, governance posture. Read by `build-buy-partner`, `vision-articulation`, `org-design`, `comp-banding`, `hiring-loop-design`. |
+| `regulatory-regime` | `regulatory-regime.md` | Strategy wing (legal-absorbed) | Active regimes (none · GDPR · HIPAA · SOC2 · PCI · CCPA), data-residency posture, breach-notification timer. Read by `contracts-cognition`, `privacy-review`, `data-handling-judgment`. |
+
 Slots are markdown files. Each is **≤ 200 lines**; longer means the
 slot is doing two jobs and the author should split or trim. Empty /
 missing slot is allowed — the citing skill MUST handle absence
