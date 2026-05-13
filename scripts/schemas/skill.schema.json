@@ -72,9 +72,9 @@
       "uniqueItems": true,
       "items": {
         "type": "string",
-        "enum": ["product", "team", "repo"]
+        "enum": ["product", "team", "repo", "channel-stage", "funnel-stage", "customer-segment"]
       },
-      "description": "Senior-skill opt-in for the tri-slot context spine. Declares which slots under agents/context-spine/ the skill expects to read (product, team, repo). Council Q1 (KEEP-3) locks the slot count at 3; additions require ≥ 2 citing skills + ADR per docs/contracts/context-spine.md § 5."
+      "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots (channel-stage, funnel-stage, customer-segment — Wing-3 GTM) follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 slots authorized by docs/contracts/adr-gtm-context-spine.md."
     },
     "execution": {
       "type": "object",

@@ -1848,3 +1848,107 @@ def test_format_json_emits_valid_payload_for_empty_results() -> None:
         "total": 0,
     }
     assert payload["results"] == []
+
+
+
+# --- Wing-3 GTM context-spine slot tests (adr-gtm-context-spine.md) ---
+
+
+_WING3_SPINE_TEMPLATE = """---
+name: spine-test
+description: "Use when testing the Wing-3 context-spine slots authorized by adr-gtm-context-spine.md."
+source: project
+domain: product
+tier: senior
+context_spine: [{slots}]
+---
+
+# spine-test
+
+## When to use
+
+- Wing-3 spine validation
+
+## Procedure
+
+1. Inspect agents/context-spine/channel-stage.md if present
+2. Apply funnel-stage cognition to the brief
+3. Validate against ICP from customer-segment slot
+
+## Related Skills
+
+**WHEN to use this**
+- GTM cognition tests
+
+**WHEN NOT to use this**
+- Off-wing cognition — route to other skills
+
+## When the agent should load this
+
+- "validate the wing-3 spine"
+
+## Output
+
+1. **spine-validation.md** — slot read trace, one section per declared slot
+
+## Output format
+
+1. spine-validation.md
+2. trace-log.md
+
+## Gotchas
+
+- Test fixture only — do not ship
+
+## Do NOT
+
+- Do NOT retrofit existing off-wing skills with these slots
+"""
+
+
+def test_wing3_spine_slots_all_three_pass(tmp_path: Path) -> None:
+    """Senior skill declaring all three Wing-3 slots lints clean (adr-gtm-context-spine.md)."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        _WING3_SPINE_TEMPLATE.format(
+            slots="channel-stage, funnel-stage, customer-segment"
+        ),
+    )
+    result = lint_file(path)
+    assert not any(
+        i.code in {"unknown_context_spine_slot", "schema_validation_error"}
+        and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_wing3_spine_mixed_with_cross_wing_passes(tmp_path: Path) -> None:
+    """Mixed cross-wing (product) + Wing-3 (channel-stage) declaration is valid."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        _WING3_SPINE_TEMPLATE.format(slots="product, channel-stage"),
+    )
+    result = lint_file(path)
+    assert not any(
+        i.code in {"unknown_context_spine_slot", "schema_validation_error"}
+        and i.severity == "error"
+        for i in result.issues
+    )
+
+
+def test_unknown_spine_slot_rejected(tmp_path: Path) -> None:
+    """Unknown slot value fails schema validation — guard against slot-sprawl."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        _WING3_SPINE_TEMPLATE.format(slots="product, made-up-slot"),
+    )
+    result = lint_file(path)
+    assert any(
+        i.severity == "error" and (
+            "context_spine" in i.message or "made-up-slot" in i.message
+        )
+        for i in result.issues
+    )
