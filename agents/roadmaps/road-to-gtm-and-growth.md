@@ -154,11 +154,11 @@ of skills + workflows + identity, override-friendly per the
 unified-senior-roles council Q4 ABSORB pattern (defaults loaded,
 project overrides allowed via `agents/overrides/`).
 
-- [ ] **I** — Wing 3 personas shipped (block marker; flips when I1–I4 are all done). Gated on Block H ≥ 50 % (at least the cluster lead-skills H1, H8, H11, H14 done).
-- [ ] **I1** — `cmo` persona (`tier: senior`): identity = "owns the said and the seen", capabilities (default-loaded, override-friendly per unified Q4) = H1 + H2 + H3 + H4 + H5 + H6 + H7. Stances: founder-mode (cited via H7). Workflows = launch-sequence-loop + content-cadence-loop.
-- [ ] **I2** — `revops` persona (`tier: senior`): identity = "owns the pipeline and the forecast", capabilities = H8 + H9 + H10. Mental-models = `theory-of-constraints` + `leading-vs-lagging-indicators`. Workflows = pipeline-review-loop + forecast-call-loop.
-- [ ] **I3** — `customer-success-lead` persona (`tier: senior`): identity = "owns the post-signature value", capabilities = H11 + H12 + H13. Workflows = onboarding-design-loop + health-score-review-loop.
-- [ ] **I4** — `growth-pm` persona (`tier: senior`): identity = "owns the funnel and the loops", capabilities = H14 + H15 + H16. Composes `customer-research` (unified L1) + `north-star-metric` (unified Wing-2 cognition). Workflows = funnel-diagnostic-loop + activation-experiment-loop.
+- [x] **I** — Wing 3 personas shipped (block marker; flips when I1–I4 are all done). Gated on Block H ≥ 50 % (at least the cluster lead-skills H1, H8, H11, H14 done).
+- [x] **I1** — `cmo` persona (`tier: senior`): identity = "owns the said and the seen", capabilities (default-loaded, override-friendly per unified Q4) = H1 + H2 + H3 + H4 + H5 + H6 + H7. Stances: founder-mode (cited via H7). Workflows = launch-sequence-loop + content-cadence-loop.
+- [x] **I2** — `revops` persona (`tier: senior`): identity = "owns the pipeline and the forecast", capabilities = H8 + H9 + H10. Mental-models = `theory-of-constraints` + `leading-vs-lagging-indicators`. Workflows = pipeline-review-loop + forecast-call-loop.
+- [x] **I3** — `customer-success-lead` persona (`tier: senior`): identity = "owns the post-signature value", capabilities = H11 + H12 + H13. Workflows = onboarding-design-loop + health-score-review-loop.
+- [x] **I4** — `growth-pm` persona (`tier: senior`): identity = "owns the funnel and the loops", capabilities = H14 + H15 + H16. Composes `customer-research` (unified L1) + `north-star-metric` (unified Wing-2 cognition). Workflows = funnel-diagnostic-loop + activation-experiment-loop.
 
 ## Sibling cross-references (locked)
 
