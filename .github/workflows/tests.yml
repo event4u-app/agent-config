@@ -30,46 +30,52 @@ on:
   # even when scripts/** or tests/** changed (observed on PR #34).
   workflow_dispatch:
 
+# Cancel superseded runs on the same ref. Saves ~7min per re-push on
+# the install-tests matrix and keeps the queue depth low so fresh
+# pushes don't sit behind stale ones.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   install-tests:
-    name: Install Script Tests (${{ matrix.os }})
+    # test_install.sh runs each of 35 tests in its own mktemp dir,
+    # invoking install.sh which symlinks hundreds of skill/rule/command
+    # files. Wall-clock dominated by fs ops — the suite is sharded
+    # across N matrix jobs (N=3) so each shard runs ~12 tests, hitting
+    # the 1–2 min per-job target. Within each shard, --parallel uses
+    # the default nproc-based job count which avoids fs contention
+    # from over-subscription that was observed at -P 8.
+    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/3)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-
+        shard: [1, 2, 3]
+    env:
+      SHARD: ${{ matrix.shard }}/3
     steps:
       - uses: actions/checkout@v4
 
-      # The install-script suite is I/O-bound (mktemp · symlink walks ·
-      # tarball builds). Two wall-clock optimizations applied here:
-      #
-      # 1. -P 8 inside each script: macos-latest's default xargs job
-      #    count (`getconf _NPROCESSORS_ONLN` ≈ 3) leaves cycles on the
-      #    table. Bumping to 8 cuts test_install.sh from ~5m to ~2m
-      #    without overloading the runner; ubuntu-latest also benefits.
-      # 2. test_install.sh and test_install_orchestrator.sh launched
-      #    concurrently via shell backgrounding. They share no state
-      #    (each test mktemps its own dir) so they're safe to overlap.
-      #    Combined this cuts macOS install-tests from ~7m to ~3m.
-      #
-      # Numbers tuned empirically; raise -P carefully since each shard
-      # forks bash + install.sh + symlink fs ops.
-      - name: Run install.sh + orchestrator integration tests (concurrent)
-        run: |
-          set -uo pipefail
-          bash tests/test_install.sh --parallel 8 > install.log 2>&1 &
-          pid_install=$!
-          bash tests/test_install_orchestrator.sh --parallel 8 > orch.log 2>&1 &
-          pid_orch=$!
-          wait $pid_install; rc_install=$?
-          wait $pid_orch;    rc_orch=$?
-          echo "===== test_install.sh (exit=$rc_install) ====="
-          cat install.log
-          echo "===== test_install_orchestrator.sh (exit=$rc_orch) ====="
-          cat orch.log
-          exit $(( rc_install | rc_orch ))
+      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/3)
+        run: bash tests/test_install.sh --parallel
+
+  install-aux-tests:
+    # Orchestrator + key-contract + one-liner smoke. Smaller suites
+    # (orchestrator ~40 tests, keys <2s each, one-liner ~15s) so a
+    # single job per OS hits the 1–2 min target without sharding.
+    name: Install Aux Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install orchestrator integration tests
+        run: bash tests/test_install_orchestrator.sh --parallel
 
       - name: Run install_openai_key.sh + install_anthropic_key.sh contract tests
         # Tiny suites (<2s each) — folded into one step so the per-step
