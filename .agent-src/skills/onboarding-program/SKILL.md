@@ -35,7 +35,7 @@ Do NOT use as a customer-onboarding surface (route to Wing-3 [`onboarding-design
 
 ## Procedure
 
-### Step 0: Frame onboarding by role-family and ramp definition
+### Step 0: Identify role-family and ramp definition
 
 Before designing the program, name:
 

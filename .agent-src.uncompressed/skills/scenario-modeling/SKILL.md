@@ -27,7 +27,7 @@ Do NOT use for per-customer economics (route to `unit-economics-modeling` (O1)),
 
 ## Procedure
 
-### Step 0: Pull the upstream frames
+### Step 0: Inspect and pull the upstream frames
 
 Read the three Wing-4 inputs:
 

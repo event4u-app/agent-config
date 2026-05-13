@@ -42,7 +42,7 @@ Do NOT use to qualify a single deal (route to `deal-qualification-meddic`), cons
 
 ## Procedure
 
-### Step 0: Pick the construction shape
+### Step 0: Inspect the construction shape
 
 Read the fiscal-period slot. Decide between three shapes:
 

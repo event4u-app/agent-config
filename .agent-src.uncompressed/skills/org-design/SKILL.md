@@ -35,7 +35,7 @@ Do NOT use as a hiring-plan substitute (route to forthcoming hiring-loop / comp 
 
 ## Procedure
 
-### Step 0: Diagnose the real problem before redesigning anything
+### Step 0: Identify the real problem before redesigning anything
 
 Most "we need to reorg" requests are misdiagnosed. Run three checks first:
 

@@ -35,7 +35,7 @@ Do NOT use as a payroll / equity-administration substitute (this skill produces 
 
 ## Procedure
 
-### Step 0: Frame the comp question by intent
+### Step 0: Inspect intent before framing the comp question
 
 Before designing or adjusting bands, name:
 

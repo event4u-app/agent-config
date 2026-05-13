@@ -27,7 +27,7 @@ Do NOT use for outward-facing fundraise pitch (route to Wing-3 `fundraising-narr
 
 ## Procedure
 
-### Step 0: Stance check — founder vs operator
+### Step 0: Identify stance — founder vs operator
 
 Vision-articulation is a founder-mode act, not an operator-mode act (per council Q6). Before starting:
 
