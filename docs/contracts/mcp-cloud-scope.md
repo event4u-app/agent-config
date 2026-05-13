@@ -27,6 +27,88 @@ not a sub-process), and (2) no HMAC for MVP-1 (content is OSS and
 read-only; the appendix pattern's `verifyRequest` is deferred to MVP-2
 alongside auth).
 
+## MCP scope: Lite vs Full
+
+The package ships **two MCP surfaces** governed by named scopes. Every
+MCP-related doc, ADR, and code path carries `mcp_scope: lite|full|deferred`
+in its frontmatter (Phase 1 Step 6 of
+`agents/roadmaps/road-to-distribution-maturity.md`) so the boundary is
+machine-checkable, not prose-only.
+
+### `mcp_scope: lite` — hosted, read-only knowledge surfaces
+
+- **What it serves:** the governance content as MCP `prompts` and
+  `resources` — skills (`.agent-src/skills/<name>/SKILL.md`), commands
+  (`.agent-src/commands/**/*.md`), rules (`.agent-src/rules/*.md`),
+  guidelines (`docs/guidelines/`), and the docs index. Plus a small
+  set of **read-only tools** (`memory_lookup`, `chat_history_read`,
+  `list_*`, `read_resource_body`) that touch the content blob only.
+- **What it never does:** execute Python scripts, shell out, spawn
+  runtimes, touch consumer FS, write to R2, mutate consumer state,
+  call upstream LLM APIs, or read `.agent-src.uncompressed/`.
+- **Owner code path:** `workers/mcp/` (TypeScript, Cloudflare Worker).
+  This contract is the normative spec.
+- **Auth model:** `public` (default) or `bearer-auth` (operator opt-in)
+  per `## Auth surface`. HMAC and CF Access are declared but deferred.
+- **Invariant 8 binding:** **layered, mode-aware ingress protection**
+  (edge cache + Cloudflare DDoS shielding + per-request bearer when
+  set) is the **only** access control. Anything that would require a
+  finer-grained policy — per-tool ACLs, per-tenant scoping, mutation
+  authorization — is **out of `lite` scope by construction**, and
+  per `## A0-cloud invariants § 8` would require a contract amendment,
+  not a Worker code change.
+
+### `mcp_scope: full` — local stdio kernel, MVP-2+ execution
+
+- **What it serves:** the full local kernel — `prompts/list`,
+  `prompts/get`, `resources/list`, `resources/read` **plus**
+  execution-side tools (`lint_skills`, `chat_history_append`, and
+  the MVP-2 deferred tool set). Reads from the live worktree
+  (`.agent-src/` projection), not a release-pinned blob.
+- **What it requires:** a local install per Quickstart (`npx
+  @event4u/agent-config init` or `task mcp:setup`) — Python runtime,
+  the package's ~112 scripts on disk, and a consumer-side
+  `.agent-settings.yml`.
+- **Owner code path:** `scripts/mcp_server/` (Python stdio). Governed
+  by [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md), not this
+  contract — the two surfaces are siblings, not parent / child.
+- **Auth model:** filesystem-trusted (stdio child of the consumer
+  agent). No network surface, so no per-request auth applies.
+- **Invariant 8 binding:** the hosted-surface ingress protection
+  declared in `## A0-cloud invariants § 8` **does not apply** to
+  `mcp_scope: full` — the trust boundary is the local FS, not the
+  Cloudflare edge. Promotion of a `full`-scope tool into the hosted
+  Worker is a **scope migration** (lite ← full), gated on the wake-up
+  triggers in `## MVP-2 wake-up triggers` plus a security review per
+  `## A0-cloud invariants § 1 + § 6`.
+
+### `mcp_scope: deferred` — declared, not yet shipped
+
+- Modes named in this contract (`hmac-deferred`, `cf-access-deferred`)
+  and tools listed as deprecated stubs (`lint_skills`,
+  `chat_history_append` on the hosted Worker) carry `mcp_scope:
+  deferred` until their wake-up triggers fire. README MUST NOT
+  recommend a `deferred` mode or tool — the bidirectional drift
+  test enforces this per `## Auth surface § Bidirectional contract ↔
+  README drift`.
+
+### Boundary properties
+
+- **README citations are normative.** The README MCP section names
+  `mcp_scope: lite` and `mcp_scope: full` as canonical scopes (see
+  [`README.md`](../../README.md) § "Self-hosted MCP on Cloudflare").
+  The bidirectional drift test ensures the names this contract
+  declares match the names the README cites.
+- **No scope inheritance.** A `lite`-scope code path may not assume a
+  `full`-scope capability is available (e.g., the Worker may not
+  assume `lint_skills` is reachable via a fallback to the local
+  server). Each scope is self-contained.
+- **Scope migration is a contract event.** Moving a tool from
+  `full` to `lite` (e.g., restoring `lint_skills` on the hosted
+  Worker in MVP-2+) requires this contract's `## In-scope (MVP-1)` /
+  `## Deprecated tool stub contract` sections to be updated in the
+  same PR that lands the implementation — not a follow-up.
+
 ## In-scope (MVP-1)
 
 - **Transport:** HTTP + SSE (Cloudflare Worker `fetch` handler). The
