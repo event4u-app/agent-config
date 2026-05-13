@@ -301,6 +301,24 @@ top-level. Trigger: a real second agent-config-style package
 shipping in production and reporting a top-level collision that
 schema v2 + conflict detection cannot resolve cleanly.
 
+**What schema v2 can resolve:** two packages writing into the
+same flat directory but different filenames (e.g. `pkg-a` ships
+`skills/code-review/SKILL.md`, `pkg-b` ships
+`skills/api-design/SKILL.md`) — the manifest records who-owns-what,
+uninstall and prune stay deterministic. The
+`tests/test_e2e_multi_package_coexistence.py` scenario covers
+exactly this shape.
+
+**What schema v2 cannot resolve:** two packages claiming the same
+top-level skill name (both ship `skills/code-review/SKILL.md` with
+different contents). `tools-doctor` flags the collision, but no
+auto-resolve path exists because both packages are legitimate
+owners — the last-write-wins-with-warning behaviour we use today
+silently masks one package's content. Namespace-as-opt-in is the
+escape hatch: collision-prone packages opt into
+`<root>/skills/<package-id>/` and the top-level surface stays free
+for the unscoped majority.
+
 ## Acceptance — roadmap-level done criteria
 
 - [x] All steps in Phases 1–5 closed.
