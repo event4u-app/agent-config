@@ -160,3 +160,136 @@ def test_curation_restricts_to_named_skills(tmp_path: Path) -> None:
     bundle_names = sorted(p.name for p in written)
     assert bundle_names == ["alpha.zip", "gamma.zip"]
     assert not (dest / "beta.zip").exists()
+
+
+def _make_command(
+    package_root: Path,
+    rel_path: str,
+    *,
+    body: str = "# command\n",
+) -> Path:
+    """Create a fake command file under ``<package_root>/.agent-src/commands/``."""
+    target = package_root / ".agent-src" / "commands" / rel_path
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(body, encoding="utf-8")
+    return target
+
+
+def test_command_bundle_generated_for_top_level_command(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "commit.md", body="# /commit\n\nDo the commit thing.\n")
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    zip_path = dest / "commit.zip"
+    assert written == [zip_path]
+    assert zip_path.exists()
+    assert (dest / "commit.sha256").exists()
+    with zipfile.ZipFile(zip_path) as zf:
+        names = sorted(zf.namelist())
+        assert names == ["SKILL.md"]
+        assert zf.read("SKILL.md").decode("utf-8") == "# /commit\n\nDo the commit thing.\n"
+
+
+def test_nested_command_flattens_slug(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "council/default.md", body="# council default\n")
+    _make_command(pkg, "council/pr.md", body="# council pr\n")
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    names = sorted(p.name for p in written)
+    assert names == ["council-default.zip", "council-pr.zip"]
+
+
+def test_command_skips_cluster_agents_md(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "council/AGENTS.md", body="# cluster doc\n")
+    _make_command(pkg, "council/default.md", body="# default\n")
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    assert [p.name for p in written] == ["council-default.zip"]
+    assert not (dest / "council-AGENTS.zip").exists()
+
+
+def test_command_skipped_when_skill_with_same_name_exists(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_skill(pkg, "compress", skill_md="# real skill\n")
+    _make_command(pkg, "compress.md", body="# command shadow\n")
+    _make_command(pkg, "research.md", body="# research\n")
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    names = sorted(p.name for p in written)
+    assert names == ["research.zip"]
+    assert not (dest / "compress.zip").exists()
+
+
+def test_command_bundle_idempotent_second_call(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "stable.md")
+    dest = tmp_path / "bundles"
+
+    first = claude_desktop_bundler.build_command_bundles(pkg, dest)
+    mtime_first = (dest / "stable.zip").stat().st_mtime_ns
+    second = claude_desktop_bundler.build_command_bundles(pkg, dest)
+    mtime_second = (dest / "stable.zip").stat().st_mtime_ns
+
+    assert len(first) == 1
+    assert second == []
+    assert mtime_first == mtime_second
+
+
+def test_command_force_rewrites_unchanged_bundle(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "force-me.md")
+    dest = tmp_path / "bundles"
+    claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest, force=True)
+    assert written == [dest / "force-me.zip"]
+
+
+def test_command_content_change_rewrites_bundle(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    source = _make_command(pkg, "evolving.md", body="# v1\n")
+    dest = tmp_path / "bundles"
+    claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    source.write_text("# v2\n", encoding="utf-8")
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+
+    assert written == [dest / "evolving.zip"]
+    with zipfile.ZipFile(dest / "evolving.zip") as zf:
+        assert zf.read("SKILL.md").decode("utf-8") == "# v2\n"
+
+
+def test_command_missing_dir_returns_empty(tmp_path: Path) -> None:
+    pkg = tmp_path / "empty-pkg"
+    pkg.mkdir()
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(pkg, dest)
+    assert written == []
+    assert not dest.exists() or not any(dest.iterdir())
+
+
+def test_command_curation_restricts_to_named_slugs(tmp_path: Path) -> None:
+    pkg = tmp_path / "pkg"
+    _make_command(pkg, "alpha.md")
+    _make_command(pkg, "beta.md")
+    _make_command(pkg, "gamma.md")
+    dest = tmp_path / "bundles"
+
+    written = claude_desktop_bundler.build_command_bundles(
+        pkg, dest, curation=["alpha", "gamma"]
+    )
+
+    names = sorted(p.name for p in written)
+    assert names == ["alpha.zip", "gamma.zip"]
+    assert not (dest / "beta.zip").exists()

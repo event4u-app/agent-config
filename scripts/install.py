@@ -2888,6 +2888,7 @@ def _deploy_claude_desktop(
     bundler = _load_claude_desktop_bundler_module()
     bundles_dir = _claude_desktop_bundles_dir()
     bundler.build_skill_bundles(package_root, bundles_dir, force=force)
+    bundler.build_command_bundles(package_root, bundles_dir, force=force)
     # Count total existing ZIPs (idempotent runs may not rewrite any).
     bundle_count = sum(1 for _ in bundles_dir.glob("*.zip")) if bundles_dir.is_dir() else 0
     _, _, marker_paths = _write_claude_desktop_marker(

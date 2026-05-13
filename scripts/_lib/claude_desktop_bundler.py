@@ -3,20 +3,32 @@
 Claude Desktop has no filesystem convention for skills; the Customize →
 Skills UI accepts a ZIP per skill via the Upload button. This module
 walks ``<package_root>/.agent-src/skills/*`` and produces one
-``<skill-name>.zip`` per directory into ``dest_dir``.
+``<skill-name>.zip`` per directory into ``dest_dir``. It additionally
+walks ``<package_root>/.agent-src/commands/`` and produces one
+``<command-slug>.zip`` per command ``.md`` file so Claude Desktop sees
+the same surface that Claude Code exposes via the ``.claude/skills/``
+symlink wrapper layer.
 
 Contract:
 
 - Each ZIP contains ``SKILL.md`` plus every sibling file under the same
   directory (recursive). Symlinks are dereferenced so the ZIP is
   self-contained.
+- Command bundles wrap a single ``.agent-src/commands/<path>.md`` file
+  as ``SKILL.md`` inside the ZIP. Nested commands flatten to
+  ``<cluster>-<leaf>`` slugs (e.g. ``council/default.md`` →
+  ``council-default.zip``) to mirror ``compress.py``.
 - Exclusions: ``.git*``, ``__pycache__``, ``*.pyc`` — matched on the
   basename of any path component.
 - A skill folder without a ``SKILL.md`` is skipped (defensive: avoids
   shipping Claude-Code orchestrator stubs that don't follow the
   Anthropic skill schema).
+- Command files named ``AGENTS.md`` are skipped (cluster authoring docs,
+  not invocable commands).
+- A command slug that collides with an existing skill name is skipped —
+  the real skill bundle wins, matching ``compress.generate_claude_commands``.
 - Writes are atomic via tempfile → ``os.replace``.
-- Idempotent: each ZIP gets a sibling ``<skill-name>.sha256`` recording
+- Idempotent: each ZIP gets a sibling ``<slug>.sha256`` recording
   the manifest digest. If the recomputed digest matches the recorded
   one, the existing ZIP is left untouched (unless ``force=True``).
 """
@@ -141,6 +153,82 @@ def build_skill_bundles(
         digest = _manifest_digest(files)
         zip_path = dest_dir / f"{skill_name}.zip"
         digest_path = dest_dir / f"{skill_name}.sha256"
+        recorded = digest_path.read_text(encoding="utf-8").strip() if digest_path.exists() else ""
+        if not force and recorded == digest and zip_path.exists():
+            continue
+        _atomic_write_zip(zip_path, files)
+        digest_path.write_text(digest + "\n", encoding="utf-8")
+        written.append(zip_path)
+    return written
+
+
+def _command_slug(source_file: Path, commands_root: Path) -> str:
+    """Return the flat slug for a command source file.
+
+    Mirrors ``scripts/compress.py::_command_slug``: top-level commands
+    keep their stem (``commit.md`` → ``commit``); nested commands flatten
+    the relative path with ``-`` (``council/default.md`` →
+    ``council-default``).
+    """
+    rel = source_file.relative_to(commands_root)
+    return "-".join(rel.with_suffix("").parts)
+
+
+def _iter_command_files(commands_root: Path) -> Iterable[Path]:
+    """Yield every command ``.md`` file under ``commands_root`` (recursive).
+
+    Skips ``AGENTS.md`` cluster authoring docs, matching
+    ``scripts/compress.py::_iter_commands``.
+    """
+    for source_file in sorted(commands_root.rglob("*.md")):
+        if source_file.name == "AGENTS.md":
+            continue
+        yield source_file
+
+
+def build_command_bundles(
+    package_root: Path,
+    dest_dir: Path,
+    force: bool = False,
+    curation: Optional[list[str]] = None,
+) -> list[Path]:
+    """Build per-command ZIPs under ``dest_dir``.
+
+    Each ZIP contains a single ``SKILL.md`` whose bytes are the source
+    command ``.md`` file — same wrapping pattern that
+    ``compress.generate_claude_commands`` uses for Claude Code via
+    ``.claude/skills/<slug>/SKILL.md`` symlinks.
+
+    Slugs that collide with an existing skill folder under
+    ``<package_root>/.agent-src/skills/`` are skipped so the real skill
+    bundle wins.
+
+    Returns the list of ZIP paths that were (re-)written this call. ZIPs
+    skipped because their content digest matched the existing sidecar
+    are not in the returned list (but remain on disk).
+
+    ``curation`` optionally restricts the build to the given command
+    slugs; ``None`` bundles every command file.
+    """
+    commands_root = package_root / ".agent-src" / "commands"
+    if not commands_root.is_dir():
+        return []
+    skills_root = package_root / ".agent-src" / "skills"
+    skill_names: set[str] = set()
+    if skills_root.is_dir():
+        skill_names = {entry.name for entry in skills_root.iterdir() if entry.is_dir()}
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    written: list[Path] = []
+    for source_file in _iter_command_files(commands_root):
+        slug = _command_slug(source_file, commands_root)
+        if slug in skill_names:
+            continue
+        if curation is not None and slug not in curation:
+            continue
+        files = [(source_file.resolve(), ("SKILL.md",))]
+        digest = _manifest_digest(files)
+        zip_path = dest_dir / f"{slug}.zip"
+        digest_path = dest_dir / f"{slug}.sha256"
         recorded = digest_path.read_text(encoding="utf-8").strip() if digest_path.exists() else ""
         if not force and recorded == digest and zip_path.exists():
             continue
