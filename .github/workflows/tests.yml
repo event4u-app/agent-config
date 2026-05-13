@@ -42,23 +42,25 @@ jobs:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
     # invoking install.sh which symlinks hundreds of skill/rule/command
     # files. Wall-clock dominated by fs ops — the suite is sharded
-    # across N matrix jobs (N=3) so each shard runs ~12 tests, hitting
-    # the 1–2 min per-job target. Within each shard, --parallel uses
-    # the default nproc-based job count which avoids fs contention
-    # from over-subscription that was observed at -P 8.
-    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/3)
+    # across N matrix jobs (N=4) so each shard runs ~9 tests, hitting
+    # the 1–2 min per-job target on slower macOS runners (3-shard
+    # runs measured 1m41s–2m19s; 4 shards keeps the worst case under
+    # 2min). Within each shard, --parallel uses the default
+    # nproc-based job count which avoids fs contention from
+    # over-subscription that was observed at -P 8.
+    name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest]
-        shard: [1, 2, 3]
+        shard: [1, 2, 3, 4]
     env:
-      SHARD: ${{ matrix.shard }}/3
+      SHARD: ${{ matrix.shard }}/4
     steps:
       - uses: actions/checkout@v4
 
-      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/3)
+      - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
         run: bash tests/test_install.sh --parallel
 
   install-aux-tests:
