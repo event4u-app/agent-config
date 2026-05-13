@@ -90,7 +90,7 @@ npx @event4u/agent-config init --tools=windsurf         # Windsurf
 npx @event4u/agent-config init --tools=cline            # Cline
 npx @event4u/agent-config init --tools=gemini-cli       # Gemini CLI
 npx @event4u/agent-config init --tools=copilot          # GitHub Copilot
-npx @event4u/agent-config init --tools=augment          # Augment Code
+npx @event4u/agent-config init --tools=augment --global # Augment Code (global-only)
 npx @event4u/agent-config init --tools=roocode          # Roo Code
 npx @event4u/agent-config init --tools=aider            # Aider
 npx @event4u/agent-config init --tools=codex            # Codex CLI
@@ -112,13 +112,16 @@ npx @event4u/agent-config init --tools=claude-code --global   # → ~/.claude/
 npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
 ```
 
-Per-AI scope support varies — Claude Desktop, for example, is
-global-only (no project-local discovery on macOS), while Roo Code and
-Continue.dev are project-local. The Supported Tools table below
-documents per-AI scope. Incompatible combinations (e.g.
-`--tools=roocode --global` or `--tools=claude-desktop` without
-`--global`) are rejected with a directive error; `--tools=all`
-silently filters to the scope's compatible subset.
+Per-AI scope support varies — Claude Desktop and Augment Code, for
+example, are global-only (Claude Desktop has no project-local
+discovery on macOS; Augment ships from a single user-scope tree
+(`~/.augment/`) — see [`ADR-007 § Amendment 2026-05-13 — global-only`](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)),
+while Roo Code and Continue.dev are project-local. The Supported
+Tools table below documents per-AI scope. Incompatible combinations
+(e.g. `--tools=roocode --global`, `--tools=claude-desktop` without
+`--global`, or `--tools=augment` without `--global`) are rejected
+with a directive error; `--tools=all` silently filters to the scope's
+compatible subset.
 
 ### For individual use (optional)
 
@@ -488,7 +491,6 @@ Every developer gets the same behavior. No per-user setup needed —
 
 | Tool | Rules | Skills | Commands | How it works |
 |---|---|---|---|---|
-| **Augment VSCode/IntelliJ** | ✅ | ✅ | ✅ | Reads `.augment/` from project |
 | **Claude Code** | ✅ | ✅ | ✅ | Reads `.claude/` (skills + commands as skills) |
 | **Cursor** | ✅ | — | ☑️ | Reads `.cursor/rules/` + commands via AGENTS.md |
 | **Cline** | ✅ | — | ☑️ | Reads `.clinerules/` + commands via AGENTS.md |
@@ -499,6 +501,7 @@ Every developer gets the same behavior. No per-user setup needed —
 | **Codex CLI** | ✅ | — | ☑️ | Auto-discovers `AGENTS.md` at project root |
 | **Continue.dev** | ✅ | — | ☑️ | Auto-discovers `.continue/rules/*.md` + AGENTS.md |
 | **Aider** | 📌 | — | — | Marker + manual `read:` in `.aider.conf.yml` |
+| **Augment VSCode/IntelliJ** | 📌 | — | — | Global-only — install with `--global` (see [ADR-007 Amendment 2026-05-13](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)); project writes `.augment/settings.json` marker only |
 | **Claude Desktop** | 📌 | — | — | Global-only — install with `--global` (see ADR-007) |
 
 ✅ = native support &nbsp; — = not available &nbsp; ☑️ = text reference only
@@ -506,13 +509,15 @@ Every developer gets the same behavior. No per-user setup needed —
 slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
-> **What this means in practice:** Augment Code and Claude Code get the full
-> package (rules + 174 skills + 106 native commands). Cursor, Cline, Windsurf,
-> Gemini CLI, GitHub Copilot, Roo Code, Codex CLI, and Continue.dev only get
-> the **rules** natively; skills and commands are available as documentation
-> the agent can read, not as first-class features. Aider and Claude Desktop
-> ship marker-only bridges — Aider needs a one-line `read:` entry in
-> `.aider.conf.yml`; Claude Desktop is global-scope and pairs with `--global`.
+> **What this means in practice:** Claude Code gets the full project-scoped
+> package (rules + 174 skills + 106 native commands); Augment Code gets the
+> same content but only from a single global install at `~/.augment/`.
+> Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
+> and Continue.dev only get the **rules** natively; skills and commands are
+> available as documentation the agent can read, not as first-class features.
+> Aider, Augment, and Claude Desktop ship marker-only bridges in projects —
+> Aider needs a one-line `read:` entry in `.aider.conf.yml`; Augment and
+> Claude Desktop are global-scope and pair with `--global`.
 
 > **Team reproducibility (ADR-008):** every tool you `init` is also recorded in
 > `agents/installed-tools.lock` — committed, machine-managed. New team members
