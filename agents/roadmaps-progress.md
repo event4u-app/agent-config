@@ -6,17 +6,17 @@
 
 ## Overall
 
-**2 / 103 steps done · 2%**
+**4 / 103 steps done · 4%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 24 | 2 | 0 | 0 | █░░░░░░░░░ 8% |
+| 1 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 22 | 4 | 0 | 0 | ██░░░░░░░░ 15% |
 | 2 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -27,11 +27,11 @@
 
 ### [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md)
 
-**Road to GTM and Growth (Wing 3)** — 2 / 26 done (8%)
+**Road to GTM and Growth (Wing 3)** — 4 / 26 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | GTM and Growth execution | 🟡 in progress | 24 | 2 | 0 | 0 | 8% |
+| 1 | GTM and Growth execution | 🟡 in progress | 22 | 4 | 0 | 0 | 15% |
 
 ### [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md)
 

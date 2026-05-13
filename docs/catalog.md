@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **408 public artefacts** shipped by
+Consumer-facing catalog of all **409 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -360,7 +360,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (70)
+## Guidelines (71)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -404,6 +404,7 @@ are excluded.
 | guideline | [`cross-role-handoff`](../docs/guidelines/cross-role-handoff.md) | (root) |  |
 | guideline | [`readme-size-and-splitting`](../docs/guidelines/docs/readme-size-and-splitting.md) | docs |  |
 | guideline | [`playwright`](../docs/guidelines/e2e/playwright.md) | e2e |  |
+| guideline | [`gtm-handoff`](../docs/guidelines/gtm-handoff.md) | (root) |  |
 | guideline | [`api-design`](../docs/guidelines/php/api-design.md) | php |  |
 | guideline | [`artisan-commands`](../docs/guidelines/php/artisan-commands.md) | php |  |
 | guideline | [`blade-ui`](../docs/guidelines/php/blade-ui.md) | php |  |
