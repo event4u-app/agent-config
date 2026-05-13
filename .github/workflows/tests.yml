@@ -41,13 +41,12 @@ jobs:
   install-tests:
     # test_install.sh runs each of 35 tests in its own mktemp dir,
     # invoking install.sh which symlinks hundreds of skill/rule/command
-    # files. Wall-clock dominated by fs ops — the suite is sharded
-    # across N matrix jobs (N=4) so each shard runs ~9 tests, hitting
-    # the 1–2 min per-job target on slower macOS runners (3-shard
-    # runs measured 1m41s–2m19s; 4 shards keeps the worst case under
-    # 2min). Within each shard, --parallel uses the default
-    # nproc-based job count which avoids fs contention from
-    # over-subscription that was observed at -P 8.
+    # files. Wall-clock dominated by fs ops — sharded across 4 matrix
+    # jobs so each shard runs ~9 tests, then --parallel 9 fans those
+    # out concurrently within the shard. Default nproc on macOS-arm64
+    # runners returns only 3, leaving cycles on the table; with only
+    # 9 tests/shard the fs contention that hurt at the un-sharded
+    # -P 8 setting is no longer a concern.
     name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -61,7 +60,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run install.sh integration tests (shard ${{ matrix.shard }}/4)
-        run: bash tests/test_install.sh --parallel
+        run: bash tests/test_install.sh --parallel 9
 
   install-aux-tests:
     # Orchestrator + key-contract + one-liner smoke. Smaller suites
@@ -77,7 +76,10 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run install orchestrator integration tests
-        run: bash tests/test_install_orchestrator.sh --parallel
+        # Default nproc on macOS-arm64 runners returns 3, bottlenecking
+        # the ~40-test orchestrator suite. Explicit -P 8 keeps wall-clock
+        # under 90s without the fs contention seen in larger suites.
+        run: bash tests/test_install_orchestrator.sh --parallel 8
 
       - name: Run install_openai_key.sh + install_anthropic_key.sh contract tests
         # Tiny suites (<2s each) — folded into one step so the per-step
