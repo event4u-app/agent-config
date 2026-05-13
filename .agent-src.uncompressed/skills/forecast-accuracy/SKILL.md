@@ -20,7 +20,7 @@ Do NOT use to design pipeline stages (route to
 `pipeline-strategy`), qualify a single deal (route to
 `deal-qualification-meddic`), or build the finance-side
 top-down / bottom-up model (composes against — but does not
-duplicate — the `forecasting` skill in the finance-partner wing,
+duplicate — the finance-partner forecasting capability,
 via the `forecast-construction-shape` interface).
 
 ## Cognition cluster
@@ -118,7 +118,7 @@ upgrades in Step 0.
 - Single-deal qualification or disqualification — route to
   [`deal-qualification-meddic`](../deal-qualification-meddic/SKILL.md).
 - Finance-side top-down model or board-deck forecast — composes
-  against (does not replace) the finance-partner `forecasting` skill
+  against (does not replace) the finance-partner forecasting capability
   via the `forecast-construction-shape` interface.
 
 ## When the agent should load this

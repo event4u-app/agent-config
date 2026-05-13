@@ -17,7 +17,7 @@ context_spine: [product, customer-segment, funnel-stage]
 - Time-to-first-value is *"days, maybe weeks"* — the answer needs to be a number with a falsifiable definition, not a sentiment.
 
 Do NOT use to onboard employees (that is the Wing-4
-`onboarding-program` skill — different audience, different
+employee-onboarding program — different audience, different
 contract), diagnose long-cycle churn (route to
 `churn-prevention`), or run the full visitor → paid funnel (route
 to `funnel-analysis`).
