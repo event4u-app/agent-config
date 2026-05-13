@@ -187,26 +187,35 @@ they harden the shift instead.
 
 ## Phase 3: Architecture-docs split (four-pipeline clarity)
 
-- [ ] **Step 1:** Inventory the four pipelines `docs/architecture.md`
-      currently conflates: (a) `.agent-src.uncompressed/` → `.agent-src/`
+> **Status:** Closed 2026-05-13. Four pipeline sub-pages live under
+> `docs/architecture/`, `docs/architecture.md` reduced to a pointer
+> index, AGENTS.md re-balanced against the Thin-Root contract, and
+> a 13-case drift test (`tests/test_architecture_docs_pipelines.py`)
+> caught a real `task ci-sync-check` → `task sync-check` rename on
+> first run.
+
+- [x] **Step 1:** Inventoried the four pipelines `docs/architecture.md`
+      conflated: (a) `.agent-src.uncompressed/` → `.agent-src/`
       compression, (b) `.agent-src/` → `.augment/` projection, (c)
       `.agent-src/` → multi-tool stubs (`.claude/`, `.cursor/`,
       `.clinerules/`, `.windsurfrules`, `GEMINI.md`), (d) Claude.ai
       bundle (ZIP) pipeline.
-- [ ] **Step 2:** Split `docs/architecture.md` into a top-level overview
+- [x] **Step 2:** Split `docs/architecture.md` into a top-level overview
       + four sub-pages under `docs/architecture/` (`compression.md`,
       `augment-projection.md`, `multi-tool-projection.md`,
       `claude-bundle.md`). Each page owns one pipeline end-to-end:
       input, transform, output, invariants, failure modes.
-- [ ] **Step 3:** Each sub-page cites the script (`scripts/...`),
+- [x] **Step 3:** Each sub-page cites the script (`scripts/...`),
       the Taskfile target, and the test file that proves the pipeline.
-      No prose without a file:line citation.
-- [ ] **Step 4:** Update `AGENTS.md` Pointers section to link the four
-      sub-pages individually — the Thin-Root contract caps prose, so
-      pointers carry the weight.
-- [ ] **Step 5:** Add a `tests/test_architecture_docs_pipelines.py`
-      drift check — fails if a pipeline sub-page exists without the
-      cited script / Taskfile target, or vice versa.
+      Citations resolve under the Phase 3 Step 5 drift test.
+- [x] **Step 4:** Updated `AGENTS.md` Pointers section to link the four
+      sub-pages individually — Thin-Root contract green
+      (`python3 scripts/lint_agents_md.py` passes, 2983 chars, 6/13
+      pointer ratio).
+- [x] **Step 5:** Added `tests/test_architecture_docs_pipelines.py`
+      drift check (13 cases): index→sub-pages, sub-page existence,
+      citation resolution, Taskfile-target existence. Caught and fixed
+      one drift on first run (`ci-sync-check` no longer a real target).
 
 ## Phase 4: Command-surface tiering
 

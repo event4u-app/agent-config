@@ -6,17 +6,17 @@
 
 ## Overall
 
-**51 / 184 steps done · 28%**
+**56 / 184 steps done · 30%**
 
 ```text
-███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   28%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 10 | 45 | 25 | 20 | 0 | 0 | ████░░░░░░ 44% |
+| 1 | [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md) | 10 | 45 | 20 | 25 | 0 | 0 | ██████░░░░ 56% |
 | 2 | [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md) | 6 | 36 | 5 | 31 | 0 | 0 | █████████░ 86% |
 | 3 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,14 +29,14 @@
 
 ### [road-to-distribution-maturity.md](roadmaps/road-to-distribution-maturity.md)
 
-**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 20 / 45 done (44%)
+**Road to distribution maturity (post-2.2.2 evaluation follow-ups)** — 25 / 45 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Council passes (gate the rest of the roadmap) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 1 | MCP contract ↔ README auth-surface sync | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 2 | Enterprise / offline fallback story | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 3 | Architecture-docs split (four-pipeline clarity) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Architecture-docs split (four-pipeline clarity) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | Command-surface tiering | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 5 | MCP Lite vs Full boundary + Changelog hygiene | 🟡 in progress | 14 | 1 | 0 | 0 | 7% |
 | 1 | Step 1 drift catalog | ⬜ empty | 0 | 0 | 0 | 0 | 0% |
