@@ -17,8 +17,9 @@ settings.py``):
 Per road-to-portable-dev-preferences P3, the YAML read goes through
 :func:`work_engine._lib.agent_settings.load_agent_settings`, which
 cascades the whitelisted ``cost_profile`` (and other DX-comfort keys)
-from ``~/.config/agent-config/agent-settings.yml`` when the project
-file omits them. Project values always win.
+from ``~/.event4u/agent-config/agent-settings.yml`` (legacy
+``~/.config/agent-config/agent-settings.yml`` read as fallback) when
+the project file omits them. Project values always win.
 """
 from __future__ import annotations
 
@@ -67,9 +68,11 @@ def load_hook_settings(
     ``settings_path`` defaults to ``./.agent-settings.yml`` relative to
     the current working directory — same convention as chat-history.
     ``user_global_path`` defaults to
-    ``~/.config/agent-config/agent-settings.yml`` and only cascades the
-    whitelisted DX-comfort keys (currently ``cost_profile``) when the
-    project file omits them. See road-to-portable-dev-preferences P3.
+    ``~/.event4u/agent-config/agent-settings.yml`` (with a read fallback
+    to the legacy ``~/.config/agent-config/agent-settings.yml``) and
+    only cascades the whitelisted DX-comfort keys (currently
+    ``cost_profile``) when the project file omits them. See
+    road-to-portable-dev-preferences P3.
     """
     path = Path(settings_path) if settings_path else Path(DEFAULT_SETTINGS_FILE)
     raw = load_agent_settings(

@@ -40,9 +40,11 @@ One line: one-time setup, six questions, one at a time (iron law from
 
 ### 2. Offer user-global cross-project defaults
 
-Detect whether `~/.config/agent-config/agent-settings.yml` exists. Path is
-XDG-style, matches existing `~/.config/agent-config/` dir used for
-`anthropic.key`, `openai.key`, `council-spend.jsonl`.
+Detect whether `~/.event4u/agent-config/agent-settings.yml` exists (or
+legacy `~/.config/agent-config/agent-settings.yml`, read as fallback by
+every loader). New path namespaces every event4u-owned user-global
+artefact under one root — same place `anthropic.key`, `openai.key`,
+`council-spend.jsonl` now live.
 
 - **File exists** → skip step entirely. Re-onboarding never overwrites
   user-global file silently.
@@ -54,7 +56,7 @@ XDG-style, matches existing `~/.config/agent-config/` dir used for
   → empty → first-time setup, ask:
 
 ```
-> A user-global config at ~/.config/agent-config/agent-settings.yml lets
+> A user-global config at ~/.event4u/agent-config/agent-settings.yml lets
 > you carry your DX-comfort defaults (name, IDE, autonomy, cost profile,
 > communication style) across every project that uses event4u/agent-config.
 >
@@ -177,7 +179,7 @@ Skip unless step 2 captured explicit "yes". Re-confirm intent in one line —
 never silent-write a file outside project tree:
 
 ```
-> Writing ~/.config/agent-config/agent-settings.yml with the six
+> Writing ~/.event4u/agent-config/agent-settings.yml with the six
 > mergeable keys mirrored from this project's choices:
 >
 >   name: {personal.user_name or ""}
@@ -191,10 +193,12 @@ never silent-write a file outside project tree:
 > 2. Cancel — keep settings project-local only
 ```
 
-`1` → ensure `~/.config/agent-config/` exists (`mkdir -p`, mode `0700`),
+`1` → ensure `~/.event4u/agent-config/` exists (`mkdir -p`, mode `0700`;
+migration shim in `scripts/install.py` moves any legacy
+`~/.config/agent-config/` files into new namespace on first run),
 then write file with mode `0600`. Schema is **flat-or-nested YAML keyed on
 dotted paths** in whitelist documented in
-[`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py).
+[`scripts/_lib/agent_settings.py`](../../scripts/_lib/agent_settings.py).
 Use same section-aware merge rules from
 [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 **only if file unexpectedly already exists** between step 2 and this step
@@ -263,7 +267,8 @@ Skip this block in cloud surfaces (no settings file, no log path).
   `ide`).
 - **User-global file is opt-in, one-shot, never silent.** Step 2 captures
   intent, step 9 re-confirms before actual write. If
-  `~/.config/agent-config/agent-settings.yml` already exists when
+  `~/.event4u/agent-config/agent-settings.yml` (or legacy
+  `~/.config/agent-config/agent-settings.yml`) already exists when
   `/onboard` starts, step 2 is skipped entirely — re-onboarding never
   silently rewrites developer's cross-project defaults. Use
   `/sync-agent-settings` (project-scoped only) or edit file manually for
@@ -282,4 +287,4 @@ cloud agent should proceed without invoking it.
 - [`set-cost-profile`](set-cost-profile.md) — isolated profile change
 - [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md) — merge rules for mid-life edits
 - [`agent-settings` template](../templates/agent-settings.md) — settings reference
-- [`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py) — centralized loader + whitelist that consumes the user-global file
+- [`scripts/_lib/agent_settings.py`](../../scripts/_lib/agent_settings.py) — centralized loader + whitelist that consumes the user-global file

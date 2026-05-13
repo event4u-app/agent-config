@@ -97,7 +97,7 @@ Ask format:
 
 > 1. `.worktrees/` — project-local, hidden
 > 2. `worktrees/` — project-local, visible
-> 3. `~/.config/agent-config/worktrees/<project>/` — global
+> 3. `~/.event4u/agent-config/worktrees/<project>/` — global
 
 **Recommendation: 1 — `.worktrees/`** — project-local keeps the worktree next to the repo (easy cleanup), and the leading dot keeps it out of `ls`. Caveat: pick 3 if multiple repos must share a single worktree root.
 

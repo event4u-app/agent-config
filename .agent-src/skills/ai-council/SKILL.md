@@ -89,7 +89,7 @@ travel changes.
 
 | Mode | Client | Billable | Transport | Status |
 |---|---|---|---|---|
-| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.config/agent-config/<provider>.key` | shipped |
+| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
 
 Resolution lives in `scripts/ai_council/modes.py`:
@@ -338,7 +338,8 @@ Real failure modes seen in the wild:
 
 The bundler's redaction pass strips:
 
-- Paths matching `~/.config/agent-config/*.key`.
+- Paths matching `~/.event4u/agent-config/*.key` and the legacy
+  `~/.config/agent-config/*.key`.
 - Lines starting with `Authorization:`.
 - `key = …`, `secret = …`, `token = …`, `password = …` assignments.
 - `sk-ant-…` and `sk-…` token-like strings.
@@ -358,7 +359,8 @@ per-invocation caps from `ai_council.cost_budget`:
 - `max_calls` — maximum number of council members per invocation.
 - `daily_limit_usd` — rolling 24h spend cap across all `/council`
   invocations. `0` disables. Persists in
-  `~/.config/agent-config/council-spend.jsonl` (mode 0600). Breach
+  `~/.event4u/agent-config/council-spend.jsonl` (mode 0600; legacy
+  `~/.config/agent-config/council-spend.jsonl` read as fallback). Breach
   fires `on_overrun(event)` with `event.breach_kind == "daily"` and,
   if the callback returns False or is absent, tags the member
   `daily_budget_exceeded` instead of `cost_budget_exceeded`.

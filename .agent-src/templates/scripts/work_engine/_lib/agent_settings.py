@@ -5,10 +5,15 @@ how scripts read agent settings — replaces ~15 ad-hoc loaders in P3.
 
 Resolution order (deepest wins; user-global is whitelist-filtered only):
 
-  N. ``~/.config/agent-config/agent-settings.yml``  (user-global; whitelist only)
+  N. ``~/.event4u/agent-config/agent-settings.yml`` (user-global; whitelist only)
 N-1. ``<repo-root>/.agent-settings.yml``            (project-wide; all keys)
 N-2. ``<intermediate-dir>/.agent-settings.yml``     (subsystem-scoped; all keys)
   1. ``<CWD>/.agent-settings.yml``                  (deepest, wins; all keys)
+
+The user-global path is resolved via
+:mod:`scripts._lib.user_global_paths` with a read-fallback to the
+legacy ``~/.config/agent-config/agent-settings.yml`` so pre-2.4
+installs keep working during the namespace migration.
 
 ``<repo-root>`` is the nearest ancestor that contains ``.git`` (directory
 **or** file — submodule support). The walk stops there — it never drifts
@@ -37,12 +42,32 @@ import logging
 from pathlib import Path
 from typing import Any, Iterator
 
+try:
+    from scripts._lib import user_global_paths  # type: ignore[import-not-found]
+except ModuleNotFoundError:  # pragma: no cover — direct-script invocation
+    # `scripts/chat_history.py` and friends are invoked without the repo
+    # root on sys.path; fall back to a sibling import so the module loads
+    # in both packaged (`scripts._lib...`) and standalone (`_lib...`) modes.
+    from _lib import user_global_paths  # type: ignore[no-redef,import-not-found]
+
 logger = logging.getLogger(__name__)
 
 DEFAULT_PROJECT_FILE = ".agent-settings.yml"
-DEFAULT_USER_GLOBAL_FILE = (
-    Path.home() / ".config" / "agent-config" / "agent-settings.yml"
-)
+USER_GLOBAL_FILENAME = "agent-settings.yml"
+
+#: Canonical write target under the new ``~/.event4u/agent-config/``
+#: namespace. Reads route through :func:`_resolve_user_global_file` so
+#: pre-2.4 installs are still picked up from ``~/.config/agent-config/``
+#: until the migration shim copies them across.
+DEFAULT_USER_GLOBAL_FILE = user_global_paths.write_target(USER_GLOBAL_FILENAME)
+
+
+def _resolve_user_global_file() -> Path:
+    """Return the active user-global settings path with legacy fallback."""
+    found = user_global_paths.resolve_with_fallback(USER_GLOBAL_FILENAME)
+    if found is not None:
+        return found
+    return DEFAULT_USER_GLOBAL_FILE
 
 #: Exact dotted paths allowed to cascade from user-global into the merged
 #: settings. Anything not listed here is silently ignored when present in
@@ -129,7 +154,8 @@ def load_agent_settings(
 
     ``project_path`` defaults to ``./.agent-settings.yml`` (CWD-relative).
     ``user_global_path`` defaults to
-    ``~/.config/agent-config/agent-settings.yml``. Both arguments accept
+    ``~/.event4u/agent-config/agent-settings.yml`` (with a read fallback
+    to the legacy ``~/.config/agent-config/agent-settings.yml``). Both arguments accept
     ``Path`` or ``str``. Pass ``verbose=True`` to log keys present in
     user-global that are not on the whitelist.
 
@@ -143,7 +169,7 @@ def load_agent_settings(
     with pre-cascade callers.
     """
     user_global_raw = _read_yaml(
-        Path(user_global_path) if user_global_path else DEFAULT_USER_GLOBAL_FILE,
+        Path(user_global_path) if user_global_path else _resolve_user_global_file(),
     ) or {}
 
     user_global_filtered, ignored = _filter_whitelist(
@@ -181,7 +207,7 @@ def iter_setting_overrides(
     Never blocks, never raises on missing files.
     """
     user_global_path_resolved = (
-        Path(user_global_path) if user_global_path else DEFAULT_USER_GLOBAL_FILE
+        Path(user_global_path) if user_global_path else _resolve_user_global_file()
     )
     user_global_raw = _read_yaml(user_global_path_resolved) or {}
     user_global_filtered, _ = _filter_whitelist(user_global_raw, MERGEABLE_KEYS)
