@@ -45,7 +45,7 @@ questions, one at a time, following the iron law (`user-interaction`).
 Detect whether `~/.event4u/agent-config/agent-settings.yml` already
 exists (or the legacy `~/.config/agent-config/agent-settings.yml`,
 which is read as a fallback by every loader). The new path namespaces
-every event4u-owned user-global artefact under one root — same place
+every package-owned user-global artefact under one root — same place
 where `anthropic.key`, `openai.key`, and `council-spend.jsonl` now
 live.
 

@@ -42,7 +42,7 @@ One line: one-time setup, six questions, one at a time (iron law from
 
 Detect whether `~/.event4u/agent-config/agent-settings.yml` exists (or
 legacy `~/.config/agent-config/agent-settings.yml`, read as fallback by
-every loader). New path namespaces every event4u-owned user-global
+every loader). New path namespaces every package-owned user-global
 artefact under one root — same place `anthropic.key`, `openai.key`,
 `council-spend.jsonl` now live.
 
