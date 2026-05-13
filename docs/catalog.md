@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **424 public artefacts** shipped by
+Consumer-facing catalog of all **442 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (189)
+## Skills (206)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -31,23 +31,28 @@ are excluded.
 | skill | [`blade-ui`](../.agent-src/skills/blade-ui/SKILL.md) |  | Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic. |
 | skill | [`blast-radius-analyzer`](../.agent-src/skills/blast-radius-analyzer/SKILL.md) |  | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
 | skill | [`bug-analyzer`](../.agent-src/skills/bug-analyzer/SKILL.md) |  | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
+| skill | [`build-buy-partner`](../.agent-src/skills/build-buy-partner/SKILL.md) |  | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
 | skill | [`check-refs`](../.agent-src/skills/check-refs/SKILL.md) |  | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../.agent-src/skills/churn-prevention/SKILL.md) |  | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
 | skill | [`code-refactoring`](../.agent-src/skills/code-refactoring/SKILL.md) |  | Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools. |
 | skill | [`code-review`](../.agent-src/skills/code-review/SKILL.md) |  | Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards. |
 | skill | [`command-routing`](../.agent-src/skills/command-routing/SKILL.md) |  | Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns. |
 | skill | [`command-writing`](../.agent-src/skills/command-writing/SKILL.md) |  | Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'. |
+| skill | [`comp-banding`](../.agent-src/skills/comp-banding/SKILL.md) |  | Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'. |
+| skill | [`competitive-moat-analysis`](../.agent-src/skills/competitive-moat-analysis/SKILL.md) |  | Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'. |
 | skill | [`competitive-positioning`](../.agent-src/skills/competitive-positioning/SKILL.md) |  | Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'. |
 | skill | [`composer-packages`](../.agent-src/skills/composer-packages/SKILL.md) |  | Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'. |
 | skill | [`content-funnel-design`](../.agent-src/skills/content-funnel-design/SKILL.md) |  | Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'. |
 | skill | [`context-authoring`](../.agent-src/skills/context-authoring/SKILL.md) |  | Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel. |
 | skill | [`context-document`](../.agent-src/skills/context-document/SKILL.md) |  | Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation. |
+| skill | [`contracts-cognition`](../.agent-src/skills/contracts-cognition/SKILL.md) |  | Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'. |
 | skill | [`conventional-commits-writing`](../.agent-src/skills/conventional-commits-writing/SKILL.md) |  | Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
 | skill | [`copilot-agents-optimization`](../.agent-src/skills/copilot-agents-optimization/SKILL.md) |  | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
 | skill | [`copilot-config`](../.agent-src/skills/copilot-config/SKILL.md) |  | Use when configuring GitHub Copilot — copilot-instructions.md, PR review patterns, output optimization — even when the user just says 'tune Copilot' or 'why is Copilot commenting on X'. |
 | skill | [`customer-research`](../.agent-src/skills/customer-research/SKILL.md) |  | Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'. |
 | skill | [`dashboard-design`](../.agent-src/skills/dashboard-design/SKILL.md) |  | Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling. |
 | skill | [`data-flow-mapper`](../.agent-src/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
+| skill | [`data-handling-judgment`](../.agent-src/skills/data-handling-judgment/SKILL.md) |  | Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'. |
 | skill | [`database`](../.agent-src/skills/database/SKILL.md) |  | Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'. |
 | skill | [`dcf-modeling`](../.agent-src/skills/dcf-modeling/SKILL.md) |  | Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'. |
 | skill | [`deal-qualification-meddic`](../.agent-src/skills/deal-qualification-meddic/SKILL.md) |  | Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'. |
@@ -74,6 +79,7 @@ are excluded.
 | skill | [`finishing-a-development-branch`](../.agent-src/skills/finishing-a-development-branch/SKILL.md) |  | Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'. |
 | skill | [`flux`](../.agent-src/skills/flux/SKILL.md) |  | Use when the project uses `livewire/flux` — dispatched by `directives/ui/{apply,review,polish}.py`. Covers Flux components, slots, variants, and form primitives. |
 | skill | [`forecast-accuracy`](../.agent-src/skills/forecast-accuracy/SKILL.md) |  | Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'. |
+| skill | [`forecasting`](../.agent-src/skills/forecasting/SKILL.md) |  | Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'. |
 | skill | [`form-handler`](../.agent-src/skills/form-handler/SKILL.md) |  | Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'. |
 | skill | [`fundraising-narrative`](../.agent-src/skills/fundraising-narrative/SKILL.md) |  | Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'. |
 | skill | [`funnel-analysis`](../.agent-src/skills/funnel-analysis/SKILL.md) |  | Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven. |
@@ -82,6 +88,7 @@ are excluded.
 | skill | [`grafana`](../.agent-src/skills/grafana/SKILL.md) |  | Use when working with Grafana — dashboards, Loki LogQL queries, alerting rules, monitoring panels — even when the user just says 'build me a dashboard' or 'query the logs' without naming Grafana. |
 | skill | [`gtm-launch`](../.agent-src/skills/gtm-launch/SKILL.md) |  | Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'. |
 | skill | [`guideline-writing`](../.agent-src/skills/guideline-writing/SKILL.md) |  | Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'. |
+| skill | [`hiring-loop-design`](../.agent-src/skills/hiring-loop-design/SKILL.md) |  | Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'. |
 | skill | [`incident-commander`](../.agent-src/skills/incident-commander/SKILL.md) |  | Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'. |
 | skill | [`jira-integration`](../.agent-src/skills/jira-integration/SKILL.md) |  | Use when the user says "check Jira", "create ticket", "update issue", or needs JQL queries, ticket transitions, or branch-to-ticket linking. |
 | skill | [`jobs-events`](../.agent-src/skills/jobs-events/SKILL.md) |  | Use when creating Laravel jobs, queued workflows, events, or listeners. Covers clear responsibilities, safe serialization, and retry/failure handling. |
@@ -105,6 +112,7 @@ are excluded.
 | skill | [`livewire`](../.agent-src/skills/livewire/SKILL.md) |  | Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation. |
 | skill | [`livewire-architect`](../.agent-src/skills/livewire-architect/SKILL.md) |  | Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'. |
 | skill | [`logging-monitoring`](../.agent-src/skills/logging-monitoring/SKILL.md) |  | Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers. |
+| skill | [`market-entry-analysis`](../.agent-src/skills/market-entry-analysis/SKILL.md) |  | Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'. |
 | skill | [`markitdown`](../.agent-src/skills/markitdown/SKILL.md) |  | Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'. |
 | skill | [`mcp`](../.agent-src/skills/mcp/SKILL.md) |  | Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows. |
 | skill | [`mcp-builder`](../.agent-src/skills/mcp-builder/SKILL.md) |  | Use when building an MCP server in Python (FastMCP) or Node/TypeScript (MCP SDK) — agent-centric tool design, input schemas, error handling, and the 10-question evaluation harness. |
@@ -119,8 +127,12 @@ are excluded.
 | skill | [`multi-tenancy`](../.agent-src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`okr-tree-modeling`](../.agent-src/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
 | skill | [`onboarding-design`](../.agent-src/skills/onboarding-design/SKILL.md) |  | Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'. |
+| skill | [`onboarding-program`](../.agent-src/skills/onboarding-program/SKILL.md) |  | Use when shaping employee onboarding — time-to-productivity, role-by-role program, mentor pairing, 30/60/90 milestones. Triggers on 'design our onboarding', 'why are new hires ramping slow'. |
+| skill | [`one-on-one-cadence`](../.agent-src/skills/one-on-one-cadence/SKILL.md) |  | Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'. |
 | skill | [`openapi`](../.agent-src/skills/openapi/SKILL.md) |  | Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI. |
+| skill | [`org-design`](../.agent-src/skills/org-design/SKILL.md) |  | Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'. |
 | skill | [`override-management`](../.agent-src/skills/override-management/SKILL.md) |  | Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/. |
+| skill | [`perf-feedback-craft`](../.agent-src/skills/perf-feedback-craft/SKILL.md) |  | Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'. |
 | skill | [`performance`](../.agent-src/skills/performance/SKILL.md) |  | Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design. |
 | skill | [`performance-analysis`](../.agent-src/skills/performance-analysis/SKILL.md) |  | ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work. |
 | skill | [`persona-writing`](../.agent-src/skills/persona-writing/SKILL.md) |  | Use when creating or editing a persona in .agent-src.uncompressed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'. |
@@ -133,6 +145,7 @@ are excluded.
 | skill | [`playwright-testing`](../.agent-src/skills/playwright-testing/SKILL.md) |  | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`positioning-strategy`](../.agent-src/skills/positioning-strategy/SKILL.md) |  | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
+| skill | [`privacy-review`](../.agent-src/skills/privacy-review/SKILL.md) |  | Use when reviewing data flows for GDPR / CCPA / HIPAA fit — regulatory-regime delta, consent shape, breach-impact triage. Triggers on 'is this GDPR-safe', 'do we need a DPA'. |
 | skill | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) |  | Use for the universal deep-analysis workflow: project discovery, version resolution, docs loading, architecture mapping, execution flow, and package research. |
 | skill | [`project-analysis-hypothesis-driven`](../.agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
 | skill | [`project-analysis-laravel`](../.agent-src/skills/project-analysis-laravel/SKILL.md) |  | Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns. |
@@ -165,6 +178,8 @@ are excluded.
 | skill | [`roadmap-writing`](../.agent-src/skills/roadmap-writing/SKILL.md) |  | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'. |
 | skill | [`rtk-output-filtering`](../.agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
 | skill | [`rule-writing`](../.agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
+| skill | [`runway-cognition`](../.agent-src/skills/runway-cognition/SKILL.md) |  | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
+| skill | [`scenario-modeling`](../.agent-src/skills/scenario-modeling/SKILL.md) |  | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
 | skill | [`script-writing`](../.agent-src/skills/script-writing/SKILL.md) |  | Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'. |
 | skill | [`secrets-management`](../.agent-src/skills/secrets-management/SKILL.md) |  | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
 | skill | [`security`](../.agent-src/skills/security/SKILL.md) |  | Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding. |
@@ -188,15 +203,17 @@ are excluded.
 | skill | [`test-performance`](../.agent-src/skills/test-performance/SKILL.md) |  | Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives. |
 | skill | [`testing-anti-patterns`](../.agent-src/skills/testing-anti-patterns/SKILL.md) |  | Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five Iron Laws and gates against mocking-the-mock, production pollution, silent partial mocks. |
 | skill | [`threat-modeling`](../.agent-src/skills/threat-modeling/SKILL.md) |  | Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation. |
+| skill | [`throughput-vs-morale-tradeoff`](../.agent-src/skills/throughput-vs-morale-tradeoff/SKILL.md) |  | Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'. |
 | skill | [`token-optimizer`](../.agent-src/skills/token-optimizer/SKILL.md) |  | Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action. |
 | skill | [`traefik`](../.agent-src/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
 | skill | [`ui-component-architect`](../.agent-src/skills/ui-component-architect/SKILL.md) |  | Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'. |
-| skill | [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, gross-margin payback, or contribution margin per customer — for SaaS, marketplace, or transactional businesses. |
+| skill | [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'. |
 | skill | [`universal-project-analysis`](../.agent-src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills. |
 | skill | [`upstream-contribute`](../.agent-src/skills/upstream-contribute/SKILL.md) |  | Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package. |
 | skill | [`using-git-worktrees`](../.agent-src/skills/using-git-worktrees/SKILL.md) |  | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | skill | [`validate-feature-fit`](../.agent-src/skills/validate-feature-fit/SKILL.md) |  | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
+| skill | [`vision-articulation`](../.agent-src/skills/vision-articulation/SKILL.md) |  | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
@@ -375,7 +392,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (71)
+## Guidelines (72)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -450,6 +467,7 @@ are excluded.
 | guideline | [`sql`](../docs/guidelines/php/sql.md) | php |  |
 | guideline | [`validations`](../docs/guidelines/php/validations.md) | php |  |
 | guideline | [`websocket`](../docs/guidelines/php/websocket.md) | php |  |
+| guideline | [`wing4-handoff`](../docs/guidelines/wing4-handoff.md) | (root) |  |
 
 ---
 
