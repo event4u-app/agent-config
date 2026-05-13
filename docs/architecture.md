@@ -4,13 +4,25 @@
 
 ## System overview
 
+Six layers, ordered from "how the package reaches a consumer" down to "what a consumer's agent actually executes". Each layer names its canonical contract under [`docs/contracts/`](contracts/) — the overview is a router, not a re-statement.
+
 ```
-Rules               → Behavior enforcement (always active)              ← stable
-Skills              → Execution logic (on-demand expertise)             ← stable
-Runtime Dispatcher  → Single-skill shell execution (pilot skills)       ← stable (mechanism)
-Work Engine         → Multi-step orchestration for /work + /implement   ← beta
-Tool Adapters       → External integrations (GitHub, Jira)              ← experimental
+Distribution         → npx-only runtime · install.sh · lockfile pin        ← stable
+Governance           → Kernel rules · tier-1/2 routing · command clusters  ← stable
+Router-Kernel        → router.json · always-loaded Iron Laws · char caps   ← stable
+Projection           → Compression · augment / multi-tool / cloud bundles  ← stable
+Execution Contracts  → Skills · commands · work-engine · roadmap engine    ← stable / beta
+MCP Lite/Full        → Hosted read-only (Lite) · local stdio (Full)        ← experimental
 ```
+
+| Layer | Canonical contract | Tier |
+|---|---|---|
+| **Distribution** | [`installed-tools-lockfile.md`](contracts/installed-tools-lockfile.md) + the "Distribution model" subsection below | stable |
+| **Governance** | [`command-clusters.md`](contracts/command-clusters.md) + [`command-surface-tiers.md`](contracts/command-surface-tiers.md) | stable |
+| **Router-Kernel** | [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) | stable |
+| **Projection** | [`architecture/compression.md`](architecture/compression.md), [`augment-projection.md`](architecture/augment-projection.md), [`multi-tool-projection.md`](architecture/multi-tool-projection.md), [`claude-bundle.md`](architecture/claude-bundle.md) | stable |
+| **Execution Contracts** | [`implement-ticket-flow.md`](contracts/implement-ticket-flow.md), [`orchestration-dsl-v1.md`](contracts/orchestration-dsl-v1.md), [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) | stable (skills · commands) / beta (work-engine · roadmap engine) |
+| **MCP Lite/Full** | [`mcp-phase-1-scope.md`](contracts/mcp-phase-1-scope.md), [`mcp-cloud-scope.md`](contracts/mcp-cloud-scope.md), [`mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md) | experimental — promotion to beta gated on `mcp-beta-criteria.md` (six artefact gates, monitored by `agent-config doctor --check mcp-beta-readiness`) |
 
 Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 
@@ -18,8 +30,18 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 - **beta** = shipped and load-bearing for one or more flows, but the surface is expected to evolve; minor-version breaks allowed under a `### Breaking` CHANGELOG note.
 - **experimental** = scaffold or pilot status; breaks allowed in any release.
 
+### What changed since 2.2.2
+
+Four load-bearing additions reshaped the top of the model between 2.2.2 and the current release. They are listed here so the diagram above reads as the *current* package, not a historical accumulation:
+
+1. **Router-Kernel** — the always-loaded Iron Laws collapsed into a 9-rule kernel with explicit per-rule character budgets enforced by `task lint-rule-budget`; everything else routes via tier-1/2 (`.agent-src/router.json`). Contract: [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md).
+2. **MCP Lite/Full** — replaces the old "Tool Adapters" layer at the top level. Lite is the hosted read-only surface (Claude.ai, Cloud agents); Full is the local stdio server consumers self-host. Promotion to beta is gated on six falsifiable artefacts in [`mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md); the old GitHub / Jira adapters remain as an internal detail of the Execution Contracts layer (see Tool Adapters subsection below).
+3. **npx distribution** — Composer and `npm install` paths retired in favour of `npx @event4u/agent-config`, with the lockfile-equivalent role played by `agent_config_version` in `.agent-settings.yml`. Full rationale in the "Distribution model" subsection below.
+4. **Command tiering** — `/`-commands now declare a `tier:` (0 / 1 / 2 / 3) that maps to invocation frequency and surface budget; tier-0 is the trimmed Tier-0 set surfaced in `agent-config --help` after the 2.7.x surface-discipline pass. Contract: [`command-surface-tiers.md`](contracts/command-surface-tiers.md) + [`command-clusters.md`](contracts/command-clusters.md).
+
 > The previous "observability, feedback, lifecycle" layers were removed in
-> 1.5 — they were scaffolds without production consumers.
+> 1.5 — they were scaffolds without production consumers. The "Tool
+> Adapters" top-level layer was demoted in 2.7 — see point 2 above.
 
 ## Content pipelines
 
@@ -128,7 +150,9 @@ note, package-internal path-swap, description budget, and the
 
 ---
 
-## Layers
+## Execution-layer detail
+
+> The six layers in the System overview are the top-level model. This section provides depth on the **Governance**, **Router-Kernel**, and **Execution Contracts** layers — the three a host agent interacts with on every turn. Distribution and Projection live in their own sub-pages ([`architecture/`](architecture/) and the "Distribution model" subsection above); MCP Lite/Full lives in [`docs/mcp-server.md`](mcp-server.md).
 
 ### 1. Governance Layer
 
@@ -137,7 +161,7 @@ note, package-internal path-swap, description budget, and the
 - **Guidelines** → reference-only documentation
 - **Commands** → workflow orchestration
 
-Ensures: no guessing, analysis before action, real verification, consistent outputs.
+Ensures: no guessing, analysis before action, real verification, consistent outputs. Canonical contracts: [`kernel-membership.md`](contracts/kernel-membership.md), [`rule-router.md`](contracts/rule-router.md), [`command-clusters.md`](contracts/command-clusters.md), [`command-surface-tiers.md`](contracts/command-surface-tiers.md).
 
 ### 2. Runtime Dispatcher — stable mechanism, pilot coverage
 
@@ -222,7 +246,9 @@ The Work Engine **uses** the Runtime Dispatcher when a phase needs
 to execute a single skill (e.g. lint, refs check), but the two are
 independent components with separate stability tiers.
 
-### 4. Tool Adapters — experimental
+### 4. Tool Adapters — experimental (internal detail; superseded at the top level by MCP)
+
+> **Position in the new model.** Tool Adapters no longer occupy a top-level layer — that slot is now **MCP Lite/Full**. The adapter classes still ship as the internal mechanism the Work Engine uses for inline GitHub/Jira reads, but external integration is meant to land via MCP going forward. See [`mcp-phase-1-scope.md`](contracts/mcp-phase-1-scope.md), [`mcp-cloud-scope.md`](contracts/mcp-cloud-scope.md), and [`mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md) for the surface that replaces this layer at the top level.
 
 > **Status: scaffold + read-only GitHub calls.** With a `GITHUB_TOKEN` the
 > GitHub adapter performs real read calls; without one it returns scaffold

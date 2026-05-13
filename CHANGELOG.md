@@ -18,6 +18,78 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 Four roadmaps land in this release.
 
+**Tier-0 trim (`road-to-surface-discipline` Phase 1)** — six CLI
+commands moved from Tier-0 to Tier-1 in `./agent-config --help` to
+collapse the daily-driver surface down to the seven commands a new
+contributor actually needs in their first session. Commands stay
+fully invokable by full name — only the default `--help` view
+changed. Source of truth: `docs/contracts/command-surface-tiers.md`.
+
+Pre/post diff of `./agent-config --help` Tier-0 block:
+
+| Command | Pre | Post | Rationale |
+|---|:-:|:-:|---|
+| `init` | Tier-0 | Tier-0 | daily-driver entrypoint |
+| `sync` | Tier-0 | Tier-0 | daily-driver entrypoint |
+| `validate` | Tier-0 | Tier-0 | daily-driver entrypoint |
+| `work` | Tier-0 | Tier-0 | daily-driver entrypoint |
+| `implement-ticket` | Tier-0 | Tier-0 | daily-driver entrypoint |
+| `help` | Tier-0 | Tier-0 | help meta-command |
+| `--version` | Tier-0 | Tier-0 | help meta-command |
+| `first-run` | Tier-0 | **Tier-1** | one-time setup; not in daily loop |
+| `keys:install-anthropic` | Tier-0 | **Tier-1** | one-time credential setup |
+| `keys:install-openai` | Tier-0 | **Tier-1** | one-time credential setup |
+| `council:estimate` | Tier-0 | **Tier-1** | on-demand review tool |
+| `council:run` | Tier-0 | **Tier-1** | on-demand review tool |
+| `council:render` | Tier-0 | **Tier-1** | on-demand review tool |
+
+Net surface delta: **0 new commands, 0 removed commands.** Only the
+`--help` surfacing changed. Run `./agent-config --help --tier=1` for
+the full power-user view (15 commands) or `--tier=all` for
+maintenance / hooks / MCP / telemetry (26 additional commands).
+
+**Diagnostic Hub (`road-to-surface-discipline` Phase 2)** — the
+existing `./agent-config doctor` is repositioned as the single
+entrypoint for health checks. New `CHECK_IDS` registry plus
+`doctor --check <id>` filter; `--list-checks` enumerates every
+runner; failing checks print the literal command line that
+reproduces the failure. Surface delta: **0 new commands** — only
+flags and registry plumbing.
+
+**MCP beta gating (`road-to-surface-discipline` Phase 3)** — MCP
+promotion criteria pinned in
+[`docs/contracts/mcp-beta-criteria.md`](docs/contracts/mcp-beta-criteria.md)
+with a four-gate contract (offline-readiness, scope, drift, runtime).
+`doctor --check mcp-beta-readiness` enforces the gates; failing tests
+under `tests/test_mcp_beta_gates.py` codify the promotion bar.
+Cloud-scope behaviour cross-referenced from
+[`docs/contracts/mcp-cloud-scope.md`](docs/contracts/mcp-cloud-scope.md).
+
+**Architecture refresh (`road-to-surface-discipline` Phase 4)** —
+[`docs/architecture.md`](docs/architecture.md) and
+[`docs/mcp-server.md`](docs/mcp-server.md) re-anchor the 6-layer
+system model (consumer → tools → installer → package → kernel →
+runtime). `AGENTS.md` re-trimmed to honour the Thin-Root contract
+(< 3,000 chars). No code churn — docs only.
+
+**Tier-usage telemetry (`road-to-surface-discipline` Phase 5)** —
+empirical retiering signal added behind a default-off opt-in. New
+`telemetry.tier_usage` namespace in `.agent-settings.yml`; signal
+contract pinned in
+[`docs/contracts/command-clusters.md`](docs/contracts/command-clusters.md)
+§ tier-usage (whitelist: `ts_bucket`, `command`, `tier`, `outcome`,
+`user_hash`; hourly time buckets; 16-char salted user hash; no paths,
+no argv). Retiering thresholds (≥ 20 invocations and ≥ 3 distinct
+users over 30 days) live in the same contract. A new
+`tier_usage_report.py` template script aggregates the local log into
+a frequency table and refuses to render rows that violate the
+privacy floor. The existing `doctor` gains a `tier-usage-readiness`
+check (warn when disabled or empty; fail when every record is
+poisoned; ok when ≥ 1 record passes the floor). Surface delta: **0
+new commands, 0 new skills, 0 new personas** — telemetry rides on
+the existing dispatcher and the existing `doctor` entrypoint.
+
+
 **Package consolidation** — the standalone wrapper package
 `@event4u/create-agent-config` is retired. `npx @event4u/agent-config init`
 is now the canonical one-shot entrypoint; the bundle package gains an

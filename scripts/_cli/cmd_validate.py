@@ -130,6 +130,7 @@ def main(argv: list[str]) -> int:
     if data is None:
         _emit(opts.quiet, f"❌  No manifest found at {manifest}")
         _emit(opts.quiet, "    Run `./agent-config init --tools=<id>` to create one.")
+        _emit(opts.quiet, "    Diagnose: `./agent-config doctor --check manifest-integrity`")
         return 1
 
     entries = list(data.get("tools") or [])
@@ -157,6 +158,15 @@ def main(argv: list[str]) -> int:
     _emit(opts.quiet, "")
     _emit(opts.quiet, "Run `./agent-config sync` to replay missing bridges, or")
     _emit(opts.quiet, "`./agent-config init --tools=<id> --force` to refresh the manifest.")
+    # Deeplink: route per-kind to the matching `doctor` check so users can
+    # copy-paste even though `doctor` is Tier-1 and absent from --help.
+    kinds = {issue["kind"] for issue in issues}
+    if "version_drift" in kinds:
+        _emit(opts.quiet, "Diagnose:  `./agent-config doctor --check lockfile-freshness`")
+    if kinds & {"marker_missing", "scope_divergence"}:
+        _emit(opts.quiet, "Diagnose:  `./agent-config doctor --check bridge-drift`")
+    if "manifest_corrupt" in kinds:
+        _emit(opts.quiet, "Diagnose:  `./agent-config doctor --check manifest-integrity`")
     return 1
 
 

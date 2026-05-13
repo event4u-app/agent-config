@@ -379,3 +379,175 @@ def test_json_output_includes_tag_drift(
     assert item["found"] == "other/pkg"
     assert set(item.keys()) >= {"tool", "path", "kind", "fix",
                                 "expected", "found"}
+
+
+
+# ---------------------------------------------------------------------------
+# Health-check registry (Phase 2 of road-to-surface-discipline)
+# ---------------------------------------------------------------------------
+
+
+def _checks_by_id(payload: dict) -> dict:
+    return {c["id"]: c for c in payload.get("checks", [])}
+
+
+def _run_json(tmp_path: Path, capsys: pytest.CaptureFixture) -> dict:
+    cmd_doctor.main([f"--project={tmp_path}", "--json"])
+    return json.loads(capsys.readouterr().out)
+
+
+def _clean_project(tmp_path: Path) -> None:
+    body = b"rule body\n"
+    _touch(tmp_path, ".augment/rules/r1.md", body)
+    _write_manifest(
+        tmp_path,
+        [_entry("augment", files=[{
+            "path": ".augment/rules/r1.md",
+            "kind": "deployed",
+            "sha256": _sha(body),
+        }])],
+        deploy_roots=[".augment/rules"],
+    )
+
+
+def test_check_registry_emits_all_ten_ids(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    ids = [c["id"] for c in payload["checks"]]
+    assert ids == list(cmd_doctor.CHECK_IDS)
+    assert len(ids) == 10
+
+
+def test_check_scope_standalone(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    scope = _checks_by_id(payload)["scope"]
+    assert scope["status"] == "ok"
+    assert "standalone" in scope["message"]
+
+
+def test_check_lockfile_freshness_drift(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    # Manifest writer "2.1.0" vs current package version → warn.
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    fresh = _checks_by_id(payload)["lockfile-freshness"]
+    current = cmd_doctor._current_package_version()
+    if current == "2.1.0":
+        assert fresh["status"] == "ok"
+    else:
+        assert fresh["status"] == "warn"
+        assert "2.1.0" in fresh["message"]
+        assert "sync" in fresh["remedy"]
+
+
+def test_check_bridge_drift_ok(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    bridge = _checks_by_id(payload)["bridge-drift"]
+    assert bridge["status"] == "ok"
+
+
+def test_check_bridge_drift_fail_on_missing(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    body = b"rule body\n"
+    _write_manifest(
+        tmp_path,
+        [_entry("augment", files=[{
+            "path": ".augment/rules/missing.md",
+            "kind": "deployed",
+            "sha256": _sha(body),
+        }])],
+        deploy_roots=[".augment/rules"],
+    )
+    payload = _run_json(tmp_path, capsys)
+    bridge = _checks_by_id(payload)["bridge-drift"]
+    assert bridge["status"] == "fail"
+    assert "missing" in bridge["message"]
+
+
+def test_check_mcp_mode_absent(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    mcp = _checks_by_id(payload)["mcp-mode"]
+    assert mcp["status"] == "ok"
+    assert "no MCP config present" in mcp["message"]
+
+
+def test_check_mcp_mode_invalid_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    _touch(tmp_path, ".cursor/mcp.json", b"{not json")
+    payload = _run_json(tmp_path, capsys)
+    mcp = _checks_by_id(payload)["mcp-mode"]
+    assert mcp["status"] == "warn"
+    assert "not valid JSON" in mcp["message"]
+
+
+def test_check_mcp_mode_detects_cursor(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    _touch(tmp_path, ".cursor/mcp.json", b'{"servers": {}}')
+    payload = _run_json(tmp_path, capsys)
+    mcp = _checks_by_id(payload)["mcp-mode"]
+    assert mcp["status"] == "ok"
+    assert "cursor" in mcp["message"]
+
+
+def test_check_offline_readiness_present(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    off = _checks_by_id(payload)["offline-readiness"]
+    # This repo ships scripts/hermetic-install.sh, so the check is ok.
+    assert off["status"] == "ok"
+
+
+def test_check_unsupported_combos_ok(
+    tmp_path: Path, capsys: pytest.CaptureFixture,
+) -> None:
+    _clean_project(tmp_path)
+    payload = _run_json(tmp_path, capsys)
+    combo = _checks_by_id(payload)["unsupported-combos"]
+    assert combo["status"] == "ok"
+
+
+
+def test_check_mcp_beta_readiness_warn_when_artefacts_missing(
+    tmp_path: Path,
+) -> None:
+    """A bare project has no MCP beta artefacts — all 6 gates pending."""
+    result = cmd_doctor._check_mcp_beta_readiness(tmp_path)
+    assert result["id"] == "mcp-beta-readiness"
+    assert result["status"] == "warn"
+    assert "6/6" in result["message"]
+    assert "mcp-beta-criteria.md" in result["remedy"]
+
+
+def test_check_mcp_beta_readiness_ok_when_all_artefacts_present(
+    tmp_path: Path,
+) -> None:
+    """All 6 gate artefacts present → status ok, promotion authorized."""
+    for _gate_id, rel in cmd_doctor.MCP_BETA_GATES:
+        target = tmp_path / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        if rel.endswith((".js", ".md", ".yml")):
+            target.write_text("placeholder", encoding="utf-8")
+        else:
+            target.mkdir(parents=True, exist_ok=True)
+    result = cmd_doctor._check_mcp_beta_readiness(tmp_path)
+    assert result["status"] == "ok"
+    assert "promotion authorized" in result["message"]

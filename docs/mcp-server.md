@@ -1,6 +1,6 @@
 # MCP Server
 
-> Status: **experimental** — Phase 1 + 2 + 3 shipped. No `tools/*` primitive yet (Phase 4, deferred behind a design call).
+> Status: **experimental** — Phase 1 + 2 + 3 shipped. No `tools/*` primitive yet (Phase 4, deferred behind a design call). Promotion to **beta** is gated on the six criteria in [`docs/contracts/mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md); current gate status: `./agent-config doctor --check mcp-beta-readiness` (Phase 3 of `road-to-surface-discipline.md`).
 
 `agent-config` ships a built-in [Model Context Protocol](https://modelcontextprotocol.io)
 server that exposes the package's read-only governance surface to MCP-aware

@@ -62,17 +62,6 @@ Tier 0 — daily-driver (init → sync → validate → work):
                              (Option-A loop; called by the /work command)
   implement-ticket           Drive the work_engine Python engine on a ticket envelope
                              (Option-A loop; called by the /implement-ticket command)
-  first-run                  Guided first-run setup — cost profile, settings, tooling
-  keys:install-anthropic     Install the Anthropic API key for the AI Council
-                             (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
-  keys:install-openai        Install the OpenAI API key for the AI Council
-                             (interactive, /dev/tty only, writes ~/.config/agent-config/openai.key 0600)
-  council:estimate           Pre-call council cost preview (no API call, no spend)
-                             Usage: council:estimate <question> [--input-mode prompt|roadmap]
-  council:run                Run the council. Requires --confirm to spend.
-                             Usage: council:run <question> --output <path> --confirm
-  council:render             Re-render a saved council responses JSON to markdown
-                             Usage: council:render <responses.json>
   help                       Show this help (default Tier-0; --tier=1|all expands)
   --version, -V              Print package version
 EOF
@@ -110,6 +99,17 @@ Tier 1 — power-user (release shape, audit, migration):
                              Flags: --json | --project=<path>
   migrate                    One-shot migration off legacy composer / npm install paths
                              Flags: --dry-run (detect only)
+  first-run                  Guided first-run setup — cost profile, settings, tooling
+  keys:install-anthropic     Install the Anthropic API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
+  keys:install-openai        Install the OpenAI API key for the AI Council
+                             (interactive, /dev/tty only, writes ~/.config/agent-config/openai.key 0600)
+  council:estimate           Pre-call council cost preview (no API call, no spend)
+                             Usage: council:estimate <question> [--input-mode prompt|roadmap]
+  council:run                Run the council. Requires --confirm to spend.
+                             Usage: council:run <question> --output <path> --confirm
+  council:render             Re-render a saved council responses JSON to markdown
+                             Usage: council:render <responses.json>
 EOF
   fi
 
@@ -124,6 +124,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (one-line MCP server onboarding; idempotent)
   mcp:run                    Run the built-in MCP server over stdio
                              (requires `mcp:setup` first; see docs/mcp-server.md)
+                             (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
   hooks:install              Install the pre-commit roadmap-progress hook
@@ -161,7 +162,7 @@ EOF
   if [[ "$tier" == "0" ]]; then
     cat <<'EOF'
 
-(Hidden: 9 Tier-1 + 26 Tier-2 commands. Run `./agent-config --help --tier=1`
+(Hidden: 15 Tier-1 + 26 Tier-2 commands. Run `./agent-config --help --tier=1`
 or `--tier=all` to see them. Tier criteria: docs/contracts/command-surface-tiers.md.)
 EOF
   fi
@@ -173,14 +174,8 @@ Examples (Tier 0):
   ./agent-config sync --dry-run
   ./agent-config sync
   ./agent-config validate
-  ./agent-config first-run
   ./agent-config work --state-file .work-state.json --prompt-file prompt.txt
   ./agent-config implement-ticket --state-file .work-state.json
-  ./agent-config keys:install-anthropic
-  ./agent-config keys:install-openai
-  ./agent-config council:estimate prompt.txt
-  ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
-  ./agent-config council:render agents/council-sessions/out.json
 EOF
 
   if [[ "$tier" == "1" || "$tier" == "all" ]]; then
@@ -203,6 +198,12 @@ Examples (Tier 1):
   ./agent-config versions --json
   ./agent-config init --offline --tools=claude-code,cursor --yes
   ./agent-config update --offline --to=2.2.0
+  ./agent-config first-run
+  ./agent-config keys:install-anthropic
+  ./agent-config keys:install-openai
+  ./agent-config council:estimate prompt.txt
+  ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
+  ./agent-config council:render agents/council-sessions/out.json
 EOF
   fi
 

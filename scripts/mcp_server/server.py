@@ -125,9 +125,10 @@ def build_server(
         name=SERVER_NAME,
         version=__version__,
         instructions=(
-            "agent-config MCP server (Phase 3, experimental). Exposes "
-            "all skills + commands as instructional prompts, plus "
-            "rules + guidelines + contexts as read-only resources."
+            "agent-config MCP server (Phase 3, experimental; beta gates "
+            "in docs/contracts/mcp-beta-criteria.md). Exposes all skills "
+            "+ commands as instructional prompts, plus rules + guidelines "
+            "+ contexts as read-only resources."
         ),
     )
 
