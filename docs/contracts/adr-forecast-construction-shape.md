@@ -5,7 +5,6 @@ stability: beta
 # ADR — `forecast-construction-shape`: the O2 ↔ H10 interface
 
 > **Status:** Decided · 2026-05-13
-> **Roadmap origin:** `agents/roadmaps/road-to-money-strategy-ops.md` (O2-interface)
 > **Builds on:** [`cross-wing-handoff.md`](cross-wing-handoff.md) § 5 W4 chain;
 > [`wing4-handoff.md`](../guidelines/wing4-handoff.md) § Chain 4;
 > [`gtm-handoff.md`](../guidelines/gtm-handoff.md) § Chain 2 (H10 side).
@@ -88,6 +87,3 @@ Three signals that this ADR is wrong and needs revisiting:
   side prose; identical contract, opposite consumer.
 - [`cross-wing-handoff.md`](cross-wing-handoff.md) § 5 — wing-scoped
   contract policy this ADR follows.
-- `agents/roadmaps/road-to-money-strategy-ops.md` § O2 — the
-  authorising roadmap (archived after merge; this ADR is the
-  durable record).

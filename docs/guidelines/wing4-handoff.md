@@ -125,6 +125,3 @@ consumes it).
   every chain step opts into ≥ 1 slot or carries an ADR opt-out.
 - [`docs/contracts/adr-wing4-context-spine.md`](../contracts/adr-wing4-context-spine.md)
   — durable record for the Wing-4 slot extension.
-- `agents/roadmaps/road-to-money-strategy-ops.md` (archived after
-  merge) — the eighteen Wing-4 skills this guideline maps; pending
-  skills appear here as backtick slugs until shipped.

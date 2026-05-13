@@ -5,7 +5,6 @@ stability: beta
 # ADR — Wing-4 context-spine: Money / Strategy / Ops slot extension
 
 > **Status:** Decided · 2026-05-13
-> **Roadmap origin:** `agents/roadmaps/road-to-money-strategy-ops.md` (Block J — J1, archived after merge)
 > **Builds on:** [`context-spine.md`](context-spine.md) — tri-slot cross-wing
 > contract (`product`, `team`, `repo`) locked at 3 by council Q1
 > (2026-05-05 KEEP-3, unified-senior-roles iter 1) plus the wing-scoped
@@ -121,9 +120,6 @@ re-opens the slot-sprawl risk and needs a separate ADR.
   reference ADR this one composes against.
 - [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
   — `context_spine.items.enum` extended in this ADR.
-- `agents/roadmaps/road-to-money-strategy-ops.md` § Block J — the
-  authorising roadmap (archived after merge; this ADR is the
-  durable record).
 - [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
   § Senior-Tier Required Structure — the four blocks every senior
   skill ships independently of spine opt-in.
