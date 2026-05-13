@@ -26,6 +26,13 @@ hashed before deletion. A mismatch flags the file as **modified** —
 prune surfaces the path and skips removal so user / neighbour-tool
 edits to deployed content survive the prune sweep. Files without a
 recorded hash (bridges) skip the check and prune normally.
+
+Resume-uninstall (P2.2): ``--resume-uninstall`` narrows prune to the
+crash-recovery scope — only files belonging to tools with
+``status: uninstalling`` are surfaced. The legacy disk scan is skipped
+and healthy tools / unmanaged drift are untouched. Intended for
+re-running after an uninstall crashed mid-flight; no-op when no tool
+is in the ``uninstalling`` state.
 """
 from __future__ import annotations
 
@@ -93,7 +100,8 @@ def _sha256(path: Path) -> str | None:
         return None
 
 
-def _orphaned(project_root: Path, manifest: dict | None, declared: set[str]
+def _orphaned(project_root: Path, manifest: dict | None, declared: set[str],
+              *, resume_uninstall: bool = False,
               ) -> list[tuple[str, Path, str | None, str | None]]:
     """Return ``[(tool_id, target_path, kind, expected_sha256), …]``.
 
@@ -113,18 +121,25 @@ def _orphaned(project_root: Path, manifest: dict | None, declared: set[str]
 
     Paths already collected by the disk scan are deduplicated so the
     same orphan never appears twice.
+
+    ``resume_uninstall=True`` skips the legacy disk scan and the
+    healthy-tool branch entirely — only tools with
+    ``status == "uninstalling"`` contribute candidates. Used by
+    ``--resume-uninstall`` to scope crash recovery to half-removed
+    tools without touching unmanaged drift.
     """
     out: list[tuple[str, Path, str | None, str | None]] = []
     seen: set[Path] = set()
 
-    for tool_id, rel in PROJECT_BRIDGE_MARKERS.items():
-        if tool_id in declared:
-            continue
-        target = project_root / rel
-        if not target.exists():
-            continue
-        out.append((tool_id, target, None, None))
-        seen.add(target.resolve())
+    if not resume_uninstall:
+        for tool_id, rel in PROJECT_BRIDGE_MARKERS.items():
+            if tool_id in declared:
+                continue
+            target = project_root / rel
+            if not target.exists():
+                continue
+            out.append((tool_id, target, None, None))
+            seen.add(target.resolve())
 
     if manifest is None:
         return out
@@ -137,7 +152,10 @@ def _orphaned(project_root: Path, manifest: dict | None, declared: set[str]
             continue
         tool_id = str(tool.get("name", ""))
         status = tool.get("status", "installed")
-        if status == "installed" and tool_id in declared:
+        if resume_uninstall:
+            if status != "uninstalling":
+                continue
+        elif status == "installed" and tool_id in declared:
             continue
         for entry in files:
             kind = entry.get("kind")
@@ -207,6 +225,10 @@ def _parse(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--all-missing-lock", action="store_true",
                         help="treat a missing lockfile as 'no tools declared' "
                              "and prune every known marker (destructive)")
+    parser.add_argument("--resume-uninstall", action="store_true",
+                        help="only sweep files of tools left in "
+                             "status='uninstalling' (P2.2 crash recovery); "
+                             "skips the legacy disk scan and healthy tools")
     return parser.parse_args(argv)
 
 
@@ -270,7 +292,10 @@ def main(argv: list[str] | None = None) -> int:
         print("    pass --all-missing-lock to prune every known marker (destructive)",
               file=sys.stderr)
         return 1
-    candidates = _orphaned(project_root, manifest, declared)
+    candidates = _orphaned(
+        project_root, manifest, declared,
+        resume_uninstall=opts.resume_uninstall,
+    )
     results: list[tuple[str, Path, str, bool, str]] = []
     for tool_id, target, _kind, expected_sha in candidates:
         state, _actual = _classify(target, expected_sha)

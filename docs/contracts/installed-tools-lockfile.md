@@ -64,7 +64,7 @@ tools:
 | `scope` | str | yes | `global` (user-home) or `project` (workspace bridge) |
 | `bridge_marker` | str | yes | absolute / `~`-prefixed for global; repo-relative for project |
 | `installed_at` | str | yes | ISO date; informational only |
-| `status` | str | no | `installed` (default when absent) or `uninstalling`; reserved for two-phase uninstall (P2.2) |
+| `status` | str | no | `installed` (default when absent) or `uninstalling`; two-phase uninstall (P2.2). A crashed uninstall leaves the entry in `uninstalling` — `agent-config prune --resume-uninstall` sweeps only those entries' `files[]` without touching healthy tools or unmanaged drift. |
 | `files` | list[obj] | no | content the installer deployed for this tool |
 | `merged_keys` | list[obj] | no | named keys this tool inserted into shared JSON files |
 
