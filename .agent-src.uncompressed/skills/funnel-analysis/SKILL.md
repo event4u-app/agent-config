@@ -5,6 +5,7 @@ status: active
 tier: senior
 source: package
 domain: product
+context_spine: [product, customer-segment, funnel-stage]
 ---
 
 # funnel-analysis
@@ -16,6 +17,29 @@ domain: product
 - A board ask: "where does the money leak between landing page and paying customer?"
 
 Do NOT use for ranking features, valuation, or OKR decomposition (see Related Skills). Funnel analysis is a **diagnostic**, not a roadmap.
+
+## Cognition cluster
+
+- **Mental model 16 — Leading vs. lagging indicators.** Paid is
+  lagging; activation is leading; signup is upstream of both. A
+  funnel decision built on the lagging stage can only confirm the
+  miss; the leading stage names the binding fix. See
+  [`docs/contracts/mental-models.md`](../../../docs/contracts/mental-models.md) § 16.
+- **Mental model 13 — Occam's razor.** When a stage drops, the
+  simpler explanation usually wins: *"acquisition mix shifted"*
+  beats *"users no longer understand the product."* Pick the simpler
+  cause; it changes the move. See `mental-models.md` § 13.
+- **Mental model 3 — Pareto (80/20).** Drops are almost never
+  uniform across segments; ~20 % of the segment × stage cells carry
+  ~80 % of the loss. Segment before treating the average as
+  actionable. See `mental-models.md` § 3.
+- **Context-spine — product + customer-segment + funnel-stage.**
+  Read the **product** slot for what activation can actually mean
+  in-product (the activation event must be shippable), the
+  **customer-segment** slot for which segments' switch-events the
+  funnel is built for, and the **funnel-stage** slot for the
+  position of each stage relative to the buying journey. See
+  [`context-spine`](../../../docs/contracts/context-spine.md).
 
 ## Procedure
 
@@ -40,7 +64,7 @@ Do NOT use for ranking features, valuation, or OKR decomposition (see Related Sk
 
 1. The right benchmark is **your own funnel one quarter ago**, not industry averages. Industry averages mix verticals so coarsely they're useless for action.
 2. For each stage: is current rate within ±2 percentage points of trailing-quarter median? If not, that stage is the primary suspect.
-3. If multiple stages drift simultaneously, the cause is upstream (acquisition mix change, broken instrumentation), not the stage itself.
+3. If multiple stages move off-band simultaneously, the cause is upstream (acquisition mix change, broken instrumentation), not the stage itself.
 
 ### Step 4: Segment the broken stage
 

@@ -130,21 +130,21 @@ runnable example. **No skill ships without all six.**
 
 **RevOps cluster (3 skills):**
 
-- [ ] **H8** — `pipeline-strategy` skill (`tier: senior`): stage-definition, conversion-rate-by-stage targets, pipeline-coverage reasoning, leak detection. **Out:** Salesforce / HubSpot configuration.
-- [ ] **H9** — `deal-qualification-meddic` skill (`tier: senior`): MEDDIC framework cognition (Metrics, Economic-buyer, Decision-criteria, Decision-process, Identify-pain, Champion), qualification-call structure, disqualification heuristics. **Out:** call-recording integrations.
-- [ ] **H10** — `forecast-accuracy` skill (`tier: senior`, cites finance-partner `forecasting` (Wing-4 O2) via interface-first-stub per iter-2 OQ4): forecast-call construction, commit / best-case / pipeline categorization, accuracy retro-loop. Composes against the `forecast-construction-shape` ADR shipped by O2 (top-down vs bottom-up, confidence-band, retro-loop signature) — H10 starts only after O2-interface ≥ 100 % but parallel to O2 implementation. If O2 drifts from interface, O2 breaks contract (not H10); contract locked in J3 + G3 handoff guidelines. **Out:** forecasting-tool plugins.
+- [x] **H8** — `pipeline-strategy` skill (`tier: senior`): stage-definition, conversion-rate-by-stage targets, pipeline-coverage reasoning, leak detection. **Out:** Salesforce / HubSpot configuration.
+- [x] **H9** — `deal-qualification-meddic` skill (`tier: senior`): MEDDIC framework cognition (Metrics, Economic-buyer, Decision-criteria, Decision-process, Identify-pain, Champion), qualification-call structure, disqualification heuristics. **Out:** call-recording integrations.
+- [x] **H10** — `forecast-accuracy` skill (`tier: senior`, cites finance-partner `forecasting` (Wing-4 O2) via interface-first-stub per iter-2 OQ4): forecast-call construction, commit / best-case / pipeline categorization, accuracy retro-loop. Composes against the `forecast-construction-shape` ADR shipped by O2 (top-down vs bottom-up, confidence-band, retro-loop signature) — H10 starts only after O2-interface ≥ 100 % but parallel to O2 implementation. If O2 drifts from interface, O2 breaks contract (not H10); contract locked in J3 + G3 handoff guidelines. **Out:** forecasting-tool plugins.
 
 **Customer Success cluster (3 skills):**
 
-- [ ] **H11** — `onboarding-design` skill (`tier: senior`): time-to-first-value reasoning, milestone-design, friction-audit, drop-off diagnosis. Distinct from `onboarding-program` (Wing-4 employee-facing).
-- [ ] **H12** — `churn-prevention` skill (`tier: senior`): health-score signal design, churn-cause classification (involuntary / value / relationship / fit), early-warning loop. Feeds back into Wing-4 forecasting per cross-skill map.
-- [ ] **H13** — `expansion-playbook` skill (`tier: senior`): account-expansion patterns, upsell-vs-cross-sell reasoning, expansion-trigger signals, NRR-cognition. **Out:** PQL-tooling integrations.
+- [x] **H11** — `onboarding-design` skill (`tier: senior`): time-to-first-value reasoning, milestone-design, friction-audit, drop-off diagnosis. Distinct from `onboarding-program` (Wing-4 employee-facing).
+- [x] **H12** — `churn-prevention` skill (`tier: senior`): health-score signal design, churn-cause classification (involuntary / value / relationship / fit), early-warning loop. Feeds back into Wing-4 forecasting per cross-skill map.
+- [x] **H13** — `expansion-playbook` skill (`tier: senior`): account-expansion patterns, upsell-vs-cross-sell reasoning, expansion-trigger signals, NRR-cognition. **Out:** PQL-tooling integrations.
 
 **Growth PM cluster (3 skills):**
 
-- [ ] **H14** — `funnel-analysis` skill (`tier: senior`): funnel-stage diagnostics, leaky-bucket vs growth-loop classification, leading-indicator selection, cohort-behavior reading. **Out:** Mixpanel / Amplitude SDK wrapping.
-- [ ] **H15** — `retention-loops` skill (`tier: senior`): habit-formation reasoning, trigger-action-reward design, network-effect vs single-user-loop classification. Composes `onboarding-design` (H11) + `churn-prevention` (H12).
-- [ ] **H16** — `activation-design` skill (`tier: senior`): aha-moment definition, activation-event selection, activation-funnel construction, leading-vs-lagging-indicator reasoning.
+- [x] **H14** — `funnel-analysis` skill (`tier: senior`): funnel-stage diagnostics, leaky-bucket vs growth-loop classification, leading-indicator selection, cohort-behavior reading. **Out:** Mixpanel / Amplitude SDK wrapping.
+- [x] **H15** — `retention-loops` skill (`tier: senior`): habit-formation reasoning, trigger-action-reward design, network-effect vs single-user-loop classification. Composes `onboarding-design` (H11) + `churn-prevention` (H12).
+- [x] **H16** — `activation-design` skill (`tier: senior`): aha-moment definition, activation-event selection, activation-funnel construction, leading-vs-lagging-indicator reasoning.
 
 
 ### Block I — Wing 3 personas
