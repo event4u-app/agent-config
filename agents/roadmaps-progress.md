@@ -6,17 +6,17 @@
 
 ## Overall
 
-**24 / 139 steps done · 17%**
+**29 / 139 steps done · 21%**
 
 ```text
-███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md) | 6 | 36 | 12 | 24 | 0 | 0 | ███████░░░ 67% |
+| 1 | [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md) | 6 | 36 | 7 | 29 | 0 | 0 | ████████░░ 81% |
 | 2 | [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md) | 1 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-money-strategy-ops.md](roadmaps/road-to-money-strategy-ops.md) | 1 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,7 +28,7 @@
 
 ### [road-to-event4u-namespace-and-claude-desktop.md](roadmaps/road-to-event4u-namespace-and-claude-desktop.md)
 
-**Road to `~/.event4u/agent-config/` namespace + real Claude Desktop deployment** — 24 / 36 done (67%)
+**Road to `~/.event4u/agent-config/` namespace + real Claude Desktop deployment** — 29 / 36 done (81%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -37,7 +37,7 @@
 | 3 | Auto-migration shim | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Real Claude Desktop ZIP bundle deployment | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | Tests + Docs + ADR | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 6 | Quality pipeline + AI Council post-review + PR | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 6 | Quality pipeline + AI Council post-review + PR | 🟡 in progress | 7 | 5 | 0 | 0 | 42% |
 
 ### [road-to-gtm-and-growth.md](roadmaps/road-to-gtm-and-growth.md)
 

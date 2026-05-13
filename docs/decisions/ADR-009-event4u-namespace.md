@@ -132,6 +132,34 @@ path and count so the user can paste it into Finder / Explorer.
   ADR explicitly does **not** propose moving them under
   `~/.event4u/`.
 
+## Rollback / kill-switch
+
+If the migration corrupts user state, the rollback path is **manual but
+zero-data-loss** by design:
+
+1. **Legacy tree is never auto-deleted.** Even after the breadcrumb is
+   written, `~/.config/agent-config/` retains every file. The user can
+   reinstate it by deleting `~/.event4u/agent-config/` and re-running
+   `bash install.sh --global` — the shim will re-copy from the legacy
+   tree if the new root is absent.
+2. **Per-entry atomic write.** Each top-level entry is copied to a
+   sibling `<name>.event4u-partial-<pid>` and then `os.replace`'d into
+   place. A crash mid-copy leaves `*.event4u-partial-*` debris that the
+   next run purges before retrying — a partial subdirectory is never
+   mistaken for a completed copy.
+3. **`EVENT4U_HOME` env override.** A user who needs to point the
+   resolver at a known-good state (e.g. a restored backup) can set
+   `EVENT4U_HOME=/path/to/restored/agent-config` without editing any
+   config file.
+4. **Bundler is hash-gated.** If `claude_desktop_bundler.py` ever
+   produces a corrupt ZIP, the SHA-256 sidecar diverges from the source
+   manifest and the next run rewrites it. `--force` forces a full
+   rebuild from scratch.
+5. **Out-of-scope failure modes.** Disk exhaustion mid-copy, permission
+   bit corruption on cross-filesystem moves, and unicode-NFC normalisation
+   drift on macOS HFS+ → APFS migrations are **not** auto-recovered.
+   Users hit by those run the manual rollback in step 1.
+
 ## Alternatives considered
 
 1. **Symlink `~/.event4u/agent-config/` ↔ `~/.config/agent-config/`.**

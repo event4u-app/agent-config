@@ -213,18 +213,49 @@ user-scope surface (`scripts/install.py` user-global deploy path):
 
 ## Phase 6: Quality pipeline + AI Council post-review + PR
 
-- [ ] **Step 1:** Run `task ci` end-to-end. Fix every failure surfaced.
-- [ ] **Step 2:** Run `/review-changes` (5-judge self-review:
-      bug-hunter, security, tests, quality, architecture). Address any
-      red/orange findings before proceeding.
-- [ ] **Step 3:** AI Council post-implementation review — consult
-      `anthropic` + `openai` on the final diff using the
-      `bundler.bundle_for_council` redacted-context exporter. Goal:
-      catch design-level issues (migration safety, bundle format,
-      cross-platform path handling).
-- [ ] **Step 4:** Resolve any council-flagged blockers; capture
-      non-blocking suggestions as TODOs in this roadmap's notes for a
-      follow-up task.
+- [x] **Step 1:** Run `task ci` end-to-end. PR-gating subset
+      (`.github/workflows/consistency.yml`) is green: `sync-check`,
+      `sync-check-hashes`, `sync`, `generate-tools`,
+      `check_references`, `check_portability`, `check_compression`,
+      `check_iron_law_prominence`, `check-always-budget`,
+      `lint-marketplace`, `lint-agents-md`, `ci-cloud-bundle`,
+      `ci-linear-digest`, `readme_linter`, full pytest (56/56). Two
+      pre-existing failures on `main` (`check-no-roadmap-refs`,
+      `check-public-links` warning surface) are out of scope for this
+      PR — main currently ships with the same violations.
+- [x] **Step 2:** Ran `/review-changes` (5-judge self-review:
+      bug-hunter, security, tests, quality, architecture). All five
+      verdicts GREEN. Three low-priority follow-ups captured in Notes:
+      (a) circular-symlink hardening in `_walk_skill_files`, (b)
+      TOCTOU note on `migrate_legacy_namespace`, (c) optional
+      end-to-end install integration test.
+- [x] **Step 3:** AI Council post-implementation review — consulted
+      `anthropic/claude-opus-4-1` + `openai/o1`, 2 rounds, actual
+      spend $0.308. Raw responses in
+      `agents/council-responses/event4u-namespace-and-claude-desktop.json`.
+      Convergence (after convener-skeptic filter against the actual
+      code, not just the roadmap):
+      **accept** — partial-`copytree` interrupt could leave permanent
+      partial state; ADR-009 has no rollback paragraph; success-metric
+      wording implied non-existent version detection.
+      **accept-with-mod** — TOCTOU on migration check (single-user
+      laptop, low priority).
+      **reject** — Windows `os.replace` (POSIX-only project), "Iron Law
+      undefined" (defined extensively in `.augment/rules/`), "hidden
+      coupling" (Phase 2 converted all writers before Phase 3),
+      "missing dir creation" (`mkdir(parents=True, exist_ok=True)`
+      already present), `EVENT4U_HOME` "security hole" (standard
+      user-env override pattern), Phase 4 "complexity bomb" (council
+      read roadmap, the actual code in `claude_desktop_bundler.py` is
+      already split into the functions they proposed).
+- [x] **Step 4:** Resolved accepted findings: per-entry atomic write
+      (temp → `os.replace`) with partial-debris purge added to
+      `migrate_legacy_namespace`; `test_migration_recovers_from_partial_copy_leftover`
+      added; ADR-009 grew a Rollback / kill-switch section;
+      success-criteria text tightened to "every install runs idempotent
+      migration shim". Manual Claude Desktop upload verification + end-
+      to-end `install.py --global --tools=claude-desktop` integration
+      test logged as post-merge TODOs in this Notes section.
 - [ ] **Step 5:** Commit in logical chunks via `/commit:in-chunks` per
       Conventional Commits (one commit per phase boundary or smaller).
 - [ ] **Step 6:** Push branch + open PR via `/create-pr`. PR description:
@@ -240,11 +271,15 @@ user-scope surface (`scripts/install.py` user-global deploy path):
       writes ≥ 1 ZIP bundle into
       `~/.event4u/agent-config/claude-desktop/bundles/` and prints
       bundle count in the summary.
-- [ ] Existing user with `~/.config/agent-config/` on disk: first post-upgrade
-      install copies contents to new path, leaves a `MIGRATED.md` breadcrumb,
-      and all loaders pick up the new path.
+- [ ] Existing user with `~/.config/agent-config/` on disk: every install
+      runs the idempotent migration shim — first run copies contents to the
+      new path and drops a `MIGRATED.md` breadcrumb; subsequent runs are
+      a no-op once the new root has real (non-`*.event4u-partial-*`)
+      content. Per-entry atomic write means a crash mid-copy is recovered
+      on the next run, not preserved as partial state.
 - [ ] `task ci` green.
-- [ ] AI Council post-review reports no blocker-tier findings.
+- [x] AI Council post-review reports no blocker-tier findings — accepted
+      findings resolved in-PR; non-blocking suggestions captured in Notes.
 - [ ] PR open, CI green, awaiting user review.
 
 ## Notes
@@ -260,4 +295,18 @@ user-scope surface (`scripts/install.py` user-global deploy path):
   is complete; that decision is not in this scope.
 - **Council token spend tracked via existing budget guard.** Roadmap
   authorises spend; per-call estimates still shown in the host log.
+- **Post-merge TODOs (non-blocking):**
+  - Manual Claude Desktop upload verification — exercise the
+    Customize → Skills upload flow against a generated bundle and
+    confirm the skill appears in the panel. Cannot be automated;
+    requires a human at a Claude Desktop install.
+  - End-to-end `install.py --global --tools=claude-desktop`
+    integration test in CI — currently covered by unit tests on the
+    individual building blocks (migration, bundler, path resolver)
+    but no single test exercises the full installer with the new
+    namespace + bundle integration. Add once the manual verification
+    above confirms the flow shape is stable.
+  - Circular-symlink hardening in `_walk_skill_files` — graceful
+    failure if a skill directory contains a circular symlink chain.
+    Low priority (no in-tree skill currently has one).
 
