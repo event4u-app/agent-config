@@ -105,6 +105,11 @@ def warn(msg: str) -> None:
 
 def fail(msg: str) -> "None":
     print(f"  ❌  {msg}", file=sys.stderr)
+    print(
+        "      Diagnose: `./agent-config doctor` "
+        "(or `--check <id>` for a single category)",
+        file=sys.stderr,
+    )
     sys.exit(1)
 
 
