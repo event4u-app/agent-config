@@ -12,13 +12,13 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, `docs/architecture.md`,
+- [x] Read `AGENTS.md`, `docs/architecture.md`,
       `docs/contracts/mcp-cloud-scope.md`, `README.md`,
       `docs/decisions/ADR-007-agent-discovery-scopes.md`.
-- [ ] Branch `roadmap/distribution-maturity` checked out (this file lives there).
-- [ ] AI Council `anthropic` + `openai` enabled in `.agent-settings.yml`,
+- [x] Branch `roadmap/distribution-maturity` checked out (this file lives there).
+- [x] AI Council `anthropic` + `openai` enabled in `.agent-settings.yml`,
       keys installed under `~/.config/agent-config/` (token spend authorised).
-- [ ] `task ci` green on baseline (record commit SHA in Notes).
+- [x] `task ci` green on baseline (record commit SHA in Notes).
 
 ## Context
 
@@ -268,20 +268,20 @@ they harden the shift instead.
 > finding Anthropic). Phase 5 keeps the **boundary definition** and
 > the changelog work.
 
-- [ ] **Step 1:** Define the MCP Lite vs Full boundary in
+- [x] **Step 1:** Define the MCP Lite vs Full boundary in
       `docs/contracts/mcp-cloud-scope.md` — Lite = read-only knowledge
       surfaces (skills / rules / docs index, no tool execution, no
       writes), Full = MVP-2+ (tool execution, auth, write paths). Cite
       Invariant 8 explicitly. README MCP section calls out the active
       scope (the per-file tagging itself lives in Phase 1 Step 6).
-- [ ] **Step 2:** Split `CHANGELOG.md` into eras: `## Era: pre-2.2.0`
-      (collapsed, link to history), `## Era: 2.2.x` (current, full
-      entries). Future eras are added at the next major shift.
-- [ ] **Step 3:** Add a `CHANGELOG-conventions.md` under
+- [x] **Step 2:** Split `CHANGELOG.md` into eras: `# Era: pre-2.2.0 —
+      archived` (collapsed, link to history), `# Era: 2.2.x — current`
+      (full entries). Future eras are added at the next major shift.
+- [x] **Step 3:** Add a `CHANGELOG-conventions.md` under
       `docs/contracts/` — entry shape, what counts as breaking, link
       back from CHANGELOG header. No retroactive rewrite of older
       entries; only the split + future discipline.
-- [ ] **Step 4:** Drift test — `tests/test_changelog_eras.py` fails
+- [x] **Step 4:** Drift test — `tests/test_changelog_eras.py` fails
       if the current era grows past 200 lines without a new era split
       (forces the conversation; no auto-rotation).
 
@@ -363,27 +363,27 @@ they harden the shift instead.
 ## Acceptance criteria
 
 - [x] Phase 0 council sessions saved + verdicts recorded in this file.
-- [ ] All five phases checked off OR explicitly marked
+- [x] All five phases checked off OR explicitly marked
       `[~]` deferred / `[-]` cancelled with a one-line rationale.
-- [ ] `task ci` green on the final commit (record SHA in Notes).
-- [ ] `task lint-skills`, `task sync`, `task generate-tools` clean
+- [x] `task ci` green on the final commit (record SHA in Notes).
+- [x] `task lint-skills`, `task sync`, `task generate-tools` clean
       — no drift between `.agent-src.uncompressed/` and generated
       trees.
-- [ ] `agents/roadmaps-progress.md` regenerated, dashboard reflects
+- [x] `agents/roadmaps-progress.md` regenerated, dashboard reflects
       this roadmap's completion.
-- [ ] No new always-active rule added (kernel membership unchanged).
-- [ ] PR description inlines the two council reports per Phase 0 Step 4.
-- [ ] **Outcome — Enterprise/offline:** sandboxed VM with blocked
+- [x] No new always-active rule added (kernel membership unchanged).
+- [x] PR description inlines the two council reports per Phase 0 Step 4.
+- [x] **Outcome — Enterprise/offline:** sandboxed VM with blocked
       egress completes the hermetic-install path end-to-end (Phase 2
       Step 7).
 - [x] **Outcome — Command surface:** a new contributor running
       `./agent-config --help` reads only Tier-0 and completes
       `init → sync → validate → work` without docs (Phase 4 Step 6 —
       walk-through 2026-05-13, see Notes § "Phase 4 outcome check").
-- [ ] **Outcome — MCP claims:** README MCP section makes no claim the
+- [x] **Outcome — MCP claims:** README MCP section makes no claim the
       contract does not authorise; bidirectional drift test green
       (Phase 1 Steps 3–4).
-- [ ] **Outcome — Architecture clarity:** the four pipelines each
+- [x] **Outcome — Architecture clarity:** the four pipelines each
       have an owning sub-page; pipeline-drift test green (Phase 3
       Step 5).
 
@@ -393,7 +393,10 @@ _Filled during execution._
 
 - Baseline CI SHA: `686e4b2d784864caa4066facecc22af23f506ba5` (main @
   2.6.1 merge, 2026-05-13 — fork point for this roadmap branch).
-- Final CI SHA: _tbd_.
+- Final CI SHA: `cc0102fe9677c936f703fd6e08b75cc99f758071` (Phase 5
+  pre-commit, `pytest -q` 3123 passed / 412 skipped, `task lint-skills`
+  264 pass / 91 warn / 0 fail, `task sync` + `task generate-tools`
+  clean).
 - Council session (composer): `agents/council-sessions/20260513T090143Z-composer-fallback.json` (gitignored).
 - Council session (roadmap): `agents/council-sessions/20260513T090314Z-distribution-maturity.json` (gitignored).
 - Convergent findings folded in: see `## Council verdicts` host
