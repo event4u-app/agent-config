@@ -429,6 +429,53 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.13.0](https://github.com/event4u-app/agent-config/compare/2.12.0...2.13.0) (2026-05-14)
+
+### Features
+
+* **council:** Phase 7 — debate orchestration + CLI wiring ([647a3f0](https://github.com/event4u-app/agent-config/commit/647a3f07698792f41beb7413600d54b2321f4a96))
+* **council:** Phase 7 — /council debate sub-command files ([abbd436](https://github.com/event4u-app/agent-config/commit/abbd43666b7e2c704ab3c46f2901f01eae446139))
+* **council:** Phase 6 — thinking-style advisor personas ([21c8b88](https://github.com/event4u-app/agent-config/commit/21c8b88310a2a65d7ea9082da085d023f813d114))
+* **council:** Phase 5 — Karpathy peer-review opt-in flag ([bce381a](https://github.com/event4u-app/agent-config/commit/bce381ae9c412abf501473fa4154f91d9c0befbf))
+* **council:** analysis lens + lens-adaptive synthesis + consensus scoring ([6d7136a](https://github.com/event4u-app/agent-config/commit/6d7136ad6be31b7627a332600a7623f2cd929e76))
+* **council:** add config loader, overlay, and 3 new provider clients ([0cb5591](https://github.com/event4u-app/agent-config/commit/0cb55914457a62b6f57744d8c8dac16bf777921d))
+* **council:** introduce agents/.ai-council.yml as single source of truth ([043c2d2](https://github.com/event4u-app/agent-config/commit/043c2d23445f2ef7ad8aee880dc83d97c347635f))
+* **governance:** Phase 5 — roadmap trajectory metric + architectural-consensus ADR ([926a632](https://github.com/event4u-app/agent-config/commit/926a63237c3dbe1fcfd7df05c9230809382d8790))
+* **projection:** Phase 4 + 1.4 — multi-tool projection fidelity contract + ci-strict gate ([e18e4ad](https://github.com/event4u-app/agent-config/commit/e18e4ad73595e17889009b0123ebd000254c165b))
+* **routing:** Phase 3 — tighten skill descriptions + 4 tier-3 routing rules for failing clusters ([2a11c70](https://github.com/event4u-app/agent-config/commit/2a11c70b274741e7d98fd814ac39c1d05a1a38c9))
+* **governance:** Phase 1 — credibility (CONTRIBUTING preface, source-projection rename, archive 7 migration scripts) ([2e5cfe0](https://github.com/event4u-app/agent-config/commit/2e5cfe02e1b5f4218d1283108796b0ce43fd9165))
+
+### Bug Fixes
+
+* **docs:** drop transient council-sessions citation from multi-tool-projection ([55dbbb1](https://github.com/event4u-app/agent-config/commit/55dbbb1e599aae2d913dc56a05c9dab0014e2739))
+* **linter:** treat ../docs/contracts/ links as out-of-scope like guidelines ([a2249b0](https://github.com/event4u-app/agent-config/commit/a2249b02b70233e2b13ccf3efeda4188686b6181))
+* **routing:** strip transient roadmap citation from tier-3 routing rules ([2cf745c](https://github.com/event4u-app/agent-config/commit/2cf745cad9beb40c4e6e9eb7f97abbc58a94d9de))
+
+### Documentation
+
+* **roadmap:** rename "rule" to "invariant" for deep_min_rounds reference ([758ea46](https://github.com/event4u-app/agent-config/commit/758ea46568c23ef5518ff61d80700f7559bc54a1))
+* **ai-council:** sync compressed SKILL.md with Phase 6 advisors section ([6d57034](https://github.com/event4u-app/agent-config/commit/6d57034c7b342abdd5d38ff300fa67c51deb3471))
+* **council:** document master/wrapper contract for the council cluster ([7346f34](https://github.com/event4u-app/agent-config/commit/7346f34376b48c02ced3ae939dfff6ea215025ba))
+
+### Tests
+
+* **ai-council:** Phase 8 — negative-test backfill for config loader ([cc3a08c](https://github.com/event4u-app/agent-config/commit/cc3a08c360c94685f9a1efaaa57f84001f78788c))
+
+### Chores
+
+* **roadmaps:** archive step-2-ai-council-consolidation — all phases + ACs done ([c7f0c9c](https://github.com/event4u-app/agent-config/commit/c7f0c9ca7ac300023c5da0b939e0c63554dbcfed))
+* **docs:** bump getting-started command count 106 -> 108 after council debate sub-command ([5e256d7](https://github.com/event4u-app/agent-config/commit/5e256d79d3eea3046900e8afa5be64526b4fc61d))
+* **roadmaps:** retag complexity from "medium" to lint-valid values ([4c5457e](https://github.com/event4u-app/agent-config/commit/4c5457e271f8dcdc03943bac7adff84455388615))
+* regenerate index + catalog for council-debate skill ([3c365a3](https://github.com/event4u-app/agent-config/commit/3c365a375da22f16f97829677c875500e40d436a))
+* **roadmap:** mark Phases 6-7 of step-2-ai-council-consolidation complete ([7e8e557](https://github.com/event4u-app/agent-config/commit/7e8e557505bbf88b486605980a7f5ee2f97bcbb4))
+* **roadmap:** mark Phases 1-4 of step-2-ai-council-consolidation complete ([101a5cf](https://github.com/event4u-app/agent-config/commit/101a5cf70d4fc694f85a270b2bebfb8fe545833a))
+* **roadmap:** mark Phase 0 of step-2-ai-council-consolidation complete ([4fa2734](https://github.com/event4u-app/agent-config/commit/4fa27346c8faad54de582757ce5cfe7216041bda))
+* **template:** bump agent_config_version pin to 2.12.0 ([e5c41fd](https://github.com/event4u-app/agent-config/commit/e5c41fd433105359d6e36b03b0de62415be212f0))
+* regenerate agents/index.md + docs/catalog.md after rule additions ([b7fa4b6](https://github.com/event4u-app/agent-config/commit/b7fa4b6e25cbc55d8b3197f815c00530bd1eee79))
+* **roadmap:** archive completed step-1-v2-feedback-followup (20/20 done) ([88a07ea](https://github.com/event4u-app/agent-config/commit/88a07ea9a983f0b63710e5461c8fddee36b2d378))
+
+Tests: 3868 (+150 since 2.12.0)
+
 ## [2.12.0](https://github.com/event4u-app/agent-config/compare/2.11.0...2.12.0) (2026-05-14)
 
 ### Features
