@@ -230,7 +230,7 @@ siblings carry their own scope). Phase 8 = final validation.
   trace shows `affected` keys when memory changed an outcome.
 
 This phase flips to `[x]` automatically when
-`agents/roadmaps/road-to-proof-not-features.md` reaches 100 %.
+`agents/roadmaps/archive/road-to-proof-not-features.md` reaches 100 %.
 
 ## Phase 7 — Sibling: `road-to-better-skills-and-profiles.md` Block A (BLOCKER)
 
