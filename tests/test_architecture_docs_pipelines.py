@@ -32,7 +32,7 @@ ARCH_INDEX = REPO_ROOT / "docs" / "architecture.md"
 ARCH_DIR = REPO_ROOT / "docs" / "architecture"
 
 EXPECTED_SUBPAGES = (
-    "compression.md",
+    "source-projection.md",
     "augment-projection.md",
     "multi-tool-projection.md",
     "claude-bundle.md",
