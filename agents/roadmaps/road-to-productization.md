@@ -4,9 +4,8 @@ complexity: structural
 
 # Road to Productization (Level 6)
 
-**Status:** DRAFT — synthesised 2026-05-06 from two external feedback
-blocks on PR #43 (concrete-gaps audit + Level-5/6 product rating).
-Awaits AI Council pass + user approval before promotion to READY.
+**Status:** READY — promoted 2026-05-14 (AI-Council-gated execution
+authorised by user; Council consulted per-decision instead of pre-promotion).
 **Started:** 2026-05-06
 **Trigger:** PR #43 lifted the package from Level-4 (execution engine)
 to Level-5 (observable decision system). Both feedback blocks converge
@@ -93,16 +92,22 @@ siblings carry their own scope). Phase 8 = final validation.
 
 ## Phase 1 — Release-trunk Sync (READY)
 
-- [ ] **P1.1 — Merge backlog into main.** Bring main current with
+- [x] **P1.1 — Merge backlog into main.** Bring main current with
   the latest tagged release. Acceptance: `git diff main…<latest-tag>
   -- README.md AGENTS.md` is empty; counts table on main matches
-  shipped tag (`134/56/94/51` or whatever current).
-- [ ] **P1.2 — Document the protocol.** Add `docs/contracts/release-
+  shipped tag (`134/56/94/51` or whatever current). **Done 2026-05-14
+  by virtue of `2.10.0` merge (PR #143); `git diff main..2.10.0` empty
+  at HEAD `23ee84b9`.**
+- [x] **P1.2 — Document the protocol.** Add `docs/contracts/release-
   trunk-sync.md`: every tagged release fast-forwards main, no
   exceptions; sync runs as the last step of the release task. ADR-shape.
-- [ ] **P1.3 — CI gate.** Extend `task ci` (or a sibling task) to fail
+  **Done 2026-05-14:** [`docs/contracts/release-trunk-sync.md`](../../docs/contracts/release-trunk-sync.md).
+- [x] **P1.3 — CI gate.** Extend `task ci` (or a sibling task) to fail
   if `main` is more than one tagged release behind the current
-  release-prep branch. Hard exit, no warning-only.
+  release-prep branch. Hard exit, no warning-only. **Done 2026-05-14:**
+  [`scripts/check_release_trunk_sync.py`](../../scripts/check_release_trunk_sync.py)
+  wired into `task ci` as `check-release-trunk-sync`; no-op on
+  non-`release/` branches.
 
 ## Phase 2 — Decision Engine controllable (gated on P1)
 

@@ -121,6 +121,11 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-release-trunk-sync:
+    silent: true
+    desc: Fail if main is more than one tagged release behind a release/X.Y.Z branch (P1.3 of road-to-productization, contract docs/contracts/release-trunk-sync.md)
+    cmd: python3 scripts/check_release_trunk_sync.py
+
   check-token-optimizer-freshness:
     silent: true
     desc: Verify token-optimizer catalog rows still match their cited assets (P1.3 of road-to-token-optimization)
