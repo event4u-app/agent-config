@@ -6,17 +6,17 @@
 
 ## Overall
 
-**8 / 27 steps done · 30%**
+**12 / 27 steps done · 44%**
 
 ```text
-████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   30%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 19 | 8 | 0 | 0 | ███░░░░░░░ 30% |
+| 1 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 15 | 12 | 0 | 0 | ████░░░░░░ 44% |
 
 ---
 
@@ -24,13 +24,13 @@
 
 ### [road-to-productization.md](roadmaps/road-to-productization.md)
 
-**Road to Productization (Level 6)** — 8 / 27 done (30%)
+**Road to Productization (Level 6)** — 12 / 27 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Release-trunk Sync (READY) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | Decision Engine controllable (gated on P1) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
-| 3 | UX Simplification (gated on P2) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | UX Simplification (gated on P2) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 4 | Multi-Stack Skill-Depth (gated on P3) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 5 | Architecture Cleanup (gated on P4) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Sibling: `road-to-proof-not-features.md` 100 % (BLOCKER) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
