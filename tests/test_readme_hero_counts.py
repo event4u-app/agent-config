@@ -9,7 +9,7 @@ CI instead of shipping silently.
 
 The hero badge in `README.md` line ~10 must list:
 
-    {S} Skills · {R} Rules · {C} Commands · {G} Guidelines · 8 AI Tools
+    {S} Skills · {R} Rules · {C} Commands · {G} Guidelines · {P} Personas · {A} Advisors · 8 AI Tools
 
 where the counts come from disk:
 
@@ -19,6 +19,12 @@ where the counts come from disk:
                   with frontmatter `deprecated_in:` (deprecation shims
                   are documented separately in AGENTS.md)
   * Guidelines  = `docs/guidelines/**/*.md` recursive count
+  * Personas    = `.agent-src.uncompressed/personas/*.md` top-level
+                  files, excluding `README.md` and `_template-*` scaffolds
+                  (the `advisors/` subdirectory is counted separately)
+  * Advisors    = `.agent-src.uncompressed/personas/advisors/*.md` count
+                  — distinct class (Council Replace-mode personas, see
+                  step-1-ai-council-cli-transport Phase 7)
 
 AI-tool count is held constant at 8 (Augment, Claude, Cursor, Cline,
 Windsurf, Gemini, Copilot, Claude.ai) — drift in that number requires
@@ -42,7 +48,9 @@ HERO_RE = re.compile(
     r"<strong>(\d+)\s+Skills</strong>\s*·\s*"
     r"<strong>(\d+)\s+Rules</strong>\s*·\s*"
     r"<strong>(\d+)\s+Commands</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Guidelines</strong>"
+    r"<strong>(\d+)\s+Guidelines</strong>\s*·\s*"
+    r"<strong>(\d+)\s+Personas</strong>\s*·\s*"
+    r"<strong>(\d+)\s+Advisors</strong>"
 )
 
 
@@ -74,25 +82,45 @@ def _count_guidelines() -> int:
     return sum(1 for p in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
 
 
+def _count_personas() -> int:
+    # Top-level .md files in personas/, excluding README.md and any
+    # _template-* scaffold files. The advisors/ subdirectory is counted
+    # separately by _count_advisors() — distinct class.
+    return sum(
+        1
+        for p in (SRC / "personas").glob("*.md")
+        if p.name != "README.md" and not p.name.startswith("_")
+    )
+
+
+def _count_advisors() -> int:
+    return sum(1 for p in (SRC / "personas" / "advisors").glob("*.md"))
+
+
 def test_readme_hero_counts_match_disk() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
     m = HERO_RE.search(readme)
     assert m, (
         "README.md is missing the hero badge line — expected pattern "
         "`<strong>N Skills</strong> · <strong>N Rules</strong> · "
-        "<strong>N Commands</strong> · <strong>N Guidelines</strong>`"
+        "<strong>N Commands</strong> · <strong>N Guidelines</strong> · "
+        "<strong>N Personas</strong> · <strong>N Advisors</strong>`"
     )
     claimed = {
         "Skills": int(m.group(1)),
         "Rules": int(m.group(2)),
         "Commands": int(m.group(3)),
         "Guidelines": int(m.group(4)),
+        "Personas": int(m.group(5)),
+        "Advisors": int(m.group(6)),
     }
     actual = {
         "Skills": _count_skills(),
         "Rules": _count_rules(),
         "Commands": _count_active_commands(),
         "Guidelines": _count_guidelines(),
+        "Personas": _count_personas(),
+        "Advisors": _count_advisors(),
     }
     drift = {k: (claimed[k], actual[k]) for k in claimed if claimed[k] != actual[k]}
     assert not drift, (
