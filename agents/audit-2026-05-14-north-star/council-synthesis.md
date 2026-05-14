@@ -78,7 +78,7 @@ benchmark unmaintainable surface, you measure noise).
 | **step-4** | **`step-4-measurement-and-benchmark.md` (NEW)** | P1 | Same intent, refined scope (25 prompts, cost-tracker, 60-day baseline) |
 | **step-5** | **`step-5-minimal-schema.md` (NEW)** | P3 | Replaces full schema-v2; just `model_tier` + `## Deep Reference` |
 | step-6 | `step-6-test-cleanup.md` | P2 | renumbered (was step-5) |
-| step-7 | `step-7-public-personas.md` | P4 | renumbered (was step-3) |
+| step-7 | `step-7-agent-user-persona.md` | P4 | renumbered (was step-3) |
 | step-8 | `step-8-ghostwriter.md` | P4 | renumbered (was step-4) |
 | step-9 | `step-9-user-types-axis.md` | P4 | renumbered (was step-6) |
 

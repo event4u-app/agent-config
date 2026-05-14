@@ -13,7 +13,7 @@ Authoritative spec: [`council-synthesis.md § 6`](council-synthesis.md)
 | Current path | New path |
 |---|---|
 | `agents/roadmaps/step-2-ai-council-consolidation.md` | `agents/roadmaps/step-3-ai-council-consolidation.md` |
-| `agents/roadmaps/step-3-public-personas.md` | `agents/roadmaps/step-7-public-personas.md` |
+| `agents/roadmaps/step-3-agent-user-persona.md` | `agents/roadmaps/step-7-agent-user-persona.md` |
 | `agents/roadmaps/step-4-ghostwriter.md` | `agents/roadmaps/step-8-ghostwriter.md` |
 | `agents/roadmaps/step-5-test-cleanup.md` | `agents/roadmaps/step-6-test-cleanup.md` |
 | `agents/roadmaps/step-6-user-types-axis.md` | `agents/roadmaps/step-9-user-types-axis.md` |

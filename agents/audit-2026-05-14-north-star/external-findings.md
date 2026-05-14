@@ -78,7 +78,7 @@ treats migrations. We treat it as additive markdown.
 |---|---|---|---|
 | **One plugin per role** | `engineering/`, `product-management/`, `design/` — each ~6 commands + ~6–10 skills, all in one folder | A user installs the plugin for their job, not for individual skills | Our `personas:` axis is similar in spirit but invoked at runtime; no install-time bundling. |
 | **"Standalone + Supercharged"** | Every command works without integration. MCP connectors are enrichment, not requirement. README has a `Standalone / Supercharged With` table per command. | Adoption ramp: zero-config working version → connector-rich version | Our skills assume the agent has access to Augment / memory / network. No documented fallback table. |
-| **Settings file pattern** | `.claude/settings.local.json` with `{ name, title, team, company, techStack, defaultBranch, deployProcess }` — plugin prompts interactively if missing | Personalization without ghostwriter complexity | Our `step-3-public-personas` + `step-4-ghostwriter` are richer but heavier. The simple-settings on-ramp is missing. |
+| **Settings file pattern** | `.claude/settings.local.json` with `{ name, title, team, company, techStack, defaultBranch, deployProcess }` — plugin prompts interactively if missing | Personalization without ghostwriter complexity | Our `step-3-agent-user-persona` + `step-4-ghostwriter` are richer but heavier. The simple-settings on-ramp is missing. |
 | **CONNECTORS.md per plugin** | Documents exactly which MCP connectors enrich which command | Honest connector-coverage matrix | We have no equivalent surface. |
 
 **Read-across:** anthropics ships the **minimum viable agentic plugin**.

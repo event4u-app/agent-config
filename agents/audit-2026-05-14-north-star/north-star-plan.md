@@ -36,7 +36,7 @@ Current state (numbered prefix order):
 |---|---|---|
 | step-1 | `step-1-v2-feedback-followup.md` | Mostly **P2** (linter gate, archive dead scripts) + **P1** (rename "compression") |
 | step-2 | `step-2-ai-council-consolidation.md` | **P2** (Master/Wrapper enforcement) |
-| step-3 | `step-3-public-personas.md` | **P4** (role-bundle on-ramp) |
+| step-3 | `step-3-agent-user-persona.md` | **P4** (role-bundle on-ramp) |
 | step-4 | `step-4-ghostwriter.md` | **P4** (LinkedIn-derived persona injection) |
 | step-5 | `step-5-test-cleanup.md` | **P2** (test hygiene) |
 | step-6 | `step-6-user-types-axis.md` | **P4** (domain filter, harmonist-style) |
@@ -59,7 +59,7 @@ brackets.
 | **step-3** | `step-3-ai-council-consolidation.md` (renamed from old step-2) | P2 | Master/Wrapper contract + Iron Law `AGENT: <slug>` marker. Builds on schema v2. |
 | **step-4** | `step-4-measurement-and-benchmark.md` (**NEW**) | P1 | `task bench`, golden corpus, selection-accuracy %, cost surface, projection fidelity. Requires schema (step-2) for `model_tier` + council (step-3) for review-gate fixtures. |
 | **step-5** | `step-5-test-cleanup.md` (unchanged) | P2 | Test hygiene. Strict CI follow-on. Position keeps the prefix stable. |
-| **step-6** | `step-6-public-personas.md` (renamed from old step-3) | P4 | Role bundles. Now declarable via schema v2 + measurable via step-4. |
+| **step-6** | `step-6-agent-user-persona.md` (renamed from old step-3) | P4 | Role bundles. Now declarable via schema v2 + measurable via step-4. |
 | **step-7** | `step-7-ghostwriter.md` (renamed from old step-4) | P4 | LinkedIn enrichment. Layered on top of personas. |
 | **step-8** | `step-8-user-types-axis.md` (renamed from old step-6) | P4 | Domain filter. Final layer on the adoption-ramp stack. |
 
@@ -101,7 +101,7 @@ Renames only (no content change in this round):
 | Old name | New name |
 |---|---|
 | `step-2-ai-council-consolidation.md` | `step-3-ai-council-consolidation.md` |
-| `step-3-public-personas.md` | `step-6-public-personas.md` |
+| `step-3-agent-user-persona.md` | `step-6-agent-user-persona.md` |
 | `step-4-ghostwriter.md` | `step-7-ghostwriter.md` |
 | `step-6-user-types-axis.md` | `step-8-user-types-axis.md` |
 
