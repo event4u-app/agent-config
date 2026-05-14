@@ -106,6 +106,7 @@
         "./.claude/skills/cost-report",
         "./.claude/skills/council",
         "./.claude/skills/council-analysis",
+        "./.claude/skills/council-debate",
         "./.claude/skills/council-default",
         "./.claude/skills/council-design",
         "./.claude/skills/council-optimize",
