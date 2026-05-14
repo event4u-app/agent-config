@@ -435,8 +435,8 @@ prompt as `<original artefact> + <prior round, anonymised>` so each
 member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
-The default round count comes from `ai_council.min_rounds` in
-`.agent-settings.yml` (default `2` so members critique each other
+The default round count comes from `defaults.min_rounds` in
+`agents/.ai-council.yml` (default `2` so members critique each other
 at least once before convergence). The host agent does **not** ask
 "how many rounds?" when the requested count is `<= min_rounds` —
 the settings owner already made that decision. Ask only when a

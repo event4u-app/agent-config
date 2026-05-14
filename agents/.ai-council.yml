@@ -1,0 +1,137 @@
+# --- AI Council (external second-opinion network) ---
+#
+# When enabled, the /council command lets the agent poll independent
+# external models (Anthropic, OpenAI, Gemini, xAI, Perplexity) for a
+# neutral critique of a roadmap, diff, prompt, or file set. Council
+# members never see the host agent's reasoning — only the artefact + a
+# neutral system prompt.
+#
+# Tokens are NEVER stored here. Keys live in 0600 files under
+# ~/.event4u/agent-config/<provider>.key (installed via
+#   bash scripts/install_anthropic_key.sh
+#   bash scripts/install_openai_key.sh
+# for providers with an installer) or in environment variables. The
+# legacy ~/.config/agent-config/<provider>.key tree is read as a
+# fallback. The `api_key_ref:` field below points at one of those —
+# never at the raw secret. See docs/contracts/ai-council-config.md for
+# the full schema.
+#
+# Cost note: every consultation makes real, paid API calls. The
+# autonomy directive does NOT silently spend tokens — the /council
+# command always asks before invoking, even under autonomy: on.
+
+# Master switch (true, false). Default false in the template — installing
+# a key is not the same as wanting the agent to spend money on it.
+enabled: true
+
+# Per-invocation defaults. Each member may override `mode:` below.
+defaults:
+  # Default transport mode for every member (overridable per-member
+  # below, and per-invocation via `/council mode:<x>`).
+  #
+  #   api    = direct SDK call against the provider's API (billable).
+  #   manual = copy-paste loop, user is the transport (free).
+  #
+  # Precedence: invocation flag > per-member mode > defaults.mode > "manual".
+  mode: api
+
+  # Default number of debate rounds per /council invocation.
+  #
+  # Round 1 sees the artefact alone. Round 2+ sees the artefact plus
+  # anonymised critiques from the previous round (provider/model
+  # identity stripped per the neutrality Iron Law). Applies identically
+  # to api and manual transports — manual mode runs round 1 across all
+  # members, the host agent consolidates, then round 2 starts with the
+  # anonymised round-1 critiques folded in.
+  #
+  # Default is 2 so council members critique each other at least once
+  # before convergence. The agent does NOT ask "how many rounds?" when
+  # the requested rounds <= min_rounds; pass `rounds:N` on the
+  # invocation (or `--rounds N` to the CLI) to override.
+  min_rounds: 2
+
+  # Higher floor for deep-reasoning artefacts (architecture review,
+  # refactoring proposals, bug-diagnosis runs). Activated when the
+  # consuming rule, skill, or command declares `council_depth: deep`
+  # in its frontmatter, or the user passes `--depth deep` to the CLI.
+  # Effective rounds = max(deep_min_rounds, min_rounds), so this floor
+  # is monotonic — lowering it below `min_rounds` has no effect.
+  # Standard tasks keep `min_rounds`; cost rises only when an artefact
+  # opts in. Set to `min_rounds` to disable the deep tier.
+  deep_min_rounds: 3
+
+  # Per-member output-token budget passed to every API call. The CLI
+  # `--max-tokens` flag overrides this on a single invocation; the
+  # cost estimator uses the same value as its worst-case ceiling.
+  # `0` means "unlimited" — internally widened to the safe provider
+  # ceiling (16384) because Anthropic rejects max_tokens=0. Default
+  # in the project template is 2048.
+  max_output_tokens: 0
+
+  # Retention for `agents/council-sessions/` audit folders. Sessions
+  # older than this are pruned automatically on the next `save()`.
+  # `0` disables pruning (keep forever — disk grows unbounded).
+  session_retention_days: 7
+
+  # Reserved by Phase 0, wired in Phase 7 (/council debate). Maximum
+  # number of debate rounds before the orchestrator refuses to continue
+  # even with --auto-continue. Progressive-disclosure cost gate fires
+  # between every round regardless.
+  debate_max_rounds: 4
+
+# Hard cost ceiling per /council invocation. The orchestrator pauses
+# before any member whose projected spend would breach a cap and asks
+# the user to continue. Each `0` disables that single cap; other caps
+# still apply.
+#
+# Prices come from agents/.agent-prices.md (gitignored, refreshed weekly
+# by `python3 scripts/update_prices.py`; bootstrapped from
+# scripts/ai_council/_default_prices.py on first run).
+cost_budget:
+  max_input_tokens: 500000
+  max_output_tokens: 200000
+  max_calls: 50
+  max_total_usd: 20.0
+
+# Per-member configuration. Set enabled=true on the providers you want
+# to consult. The `model:` field selects which model receives the query.
+# `api_key_ref:` points at a 0600 key file (`file:<path>` — relative
+# paths resolve under ~/.event4u/agent-config/ with the legacy
+# ~/.config/agent-config/ tree as a read fallback) or an environment
+# variable (`env:<VAR>`). Raw keys in this file are a hard validation
+# error. Optional `mode:` overrides defaults.mode for that member only.
+members:
+  anthropic:
+    enabled: true
+    model: claude-sonnet-4-5
+    api_key_ref: file:anthropic.key
+    # mode: api        # uncomment to override defaults.mode
+
+  openai:
+    enabled: true
+    model: gpt-4o
+    api_key_ref: file:openai.key
+    # mode: manual     # uncomment to override defaults.mode
+
+  gemini:
+    enabled: false
+    model: gemini-2.5-pro
+    api_key_ref: env:GEMINI_API_KEY
+
+  xai:
+    enabled: false
+    model: grok-4
+    api_key_ref: env:XAI_API_KEY
+
+  perplexity:
+    enabled: false
+    model: sonar-pro
+    api_key_ref: env:PERPLEXITY_API_KEY
+
+# Thinking-style advisors (replace-mode). Reserved by Phase 0, wired in
+# Phase 6: when any `advisors.<key>.enabled: true`, the orchestrator
+# replaces the matching plain-member call with an advisor-persona call
+# on that provider. Five advisors planned (Contrarian, Expansionist,
+# Reductionist, Historian, Pragmatist); each lives under
+# personas/advisors/<key>.md once Phase 6 ships.
+advisors: {}

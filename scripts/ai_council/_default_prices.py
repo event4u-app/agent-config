@@ -17,7 +17,7 @@ from __future__ import annotations
 
 # YYYY-MM-DD of when this table was last hand-edited. Keep in sync with
 # the test_default_prices freshness assertion if you bump this.
-LAST_UPDATED = "2026-04-29"
+LAST_UPDATED = "2026-05-14"
 
 # (provider, model)  ->  (input_per_1m_usd, output_per_1m_usd)
 DEFAULT_PRICES: dict[tuple[str, str], tuple[float, float]] = {
@@ -30,6 +30,15 @@ DEFAULT_PRICES: dict[tuple[str, str], tuple[float, float]] = {
     ("openai", "gpt-4o-mini"): (0.15, 0.60),
     ("openai", "o1"): (15.00, 60.00),
     ("openai", "o3-mini"): (1.10, 4.40),
+    # ── Google Gemini ────────────────────────────────────────────────
+    ("gemini", "gemini-2.5-pro"): (1.25, 10.00),
+    ("gemini", "gemini-2.5-flash"): (0.30, 2.50),
+    # ── xAI Grok ─────────────────────────────────────────────────────
+    ("xai", "grok-4"): (3.00, 15.00),
+    ("xai", "grok-3-mini"): (0.30, 0.50),
+    # ── Perplexity ───────────────────────────────────────────────────
+    ("perplexity", "sonar-pro"): (3.00, 15.00),
+    ("perplexity", "sonar"): (1.00, 1.00),
 }
 
 
