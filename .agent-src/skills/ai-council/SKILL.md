@@ -645,6 +645,51 @@ Needs ≥ 2 distinct deliberation outputs; below that the round is a
 no-op and nothing extra is billed. Self-review is structurally
 impossible — a member never sees its own response.
 
+## Thinking-style advisors (replace-mode)
+
+Phase 6 introduces five **advisor personas** the council adopts in
+*replace-mode*: an enabled advisor substitutes its bound member's
+plain call with the same provider running the advisor's persona
+prompt. Total call count stays the same — only the system prompt
+swaps.
+
+| Advisor | Default bound member | Focus |
+|---|---|---|
+| **Contrarian** | `anthropic` | strongest counterargument, hidden assumptions |
+| **First-Principles** | `anthropic` | strip metaphor, derive from physics / math / cost |
+| **Expansionist** | `openai` | adjacent opportunities, second-order effects |
+| **Outsider** | `openai` | naive-but-sharp questions, beginner's-mind probes |
+| **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
+
+Activation — edit `agents/.ai-council.yml` and flip the advisor's
+`enabled: true`. Optional `model: <name>` overrides the bound
+member's default model. An advisor referencing a disabled member
+fails closed at config load — never silently skipped.
+
+```yaml
+advisors:
+  contrarian:
+    enabled: true        # ← swap anthropic's plain call for contrarian
+    member: anthropic
+    # model: claude-opus-4   # optional pin
+```
+
+`council:estimate` surfaces every active swap on a dedicated line
+above the cost table:
+
+```
+council:estimate · mode=prompt · members=2 (billable=2)
+  advisor: Contrarian on anthropic via claude-sonnet-4-5
+anthropic/claude-sonnet-4-5: ~991 in + 256 out  =  $0.0068
+openai/gpt-4o: ~208 in + 256 out  =  $0.0031
+```
+
+Cost-bounded — replace-mode never adds calls. The persona prompt is
+larger than plain (~1k extra input tokens per swap); output tokens
+and call count are unaffected. Peer-review preserves the advisor
+label while stripping provider identity (`Response A (Contrarian)`).
+Two enabled advisors on the same member is a config error.
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -652,6 +697,10 @@ impossible — a member never sees its own response.
   network, no spend, but no diversity of weights either).
 - `scripts/ai_council/prompts.py` — neutrality preamble + per-mode
   system prompts.
+- `scripts/ai_council/advisors.py` — replace-mode planning + persona
+  resolution.
 - `scripts/ai_council/bundler.py` — redaction pattern set + size
   guard.
 - `docs/customization.md` § `ai_council.*` — settings reference.
+- `docs/contracts/ai-council-config.md` § advisors — schema + precedence
+  contract.
