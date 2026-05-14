@@ -296,6 +296,74 @@ def test_parser_accepts_siblings_flag() -> None:
     assert parsed.siblings == ["anthropic=claude-sonnet-4-5,claude-opus-4-1"]
 
 
+# ── build_members — cli mode dispatch (Phase 2 Step 2) ────────────────
+
+
+def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
+    """mode=cli for a known CLI provider builds an AnthropicCliClient."""
+    constructed: list[dict] = []
+
+    class _FakeCli:
+        name = "anthropic"
+        billable = False
+
+        def __init__(self, *, model, binary=None, max_calls_per_day=None):
+            self.model = model
+            self.binary = binary or "/bin/claude"
+            constructed.append({
+                "model": model, "binary": binary,
+                "max_calls_per_day": max_calls_per_day,
+            })
+
+        def ask(self, *a, **kw):  # pragma: no cover
+            return CouncilResponse("anthropic", self.model, "x")
+
+    monkeypatch.setattr(council_cli, "AnthropicCliClient", _FakeCli)
+    settings = {"ai_council": {
+        "enabled": True, "mode": "api",
+        "cli_call_budget": {"max_calls_per_day": {"anthropic": 50}},
+        "members": {
+            "anthropic": {
+                "enabled": True, "mode": "cli",
+                "model": "claude-sonnet-4-5",
+                "binary": "/opt/claude",
+            },
+        },
+    }}
+    members = council_cli.build_members(settings)
+    assert len(members) == 1
+    assert members[0].name == "anthropic"
+    assert constructed == [{
+        "model": "claude-sonnet-4-5",
+        "binary": "/opt/claude",
+        "max_calls_per_day": 50,
+    }]
+
+
+def test_build_members_cli_unknown_provider_raises() -> None:
+    """mode=cli for a provider without a wired CLI subclass raises."""
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "openai": {"enabled": True, "mode": "cli", "model": "gpt-4o"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="no CLI client is\\s+wired"):
+        council_cli.build_members(settings)
+
+
+def test_build_members_cli_binary_missing_wraps_cli_error(monkeypatch) -> None:
+    """CliClientError at construction time becomes CouncilDisabledError."""
+    from scripts.ai_council.clients import CliClientError
+
+    def _raise(**kw):
+        raise CliClientError("binary 'claude' not found on PATH")
+
+    monkeypatch.setattr(council_cli, "AnthropicCliClient", _raise)
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        "anthropic": {"enabled": True, "mode": "cli", "model": "claude-sonnet-4-5"},
+    }}}
+    with pytest.raises(council_cli.CouncilDisabledError, match="binary is\\s+not available"):
+        council_cli.build_members(settings)
+
+
 # ── cmd_estimate ─────────────────────────────────────────────────────
 
 

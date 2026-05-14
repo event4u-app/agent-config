@@ -33,7 +33,8 @@ from scripts.ai_council.bundler import (  # noqa: E402
 )
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
-    AnthropicClient, CouncilResponse, ExternalAIClient, GeminiClient,
+    AnthropicClient, AnthropicCliClient, CliClientError,
+    CouncilResponse, ExternalAIClient, GeminiClient,
     ManualClient, OpenAIClient, PerplexityClient, XAIClient,
     load_anthropic_key, load_openai_key,
 )
@@ -63,6 +64,13 @@ SCHEMA_VERSION = 1
 #: Provider names accepted under `mode=api`. Mirrors the routing table
 #: in ``_construct_api_member``; both must stay in sync.
 _API_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
+
+#: Provider names with a wired ``mode=cli`` subclass. Mirrors the
+#: routing table in ``_construct_cli_member``; both must stay in sync.
+#: Phase 2 ships ``anthropic``; Phase 3 adds ``openai`` + ``gemini``;
+#: Phase 4 adds ``xai`` + ``perplexity`` (community CLIs, no
+#: subscription savings — they still consume the API key).
+_CLI_PROVIDERS = frozenset({"anthropic"})
 
 
 class CouncilDisabledError(RuntimeError):
@@ -112,6 +120,8 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             entry["api_key_ref"] = m.api_key_ref
         if m.mode is not None:
             entry["mode"] = m.mode
+        if m.binary is not None:
+            entry["binary"] = m.binary
         members[name] = entry
     advisors: dict[str, dict[str, Any]] = {}
     for name, a in cfg.advisors.items():
@@ -142,6 +152,9 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             "strong_threshold": cfg.consensus_scoring.strong_threshold,
             "minority_threshold": cfg.consensus_scoring.minority_threshold,
             "lenses": list(cfg.consensus_scoring.lenses),
+        },
+        "cli_call_budget": {
+            "max_calls_per_day": dict(cfg.cli_call_budget.max_calls_per_day),
         },
         "members": members,
         "advisors": advisors,
@@ -180,6 +193,8 @@ def build_members(
         )
     members_cfg = ai.get("members") or {}
     global_mode = ai.get("mode")
+    cli_budget_cfg = (ai.get("cli_call_budget") or {}) if isinstance(ai, dict) else {}
+    cli_caps = (cli_budget_cfg.get("max_calls_per_day") or {}) if isinstance(cli_budget_cfg, dict) else {}
     overrides = model_overrides or {}
     siblings = siblings_overrides or {}
     unknown = set(overrides) - set(members_cfg)
@@ -231,6 +246,20 @@ def build_members(
         if mode == "api" and name in _API_PROVIDERS:
             members.append(
                 _construct_api_member(name, model, api_key_ref=cfg.get("api_key_ref")),
+            )
+        elif mode == "cli" and name in _CLI_PROVIDERS:
+            members.append(
+                _construct_cli_member(
+                    name,
+                    model,
+                    binary=cfg.get("binary"),
+                    max_calls_per_day=cli_caps.get(name),
+                ),
+            )
+        elif mode == "cli":
+            raise CouncilDisabledError(
+                f"member {name!r} resolves to mode=cli but no CLI client is "
+                f"wired (known: {sorted(_CLI_PROVIDERS)!r})."
             )
         elif mode == "manual":
             members.append(ManualClient(name=name, model=model or "manual"))
@@ -369,6 +398,42 @@ def _construct_api_member(
     raise CouncilDisabledError(
         f"member {name!r} has no api transport "
         f"(known: {sorted(_API_PROVIDERS)!r})."
+    )
+
+
+def _construct_cli_member(
+    name: str,
+    model: str | None,
+    *,
+    binary: str | None = None,
+    max_calls_per_day: int | None = None,
+) -> ExternalAIClient:
+    """Build a cli-mode client for a known provider name.
+
+    ``binary`` overrides the provider default (e.g. ``/opt/claude``);
+    ``None`` falls through to ``shutil.which(default_binary)``. The
+    daily quota is plumbed through to the subclass; ``None`` disables
+    the local counter (only stderr-based quota detection remains).
+    Wraps the subclass' ``CliClientError`` (raised when the binary is
+    missing at construction time) into ``CouncilDisabledError`` so the
+    council's error contract stays uniform.
+    """
+    if name == "anthropic":
+        try:
+            return AnthropicCliClient(
+                model=model or "claude-sonnet-4-5",
+                binary=binary,
+                max_calls_per_day=max_calls_per_day,
+            )
+        except CliClientError as exc:
+            raise CouncilDisabledError(
+                f"member 'anthropic' resolves to mode=cli but the binary is "
+                f"not available: {exc}. Install the Claude CLI or flip "
+                f"ai_council.members.anthropic.mode back to 'api'."
+            ) from exc
+    raise CouncilDisabledError(
+        f"member {name!r} has no cli transport "
+        f"(known: {sorted(_CLI_PROVIDERS)!r})."
     )
 
 

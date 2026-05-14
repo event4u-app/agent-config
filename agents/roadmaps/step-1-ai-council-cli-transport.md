@@ -76,9 +76,9 @@ One abstract `CliClient(ExternalAIClient)` base in `scripts/ai_council/clients.p
 Claude Code is the most mature CLI with the cleanest JSON output — implement it first so the pattern is locked before the other providers reuse it.
 
 - [x] **Step 1 — `AnthropicCliClient(CliClient)`:** `default_args = ["-p", "--output-format", "json"]`, `binary = "claude"`. Auth patterns: `"Please run `claude login`"`, `"Not logged in"`, `"OAuth token expired"`. `_parse_output` decodes the JSON envelope, extracts `result`, sets `text`, maps `is_error: true` to a structured error.
-- [ ] **Step 2 — Wire into the loader:** When `member.effective_mode == "cli"`, `council_cli.py:run()` instantiates the provider-matched CliClient subclass instead of the SDK client. Provider→class map: `anthropic → AnthropicCliClient` (others stub for Phase 3/4).
-- [ ] **Step 3 — `agents/.ai-council.yml` example:** Add a commented-out example block under `members.anthropic` showing how to flip to `mode: cli` with optional `binary:` override and `cli_call_budget.max_calls_per_day.anthropic: <N>`.
-- [ ] **Step 4 — Integration test with mocked subprocess:** Real Claude JSON envelope captured from the public docs as a fixture under `tests/fixtures/claude_cli_json.txt`; subprocess mock returns it; verify the `CouncilResponse` is populated correctly (text, error=None, metadata carries `session_id` + `cost_usd` for audit even though billable=False).
+- [x] **Step 2 — Wire into the loader:** When `member.effective_mode == "cli"`, `council_cli.py:run()` instantiates the provider-matched CliClient subclass instead of the SDK client. Provider→class map: `anthropic → AnthropicCliClient` (others stub for Phase 3/4).
+- [x] **Step 3 — `agents/.ai-council.yml` example:** Add a commented-out example block under `members.anthropic` showing how to flip to `mode: cli` with optional `binary:` override and `cli_call_budget.max_calls_per_day.anthropic: <N>`.
+- [x] **Step 4 — Integration test with mocked subprocess:** Real Claude JSON envelope captured from the public docs as a fixture under `tests/fixtures/claude_cli_json.txt`; subprocess mock returns it; verify the `CouncilResponse` is populated correctly (text, error=None, metadata carries `session_id` + `cost_usd` for audit even though billable=False).
 
 ## Phase 3: Codex + Gemini CLI integration
 
@@ -183,9 +183,9 @@ Counter-validated learning loop with an explicit probation period. When the user
 
 ## Acceptance Criteria
 
-- [ ] Phase 0 — `_VALID_MODES` extended, `binary:` field validated, `cli_call_budget` block parsed, contract doc + `.ai-council.yml` comments cover all three modes (`manual` = copy & paste / `api` / `cli`)
+- [x] Phase 0 — `_VALID_MODES` extended, `binary:` field validated, `cli_call_budget` block parsed, contract doc + `.ai-council.yml` comments cover all three modes (`manual` = copy & paste / `api` / `cli`)
 - [x] Phase 1 — `CliClient` abstract base shipped with subprocess plumbing + auth-failure detection + daily quota counter + unit tests
-- [ ] Phase 2 — `AnthropicCliClient` wired end-to-end, JSON output parsed, fixture test green
+- [x] Phase 2 — `AnthropicCliClient` wired end-to-end, JSON output parsed, fixture test green
 - [ ] Phase 3 — `OpenAICliClient` + `GeminiCliClient` wired end-to-end, fixture tests green, SKILL.md updated
 - [ ] Phase 4 — `XAICliClient` + `PerplexityCliClient` wired with `billable=True` override + cost-gate-still-applies warning
 - [ ] Phase 5 — `session.md` adapted for subscription vs paid, negative-test suite covers binary-missing / non-zero-exit / malformed-JSON / quota-exhausted paths

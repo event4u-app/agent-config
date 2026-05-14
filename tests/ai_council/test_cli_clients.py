@@ -202,3 +202,35 @@ def test_cli_client_is_not_billable():
 def test_cli_client_is_subclass_of_external():
     from scripts.ai_council.clients import ExternalAIClient
     assert issubclass(CliClient, ExternalAIClient)
+
+
+# ── integration: fixture-backed end-to-end (Phase 2 Step 4) ───────────────
+
+
+_CLAUDE_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "claude_cli_json.txt"
+)
+
+
+def test_ask_with_real_claude_cli_envelope(monkeypatch, tmp_path):
+    """Real Claude JSON envelope from public docs → fully populated CouncilResponse.
+
+    Mirrors what `claude --print --output-format json` actually emits;
+    subprocess is mocked, so the test runs without a real binary. Audit
+    metadata (session_id + reported_cost_usd) is preserved even though
+    the transport is non-billable.
+    """
+    envelope = _CLAUDE_FIXTURE.read_text(encoding="utf-8")
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/claude")
+    _patch_run(monkeypatch, stdout=envelope)
+    cli = AnthropicCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("you are a geography tutor", "What is the capital of France?")
+    assert resp.error is None
+    assert resp.text == "The capital of France is Paris."
+    assert resp.input_tokens == 128
+    assert resp.output_tokens == 42
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["session_id"] == "3f0d9c2e-7b5a-4e1c-9d2b-8a6f5e4c3b2a"
+    assert resp.metadata["reported_cost_usd"] == 0.0089
+    assert resp.metadata["reported_duration_ms"] == 1842
+    assert AnthropicCliClient.billable is False
