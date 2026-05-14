@@ -1,3 +1,4 @@
+<!-- check-refs: skip -->
 # NEXT ACTIONS — North Star Restructure (deferred)
 
 > User picked Option 2 on 2026-05-14: commit audit material now,

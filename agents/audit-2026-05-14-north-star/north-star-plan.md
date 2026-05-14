@@ -88,7 +88,7 @@ Define a 50-prompt golden corpus at
 prompt. Ship `task bench` (output-token saving %, selection-accuracy %,
 cost / task auto-captured from session jsonl à la ruflo, projection
 fidelity %). Publish `BENCH.md` with the per-release table. Cost surface
-exposed via `cost-report` skill (50/75/90/100 ladder, hard stop at 100).
+exposed via `cost-report` skill (50/75/90/100 ladder, hard stop at 100). <!-- ref-ignore -->
 Per-tool projection fidelity test (closes U5). Estimated 7 phases /
 ~40 steps.
 

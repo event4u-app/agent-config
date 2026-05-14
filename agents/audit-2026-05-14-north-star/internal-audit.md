@@ -52,7 +52,7 @@ change is safe. We diff bytes; we don't diff behaviour."
 | # | Pain | Evidence | Brutal verdict |
 |---|---|---|---|
 | P1 | No north-star metric | Mission stated in `docs/contracts/package-self-orientation.md`; success criterion = ? | A package preaching token economy with no measured token saving is a contradiction. Pick one number and own it. |
-| P2 | Adoption funnel undefined | `README.md` install path, `onboard` skill, `.agent-settings.yml` — but no "first 24 hours" path articulated | We do not know what success on day 1 looks like for a new user. |
+| P2 | Adoption funnel undefined | `README.md` install path, `onboard` skill, `.agent-settings.yml` — but no "first 24 hours" path articulated | We do not know what success on day 1 looks like for a new user. | <!-- ref-ignore -->
 | P3 | Roadmap count high, finished count low | 5 active roadmaps × 155 steps, 0 / 155 done (per current dashboard); 1 archived (`road-to-productization`) | Velocity is invisible to outside observer. Council F7 / U4 (roadmap trajectory) is the formal version of this. |
 | P4 | No "what's new in 2.10" | Tag exists; CHANGELOG has entries; no "for a user who installed 2.8, this is what changed for you" | Internal users (matze4u and downstream) re-read PRs. External users see nothing. |
 | P5 | Persona axis (11 review lenses) is invisible | `personas:` mechanic exists; no user-facing "which persona should I activate for code review?" doc | Power feature, undocumented surface. KW-plugins style "one plugin per role" makes the same axis discoverable. |

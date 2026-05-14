@@ -35,7 +35,7 @@ Cline). Version 2.10.0. Maintainer: solo. Goal: lift it to a
    (input / output / cache-read / cache-write), enforces 50/75/90/100
    budget ladder. Per-plugin ADR directories. Smoke contracts.
 3. **`GammaLabTechnologies/harmonist`** — 186 schema-driven agents.
-   `agents/SCHEMA.md` defines 8 required + ~10 optional frontmatter
+   `agents/SCHEMA.md` defines 8 required + ~10 optional frontmatter <!-- ref-ignore -->
    fields. `schema_version`, `model_tier`, `distinguishes_from`,
    `disambiguation`. Migration registry (`MIGRATIONS[("1","2")]`).
    `## Deep Reference` cut-point splits essentials from on-demand body.

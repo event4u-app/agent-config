@@ -1,3 +1,4 @@
+<!-- check-refs: skip -->
 # External Findings — Senior-Dev Benchmark
 
 **Date:** 2026-05-14
