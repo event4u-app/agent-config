@@ -2233,17 +2233,26 @@ def lint_type_boundaries(path: Path, text: str, artifact_type: str) -> List[Issu
         # Check frontmatter skills field
         frontmatter = extract_frontmatter(text)
         has_skills_field = False
+        # Commands tagged `type: orchestrator` aggregate other commands /
+        # routers — they intentionally do not declare a `skills:` list and
+        # are exempt from the no-skill-reference check. The tag is the
+        # contract; no hard-coded path list.
+        is_orchestrator = False
         if frontmatter:
             skills_match = re.search(r'skills:\s*\[(.+)\]', frontmatter)
             has_skills_field = bool(skills_match and skills_match.group(1).strip())
+            type_match = re.search(r'^type:\s*[\'"]?orchestrator[\'"]?\s*$',
+                                   frontmatter, re.MULTILINE)
+            is_orchestrator = bool(type_match)
 
         # Also check body for skill references
         has_skill_ref = bool(re.search(r'skill|SKILL\.md', text))
 
-        if not has_skills_field and not has_skill_ref:
+        if not has_skills_field and not has_skill_ref and not is_orchestrator:
             issues.append(Issue("warning", "command_missing_skill_references",
                                 "Command does not reference any skills — "
-                                "commands should orchestrate skills, not contain domain logic"))
+                                "commands should orchestrate skills, not contain domain logic "
+                                "(use `type: orchestrator` in frontmatter to exempt routers)"))
 
     # --- Skill: validation should be concrete, not vague ---
     if artifact_type == "skill":

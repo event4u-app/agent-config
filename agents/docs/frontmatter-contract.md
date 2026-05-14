@@ -104,6 +104,7 @@ description: "Architecture rules for creating new files, classes, …"
 | key | type | shape | notes |
 |---|---|---|---|
 | `skills` | list\<string\> | `[skill-id, …]` | Skills this command delegates to; 63/67 declare it. Empty list `[]` allowed. |
+| `type` | enum | `orchestrator` | Marks a cluster router / top-level entry point that aggregates other commands. Exempts the file from the `command_missing_skill_references` linter check. Omit for ordinary commands. See road-to-productization.md § P5.3. |
 
 ### Example
 

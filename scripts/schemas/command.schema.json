@@ -39,6 +39,11 @@
       "pattern": "^[a-z][a-z0-9-]*$",
       "description": "Locked verb cluster this command belongs to. See docs/contracts/command-clusters.md."
     },
+    "type": {
+      "type": "string",
+      "enum": ["orchestrator"],
+      "description": "Optional type tag. `orchestrator` marks a command that aggregates other commands / skills (cluster routers, top-level entry points) and exempts it from the `command_missing_skill_references` linter check. Omit the key for ordinary commands. See road-to-productization.md P5.3."
+    },
     "sub": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",

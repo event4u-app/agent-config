@@ -3,6 +3,7 @@ name: grill-me
 tier: 2
 description: Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 cluster: challenge-me
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true
