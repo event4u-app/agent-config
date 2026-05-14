@@ -1,6 +1,6 @@
 ---
 name: laravel
-description: "Writes Laravel code following framework conventions, project architecture, and modern best practices for controllers, requests, services, jobs, events, policies, and application structure."
+description: "Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`."
 source: package
 domain: engineering
 ---

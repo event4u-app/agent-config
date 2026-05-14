@@ -1,6 +1,6 @@
 ---
 name: project-analyzer
-description: "ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work."
+description: "ONLY when user asks for single-pass tech-stack detection or `agents/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
 source: package
 domain: discovery
 ---

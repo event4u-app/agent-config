@@ -1,6 +1,6 @@
 ---
 name: devcontainer
-description: "Use when configuring DevContainers or GitHub Codespaces — devcontainer.json, custom images, secrets, VS Code features — even when the user just says 'why does my Codespace not start'."
+description: "Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`)."
 source: package
 domain: devops
 ---

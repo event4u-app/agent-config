@@ -1,6 +1,6 @@
 ---
 name: symfony-workflow
-description: "Writes Symfony code following framework conventions, container wiring, and modern best practices for controllers, services, bundles, Messenger, Doctrine, security, and console commands."
+description: "Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`."
 source: package
 domain: engineering
 ---

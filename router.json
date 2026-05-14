@@ -139,6 +139,43 @@
       "routes_to": []
     },
     {
+      "id": "copilot-routing",
+      "triggers": [
+        {
+          "keyword": "copilot"
+        },
+        {
+          "phrase": "copilot-instructions"
+        },
+        {
+          "phrase": "copilot pr review"
+        }
+      ],
+      "routes_to": [
+        "skill:copilot-config"
+      ]
+    },
+    {
+      "id": "devcontainer-routing",
+      "triggers": [
+        {
+          "keyword": "devcontainer"
+        },
+        {
+          "keyword": "codespaces"
+        },
+        {
+          "keyword": "codespace"
+        },
+        {
+          "phrase": "devcontainer.json"
+        }
+      ],
+      "routes_to": [
+        "skill:devcontainer"
+      ]
+    },
+    {
       "id": "docker-commands",
       "triggers": [
         {
@@ -173,6 +210,26 @@
       ],
       "routes_to": [
         "command:e2e-heal"
+      ]
+    },
+    {
+      "id": "laravel-routing",
+      "triggers": [
+        {
+          "keyword": "laravel"
+        },
+        {
+          "keyword": "artisan"
+        },
+        {
+          "keyword": "eloquent"
+        },
+        {
+          "keyword": "FormRequest"
+        }
+      ],
+      "routes_to": [
+        "skill:laravel"
       ]
     },
     {
@@ -293,6 +350,26 @@
       ],
       "routes_to": [
         "skill:command-routing"
+      ]
+    },
+    {
+      "id": "symfony-routing",
+      "triggers": [
+        {
+          "keyword": "symfony"
+        },
+        {
+          "keyword": "doctrine"
+        },
+        {
+          "keyword": "twig"
+        },
+        {
+          "keyword": "messenger"
+        }
+      ],
+      "routes_to": [
+        "skill:symfony-workflow"
       ]
     },
     {
