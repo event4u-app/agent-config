@@ -429,6 +429,34 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.10.0](https://github.com/event4u-app/agent-config/compare/2.9.0...2.10.0) (2026-05-14)
+
+### Features
+
+* **ci:** lint-hook-concern-budget Tier-1 fail-closed gate ([8d60b8a](https://github.com/event4u-app/agent-config/commit/8d60b8ab464c4c5bdc6d072bb2a9b0123942e13b))
+* **cli:** settings:check command + YAML subset contract ([638e740](https://github.com/event4u-app/agent-config/commit/638e74017ffea8d7c08073a949e86fde047db109))
+* **hooks:** hooks:doctor + hooks:replay subcommands + fixture corpus ([3156e25](https://github.com/event4u-app/agent-config/commit/3156e25fd3253fc926a57b92e14b407a9ed54b58))
+* **work-engine:** add decision-trace memory_visibility hook + scoring ([bf056ac](https://github.com/event4u-app/agent-config/commit/bf056ace877a696afa5fe758053ea1eb350e5dff))
+
+### Bug Fixes
+
+* **roadmap:** point productization P6 gate at archived proof-not-features path ([35a1009](https://github.com/event4u-app/agent-config/commit/35a1009cffdfde28c7b0384c890c31a7e62b70cf))
+
+### Documentation
+
+* **roadmap:** complete road-to-proof-not-features 16/16 + sync dashboard ([89af72d](https://github.com/event4u-app/agent-config/commit/89af72d5514b74c19d533b5a2e69ff7ddf16ecbc))
+* **readme:** split README by audience + audience-order contract ([60a87c0](https://github.com/event4u-app/agent-config/commit/60a87c056555a80585d25555f3d5b87d54c7283a))
+
+### Refactoring
+
+* **check-council-references:** structural carve-outs for immutable inputs and decision provenance ([3ed7784](https://github.com/event4u-app/agent-config/commit/3ed77841c42c5e3ebf4191611bb7fa4a52ed2fa0))
+
+### Chores
+
+* **roadmap:** archive road-to-proof-not-features (16/16 done, Phase 1 deferred) ([9d05aed](https://github.com/event4u-app/agent-config/commit/9d05aed79a46023b1e95c5488a1e3d5e78748e67))
+
+Tests: 3663 (+60 since 2.9.0)
+
 ## [2.9.0](https://github.com/event4u-app/agent-config/compare/2.8.0...2.9.0) (2026-05-13)
 
 ### Features
