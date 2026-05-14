@@ -15,10 +15,15 @@ from work_engine.hooks import (
 
 @dataclass
 class _FakeWork:
-    """Stand-in for :class:`WorkState` exposing the two fields we read."""
+    """Stand-in for :class:`WorkState` exposing the fields we read."""
 
     memory: list[dict[str, Any]] = field(default_factory=list)
     report: str = ""
+    verify: Any = None
+    questions: Any = None
+    changes: Any = None
+    applied_rules: Any = None
+    test_plan: Any = None
 
 
 def _runner(hook: MemoryVisibilityHook) -> tuple[HookRunner, _FakeWork]:
@@ -97,3 +102,69 @@ def test_only_registers_on_before_save() -> None:
     assert not registry.for_event(HookEvent.AFTER_DISPATCH)
     assert not registry.for_event(HookEvent.AFTER_STEP)
     assert not registry.for_event(HookEvent.ON_HALT)
+
+
+# -- affected segment (P2.1b) -----------------------------------------
+
+
+def test_affected_segment_surfaces_band_flip() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    work.memory = [
+        {"id": "mem_1", "type": "domain-invariants"},
+        {"id": "mem_2", "type": "incident-learnings"},
+    ]
+    runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
+    assert "\u00b7 affected: confidence_band" in work.report
+
+
+def test_affected_segment_renders_none_when_consulted_but_no_divergence() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    # One hit but verify already passes → band="medium" with-and-without
+    work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
+    work.verify = {"claims": 1, "first_try_passes": 1}
+    runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
+    assert work.report.endswith("\u00b7 affected: none")
+
+
+def test_affected_segment_omitted_when_no_memory_hits() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    # Entry returned by retrieval but explicitly flagged hit=False —
+    # the visibility summariser still sees a typed entry (asks > 0)
+    # so the line emits, but trace-level memory_hits == 0 so the
+    # `· affected: …` trailing segment is absent.
+    work.memory = [
+        {"id": "mem_1", "type": "domain-invariants", "hit": False},
+    ]
+    runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
+    assert work.report
+    assert "affected" not in work.report
+
+
+def test_changed_decisions_block_appended_when_keys_diverged() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    work.memory = [
+        {"id": "mem_1", "type": "domain-invariants"},
+        {"id": "mem_2", "type": "incident-learnings"},
+    ]
+    runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
+    assert "Memory changed decisions:" in work.report
+    assert "- mem_1 \u2192 confidence_band" in work.report
+    assert "- mem_2 \u2192 confidence_band" in work.report
+
+
+def test_changed_decisions_block_suppressed_when_no_divergence() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
+    work.verify = {"claims": 1, "first_try_passes": 1}
+    runner.emit(HookEvent.BEFORE_SAVE, HookContext(work=work))
+    assert "Memory changed decisions:" not in work.report
+
+
+def test_changed_decisions_block_idempotent() -> None:
+    runner, work = _runner(MemoryVisibilityHook())
+    work.memory = [{"id": "mem_1", "type": "domain-invariants"}]
+    ctx = HookContext(work=work)
+    runner.emit(HookEvent.BEFORE_SAVE, ctx)
+    once = work.report
+    runner.emit(HookEvent.BEFORE_SAVE, ctx)
+    assert work.report == once

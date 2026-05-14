@@ -23,8 +23,11 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
+from ...scoring.decision_trace import summarise_memory, summarise_verify
 from ...scoring.memory_visibility import (
     DEFAULT_ASKED_TYPES,
+    compute_affected,
+    format_changed_decisions_block,
     format_line,
     should_emit,
     summarise_visibility,
@@ -82,19 +85,45 @@ class MemoryVisibilityHook:
             visibility_off=self._visibility_off,
         ):
             return
-        line = format_line(summary)
+        affected = self._derive_affected(work, memory)
+        line = format_line(summary, affected=affected)
         if not line:
             return
+        block = format_changed_decisions_block(
+            summary.get("ids") or [], affected,
+        )
         existing = getattr(work, "report", "") or ""
-        if line in existing:
+        rendered = line if block is None else f"{line}\n\n{block}"
+        if line in existing and (block is None or block in existing):
             return
         sep = "\n\n" if existing else ""
         try:
-            work.report = f"{existing}{sep}{line}"
+            work.report = f"{existing}{sep}{rendered}"
         except AttributeError as exc:
             raise HookError(
                 "memory-visibility: state.report not writable",
             ) from exc
+
+    def _derive_affected(self, work: Any, memory: Any) -> list[str] | None:
+        """Compute the closed-list ``affected`` keys for this work step.
+
+        Reuses the decision-trace summarisers so the counterfactual
+        matches the trace hook's view of the same WorkState. Returns
+        ``None`` when memory was not consulted (hits == 0); callers
+        then omit the ``· affected: …`` segment per the contract.
+        """
+        memory_summary = summarise_memory(memory)
+        verify_summary = summarise_verify(getattr(work, "verify", None))
+        ambiguity = bool(getattr(work, "questions", None))
+        return compute_affected(
+            memory_hits=memory_summary["hits"],
+            verify_claims=verify_summary["claims"],
+            verify_first_try_passes=verify_summary["first_try_passes"],
+            ambiguity_flag=ambiguity,
+            changes=getattr(work, "changes", None),
+            applied_rules=getattr(work, "applied_rules", None),
+            test_plan=getattr(work, "test_plan", None),
+        )
 
 
 def derive_visibility(memory: Any) -> str | None:
