@@ -46,6 +46,30 @@ or `.agent-src/`.
 
 ## Quickstart
 
+**Three steps. Five minutes. Decision-traced first task.**
+
+```bash
+# 1. Install (writes .agent-settings.yml, .augment/, .claude/, …)
+npx @event4u/agent-config init
+
+# 2. First-run setup (sets your name, IDE, cost profile)
+#    Open your AI agent (Claude Code, Cursor, …) and type:
+/onboard
+
+# 3. First real task — agent refines, plans, logs a decision_result
+/work "your first real task"
+```
+
+A `decision_result` entry lands in `agents/state/` confirming the
+work-engine phases ran end-to-end. Stack-aware skills auto-load.
+
+> Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
+> or wire optional memory — see [**Detailed installation**](#detailed-installation)
+> below. Contributors rebuilding the package — jump to
+> [**For contributors**](#for-contributors).
+
+### Detailed installation
+
 Two minutes from `npx` to a better-behaved agent — no install, no
 vendored package, no postinstall hook.
 
@@ -650,13 +674,16 @@ re-enabled or the chat ends. Full scoring contract and hardening:
 
 ---
 
-## Development
+## For contributors
 
-Edit in `.agent-src.uncompressed/`, compress, verify:
+Working on the package itself? Edit in `.agent-src.uncompressed/`,
+then regenerate compressed and projected trees:
 
 ```bash
-task ci            # Run all CI checks
-task test          # Run all tests
+task sync             # regenerate .agent-src/ and .augment/
+task generate-tools   # regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
+task ci               # full pipeline — green before PR
+task test             # unit + integration tests
 ```
 
 → Full commands and project structure: [**docs/development.md**](docs/development.md)
