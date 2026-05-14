@@ -429,6 +429,37 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.12.0](https://github.com/event4u-app/agent-config/compare/2.11.0...2.12.0) (2026-05-14)
+
+### Features
+
+* **linter:** evals.json schema validator + meta_skill exemption ([9568510](https://github.com/event4u-app/agent-config/commit/95685109540c7f2dc2643ec24ba9d996467e0645))
+* **skill-writing:** § 7 quantitative eval loop + run_skill_evals.py ([9eda402](https://github.com/event4u-app/agent-config/commit/9eda402dc43b8e14682787fb1cbbc9872eb16fcc))
+* **skills:** add doc-coauthoring from Anthropic ([161b904](https://github.com/event4u-app/agent-config/commit/161b9044743753f2e54bcae45c36a29daaa8058d))
+* **skills:** add canvas-design from Anthropic ([95c247c](https://github.com/event4u-app/agent-config/commit/95c247c08d3c6710c53bfcd7ba7a00f270e0d8d4))
+* **check-refs:** add file/line opt-out markers ([f381bcb](https://github.com/event4u-app/agent-config/commit/f381bcb5a08818e042af35836dd2c4d8965aa98e))
+* make ai-council max_output_tokens configurable ([5976b46](https://github.com/event4u-app/agent-config/commit/5976b4623b94277f6ba49b0e82bb36ab7d5adb50))
+
+### Bug Fixes
+
+* **marketplace:** register canvas-design + doc-coauthoring ([9fbfe6a](https://github.com/event4u-app/agent-config/commit/9fbfe6af83589bf45b27b72c1b818be9772ae60c))
+
+### Documentation
+
+* **audit:** mark forward-refs in north-star bundle as opt-out ([a1d7c21](https://github.com/event4u-app/agent-config/commit/a1d7c21df3d05c27bacf81344893c4e43ae72a06))
+* **roadmap:** expand step-99 with Total Dominance mandate ([c46cffd](https://github.com/event4u-app/agent-config/commit/c46cffd54214a61230be27ddaae3367053be39a5))
+* **roadmap:** add step-99 north-star restructure (meta · out-of-band) ([8dd18f9](https://github.com/event4u-app/agent-config/commit/8dd18f963742d14dd9d006237ddd93881b198a60))
+* **audit:** correct step-3 filename reference ([ee6bd7f](https://github.com/event4u-app/agent-config/commit/ee6bd7ffc6c6cd363b6207b6ff32aa72f2bc317e))
+* **audit:** add 2026-05-14 north-star audit + council synthesis ([589c2fb](https://github.com/event4u-app/agent-config/commit/589c2fbd3e35b57529ab0f934665d71d611012d4))
+* add roadmaps for council, persona, ghostwriter, user-types axis ([471fae3](https://github.com/event4u-app/agent-config/commit/471fae3a46182d930fea21adb4037a41ec99dcb3))
+* add v2 feedback follow-up roadmap ([23d17cb](https://github.com/event4u-app/agent-config/commit/23d17cb24b33e794f7c1e31e76055cc5c8f1ab6c))
+
+### Chores
+
+* prefix roadmaps with step-N execution sequence ([de87232](https://github.com/event4u-app/agent-config/commit/de87232213404ad104e07c5ca831d64f4a607f8e))
+
+Tests: 3718 (+0 since 2.11.0)
+
 ## [2.11.0](https://github.com/event4u-app/agent-config/compare/2.10.0...2.11.0) (2026-05-14)
 
 ### Features
