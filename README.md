@@ -288,7 +288,7 @@ Install in the same project (dev-only):
 npm install --save-dev @event4u/agent-memory
 ```
 
-→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — local stdio access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`; promotion to beta gated on [`mcp-beta-criteria.md`](docs/contracts/mcp-beta-criteria.md))
+→ [Memory contract & retrieval API](docs/contracts/agent-memory-contract.md) (beta) · [Built-in MCP server](docs/mcp-server.md) (experimental — local stdio access from Claude Desktop / Cursor / Zed / Continue, install with `task mcp:setup`; promotion to beta gated on `docs/contracts/mcp-beta-criteria.md`)
 
 ---
 

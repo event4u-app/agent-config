@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-14
+---
+
 # Multi-Tool Projection Fidelity Contract
 
 **Status:** beta · **Phase 4 of [step-1-v2-feedback-followup](../../agents/roadmaps/step-1-v2-feedback-followup.md)**
