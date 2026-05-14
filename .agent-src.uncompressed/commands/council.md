@@ -18,6 +18,37 @@ commands with a single entry point + sub-command dispatch. Each lens
 shares the same transport, neutrality preamble, and cost gate; the
 sub-command swaps the mode-specific addendum.
 
+## Architecture — master / wrapper split
+
+`/council default` is the **master orchestrator**. It owns the full flow:
+
+1. Resolve the target + capture the original ask.
+2. Check the council is configured + price table fresh.
+3. Cost confirmation (ALWAYS ASK for billable members).
+4. Run the CLI.
+5. Render the report (5 / 5a / 5b — render → critical lens → user options).
+6. Hard floor — text only.
+
+The other three sub-commands (`pr`, `design`, `optimize`) are **wrappers**.
+Each wrapper resolves its lens-specific input (PR target, design artefact,
+optimization target + metric), captures a wrapper-specific `original_ask`,
+then delegates to `/council default` with `mode_override=<lens>`. The
+lens-specific neutrality addendums live in **one** place —
+[`scripts/ai_council/prompts.py:_MODE_TABLE`](../../scripts/ai_council/prompts.py) —
+and are selected by the `mode_override` value. Wrappers never re-implement
+cost-gate, CLI invocation, render, or the host-verdict pass; those flow
+through the master verbatim.
+
+Invariants:
+
+- Wrapper step numbers (`cost gate from /council default Step 3`,
+  `render via Step 5/5a/5b of /council default`) anchor to the master, not
+  the wrapper, so the master is the single source of truth for flow shape.
+- A new lens = a new entry in `_MODE_TABLE` + a new wrapper file that
+  follows the `pr.md` / `design.md` / `optimize.md` shape. No new master.
+- Behavioural changes to the orchestration (e.g. new render step) land in
+  `default.md` + `_MODE_TABLE`; the wrappers inherit automatically.
+
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |

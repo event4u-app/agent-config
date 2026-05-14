@@ -17,8 +17,8 @@ suggestion:
 ## Instructions
 
 Specialised council mode for **design documents, ADRs, and
-architecture proposals**. Wraps `/council files:<paths>` (or
-`/council prompt:"…"`) with the `design` mode neutrality preamble that
+architecture proposals**. Wraps `/council default files:<paths>` (or
+`/council default prompt:"…"`) with the `design` mode neutrality preamble that
 focuses members on architectural risk rather than line-level
 correctness.
 
@@ -33,8 +33,8 @@ path was supplied, ask (one question per turn):
 > 2. Multiple files / a directory (the bundler will gather them)
 > 3. A free-form proposal in the chat — paste it now
 
-Pick **1** or **2** → use `files:` mode of `/council`.
-Pick **3** → use `prompt:` mode of `/council`.
+Pick **1** or **2** → use `files:` mode of `/council default`.
+Pick **3** → use `prompt:` mode of `/council default`.
 
 ### 2. Capture the originating ask
 
@@ -46,12 +46,12 @@ goal section, ask the user (one question per turn):
 > What is the goal of this design? (one sentence — used as neutral
 > framing for the council, not their analysis)
 
-### 3. Run /council with the design mode preamble
+### 3. Run /council default with the design mode preamble
 
-Invoke the matching `/council` form:
+Invoke the matching `/council default` form:
 
-- `files:` → `/council files:<paths>` with `mode_override=design`.
-- `prompt:` → `/council prompt:"<artefact text>"` with
+- `files:` → `/council default files:<paths>` with `mode_override=design`.
+- `prompt:` → `/council default prompt:"<artefact text>"` with
   `mode_override=design`.
 
 The `design` mode addendum from `scripts/ai_council/prompts.py`
@@ -62,7 +62,8 @@ focuses council members on:
 - Sequencing risk (does step N really not block step N+1?).
 - Open questions disguised as decisions.
 
-The cost gate from `/council` Step 3 still applies.
+The cost gate from `/council default` Step 3 still applies. Render via
+Step 5/5a/5b of `/council default`.
 
 ### 4. Render the report
 
@@ -88,11 +89,11 @@ design file, open ADR PRs, or modify the codebase.
 
 - **No artefact resolvable** → ask once; if still empty, stop.
 - **Artefact too large** → bundler raises `BundleTooLarge`; suggest
-  splitting (`/council files:<single-file>` per section).
+  splitting (`/council default files:<single-file>` per section).
 
 ## See also
 
-- `/council` — base orchestration entry point.
+- `/council default` — base orchestration entry point.
 - `/feature plan` / `/feature refactor` — where design changes get
   written, after the council surfaces issues.
 - `ai-council` skill — neutrality guidelines.

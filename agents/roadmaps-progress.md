@@ -6,17 +6,17 @@
 
 ## Overall
 
-**8 / 187 steps done · 4%**
+**12 / 187 steps done · 6%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   6%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 8 | 56 | 48 | 8 | 0 | 0 | █░░░░░░░░░ 14% |
+| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 8 | 56 | 44 | 12 | 0 | 0 | ██░░░░░░░░ 21% |
 | 2 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,12 +28,12 @@
 
 ### [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md)
 
-**AI Council Consolidation + External-Pattern Integration** — 8 / 56 done (14%)
+**AI Council Consolidation + External-Pattern Integration** — 12 / 56 done (21%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Centralize council config into `agents/.ai-council.yml` | ✅ done | 0 | 8 | 0 | 0 | 100% |
-| 1 | Document the master/wrapper contract | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Document the master/wrapper contract | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | `/council analysis` lens | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | F2 — lens-adaptive synthesis templates | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | F3 — consensus-scoring on the analysis lens | ⬜ not started | 5 | 0 | 0 | 0 | 0% |

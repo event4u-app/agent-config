@@ -119,6 +119,42 @@ grandfathered indefinitely; modifying them does NOT require adding
 the field. The goal is to stop the atomic surface from growing,
 not to retro-fit every legacy command into a cluster.
 
+## Master / wrapper sub-command shape (`council` cluster)
+
+The `council` cluster uses a **master / wrapper** shape within the flat
+ADR-003 dispatch — the only cluster currently shaped this way. It does
+not break ADR-003 (still one level of sub-commands) and is documented
+here so future lens additions follow the same shape.
+
+- **Master:** `/council default` owns the full orchestration — Step 1
+  (resolve target + capture `original_ask`), Step 2 (configure check +
+  price-table freshness), Step 3 (cost confirmation), Step 4 (run CLI),
+  Step 5 / 5a / 5b (render → critical-evaluation lens → user options),
+  Step 6 (hard floor). See [`commands/council.md` → `## Architecture`](../../.agent-src.uncompressed/commands/council.md).
+- **Wrappers:** `/council pr` · `/council design` · `/council optimize`
+  resolve lens-specific input (PR target / design artefact / optimization
+  target + metric), capture a wrapper-specific `original_ask`, then
+  delegate to `/council default` with `mode_override=<lens>`. They MUST
+  NOT re-implement cost-gate, CLI invocation, render, or host-verdict;
+  those flow through the master verbatim. Wrapper step references anchor
+  to the master (e.g. "cost gate from `/council default` Step 3",
+  "render via Step 5/5a/5b of `/council default`"), not the wrapper.
+- **Single source of lens addendums:** lens-specific neutrality
+  addendums live in [`scripts/ai_council/prompts.py:_MODE_TABLE`](../../scripts/ai_council/prompts.py)
+  and are selected by `mode_override`. A new lens = a new `_MODE_TABLE`
+  entry **plus** a new wrapper file mirroring the `pr.md` / `design.md` /
+  `optimize.md` shape (~100–130 lines). No new master.
+- **Behavioural changes** to the orchestration (e.g. a new render step)
+  land in `default.md` + `_MODE_TABLE` only; wrappers inherit
+  automatically. This invariant is what makes the shape safe under the
+  flat ADR-003 contract — the wrapper is text-only delegation.
+
+Cluster-table names are unchanged: `/council default` is the master,
+the other three are wrappers. The deprecation shims for the four
+legacy slugs (`/council`, `/council-pr`, `/council-design`,
+`/council-optimize`) continue to follow the standard shim contract
+below.
+
 ## Deprecation shim contract
 
 A shim is a one-file stub that:

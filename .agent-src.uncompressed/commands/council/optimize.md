@@ -20,7 +20,7 @@ Specialised council mode for **optimization targets**: hot paths,
 slow queries, allocation profiles, or the output of an `/optimize-*`
 command (`/optimize-skills`, `/optimize-agents`,
 `/optimize-augmentignore`, `/optimize-rtk-filters`). Wraps
-`/council` with the `optimize` neutrality preamble, which focuses
+`/council default` with the `optimize` neutrality preamble, which focuses
 members on **ranked**, **evidence-based** suggestions instead of
 generic "you should profile" advice.
 
@@ -37,19 +37,19 @@ If nothing was supplied, ask (one question per turn):
 >    the report to the council
 > 4. A free-form description of the bottleneck
 
-Pick **1** → `/council files:<paths>` with `mode_override=optimize`.
-Pick **2** → `/council prompt:"<query + context>"` with
+Pick **1** → `/council default files:<paths>` with `mode_override=optimize`.
+Pick **2** → `/council default prompt:"<query + context>"` with
 `mode_override=optimize`.
 Pick **3** → run the chosen `/optimize-*` command first, then feed
-its report file to `/council files:<report>` with
+its report file to `/council default files:<report>` with
 `mode_override=optimize`.
-Pick **4** → `/council prompt:"<description>"` with
+Pick **4** → `/council default prompt:"<description>"` with
 `mode_override=optimize`.
 
 ### 2. Capture the constraint
 
 Optimization is meaningless without a target metric. Ask **once**
-(one question per turn) before invoking `/council`:
+(one question per turn) before invoking `/council default`:
 
 > What does "better" mean here?
 >
@@ -63,9 +63,9 @@ Optimization is meaningless without a target metric. Ask **once**
 The chosen metric becomes the `original_ask` for the handoff preamble:
 `Optimize for <metric>: <one-line scope>`.
 
-### 3. Run /council with the optimize mode preamble
+### 3. Run /council default with the optimize mode preamble
 
-Invoke the matching `/council` form (`files:` / `prompt:`) with
+Invoke the matching `/council default` form (`files:` / `prompt:`) with
 `mode_override=optimize`. The `optimize` mode addendum from
 `scripts/ai_council/prompts.py` requires members to:
 
@@ -78,7 +78,8 @@ Invoke the matching `/council` form (`files:` / `prompt:`) with
 - Mark at least one suggestion that requires measurement before
   committing — i.e. flag what is hypothesis vs. confirmed.
 
-The cost gate from `/council` Step 3 still applies.
+The cost gate from `/council default` Step 3 still applies. Render via
+Step 5/5a/5b of `/council default`.
 
 ### 4. Render the report
 
@@ -106,11 +107,11 @@ run benchmarks, or change configuration.
   unit, ask once for clarification; if still vague, stop. Generic
   "make it better" is exactly what this command refuses to enable.
 - **Target too large** → bundler raises `BundleTooLarge`; suggest
-  narrowing to the hot path (`/council files:<single-file>`).
+  narrowing to the hot path (`/council default files:<single-file>`).
 
 ## See also
 
-- `/council` — base orchestration entry point.
+- `/council default` — base orchestration entry point.
 - `/optimize-skills`, `/optimize-agents`, `/optimize-augmentignore`,
   `/optimize-rtk-filters` — internal optimization commands; their
   output can be fed to `/council optimize` for an external ranking.
