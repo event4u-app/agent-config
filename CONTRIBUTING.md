@@ -3,6 +3,11 @@
 Thanks for considering a contribution to `event4u/agent-config`. This file
 describes how to propose changes and what the package's conventions are.
 
+> **This project is currently single-maintainer (`matze4u`).** Contributions
+> are welcome; expect direct review and potentially slower response than
+> multi-maintainer projects. The process below describes the target workflow
+> as the contributor base grows.
+
 ## Status and scope
 
 The package is maintained by a small team at event4u:

@@ -327,6 +327,59 @@ def test_render_emits_one_section_per_member_plus_summary_slot() -> None:
 
 
 
+# ── render — lens-aware synthesis (Phase 3 / F2) ────────────────
+
+
+def _two_responses() -> list[CouncilResponse]:
+    return [
+        CouncilResponse("anthropic", "claude-opus-4-1", "Body A.",
+                        input_tokens=100, output_tokens=20, latency_ms=1500),
+        CouncilResponse("openai", "gpt-5", "Body B.",
+                        input_tokens=110, output_tokens=22, latency_ms=1700),
+    ]
+
+
+def test_render_default_mode_uses_structured_template() -> None:
+    out = render(_two_responses())
+    assert "### Agreement" in out
+    assert "### Recommendation" in out
+    assert "*to be summarised by the host agent*" not in out
+
+
+def test_render_pr_lens_uses_pr_template() -> None:
+    out = render(_two_responses(), mode="pr")
+    assert "### Consensus" in out
+    assert "### Must-fix before merge" in out
+
+
+def test_render_analysis_lens_uses_analysis_template() -> None:
+    out = render(_two_responses(), mode="analysis")
+    assert "### Top-10 by consensus" in out
+    assert "### Outliers" in out
+
+
+@pytest.mark.parametrize("creative", ["design", "optimize"])
+def test_render_creative_lens_uses_bare_passthrough(creative: str) -> None:
+    out = render(_two_responses(), mode=creative)
+    assert "*to be summarised by the host agent*" in out
+    # No structured headers from any decision template
+    assert "### Agreement" not in out
+    assert "### Top-10 by consensus" not in out
+
+
+def test_render_prose_synthesis_forces_passthrough_on_decision_lens() -> None:
+    out = render(_two_responses(), mode="pr", prose_synthesis=True)
+    assert "*to be summarised by the host agent*" in out
+    assert "### Consensus" not in out
+
+
+def test_render_no_prose_synthesis_forces_structured_on_creative_lens() -> None:
+    out = render(_two_responses(), mode="design", prose_synthesis=False)
+    assert "### Agreement" in out
+    assert "*to be summarised by the host agent*" not in out
+
+
+
 # ── non-billable bypass (Phase 2b · F4) ───────────────────────────────────────
 
 

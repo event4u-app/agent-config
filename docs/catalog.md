@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **442 public artefacts** shipped by
+Consumer-facing catalog of all **452 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (206)
+## Skills (210)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -32,6 +32,7 @@ are excluded.
 | skill | [`blast-radius-analyzer`](../.agent-src/skills/blast-radius-analyzer/SKILL.md) |  | Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency. |
 | skill | [`bug-analyzer`](../.agent-src/skills/bug-analyzer/SKILL.md) |  | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | skill | [`build-buy-partner`](../.agent-src/skills/build-buy-partner/SKILL.md) |  | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
+| skill | [`canvas-design`](../.agent-src/skills/canvas-design/SKILL.md) |  | Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'. |
 | skill | [`check-refs`](../.agent-src/skills/check-refs/SKILL.md) |  | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../.agent-src/skills/churn-prevention/SKILL.md) |  | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
 | skill | [`code-refactoring`](../.agent-src/skills/code-refactoring/SKILL.md) |  | Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools. |
@@ -48,7 +49,7 @@ are excluded.
 | skill | [`contracts-cognition`](../.agent-src/skills/contracts-cognition/SKILL.md) |  | Use when reading a contract for risk and constraint — clause shape, redline priority, what the contract actually binds. Triggers on 'review this contract', 'what does this MSA constrain'. |
 | skill | [`conventional-commits-writing`](../.agent-src/skills/conventional-commits-writing/SKILL.md) |  | Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits. |
 | skill | [`copilot-agents-optimization`](../.agent-src/skills/copilot-agents-optimization/SKILL.md) |  | Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience. |
-| skill | [`copilot-config`](../.agent-src/skills/copilot-config/SKILL.md) |  | Use when configuring GitHub Copilot — copilot-instructions.md, PR review patterns, output optimization — even when the user just says 'tune Copilot' or 'why is Copilot commenting on X'. |
+| skill | [`copilot-config`](../.agent-src/skills/copilot-config/SKILL.md) |  | Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-review patterns, suggestion behavior, output verbosity. NOT for dev-environment setup (use `devcontainer`). |
 | skill | [`customer-research`](../.agent-src/skills/customer-research/SKILL.md) |  | Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'. |
 | skill | [`dashboard-design`](../.agent-src/skills/dashboard-design/SKILL.md) |  | Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling. |
 | skill | [`data-flow-mapper`](../.agent-src/skills/data-flow-mapper/SKILL.md) |  | Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line. |
@@ -62,9 +63,10 @@ are excluded.
 | skill | [`dependency-upgrade`](../.agent-src/skills/dependency-upgrade/SKILL.md) |  | Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification. |
 | skill | [`description-assist`](../.agent-src/skills/description-assist/SKILL.md) |  | Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'. |
 | skill | [`design-review`](../.agent-src/skills/design-review/SKILL.md) |  | Use when the user says "review the design", "check the UI", or wants a comprehensive UI/UX review. Uses a 7-phase methodology covering interaction, responsiveness, accessibility, and more. |
-| skill | [`devcontainer`](../.agent-src/skills/devcontainer/SKILL.md) |  | Use when configuring DevContainers or GitHub Codespaces — devcontainer.json, custom images, secrets, VS Code features — even when the user just says 'why does my Codespace not start'. |
+| skill | [`devcontainer`](../.agent-src/skills/devcontainer/SKILL.md) |  | Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`). |
 | skill | [`developer-like-execution`](../.agent-src/skills/developer-like-execution/SKILL.md) |  | Use when implementing, debugging, refactoring, or reviewing code — enforces the think → analyze → verify → execute workflow — even when the user just says 'implement X' without naming it. |
 | skill | [`discovery-interview`](../.agent-src/skills/discovery-interview/SKILL.md) |  | Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'. |
+| skill | [`doc-coauthoring`](../.agent-src/skills/doc-coauthoring/SKILL.md) |  | Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'. |
 | skill | [`docker`](../.agent-src/skills/docker/SKILL.md) |  | Use when working with Docker — Dockerfile edits, docker-compose services, containers, or the dual-container (fast + Xdebug) setup — even when the user just says 'my container won't start'. |
 | skill | [`dto-creator`](../.agent-src/skills/dto-creator/SKILL.md) |  | Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping. |
 | skill | [`editorial-calendar`](../.agent-src/skills/editorial-calendar/SKILL.md) |  | Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'. |
@@ -96,7 +98,7 @@ are excluded.
 | skill | [`judge-code-quality`](../.agent-src/skills/judge-code-quality/SKILL.md) |  | Use when a diff needs a readability review — naming, single-responsibility, DRY, dead code, mismatch with codebase conventions — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-security-auditor`](../.agent-src/skills/judge-security-auditor/SKILL.md) |  | Use when a diff may introduce security risk — authZ, injection, secrets, unsafe deserialization, SSRF, XSS, mass assignment — dispatched by /review-changes, /do-and-judge, /judge. |
 | skill | [`judge-test-coverage`](../.agent-src/skills/judge-test-coverage/SKILL.md) |  | Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'. |
-| skill | [`laravel`](../.agent-src/skills/laravel/SKILL.md) |  | Writes Laravel code following framework conventions, project architecture, and modern best practices for controllers, requests, services, jobs, events, policies, and application structure. |
+| skill | [`laravel`](../.agent-src/skills/laravel/SKILL.md) |  | Writes Laravel PHP — Eloquent, Artisan controllers, FormRequests, jobs, events, policies, providers. For Symfony / Doctrine use `symfony-workflow`. For framework-free PHP use `php-coder`. |
 | skill | [`laravel-horizon`](../.agent-src/skills/laravel-horizon/SKILL.md) |  | Use when working with Laravel queues in production — Horizon dashboard, worker supervision, job metrics, balancing strategies — even when the user just says 'my jobs are piling up'. |
 | skill | [`laravel-mail`](../.agent-src/skills/laravel-mail/SKILL.md) |  | Use when building Laravel emails — Mailables, Markdown templates, queued sending, attachments, previews — even when the user says 'send this as an email' without naming Mailables. |
 | skill | [`laravel-middleware`](../.agent-src/skills/laravel-middleware/SKILL.md) |  | Use when creating or modifying Laravel middleware — request/response filtering, groups, priority, terminable middleware, or route-level assignment. |
@@ -125,6 +127,7 @@ are excluded.
 | skill | [`mobile-e2e-strategy`](../.agent-src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-management`](../.agent-src/skills/module-management/SKILL.md) |  | Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions. |
 | skill | [`multi-tenancy`](../.agent-src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
+| skill | [`nextjs-patterns`](../.agent-src/skills/nextjs-patterns/SKILL.md) |  | Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture. |
 | skill | [`okr-tree-modeling`](../.agent-src/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
 | skill | [`onboarding-design`](../.agent-src/skills/onboarding-design/SKILL.md) |  | Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'. |
 | skill | [`onboarding-program`](../.agent-src/skills/onboarding-program/SKILL.md) |  | Use when shaping employee onboarding — time-to-productivity, role-by-role program, mentor pairing, 30/60/90 milestones. Triggers on 'design our onboarding', 'why are new hires ramping slow'. |
@@ -146,7 +149,7 @@ are excluded.
 | skill | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
 | skill | [`positioning-strategy`](../.agent-src/skills/positioning-strategy/SKILL.md) |  | Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'. |
 | skill | [`privacy-review`](../.agent-src/skills/privacy-review/SKILL.md) |  | Use when reviewing data flows for GDPR / CCPA / HIPAA fit — regulatory-regime delta, consent shape, breach-impact triage. Triggers on 'is this GDPR-safe', 'do we need a DPA'. |
-| skill | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) |  | Use for the universal deep-analysis workflow: project discovery, version resolution, docs loading, architecture mapping, execution flow, and package research. |
+| skill | [`project-analysis-core`](../.agent-src/skills/project-analysis-core/SKILL.md) |  | Raw discovery primitives — project discovery, version resolution, docs loading, architecture mapping, execution flow. Called by `universal-project-analysis`. Single-pass scan → `project-analyzer`. |
 | skill | [`project-analysis-hypothesis-driven`](../.agent-src/skills/project-analysis-hypothesis-driven/SKILL.md) |  | Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'. |
 | skill | [`project-analysis-laravel`](../.agent-src/skills/project-analysis-laravel/SKILL.md) |  | Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns. |
 | skill | [`project-analysis-nextjs`](../.agent-src/skills/project-analysis-nextjs/SKILL.md) |  | Use for deep Next.js analysis: server vs client boundaries, routing, data fetching, caching, rendering modes, and hydration/runtime issues. |
@@ -154,7 +157,7 @@ are excluded.
 | skill | [`project-analysis-react`](../.agent-src/skills/project-analysis-react/SKILL.md) |  | Use for deep React analysis: component tree, state flow, props flow, hooks usage, rendering behavior, and React-specific failure patterns. |
 | skill | [`project-analysis-symfony`](../.agent-src/skills/project-analysis-symfony/SKILL.md) |  | Use for deep Symfony project analysis: kernel/bootstrap, container wiring, routing/request flow, Doctrine, security, Messenger, and Symfony-specific failure patterns. |
 | skill | [`project-analysis-zend-laminas`](../.agent-src/skills/project-analysis-zend-laminas/SKILL.md) |  | Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks. |
-| skill | [`project-analyzer`](../.agent-src/skills/project-analyzer/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, tech stack detection, or structured analysis documents for agents/analysis/. NOT for regular feature work. |
+| skill | [`project-analyzer`](../.agent-src/skills/project-analyzer/SKILL.md) |  | ONLY when user asks for single-pass tech-stack detection or `agents/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`. |
 | skill | [`project-docs`](../.agent-src/skills/project-docs/SKILL.md) |  | Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs. |
 | skill | [`prompt-engineering-patterns`](../.agent-src/skills/prompt-engineering-patterns/SKILL.md) |  | Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt. |
 | skill | [`prompt-optimizer`](../.agent-src/skills/prompt-optimizer/SKILL.md) |  | Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'. |
@@ -193,6 +196,7 @@ are excluded.
 | skill | [`sql-writing`](../.agent-src/skills/sql-writing/SKILL.md) |  | Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL. |
 | skill | [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) |  | Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'. |
 | skill | [`subagent-orchestration`](../.agent-src/skills/subagent-orchestration/SKILL.md) |  | Use when orchestrating implementer/judge subagents — seven modes (do-and-judge ±two-stage, do-in-steps/parallel/worktrees, do-competitively, judge-with-debate) — models from .agent-settings.yml. |
+| skill | [`symfony-workflow`](../.agent-src/skills/symfony-workflow/SKILL.md) |  | Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`. |
 | skill | [`systematic-debugging`](../.agent-src/skills/systematic-debugging/SKILL.md) |  | Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'. |
 | skill | [`tailwind-engineer`](../.agent-src/skills/tailwind-engineer/SKILL.md) |  | Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'. |
 | skill | [`tech-debt-tracker`](../.agent-src/skills/tech-debt-tracker/SKILL.md) |  | Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'. |
@@ -208,7 +212,7 @@ are excluded.
 | skill | [`traefik`](../.agent-src/skills/traefik/SKILL.md) |  | Use when setting up Traefik as a local reverse proxy — real domains on 127.0.0.1, trusted HTTPS via mkcert, automatic service discovery, and multi-project routing. |
 | skill | [`ui-component-architect`](../.agent-src/skills/ui-component-architect/SKILL.md) |  | Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'. |
 | skill | [`unit-economics-modeling`](../.agent-src/skills/unit-economics-modeling/SKILL.md) |  | Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'. |
-| skill | [`universal-project-analysis`](../.agent-src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user explicitly requests: full project analysis, deep codebase audit, or comprehensive architecture review. Routes to core and framework-specific analysis skills. |
+| skill | [`universal-project-analysis`](../.agent-src/skills/universal-project-analysis/SKILL.md) |  | ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`. |
 | skill | [`upstream-contribute`](../.agent-src/skills/upstream-contribute/SKILL.md) |  | Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package. |
 | skill | [`using-git-worktrees`](../.agent-src/skills/using-git-worktrees/SKILL.md) |  | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | skill | [`validate-feature-fit`](../.agent-src/skills/validate-feature-fit/SKILL.md) |  | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
@@ -218,7 +222,7 @@ are excluded.
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (58)
+## Rules (62)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -237,6 +241,8 @@ are excluded.
 | rule | [`commit-conventions`](../.agent-src/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
 | rule | [`commit-policy`](../.agent-src/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../.agent-src/rules/context-hygiene.md) | auto | When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
+| rule | [`copilot-routing`](../.agent-src/rules/copilot-routing.md) | auto | When configuring the GitHub Copilot AI assistant — copilot-instructions.md, PR-review comment patterns, suggestion behavior — route to the copilot-config skill |
+| rule | [`devcontainer-routing`](../.agent-src/rules/devcontainer-routing.md) | auto | When wiring DevContainers or GitHub Codespaces — devcontainer.json, container images, VS Code features, port forwarding — route to the devcontainer skill |
 | rule | [`direct-answers`](../.agent-src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../.agent-src/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`domain-adoption-policy`](../.agent-src/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
@@ -247,6 +253,7 @@ are excluded.
 | rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
+| rule | [`laravel-routing`](../.agent-src/rules/laravel-routing.md) | auto | When writing or reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to the laravel skill |
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
 | rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
@@ -272,6 +279,7 @@ are excluded.
 | rule | [`skill-improvement-trigger`](../.agent-src/rules/skill-improvement-trigger.md) | auto | After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../.agent-src/rules/skill-quality.md) | auto | Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained |
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`symfony-routing`](../.agent-src/rules/symfony-routing.md) | auto | When writing or reviewing Symfony code — DI container, bundles, Doctrine, Messenger, Security voters, console commands — route to the symfony-workflow skill |
 | rule | [`think-before-action`](../.agent-src/rules/think-before-action.md) | auto | Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src/rules/token-efficiency.md) | auto | When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
 | rule | [`token-optimizer-maintenance`](../.agent-src/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit |
@@ -281,7 +289,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (106)
+## Commands (108)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -309,11 +317,13 @@ are excluded.
 | command | [`context:refactor`](../.agent-src/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
 | command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`cost-report`](../.agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
+| command | [`council:analysis`](../.agent-src/commands/council/analysis.md) | cluster: council | Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness. |
+| command | [`council:debate`](../.agent-src/commands/council/debate.md) | cluster: council | Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds. |
 | command | [`council:default`](../.agent-src/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council:optimize`](../.agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council:pr`](../.agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
+| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
 | command | [`create-pr:description-only`](../.agent-src/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |

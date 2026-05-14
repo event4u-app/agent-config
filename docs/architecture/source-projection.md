@@ -1,7 +1,25 @@
-# Pipeline A — Compression
+# Pipeline A — Source projection
 
-> **Scope:** transform verbose authoring source into the token-efficient
-> distribution payload that ships in the npm package.
+> **Scope:** transform verbose authoring source into the deterministic
+> distribution payload that ships in the npm package. The pipeline does
+> path-rewriting, `.npmignore`-style filtering, hash-tracking, and (on
+> selected files) caveman-style prose compression. The *primary* function
+> is the source-to-dist projection itself; raw byte reduction is small
+> (~0.35 % on the source/dist boundary: 3,253,997 B → 3,242,579 B across
+> 596 files) because most files are 1:1-projected with only frontmatter
+> and link rewrites. Per-tool size at the downstream projection
+> boundaries (`.augment/`, `.claude/`, `.cursor/`, `.windsurf/`,
+> `.clinerules/`, `.windsurfrules`, `GEMINI.md`) is measured separately
+> — see [`multi-tool-projection.md § Per-tool projection size`](multi-tool-projection.md#per-tool-projection-size)
+> for the table produced by [`scripts/measure_projection_bytes.py`](../../scripts/measure_projection_bytes.py).
+
+> **Historical note.** This pipeline was previously labelled
+> "Compression". Renamed in the v2.10.0 feedback follow-up after the
+> council pointed out that the dominant function is projection, not
+> byte compression. The script names (`scripts/compress.py`,
+> `scripts/compress.sh`) are kept for now to avoid a large blast-radius
+> refactor; the prose-compression sub-step (and the `/compress` slash
+> command for caveman text compression) still earn the legacy name.
 
 ## Input → Transform → Output
 

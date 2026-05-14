@@ -16,7 +16,7 @@ suggestion:
 
 ## Instructions
 
-Specialised council mode for **GitHub PRs**. Wraps `/council diff:<base>..<head>`
+Specialised council mode for **GitHub PRs**. Wraps `/council default diff:<base>..<head>`
 with a PR-aware neutrality preamble (the `pr` mode) and an opt-in
 "post a comment summary on the PR" step at the end.
 
@@ -55,26 +55,26 @@ git fetch origin <head>:<head>
 Compute the diff range as `origin/<base>..origin/<head>` (or the local
 refs if already fetched).
 
-### 4. Run /council with the pr mode preamble
+### 4. Run /council default with the pr mode preamble
 
-Invoke `/council diff:<base>..<head>` with:
+Invoke `/council default diff:<base>..<head>` with:
 
 - `original_ask` = PR title + body (capped per
   `bundler.size_guard`; warn if truncated).
-- The neutrality preamble uses the `pr` mode addendum from
-  `scripts/ai_council/prompts.py` — focuses members on
-  PR-specific risks (shipping risk, reviewer fatigue, scope creep)
-  on top of the generic diff focus (correctness, security, tests,
-  maintainability).
+- Pass `--prompt-mode pr` so the neutrality preamble uses the `pr`
+  mode addendum from `scripts/ai_council/prompts.py` — focuses
+  members on PR-specific risks (shipping risk, reviewer fatigue,
+  scope creep) on top of the generic diff focus (correctness,
+  security, tests, maintainability).
 
-The cost gate from `/council` Step 3 still applies. Council is
+The cost gate from `/council default` Step 3 still applies. Council is
 billable; suppress the question only when the resolved members are
 all-manual.
 
 ### 5. Render the report
 
 Use the standard stacked + Convergence/Divergence layout from
-`/council` Step 6. Add a one-line PR header at the top:
+`/council default` Step 5/5a/5b. Add a one-line PR header at the top:
 
 ```
 ## Council on PR #<number> — <title>
@@ -116,10 +116,10 @@ comment**. It does **NOT**:
 - **PR is closed / merged** → ask whether to proceed (council on a
   closed PR is fine for retrospectives) or cancel.
 - **Diff too large** → bundler raises `BundleTooLarge`; suggest
-  `/council files:<paths>` for a narrower review.
+  `/council default files:<paths>` for a narrower review.
 
 ## See also
 
-- `/council` — base orchestration entry point.
+- `/council default` — base orchestration entry point.
 - `ai-council` skill — neutrality guidelines.
 - `/review-changes` — internal four-judge variant for local diffs.

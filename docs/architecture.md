@@ -10,7 +10,7 @@ Six layers, ordered from "how the package reaches a consumer" down to "what a co
 Distribution         → npx-only runtime · install.sh · lockfile pin        ← stable
 Governance           → Kernel rules · tier-1/2 routing · command clusters  ← stable
 Router-Kernel        → router.json · always-loaded Iron Laws · char caps   ← stable
-Projection           → Compression · augment / multi-tool / cloud bundles  ← stable
+Projection           → Source · augment / multi-tool / cloud bundles       ← stable
 Execution Contracts  → Skills · commands · work-engine · roadmap engine    ← stable / beta
 MCP Lite/Full        → Hosted read-only (Lite) · local stdio (Full)        ← experimental
 ```
@@ -20,7 +20,7 @@ MCP Lite/Full        → Hosted read-only (Lite) · local stdio (Full)        �
 | **Distribution** | [`installed-tools-lockfile.md`](contracts/installed-tools-lockfile.md) + the "Distribution model" subsection below | stable |
 | **Governance** | [`command-clusters.md`](contracts/command-clusters.md) + [`command-surface-tiers.md`](contracts/command-surface-tiers.md) | stable |
 | **Router-Kernel** | [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) | stable |
-| **Projection** | [`architecture/compression.md`](architecture/compression.md), [`augment-projection.md`](architecture/augment-projection.md), [`multi-tool-projection.md`](architecture/multi-tool-projection.md), [`claude-bundle.md`](architecture/claude-bundle.md) | stable |
+| **Projection** | [`architecture/source-projection.md`](architecture/source-projection.md), [`augment-projection.md`](architecture/augment-projection.md), [`multi-tool-projection.md`](architecture/multi-tool-projection.md), [`claude-bundle.md`](architecture/claude-bundle.md) | stable |
 | **Execution Contracts** | [`implement-ticket-flow.md`](contracts/implement-ticket-flow.md), [`orchestration-dsl-v1.md`](contracts/orchestration-dsl-v1.md), [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) | stable (skills · commands) / beta (work-engine · roadmap engine) |
 | **MCP Lite/Full** | [`mcp-phase-1-scope.md`](contracts/mcp-phase-1-scope.md), [`mcp-cloud-scope.md`](contracts/mcp-cloud-scope.md), [`mcp-beta-criteria.md`](contracts/mcp-beta-criteria.md) | experimental — promotion to beta gated on `mcp-beta-criteria.md` (six artefact gates, monitored by `agent-config doctor --check mcp-beta-readiness`) |
 
@@ -64,7 +64,7 @@ the pipeline.
 
 | Pipeline | Page | Output |
 |---|---|---|
-| **A.** Compression | [`architecture/compression.md`](architecture/compression.md) | `.agent-src/` |
+| **A.** Source projection | [`architecture/source-projection.md`](architecture/source-projection.md) | `.agent-src/` |
 | **B.** Augment projection | [`architecture/augment-projection.md`](architecture/augment-projection.md) | `.augment/` |
 | **C.** Multi-tool projection | [`architecture/multi-tool-projection.md`](architecture/multi-tool-projection.md) | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md` |
 | **D.** Claude.ai bundle | [`architecture/claude-bundle.md`](architecture/claude-bundle.md) | `dist/cloud/<skill>.zip` |
@@ -142,8 +142,8 @@ note, package-internal path-swap, description budget, and the
 | Layer | Count | Purpose |
 |---|---|---|
 | **Skills** | 210 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 61 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 106 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
+| **Rules** | 65 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Commands** | 108 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
 | **Guidelines** | 72 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |

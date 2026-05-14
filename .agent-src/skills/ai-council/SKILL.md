@@ -292,6 +292,65 @@ NEVER ships the host verdict as council output. Provider attribution
 stays visible in the per-member sections; host verdicts stay
 attributed to the host.
 
+## Synthesis templates (lens-aware)
+
+The **Convergence / Divergence** slot in `council:render` output is
+populated with a lens-specific synthesis prompt. The host agent reads
+this prompt and writes the summary in the shape it dictates. The five
+templates live in `scripts/ai_council/prompts.py::_SYNTHESIS_TABLE`
+and are exposed via `synthesis_template(mode)`.
+
+**R4 Q4 split** — decision lenses get a structured Karpathy-style
+template; creative lenses stay open-ended prose (bare slot):
+
+| Lens | Class | Synthesis sections |
+|---|---|---|
+| `default` | decision | Agreement · Clashes · Blind spots · Recommendation · Next step |
+| `pr` | decision | Consensus · Conflicts · Must-fix before merge · Recommendation |
+| `analysis` | decision | Top-10 by consensus · Supporting · Outliers |
+| `design` | creative | *(no template — open prose passthrough)* |
+| `optimize` | creative | *(no template — open prose passthrough)* |
+
+Input modes (`prompt` / `roadmap` / `diff` / `files`) inherit the
+`default` decision template — they are bundling shapes, not lenses.
+
+**Source citations:**
+* Template shape — Round 2 council verdict
+  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-1.md`,
+  Opus's lens-adaptive synthesis proposal).
+* Decision/creative split — Round 4 Q4 verdict
+  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-3-responses.json`).
+  R4 reframed `optimize` as creative because perf trade-offs resist
+  pre-templated shape — Performance-wins / Trade-offs /
+  Implementation-order is too rigid for the variety of optimize-lens
+  artefacts. R4 reframed `design` for the same reason — design
+  critiques are inherently narrative.
+
+### `--prose-synthesis` escape hatch (R4 Q4)
+
+Both `council:run` and `council:render` accept symmetric escape-hatch
+flags on top of the lens table:
+
+* `--prose-synthesis` — force creative-lens passthrough (bare slot)
+  regardless of lens. Use when the user on `default`/`pr`/`analysis`
+  prefers a narrative recommendation over the structured template.
+* `--no-prose-synthesis` — force the `default` structured template
+  even on a creative lens. Use when a `design` or `optimize` artefact
+  has a one-shot need for Karpathy-style structure.
+
+The flag is mutually exclusive — picking one disables the other on
+the same invocation. When `council:run` records either flag in the
+output JSON, `council:render` honours it unless the renderer is
+called with an explicit flag of its own.
+
+### Renderer lens resolution
+
+`council:render <responses.json>` resolves the active lens in this
+order: explicit `--prompt-mode` flag > `prompt_mode` field in the
+payload > `mode` field in the payload > `None` (default decision
+template). The `--prose-synthesis` / `--no-prose-synthesis` flag
+overrides the table regardless of how the lens resolved.
+
 ## Do NOT
 
 - Do NOT paraphrase council output into the host agent's voice — strip
@@ -435,8 +494,8 @@ prompt as `<original artefact> + <prior round, anonymised>` so each
 member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
-The default round count comes from `ai_council.min_rounds` in
-`.agent-settings.yml` (default `2` so members critique each other
+The default round count comes from `defaults.min_rounds` in
+`agents/.ai-council.yml` (default `2` so members critique each other
 at least once before convergence). The host agent does **not** ask
 "how many rounds?" when the requested count is `<= min_rounds` —
 the settings owner already made that decision. Ask only when a
@@ -516,6 +575,121 @@ internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
 **inside** a single member's chat thread and is orthogonal to the
 orchestrator-level rounds.
 
+### `/council debate` sub-command (progressive disclosure)
+
+`/council debate <artefact> [--rounds N] [--continue-as-debate <session>]`
+runs an **interactive** multi-round critique with a confirmation gate
+between every round so the user can stop the spend at any point.
+
+| Property | Behaviour |
+|---|---|
+| Round flow | Same orchestrator as `rounds:N` (`run_debate()`), but each round prints its responses then pauses on a y/n prompt before launching the next round. |
+| Cost gate | After every round the CLI prints `Spent so far: $X · Next round: ~$Y · Cap: $Z`. `n` exits cleanly with partial results; `y` continues. |
+| Hard cap | If the projected next-round cost would breach `max_total_usd`, `run_debate()` raises `DebateCapExceeded` and the CLI exits with the partial transcript. No silent overrun. |
+| `--continue-as-debate` | Seeds round 1 from an existing `/council default` (or analysis lens) session. No round-1 API calls are billed; round 2+ run normally. Member list must match. |
+| Session files | One file per round under `agents/council-sessions/<slug>/debate-round-NN.md`. |
+| Anonymisation | Identical to `rounds:N`. The continue-as-debate path also anonymises the seeded round-1 responses when building the round-2 prompt. |
+
+Use this when the artefact is genuinely contentious and the user
+wants to control depth interactively. For a fire-and-forget
+multi-round run, prefer `consult(..., rounds=N)` or `--rounds N` on
+`/council default`.
+
+
+## Karpathy peer-review (opt-in)
+
+After the final deliberation round, an optional **anonymous peer-review
+pass** lets each member critique the *other* members' responses for
+blind spots before synthesis. Inspired by Andrej Karpathy's "ask the
+strongest models to review each other anonymously" pattern; see his
+[talks / threads on inter-model critique](https://karpathy.ai/) and the
+internal verdict in
+`agents/council-sessions/2026-05-14-ai-council-redesign/round-2.md`
+(R2 split: one approve-as-flag, one reject-as-default → opt-in only).
+
+Pipeline order when every feature is active:
+
+```
+deliberation rounds → peer-review → consensus-scoring → synthesis
+```
+
+Activation — two equivalent paths:
+
+* CLI: `--peer-review` on `council:estimate` or `council:run`.
+* Config: `ai_council.peer_review.enabled: true` in
+  `agents/.ai-council.yml`. Default is `false`.
+
+Mechanics:
+
+1. The final deliberation round's outputs are anonymised into
+   `Response-A`, `Response-B`, … in stable input order. Provider /
+   model identity is stripped (Iron-Law neutrality holds); empty or
+   errored deliberation responses are skipped.
+2. Each member receives an N−1 view (its own response filtered out)
+   plus the Karpathy prompt: *strongest response*, *weakest blind
+   spot*, *what did everyone miss*, *refinement*.
+3. The N critiques flow back into synthesis through a
+   "Peer-Review-Surfaced Blind Spots" addendum on the lens template.
+4. **Advisor preserve-persona (R4 Q3, hard-coded):** when the
+   deliberation was an advisor-mode run (Phase 6), anonymisation
+   strips provider identity but **preserves the advisor persona
+   label**. Peer-review renders as `Response A (Contrarian)`, never
+   `Response A (Anthropic Opus)`. Plain-member runs strip identity
+   entirely.
+
+Cost — adds exactly N billable calls (one per member) at the same
+per-call cost as a deliberation call. The `council:estimate` table
+surfaces the delta as a `+peer-review: +N calls (~+$X)` row.
+
+Needs ≥ 2 distinct deliberation outputs; below that the round is a
+no-op and nothing extra is billed. Self-review is structurally
+impossible — a member never sees its own response.
+
+## Thinking-style advisors (replace-mode)
+
+Phase 6 introduces five **advisor personas** the council adopts in
+*replace-mode*: an enabled advisor substitutes its bound member's
+plain call with the same provider running the advisor's persona
+prompt. Total call count stays the same — only the system prompt
+swaps.
+
+| Advisor | Default bound member | Focus |
+|---|---|---|
+| **Contrarian** | `anthropic` | strongest counterargument, hidden assumptions |
+| **First-Principles** | `anthropic` | strip metaphor, derive from physics / math / cost |
+| **Expansionist** | `openai` | adjacent opportunities, second-order effects |
+| **Outsider** | `openai` | naive-but-sharp questions, beginner's-mind probes |
+| **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
+
+Activation — edit `agents/.ai-council.yml` and flip the advisor's
+`enabled: true`. Optional `model: <name>` overrides the bound
+member's default model. An advisor referencing a disabled member
+fails closed at config load — never silently skipped.
+
+```yaml
+advisors:
+  contrarian:
+    enabled: true        # ← swap anthropic's plain call for contrarian
+    member: anthropic
+    # model: claude-opus-4   # optional pin
+```
+
+`council:estimate` surfaces every active swap on a dedicated line
+above the cost table:
+
+```
+council:estimate · mode=prompt · members=2 (billable=2)
+  advisor: Contrarian on anthropic via claude-sonnet-4-5
+anthropic/claude-sonnet-4-5: ~991 in + 256 out  =  $0.0068
+openai/gpt-4o: ~208 in + 256 out  =  $0.0031
+```
+
+Cost-bounded — replace-mode never adds calls. The persona prompt is
+larger than plain (~1k extra input tokens per swap); output tokens
+and call count are unaffected. Peer-review preserves the advisor
+label while stripping provider identity (`Response A (Contrarian)`).
+Two enabled advisors on the same member is a config error.
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -523,6 +697,10 @@ orchestrator-level rounds.
   network, no spend, but no diversity of weights either).
 - `scripts/ai_council/prompts.py` — neutrality preamble + per-mode
   system prompts.
+- `scripts/ai_council/advisors.py` — replace-mode planning + persona
+  resolution.
 - `scripts/ai_council/bundler.py` — redaction pattern set + size
   guard.
 - `docs/customization.md` § `ai_council.*` — settings reference.
+- `docs/contracts/ai-council-config.md` § advisors — schema + precedence
+  contract.

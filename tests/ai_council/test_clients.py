@@ -14,7 +14,10 @@ from scripts.ai_council.clients import (  # noqa: E402
     AnthropicClient,
     CouncilResponse,
     ExternalAIClient,
+    GeminiClient,
     OpenAIClient,
+    PerplexityClient,
+    XAIClient,
 )
 
 
@@ -66,7 +69,7 @@ def test_external_ai_client_is_abstract() -> None:
 
 
 @pytest.mark.parametrize(
-    "cls", [AnthropicClient, OpenAIClient]
+    "cls", [AnthropicClient, OpenAIClient, GeminiClient, XAIClient, PerplexityClient]
 )
 def test_clients_require_key_or_injected_client(cls) -> None:  # type: ignore[no-untyped-def]
     with pytest.raises(RuntimeError, match="api_key or"):
@@ -187,6 +190,118 @@ def test_openai_chat_models_keep_max_tokens_and_system_role(model: str) -> None:
     client.ask("sys-prompt", "user-prompt", max_tokens=256)
     assert capture.last_kwargs is not None
     assert capture.last_kwargs["max_tokens"] == 256
+    assert "max_completion_tokens" not in capture.last_kwargs
+    messages = capture.last_kwargs["messages"]
+    assert messages[0]["role"] == "system"
+    assert messages[1]["role"] == "user"
+
+
+# ── Gemini / xAI / Perplexity (Phase 0 — Step 6) ────────────────────────────
+
+
+class _MockGemini:
+    """Mimics google.genai.Client(api_key=...).models.generate_content(...)."""
+
+    def __init__(self, text: str = "ok", in_tok: int = 6, out_tok: int = 12):
+        self._text = text
+        self._in = in_tok
+        self._out = out_tok
+        self.last_kwargs: dict | None = None
+        self.models = SimpleNamespace(generate_content=self._generate)
+
+    def _generate(self, **kw):  # type: ignore[no-untyped-def]
+        self.last_kwargs = kw
+        return SimpleNamespace(
+            text=self._text,
+            usage_metadata=SimpleNamespace(
+                prompt_token_count=self._in,
+                candidates_token_count=self._out,
+            ),
+        )
+
+
+class _ExplodingGemini:
+    def __init__(self, exc: Exception) -> None:
+        self._exc = exc
+
+    @property
+    def models(self):
+        raise self._exc
+
+
+def test_gemini_client_returns_normalised_response() -> None:
+    mock = _MockGemini("hi-gem", 6, 12)
+    client = GeminiClient(client=mock, model="gemini-2.5-pro")
+    r = client.ask("sys", "user", max_tokens=128)
+    assert isinstance(r, CouncilResponse)
+    assert r.provider == "gemini"
+    assert r.model == "gemini-2.5-pro"
+    assert r.text == "hi-gem"
+    assert r.input_tokens == 6
+    assert r.output_tokens == 12
+    assert r.error is None
+    # System + user folded into a single `contents` string and max_output_tokens passed.
+    assert mock.last_kwargs is not None
+    assert "sys" in mock.last_kwargs["contents"]
+    assert "user" in mock.last_kwargs["contents"]
+    assert mock.last_kwargs["config"]["max_output_tokens"] == 128
+
+
+def test_gemini_client_normalises_sdk_exception() -> None:
+    client = GeminiClient(client=_ExplodingGemini(RuntimeError("quota")))
+    r = client.ask("sys", "user")
+    assert r.text == ""
+    assert r.error is not None
+    assert "quota" in r.error
+
+
+def test_gemini_handles_missing_usage_metadata() -> None:
+    bare = SimpleNamespace(models=SimpleNamespace(
+        generate_content=lambda **kw: SimpleNamespace(text="x", usage_metadata=None),
+    ))
+    r = GeminiClient(client=bare).ask("sys", "user")
+    assert r.text == "x"
+    assert r.input_tokens == 0
+    assert r.output_tokens == 0
+
+
+@pytest.mark.parametrize(
+    "cls,expected_provider,expected_model",
+    [
+        (XAIClient, "xai", "grok-4"),
+        (PerplexityClient, "perplexity", "sonar-pro"),
+    ],
+)
+def test_openai_compatible_clients_return_normalised_response(
+    cls, expected_provider, expected_model,
+) -> None:  # type: ignore[no-untyped-def]
+    client = cls(client=_MockOpenAI("hi-compat", 5, 7))
+    r = client.ask("sys", "user")
+    assert r.provider == expected_provider
+    assert r.model == expected_model
+    assert r.text == "hi-compat"
+    assert r.input_tokens == 5
+    assert r.output_tokens == 7
+    assert r.error is None
+
+
+@pytest.mark.parametrize("cls", [XAIClient, PerplexityClient])
+def test_openai_compatible_clients_normalise_sdk_exception(cls) -> None:  # type: ignore[no-untyped-def]
+    client = cls(client=_ExplodingClient(RuntimeError("boom")))
+    r = client.ask("sys", "user")
+    assert r.text == ""
+    assert r.error is not None
+    assert "boom" in r.error
+
+
+@pytest.mark.parametrize("cls", [XAIClient, PerplexityClient])
+def test_openai_compatible_clients_keep_system_role(cls) -> None:  # type: ignore[no-untyped-def]
+    capture = _CapturingOpenAI()
+    client = cls(client=capture, model="custom-model")
+    client.ask("sys-prompt", "user-prompt", max_tokens=128)
+    assert capture.last_kwargs is not None
+    # Neither vendor ships a reasoning model — `max_tokens` + system role stay.
+    assert capture.last_kwargs["max_tokens"] == 128
     assert "max_completion_tokens" not in capture.last_kwargs
     messages = capture.last_kwargs["messages"]
     assert messages[0]["role"] == "system"

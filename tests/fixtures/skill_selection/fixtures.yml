@@ -1,0 +1,97 @@
+# Selection-accuracy fixture set — council file 05, Phase 2.2.
+#
+# Each entry maps a natural-language prompt to (a) the intended skill and
+# (b) its collision cluster (from `agents/reports/skill-collision-clusters.json`).
+# `kind` is `clear-A` (clearly targets `intended`), `clear-B` (clearly
+# targets a different member of the same cluster), or `ambiguous`
+# (intentionally underspecified — pass if the host picks any cluster
+# member; fail if it picks outside the cluster).
+#
+# Run the scorer with predictions JSON to compute pass/fail per cluster:
+#   python3 scripts/score_skill_selection.py path/to/predictions.json
+#
+# Predictions schema:
+#   {"<fixture_id>": "<selected_skill_name>", ...}
+
+fixtures:
+  # ── C01 · "ONLY when user explicitly requests" activation cluster ──
+  - {id: c01-01, cluster: C01, kind: clear-A, intended: adversarial-review,
+     prompt: "Poke holes in this plan — give me devil's advocate analysis."}
+  - {id: c01-02, cluster: C01, kind: clear-A, intended: analysis-autonomous-mode,
+     prompt: "Dig into this end-to-end without asking me each step."}
+  - {id: c01-03, cluster: C01, kind: clear-A, intended: performance-analysis,
+     prompt: "Run a performance audit and find N+1 queries in the orders flow."}
+  - {id: c01-04, cluster: C01, kind: clear-A, intended: project-analyzer,
+     prompt: "Detect the tech stack and create the structured analysis documents."}
+  - {id: c01-05, cluster: C01, kind: clear-A, intended: security-audit,
+     prompt: "Vulnerability scan — penetration test review of the API surface."}
+  - {id: c01-06, cluster: C01, kind: clear-A, intended: sequential-thinking,
+     prompt: "Walk through this step-by-step with structured problem decomposition."}
+  - {id: c01-07, cluster: C01, kind: clear-A, intended: universal-project-analysis,
+     prompt: "Comprehensive architecture review of the whole codebase."}
+  - {id: c01-08, cluster: C01, kind: ambiguous, intended: project-analyzer,
+     prompt: "Do a deep analysis of this project."}
+  - {id: c01-09, cluster: C01, kind: ambiguous, intended: security-audit,
+     prompt: "Audit this thing for me."}
+  - {id: c01-10, cluster: C01, kind: ambiguous, intended: adversarial-review,
+     prompt: "Stress-test my thinking before I commit to this."}
+
+  # ── C02 · project-analysis framework variants ──
+  - {id: c02-01, cluster: C02, kind: clear-A, intended: project-analysis-laravel,
+     prompt: "Deep Laravel analysis — boot flow, container usage, Eloquent data flow."}
+  - {id: c02-02, cluster: C02, kind: clear-A, intended: project-analysis-node-express,
+     prompt: "Trace the Express middleware order and async behavior."}
+  - {id: c02-03, cluster: C02, kind: clear-A, intended: project-analysis-react,
+     prompt: "Analyze the React component tree, props flow, and hooks usage."}
+  - {id: c02-04, cluster: C02, kind: clear-A, intended: project-analysis-symfony,
+     prompt: "Symfony kernel bootstrap and container wiring analysis."}
+  - {id: c02-05, cluster: C02, kind: ambiguous, intended: project-analysis-laravel,
+     prompt: "Analyze how this PHP app boots."}
+  - {id: c02-06, cluster: C02, kind: ambiguous, intended: project-analysis-react,
+     prompt: "Why is rendering behavior weird in this app?"}
+
+  # ── C03 · UI directive dispatch cluster ──
+  - {id: c03-01, cluster: C03, kind: clear-A, intended: blade-ui,
+     prompt: "Update this Blade view and add a partial for the cart summary."}
+  - {id: c03-02, cluster: C03, kind: clear-A, intended: flux,
+     prompt: "Build a livewire/flux form with slot composition."}
+  - {id: c03-03, cluster: C03, kind: clear-A, intended: livewire,
+     prompt: "Reactive Livewire component with lifecycle hooks for the dashboard."}
+  - {id: c03-04, cluster: C03, kind: clear-A, intended: react-shadcn-ui,
+     prompt: "Build the settings page in React using shadcn/ui primitives + Tailwind."}
+  - {id: c03-05, cluster: C03, kind: ambiguous, intended: livewire,
+     prompt: "Polish this UI component."}
+  - {id: c03-06, cluster: C03, kind: ambiguous, intended: react-shadcn-ui,
+     prompt: "Apply the design directive to this view."}
+
+  # ── C04 · framework-coder cluster (Laravel vs Symfony) ──
+  - {id: c04-01, cluster: C04, kind: clear-A, intended: laravel,
+     prompt: "Write a Laravel controller and FormRequest for creating orders."}
+  - {id: c04-02, cluster: C04, kind: clear-A, intended: symfony-workflow,
+     prompt: "Symfony controller with Doctrine repository and Messenger handler."}
+  - {id: c04-03, cluster: C04, kind: ambiguous, intended: laravel,
+     prompt: "Write a controller following framework conventions."}
+
+  # ── C05 · GitHub config cluster ──
+  - {id: c05-01, cluster: C05, kind: clear-A, intended: copilot-config,
+     prompt: "Tune copilot-instructions.md for our PR review patterns."}
+  - {id: c05-02, cluster: C05, kind: clear-A, intended: devcontainer,
+     prompt: "Configure the devcontainer.json so Codespaces boots with PHP 8.3."}
+  - {id: c05-03, cluster: C05, kind: ambiguous, intended: devcontainer,
+     prompt: "Set up the GitHub workspace config."}
+
+  # ── C06 · ticket workflow cluster ──
+  - {id: c06-01, cluster: C06, kind: clear-A, intended: estimate-ticket,
+     prompt: "Estimate PROJ-123 — give me size, risk, and a split recommendation."}
+  - {id: c06-02, cluster: C06, kind: clear-A, intended: refine-ticket,
+     prompt: "Refine PROJ-123 — tighten the AC and rewrite the user story."}
+  - {id: c06-03, cluster: C06, kind: ambiguous, intended: refine-ticket,
+     prompt: "Ist das Ticket PROJ-123 klar genug?"}
+
+  # ── C07 · review-judge cluster ──
+  - {id: c07-01, cluster: C07, kind: clear-A, intended: judge-bug-hunter,
+     prompt: "Review this diff for null-safety, off-by-one, and race conditions."}
+  - {id: c07-02, cluster: C07, kind: clear-A, intended: judge-code-quality,
+     prompt: "Review this diff for naming, single-responsibility, and dead code."}
+  - {id: c07-03, cluster: C07, kind: ambiguous, intended: judge-bug-hunter,
+     prompt: "Run /judge on this diff."}

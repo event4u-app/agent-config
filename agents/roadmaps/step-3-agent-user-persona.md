@@ -1,5 +1,5 @@
 ---
-complexity: medium
+complexity: lightweight
 ---
 
 # Roadmap: `.agent-user.md` + User-Persona Cluster + Sparring Command

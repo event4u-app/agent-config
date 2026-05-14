@@ -61,6 +61,56 @@ removes `.cursor/` on next `task generate-tools`.
 | Stale `.windsurfrules` after rule rename | concatenation cache | `task clean-tools && task generate-tools` |
 | Gemini CLI reads outdated content | `AGENTS.md` changed without re-symlink | `task generate-tools` |
 
+## Per-tool projection size
+
+The previous "0.45 % reduction" headline was a wrong-boundary
+measurement: that figure compares `.agent-src.uncompressed/` to
+`.agent-src/`, but the pipeline's claimed function is *projection*, not
+byte compression. The table below is produced by
+[`scripts/measure_projection_bytes.py --regenerate`](../../scripts/measure_projection_bytes.py)
+with every tool ID temporarily enabled in `.agent-tools.yml`.
+
+| Surface | Files | Symlinks | Bytes materialized | Method |
+|---|---:|---:|---:|---|
+| `.agent-src.uncompressed/` | 596 | 0 | 3,253,997 | verbose source (input) |
+| `.agent-src/` | 596 | 0 | 3,242,579 | source projection (path-rewrite + `.npmignore`) |
+| `.augment/` | 61 | 7 | 136,146 | Augment Code — copies (rules) + symlinks (skills/cmds) |
+| `.claude/` | 0 | 395 | 0 | Claude Code — pure symlinks |
+| `.cursor/` | 61 | 189 | 124,741 | Cursor — per-rule `.mdc` materialized + symlinks |
+| `.clinerules/` | 0 | 61 | 0 | Cline — pure symlinks |
+| `.windsurf/` | 61 | 106 | 125,010 | Windsurf — per-rule wave-8 `.md` + symlinks |
+| `.windsurfrules` | 1 | 0 | 114,263 | Windsurf legacy — concatenated single file |
+| `GEMINI.md` | 0 | 1 | 0 | Gemini CLI — symlink → `AGENTS.md` |
+
+**What the pipeline optimises**
+
+- **Format fidelity** — each tool receives content in the format its host
+  reads natively (Cursor `.mdc` frontmatter, Windsurf Wave-8 frontmatter,
+  Claude / Cline symlinked into the source tree, Gemini single-file).
+- **Path stability** — surface paths match the host vendor's
+  documentation so users opt in by enabling the tool, not by remapping.
+- **Materialization minimization** — pure-symlink tools (`.claude/`,
+  `.clinerules/`, `GEMINI.md`) contribute zero bytes; tools that need a
+  format transform materialize only the transformed rule files.
+
+**What the pipeline does not optimise**
+
+- **Raw byte count** — `.cursor/` and `.windsurf/` *grow* the on-disk
+  footprint by ~125 KB each because their host formats require
+  per-rule frontmatter that cannot be supplied via symlink alone.
+  `.windsurfrules` materializes the rule set a second time as a
+  concatenated single file for users who prefer that surface.
+- **Source dedup** — the same rule body appears in `.agent-src/rules/`
+  *and* in every tool's materialized projection. This is intentional:
+  removing the duplication would push format conversion into runtime.
+
+Re-run the measurement after every change to the projection logic:
+
+```bash
+python3 scripts/measure_projection_bytes.py --regenerate
+python3 scripts/measure_projection_bytes.py --json    # CI-friendly
+```
+
 ## Proving the pipeline
 
 - [`tests/test_modern_editor_formats.py`](../../tests/test_modern_editor_formats.py)
@@ -68,5 +118,8 @@ removes `.cursor/` on next `task generate-tools`.
   frontmatter; runs only when `task generate-tools` has been executed.
 - [`tests/test_compress.py`](../../tests/test_compress.py) — covers
   the shared compress / generate-tools entrypoint and `_filter_tool_dirs`.
+- [`scripts/measure_projection_bytes.py`](../../scripts/measure_projection_bytes.py)
+  — per-tool byte / file / symlink count; the per-tool-size table above
+  is its output.
 
 ← [Architecture overview](../architecture.md)

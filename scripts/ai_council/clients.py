@@ -52,6 +52,15 @@ def _resolve_key_path(filename: str) -> Path:
 
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 DEFAULT_OPENAI_MODEL = "gpt-4o"
+DEFAULT_GEMINI_MODEL = "gemini-2.5-pro"
+DEFAULT_XAI_MODEL = "grok-4"
+DEFAULT_PERPLEXITY_MODEL = "sonar-pro"
+
+#: OpenAI-API-compatible endpoints. xAI and Perplexity both expose the
+#: ``/v1/chat/completions`` shape, so their clients reuse the ``openai``
+#: SDK with a custom ``base_url``. Gemini has its own SDK (``google-genai``).
+XAI_BASE_URL = "https://api.x.ai/v1"
+PERPLEXITY_BASE_URL = "https://api.perplexity.ai"
 
 #: Per-call output budget when no caller-supplied value reaches `ask()`.
 #: The CLI resolves the live default from `ai_council.max_output_tokens`
@@ -267,6 +276,169 @@ class OpenAIClient(ExternalAIClient):
             output_tokens=getattr(usage, "completion_tokens", 0) if usage else 0,
             latency_ms=latency_ms,
         )
+
+
+# ── Gemini / xAI / Perplexity (Phase 0 — Step 6) ─────────────────────
+
+
+class GeminiClient(ExternalAIClient):
+    """Google Gemini via the ``google-genai`` SDK.
+
+    Lazy-imports ``google.genai`` on first ``ask()`` so disabled
+    members do not require the SDK to be installed. Tests inject a
+    mock client shaped like ``genai.Client(api_key=...)`` —
+    ``self._client.models.generate_content(...)`` returns an object
+    with ``.text`` and ``.usage_metadata.{prompt_token_count,
+    candidates_token_count}``.
+    """
+
+    name = "gemini"
+    billable = True
+
+    def __init__(
+        self,
+        model: str = DEFAULT_GEMINI_MODEL,
+        client: object = None,
+        api_key: str | None = None,
+    ):
+        self.model = model
+        if client is not None:
+            self._client = client
+            return
+        if api_key is None:
+            raise RuntimeError(
+                "GeminiClient requires explicit api_key or injected client. "
+                "Use `api_key_ref: env:GEMINI_API_KEY` in agents/.ai-council.yml."
+            )
+        try:
+            from google import genai  # type: ignore[import-not-found]
+        except ImportError as exc:  # pragma: no cover - exercised only with real SDK
+            raise RuntimeError(
+                "google-genai package not installed. `pip install google-genai`."
+            ) from exc
+        self._client = genai.Client(api_key=api_key)
+
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = DEFAULT_MAX_TOKENS) -> CouncilResponse:
+        t0 = time.monotonic()
+        contents = f"{system_prompt}\n\n---\n\n{user_prompt}"
+        try:
+            response = self._client.models.generate_content(
+                model=self.model,
+                contents=contents,
+                config={"max_output_tokens": max_tokens},
+            )
+        except Exception as exc:  # noqa: BLE001 - normalise all SDK errors
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=int((time.monotonic() - t0) * 1000),
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        latency_ms = int((time.monotonic() - t0) * 1000)
+        text = getattr(response, "text", "") or ""
+        usage = getattr(response, "usage_metadata", None)
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=getattr(usage, "prompt_token_count", 0) if usage else 0,
+            output_tokens=getattr(usage, "candidates_token_count", 0) if usage else 0,
+            latency_ms=latency_ms,
+        )
+
+
+class _OpenAICompatibleClient(ExternalAIClient):
+    """Shared shape for OpenAI-API-compatible providers (xAI, Perplexity).
+
+    Both vendors implement ``/v1/chat/completions`` and accept the
+    ``openai`` Python SDK with a custom ``base_url``. The reasoning-
+    model branch from :class:`OpenAIClient` is intentionally omitted —
+    neither xAI nor Perplexity ships a reasoning model that requires
+    ``max_completion_tokens`` as of 2026-05-14.
+    """
+
+    billable = True
+    base_url: str = ""
+
+    def __init__(
+        self,
+        model: str,
+        client: object = None,
+        api_key: str | None = None,
+    ):
+        self.model = model
+        if client is not None:
+            self._client = client
+            return
+        if api_key is None:
+            raise RuntimeError(
+                f"{type(self).__name__} requires explicit api_key or injected client."
+            )
+        try:
+            import openai  # type: ignore[import-not-found]
+        except ImportError as exc:  # pragma: no cover - exercised only with real SDK
+            raise RuntimeError(
+                "openai package not installed. `pip install openai`."
+            ) from exc
+        self._client = openai.OpenAI(api_key=api_key, base_url=self.base_url)
+
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = DEFAULT_MAX_TOKENS) -> CouncilResponse:
+        t0 = time.monotonic()
+        try:
+            response = self._client.chat.completions.create(
+                model=self.model,
+                max_tokens=max_tokens,
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt},
+                ],
+            )
+        except Exception as exc:  # noqa: BLE001 - normalise all SDK errors
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=int((time.monotonic() - t0) * 1000),
+                error=f"{type(exc).__name__}: {exc}",
+            )
+        latency_ms = int((time.monotonic() - t0) * 1000)
+        text = ""
+        choices = getattr(response, "choices", None)
+        if choices:
+            msg = getattr(choices[0], "message", None)
+            text = getattr(msg, "content", "") if msg else ""
+        usage = getattr(response, "usage", None)
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text or "",
+            input_tokens=getattr(usage, "prompt_tokens", 0) if usage else 0,
+            output_tokens=getattr(usage, "completion_tokens", 0) if usage else 0,
+            latency_ms=latency_ms,
+        )
+
+
+class XAIClient(_OpenAICompatibleClient):
+    """xAI Grok via the OpenAI-compatible endpoint at api.x.ai/v1."""
+
+    name = "xai"
+    base_url = XAI_BASE_URL
+
+    def __init__(
+        self,
+        model: str = DEFAULT_XAI_MODEL,
+        client: object = None,
+        api_key: str | None = None,
+    ):
+        super().__init__(model=model, client=client, api_key=api_key)
+
+
+class PerplexityClient(_OpenAICompatibleClient):
+    """Perplexity via the OpenAI-compatible endpoint at api.perplexity.ai."""
+
+    name = "perplexity"
+    base_url = PERPLEXITY_BASE_URL
+
+    def __init__(
+        self,
+        model: str = DEFAULT_PERPLEXITY_MODEL,
+        client: object = None,
+        api_key: str | None = None,
+    ):
+        super().__init__(model=model, client=client, api_key=api_key)
 
 
 # ── Manual mode (Phase 2b) ───────────────────────────────────────────

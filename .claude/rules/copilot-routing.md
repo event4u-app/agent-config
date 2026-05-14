@@ -1,0 +1,1 @@
+../../.agent-src/rules/copilot-routing.md

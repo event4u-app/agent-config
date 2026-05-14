@@ -232,100 +232,12 @@ worktrees:
 
 # --- AI Council (external second-opinion network) ---
 #
-# When enabled, the /council command lets the agent poll independent
-# external models (OpenAI, Anthropic) for a neutral critique of a
-# roadmap, diff, prompt, or file set. Council members never see the
-# host agent's reasoning — only the artefact + a neutral system prompt.
+# Configuration moved to `agents/.ai-council.yml` as of the Step-2
+# consolidation roadmap. Consumer projects opt in by copying the
+# reference file from the package (`agents/.ai-council.yml`) into their
+# own `agents/` tree and flipping `enabled: true` per provider.
 #
-# Tokens are NEVER stored here. They live in ~/.event4u/agent-config/
-# <provider>.key (mode 0600; legacy ~/.config/agent-config/<provider>.key
-# is read as a fallback), installed via:
-#   bash scripts/install_anthropic_key.sh
-#   bash scripts/install_openai_key.sh
-#
-# Cost note: every consultation makes real, paid API calls. The
-# autonomy directive does NOT silently spend tokens — the /council
-# command always asks before invoking, even under autonomy: on.
-ai_council:
-  # Master switch (true, false). Default false — installing a key is
-  # not the same as wanting the agent to spend money on it.
-  enabled: false
-
-  # Default transport mode for every member (overridable per-member
-  # below, and per-invocation via `/council mode:<x>`).
-  #
-  #   api    = direct SDK call against the provider's API (billable).
-  #   manual = copy-paste loop, user is the transport (free).
-  #
-  # Precedence: invocation flag > per-member mode > global mode > "manual".
-  mode: "manual"
-
-  # Per-member configuration. Set enabled=true on the providers you want
-  # to consult. The model field selects which model receives the query.
-  # Optional `mode:` overrides the global setting for that member only.
-  members:
-    anthropic:
-      enabled: false
-      model: "claude-sonnet-4-5"
-      # mode: "api"      # uncomment to override ai_council.mode
-    openai:
-      enabled: false
-      model: "gpt-4o"
-      # mode: "manual"   # uncomment to override ai_council.mode
-
-  # Default number of debate rounds per /council invocation.
-  #
-  # Round 1 sees the artefact alone. Round 2+ sees the artefact plus
-  # anonymised critiques from the previous round (provider/model
-  # identity stripped per the neutrality Iron Law). Applies identically
-  # to api and manual transports — manual mode runs round 1 across all
-  # members, the host agent consolidates, then round 2 starts with the
-  # anonymised round-1 critiques folded in.
-  #
-  # Default is 2 so council members critique each other at least once
-  # before convergence. The agent does NOT ask "how many rounds?" when
-  # the requested rounds <= min_rounds; pass `rounds:N` on the
-  # invocation (or `--rounds N` to the CLI) to override.
-  min_rounds: 2
-
-  # Higher floor for deep-reasoning artefacts (architecture review,
-  # refactoring proposals, bug-diagnosis runs). Activated when the
-  # consuming rule, skill, or command declares `council_depth: deep`
-  # in its frontmatter, or the user passes `--depth deep` to the CLI.
-  # Effective rounds = max(deep_min_rounds, min_rounds), so this floor
-  # is monotonic — lowering it below `min_rounds` has no effect.
-  # Standard tasks keep `min_rounds`; cost rises only when an artefact
-  # opts in. Set to `min_rounds` to disable the deep tier.
-  deep_min_rounds: 3
-
-  # Per-member output-token budget passed to every API call. The CLI
-  # `--max-tokens` flag overrides this on a single invocation; the
-  # cost estimator uses the same value as its worst-case ceiling.
-  # `0` means "unlimited" — internally widened to the safe provider
-  # ceiling (16384) because Anthropic rejects max_tokens=0. Raise
-  # explicitly past 16384 only when a model genuinely supports more
-  # and you want longer answers.
-  max_output_tokens: 2048
-
-  # Hard cost ceiling per /council invocation. The orchestrator pauses
-  # before any member whose projected spend would breach a cap and asks
-  # the user to continue. `max_total_usd: 0` disables the USD ceiling
-  # (token caps still apply). Total spend = rounds * single-round cost.
-  #
-  # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
-  # by `python3 scripts/update_prices.py`; bootstrapped from
-  # scripts/ai_council/_default_prices.py on first run).
-  cost_budget:
-    max_input_tokens: 50000
-    max_output_tokens: 20000
-    max_calls: 10
-    max_total_usd: 0.50
-
-  # Retention for council artefacts. Files older than this in
-  # `agents/council-{questions,responses,sessions}/` are pruned
-  # automatically on the next `save()` and on `task council-prune`.
-  # `0` disables pruning (keep forever — disk grows unbounded).
-  session_retention_days: 7
+# See `docs/contracts/ai-council-config.md` for the schema.
 
 # --- Onboarding ---
 #

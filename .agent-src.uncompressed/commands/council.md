@@ -1,7 +1,7 @@
 ---
 name: council
 tier: 1
-description: Council orchestrator — routes to default, pr, design, optimize
+description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council
 type: orchestrator
 disable-model-invocation: true
@@ -18,6 +18,37 @@ commands with a single entry point + sub-command dispatch. Each lens
 shares the same transport, neutrality preamble, and cost gate; the
 sub-command swaps the mode-specific addendum.
 
+## Architecture — master / wrapper split
+
+`/council default` is the **master orchestrator**. It owns the full flow:
+
+1. Resolve the target + capture the original ask.
+2. Check the council is configured + price table fresh.
+3. Cost confirmation (ALWAYS ASK for billable members).
+4. Run the CLI.
+5. Render the report (5 / 5a / 5b — render → critical lens → user options).
+6. Hard floor — text only.
+
+The other three sub-commands (`pr`, `design`, `optimize`) are **wrappers**.
+Each wrapper resolves its lens-specific input (PR target, design artefact,
+optimization target + metric), captures a wrapper-specific `original_ask`,
+then delegates to `/council default` with `mode_override=<lens>`. The
+lens-specific neutrality addendums live in **one** place —
+[`scripts/ai_council/prompts.py:_MODE_TABLE`](../../scripts/ai_council/prompts.py) —
+and are selected by the `mode_override` value. Wrappers never re-implement
+cost-gate, CLI invocation, render, or the host-verdict pass; those flow
+through the master verbatim.
+
+Invariants:
+
+- Wrapper step numbers (`cost gate from /council default Step 3`,
+  `render via Step 5/5a/5b of /council default`) anchor to the master, not
+  the wrapper, so the master is the single source of truth for flow shape.
+- A new lens = a new entry in `_MODE_TABLE` + a new wrapper file that
+  follows the `pr.md` / `design.md` / `optimize.md` shape. No new master.
+- Behavioural changes to the orchestration (e.g. new render step) land in
+  `default.md` + `_MODE_TABLE`; the wrappers inherit automatically.
+
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
@@ -26,9 +57,22 @@ sub-command swaps the mode-specific addendum.
 | `/council pr` | `commands/council/pr.md` | Pull a GitHub PR via `gh` and run the council on the diff with PR-specific framing |
 | `/council design` | `commands/council/design.md` | Run the council on a design doc / ADR / architecture proposal |
 | `/council optimize` | `commands/council/optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
+| `/council analysis` | `commands/council/analysis.md` | Run the council on a local analysis output — dedup, evidence quality, roadmap-ready Top-N |
+| `/council debate` | `commands/council/debate.md` | Multi-round debate with progressive cost disclosure — initial positions + rebuttals across N rounds |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+
+## Advisor mode (replace-mode personas)
+
+Any sub-command above can run in **advisor mode** by enabling one or
+more advisors in `agents/.ai-council.yml` under `advisors:` (Contrarian,
+First-Principles, Expansionist, Outsider, Executor). An enabled advisor
+swaps its bound member's plain call for the same provider running the
+advisor persona — **same call count, same budget**. `council:estimate`
+surfaces every active swap on a dedicated line. Full contract: skills
+`ai-council` § "Thinking-style advisors" and
+[`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md).
 
 ## Dispatch
 
@@ -42,6 +86,8 @@ Sub-command names match the locked contract in
    > 2. pr — review a GitHub PR (read-only by default)
    > 3. design — review a design doc / ADR / architecture proposal
    > 4. optimize — ranked, evidence-based optimization advice
+   > 5. analysis — critique a local analysis output (project-analyze, audits)
+   > 6. debate — multi-round rebuttals with progressive cost disclosure
 
 ## Rules
 
