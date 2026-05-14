@@ -23,6 +23,7 @@ from .hooks.builtin import (
     MemoryVisibilityHook,
     StateShapeValidationHook,
     TraceHook,
+    build_decision_gate_hook,
 )
 from .hooks.settings import HookSettings, load_hook_settings
 
@@ -58,6 +59,9 @@ def _build_hook_registry(args: argparse.Namespace) -> HookRegistry:
         DirectiveSetGuardHook().register(registry)
     if settings.decision_trace:
         DecisionTraceHook().register(registry)
+    gate_hook = build_decision_gate_hook(settings.decision_engine)
+    if gate_hook is not None:
+        gate_hook.register(registry)
     if settings.memory_visibility:
         MemoryVisibilityHook(
             cost_profile=settings.cost_profile,

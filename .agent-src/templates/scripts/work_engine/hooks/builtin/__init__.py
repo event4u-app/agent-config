@@ -13,6 +13,7 @@ from __future__ import annotations
 
 from .chat_history_append import ChatHistoryAppendHook
 from .chat_history_halt_append import ChatHistoryHaltAppendHook
+from .decision_gate import DecisionGateHook, build_decision_gate_hook
 from .decision_trace import DecisionTraceHook
 from .directive_set_guard import DirectiveSetGuardHook
 from .halt_surface_audit import HaltSurfaceAuditHook
@@ -23,10 +24,12 @@ from .trace import TraceHook
 __all__ = [
     "ChatHistoryAppendHook",
     "ChatHistoryHaltAppendHook",
+    "DecisionGateHook",
     "DecisionTraceHook",
     "DirectiveSetGuardHook",
     "HaltSurfaceAuditHook",
     "MemoryVisibilityHook",
     "StateShapeValidationHook",
     "TraceHook",
+    "build_decision_gate_hook",
 ]
