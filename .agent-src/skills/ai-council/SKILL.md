@@ -754,6 +754,26 @@ and call count are unaffected. Peer-review preserves the advisor
 label while stripping provider identity (`Response A (Contrarian)`).
 Two enabled advisors on the same member is a config error.
 
+## Decision-replay artefact (Phase 9, audit trail)
+
+Every session that runs consensus scoring drops a `decision-replay.md`
+next to `responses.json`. Pure projection of consensus + final-round
+member texts — **no extra model calls, no extra spend**. Surfaces per
+top finding: verdict band (Strong/Moderate/Weak), evidence-quality
+(H/M/L), agree/dissent split, one key argument per member.
+
+Two render modes — **Full** (per-member arguments attributed to
+`provider:model`) and **Redacted** (verdict + evidence-quality + counts
+only). Toggles: `ai_council.decision_replay.{enabled,
+include_member_arguments}` global; `ai_council.lenses.<lens>.decision_replay.*`
+per-lens override.
+
+CLI — written automatically by `council run` on lenses that score
+consensus. `council replay <responses.json>` re-renders from a saved
+session; `--redact-member-arguments` / `--include-member-arguments`
+flip the view independent of config (share redacted variant of an
+already-paid run).
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -768,3 +788,7 @@ Two enabled advisors on the same member is a config error.
 - `docs/customization.md` § `ai_council.*` — settings reference.
 - `docs/contracts/ai-council-config.md` § advisors — schema + precedence
   contract.
+- `docs/contracts/ai-council-config.md` § Decision-replay artefact —
+  Phase 9 audit trail contract + redaction modes.
+- `scripts/ai_council/replay.py` — pure projection renderer (no model
+  calls).

@@ -105,6 +105,33 @@ cost_budget:
   max_calls: 50
   max_total_usd: 20.0
 
+# Phase 8 — Debate cost-visibility + hard refusal cap.
+#
+# `max_cost_usd` is the unconditional refusal cap. When the pre-flight
+# high-end estimate (expected × 1.20 over-run buffer) exceeds the cap,
+# `/council debate` refuses to start — the user must lower `--rounds`,
+# drop members, or raise the cap explicitly. No --proceed-anyway override.
+# Set to 0 to disable the cap (not recommended).
+#
+# `cost_disclosure.mode` ∈ {"always", "above_threshold", "off"}:
+#   always           — emit the disclosure block before every debate.
+#   above_threshold  — emit only when expected_usd > threshold_usd.
+#   off              — power-user opt-out; the refusal cap still fires.
+# `cost_disclosure.show_per_member` toggles the per-member breakdown.
+#
+# Per-lens override for analysis / default (cheap lenses default to off):
+#   lenses:
+#     analysis:
+#       cost_disclosure:
+#         mode: above_threshold
+#         threshold_usd: 0.50
+debate:
+  max_cost_usd: 5.00
+  cost_disclosure:
+    mode: always
+    threshold_usd: 1.00
+    show_per_member: true
+
 # Per-day call-count guard for `mode: cli` members. The standard
 # `cost_budget` block skips CLI calls because they are billable=False —
 # but provider subscriptions still carry their own quotas (Claude Pro
@@ -144,6 +171,19 @@ members:
     api_key_ref: file:anthropic.key
     # mode: cli                          # use subscription auth (Claude Pro/Max) — free, see cli_call_budget above
     # binary: /usr/local/bin/claude      # only valid when mode == cli
+    # Phase 7 — size-fit downgrade ladder (smallest → largest). The
+    # active `model:` above must appear on this list. When the size
+    # classifier flags a request as oversized, it suggests the next
+    # rung *down*; the top rung is the default for complex prompts.
+    model_ladder:
+      - claude-haiku-4-5
+      - claude-sonnet-4-5
+      - claude-opus-4-5
+    # Phase 11 — opt this member in to the lightweight-QA fast-path.
+    # Only opted-in members run when a `low_impact` question routes
+    # to `council`. Defaults to false; flipping requires explicit
+    # consent because the fast-path bypasses the standard fan-out.
+    participate_low_impact: true
 
   openai:
     enabled: true
@@ -151,6 +191,13 @@ members:
     api_key_ref: file:openai.key
     # mode: cli                          # use subscription auth (ChatGPT Plus/Pro via Codex CLI) — free
     # binary: /usr/local/bin/codex       # only valid when mode == cli
+    # Phase 7 — size-fit downgrade ladder (smallest → largest). The
+    # active `model:` above must appear on this list.
+    model_ladder:
+      - gpt-4o-mini
+      - gpt-4o
+      - gpt-4.1
+    participate_low_impact: true
 
   gemini:
     enabled: false
@@ -249,3 +296,80 @@ consensus_scoring:
 # or the `--peer-review` CLI flag.
 peer_review:
   enabled: false
+
+# Council-necessity classifier (Phase 6). Heuristic pre-flight that
+# decides whether the prompt actually warrants a council deliberation
+# before any member fires. Three verdicts drive three exit paths:
+#
+#   necessary  / borderline → proceed (council runs)
+#   unnecessary             → skip (agent) or educate (user_explicit)
+#
+# The classifier is shape-based (word-boundary regex over trigger
+# buckets) — fast, deterministic, no LLM pre-flight cost. False
+# positives on `necessary` are preferable to false negatives; the
+# educate path lets the user override a wrong `unnecessary` verdict
+# via `--proceed-anyway`.
+#
+# Modes:
+#   off     = classifier disabled entirely (legacy behaviour)
+#   educate = unnecessary + user_explicit → educate paragraph + exit 2
+#             unnecessary + agent         → silent skip + exit 0
+#   block   = unnecessary → skip on both invocation paths (no override)
+#
+# See docs/contracts/ai-council-config.md for the trigger lists and
+# per-lens override schema (`lenses.<lens>.necessity_classifier.mode`).
+necessity_classifier:
+  enabled: true
+  mode: educate
+
+
+# ── Decision resolution by impact (Phase 10) ────────────────────────────────
+# Five-class impact classifier routes pending agent questions:
+#   trivial         → agent  (naming, whitespace, comments)
+#   low_impact      → agent  (local idioms, DTOs, test extensions)
+#   medium_impact   → council (API shape, contract changes)
+#   high_impact     → user   (LOCKED — security, auth, migrations, billing)
+#   user_required   → user   (LOCKED — explicit "ask me" / "review first")
+#
+# Iron Law: `high_impact` and `user_required` ALWAYS route to the user.
+# Remapping either to `agent` or `council` is rejected at schema load.
+# `confidence_threshold` is the minimum classifier confidence required to
+# keep the configured mode; below it the mode is upgraded one rung
+# (agent → council → user).
+#
+# See docs/contracts/ai-council-config.md for the trigger lists and the
+# Iron-Law clause.
+decision_resolution:
+  enabled: true
+  classes:
+    trivial:
+      mode: agent
+      confidence_threshold: 0.6
+    low_impact:
+      mode: agent
+      confidence_threshold: 0.6
+    medium_impact:
+      mode: council
+      confidence_threshold: 0.6
+    high_impact:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+    user_required:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+
+  # Phase 11: lightweight-QA fast-path. Hard caps for `low_impact`
+  # resolutions that route to `council`. Cuts latency + spend by
+  # narrowing the fan-out to opted-in members only and stripping
+  # debate. Multi-round is structurally forbidden — `max_rounds`
+  # MUST stay 1 (the loader rejects any other value).
+  #
+  # Opt members in via `members.<name>.participate_low_impact: true`
+  # below. With no opt-in, fast-path is unavailable and the caller
+  # falls back to the standard council path or escalates to user.
+  fast_path:
+    max_members: 2          # 1 or 2 only — wider fan-out belongs to standard council
+    max_rounds: 1           # LOCKED — Iron Law of the fast-path
+    max_tokens: 2500        # combined input + output budget per resolution
+    max_cost_usd: 0.05      # USD ceiling per resolution
+

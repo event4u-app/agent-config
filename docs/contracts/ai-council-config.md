@@ -59,6 +59,20 @@ advisors:                       # Thinking-style replace-mode advisors
     member: <provider>                    # required; references members.<provider>
     model: <string>                       # optional; overrides member.model
     persona: <path>                       # optional; defaults to personas/advisors/<advisor-key>.md
+necessity_classifier:           # Phase 6 — optional, default enabled+educate
+  enabled: <bool>                         # master switch (default true)
+  mode: <"off" | "educate" | "block">     # default "educate"
+decision_replay:                # Phase 9 — optional, default enabled+full
+  enabled: <bool>                         # master switch (default true)
+  include_member_arguments: <bool>        # default true; false = redacted view
+lens_overrides:                 # Phase 6 — optional, per-lens nudges
+  necessity_classifier_mode:
+    <lens>: <"off" | "educate" | "block">
+lenses:                         # Phase 9 — optional, per-lens overrides
+  <lens>:
+    decision_replay:
+      enabled: <bool>
+      include_member_arguments: <bool>
 ```
 
 Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
@@ -130,6 +144,177 @@ step preserves the **advisor persona label** as signal — peer-review
 output renders as `Response A (Contrarian)`, never
 `Response A (Anthropic Opus)`. Plain runs strip identity entirely.
 Hard-coded behaviour — no flag, no opt-out.
+
+### Necessity classifier (Phase 6, pre-flight gate)
+
+A heuristic pre-flight that decides whether the request actually
+warrants a full council deliberation. Three verdicts (`necessary`,
+`borderline`, `unnecessary`) drive three exit paths in the dispatcher
+(skip silently, educate + block, or proceed). Implemented in
+[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py);
+wired into `council_cli.cmd_run` and `cmd_debate` before any member
+is invoked.
+
+**Configuration.**
+
+- `necessity_classifier.enabled` (bool, default `true`) — master switch.
+  `false` short-circuits the gate entirely; legacy "always run" behaviour
+  is restored.
+- `necessity_classifier.mode` (`"off" | "educate" | "block"`, default
+  `"educate"`).
+  - `off` — gate disabled while keeping the classifier module loaded
+    (cheap toggle for experiments).
+  - `educate` — agent-initiated invocation + `unnecessary` verdict skips
+    silently with `skipped_reason: necessity_unnecessary` in
+    `session.md`. User-explicit invocation + `unnecessary` prints a
+    one-paragraph rationale and exits non-zero; `--proceed-anyway`
+    overrides on this single call.
+  - `block` — same as `educate` for `necessary` / `borderline`, but
+    `unnecessary` is rejected regardless of invocation source. Even
+    `--proceed-anyway` is ignored (power-user opt-in for cost-strict
+    environments).
+- `lens_overrides.necessity_classifier_mode.<lens>` — per-lens override.
+  Wins over the global `mode`. Typical use: leave the global at
+  `educate` and force `debate` lens to `block` because debate is the
+  most expensive transport.
+
+**Invocation context (CLI flags).**
+
+- `--invocation {agent,user_explicit}` — defaults to `user_explicit`.
+  Agent orchestration MUST set `--invocation agent` so silent skips are
+  available; user-typed `/council` keeps the default.
+- `--proceed-anyway` — one-shot override of the `educate` block. Does
+  NOT lift `block` mode.
+
+**Classifier shape.**
+
+Word-boundary regex matches against four `necessary` buckets
+(architecture / tradeoff / ambiguity / strategic) and four
+`unnecessary` buckets (bugfix / syntax / single_file / lookup).
+Decision table:
+
+| Necessary hits | Unnecessary hits | Lens strict? | Verdict |
+|---|---|---|---|
+| `> unnecessary` | any | n/a | `necessary` |
+| `>= 1` | `== 0` | n/a | `necessary` |
+| `== 0` | `>= 1` | n/a | `unnecessary` |
+| equal `>= 1` each | both `>= 1` | n/a | `borderline` |
+| `== 0` | `== 0` | yes (`debate`) | `unnecessary` |
+| `== 0` | `== 0` | no | `borderline` |
+
+Trigger word lists live in
+[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py)
+as `NECESSARY_TRIGGERS` and `UNNECESSARY_TRIGGERS` — extend there with
+a unit test; never edit downstream copies.
+
+### Decision-replay artefact (Phase 9, audit trail)
+
+Per-session `decision-replay.md` written next to `responses.json` whenever
+the consensus round runs. Pure projection of consensus data plus the
+final-round per-member texts — no extra model calls. The artefact
+surfaces, per top finding, the verdict band (Strong/Moderate/Weak), the
+evidence-quality bucket (H/M/L), the agree/dissent member split, and one
+key argument per member. Implementation:
+[`scripts/ai_council/replay.py`](../../scripts/ai_council/replay.py).
+
+**Configuration.**
+
+- `decision_replay.enabled` (bool, default `true`) — master switch.
+  `false` skips the artefact for every lens.
+- `decision_replay.include_member_arguments` (bool, default `true`) —
+  when `false`, the artefact emits the redacted view: verdict +
+  evidence-quality + counts only, no per-member arguments. Use for
+  surfaces where attributing reasoning to a specific model would leak
+  vendor preference signal.
+- `lenses.<lens>.decision_replay.enabled` / `include_member_arguments`
+  — per-lens overrides that beat the global block. Typical use: keep
+  the audit trail on for `analysis` and turn it off for `default` /
+  `prompt` where consensus rarely runs.
+
+**CLI.**
+
+- Written automatically by `council run` when consensus scoring fires.
+- `council replay <responses.json>` re-renders the artefact from a saved
+  session. `--output <path>` writes to a file (otherwise stdout);
+  `--redact-member-arguments` / `--include-member-arguments` toggle the
+  redacted view independent of config.
+
+**Decision-replay schema.** The markdown body follows a fixed shape so
+downstream tooling can scrape it:
+
+```
+# Decision Replay
+
+> <original-ask truncated to 400 chars>
+
+## <finding-id> — <finding-text truncated to 120 chars>
+
+- **Consensus**: Strong|Moderate|Weak (<strength 0.00–1.00>)
+- **Evidence quality**: H|M|L (mean <X>/10)
+- **Agreement**: <concur>/<total> members concur, <dissent> dissent
+
+**Agreeing members**:                        # full mode only
+- _<provider:model>_ — <argument truncated to 200 chars>
+
+**Dissenting members**:                      # full mode only
+- _<provider:model>_ — <argument truncated to 200 chars>
+
+**Synthesis verdict**: <band> consensus — <source> sourced.
+
+---
+
+_artefact mode: full|redacted (counts only)_
+```
+
+Findings are ranked by `consensus_strength` descending. Empty sessions
+emit the heading plus `*No findings were extracted for this session.*`.
+
+### Decision resolution by impact (Phase 10, ask-user routing)
+
+Five-class impact classifier triages every pending agent question
+before it surfaces. Heuristic, shape-based, keyword-driven — no LLM
+call, fully explainable. Lives in `scripts/ai_council/necessity.py`
+(`classify_impact`, `route_decision`).
+
+| Class | Trigger shape | Default mode |
+|---|---|---|
+| `trivial` | naming, whitespace, comments, typo, indent | `agent` |
+| `low_impact` | local idioms, DTO vs value object, test extensions | `agent` |
+| `medium_impact` | API shape, contract change, breaking change, module boundary | `council` |
+| `high_impact` | security, auth, tenant boundary, migration, billing, secrets, PII | `user` (**LOCKED**) |
+| `user_required` | user-fence markers — "ask me", "review first", "plan only" | `user` (**LOCKED**) |
+
+**Iron Law** — `high_impact` and `user_required` ALWAYS route to the
+user. The schema loader rejects any `decision_resolution.classes.<cls>.mode`
+that maps either class to `agent` or `council`. No override path, no
+config flag, no autonomy setting can lift this lock.
+
+**Confidence gate** — each entry carries a `confidence_threshold`
+(default `0.6`). When the classifier's confidence is below the
+threshold, the configured mode is upgraded one rung
+(`agent` → `council` → `user`) so low-certainty calls escalate rather
+than silently auto-resolve.
+
+```yaml
+decision_resolution:
+  enabled: true
+  classes:
+    trivial:
+      mode: agent
+      confidence_threshold: 0.6
+    low_impact:
+      mode: agent
+      confidence_threshold: 0.6
+    medium_impact:
+      mode: council
+      confidence_threshold: 0.6
+    high_impact:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+    user_required:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+```
 
 ## `api_key_ref` forms
 
@@ -230,6 +415,12 @@ error) when any of these hold:
     allowed — a typo never costs the user money on an unintended call
     plan.
 11. `advisors.<key>.model` is set but not a string.
+12. `necessity_classifier` is not a mapping, or `enabled` is not a bool,
+    or `mode` is not one of `{"off", "educate", "block"}`.
+13. `lens_overrides.necessity_classifier_mode` is not a mapping, or any
+    value is not one of `{"off", "educate", "block"}`. Unknown lens keys
+    are accepted (forward-compatible) but never silently rewrite the
+    global default.
 
 ## Migration footprint (Phase 0)
 

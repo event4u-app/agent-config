@@ -14,9 +14,11 @@ from scripts.ai_council.clients import CouncilResponse, ExternalAIClient  # noqa
 from scripts.ai_council.orchestrator import (  # noqa: E402
     CostBudget,
     CouncilQuestion,
+    DebateCostEstimate,
     OverrunEvent,
     consult,
     estimate,
+    estimate_debate_cost,
     render,
 )
 from scripts.ai_council.pricing import bootstrap_from_defaults, load_prices  # noqa: E402
@@ -637,3 +639,128 @@ def test_consult_multiround_cost_budget_accumulates_across_rounds() -> None:
     )
     # Round 2 must hit the cost gate (output spent in round 1 carries over).
     assert out[0].error == "cost_budget_exceeded"
+
+
+# ── Phase 8: debate cost-visibility ───────────────────────────────────────────
+
+
+class _PricedMember(ExternalAIClient):
+    """Stub member with explicit transport + billable flags for cost tests."""
+
+    def __init__(
+        self,
+        name: str,
+        model: str,
+        *,
+        billable: bool = True,
+        transport: str = "api",
+        subscription_label: str = "",
+    ):
+        self.name = name
+        self.model = model
+        self.billable = billable
+        self.transport = transport
+        self.subscription_label = subscription_label
+
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
+        return CouncilResponse(self.name, self.model, "ok", 1, 1)
+
+
+def test_estimate_debate_cost_rejects_zero_or_negative_rounds() -> None:
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="x", max_tokens=1024)
+    member = _PricedMember("anthropic", "claude-sonnet-4-5")
+    with pytest.raises(ValueError):
+        estimate_debate_cost(q, [member], table, rounds=0)
+    with pytest.raises(ValueError):
+        estimate_debate_cost(q, [member], table, rounds=-1)
+
+
+def test_estimate_debate_cost_scales_linearly_with_rounds() -> None:
+    """N rounds must yield N× the single-round expected_usd."""
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="payload" * 50, max_tokens=2000)
+    members = [_PricedMember("anthropic", "claude-sonnet-4-5")]
+    one = estimate_debate_cost(q, members, table, rounds=1)
+    three = estimate_debate_cost(q, members, table, rounds=3)
+    assert three.expected_usd == pytest.approx(one.expected_usd * 3, rel=1e-9)
+    assert three.rounds == 3
+
+
+def test_estimate_debate_cost_bounds_ordering() -> None:
+    """low_usd <= expected_usd <= high_usd; high is +20% buffer over expected."""
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="abc" * 100, max_tokens=2000)
+    members = [
+        _PricedMember("anthropic", "claude-sonnet-4-5"),
+        _PricedMember("openai", "gpt-4o"),
+    ]
+    est = estimate_debate_cost(q, members, table, rounds=2)
+    assert est.low_usd <= est.expected_usd <= est.high_usd
+    assert est.high_usd == pytest.approx(est.expected_usd * 1.20, rel=1e-9)
+
+
+def test_estimate_debate_cost_excludes_non_billable_from_totals() -> None:
+    """CLI / manual members surface under subscription_members, not totals."""
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="prompt", max_tokens=1024)
+    api_member = _PricedMember("anthropic", "claude-sonnet-4-5")
+    cli_member = _PricedMember(
+        "claude-cli", "claude-sonnet-4-5",
+        billable=False, transport="cli", subscription_label="Claude Pro",
+    )
+    est = estimate_debate_cost(q, [api_member, cli_member], table, rounds=2)
+    assert len(est.per_member) == 1
+    assert est.per_member[0]["name"] == "anthropic"
+    assert len(est.subscription_members) == 1
+    assert est.subscription_members[0] == {
+        "name": "claude-cli",
+        "model": "claude-sonnet-4-5",
+        "transport": "cli",
+        "subscription_label": "Claude Pro",
+    }
+
+
+def test_estimate_debate_cost_all_subscription_zero_totals() -> None:
+    """All-CLI council yields zero USD totals + filled subscription list."""
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="x", max_tokens=1024)
+    members = [
+        _PricedMember(
+            "claude-cli", "claude-sonnet-4-5",
+            billable=False, transport="cli",
+        ),
+        _PricedMember(
+            "codex-cli", "gpt-4o",
+            billable=False, transport="cli",
+        ),
+    ]
+    est = estimate_debate_cost(q, members, table, rounds=3)
+    assert est.low_usd == 0.0
+    assert est.expected_usd == 0.0
+    assert est.high_usd == 0.0
+    assert est.per_member == []
+    assert len(est.subscription_members) == 2
+
+
+def test_estimate_debate_cost_returns_per_member_breakdown() -> None:
+    """Every billable member shows up with its own low/expected/high triple."""
+    bootstrap_from_defaults()
+    table = load_prices()
+    q = CouncilQuestion(mode="debate", user_prompt="abc" * 30, max_tokens=1500)
+    members = [
+        _PricedMember("anthropic", "claude-sonnet-4-5"),
+        _PricedMember("openai", "gpt-4o"),
+    ]
+    est = estimate_debate_cost(q, members, table, rounds=2)
+    names = {pm["name"] for pm in est.per_member}
+    assert names == {"anthropic", "openai"}
+    for pm in est.per_member:
+        assert pm["low_usd"] <= pm["expected_usd"] <= pm["high_usd"]
+        assert pm["transport"] == "api"
+    assert isinstance(est, DebateCostEstimate)

@@ -30,6 +30,47 @@ Do NOT use when:
 * The user has not configured any council member → state that and stop;
   do not silently fall back to anything.
 
+## When NOT to invoke — necessity self-check
+
+The Phase 6 necessity classifier (see
+[`ai-council-config § Necessity classifier`](../../../docs/contracts/ai-council-config.md))
+runs as a pre-flight gate inside the CLI and skips the council when
+the prompt looks like routine work. Route around it BEFORE the gate
+fires so the user never pays the classifier-pause cost on a request
+that obviously did not need a council in the first place.
+
+Skip the council and stay in-session for:
+
+* **Bugfix shape** — stack trace, error, crash, failing test, "broken",
+  regression. Use `systematic-debugging` or `bug-investigate`.
+* **Syntax / format / lint** — `typo`, `formatting`, `lint`, `indent`,
+  `import order`, simple rename. Use the language skill directly
+  (`php-coder`, `eloquent`, `nextjs-patterns`, etc).
+* **Single-file implementation** — "this function", "this method",
+  "this file", "one-liner", "small change", "add a getter". Use the
+  language skill directly.
+* **Documentation lookup** — "what is X", "how does Y work", "example
+  of Z", "syntax of W". Use `codebase-retrieval` or the docs skill,
+  never the council.
+
+Invoke the council when:
+
+* **Architectural / structural** — system boundaries, coupling,
+  refactor strategy, migration plan, rewrite vs redesign.
+* **Multi-axis trade-off** — stakeholders disagree; competing
+  alternatives need weighing; "pros and cons" is the actual ask.
+* **Strategic / direction** — "should we …", "shall we …", roadmap
+  shape, long-term technical direction.
+* **Explicit ambiguity** — the user wrote "unsure / uncertain /
+  ambiguous / second opinion / sanity check".
+
+Agent orchestration MUST call `council_cli` with
+`--invocation agent` so the gate can skip silently on routine
+requests. User-typed `/council` keeps the default
+(`--invocation user_explicit`); the user gets the educational message
++ `--proceed-anyway` override path. Mode `block` ignores
+`--proceed-anyway` by design — cost-strict opt-in.
+
 ## Goal
 
 Bring in **independent** external models to critique a project
@@ -764,6 +805,100 @@ One-per-provider invariant — two enabled advisors targeting the same
 member is a config error (replace-mode runs exactly one advisor per
 provider; the call plan never doubles up by accident).
 
+## Decision-replay artefact (Phase 9, audit trail)
+
+Every session that runs consensus scoring drops a
+`decision-replay.md` next to the saved `responses.json`. Pure
+projection of the consensus block plus the final-round per-member
+texts — **no extra model calls, no extra spend**. Surfaces, per top
+finding: verdict band (Strong/Moderate/Weak), evidence-quality bucket
+(H/M/L), agree/dissent split, and one key argument per member.
+
+Two render modes:
+
+* **Full** (default) — per-member arguments attributed to
+  `provider:model`. Reasoning is traceable, vendor identity is
+  visible.
+* **Redacted** — verdict + evidence-quality + counts only. Use for
+  surfaces where attributing reasoning to a specific model would leak
+  vendor-preference signal.
+
+Toggles (config, see `ai-council-config § Decision-replay artefact`):
+
+* `ai_council.decision_replay.enabled` — master switch (default
+  `true`).
+* `ai_council.decision_replay.include_member_arguments` — flip to
+  `false` for redacted-by-default.
+* `ai_council.lenses.<lens>.decision_replay.*` — per-lens override
+  beats the global block.
+
+CLI:
+
+* Written automatically by `council run` whenever the lens triggers
+  consensus scoring.
+* `council replay <responses.json>` re-renders from a saved session;
+  `--redact-member-arguments` / `--include-member-arguments` flip the
+  view independent of config. Useful for sharing a redacted variant
+  of an already-paid run.
+
+## Lightweight-QA fast-path (Phase 11)
+
+Low-impact questions classified by Phase 10's impact router can route
+to a restricted fast-path instead of the full debate loop. The
+trade-off is explicit: **1 round · ≤2 members · $0.05/answer · 2500
+tokens**. No advisors, no peer-review, no consensus scoring — the goal
+is a quick answer with a transparency marker, not a deliberation.
+
+### Iron Law
+
+`high_impact` and `user_required` **never** route to the fast-path,
+regardless of config. Schema validation rejects the override. The
+fast-path only activates when:
+
+1. `ai_council.enabled: true` AND
+2. `decision_resolution.low_impact.mode: council` AND
+3. At least one member has `participate_low_impact: true` (default
+   `false` — explicit opt-in per member).
+
+### Output marker (always surfaced)
+
+* **Resolved** — `> Resolved via low-impact council (anthropic): <one-line answer>`
+* **Split** — `> Low-impact council split — escalating to user (anthropic: X / openai: Y):`
+* **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
+
+The marker is mandatory: the agent never silently substitutes a
+fast-path verdict for its own answer.
+
+### Session artefact
+
+Every fast-path attempt appends one line to
+`agents/council-sessions/<date>-<slug>/low-impact-resolutions.md`:
+
+```
+2025-05-14T10:00:00Z | resolved | members=2/2 | members(anthropic, openai) cost=$0.0034 | Q=Service vs Repository for this read path?
+```
+
+Append-only, one line per resolution. The parser tolerates free-form
+section headers around the canonical lines, so the artefact may grow
+human notes without breaking aggregation.
+
+### `council replay --low-impact-stats`
+
+Re-projection of the session log into a summary block:
+
+```
+$ council replay agents/council-sessions/2025-05-14-foo/responses.json --low-impact-stats
+# Low-impact fast-path · session summary
+
+- attempts: 4
+- status: aborted=1 · resolved=2 · split=1
+- members: anthropic=4 · openai=3
+- total cost: $0.0096
+```
+
+No model calls — pure parse of the markdown log. Returns 0 when the
+session had no fast-path entries (a clean session is not an error).
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -778,3 +913,7 @@ provider; the call plan never doubles up by accident).
 - `docs/customization.md` § `ai_council.*` — settings reference.
 - `docs/contracts/ai-council-config.md` § advisors — schema + precedence
   contract.
+- `docs/contracts/ai-council-config.md` § Decision-replay artefact —
+  Phase 9 audit trail contract + redaction modes.
+- `scripts/ai_council/replay.py` — pure projection renderer (no model
+  calls).

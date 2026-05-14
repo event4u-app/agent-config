@@ -54,6 +54,10 @@ Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Ra
 - **Blocking clarification** — ask FIRST, alone, before any research or planning output.
 - **Optional refinement** — don't ask; state the assumption, proceed.
 
+## Impact-based routing (AI Council)
+
+When the AI Council is enabled, every pending question is classified by the five-class impact heuristic (`trivial` / `low_impact` / `medium_impact` / `high_impact` / `user_required`) and routed to `agent` / `council` / `user` per `decision_resolution` in `agents/.ai-council.yml`. **Iron Law: `high_impact` and `user_required` ALWAYS reach the user** — security, auth, migrations, billing, secrets, tenant boundaries, and explicit "ask me" / "review first" fences never bypass. Contract: [`ai-council-config § decision resolution`](../../docs/contracts/ai-council-config.md#decision-resolution-by-impact-phase-10-ask-user-routing).
+
 ## Creating new agent artifacts
 
 Skill / rule / command / guideline creation or major rewrite → [`artifact-drafting-protocol`](artifact-drafting-protocol.md) (Understand → Research → Draft). Don't improvise questions.

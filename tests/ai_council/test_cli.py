@@ -760,3 +760,419 @@ def test_main_returns_2_when_council_disabled(tmp_path, monkeypatch, capsys) -> 
     assert rc == 2
     err = capsys.readouterr().err
     assert "enabled is false" in err
+
+
+
+# ── Phase 6 necessity gate ────────────────────────────────────────────
+
+
+def test_necessity_gate_off_when_classifier_disabled() -> None:
+    buf = io.StringIO()
+    proceed, rc, result = council_cli._necessity_gate(
+        prompt="fix the typo crash bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=False,
+        ai_cfg={"necessity_classifier": {"enabled": False, "mode": "educate"}},
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+    assert result is None
+
+
+def test_necessity_gate_off_when_mode_off() -> None:
+    buf = io.StringIO()
+    proceed, rc, result = council_cli._necessity_gate(
+        prompt="fix the typo crash bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=False,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "off"}},
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+
+
+def test_necessity_gate_agent_skip_is_silent_exit_zero() -> None:
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="agent",
+        proceed_anyway=False,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        stdout=buf,
+    )
+    assert proceed is False
+    assert rc == 0
+    assert "skipped" in buf.getvalue()
+
+
+def test_necessity_gate_user_explicit_educates_and_exits_two() -> None:
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=False,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        stdout=buf,
+    )
+    assert proceed is False
+    assert rc == 2
+    assert "--proceed-anyway" in buf.getvalue()
+
+
+def test_necessity_gate_proceed_anyway_overrides_educate() -> None:
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=True,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+    assert "override" in buf.getvalue()
+
+
+def test_necessity_gate_block_mode_ignores_proceed_anyway() -> None:
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=True,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "block"}},
+        stdout=buf,
+    )
+    assert proceed is False
+    assert rc == 0
+    assert "mode=block" in buf.getvalue()
+
+
+def test_necessity_gate_necessary_verdict_proceeds() -> None:
+    buf = io.StringIO()
+    proceed, rc, result = council_cli._necessity_gate(
+        prompt=(
+            "Should we refactor the service boundary? Stakeholders "
+            "disagree on the architecture trade-off."
+        ),
+        lens="analysis",
+        invocation="agent",
+        proceed_anyway=False,
+        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+    assert result is not None
+    assert result.verdict == "necessary"
+
+
+def test_resolve_necessity_mode_lens_override_wins() -> None:
+    ai_cfg = {
+        "necessity_classifier": {"enabled": True, "mode": "educate"},
+        "lens_overrides": {
+            "necessity_classifier_mode": {"debate": "block"},
+        },
+    }
+    enabled, mode = council_cli._resolve_necessity_mode(ai_cfg, "debate")
+    assert enabled is True
+    assert mode == "block"
+    enabled, mode = council_cli._resolve_necessity_mode(ai_cfg, "analysis")
+    assert mode == "educate"
+
+
+# \u2500\u2500 Phase 8: cmd_debate disclosure + refusal cap \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+
+
+def _debate_args(tmp_path: Path, *, rounds: int = 2, confirm: bool = False):
+    """Build a Namespace shaped for ``cmd_debate``."""
+    q = tmp_path / "ask.txt"
+    q.write_text("Design trade-off: monolith vs microservices", encoding="utf-8")
+    out_dir = tmp_path / "debate-out"
+    return _ns(
+        question=str(q), input_mode="prompt", max_tokens=128,
+        mode_override=None, original_ask="",
+        confirm=confirm, output=str(out_dir), rounds=rounds,
+        model=None, siblings=None,
+        proceed_anyway=False, invocation="agent",
+        continue_as_debate=None, auto_continue=True,
+        depth="standard",
+    )
+
+
+def test_cmd_debate_disclosure_always_renders_block(tmp_path, capsys) -> None:
+    """``cost_disclosure.mode=always`` emits the disclosure block."""
+    args = _debate_args(tmp_path)
+    members = [_StubMember("openai", "gpt-x",
+                           CouncilResponse("openai", "gpt-x", "r"))]
+    rc = council_cli.cmd_debate(
+        args,
+        settings={"ai_council": {
+            "enabled": True,
+            "debate": {
+                "max_cost_usd": 100.0,
+                "cost_disclosure": {"mode": "always", "show_per_member": True},
+            },
+        }},
+        members=members, table=_fake_table(),
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "cost-disclosure" in out
+    assert "per member" in out
+
+
+def test_cmd_debate_disclosure_off_suppresses_block(tmp_path, capsys) -> None:
+    args = _debate_args(tmp_path)
+    members = [_StubMember("openai", "gpt-x",
+                           CouncilResponse("openai", "gpt-x", "r"))]
+    rc = council_cli.cmd_debate(
+        args,
+        settings={"ai_council": {
+            "enabled": True,
+            "debate": {
+                "max_cost_usd": 100.0,
+                "cost_disclosure": {"mode": "off"},
+            },
+        }},
+        members=members, table=_fake_table(),
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "cost-disclosure" not in out
+
+
+def test_cmd_debate_disclosure_above_threshold_only_when_exceeded(
+    tmp_path, capsys,
+) -> None:
+    """``above_threshold`` mode skips the block when expected_usd is below."""
+    args = _debate_args(tmp_path, rounds=1)
+    members = [_StubMember("openai", "gpt-x",
+                           CouncilResponse("openai", "gpt-x", "r"))]
+    rc = council_cli.cmd_debate(
+        args,
+        settings={"ai_council": {
+            "enabled": True,
+            "debate": {
+                "max_cost_usd": 100.0,
+                "cost_disclosure": {
+                    "mode": "above_threshold",
+                    "threshold_usd": 1000.0,
+                },
+            },
+        }},
+        members=members, table=_fake_table(),
+    )
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "cost-disclosure" not in out
+
+
+def test_cmd_debate_refusal_cap_blocks_when_exceeded(tmp_path, capsys) -> None:
+    """High-end estimate above ``max_cost_usd`` exits 4 without running."""
+    args = _debate_args(tmp_path, rounds=4, confirm=True)
+    members = [_StubMember("openai", "gpt-x",
+                           CouncilResponse("openai", "gpt-x", "r"))]
+    rc = council_cli.cmd_debate(
+        args,
+        settings={"ai_council": {
+            "enabled": True,
+            "debate_max_rounds": 4,
+            "debate": {
+                "max_cost_usd": 0.000001,  # impossibly low
+                "cost_disclosure": {"mode": "always"},
+            },
+        }},
+        members=members, table=_fake_table(),
+    )
+    captured = capsys.readouterr()
+    assert rc == 4
+    assert "refused" in captured.err
+    assert "max_cost_usd" in captured.err
+
+
+def test_cmd_debate_refusal_cap_zero_disables_check(tmp_path, capsys) -> None:
+    """``max_cost_usd: 0`` short-circuits the cap (cap disabled)."""
+    args = _debate_args(tmp_path, rounds=1)
+    members = [_StubMember("openai", "gpt-x",
+                           CouncilResponse("openai", "gpt-x", "r"))]
+    rc = council_cli.cmd_debate(
+        args,
+        settings={"ai_council": {
+            "enabled": True,
+            "debate": {
+                "max_cost_usd": 0,
+                "cost_disclosure": {"mode": "off"},
+            },
+        }},
+        members=members, table=_fake_table(),
+    )
+    err = capsys.readouterr().err
+    assert rc == 0
+    assert "refused" not in err
+
+
+def test_resolve_cost_disclosure_lens_override_wins() -> None:
+    """Per-lens override beats the global ``debate.cost_disclosure``."""
+    ai_cfg = {
+        "debate": {
+            "cost_disclosure": {"mode": "always", "threshold_usd": 1.0},
+        },
+        "lens_overrides": {
+            "cost_disclosure": {
+                "analysis": {
+                    "mode": "above_threshold",
+                    "threshold_usd": 0.5,
+                    "show_per_member": False,
+                },
+            },
+        },
+    }
+    mode, thr, show = council_cli._resolve_cost_disclosure(ai_cfg, "analysis")
+    assert mode == "above_threshold"
+    assert thr == 0.5
+    assert show is False
+    # The debate lens keeps the global block.
+    mode, thr, show = council_cli._resolve_cost_disclosure(ai_cfg, "debate")
+    assert mode == "always"
+
+
+def test_resolve_cost_disclosure_default_off_for_non_debate_lens() -> None:
+    """Non-debate lenses default to ``off`` unless overridden."""
+    mode, _, _ = council_cli._resolve_cost_disclosure({}, "analysis")
+    assert mode == "off"
+    mode, _, _ = council_cli._resolve_cost_disclosure({}, "default")
+    assert mode == "off"
+
+
+
+# ── cmd_replay (Phase 9) ────────────────────────────────────────────
+
+
+def _consensus_payload(**extra) -> dict:
+    """Minimal payload with a consensus block for replay tests."""
+    payload: dict = {
+        "responses": [
+            {"provider": "openai", "model": "gpt-x", "text": "agree",
+             "input_tokens": 10, "output_tokens": 5, "latency_ms": 1},
+            {"provider": "anthropic", "model": "claude-x", "text": "agree",
+             "input_tokens": 11, "output_tokens": 6, "latency_ms": 2},
+        ],
+        "original_ask": "Should we ship?",
+        "consensus": {
+            "findings": [
+                {"id": "F1", "source": "anthropic:claude-x", "text": "Ship it."},
+            ],
+            "scores": [
+                {"finding_id": "F1", "scorer": "openai:gpt-x",
+                 "score": 9, "agree": True, "reason": "Tests green."},
+            ],
+            "extraction_responses": [],
+            "scoring_responses": [],
+        },
+    }
+    payload.update(extra)
+    return payload
+
+
+def test_parser_replay_subcommand_accepts_responses() -> None:
+    parsed = council_cli.build_parser().parse_args(["replay", "r.json"])
+    assert parsed.cmd == "replay"
+    assert parsed.responses == "r.json"
+    assert parsed.include_member_arguments is None  # default → True at runtime
+
+
+def test_parser_replay_redact_and_include_are_mutually_exclusive() -> None:
+    with pytest.raises(SystemExit):
+        council_cli.build_parser().parse_args(
+            ["replay", "r.json",
+             "--redact-member-arguments", "--include-member-arguments"],
+        )
+
+
+def test_cmd_replay_writes_audit_trail_to_stdout(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_consensus_payload()), encoding="utf-8")
+    args = _ns(responses=str(src), output=None,
+               include_member_arguments=None)
+    rc = council_cli.cmd_replay(args)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "# Decision Replay" in out
+    assert "> Should we ship?" in out
+    assert "## F1 — Ship it." in out
+    assert "Tests green." in out  # full mode includes arguments
+
+
+def test_cmd_replay_writes_to_output_file_when_provided(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_consensus_payload()), encoding="utf-8")
+    out = tmp_path / "subdir" / "decision-replay.md"
+    args = _ns(responses=str(src), output=str(out),
+               include_member_arguments=None)
+    rc = council_cli.cmd_replay(args)
+    assert rc == 0
+    assert out.exists()
+    body = out.read_text(encoding="utf-8")
+    assert "## F1 — Ship it." in body
+    stdout = capsys.readouterr().out
+    assert "council:replay" in stdout
+
+
+def test_cmd_replay_redacted_mode_drops_per_member_arguments(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_consensus_payload()), encoding="utf-8")
+    args = _ns(responses=str(src), output=None,
+               include_member_arguments=False)
+    rc = council_cli.cmd_replay(args)
+    out = capsys.readouterr().out
+    assert rc == 0
+    assert "Tests green." not in out
+    assert "redacted (counts only)" in out
+
+
+def test_cmd_replay_returns_2_when_payload_lacks_consensus(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps({"responses": []}), encoding="utf-8")
+    args = _ns(responses=str(src), output=None,
+               include_member_arguments=None)
+    rc = council_cli.cmd_replay(args)
+    err = capsys.readouterr().err
+    assert rc == 2
+    assert "no `consensus` block" in err
+
+
+def test_decision_replay_settings_global_default_enabled() -> None:
+    enabled, include_args = council_cli._decision_replay_settings({}, "analysis")
+    assert enabled is True
+    assert include_args is True
+
+
+def test_decision_replay_settings_lens_override_disables() -> None:
+    ai_cfg = {
+        "decision_replay": {"enabled": True},
+        "lenses": {"pr": {"decision_replay": {"enabled": False}}},
+    }
+    enabled, _ = council_cli._decision_replay_settings(ai_cfg, "pr")
+    assert enabled is False
+    # Global still applies for non-overridden lens.
+    enabled, _ = council_cli._decision_replay_settings(ai_cfg, "analysis")
+    assert enabled is True
+
+
+def test_decision_replay_settings_lens_override_redacts() -> None:
+    ai_cfg = {
+        "decision_replay": {"include_member_arguments": True},
+        "lenses": {
+            "analysis": {"decision_replay": {"include_member_arguments": False}},
+        },
+    }
+    _, include_args = council_cli._decision_replay_settings(ai_cfg, "analysis")
+    assert include_args is False
