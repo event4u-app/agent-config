@@ -89,8 +89,9 @@ travel changes.
 
 | Mode | Client | Billable | Transport | Status |
 |---|---|---|---|---|
-| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
+| `api` | `AnthropicClient` / `OpenAIClient` / `GeminiClient` / `XAIClient` / `PerplexityClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
+| `cli` | `AnthropicCliClient` / `OpenAICliClient` / `GeminiCliClient` | no (subscription-authed) | local subprocess against the vendor CLI (`claude`, `codex`, `gemini`); auth delegated to the CLI's own session, no API key in this process | shipped (anthropic/openai/gemini · Phase 3) |
 
 Resolution lives in `scripts/ai_council/modes.py`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
@@ -118,16 +119,79 @@ thread** (no system prompt repetition). `2` records the round and
 moves to the next member. `3` returns `error="manual_aborted"` for
 that member and the orchestrator stops the fan-out.
 
+### CLI-mode UX
+
+`mode: cli` runs the council through the vendor's local CLI
+instead of the API. Auth is delegated — user logs into each CLI
+once (`claude login`, `codex login`, `gemini`), orchestrator
+inherits the subscription. No API key in this process.
+`billable=False` → cost gate bypassed; the local
+`cli_call_budget.max_calls_per_day.<provider>` quota (state at
+`~/.event4u/agent-config/cli-calls.json`, daily UTC reset) is the
+only per-day brake.
+
+Three vendor CLIs wired:
+
+- **Anthropic / Claude** — invokes `claude --print --output-format json`,
+  parses standard envelope (`result` + `usage` + `session_id` +
+  `total_cost_usd`). Token counts and reported cost survive to
+  `metadata` for audit.
+
+  ```yaml
+  members:
+    anthropic:
+      enabled: true
+      mode: cli
+      model: claude-sonnet-4-5
+  ```
+
+- **OpenAI / Codex** — invokes `codex exec --json`, walks the
+  newline-delimited JSON event stream, pulls text from
+  `item.completed` and tokens from `turn.completed`. Session id
+  preserved.
+
+  ```yaml
+  members:
+    openai:
+      enabled: true
+      mode: cli
+      model: gpt-5
+  ```
+
+- **Google / Gemini** — invokes `gemini --output-format json` with
+  prompt piped on stdin, parses `response` + `stats.models.<m>.tokens`
+  envelope. OAuth consent must be granted once interactively before
+  the CLI is usable from a non-interactive shell.
+
+  ```yaml
+  members:
+    gemini:
+      enabled: true
+      mode: cli
+      model: gemini-2.5-pro
+  ```
+
+Auth-failure stderr from any vendor CLI surfaces as
+`error="auth_expired"` with the original stderr tail in
+`metadata.stderr_tail` so the user knows to re-login. Missing
+binary at construction time fails fast with `CouncilDisabledError`
+naming the binary and the YAML override path — never silently
+substitutes.
+
+`xai` + `perplexity` accept `mode: cli` from Phase 4 onward, but
+their community CLIs DO consume the API key and DO NOT bypass
+per-token billing — contract doc warns explicitly.
+
 ### Cost-gate bypass for non-billable members
 
 `ExternalAIClient.billable` is the contract. Clients with
-`billable=False` (`ManualClient`) bypass the cost gate entirely —
-the orchestrator skips the
-projection check, the `on_overrun` callback, and the USD-budget
-short-circuit for that member, but still records the response's
-token counts (from the manual-paste length heuristic or the
-provider's reply, when available) for observability. Mixed runs
-(one manual + one api) gate only the api members.
+`billable=False` (`ManualClient`, `AnthropicCliClient`,
+`OpenAICliClient`, `GeminiCliClient`) bypass the cost gate entirely —
+orchestrator skips the projection check, the `on_overrun` callback,
+and the USD-budget short-circuit for that member, but still records
+the response's token counts (from the manual-paste length heuristic
+or the provider's reply, when available) for observability. Mixed
+runs (one cli + one api) gate only the api members.
 
 ## Degradation modes
 

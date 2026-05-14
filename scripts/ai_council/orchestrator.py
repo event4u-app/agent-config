@@ -272,6 +272,7 @@ def _run_round(
                     provider=member.name, model=member.model, text="",
                     error=f"{type(exc).__name__}: {exc}",
                 )
+            _stamp_transport_metadata(response, member)
             results.append(response)
             spent["input"] += response.input_tokens
             spent["output"] += response.output_tokens
@@ -341,6 +342,7 @@ def _run_round(
         results.append(response)
         spent["input"] += response.input_tokens
         spent["output"] += response.output_tokens
+        actual_usd: float | None = None
         if estimates is not None and table is not None:
             # Bill the actual output against the budget using the
             # member's per-1M output rate. Re-use estimate_cost with
@@ -349,6 +351,7 @@ def _run_round(
                 member.name, member.model,
                 response.input_tokens, response.output_tokens, table,
             )
+            actual_usd = actual.total_usd
             spent["usd"] += actual.total_usd
             # Persist to the rolling 24h ledger when the daily cap is
             # active. Errors are swallowed inside record_spend.
@@ -356,14 +359,44 @@ def _run_round(
                 _record_daily_spend(
                     actual.total_usd, member.name, member.model,
                 )
+        _stamp_transport_metadata(response, member, cost_usd=actual_usd)
 
     return results
 
 
 def _aborted(member: ExternalAIClient, reason: str) -> CouncilResponse:
-    return CouncilResponse(
+    response = CouncilResponse(
         provider=member.name, model=member.model, text="", error=reason,
     )
+    _stamp_transport_metadata(response, member)
+    return response
+
+
+def _stamp_transport_metadata(
+    response: CouncilResponse,
+    member: ExternalAIClient,
+    *,
+    cost_usd: float | None = None,
+) -> None:
+    """Annotate `response.metadata` with transport / billable / cost info.
+
+    Phase 5 / Step 1 — the session writer and orchestrator renderer key
+    off these fields to format the cost line as either
+    ``cost: subscription (claude-pro)`` (non-billable vendor CLI) or
+    ``cost: $0.NNNN (… in / … out)`` (billable api or community CLI).
+    Stamped here (and not in each client) so the writer stays decoupled
+    from the client class hierarchy.
+    """
+    meta = dict(response.metadata or {})
+    transport = getattr(member, "transport", "api")
+    meta.setdefault("transport", transport)
+    meta.setdefault("billable", bool(getattr(member, "billable", True)))
+    label = getattr(member, "subscription_label", "") or ""
+    if label and not meta.get("billable", True):
+        meta.setdefault("subscription_label", label)
+    if cost_usd is not None:
+        meta["cost_usd"] = float(cost_usd)
+    response.metadata = meta
 
 
 def _augment_for_next_round(
@@ -857,6 +890,35 @@ def run_consensus_scoring(
     )
 
 
+def _render_response_meta(r: CouncilResponse) -> str:
+    """Format the per-member meta line — tokens, cost (or subscription), latency.
+
+    Phase 5 / Step 1 — non-billable vendor-CLI calls render
+    ``cost: subscription (<label>)`` with no token detail (the local
+    session counted them but the user is on a flat rate). Billable
+    calls (api or community CLI) render ``cost: $X.XXXX`` plus tokens.
+    Tokens marked ``estimated=True`` get a ``~`` prefix so the audit
+    trail flags heuristic counts.
+    """
+    meta_dict = r.metadata or {}
+    billable = bool(meta_dict.get("billable", True))
+    estimated = bool(meta_dict.get("tokens_estimated", False))
+    parts: list[str] = []
+    if not billable:
+        label = meta_dict.get("subscription_label") or "flat-rate"
+        parts.append(f"cost: subscription ({label})")
+    else:
+        cost_usd = meta_dict.get("cost_usd")
+        if isinstance(cost_usd, (int, float)):
+            parts.append(f"cost: ${cost_usd:.4f}")
+        prefix = "~" if estimated else ""
+        parts.append(
+            f"tokens: {prefix}{r.input_tokens} in / {prefix}{r.output_tokens} out"
+        )
+    parts.append(f"{r.latency_ms} ms")
+    return f"*{' · '.join(parts)}*"
+
+
 def render(
     responses: list[CouncilResponse],
     *,
@@ -894,10 +956,7 @@ def render(
         if r.error:
             blocks.append(f"{header}\n\n*ERROR:* `{r.error}`")
             continue
-        meta = (
-            f"*tokens: {r.input_tokens} in / {r.output_tokens} out · "
-            f"{r.latency_ms} ms*"
-        )
+        meta = _render_response_meta(r)
         blocks.append(f"{header}\n\n{meta}\n\n{r.text}")
     if peer_review is not None and peer_review.responses:
         blocks.append(_render_peer_review(peer_review))

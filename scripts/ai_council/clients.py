@@ -158,6 +158,8 @@ class ExternalAIClient(ABC):
     name: str = ""
     model: str = ""
     billable: bool = True  # API-mode subclasses spend money; manual doesn't.
+    transport: str = "api"  # "api" | "cli" | "manual" — surfaced in session manifest.
+    subscription_label: str = ""  # vendor-CLI label (e.g. "claude") for non-billable transports.
 
     @abstractmethod
     def ask(
@@ -552,6 +554,7 @@ class CliClient(ExternalAIClient):
     """
 
     billable = False
+    transport = "cli"
     default_binary: str = ""
 
     _AUTH_FAILURE_PATTERNS = (
@@ -753,6 +756,7 @@ class AnthropicCliClient(CliClient):
 
     name = "anthropic"
     default_binary = "claude"
+    subscription_label = "claude-pro"
 
     def __init__(
         self,
@@ -833,6 +837,7 @@ class OpenAICliClient(CliClient):
 
     name = "openai"
     default_binary = "codex"
+    subscription_label = "chatgpt-plus"
 
     _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
         "codex login", "auth_required", "401",
@@ -924,6 +929,7 @@ class GeminiCliClient(CliClient):
 
     name = "gemini"
     default_binary = "gemini"
+    subscription_label = "gemini-pro"
 
     _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
         "interactive consent could not be obtained",
@@ -1057,7 +1063,7 @@ class XAICliClient(CliClient):
         return CouncilResponse(
             provider=self.name, model=self.model, text=text,
             input_tokens=0, output_tokens=output_tokens,
-            metadata={"cli_output_format": "plain_text"},
+            metadata={"cli_output_format": "plain_text", "tokens_estimated": True},
         )
 
 
@@ -1116,7 +1122,7 @@ class PerplexityCliClient(CliClient):
         return CouncilResponse(
             provider=self.name, model=self.model, text=text,
             input_tokens=0, output_tokens=output_tokens,
-            metadata={"cli_output_format": "plain_text"},
+            metadata={"cli_output_format": "plain_text", "tokens_estimated": True},
         )
 
 
@@ -1158,6 +1164,7 @@ class ManualClient(ExternalAIClient):
     """
 
     billable = False
+    transport = "manual"
 
     def __init__(
         self,

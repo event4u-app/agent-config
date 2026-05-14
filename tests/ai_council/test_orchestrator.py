@@ -326,6 +326,75 @@ def test_render_emits_one_section_per_member_plus_summary_slot() -> None:
     assert out.count("\n\n---\n\n") >= 2
 
 
+# ── Phase 5 / Step 1 — render meta-line formatting ──────────────
+
+
+def test_render_billable_api_response_shows_cost_and_tokens() -> None:
+    rs = [
+        CouncilResponse(
+            "anthropic", "claude-x", "body",
+            input_tokens=100, output_tokens=20, latency_ms=1500,
+            metadata={"transport": "api", "billable": True, "cost_usd": 0.0023},
+        ),
+    ]
+    out = render(rs)
+    assert "cost: $0.0023" in out
+    assert "tokens: 100 in / 20 out" in out
+    assert "1500 ms" in out
+    # No subscription label leak when billable
+    assert "subscription" not in out
+
+
+def test_render_non_billable_vendor_cli_shows_subscription_label() -> None:
+    rs = [
+        CouncilResponse(
+            "anthropic", "claude-x", "body",
+            input_tokens=100, output_tokens=20, latency_ms=800,
+            metadata={
+                "transport": "cli", "billable": False,
+                "subscription_label": "claude-pro",
+            },
+        ),
+    ]
+    out = render(rs)
+    assert "cost: subscription (claude-pro)" in out
+    assert "800 ms" in out
+    # Token detail suppressed for flat-rate calls per Phase 5 Step 1
+    assert "100 in" not in out
+    assert "20 out" not in out
+
+
+def test_render_community_cli_marks_estimated_tokens() -> None:
+    rs = [
+        CouncilResponse(
+            "xai", "grok-x", "body",
+            input_tokens=0, output_tokens=30, latency_ms=600,
+            metadata={
+                "transport": "cli", "billable": True,
+                "tokens_estimated": True, "cost_usd": 0.0015,
+            },
+        ),
+    ]
+    out = render(rs)
+    assert "cost: $0.0015" in out
+    # Heuristic counts get a ~ prefix so the audit trail flags them
+    assert "tokens: ~0 in / ~30 out" in out
+
+
+def test_render_legacy_response_without_metadata_uses_billable_default() -> None:
+    """Back-compat: responses with empty metadata render as billable api."""
+    rs = [
+        CouncilResponse(
+            "anthropic", "claude-x", "body",
+            input_tokens=10, output_tokens=5, latency_ms=100,
+        ),
+    ]
+    out = render(rs)
+    # No cost line when neither cost_usd nor subscription_label is set
+    assert "tokens: 10 in / 5 out" in out
+    assert "subscription" not in out
+
+
 
 # ── render — lens-aware synthesis (Phase 3 / F2) ────────────────
 

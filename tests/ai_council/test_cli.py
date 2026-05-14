@@ -380,19 +380,96 @@ def test_build_members_cli_map_closed_for_all_providers(monkeypatch) -> None:
     assert {entry[0] for entry in constructed} == {"xai", "perplexity"}
 
 
-def test_build_members_cli_binary_missing_wraps_cli_error(monkeypatch) -> None:
-    """CliClientError at construction time becomes CouncilDisabledError."""
+@pytest.mark.parametrize(
+    ("provider", "factory_attr", "binary_name"),
+    [
+        ("anthropic", "AnthropicCliClient", "claude"),
+        ("openai", "OpenAICliClient", "codex"),
+        ("gemini", "GeminiCliClient", "gemini"),
+        ("xai", "XAICliClient", "grok"),
+        ("perplexity", "PerplexityCliClient", "perplexity"),
+    ],
+)
+def test_build_members_cli_binary_missing_skips_member_with_reason(
+    monkeypatch, capsys, provider, factory_attr, binary_name,
+) -> None:
+    """Phase 5 Step 2: missing CLI binary surfaces a structured skip
+    entry, prints `[council] SKIP <name>: <detail>` on stderr, and
+    raises CouncilDisabledError ONLY when no other member survives.
+    Parametrized across all five providers wired in `_CLI_FACTORY`.
+    """
     from scripts.ai_council.clients import CliClientError
 
     def _raise(**kw):
-        raise CliClientError("binary 'claude' not found on PATH")
+        raise CliClientError(
+            f"{factory_attr}: binary {binary_name!r} not found on PATH. "
+            f"Install the provider CLI or set "
+            f"`members.{provider}.binary:` in agents/.ai-council.yml."
+        )
+
+    monkeypatch.setattr(council_cli, factory_attr, _raise)
+    settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
+        provider: {"enabled": True, "mode": "cli", "model": "model-x"},
+    }}}
+    skipped: list[dict] = []
+    with pytest.raises(
+        council_cli.CouncilDisabledError,
+        match=r"every enabled\s+member was skipped",
+    ):
+        council_cli.build_members(settings, skipped=skipped)
+    assert len(skipped) == 1
+    assert skipped[0]["member"] == provider
+    assert skipped[0]["reason"] == "binary_missing"
+    assert "not found on PATH" in skipped[0]["detail"]
+    err = capsys.readouterr().err
+    assert f"[council] SKIP {provider}:" in err
+
+
+def test_build_members_cli_binary_missing_partial_skip_other_members_survive(
+    monkeypatch, capsys,
+) -> None:
+    """Phase 5 Step 2: when one CLI member's binary is missing but
+    another (api-mode) member is enabled, the council still constructs
+    — only the unavailable member is logged as skipped.
+    """
+    from scripts.ai_council.clients import CliClientError
+
+    def _raise(**kw):
+        raise CliClientError("binary 'claude' not found on PATH.")
 
     monkeypatch.setattr(council_cli, "AnthropicCliClient", _raise)
+    monkeypatch.setattr(
+        council_cli, "load_openai_key", lambda: "sk-test-stub-not-real",
+    )
+
+    class _StubOpenAI:
+        billable = True
+        name = "openai"
+        model = "gpt-4o"
+
+        def __init__(self, *, model, api_key):
+            self.model = model
+
+    monkeypatch.setattr(council_cli, "OpenAIClient", _StubOpenAI)
+
     settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
         "anthropic": {"enabled": True, "mode": "cli", "model": "claude-sonnet-4-5"},
+        "openai": {"enabled": True, "mode": "api", "model": "gpt-4o"},
     }}}
-    with pytest.raises(council_cli.CouncilDisabledError, match="binary is\\s+not available"):
-        council_cli.build_members(settings)
+    skipped: list[dict] = []
+    members = council_cli.build_members(settings, skipped=skipped)
+    assert [m.name for m in members] == ["openai"]
+    assert len(skipped) == 1
+    assert skipped[0] == {
+        "member": "anthropic",
+        "reason": "binary_missing",
+        "detail": (
+            "binary 'claude' not found on PATH. Install the Claude CLI "
+            "or flip ai_council.members.anthropic.mode back to 'api'."
+        ),
+    }
+    err = capsys.readouterr().err
+    assert "[council] SKIP anthropic:" in err
 
 
 # ── cmd_estimate ─────────────────────────────────────────────────────

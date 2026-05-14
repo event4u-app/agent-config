@@ -6,17 +6,17 @@
 
 ## Overall
 
-**27 / 230 steps done · 12%**
+**32 / 230 steps done · 14%**
 
 ```text
-█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   12%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 53 | 27 | 0 | 0 | ███░░░░░░░ 34% |
+| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 48 | 32 | 0 | 0 | ████░░░░░░ 40% |
 | 2 | [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,7 +29,7 @@
 
 ### [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md)
 
-**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 27 / 80 done (34%)
+**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 32 / 80 done (40%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -38,7 +38,7 @@
 | 2 | Claude CLI integration (canonical JSON path) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | Codex + Gemini CLI integration | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | Community CLI handling for xAI + Perplexity | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 5 | Session-trail adaptation + negative-test backfill | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Session-trail adaptation + negative-test backfill | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 | 6 | Council-necessity classifier + skip / educate / force flow | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 7 | Model-size classifier + downgrade suggestion + toggle | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 8 | Debate cost-visibility + hard refusal cap | ⬜ not started | 5 | 0 | 0 | 0 | 0% |

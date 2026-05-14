@@ -104,11 +104,11 @@ No subscription savings — these CLIs wrap the API with an API key. Phase 4 sup
 
 Close the audit-trail gap and the negative-path coverage gap in one phase. Mirrors the discipline of step-2 Phase 8.
 
-- [ ] **Step 1 — `session.md` schema adaptation:** Where today's writer emits `cost: $0.0023 (1024 in / 512 out)` for `api` calls, emit `cost: subscription (claude-pro)` for `billable=False` CLI calls and `cost: $0.NNNN (… in / … out)` for the xAI/Perplexity community-CLI case (still billable). Token-count fields become `null` when the CLI's output envelope does not surface them.
-- [ ] **Step 2 — Negative tests — binary missing:** Parametrized per provider — `shutil.which` returns `None` → `CliClientError` on constructor; member-init in `council_cli.py:run()` surfaces this as a structured "skip member with reason" entry in the run log, never silently drops the member.
-- [ ] **Step 3 — Negative tests — non-zero exit:** Mock subprocess returns `returncode=1` with auth-failure stderr → `CouncilResponse.error == "auth_expired"`; with timeout-like stderr → `error == "timeout"` (covered by Phase 1 Step 5 but re-verified end-to-end here).
-- [ ] **Step 4 — Negative tests — malformed JSON:** Claude/Codex/Gemini subclasses receive stdout that is NOT valid JSON → `_parse_output` returns `CouncilResponse(error="parse_failed", text="<raw stdout>")`. Never crashes the run.
-- [ ] **Step 5 — Negative tests — daily quota:** `cli_call_budget.max_calls_per_day.anthropic: 2` set; third call in the same UTC day returns `error="cli_quota_exhausted"` without firing the subprocess. State file reset on UTC date rollover verified.
+- [x] **Step 1 — `session.md` schema adaptation:** Where today's writer emits `cost: $0.0023 (1024 in / 512 out)` for `api` calls, emit `cost: subscription (claude-pro)` for `billable=False` CLI calls and `cost: $0.NNNN (… in / … out)` for the xAI/Perplexity community-CLI case (still billable). Token-count fields become `null` when the CLI's output envelope does not surface them.
+- [x] **Step 2 — Negative tests — binary missing:** Parametrized per provider — `shutil.which` returns `None` → `CliClientError` on constructor; member-init in `council_cli.py:run()` surfaces this as a structured "skip member with reason" entry in the run log, never silently drops the member.
+- [x] **Step 3 — Negative tests — non-zero exit:** Mock subprocess returns `returncode=1` with auth-failure stderr → `CouncilResponse.error == "auth_expired"`; with timeout-like stderr → `error == "timeout"` (covered by Phase 1 Step 5 but re-verified end-to-end here).
+- [x] **Step 4 — Negative tests — malformed JSON:** Claude/Codex/Gemini subclasses receive stdout that is NOT valid JSON → `_parse_output` returns `CouncilResponse(error="parse_failed", text="<raw stdout>")`. Never crashes the run.
+- [x] **Step 5 — Negative tests — daily quota:** `cli_call_budget.max_calls_per_day.anthropic: 2` set; third call in the same UTC day returns `error="cli_quota_exhausted"` without firing the subprocess. State file reset on UTC date rollover verified.
 - [ ] **Step 6 — Full suite green:** `python3 -m pytest tests/ai_council/ -q` passes end-to-end; `task ci` clean.
 
 ## Phase 6: Council-necessity classifier + skip / educate / force flow

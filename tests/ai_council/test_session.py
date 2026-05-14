@@ -353,3 +353,101 @@ def test_save_in_isolated_dir_does_not_touch_real_repo(tmp_path: Path) -> None:
     # No assertion on real dirs — the test passes by not erroring and
     # by the documented invariant (save() with explicit sessions_dir
     # confines pruning to that dir per session.py).
+
+
+
+# ── Phase 5 / Step 1 — transport / billable / cost manifest schema ───
+
+
+def _r_with_meta(provider: str, **meta: object) -> CouncilResponse:
+    return CouncilResponse(
+        provider=provider, model=f"{provider}-stub", text="ok",
+        input_tokens=10, output_tokens=20, latency_ms=100,
+        metadata=meta,
+    )
+
+
+def test_manifest_surfaces_billable_api_response(tmp_path: Path) -> None:
+    response = _r_with_meta(
+        "anthropic", transport="api", billable=True, cost_usd=0.0023,
+    )
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[response],
+        sessions_dir=tmp_path,
+    )
+    session_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+    payload = json.loads((session_dir / "manifest.json").read_text())
+    entry = payload["responses_per_round"][0][0]
+    assert entry["transport"] == "api"
+    assert entry["billable"] is True
+    assert entry["cost_usd"] == pytest.approx(0.0023)
+    assert entry["tokens_estimated"] is False
+    assert "subscription_label" not in entry
+
+
+def test_manifest_surfaces_non_billable_vendor_cli(tmp_path: Path) -> None:
+    response = _r_with_meta(
+        "anthropic", transport="cli", billable=False,
+        subscription_label="claude-pro",
+    )
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[response],
+        sessions_dir=tmp_path,
+    )
+    session_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+    payload = json.loads((session_dir / "manifest.json").read_text())
+    entry = payload["responses_per_round"][0][0]
+    assert entry["transport"] == "cli"
+    assert entry["billable"] is False
+    assert entry["subscription_label"] == "claude-pro"
+    assert "cost_usd" not in entry
+
+
+def test_manifest_flags_estimated_tokens_for_community_cli(
+    tmp_path: Path,
+) -> None:
+    response = _r_with_meta(
+        "xai", transport="cli", billable=True, tokens_estimated=True,
+        cost_usd=0.0015,
+    )
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["xai/grok-x"],
+        ),
+        responses=[response],
+        sessions_dir=tmp_path,
+    )
+    session_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+    payload = json.loads((session_dir / "manifest.json").read_text())
+    entry = payload["responses_per_round"][0][0]
+    assert entry["transport"] == "cli"
+    assert entry["billable"] is True
+    assert entry["tokens_estimated"] is True
+    assert entry["cost_usd"] == pytest.approx(0.0015)
+
+
+def test_manifest_defaults_when_metadata_missing(tmp_path: Path) -> None:
+    """Legacy responses without transport/billable metadata default to api."""
+    save(
+        manifest=SessionManifest(
+            mode="prompt", artefact="<inline>", original_ask="x",
+            members=["anthropic/claude-x"],
+        ),
+        responses=[_r("anthropic")],
+        sessions_dir=tmp_path,
+    )
+    session_dir = next(p for p in tmp_path.iterdir() if p.is_dir())
+    payload = json.loads((session_dir / "manifest.json").read_text())
+    entry = payload["responses_per_round"][0][0]
+    assert entry["transport"] == "api"
+    assert entry["billable"] is True
+    assert entry["tokens_estimated"] is False

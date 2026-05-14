@@ -169,6 +169,7 @@ def build_members(
     invocation_mode: str | None = None,
     model_overrides: dict[str, str] | None = None,
     siblings_overrides: dict[str, list[str]] | None = None,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[ExternalAIClient]:
     """Construct enabled council members from settings.
 
@@ -186,6 +187,16 @@ def build_members(
     becomes its own billable member with independent cost tracking.
     Mutually exclusive with `model_overrides` for the same provider;
     requires `mode=api`; provider must be enabled in settings.
+
+    `skipped` is an optional caller-owned list. When provided, each
+    cli-mode member that fails to construct (binary missing) is appended
+    as `{"member": <name>, "reason": "binary_missing", "detail": <msg>}`
+    instead of crashing the loop. The skip is also surfaced on stderr
+    as `[council] SKIP <name>: <detail>` so the run log carries it
+    even when the caller passes ``None``. Phase 5 Step 2 contract:
+    a missing CLI binary degrades that member only — never silently
+    drops, never crashes the whole council unless every configured
+    member ends up skipped.
     """
     ai = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     if not ai.get("enabled"):
@@ -250,14 +261,30 @@ def build_members(
                 _construct_api_member(name, model, api_key_ref=cfg.get("api_key_ref")),
             )
         elif mode == "cli" and name in _CLI_PROVIDERS:
-            members.append(
-                _construct_cli_member(
-                    name,
-                    model,
-                    binary=cfg.get("binary"),
-                    max_calls_per_day=cli_caps.get(name),
-                ),
-            )
+            try:
+                members.append(
+                    _construct_cli_member(
+                        name,
+                        model,
+                        binary=cfg.get("binary"),
+                        max_calls_per_day=cli_caps.get(name),
+                    ),
+                )
+            except CliClientError as exc:
+                _, _, display = _CLI_FACTORY[name]
+                detail = (
+                    f"{exc} Install the {display} CLI or flip "
+                    f"ai_council.members.{name}.mode back to 'api'."
+                )
+                entry = {
+                    "member": name,
+                    "reason": "binary_missing",
+                    "detail": detail,
+                }
+                if skipped is not None:
+                    skipped.append(entry)
+                print(f"[council] SKIP {name}: {detail}", file=sys.stderr)
+                continue
         elif mode == "cli":
             raise CouncilDisabledError(
                 f"member {name!r} resolves to mode=cli but no CLI client is "
@@ -275,6 +302,13 @@ def build_members(
                 f"name not in {sorted(_API_PROVIDERS)!r}."
             )
     if not members:
+        if skipped:
+            names = ", ".join(s["member"] for s in skipped)
+            raise CouncilDisabledError(
+                f"no council member could be constructed — every enabled "
+                f"member was skipped ({names}). See [council] SKIP entries "
+                f"on stderr for the per-member reason."
+            )
         raise CouncilDisabledError(
             "no council member has `enabled: true` — enable at least one in "
             ".agent-settings.yml under ai_council.members.*."
@@ -403,6 +437,22 @@ def _construct_api_member(
     )
 
 
+#: Provider → (class-attribute-name, default_model, human_display) for
+#: cli-mode routing. The class ref is looked up via ``getattr`` on this
+#: module at call time so ``monkeypatch.setattr(council_cli, "AnthropicCliClient", X)``
+#: keeps working from tests. The display string is used by
+#: ``build_members`` to render the "Install the <X> CLI" hint in
+#: skip-with-reason logs without re-importing every subclass at the
+#: call site.
+_CLI_FACTORY: dict[str, tuple[str, str, str]] = {
+    "anthropic": ("AnthropicCliClient", "claude-sonnet-4-5", "Claude"),
+    "openai": ("OpenAICliClient", "gpt-5", "Codex"),
+    "gemini": ("GeminiCliClient", "gemini-2.5-pro", "Gemini"),
+    "xai": ("XAICliClient", "grok-4", "Grok (community)"),
+    "perplexity": ("PerplexityCliClient", "sonar-pro", "Perplexity (community)"),
+}
+
+
 def _construct_cli_member(
     name: str,
     model: str | None,
@@ -416,31 +466,21 @@ def _construct_cli_member(
     ``None`` falls through to ``shutil.which(default_binary)``. The
     daily quota is plumbed through to the subclass; ``None`` disables
     the local counter (only stderr-based quota detection remains).
-    Wraps the subclass' ``CliClientError`` (raised when the binary is
-    missing at construction time) into ``CouncilDisabledError`` so the
-    council's error contract stays uniform.
+    Lets the subclass' ``CliClientError`` propagate so ``build_members``
+    can convert it into a structured per-member skip entry without
+    crashing the whole council (the original "fail loudly for the
+    entire council" contract is preserved when no other member
+    survives — the empty-members guard at the end of ``build_members``
+    fires with the skip log attached).
     """
-    cli_factory: dict[str, tuple[type[ExternalAIClient], str, str]] = {
-        "anthropic": (AnthropicCliClient, "claude-sonnet-4-5", "Claude"),
-        "openai": (OpenAICliClient, "gpt-5", "Codex"),
-        "gemini": (GeminiCliClient, "gemini-2.5-pro", "Gemini"),
-        "xai": (XAICliClient, "grok-4", "Grok (community)"),
-        "perplexity": (PerplexityCliClient, "sonar-pro", "Perplexity (community)"),
-    }
-    if name in cli_factory:
-        cls, default_model, display = cli_factory[name]
-        try:
-            return cls(
-                model=model or default_model,
-                binary=binary,
-                max_calls_per_day=max_calls_per_day,
-            )
-        except CliClientError as exc:
-            raise CouncilDisabledError(
-                f"member {name!r} resolves to mode=cli but the binary is "
-                f"not available: {exc}. Install the {display} CLI or flip "
-                f"ai_council.members.{name}.mode back to 'api'."
-            ) from exc
+    if name in _CLI_FACTORY:
+        attr, default_model, _display = _CLI_FACTORY[name]
+        cls = globals()[attr]
+        return cls(
+            model=model or default_model,
+            binary=binary,
+            max_calls_per_day=max_calls_per_day,
+        )
     raise CouncilDisabledError(
         f"member {name!r} has no cli transport "
         f"(known: {sorted(_CLI_PROVIDERS)!r})."

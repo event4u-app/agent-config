@@ -462,3 +462,148 @@ def test_billable_community_cli_participates_in_cost_gate(monkeypatch, tmp_path)
     assert AnthropicCliClient.billable is False
     assert OpenAICliClient.billable is False
     assert GeminiCliClient.billable is False
+
+
+
+# ── Phase 5 backfill: parametrized negative paths across providers ────────
+
+
+_ALL_CLI_CLIENTS = [
+    ("anthropic", AnthropicCliClient, "/bin/claude"),
+    ("openai", OpenAICliClient, "/bin/codex"),
+    ("gemini", GeminiCliClient, "/bin/gemini"),
+    ("xai", XAICliClient, "/bin/grok"),
+    ("perplexity", PerplexityCliClient, "/bin/perplexity"),
+]
+
+
+@pytest.mark.parametrize("provider,cls,binary_path", _ALL_CLI_CLIENTS)
+def test_phase5_step3_non_zero_exit_auth_expired(
+    monkeypatch, tmp_path, provider, cls, binary_path
+):
+    """Step 3 — every provider classifies auth-flavoured stderr on
+    non-zero exit as ``auth_expired``; orchestrator does not retry,
+    session records the structured error.
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: binary_path)
+    auth_stderr = {
+        "anthropic": "Authentication failed: please run /login",
+        "openai": "AUTH_REQUIRED — please run `codex login`",
+        "gemini": "OAuth token expired — please run `gemini` interactively",
+        "xai": "Error: 401 unauthorized — XAI_API_KEY invalid",
+        "perplexity": "Error: 401 unauthorized — PERPLEXITY_API_KEY missing",
+    }[provider]
+    _patch_run(monkeypatch, stderr=auth_stderr, returncode=1)
+    cli = cls(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.error == "auth_expired", f"{provider}: expected auth_expired, got {resp.error!r}"
+    assert resp.text == ""
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["returncode"] == 1
+
+
+@pytest.mark.parametrize("provider,cls,binary_path", _ALL_CLI_CLIENTS)
+def test_phase5_step3_timeout_end_to_end(
+    monkeypatch, tmp_path, provider, cls, binary_path
+):
+    """Step 3 — every provider returns ``error='timeout'`` when the
+    subprocess exceeds the configured budget; no retry, no crash.
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: binary_path)
+    _patch_run_raises(
+        monkeypatch, subprocess.TimeoutExpired(cmd=binary_path, timeout=1)
+    )
+    cli = cls(cli_calls_path=tmp_path / "cli-calls.json", timeout_seconds=1)
+    resp = cli.ask("sys", "user")
+    assert resp.error == "timeout", f"{provider}: expected timeout, got {resp.error!r}"
+    assert resp.text == ""
+    assert resp.metadata["timeout_seconds"] == 1
+
+
+@pytest.mark.parametrize("provider,cls,binary_path", _ALL_CLI_CLIENTS)
+def test_phase5_step4_malformed_output_never_crashes(
+    monkeypatch, tmp_path, provider, cls, binary_path
+):
+    """Step 4 — malformed stdout never crashes the run.
+
+    Iron Law: a broken envelope yields a structured ``CouncilResponse``,
+    not an exception. JSON-envelope clients (anthropic, gemini) report
+    ``parse_failed:*`` and surface raw stdout. NDJSON (openai) silently
+    skips non-JSON lines and returns an empty text. Plain-text clients
+    (xai, perplexity) treat any stdout as the answer.
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: binary_path)
+    _patch_run(monkeypatch, stdout="this is not JSON at all")
+    cli = cls(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.metadata["cli"] is True
+    if provider in {"anthropic", "gemini"}:
+        assert resp.error is not None
+        assert resp.error.startswith("parse_failed:"), (
+            f"{provider}: expected parse_failed prefix, got {resp.error!r}"
+        )
+        assert resp.text == "this is not JSON at all"
+    elif provider == "openai":
+        assert resp.error is None
+        assert resp.text == ""
+    else:
+        assert resp.error is None
+        assert resp.text == "this is not JSON at all"
+
+
+@pytest.mark.parametrize("provider,cls,binary_path", _ALL_CLI_CLIENTS)
+def test_phase5_step5_daily_quota_blocks_subprocess(
+    monkeypatch, tmp_path, provider, cls, binary_path
+):
+    """Step 5 — when the local counter has already reached the
+    per-day budget, ``ask()`` returns ``cli_quota_exhausted`` WITHOUT
+    spawning the subprocess.
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: binary_path)
+    state = tmp_path / "cli-calls.json"
+    record_cli_call(provider, state)
+    record_cli_call(provider, state)
+
+    spawn_count = {"n": 0}
+
+    def fake_run(*_a, **_kw):
+        spawn_count["n"] += 1
+        return _completed()
+
+    monkeypatch.setattr(clients_mod.subprocess, "run", fake_run)
+
+    cli = cls(cli_calls_path=state, max_calls_per_day=2)
+    resp = cli.ask("sys", "user")
+    assert resp.error == "cli_quota_exhausted"
+    assert resp.metadata["cli_calls_used"] == 2
+    assert resp.metadata["cli_calls_max"] == 2
+    assert spawn_count["n"] == 0, f"{provider}: subprocess MUST NOT spawn after quota hit"
+
+
+@pytest.mark.parametrize("provider,cls,binary_path", _ALL_CLI_CLIENTS)
+def test_phase5_step5_state_file_resets_on_utc_rollover(
+    monkeypatch, tmp_path, provider, cls, binary_path
+):
+    """Step 5 — yesterday's counts do not leak into today.
+
+    Simulate a state file whose ``date`` field is a prior UTC date;
+    ``load_cli_call_counts`` returns an empty dict and the next call
+    proceeds (subprocess fires, counter starts fresh at 1).
+    """
+    state = tmp_path / "cli-calls.json"
+    state.write_text(
+        json.dumps({"date": "1999-01-01", "counts": {provider: 99}}),
+        encoding="utf-8",
+    )
+    assert load_cli_call_counts(state) == {}, (
+        f"{provider}: stale state must not leak across UTC rollover"
+    )
+
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: binary_path)
+    _patch_run(monkeypatch, stdout="")
+    cli = cls(cli_calls_path=state, max_calls_per_day=2)
+    resp = cli.ask("sys", "user")
+    assert resp.error != "cli_quota_exhausted", (
+        f"{provider}: stale-date state must not block today's first call"
+    )
+    assert load_cli_call_counts(state) == {provider: 1}
