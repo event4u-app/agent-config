@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-agent-error-001",
+  "error_type": "host_crash",
+  "error_message": "subprocess terminated unexpectedly",
+  "cwd": "/workspace",
+  "platform_hint": "synthetic"
+}

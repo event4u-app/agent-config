@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-pre-compact-001",
+  "trigger": "auto",
+  "transcript_path": "/tmp/fixture-transcript.json",
+  "cwd": "/workspace",
+  "platform_hint": "claude"
+}

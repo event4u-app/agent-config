@@ -127,10 +127,22 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              (experimental — beta gates: docs/contracts/mcp-beta-criteria.md)
   roadmap:progress           Regenerate agents/roadmaps-progress.md from open roadmaps
   roadmap:progress-check     Fail if agents/roadmaps-progress.md is stale (for CI)
+  settings:check             Validate .agent-settings.yml against the YAML-subset contract
+                             (docs/contracts/settings-sync-yaml-subset.md). Read-only.
+                             Exit 0 clean, 1 finding(s), 2 file absent / unreadable.
   hooks:install              Install the pre-commit roadmap-progress hook
                              (use --print to dump it, --force to overwrite an existing hook)
   hooks:status               Print the runtime hook matrix (per-platform install + bindings)
                              Flags: --format json|table, --strict (CI), --project-root <path>
+  hooks:doctor               Diagnose hook health: concerns + fail-open/closed posture,
+                             last dispatcher feedback per concern, missing trampolines.
+                             Wraps hooks:status. Read-only.
+                             Flags: --format json|table, --strict (CI), --project-root <path>
+  hooks:replay               Replay a fixture through the universal dispatcher with
+                             AGENT_CONFIG_REPLAY=1 (no writes under agents/state/).
+                             Usage: hooks:replay --platform <name> --event <event>
+                                    --payload <path|event-name> [--native-event <native>]
+                                    [--manifest <path>] [--json] [--dry-run]
   migrate-state              Migrate a legacy .implement-ticket-state.json file
                              to the v1 .work-state.json schema (preserves .bak)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
@@ -217,7 +229,9 @@ Examples (Tier 2):
   ./agent-config mcp:setup
   ./agent-config mcp:run
   ./agent-config roadmap:progress
+  ./agent-config settings:check
   ./agent-config hooks:install
+  ./agent-config hooks:replay --platform augment --event post_tool_use --payload post_tool_use --json
   ./agent-config migrate-state
   ./agent-config memory:lookup --types domain-invariants --key billing
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
@@ -507,6 +521,20 @@ cmd_hooks_status() {
   exec python3 "$script" "$@"
 }
 
+cmd_hooks_doctor() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/hooks_doctor.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_hooks_replay() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/hooks/replay_hook.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
 cmd_chat_history_checkpoint() {
   require_python3
   local script
@@ -676,6 +704,15 @@ cmd_validate() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_validate "$@"
 }
 
+# `agent-config settings:check` — read-only YAML-subset validator for
+# `.agent-settings.yml` (P3.2 of road-to-proof-not-features.md). Contract
+# pinned in docs/contracts/settings-sync-yaml-subset.md. Exit 0 clean,
+# 1 finding(s), 2 file absent / unreadable.
+cmd_settings_check() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_settings_check "$@"
+}
+
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
 # entries (global). Idempotent. Pass `--purge` to also delete deployed
 # content directories under user-scope anchors (destructive). See
@@ -744,6 +781,8 @@ main() {
     context-hygiene:hook)    cmd_context_hygiene_hook "$@" ;;
     dispatch:hook)           cmd_dispatch_hook "$@" ;;
     hooks:status)            cmd_hooks_status "$@" ;;
+    hooks:doctor)            cmd_hooks_doctor "$@" ;;
+    hooks:replay)            cmd_hooks_replay "$@" ;;
     telemetry:record)        cmd_telemetry_record "$@" ;;
     telemetry:status)        cmd_telemetry_status "$@" ;;
     telemetry:report)        cmd_telemetry_report "$@" ;;
@@ -757,6 +796,7 @@ main() {
     export)                  cmd_export "$@" ;;
     sync)                    cmd_sync "$@" ;;
     validate)                cmd_validate "$@" ;;
+    settings:check)          cmd_settings_check "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;

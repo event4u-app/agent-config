@@ -1,0 +1,6 @@
+{
+  "session_id": "fixture-session-end-001",
+  "reason": "user_quit",
+  "cwd": "/workspace",
+  "platform_hint": "augment"
+}

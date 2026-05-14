@@ -1,0 +1,13 @@
+{
+  "session_id": "fixture-post-tool-001",
+  "tool_name": "str-replace-editor",
+  "tool_input": {
+    "path": "agents/roadmaps/example.md",
+    "command": "str_replace"
+  },
+  "tool_response": {
+    "success": true
+  },
+  "cwd": "/workspace",
+  "platform_hint": "augment"
+}

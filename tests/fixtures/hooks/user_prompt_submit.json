@@ -1,0 +1,7 @@
+{
+  "session_id": "fixture-user-prompt-001",
+  "prompt": "echo hello",
+  "transcript_path": "/tmp/fixture-transcript.json",
+  "cwd": "/workspace",
+  "platform_hint": "claude"
+}

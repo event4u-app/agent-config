@@ -37,7 +37,7 @@ MANIFEST_PATH = REPO_ROOT / "scripts" / "hook_manifest.yaml"
 # Lazy import — we want this module to be importable even if the
 # hooks package state_io has changed (test isolation).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from state_io import atomic_write_json, feedback_dir  # noqa: E402
+from state_io import atomic_write_json, feedback_dir, is_replay_mode  # noqa: E402
 
 EXIT_ALLOW = 0
 EXIT_BLOCK = 1
@@ -272,6 +272,10 @@ def _write_feedback(envelope: dict, session_id: str, entries: list[dict],
     not control flow. We only swallow IO errors here; fail-open
     matches the dispatcher's overall posture.
     """
+    # Replay mode skips feedback emission entirely so fixture replays
+    # never create per-session dirs under agents/state/.dispatcher/.
+    if is_replay_mode():
+        return
     workspace = envelope.get("workspace_root") or str(Path.cwd())
     state_root = Path(workspace) / "agents" / "state"
     fb_dir = feedback_dir(state_root, session_id)

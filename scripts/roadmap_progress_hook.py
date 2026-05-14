@@ -26,9 +26,12 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
+
+REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY"
 
 # Tools whose successful execution can write to a roadmap file. We keep
 # the list explicit so an unknown tool name (e.g. a new MCP tool that
@@ -131,6 +134,14 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
     if script is None:
         if verbose:
             print("roadmap-progress-hook: regenerator not found, skipping",
+                  file=sys.stderr)
+        return 0
+
+    # Replay mode (`AGENT_CONFIG_REPLAY=1`) skips the regenerator subprocess
+    # so fixture dispatches never rewrite agents/roadmaps-progress.md.
+    if os.environ.get(REPLAY_ENV_VAR, "").strip() == "1":
+        if verbose:
+            print("roadmap-progress-hook: replay mode, skipping regenerator",
                   file=sys.stderr)
         return 0
 
