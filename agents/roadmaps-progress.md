@@ -6,7 +6,7 @@
 
 ## Overall
 
-**0 / 175 steps done · 0%**
+**0 / 183 steps done · 0%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
@@ -21,7 +21,7 @@
 | 3 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 5 | 20 | 20 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 6 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -92,13 +92,14 @@
 
 ### [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md)
 
-**North Star Restructure (meta · out-of-band)** — 0 / 20 done (0%)
+**North Star Restructure (meta · out-of-band · **breaking change**)** — 0 / 28 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Renames (6 × `git mv`) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | New roadmap drafts (3 × `roadmap-writing` skill) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | New roadmap drafts (`roadmap-writing` skill) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Verification | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Compression decision (criterion-deferred, do NOT decide in this roadmap) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 5 | Closeout | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | External Parity Coverage (Domination Mandate) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Closeout | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 
