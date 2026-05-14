@@ -94,11 +94,11 @@ Two parallel subclasses on the AnthropicCliClient template; they only differ in 
 
 No subscription savings — these CLIs wrap the API with an API key. Phase 4 supports them as `mode: cli` for symmetry, but the contract doc warns that they DO consume the API key and DO NOT bypass per-token billing. Opt-in only.
 
-- [ ] **Step 1 — `XAICliClient(CliClient)`:** `binary = "grok"` (community Superagent project), `default_args = ["-p"]`. Output is plain text (no JSON envelope at time of writing — verify before implementing); `_parse_output` returns the trimmed stdout. Auth patterns: `"XAI_API_KEY"`, `"401"`, `"unauthorized"`.
-- [ ] **Step 2 — `PerplexityCliClient(CliClient)`:** `binary = "perplexity"` (community `@perplexity-cli/perplexity-cli`), `default_args = ["-p"]`. Same plain-text contract. Auth patterns: `"PERPLEXITY_API_KEY"`, `"401"`, `"unauthorized"`.
-- [ ] **Step 3 — Contract warning:** Add a callout to [`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md) and to the `xai` + `perplexity` member blocks in `agents/.ai-council.yml` stating that `mode: cli` for these providers is an ergonomic shortcut, NOT a billing change. The `cost_budget.max_total_usd` gate STILL applies — override `billable=True` on these two subclasses only.
-- [ ] **Step 4 — Provider→class map closes:** All five providers now wired. `mode: cli` no longer raises `NotImplementedError` for any provider.
-- [ ] **Step 5 — Fixture tests for both:** Plain-text fixtures (one per provider). Verify auth-failure paths, timeout paths, and the `billable=True` override produces the right cost-gate behaviour (call IS counted against `cost_budget`).
+- [x] **Step 1 — `XAICliClient(CliClient)`:** `binary = "grok"` (community Superagent project), `default_args = ["-p"]`. Output is plain text (no JSON envelope at time of writing — verify before implementing); `_parse_output` returns the trimmed stdout. Auth patterns: `"XAI_API_KEY"`, `"401"`, `"unauthorized"`.
+- [x] **Step 2 — `PerplexityCliClient(CliClient)`:** `binary = "perplexity"` (community `@perplexity-cli/perplexity-cli`), `default_args = ["-p"]`. Same plain-text contract. Auth patterns: `"PERPLEXITY_API_KEY"`, `"401"`, `"unauthorized"`.
+- [x] **Step 3 — Contract warning:** Add a callout to [`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md) and to the `xai` + `perplexity` member blocks in `agents/.ai-council.yml` stating that `mode: cli` for these providers is an ergonomic shortcut, NOT a billing change. The `cost_budget.max_total_usd` gate STILL applies — override `billable=True` on these two subclasses only.
+- [x] **Step 4 — Provider→class map closes:** All five providers now wired. `mode: cli` no longer raises `NotImplementedError` for any provider.
+- [x] **Step 5 — Fixture tests for both:** Plain-text fixtures (one per provider). Verify auth-failure paths, timeout paths, and the `billable=True` override produces the right cost-gate behaviour (call IS counted against `cost_budget`).
 
 ## Phase 5: Session-trail adaptation + negative-test backfill
 

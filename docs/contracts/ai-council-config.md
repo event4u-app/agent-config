@@ -42,7 +42,7 @@ cost_budget:                    # hard caps per /council invocation, required
   max_input_tokens: <int >= 0>            # 0 disables this cap
   max_output_tokens: <int >= 0>           # 0 disables this cap
   max_calls: <int >= 0>                   # 0 disables this cap
-  max_total_usd: <number >= 0>            # 0 disables the USD ceiling — applies to billable transports only (api), NOT to cli or manual
+  max_total_usd: <number >= 0>            # 0 disables the USD ceiling — applies to billable transports: all `mode: api`, plus `mode: cli` for xai/perplexity (community CLIs that still consume the API key). Does NOT apply to vendor-official `mode: cli` (anthropic/openai/gemini) or to `mode: manual`
 cli_call_budget:                # optional; per-day call-count guard for mode: cli members
   max_calls_per_day:
     <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
@@ -73,15 +73,26 @@ Three first-class transports on the `mode:` axis. Resolution per member:
 |---|---|---|---|---|
 | `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
 | `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
-| `cli` | Shell out to a locally-installed provider CLI under the user's subscription auth (`claude`, `codex`, `gemini`). Spend is covered by the flat-rate subscription. | No | CLI-managed OAuth / session (`~/.claude/`, `~/.codex/auth.json`, etc.) | `cli_call_budget.max_calls_per_day` only |
+| `cli` | Shell out to a locally-installed provider CLI. For `anthropic` / `openai` / `gemini` this runs under the user's subscription auth and is `billable=False`. For `xai` / `perplexity` (community wrappers) the CLI consumes the same API key as `mode: api` and remains `billable=True`. | Mixed — see below | CLI-managed OAuth (vendor) or API key in CLI env (community) | Vendor: `cli_call_budget.max_calls_per_day` only · Community: full `cost_budget` |
 
 Implications:
 
-- **`cost_budget.max_total_usd` does NOT apply to `cli` or `manual` calls.**
-  Both are `billable=False`; the USD ceiling is a token-billing concept.
-- **`api_key_ref` is required only for enabled members whose effective mode
-  is `api`.** CLI members authenticate via their own login flow; manual
-  members have no key at all.
+- **`cost_budget.max_total_usd` applies to `mode: cli` for `xai` and
+  `perplexity`.** Their CLIs (`grok`, `perplexity`) are community-built
+  wrappers around the same paid API — `mode: cli` is an ergonomic
+  shortcut, NOT a billing change. The orchestrator still runs the
+  pre-call USD estimate and the budget gate for these two providers.
+- **`cost_budget.max_total_usd` does NOT apply to `mode: cli` for the
+  vendor-official CLIs (`anthropic`, `openai`, `gemini`) or to
+  `mode: manual`.** All four are `billable=False`; the USD ceiling is
+  a token-billing concept they don't participate in.
+- **`api_key_ref` is required for enabled members whose effective mode
+  is `api`, AND for `xai` / `perplexity` even in `mode: cli`** — the
+  community CLI reads the key from its own env, but the agent still
+  surfaces missing-key as a validation error before the call. The
+  vendor-official CLIs (`anthropic`, `openai`, `gemini`) authenticate
+  via their own login flow and need no `api_key_ref` in `mode: cli`;
+  manual members have no key at all.
 - **`binary:` is only valid when the effective mode is `cli`.** Setting it
   on an `api` or `manual` member is a hard validation error — no silent
   ignore, no clutter.

@@ -25,6 +25,8 @@ from scripts.ai_council.clients import (  # noqa: E402
     CouncilResponse,
     GeminiCliClient,
     OpenAICliClient,
+    PerplexityCliClient,
+    XAICliClient,
     load_cli_call_counts,
     record_cli_call,
 )
@@ -351,3 +353,112 @@ def test_gemini_cli_parse_failed_on_garbage(monkeypatch, tmp_path):
     assert resp.error is not None
     assert resp.error.startswith("parse_failed:")
     assert resp.text == "not JSON at all"
+
+
+# ── integration: XAICliClient (Phase 4 Step 5) ────────────────────────────
+
+
+def test_xai_cli_plain_text_envelope(monkeypatch, tmp_path):
+    """Plain-text stdout → trimmed text + heuristic output token estimate.
+
+    The community `grok` CLI emits no JSON envelope, so the client
+    returns the trimmed stdout and estimates output tokens from
+    character count (chars / 4). Subprocess is mocked.
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/grok")
+    _patch_run(monkeypatch, stdout="The capital of France is Paris.\n")
+    cli = XAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("you are a geography tutor", "What is the capital of France?")
+    assert resp.error is None
+    assert resp.text == "The capital of France is Paris."
+    assert resp.input_tokens == 0
+    assert resp.output_tokens == len("The capital of France is Paris.") // 4
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["cli_output_format"] == "plain_text"
+
+
+def test_xai_cli_is_billable():
+    """`mode: cli` for xAI must keep `billable=True` — community CLI
+    consumes XAI_API_KEY, so the USD cost gate still applies.
+    """
+    assert XAICliClient.billable is True
+
+
+def test_xai_cli_build_command(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/grok")
+    captured = _patch_run(monkeypatch, stdout="ok")
+    cli = XAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    cli.ask("system here", "user here")
+    cmd = captured["cmd"]
+    assert cmd[0] == "/bin/grok"
+    assert "-p" in cmd
+    assert "user here" in cmd
+    assert "--model" in cmd
+    assert "grok-4" in cmd
+
+
+def test_xai_cli_auth_failure(monkeypatch, tmp_path):
+    """Non-zero exit + auth-flavoured stderr → structured auth_expired."""
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/grok")
+    _patch_run(
+        monkeypatch,
+        stdout="",
+        stderr="Error: 401 unauthorized — XAI_API_KEY invalid",
+        returncode=1,
+    )
+    cli = XAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.error == "auth_expired"
+
+
+# ── integration: PerplexityCliClient (Phase 4 Step 5) ─────────────────────
+
+
+def test_perplexity_cli_plain_text_envelope(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/perplexity")
+    _patch_run(monkeypatch, stdout="The capital of France is Paris.\n")
+    cli = PerplexityCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("you are a geography tutor", "What is the capital of France?")
+    assert resp.error is None
+    assert resp.text == "The capital of France is Paris."
+    assert resp.input_tokens == 0
+    assert resp.output_tokens == len("The capital of France is Paris.") // 4
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["cli_output_format"] == "plain_text"
+
+
+def test_perplexity_cli_is_billable():
+    """`mode: cli` for Perplexity must keep `billable=True` — community
+    CLI consumes PERPLEXITY_API_KEY, so the USD cost gate still applies.
+    """
+    assert PerplexityCliClient.billable is True
+
+
+def test_perplexity_cli_auth_failure(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/perplexity")
+    _patch_run(
+        monkeypatch,
+        stdout="",
+        stderr="Error: 401 unauthorized — PERPLEXITY_API_KEY missing",
+        returncode=1,
+    )
+    cli = PerplexityCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.error == "auth_expired"
+
+
+def test_billable_community_cli_participates_in_cost_gate(monkeypatch, tmp_path):
+    """The cost-gate-skip branch in orchestrator must NOT fire for
+    `billable=True` CLI subclasses — they go through the same USD
+    projection path as `mode: api` clients.
+
+    Verifies the structural invariant: `billable` is True at the class
+    level for both community CLIs, mirroring the orchestrator's check
+    `if not getattr(member, "billable", True):`.
+    """
+    assert XAICliClient.billable is True
+    assert PerplexityCliClient.billable is True
+    # And the vendor-official CLIs stay non-billable:
+    assert AnthropicCliClient.billable is False
+    assert OpenAICliClient.billable is False
+    assert GeminiCliClient.billable is False

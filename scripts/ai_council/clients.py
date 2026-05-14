@@ -17,12 +17,18 @@ Mode contract:
 - `billable=True` clients (AnthropicClient, OpenAIClient, GeminiClient,
   XAIClient, PerplexityClient) participate in the cost gate — projected
   USD spend is checked before each call.
-- `billable=False` clients (ManualClient, CliClient subclasses) skip
-  the USD cost gate entirely. Spend = $0 to us; provider-side limits
-  are the user's concern. CLI subclasses additionally consult the
-  optional `cli_call_budget.max_calls_per_day.<provider>` quota with
-  state persisted at `~/.event4u/agent-config/cli-calls.json` (daily
-  UTC reset).
+- `billable=False` clients (ManualClient, vendor-official CliClient
+  subclasses — AnthropicCliClient, OpenAICliClient, GeminiCliClient)
+  skip the USD cost gate entirely. Spend = $0 to us; provider-side
+  limits are the user's concern.
+- `billable=True` CLI subclasses (XAICliClient, PerplexityCliClient)
+  wrap community-maintained CLIs that consume the same API key as
+  their `api` counterparts — they participate in the USD cost gate.
+  `mode: cli` here is an ergonomic shortcut, not a billing change.
+
+CLI subclasses additionally consult the optional
+`cli_call_budget.max_calls_per_day.<provider>` quota with state
+persisted at `~/.event4u/agent-config/cli-calls.json` (daily UTC reset).
 """
 
 from __future__ import annotations
@@ -988,6 +994,129 @@ class GeminiCliClient(CliClient):
             provider=self.name, model=self.model, text=text,
             input_tokens=input_tokens, output_tokens=output_tokens,
             metadata=meta,
+        )
+
+
+class XAICliClient(CliClient):
+    """xAI Grok via the community `grok` CLI (Superagent project).
+
+    Community-maintained wrapper around the xAI API — **not** an
+    official subscription transport. The CLI consumes ``XAI_API_KEY``
+    from its own environment, so every call is paid per-token exactly
+    as ``XAIClient`` (api transport) would be. ``mode: cli`` here is
+    an ergonomic shortcut for users who already drive Grok from the
+    shell; it does NOT bypass the USD cost gate.
+
+    Invokes ``grok -p <prompt>``. Output is plain text — no JSON
+    envelope. ``_parse_output`` returns the trimmed stdout and
+    estimates token counts heuristically (chars / 4) for the
+    audit-trail; estimates feed the post-call spend tracker, not the
+    pre-call gate (the orchestrator's ``estimate()`` already projects
+    cost from the prompt before this client is invoked).
+    """
+
+    name = "xai"
+    default_binary = "grok"
+    billable = True  # community CLI consumes an API key — billable applies
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "xai_api_key", "401", "unauthorized",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = DEFAULT_XAI_MODEL,
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "-p", user_prompt]
+        if self.model:
+            cmd.extend(["--model", self.model])
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = stdout.strip()
+        # Plain-text CLIs surface no token usage — estimate from text
+        # length so the audit trail and post-call tracker stay populated.
+        # chars / 4 mirrors `pricing.estimate_input_tokens`.
+        output_tokens = max(1, len(text) // 4) if text else 0
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=0, output_tokens=output_tokens,
+            metadata={"cli_output_format": "plain_text"},
+        )
+
+
+class PerplexityCliClient(CliClient):
+    """Perplexity via the community `perplexity` CLI (npm package).
+
+    Community-maintained wrapper around the Perplexity API — **not**
+    an official subscription transport. The CLI consumes
+    ``PERPLEXITY_API_KEY`` from its own environment, so every call is
+    paid per-token exactly as ``PerplexityClient`` (api transport)
+    would be. ``mode: cli`` here is an ergonomic shortcut; it does
+    NOT bypass the USD cost gate.
+
+    Invokes ``perplexity -p <prompt>``. Output is plain text — no
+    JSON envelope. Token counts are estimated heuristically for the
+    audit trail; the pre-call cost gate uses the orchestrator's
+    prompt-side estimate.
+    """
+
+    name = "perplexity"
+    default_binary = "perplexity"
+    billable = True  # community CLI consumes an API key — billable applies
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "perplexity_api_key", "401", "unauthorized",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = DEFAULT_PERPLEXITY_MODEL,
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "-p", user_prompt]
+        if self.model:
+            cmd.extend(["--model", self.model])
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = stdout.strip()
+        output_tokens = max(1, len(text) // 4) if text else 0
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=0, output_tokens=output_tokens,
+            metadata={"cli_output_format": "plain_text"},
         )
 
 

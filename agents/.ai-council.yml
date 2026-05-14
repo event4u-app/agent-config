@@ -163,11 +163,17 @@ members:
     enabled: false
     model: grok-4
     api_key_ref: env:XAI_API_KEY
+    # mode: cli                          # community `grok` CLI (Superagent) — ergonomic shortcut, NOT a billing change.
+    # binary: /usr/local/bin/grok        # The CLI consumes XAI_API_KEY and remains billable=True;
+    #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.
 
   perplexity:
     enabled: false
     model: sonar-pro
     api_key_ref: env:PERPLEXITY_API_KEY
+    # mode: cli                          # community `perplexity` CLI — ergonomic shortcut, NOT a billing change.
+    # binary: /usr/local/bin/perplexity  # The CLI consumes PERPLEXITY_API_KEY and remains billable=True;
+    #                                    # cost_budget.max_total_usd STILL applies. Opt-in only.
 
 # Thinking-style advisors (replace-mode). When any `advisors.<key>.enabled:
 # true`, the orchestrator REPLACES that advisor's `member:` plain-member

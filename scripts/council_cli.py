@@ -35,7 +35,8 @@ from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
     AnthropicClient, AnthropicCliClient, CliClientError,
     CouncilResponse, ExternalAIClient, GeminiClient, GeminiCliClient,
-    ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient, XAIClient,
+    ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient,
+    PerplexityCliClient, XAIClient, XAICliClient,
     load_anthropic_key, load_openai_key,
 )
 from scripts.ai_council.advisors import (  # noqa: E402
@@ -69,8 +70,9 @@ _API_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"
 #: routing table in ``_construct_cli_member``; both must stay in sync.
 #: Phase 2 ships ``anthropic``; Phase 3 adds ``openai`` + ``gemini``;
 #: Phase 4 adds ``xai`` + ``perplexity`` (community CLIs, no
-#: subscription savings — they still consume the API key).
-_CLI_PROVIDERS = frozenset({"anthropic", "openai", "gemini"})
+#: subscription savings — they still consume the API key and remain
+#: ``billable=True``).
+_CLI_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
 
 
 class CouncilDisabledError(RuntimeError):
@@ -422,6 +424,8 @@ def _construct_cli_member(
         "anthropic": (AnthropicCliClient, "claude-sonnet-4-5", "Claude"),
         "openai": (OpenAICliClient, "gpt-5", "Codex"),
         "gemini": (GeminiCliClient, "gemini-2.5-pro", "Gemini"),
+        "xai": (XAICliClient, "grok-4", "Grok (community)"),
+        "perplexity": (PerplexityCliClient, "sonar-pro", "Perplexity (community)"),
     }
     if name in cli_factory:
         cls, default_model, display = cli_factory[name]

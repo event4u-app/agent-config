@@ -340,18 +340,44 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
     }]
 
 
-def test_build_members_cli_unknown_provider_raises() -> None:
-    """mode=cli for a provider without a wired CLI subclass raises.
+def test_build_members_cli_map_closed_for_all_providers(monkeypatch) -> None:
+    """Phase 4 Step 4 — `mode: cli` is wired for every supported provider.
 
-    `xai` and `perplexity` are scheduled for Phase 4; until then they
-    are valid `mode=api` providers but have no CLI transport — the
-    loader must surface that explicitly, not silently fall through.
+    Originally this test asserted that `xai` / `perplexity` raised
+    `no CLI client is wired`. Phase 4 closes the map (all five
+    providers route to a CliClient subclass), so the contract flips:
+    `mode: cli` now constructs the client successfully. The negative
+    path that survives is the binary-missing one, covered by the
+    following test.
     """
+    from scripts.ai_council.clients import PerplexityCliClient, XAICliClient
+
+    constructed: list[tuple[str, dict[str, object]]] = []
+
+    def fake_xai(**kw):
+        constructed.append(("xai", kw))
+        return _StubMember("xai", kw.get("model", "grok-4"),
+                           CouncilResponse("xai", kw.get("model", "grok-4"), "x"))
+
+    def fake_perplexity(**kw):
+        constructed.append(("perplexity", kw))
+        return _StubMember("perplexity", kw.get("model", "sonar-pro"),
+                           CouncilResponse("perplexity", kw.get("model", "sonar-pro"), "x"))
+
+    monkeypatch.setattr(council_cli, "XAICliClient", fake_xai)
+    monkeypatch.setattr(council_cli, "PerplexityCliClient", fake_perplexity)
+    # Sanity: the production classes the loader resolves are the
+    # community CLI subclasses, not stubs.
+    assert XAICliClient is not None
+    assert PerplexityCliClient is not None
+
     settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
         "xai": {"enabled": True, "mode": "cli", "model": "grok-4"},
+        "perplexity": {"enabled": True, "mode": "cli", "model": "sonar-pro"},
     }}}
-    with pytest.raises(council_cli.CouncilDisabledError, match="no CLI client is\\s+wired"):
-        council_cli.build_members(settings)
+    members = council_cli.build_members(settings)
+    assert {m.name for m in members} == {"xai", "perplexity"}
+    assert {entry[0] for entry in constructed} == {"xai", "perplexity"}
 
 
 def test_build_members_cli_binary_missing_wraps_cli_error(monkeypatch) -> None:
