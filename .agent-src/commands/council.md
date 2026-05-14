@@ -1,7 +1,7 @@
 ---
 name: council
 tier: 1
-description: Council orchestrator — routes to default, pr, design, optimize, analysis
+description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council
 type: orchestrator
 disable-model-invocation: true
@@ -58,9 +58,21 @@ Invariants:
 | `/council design` | `commands/council/design.md` | Run the council on a design doc / ADR / architecture proposal |
 | `/council optimize` | `commands/council/optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
 | `/council analysis` | `commands/council/analysis.md` | Run the council on a local analysis output — dedup, evidence quality, roadmap-ready Top-N |
+| `/council debate` | `commands/council/debate.md` | Multi-round debate with progressive cost disclosure — initial positions + rebuttals across N rounds |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
+
+## Advisor mode (replace-mode personas)
+
+Any sub-command above can run in **advisor mode** by enabling one or
+more advisors in `agents/.ai-council.yml` under `advisors:` (Contrarian,
+First-Principles, Expansionist, Outsider, Executor). An enabled advisor
+swaps its bound member's plain call for the same provider running the
+advisor persona — **same call count, same budget**. `council:estimate`
+surfaces every active swap on a dedicated line. Full contract: skills
+`ai-council` § "Thinking-style advisors" and
+[`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md).
 
 ## Dispatch
 
@@ -75,6 +87,7 @@ Sub-command names match the locked contract in
    > 3. design — review a design doc / ADR / architecture proposal
    > 4. optimize — ranked, evidence-based optimization advice
    > 5. analysis — critique a local analysis output (project-analyze, audits)
+   > 6. debate — multi-round rebuttals with progressive cost disclosure
 
 ## Rules
 

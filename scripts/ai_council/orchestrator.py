@@ -51,7 +51,9 @@ from scripts.ai_council.pricing import (
     estimate_input_tokens,
 )
 from scripts.ai_council.project_context import ProjectContext
+from scripts.ai_council.advisors import AdvisorPlan
 from scripts.ai_council.prompts import (
+    advisor_system_prompt,
     build_extraction_user_prompt,
     build_peer_review_user_prompt,
     build_scoring_user_prompt,
@@ -104,21 +106,41 @@ def estimate(
     *,
     project: ProjectContext | None = None,
     original_ask: str = "",
+    advisor_plans: dict[str, AdvisorPlan] | None = None,
 ) -> list[CostEstimate]:
     """Return a pre-call cost estimate per member, in input order.
 
     `project` and `original_ask` are passed through to
     `system_prompt_for()` so the estimate covers the handoff preamble
     bytes too. Both default to v1-shape (no preamble extension).
+
+    `advisor_plans` (Phase 6) — when a member's name has a plan, the
+    estimate uses the advisor persona system prompt (typically larger
+    than the bare mode addendum). The cost estimator must mirror
+    `_run_round` exactly so the pre-call preview never under-states
+    the advisor-mode bill.
     """
-    sys_prompt = system_prompt_for(
+    plans = advisor_plans or {}
+    base_user_tokens = estimate_input_tokens(question.user_prompt)
+    base_sys = system_prompt_for(
         question.mode, project=project, original_ask=original_ask,
     )
-    input_tokens = estimate_input_tokens(question.user_prompt) + estimate_input_tokens(sys_prompt)
-    return [
-        estimate_cost(m.name, m.model, input_tokens, question.max_tokens, table)
-        for m in members
-    ]
+    base_sys_tokens = estimate_input_tokens(base_sys)
+    estimates: list[CostEstimate] = []
+    for m in members:
+        plan = plans.get(m.name)
+        if plan is None:
+            sys_tokens = base_sys_tokens
+        else:
+            sys_prompt = advisor_system_prompt(
+                plan.persona_text, project=project, original_ask=original_ask,
+            )
+            sys_tokens = estimate_input_tokens(sys_prompt)
+        input_tokens = base_user_tokens + sys_tokens
+        estimates.append(
+            estimate_cost(m.name, m.model, input_tokens, question.max_tokens, table),
+        )
+    return estimates
 
 
 def consult(
@@ -132,6 +154,7 @@ def consult(
     original_ask: str = "",
     rounds: int = 1,
     on_round_complete: Callable[[int, list[CouncilResponse]], None] | None = None,
+    advisor_plans: dict[str, AdvisorPlan] | None = None,
 ) -> list[CouncilResponse]:
     """Sequentially fan out `question` to every enabled member.
 
@@ -152,6 +175,9 @@ def consult(
       accumulate across rounds. Returns the FINAL round's responses;
       use `on_round_complete(round_idx, responses)` to capture
       intermediate rounds.
+    - `advisor_plans` (Phase 6) keyed by provider name swaps the
+      member's system prompt for the advisor persona via
+      `advisor_system_prompt()`. Replace-mode: no extra calls.
     """
     if rounds < 1:
         raise ValueError(f"rounds must be >= 1 (got {rounds})")
@@ -181,6 +207,7 @@ def consult(
             members, round_question, budget, spent,
             table=table, on_overrun=on_overrun,
             project=project, original_ask=original_ask,
+            advisor_plans=advisor_plans,
         )
         if on_round_complete is not None:
             on_round_complete(round_idx, last_results)
@@ -202,14 +229,29 @@ def _run_round(
     on_overrun: OnOverrunCallback | None,
     project: ProjectContext | None,
     original_ask: str,
+    advisor_plans: dict[str, AdvisorPlan] | None = None,
 ) -> list[CouncilResponse]:
     """Run a single round; mutate `spent` with cumulative totals."""
-    system_prompt = system_prompt_for(
+    plans = advisor_plans or {}
+    base_system_prompt = system_prompt_for(
         question.mode, project=project, original_ask=original_ask,
     )
+
+    def _system_prompt_for_member(m: ExternalAIClient) -> str:
+        plan = plans.get(m.name)
+        if plan is None:
+            return base_system_prompt
+        return advisor_system_prompt(
+            plan.persona_text, project=project, original_ask=original_ask,
+        )
+
     results: list[CouncilResponse] = []
     estimates = (
-        estimate(question, members, table, project=project, original_ask=original_ask)
+        estimate(
+            question, members, table,
+            project=project, original_ask=original_ask,
+            advisor_plans=advisor_plans,
+        )
         if table is not None
         else None
     )
@@ -221,7 +263,10 @@ def _run_round(
         # observability, but no projection / budget breach can apply.
         if not getattr(member, "billable", True):
             try:
-                response = member.ask(system_prompt, question.user_prompt, question.max_tokens)
+                response = member.ask(
+                    _system_prompt_for_member(member),
+                    question.user_prompt, question.max_tokens,
+                )
             except Exception as exc:  # noqa: BLE001 - last-resort safety net
                 response = CouncilResponse(
                     provider=member.name, model=member.model, text="",
@@ -284,7 +329,10 @@ def _run_round(
 
         # ── actual call ──────────────────────────────────────────────
         try:
-            response = member.ask(system_prompt, question.user_prompt, question.max_tokens)
+            response = member.ask(
+                _system_prompt_for_member(member),
+                question.user_prompt, question.max_tokens,
+            )
         except Exception as exc:  # noqa: BLE001 - last-resort safety net
             response = CouncilResponse(
                 provider=member.name, model=member.model, text="",
@@ -354,6 +402,223 @@ def _augment_for_next_round(
         f"3. New points or refinements not raised in round 1.\n\n"
         f"{prior_block}"
     )
+
+
+@dataclass
+class DebateCheckpoint:
+    """Snapshot passed to the continue-prompt callback between rounds.
+
+    Phase 7 progressive-disclosure contract — the orchestrator pauses
+    after each completed round, builds this checkpoint, and asks the
+    caller whether to continue. Returning False stops the debate
+    gracefully (caller receives every completed round).
+    """
+
+    completed_round: int  # 1-based index of the round just finished
+    total_planned_rounds: int
+    cost_so_far_usd: float
+    next_round_estimate_usd: float
+    last_round_responses: list[CouncilResponse]
+
+
+class DebateCapExceeded(RuntimeError):
+    """Raised when projected next-round spend would breach the budget cap.
+
+    The CLI catches this *after* writing the partial artefact, so the
+    user always has a recoverable trail of the rounds that completed
+    before the cap fired.
+    """
+
+    def __init__(
+        self, *,
+        completed_round: int,
+        cost_so_far: float,
+        next_estimate: float,
+        cap: float,
+    ) -> None:
+        self.completed_round = completed_round
+        self.cost_so_far = cost_so_far
+        self.next_estimate = next_estimate
+        self.cap = cap
+        super().__init__(
+            f"Debate hard-cap: round {completed_round + 1} would push spend "
+            f"to ${cost_so_far + next_estimate:.4f} (cap=${cap:.4f}); "
+            f"stopping after round {completed_round}."
+        )
+
+
+# Continue-prompt callback. Receives a DebateCheckpoint, returns True to
+# proceed with the next round, False to stop gracefully.
+DebateContinuePrompt = Callable[[DebateCheckpoint], bool]
+
+
+def _augment_for_debate_round(
+    original_prompt: str,
+    prior_responses: list[CouncilResponse],
+    next_round_number: int,
+) -> str:
+    """Build the round-N user prompt for a debate — rebuttal framing.
+
+    Same anonymisation rules as `_augment_for_next_round` (Iron Law of
+    Neutrality § multi-round): provider/model identifiers stripped,
+    "Reviewer A / B / C…" labels assigned in input order, errors
+    skipped. The instruction block is debate-specific: each reviewer
+    is asked to identify the strongest opposing position and write a
+    rebuttal, NOT to find common ground.
+    """
+    blocks: list[str] = []
+    label_idx = 0
+    for r in prior_responses:
+        if r.error or not r.text.strip():
+            continue
+        label = chr(ord("A") + label_idx)
+        label_idx += 1
+        blocks.append(f"### Reviewer {label}\n\n{r.text.strip()}")
+    if not blocks:
+        return original_prompt
+    prior_block = "\n\n".join(blocks)
+    return (
+        f"{original_prompt}\n\n"
+        f"---\n\n"
+        f"## Prior round positions (round {next_round_number - 1})\n\n"
+        f"You are now in round {next_round_number} of a structured\n"
+        f"debate. Below are anonymised positions from independent\n"
+        f"reviewers in the previous round. You do NOT know which model\n"
+        f"produced which position.\n\n"
+        f"Identify the SINGLE strongest opposing position and write a\n"
+        f"rebuttal addressed at its strongest steel-manned form. Do NOT\n"
+        f"search for common ground — name the load-bearing flaw the\n"
+        f"opposing reviewer missed and state the evidence behind your\n"
+        f"counter-position.\n\n"
+        f"{prior_block}"
+    )
+
+
+def run_debate(
+    members: list[ExternalAIClient],
+    question: CouncilQuestion,
+    *,
+    budget: CostBudget | None = None,
+    table: PriceTable | None = None,
+    on_overrun: OnOverrunCallback | None = None,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
+    max_rounds: int = 2,
+    on_round_complete: Callable[[int, list[CouncilResponse]], None] | None = None,
+    on_continue: DebateContinuePrompt | None = None,
+    advisor_plans: dict[str, AdvisorPlan] | None = None,
+    seed_round_1: list[CouncilResponse] | None = None,
+) -> list[list[CouncilResponse]]:
+    """Run a structured multi-round debate with progressive disclosure.
+
+    Returns every completed round in order — caller persists each
+    round incrementally via `on_round_complete` for crash safety.
+
+    Round 1: each member produces an initial position. When
+    `seed_round_1` is provided, it is reused verbatim (no calls) so
+    `/council debate --continue-as-debate` can pivot from an existing
+    `/council default` session.
+
+    Round 2+: `_augment_for_debate_round` wraps the original prompt
+    with anonymised prior positions and asks each member for a
+    rebuttal addressed at the strongest opposing view.
+
+    Between rounds: `on_continue(checkpoint)` is consulted. Returning
+    False stops the debate; the caller receives every completed round.
+    `None` (the default) auto-continues — the CLI wires its
+    interactive y/N prompt here, `--auto-continue` passes `None`.
+
+    Hard cap: before kicking off round N+1, the orchestrator compares
+    `spent_usd + next_round_estimate` to `budget.max_total_usd`. A
+    projected breach raises `DebateCapExceeded`; the CLI catches it
+    after persisting the partial debate.
+    """
+    if max_rounds < 1:
+        raise ValueError(f"max_rounds must be >= 1 (got {max_rounds})")
+    if not members:
+        return []
+    budget = budget or CostBudget()
+    if len(members) > budget.max_calls:
+        raise ValueError(
+            f"Debate has {len(members)} members but budget caps at "
+            f"{budget.max_calls} calls."
+        )
+
+    spent: dict[str, float] = {"input": 0, "output": 0, "usd": 0.0}
+    all_rounds: list[list[CouncilResponse]] = []
+    current_user_prompt = question.user_prompt
+
+    for round_idx in range(max_rounds):
+        round_number = round_idx + 1
+        if round_idx == 0 and seed_round_1 is not None:
+            # Pivot from /council default — reuse the existing round 1
+            # verbatim. No calls billed; spend stays at $0 until round 2.
+            results = list(seed_round_1)
+        else:
+            round_question = (
+                question if round_idx == 0
+                else CouncilQuestion(
+                    mode=question.mode,
+                    user_prompt=current_user_prompt,
+                    max_tokens=question.max_tokens,
+                )
+            )
+            results = _run_round(
+                members, round_question, budget, spent,
+                table=table, on_overrun=on_overrun,
+                project=project, original_ask=original_ask,
+                advisor_plans=advisor_plans,
+            )
+
+        all_rounds.append(results)
+        if on_round_complete is not None:
+            on_round_complete(round_number, results)
+
+        # Prep the user-prompt for the next round so the cost estimate
+        # below covers the augmented bytes.
+        if round_idx + 1 < max_rounds:
+            current_user_prompt = _augment_for_debate_round(
+                question.user_prompt, results, round_number + 1,
+            )
+            # Hard-cap + continue-prompt gating before kicking off N+1.
+            if table is not None:
+                next_question = CouncilQuestion(
+                    mode=question.mode,
+                    user_prompt=current_user_prompt,
+                    max_tokens=question.max_tokens,
+                )
+                next_estimates = estimate(
+                    next_question, members, table,
+                    project=project, original_ask=original_ask,
+                    advisor_plans=advisor_plans,
+                )
+                next_round_usd = sum(e.total_usd for e in next_estimates)
+            else:
+                next_round_usd = 0.0
+
+            if (
+                budget.max_total_usd > 0
+                and spent["usd"] + next_round_usd > budget.max_total_usd
+            ):
+                raise DebateCapExceeded(
+                    completed_round=round_number,
+                    cost_so_far=spent["usd"],
+                    next_estimate=next_round_usd,
+                    cap=budget.max_total_usd,
+                )
+
+            if on_continue is not None:
+                checkpoint = DebateCheckpoint(
+                    completed_round=round_number,
+                    total_planned_rounds=max_rounds,
+                    cost_so_far_usd=spent["usd"],
+                    next_round_estimate_usd=next_round_usd,
+                    last_round_responses=results,
+                )
+                if not on_continue(checkpoint):
+                    return all_rounds
+
+    return all_rounds
 
 
 @dataclass

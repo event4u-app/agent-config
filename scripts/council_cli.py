@@ -37,16 +37,21 @@ from scripts.ai_council.clients import (  # noqa: E402
     ManualClient, OpenAIClient, PerplexityClient, XAIClient,
     load_anthropic_key, load_openai_key,
 )
+from scripts.ai_council.advisors import (  # noqa: E402
+    AdvisorPlan, build_persona_labels, plan_advisor_swap,
+)
 from scripts.ai_council.config import (  # noqa: E402
-    CouncilConfig, CouncilConfigError, load_council_config, resolve_api_key,
+    AdvisorConfig, CouncilConfig, CouncilConfigError,
+    load_council_config, resolve_api_key,
 )
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
 from scripts.ai_council.orchestrator import (  # noqa: E402
     ConsensusResult,
-    CostBudget, CouncilQuestion, PeerReviewResult, consult, estimate, render,
-    run_consensus_scoring, run_peer_review,
+    CostBudget, CouncilQuestion, DebateCapExceeded, DebateCheckpoint,
+    PeerReviewResult, consult, estimate, render,
+    run_consensus_scoring, run_debate, run_peer_review,
 )
 from scripts.ai_council.pricing import (  # noqa: E402
     PriceTable, estimate_cost, load_prices,
@@ -108,6 +113,16 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         if m.mode is not None:
             entry["mode"] = m.mode
         members[name] = entry
+    advisors: dict[str, dict[str, Any]] = {}
+    for name, a in cfg.advisors.items():
+        entry = {
+            "enabled": a.enabled,
+            "member": a.member,
+            "persona": a.persona,
+        }
+        if a.model is not None:
+            entry["model"] = a.model
+        advisors[name] = entry
     return {
         "enabled": cfg.enabled,
         "mode": cfg.defaults.mode,
@@ -129,6 +144,7 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             "lenses": list(cfg.consensus_scoring.lenses),
         },
         "members": members,
+        "advisors": advisors,
     }
 
 
@@ -233,6 +249,69 @@ def build_members(
             ".agent-settings.yml under ai_council.members.*."
         )
     return members
+
+
+def _build_advisor_plans(
+    ai_cfg: dict[str, Any],
+    repo_root: Path,
+) -> dict[str, AdvisorPlan]:
+    """Reconstruct AdvisorConfig from the projected dict, then plan swaps.
+
+    The legacy ``ai_council.advisors`` dict shape is the projection
+    written by ``_synthesize_ai_council_block``. Disabled advisors are
+    silently skipped by ``plan_advisor_swap``; one-per-provider is
+    enforced there. Returns empty when no advisor block is present.
+    """
+    raw = ai_cfg.get("advisors") if isinstance(ai_cfg, dict) else None
+    if not raw:
+        return {}
+    advisors: dict[str, AdvisorConfig] = {}
+    for name, entry in raw.items():
+        if not isinstance(entry, dict):
+            continue
+        advisors[name] = AdvisorConfig(
+            name=name,
+            enabled=bool(entry.get("enabled", False)),
+            member=str(entry.get("member", "")),
+            persona=str(entry.get("persona", "")),
+            model=entry.get("model"),
+        )
+    return plan_advisor_swap(advisors, repo_root)
+
+
+def _advisor_model_overrides(
+    plans: dict[str, AdvisorPlan],
+    explicit: dict[str, str] | None,
+) -> dict[str, str]:
+    """Merge advisor model_overrides under explicit ``--model`` flags.
+
+    Explicit CLI ``--model`` overrides win over advisor-bound model
+    overrides — the user's flag is always authoritative.
+    """
+    merged: dict[str, str] = {}
+    for member, plan in plans.items():
+        if plan.model_override:
+            merged[member] = plan.model_override
+    if explicit:
+        merged.update(explicit)
+    return merged
+
+
+def _format_advisor_summary(
+    plans: dict[str, AdvisorPlan],
+    members: list[ExternalAIClient],
+) -> str:
+    """Render the ``advisor: <persona> on <member> via <model>`` lines."""
+    if not plans:
+        return ""
+    member_models = {m.name: m.model for m in members}
+    rows: list[str] = []
+    for member, plan in plans.items():
+        model = member_models.get(member, plan.model_override or "?")
+        rows.append(
+            f"  advisor: {plan.display_name} on {member} via {model}"
+        )
+    return "\n".join(rows)
 
 
 def _construct_api_member(
@@ -485,11 +564,17 @@ def _maybe_run_peer_review(
     budget: CostBudget,
     table: PriceTable,
     project: Any,
+    *,
+    persona_labels: dict[str, str] | None = None,
 ) -> PeerReviewResult | None:
     """Run the peer-review pass when opted in.
 
     No-ops if fewer than 2 successful deliberation responses exist —
     the orchestrator surfaces the empty result in that case.
+
+    ``persona_labels`` (Phase 6) flows through to ``anonymize_responses``
+    so advisor-mode runs render as ``Response A (Contrarian)`` instead
+    of bare ``Response A``. Plain-member runs pass ``None``.
     """
     if not _peer_review_active(ai_cfg, args):
         return None
@@ -498,6 +583,7 @@ def _maybe_run_peer_review(
         budget=budget, table=table, project=project,
         original_ask=args.original_ask,
         max_tokens=question.max_tokens,
+        persona_labels=persona_labels,
     )
     if not result.responses:
         return None
@@ -592,16 +678,20 @@ def cmd_estimate(
     """Print per-member cost preview. No API calls."""
     if settings is None:
         settings = load_settings()
+    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
+    advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
+    explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
     if members is None:
         members = build_members(
             settings,
             invocation_mode=args.mode_override,
-            model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+            model_overrides=_advisor_model_overrides(
+                advisor_plans, explicit_overrides,
+            ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
         )
     if table is None:
         table = load_prices()
-    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     question, _ = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
         max_tokens=_resolve_max_tokens(args, ai_cfg),
@@ -610,7 +700,12 @@ def cmd_estimate(
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
     estimates = estimate(question, billable, table,
-                         project=project, original_ask=args.original_ask)
+                         project=project, original_ask=args.original_ask,
+                         advisor_plans=advisor_plans)
+    if getattr(args, "debate", False):
+        return _emit_debate_estimate(
+            args, ai_cfg, members, billable, estimates, advisor_plans,
+        )
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
     )
@@ -621,6 +716,9 @@ def cmd_estimate(
         f"council:estimate · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
     )
+    advisor_summary = _format_advisor_summary(advisor_plans, billable)
+    if advisor_summary:
+        sys.stdout.write(advisor_summary + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -629,6 +727,62 @@ def cmd_estimate(
             peer_review_delta_usd=pr_extra_usd,
             peer_review_extra_calls=pr_extra_calls,
         ) + "\n"
+    )
+    return 0
+
+
+def _emit_debate_estimate(
+    args: argparse.Namespace,
+    ai_cfg: dict[str, Any],
+    members: list[ExternalAIClient],
+    billable: list[ExternalAIClient],
+    estimates: list[Any],
+    advisor_plans: Any,
+) -> int:
+    """Render the round-by-round debate cost projection.
+
+    Upper bound only — progressive disclosure may stop the debate early.
+    Cost shape mirrors ``cmd_debate``: one call per billable member per
+    round, default ``ai_council.min_rounds`` (typically 2), capped at
+    ``ai_council.debate_max_rounds`` (typically 4).
+    """
+    min_rounds = int(ai_cfg.get("min_rounds", 2))
+    max_rounds_cap = int(ai_cfg.get("debate_max_rounds", 4))
+    requested = (
+        int(args.rounds) if getattr(args, "rounds", None) is not None
+        else min_rounds
+    )
+    if requested < 1:
+        raise argparse.ArgumentTypeError(
+            f"--rounds must be >= 1 (got {requested})"
+        )
+    if requested > max_rounds_cap:
+        raise argparse.ArgumentTypeError(
+            f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
+            f"raise the cap in agents/.ai-council.yml or lower --rounds."
+        )
+    rounds = requested
+    per_round_usd = sum(e.total_usd for e in estimates)
+    projected_total = per_round_usd * rounds
+    sys.stdout.write(
+        f"council:estimate · mode=debate · members={len(members)} "
+        f"(billable={len(billable)}) · rounds={rounds} "
+        f"(cap={max_rounds_cap})\n"
+    )
+    advisor_summary = _format_advisor_summary(advisor_plans, billable)
+    if advisor_summary:
+        sys.stdout.write(advisor_summary + "\n")
+    for round_idx in range(1, rounds + 1):
+        sys.stdout.write(f"\nRound {round_idx} of {rounds}:\n")
+        sys.stdout.write(format_estimate_table(billable, estimates) + "\n")
+        if round_idx < rounds:
+            sys.stdout.write("  " + "─" * 40 + "\n")
+    sys.stdout.write(
+        f"\n  PROJECTED TOTAL ({rounds} rounds):  ${projected_total:.4f}\n"
+    )
+    sys.stdout.write(
+        "  Note: progressive disclosure may stop the debate early; "
+        "this is an upper bound.\n"
     )
     return 0
 
@@ -707,16 +861,20 @@ def cmd_run(
     """Estimate, then run the council. Requires --confirm to spend."""
     if settings is None:
         settings = load_settings()
+    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
+    advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
+    explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
     if members is None:
         members = build_members(
             settings,
             invocation_mode=args.mode_override,
-            model_overrides=_parse_model_overrides(getattr(args, "model", None)),
+            model_overrides=_advisor_model_overrides(
+                advisor_plans, explicit_overrides,
+            ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
         )
     if table is None:
         table = load_prices()
-    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     question, artefact = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
         max_tokens=_resolve_max_tokens(args, ai_cfg),
@@ -725,7 +883,8 @@ def cmd_run(
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
     estimates = estimate(question, billable, table,
-                         project=project, original_ask=args.original_ask)
+                         project=project, original_ask=args.original_ask,
+                         advisor_plans=advisor_plans)
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
     )
@@ -736,6 +895,9 @@ def cmd_run(
         f"council:run · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
     )
+    advisor_summary = _format_advisor_summary(advisor_plans, billable)
+    if advisor_summary:
+        sys.stdout.write(advisor_summary + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -765,12 +927,15 @@ def cmd_run(
         members, question, budget,
         table=table, project=project,
         original_ask=args.original_ask, rounds=rounds,
+        advisor_plans=advisor_plans,
     )
     # Pipeline order (R4 verdict): deliberation → peer-review → consensus
     # → synthesis. Peer-review anonymises only deliberation outputs;
     # consensus-scoring runs on the de-anonymised findings.
+    persona_labels = build_persona_labels(advisor_plans, billable)
     peer_review = _maybe_run_peer_review(
         ai_cfg, args, question, members, responses, budget, table, project,
+        persona_labels=persona_labels,
     )
     consensus = _maybe_run_consensus(
         ai_cfg, question, members, responses, budget, table, project, args,
@@ -815,6 +980,281 @@ def cmd_run(
     )
     errors = [r for r in responses if r.error]
     return 1 if errors and len(errors) == len(responses) else 0
+
+
+def _debate_round_filename(round_number: int) -> str:
+    return f"debate-round-{round_number}.json"
+
+
+def _write_debate_round(
+    out_dir: Path,
+    round_number: int,
+    responses: list[CouncilResponse],
+    *,
+    question: CouncilQuestion,
+    members: list[ExternalAIClient],
+    artefact: str,
+    original_ask: str,
+    total_planned_rounds: int,
+    table: PriceTable,
+    prompt_mode: str | None,
+    prose_synthesis: bool | None,
+) -> Path:
+    """Persist a single debate round as a self-contained JSON.
+
+    Each round file mirrors the ``cmd_run`` payload shape — re-rendering
+    via ``council render <debate-round-N.json>`` works without special
+    handling. Round-specific keys (``debate_round``, ``debate_total_rounds``)
+    are additive so the renderer can ignore them safely.
+    """
+    out_dir.mkdir(parents=True, exist_ok=True)
+    actual_total = 0.0
+    for r in responses:
+        if r.error:
+            continue
+        ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table)
+        actual_total += ce.total_usd
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "mode": question.mode,
+        "prompt_mode": prompt_mode,
+        "prose_synthesis": prose_synthesis,
+        "artefact": artefact,
+        "original_ask": original_ask,
+        "members": [f"{m.name}/{m.model}" for m in members],
+        "debate_round": round_number,
+        "debate_total_rounds": total_planned_rounds,
+        "rounds": 1,
+        "cost_usd_actual": round(actual_total, 6),
+        "responses": _serialise_responses(responses),
+    }
+    out_path = out_dir / _debate_round_filename(round_number)
+    out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    return out_path
+
+
+def _load_debate_seed(
+    path: Path,
+    expected_members: list[ExternalAIClient],
+) -> list[CouncilResponse]:
+    """Load `--continue-as-debate` seed: round-1 responses from a prior session.
+
+    The seed file must be the JSON written by ``cmd_run`` (or a prior
+    debate round). Members + models must match the current invocation —
+    a mismatch is a hard error per the Phase 7 contract, not a silent
+    fallback. The host agent surfaces the mismatch and asks the user
+    to either re-run with matching members or drop ``--continue-as-debate``.
+    """
+    if not path.exists():
+        raise FileNotFoundError(
+            f"--continue-as-debate path not found: {path}"
+        )
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    source_members = list(payload.get("members") or [])
+    expected_labels = [f"{m.name}/{m.model}" for m in expected_members]
+    if source_members != expected_labels:
+        raise CouncilDisabledError(
+            f"--continue-as-debate member mismatch: source session has "
+            f"{source_members!r}, current invocation has {expected_labels!r}. "
+            f"Re-run with matching members or drop --continue-as-debate."
+        )
+    return _deserialise_responses(payload.get("responses") or [])
+
+
+def _make_debate_continue_prompt(
+    *, auto_continue: bool,
+    stream: Any = None,
+) -> Any:
+    """Build the on_continue callback for `run_debate()`.
+
+    ``--auto-continue`` returns ``None`` so the orchestrator skips the
+    gate entirely (still subject to the hard-cap check). Interactive
+    mode prints the checkpoint line and reads y/N from stdin.
+    """
+    if auto_continue:
+        return None
+    out = stream or sys.stdout
+
+    def _prompt(checkpoint: DebateCheckpoint) -> bool:
+        out.write(
+            f"\ndebate:checkpoint round={checkpoint.completed_round}/"
+            f"{checkpoint.total_planned_rounds} "
+            f"cost_so_far=${checkpoint.cost_so_far_usd:.4f} "
+            f"next_round_estimate=${checkpoint.next_round_estimate_usd:.4f} "
+            f"— continue? [y/N]: "
+        )
+        out.flush()
+        try:
+            answer = sys.stdin.readline().strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            return False
+        return answer in {"y", "yes"}
+
+    return _prompt
+
+
+def cmd_debate(
+    args: argparse.Namespace,
+    *,
+    settings: dict[str, Any] | None = None,
+    members: list[ExternalAIClient] | None = None,
+    table: PriceTable | None = None,
+) -> int:
+    """Run a multi-round debate with progressive cost disclosure.
+
+    Phase 7 contract: each member produces an initial position in
+    Round 1, then rebuts the strongest opposing position in subsequent
+    rounds. The orchestrator pauses after each round and asks the user
+    to continue (``--auto-continue`` bypasses the prompt). Round files
+    are persisted incrementally so an interrupted debate leaves a
+    recoverable trail.
+    """
+    if settings is None:
+        settings = load_settings()
+    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
+    advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
+    explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    if members is None:
+        members = build_members(
+            settings,
+            invocation_mode=args.mode_override,
+            model_overrides=_advisor_model_overrides(
+                advisor_plans, explicit_overrides,
+            ),
+            siblings_overrides=_parse_siblings_overrides(
+                getattr(args, "siblings", None),
+            ),
+        )
+    if table is None:
+        table = load_prices()
+    question, artefact = build_question(
+        input_path=Path(args.question), input_mode=args.input_mode,
+        max_tokens=_resolve_max_tokens(args, ai_cfg),
+        prompt_mode_override="debate",
+    )
+    project = detect_project_context(REPO_ROOT)
+    billable = [m for m in members if getattr(m, "billable", True)]
+
+    # Resolve round count: explicit --rounds wins; otherwise default 2.
+    # Hard ceiling: ai_council.debate_max_rounds (Phase 0 reserved key).
+    max_rounds_cap = int(ai_cfg.get("debate_max_rounds", 4))
+    requested = (
+        int(args.rounds) if getattr(args, "rounds", None) is not None else 2
+    )
+    if requested < 1:
+        raise argparse.ArgumentTypeError(
+            f"--rounds must be >= 1 (got {requested})"
+        )
+    if requested > max_rounds_cap:
+        raise argparse.ArgumentTypeError(
+            f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
+            f"raise the cap in agents/.ai-council.yml or lower --rounds."
+        )
+    rounds = requested
+
+    estimates = estimate(
+        question, billable, table,
+        project=project, original_ask=args.original_ask,
+        advisor_plans=advisor_plans,
+    )
+    per_round_usd = sum(e.total_usd for e in estimates)
+    projected_total = per_round_usd * rounds
+    sys.stdout.write(
+        f"council:debate · members={len(members)} (billable={len(billable)}) "
+        f"· rounds={rounds} (cap={max_rounds_cap})\n"
+    )
+    advisor_summary = _format_advisor_summary(advisor_plans, billable)
+    if advisor_summary:
+        sys.stdout.write(advisor_summary + "\n")
+    sys.stdout.write(
+        format_estimate_table(billable, estimates) + "\n"
+    )
+    sys.stdout.write(
+        f"  × {rounds} rounds (worst case, before progressive disclosure)\n"
+        f"  PROJECTED TOTAL:  ${projected_total:.4f}\n"
+    )
+
+    if not args.confirm:
+        sys.stdout.write(
+            "\nNo --confirm flag — estimate only. Re-run with --confirm to "
+            "start the debate.\n"
+        )
+        return 0
+
+    cost_cfg = ai_cfg.get("cost_budget") or {}
+    budget = CostBudget(
+        max_input_tokens=int(cost_cfg.get("max_input_tokens", 50_000)),
+        max_output_tokens=int(cost_cfg.get("max_output_tokens", 20_000)),
+        max_calls=int(cost_cfg.get("max_calls", 10)),
+        max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
+    )
+
+    out_dir = Path(args.output)
+    seed: list[CouncilResponse] | None = None
+    if getattr(args, "continue_as_debate", None):
+        seed = _load_debate_seed(Path(args.continue_as_debate), billable)
+        sys.stdout.write(
+            f"council:debate · seeding round 1 from "
+            f"{args.continue_as_debate} ({len(seed)} responses)\n"
+        )
+
+    written: list[Path] = []
+
+    def _on_round_complete(round_number: int, results: list[CouncilResponse]) -> None:
+        path = _write_debate_round(
+            out_dir, round_number, results,
+            question=question, members=members,
+            artefact=artefact, original_ask=args.original_ask,
+            total_planned_rounds=rounds, table=table,
+            prompt_mode="debate",
+            prose_synthesis=getattr(args, "prose_synthesis", None),
+        )
+        written.append(path)
+        errors = [r for r in results if r.error]
+        sys.stdout.write(
+            f"council:debate · wrote {path} "
+            f"({len(results) - len(errors)}/{len(results)} ok)\n"
+        )
+
+    on_continue = _make_debate_continue_prompt(
+        auto_continue=bool(getattr(args, "auto_continue", False)),
+    )
+
+    try:
+        all_rounds = run_debate(
+            members, question,
+            budget=budget, table=table, project=project,
+            original_ask=args.original_ask,
+            max_rounds=rounds,
+            on_round_complete=_on_round_complete,
+            on_continue=on_continue,
+            advisor_plans=advisor_plans,
+            seed_round_1=seed,
+        )
+    except DebateCapExceeded as exc:
+        sys.stderr.write(
+            f"❌  council:debate cap reached after round {exc.completed_round}: "
+            f"{exc}\n"
+            f"Partial debate persisted under {out_dir} "
+            f"({len(written)} rounds).\n"
+        )
+        return 3
+
+    actual_total = 0.0
+    for rnd in all_rounds:
+        for r in rnd:
+            if r.error:
+                continue
+            ce = estimate_cost(
+                r.provider, r.model, r.input_tokens, r.output_tokens, table,
+            )
+            actual_total += ce.total_usd
+    sys.stdout.write(
+        f"\ncouncil:debate · {len(all_rounds)} round(s) complete · "
+        f"actual ${actual_total:.4f} (cap projection ${projected_total:.4f})\n"
+    )
+    errors_last = [r for r in all_rounds[-1] if r.error] if all_rounds else []
+    return 1 if errors_last and len(errors_last) == len(all_rounds[-1]) else 0
 
 
 def cmd_render(args: argparse.Namespace) -> int:
@@ -964,6 +1404,15 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_est = sub.add_parser("estimate", help="Pre-call cost preview (no spend).")
     _add_common_input_args(p_est)
+    p_est.add_argument("--debate", action="store_true", default=False,
+                       help="Render the round-by-round projection for a "
+                            "debate run (one call per member per round). "
+                            "Progressive disclosure may stop the debate "
+                            "early — this is an upper bound.")
+    p_est.add_argument("--rounds", type=int, default=None,
+                       help="Debate round count for --debate. Defaults to "
+                            "ai_council.min_rounds (typically 2); capped "
+                            "at ai_council.debate_max_rounds (typically 4).")
 
     p_run = sub.add_parser("run", help="Run the council; --confirm required to spend.")
     _add_common_input_args(p_run)
@@ -983,6 +1432,29 @@ def build_parser() -> argparse.ArgumentParser:
                             "rule/skill/command declares council_depth: deep. "
                             "Overridden by explicit --rounds.")
     _add_prose_synthesis_arg(p_run)
+
+    p_deb = sub.add_parser(
+        "debate",
+        help="Multi-round debate with progressive cost disclosure (Phase 7).",
+    )
+    _add_common_input_args(p_deb)
+    p_deb.add_argument("--output", required=True,
+                       help="Directory to write debate-round-N.json files.")
+    p_deb.add_argument("--confirm", action="store_true",
+                       help="Required to actually start the debate.")
+    p_deb.add_argument("--rounds", type=int, default=None,
+                       help="Number of debate rounds (default 2). Capped by "
+                            "ai_council.debate_max_rounds in agents/.ai-council.yml.")
+    p_deb.add_argument("--auto-continue", action="store_true",
+                       default=False, dest="auto_continue",
+                       help="Skip the between-round y/N prompt. The hard cap "
+                            "against cost_budget.max_total_usd still applies.")
+    p_deb.add_argument("--continue-as-debate", default=None,
+                       dest="continue_as_debate", metavar="PATH",
+                       help="Seed round 1 from an existing council session "
+                            "JSON. Members + models must match the current "
+                            "invocation.")
+    _add_prose_synthesis_arg(p_deb)
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
     p_ren.add_argument("responses",
@@ -1019,6 +1491,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_estimate(args)
         if args.cmd == "run":
             return cmd_run(args)
+        if args.cmd == "debate":
+            return cmd_debate(args)
         if args.cmd == "render":
             return cmd_render(args)
     except CouncilDisabledError as exc:

@@ -70,9 +70,17 @@ class MemberConfig:
 
 @dataclass(frozen=True)
 class AdvisorConfig:
+    """Replace-mode advisor binding (Phase 6).
+
+    `member` names the provider whose plain call is replaced by this
+    advisor-persona call. `persona` is the path to the advisor persona
+    file (resolved relative to the package root). `model` is an
+    optional override of the bound member's plain model.
+    """
+
     name: str
     enabled: bool
-    target: str
+    member: str
     persona: str
     model: str | None = None
 
@@ -144,6 +152,26 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
     advisors: dict[str, AdvisorConfig] = {}
     for adv_name, adv_cfg in advisors_raw.items():
         advisors[adv_name] = _build_advisor(adv_name, adv_cfg or {})
+
+    # Cross-validate enabled advisors against the members block. An
+    # advisor referencing a missing or disabled member is a hard error
+    # — never a silent skip — so a typo never costs the user money on
+    # an unintended call plan.
+    for adv in advisors.values():
+        if not adv.enabled:
+            continue
+        bound = members.get(adv.member)
+        if bound is None:
+            raise CouncilConfigError(
+                f"advisors.{adv.name}.member={adv.member!r}: no such "
+                f"member in the `members` block."
+            )
+        if not bound.enabled:
+            raise CouncilConfigError(
+                f"advisors.{adv.name}.member={adv.member!r}: member "
+                f"exists but is disabled. Enable the member or disable "
+                f"the advisor."
+            )
 
     consensus = _build_consensus_scoring(raw.get("consensus_scoring") or {})
 
@@ -249,22 +277,28 @@ def _build_member(name: str, cfg: dict[str, Any]) -> MemberConfig:
 
 
 def _build_advisor(name: str, cfg: dict[str, Any]) -> AdvisorConfig:
-    target = cfg.get("target")
-    if target not in _VALID_PROVIDERS:
+    if not isinstance(cfg, dict):
+        raise CouncilConfigError(f"advisors.{name}: must be a mapping.")
+    member = cfg.get("member")
+    if member not in _VALID_PROVIDERS:
         raise CouncilConfigError(
-            f"advisors.{name}.target={target!r} not a valid provider."
+            f"advisors.{name}.member={member!r} not a valid provider; "
+            f"valid: {sorted(_VALID_PROVIDERS)}."
         )
-    persona = cfg.get("persona") or ""
-    if not persona:
+    # `persona` may be set explicitly; otherwise default to the
+    # convention path so the YAML stays terse.
+    persona = cfg.get("persona") or f"personas/advisors/{name}.md"
+    model = cfg.get("model")
+    if model is not None and not isinstance(model, str):
         raise CouncilConfigError(
-            f"advisors.{name}: `persona` (path to persona file) required."
+            f"advisors.{name}.model must be a string when set."
         )
     return AdvisorConfig(
         name=name,
         enabled=bool(cfg.get("enabled", False)),
-        target=target,
+        member=member,
         persona=persona,
-        model=cfg.get("model"),
+        model=model,
     )
 
 

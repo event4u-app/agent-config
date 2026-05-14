@@ -49,11 +49,44 @@ members:                        # per-provider blocks, at least one enabled
     model: <string>
     api_key_ref: <string>                 # see `api_key_ref` forms below
     mode: <"api" | "manual">              # optional override of defaults.mode
-advisors: {}                    # reserved for Phase 6, empty in Phase 0
+advisors:                       # Thinking-style replace-mode advisors
+  <advisor-key>:
+    enabled: <bool>
+    member: <provider>                    # required; references members.<provider>
+    model: <string>                       # optional; overrides member.model
+    persona: <path>                       # optional; defaults to personas/advisors/<advisor-key>.md
 ```
 
 Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
 `perplexity`. Unknown providers fail validation closed.
+
+### Advisor block (Phase 6, replace-mode)
+
+Five built-in advisor keys ship under
+[`.agent-src.uncompressed/personas/advisors/`](../../.agent-src.uncompressed/personas/advisors/):
+`contrarian`, `first-principles`, `expansionist`, `outsider`,
+`executor`. Each entry binds one advisor to one enabled provider. When
+`enabled: true`, the orchestrator REPLACES that provider's plain-member
+call with the advisor-persona call — the run keeps the same total call
+count as a plain run.
+
+- `member` is required and must name a known provider. The validator
+  rejects an enabled advisor whose `member` is missing from the
+  `members` block, OR exists but has `enabled: false` — silent skips
+  on the spend path are not allowed.
+- `model` is optional. When omitted, the advisor inherits its bound
+  member's `model`. When set, it overrides for that advisor call only.
+- `persona` is optional. When omitted, the loader resolves the file at
+  `personas/advisors/<advisor-key>.md` relative to the package root.
+
+### Advisor persona labels in peer-review (preserve-persona)
+
+Phase 5 peer-review anonymisation strips provider/model identity per
+the Iron Law of Neutrality. On an advisor-mode run, the anonymisation
+step preserves the **advisor persona label** as signal — peer-review
+output renders as `Response A (Contrarian)`, never
+`Response A (Anthropic Opus)`. Plain runs strip identity entirely.
+Hard-coded behaviour — no flag, no opt-out.
 
 ## `api_key_ref` forms
 
@@ -134,6 +167,12 @@ error) when any of these hold:
    by the monotonic rule at runtime) but logged as a warning.
 7. `defaults.mode` not in `{"api", "manual"}`; per-member `mode` override
    same constraint.
+8. `advisors.<key>.member` missing, unknown, or pointing at a
+   `members.<provider>` that does not exist or has `enabled: false`
+   (when the advisor itself is `enabled: true`). Silent skips are not
+   allowed — a typo never costs the user money on an unintended call
+   plan.
+9. `advisors.<key>.model` is set but not a string.
 
 ## Migration footprint (Phase 0)
 

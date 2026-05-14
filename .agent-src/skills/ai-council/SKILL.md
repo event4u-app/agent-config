@@ -575,6 +575,27 @@ internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
 **inside** a single member's chat thread and is orthogonal to the
 orchestrator-level rounds.
 
+### `/council debate` sub-command (progressive disclosure)
+
+`/council debate <artefact> [--rounds N] [--continue-as-debate <session>]`
+runs an **interactive** multi-round critique with a confirmation gate
+between every round so the user can stop the spend at any point.
+
+| Property | Behaviour |
+|---|---|
+| Round flow | Same orchestrator as `rounds:N` (`run_debate()`), but each round prints its responses then pauses on a y/n prompt before launching the next round. |
+| Cost gate | After every round the CLI prints `Spent so far: $X · Next round: ~$Y · Cap: $Z`. `n` exits cleanly with partial results; `y` continues. |
+| Hard cap | If the projected next-round cost would breach `max_total_usd`, `run_debate()` raises `DebateCapExceeded` and the CLI exits with the partial transcript. No silent overrun. |
+| `--continue-as-debate` | Seeds round 1 from an existing `/council default` (or analysis lens) session. No round-1 API calls are billed; round 2+ run normally. Member list must match. |
+| Session files | One file per round under `agents/council-sessions/<slug>/debate-round-NN.md`. |
+| Anonymisation | Identical to `rounds:N`. The continue-as-debate path also anonymises the seeded round-1 responses when building the round-2 prompt. |
+
+Use this when the artefact is genuinely contentious and the user
+wants to control depth interactively. For a fire-and-forget
+multi-round run, prefer `consult(..., rounds=N)` or `--rounds N` on
+`/council default`.
+
+
 ## Karpathy peer-review (opt-in)
 
 After the final deliberation round, an optional **anonymous peer-review

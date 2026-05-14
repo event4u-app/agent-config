@@ -144,6 +144,21 @@ spot the analysis itself has.
 """.strip()
 
 
+DEBATE_MODE = """\
+The artefact is the topic of a structured multi-round debate. You are
+one of several independent reviewers. Round-specific instructions:
+1. Round 1 — state your strongest, most defensible position on the
+   topic. Argue from evidence and first principles. Do not hedge.
+2. Round 2+ — read the anonymised positions from the previous round.
+   Identify the SINGLE strongest opposing position and write a
+   rebuttal addressed at its strongest steel-manned form. Your task
+   is to find the load-bearing flaw the opposing reviewer missed —
+   do NOT search for common ground.
+End each round with: a one-line position summary and the single
+piece of evidence that would change your mind.
+""".strip()
+
+
 _MODE_TABLE = {
     "prompt": PROMPT_MODE,
     "roadmap": ROADMAP_MODE,
@@ -153,6 +168,7 @@ _MODE_TABLE = {
     "design": DESIGN_MODE,
     "optimize": OPTIMIZE_MODE,
     "analysis": ANALYSIS_MODE,
+    "debate": DEBATE_MODE,
 }
 
 
@@ -426,6 +442,27 @@ def system_prompt_for(
 
 def all_modes() -> list[str]:
     return sorted(_MODE_TABLE)
+
+
+def advisor_system_prompt(
+    persona_text: str,
+    *,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
+) -> str:
+    """Build the system prompt for an advisor-mode call (Phase 6).
+
+    Layout: neutral handoff preamble (same shape every council member
+    sees, regardless of mode) + the advisor's persona body. The
+    mode-specific addendum from ``_MODE_TABLE`` is intentionally
+    replaced — the persona file owns the full instructional surface
+    for an advisor call.
+    """
+    head = handoff_preamble(project, original_ask)
+    body = (persona_text or "").strip()
+    if not body:
+        raise ValueError("advisor_system_prompt: persona_text is empty.")
+    return f"{head}\n\n{body}"
 
 
 

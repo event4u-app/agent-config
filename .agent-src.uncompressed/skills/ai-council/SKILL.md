@@ -575,6 +575,27 @@ internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
 **inside** a single member's chat thread and is orthogonal to the
 orchestrator-level rounds.
 
+### `/council debate` sub-command (progressive disclosure)
+
+`/council debate <artefact> [--rounds N] [--continue-as-debate <session>]`
+runs an **interactive** multi-round critique with a confirmation gate
+between every round so the user can stop the spend at any point.
+
+| Property | Behaviour |
+|---|---|
+| Round flow | Same orchestrator as `rounds:N` (`run_debate()`), but each round prints its responses then pauses on a y/n prompt before launching the next round. |
+| Cost gate | After every round the CLI prints `Spent so far: $X · Next round: ~$Y · Cap: $Z`. `n` exits cleanly with partial results; `y` continues. |
+| Hard cap | If the projected next-round cost would breach `max_total_usd`, `run_debate()` raises `DebateCapExceeded` and the CLI exits with the partial transcript. No silent overrun. |
+| `--continue-as-debate` | Seeds round 1 from an existing `/council default` (or analysis lens) session. No round-1 API calls are billed; round 2+ run normally. Member list must match. |
+| Session files | One file per round under `agents/council-sessions/<slug>/debate-round-NN.md`. |
+| Anonymisation | Identical to `rounds:N`. The continue-as-debate path also anonymises the seeded round-1 responses when building the round-2 prompt. |
+
+Use this when the artefact is genuinely contentious and the user
+wants to control depth interactively. For a fire-and-forget
+multi-round run, prefer `consult(..., rounds=N)` or `--rounds N` on
+`/council default`.
+
+
 ## Karpathy peer-review (opt-in)
 
 After the final deliberation round, an optional **anonymous peer-review
@@ -624,6 +645,60 @@ Needs ≥ 2 distinct deliberation outputs; below that the round is a
 no-op and nothing extra is billed. Self-review is structurally
 impossible — a member never sees its own response.
 
+## Thinking-style advisors (replace-mode)
+
+Phase 6 introduces five **advisor personas** that the council can adopt
+in *replace-mode*: an enabled advisor substitutes its bound member's
+plain call with the same provider running the advisor's persona prompt.
+Total call count stays the same as a plain run — only the system prompt
+swaps. Five advisors mirror the tenfoldmarc set, each a substantial
+persona file (not a tagline):
+
+| Advisor | Default bound member | Focus |
+|---|---|---|
+| **Contrarian** | `anthropic` | strongest counterargument, hidden assumptions |
+| **First-Principles** | `anthropic` | strip metaphor, derive from physics / math / cost |
+| **Expansionist** | `openai` | adjacent opportunities, second-order effects |
+| **Outsider** | `openai` | naive-but-sharp questions, beginner's-mind probes |
+| **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
+
+Activation — edit `agents/.ai-council.yml` and flip the advisor's
+`enabled: true`. Optional `model: <name>` overrides the bound member's
+default model. Validation rule: an advisor referencing a disabled
+member fails closed at config load — never silently skipped.
+
+```yaml
+advisors:
+  contrarian:
+    enabled: true        # ← swap anthropic's plain call for contrarian
+    member: anthropic
+    # model: claude-opus-4   # optional pin
+```
+
+`council:estimate` surfaces every active swap on a dedicated line above
+the cost table:
+
+```
+council:estimate · mode=prompt · members=2 (billable=2)
+  advisor: Contrarian on anthropic via claude-sonnet-4-5
+anthropic/claude-sonnet-4-5: ~991 in + 256 out  =  $0.0068
+openai/gpt-4o: ~208 in + 256 out  =  $0.0031
+```
+
+Cost-bounded guarantee — replace-mode never adds calls. The advisor
+persona prompt is larger than a plain prompt (~1k extra input tokens
+per swap), so the per-call estimate widens slightly. Output tokens and
+call count are unaffected.
+
+Peer-review interaction — when peer-review fires on an advisor-mode
+run, anonymisation **preserves the advisor persona label** while
+stripping provider identity: `Response A (Contrarian)` instead of bare
+`Response A`. See §Karpathy peer-review point 4 for the contract.
+
+One-per-provider invariant — two enabled advisors targeting the same
+member is a config error (replace-mode runs exactly one advisor per
+provider; the call plan never doubles up by accident).
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -631,6 +706,10 @@ impossible — a member never sees its own response.
   network, no spend, but no diversity of weights either).
 - `scripts/ai_council/prompts.py` — neutrality preamble + per-mode
   system prompts.
+- `scripts/ai_council/advisors.py` — replace-mode planning + persona
+  resolution.
 - `scripts/ai_council/bundler.py` — redaction pattern set + size
   guard.
 - `docs/customization.md` § `ai_council.*` — settings reference.
+- `docs/contracts/ai-council-config.md` § advisors — schema + precedence
+  contract.

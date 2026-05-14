@@ -24,7 +24,7 @@ from scripts.ai_council.prompts import (  # noqa: E402
 
 
 
-BASE_MODES = ["diff", "files", "prompt", "roadmap"]
+BASE_MODES = ["debate", "diff", "files", "prompt", "roadmap"]
 SPECIALISED_MODES = ["analysis", "design", "optimize", "pr"]
 ALL_MODES = sorted(BASE_MODES + SPECIALISED_MODES)
 

@@ -128,13 +128,42 @@ members:
     model: sonar-pro
     api_key_ref: env:PERPLEXITY_API_KEY
 
-# Thinking-style advisors (replace-mode). Reserved by Phase 0, wired in
-# Phase 6: when any `advisors.<key>.enabled: true`, the orchestrator
-# replaces the matching plain-member call with an advisor-persona call
-# on that provider. Five advisors planned (Contrarian, Expansionist,
-# Reductionist, Historian, Pragmatist); each lives under
-# personas/advisors/<key>.md once Phase 6 ships.
-advisors: {}
+# Thinking-style advisors (replace-mode). When any `advisors.<key>.enabled:
+# true`, the orchestrator REPLACES that advisor's `member:` plain-member
+# call with an advisor-persona call on the same provider. Plain calls
+# fire only for providers whose enabled member is NOT the target of an
+# active advisor.
+#
+# Per-advisor fields:
+#   enabled: <bool>      — off by default; opt-in per advisor.
+#   member:  <provider>  — required; which enabled provider runs this
+#                          advisor (validation fails closed if the named
+#                          member is missing or disabled).
+#   model:   <string>    — optional; overrides the member's plain model
+#                          for this advisor call only. Falls back to the
+#                          member's `model:` when omitted.
+#
+# Persona files live under .agent-src.uncompressed/personas/advisors/
+# and ship with the package; the orchestrator loads them from
+# .agent-src/personas/advisors/<key>.md (compressed projection) at call
+# time. See personas/advisors/ + docs/contracts/ai-council-config.md.
+advisors:
+  contrarian:
+    enabled: false
+    member: anthropic
+    # model: claude-opus-4   # uncomment to pin a specific model
+  first-principles:
+    enabled: false
+    member: anthropic
+  expansionist:
+    enabled: false
+    member: openai
+  outsider:
+    enabled: false
+    member: openai
+  executor:
+    enabled: false
+    member: anthropic
 
 # Consensus-scoring round (Phase 4 / F3). After the final deliberation
 # round and before synthesis, members score each other's anonymised
