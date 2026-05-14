@@ -63,8 +63,7 @@ removes `.cursor/` on next `task generate-tools`.
 
 ## Per-tool projection size
 
-The v2.10.0 council follow-up (file [02](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/02-compression-naming-and-measurement.md))
-flagged the previous "0.45 % reduction" headline as a wrong-boundary
+The previous "0.45 % reduction" headline was a wrong-boundary
 measurement: that figure compares `.agent-src.uncompressed/` to
 `.agent-src/`, but the pipeline's claimed function is *projection*, not
 byte compression. The table below is produced by
