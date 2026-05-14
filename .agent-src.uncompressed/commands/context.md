@@ -3,6 +3,7 @@ name: context
 tier: 2
 description: Context orchestrator — routes to create, refactor
 cluster: context
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true

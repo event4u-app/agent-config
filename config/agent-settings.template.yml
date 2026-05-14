@@ -418,6 +418,63 @@ hooks:
     tier1_concerns: []
     hard_fail: false
 
+# --- Decision engine ---
+#
+# Controllable gates layered over the observability surface. Absent
+# block = current behaviour (observe-only, no gates fire). Enforcement
+# is strictly opt-in; the engine never silently rejects work without
+# a configured gate. See docs/contracts/decision-engine-gates.md for
+# the full schema, gate-conflict matrix, and non-TTY timeout protocol.
+#
+# Gate-conflict resolution (only the first firing gate per phase
+# surfaces a reason; downstream gates are skipped):
+#   1. block_on_risk         (Phase=Implement, highest impact)
+#   2. require_memory_hits   (Phase=Refine)
+#   3. min_confidence        (Phase=Plan, lowest impact)
+#
+# Unknown keys are rejected hard by scripts/validate_decision_engine.py
+# (wired into `task ci`). Removing the entire block restores observe-only.
+decision_engine:
+  # Opt-in for DecisionTraceHook (default false). Mirrored into
+  # hooks.decision_trace.enabled by work_engine.hooks.settings.
+  surface_traces: false
+
+  # Confidence-band floor for Phase=Plan.
+  #   off    = no floor (default)
+  #   low    = refuse to advance when band is below low
+  #   medium = refuse when below medium
+  #   high   = refuse when below high
+  min_confidence: off
+
+  # Risk-class ceiling for Phase=Implement.
+  #   off    = no ceiling (default)
+  #   low    = refuse when risk_class >= low (most aggressive)
+  #   medium = refuse when risk_class >= medium
+  #   high   = refuse only when risk_class == high
+  block_on_risk: off
+
+  # Phase=Refine demands at least one memory hit when true (default false).
+  # Gated on road-to-proof-not-features.md P2 (memory-consequence trace);
+  # leaving this off avoids opaque rejections until the trace can explain
+  # which memory entry was missing.
+  require_memory_hits: false
+
+  # What happens when a gate fires.
+  #   stop = halt the engine with reason on the trace (default)
+  #   ask  = prompt the user; falls back to on_block_fallback in CI
+  #   warn = log the reason but advance
+  on_block: stop
+
+  # Non-TTY timeout (seconds) when on_block=ask runs without a TTY
+  # (CI=true env or stdin not a TTY). After the timeout, the engine
+  # applies on_block_fallback and surfaces block_reason=ask_timeout.
+  ask_timeout_seconds: 30
+
+  # Resolution after ask_timeout fires.
+  #   stop = halt the engine (default — fail-safe)
+  #   warn = log and advance
+  on_block_fallback: stop
+
 # --- Update check ---
 #
 # Daily background check against the npm registry for a newer

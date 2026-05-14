@@ -153,11 +153,12 @@ rtk post-install steps (telemetry off, init --global) per
 ### 7. Confirm `cost_profile` and learning loop
 
 Read current `cost_profile` and `pipelines.skill_improvement` values.
-Present plainly (sensible defaults from template — `minimal` +
-`skill_improvement: true`):
+Present plainly (sensible defaults from template — `balanced` +
+`skill_improvement: true`; rationale in
+[`docs/contracts/cost-profile-defaults.md`](../docs/contracts/cost-profile-defaults.md)):
 
 ```
-> Cost profile: {current} (minimal by default — includes the learning loop)
+> Cost profile: {current} (balanced by default — kernel + tier-1 auto-rules)
 > Learning loop (skill_improvement): {current} (true by default)
 >
 > 1. Keep defaults — recommended
@@ -236,7 +237,34 @@ directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
 
-### 11. Maintainer-only feature pointer
+### 11. Quickstart pointer — next command after onboarding
+
+Print next-action block so developer does **not** have to re-find README
+to start work. One screen, no question, no prompt:
+
+```
+🚀  Next step — your first real task
+
+  Try one of these from the same chat:
+
+    /work "your first real task"
+        Free-form prompt — agent refines, plans, implements, tests,
+        verifies, reports. A decision_result entry lands in agents/state/
+        confirming the work-engine ran end-to-end.
+
+    /implement-ticket PROJ-123
+        Ticket-driven flow — pulls Jira/Linear context, runs same
+        refine → memory → analyze → plan → implement → test → verify
+        → report sequence, halts on ambiguity.
+
+  Both honour decision_engine gates in .agent-settings.yml
+  (see docs/contracts/decision-engine-gates.md for schema).
+```
+
+Skip block in cloud surfaces (cloud agent's invocation surface is
+already chat window).
+
+### 12. Maintainer-only feature pointer
 
 Print one-screen hint after summary — no question, no prompt, just pointer
 for maintainers who want to opt into artefact-engagement telemetry layer.

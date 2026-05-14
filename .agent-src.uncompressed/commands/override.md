@@ -3,6 +3,7 @@ name: override
 tier: 2
 description: Override orchestrator — routes to create, manage
 cluster: override
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true

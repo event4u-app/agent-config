@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # Agent-Memory Contract (as expected by `agent-config`)

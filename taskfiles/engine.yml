@@ -181,6 +181,15 @@ tasks:
       after install / sync to verify manifest fidelity.
     cmd: python3 -m pytest tests/test_cmd_doctor.py -q
 
+  smoke-quickstart:
+    silent: true
+    desc: |
+      Structural smoke test for the README Quickstart path
+      (road-to-productization P3.1a). Runs the installer into a
+      tmpdir, asserts the documented default cost_profile, and
+      parses the decision_engine block through the runtime parser.
+    cmd: python3 scripts/smoke_quickstart.py
+
   build-cloud-bundle:
     silent: true
     desc: "Build one cloud-skill ZIP (Anthropic Skills format) — usage: task build-cloud-bundle -- SKILL=name"

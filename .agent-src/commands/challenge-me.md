@@ -3,6 +3,7 @@ name: challenge-me
 tier: 2
 description: Challenge-me orchestrator — routes to vision, with-docs
 cluster: challenge-me
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true

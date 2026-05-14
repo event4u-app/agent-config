@@ -28,6 +28,11 @@ from pathlib import Path
 from typing import Any
 
 from work_engine._lib.agent_settings import load_agent_settings
+from work_engine.scoring.decision_engine import (
+    DecisionEngineConfigError,
+    DecisionEngineSettings,
+    parse as _parse_decision_engine,
+)
 
 DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
 DEFAULT_CHAT_HISTORY_SCRIPT = "scripts/chat_history.py"
@@ -41,6 +46,11 @@ class HookSettings:
     empty regardless of the per-hook fields; this is the default when no
     settings file exists or no ``hooks`` block is declared, and it is
     what keeps golden-replay tests byte-stable.
+
+    ``decision_engine`` carries the parsed gate config so
+    :class:`DecisionGateHook` can read it without re-parsing
+    ``.agent-settings.yml``. When the block is absent or malformed the
+    field stays at the default (every gate ``off``).
     """
 
     enabled: bool = False
@@ -54,6 +64,7 @@ class HookSettings:
     cost_profile: str = "standard"
     chat_history_enabled: bool = False
     chat_history_script: str = DEFAULT_CHAT_HISTORY_SCRIPT
+    decision_engine: DecisionEngineSettings = DecisionEngineSettings()
 
 
 _DEFAULT = HookSettings()
@@ -89,8 +100,18 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
     if not isinstance(hooks, dict):
         return _DEFAULT
     enabled = _coerce_bool(hooks.get("enabled"), False)
+
+    decision_engine_raw = data.get("decision_engine")
+    try:
+        decision_engine_settings = _parse_decision_engine(decision_engine_raw)
+    except DecisionEngineConfigError:
+        decision_engine_settings = DecisionEngineSettings()
+
     if not enabled:
-        return HookSettings(enabled=False)
+        return HookSettings(
+            enabled=False,
+            decision_engine=decision_engine_settings,
+        )
 
     chat_section = hooks.get("chat_history")
     if isinstance(chat_section, dict):
@@ -108,11 +129,7 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         and _coerce_bool(global_chat.get("enabled"), False)
     )
 
-    decision_engine = data.get("decision_engine")
-    decision_trace_on = (
-        isinstance(decision_engine, dict)
-        and _coerce_bool(decision_engine.get("surface_traces"), False)
-    )
+    decision_trace_on = decision_engine_settings.surface_traces
 
     memory_section = data.get("memory")
     visibility_off = False
@@ -154,6 +171,7 @@ def _settings_from_raw(data: dict[str, Any]) -> HookSettings:
         cost_profile=cost_profile,
         chat_history_enabled=chat_block_enabled and global_chat_on,
         chat_history_script=chat_script,
+        decision_engine=decision_engine_settings,
     )
 
 

@@ -69,10 +69,14 @@ tasks:
       - task: check-refs
       - task: check-token-optimizer-freshness
       - task: check-portability
+      - task: check-release-trunk-sync
+      - task: validate-decision-engine
+      - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-context-spine-usage
       - task: check-public-links
+      - task: check-beta-review-markers
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands

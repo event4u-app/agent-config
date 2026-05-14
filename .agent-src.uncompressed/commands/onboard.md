@@ -157,10 +157,11 @@ logic — `/onboard` is one-shot.
 
 Read current `cost_profile` and `pipelines.skill_improvement` values.
 Present them plainly (they already have sensible defaults from the
-template — `minimal` + `skill_improvement: true`):
+template — `balanced` + `skill_improvement: true`; rationale lives in
+[`docs/contracts/cost-profile-defaults.md`](../../docs/contracts/cost-profile-defaults.md)):
 
 ```
-> Cost profile: {current} (minimal by default — includes the learning loop)
+> Cost profile: {current} (balanced by default — kernel + tier-1 auto-rules)
 > Learning loop (skill_improvement): {current} (true by default)
 >
 > 1. Keep defaults — recommended
@@ -240,7 +241,34 @@ directly — the agent follows the merge rules in `layered-settings` when
 you ask it to change a value.
 ```
 
-### 11. Maintainer-only feature pointer
+### 11. Quickstart pointer — next command after onboarding
+
+Print the next-action block so the developer does **not** have to re-find
+the README to start work. One screen, no question, no prompt:
+
+```
+🚀  Next step — your first real task
+
+  Try one of these from the same chat:
+
+    /work "your first real task"
+        Free-form prompt — agent refines, plans, implements, tests,
+        verifies, reports. A decision_result entry lands in agents/state/
+        confirming the work-engine ran end-to-end.
+
+    /implement-ticket PROJ-123
+        Ticket-driven flow — pulls Jira/Linear context, runs the same
+        refine → memory → analyze → plan → implement → test → verify
+        → report sequence, halts on ambiguity.
+
+  Both honour the decision_engine gates in .agent-settings.yml
+  (see docs/contracts/decision-engine-gates.md for the schema).
+```
+
+Skip this block in cloud surfaces (the cloud agent's invocation surface
+is already the chat window).
+
+### 12. Maintainer-only feature pointer
 
 Print a one-screen hint after the summary — no question, no prompt, just a
 pointer for maintainers who want to opt into the artefact-engagement

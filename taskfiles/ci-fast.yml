@@ -121,6 +121,16 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-release-trunk-sync:
+    silent: true
+    desc: Fail if main is more than one tagged release behind a release/X.Y.Z branch (P1.3 of road-to-productization, contract docs/contracts/release-trunk-sync.md)
+    cmd: python3 scripts/check_release_trunk_sync.py
+
+  validate-decision-engine:
+    silent: true
+    desc: Validate decision_engine block schema in agent-settings.template.yml and any local .agent-settings.yml (P2 of road-to-productization, contract docs/contracts/decision-engine-gates.md)
+    cmd: python3 scripts/validate_decision_engine.py
+
   check-token-optimizer-freshness:
     silent: true
     desc: Verify token-optimizer catalog rows still match their cited assets (P1.3 of road-to-token-optimization)
@@ -145,6 +155,11 @@ tasks:
     silent: true
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
     cmd: python3 scripts/check_public_links.py
+
+  check-beta-review-markers:
+    silent: true
+    desc: Verify every stability=beta contract carries promote-to / keep-beta-until / superseded-by (P5.4)
+    cmd: python3 scripts/check_beta_review_markers.py
 
   check-public-catalog-links:
     silent: true

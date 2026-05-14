@@ -25,6 +25,8 @@ composer.lock
 # Python
 __pycache__/
 *.pyc
+.coverage
+.coverage.*
 
 # Temp
 /tmp/

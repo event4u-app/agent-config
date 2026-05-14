@@ -12,8 +12,8 @@ format in `.agent-settings.yml`, leaves a one-shot backup as
 exactly once; subsequent runs are idempotent.
 
 Usage:
-  python3 scripts/install.py                     # defaults: cost_profile=minimal
-  python3 scripts/install.py --profile=balanced  # set cost_profile=balanced
+  python3 scripts/install.py                     # defaults: cost_profile=balanced
+  python3 scripts/install.py --profile=minimal   # set cost_profile=minimal (kernel only)
   python3 scripts/install.py --force             # overwrite existing files
   python3 scripts/install.py --skip-bridges      # only create .agent-settings.yml
   python3 scripts/install.py --project <dir>     # override project root
@@ -42,7 +42,7 @@ try:
 except ImportError:  # pragma: no cover — alt sys.path layout
     from _lib.json_pointers import build_merge_entries  # type: ignore[no-redef]  # noqa: PLC0415
 
-DEFAULT_PROFILE = "minimal"
+DEFAULT_PROFILE = "balanced"
 SUPPORTED_PROFILES = ("minimal", "balanced", "full")
 COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
 

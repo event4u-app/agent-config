@@ -3,6 +3,7 @@ name: module
 tier: 2
 description: Module orchestrator — routes to create, explore
 cluster: module
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true
