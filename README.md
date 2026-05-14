@@ -12,17 +12,37 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 
 ---
 
-## Start here
+## Use it in your project
 
-Three ways in, depending on what you're doing today:
+You run the package from a consumer repo — bootstrap via `npx`, let the
+agent pick up your stack, and ship work end-to-end. New install? Start
+with the [Quickstart](#quickstart) to write `.agent-settings.yml`,
+`.augment/`, `.claude/`, …. Already installed? [Supported Tools](#supported-tools)
+shows which AIs the package wires up, and [Featured Commands](#featured-commands)
+lists the end-to-end workflows (`/implement-ticket`, `/work`, `/commit`,
+`/create-pr`). For a deeper tour, see the
+[2-minute demo: `/implement-ticket`](#2-minute-demo-implement-ticket).
 
-| Path | Audience | What it does |
-|---|---|---|
-| **[`/onboard`](.agent-src/commands/onboard.md)** | New user, fresh install | Captures name, IDE, rtk, and cost profile; sets `onboarding.onboarded=true` |
-| **[`task ci`](docs/development.md#ci--verification)** | Contributor working **on** this package | Runs the full sync + lint + test pipeline; must be green before push |
-| **[`task generate-tools`](docs/development.md#tool-generation)** | Multi-agent user / consumer project | Rebuilds `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` from the source |
+## Prove it
 
-If none of those apply yet — start with the [Quickstart](#quickstart) and pick a path once it's installed.
+The package is audit-disciplined by construction — every memory consult,
+decision key, and hook concern lands in `agents/state/` so you can
+replay it. [Core Principles](#core-principles) names the four invariants.
+[What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
+draws the scope boundary. [Documentation](#documentation) lists the
+contracts the package ships against, including
+[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) and
+[`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+
+## Contribute
+
+Working on the package itself rather than with it?
+[Development](#development) covers the `task ci` pipeline,
+[Requirements](#requirements) the toolchain, and
+[Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
+opt-in measurement loop. The source-of-truth tree is
+`.agent-src.uncompressed/`; never hand-edit the generated `.augment/`
+or `.agent-src/`.
 
 ## Quickstart
 
