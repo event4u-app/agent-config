@@ -14,8 +14,10 @@ council files. Directory mentions and placeholder paths
 output-path convention, not a live reference.
 
 Forbidden hits in this codebase exist today (kernel-membership ADRs
-cite real session JSONs as decision traces). Suppress them with an
-inline pragma at the end of the line:
+cite real session JSONs as decision traces). Two source/target shapes
+are exempt structurally — see STRUCTURAL_CARVEOUTS below — because
+they encode immutable decision provenance, not transient drafting
+state. Anything else needs an inline pragma at the end of the line:
 
     `agents/council-sessions/...json` <!-- council-ref-allowed: <reason> -->
 
@@ -82,6 +84,31 @@ ALLOWLIST_FILES: frozenset[str] = frozenset({
 
 INLINE_PRAGMA = re.compile(r"<!--\s*council-ref-allowed:[^>]*-->")
 
+# Structural carve-outs — (source_pattern, target_pattern) pairs where
+# the reference is immutable decision provenance rather than transient
+# drafting state. Driven by the 2026-05-14 P3.4 council round
+# (agents/council-sessions/2026-05-14-p3-4-references/synthesis.md).
+#
+# Each entry: source file matches `source` regex AND the captured
+# reference path matches `target` regex → reference is allowed without
+# an inline pragma.
+STRUCTURAL_CARVEOUTS: tuple[tuple[re.Pattern[str], re.Pattern[str]], ...] = (
+    # (a) evaluation-context → council-question:
+    # the question file is a frozen function-parameter / spend-gate
+    # input, not a documentation link.
+    (
+        re.compile(r"^agents/contexts/evaluation-[^/]+\.md$"),
+        re.compile(r"^agents/council-questions/[^/]+\.md$"),
+    ),
+    # (b) contract → council-session-synthesis:
+    # the synthesis file is the audit-trail receipt the contract cites
+    # as decision provenance; the contract inlines the decision body.
+    (
+        re.compile(r"^docs/contracts/[^/]+\.md$"),
+        re.compile(r"^agents/council-sessions/[^/]+/synthesis\.md$"),
+    ),
+)
+
 
 def _is_allowlisted(rel: str) -> bool:
     if rel in ALLOWLIST_FILES:
@@ -89,8 +116,17 @@ def _is_allowlisted(rel: str) -> bool:
     return any(rel.startswith(prefix) for prefix in ALLOWLIST_PREFIXES)
 
 
+def _is_structurally_allowed(source_rel: str, target_capture: str) -> bool:
+    """True when (source, target) matches a structural carve-out pair."""
+    for src_re, tgt_re in STRUCTURAL_CARVEOUTS:
+        if src_re.match(source_rel) and tgt_re.match(target_capture):
+            return True
+    return False
+
+
 def _scan_file(path: Path) -> list[tuple[int, str]]:
     findings: list[tuple[int, str]] = []
+    rel = path.as_posix()
     try:
         text = path.read_text(encoding="utf-8")
     except (OSError, UnicodeDecodeError):
@@ -99,6 +135,8 @@ def _scan_file(path: Path) -> list[tuple[int, str]]:
         if INLINE_PRAGMA.search(line):
             continue
         for m in PATTERN.finditer(line):
+            if _is_structurally_allowed(rel, m.group(0)):
+                continue
             findings.append((ln, m.group(0)))
     return findings
 
@@ -136,10 +174,13 @@ def main() -> int:
     print(
         "\nRule: .agent-src/rules/no-roadmap-references.md (council clause)\n"
         "Fix: inline the convergence summary (members + date) instead of\n"
-        "linking the file. Append "
+        "linking the file. Two source/target shapes are exempt structurally\n"
+        "(evaluation-context → council-question, contract →\n"
+        "council-session-synthesis) — see STRUCTURAL_CARVEOUTS in this\n"
+        "script. Otherwise append "
         "<!-- council-ref-allowed: <reason> --> on the same line to\n"
-        "suppress when the reference is genuinely required (ADR / contract\n"
-        "decision trace)."
+        "suppress when the reference is genuinely required (ADR decision\n"
+        "trace)."
     )
     return 1
 

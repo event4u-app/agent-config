@@ -194,7 +194,7 @@
   "rules/model-recommendation.md": "2a1b1b4fd58f4c8925a599f3ff6acf6cd35b26cfc878c6d5e208508c1b2a5381",
   "rules/no-attribution-footers.md": "b23bbce6af84e57614c0b63632fb209ae4a1a6429039732d04df127450a2507a",
   "rules/no-cheap-questions.md": "7c604d16252c4fc7c2786ebdba5046de54c939c5d8156b26c0ee2e5f99a79525",
-  "rules/no-roadmap-references.md": "4066a3c0ded199342dba5398d0455bc5128159e54acea8c13a6347a5ea340bea",
+  "rules/no-roadmap-references.md": "bd890464e1bc72d659d1e745e99cb23f439730da3dd1826cbdb78a9eacf8f46d",
   "rules/no-unsolicited-rebase.md": "47462eab714177e922d31a91a4f0340fb499ecd54e53c42e46610c5a1aba63c4",
   "rules/non-destructive-by-default.md": "2a0124e3c38e2a37f17e944988372c161c810bb9db784a7bc8d95c356b51a011",
   "rules/onboarding-gate.md": "46099479295afe620beb145216a3576cebd56315b6015a7955229fcb2dd07687",
