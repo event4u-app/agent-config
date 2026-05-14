@@ -58,10 +58,15 @@ _LINK_RE = re.compile(r'\[[^\]]*\]\(([^)#\s]+)(?:#[^)]*)?\)')
 # Body-link prefixes whose resolution is intentionally out of scope.
 # Council Decision 2 (2026-05-06): P3.1 was cancelled, so guideline links
 # under `.agent-src/rules/` cannot resolve in the projected tree. Copilot
-# suppression (P6) is the silencer for the noise.
+# suppression (P6) is the silencer for the noise. `docs/contracts/` shares
+# the same shape as `docs/guidelines/` — both live at repo root and the
+# rewriter collapses `../../docs/{contracts,guidelines}/...` to a
+# `../docs/...` form that cannot resolve under `.agent-src/`.
 UNCHECKED_LINK_PREFIXES = (
     "../docs/guidelines/",
     "../../docs/guidelines/",
+    "../docs/contracts/",
+    "../../docs/contracts/",
 )
 
 
