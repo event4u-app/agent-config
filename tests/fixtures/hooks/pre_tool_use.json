@@ -1,0 +1,9 @@
+{
+  "session_id": "fixture-pre-tool-001",
+  "tool_name": "Read",
+  "tool_input": {
+    "file_path": "/workspace/README.md"
+  },
+  "cwd": "/workspace",
+  "platform_hint": "claude"
+}

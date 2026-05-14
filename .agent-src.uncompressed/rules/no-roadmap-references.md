@@ -83,6 +83,25 @@ fail the build on any new violation.
   descriptions — transient by construction, not part of the package
   surface
 
+## Structural carve-outs (immutable inputs / decision provenance)
+
+Two source/target shapes are exempt from the council-link ban
+because the target is **immutable input** or **decision provenance**,
+not transient drafting state. The linter implements these directly
+(`STRUCTURAL_CARVEOUTS` in `scripts/check_council_references.py`);
+they do **not** need an inline `<!-- council-ref-allowed: ... -->`
+pragma.
+
+| Source                                         | Target                                           | Why                                                                                  |
+| ---------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `agents/contexts/evaluation-*.md`              | `agents/council-questions/*.md`                  | Question file is a frozen function-parameter / spend-gate input, not documentation. |
+| `docs/contracts/*.md`                          | `agents/council-sessions/*/synthesis.md`         | Synthesis is the audit-trail receipt; contract inlines the decision body itself.    |
+
+Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5 +
+gpt-4o, converged on rule refactor over escape-hatch overuse). Any
+other source/target combination still needs an inline pragma or
+inline-summary rewrite.
+
 ## What to do instead
 
 When a stable artifact needs to cite a transient finding:

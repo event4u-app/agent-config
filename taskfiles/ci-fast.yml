@@ -61,6 +61,11 @@ tasks:
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
     cmd: python3 scripts/lint_hook_manifest.py
 
+  lint-hook-concern-budget:
+    silent: true
+    desc: P3.3 — concerns-per-event budget + fail_closed Tier-1 gate. Warn-only until hooks.concern_budget.hard_fail flips
+    cmd: python3 scripts/lint_hook_concern_budget.py
+
   lint-showcase-sessions:
     silent: true
     desc: Gate docs/showcase.md ↔ docs/showcase/sessions/ — every reference resolves to a file with frontmatter + metrics block

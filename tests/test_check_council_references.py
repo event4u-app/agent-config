@@ -122,6 +122,66 @@ def test_inline_pragma_suppresses(tmp_path: Path) -> None:
 
 
 # ---------------------------------------------------------------------------
+# Structural carve-outs (P3.5) — immutable inputs / decision provenance.
+# ---------------------------------------------------------------------------
+
+def test_carveout_evaluation_context_to_council_question(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "agents/contexts/evaluation-2-2-2-followups.md",
+        "Question file at "
+        "`agents/council-questions/composer-fallback-feasibility.md`.",
+    )
+    assert ccr.main() == 0
+
+
+def test_carveout_contract_to_session_synthesis(tmp_path: Path) -> None:
+    _write(
+        tmp_path / "docs/contracts/tier-3-contrib-plugin.md",
+        "Surfaced during the "
+        "[`2026-05-12-installer-expansion`]"
+        "(../../agents/council-sessions/2026-05-12-installer-expansion/synthesis.md)"
+        " council round.",
+    )
+    assert ccr.main() == 0
+
+
+def test_carveout_does_not_widen_evaluation_to_session(tmp_path: Path) -> None:
+    """evaluation-* → session.json is NOT in the carve-out — must still fail."""
+    _write(
+        tmp_path / "agents/contexts/evaluation-foo.md",
+        "See `agents/council-sessions/2026-05-06/raw.json` for the trace.",
+    )
+    assert ccr.main() == 1
+
+
+def test_carveout_does_not_widen_contract_to_question(tmp_path: Path) -> None:
+    """contract → council-question is NOT in the carve-out — must still fail."""
+    _write(
+        tmp_path / "docs/contracts/foo.md",
+        "See `agents/council-questions/topic.md`.",
+    )
+    assert ccr.main() == 1
+
+
+def test_carveout_does_not_widen_non_evaluation_context(tmp_path: Path) -> None:
+    """Non-evaluation context → council-question must still fail."""
+    _write(
+        tmp_path / "agents/contexts/auth-model.md",
+        "Reference: `agents/council-questions/topic.md`.",
+    )
+    assert ccr.main() == 1
+
+
+def test_carveout_does_not_widen_contract_to_non_synthesis(tmp_path: Path) -> None:
+    """contract → session non-synthesis file (e.g. raw responses) must still fail."""
+    _write(
+        tmp_path / "docs/contracts/foo.md",
+        "See `agents/council-sessions/2026-05-06/responses.json`.",
+    )
+    assert ccr.main() == 1
+
+
+# ---------------------------------------------------------------------------
 # Scope — files outside SCAN_ROOTS must not be scanned.
 # ---------------------------------------------------------------------------
 

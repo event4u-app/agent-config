@@ -205,6 +205,50 @@ that:
 The dispatcher silently no-ops when called with `--platform copilot`;
 the fallback is consumed by reading the rule, not by hook invocation.
 
+## Fixture corpus — `tests/fixtures/hooks/`
+
+Replay-safe, platform-native payloads. One JSON file per event in the
+agent-config event vocabulary. Consumed by `./agent-config hooks:replay`
+and by the dispatcher replay tests
+(`tests/hooks/test_hooks_replay.py` — Phase 2.4c).
+
+```
+tests/fixtures/hooks/
+  session_start.json · session_end.json · user_prompt_submit.json
+  pre_tool_use.json  · post_tool_use.json · stop.json
+  pre_compact.json   · agent_error.json
+  README.md          — corpus contract + platform-shape table
+```
+
+Each fixture is a **stdin payload** — the dispatcher wraps it via
+`_build_envelope` before handing it to a concern. Required keys:
+
+- Valid JSON object at the top level.
+- `session_id` — string, non-empty (drives feedback dir naming).
+- Event-specific fields realistic enough that the bound concerns
+  (`chat-history`, `roadmap-progress`, `context-hygiene`,
+  `verify-before-complete`, `minimal-safe-diff`) run without raising
+  — primarily `tool_name` (for `*_tool_use`), `prompt` (for
+  `user_prompt_submit`).
+- No real user content. Committed alongside source; the redaction
+  workflow in [`hook-payload-capture`](../hook-payload-capture.md)
+  applies to **captured** payloads, not committed fixtures.
+
+The corpus is platform-shape-representative, not platform-exhaustive
+— multi-platform shape coverage lives in
+`tests/hooks/test_event_shape_contract.py`. The replay test asserts
+1:1 mapping between `EVENT_VOCABULARY` and this directory.
+
+## Replay mode — `AGENT_CONFIG_REPLAY=1`
+
+Concerns that write under `agents/state/` MUST honor the
+`AGENT_CONFIG_REPLAY` env var: when set to `1`, skip all state
+mutations and run as read-only. The dispatcher passes the env var
+through to subprocess concerns unchanged. Concerns that do not honor
+the flag are listed by `./agent-config hooks:doctor` as not
+replay-safe; replay tests assert no `agents/state/` mutation
+post-invocation.
+
 ## Stability
 
 Beta. Breaking changes between v1 and v2 are allowed in a minor
@@ -218,3 +262,5 @@ majors.
   operational how-to for capturing redacted live payloads to upgrade
   a platform's chat-history extractor from `docs-verified` to
   `payload-verified`.
+- [`tests/fixtures/hooks/README.md`](../../tests/fixtures/hooks/README.md)
+  — fixture corpus contract.

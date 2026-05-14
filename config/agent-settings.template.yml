@@ -390,6 +390,34 @@ memory:
   # Example: ["api[_-]?key", "/Users/[a-z]+/Library"]
   redact_patterns: []
 
+# --- Hooks ---
+#
+# Configuration surface for the hook dispatcher (see
+# docs/contracts/hook-architecture-v1.md). Each subkey targets one
+# concern script under scripts/hooks/ or scripts/. Defaults are safe;
+# tune only when CI surfaces a real signal.
+hooks:
+  # Concern budget gate (P3.3, lint_hook_concern_budget.py). Caps how
+  # many concerns may bind to a single (platform, event) cell and
+  # restricts fail_closed=true to an explicit Tier-1 allowlist.
+  #
+  # max_per_event — placeholder until Phase 1 of
+  # road-to-proof-not-features.md captures real session evidence.
+  # Threshold rule per roadmap: max(observed-in-Phase-1) × 1.5, rounded
+  # up. 8 = current-observed-max (5) × 1.5 = 7.5 → 8.
+  #
+  # tier1_concerns — concerns allowed to block agent execution on
+  # failure (fail_closed: true in the manifest). Promotion is explicit
+  # opt-in; keep empty until Phase 1 evidence justifies an entry.
+  #
+  # hard_fail — false = warn-only (default). Flip to true after ≥10
+  # captured sessions across host agents per
+  # road-to-distribution-and-adoption.md.
+  concern_budget:
+    max_per_event: 8
+    tier1_concerns: []
+    hard_fail: false
+
 # --- Update check ---
 #
 # Daily background check against the npm registry for a newer

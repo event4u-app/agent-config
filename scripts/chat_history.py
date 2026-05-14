@@ -48,6 +48,15 @@ SCHEMA_VERSION = 4
 DEFAULT_MAX_SESSIONS = 5
 VALID_FREQS = {"per_turn", "per_phase", "per_tool"}
 VALID_OVERFLOW = {"rotate", "compress"}
+
+# Replay-mode signal — when set, every write to the on-disk transcript
+# is a no-op. Honoured per `docs/contracts/hook-architecture-v1.md`
+# § Replay mode so fixture dispatches never mutate real session state.
+REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY"
+
+
+def _is_replay_mode() -> bool:
+    return os.environ.get(REPLAY_ENV_VAR, "").strip() == "1"
 _WS_RE = re.compile(r"\s+")
 SESSION_ID_LEN = 16
 SESSION_ID_UNKNOWN = "<unknown>"
@@ -247,6 +256,8 @@ def init(freq: str = "per_phase", *,
         raise ValueError(f"freq must be one of {sorted(VALID_FREQS)}")
     p = path or file_path()
     header = _build_header(freq)
+    if _is_replay_mode():
+        return header
     p.parent.mkdir(parents=True, exist_ok=True)
     with p.open("w", encoding="utf-8") as fh:
         fh.write(json.dumps(header, ensure_ascii=False) + "\n")
@@ -318,6 +329,8 @@ def append(entry: dict[str, Any], *, path: Path | None = None,
         entry["s"] = session
     elif "s" not in entry and _session_tag_enabled():
         entry["s"] = _last_body_session_id(p)
+    if _is_replay_mode():
+        return
     with p.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
@@ -328,7 +341,11 @@ def _atomic_write_text(p: Path, text: str) -> None:
     Multiple processes writing to the same target use disjoint tmp paths
     (PID + uuid), so concurrent writes no longer collide on a shared
     ``.tmp`` file. The final ``replace`` is atomic on POSIX.
+
+    Under `AGENT_CONFIG_REPLAY=1` the call is a no-op.
     """
+    if _is_replay_mode():
+        return
     tmp = p.with_suffix(
         f"{p.suffix}.{os.getpid()}.{uuid.uuid4().hex[:8]}.tmp",
     )
@@ -405,6 +422,8 @@ def prepend_entries(entries: list[dict[str, Any]], *,
 
 
 def clear(*, path: Path | None = None) -> None:
+    if _is_replay_mode():
+        return
     p = path or file_path()
     if p.exists():
         p.unlink()

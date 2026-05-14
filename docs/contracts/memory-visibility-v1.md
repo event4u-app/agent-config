@@ -24,6 +24,7 @@ and a single space:
 
 ```
 🧠 Memory: <hits>/<asks> · ids=[<comma-separated-ids>]
+🧠 Memory: <hits>/<asks> · ids=[<comma-separated-ids>] · affected: <keys>
 ```
 
 Examples:
@@ -32,6 +33,8 @@ Examples:
 🧠 Memory: 3/4 · ids=[mem_42, mem_57, mem_91]
 🧠 Memory: 0/2 · ids=[]
 🧠 Memory: 5/5 · ids=[mem_a01, mem_a02, mem_a03, …+2]
+🧠 Memory: 3/4 · ids=[mem_42, mem_57] · affected: confidence_band,applied_rules
+🧠 Memory: 2/4 · ids=[mem_42] · affected: none
 ```
 
 Cap at 5 ids inline; remainder rendered as `…+N`. The full id list
@@ -45,9 +48,14 @@ lives in the decision-trace JSON
 | `hits` | Count of `memory_retrieve_*` calls during this turn that returned ≥ 1 entry. |
 | `asks` | Count of `memory_retrieve_*` calls during this turn — both successful and empty. |
 | `ids` | Stable memory entry ids returned across all calls, deduped, ordered by retrieval timestamp. |
+| `affected` | Optional trailing segment. Comma-separated list of decision-trace keys that diverged when this memory was consulted vs not consulted. Closed key list defined in [`decision-trace-v1.md § Memory consequence keys`](decision-trace-v1.md#memory-consequence-keys). Rendered as `none` when `hits ≥ 1` but no key diverged. Omitted entirely when `hits == 0` or when the producer cannot compute a counterfactual trace. |
 
 `hits ≤ asks` is invariant. If `asks == 0`, the engine MUST suppress
 the line entirely — no `0/0` noise.
+
+The `affected` segment is a forward-compat trailing extension per
+the Stability clause below — clients pinned to the segment-free
+shape MUST still parse the line.
 
 ## Privacy floor
 
@@ -87,6 +95,31 @@ counts and ids for downstream metrics.
 
 Cost-profile lookup respects `.agent-settings.yml`'s `cost_profile`
 key. Default is `standard`.
+
+## End-of-run "Memory changed decisions" block
+
+When the visibility line carries a non-empty `affected` segment, the
+engine MUST also append a structured block at the end of the run's
+report surface so reviewers can audit attribution without parsing
+the inline segment:
+
+```
+Memory changed decisions:
+- mem_42 → confidence_band
+- mem_57 → confidence_band
+```
+
+Rules:
+
+- Suppressed entirely when `affected` is empty or absent (no key
+  diverged, or memory was not consulted).
+- Each consulted id from the visibility line's `ids` is paired with
+  each affected key. v1 attribution is aggregate; per-id attribution
+  is a follow-up risk tracked in the roadmap Risk register.
+- Block heading is the literal string `Memory changed decisions:`
+  followed by `-` bullet lines in `<id> → <key>` shape.
+- Implementation: `format_changed_decisions_block` in
+  `work_engine/scoring/memory_visibility.py`.
 
 ## Audit-as-memory feed
 

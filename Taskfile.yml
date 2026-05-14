@@ -97,6 +97,7 @@ tasks:
       - task: lint-command-tiers
       - task: lint-handoffs
       - task: lint-hook-manifest
+      - task: lint-hook-concern-budget
       - task: lint-showcase-sessions
       - task: lint-marketplace
       - task: lint-skill-tools

@@ -40,6 +40,18 @@ except ImportError:  # pragma: no cover — Windows
 
 LOCK_BASENAME = ".dispatcher.lock"
 
+REPLAY_ENV_VAR = "AGENT_CONFIG_REPLAY"
+
+
+def is_replay_mode() -> bool:
+    """True when the caller signalled read-only fixture replay.
+
+    Concerns and the dispatcher honour the flag by skipping side
+    effects under `agents/state/` (and any other concern-owned state
+    surface). See `docs/contracts/hook-architecture-v1.md` § Replay mode.
+    """
+    return os.environ.get(REPLAY_ENV_VAR, "").strip() == "1"
+
 
 def _lock_path(state_dir: Path) -> Path:
     return state_dir / LOCK_BASENAME
@@ -52,7 +64,12 @@ def atomic_write_json(target: Path, payload: Any, *, indent: int = 2) -> None:
     directory the caller treats as the lock scope). The lock file is
     `<target.parent>/.dispatcher.lock`. Caller does not need to create
     the directory in advance — this function ensures it.
+
+    Under `AGENT_CONFIG_REPLAY=1` the call is a no-op so fixture
+    replay never mutates real session state.
     """
+    if is_replay_mode():
+        return
     target = Path(target)
     state_dir = target.parent
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -63,7 +80,11 @@ def atomic_write_json(target: Path, payload: Any, *, indent: int = 2) -> None:
 def atomic_write_text(target: Path, text: str) -> None:
     """Write text to `target` atomically and concurrency-safely. Same
     locking discipline as `atomic_write_json` — useful for non-JSON
-    state payloads (chat-history transcript, status text)."""
+    state payloads (chat-history transcript, status text).
+
+    Under `AGENT_CONFIG_REPLAY=1` the call is a no-op."""
+    if is_replay_mode():
+        return
     target = Path(target)
     state_dir = target.parent
     state_dir.mkdir(parents=True, exist_ok=True)
@@ -117,6 +138,8 @@ __all__ = [
     "atomic_write_json",
     "atomic_write_text",
     "feedback_dir",
+    "is_replay_mode",
     "LOCK_BASENAME",
     "FEEDBACK_DIRNAME",
+    "REPLAY_ENV_VAR",
 ]

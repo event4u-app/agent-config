@@ -8,7 +8,11 @@ from __future__ import annotations
 import pytest
 
 from work_engine.scoring.memory_visibility import (
+    CONSEQUENCE_KEYS,
     DEFAULT_ASKED_TYPES,
+    compute_affected,
+    diff_consequence_keys,
+    format_changed_decisions_block,
     format_line,
     should_emit,
     summarise_visibility,
@@ -118,3 +122,134 @@ def test_should_emit_respects_visibility_off() -> None:
 def test_should_emit_default_profile_is_standard() -> None:
     summary = {"asks": 1, "hits": 1, "ids": ["a"]}
     assert should_emit(summary) is True
+
+
+# -- Memory consequence keys (P2.1) -------------------------------------
+
+
+def test_consequence_keys_closed_list() -> None:
+    assert CONSEQUENCE_KEYS == (
+        "confidence_band",
+        "risk_class",
+        "applied_rules",
+        "test_plan",
+    )
+
+
+def test_diff_returns_empty_when_traces_match() -> None:
+    trace = {"confidence_band": "low", "risk_class": "low"}
+    assert diff_consequence_keys(trace, trace) == []
+
+
+def test_diff_surfaces_scalar_divergence() -> None:
+    a = {"confidence_band": "medium", "risk_class": "low"}
+    b = {"confidence_band": "low", "risk_class": "low"}
+    assert diff_consequence_keys(a, b) == ["confidence_band"]
+
+
+def test_diff_lists_compare_order_independent() -> None:
+    a = {"applied_rules": ["b", "a"]}
+    b = {"applied_rules": ["a", "b"]}
+    assert diff_consequence_keys(a, b) == []
+
+
+def test_diff_skips_keys_where_both_sides_none() -> None:
+    a = {"confidence_band": "low", "applied_rules": None}
+    b = {"confidence_band": "low", "applied_rules": None}
+    assert diff_consequence_keys(a, b) == []
+
+
+def test_diff_returns_sorted_keys() -> None:
+    a = {"confidence_band": "high", "risk_class": "high"}
+    b = {"confidence_band": "low", "risk_class": "low"}
+    assert diff_consequence_keys(a, b) == ["confidence_band", "risk_class"]
+
+
+def test_compute_affected_returns_none_when_no_hits() -> None:
+    assert compute_affected(memory_hits=0) is None
+
+
+def test_compute_affected_returns_empty_when_no_divergence() -> None:
+    # memory_hits=1 with verify already passing high → band stays medium
+    # because hits<2; without memory it would still be medium because
+    # verify_first_try_passes >= 1. No divergence.
+    affected = compute_affected(
+        memory_hits=1,
+        verify_claims=1,
+        verify_first_try_passes=1,
+    )
+    assert affected == []
+
+
+def test_compute_affected_surfaces_confidence_band_flip() -> None:
+    # memory_hits=1 with no verify → band="medium" with, "low" without
+    affected = compute_affected(memory_hits=1)
+    assert affected == ["confidence_band"]
+
+
+def test_compute_affected_band_flip_high_to_medium() -> None:
+    # memory_hits>=2 + all verify passes + no ambiguity → high
+    # without memory → medium (because verify_first_try_passes >= 1)
+    affected = compute_affected(
+        memory_hits=2,
+        verify_claims=1,
+        verify_first_try_passes=1,
+    )
+    assert affected == ["confidence_band"]
+
+
+def test_format_line_omits_affected_when_none() -> None:
+    line = format_line(
+        {"asks": 4, "hits": 1, "ids": ["a"]}, affected=None,
+    )
+    assert line == "\U0001F9E0 Memory: 1/4 \u00b7 ids=[a]"
+    assert "affected" not in line
+
+
+def test_format_line_renders_affected_none_label_for_empty_list() -> None:
+    line = format_line(
+        {"asks": 4, "hits": 1, "ids": ["a"]}, affected=[],
+    )
+    assert line is not None
+    assert line.endswith("\u00b7 affected: none")
+
+
+def test_format_line_renders_affected_keys() -> None:
+    line = format_line(
+        {"asks": 4, "hits": 2, "ids": ["a", "b"]},
+        affected=["confidence_band", "risk_class"],
+    )
+    assert line is not None
+    assert line.endswith("\u00b7 affected: confidence_band,risk_class")
+
+
+# -- end-of-run "Memory changed decisions" block (P2.1c) ---------------
+
+
+def test_changed_decisions_block_suppressed_when_no_affected() -> None:
+    assert format_changed_decisions_block(["mem_1"], None) is None
+    assert format_changed_decisions_block(["mem_1"], []) is None
+
+
+def test_changed_decisions_block_suppressed_when_no_ids() -> None:
+    assert format_changed_decisions_block([], ["confidence_band"]) is None
+
+
+def test_changed_decisions_block_pairs_ids_with_keys() -> None:
+    block = format_changed_decisions_block(
+        ["mem_1", "mem_2"], ["confidence_band"],
+    )
+    assert block is not None
+    assert block.startswith("Memory changed decisions:")
+    assert "- mem_1 \u2192 confidence_band" in block
+    assert "- mem_2 \u2192 confidence_band" in block
+
+
+def test_changed_decisions_block_sorts_keys_per_id() -> None:
+    block = format_changed_decisions_block(
+        ["mem_1"], ["risk_class", "confidence_band"],
+    )
+    assert block is not None
+    lines = block.splitlines()
+    assert lines[1] == "- mem_1 \u2192 confidence_band"
+    assert lines[2] == "- mem_1 \u2192 risk_class"

@@ -1,0 +1,6 @@
+{
+  "session_id": "fixture-stop-001",
+  "stop_reason": "end_turn",
+  "cwd": "/workspace",
+  "platform_hint": "augment"
+}

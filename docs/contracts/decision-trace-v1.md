@@ -113,6 +113,36 @@ the trace inherits the **maximum** risk class across all files the
 phase touched. If no files were touched (pure planning phase), risk
 is `low`.
 
+## Memory consequence keys
+
+**Purpose.** Bound the surface area where a memory hit can be said
+to have *changed* an outcome. Closed list, not open — without this
+bound, every memory call risks the "memory affected everything"
+failure mode (Risk register row 2 of
+[`agents/roadmaps/road-to-proof-not-features.md`](../../agents/roadmaps/road-to-proof-not-features.md)).
+
+**Closed list (v1).** Exactly four keys. Adding a fifth requires a
+schema bump + entry under `### Breaking` in `CHANGELOG.md`.
+
+| Key | Source | Diff semantics |
+|---|---|---|
+| `confidence_band` | Top-level envelope field. | String inequality (`high` ≠ `medium` ≠ `low`). |
+| `risk_class` | Top-level envelope field. | String inequality. |
+| `applied_rules` | Derived: sorted list of `rules[].rule_id` where `applied == true`. | Set inequality. |
+| `test_plan` | Derived: sorted list of test paths captured in the Plan-phase `state.plan.tests` slice. May be `null` when the phase is not `plan` or no Plan-phase tests were captured. | Set inequality; `null` on either side suppresses the key from the diff. |
+
+**Diff semantics.** The producer renders two traces for the same
+phase: one **with** the memory entry consulted, one **without**
+(re-running the heuristic against `memory.hits` decremented by the
+entry's contribution). The `affected` field is the sorted list of
+keys above whose values differ between the two traces. Empty list
+means "consulted but no key diverged" — the call was informational,
+not load-bearing.
+
+**Out of scope for v1.** Gradations beyond binary key-diverged /
+not-diverged (overridden, combined, filtered). Tracked as a Phase-1-
+gated revisit in the same Risk register.
+
 ## Privacy floor
 
 - `memory.ids` carries opaque ids only — no entry bodies, no secrets.
