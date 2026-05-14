@@ -111,29 +111,29 @@ siblings carry their own scope). Phase 8 = final validation.
 
 ## Phase 2 — Decision Engine controllable (gated on P1)
 
-- [ ] **P2.1 — Config schema.** Author `decision_engine:` block in
+- [x] **P2.1 — Config schema.** Author `decision_engine:` block in
   `.agent-settings.yml` template + sync_agent_settings.py validator.
   Keys: `min_confidence` (`low`/`medium`/`high`), `block_on_risk`
   (`low`/`medium`/`high`/`off`), `require_memory_hits` (bool),
   `on_block` (`stop`/`ask`/`warn`). Reject unknown keys.
-- [ ] **P2.1a — Gate-conflict resolution matrix.** Document priority
+- [x] **P2.1a — Gate-conflict resolution matrix.** Document priority
   order in `docs/contracts/decision-engine-gates.md` when multiple
   gates fire on the same phase: `block_on_risk` > `require_memory_hits`
   > `min_confidence` (highest-impact first). The first gate that
   rejects emits its reason; downstream gates are not evaluated.
   Acceptance: matrix table + one unit test per pairwise conflict.
-- [ ] **P2.1b — Non-TTY timeout protocol.** When `on_block=ask` fires
+- [x] **P2.1b — Non-TTY timeout protocol.** When `on_block=ask` fires
   in a non-interactive context (no TTY: CI, cron, webhook), the engine
   waits `decision_engine.ask_timeout_seconds` (default 30, configurable),
   then falls back to `on_block_fallback` (default `stop`). Surfaced in
   the trace as `block_reason=ask_timeout`. Detection: `os.isatty(0)` +
   `CI=true` env. Acceptance: integration test runs the gate with
   `stdin=/dev/null` and confirms the fallback fires.
-- [ ] **P2.2 — Confidence-band gate.** Wire `min_confidence` into
+- [x] **P2.2 — Confidence-band gate.** Wire `min_confidence` into
   `scripts/work_engine/scoring/confidence.py` so Phase=Plan refuses
   to advance when the band falls below the configured floor and
   `on_block=stop`. Default behaviour with no config block: unchanged.
-- [ ] **P2.3 — Risk-class gate.** Wire `block_on_risk` into the
+- [x] **P2.3 — Risk-class gate.** Wire `block_on_risk` into the
   same engine path so Phase=Implement refuses to advance when
   `risk_class` exceeds the configured ceiling.
 - [ ] **P2.4 — Memory-required policy.** Wire `require_memory_hits`
@@ -143,6 +143,8 @@ siblings carry their own scope). Phase 8 = final validation.
   shipping the gate before memory can explain *why* it blocked produces
   opaque rejections and burns trust. If P6.2 slips, P2.4 stays open;
   the rest of P2 (P2.1–P2.3) ships independently.
+  *(Note: schema, parser, and hook wiring shipped in P2.1; this
+  checkbox stays open pending P6.2 memory-consequence trace.)*
 
 ## Phase 3 — UX Simplification (gated on P2)
 
