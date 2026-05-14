@@ -429,6 +429,43 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.8.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.11.0](https://github.com/event4u-app/agent-config/compare/2.10.0...2.11.0) (2026-05-14)
+
+### Features
+
+* **stability:** add beta-review marker protocol and CI gate (P5.4) ([9b6cdfe](https://github.com/event4u-app/agent-config/commit/9b6cdfe9f9167e3e80551dfa2a88f80fff85646a))
+* **lint:** add 'type: orchestrator' frontmatter tag for cluster routers (P5.3) ([e6385bb](https://github.com/event4u-app/agent-config/commit/e6385bbaf022dc3763f55c2dd54fe85046c59fd4))
+* **skills:** add nextjs-patterns and symfony-workflow workflow skills (P4) ([038522b](https://github.com/event4u-app/agent-config/commit/038522b7ad2bd2ba1d8d8c4f9a61692694b7ebc8))
+* **onboard:** add Quickstart pointer step and surface balanced default (P3.3) ([5879b4c](https://github.com/event4u-app/agent-config/commit/5879b4cc66fc9f49fa42c99e72794e4c60f43739))
+* **install:** default cost_profile to balanced (P3.2) ([75caac2](https://github.com/event4u-app/agent-config/commit/75caac20fa2986222b5bd45a7cb63f07f9c4179f))
+* **work-engine:** wire decision_gate hook into runner ([c41a89d](https://github.com/event4u-app/agent-config/commit/c41a89d38c7eb4892358b5c931abbe9a5889038c))
+* **work-engine:** add decision_engine schema and gate evaluator ([fd1e8e2](https://github.com/event4u-app/agent-config/commit/fd1e8e2bb2e45e2288727ccd4a3bda4f809c6151))
+* **release:** release-trunk-sync contract and CI gate (P1.2, P1.3) ([a3e0d12](https://github.com/event4u-app/agent-config/commit/a3e0d12c156c367c995e84c7c0bb5d6a21ff6325))
+
+### Bug Fixes
+
+* **readme:** rename 'For contributors' to 'Development' for linter ([7957274](https://github.com/event4u-app/agent-config/commit/7957274c65895d80fa4801f95df876979362ee86))
+
+### Documentation
+
+* **roadmap:** close + archive road-to-productization (Level-6) ([7ee50e8](https://github.com/event4u-app/agent-config/commit/7ee50e8b16f1ce7d4461f1466d9a6e46f4138101))
+* **roadmap:** mark P3.1-P3.3 + P3.1a done in road-to-productization ([b0ff24f](https://github.com/event4u-app/agent-config/commit/b0ff24f23cb38d4ac556106c9ed060f104f83c8c))
+* **readme:** add 3-step Quickstart and move contributor detail below the fold (P3.1) ([b98152e](https://github.com/event4u-app/agent-config/commit/b98152eb86607d6b34f63ea9ad4c152951de58a6))
+* **roadmap:** mark P2.1-P2.3 done in road-to-productization ([189c780](https://github.com/event4u-app/agent-config/commit/189c780faef19cfbd9bceb3ad51ec42cb8cb05b7))
+
+### CI
+
+* **install:** add structural Quickstart smoke test (P3.1a) ([228445b](https://github.com/event4u-app/agent-config/commit/228445b97eefb20118bbea2872640c54225a1355))
+* **work-engine:** validate decision_engine block in agent-settings ([1a1f428](https://github.com/event4u-app/agent-config/commit/1a1f428bec4832f8ffb222a8b450719ba6409605))
+
+### Chores
+
+* **generate-tools:** expose nextjs-patterns + symfony-workflow skills ([3422ac7](https://github.com/event4u-app/agent-config/commit/3422ac7e3f273497a0cbb176b2580a0cf1256522))
+* **sync:** align orchestrator frontmatter + hash registry ([0e9ba2d](https://github.com/event4u-app/agent-config/commit/0e9ba2d50463ca99baf86651ea67ed82ca63d7f6))
+* **gitignore:** ignore python coverage artifacts ([e1a3289](https://github.com/event4u-app/agent-config/commit/e1a328921f08fad03325adc256b63a544582efb7))
+
+Tests: 3718 (+55 since 2.10.0)
+
 ## [2.10.0](https://github.com/event4u-app/agent-config/compare/2.9.0...2.10.0) (2026-05-14)
 
 ### Features
