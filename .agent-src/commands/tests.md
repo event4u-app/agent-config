@@ -3,6 +3,7 @@ name: tests
 tier: 2
 description: Tests orchestrator — routes to create, execute
 cluster: tests
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true

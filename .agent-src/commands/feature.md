@@ -3,6 +3,7 @@ name: feature
 tier: 1
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 cluster: feature
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true

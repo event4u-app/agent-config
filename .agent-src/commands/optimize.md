@@ -3,6 +3,7 @@ name: optimize
 tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize
+type: orchestrator
 disable-model-invocation: true
 suggestion:
   eligible: true
