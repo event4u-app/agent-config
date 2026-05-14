@@ -39,6 +39,17 @@ SKIP_DIRS = [
     "agents/council-questions",  # design Q&A trail — forward-refs to planned artifacts
     "agents/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
 ]
+
+# Per-file opt-out marker. When present in the first 10 lines of a .md
+# file, the entire file is skipped. Use for working docs that
+# intentionally reference planned-but-not-yet-existing artifacts
+# (audit bundles, design Q&A, in-flight plans).
+FILE_SKIP_MARKER = "<!-- check-refs: skip -->"
+
+# Per-line opt-out marker. When present anywhere on a line, that line's
+# refs are skipped. Use for isolated forward-refs inside otherwise
+# fully-checked documents.
+LINE_IGNORE_MARKER = "<!-- ref-ignore -->"
 ROOT = Path(".")
 
 # YAML memory files (engineering-memory layer) live under `agents/memory/`.
@@ -219,6 +230,14 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
     except Exception:
         return broken
 
+    # File-level opt-out: working docs that intentionally reference
+    # planned-but-not-yet-existing artifacts mark themselves with
+    # `<!-- check-refs: skip -->` in the first 10 lines. Marker pairs
+    # with the per-line `<!-- ref-ignore -->` below; either suffices.
+    header_lines = text.splitlines()[:10]
+    if any(FILE_SKIP_MARKER in line for line in header_lines):
+        return broken
+
     # Validate `personas:` frontmatter entries against known persona ids.
     for line_no, pid in _extract_personas_frontmatter(text):
         if pid not in artifacts["personas"]:
@@ -239,6 +258,12 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             in_code_block = not in_code_block
             continue
         if in_code_block:
+            continue
+
+        # Per-line opt-out: isolated forward-refs in otherwise checked
+        # documents (e.g. one ref to a planned skill, surrounded by
+        # valid refs). Skip the whole line's path / skill / rule checks.
+        if LINE_IGNORE_MARKER in line:
             continue
 
         # Unchecked TODO checkboxes document future work — their refs are

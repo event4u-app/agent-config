@@ -266,11 +266,11 @@ siblings carry their own scope). Phase 8 = final validation.
   (b) `coverage run` + `coverage report --show-missing` to find tests
   that touch identical line ranges. Cluster threshold: ≥ 3 tests
   hitting the same module + ≥ 80 % overlapping line coverage. Output:
-  a candidate sub-roadmap (`road-to-test-cleanup`, audit-only —
+  a candidate sub-roadmap (`step-5-test-cleanup`, audit-only —
   **no deletion in this roadmap**). **Done 2026-05-14:**
   828 `work_engine` tests covered; Jaccard ≥ 0.80 cluster analysis
   produced 35 unique cluster signatures across 66 modules. Audit
-  written to [`road-to-test-cleanup.md`](road-to-test-cleanup.md)
+  written to [`step-5-test-cleanup.md`](step-5-test-cleanup.md)
   with two strong-signal candidates (UI 5-way init, mixed 3-way
   init) and two import-coupling clusters explicitly marked
   "leave alone". Pass-A surfaced 106 × 2 test-name-suffix

@@ -73,7 +73,7 @@ stability: stable
   § Beta-review markers; `scripts/check_beta_review_markers.py` wired
   into `task ci`; 39 beta contracts back-filled (P5.4).
 - Test-redundancy audit produced
-  [`road-to-test-cleanup.md`](../../agents/roadmaps/road-to-test-cleanup.md)
+  [`step-5-test-cleanup.md`](../../agents/roadmaps/step-5-test-cleanup.md)
   — audit-only, no deletions (P5.5).
 
 ### Release-trunk discipline (Phase 1)
@@ -119,7 +119,7 @@ keep-beta-until dates beyond the window.
 - **Showcase capture** → future `road-to-showcase-capture.md` when a
   hosted-LLM runner is on the table.
 - **Test-suite deletion** →
-  [`road-to-test-cleanup.md`](../../agents/roadmaps/road-to-test-cleanup.md)
+  [`step-5-test-cleanup.md`](../../agents/roadmaps/step-5-test-cleanup.md)
   (audit-only sibling spawned by P5.5; non-destructive by default).
 - **Persona Block B** (Architect / Risk-Officer extension) —
   anti-recommended per the sibling closure decision; not deferred,

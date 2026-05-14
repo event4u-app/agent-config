@@ -83,6 +83,11 @@ __pycache__/
 # Live trigger-eval outputs — timestamped JSON per run, not committed.
 evals/results/
 
+# Quantitative skill-eval runs (produced by `scripts/run_skill_evals.py`;
+# evals.json is tracked, per-run outputs and benchmarks are not).
+.agent-src.uncompressed/skills/*/evals/runs/
+.agent-src/skills/*/evals/runs/
+
 # Memory access runtime cache (per-repo `memory_status` probe result;
 # regenerated on demand, never committed)
 /.agent-memory/

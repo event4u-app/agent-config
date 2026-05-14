@@ -27,7 +27,11 @@ from scripts.ai_council.budget_guard import (
     today_spend_usd as _today_spend_usd,
     would_exceed as _would_exceed_daily,
 )
-from scripts.ai_council.clients import CouncilResponse, ExternalAIClient
+from scripts.ai_council.clients import (
+    DEFAULT_MAX_TOKENS,
+    CouncilResponse,
+    ExternalAIClient,
+)
 from scripts.ai_council.pricing import (
     CostEstimate,
     PriceTable,
@@ -51,7 +55,7 @@ class CostBudget:
 class CouncilQuestion:
     mode: str  # one of: prompt, roadmap, diff, files
     user_prompt: str  # bundled artefact text
-    max_tokens: int = 1024
+    max_tokens: int = DEFAULT_MAX_TOKENS
 
 
 @dataclass

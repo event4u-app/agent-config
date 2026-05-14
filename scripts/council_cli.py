@@ -31,6 +31,7 @@ from scripts.ai_council.bundler import (  # noqa: E402
     BundleTooLarge, bundle_prompt, bundle_roadmap,
 )
 from scripts.ai_council.clients import (  # noqa: E402
+    DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
     AnthropicClient, CouncilResponse, ExternalAIClient, ManualClient,
     OpenAIClient, load_anthropic_key, load_openai_key,
 )
@@ -236,6 +237,32 @@ def _resolve_rounds(args: argparse.Namespace, ai_cfg: dict[str, Any]) -> int:
     return min_rounds
 
 
+def _resolve_max_tokens(args: argparse.Namespace, ai_cfg: dict[str, Any]) -> int:
+    """Resolve the per-call output budget passed to each member.
+
+    Resolution chain (highest priority first):
+      1. ``--max-tokens N`` — explicit invocation override.
+      2. ``ai_council.max_output_tokens`` — settings value (project file
+         is authoritative; this key is not user-global-mergeable).
+      3. ``DEFAULT_MAX_TOKENS`` — package fallback (2048).
+
+    A value of ``0`` at any layer means "unlimited"; it is widened to
+    ``UNLIMITED_TOKENS_FALLBACK`` before reaching the SDK because
+    Anthropic rejects ``max_tokens=0``. Estimation uses the same expanded
+    value so the cost preview reflects the worst-case ceiling.
+    """
+    cli = getattr(args, "max_tokens", None)
+    if cli is not None:
+        value = int(cli)
+    elif "max_output_tokens" in ai_cfg:
+        value = int(ai_cfg.get("max_output_tokens") or 0)
+    else:
+        value = DEFAULT_MAX_TOKENS
+    if value <= 0:
+        return UNLIMITED_TOKENS_FALLBACK
+    return value
+
+
 def cmd_estimate(
     args: argparse.Namespace,
     *,
@@ -255,9 +282,10 @@ def cmd_estimate(
         )
     if table is None:
         table = load_prices()
+    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     question, _ = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
-        max_tokens=args.max_tokens,
+        max_tokens=_resolve_max_tokens(args, ai_cfg),
     )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
@@ -316,9 +344,10 @@ def cmd_run(
         )
     if table is None:
         table = load_prices()
+    ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     question, artefact = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
-        max_tokens=args.max_tokens,
+        max_tokens=_resolve_max_tokens(args, ai_cfg),
     )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
@@ -337,7 +366,6 @@ def cmd_run(
         )
         return 0
 
-    ai_cfg = settings.get("ai_council") or {}
     cost_cfg = ai_cfg.get("cost_budget") or {}
     budget = CostBudget(
         max_input_tokens=int(cost_cfg.get("max_input_tokens", 50_000)),
@@ -451,8 +479,11 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--input-mode", choices=["prompt", "roadmap"],
                    default="prompt",
                    help="How to bundle the file (default: prompt).")
-    p.add_argument("--max-tokens", type=int, default=1024,
-                   help="Per-member output budget (default: 1024).")
+    p.add_argument("--max-tokens", type=int, default=None,
+                   help="Per-member output budget. Default reads "
+                        "ai_council.max_output_tokens from .agent-settings.yml "
+                        "(2048 if unset). 0 = unlimited (widened to the safe "
+                        "provider ceiling before the SDK call).")
     p.add_argument("--mode-override", choices=["api", "manual"], default=None,
                    help="Override every member's transport mode.")
     p.add_argument("--model", action="append", default=None, dest="model",
