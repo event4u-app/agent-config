@@ -62,22 +62,25 @@ Ask: **"Does the model need this to do its job correctly?"**
 
 ### Skills and commands share the `.claude/skills/` namespace
 
-Skills (`.agent-src.uncompressed/skills/{name}/SKILL.md`) AND commands
-(`.agent-src.uncompressed/commands/{name}.md`) both project into
-`.claude/skills/` (`scripts/compress.py` → `generate_claude_skills` +
-`generate_claude_commands`). Claude treats the directory as native
-skills.
+Skills in `.agent-src.uncompressed/skills/{name}/SKILL.md` AND commands in
+`.agent-src.uncompressed/commands/{name}.md` both project into
+`.claude/skills/` (see `scripts/compress.py` →
+`generate_claude_skills` + `generate_claude_commands`). Claude treats
+the whole directory as native skills.
 
-* Same-name collision: skill wins, command is skipped
-  (`generate_claude_commands` honors this). Don't reuse a command's
-  slug for a skill unless the command should retire.
-* Both compete on `description` for routing. A weak skill description
-  is shadowed by a stronger same-domain command — and vice versa.
-  Trigger phrasing must be precise (§ 1b below).
-* Workflow has both "user types `/foo`" path AND "model picks this up
-  from intent" path → author the skill first, let the command delegate
-  via `skills:` frontmatter. Two artifacts with the same trigger
-  surface fight each other in the router.
+Implications for skill authors:
+
+* If a same-name command already exists, the skill takes priority and
+  the command is skipped (`generate_claude_commands` honors this).
+  Don't reuse a command's slug for a skill unless the command should
+  retire.
+* Both artifacts compete on `description` for routing. A weak skill
+  description is shadowed by a stronger same-domain command — and vice
+  versa. Make trigger phrasing precise (§ 1b below).
+* When the workflow has both a "user types `/foo`" path AND a "model
+  picks this up from intent" path, author the skill first and let the
+  command delegate (`skills:` frontmatter). Two artifacts with the same
+  trigger surface fight each other in the router.
 
 ### When "Nothing" is the right answer
 
@@ -262,6 +265,87 @@ Example:
 * K6: Not pointer-only (executable without opening guidelines)
 * K7: Created with analysis (not blind, expected behavior defined)
 * Size: Within limits (see size-and-scope guideline)
+
+### 7. Run + iterate evals (quantitative loop)
+
+Triggers (`evals/triggers.json`) check **routing**. A separate
+`evals/evals.json` checks **behavior** — does the skill make the agent
+produce a better answer than baseline? Add this layer for any skill
+where the procedure has measurable output (commands, artifacts,
+structured text). Skip for evergreen heuristics with no falsifiable
+output (e.g. `direct-answers`, `language-and-tone`) unless the user
+asks for it.
+
+**Workspace layout** (all under `.gitignore`):
+
+```
+.agent-src.uncompressed/skills/{name}/evals/
+  triggers.json              # tracked — routing eval (§ 1c)
+  evals.json                 # tracked — behavior eval definitions
+  runs/                      # gitignored — per-iteration outputs
+    {timestamp}-baseline/    # sub-agent run without the skill
+    {timestamp}-with-skill/  # sub-agent run with the skill
+    {timestamp}-benchmark.json
+```
+
+**`evals.json` shape** — 3–10 scenarios, each with prompt + grading
+rubric:
+
+```json
+{
+  "skill": "{name}",
+  "scenarios": [
+    {
+      "id": "happy-path",
+      "prompt": "<full user-shaped task that exercises the skill>",
+      "assertions": [
+        {"kind": "contains", "value": "<expected substring in output>"},
+        {"kind": "file_exists", "path": "<artifact path the skill should create>"},
+        {"kind": "rubric", "criterion": "<one-line judgement, e.g. 'output includes a numbered procedure'>"}
+      ]
+    }
+  ]
+}
+```
+
+`contains` / `file_exists` grade deterministically. `rubric` items grade
+via a fresh sub-agent reading the output against the criterion — keep
+each criterion to one falsifiable sentence.
+
+**Loop** (orchestrated by `scripts/run_skill_evals.py`):
+
+1. **Scaffold** — `python3 scripts/run_skill_evals.py scaffold {skill}`
+   creates `runs/{timestamp}-{baseline,with-skill}/` and seeds each
+   scenario's `meta.json`.
+2. **Baseline run** — spawn one sub-agent per scenario **without** the
+   skill loaded. Capture stdout + any artifacts into
+   `runs/{timestamp}-baseline/{scenario-id}/`.
+3. **With-skill run** — same scenarios, same sub-agent harness, **with**
+   the skill loaded. Capture into `runs/{timestamp}-with-skill/{scenario-id}/`.
+4. **Grade** — for each scenario, write a `grade.json` file with
+   per-assertion pass/fail. Deterministic assertions auto-grade;
+   rubric assertions need a grader sub-agent.
+5. **Aggregate** — `python3 scripts/run_skill_evals.py aggregate {skill}
+   --run {timestamp}` produces `runs/{timestamp}-benchmark.json` with
+   pass-rate, timing, token deltas baseline-vs-with-skill.
+6. **Report** — `python3 scripts/run_skill_evals.py report {skill}
+   --run {timestamp}` prints the diff. Iterate on the skill body
+   until `with-skill` outperforms `baseline` on every scenario.
+
+The script ships with sub-agent spawning **stubbed** — the orchestration
+layer is per-environment (Claude Code, Augment, council). Implement
+the spawn function once for your environment, the rest of the loop
+(aggregate / report / scaffold) works out of the box.
+
+**Exit criterion** — every scenario passes with-skill, at least one
+fails baseline (proves the skill earns its slot). Commit the
+`evals.json` alongside the skill; never commit `runs/`.
+
+Neighbors:
+* `description-assist` — iterate on the trigger phrasing
+* `skill-reviewer` — structural 7-Killers audit
+* `lint-skills` — static checks (frontmatter, sections, size)
+* `skill-improvement-pipeline` — production-learning capture
 
 ## Output format
 
