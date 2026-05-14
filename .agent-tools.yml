@@ -1,22 +1,9 @@
-# .agent-tools.yml — self-projection toggle for THIS package
-#
-# Controls which IDE-specific projections `scripts/compress.py
-# --generate-tools` emits inside the agent-config repository itself.
-#
-# This file does NOT affect consumer installs — `scripts/install.py`
-# still supports every tool ID via `--tools <list>`. It only narrows the
-# self-projection footprint so developers working on this package don't
-# carry tracked `.cursor/`, `.clinerules/`, `.windsurf/`, `GEMINI.md`
-# trees they never use.
-#
-# Recognised tool IDs (must match `scripts/install.py`):
-#   claude-code, claude-desktop, augment, copilot,
-#   cursor, windsurf, cline, gemini
-#
-# Tools NOT listed here are skipped during `task generate-tools`. To
-# add one back: append its ID and run `task sync`.
 tools:
   - claude-code
   - claude-desktop
   - augment
   - copilot
+  - cursor
+  - windsurf
+  - cline
+  - gemini

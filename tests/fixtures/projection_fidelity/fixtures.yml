@@ -1,0 +1,91 @@
+# Per-tool projection-fidelity fixture — Phase 4.1 of step-1-v2-feedback-followup.
+#
+# Each entry pins a representative artefact and a per-tool checklist of
+# observable properties. `scripts/probe_projection_fidelity.py` reads this
+# file, walks the actual projected trees, and reports pass/fail/partial.
+#
+# Tier coverage:
+#   - kernel rule (always-active across all tools)
+#   - tier-2a rule (path-prefix triggered)
+#   - tier-3 routing rule (the new routes_to additions)
+#   - skill (the canonical multi-tool surface)
+#   - command (Augment/Cursor/Windsurf expose commands differently)
+
+entries:
+  - id: rule:non-destructive-by-default
+    type: rule
+    source: rules/non-destructive-by-default.md
+    tier: kernel
+    checks:
+      augment: { present: true, frontmatter_keys: [description] }
+      claude: { present: true, frontmatter_keys: [description] }
+      cursor_mdc: { present: true, frontmatter_keys: [description, alwaysApply], alwaysApply: true }
+      cline: { present: true, frontmatter_keys: [type, tier, description] }
+      windsurf: { concatenated_in: .windsurfrules, body_contains: "Hard Floor" }
+
+  - id: rule:laravel-translations
+    type: rule
+    source: rules/laravel-translations.md
+    tier: tier-2a
+    checks:
+      augment: { present: true }
+      claude: { present: true }
+      cursor_mdc: { present: true, frontmatter_keys: [description, alwaysApply] }
+      cline:
+        present: true
+        frontmatter_keys: [type, tier, description, triggers]
+        triggers_keyword_contains: ["__()", "trans(", "translation"]
+        triggers_path_prefix_contains: ["lang/"]
+      windsurf: { concatenated_in: .windsurfrules, body_contains: "Laravel Translations" }
+
+  - id: rule:laravel-routing
+    type: rule
+    source: rules/laravel-routing.md
+    tier: tier-3
+    checks:
+      augment: { present: true }
+      claude: { present: true }
+      cursor_mdc:
+        present: true
+        frontmatter_keys: [description, alwaysApply]
+        frontmatter_drops: [triggers, routes_to, tier]
+      cline:
+        present: true
+        frontmatter_keys: [type, tier, description, triggers, routes_to]
+        triggers_keyword_contains: ["laravel", "artisan", "eloquent"]
+        routes_to_contains: ["skill:laravel"]
+      windsurf:
+        concatenated_in: .windsurfrules
+        body_contains: "Laravel Routing"
+        routes_to_visible: false
+
+  - id: skill:laravel
+    type: skill
+    source: skills/laravel/SKILL.md
+    tier: skill
+    checks:
+      augment:
+        present: true
+        frontmatter_keys: [name, description, source, domain]
+      claude:
+        present: true
+        frontmatter_keys: [name, description, source, domain]
+      cursor_mdc: { present: false, rationale: "Cursor projects rules only, not skills" }
+      cline: { present: false, rationale: "Cline projects rules only, not skills" }
+      windsurf: { present: false, rationale: "Windsurf single-file is rule concatenation" }
+
+  - id: command:commit
+    type: command
+    source: commands/commit.md
+    tier: command
+    checks:
+      augment: { present: true, location: .augment/commands/commit.md }
+      claude: { present: true, location: .claude/skills/commit/SKILL.md }
+      cursor_commands:
+        present: true
+        location: .cursor/commands/commit.md
+        frontmatter_keys: [name, description]
+      windsurf_workflows:
+        present: true
+        location: .windsurf/workflows/commit.md
+      cline: { present: false, rationale: "Cline has no command surface" }

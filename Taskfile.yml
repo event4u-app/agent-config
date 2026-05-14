@@ -53,6 +53,14 @@ tasks:
           rm -f /tmp/agent-config-ci-start.txt
         fi
 
+  # CI tiers — Phase 1.4 of step-1-v2-feedback-followup roadmap (council U2).
+  #
+  #   ci-fast   — minimal fast loop for local edits (see taskfiles/ci-fast.yml)
+  #   ci        — full local CI, WARN-permissive (lint-skills + lint-readme)
+  #   ci-strict — full local CI, WARN-fatal (lint-skills-strict + lint-readme-strict).
+  #               Intended release-tag gate. Currently surfaces the WARN backlog —
+  #               not yet wired into the release workflow; gating decision lives
+  #               with Phase 3.1 of the same roadmap.
   ci:
     desc: Run ALL CI checks locally (must pass before push) — emits duration line (P2.4)
     cmds:
@@ -106,6 +114,7 @@ tasks:
       - task: lint-marketplace
       - task: lint-skill-tools
       - task: lint-agents-md
+      - task: lint-projection-fidelity
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
@@ -116,3 +125,68 @@ tasks:
       - task: check-council-layout
       - task: roadmap-progress-check
       - task: lint-readme
+
+  ci-strict:
+    desc: Run ALL CI checks with WARN promoted to ERROR (release-tag gate — Phase 1.4 / U2)
+    cmds:
+      - task: _ci-start
+      - defer: { task: _ci-end }
+      - task: consistency
+      - task: counts-check
+      - task: check-index
+      - task: check-router
+      - task: check-compression
+      - task: check-compressed-paths
+      - task: check-overlay-cascade-subdirs
+      - task: check-template-pin-drift
+      - task: check-refs
+      - task: check-token-optimizer-freshness
+      - task: check-portability
+      - task: check-release-trunk-sync
+      - task: validate-decision-engine
+      - task: smoke-quickstart
+      - task: check-examples-shape
+      - task: lint-roadmap-complexity
+      - task: lint-context-spine-usage
+      - task: check-public-links
+      - task: check-beta-review-markers
+      - task: check-public-catalog-links
+      - task: check-command-count
+      - task: lint-no-new-atomic-commands
+      - task: check-cluster-patterns
+      - task: lint-rule-interactions
+      - task: lint-load-context
+      - task: check-context-paths
+      - task: check-no-roadmap-refs
+      - task: check-council-references
+      - task: lint-one-off-age
+      - task: check-ownership-matrix
+      - task: check-reply-consistency
+      - task: check-iron-law-prominence
+      - task: check-always-budget
+      - task: check-augment-description-cap
+      - task: check-augment-budget-strict
+      - task: check-one-off-location
+      - task: validate-schema
+      - task: lint-rule-budget
+      - task: lint-skills-strict
+      - task: lint-rule-tiers
+      - task: lint-command-tiers
+      - task: lint-handoffs
+      - task: lint-hook-manifest
+      - task: lint-hook-concern-budget
+      - task: lint-showcase-sessions
+      - task: lint-marketplace
+      - task: lint-skill-tools
+      - task: lint-agents-md
+      - task: lint-projection-fidelity
+      - task: ci-cloud-bundle
+      - task: ci-linear-digest
+      - task: check-memory
+      - task: golden-replay
+      - task: test
+      - task: runtime-e2e
+      - task: check-roadmap-trackable
+      - task: check-council-layout
+      - task: roadmap-progress-check
+      - task: lint-readme-strict

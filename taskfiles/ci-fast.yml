@@ -71,6 +71,11 @@ tasks:
     desc: Gate docs/showcase.md ↔ docs/showcase/sessions/ — every reference resolves to a file with frontmatter + metrics block
     cmd: python3 scripts/lint_showcase_sessions.py
 
+  lint-projection-fidelity:
+    silent: true
+    desc: Probe per-tool projection fidelity (Phase 4.2 of step-1-v2-feedback-followup) — see docs/contracts/multi-tool-projection-fidelity.md
+    cmd: python3 scripts/probe_projection_fidelity.py
+
   audit-descriptions:
     silent: true
     desc: Audit skill descriptions for pushy-description pattern compliance (worst 15)
