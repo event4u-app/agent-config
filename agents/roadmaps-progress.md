@@ -6,17 +6,17 @@
 
 ## Overall
 
-**5 / 230 steps done · 2%**
+**12 / 230 steps done · 5%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 75 | 5 | 0 | 0 | █░░░░░░░░░ 6% |
+| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 68 | 12 | 0 | 0 | ██░░░░░░░░ 15% |
 | 2 | [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,13 +29,13 @@
 
 ### [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md)
 
-**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 5 / 80 done (6%)
+**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 12 / 80 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Schema extension + contract update | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 1 | CliClient skeleton + subprocess plumbing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Claude CLI integration (canonical JSON path) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | CliClient skeleton + subprocess plumbing | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Claude CLI integration (canonical JSON path) | 🟡 in progress | 3 | 1 | 0 | 0 | 25% |
 | 3 | Codex + Gemini CLI integration | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Community CLI handling for xAI + Perplexity | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | Session-trail adaptation + negative-test backfill | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
@@ -45,7 +45,7 @@
 | 9 | Confidence explanation + decision-replay artefact | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 10 | Decision-routing-by-impact classifier + schema | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 11 | Lightweight-QA fast-path — per-member opt-in + hard caps | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 12 | Low-impact-decisions learning corpus + probation gate + `/learn-low-impact` upstream PR command | ⬜ not started | 20 | 0 | 0 | 0 | 0% |
+| 12 | Low-impact-decisions learning corpus + probation gate + `/learn-low-impact` upstream PR command | 🟡 in progress | 19 | 1 | 0 | 0 | 5% |
 
 ### [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md)
 
