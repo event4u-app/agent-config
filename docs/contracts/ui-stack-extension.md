@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # UI Stack Extension — adding a new frontend stack to the UI track

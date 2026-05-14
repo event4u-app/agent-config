@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # Rule-Interaction Matrix
@@ -99,6 +100,31 @@ junior (yields). For `complements`, ordering is documentary only.
   in the rule files.
 - Skill ↔ rule interactions — the matrix is rule-only. Skills are
   invoked, not always-active.
+- **Orchestration-layer surfaces** (AI Council, Memory, Work-Engine /
+  Decision-Engine): these are runtime systems, not `always`-rules.
+  Their interactions are governed by their own contracts and stay
+  out of this matrix by design — see "Out of scope" below.
+
+## Out of scope — orchestration surfaces (Council × Memory × Work-Engine)
+
+The matrix is **rule-only**. The orchestration layer is governed by
+dedicated contracts; cross-referencing them here would duplicate the
+source of truth and weaken it. Canonical contracts:
+
+| Surface | Canonical contract |
+|---|---|
+| Decision-Engine gates (`min_confidence`, `block_on_risk`, `require_memory_hits`, `on_block`) | [`decision-engine-gates.md`](decision-engine-gates.md) |
+| Decision-trace shape (what the engine emits per phase) | [`decision-trace-v1.md`](decision-trace-v1.md) |
+| Memory contract (entries, scopes, retention) | [`agent-memory-contract.md`](agent-memory-contract.md) |
+| Memory visibility in the trace (`affected` keys) | [`memory-visibility-v1.md`](memory-visibility-v1.md) |
+| AI-Council consultation flow | [`../skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) |
+
+Where an `always`-rule **does** interact with one of these surfaces
+(e.g. `non-destructive-by-default` gating a memory-driven action), the
+gate lives in the rule and the precedence is captured in this matrix
+as a rule-pair (the orchestration surface is the *occasion*, not a
+participant). For Council ↔ Memory ↔ Work-Engine interactions among
+themselves, the dedicated contracts above are authoritative.
 
 ## See also
 

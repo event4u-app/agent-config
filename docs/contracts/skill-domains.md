@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # Skill Domains — 6-domain taxonomy

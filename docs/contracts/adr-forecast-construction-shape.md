@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # ADR — `forecast-construction-shape`: the O2 ↔ H10 interface

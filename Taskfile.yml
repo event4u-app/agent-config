@@ -76,6 +76,7 @@ tasks:
       - task: lint-roadmap-complexity
       - task: lint-context-spine-usage
       - task: check-public-links
+      - task: check-beta-review-markers
       - task: check-public-catalog-links
       - task: check-command-count
       - task: lint-no-new-atomic-commands

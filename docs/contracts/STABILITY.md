@@ -83,6 +83,22 @@ Promotion criteria:
   with the contract unchanged, or the contract has been explicitly
   frozen as part of a roadmap step.
 
+## Beta-review markers
+
+Every `stability: beta` contract MUST carry exactly one of the
+following frontmatter markers (audit-acceptance for the periodic beta
+review; see `road-to-productization.md` § P5.4):
+
+| Marker | Shape | Meaning |
+|---|---|---|
+| `promote-to: stable` | literal | Contract has been ≥ 30 days in beta, zero breaking changes in the last 14 days, ≥ 1 consumer reference. Schedule promotion in the next release. |
+| `keep-beta-until: YYYY-MM-DD` | ISO date | API still moving or consumer count = 0. Date is the next review deadline (max 90 days from the last review). |
+| `superseded-by: <contract-id>` | string | Replaced by a stable contract. Slated for deprecation, not deletion. |
+
+The audit is repeated whenever the `keep-beta-until` date passes for
+≥ 25 % of beta contracts, or at the start of any roadmap phase that
+touches the contract surface.
+
 ## Current contracts
 
 See the file headers themselves for current levels. The frontmatter is

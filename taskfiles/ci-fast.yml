@@ -156,6 +156,11 @@ tasks:
     desc: Validate README/AGENTS.md/docs/architecture.md links into docs/contracts/ against stability frontmatter
     cmd: python3 scripts/check_public_links.py
 
+  check-beta-review-markers:
+    silent: true
+    desc: Verify every stability=beta contract carries promote-to / keep-beta-until / superseded-by (P5.4)
+    cmd: python3 scripts/check_beta_review_markers.py
+
   check-public-catalog-links:
     silent: true
     desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncompressed/, all paths under package.json#files)

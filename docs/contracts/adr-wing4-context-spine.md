@@ -1,5 +1,6 @@
 ---
 stability: beta
+keep-beta-until: 2026-08-12
 ---
 
 # ADR — Wing-4 context-spine: Money / Strategy / Ops slot extension
