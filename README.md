@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>206 Skills</strong> · <strong>61 Rules</strong> · <strong>106 Commands</strong> · <strong>72 Guidelines</strong> · <strong>8 AI Tools</strong>
+  <strong>208 Skills</strong> · <strong>61 Rules</strong> · <strong>106 Commands</strong> · <strong>72 Guidelines</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -475,12 +475,14 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | Stack | Coverage |
 |---|---|
 | Laravel · modern PHP | Skills, rules, project-analysis, quality-tool wiring (Pest · PHPStan · Rector · ECS) |
-| Symfony · Zend / Laminas | Project-analysis skills + shared PHP coder/quality skills |
-| Next.js · React · Node / Express | Project-analysis skills + UI directive set (`react-shadcn`) |
+| Symfony | Workflow skill (`symfony-workflow`) + project-analysis + shared PHP coder/quality skills |
+| Zend / Laminas | Project-analysis skills + shared PHP coder/quality skills |
+| Next.js · App Router | Workflow skill (`nextjs-patterns`) + project-analysis + UI directive set (`react-shadcn`) |
+| React · Node / Express | Project-analysis skills + UI directive set (`react-shadcn`) |
 | Vue · plain HTML | UI directive set (`vue` / `plain`) — analysis skills as they ship |
 | Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
-**Deepest reference stack today: Laravel.** Skill density covers Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant — the stack the package was first proven on. Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
+**Deepest reference stack today: Laravel** — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant. **Workflow-grade second tier: Symfony** (`symfony-workflow` — DI, Doctrine, Messenger, voters, Twig) and **Next.js App Router** (`nextjs-patterns` — RSC boundaries, Server Actions, caching, route handlers). Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
 ---
 
@@ -554,7 +556,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 206 skills + 106 native commands); Augment Code gets the
+> package (rules + 208 skills + 106 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
