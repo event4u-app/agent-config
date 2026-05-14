@@ -137,17 +137,17 @@ Phase 0 Step 8 shipped the happy-path tests for [`scripts/ai_council/config.py`]
 
 ## Acceptance Criteria
 
-- [ ] Phase 0 — `agents/.ai-council.yml` exists with all 5 providers configured (2 enabled by default); `ai_council.*` block removed from `.agent-settings.yml` with breadcrumb in place; loader passes schema validation; existing 2-member council runs work unchanged from a user perspective
-- [ ] Phase 1 — `commands/council.md` carries an `## Architecture` block that names `default.md` as master and `pr.md`/`design.md`/`optimize.md` as `mode_override` wrappers; cross-references in the three wrappers point to `/council default` (not bare `/council`); `docs/contracts/command-clusters.md` mirrors the contract; `task ci` passes
-- [ ] Phase 2 — `/council analysis` is invocable, follows the same wrapper shape as `pr`/`design`/`optimize`, and round-trips a small analysis through `/roadmap-create` end-to-end
-- [ ] Phase 3 — Synthesis output for decision lenses (`default`/`pr`/`analysis`) follows the Karpathy-structured template; creative lenses (`design`/`optimize`) stay open-ended prose; renderer handles all five shapes; `--prose-synthesis` escape hatch works in both directions
-- [ ] Phase 4 — `/council analysis` output includes per-finding consensus metadata; renderer surfaces "Strong Consensus" / default / "Minority Views" sections per the threshold rules
-- [ ] Phase 5 — Either `--peer-review` is implemented and documented (with advisor-mode preserve-persona labeling from Phase 6 Step 3a), or the phase is explicitly cancelled with rationale recorded in this file
-- [ ] Phase 6 — Five advisor persona files exist under `personas/advisors/`; yml advisor-block round-trips through the loader; replace-mode call planner produces the expected call counts in tests; cost-estimate output reflects active advisors; peer-review preserves advisor persona labels while stripping provider identity
+- [x] Phase 0 — `agents/.ai-council.yml` exists with all 5 providers configured (2 enabled by default); `ai_council.*` block removed from `.agent-settings.yml` with breadcrumb in place; loader passes schema validation; existing 2-member council runs work unchanged from a user perspective
+- [x] Phase 1 — `commands/council.md` carries an `## Architecture` block that names `default.md` as master and `pr.md`/`design.md`/`optimize.md` as `mode_override` wrappers; cross-references in the three wrappers point to `/council default` (not bare `/council`); `docs/contracts/command-clusters.md` mirrors the contract; `task ci` passes
+- [x] Phase 2 — `/council analysis` is invocable, follows the same wrapper shape as `pr`/`design`/`optimize`, and round-trips a small analysis through `/roadmap-create` end-to-end
+- [x] Phase 3 — Synthesis output for decision lenses (`default`/`pr`/`analysis`) follows the Karpathy-structured template; creative lenses (`design`/`optimize`) stay open-ended prose; renderer handles all five shapes; `--prose-synthesis` escape hatch works in both directions
+- [x] Phase 4 — `/council analysis` output includes per-finding consensus metadata; renderer surfaces "Strong Consensus" / default / "Minority Views" sections per the threshold rules
+- [x] Phase 5 — Either `--peer-review` is implemented and documented (with advisor-mode preserve-persona labeling from Phase 6 Step 3a), or the phase is explicitly cancelled with rationale recorded in this file
+- [x] Phase 6 — Five advisor persona files exist under `personas/advisors/`; yml advisor-block round-trips through the loader; replace-mode call planner produces the expected call counts in tests; cost-estimate output reflects active advisors; peer-review preserves advisor persona labels while stripping provider identity
 - [x] Phase 7 — `/council debate` is invocable; progressive-disclosure cost gate fires between rounds; `--continue-as-debate` accepts existing session paths; hard cap against `cost_budget.max_total_usd` refuses round N+1 when projected breach; session artefacts written incrementally per round
 - [x] Phase 8 — Every validation branch in `scripts/ai_council/config.py` is exercised by a test in `tests/ai_council/test_config.py` with a specific error-message match; raw-key refusal is parametrized across all known prefixes; `python3 -m pytest tests/ai_council/test_config.py -q` passes with zero skips
-- [ ] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`)
-- [ ] Council session artefacts (R1 + R2 + R3 inline + R4 prompts and responses) remain in `agents/council-sessions/` as audit trail
+- [x] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`)
+- [x] Council session artefacts (R1 + R2 + R3 inline + R4 prompts and responses) remain in `agents/council-sessions/` as audit trail
 
 ## Notes
 
