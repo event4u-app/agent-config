@@ -96,11 +96,11 @@ Members score each other's findings (1–10 + agree/disagree + reason). The rend
 
 Opt-in only. Both Round 2 members agreed this should not be default; one rejected outright, the other approved as a flag. Implement as a flag, gate the implementation on actual user demand (i.e., land Phases 1–4 first, observe whether the flag is needed).
 
-- [ ] **Step 1 — Trigger criterion:** Before starting Phase 5, confirm via user that the flag is wanted. If not requested, mark this phase `[-]` (cancelled) and close the roadmap.
-- [ ] **Step 2 — Anonymization pass in the orchestrator:** Pipeline order when all features are active: **deliberation rounds → peer-review (this step) → consensus-scoring (Phase 4) → synthesis**. Peer-review fires after the final deliberation round: randomize member outputs into `Response A–N`, spawn one anonymized peer-review pass per member ("Strongest? Weakest blind spot? What did all miss?"), de-anonymize only at synthesis time. Consensus-scoring (if enabled) runs against the de-anonymized findings produced by deliberation, not against the peer-review responses.
-- [ ] **Step 3 — Synthesizer prompt update:** When peer-review data is present, the synthesizer receives both the original responses (de-anonymized) and the peer-review responses (still labeled by reviewer). Add a "Peer-Review-Surfaced Blind Spots" section to the relevant lens templates.
-- [ ] **Step 4 — CLI flag wiring:** Add `--peer-review` to `council:run` and `council:estimate`. The estimate increases by ~one round (N extra inference calls).
-- [ ] **Step 5 — Document in the skill spec:** Add a "Karpathy peer-review (opt-in)" subsection citing the source repository.
+- [x] **Step 1 — Trigger criterion:** Before starting Phase 5, confirm via user that the flag is wanted. If not requested, mark this phase `[-]` (cancelled) and close the roadmap.
+- [x] **Step 2 — Anonymization pass in the orchestrator:** Pipeline order when all features are active: **deliberation rounds → peer-review (this step) → consensus-scoring (Phase 4) → synthesis**. Peer-review fires after the final deliberation round: randomize member outputs into `Response A–N`, spawn one anonymized peer-review pass per member ("Strongest? Weakest blind spot? What did all miss?"), de-anonymize only at synthesis time. Consensus-scoring (if enabled) runs against the de-anonymized findings produced by deliberation, not against the peer-review responses.
+- [x] **Step 3 — Synthesizer prompt update:** When peer-review data is present, the synthesizer receives both the original responses (de-anonymized) and the peer-review responses (still labeled by reviewer). Add a "Peer-Review-Surfaced Blind Spots" section to the relevant lens templates.
+- [x] **Step 4 — CLI flag wiring:** Add `--peer-review` to `council:run` and `council:estimate`. The estimate increases by ~one round (N extra inference calls).
+- [x] **Step 5 — Document in the skill spec:** Add a "Karpathy peer-review (opt-in)" subsection citing the source repository.
 
 ## Phase 6: Thinking-style advisor system (replace-mode)
 

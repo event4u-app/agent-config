@@ -45,8 +45,8 @@ from scripts.ai_council.modes import (  # noqa: E402
 )
 from scripts.ai_council.orchestrator import (  # noqa: E402
     ConsensusResult,
-    CostBudget, CouncilQuestion, consult, estimate, render,
-    run_consensus_scoring,
+    CostBudget, CouncilQuestion, PeerReviewResult, consult, estimate, render,
+    run_consensus_scoring, run_peer_review,
 )
 from scripts.ai_council.pricing import (  # noqa: E402
     PriceTable, estimate_cost, load_prices,
@@ -330,6 +330,8 @@ def format_estimate_table(
     *,
     consensus_delta_usd: float = 0.0,
     consensus_extra_calls: int = 0,
+    peer_review_delta_usd: float = 0.0,
+    peer_review_extra_calls: int = 0,
 ) -> str:
     rows = [
         f"  {m.name}/{m.model}: "
@@ -343,6 +345,12 @@ def format_estimate_table(
             f"(~+${consensus_delta_usd:.4f})"
         )
         total += consensus_delta_usd
+    if peer_review_extra_calls > 0:
+        rows.append(
+            f"  +peer-review: +{peer_review_extra_calls} calls "
+            f"(~+${peer_review_delta_usd:.4f})"
+        )
+        total += peer_review_delta_usd
     rows.append(f"  TOTAL:  ${total:.4f}")
     return "\n".join(rows)
 
@@ -425,6 +433,101 @@ def _serialise_consensus(consensus: ConsensusResult) -> dict[str, Any]:
         "extraction_responses": _serialise_responses(consensus.extraction_responses),
         "scoring_responses": _serialise_responses(consensus.scoring_responses),
     }
+
+
+# ── peer-review (Phase 5 / F1, Karpathy anonymous review) ──────────
+
+
+def _peer_review_active(ai_cfg: dict[str, Any], args: argparse.Namespace) -> bool:
+    """Return True when peer-review should fire for this invocation.
+
+    Resolution chain (highest priority first):
+      1. ``--peer-review`` CLI flag — explicit opt-in.
+      2. ``ai_council.peer_review.enabled: true`` in
+         ``agents/.ai-council.yml`` — opt-in via config.
+    Both default to false; peer-review is opt-in by R2 verdict.
+    """
+    if getattr(args, "peer_review", False):
+        return True
+    pr_cfg = ai_cfg.get("peer_review") or {}
+    return bool(pr_cfg.get("enabled"))
+
+
+def _peer_review_cost_delta(
+    ai_cfg: dict[str, Any],
+    args: argparse.Namespace,
+    estimates: list[Any],
+    n_billable: int,
+) -> tuple[int, float]:
+    """Return ``(extra_calls, extra_usd)`` for the peer-review round.
+
+    One extra call per billable member (each reviews the others). The
+    worst-case cost uses the base per-member estimate as a ceiling —
+    same heuristic as ``_consensus_cost_delta``.
+    """
+    if not _peer_review_active(ai_cfg, args):
+        return 0, 0.0
+    if n_billable < 2:
+        # Need ≥ 2 distinct deliberation outputs for peer-review to
+        # have anything to review. The orchestrator no-ops below 2.
+        return 0, 0.0
+    extra_calls = n_billable
+    extra_usd = sum(e.total_usd for e in estimates)
+    return extra_calls, extra_usd
+
+
+def _maybe_run_peer_review(
+    ai_cfg: dict[str, Any],
+    args: argparse.Namespace,
+    question: CouncilQuestion,
+    members: list[ExternalAIClient],
+    responses: list[CouncilResponse],
+    budget: CostBudget,
+    table: PriceTable,
+    project: Any,
+) -> PeerReviewResult | None:
+    """Run the peer-review pass when opted in.
+
+    No-ops if fewer than 2 successful deliberation responses exist —
+    the orchestrator surfaces the empty result in that case.
+    """
+    if not _peer_review_active(ai_cfg, args):
+        return None
+    result = run_peer_review(
+        members, responses,
+        budget=budget, table=table, project=project,
+        original_ask=args.original_ask,
+        max_tokens=question.max_tokens,
+    )
+    if not result.responses:
+        return None
+    return result
+
+
+def _serialise_peer_review(peer_review: PeerReviewResult) -> dict[str, Any]:
+    """Project PeerReviewResult onto a JSON-safe dict for session payloads."""
+    return {
+        "responses": _serialise_responses(peer_review.responses),
+        "label_to_source": dict(peer_review.label_to_source),
+        "persona_labels": dict(peer_review.persona_labels),
+    }
+
+
+def _deserialise_peer_review(
+    data: dict[str, Any] | None,
+) -> PeerReviewResult | None:
+    """Reconstruct a PeerReviewResult from a session payload section.
+
+    Returns ``None`` for payloads predating Phase 5 or runs where the
+    flag was not passed.
+    """
+    if not data:
+        return None
+    return PeerReviewResult(
+        responses=_deserialise_responses(data.get("responses") or []),
+        label_to_source=dict(data.get("label_to_source") or {}),
+        persona_labels=dict(data.get("persona_labels") or {}),
+    )
 
 
 # ── subcommands ─────────────────────────────────────────────────────
@@ -511,6 +614,9 @@ def cmd_estimate(
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
     )
+    pr_extra_calls, pr_extra_usd = _peer_review_cost_delta(
+        ai_cfg, args, estimates, len(billable),
+    )
     sys.stdout.write(
         f"council:estimate · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
@@ -520,6 +626,8 @@ def cmd_estimate(
             billable, estimates,
             consensus_delta_usd=extra_usd,
             consensus_extra_calls=extra_calls,
+            peer_review_delta_usd=pr_extra_usd,
+            peer_review_extra_calls=pr_extra_calls,
         ) + "\n"
     )
     return 0
@@ -621,6 +729,9 @@ def cmd_run(
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
     )
+    pr_extra_calls, pr_extra_usd = _peer_review_cost_delta(
+        ai_cfg, args, estimates, len(billable),
+    )
     sys.stdout.write(
         f"council:run · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
@@ -630,6 +741,8 @@ def cmd_run(
             billable, estimates,
             consensus_delta_usd=extra_usd,
             consensus_extra_calls=extra_calls,
+            peer_review_delta_usd=pr_extra_usd,
+            peer_review_extra_calls=pr_extra_calls,
         ) + "\n"
     )
 
@@ -653,12 +766,20 @@ def cmd_run(
         table=table, project=project,
         original_ask=args.original_ask, rounds=rounds,
     )
+    # Pipeline order (R4 verdict): deliberation → peer-review → consensus
+    # → synthesis. Peer-review anonymises only deliberation outputs;
+    # consensus-scoring runs on the de-anonymised findings.
+    peer_review = _maybe_run_peer_review(
+        ai_cfg, args, question, members, responses, budget, table, project,
+    )
     consensus = _maybe_run_consensus(
         ai_cfg, question, members, responses, budget, table, project, args,
     )
     estimated_total = sum(e.total_usd for e in estimates)
     actual_total = 0.0
     all_responses: list[CouncilResponse] = list(responses)
+    if peer_review is not None:
+        all_responses.extend(peer_review.responses)
     if consensus is not None:
         all_responses.extend(consensus.extraction_responses)
         all_responses.extend(consensus.scoring_responses)
@@ -672,6 +793,7 @@ def cmd_run(
         "mode": question.mode,
         "prompt_mode": getattr(args, "prompt_mode", None),
         "prose_synthesis": getattr(args, "prose_synthesis", None),
+        "peer_review_enabled": _peer_review_active(ai_cfg, args),
         "artefact": artefact,
         "original_ask": args.original_ask,
         "members": [f"{m.name}/{m.model}" for m in members],
@@ -680,6 +802,8 @@ def cmd_run(
         "cost_usd_actual": round(actual_total, 6),
         "responses": _serialise_responses(responses),
     }
+    if peer_review is not None:
+        payload["peer_review"] = _serialise_peer_review(peer_review)
     if consensus is not None:
         payload["consensus"] = _serialise_consensus(consensus)
     out_path = Path(args.output)
@@ -709,12 +833,14 @@ def cmd_render(args: argparse.Namespace) -> int:
     if prose is None:
         prose = payload.get("prose_synthesis")
     consensus = _deserialise_consensus(payload.get("consensus"))
+    peer_review = _deserialise_peer_review(payload.get("peer_review"))
     sys.stdout.write(
         render(
             _deserialise_responses(items),
             mode=mode,
             prose_synthesis=prose,
             consensus=consensus,
+            peer_review=peer_review,
         )
         + "\n"
     )
@@ -819,6 +945,14 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "skill.")
     p.add_argument("--original-ask", default="",
                    help="The user's framing sentence (flows into handoff).")
+    p.add_argument("--peer-review", dest="peer_review", action="store_true",
+                   default=False,
+                   help="Run an anonymous peer-review pass after the main "
+                        "deliberation. Each member critiques the others' "
+                        "(anonymised) responses for blind spots before "
+                        "synthesis. Adds N extra API calls. Opt-in per the "
+                        "R2 verdict; also accepts ai_council.peer_review."
+                        "enabled: true in agents/.ai-council.yml.")
 
 
 def build_parser() -> argparse.ArgumentParser:

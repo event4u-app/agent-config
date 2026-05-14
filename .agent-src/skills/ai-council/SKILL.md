@@ -575,6 +575,55 @@ internal "more feedback" follow-up loop (1 / 2 / 3 menu) is
 **inside** a single member's chat thread and is orthogonal to the
 orchestrator-level rounds.
 
+## Karpathy peer-review (opt-in)
+
+After the final deliberation round, an optional **anonymous peer-review
+pass** lets each member critique the *other* members' responses for
+blind spots before synthesis. Inspired by Andrej Karpathy's "ask the
+strongest models to review each other anonymously" pattern; see his
+[talks / threads on inter-model critique](https://karpathy.ai/) and the
+internal verdict in
+`agents/council-sessions/2026-05-14-ai-council-redesign/round-2.md`
+(R2 split: one approve-as-flag, one reject-as-default → opt-in only).
+
+Pipeline order when every feature is active:
+
+```
+deliberation rounds → peer-review → consensus-scoring → synthesis
+```
+
+Activation — two equivalent paths:
+
+* CLI: `--peer-review` on `council:estimate` or `council:run`.
+* Config: `ai_council.peer_review.enabled: true` in
+  `agents/.ai-council.yml`. Default is `false`.
+
+Mechanics:
+
+1. The final deliberation round's outputs are anonymised into
+   `Response-A`, `Response-B`, … in stable input order. Provider /
+   model identity is stripped (Iron-Law neutrality holds); empty or
+   errored deliberation responses are skipped.
+2. Each member receives an N−1 view (its own response filtered out)
+   plus the Karpathy prompt: *strongest response*, *weakest blind
+   spot*, *what did everyone miss*, *refinement*.
+3. The N critiques flow back into synthesis through a
+   "Peer-Review-Surfaced Blind Spots" addendum on the lens template.
+4. **Advisor preserve-persona (R4 Q3, hard-coded):** when the
+   deliberation was an advisor-mode run (Phase 6), anonymisation
+   strips provider identity but **preserves the advisor persona
+   label**. Peer-review renders as `Response A (Contrarian)`, never
+   `Response A (Anthropic Opus)`. Plain-member runs strip identity
+   entirely.
+
+Cost — adds exactly N billable calls (one per member) at the same
+per-call cost as a deliberation call. The `council:estimate` table
+surfaces the delta as a `+peer-review: +N calls (~+$X)` row.
+
+Needs ≥ 2 distinct deliberation outputs; below that the round is a
+no-op and nothing extra is billed. Self-review is structurally
+impossible — a member never sees its own response.
+
 ## See also
 
 - `/council` command — the user-facing entry point.

@@ -154,3 +154,22 @@ consensus_scoring:
   minority_threshold: 0.4
   lenses:
     - analysis
+
+# Peer-review pass (Phase 5 / F1, Karpathy anonymous review). After the
+# final deliberation round and before synthesis, each member sees the
+# OTHER members' anonymised outputs (Response-A, Response-B, …) and
+# returns a critique focused on:
+#
+#   - Strongest response (and why)
+#   - Weakest blind spot
+#   - What everyone missed
+#
+# Provider/model identity is stripped (Iron Law of Neutrality); advisor
+# personas (Phase 6) are preserved as signal. The synthesis template
+# gains a "Peer-Review-Surfaced Blind Spots" slot.
+#
+# Cost: one extra inference call per billable member per consultation.
+# Opt-in per R2 verdict — default off. Activated either via this flag
+# or the `--peer-review` CLI flag.
+peer_review:
+  enabled: false

@@ -6,17 +6,17 @@
 
 ## Overall
 
-**27 / 187 steps done · 14%**
+**32 / 187 steps done · 17%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   14%
+███████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   17%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 8 | 56 | 29 | 27 | 0 | 0 | █████░░░░░ 48% |
+| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 8 | 56 | 24 | 32 | 0 | 0 | ██████░░░░ 57% |
 | 2 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,7 +28,7 @@
 
 ### [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md)
 
-**AI Council Consolidation + External-Pattern Integration** — 27 / 56 done (48%)
+**AI Council Consolidation + External-Pattern Integration** — 32 / 56 done (57%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -37,7 +37,7 @@
 | 2 | `/council analysis` lens | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 3 | F2 — lens-adaptive synthesis templates | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 4 | F3 — consensus-scoring on the analysis lens | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 5 | F1 — `--peer-review` opt-in flag (Karpathy anonymous review) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | F1 — `--peer-review` opt-in flag (Karpathy anonymous review) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 6 | Thinking-style advisor system (replace-mode) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 7 | `/council debate` sub-command (multi-round rebuttals, progressive disclosure) | ⬜ not started | 17 | 0 | 0 | 0 | 0% |
 

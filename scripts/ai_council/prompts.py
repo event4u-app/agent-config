@@ -450,3 +450,81 @@ def build_scoring_user_prompt(anonymised: dict[str, str]) -> str:
     for label, text in anonymised.items():
         lines.append(f"### {label}\n\n{text}")
     return "\n\n".join(lines)
+
+
+# ── Peer-review (Phase 5 / F1, Karpathy anonymous review) ────────────
+#
+# After the final deliberation round, each member sees the OTHER
+# members' deliberation outputs under neutral `Response-A` / `Response-B`
+# labels and produces a Karpathy-style critique: strongest response,
+# weakest blind spot, what all of them missed. Provider identity is
+# stripped (Iron Law of Neutrality § peer-review); advisor persona
+# labels (Phase 6) are preserved by the caller via `anonymize_responses`.
+#
+# Reviewers never see their own response — that is by design (the
+# orchestrator filters self before calling `build_peer_review_user_prompt`).
+
+PEER_REVIEW_PROMPT = """\
+Below are responses from other independent reviewers to the same
+artefact you just reviewed. Each is labelled with a neutral identifier
+(`Response-A`, `Response-B`, …). You do NOT know which model produced
+which response. Critique them as a peer — your goal is to surface
+signal the round-1 deliberation may have missed.
+
+Respond in plain prose under exactly these four headings:
+
+### Strongest response
+Name the single response whose argument or evidence is most
+load-bearing. Cite the label. One paragraph.
+
+### Weakest blind spot
+The single most important thing one specific response missed,
+glossed over, or got wrong. Cite the label. One paragraph.
+
+### What everyone missed
+A point none of the responses raised but that the artefact's context
+suggests is load-bearing. One paragraph. Mark as `needs-verification`
+when you inferred it rather than read it directly from the artefact.
+
+### Refinement
+One sentence: which course the synthesizer should prefer in light of
+the above, grounded in the strongest converged signal.
+
+Rules:
+- Cite labels exactly as given (`Response-A`, not `A` or `the first one`).
+- Do not invent agreement or disagreement that is not visible in the
+  responses themselves.
+- You may NOT see your own response in the list — that is by design.
+""".strip()
+
+PEER_REVIEW_SYNTHESIS_ADDENDUM = """\
+
+### Peer-Review-Surfaced Blind Spots
+Items the peer-review round surfaced that the round-1 responses did
+not. Cite the peer-reviewer label and the targeted response label
+(`Reviewer A on Response-B: <one-line summary>`). Maximum three.
+""".rstrip()
+
+
+def build_peer_review_user_prompt(anonymised: dict[str, str]) -> str:
+    """User-message body for the peer-review pass.
+
+    `anonymised` maps `Response-A` / `Response-B` / … → response text.
+    Provider identities MUST already be stripped by the caller (see
+    `consensus.anonymize_responses`); this function does NOT re-anonymise,
+    it just renders.
+    """
+    lines = [PEER_REVIEW_PROMPT, "", "---", ""]
+    for label, text in anonymised.items():
+        lines.append(f"### {label}\n\n{text}")
+    return "\n\n".join(lines)
+
+
+def peer_review_synthesis_addendum() -> str:
+    """Return the synthesis-template addendum used when peer-review fired.
+
+    Appended to the lens-specific synthesis template by the renderer.
+    Creative-lens (prose) runs receive only the bare section header so
+    the host agent can write free-form synthesis underneath it.
+    """
+    return PEER_REVIEW_SYNTHESIS_ADDENDUM

@@ -245,3 +245,46 @@ def anonymize_findings(findings: list[Finding]) -> dict[str, Finding]:
         label = f"Finding-{chr(ord('A') + idx)}"
         out[label] = f
     return out
+
+
+def anonymize_responses(
+    responses: Iterable[tuple[str, str]],
+    *,
+    persona_labels: dict[str, str] | None = None,
+) -> tuple[dict[str, str], dict[str, str]]:
+    """Anonymize deliberation responses for the peer-review round (Phase 5).
+
+    `responses` is an iterable of ``(source, text)`` pairs where ``source``
+    is the canonical `provider:model` identifier. Returns:
+
+      - ``anon_text``: ``{Response-A: <body>}`` map fed into the prompt.
+      - ``label_to_source``: ``{Response-A: provider:model}`` map kept
+        server-side so the orchestrator can de-anonymize at synthesis time.
+
+    Empty / whitespace-only texts are skipped — they leak nothing and
+    would clutter the prompt. Input order is preserved so determinism
+    holds for tests (Iron-Law neutrality §peer-review: anonymization
+    strips identity, not order; deterministic A/B labels avoid
+    accidental cross-run reidentification when the same artefact is
+    re-run).
+
+    Phase 6 Step 3a wires `persona_labels` so advisor-mode runs render
+    as ``Response A (Contrarian)`` while provider identity stays
+    stripped. ``persona_labels`` maps ``source`` → ``persona`` (e.g.
+    ``"anthropic:claude-opus-4-1" -> "Contrarian"``); sources missing
+    from the map render as bare ``Response A``. Plain-member runs pass
+    ``persona_labels=None`` and behave exactly like today.
+    """
+    anon_text: dict[str, str] = {}
+    label_to_source: dict[str, str] = {}
+    idx = 0
+    for source, text in responses:
+        if not text or not text.strip():
+            continue
+        base = f"Response-{chr(ord('A') + idx)}"
+        persona = (persona_labels or {}).get(source)
+        label = f"{base} ({persona})" if persona else base
+        anon_text[label] = text.strip()
+        label_to_source[label] = source
+        idx += 1
+    return anon_text, label_to_source

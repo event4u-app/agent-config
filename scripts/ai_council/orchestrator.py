@@ -39,6 +39,7 @@ from scripts.ai_council.consensus import (
     FindingScore,
     aggregate_scores,
     anonymize_findings,
+    anonymize_responses,
     bucket_by_threshold,
     parse_findings_response,
     parse_scores_response,
@@ -52,7 +53,9 @@ from scripts.ai_council.pricing import (
 from scripts.ai_council.project_context import ProjectContext
 from scripts.ai_council.prompts import (
     build_extraction_user_prompt,
+    build_peer_review_user_prompt,
     build_scoring_user_prompt,
+    peer_review_synthesis_addendum,
     synthesis_template,
     system_prompt_for,
 )
@@ -354,6 +357,119 @@ def _augment_for_next_round(
 
 
 @dataclass
+class PeerReviewResult:
+    """Bundle returned by `run_peer_review()` (Phase 5 / F1).
+
+    `responses` carries the per-reviewer critiques. `label_to_source`
+    is the anonymisation map captured server-side so the audit-trail
+    JSON can rehydrate it without leaking provider identity to the
+    member at prompt time.
+
+    `persona_labels` is the (optional) Phase 6 / Step 3a wiring: when
+    the deliberation was an advisor-mode run, the source → persona
+    map flows through to the renderer so peer-review output can render
+    as `Response A (Contrarian)`. Plain-member runs leave it empty.
+    """
+
+    responses: list[CouncilResponse]
+    label_to_source: dict[str, str]
+    persona_labels: dict[str, str]
+
+
+def run_peer_review(
+    members: list[ExternalAIClient],
+    deliberation_responses: list[CouncilResponse],
+    *,
+    budget: CostBudget | None = None,
+    table: PriceTable | None = None,
+    on_overrun: OnOverrunCallback | None = None,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    persona_labels: dict[str, str] | None = None,
+) -> PeerReviewResult:
+    """Karpathy peer-review pass (Phase 5 / F1).
+
+    After the final deliberation round, each member sees the OTHER
+    members' deliberation outputs under neutral `Response-A` labels
+    (provider identity stripped; advisor persona labels preserved per
+    Phase 6 Step 3a) and emits a Karpathy-style critique:
+    strongest / weakest blind spot / what all missed / refinement.
+
+    Members never see their own response — the orchestrator filters
+    self before building the anonymised prompt. Errors in one member's
+    pass tag that member but never abort the round.
+
+    Cost gates flow through `consult([member], ...)`, so the same
+    budget + daily-ledger semantics as deliberation apply.
+    """
+    if not members or not deliberation_responses:
+        return PeerReviewResult(
+            responses=[], label_to_source={}, persona_labels={},
+        )
+
+    member_by_name = {m.name: m for m in members}
+    # ── source map: deliberation responses keyed by `provider:model` ─
+    # Errors and empty bodies are skipped — they leak nothing useful
+    # and would clutter the anonymised prompt with blanks.
+    by_source: dict[str, CouncilResponse] = {}
+    for r in deliberation_responses:
+        if r.error or not r.text.strip():
+            continue
+        source = f"{r.provider}:{r.model}"
+        by_source[source] = r
+
+    if len(by_source) < 2:
+        # Peer-review needs ≥ 2 distinct deliberation outputs (a
+        # reviewer with nothing else to review is a no-op).
+        return PeerReviewResult(
+            responses=[], label_to_source={}, persona_labels={},
+        )
+
+    persona_labels = dict(persona_labels or {})
+    review_responses: list[CouncilResponse] = []
+    # ── final label_to_source map captured from the LAST member call
+    # so the renderer / JSON dump has the deterministic A/B mapping.
+    # Each member sees a different N-1 subset (self filtered), but the
+    # ordering of `by_source` stays stable, so the label assignment is
+    # deterministic per artefact run.
+    last_label_to_source: dict[str, str] = {}
+
+    for reviewer in members:
+        scorer = f"{reviewer.name}:{reviewer.model}"
+        if reviewer.name not in member_by_name:
+            continue
+        others_pairs = [
+            (src, resp.text) for src, resp in by_source.items() if src != scorer
+        ]
+        if len(others_pairs) == 0:
+            continue
+        anon_text, label_to_source = anonymize_responses(
+            others_pairs, persona_labels=persona_labels,
+        )
+        if not anon_text:
+            continue
+        last_label_to_source = label_to_source
+        question = CouncilQuestion(
+            mode="prompt",
+            user_prompt=build_peer_review_user_prompt(anon_text),
+            max_tokens=max_tokens,
+        )
+        reviewed = consult(
+            [reviewer], question,
+            budget=budget, table=table, on_overrun=on_overrun,
+            project=project, original_ask=original_ask,
+        )
+        review_responses.extend(reviewed)
+
+    return PeerReviewResult(
+        responses=review_responses,
+        label_to_source=last_label_to_source,
+        persona_labels=persona_labels,
+    )
+
+
+@dataclass
 class ConsensusResult:
     """Bundle returned by `run_consensus_scoring()`.
 
@@ -482,6 +598,7 @@ def render(
     mode: str | None = None,
     prose_synthesis: bool | None = None,
     consensus: ConsensusResult | None = None,
+    peer_review: PeerReviewResult | None = None,
 ) -> str:
     """Render stacked sections + a lens-aware synthesis prompt slot.
 
@@ -495,6 +612,12 @@ def render(
 
     `consensus` (Phase 4 / F3) prepends Strong Consensus / Findings /
     Minority Views sections when the analysis lens scored its findings.
+
+    `peer_review` (Phase 5 / F1) appends a Peer-Review block listing
+    each member's critique (under Reviewer-A / Reviewer-B labels, in
+    member input order so the audit trail is deterministic) and
+    extends the synthesis template with the
+    `Peer-Review-Surfaced Blind Spots` addendum.
     """
     blocks: list[str] = []
     if consensus is not None and (
@@ -511,18 +634,42 @@ def render(
             f"{r.latency_ms} ms*"
         )
         blocks.append(f"{header}\n\n{meta}\n\n{r.text}")
+    if peer_review is not None and peer_review.responses:
+        blocks.append(_render_peer_review(peer_review))
     if prose_synthesis is True:
         template = ""
     elif prose_synthesis is False:
         template = synthesis_template("default")
     else:
         template = synthesis_template(mode)
+    if peer_review is not None and peer_review.responses:
+        addendum = peer_review_synthesis_addendum()
+        template = f"{template}\n{addendum}" if template else addendum.lstrip()
     if template:
         body = template
     else:
         body = "*to be summarised by the host agent*"
     blocks.append(f"## Convergence / Divergence\n\n{body}")
     return "\n\n---\n\n".join(blocks)
+
+
+def _render_peer_review(peer_review: PeerReviewResult) -> str:
+    """Render the peer-review block under deterministic Reviewer labels.
+
+    Each successful reviewer gets a `### Reviewer X` sub-section. Errors
+    keep their slot (so the audit trail still surfaces the breach) but
+    render `ERROR: <tag>` instead of the prompt body.
+    """
+    lines = ["## Peer-Review (Karpathy)"]
+    label_idx = 0
+    for r in peer_review.responses:
+        label = chr(ord("A") + label_idx)
+        label_idx += 1
+        if r.error:
+            lines.append(f"### Reviewer {label}\n\n*ERROR:* `{r.error}`")
+            continue
+        lines.append(f"### Reviewer {label}\n\n{r.text.strip()}")
+    return "\n\n".join(lines)
 
 
 def _render_consensus(bucket: ConsensusBucket) -> str:
