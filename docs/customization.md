@@ -139,7 +139,7 @@ Rules:
 | Setting | Default | Description |
 |---|---|---|
 | `agent_config_version` | *(empty)* | Exact semver pin of the agent-config release (see above). Empty = unpinned. |
-| `cost_profile` | `minimal` | Token budget (`minimal`, `balanced`, `full`, `custom`) |
+| `cost_profile` | `balanced` | Token budget (`minimal`, `balanced`, `full`, `custom`) — rationale: [`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md) |
 | `personal.user_name` | *(empty)* | User's first name for personalized responses |
 | `personal.minimal_output` | `true` | Suppress intermediate output |
 | `personal.play_by_play` | `false` | Share intermediate findings during analysis |

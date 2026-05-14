@@ -240,8 +240,8 @@ wrapper (`./agent-config`) can fall through to it when no
 The orchestrator chains payload sync and bridge generation:
 
 ```bash
-bash scripts/install                  # defaults to cost_profile=minimal
-bash scripts/install --profile=balanced
+bash scripts/install                  # defaults to cost_profile=balanced
+bash scripts/install --profile=minimal
 bash scripts/install --force          # overwrite existing bridges
 bash scripts/install --skip-bridges   # payload only
 bash scripts/install --skip-sync      # bridges only
@@ -287,7 +287,7 @@ regardless of which AI tool they use.** No per-developer plugin installation nee
 After initial setup, commit these files:
 
 ```
-.agent-settings.yml                ← shared profile (e.g., cost_profile: minimal)
+.agent-settings.yml                ← shared profile (e.g., cost_profile: balanced)
 agents/installed-tools.lock        ← AI bill of materials (ADR-008, Phase 3)
 .augment/                          ← rules, skills, commands (symlinks)
 .cursor/rules/                     ← Cursor rules (symlinks)
@@ -517,16 +517,18 @@ The system works immediately with sensible defaults. Optionally, create `.agent-
 to choose a profile:
 
 ```yaml
-cost_profile: minimal
+cost_profile: balanced
 ```
 
 | Profile | What's active | For whom |
 |---|---|---|
-| `minimal` (default) | Rules + Skills only, zero overhead | New users, solo devs |
+| `minimal` | Kernel only — Iron-Law floor, zero router | Token-constrained agents |
 | `balanced` | + Runtime dispatcher + shell handler | Most teams |
 | `full` | + Tool adapters (GitHub, Jira) | Platform teams |
 
-No profile configured = `minimal` behavior. → [Full profile details](customization.md)
+No profile configured = `balanced` behavior (default). Rationale:
+[`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md).
+→ [Full profile details](customization.md)
 
 ---
 

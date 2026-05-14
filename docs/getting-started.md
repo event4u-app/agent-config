@@ -123,9 +123,11 @@ The system supports four configuration profiles:
 Set your profile in `.agent-settings.yml`:
 
 ```yaml
-cost_profile: minimal
+cost_profile: balanced
 ```
 
+`balanced` is the default — kernel + tier-1 auto-rules. Rationale:
+[`docs/contracts/cost-profile-defaults.md`](contracts/cost-profile-defaults.md).
 You can override any individual setting. See [Customization](customization.md) for details.
 
 ---
