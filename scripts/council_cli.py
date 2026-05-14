@@ -24,6 +24,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
+AI_COUNCIL_FILE = REPO_ROOT / "agents" / ".ai-council.yml"
 
 sys.path.insert(0, str(REPO_ROOT))
 
@@ -32,8 +33,12 @@ from scripts.ai_council.bundler import (  # noqa: E402
 )
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
-    AnthropicClient, CouncilResponse, ExternalAIClient, ManualClient,
-    OpenAIClient, load_anthropic_key, load_openai_key,
+    AnthropicClient, CouncilResponse, ExternalAIClient, GeminiClient,
+    ManualClient, OpenAIClient, PerplexityClient, XAIClient,
+    load_anthropic_key, load_openai_key,
+)
+from scripts.ai_council.config import (  # noqa: E402
+    CouncilConfig, CouncilConfigError, load_council_config, resolve_api_key,
 )
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
@@ -48,21 +53,75 @@ from scripts.ai_council.project_context import detect_project_context  # noqa: E
 
 SCHEMA_VERSION = 1
 
+#: Provider names accepted under `mode=api`. Mirrors the routing table
+#: in ``_construct_api_member``; both must stay in sync.
+_API_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
+
 
 class CouncilDisabledError(RuntimeError):
     """Raised when ai_council.enabled is false or no member is enabled."""
 
 
-def load_settings(path: Path = SETTINGS_FILE) -> dict[str, Any]:
+def load_settings(
+    path: Path = SETTINGS_FILE,
+    *,
+    ai_council_path: Path = AI_COUNCIL_FILE,
+) -> dict[str, Any]:
     """Load merged settings via the centralized loader.
 
     road-to-portable-dev-preferences P3 migration: tolerance contract
     (missing file / malformed YAML / no PyYAML) is handled uniformly by
     ``load_agent_settings``. ``ai_council.*`` keys are not whitelisted,
     so the project file remains authoritative for council config.
+
+    Step-2 council-redesign overlay: when ``agents/.ai-council.yml``
+    exists it is the single source of truth — the validated config is
+    synthesized back into ``settings['ai_council']`` and wins over any
+    legacy block in ``.agent-settings.yml``. The pre-2 path stays alive
+    so the migration breadcrumb in ``.agent-settings.yml`` can ship
+    independently.
     """
     from scripts._lib.agent_settings import load_agent_settings
-    return load_agent_settings(project_path=path)
+    settings = load_agent_settings(project_path=path)
+    if ai_council_path.exists():
+        cfg = load_council_config(ai_council_path)
+        settings["ai_council"] = _synthesize_ai_council_block(cfg)
+    return settings
+
+
+def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
+    """Project a validated ``CouncilConfig`` onto the legacy dict shape.
+
+    ``build_members`` and the ``_resolve_*`` helpers read the legacy
+    ``ai_council.*`` keys — keeping the projection identical means no
+    downstream caller changes. ``api_key_ref`` is carried through; raw
+    keys are never resolved here (resolution is lazy, per enabled
+    member, inside ``_construct_api_member``).
+    """
+    members: dict[str, dict[str, Any]] = {}
+    for name, m in cfg.members.items():
+        entry: dict[str, Any] = {"enabled": m.enabled, "model": m.model}
+        if m.api_key_ref is not None:
+            entry["api_key_ref"] = m.api_key_ref
+        if m.mode is not None:
+            entry["mode"] = m.mode
+        members[name] = entry
+    return {
+        "enabled": cfg.enabled,
+        "mode": cfg.defaults.mode,
+        "min_rounds": cfg.defaults.min_rounds,
+        "deep_min_rounds": cfg.defaults.deep_min_rounds,
+        "max_output_tokens": cfg.defaults.max_output_tokens,
+        "session_retention_days": cfg.defaults.session_retention_days,
+        "debate_max_rounds": cfg.defaults.debate_max_rounds,
+        "cost_budget": {
+            "max_input_tokens": cfg.cost_budget.max_input_tokens,
+            "max_output_tokens": cfg.cost_budget.max_output_tokens,
+            "max_calls": cfg.cost_budget.max_calls,
+            "max_total_usd": cfg.cost_budget.max_total_usd,
+        },
+        "members": members,
+    }
 
 
 def build_members(
@@ -138,12 +197,17 @@ def build_members(
                 raise CouncilDisabledError(
                     f"--siblings requires mode=api for member {name!r} (got {mode!r})."
                 )
+            api_key_ref = cfg.get("api_key_ref")
             for sib_model in siblings[name]:
-                members.append(_construct_api_member(name, sib_model))
+                members.append(
+                    _construct_api_member(name, sib_model, api_key_ref=api_key_ref),
+                )
             continue
         model = overrides.get(name) or cfg.get("model")
-        if mode == "api" and name in {"anthropic", "openai"}:
-            members.append(_construct_api_member(name, model))
+        if mode == "api" and name in _API_PROVIDERS:
+            members.append(
+                _construct_api_member(name, model, api_key_ref=cfg.get("api_key_ref")),
+            )
         elif mode == "manual":
             members.append(ManualClient(name=name, model=model or "manual"))
         elif mode == "playwright":
@@ -152,7 +216,8 @@ def build_members(
             )
         else:
             raise CouncilDisabledError(
-                f"member {name!r} has no transport — mode={mode}, name not in {{anthropic,openai}}."
+                f"member {name!r} has no transport — mode={mode}, "
+                f"name not in {sorted(_API_PROVIDERS)!r}."
             )
     if not members:
         raise CouncilDisabledError(
@@ -162,16 +227,61 @@ def build_members(
     return members
 
 
-def _construct_api_member(name: str, model: str | None) -> ExternalAIClient:
-    """Build an api-mode client for a known provider name."""
+def _construct_api_member(
+    name: str,
+    model: str | None,
+    *,
+    api_key_ref: str | None = None,
+) -> ExternalAIClient:
+    """Build an api-mode client for a known provider name.
+
+    ``api_key_ref`` carries the validated ``file:<path>`` / ``env:<VAR>``
+    reference from ``agents/.ai-council.yml`` and is resolved lazily here
+    so the council does not require keys for disabled providers. When
+    ``api_key_ref`` is ``None`` (no new config yet, or legacy code path),
+    fall back to the per-provider loaders so the pre-step-2
+    ``.agent-settings.yml`` flow keeps working during migration. Tests
+    monkeypatch the legacy loaders — that path stays intact.
+    """
     if name == "anthropic":
-        return AnthropicClient(model=model or "claude-sonnet-4-5",
-                               api_key=load_anthropic_key())
+        api_key = (
+            resolve_api_key(api_key_ref, scope="ai_council.members.anthropic")
+            if api_key_ref else load_anthropic_key()
+        )
+        return AnthropicClient(model=model or "claude-sonnet-4-5", api_key=api_key)
     if name == "openai":
-        return OpenAIClient(model=model or "gpt-4o",
-                            api_key=load_openai_key())
+        api_key = (
+            resolve_api_key(api_key_ref, scope="ai_council.members.openai")
+            if api_key_ref else load_openai_key()
+        )
+        return OpenAIClient(model=model or "gpt-4o", api_key=api_key)
+    if name == "gemini":
+        if not api_key_ref:
+            raise CouncilDisabledError(
+                "member 'gemini' requires api_key_ref in agents/.ai-council.yml "
+                "(e.g. `env:GEMINI_API_KEY`) — no legacy fallback."
+            )
+        api_key = resolve_api_key(api_key_ref, scope="ai_council.members.gemini")
+        return GeminiClient(model=model or "gemini-2.5-pro", api_key=api_key)
+    if name == "xai":
+        if not api_key_ref:
+            raise CouncilDisabledError(
+                "member 'xai' requires api_key_ref in agents/.ai-council.yml "
+                "(e.g. `env:XAI_API_KEY`) — no legacy fallback."
+            )
+        api_key = resolve_api_key(api_key_ref, scope="ai_council.members.xai")
+        return XAIClient(model=model or "grok-4", api_key=api_key)
+    if name == "perplexity":
+        if not api_key_ref:
+            raise CouncilDisabledError(
+                "member 'perplexity' requires api_key_ref in agents/.ai-council.yml "
+                "(e.g. `env:PERPLEXITY_API_KEY`) — no legacy fallback."
+            )
+        api_key = resolve_api_key(api_key_ref, scope="ai_council.members.perplexity")
+        return PerplexityClient(model=model or "sonar-pro", api_key=api_key)
     raise CouncilDisabledError(
-        f"member {name!r} has no api transport (known: anthropic, openai)."
+        f"member {name!r} has no api transport "
+        f"(known: {sorted(_API_PROVIDERS)!r})."
     )
 
 
