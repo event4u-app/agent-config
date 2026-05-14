@@ -66,7 +66,7 @@ work-engine phases ran end-to-end. Stack-aware skills auto-load.
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
 > below. Contributors rebuilding the package — jump to
-> [**For contributors**](#for-contributors).
+> [**Development**](#development).
 
 ### Detailed installation
 
@@ -676,7 +676,7 @@ re-enabled or the chat ends. Full scoring contract and hardening:
 
 ---
 
-## For contributors
+## Development
 
 Working on the package itself? Edit in `.agent-src.uncompressed/`,
 then regenerate compressed and projected trees:
