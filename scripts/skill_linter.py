@@ -775,8 +775,14 @@ def lint_skill(path: Path, text: str) -> LintResult:
     # is *both* large AND prose-dominant OR ships ≥ 2 independently invocable
     # procedures. Reference catalogues (quality-tools 411 L / density 0.83)
     # pass; multi-procedure skills are flagged for split.
+    #
+    # Frontmatter opt-out: `meta_skill: true` exempts a skill from the size
+    # warn when the skill's purpose *is* breadth (skill-writing, agent-docs-
+    # writing, skill-reviewer, etc.). Meta-skills inherently bundle multiple
+    # procedures and inline examples.
     total_lines = len(text.splitlines())
-    if total_lines > 400:
+    is_meta_skill = bool(fm) and re.search(r"^meta_skill:\s*true\s*$", fm, re.MULTILINE)
+    if total_lines > 400 and not is_meta_skill:
         density = _density_score(text)
         procedures = _count_procedure_sections(text)
         if density < 0.6 or procedures >= 2:
@@ -832,6 +838,12 @@ def lint_skill(path: Path, text: str) -> LintResult:
                                f"{meaningful_steps} steps) — may lack its own executable workflow"))
             suggestions.append("Expand the skill so it remains executable without opening a guideline")
 
+    # --- evals.json schema validator ---
+    # When a skill ships sibling `evals/evals.json` (quantitative behavior
+    # eval per skill-writing § 7), validate its shape. Triggers.json is a
+    # separate concern handled elsewhere. All issues here are WARN.
+    issues.extend(validate_evals_json(path))
+
     return LintResult(
         file=str(path),
         artifact_type="skill",
@@ -839,6 +851,64 @@ def lint_skill(path: Path, text: str) -> LintResult:
         issues=issues,
         suggestions=dedupe_preserve_order(suggestions),
     )
+
+
+def validate_evals_json(skill_path: Path) -> list[Issue]:
+    """Validate `{skill_dir}/evals/evals.json` against the schema declared
+    in `skill-writing` § 7. Returns WARN-level issues only; never blocks.
+    Skipped entirely when the file is absent."""
+    evals_path = skill_path.parent / "evals" / "evals.json"
+    if not evals_path.is_file():
+        return []
+    issues: list[Issue] = []
+    try:
+        data = json.loads(evals_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [Issue("warning", "evals_json_unreadable",
+                      f"evals/evals.json could not be parsed: {exc}")]
+    if not isinstance(data, dict):
+        return [Issue("warning", "evals_json_shape",
+                      "evals/evals.json root must be an object")]
+    if "skill" not in data or not isinstance(data["skill"], str):
+        issues.append(Issue("warning", "evals_json_missing_skill",
+                            "evals/evals.json must declare top-level 'skill' (string)"))
+    scenarios = data.get("scenarios")
+    if not isinstance(scenarios, list) or len(scenarios) < 1:
+        issues.append(Issue("warning", "evals_json_no_scenarios",
+                            "evals/evals.json must declare 'scenarios' (non-empty array)"))
+        return issues
+    valid_kinds = {"contains", "file_exists", "rubric"}
+    for idx, scenario in enumerate(scenarios):
+        loc = f"scenarios[{idx}]"
+        if not isinstance(scenario, dict):
+            issues.append(Issue("warning", "evals_json_scenario_shape",
+                                f"{loc} must be an object"))
+            continue
+        for key in ("id", "prompt"):
+            if key not in scenario or not isinstance(scenario[key], str) or not scenario[key].strip():
+                issues.append(Issue("warning", "evals_json_scenario_missing_field",
+                                    f"{loc} missing required string field '{key}'"))
+        assertions = scenario.get("assertions")
+        if not isinstance(assertions, list) or len(assertions) < 1:
+            issues.append(Issue("warning", "evals_json_scenario_no_assertions",
+                                f"{loc}.assertions must be a non-empty array"))
+            continue
+        for a_idx, assertion in enumerate(assertions):
+            a_loc = f"{loc}.assertions[{a_idx}]"
+            if not isinstance(assertion, dict):
+                issues.append(Issue("warning", "evals_json_assertion_shape",
+                                    f"{a_loc} must be an object"))
+                continue
+            kind = assertion.get("kind")
+            if kind not in valid_kinds:
+                issues.append(Issue("warning", "evals_json_assertion_kind",
+                                    f"{a_loc}.kind must be one of {sorted(valid_kinds)}, got {kind!r}"))
+                continue
+            required_field = {"contains": "value", "file_exists": "path", "rubric": "criterion"}[kind]
+            if required_field not in assertion or not isinstance(assertion[required_field], str):
+                issues.append(Issue("warning", "evals_json_assertion_missing_field",
+                                    f"{a_loc} (kind={kind}) missing required string field '{required_field}'"))
+    return issues
 
 
 def extract_frontmatter(text: str) -> Optional[str]:

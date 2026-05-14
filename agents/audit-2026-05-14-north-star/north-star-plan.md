@@ -92,6 +92,28 @@ exposed via `cost-report` skill (50/75/90/100 ladder, hard stop at 100). <!-- re
 Per-tool projection fidelity test (closes U5). Estimated 7 phases /
 ~40 steps.
 
+### step-100 — Reader-Test pass on adopted skills *(NEW, queued)*
+
+Apply the `doc-coauthoring` reader-test discipline to the Anthropic
+adoptions (`canvas-design`, `doc-coauthoring`) plus the existing top-10
+most-used skills. For each: spawn a fresh sub-agent with only the SKILL
+loaded, hand it the trigger prompts from `evals/triggers.json`, capture
+where the agent gets stuck or asks for context the skill should have
+provided. Convert each gap into a concrete SKILL.md edit. No tooling
+changes — pure content hardening. Estimated 1 phase / ~12 steps
+(one per skill). Blocks on step-101 when behavior eval surfaces signal.
+
+### step-101 — Quantitative eval pilots *(NEW, queued)*
+
+Pilot `scripts/run_skill_evals.py` on 3–5 skills with measurable output
+(e.g. `commit`, `quality-fix`, `refine-ticket`, `roadmap-writing`,
+`canvas-design`). For each: author `evals/evals.json` per the schema in
+`skill-writing` § 7, run baseline + with-skill arms, publish the
+benchmark delta. Wire the linter's new `evals_json_*` warnings into the
+strict-CI ladder once ≥ 5 skills carry green evals. Feeds the per-release
+`BENCH.md` table from step-4. Estimated 1 phase / ~8 steps. Requires
+step-100 reader-test exits to be clean.
+
 ---
 
 ## 5. Existing roadmaps — required deltas

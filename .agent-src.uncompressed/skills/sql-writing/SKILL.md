@@ -17,7 +17,7 @@ Do NOT use when:
 
 ## Procedure: Write raw SQL
 
-1. **Choose approach** — Use query builder when possible. Raw SQL only when query builder can't express the query.
+1. **Inspect call site & choose approach** — identify every dynamic value flowing into the query, then pick: query builder when possible. Raw SQL only when query builder can't express the query.
 2. **Parameterize** — Every variable must use `?` binding or named `:param`. Never interpolate PHP variables into SQL strings.
 3. **Use MariaDB syntax** — Not PostgreSQL or MSSQL. Check `php/sql.md` for MariaDB-specific patterns.
 4. **Verify** — Run EXPLAIN on complex queries. Check that no PHP interpolation (`"$var"`, `'{$var}'`) appears in SQL.

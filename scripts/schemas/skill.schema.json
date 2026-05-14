@@ -47,6 +47,10 @@
       "enum": ["senior"],
       "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncompressed/rules/skill-quality.md."
     },
+    "meta_skill": {
+      "type": "boolean",
+      "description": "Opt-out of the linter's `skill_too_large` warn for skills whose purpose IS breadth (skill-writing, agent-docs-writing, skill-reviewer). Meta-skills inherently bundle multiple procedures and inline examples. Use sparingly — every meta_skill: true is a load-on-context trade-off."
+    },
     "external_source": {
       "type": "string",
       "format": "uri",
