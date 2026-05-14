@@ -298,6 +298,15 @@ ai_council:
   # opts in. Set to `min_rounds` to disable the deep tier.
   deep_min_rounds: 3
 
+  # Per-member output-token budget passed to every API call. The CLI
+  # `--max-tokens` flag overrides this on a single invocation; the
+  # cost estimator uses the same value as its worst-case ceiling.
+  # `0` means "unlimited" — internally widened to the safe provider
+  # ceiling (16384) because Anthropic rejects max_tokens=0. Raise
+  # explicitly past 16384 only when a model genuinely supports more
+  # and you want longer answers.
+  max_output_tokens: 2048
+
   # Hard cost ceiling per /council invocation. The orchestrator pauses
   # before any member whose projected spend would breach a cap and asks
   # the user to continue. `max_total_usd: 0` disables the USD ceiling

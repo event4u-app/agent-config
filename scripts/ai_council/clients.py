@@ -53,6 +53,19 @@ def _resolve_key_path(filename: str) -> Path:
 DEFAULT_ANTHROPIC_MODEL = "claude-sonnet-4-5"
 DEFAULT_OPENAI_MODEL = "gpt-4o"
 
+#: Per-call output budget when no caller-supplied value reaches `ask()`.
+#: The CLI resolves the live default from `ai_council.max_output_tokens`
+#: in `.agent-settings.yml`; this constant is only the abstract-base /
+#: direct-API fallback when nothing else is wired up.
+DEFAULT_MAX_TOKENS = 2048
+
+#: Expansion target when the user sets `max_output_tokens: 0` ("unlimited")
+#: in settings. Anthropic requires `max_tokens` to be a positive integer,
+#: so 0 is widened to this safe ceiling before the SDK call. Big enough
+#: for current frontier models (Sonnet/GPT-4o headroom ≥ 16k); raise
+#: explicitly in settings if a larger budget is genuinely needed.
+UNLIMITED_TOKENS_FALLBACK = 16384
+
 # OpenAI reasoning models (o1, o3, o4 families) reject `max_tokens` and the
 # `system` role; they require `max_completion_tokens` and accept only `user`
 # (and `developer`) messages.
@@ -128,7 +141,7 @@ class ExternalAIClient(ABC):
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: int = 1024,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
     ) -> CouncilResponse:
         """Send one independent query. Must never raise on network/API
         failure — return a `CouncilResponse` with `error` set instead.
@@ -162,7 +175,7 @@ class AnthropicClient(ExternalAIClient):
             ) from exc
         self._client = anthropic.Anthropic(api_key=api_key)
 
-    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = DEFAULT_MAX_TOKENS) -> CouncilResponse:
         t0 = time.monotonic()
         try:
             response = self._client.messages.create(
@@ -218,7 +231,7 @@ class OpenAIClient(ExternalAIClient):
             ) from exc
         self._client = openai.OpenAI(api_key=api_key)
 
-    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024) -> CouncilResponse:
+    def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = DEFAULT_MAX_TOKENS) -> CouncilResponse:
         t0 = time.monotonic()
         kwargs: dict[str, object] = {"model": self.model}
         if _is_reasoning_model(self.model):
@@ -316,7 +329,7 @@ class ManualClient(ExternalAIClient):
         self,
         system_prompt: str,
         user_prompt: str,
-        max_tokens: int = 1024,  # noqa: ARG002 — accepted for ABC parity
+        max_tokens: int = DEFAULT_MAX_TOKENS,  # noqa: ARG002 — accepted for ABC parity
     ) -> CouncilResponse:
         t0 = time.monotonic()
         rounds: list[str] = []
