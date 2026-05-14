@@ -23,6 +23,8 @@ from scripts.ai_council.clients import (  # noqa: E402
     CliClient,
     CliClientError,
     CouncilResponse,
+    GeminiCliClient,
+    OpenAICliClient,
     load_cli_call_counts,
     record_cli_call,
 )
@@ -234,3 +236,118 @@ def test_ask_with_real_claude_cli_envelope(monkeypatch, tmp_path):
     assert resp.metadata["reported_cost_usd"] == 0.0089
     assert resp.metadata["reported_duration_ms"] == 1842
     assert AnthropicCliClient.billable is False
+
+
+# ── integration: OpenAICliClient (Phase 3 Step 4) ─────────────────────────
+
+
+_CODEX_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "codex_cli_ndjson.txt"
+)
+
+
+def test_openai_cli_with_real_codex_envelope(monkeypatch, tmp_path):
+    """Real Codex NDJSON event stream → fully populated CouncilResponse.
+
+    Codex emits one JSON object per line in `exec --json` mode; the
+    parser walks the stream and pulls the final-result event plus the
+    turn.completed usage tally. Subprocess is mocked.
+    """
+    envelope = _CODEX_FIXTURE.read_text(encoding="utf-8")
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/codex")
+    _patch_run(monkeypatch, stdout=envelope)
+    cli = OpenAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("you are a geography tutor", "What is the capital of France?")
+    assert resp.error is None
+    assert resp.text == "The capital of France is Paris."
+    assert resp.input_tokens == 146
+    assert resp.output_tokens == 38
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["item_id"] == "item_01"
+    assert resp.metadata["session_id"] == "01HZK8R2W6X9Q4M7N5T2Y3F6A8"
+    assert OpenAICliClient.billable is False
+
+
+def test_openai_cli_build_command_includes_system_prompt(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/codex")
+    captured = _patch_run(monkeypatch, stdout="")
+    cli = OpenAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    cli.ask("system here", "user here")
+    cmd = captured["cmd"]
+    assert cmd[0] == "/bin/codex"
+    assert "exec" in cmd
+    assert "--json" in cmd
+    assert "--system" in cmd
+    assert "system here" in cmd
+    assert cmd[-1] == "user here"
+
+
+def test_openai_cli_parse_failed_on_garbage(monkeypatch, tmp_path):
+    """Pure-garbage stdout → empty text but no crash; defensive parse.
+
+    Codex's NDJSON parser silently skips non-JSON lines, so garbage
+    input yields an empty CouncilResponse rather than a parse_failed
+    error. Either contract is acceptable; the Iron Law is "never
+    crash the run".
+    """
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/codex")
+    _patch_run(monkeypatch, stdout="this is not JSON\nneither is this\n")
+    cli = OpenAICliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.text == ""
+    assert resp.input_tokens == 0
+    assert resp.output_tokens == 0
+    assert resp.metadata["cli"] is True
+
+
+# ── integration: GeminiCliClient (Phase 3 Step 4) ─────────────────────────
+
+
+_GEMINI_FIXTURE = (
+    Path(__file__).resolve().parents[1] / "fixtures" / "gemini_cli_json.txt"
+)
+
+
+def test_gemini_cli_with_real_envelope(monkeypatch, tmp_path):
+    """Real Gemini JSON envelope → fully populated CouncilResponse.
+
+    `gemini -p --output-format json` emits one top-level object with
+    `response`, `stats.models[<model>].tokens`, and `sessionId`. The
+    parser pulls all three; subprocess is mocked.
+    """
+    envelope = _GEMINI_FIXTURE.read_text(encoding="utf-8")
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/gemini")
+    _patch_run(monkeypatch, stdout=envelope)
+    cli = GeminiCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("you are a geography tutor", "What is the capital of France?")
+    assert resp.error is None
+    assert resp.text == "The capital of France is Paris."
+    assert resp.input_tokens == 112
+    assert resp.output_tokens == 31
+    assert resp.metadata["cli"] is True
+    assert resp.metadata["session_id"] == "sess_3f7a8b2d_91c4_4e6f_a0d8"
+    assert GeminiCliClient.billable is False
+
+
+def test_gemini_cli_pipes_prompt_on_stdin(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/gemini")
+    captured = _patch_run(monkeypatch, stdout='{"response":"ok"}')
+    cli = GeminiCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    cli.ask("system here", "user here")
+    cmd = captured["cmd"]
+    assert cmd[0] == "/bin/gemini"
+    assert "--output-format" in cmd
+    assert "json" in cmd
+    # prompt rides on stdin, not argv, so argv must not contain it
+    assert "user here" not in cmd
+    assert captured["kw"]["input"] == "user here"
+
+
+def test_gemini_cli_parse_failed_on_garbage(monkeypatch, tmp_path):
+    monkeypatch.setattr(clients_mod.shutil, "which", lambda b: "/bin/gemini")
+    _patch_run(monkeypatch, stdout="not JSON at all")
+    cli = GeminiCliClient(cli_calls_path=tmp_path / "cli-calls.json")
+    resp = cli.ask("sys", "user")
+    assert resp.error is not None
+    assert resp.error.startswith("parse_failed:")
+    assert resp.text == "not JSON at all"

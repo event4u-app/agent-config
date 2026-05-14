@@ -341,9 +341,14 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
 
 
 def test_build_members_cli_unknown_provider_raises() -> None:
-    """mode=cli for a provider without a wired CLI subclass raises."""
+    """mode=cli for a provider without a wired CLI subclass raises.
+
+    `xai` and `perplexity` are scheduled for Phase 4; until then they
+    are valid `mode=api` providers but have no CLI transport — the
+    loader must surface that explicitly, not silently fall through.
+    """
     settings = {"ai_council": {"enabled": True, "mode": "api", "members": {
-        "openai": {"enabled": True, "mode": "cli", "model": "gpt-4o"},
+        "xai": {"enabled": True, "mode": "cli", "model": "grok-4"},
     }}}
     with pytest.raises(council_cli.CouncilDisabledError, match="no CLI client is\\s+wired"):
         council_cli.build_members(settings)

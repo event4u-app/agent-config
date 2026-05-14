@@ -805,6 +805,192 @@ class AnthropicCliClient(CliClient):
         )
 
 
+class OpenAICliClient(CliClient):
+    """OpenAI via the official `codex` CLI (subscription-authed).
+
+    Invokes ``codex exec --json <prompt>`` and consumes the
+    newline-delimited JSON event stream. The user prompt rides on
+    argv (Codex does not read prompts from stdin in ``exec`` mode);
+    the system prompt is passed via ``--system`` when non-empty.
+
+    Auth is delegated to the CLI's own session — the user runs
+    ``codex login`` once and the orchestrator inherits the
+    subscription. No API key flows through this process.
+
+    Output shape: one JSON object per line. The terminal event has
+    ``type == "item.completed"`` with the final assistant message in
+    ``item.content[0].text``; a separate ``type == "turn.completed"``
+    event carries token usage in ``usage.input_tokens`` /
+    ``usage.output_tokens``. Robust against the order of events and
+    against unknown event types (silently skipped).
+    """
+
+    name = "openai"
+    default_binary = "codex"
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "codex login", "auth_required", "401",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = "gpt-5",
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "exec", "--json", "--model", self.model]
+        if system_prompt:
+            cmd.extend(["--system", system_prompt])
+        cmd.append(user_prompt)
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = ""
+        input_tokens = 0
+        output_tokens = 0
+        meta: dict[str, object] = {}
+        for line in stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            event_type = event.get("type")
+            if event_type == "item.completed":
+                item = event.get("item") or {}
+                if isinstance(item, dict):
+                    content = item.get("content") or []
+                    if isinstance(content, list):
+                        chunks: list[str] = []
+                        for entry in content:
+                            if isinstance(entry, dict) and entry.get("text"):
+                                chunks.append(str(entry["text"]))
+                        if chunks:
+                            text = "\n".join(chunks).strip()
+                    if item.get("id"):
+                        meta["item_id"] = str(item["id"])
+            elif event_type == "turn.completed":
+                usage = event.get("usage") or {}
+                if isinstance(usage, dict):
+                    input_tokens = int(usage.get("input_tokens", 0) or 0)
+                    output_tokens = int(usage.get("output_tokens", 0) or 0)
+            elif event_type == "session.created":
+                if event.get("session_id"):
+                    meta["session_id"] = str(event["session_id"])
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=input_tokens, output_tokens=output_tokens,
+            metadata=meta,
+        )
+
+
+class GeminiCliClient(CliClient):
+    """Google Gemini via the official `gemini` CLI (free-tier subscription).
+
+    Invokes ``gemini --prompt <prompt> --output-format json`` and
+    consumes the structured envelope: ``{"response": str, "stats":
+    {"models": {"<model>": {"tokens": {"prompt": int, "candidates":
+    int}}}}, ...}``. Prompt is piped on stdin to dodge argv limits.
+
+    Auth is delegated to the CLI's own session — the user runs
+    ``gemini`` once interactively to set up OAuth, then the
+    orchestrator inherits the consent. Free-tier quotas apply at the
+    Google account level; ``cli_call_budget`` enforces a local mirror.
+    """
+
+    name = "gemini"
+    default_binary = "gemini"
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "interactive consent could not be obtained",
+        "please run `gemini`",
+        "oauth",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = "gemini-2.5-pro",
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [
+            self.binary,
+            "--output-format", "json",
+            "--model", self.model,
+        ]
+        if system_prompt:
+            cmd.extend(["--system", system_prompt])
+        return cmd
+
+    def _stdin_payload(self, system_prompt: str, user_prompt: str) -> str | None:  # noqa: ARG002
+        return user_prompt
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        envelope = json.loads(stdout)
+        if not isinstance(envelope, dict):
+            raise ValueError("expected JSON object at the top level of gemini CLI output")
+        text = str(envelope.get("response", "")).strip()
+        input_tokens = 0
+        output_tokens = 0
+        stats = envelope.get("stats") or {}
+        if isinstance(stats, dict):
+            models = stats.get("models") or {}
+            if isinstance(models, dict):
+                # gemini emits per-model token counts; pick the configured model
+                # if present, else sum across all models in the envelope.
+                model_stats = models.get(self.model)
+                if not isinstance(model_stats, dict):
+                    model_stats = next(
+                        (v for v in models.values() if isinstance(v, dict)),
+                        {},
+                    )
+                tokens = (model_stats.get("tokens") or {}) if isinstance(model_stats, dict) else {}
+                if isinstance(tokens, dict):
+                    input_tokens = int(tokens.get("prompt", 0) or 0)
+                    output_tokens = int(tokens.get("candidates", 0) or 0)
+        meta: dict[str, object] = {}
+        session_id = envelope.get("sessionId") or envelope.get("session_id")
+        if session_id:
+            meta["session_id"] = str(session_id)
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=input_tokens, output_tokens=output_tokens,
+            metadata=meta,
+        )
+
+
 # ── Manual mode (Phase 2b) ───────────────────────────────────────────
 
 

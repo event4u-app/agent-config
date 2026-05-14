@@ -34,8 +34,8 @@ from scripts.ai_council.bundler import (  # noqa: E402
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
     AnthropicClient, AnthropicCliClient, CliClientError,
-    CouncilResponse, ExternalAIClient, GeminiClient,
-    ManualClient, OpenAIClient, PerplexityClient, XAIClient,
+    CouncilResponse, ExternalAIClient, GeminiClient, GeminiCliClient,
+    ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient, XAIClient,
     load_anthropic_key, load_openai_key,
 )
 from scripts.ai_council.advisors import (  # noqa: E402
@@ -70,7 +70,7 @@ _API_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"
 #: Phase 2 ships ``anthropic``; Phase 3 adds ``openai`` + ``gemini``;
 #: Phase 4 adds ``xai`` + ``perplexity`` (community CLIs, no
 #: subscription savings — they still consume the API key).
-_CLI_PROVIDERS = frozenset({"anthropic"})
+_CLI_PROVIDERS = frozenset({"anthropic", "openai", "gemini"})
 
 
 class CouncilDisabledError(RuntimeError):
@@ -418,18 +418,24 @@ def _construct_cli_member(
     missing at construction time) into ``CouncilDisabledError`` so the
     council's error contract stays uniform.
     """
-    if name == "anthropic":
+    cli_factory: dict[str, tuple[type[ExternalAIClient], str, str]] = {
+        "anthropic": (AnthropicCliClient, "claude-sonnet-4-5", "Claude"),
+        "openai": (OpenAICliClient, "gpt-5", "Codex"),
+        "gemini": (GeminiCliClient, "gemini-2.5-pro", "Gemini"),
+    }
+    if name in cli_factory:
+        cls, default_model, display = cli_factory[name]
         try:
-            return AnthropicCliClient(
-                model=model or "claude-sonnet-4-5",
+            return cls(
+                model=model or default_model,
                 binary=binary,
                 max_calls_per_day=max_calls_per_day,
             )
         except CliClientError as exc:
             raise CouncilDisabledError(
-                f"member 'anthropic' resolves to mode=cli but the binary is "
-                f"not available: {exc}. Install the Claude CLI or flip "
-                f"ai_council.members.anthropic.mode back to 'api'."
+                f"member {name!r} resolves to mode=cli but the binary is "
+                f"not available: {exc}. Install the {display} CLI or flip "
+                f"ai_council.members.{name}.mode back to 'api'."
             ) from exc
     raise CouncilDisabledError(
         f"member {name!r} has no cli transport "

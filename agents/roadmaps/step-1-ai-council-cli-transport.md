@@ -84,11 +84,11 @@ Claude Code is the most mature CLI with the cleanest JSON output — implement i
 
 Two parallel subclasses on the AnthropicCliClient template; they only differ in argv shape, JSON shape, and auth-failure regex.
 
-- [ ] **Step 1 — `OpenAICliClient(CliClient)`:** `default_args = ["exec", "--json"]`, `binary = "codex"`. Codex emits newline-delimited JSON events; `_parse_output` walks the stream and pulls the final-result event. Auth patterns: `"codex login"`, `"AUTH_REQUIRED"`, `"401"`.
-- [ ] **Step 2 — `GeminiCliClient(CliClient)`:** `default_args = ["-p", "--output-format", "json"]` (verified against vendor docs at roadmap-author time — re-verify if vendor doc shifts before implementing), `binary = "gemini"`. Auth patterns: `"Interactive consent could not be obtained"`, `"Please run `gemini`"`, `"OAuth"`.
-- [ ] **Step 3 — Extend the provider→class map:** `openai → OpenAICliClient`, `gemini → GeminiCliClient`. Keep `xai` and `perplexity` raising `NotImplementedError` for `mode: cli` until Phase 4.
-- [ ] **Step 4 — Fixture-backed tests:** One captured-JSON fixture per provider under `tests/fixtures/`; tests mirror Phase 2 Step 4 for `openai` and `gemini`.
-- [ ] **Step 5 — Documentation cross-link:** Update [`.agent-src.uncompressed/skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) "Transport modes" section to cover `cli` for all three providers with one example each.
+- [x] **Step 1 — `OpenAICliClient(CliClient)`:** `default_args = ["exec", "--json"]`, `binary = "codex"`. Codex emits newline-delimited JSON events; `_parse_output` walks the stream and pulls the final-result event. Auth patterns: `"codex login"`, `"AUTH_REQUIRED"`, `"401"`.
+- [x] **Step 2 — `GeminiCliClient(CliClient)`:** `default_args = ["-p", "--output-format", "json"]` (verified against vendor docs at roadmap-author time — re-verify if vendor doc shifts before implementing), `binary = "gemini"`. Auth patterns: `"Interactive consent could not be obtained"`, `"Please run `gemini`"`, `"OAuth"`.
+- [x] **Step 3 — Extend the provider→class map:** `openai → OpenAICliClient`, `gemini → GeminiCliClient`. Keep `xai` and `perplexity` raising `NotImplementedError` for `mode: cli` until Phase 4.
+- [x] **Step 4 — Fixture-backed tests:** One captured-JSON fixture per provider under `tests/fixtures/`; tests mirror Phase 2 Step 4 for `openai` and `gemini`.
+- [x] **Step 5 — Documentation cross-link:** Update [`.agent-src.uncompressed/skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) "Transport modes" section to cover `cli` for all three providers with one example each.
 
 ## Phase 4: Community CLI handling for xAI + Perplexity
 
