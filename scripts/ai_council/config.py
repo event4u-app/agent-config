@@ -4,17 +4,28 @@ Reads ``agents/.ai-council.yml`` per the contract in
 ``docs/contracts/ai-council-config.md``. Replaces the fragmented
 ``.agent-settings.yml`` ``ai_council`` block (Phase 0 migration).
 
-Validation contract (7 rules, all enforced at load time):
+Validation contract (8 rules, all enforced at load time):
 
 1. ``enabled`` is a bool.
-2. ``defaults.mode`` ∈ {``api``, ``manual``}; per-member mode same set.
+2. ``defaults.mode`` ∈ {``api``, ``manual``, ``cli``}; per-member mode
+   same set. Semantics: ``api`` = SDK call against a stored key
+   (billable); ``manual`` = copy & paste — human transports prompt +
+   reply between the agent and an external chat surface (free);
+   ``cli`` = shell out to a locally-installed CLI under subscription
+   auth (free for first-party CLIs, billable for community wrappers).
 3. ``members.<name>`` keys are restricted to the known provider set.
 4. ``cost_budget.*`` numeric fields are >= 0.
-5. Enabled members carry a non-empty ``model`` and ``api_key_ref``.
+5. Enabled members carry a non-empty ``model`` and ``api_key_ref``
+   when their effective mode is ``api``. CLI-mode members do NOT
+   require ``api_key_ref`` (subscription auth is provided by the CLI
+   binary itself).
 6. ``api_key_ref`` starts with ``file:`` or ``env:`` — raw keys are
    refused even if syntactically plausible.
 7. Resolved ``file:`` key paths must have mode 0o600 (delegated to
    :func:`resolve_api_key`; runs at use-time, not parse-time).
+8. ``binary:`` is only valid when the member's effective mode is
+   ``cli``; ``cli_call_budget.max_calls_per_day.<provider>`` keys
+   must be valid providers.
 """
 
 from __future__ import annotations
@@ -30,7 +41,7 @@ import yaml
 from scripts._lib import user_global_paths
 
 _VALID_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
-_VALID_MODES = frozenset({"api", "manual"})
+_VALID_MODES = frozenset({"api", "manual", "cli"})
 
 #: Prefixes that signal "this is a raw API key" so we refuse it loudly
 #: even when the user accidentally inlined it in ``api_key_ref``.
@@ -66,6 +77,7 @@ class MemberConfig:
     model: str
     api_key_ref: str | None
     mode: str | None = None
+    binary: str | None = None
 
 
 @dataclass(frozen=True)
@@ -103,6 +115,24 @@ class ConsensusScoringConfig:
 
 
 @dataclass(frozen=True)
+class CliCallBudgetConfig:
+    """Per-day call-count guard for ``mode: cli`` members (Phase 0).
+
+    The standard ``cost_budget`` gate skips CLI calls because they are
+    ``billable=False`` — but provider subscriptions still carry their
+    own quotas (Claude Pro 5h windows, ChatGPT Plus message caps,
+    Gemini free-tier per-day limits). Users opt into a per-provider
+    cap; default unset = unlimited from this loader's perspective.
+
+    Counter state persists under
+    ``~/.event4u/agent-config/cli-calls.json`` with daily UTC reset
+    (wired in Phase 1).
+    """
+
+    max_calls_per_day: dict[str, int] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class CouncilConfig:
     enabled: bool
     defaults: DefaultsConfig
@@ -111,6 +141,9 @@ class CouncilConfig:
     advisors: dict[str, AdvisorConfig] = field(default_factory=dict)
     consensus_scoring: ConsensusScoringConfig = field(
         default_factory=ConsensusScoringConfig,
+    )
+    cli_call_budget: CliCallBudgetConfig = field(
+        default_factory=CliCallBudgetConfig,
     )
     source_path: Path | None = None
 
@@ -144,7 +177,7 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
         raise CouncilConfigError("`members` must be a mapping.")
     members: dict[str, MemberConfig] = {}
     for name, cfg in members_raw.items():
-        members[name] = _build_member(name, cfg or {})
+        members[name] = _build_member(name, cfg or {}, default_mode=defaults.mode)
 
     advisors_raw = raw.get("advisors") or {}
     if not isinstance(advisors_raw, dict):
@@ -174,6 +207,7 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
             )
 
     consensus = _build_consensus_scoring(raw.get("consensus_scoring") or {})
+    cli_call_budget = _build_cli_call_budget(raw.get("cli_call_budget") or {})
 
     return CouncilConfig(
         enabled=enabled,
@@ -182,6 +216,7 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
         members=members,
         advisors=advisors,
         consensus_scoring=consensus,
+        cli_call_budget=cli_call_budget,
         source_path=source_path,
     )
 
@@ -243,7 +278,12 @@ def _build_cost_budget(d: dict[str, Any]) -> CostBudgetConfig:
     return cb
 
 
-def _build_member(name: str, cfg: dict[str, Any]) -> MemberConfig:
+def _build_member(
+    name: str,
+    cfg: dict[str, Any],
+    *,
+    default_mode: str = "api",
+) -> MemberConfig:
     if name not in _VALID_PROVIDERS:
         raise CouncilConfigError(
             f"members.{name}: unknown provider; valid: {sorted(_VALID_PROVIDERS)}."
@@ -251,29 +291,72 @@ def _build_member(name: str, cfg: dict[str, Any]) -> MemberConfig:
     member_enabled = bool(cfg.get("enabled", False))
     model = cfg.get("model") or ""
     api_key_ref = cfg.get("api_key_ref")
-    if member_enabled:
-        if not model:
-            raise CouncilConfigError(
-                f"members.{name}: enabled members require a non-empty `model`."
-            )
-        if not api_key_ref:
-            raise CouncilConfigError(
-                f"members.{name}: enabled members require an `api_key_ref`."
-            )
-    if api_key_ref is not None:
-        _validate_api_key_ref(f"members.{name}", api_key_ref)
     member_mode = cfg.get("mode")
     if member_mode is not None and member_mode not in _VALID_MODES:
         raise CouncilConfigError(
             f"members.{name}.mode={member_mode!r} not in {sorted(_VALID_MODES)}."
         )
+    effective_mode = member_mode or default_mode
+    binary = cfg.get("binary")
+    if binary is not None:
+        if not isinstance(binary, str) or not binary.strip():
+            raise CouncilConfigError(
+                f"members.{name}.binary must be a non-empty string when set."
+            )
+        if effective_mode != "cli":
+            raise CouncilConfigError(
+                f"members.{name}.binary is only valid when the member's "
+                f"effective mode is 'cli' (got {effective_mode!r}). Set "
+                f"`mode: cli` on the member or `defaults.mode: cli` to use "
+                f"this field."
+            )
+    if member_enabled:
+        if not model:
+            raise CouncilConfigError(
+                f"members.{name}: enabled members require a non-empty `model`."
+            )
+        # CLI-mode members authenticate via the subscription bound to
+        # the local CLI binary; api_key_ref is not required for them.
+        # Manual mode is human-transported and also key-free. Only
+        # api-mode members must supply an api_key_ref.
+        if effective_mode == "api" and not api_key_ref:
+            raise CouncilConfigError(
+                f"members.{name}: enabled api-mode members require an `api_key_ref`."
+            )
+    if api_key_ref is not None:
+        _validate_api_key_ref(f"members.{name}", api_key_ref)
     return MemberConfig(
         name=name,
         enabled=member_enabled,
         model=model,
         api_key_ref=api_key_ref,
         mode=member_mode,
+        binary=binary,
     )
+
+
+def _build_cli_call_budget(d: dict[str, Any]) -> CliCallBudgetConfig:
+    if not isinstance(d, dict):
+        raise CouncilConfigError("`cli_call_budget` must be a mapping.")
+    raw_caps = d.get("max_calls_per_day") or {}
+    if not isinstance(raw_caps, dict):
+        raise CouncilConfigError(
+            "`cli_call_budget.max_calls_per_day` must be a mapping."
+        )
+    caps: dict[str, int] = {}
+    for provider, value in raw_caps.items():
+        if provider not in _VALID_PROVIDERS:
+            raise CouncilConfigError(
+                f"cli_call_budget.max_calls_per_day.{provider}: unknown "
+                f"provider; valid: {sorted(_VALID_PROVIDERS)}."
+            )
+        if not isinstance(value, int) or isinstance(value, bool) or value < 0:
+            raise CouncilConfigError(
+                f"cli_call_budget.max_calls_per_day.{provider} must be a "
+                f"non-negative integer (got {value!r})."
+            )
+        caps[provider] = value
+    return CliCallBudgetConfig(max_calls_per_day=caps)
 
 
 def _build_advisor(name: str, cfg: dict[str, Any]) -> AdvisorConfig:

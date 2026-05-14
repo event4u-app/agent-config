@@ -32,7 +32,7 @@ pointing at this contract.
 ```yaml
 enabled: <bool>                 # master switch, required
 defaults:                       # per-invocation defaults, required
-  mode: <"api" | "manual">
+  mode: <"api" | "manual" | "cli">
   min_rounds: <int >= 1>
   deep_min_rounds: <int >= min_rounds>
   max_output_tokens: <int >= 0>           # 0 widens to provider ceiling
@@ -42,13 +42,17 @@ cost_budget:                    # hard caps per /council invocation, required
   max_input_tokens: <int >= 0>            # 0 disables this cap
   max_output_tokens: <int >= 0>           # 0 disables this cap
   max_calls: <int >= 0>                   # 0 disables this cap
-  max_total_usd: <number >= 0>            # 0 disables the USD ceiling
+  max_total_usd: <number >= 0>            # 0 disables the USD ceiling — applies to billable transports only (api), NOT to cli or manual
+cli_call_budget:                # optional; per-day call-count guard for mode: cli members
+  max_calls_per_day:
+    <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
     model: <string>
-    api_key_ref: <string>                 # see `api_key_ref` forms below
-    mode: <"api" | "manual">              # optional override of defaults.mode
+    api_key_ref: <string>                 # required for mode: api; optional for cli/manual
+    mode: <"api" | "manual" | "cli">      # optional override of defaults.mode
+    binary: <string>                      # optional; only valid when effective mode == "cli"
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
     enabled: <bool>
@@ -59,6 +63,34 @@ advisors:                       # Thinking-style replace-mode advisors
 
 Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
 `perplexity`. Unknown providers fail validation closed.
+
+### Transport modes
+
+Three first-class transports on the `mode:` axis. Resolution per member:
+`per-member mode > defaults.mode > "api"`.
+
+| Mode | Semantics | Billable | Auth | Cost gate |
+|---|---|---|---|---|
+| `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
+| `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
+| `cli` | Shell out to a locally-installed provider CLI under the user's subscription auth (`claude`, `codex`, `gemini`). Spend is covered by the flat-rate subscription. | No | CLI-managed OAuth / session (`~/.claude/`, `~/.codex/auth.json`, etc.) | `cli_call_budget.max_calls_per_day` only |
+
+Implications:
+
+- **`cost_budget.max_total_usd` does NOT apply to `cli` or `manual` calls.**
+  Both are `billable=False`; the USD ceiling is a token-billing concept.
+- **`api_key_ref` is required only for enabled members whose effective mode
+  is `api`.** CLI members authenticate via their own login flow; manual
+  members have no key at all.
+- **`binary:` is only valid when the effective mode is `cli`.** Setting it
+  on an `api` or `manual` member is a hard validation error — no silent
+  ignore, no clutter.
+- **Subscription quotas:** Claude Pro 5h usage windows, ChatGPT Plus
+  message caps, Gemini free-tier per-day limits all live outside this
+  loader's view. `cli_call_budget.max_calls_per_day.<provider>` lets the
+  user opt into a per-day cap; counter state persists at
+  `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
+  Phase 1 of the CLI-transport roadmap).
 
 ### Advisor block (Phase 6, replace-mode)
 
@@ -122,9 +154,18 @@ as comments and the loader enforces them.
   identity.
 - **Autonomy carve-out — no silent spend.** The `/council` command always
   asks before invoking, even under autonomy: on. Cost is real and paid.
-- **Manual vs API transport.** `api` = direct SDK call against the
-  provider's API (billable). `manual` = copy-paste loop, user is the
-  transport (free). Per-invocation flag > per-member override > defaults.
+- **Manual vs API vs CLI transport.** Three first-class modes on the
+  `mode:` axis:
+  - `manual` = copy & paste — the human transports prompt + reply between
+    the agent and an external chat surface. Free, no key.
+  - `api` = direct SDK call against a stored key (per-token billing).
+  - `cli` = shell out to a locally-installed provider CLI under the
+    user's subscription auth — spend is covered by the flat-rate
+    subscription, not per-token. `billable=False` so the `cost_budget`
+    USD ceiling does not apply; subscription quotas are guarded by
+    `cli_call_budget.max_calls_per_day` instead.
+
+  Precedence: per-invocation flag > per-member override > defaults > `api`.
 - **Tokens never stored in this yml.** Keys live in 0600 files
   (`~/.event4u/agent-config/<provider>.key`, installed via
   `bash scripts/install_<provider>_key.sh` for providers that ship an
@@ -165,14 +206,19 @@ error) when any of these hold:
    `sk-`, `pk-`, `xai-`, or matches a provider's key prefix).
 6. `defaults.deep_min_rounds < defaults.min_rounds` is allowed (clamped
    by the monotonic rule at runtime) but logged as a warning.
-7. `defaults.mode` not in `{"api", "manual"}`; per-member `mode` override
-   same constraint.
-8. `advisors.<key>.member` missing, unknown, or pointing at a
-   `members.<provider>` that does not exist or has `enabled: false`
-   (when the advisor itself is `enabled: true`). Silent skips are not
-   allowed — a typo never costs the user money on an unintended call
-   plan.
-9. `advisors.<key>.model` is set but not a string.
+7. `defaults.mode` not in `{"api", "manual", "cli"}`; per-member `mode`
+   override same constraint.
+8. `members.<provider>.binary` set when the member's effective mode is
+   not `cli` — explicit error to keep config clutter-free.
+9. `cli_call_budget` is not a mapping, or
+   `cli_call_budget.max_calls_per_day.<key>` is an unknown provider, or
+   any value is a negative integer / non-integer.
+10. `advisors.<key>.member` missing, unknown, or pointing at a
+    `members.<provider>` that does not exist or has `enabled: false`
+    (when the advisor itself is `enabled: true`). Silent skips are not
+    allowed — a typo never costs the user money on an unintended call
+    plan.
+11. `advisors.<key>.model` is set but not a string.
 
 ## Migration footprint (Phase 0)
 

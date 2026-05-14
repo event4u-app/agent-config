@@ -475,3 +475,141 @@ def test_raw_key_prefixes_are_all_rejected(tmp_path: Path, raw_key: str) -> None
     }
     with pytest.raises(CouncilConfigError, match="raw API key"):
         load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── Phase 0 (CLI transport): mode: cli + binary: + cli_call_budget ───────────
+
+
+def test_cli_mode_accepted_without_api_key_ref(tmp_path: Path) -> None:
+    """`mode: cli` is the third transport — keys are CLI-managed, not required."""
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "mode": "cli",
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.members["anthropic"].mode == "cli"
+    assert cfg.members["anthropic"].api_key_ref is None
+
+
+def test_cli_mode_via_defaults_accepted(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "cli"},
+        "members": {
+            "anthropic": {"enabled": True, "model": "claude-sonnet-4-5"},
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.defaults.mode == "cli"
+    assert cfg.members["anthropic"].api_key_ref is None
+
+
+def test_binary_field_accepted_when_member_is_cli(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "mode": "cli",
+                "binary": "/usr/local/bin/claude",
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.members["anthropic"].binary == "/usr/local/bin/claude"
+
+
+def test_binary_field_rejected_when_effective_mode_is_api(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["members"] = {
+        "anthropic": {
+            "enabled": True,
+            "model": "claude-sonnet-4-5",
+            "api_key_ref": "env:ANTHROPIC_API_KEY",
+            "binary": "/usr/local/bin/claude",
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary.*only valid"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_binary_field_rejected_when_effective_mode_is_manual(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "manual"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "binary": "/usr/local/bin/claude",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary.*only valid"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_binary_field_must_be_non_empty_string(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "cli"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "binary": "",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary must be a non-empty"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_optional_block_defaults_empty(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.cli_call_budget.max_calls_per_day == {}
+
+
+def test_cli_call_budget_per_provider_cap_accepted(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {
+        "max_calls_per_day": {"anthropic": 50, "openai": 100},
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.cli_call_budget.max_calls_per_day == {"anthropic": 50, "openai": 100}
+
+
+def test_cli_call_budget_unknown_provider_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {"max_calls_per_day": {"deepmind": 5}}
+    with pytest.raises(CouncilConfigError, match="unknown.*provider"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_negative_cap_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {"max_calls_per_day": {"anthropic": -1}}
+    with pytest.raises(CouncilConfigError, match="non-negative integer"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_must_be_mapping(tmp_path: Path) -> None:
+    p = tmp_path / "bad.yml"
+    p.write_text(
+        "enabled: true\ndefaults: {mode: api}\nmembers:\n  anthropic:\n"
+        "    enabled: true\n    model: claude-sonnet-4-5\n"
+        "    api_key_ref: env:ANTHROPIC_API_KEY\n"
+        "cli_call_budget:\n  - foo\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(CouncilConfigError, match="cli_call_budget.*mapping"):
+        load_council_config(p)

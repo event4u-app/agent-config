@@ -29,10 +29,18 @@ defaults:
   # Default transport mode for every member (overridable per-member
   # below, and per-invocation via `/council mode:<x>`).
   #
-  #   api    = direct SDK call against the provider's API (billable).
-  #   manual = copy-paste loop, user is the transport (free).
+  #   manual = copy & paste — the human transports prompt + reply
+  #            between the agent and an external chat surface. Free,
+  #            no key.
+  #   api    = SDK call against a stored key, per-token billing.
+  #   cli    = shell out to a locally-installed provider CLI under the
+  #            user's subscription auth (Claude Pro/Max, ChatGPT
+  #            Plus/Pro, Google Gemini, etc.). Spend is covered by the
+  #            flat-rate subscription, not per-token. `cost_budget.
+  #            max_total_usd` does NOT apply; use `cli_call_budget`
+  #            below to guard subscription quotas.
   #
-  # Precedence: invocation flag > per-member mode > defaults.mode > "manual".
+  # Precedence: invocation flag > per-member mode > defaults.mode > "api".
   mode: api
 
   # Default number of debate rounds per /council invocation.
@@ -84,6 +92,10 @@ defaults:
 # the user to continue. Each `0` disables that single cap; other caps
 # still apply.
 #
+# Applies to BILLABLE transports only (mode: api). mode: cli and
+# mode: manual are billable=False — `max_total_usd` does NOT gate
+# them. CLI subscription quotas are guarded by `cli_call_budget` below.
+#
 # Prices come from agents/.agent-prices.md (gitignored, refreshed weekly
 # by `python3 scripts/update_prices.py`; bootstrapped from
 # scripts/ai_council/_default_prices.py on first run).
@@ -93,30 +105,59 @@ cost_budget:
   max_calls: 50
   max_total_usd: 20.0
 
+# Per-day call-count guard for `mode: cli` members. The standard
+# `cost_budget` block skips CLI calls because they are billable=False —
+# but provider subscriptions still carry their own quotas (Claude Pro
+# 5h windows, ChatGPT Plus message caps, Gemini free-tier per-day
+# limits). Opt into a per-provider cap; default unset = unlimited from
+# this loader's perspective.
+#
+# Counter state persists at ~/.event4u/agent-config/cli-calls.json
+# with daily UTC reset. Wired by Phase 1 of the CLI-transport roadmap.
+# cli_call_budget:
+#   max_calls_per_day:
+#     anthropic: 50
+#     openai: 100
+#     gemini: 20
+
 # Per-member configuration. Set enabled=true on the providers you want
 # to consult. The `model:` field selects which model receives the query.
+#
 # `api_key_ref:` points at a 0600 key file (`file:<path>` — relative
 # paths resolve under ~/.event4u/agent-config/ with the legacy
 # ~/.config/agent-config/ tree as a read fallback) or an environment
 # variable (`env:<VAR>`). Raw keys in this file are a hard validation
-# error. Optional `mode:` overrides defaults.mode for that member only.
+# error. Required for mode: api; OPTIONAL for mode: cli and mode:
+# manual (those transports don't authenticate through a stored key).
+#
+# Optional `mode:` overrides defaults.mode for that member only.
+#
+# Optional `binary:` is the absolute path to the provider's CLI
+# executable — only valid when the member's effective mode is `cli`.
+# When omitted, the CliClient resolves the provider's default binary
+# name (`claude`, `codex`, `gemini`) via `shutil.which`. Setting it on
+# an api/manual member is a hard validation error.
 members:
   anthropic:
     enabled: true
     model: claude-sonnet-4-5
     api_key_ref: file:anthropic.key
-    # mode: api        # uncomment to override defaults.mode
+    # mode: cli                          # use subscription auth (Claude Pro/Max) — free, see cli_call_budget above
+    # binary: /usr/local/bin/claude      # only valid when mode == cli
 
   openai:
     enabled: true
     model: gpt-4o
     api_key_ref: file:openai.key
-    # mode: manual     # uncomment to override defaults.mode
+    # mode: cli                          # use subscription auth (ChatGPT Plus/Pro via Codex CLI) — free
+    # binary: /usr/local/bin/codex       # only valid when mode == cli
 
   gemini:
     enabled: false
     model: gemini-2.5-pro
     api_key_ref: env:GEMINI_API_KEY
+    # mode: cli                          # use Google account (free-tier limits apply) — free
+    # binary: /usr/local/bin/gemini      # only valid when mode == cli
 
   xai:
     enabled: false

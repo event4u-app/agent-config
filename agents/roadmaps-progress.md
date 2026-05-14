@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 230 steps done · 0%**
+**5 / 230 steps done · 2%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 80 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md) | 13 | 80 | 75 | 5 | 0 | 0 | █░░░░░░░░░ 6% |
 | 2 | [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,11 +29,11 @@
 
 ### [step-1-ai-council-cli-transport.md](roadmaps/step-1-ai-council-cli-transport.md)
 
-**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 0 / 80 done (0%)
+**AI Council CLI Transport + Safety Net + Decision-Replay + Impact-Routed Lightweight QA** — 5 / 80 done (6%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Schema extension + contract update | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Schema extension + contract update | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 1 | CliClient skeleton + subprocess plumbing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Claude CLI integration (canonical JSON path) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Codex + Gemini CLI integration | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
