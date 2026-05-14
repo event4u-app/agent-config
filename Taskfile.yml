@@ -70,6 +70,7 @@ tasks:
       - task: check-token-optimizer-freshness
       - task: check-portability
       - task: check-release-trunk-sync
+      - task: validate-decision-engine
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-context-spine-usage
