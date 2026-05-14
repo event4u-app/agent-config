@@ -16,5 +16,5 @@ routes_to:
 
 **Iron Law.** Laravel-flavoured PHP (Eloquent, Artisan, FormRequest, jobs, events, policies) → load the `laravel` skill, not `symfony-workflow` and not `php-coder`.
 
-Body migrated to `skill:laravel`. Disambiguates C04 (laravel ↔ symfony-workflow) per [`agents/roadmaps/step-1-v2-feedback-followup.md`](../../agents/roadmaps/step-1-v2-feedback-followup.md) Phase 3.3.
+Body migrated to `skill:laravel`. Disambiguates the laravel ↔ symfony-workflow cluster head per [`adr-architectural-consensus-mechanism`](../../docs/contracts/adr-architectural-consensus-mechanism.md).
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
