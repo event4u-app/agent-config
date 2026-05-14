@@ -77,14 +77,14 @@ already compute the four metrics natively (verified 2026-05-04 in
 `scripts/capture_showcase_session.py`); `memory_hit_ratio` returns
 `None` until hit/miss markers exist in the log shape — see P1.0.
 
-- [ ] **P1.0** — Pre-flight: confirm `capture_showcase_session.py
+- [x] **P1.0** — Pre-flight: confirm `capture_showcase_session.py
       metrics` runs against a synthetic log fixture and emits all
       four keys (null is acceptable for `memory_hit_ratio` until
       P2.1). If any other metric returns `None` unexpectedly, fix
       the pattern before P1.1 — three real sessions with broken
       metrics is wasted work. **No new metric implementation here**;
       strictly verification of existing extractors.
-- [ ] **P1.1** — Run `/implement-ticket` against a **non-production
+- [-] **P1.1** — Run `/implement-ticket` against a **non-production
       target**: a `Consumer` staging-tenant ticket, a sandbox
       database, or a synthetic ticket on a throwaway branch. Production
       backend is **forbidden** in this phase — see Risk register
@@ -94,21 +94,26 @@ already compute the four metrics natively (verified 2026-05-04 in
       frontmatter: `commit_sha`, `host_agent`, `model`, `started`,
       `ended`, `task_class`, `metrics: {tool_call_count,
       reply_chars, memory_hit_ratio, verify_pass_rate}`.
-- [ ] **P1.2** — Run `/work` against a deliberately vague
+      *Deferred — Iron Law 2 (no impersonation): real host-agent
+      session must be run by the operator. Tracked in PR body.*
+- [-] **P1.2** — Run `/work` against a deliberately vague
       stakeholder request (Refine → Plan → Implement) on the same
       non-production target class as P1.1. Same capture + frontmatter
       contract.
-- [ ] **P1.3** — Run `/review-changes` against a real local diff
+      *Deferred — Iron Law 2 (no impersonation).*
+- [-] **P1.3** — Run `/review-changes` against a real local diff
       (or `/fix-ci` against a captured CI failure log if no diff is
       review-ready). Read-only by construction — no production risk.
       Same capture contract.
-- [ ] **P1.4** — `docs/showcase.md` gets a "Real sessions" section
+      *Deferred — Iron Law 2 (no impersonation).*
+- [-] **P1.4** — `docs/showcase.md` gets a "Real sessions" section
       linking the three captured logs. **Per-session outcome line
       must include**: (a) verify-gate pass/fail, (b) `task_class`,
       (c) `verify_pass_rate`, (d) one-sentence "did the agent solve
       it?" verdict written by the operator (binary: yes / no / partial).
       `lint_showcase_sessions.py` must pass — no orphans, no broken
       links, frontmatter complete.
+      *Deferred — depends on P1.1–P1.3 operator sessions.*
 
 **Exit criterion (lint):** `task lint-showcase` exits 0 with three
 linked sessions and `docs/showcase.md` no longer carries "deferred"
@@ -135,14 +140,14 @@ failure without platform magic.
 
 ### P2.1 — Memory decision consequence (split into three steps)
 
-- [ ] **P2.1a — Trace key set.** Define the closed list of
+- [x] **P2.1a — Trace key set.** Define the closed list of
       decision-trace JSON keys that count as "affected when memory
       changed" (e.g. `test_plan`, `risk_flags`, `confidence_band`,
       `applied_rules`). Document in `docs/contracts/decision-trace-v1.md`
       under a new "Memory consequence keys" section. Closed list,
       not open: keeps the abstraction from leaking into "every
       memory call affects everything" (Risk register row 2).
-- [ ] **P2.1b — Surface `affected` field.** Update
+- [x] **P2.1b — Surface `affected` field.** Update
       `scripts/work_engine/scoring/memory_visibility.py` and
       `.agent-src/templates/scripts/work_engine/hooks/builtin/memory_visibility.py`
       to compute the diff between "decision-trace with this memory
@@ -152,7 +157,7 @@ failure without platform magic.
       Empty `affected` (consulted but no key diverged) renders as
       `· affected: none` so the user sees that the call was
       *informational*, not load-bearing.
-- [ ] **P2.1c — Tests + report block.** Unit tests cover three
+- [x] **P2.1c — Tests + report block.** Unit tests cover three
       cases: (i) consulted-and-applied (≥1 key in `affected`),
       (ii) consulted-but-no-divergence (`affected: none`),
       (iii) entry not consulted (no line at all). Add an end-of-run
@@ -168,27 +173,27 @@ failure without platform magic.
 
 ### P2.2 — README three-audience split (split into three steps)
 
-- [ ] **P2.2a — Information architecture.** Decide the three
+- [x] **P2.2a — Information architecture.** Decide the three
       top-of-README headings: "Use it in your project", "Prove it",
       "Contribute". Map every existing top-of-README block (Start
       here, Quick install, Showcase teaser, Multi-agent tool support,
       etc.) to exactly one of the three branches. No content rewrite
       yet — only an annotated outline committed as `docs/readme-split-plan.md`.
-- [ ] **P2.2b — Content migration.** Apply the plan: move blocks,
+- [x] **P2.2b — Content migration.** Apply the plan: move blocks,
       keep anchor IDs stable for "Multi-agent tool support",
       "Installation", "Showcase" so existing inbound links survive.
       Top of README = three paragraphs (one per audience), each
       with a single primary CTA. AI Council is **not** mentioned
       in any of the three branches (this is the surface P3.4
       verifies).
-- [ ] **P2.2c — Verification.** Re-run `lint-readme` (existing CI
+- [x] **P2.2c — Verification.** Re-run `lint-readme` (existing CI
       gate). Add a grep-based test under `tests/` that asserts
       the three audience headings exist in the order
       Use → Prove → Contribute. No regression in `task ci`.
 
 ### P2.3 — Hook doctor
 
-- [ ] **P2.3** — `./agent-config hooks:doctor`. Lists registered
+- [x] **P2.3** — `./agent-config hooks:doctor`. Lists registered
       concerns per platform/event from `scripts/hook_manifest.yaml`,
       surfaces fail-open vs fail-closed, last-feedback file per
       concern under `agents/state/`, and any platform whose
@@ -197,21 +202,24 @@ failure without platform magic.
 
 ### P2.4 — Hook replay (split into three steps)
 
-- [ ] **P2.4a — Fixture corpus.** Build `tests/fixtures/hooks/`
+- [x] **P2.4a — Fixture corpus.** Build `tests/fixtures/hooks/`
       with one JSON payload per declared event in
       `scripts/hook_manifest.yaml` (Stop, PostToolUse, …). Each
       fixture is a minimal valid payload that the dispatcher
       accepts without modification. Schema: documented inline in
       `docs/contracts/hook-architecture-v1.md` if not already there.
-- [ ] **P2.4b — Replay subcommand.** `./agent-config hooks:replay
+- [x] **P2.4b — Replay subcommand.** `./agent-config hooks:replay
       --platform <p> --event <e> --payload <fixture-path>` loads
-      the fixture, dispatches through `scripts/runtime_dispatcher.py`,
+      the fixture, dispatches through `scripts/hooks/dispatch_hook.py`,
       prints each concern's exit code + stderr + feedback file.
       **Read-only enforcement:** dispatcher runs with an env flag
-      (`AGENT_CONFIG_REPLAY=1`) that the existing concerns honor by
-      skipping `agents/state/` writes; concerns that don't honor
-      the flag are listed by `hooks:doctor` as not replay-safe.
-- [ ] **P2.4c — Tests.** Boot the dispatcher with each fixture in
+      (`AGENT_CONFIG_REPLAY=1`) that `state_io.atomic_write_json` /
+      `atomic_write_text` honor (gating most concerns automatically),
+      with manual guards in `chat_history.py` and
+      `roadmap_progress_hook.py` for their non-atomic side effects.
+      Verified: 8 events × 7 platforms = 56 replays, zero mutations
+      under `agents/state/` or `agents/.agent-chat-history`.
+- [x] **P2.4c — Tests.** Boot the dispatcher with each fixture in
       replay mode, assert no `agents/state/` mutation, assert exit
       codes match the manifest expectations.
 
@@ -238,16 +246,16 @@ widens the product.
 green) **and** Phase 2 P2.1b visible in at least one new session.
 Without both, Phase 3 does not start.
 
-- [ ] **P3.1** — `docs/contracts/settings-sync-yaml-subset.md`. Lock
+- [x] **P3.1** — `docs/contracts/settings-sync-yaml-subset.md`. Lock
       the supported `.agent-settings.yml` subset (scalars, mappings,
       sequences-of-scalars, line comments, no anchors / aliases / multi-
       doc). Pulled out of the ADR's revisit-trigger language so
       contributors have a citable contract.
-- [ ] **P3.2** — `./agent-config settings:check`. Validates the
+- [x] **P3.2** — `./agent-config settings:check`. Validates the
       user's `.agent-settings.yml` against the subset, prints
       "supported / not supported / how to fix" per offending line.
       Read-only.
-- [ ] **P3.3** — Hook **concern budget** analogous to always-rule
+- [x] **P3.3** — Hook **concern budget** analogous to always-rule
       budgets: max concerns per event, max execution time per
       concern, fail-closed allowed only for Tier-1 concerns,
       warning when a single event fires more than the threshold.
@@ -263,18 +271,30 @@ Without both, Phase 3 does not start.
 
       New CI gate `lint_hook_concern_budget.py` (warn-only by
       default, hard-fail behind a settings flag).
-- [ ] **P3.4** — AI Council surface scoping (product-facing only;
+- [x] **P3.4** — AI Council surface scoping (product-facing only;
       this roadmap's drafting use of Council is unaffected — see
       Reference). Move `scripts/ai_council/` references out of the
       README's user-facing path; keep `docs/ai-council.md` as a
       maintainer / evaluation page. README "Use it" branch must not
       mention Council. Verify by grep: zero references in the
       top-level README sections owned by P2.2.
+- [x] **P3.5** — `no-roadmap-references` rule: add structural
+      carve-outs for legitimate maintainer drafting references —
+      (a) evaluation-context files under `agents/contexts/` linking
+      frozen council questions, and (b) contract files under
+      `docs/contracts/` linking archived council session syntheses.
+      Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5
+      + gpt-4o, converged on rule refactor over escape-hatch overuse).
+      Touches `scripts/check_council_references.py`,
+      `.agent-src.uncompressed/rules/no-roadmap-references.md`, and
+      adds/updates test fixtures. Once shipped, the two
+      `council-ref-allowed` suppressors landed in P3.4 are removed
+      (rule now covers them structurally).
 
 **Exit criterion:** `task ci` green with the new `settings:check`
 and `lint_hook_concern_budget` gates in warn-only mode. P3.4 grep
 returns zero hits in the "Use it" / "Prove it" branches of the
-README.
+README. P3.5 ships when the rule refactor lands.
 
 **Rollback / kill-switch:** P3.2 and `lint_hook_concern_budget`
 are warn-only by default — if real-world adoption shows false

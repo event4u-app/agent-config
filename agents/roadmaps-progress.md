@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 46 steps done · 0%**
+**16 / 43 steps done · 37%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-productization.md](roadmaps/road-to-productization.md) | 8 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md) | 3 | 20 | 0 | 16 | 0 | 4 | ██████████ 100% |
 
 ---
 
@@ -40,11 +40,11 @@
 
 ### [road-to-proof-not-features.md](roadmaps/road-to-proof-not-features.md)
 
-**Road to Proof not Features** — 0 / 19 done (0%)
+**Road to Proof not Features** — 16 / 16 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Beweis (3 real showcase sessions) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Erklärbarkeit (consequence + audience + debug) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-| 3 | Stabilisierung (deferred, gated on Phase 1 + 2) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Beweis (3 real showcase sessions) | ✅ done | 0 | 1 | 0 | 4 | 100% |
+| 2 | Erklärbarkeit (consequence + audience + debug) | ✅ done | 0 | 10 | 0 | 0 | 100% |
+| 3 | Stabilisierung (deferred, gated on Phase 1 + 2) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 
