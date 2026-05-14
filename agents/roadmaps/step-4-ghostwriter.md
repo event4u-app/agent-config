@@ -1,5 +1,5 @@
 ---
-complexity: medium
+complexity: lightweight
 ---
 
 # Roadmap: `/ghostwriter` cluster + `/post-as:me` + `/post-as:ghostwriter`

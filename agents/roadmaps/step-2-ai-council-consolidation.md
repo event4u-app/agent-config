@@ -1,5 +1,5 @@
 ---
-complexity: medium
+complexity: structural
 ---
 
 # Roadmap: AI Council Consolidation + External-Pattern Integration
