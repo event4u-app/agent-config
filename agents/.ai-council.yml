@@ -135,3 +135,22 @@ members:
 # Reductionist, Historian, Pragmatist); each lives under
 # personas/advisors/<key>.md once Phase 6 ships.
 advisors: {}
+
+# Consensus-scoring round (Phase 4 / F3). After the final deliberation
+# round and before synthesis, members score each other's anonymised
+# findings (1-10 + agree/disagree + one-line reason). The renderer
+# buckets findings by consensus strength:
+#
+#   strength > strong_threshold      → "Strong Consensus" (top of output)
+#   minority < strength ≤ strong     → "Findings" (default body)
+#   strength ≤ minority_threshold    → "Minority Views" (footer, kept)
+#
+# Cost: one extra inference call per member per consultation. The
+# `council:estimate` command accounts for this when `enabled: true` and
+# the active lens is in `lenses`. Default off — opt in deliberately.
+consensus_scoring:
+  enabled: false
+  strong_threshold: 0.7
+  minority_threshold: 0.4
+  lenses:
+    - analysis

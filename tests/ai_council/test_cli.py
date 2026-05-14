@@ -89,6 +89,48 @@ def test_parser_run_accepts_depth_deep() -> None:
     assert parsed.depth == "deep"
 
 
+# ── --prompt-mode lens override ──────────────────────────────────────
+
+
+def test_parser_prompt_mode_defaults_to_none() -> None:
+    parsed = council_cli.build_parser().parse_args(["estimate", "q.txt"])
+    assert parsed.prompt_mode is None
+
+
+@pytest.mark.parametrize("lens", ["pr", "design", "optimize", "analysis"])
+def test_parser_prompt_mode_accepts_known_lenses(lens: str) -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["estimate", "q.txt", "--prompt-mode", lens],
+    )
+    assert parsed.prompt_mode == lens
+
+
+def test_parser_prompt_mode_rejects_unknown_lens(capsys: pytest.CaptureFixture[str]) -> None:
+    with pytest.raises(SystemExit):
+        council_cli.build_parser().parse_args(
+            ["estimate", "q.txt", "--prompt-mode", "bogus"],
+        )
+    err = capsys.readouterr().err
+    assert "invalid choice" in err and "bogus" in err
+
+
+def test_build_question_lens_override_swaps_question_mode(tmp_path: Path) -> None:
+    q = tmp_path / "q.md"
+    q.write_text("body", encoding="utf-8")
+    # Baseline: prompt input mode → question.mode == "prompt".
+    question, _ = council_cli.build_question(
+        input_path=q, input_mode="prompt", max_tokens=128,
+    )
+    assert question.mode == "prompt"
+    # Override flips the lens addendum without touching the bundle.
+    question_overridden, _ = council_cli.build_question(
+        input_path=q, input_mode="prompt", max_tokens=128,
+        prompt_mode_override="analysis",
+    )
+    assert question_overridden.mode == "analysis"
+    assert question_overridden.user_prompt == question.user_prompt
+
+
 # ── _resolve_rounds resolution chain ─────────────────────────────────
 
 
@@ -416,6 +458,118 @@ def test_cmd_render_reads_responses_json_and_prints_markdown(tmp_path, capsys) -
     assert rc == 0
     out = capsys.readouterr().out
     assert "first reply" in out and "second" in out
+
+
+
+# ── cmd_render — lens-aware synthesis (Phase 3 / F2) ────────────────
+
+
+def _two_response_payload(**extra) -> dict:
+    payload = {
+        "responses": [
+            {"provider": "openai", "model": "gpt-x", "text": "first reply",
+             "input_tokens": 10, "output_tokens": 5, "latency_ms": 1},
+            {"provider": "anthropic", "model": "claude-x", "text": "second",
+             "input_tokens": 11, "output_tokens": 6, "latency_ms": 2},
+        ],
+    }
+    payload.update(extra)
+    return payload
+
+
+def test_parser_render_accepts_prompt_mode_and_prose_flags() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["render", "r.json", "--prompt-mode", "pr", "--prose-synthesis"],
+    )
+    assert parsed.cmd == "render"
+    assert parsed.prompt_mode == "pr"
+    assert parsed.prose_synthesis is True
+
+
+def test_parser_render_no_prose_synthesis_flag_sets_false() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["render", "r.json", "--prompt-mode", "design", "--no-prose-synthesis"],
+    )
+    assert parsed.prose_synthesis is False
+
+
+def test_parser_render_prose_flags_are_mutually_exclusive() -> None:
+    with pytest.raises(SystemExit):
+        council_cli.build_parser().parse_args(
+            ["render", "r.json", "--prose-synthesis", "--no-prose-synthesis"],
+        )
+
+
+def test_cmd_render_uses_payload_prompt_mode_when_no_flag(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_two_response_payload(prompt_mode="analysis")),
+                   encoding="utf-8")
+    args = _ns(responses=str(src), prompt_mode=None, prose_synthesis=None)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "### Top-10 by consensus" in out
+    assert "### Outliers" in out
+
+
+def test_cmd_render_explicit_prompt_mode_overrides_payload(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_two_response_payload(prompt_mode="analysis")),
+                   encoding="utf-8")
+    args = _ns(responses=str(src), prompt_mode="pr", prose_synthesis=None)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "### Consensus" in out
+    assert "### Must-fix before merge" in out
+    assert "### Top-10 by consensus" not in out
+
+
+def test_cmd_render_payload_mode_field_used_as_fallback(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_two_response_payload(mode="pr")), encoding="utf-8")
+    args = _ns(responses=str(src), prompt_mode=None, prose_synthesis=None)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "### Consensus" in out
+
+
+def test_cmd_render_prose_synthesis_flag_forces_passthrough(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_two_response_payload(prompt_mode="pr")),
+                   encoding="utf-8")
+    args = _ns(responses=str(src), prompt_mode=None, prose_synthesis=True)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "*to be summarised by the host agent*" in out
+    assert "### Consensus" not in out
+
+
+def test_cmd_render_no_prose_synthesis_flag_forces_structured(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(json.dumps(_two_response_payload(prompt_mode="design")),
+                   encoding="utf-8")
+    args = _ns(responses=str(src), prompt_mode=None, prose_synthesis=False)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "### Agreement" in out
+    assert "*to be summarised by the host agent*" not in out
+
+
+def test_cmd_render_payload_prose_synthesis_honoured(tmp_path, capsys) -> None:
+    src = tmp_path / "saved.json"
+    src.write_text(
+        json.dumps(_two_response_payload(prompt_mode="pr", prose_synthesis=True)),
+        encoding="utf-8",
+    )
+    args = _ns(responses=str(src), prompt_mode=None, prose_synthesis=None)
+    rc = council_cli.cmd_render(args)
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "*to be summarised by the host agent*" in out
 
 
 # ── main entry point ────────────────────────────────────────────────

@@ -17,10 +17,15 @@ from scripts.ai_council.prompts import (  # noqa: E402
     handoff_preamble,
     system_prompt_for,
 )
+from scripts.ai_council.prompts import (  # noqa: E402
+    all_synthesis_modes,
+    synthesis_template,
+)
+
 
 
 BASE_MODES = ["diff", "files", "prompt", "roadmap"]
-SPECIALISED_MODES = ["design", "optimize", "pr"]
+SPECIALISED_MODES = ["analysis", "design", "optimize", "pr"]
 ALL_MODES = sorted(BASE_MODES + SPECIALISED_MODES)
 
 
@@ -95,6 +100,19 @@ def test_optimize_mode_demands_evidence_and_ranking() -> None:
     assert "evidence" in sp
     # Must require a hypothesis-vs-confirmed split to avoid hand-wave output.
     assert "hypothesis" in sp or "measure" in sp
+
+
+def test_analysis_mode_critiques_the_analysis_itself() -> None:
+    """Analysis lens reviews local analysis output, not the underlying codebase."""
+    sp = system_prompt_for("analysis").lower()
+    # Must deduplicate findings.
+    assert "deduplicate" in sp or "restated" in sp
+    # Must score evidence quality.
+    assert "evidence" in sp and ("confirmed" in sp or "speculative" in sp)
+    # Must surface roadmap-ready follow-ups.
+    assert "roadmap" in sp
+    # Must propose ranked follow-ups, not just critique.
+    assert "follow-up" in sp or "follow up" in sp or "leverage" in sp
 
 
 def test_neutrality_preamble_has_independence_clause() -> None:
@@ -194,3 +212,61 @@ def test_system_prompt_for_with_only_original_ask_still_includes_ask() -> None:
     out = system_prompt_for("roadmap", original_ask="ship it?")
     assert "> ship it?" in out
     assert NEUTRALITY_PREAMBLE in out
+
+
+
+# ── Synthesis templates (Phase 3 / F2) ───────────────────────────
+
+
+DECISION_LENSES = ["default", "pr", "analysis"]
+CREATIVE_LENSES = ["design", "optimize"]
+
+
+def test_all_synthesis_modes_returns_five_lens_keys() -> None:
+    assert all_synthesis_modes() == sorted(DECISION_LENSES + CREATIVE_LENSES)
+
+
+@pytest.mark.parametrize("mode", DECISION_LENSES)
+def test_decision_lens_returns_structured_template(mode: str) -> None:
+    out = synthesis_template(mode)
+    assert out, f"decision lens {mode!r} must return a non-empty template"
+    assert "###" in out, "decision template must carry markdown section headers"
+
+
+@pytest.mark.parametrize("mode", CREATIVE_LENSES)
+def test_creative_lens_returns_empty_passthrough(mode: str) -> None:
+    assert synthesis_template(mode) == ""
+
+
+def test_none_mode_collapses_to_default() -> None:
+    assert synthesis_template(None) == synthesis_template("default")
+
+
+@pytest.mark.parametrize("mode", ["prompt", "roadmap", "diff", "files"])
+def test_input_modes_inherit_default_template(mode: str) -> None:
+    assert synthesis_template(mode) == synthesis_template("default")
+
+
+def test_unknown_mode_raises_value_error() -> None:
+    with pytest.raises(ValueError, match="Unknown synthesis mode"):
+        synthesis_template("bogus")
+
+
+def test_default_template_carries_karpathy_sections() -> None:
+    out = synthesis_template("default")
+    for header in ("### Agreement", "### Clashes", "### Blind spots",
+                   "### Recommendation", "### Next step"):
+        assert header in out
+
+
+def test_pr_template_carries_pr_review_sections() -> None:
+    out = synthesis_template("pr")
+    for header in ("### Consensus", "### Conflicts",
+                   "### Must-fix before merge", "### Recommendation"):
+        assert header in out
+
+
+def test_analysis_template_carries_consensus_ranked_sections() -> None:
+    out = synthesis_template("analysis")
+    for header in ("### Top-10 by consensus", "### Supporting", "### Outliers"):
+        assert header in out

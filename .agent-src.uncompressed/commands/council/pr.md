@@ -61,11 +61,11 @@ Invoke `/council default diff:<base>..<head>` with:
 
 - `original_ask` = PR title + body (capped per
   `bundler.size_guard`; warn if truncated).
-- The neutrality preamble uses the `pr` mode addendum from
-  `scripts/ai_council/prompts.py` — focuses members on
-  PR-specific risks (shipping risk, reviewer fatigue, scope creep)
-  on top of the generic diff focus (correctness, security, tests,
-  maintainability).
+- Pass `--prompt-mode pr` so the neutrality preamble uses the `pr`
+  mode addendum from `scripts/ai_council/prompts.py` — focuses
+  members on PR-specific risks (shipping risk, reviewer fatigue,
+  scope creep) on top of the generic diff focus (correctness,
+  security, tests, maintainability).
 
 The cost gate from `/council default` Step 3 still applies. Council is
 billable; suppress the question only when the resolved members are

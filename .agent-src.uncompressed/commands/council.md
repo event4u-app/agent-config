@@ -1,7 +1,7 @@
 ---
 name: council
 tier: 1
-description: Council orchestrator — routes to default, pr, design, optimize
+description: Council orchestrator — routes to default, pr, design, optimize, analysis
 cluster: council
 type: orchestrator
 disable-model-invocation: true
@@ -57,6 +57,7 @@ Invariants:
 | `/council pr` | `commands/council/pr.md` | Pull a GitHub PR via `gh` and run the council on the diff with PR-specific framing |
 | `/council design` | `commands/council/design.md` | Run the council on a design doc / ADR / architecture proposal |
 | `/council optimize` | `commands/council/optimize.md` | Run the council on an optimization target — ranked, evidence-based suggestions |
+| `/council analysis` | `commands/council/analysis.md` | Run the council on a local analysis output — dedup, evidence quality, roadmap-ready Top-N |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -73,6 +74,7 @@ Sub-command names match the locked contract in
    > 2. pr — review a GitHub PR (read-only by default)
    > 3. design — review a design doc / ADR / architecture proposal
    > 4. optimize — ranked, evidence-based optimization advice
+   > 5. analysis — critique a local analysis output (project-analyze, audits)
 
 ## Rules
 

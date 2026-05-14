@@ -122,6 +122,27 @@ MUST:
    evidence in the artefact).
 """.strip()
 
+ANALYSIS_MODE = """\
+The artefact is a local analysis output (from a project analyzer,
+audit script, or codebase scan). Critique the **analysis itself**, not
+the underlying codebase. You MUST:
+1. Flag findings that are restated under different headings —
+   deduplicate aggressively. The downstream consumer wants a unique
+   Top-N, not a long list with overlap.
+2. Score the evidence quality of each finding: confirmed (the
+   analysis cites file:line / metric), inferred (plausible from
+   stated context), or speculative (no citation, vibes-only).
+   Speculative findings must be called out by name.
+3. Identify findings that are roadmap-ready (concrete enough to land
+   as a phase step) vs ones that need a discovery loop first.
+4. Propose 3–5 follow-up actions ranked by leverage — what the next
+   roadmap should attack first. Cite the supporting finding(s) by id
+   or heading.
+End with: a Top-N consensus list (one bullet per finding the
+analysis surfaces) plus a single sentence on the strongest blind
+spot the analysis itself has.
+""".strip()
+
 
 _MODE_TABLE = {
     "prompt": PROMPT_MODE,
@@ -131,7 +152,182 @@ _MODE_TABLE = {
     "pr": PR_MODE,
     "design": DESIGN_MODE,
     "optimize": OPTIMIZE_MODE,
+    "analysis": ANALYSIS_MODE,
 }
+
+
+# ── Consensus-scoring prompts (Phase 4 / F3) ──────────────────────────
+#
+# Two-step extraction + scoring round used by the analysis lens. The
+# extraction pass asks each member to surface its own top findings in
+# a strict JSON shape; the scoring pass asks each member to rate
+# anonymised findings produced by the *other* members.
+#
+# Iron Law of Neutrality applies to both: the extraction prompt never
+# names other reviewers, and the scoring prompt strips the source
+# author by using `Finding-A` / `Finding-B` labels (see
+# `consensus.anonymize_findings`).
+
+FINDING_EXTRACTION_PROMPT = """\
+You have just produced an analysis. Re-emit your top findings as a
+strict JSON array suitable for downstream tooling. Each item MUST
+have:
+
+    {"id": "<short-slug>", "text": "<one-sentence finding>"}
+
+Rules:
+- 3-7 findings, ordered by importance (most important first).
+- `id` is a 1-3 word kebab-case slug, unique within your array.
+- `text` is a single sentence, no markdown, no reviewer self-reference.
+- Wrap the array in a ```json``` fenced block. No commentary outside it.
+""".strip()
+
+FINDING_SCORING_PROMPT = """\
+Below are findings from other independent reviewers, presented with
+neutral labels (Finding-A, Finding-B, …). Score each one on its
+merits. You MUST emit a strict JSON array, one entry per finding,
+in this shape:
+
+    {"finding_id": "Finding-A", "score": 1-10, "agree": true|false,
+     "reason": "<one-sentence justification>"}
+
+Rules:
+- `score` is an integer 1 (weak / irrelevant) to 10 (load-bearing /
+  must-address).
+- `agree=true` means you would surface this same finding yourself;
+  `agree=false` means you think it is wrong, overstated, or off-topic.
+- `reason` is a single sentence, no markdown.
+- Wrap the array in a ```json``` fenced block. No commentary outside it.
+
+You may not see your own findings in the list — that is by design.
+""".strip()
+
+
+# ── Synthesis templates (Phase 3 / F2) ────────────────────────────────
+#
+# Lens-aware synthesis prompts. Each entry maps a lens key onto the
+# block the host agent should produce when summarising member responses.
+# R4 Q4 split: decision lenses get a Karpathy-structured template;
+# creative lenses (design / optimize) stay open-ended prose (empty
+# string → renderer falls back to the bare "Convergence / Divergence"
+# slot). Input modes (prompt / roadmap / diff / files) map onto the
+# `default` decision template via `synthesis_template()`.
+
+DEFAULT_SYNTHESIS = """\
+Summarise the council using the structured shape below. Be terse,
+cite reviewers by label, and refuse to invent agreement that is not
+in the responses.
+
+### Agreement
+Points that two or more reviewers converged on, each as a single line.
+
+### Clashes
+Points where reviewers disagreed. State both sides with a one-line
+reviewer-label citation per side.
+
+### Blind spots
+Items that none of the reviewers raised but that the artefact's
+context suggests are load-bearing. Maximum three. Mark each as
+`needs-verification` when the host agent inferred it rather than
+read it directly from a response.
+
+### Recommendation
+A single sentence: which course the host agent should advise the
+user to take, grounded in the strongest converged point.
+
+### Next step
+One concrete next action the user can take in their current turn.
+""".strip()
+
+PR_SYNTHESIS = """\
+Summarise the council with the PR-review shape below.
+
+### Consensus
+Findings where two or more reviewers agreed, each one a single line.
+
+### Conflicts
+Findings where reviewers disagreed. State both sides with reviewer
+labels; do not pick a winner here — that lives in the recommendation.
+
+### Must-fix before merge
+Items at least one reviewer marked `REQUEST_CHANGES` or `REJECT`
+and the host agent confirms are load-bearing. Maximum five.
+
+### Recommendation
+APPROVE / REQUEST_CHANGES / REJECT and a single sentence justifying
+the verdict, anchored on the strongest consensus or must-fix line.
+""".strip()
+
+ANALYSIS_SYNTHESIS = """\
+Summarise the council with the analysis-lens shape below.
+
+### Top-10 by consensus
+Findings ranked by how many reviewers surfaced them. Format each
+line as: `N. <finding> — cited by <reviewer labels> · evidence:
+confirmed | inferred | speculative · roadmap-ready: yes | needs-discovery`.
+Stop at ten or when only single-reviewer items remain, whichever
+comes first.
+
+### Supporting
+Findings that one reviewer raised and at least one other treated as
+plausible but did not independently surface. One line each, same
+metadata shape as Top-10.
+
+### Outliers
+Single-reviewer findings the others did not engage with. Keep them
+— they are signal for a future deeper analysis pass — but mark each
+as `unverified-by-council`.
+""".strip()
+
+# Creative lenses — open-ended prose, no template. The renderer keeps
+# the bare "Convergence / Divergence" slot so the host agent can write
+# free-form synthesis.
+_CREATIVE_PASSTHROUGH = ""
+
+_SYNTHESIS_TABLE = {
+    "default": DEFAULT_SYNTHESIS,
+    "pr": PR_SYNTHESIS,
+    "analysis": ANALYSIS_SYNTHESIS,
+    "design": _CREATIVE_PASSTHROUGH,
+    "optimize": _CREATIVE_PASSTHROUGH,
+}
+
+# Input modes inherit the `default` decision template. Lens overrides
+# (`pr`/`design`/`optimize`/`analysis`) pick their own row.
+_INPUT_MODE_TO_SYNTHESIS_KEY = {
+    "prompt": "default",
+    "roadmap": "default",
+    "diff": "default",
+    "files": "default",
+}
+
+
+def synthesis_template(mode: str | None) -> str:
+    """Return the synthesis-prompt body for a given mode.
+
+    `mode=None` collapses to the `default` decision template (back-
+    compat for callers that do not thread the lens through). Unknown
+    modes raise ValueError — fail closed, never silently passthrough.
+
+    Returns an empty string for creative lenses (`design`/`optimize`)
+    so callers can detect "no template, render bare" without a magic
+    sentinel.
+    """
+    if mode is None:
+        return _SYNTHESIS_TABLE["default"]
+    if mode in _SYNTHESIS_TABLE:
+        return _SYNTHESIS_TABLE[mode]
+    if mode in _INPUT_MODE_TO_SYNTHESIS_KEY:
+        return _SYNTHESIS_TABLE[_INPUT_MODE_TO_SYNTHESIS_KEY[mode]]
+    raise ValueError(
+        f"Unknown synthesis mode {mode!r}. "
+        f"Expected one of: {sorted(set(_SYNTHESIS_TABLE) | set(_INPUT_MODE_TO_SYNTHESIS_KEY))}"
+    )
+
+
+def all_synthesis_modes() -> list[str]:
+    """Return the lens keys that have explicit synthesis templates."""
+    return sorted(_SYNTHESIS_TABLE)
 
 
 def _strip_host_identity(text: str) -> str:
@@ -230,3 +426,27 @@ def system_prompt_for(
 
 def all_modes() -> list[str]:
     return sorted(_MODE_TABLE)
+
+
+
+def build_extraction_user_prompt(original_analysis: str) -> str:
+    """User-message body for the finding-extraction pass.
+
+    Pairs the prior analysis text with the extraction-prompt rules so
+    the member re-emits its own findings in machine-readable form.
+    """
+    cleaned = _strip_host_identity(original_analysis or "").strip()
+    return f"{FINDING_EXTRACTION_PROMPT}\n\n---\n\n{cleaned}"
+
+
+def build_scoring_user_prompt(anonymised: dict[str, str]) -> str:
+    """User-message body for the scoring pass.
+
+    `anonymised` maps `Finding-A`/`Finding-B`/… → finding text. Author
+    identities MUST already be stripped — this function does NOT
+    re-anonymise, it just renders.
+    """
+    lines = [FINDING_SCORING_PROMPT, "", "---", ""]
+    for label, text in anonymised.items():
+        lines.append(f"### {label}\n\n{text}")
+    return "\n\n".join(lines)

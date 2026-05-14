@@ -42,7 +42,7 @@ column 1 of this table.
 | `judge` | 2 | `solo` · `on-diff` · `steps` | `judge` (legacy standalone) · `do-and-judge` · `do-in-steps` |
 | `commit` | 2 | `in-chunks` | `commit-in-chunks` |
 | `create-pr` | 2 | `description-only` | `create-pr-description` |
-| `council` | 3 | `default` · `pr` · `design` · `optimize` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize` |
+| `council` | 3 | `default` · `pr` · `design` · `optimize` · `analysis` | `council` (legacy default lens) · `council-pr` · `council-design` · `council-optimize`; `analysis` added 2026-05-14 — wrapper for local analysis outputs with a Top-N consensus tail block consumed by `/roadmap create` |
 | `challenge-me` | — | `vision` · `with-docs` | new — Pocock-inspired one-question-at-a-time interview; `vision` is the standard 95%-confidence variant, `with-docs` adds doc/glossary awareness with a session-scoped glossary and load-bearing claim-vs-code verification |
 | `research` | 2 | `deep` · `report` | preliminary-research scaffolder ported from `Weizhena/Deep-Research-skills` (cluster head emits `outline.yaml` + `fields.yaml` against the `research-schema` contract). `:deep` populates per-item JSON in batches with native web-search + JSON-Schema self-validation (no Python runtime); `:report` renders `report.md` directly + optionally emits a `jq` template for deterministic regeneration. `add-items` / `add-fields` intentionally **not** ported — re-run `/research <topic>` to extend the field framework. |
 | `orchestrate` | — | _(none yet — cluster head only)_ | new — runtime executor for YAML pipelines under `.agent-config/orchestrations/` per the [`orchestration-dsl-v1`](orchestration-dsl-v1.md) contract; chains personas / skills / commands / sub-agents deterministically. Single cluster head; sub-commands deferred until a second verb is needed. |
@@ -150,10 +150,30 @@ here so future lens additions follow the same shape.
   flat ADR-003 contract — the wrapper is text-only delegation.
 
 Cluster-table names are unchanged: `/council default` is the master,
-the other three are wrappers. The deprecation shims for the four
-legacy slugs (`/council`, `/council-pr`, `/council-design`,
-`/council-optimize`) continue to follow the standard shim contract
-below.
+the other wrappers (`pr`, `design`, `optimize`, `analysis`) follow the
+same shape. The deprecation shims for the four legacy slugs (`/council`,
+`/council-pr`, `/council-design`, `/council-optimize`) continue to
+follow the standard shim contract below.
+
+### Wrapper output shapes (consumer contract)
+
+Each wrapper renders the standard stacked + Convergence/Divergence
+layout from `/council default` Step 5/5a/5b. Wrappers MAY append a
+**lens-specific tail block** when their output is the input to a
+downstream command — locking the tail shape avoids brittle scraping.
+
+| Wrapper | Tail block | Downstream consumer |
+|---|---|---|
+| `pr` | (optional) one-line PR header at top; no structured tail | `gh pr comment` (opt-in single comment) |
+| `design` | (none — open-ended prose) | Human reader; `/feature plan` / `/feature refactor` |
+| `optimize` | (none — open-ended prose) | Human reader |
+| `analysis` | `## Top-N consensus findings (roadmap-ready first)` — numbered list, each finding with `evidence-grade` (confirmed / inferred / speculative), `roadmap-ready` (yes / needs-discovery), `cited by`, `supporting citation` | `/roadmap create` |
+
+The `analysis` Top-N block is the only structured tail shipped today.
+Its fields are normative — `/roadmap create` parses them to draft a
+roadmap; renaming or reordering them is a breaking change for the
+council → roadmap pipeline. Cap at N=10 unless the upstream analysis
+has fewer findings.
 
 ## Deprecation shim contract
 

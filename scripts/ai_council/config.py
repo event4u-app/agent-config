@@ -78,12 +78,32 @@ class AdvisorConfig:
 
 
 @dataclass(frozen=True)
+class ConsensusScoringConfig:
+    """Consensus-scoring round settings (Phase 4 / F3).
+
+    Only the `analysis` lens activates the scoring round today. Other
+    lenses see this as inert config. Thresholds are inclusive on the
+    `strong` side (> strong → strong bucket) and exclusive on the
+    `minority` side (≤ minority → minority bucket); the middle bucket
+    is `(minority, strong]`. Defaults mirror the roadmap (0.7 / 0.4).
+    """
+
+    enabled: bool = False
+    strong_threshold: float = 0.7
+    minority_threshold: float = 0.4
+    lenses: tuple[str, ...] = ("analysis",)
+
+
+@dataclass(frozen=True)
 class CouncilConfig:
     enabled: bool
     defaults: DefaultsConfig
     cost_budget: CostBudgetConfig
     members: dict[str, MemberConfig]
     advisors: dict[str, AdvisorConfig] = field(default_factory=dict)
+    consensus_scoring: ConsensusScoringConfig = field(
+        default_factory=ConsensusScoringConfig,
+    )
     source_path: Path | None = None
 
 
@@ -125,13 +145,37 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
     for adv_name, adv_cfg in advisors_raw.items():
         advisors[adv_name] = _build_advisor(adv_name, adv_cfg or {})
 
+    consensus = _build_consensus_scoring(raw.get("consensus_scoring") or {})
+
     return CouncilConfig(
         enabled=enabled,
         defaults=defaults,
         cost_budget=cost_budget,
         members=members,
         advisors=advisors,
+        consensus_scoring=consensus,
         source_path=source_path,
+    )
+
+
+def _build_consensus_scoring(d: dict[str, Any]) -> ConsensusScoringConfig:
+    if not isinstance(d, dict):
+        raise CouncilConfigError("`consensus_scoring` must be a mapping.")
+    strong = float(d.get("strong_threshold", 0.7))
+    minority = float(d.get("minority_threshold", 0.4))
+    if not 0.0 <= minority <= strong <= 1.0:
+        raise CouncilConfigError(
+            f"consensus_scoring thresholds broken: require "
+            f"0 <= minority ({minority}) <= strong ({strong}) <= 1."
+        )
+    lenses_raw = d.get("lenses", ["analysis"])
+    if not isinstance(lenses_raw, list) or not all(isinstance(x, str) for x in lenses_raw):
+        raise CouncilConfigError("`consensus_scoring.lenses` must be a list of strings.")
+    return ConsensusScoringConfig(
+        enabled=bool(d.get("enabled", False)),
+        strong_threshold=strong,
+        minority_threshold=minority,
+        lenses=tuple(lenses_raw),
     )
 
 

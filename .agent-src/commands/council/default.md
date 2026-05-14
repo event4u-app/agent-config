@@ -126,8 +126,15 @@ redaction, and prints the per-member preview without spending:
     [--input-mode prompt|roadmap] \
     [--max-tokens N] \
     [--mode-override api|manual] \
+    [--prompt-mode pr|design|optimize|analysis] \
     [--original-ask "<framing sentence>"]
 ```
+
+`--prompt-mode` is the lens-override flag routed by the
+`/council pr|design|optimize|analysis` wrappers. It swaps the
+per-mode neutrality addendum (see `scripts/ai_council/prompts.py`
+`_MODE_TABLE`) without changing the bundle shape. Bare
+`/council default` invocations leave it unset.
 
 For `prompt:"<text>"` mode, write the text to a temp file first
 (`mktemp` is fine) and pass that path. For `roadmap:<path>`, pass the
@@ -155,6 +162,7 @@ Once the user picks `1`, invoke the same arguments with `run` plus
     [--rounds 1|2|3] \
     [--depth standard|deep] \
     [--input-mode …] [--max-tokens …] [--mode-override …] \
+    [--prompt-mode …] \
     [--original-ask "<framing sentence>"]
 ```
 

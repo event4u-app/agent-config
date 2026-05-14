@@ -50,9 +50,12 @@ goal section, ask the user (one question per turn):
 
 Invoke the matching `/council default` form:
 
-- `files:` → `/council default files:<paths>` with `mode_override=design`.
+- `files:` → `/council default files:<paths>` with `--prompt-mode design`.
 - `prompt:` → `/council default prompt:"<artefact text>"` with
-  `mode_override=design`.
+  `--prompt-mode design`.
+
+`--prompt-mode` is the CLI flag (`scripts/council_cli.py`) that
+swaps the lens addendum after the bundler has run.
 
 The `design` mode addendum from `scripts/ai_council/prompts.py`
 focuses council members on:

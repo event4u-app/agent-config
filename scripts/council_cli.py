@@ -44,7 +44,9 @@ from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
 from scripts.ai_council.orchestrator import (  # noqa: E402
+    ConsensusResult,
     CostBudget, CouncilQuestion, consult, estimate, render,
+    run_consensus_scoring,
 )
 from scripts.ai_council.pricing import (  # noqa: E402
     PriceTable, estimate_cost, load_prices,
@@ -119,6 +121,12 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             "max_output_tokens": cfg.cost_budget.max_output_tokens,
             "max_calls": cfg.cost_budget.max_calls,
             "max_total_usd": cfg.cost_budget.max_total_usd,
+        },
+        "consensus_scoring": {
+            "enabled": cfg.consensus_scoring.enabled,
+            "strong_threshold": cfg.consensus_scoring.strong_threshold,
+            "minority_threshold": cfg.consensus_scoring.minority_threshold,
+            "lenses": list(cfg.consensus_scoring.lenses),
         },
         "members": members,
     }
@@ -290,8 +298,16 @@ def build_question(
     input_path: Path,
     input_mode: str,
     max_tokens: int,
+    prompt_mode_override: str | None = None,
 ) -> tuple[CouncilQuestion, str]:
-    """Bundle the input file. Returns (question, artefact_label)."""
+    """Bundle the input file. Returns (question, artefact_label).
+
+    `prompt_mode_override` swaps the per-mode neutrality addendum looked
+    up by `system_prompt_for(question.mode, ...)`. The bundle shape is
+    unchanged — the bundler still uses `input_mode` to format the
+    artefact. Routed by the `/council pr|design|optimize|analysis`
+    wrappers via the `--prompt-mode` CLI flag.
+    """
     if input_mode == "prompt":
         text = input_path.read_text(encoding="utf-8")
         ctx = bundle_prompt(text)
@@ -303,13 +319,17 @@ def build_question(
         raise ValueError(
             f"unsupported input mode: {input_mode!r} (use prompt | roadmap)"
         )
-    return CouncilQuestion(mode=ctx.mode, user_prompt=ctx.text,
+    mode = prompt_mode_override or ctx.mode
+    return CouncilQuestion(mode=mode, user_prompt=ctx.text,
                            max_tokens=max_tokens), artefact
 
 
 def format_estimate_table(
     members: list[ExternalAIClient],
     estimates: list[Any],
+    *,
+    consensus_delta_usd: float = 0.0,
+    consensus_extra_calls: int = 0,
 ) -> str:
     rows = [
         f"  {m.name}/{m.model}: "
@@ -317,8 +337,94 @@ def format_estimate_table(
         for m, e in zip(members, estimates)
     ]
     total = sum(e.total_usd for e in estimates)
+    if consensus_extra_calls > 0:
+        rows.append(
+            f"  +consensus scoring: +{consensus_extra_calls} calls "
+            f"(~+${consensus_delta_usd:.4f})"
+        )
+        total += consensus_delta_usd
     rows.append(f"  TOTAL:  ${total:.4f}")
     return "\n".join(rows)
+
+
+def _consensus_cost_delta(
+    ai_cfg: dict[str, Any],
+    prompt_mode: str,
+    estimates: list[Any],
+    n_billable: int,
+) -> tuple[int, float]:
+    """Return ``(extra_calls, extra_usd)`` for the consensus round.
+
+    Active when ``ai_council.consensus_scoring.enabled`` is true AND the
+    invocation's lens is in ``consensus_scoring.lenses``. Each member
+    contributes two extra calls (extraction + scoring); the worst-case
+    cost uses the base per-member estimate as a ceiling.
+    """
+    cs = ai_cfg.get("consensus_scoring") or {}
+    if not cs.get("enabled"):
+        return 0, 0.0
+    lenses = cs.get("lenses") or ["analysis"]
+    if prompt_mode not in lenses:
+        return 0, 0.0
+    extra_calls = 2 * n_billable
+    extra_usd = 2.0 * sum(e.total_usd for e in estimates)
+    return extra_calls, extra_usd
+
+
+def _maybe_run_consensus(
+    ai_cfg: dict[str, Any],
+    question: CouncilQuestion,
+    members: list[ExternalAIClient],
+    responses: list[CouncilResponse],
+    budget: CostBudget,
+    table: PriceTable,
+    project: Any,
+    args: argparse.Namespace,
+) -> ConsensusResult | None:
+    """Run the consensus scoring round when enabled for this lens."""
+    cs = ai_cfg.get("consensus_scoring") or {}
+    if not cs.get("enabled"):
+        return None
+    lenses = cs.get("lenses") or ["analysis"]
+    if question.mode not in lenses:
+        return None
+    return run_consensus_scoring(
+        members, responses,
+        budget=budget, table=table, project=project,
+        original_ask=args.original_ask,
+        max_tokens=question.max_tokens,
+        strong_threshold=float(cs.get("strong_threshold", 0.7)),
+        minority_threshold=float(cs.get("minority_threshold", 0.4)),
+    )
+
+
+def _serialise_consensus(consensus: ConsensusResult) -> dict[str, Any]:
+    """Project ConsensusResult onto a JSON-safe dict for session payloads."""
+    return {
+        "findings": [
+            {"id": f.id, "source": f.source, "text": f.text}
+            for f in consensus.findings
+        ],
+        "scores": [
+            {
+                "finding_id": s.finding_id, "scorer": s.scorer,
+                "score": s.score, "agree": s.agree, "reason": s.reason,
+            }
+            for s in consensus.scores
+        ],
+        "metadata": {
+            fid: {
+                "mean_score": m.mean_score,
+                "agreement_rate": m.agreement_rate,
+                "consensus_strength": m.consensus_strength,
+                "dissent_count": m.dissent_count,
+                "scorers": list(m.scorers),
+            }
+            for fid, m in consensus.metadata.items()
+        },
+        "extraction_responses": _serialise_responses(consensus.extraction_responses),
+        "scoring_responses": _serialise_responses(consensus.scoring_responses),
+    }
 
 
 # ── subcommands ─────────────────────────────────────────────────────
@@ -396,16 +502,26 @@ def cmd_estimate(
     question, _ = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
         max_tokens=_resolve_max_tokens(args, ai_cfg),
+        prompt_mode_override=getattr(args, "prompt_mode", None),
     )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
     estimates = estimate(question, billable, table,
                          project=project, original_ask=args.original_ask)
+    extra_calls, extra_usd = _consensus_cost_delta(
+        ai_cfg, question.mode, estimates, len(billable),
+    )
     sys.stdout.write(
         f"council:estimate · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
     )
-    sys.stdout.write(format_estimate_table(billable, estimates) + "\n")
+    sys.stdout.write(
+        format_estimate_table(
+            billable, estimates,
+            consensus_delta_usd=extra_usd,
+            consensus_extra_calls=extra_calls,
+        ) + "\n"
+    )
     return 0
 
 
@@ -435,6 +551,44 @@ def _deserialise_responses(items: list[dict[str, Any]]) -> list[CouncilResponse]
     return out
 
 
+def _deserialise_consensus(data: dict[str, Any] | None) -> ConsensusResult | None:
+    """Reconstruct a ConsensusResult from a serialised payload section.
+
+    Used by ``cmd_render`` to re-render saved sessions that captured a
+    consensus round. Returns ``None`` when the payload predates Phase 4
+    or the round was skipped for the lens.
+    """
+    if not data:
+        return None
+    from scripts.ai_council.consensus import (
+        ConsensusMetadata, Finding, FindingScore,
+        aggregate_scores, bucket_by_threshold,
+    )
+    findings = [
+        Finding(id=f["id"], source=f["source"], text=f["text"])
+        for f in (data.get("findings") or [])
+    ]
+    scores = [
+        FindingScore(
+            finding_id=s["finding_id"], scorer=s["scorer"],
+            score=int(s["score"]), agree=bool(s["agree"]),
+            reason=s.get("reason", ""),
+        )
+        for s in (data.get("scores") or [])
+    ]
+    metadata = aggregate_scores(findings, scores)
+    bucket = bucket_by_threshold(findings, metadata)
+    return ConsensusResult(
+        bucket=bucket, findings=findings, scores=scores, metadata=metadata,
+        extraction_responses=_deserialise_responses(
+            data.get("extraction_responses") or [],
+        ),
+        scoring_responses=_deserialise_responses(
+            data.get("scoring_responses") or [],
+        ),
+    )
+
+
 def cmd_run(
     args: argparse.Namespace,
     *,
@@ -458,16 +612,26 @@ def cmd_run(
     question, artefact = build_question(
         input_path=Path(args.question), input_mode=args.input_mode,
         max_tokens=_resolve_max_tokens(args, ai_cfg),
+        prompt_mode_override=getattr(args, "prompt_mode", None),
     )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
     estimates = estimate(question, billable, table,
                          project=project, original_ask=args.original_ask)
+    extra_calls, extra_usd = _consensus_cost_delta(
+        ai_cfg, question.mode, estimates, len(billable),
+    )
     sys.stdout.write(
         f"council:run · mode={question.mode} · members={len(members)} "
         f"(billable={len(billable)})\n"
     )
-    sys.stdout.write(format_estimate_table(billable, estimates) + "\n")
+    sys.stdout.write(
+        format_estimate_table(
+            billable, estimates,
+            consensus_delta_usd=extra_usd,
+            consensus_extra_calls=extra_calls,
+        ) + "\n"
+    )
 
     if not args.confirm:
         sys.stdout.write(
@@ -489,9 +653,16 @@ def cmd_run(
         table=table, project=project,
         original_ask=args.original_ask, rounds=rounds,
     )
+    consensus = _maybe_run_consensus(
+        ai_cfg, question, members, responses, budget, table, project, args,
+    )
     estimated_total = sum(e.total_usd for e in estimates)
     actual_total = 0.0
-    for r in responses:
+    all_responses: list[CouncilResponse] = list(responses)
+    if consensus is not None:
+        all_responses.extend(consensus.extraction_responses)
+        all_responses.extend(consensus.scoring_responses)
+    for r in all_responses:
         if r.error:
             continue
         ce = estimate_cost(r.provider, r.model, r.input_tokens, r.output_tokens, table)
@@ -499,6 +670,8 @@ def cmd_run(
     payload = {
         "schema_version": SCHEMA_VERSION,
         "mode": question.mode,
+        "prompt_mode": getattr(args, "prompt_mode", None),
+        "prose_synthesis": getattr(args, "prose_synthesis", None),
         "artefact": artefact,
         "original_ask": args.original_ask,
         "members": [f"{m.name}/{m.model}" for m in members],
@@ -507,6 +680,8 @@ def cmd_run(
         "cost_usd_actual": round(actual_total, 6),
         "responses": _serialise_responses(responses),
     }
+    if consensus is not None:
+        payload["consensus"] = _serialise_consensus(consensus)
     out_path = Path(args.output)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
@@ -519,10 +694,30 @@ def cmd_run(
 
 
 def cmd_render(args: argparse.Namespace) -> int:
-    """Re-render a saved responses JSON to the markdown report."""
+    """Re-render a saved responses JSON to the markdown report.
+
+    Lens resolution order: explicit ``--prompt-mode`` > ``prompt_mode``
+    in the payload > ``mode`` in the payload > ``None`` (default decision
+    template). R4 Q4 escape hatch ``--prose-synthesis`` overrides the
+    table.
+    """
     payload = json.loads(Path(args.responses).read_text(encoding="utf-8"))
     items = payload.get("responses") or []
-    sys.stdout.write(render(_deserialise_responses(items)) + "\n")
+    explicit = getattr(args, "prompt_mode", None)
+    mode = explicit or payload.get("prompt_mode") or payload.get("mode")
+    prose = getattr(args, "prose_synthesis", None)
+    if prose is None:
+        prose = payload.get("prose_synthesis")
+    consensus = _deserialise_consensus(payload.get("consensus"))
+    sys.stdout.write(
+        render(
+            _deserialise_responses(items),
+            mode=mode,
+            prose_synthesis=prose,
+            consensus=consensus,
+        )
+        + "\n"
+    )
     return 0
 
 
@@ -589,6 +784,15 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
     p.add_argument("--input-mode", choices=["prompt", "roadmap"],
                    default="prompt",
                    help="How to bundle the file (default: prompt).")
+    p.add_argument("--prompt-mode",
+                   choices=["pr", "design", "optimize", "analysis"],
+                   default=None, dest="prompt_mode",
+                   help="Lens-override for the system-prompt addendum. "
+                        "The bundle shape stays as --input-mode; only "
+                        "the per-mode neutrality addendum is swapped "
+                        "(see scripts/ai_council/prompts.py _MODE_TABLE). "
+                        "Routed by the /council pr|design|optimize|"
+                        "analysis wrappers.")
     p.add_argument("--max-tokens", type=int, default=None,
                    help="Per-member output budget. Default reads "
                         "ai_council.max_output_tokens from .agent-settings.yml "
@@ -644,12 +848,34 @@ def build_parser() -> argparse.ArgumentParser:
                             "artefacts. Set by the host agent when the consuming "
                             "rule/skill/command declares council_depth: deep. "
                             "Overridden by explicit --rounds.")
+    _add_prose_synthesis_arg(p_run)
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
     p_ren.add_argument("responses",
                        help="Path to the JSON written by `council run`.")
+    p_ren.add_argument("--prompt-mode",
+                       choices=["default", "pr", "design", "optimize", "analysis",
+                                "prompt", "roadmap", "diff", "files"],
+                       default=None, dest="prompt_mode",
+                       help="Override the synthesis-template lens. Defaults "
+                            "to the `mode` recorded in the responses JSON.")
+    _add_prose_synthesis_arg(p_ren)
 
     return parser
+
+
+def _add_prose_synthesis_arg(p: argparse.ArgumentParser) -> None:
+    """R4 Q4 escape hatch — toggle structured vs prose synthesis."""
+    group = p.add_mutually_exclusive_group()
+    group.add_argument("--prose-synthesis", dest="prose_synthesis",
+                       action="store_const", const=True, default=None,
+                       help="Force open-ended prose synthesis (bare slot) "
+                            "regardless of lens. R4 Q4 escape hatch.")
+    group.add_argument("--no-prose-synthesis", dest="prose_synthesis",
+                       action="store_const", const=False,
+                       help="Force the structured default decision-lens "
+                            "template even on a creative lens "
+                            "(design / optimize). Symmetric escape hatch.")
 
 
 def main(argv: list[str] | None = None) -> int:

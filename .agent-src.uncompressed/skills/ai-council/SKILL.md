@@ -292,6 +292,65 @@ NEVER ships the host verdict as council output. Provider attribution
 stays visible in the per-member sections; host verdicts stay
 attributed to the host.
 
+## Synthesis templates (lens-aware)
+
+The **Convergence / Divergence** slot in `council:render` output is
+populated with a lens-specific synthesis prompt. The host agent reads
+this prompt and writes the summary in the shape it dictates. The five
+templates live in `scripts/ai_council/prompts.py::_SYNTHESIS_TABLE`
+and are exposed via `synthesis_template(mode)`.
+
+**R4 Q4 split** — decision lenses get a structured Karpathy-style
+template; creative lenses stay open-ended prose (bare slot):
+
+| Lens | Class | Synthesis sections |
+|---|---|---|
+| `default` | decision | Agreement · Clashes · Blind spots · Recommendation · Next step |
+| `pr` | decision | Consensus · Conflicts · Must-fix before merge · Recommendation |
+| `analysis` | decision | Top-10 by consensus · Supporting · Outliers |
+| `design` | creative | *(no template — open prose passthrough)* |
+| `optimize` | creative | *(no template — open prose passthrough)* |
+
+Input modes (`prompt` / `roadmap` / `diff` / `files`) inherit the
+`default` decision template — they are bundling shapes, not lenses.
+
+**Source citations:**
+* Template shape — Round 2 council verdict
+  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-1.md`,
+  Opus's lens-adaptive synthesis proposal).
+* Decision/creative split — Round 4 Q4 verdict
+  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-3-responses.json`).
+  R4 reframed `optimize` as creative because perf trade-offs resist
+  pre-templated shape — Performance-wins / Trade-offs /
+  Implementation-order is too rigid for the variety of optimize-lens
+  artefacts. R4 reframed `design` for the same reason — design
+  critiques are inherently narrative.
+
+### `--prose-synthesis` escape hatch (R4 Q4)
+
+Both `council:run` and `council:render` accept symmetric escape-hatch
+flags on top of the lens table:
+
+* `--prose-synthesis` — force creative-lens passthrough (bare slot)
+  regardless of lens. Use when the user on `default`/`pr`/`analysis`
+  prefers a narrative recommendation over the structured template.
+* `--no-prose-synthesis` — force the `default` structured template
+  even on a creative lens. Use when a `design` or `optimize` artefact
+  has a one-shot need for Karpathy-style structure.
+
+The flag is mutually exclusive — picking one disables the other on
+the same invocation. When `council:run` records either flag in the
+output JSON, `council:render` honours it unless the renderer is
+called with an explicit flag of its own.
+
+### Renderer lens resolution
+
+`council:render <responses.json>` resolves the active lens in this
+order: explicit `--prompt-mode` flag > `prompt_mode` field in the
+payload > `mode` field in the payload > `None` (default decision
+template). The `--prose-synthesis` / `--no-prose-synthesis` flag
+overrides the table regardless of how the lens resolved.
+
 ## Do NOT
 
 - Do NOT paraphrase council output into the host agent's voice — strip

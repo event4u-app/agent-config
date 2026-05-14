@@ -32,6 +32,17 @@ from scripts.ai_council.clients import (
     CouncilResponse,
     ExternalAIClient,
 )
+from scripts.ai_council.consensus import (
+    ConsensusBucket,
+    ConsensusMetadata,
+    Finding,
+    FindingScore,
+    aggregate_scores,
+    anonymize_findings,
+    bucket_by_threshold,
+    parse_findings_response,
+    parse_scores_response,
+)
 from scripts.ai_council.pricing import (
     CostEstimate,
     PriceTable,
@@ -39,7 +50,12 @@ from scripts.ai_council.pricing import (
     estimate_input_tokens,
 )
 from scripts.ai_council.project_context import ProjectContext
-from scripts.ai_council.prompts import system_prompt_for
+from scripts.ai_council.prompts import (
+    build_extraction_user_prompt,
+    build_scoring_user_prompt,
+    synthesis_template,
+    system_prompt_for,
+)
 
 
 @dataclass
@@ -337,9 +353,154 @@ def _augment_for_next_round(
     )
 
 
-def render(responses: list[CouncilResponse]) -> str:
-    """Render stacked sections + a Convergence/Divergence summary slot."""
+@dataclass
+class ConsensusResult:
+    """Bundle returned by `run_consensus_scoring()`.
+
+    `bucket` is renderer-ready; `findings`, `scores`, and `metadata`
+    are kept for audit-trail JSON (council-sessions/*.json).
+    """
+
+    bucket: ConsensusBucket
+    findings: list[Finding]
+    scores: list[FindingScore]
+    metadata: dict[str, ConsensusMetadata]
+    extraction_responses: list[CouncilResponse]
+    scoring_responses: list[CouncilResponse]
+
+
+def run_consensus_scoring(
+    members: list[ExternalAIClient],
+    deliberation_responses: list[CouncilResponse],
+    *,
+    budget: CostBudget | None = None,
+    table: PriceTable | None = None,
+    on_overrun: OnOverrunCallback | None = None,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
+    max_tokens: int = DEFAULT_MAX_TOKENS,
+    strong_threshold: float = 0.7,
+    minority_threshold: float = 0.4,
+) -> ConsensusResult:
+    """Two-pass consensus round (Phase 4 / F3).
+
+    Pass 1 — extraction: each member re-emits its own deliberation as
+    a JSON array of `{id, text}` findings. Pass 2 — scoring: each
+    member sees the *other* members' findings under anonymous labels
+    and rates them 1-10 + agree/disagree + reason.
+
+    The cost budget is shared across both passes; the daily ledger
+    receives both. Errors in one member's extraction or scoring tag
+    that member but never abort the round.
+    """
+    if not members or not deliberation_responses:
+        return ConsensusResult(
+            bucket=ConsensusBucket(), findings=[], scores=[], metadata={},
+            extraction_responses=[], scoring_responses=[],
+        )
+
+    # ── Pass 1: extraction ──────────────────────────────────────────
+    member_by_name = {m.name: m for m in members}
+    extraction_responses: list[CouncilResponse] = []
+    all_findings: list[Finding] = []
+    for resp in deliberation_responses:
+        member = member_by_name.get(resp.provider)
+        if member is None or resp.error or not resp.text.strip():
+            continue
+        question = CouncilQuestion(
+            mode="prompt",
+            user_prompt=build_extraction_user_prompt(resp.text),
+            max_tokens=max_tokens,
+        )
+        extracted = consult(
+            [member], question,
+            budget=budget, table=table, on_overrun=on_overrun,
+            project=project, original_ask=original_ask,
+        )
+        extraction_responses.extend(extracted)
+        if not extracted or extracted[0].error:
+            continue
+        source = f"{member.name}:{member.model}"
+        all_findings.extend(
+            parse_findings_response(extracted[0].text, source=source),
+        )
+
+    if not all_findings:
+        return ConsensusResult(
+            bucket=ConsensusBucket(), findings=[], scores=[], metadata={},
+            extraction_responses=extraction_responses, scoring_responses=[],
+        )
+
+    # ── Pass 2: scoring (each member rates the OTHERS' findings) ────
+    scoring_responses: list[CouncilResponse] = []
+    all_scores: list[FindingScore] = []
+    for member in members:
+        scorer = f"{member.name}:{member.model}"
+        others = [f for f in all_findings if f.source != scorer]
+        if not others:
+            continue
+        anon = anonymize_findings(others)
+        label_to_id = {label: f.id for label, f in anon.items()}
+        anon_text = {label: f.text for label, f in anon.items()}
+        question = CouncilQuestion(
+            mode="prompt",
+            user_prompt=build_scoring_user_prompt(anon_text),
+            max_tokens=max_tokens,
+        )
+        scored = consult(
+            [member], question,
+            budget=budget, table=table, on_overrun=on_overrun,
+            project=project, original_ask=original_ask,
+        )
+        scoring_responses.extend(scored)
+        if not scored or scored[0].error:
+            continue
+        for s in parse_scores_response(scored[0].text, scorer=scorer):
+            real_id = label_to_id.get(s.finding_id)
+            if real_id is None:
+                continue
+            all_scores.append(FindingScore(
+                finding_id=real_id, scorer=s.scorer, score=s.score,
+                agree=s.agree, reason=s.reason,
+            ))
+
+    metadata = aggregate_scores(all_findings, all_scores)
+    bucket = bucket_by_threshold(
+        all_findings, metadata,
+        strong=strong_threshold, minority=minority_threshold,
+    )
+    return ConsensusResult(
+        bucket=bucket, findings=all_findings, scores=all_scores,
+        metadata=metadata, extraction_responses=extraction_responses,
+        scoring_responses=scoring_responses,
+    )
+
+
+def render(
+    responses: list[CouncilResponse],
+    *,
+    mode: str | None = None,
+    prose_synthesis: bool | None = None,
+    consensus: ConsensusResult | None = None,
+) -> str:
+    """Render stacked sections + a lens-aware synthesis prompt slot.
+
+    `mode` selects the synthesis template from `prompts.synthesis_template`.
+    `None` collapses to the default decision-lens template (back-compat).
+
+    `prose_synthesis` is the R4 Q4 escape hatch:
+      - `True`  → force creative-lens passthrough (bare slot) regardless of mode
+      - `False` → force decision-lens default template even on creative lenses
+      - `None`  → honour the lens default from the table
+
+    `consensus` (Phase 4 / F3) prepends Strong Consensus / Findings /
+    Minority Views sections when the analysis lens scored its findings.
+    """
     blocks: list[str] = []
+    if consensus is not None and (
+        consensus.bucket.strong or consensus.bucket.findings or consensus.bucket.minority
+    ):
+        blocks.append(_render_consensus(consensus.bucket))
     for r in responses:
         header = f"## {r.provider} · {r.model}"
         if r.error:
@@ -350,5 +511,46 @@ def render(responses: list[CouncilResponse]) -> str:
             f"{r.latency_ms} ms*"
         )
         blocks.append(f"{header}\n\n{meta}\n\n{r.text}")
-    blocks.append("## Convergence / Divergence\n\n*to be summarised by the host agent*")
+    if prose_synthesis is True:
+        template = ""
+    elif prose_synthesis is False:
+        template = synthesis_template("default")
+    else:
+        template = synthesis_template(mode)
+    if template:
+        body = template
+    else:
+        body = "*to be summarised by the host agent*"
+    blocks.append(f"## Convergence / Divergence\n\n{body}")
     return "\n\n---\n\n".join(blocks)
+
+
+def _render_consensus(bucket: ConsensusBucket) -> str:
+    """Render Strong / Findings / Minority sections in renderer order."""
+    parts: list[str] = []
+    if bucket.strong:
+        parts.append("## Strong Consensus\n\n" + _render_bucket(bucket.strong))
+    if bucket.findings:
+        parts.append("## Findings\n\n" + _render_bucket(bucket.findings))
+    if bucket.minority:
+        parts.append(
+            "## Minority Views\n\n"
+            "*Sub-threshold by consensus; kept for audit trail.*\n\n"
+            + _render_bucket(bucket.minority)
+        )
+    return "\n\n".join(parts)
+
+
+def _render_bucket(
+    items: list[tuple[Finding, ConsensusMetadata]],
+) -> str:
+    lines: list[str] = []
+    for f, m in items:
+        badge = (
+            f"strength {m.consensus_strength:.2f} · "
+            f"mean {m.mean_score:.1f}/10 · "
+            f"{len(m.scorers)} scorers · "
+            f"{m.dissent_count} dissent"
+        )
+        lines.append(f"- **{f.id}** — {f.text}  \n  _{badge}_")
+    return "\n".join(lines)

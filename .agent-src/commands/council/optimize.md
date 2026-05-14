@@ -37,14 +37,14 @@ If nothing was supplied, ask (one question per turn):
 >    the report to the council
 > 4. A free-form description of the bottleneck
 
-Pick **1** → `/council default files:<paths>` with `mode_override=optimize`.
+Pick **1** → `/council default files:<paths>` with `--prompt-mode optimize`.
 Pick **2** → `/council default prompt:"<query + context>"` with
-`mode_override=optimize`.
+`--prompt-mode optimize`.
 Pick **3** → run the chosen `/optimize-*` command first, then feed
 its report file to `/council default files:<report>` with
-`mode_override=optimize`.
+`--prompt-mode optimize`.
 Pick **4** → `/council default prompt:"<description>"` with
-`mode_override=optimize`.
+`--prompt-mode optimize`.
 
 ### 2. Capture the constraint
 
@@ -66,7 +66,7 @@ The chosen metric becomes the `original_ask` for the handoff preamble:
 ### 3. Run /council default with the optimize mode preamble
 
 Invoke the matching `/council default` form (`files:` / `prompt:`) with
-`mode_override=optimize`. The `optimize` mode addendum from
+`--prompt-mode optimize`. The `optimize` mode addendum from
 `scripts/ai_council/prompts.py` requires members to:
 
 - Rank suggestions by expected impact on the chosen metric, not by
