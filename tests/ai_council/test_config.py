@@ -281,3 +281,197 @@ def test_resolve_api_key_file_empty_rejected(tmp_path: Path) -> None:
     keyfile.chmod(0o600)
     with pytest.raises(CouncilConfigError, match="is empty"):
         resolve_api_key(f"file:{keyfile}")
+
+
+# ── Phase 8 backfill: malformed YAML + section-shape sweep ───────────────────
+
+
+def test_malformed_yaml_is_wrapped(tmp_path: Path) -> None:
+    """Unparseable YAML surfaces as `CouncilConfigError`, never raw YAMLError."""
+    p = tmp_path / "bad.yml"
+    p.write_text("enabled: true\n  bad: :\n", encoding="utf-8")
+    with pytest.raises(CouncilConfigError, match="invalid YAML"):
+        load_council_config(p)
+
+
+def test_members_list_is_rejected(tmp_path: Path) -> None:
+    p = tmp_path / "bad.yml"
+    p.write_text("enabled: true\nmembers:\n  - anthropic\n", encoding="utf-8")
+    with pytest.raises(CouncilConfigError, match=r"`members` must be a mapping"):
+        load_council_config(p)
+
+
+@pytest.mark.parametrize(
+    "section",
+    ["defaults", "cost_budget", "advisors", "consensus_scoring"],
+)
+def test_section_must_be_mapping(tmp_path: Path, section: str) -> None:
+    """Every top-level config section must be a mapping when present."""
+    payload = dict(_MINIMAL_VALID)
+    payload[section] = ["not", "a", "mapping"]
+    with pytest.raises(CouncilConfigError, match=f"`{section}` must be a mapping"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── Phase 8 backfill: advisor cross-validation ───────────────────────────────
+
+
+def _members_with_anthropic_only() -> dict:
+    return {
+        "anthropic": {
+            "enabled": True,
+            "model": "claude-sonnet-4-5",
+            "api_key_ref": "env:ANTHROPIC_API_KEY",
+        },
+    }
+
+
+def test_advisor_referencing_unknown_member_is_rejected(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": _members_with_anthropic_only(),
+        "advisors": {
+            "contrarian": {
+                "enabled": True,
+                "member": "openai",
+                "persona": "personas/advisors/contrarian.md",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="no such member"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_advisor_referencing_disabled_member_is_rejected(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "api_key_ref": "env:ANTHROPIC_API_KEY",
+            },
+            "openai": {"enabled": False},
+        },
+        "advisors": {
+            "contrarian": {
+                "enabled": True,
+                "member": "openai",
+                "persona": "personas/advisors/contrarian.md",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="exists but is disabled"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_advisor_with_unknown_provider_is_rejected(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": _members_with_anthropic_only(),
+        "advisors": {
+            "contrarian": {
+                "enabled": True,
+                "member": "deepmind",
+                "persona": "personas/advisors/contrarian.md",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="not a valid provider"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_advisor_model_must_be_string(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": _members_with_anthropic_only(),
+        "advisors": {
+            "contrarian": {
+                "enabled": True,
+                "member": "anthropic",
+                "persona": "personas/advisors/contrarian.md",
+                "model": 42,
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="model must be a string"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_disabled_advisor_skips_cross_validation(tmp_path: Path) -> None:
+    """A disabled advisor pointing at a missing member must NOT fail."""
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": _members_with_anthropic_only(),
+        "advisors": {
+            "contrarian": {
+                "enabled": False,
+                "member": "openai",
+                "persona": "personas/advisors/contrarian.md",
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.advisors["contrarian"].enabled is False
+
+
+# ── Phase 8 backfill: consensus_scoring thresholds + lenses ──────────────────
+
+
+def test_consensus_scoring_inverted_thresholds_rejected(tmp_path: Path) -> None:
+    """minority > strong violates the 0 <= minority <= strong <= 1 invariant."""
+    payload = dict(_MINIMAL_VALID)
+    payload["consensus_scoring"] = {
+        "enabled": True,
+        "strong_threshold": 0.3,
+        "minority_threshold": 0.7,
+    }
+    with pytest.raises(CouncilConfigError, match="thresholds broken"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_consensus_scoring_threshold_out_of_unit_range_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["consensus_scoring"] = {"strong_threshold": 1.5}
+    with pytest.raises(CouncilConfigError, match="thresholds broken"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_consensus_scoring_lenses_must_be_list_of_strings(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["consensus_scoring"] = {"lenses": [1, 2, 3]}
+    with pytest.raises(CouncilConfigError, match="must be a list of strings"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── Phase 8 backfill: every raw-key prefix is refused ────────────────────────
+
+
+@pytest.mark.parametrize(
+    "raw_key",
+    [
+        "sk-totallynotrealkey",
+        "sk-ant-totallynotrealkey",
+        "ya29.totallynotrealkey",
+        "AIzaTotallyNotRealKey",
+        "xai-totallynotrealkey",
+        "pplx-totallynotrealkey",
+        "gsk_totallynotrealkey",
+    ],
+)
+def test_raw_key_prefixes_are_all_rejected(tmp_path: Path, raw_key: str) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["members"] = {
+        "anthropic": {
+            "enabled": True,
+            "model": "claude-sonnet-4-5",
+            "api_key_ref": raw_key,
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="raw API key"):
+        load_council_config(_write_yaml(tmp_path, payload))

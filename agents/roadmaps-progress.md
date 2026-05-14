@@ -6,17 +6,17 @@
 
 ## Overall
 
-**47 / 187 steps done · 25%**
+**52 / 192 steps done · 27%**
 
 ```text
-██████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   25%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 8 | 56 | 9 | 47 | 0 | 0 | ████████░░ 84% |
+| 1 | [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md) | 9 | 61 | 9 | 52 | 0 | 0 | ████████░░ 85% |
 | 2 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,7 +28,7 @@
 
 ### [step-2-ai-council-consolidation.md](roadmaps/step-2-ai-council-consolidation.md)
 
-**AI Council Consolidation + External-Pattern Integration** — 47 / 56 done (84%)
+**AI Council Consolidation + External-Pattern Integration** — 52 / 61 done (85%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -39,7 +39,8 @@
 | 4 | F3 — consensus-scoring on the analysis lens | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | F1 — `--peer-review` opt-in flag (Karpathy anonymous review) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 6 | Thinking-style advisor system (replace-mode) | ✅ done | 0 | 7 | 0 | 0 | 100% |
-| 7 | `/council debate` sub-command (multi-round rebuttals, progressive disclosure) | 🟡 in progress | 9 | 8 | 0 | 0 | 47% |
+| 7 | `/council debate` sub-command (multi-round rebuttals, progressive disclosure) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 8 | Negative-test backfill for the config loader | 🟡 in progress | 9 | 6 | 0 | 0 | 40% |
 
 ### [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md)
 
