@@ -1,12 +1,14 @@
 ---
 complexity: structural
+status: draft
 ---
 
 # Road to Test-Suite Cleanup (audit-only)
 
 **Status:** OPEN — audit captured 2026-05-14, no deletion authorised.
-**Parent roadmap:** [`road-to-productization.md`](road-to-productization.md)
+**Parent roadmap:** [`road-to-productization.md`](archive/road-to-productization.md) (archived)
 P5.5 produced this audit.
+**Sequence position:** step-5 — runs after step-1 … step-4. Audit-only (no canonical `Phase <id>` headings), so it is excluded from the auto-dashboard by `status: draft` per [`roadmap-progress-sync`](../../.augment/rules/roadmap-progress-sync.md).
 **Mode:** Audit-only candidate list. Every checkbox is a *review*
 checkbox, not a *delete* checkbox. Deletion needs its own roadmap
 (`road-to-test-consolidation`) plus operator sign-off per
