@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **450 public artefacts** shipped by
+Consumer-facing catalog of all **452 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -289,7 +289,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (106)
+## Commands (108)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -317,11 +317,13 @@ are excluded.
 | command | [`context:refactor`](../.agent-src/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
 | command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`cost-report`](../.agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
+| command | [`council:analysis`](../.agent-src/commands/council/analysis.md) | cluster: council | Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness. |
+| command | [`council:debate`](../.agent-src/commands/council/debate.md) | cluster: council | Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds. |
 | command | [`council:default`](../.agent-src/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council:optimize`](../.agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council:pr`](../.agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize |
+| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
 | command | [`create-pr:description-only`](../.agent-src/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
