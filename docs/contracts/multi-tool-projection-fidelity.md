@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-14
+keep-beta-until: 2026-08-13
 ---
 
 # Multi-Tool Projection Fidelity Contract
