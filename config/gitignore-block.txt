@@ -18,6 +18,17 @@
 .agent-settings
 .agent-settings.backup.key-value
 
+# Agent config — user-persona file (.agent-user.md, written by /agents user init)
+# Contains who the user is and how they want to be addressed. Local-only by
+# default; commit explicitly only via the deferred --shared opt-in.
+# See docs/contracts/agent-user-schema.md.
+.agent-user.md
+.agent-user.md.bak
+
+# Agent config — user-persona observation buffer (append-only JSONL,
+# never shared). Feeds /agents user review / accept only.
+.agent-user.observations.jsonl
+
 # Agent config — persistent chat history (crash recovery, never commit)
 /agents/.agent-chat-history
 /agents/.agent-chat-history.bak
