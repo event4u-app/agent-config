@@ -1,3 +1,9 @@
+---
+stability: beta
+keep-beta-until: 2026-08-15
+---
+
+
 # Universal Skills — Allowlist Contract
 
 > **Status:** beta · **Owner:** step-12 Phase 3 · **Stability:** additive only (no removals without a migration note in `STABILITY.md`)

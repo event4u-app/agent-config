@@ -1,3 +1,9 @@
+---
+stability: beta
+keep-beta-until: 2026-08-15
+---
+
+
 # Router Blending — Cross-Domain Skill Mix Contract
 
 > **Status:** beta · **Owner:** step-12 Phase 5 · **Depends on:** [`universal-skills.md`](universal-skills.md), [`step-9-user-types-axis`](../../agents/roadmaps/step-9-user-types-axis.md) (axis seeds)
