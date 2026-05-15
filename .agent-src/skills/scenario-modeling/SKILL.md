@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: process
 context_spine: [org-stage, fiscal-period, product]
+recommended_for_user_types: [founder, finance]
+
+
 ---
 
 # scenario-modeling

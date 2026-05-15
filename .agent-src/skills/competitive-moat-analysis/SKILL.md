@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: process
 context_spine: [customer-segment, product, org-stage]
+recommended_for_user_types: [consultant, founder]
+
+
 ---
 
 # competitive-moat-analysis

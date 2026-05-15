@@ -5,6 +5,8 @@ personas:
   - frontend-engineer
 source: package
 domain: quality
+recommended_for_user_types: [developer]
+
 ---
 
 # playwright-architect

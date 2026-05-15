@@ -5,6 +5,8 @@ status: active
 tier: senior
 source: package
 domain: product
+recommended_for_user_types: [finance]
+
 ---
 
 # dcf-modeling

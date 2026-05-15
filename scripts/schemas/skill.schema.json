@@ -80,6 +80,12 @@
       },
       "description": "Senior-skill opt-in for the context spine. Declares which slots under agents/context-spine/ the skill expects to read. Cross-wing slots (product, team, repo) are locked at 3 by council Q1 (KEEP-3); wing-scoped slots follow the per-wing ADR track in docs/contracts/context-spine.md § 5. Wing-3 (channel-stage, funnel-stage, customer-segment) authorized by docs/contracts/adr-gtm-context-spine.md; Wing-4 (fiscal-period, org-stage, regulatory-regime) authorized by docs/contracts/adr-wing4-context-spine.md."
     },
+    "recommended_for_user_types": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {"type": "string"},
+      "description": "Forward-compatible user-type recommendation tags (step-12-universal-os-reframe Phase 5). Skill loads for every user-type whose slug appears in this list. Absence of the key marks the skill as universal — see docs/contracts/universal-skills.md for the always-loaded floor and docs/contracts/router-blending.md for per-user-type mix ratios. Wired by step-9-user-types-axis once it lands; treated as metadata until then. Free-form tags (e.g. 'creator', 'founder', 'consultant', 'gtm', 'finance', 'ops', 'developer') — no enum until the user-types axis closes."
+    },
     "execution": {
       "type": "object",
       "additionalProperties": false,

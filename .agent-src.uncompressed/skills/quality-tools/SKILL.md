@@ -7,6 +7,8 @@ execution:
   type: assisted
   handler: shell
   allowed_tools: []
+recommended_for_user_types: [developer]
+
 ---
 
 # quality-tools

@@ -5,6 +5,8 @@ personas:
   - backend-architect
 source: package
 domain: engineering
+recommended_for_user_types: [developer, founder]
+
 ---
 
 # api-design

@@ -7,6 +7,9 @@ personas:
   - critical-challenger
 source: package
 domain: process
+recommended_for_user_types: [developer, founder]
+
+
 ---
 
 # tech-debt-tracker

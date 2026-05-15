@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, product]
+recommended_for_user_types: [ops, finance]
+
+
 ---
 
 # data-handling-judgment
