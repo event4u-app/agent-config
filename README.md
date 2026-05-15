@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+  <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -494,6 +494,23 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
 **Deepest reference stack today: Laravel** — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant. **Workflow-grade second tier: Symfony** (`symfony-workflow` — DI, Doctrine, Messenger, voters, Twig) and **Next.js App Router** (`nextjs-patterns` — RSC boundaries, Server Actions, caching, route handlers). Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
+
+---
+
+## Data governance & domain safety
+
+`agent-config` ships **12 domain-safety rules** (`.agent-src.uncompressed/rules/domain-safety-*.md`) that act as a per-domain output floor — PII redaction, disclaimer requirements, and retention guidance. Rules fire automatically via the router when their triggers match.
+
+| Surface | Rule(s) | Floor |
+|---|---|---|
+| Support / CRM drafts | `domain-safety-pii-support` · `domain-safety-retention-support` | Redact customer names, emails, phones, account IDs to placeholders before output |
+| Finance / invoicing | `domain-safety-pii-finance` · `domain-safety-retention-finance` | Redact counterparty PII and bank identifiers; flag retention under audit hold |
+| Recruiting | `domain-safety-pii-recruiting` | Redact candidate PII from notes, scorecards, rejection emails |
+| Marketing testimonials | `domain-safety-pii-marketing` | Require consent record before customer-identifying copy ships |
+| Legal · financial · medical · consulting drafts | `domain-safety-disclaimer-*` | "Not legal/financial/medical advice" disclaimers; refuse diagnostic / dosage / specific tax positions |
+| Logs · exports | `domain-safety-logging-pii-floor` · `domain-safety-export-redact` | No raw PII in logs or exports; allowlist-driven structured fields only |
+
+Each rule declares `applies_to_user_types:` in frontmatter — rules load only when the matching user-type is active (forward-compatible with the user-types axis shipping in `step-9-user-types-axis`). The set is opt-in by domain, never overrides higher Iron Laws, and cross-references the `privacy-review` and `data-handling-judgment` skills for deeper regime checks (GDPR · CCPA · HIPAA).
 
 ---
 
