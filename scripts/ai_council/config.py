@@ -381,10 +381,19 @@ class LowImpactConfig:
     ``1.0`` every solo decision is also dispatched to the full
     council and the verdicts are compared in
     ``agents/council-shadow-log.jsonl``. Must be in ``[0.0, 1.0]``.
+
+    ``solo_confidence_floor`` is the auto-escalation threshold for
+    solo-member responses (step-9 P13). When the dispatcher extracts
+    a confidence signal below the floor — or detects a split /
+    refusal response — the decision escalates to the full council
+    on this invocation, independent of shadow sampling. Default
+    ``0.7``; must be in ``[0.0, 1.0]``. The floor is irrelevant when
+    ``dispatch=full`` (no solo step to gate).
     """
 
     dispatch: str = "full"
     shadow_sample_rate: float = 0.1
+    solo_confidence_floor: float = 0.7
 
 
 @dataclass(frozen=True)
@@ -1075,24 +1084,51 @@ def _build_low_impact(
             "low_impact.shadow_sample_rate must be in [0.0, 1.0] "
             f"(got {shadow!r})."
         )
-    return LowImpactConfig(dispatch=dispatch, shadow_sample_rate=shadow)
+    floor_raw = d.get("solo_confidence_floor", 0.7)
+    if isinstance(floor_raw, bool) or not isinstance(floor_raw, (int, float)):
+        raise CouncilConfigError(
+            "low_impact.solo_confidence_floor must be a number "
+            f"(got {type(floor_raw).__name__})."
+        )
+    floor = float(floor_raw)
+    if not 0.0 <= floor <= 1.0:
+        raise CouncilConfigError(
+            "low_impact.solo_confidence_floor must be in [0.0, 1.0] "
+            f"(got {floor!r})."
+        )
+    return LowImpactConfig(
+        dispatch=dispatch,
+        shadow_sample_rate=shadow,
+        solo_confidence_floor=floor,
+    )
 
 
 def _reject_top_level_locked_dispatch(raw: dict[str, Any]) -> None:
-    """Iron Law (step-9 P8/P11 · U3) — reject top-level dispatch keys.
+    """Iron Law (step-9 P8/P11/P13 · U3) — reject locked-class dispatch keys.
 
     Some authors will write `high_impact.dispatch: single` at the top
     level (mirroring `low_impact.dispatch`) rather than nested under
     `decision_resolution.classes`. Catch that shape too so the Iron
-    Law cannot be bypassed by surface choice.
+    Law cannot be bypassed by surface choice. Also covers
+    `solo_confidence_floor` — meaningless on locked classes (they
+    never dispatch solo) and a confusing knob to leave reachable.
     """
     for cls in _LOCKED_IMPACT_CLASSES:
         block = raw.get(cls)
-        if isinstance(block, dict) and "dispatch" in block:
+        if not isinstance(block, dict):
+            continue
+        if "dispatch" in block:
             raise CouncilConfigError(
                 f"{cls}.dispatch={block['dispatch']!r}: dispatch is "
                 f"not configurable for high-impact / user-required "
                 f"decisions — always full council."
+            )
+        if "solo_confidence_floor" in block:
+            raise CouncilConfigError(
+                f"{cls}.solo_confidence_floor="
+                f"{block['solo_confidence_floor']!r}: irrelevant on "
+                f"high-impact / user-required classes — they never "
+                f"dispatch solo. Set on `low_impact` instead."
             )
 
 

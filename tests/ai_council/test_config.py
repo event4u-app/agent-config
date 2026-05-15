@@ -1132,3 +1132,47 @@ def test_top_level_user_required_dispatch_rejected(tmp_path: Path) -> None:
     payload["user_required"] = {"dispatch": "full"}
     with pytest.raises(CouncilConfigError, match="not configurable"):
         load_council_config(_write_yaml(tmp_path, payload))
+
+
+
+# ── step-9 P13: solo_confidence_floor ──────────────────────────────────────
+
+
+def test_solo_confidence_floor_defaults_to_07(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, dict(_MINIMAL_VALID)))
+    assert cfg.low_impact.solo_confidence_floor == pytest.approx(0.7)
+
+
+def test_solo_confidence_floor_accepts_valid_value(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": 0.85}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.low_impact.solo_confidence_floor == pytest.approx(0.85)
+
+
+def test_solo_confidence_floor_out_of_range(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": 1.5}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_solo_confidence_floor_wrong_type(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": "high"}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_high_impact_solo_floor_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["high_impact"] = {"solo_confidence_floor": 0.8}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_user_required_solo_floor_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["user_required"] = {"solo_confidence_floor": 0.8}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
