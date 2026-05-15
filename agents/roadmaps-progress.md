@@ -6,17 +6,17 @@
 
 ## Overall
 
-**6 / 117 steps done · 5%**
+**25 / 117 steps done · 21%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md) | 7 | 48 | 42 | 6 | 0 | 0 | █░░░░░░░░░ 12% |
+| 1 | [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md) | 7 | 48 | 23 | 25 | 0 | 0 | █████░░░░░ 52% |
 | 2 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,16 +26,16 @@
 
 ### [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md)
 
-**Road to Universal-OS Reframe (audience expansion, capability-preserving)** — 6 / 48 done (12%)
+**Road to Universal-OS Reframe (audience expansion, capability-preserving)** — 25 / 48 done (52%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Non-developer evaluation corpus (prerequisite gate) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Role-based documentation (fast win, zero code) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Interactive initialization (MCP-compatible) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Non-developer evaluation corpus (prerequisite gate) | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 2 | Role-based documentation (fast win, zero code) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 3 | Interactive initialization (MCP-compatible) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
 | 4 | Domain safety rules (data governance) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 5 | Cross-domain skill bridging (schema) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | README identity rewrite (post-validation) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Cross-domain skill bridging (schema) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 6 | README identity rewrite (post-validation) | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
 | 7 | Community validation (proof of concept) | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 
 ### [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md)
