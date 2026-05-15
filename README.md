@@ -1,13 +1,15 @@
-# Agent Config — Governed Agent System
+# Agent Config — Universal AI Agent OS
 
-> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+> **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
-Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
+Give your AI agents an audit-disciplined execution layer: **210 skills**, **79 governance rules**, **124 commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
 
-> Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
+| 👩‍💻 Developers | 🚀 Founders & Operators | ✍️ Creators & Consultants |
+|---|---|---|
+| Implement tickets, fix CI, write tests, run PR reviews — `/implement-ticket`, `/work`, `/commit`, `/fix ci`, `/create-pr` — with stack-aware skills for Laravel · Symfony · Next.js · React · Node. | Pitch decks, runway math, OKR trees, GTM launches, pricing reviews — `runway-cognition`, `unit-economics-modeling`, `fundraising-narrative`, `gtm-launch`, `okr-tree-modeling`. | Editorial calendars, brand voice, ghostwriting, content funnels, discovery interviews — `voice-and-tone-design`, `editorial-calendar`, `ghostwriter`, `content-funnel-design`, `discovery-interview`. |
 
 <p align="center">
-  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>115 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+  <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -67,6 +69,12 @@ work-engine phases ran end-to-end. Stack-aware skills auto-load.
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
 > below. Contributors rebuilding the package — jump to
 > [**Development**](#development).
+>
+> **Non-developer? No terminal?** Skip `npx` entirely — host
+> agent-config as a [Cloudflare MCP endpoint](#self-hosted-mcp-on-cloudflare--zero-local-install)
+> and connect from Claude Desktop. The [role-based getting started](docs/getting-started-by-role.md)
+> guide names the three skills each role reaches for first (Creator,
+> Founder, Consultant, GTM, Finance/Ops, Developer).
 
 ### Detailed installation
 
@@ -497,6 +505,12 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ---
 
+## Data governance & domain safety
+
+12 domain-safety rules (`.agent-src.uncompressed/rules/domain-safety-*.md`) act as a per-domain output floor — PII redaction for support / finance / recruiting / marketing, advice disclaimers for legal / financial / medical / consulting drafts, retention guidance for finance / support, and ops floors for logging / export. Full surface → rule(s) → floor matrix: [`docs/safety.md`](docs/safety.md).
+
+---
+
 ## Featured Skills
 
 | Skill | What your agent learns |
@@ -535,7 +549,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 115 active commands](.agent-src/commands/)
+→ [Browse all 124 active commands](.agent-src/commands/)
 
 ---
 
@@ -567,7 +581,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 210 skills + 115 native commands); Augment Code gets the
+> package (rules + 210 skills + 124 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
@@ -631,6 +645,28 @@ Create it interactively with `/agents user init`. Inspect with
 legacy `personal.user_name` key in `.agent-settings.yml` stays as a
 fallback when `.agent-user.md` is absent.
 
+## Ghostwriter (`agents/ghostwriter/<slug>.md`)
+
+Third voice primitive — captures **public-facing writing voice of
+documented public figures** (authors, executives, academics,
+journalists, public speakers, deceased historical figures).
+`/ghostwriter:fetch <url-or-name>` runs an attestation gate, delegates
+to the host agent's `web-fetch` / `web-search` (zero network code in
+the package), and writes `agents/ghostwriter/<slug>.md` — **gitignored
+by default**, never shipped in the OSS package. `/ghostwriter:write
+--as=<slug>` drafts in that voice and appends the **mandatory
+non-removable disclosure footer** (`*Written in the style of <name>,
+not by them.*`); `/post-as:ghostwriter` is a thin alias. Private
+individuals are rejected; paywalled / leaked / DM content banned at
+the schema level. `:list`, `:show`, `:delete` round out the cluster.
+Schema: [`docs/contracts/ghostwriter-schema.md`](docs/contracts/ghostwriter-schema.md).
+
+| Primitive | Voice | Disclosure footer |
+|---|---|---|
+| `personas/*.md` | review-lens (internal critique) | n/a |
+| `.agent-user.md` | maintainer's own voice (`/post-as:me`) | none — you are the author |
+| `agents/ghostwriter/<slug>.md` | external public-figure (`/post-as:ghostwriter`) | mandatory, non-removable |
+
 ## Core Principles
 
 - **Analyze before implementing** — no guessing, no blind edits
@@ -662,22 +698,7 @@ step (package manager + `rm -rf` of generated dirs).
 
 ### Maintainer telemetry (opt-in, default-off)
 
-A local-only artefact-engagement log can be enabled by maintainers to see
-which skills, rules, commands, and guidelines the agent actually consults
-and applies during a `/implement-ticket` or `/work` run. The log is a
-JSONL file under the project root; nothing is uploaded, nothing is shared
-across projects. Default is off; consumers see no prompts.
-
-```yaml
-# .agent-settings.yml — opt in only when you want measurement
-telemetry:
-  artifact_engagement:
-    enabled: true
-```
-
-Reports: `./agent-config telemetry:report`. Full contract,
-privacy/redaction floor, and quartile semantics:
-[`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
+Local-only artefact-engagement log (`telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`) records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded, nothing shared. Reports via `./agent-config telemetry:report`. Contract + privacy floor: [`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
 
 ### Context-aware command suggestion
 

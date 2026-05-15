@@ -6,6 +6,8 @@ tier: senior
 source: package
 domain: process
 context_spine: [product, fiscal-period, customer-segment]
+recommended_for_user_types: [finance, founder]
+
 ---
 
 # forecasting

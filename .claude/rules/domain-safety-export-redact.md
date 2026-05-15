@@ -1,0 +1,1 @@
+../../.agent-src/rules/domain-safety-export-redact.md

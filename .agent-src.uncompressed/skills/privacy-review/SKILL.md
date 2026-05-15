@@ -1,11 +1,13 @@
 ---
 name: privacy-review
-description: "Use when reviewing data flows for GDPR / CCPA / HIPAA fit — regulatory-regime delta, consent shape, breach-impact triage. Triggers on 'is this GDPR-safe', 'do we need a DPA'."
+description: "Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'."
 status: active
 tier: senior
 source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, product]
+recommended_for_user_types: [ops, finance, creator]
+
 ---
 
 # privacy-review

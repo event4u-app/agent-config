@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, org-stage]
+recommended_for_user_types: [consultant, finance, ops]
+
+
 ---
 
 # contracts-cognition

@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: product
 context_spine: [product]
+recommended_for_user_types: [consultant, gtm, founder]
+
+
 ---
 
 # competitive-positioning

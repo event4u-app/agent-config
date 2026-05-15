@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **464 artefacts** in this package.
+Maintainer-facing index of all **485 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -222,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (67)
+## Rules (79)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -249,6 +249,18 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`docker-commands`](../.agent-src.uncompressed/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`docs-sync`](../.agent-src.uncompressed/rules/docs-sync.md) | auto | Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra |
 | rule | [`domain-adoption-policy`](../.agent-src.uncompressed/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
+| rule | [`domain-safety-disclaimer-consulting`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md) | auto | Drafting strategic recommendations, executive memos, board decks, or consulting deliverables — cite assumptions; flag low-confidence claims |
+| rule | [`domain-safety-disclaimer-financial`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md) | auto | Drafting investment memos, valuation models, tax positions, or financial-advice-shaped content — require 'not financial advice' disclaimer |
+| rule | [`domain-safety-disclaimer-legal`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md) | auto | Drafting legal briefs, contract redlines, ToS, privacy policies, or any legal-shaped content — require 'not legal advice' disclaimer in output |
+| rule | [`domain-safety-disclaimer-medical`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md) | auto | Drafting health, wellness, medical, or therapeutic content — require 'not medical advice' disclaimer; refuse diagnostic or dosage outputs |
+| rule | [`domain-safety-export-redact`](../.agent-src.uncompressed/rules/domain-safety-export-redact.md) | auto | Generating CSV / Excel / API exports, partner data-shares, or analyst handoffs — redact direct identifiers; flag re-identification on quasi-IDs |
+| rule | [`domain-safety-logging-pii-floor`](../.agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md) | auto | Writing logging code, structured logger config, or log lines — refuse to log raw PII; require redaction or a structured-field allowlist |
+| rule | [`domain-safety-pii-finance`](../.agent-src.uncompressed/rules/domain-safety-pii-finance.md) | auto | Drafting invoices, financial reports, AR/AP statements, or finance memos — redact counterparty PII and account/bank identifiers before output |
+| rule | [`domain-safety-pii-marketing`](../.agent-src.uncompressed/rules/domain-safety-pii-marketing.md) | auto | Drafting testimonials, case studies, social proof, or marketing emails referencing real customers — require consent; redact identifiers if absent |
+| rule | [`domain-safety-pii-recruiting`](../.agent-src.uncompressed/rules/domain-safety-pii-recruiting.md) | auto | Drafting candidate notes, interview scorecards, rejection emails, or hiring memos — redact candidate PII before output |
+| rule | [`domain-safety-pii-support`](../.agent-src.uncompressed/rules/domain-safety-pii-support.md) | auto | Generating support macros, ticket responses, or help-desk drafts — redact customer PII before output (names, emails, phones, account IDs, addresses) |
+| rule | [`domain-safety-retention-finance`](../.agent-src.uncompressed/rules/domain-safety-retention-finance.md) | auto | Finance data retention guidance — flag jurisdiction dependence, default to longest applicable retention, never delete records under audit hold |
+| rule | [`domain-safety-retention-support`](../.agent-src.uncompressed/rules/domain-safety-retention-support.md) | auto | Support / CRM data retention guidance — surface DSR-readiness, consent-window expiry, ticket-body retention vs. analytics aggregate retention |
 | rule | [`downstream-changes`](../.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src.uncompressed/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`external-reference-deep-dive`](../.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | User names an external repo, file, URL, or artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
@@ -294,7 +306,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (115)
+## Commands (124)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -354,6 +366,12 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`fix:refs`](../.agent-src.uncompressed/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix:seeder`](../.agent-src.uncompressed/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`fix`](../.agent-src.uncompressed/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
+| command | [`ghostwriter:delete`](../.agent-src.uncompressed/commands/ghostwriter/delete.md) | cluster: ghostwriter | Hard-delete a ghostwriter profile at agents/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance. |
+| command | [`ghostwriter:fetch`](../.agent-src.uncompressed/commands/ghostwriter/fetch.md) | cluster: ghostwriter | Build or refresh a public-figure voice profile at agents/ghostwriter/<slug>.md from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch / web-search to the host agent. |
+| command | [`ghostwriter:list`](../.agent-src.uncompressed/commands/ghostwriter/list.md) | cluster: ghostwriter | List captured ghostwriter profiles under agents/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only. |
+| command | [`ghostwriter:show`](../.agent-src.uncompressed/commands/ghostwriter/show.md) | cluster: ghostwriter | Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only. |
+| command | [`ghostwriter:write`](../.agent-src.uncompressed/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
+| command | [`ghostwriter`](../.agent-src.uncompressed/commands/ghostwriter.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
 | command | [`grill-me`](../.agent-src.uncompressed/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../.agent-src.uncompressed/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src.uncompressed/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
@@ -385,6 +403,9 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`override`](../.agent-src.uncompressed/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`package-reset`](../.agent-src.uncompressed/commands/package-reset.md) |  | /package-reset |
 | command | [`package-test`](../.agent-src.uncompressed/commands/package-test.md) |  | /package-test |
+| command | [`post-as:ghostwriter`](../.agent-src.uncompressed/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
+| command | [`post-as:me`](../.agent-src.uncompressed/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+| command | [`post-as`](../.agent-src.uncompressed/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`prepare-for-review`](../.agent-src.uncompressed/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src.uncompressed/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src.uncompressed/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |

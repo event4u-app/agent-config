@@ -6,6 +6,9 @@ personas:
   - critical-challenger
 source: package
 domain: process
+recommended_for_user_types: [ops, developer]
+
+
 ---
 
 # incident-commander

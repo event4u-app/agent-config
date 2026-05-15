@@ -6,6 +6,8 @@ tier: senior
 source: package
 domain: product
 context_spine: [product, team]
+recommended_for_user_types: [creator, gtm, founder]
+
 ---
 
 # release-comms

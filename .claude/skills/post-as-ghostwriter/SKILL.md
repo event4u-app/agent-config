@@ -1,0 +1,1 @@
+../../../.agent-src/commands/post-as/ghostwriter.md

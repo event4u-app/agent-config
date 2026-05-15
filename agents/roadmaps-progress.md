@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 99 steps done · 0%**
+**38 / 117 steps done · 32%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md) | 7 | 48 | 10 | 38 | 0 | 0 | ████████░░ 79% |
 | 2 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -24,17 +24,19 @@
 
 ## Per-roadmap phase breakdown
 
-### [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md)
+### [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md)
 
-**`/ghostwriter` cluster + `/post-as:me` + `/post-as:ghostwriter`** — 0 / 30 done (0%)
+**Road to Universal-OS Reframe (audience expansion, capability-preserving)** — 38 / 48 done (79%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Schema + storage + privacy gate + fictional fixtures | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | `/ghostwriter:fetch` (URL + name-only modes) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | `/ghostwriter:write` + `/post-as:me` + `/post-as:ghostwriter` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Maintenance — list / show / delete / refetch | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 5 | Documentation + cross-references | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
+| 1 | Non-developer evaluation corpus (prerequisite gate) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 2 | Role-based documentation (fast win, zero code) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 3 | Interactive initialization (MCP-compatible) | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
+| 4 | Domain safety rules (data governance) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 5 | Cross-domain skill bridging (schema) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 6 | README identity rewrite (post-validation) | 🟡 in progress | 2 | 4 | 0 | 0 | 67% |
+| 7 | Community validation (proof of concept) | 🟡 in progress | 6 | 8 | 0 | 0 | 57% |
 
 ### [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md)
 

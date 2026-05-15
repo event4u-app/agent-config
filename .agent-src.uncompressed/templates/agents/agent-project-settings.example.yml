@@ -39,7 +39,7 @@ schema_version: 1
 # CI guard: a release bump of `package.json` must update this value
 # in lockstep — see scripts/check_template_pin_drift.py (road-to-
 # portable-runtime-and-update-check P3.3).
-agent_config_version: "2.15.0"
+agent_config_version: "2.16.0"
 
 # --- Project identity ---
 project:
@@ -123,6 +123,21 @@ personas:
     # is the v1 specialist; more land in v1.1+ (security, performance).
     # Leave empty to require explicit --personas=+<id> opt-in.
     auto_include: [qa]
+
+# --- Ghostwriter (optional) ---
+#
+# Toggles for the /ghostwriter command cluster. Consumer-only —
+# the package itself ignores this block (fixtures never carry aliases).
+# See docs/contracts/ghostwriter-schema.md § Aliases.
+ghostwriter:
+  # When true, `/ghostwriter:write --as=<value>` resolves <value> against
+  # both slug filenames AND every profile's `aliases:` list
+  # (case-insensitive). Conflicts are rejected at lint time
+  # (task lint-ghostwriter-source), never at runtime.
+  # Set to false to disable alias resolution (slug-only matching);
+  # any `aliases:` already in profiles are then ignored at resolve time
+  # but still validated by the lint.
+  aliases: true
 
 # --- Quality pipeline (optional) ---
 #

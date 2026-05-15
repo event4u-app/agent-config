@@ -6,6 +6,8 @@ tier: senior
 source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage, funnel-stage]
+recommended_for_user_types: [creator, gtm]
+
 ---
 
 # content-funnel-design

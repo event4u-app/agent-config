@@ -75,6 +75,11 @@
       "items": {"type": "string", "pattern": "^(skill|guideline|command|contract):"},
       "description": "Router targets (skill / guideline / command / contract). Forbidden on kernel rules. Schema: docs/contracts/rule-router.md."
     },
+    "applies_to_user_types": {
+      "type": "array",
+      "items": {"type": "string"},
+      "description": "Forward-compatible user-type filter (step-12-universal-os-reframe Phase 4). Rule loads only when the active user-type matches one of these tags. Wired by step-9-user-types-axis once it lands; treated as a no-op gate until then. Free-form tags (e.g. 'support', 'finance', 'recruiting', 'marketing', 'legal-drafting', 'consulting', 'medical-drafting', 'finance-drafting', 'ops', 'analytics-export', 'all') — no enum until the user-types axis closes."
+    },
     "profile": {
       "type": "string",
       "enum": ["minimal", "balanced", "full"],

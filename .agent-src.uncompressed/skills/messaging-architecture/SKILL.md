@@ -6,6 +6,8 @@ tier: senior
 source: package
 domain: product
 context_spine: [product, customer-segment]
+recommended_for_user_types: [creator, gtm, consultant]
+
 ---
 
 # messaging-architecture

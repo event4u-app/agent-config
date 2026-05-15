@@ -5,6 +5,9 @@ status: active
 tier: senior
 source: package
 domain: product
+recommended_for_user_types: [founder]
+
+
 ---
 
 # okr-tree-modeling

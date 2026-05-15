@@ -6,6 +6,9 @@ tier: senior
 source: package
 domain: product
 context_spine: [product, fiscal-period]
+recommended_for_user_types: [founder, finance]
+
+
 ---
 
 # unit-economics-modeling

@@ -92,3 +92,11 @@ cast (usually Core-6 for review skills, empty for others).
 - [`../../docs/contracts/persona-schema.md`](../../docs/contracts/persona-schema.md) — locked schema (Core / Specialist)
 - [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow modes personas compose with
 - [`../rules/artifact-drafting-protocol.md`](../rules/artifact-drafting-protocol.md) — mandatory per new persona
+
+## See also — sibling voice primitives
+
+Personas are one of three voice primitives. Same shape (Markdown +
+frontmatter), distinct purpose — **no folding, no shared schema**:
+
+- [`../../docs/contracts/agent-user-schema.md`](../../docs/contracts/agent-user-schema.md) — `.agent-user.md`, the maintainer's own voice (`/post-as:me`, no disclosure footer).
+- [`../../docs/contracts/ghostwriter-schema.md`](../../docs/contracts/ghostwriter-schema.md) — `agents/ghostwriter/<slug>.md`, captured public-figure voice (`/ghostwriter:write` / `/post-as:ghostwriter`, mandatory disclosure footer).
