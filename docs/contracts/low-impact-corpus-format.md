@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-13
+---
+
 # `low-impact-decisions.md` — corpus format contract (step-9 P4)
 
 Parser-visible invariants for `agents/low-impact-decisions.md` and any
