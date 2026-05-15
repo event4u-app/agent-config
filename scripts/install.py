@@ -3236,6 +3236,18 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "guard). See docs/installation.md → Minimal init."
         ),
     )
+    parser.add_argument(
+        "--interactive",
+        action="store_true",
+        help=(
+            "after the install completes, run a short prompt to capture "
+            "user-type / stack / verbosity and write `.agent-config.local.json` "
+            "(forward-compatible stub for step-9 user-types axis — runtime "
+            "skill filtering activates once that axis ships). TTY-only; "
+            "no-op without an interactive stdin. See "
+            "docs/contracts/universal-skills.md for the always-loaded set."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -3437,6 +3449,120 @@ def install_minimal(target_root: Path, force: bool) -> int:
     return 0
 
 
+# --- Interactive init (step-12 Phase 3, forward-compatible stub) ---
+
+_INTERACTIVE_USER_TYPES: tuple[tuple[str, str], ...] = (
+    ("creator", "Content / writing / publishing"),
+    ("founder", "Early-stage company building"),
+    ("consultant", "Advisory / strategy / discovery"),
+    ("gtm", "Sales / marketing / revenue ops"),
+    ("finance", "Finance / FP&A / unit economics"),
+    ("ops", "Operations / incident / compliance"),
+    ("developer", "Engineering / code-heavy work"),
+)
+
+_INTERACTIVE_STACKS: tuple[tuple[str, str], ...] = (
+    ("none", "No code project / pure content"),
+    ("laravel", "PHP / Laravel"),
+    ("nextjs", "TypeScript / Next.js / React"),
+    ("python", "Python / FastAPI / Django"),
+    ("symfony", "PHP / Symfony"),
+    ("generic", "Other / mixed stack"),
+)
+
+_INTERACTIVE_VERBOSITIES: tuple[tuple[str, str], ...] = (
+    ("quiet", "Caveman / minimal output"),
+    ("normal", "Default verbosity"),
+    ("verbose", "Full intent announcements + play-by-play"),
+)
+
+_LOCAL_CONFIG_FILE = ".agent-config.local.json"
+
+
+def _interactive_prompt_choice(label: str, options: tuple[tuple[str, str], ...]) -> str:
+    """Render a numbered list and return the chosen id. Defaults to option 1 on empty input."""
+    print()
+    print(f"  {label}")
+    for idx, (key, blurb) in enumerate(options, start=1):
+        print(f"    {idx}. {key}  — {blurb}")
+    print()
+    while True:
+        try:
+            raw = input(f"  Choice [1-{len(options)}, default 1]: ").strip()
+        except EOFError:
+            return options[0][0]
+        if not raw:
+            return options[0][0]
+        if raw.isdigit():
+            i = int(raw)
+            if 1 <= i <= len(options):
+                return options[i - 1][0]
+        # Allow typing the slug directly.
+        for key, _ in options:
+            if raw.lower() == key:
+                return key
+        print(f"  ⚠️  Pick a number 1-{len(options)} or one of: {', '.join(k for k, _ in options)}.")
+
+
+def run_interactive_init(project_root: Path, force: bool) -> int:
+    """Write ``.agent-config.local.json`` based on three TTY prompts.
+
+    Forward-compatible stub for [`step-9-user-types-axis`](../agents/roadmaps/step-9-user-types-axis.md):
+    runtime skill filtering activates once that axis ships its
+    ``user-types/`` directory and ``--user-type`` flag. Until then,
+    this file is metadata-only — read by ``doctor --context`` and the
+    upcoming ``agent-config skills`` listing command.
+
+    Universal-skills allowlist (see
+    ``docs/contracts/universal-skills.md``) loads regardless of the
+    captured ``user_type`` — the contract guarantees these 15 skills
+    are never filtered out.
+
+    Returns 0 on success, 1 on collision without ``--force``. No-op
+    (returns 0) when stdin is not a TTY.
+    """
+    if not sys.stdin.isatty():
+        warn(
+            "--interactive requested but stdin is not a TTY; skipping the "
+            f"prompt. Re-run interactively or hand-edit {_LOCAL_CONFIG_FILE}."
+        )
+        return 0
+
+    target = project_root / _LOCAL_CONFIG_FILE
+    if target.exists() and not force:
+        warn(
+            f"{_LOCAL_CONFIG_FILE} already exists; re-run with --force to "
+            "overwrite. Skipping interactive init."
+        )
+        return 0
+
+    print()
+    info("Interactive init — captures user-type / stack / verbosity")
+    info("(forward-compatible stub; runtime filtering activates with step-9)")
+
+    user_type = _interactive_prompt_choice("Primary user type:", _INTERACTIVE_USER_TYPES)
+    stack = _interactive_prompt_choice("Project stack:", _INTERACTIVE_STACKS)
+    verbosity = _interactive_prompt_choice("Verbosity profile:", _INTERACTIVE_VERBOSITIES)
+
+    payload: dict[str, Any] = {
+        "$schema": "https://github.com/event4u-app/agent-config/scripts/schemas/local-config.schema.json",
+        "version": 1,
+        "user_type": user_type,
+        "stack": stack,
+        "verbosity": verbosity,
+        "universal_skills_contract": "docs/contracts/universal-skills.md",
+    }
+
+    try:
+        target.write_text(json.dumps(payload, indent=2, sort_keys=False) + "\n", encoding="utf-8")
+    except OSError as exc:
+        warn(f"Could not write {target}: {exc}")
+        return 1
+
+    success(f"Wrote {target.relative_to(project_root)} ({user_type} / {stack} / {verbosity})")
+    return 0
+
+
 # --- Main ---
 
 def main(argv: list[str]) -> int:
@@ -3503,7 +3629,13 @@ def main(argv: list[str]) -> int:
 
         project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
         is_first_run = not (project_root / SETTINGS_FILE).exists()
-        return _main_project_install(opts, project_root, parsed_tools, is_first_run)
+        rc = _main_project_install(opts, project_root, parsed_tools, is_first_run)
+        # Interactive post-install prompt (step-12 Phase 3, forward-compatible
+        # stub). Runs only after a successful install so the local config
+        # never ships ahead of the bridge files it parameterizes.
+        if rc == 0 and getattr(opts, "interactive", False):
+            run_interactive_init(project_root, opts.force)
+        return rc
     except ConflictAbort as exc:
         warn(exc.message)
         return 1
