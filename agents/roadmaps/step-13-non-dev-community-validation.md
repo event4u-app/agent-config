@@ -22,6 +22,10 @@ complexity: lightweight
   (autonomous-feasible work done) *(see step-12 closure run #2)*
 - [x] Launch posts drafted in `docs/announcements/2026-05-non-dev-launch.md` *(prerequisite)*
 - [x] Case-study template shipped at `docs/case-studies/_template.md` *(prerequisite)*
+- [x] Recruit intake template shipped at [`docs/recruits/_template.md`](../../docs/recruits/_template.md)
+  *(Phase 1 readiness — consent, session log, friction inventory, outcome verdict)*
+- [x] Eval-finding schema shipped at [`agents/eval-findings/_template.md`](../eval-findings/_template.md)
+  *(Phase 1 / 2 / 4 readiness — anchors which roadmap row each finding closes)*
 
 ## Phase 1 — Non-dev MCP setup validation
 
