@@ -1421,6 +1421,24 @@ def _debate_refusal_cap(
     return float(debate_block.get("max_cost_usd", 5.00) or 0.0)
 
 
+def _emit_shadow_slo_banner() -> None:
+    """Pre-flight SLO banner for solo-dispatch invocations (step-9 P10).
+
+    Reads ``agents/council-shadow-log.jsonl`` and prints the 7-day rolling
+    disagreement rate. ``OK``, ``WARN``, ``BREACH`` are all surfaced so the
+    user can see when single-member quality is drifting. Never auto-flips
+    back to full council \u2014 visibility-first, action-second (D10).
+    """
+    try:
+        from scripts.ai_council import shadow_dispatch as _sd
+        rate, n = _sd.compute_disagreement_rate(_sd.SHADOW_LOG_PATH)
+        if n == 0:
+            return
+        sys.stdout.write(_sd.slo_banner(rate, n) + "\n")
+    except Exception:  # noqa: BLE001 \u2014 banner must never break dispatch.
+        return
+
+
 def _apply_solo_dispatch(
     members: list[ExternalAIClient],
 ) -> tuple[list[ExternalAIClient], str | None]:
@@ -1509,6 +1527,7 @@ def cmd_run(
         members, solo_banner = _apply_solo_dispatch(members)
         if solo_banner:
             sys.stdout.write(solo_banner + "\n")
+        _emit_shadow_slo_banner()
     if table is None:
         table = load_prices()
     question, artefact = build_question(
@@ -2242,6 +2261,20 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "enabled: true in agents/.ai-council.yml.")
 
 
+def cmd_shadow_report(args: argparse.Namespace) -> int:
+    """Print the 7-day rolling disagreement rate + SLO status (step-9 P10)."""
+    from pathlib import Path as _Path
+
+    from scripts.ai_council import shadow_dispatch as _sd
+
+    log_path = _Path(args.log) if args.log else _sd.SHADOW_LOG_PATH
+    rate, n = _sd.compute_disagreement_rate(
+        log_path, window_days=int(args.window_days)
+    )
+    print(_sd.slo_banner(rate, n))
+    return 0
+
+
 def cmd_quota(
     args: argparse.Namespace,
     *,
@@ -2448,6 +2481,17 @@ def build_parser() -> argparse.ArgumentParser:
     p_quo.add_argument("--confirm", action="store_true", default=False,
                        help="Confirm a mutating --reset operation.")
 
+    p_sha = sub.add_parser(
+        "shadow-report",
+        help="Read agents/council-shadow-log.jsonl and print the 7-day "
+             "rolling disagreement rate + SLO status (step-9 P10).",
+    )
+    p_sha.add_argument("--log", default=None,
+                       help="Path to the shadow log (default: "
+                            "agents/council-shadow-log.jsonl).")
+    p_sha.add_argument("--window-days", type=int, default=7,
+                       help="Rolling window in days (default: 7).")
+
     return parser
 
 
@@ -2480,6 +2524,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_replay(args)
         if args.cmd == "quota":
             return cmd_quota(args)
+        if args.cmd == "shadow-report":
+            return cmd_shadow_report(args)
     except CouncilDisabledError as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2
