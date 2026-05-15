@@ -55,8 +55,11 @@ def test_record_writes_jsonl_row_with_expected_fields(tmp_path: Path) -> None:
     row = rows[0]
     assert set(row.keys()) == {
         "timestamp", "query_hash", "solo_verdict", "full_verdict", "agreed",
+        "escalated", "escalation_reason",
     }
     assert row["agreed"] is True
+    assert row["escalated"] is False
+    assert row["escalation_reason"] == "ok"
     assert len(row["query_hash"]) == 16
 
 
@@ -182,3 +185,70 @@ def test_slo_banner_ok_warn_breach_include_recommendation() -> None:
     breach = sd.slo_banner(0.10, 100)
     assert "BREACH" in breach and "revert to" in breach
 
+
+
+
+# ── escalation logging (step-9 P13) ──────────────────────────────────
+
+
+def test_record_with_escalation_writes_fields(tmp_path: Path) -> None:
+    log = tmp_path / "shadow.jsonl"
+    decision = sd.record_shadow_decision(
+        log,
+        query="should I rename this?",
+        solo_verdict="maybe ship",
+        full_verdict="ship",
+        escalated=True,
+        escalation_reason="low_confidence",
+    )
+    assert decision is not None
+    assert decision.escalated is True
+    assert decision.escalation_reason == "low_confidence"
+    row = json.loads(log.read_text().splitlines()[0])
+    assert row["escalated"] is True
+    assert row["escalation_reason"] == "low_confidence"
+
+
+def test_compute_escalation_rate_empty_log_returns_zero(tmp_path: Path) -> None:
+    rate, n = sd.compute_escalation_rate(tmp_path / "missing.jsonl")
+    assert rate == 0.0 and n == 0
+
+
+def test_compute_escalation_rate_within_window(tmp_path: Path) -> None:
+    now = datetime(2026, 5, 15, tzinfo=timezone.utc)
+    fresh = (now - timedelta(days=2)).isoformat(timespec="seconds")
+    log = tmp_path / "shadow.jsonl"
+    _write_rows(log, [
+        {"timestamp": fresh, "agreed": True, "escalated": False},
+        {"timestamp": fresh, "agreed": False, "escalated": True},
+        {"timestamp": fresh, "agreed": True, "escalated": True},
+        {"timestamp": fresh, "agreed": True, "escalated": False},
+    ])
+    rate, n = sd.compute_escalation_rate(log, window_days=7, now=now)
+    assert n == 4
+    assert rate == pytest.approx(0.5)
+
+
+def test_compute_escalation_rate_handles_missing_field(tmp_path: Path) -> None:
+    """Legacy rows without ``escalated`` count as not-escalated."""
+    now = datetime(2026, 5, 15, tzinfo=timezone.utc)
+    fresh = (now - timedelta(days=1)).isoformat(timespec="seconds")
+    log = tmp_path / "shadow.jsonl"
+    _write_rows(log, [
+        {"timestamp": fresh, "agreed": True},
+        {"timestamp": fresh, "agreed": False, "escalated": True},
+    ])
+    rate, n = sd.compute_escalation_rate(log, window_days=7, now=now)
+    assert n == 2
+    assert rate == pytest.approx(0.5)
+
+
+def test_slo_banner_appends_escalation_rate() -> None:
+    banner = sd.slo_banner(0.02, 100, escalation_rate=0.15)
+    assert "OK" in banner
+    assert "15.0% auto-escalated" in banner
+
+
+def test_slo_banner_without_escalation_rate_unchanged() -> None:
+    banner = sd.slo_banner(0.02, 100)
+    assert "auto-escalated" not in banner

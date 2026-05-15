@@ -20,6 +20,10 @@ from dataclasses import dataclass, field
 from typing import Callable, Mapping
 
 from scripts.ai_council.config import MemberConfig, RoutingConfig
+from scripts.ai_council.confidence_gate import (
+    EscalationDecision,
+    should_escalate,
+)
 
 #: TTL for cached auth-probe results. Lazy probe per session; bumped
 #: forward whenever a probe is re-run.
@@ -119,11 +123,103 @@ def select_solo_member(
     return None
 
 
+@dataclass(frozen=True)
+class SoloDispatchResult:
+    """Outcome of :func:`dispatch_with_escalation`.
+
+    ``verdict`` is the final answer text returned to the caller.
+    ``escalated`` is True when the solo response was rejected by the
+    confidence gate and the full council ran. ``solo_member`` /
+    ``solo_response`` are populated even on escalation so the shadow
+    log can record both sides without re-running the solo step.
+    """
+
+    verdict: str
+    escalated: bool
+    escalation_reason: str  # 'low_confidence' | 'split' | 'refusal' | 'short_response' | 'ok' | 'no_solo_member'
+    solo_member: str | None
+    solo_response: str | None
+    solo_confidence: float | None
+
+
+def dispatch_with_escalation(
+    routing: RoutingConfig,
+    members: Mapping[str, MemberConfig],
+    *,
+    auth_cache: AuthCache,
+    probe: Callable[[str, float], bool],
+    run_solo: Callable[[str], str],
+    run_full: Callable[[], str],
+    confidence_floor: float,
+    now: float | None = None,
+    env: Mapping[str, str] | None = None,
+) -> SoloDispatchResult:
+    """Solo-dispatch with auto-escalation on low-confidence / split / refusal.
+
+    Step-9 P13 — defense-in-depth on top of shadow-mode SLO.
+
+    Flow:
+
+    1. ``select_solo_member`` picks the chain entry.
+    2. None → escalate immediately (``no_solo_member``).
+    3. ``run_solo`` is invoked; response is scored via
+       :func:`scripts.ai_council.confidence_gate.should_escalate`.
+    4. Verdict ``escalate=True`` → ``run_full`` is invoked and that
+       verdict is returned; the solo response stays on the result
+       for shadow logging.
+    5. ``escalate=False`` → solo verdict is returned as-is.
+
+    ``run_solo(name) -> str`` and ``run_full() -> str`` are caller-
+    supplied; this module owns no LLM transport. Callers MUST raise
+    on transport errors — escalation is for *content* low-confidence,
+    not infrastructure failures (those bubble up to the orchestrator's
+    own retry / fallback policy).
+    """
+    name = select_solo_member(
+        routing,
+        members,
+        auth_cache=auth_cache,
+        probe=probe,
+        now=now,
+        env=env,
+    )
+    if name is None:
+        return SoloDispatchResult(
+            verdict=run_full(),
+            escalated=True,
+            escalation_reason="no_solo_member",
+            solo_member=None,
+            solo_response=None,
+            solo_confidence=None,
+        )
+    solo = run_solo(name)
+    decision: EscalationDecision = should_escalate(solo, floor=confidence_floor)
+    if decision.escalate:
+        return SoloDispatchResult(
+            verdict=run_full(),
+            escalated=True,
+            escalation_reason=decision.reason,
+            solo_member=name,
+            solo_response=solo,
+            solo_confidence=decision.confidence,
+        )
+    return SoloDispatchResult(
+        verdict=solo,
+        escalated=False,
+        escalation_reason="ok",
+        solo_member=name,
+        solo_response=solo,
+        solo_confidence=decision.confidence,
+    )
+
+
 __all__ = [
     "AUTH_CACHE_TTL_SECONDS",
     "AuthCache",
     "AuthCacheEntry",
     "FORCE_FULL_ENV",
+    "SoloDispatchResult",
+    "dispatch_with_escalation",
     "force_full_council",
     "select_solo_member",
 ]

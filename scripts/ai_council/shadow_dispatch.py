@@ -36,6 +36,12 @@ class ShadowDecision:
     solo_verdict: str
     full_verdict: str
     agreed: bool
+    #: Step-9 P13 — True when the confidence gate auto-escalated this
+    #: decision to the full council. Distinguishes "silent disagreement"
+    #: (escalated=False, agreed=False) from "gate-caught" (escalated=True)
+    #: in the SLO banner.
+    escalated: bool = False
+    escalation_reason: str = "ok"
 
 
 def should_shadow(
@@ -66,9 +72,16 @@ def record_shadow_decision(
     query: str,
     solo_verdict: str,
     full_verdict: str,
+    escalated: bool = False,
+    escalation_reason: str = "ok",
 ) -> ShadowDecision | None:
     """Append one JSONL row. Returns ``None`` when redaction would drop
     the entry (privacy floor — do not soften).
+
+    ``escalated`` / ``escalation_reason`` come from the confidence
+    gate (step-9 P13). When True, ``solo_verdict`` is the rejected
+    solo response and ``full_verdict`` is the council's verdict that
+    actually answered the user.
     """
     redacted_q = redact(query)
     if _privacy_dropped(redacted_q):
@@ -80,6 +93,8 @@ def record_shadow_decision(
         solo_verdict=solo_verdict,
         full_verdict=full_verdict,
         agreed=(solo_verdict == full_verdict),
+        escalated=escalated,
+        escalation_reason=escalation_reason,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("a", encoding="utf-8") as f:
@@ -89,6 +104,8 @@ def record_shadow_decision(
             "solo_verdict": decision.solo_verdict,
             "full_verdict": decision.full_verdict,
             "agreed": decision.agreed,
+            "escalated": decision.escalated,
+            "escalation_reason": decision.escalation_reason,
         }) + "\n")
     return decision
 
@@ -113,7 +130,13 @@ def compute_disagreement_rate(
     window_days: int = 7,
     now: datetime | None = None,
 ) -> tuple[float, int]:
-    """``(disagreement_rate, sample_count)`` over the rolling window."""
+    """``(disagreement_rate, sample_count)`` over the rolling window.
+
+    Counts a row as "disagreed" when ``agreed=False`` regardless of
+    the escalation flag — a gate-caught split is still a sign that
+    solo mode was wrong on that decision. :func:`compute_escalation_rate`
+    breaks the same window down by ``escalated=True`` for the banner.
+    """
     cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=window_days)
     total = 0
     disagreed = 0
@@ -135,6 +158,38 @@ def compute_disagreement_rate(
     return disagreed / total, total
 
 
+def compute_escalation_rate(
+    log_path: Path,
+    *,
+    window_days: int = 7,
+    now: datetime | None = None,
+) -> tuple[float, int]:
+    """``(escalation_rate, sample_count)`` — fraction with ``escalated=True``.
+
+    Step-9 P13 — separates gate-caught escalations from silent
+    disagreement so the banner can name the dominant failure mode.
+    """
+    cutoff = (now or datetime.now(timezone.utc)) - timedelta(days=window_days)
+    total = 0
+    escalated = 0
+    for row in _iter_log(log_path):
+        raw_ts = row.get("timestamp", "")
+        try:
+            ts = datetime.fromisoformat(raw_ts.replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        if ts.tzinfo is None:
+            ts = ts.replace(tzinfo=timezone.utc)
+        if ts < cutoff:
+            continue
+        total += 1
+        if row.get("escalated", False):
+            escalated += 1
+    if total == 0:
+        return 0.0, 0
+    return escalated / total, total
+
+
 def slo_status(rate: float) -> str:
     if rate < SLO_THRESHOLD_WARN:
         return "OK"
@@ -143,24 +198,38 @@ def slo_status(rate: float) -> str:
     return "BREACH"
 
 
-def slo_banner(rate: float, sample_count: int) -> str:
+def slo_banner(
+    rate: float,
+    sample_count: int,
+    *,
+    escalation_rate: float | None = None,
+) -> str:
+    """One-line SLO banner. ``escalation_rate`` is appended when given.
+
+    Step-9 P13 — escalation tail surfaces the share of decisions the
+    confidence gate caught before they reached the user.
+    """
     pct = rate * 100
     status = slo_status(rate)
     if sample_count == 0:
         return "[shadow SLO] no samples yet"
     if status == "OK":
-        return (
+        base = (
             f"[shadow SLO] OK · {pct:.1f}% disagreement over "
             f"{sample_count} samples (<5%)"
         )
-    if status == "WARN":
-        return (
+    elif status == "WARN":
+        base = (
             f"[shadow SLO] WARN · {pct:.1f}% disagreement over "
             f"{sample_count} samples (5–8% — consider reverting to "
             f"low_impact.dispatch: full)"
         )
-    return (
-        f"[shadow SLO] BREACH · {pct:.1f}% disagreement over "
-        f"{sample_count} samples (>8% — revert to "
-        f"low_impact.dispatch: full)"
-    )
+    else:
+        base = (
+            f"[shadow SLO] BREACH · {pct:.1f}% disagreement over "
+            f"{sample_count} samples (>8% — revert to "
+            f"low_impact.dispatch: full)"
+        )
+    if escalation_rate is not None:
+        base += f" · {escalation_rate * 100:.1f}% auto-escalated"
+    return base

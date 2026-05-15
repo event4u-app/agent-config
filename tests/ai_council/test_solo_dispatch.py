@@ -14,6 +14,7 @@ from scripts.ai_council.solo_dispatch import (  # noqa: E402
     AUTH_CACHE_TTL_SECONDS,
     AuthCache,
     FORCE_FULL_ENV,
+    dispatch_with_escalation,
     force_full_council,
     select_solo_member,
 )
@@ -230,3 +231,94 @@ def test_empty_chain_returns_none() -> None:
         probe=lambda n, _t: True, now=100.0, env={},
     )
     assert pick is None
+
+
+
+# ── dispatch_with_escalation (step-9 P13) ───────────────────────────────────
+
+
+_HIGH_CONF = (
+    "The fix updates the validator and the regression test asserts the new "
+    "message. PHPStan and ECS are clean.\nConfidence: 0.92"
+)
+_LOW_CONF_HEDGES = (
+    "Maybe this is right. I think it's probably ok but I'm not sure. "
+    "Perhaps the validator works."
+)
+
+
+def _wrap_kwargs(
+    chain: tuple[str, ...],
+    *,
+    solo_response: str,
+    full_response: str = "FULL_VERDICT",
+    floor: float = 0.7,
+    probe_ok: bool = True,
+):
+    cache = AuthCache()
+    members = {name: _member(name) for name in chain}
+    return dict(
+        routing=_routing(chain),
+        members=members,
+        auth_cache=cache,
+        probe=lambda _n, _t: probe_ok,
+        run_solo=lambda _n: solo_response,
+        run_full=lambda: full_response,
+        confidence_floor=floor,
+        now=100.0,
+        env={},
+    )
+
+
+def test_dispatch_high_confidence_returns_solo() -> None:
+    result = dispatch_with_escalation(
+        **_wrap_kwargs(("anthropic",), solo_response=_HIGH_CONF)
+    )
+    assert not result.escalated
+    assert result.escalation_reason == "ok"
+    assert result.verdict == _HIGH_CONF
+    assert result.solo_member == "anthropic"
+
+
+def test_dispatch_low_confidence_escalates_to_full() -> None:
+    result = dispatch_with_escalation(
+        **_wrap_kwargs(("anthropic",), solo_response=_LOW_CONF_HEDGES)
+    )
+    assert result.escalated
+    assert result.escalation_reason == "low_confidence"
+    assert result.verdict == "FULL_VERDICT"
+    assert result.solo_response == _LOW_CONF_HEDGES
+
+
+def test_dispatch_refusal_escalates() -> None:
+    result = dispatch_with_escalation(
+        **_wrap_kwargs(("anthropic",), solo_response="I cannot decide.")
+    )
+    assert result.escalated
+    assert result.escalation_reason == "refusal"
+    assert result.verdict == "FULL_VERDICT"
+
+
+def test_dispatch_no_solo_member_escalates() -> None:
+    result = dispatch_with_escalation(
+        **_wrap_kwargs(
+            ("anthropic",), solo_response="ignored", probe_ok=False,
+        )
+    )
+    assert result.escalated
+    assert result.escalation_reason == "no_solo_member"
+    assert result.solo_member is None
+    assert result.solo_response is None
+    assert result.verdict == "FULL_VERDICT"
+
+
+def test_dispatch_split_escalates() -> None:
+    split_text = (
+        "This response is long enough to clear the short-response cutoff.\n"
+        "Option A: revert. Option B: patch forward."
+    )
+    result = dispatch_with_escalation(
+        **_wrap_kwargs(("anthropic",), solo_response=split_text)
+    )
+    assert result.escalated
+    assert result.escalation_reason == "split"
