@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 178 steps done · 0%**
+**15 / 175 steps done · 9%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md) | 3 | 19 | 19 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md) | 3 | 19 | 1 | 15 | 0 | 3 | █████████░ 94% |
 | 2 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -29,13 +29,13 @@
 
 ### [step-2-feedback-followup.md](roadmaps/step-2-feedback-followup.md)
 
-**PR #148 Feedback Follow-Up (Command Surface + Doc Links)** — 0 / 19 done (0%)
+**PR #148 Feedback Follow-Up (Command Surface + Doc Links)** — 15 / 16 done (94%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Command-surface audit | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Execute consolidation | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Fix pre-existing `check-public-links` failures on mcp-* contracts | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 1 | Command-surface audit | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Execute consolidation | ✅ done | 0 | 3 | 0 | 2 | 100% |
+| 3 | Fix pre-existing `check-public-links` warnings | 🟡 in progress | 1 | 8 | 0 | 1 | 89% |
 
 ### [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md)
 
