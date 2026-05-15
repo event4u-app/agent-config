@@ -72,9 +72,9 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 3 — Doctor CLI checks (G5)
 
-- [ ] `scripts/_cli/cmd_doctor.py` (or equivalent) gains `_check_cli_council()`: per provider with `mode: cli`, run binary `--version`, auth probe (cached), parse a stored fixture, read `cli-calls.json` for quota state, surface `billable` flag from config.
-- [ ] Output one table row per CLI member with status icons (✅ / ⚠️ / ❌) and short reason.
-- [ ] Integration test `tests/test_doctor_cli_council.py`.
+- [x] `scripts/_cli/cmd_doctor.py` gains `_check_council_cli()`: per provider with `mode: cli`, verifies binary presence via `shutil.which` (no subprocess — keeps doctor cheap and offline-safe), reads `cli-calls.json` for quota state, surfaces `billable` flag from a static provider map. (CHECK_IDS now includes `council-cli`.)
+- [x] Output one summary line per CLI member with status icons (✅ / ⚠️ / ❌) and per-provider remedy pointing at `council:estimate` install hints.
+- [x] Integration test `tests/test_doctor_cli_council.py` — six cases covering no-config, no-cli-members, binary-present, binary-missing, quota-warn, and billable-label rendering.
 
 ### Phase 4 — Corpus parser hardening (G2)
 

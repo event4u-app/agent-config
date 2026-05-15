@@ -410,14 +410,14 @@ def _clean_project(tmp_path: Path) -> None:
     )
 
 
-def test_check_registry_emits_all_ten_ids(
+def test_check_registry_emits_all_ids(
     tmp_path: Path, capsys: pytest.CaptureFixture,
 ) -> None:
     _clean_project(tmp_path)
     payload = _run_json(tmp_path, capsys)
     ids = [c["id"] for c in payload["checks"]]
     assert ids == list(cmd_doctor.CHECK_IDS)
-    assert len(ids) == 10
+    assert len(ids) == len(cmd_doctor.CHECK_IDS)
 
 
 def test_check_scope_standalone(
