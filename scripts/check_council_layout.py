@@ -15,6 +15,11 @@ catches **misplacement**, not naming-conventions inside the dirs:
     (e.g. agents/council-question-foo.md, agents/.council-foo.md).
   - council-* files under any other subdirectory of agents/.
 
+`agents/audit-*/` directories are exempt — historical audit bundles
+are cohesive, checked-in narratives (the canonical council dirs are
+gitignored) and may legitimately include council-* artefacts as part
+of the audit's evidence trail.
+
 Failure modes are enforced by `.agent-src.uncompressed/skills/ai-council/SKILL.md`
 § "Output path convention".
 
@@ -40,6 +45,10 @@ CANONICAL_DIRS = {
     "council-responses": ".json",
     "council-sessions": ".json",
 }
+# Subdirectory prefixes whose contents are exempt from the layout check.
+# `audit-*/` covers historical audit bundles where council artefacts
+# form part of the documented evidence trail.
+EXEMPT_DIR_PREFIXES = ("audit-",)
 # A council artefact is a file whose name starts with `council-` or
 # `.council-`. This intentionally excludes roadmaps like
 # `road-to-ai-council.md` whose stem only contains the word "council".
@@ -78,6 +87,8 @@ def find_violations(root: Path) -> list[str]:
         if len(rel.parts) == 1:
             continue  # already handled above
         if rel.parts[0] in CANONICAL_DIRS:
+            continue
+        if rel.parts[0].startswith(EXEMPT_DIR_PREFIXES):
             continue
         findings.append(
             f"{path}: council artefact in non-canonical directory "

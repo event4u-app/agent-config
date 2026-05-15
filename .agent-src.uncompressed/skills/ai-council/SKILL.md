@@ -374,6 +374,16 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
   + gpt-4o, YYYY-MM-DD) reviewed N candidate strategies; converged
   on …`).
 
+### Exempt
+
+- `agents/audit-*/` — historical audit bundles. The canonical
+  council dirs are gitignored; audit bundles are tracked,
+  cohesive narratives that may include council artefacts as
+  part of their evidence trail (e.g. `audit-2026-05-14-north-star/`
+  bundling its triggering question, raw responses, and synthesis
+  alongside the audit's findings). The layout linter
+  (`scripts/check_council_layout.py`) skips these directories.
+
 `scripts/check_council_layout.py` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so
 violations break the build.
