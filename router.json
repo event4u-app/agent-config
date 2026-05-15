@@ -571,6 +571,369 @@
       "routes_to": []
     },
     {
+      "id": "domain-safety-disclaimer-consulting",
+      "triggers": [
+        {
+          "keyword": "strategic recommendation"
+        },
+        {
+          "keyword": "board memo"
+        },
+        {
+          "keyword": "executive summary"
+        },
+        {
+          "keyword": "consulting deliverable"
+        },
+        {
+          "keyword": "go-to-market plan"
+        },
+        {
+          "phrase": "what should we do"
+        },
+        {
+          "phrase": "recommend a strategy"
+        }
+      ],
+      "routes_to": [
+        "skill:decision-record",
+        "skill:stakeholder-tradeoff"
+      ]
+    },
+    {
+      "id": "domain-safety-disclaimer-financial",
+      "triggers": [
+        {
+          "keyword": "investment memo"
+        },
+        {
+          "keyword": "valuation"
+        },
+        {
+          "keyword": "DCF"
+        },
+        {
+          "keyword": "tax position"
+        },
+        {
+          "keyword": "portfolio allocation"
+        },
+        {
+          "keyword": "should I invest"
+        },
+        {
+          "phrase": "is this a good investment"
+        },
+        {
+          "phrase": "tax implications of"
+        }
+      ],
+      "routes_to": [
+        "skill:dcf-modeling",
+        "skill:scenario-modeling"
+      ]
+    },
+    {
+      "id": "domain-safety-disclaimer-legal",
+      "triggers": [
+        {
+          "keyword": "legal brief"
+        },
+        {
+          "keyword": "contract redline"
+        },
+        {
+          "keyword": "terms of service"
+        },
+        {
+          "keyword": "privacy policy"
+        },
+        {
+          "keyword": "MSA"
+        },
+        {
+          "keyword": "DPA"
+        },
+        {
+          "phrase": "draft a clause"
+        },
+        {
+          "phrase": "review this contract"
+        }
+      ],
+      "routes_to": [
+        "skill:contracts-cognition"
+      ]
+    },
+    {
+      "id": "domain-safety-disclaimer-medical",
+      "triggers": [
+        {
+          "keyword": "diagnosis"
+        },
+        {
+          "keyword": "symptoms"
+        },
+        {
+          "keyword": "dosage"
+        },
+        {
+          "keyword": "medication"
+        },
+        {
+          "keyword": "therapy"
+        },
+        {
+          "keyword": "treatment plan"
+        },
+        {
+          "phrase": "should I take"
+        },
+        {
+          "phrase": "is this symptom"
+        }
+      ],
+      "routes_to": [
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-export-redact",
+      "triggers": [
+        {
+          "keyword": "export to CSV"
+        },
+        {
+          "keyword": "data export"
+        },
+        {
+          "keyword": "share with analyst"
+        },
+        {
+          "keyword": "send dataset"
+        },
+        {
+          "keyword": "partner integration"
+        },
+        {
+          "phrase": "dump the data"
+        },
+        {
+          "phrase": "send them the spreadsheet"
+        }
+      ],
+      "routes_to": [
+        "skill:data-handling-judgment",
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-logging-pii-floor",
+      "triggers": [
+        {
+          "keyword": "log"
+        },
+        {
+          "keyword": "logger"
+        },
+        {
+          "keyword": "logging"
+        },
+        {
+          "keyword": "Sentry"
+        },
+        {
+          "keyword": "Datadog"
+        },
+        {
+          "keyword": "structured log"
+        },
+        {
+          "phrase": "log the user"
+        },
+        {
+          "phrase": "log the request"
+        }
+      ],
+      "routes_to": [
+        "skill:logging-monitoring",
+        "skill:secrets-management"
+      ]
+    },
+    {
+      "id": "domain-safety-pii-finance",
+      "triggers": [
+        {
+          "keyword": "invoice"
+        },
+        {
+          "keyword": "accounts receivable"
+        },
+        {
+          "keyword": "accounts payable"
+        },
+        {
+          "keyword": "finance memo"
+        },
+        {
+          "keyword": "AR aging"
+        },
+        {
+          "keyword": "AP run"
+        },
+        {
+          "phrase": "draft a financial report"
+        }
+      ],
+      "routes_to": [
+        "skill:data-handling-judgment",
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-pii-marketing",
+      "triggers": [
+        {
+          "keyword": "testimonial"
+        },
+        {
+          "keyword": "case study"
+        },
+        {
+          "keyword": "social proof"
+        },
+        {
+          "keyword": "customer story"
+        },
+        {
+          "keyword": "logo wall"
+        },
+        {
+          "phrase": "marketing email featuring"
+        }
+      ],
+      "routes_to": [
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-pii-recruiting",
+      "triggers": [
+        {
+          "keyword": "candidate"
+        },
+        {
+          "keyword": "interview notes"
+        },
+        {
+          "keyword": "scorecard"
+        },
+        {
+          "keyword": "rejection email"
+        },
+        {
+          "keyword": "offer letter"
+        },
+        {
+          "keyword": "hiring memo"
+        },
+        {
+          "phrase": "draft feedback for"
+        }
+      ],
+      "routes_to": [
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-pii-support",
+      "triggers": [
+        {
+          "keyword": "support macro"
+        },
+        {
+          "keyword": "ticket response"
+        },
+        {
+          "keyword": "help desk"
+        },
+        {
+          "keyword": "customer reply"
+        },
+        {
+          "keyword": "Zendesk"
+        },
+        {
+          "keyword": "Intercom"
+        },
+        {
+          "phrase": "draft a response to"
+        }
+      ],
+      "routes_to": [
+        "skill:privacy-review"
+      ]
+    },
+    {
+      "id": "domain-safety-retention-finance",
+      "triggers": [
+        {
+          "keyword": "retention policy"
+        },
+        {
+          "keyword": "data retention"
+        },
+        {
+          "keyword": "record retention"
+        },
+        {
+          "keyword": "delete financial"
+        },
+        {
+          "keyword": "purge invoice"
+        },
+        {
+          "phrase": "how long should we keep"
+        },
+        {
+          "phrase": "when can we delete"
+        }
+      ],
+      "routes_to": [
+        "skill:data-handling-judgment"
+      ]
+    },
+    {
+      "id": "domain-safety-retention-support",
+      "triggers": [
+        {
+          "keyword": "ticket retention"
+        },
+        {
+          "keyword": "CRM retention"
+        },
+        {
+          "keyword": "DSAR"
+        },
+        {
+          "keyword": "data subject request"
+        },
+        {
+          "keyword": "right to be forgotten"
+        },
+        {
+          "phrase": "delete customer data"
+        },
+        {
+          "phrase": "how long do we keep tickets"
+        }
+      ],
+      "routes_to": [
+        "skill:data-handling-judgment",
+        "skill:privacy-review"
+      ]
+    },
+    {
       "id": "downstream-changes",
       "triggers": [
         {
