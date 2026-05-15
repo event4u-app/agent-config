@@ -51,7 +51,7 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 - [x] Shadow-mode logger `agents/council-shadow-log.jsonl` records single-vs-full disagreement rate when `low_impact.dispatch: single` is active. SLO threshold `5%` over 7-day rolling window; above threshold prints warning in pre-flight disclosure.
 - [x] Env var `AGENT_CONFIG_FORCE_FULL_COUNCIL=1` kill-switch overrides `low_impact.dispatch: single` for the current invocation.
 - [-] Migration script `scripts/_cli/cmd_migrate_council_dispatch.py` scans existing `.agent-settings.yml` / `agents/.ai-council.yml`, adds explicit `dispatch: full` where `low_impact.mode: council` is set without `dispatch`. Idempotent. (deferred — Phase 8 defaults are backward-compatible; missing `dispatch` reads as `full`, no migration required.)
-- [ ] All new tests pass; `task ci` green; no Iron-Law regression.
+- [x] All new tests pass; `task ci` green; no Iron-Law regression.
 
 ## Phases
 
@@ -154,10 +154,10 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 12 — Final wire-up
 
-- [ ] Regenerate `.agent-src/`, `.augment/`, multi-tool projections.
-- [ ] `agents/roadmaps-progress.md` regenerated.
-- [ ] `CHANGELOG.md` entry under the 2.13.x current era — call out the three new settings with the explicit "Iron Law: high-impact dispatch not configurable" line.
-- [ ] `task ci` green.
+- [x] Regenerate `.agent-src/`, `.augment/`, multi-tool projections.
+- [x] `agents/roadmaps-progress.md` regenerated.
+- [x] `CHANGELOG.md` entry under the 2.13.x current era — call out the three new settings with the explicit "Iron Law: high-impact dispatch not configurable" line.
+- [x] `task ci` green.
 
 ## Decisions (resolved via AI Council, analysis lens)
 
