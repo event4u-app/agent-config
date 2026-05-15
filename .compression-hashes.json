@@ -502,5 +502,6 @@
   "templates/persona.md": "cb504df77838d9f42e3eb2c9f0bd1e82c443b70734a2d8feeace5925193954db",
   "templates/roadmaps.md": "6455a8010660c32da822ea4e48ff5c0ae171f582dec5da95191f7794b24c4118",
   "templates/rule.md": "6462b73f17ad052490078c6b5c92616dceff1a6749c6e26afefb764e88a7827f",
-  "templates/skill.md": "a9819ff604611a9bc2afc56e5c565d5f7bd66fa01044c5d753a77d367208c030"
+  "templates/skill.md": "a9819ff604611a9bc2afc56e5c565d5f7bd66fa01044c5d753a77d367208c030",
+  "user-types/_template/user-type.md": "7db4c3a036404b107aac5a8f29826eb1bfcff380c8c8d6f68910b94b0b4c8d7b"
 }

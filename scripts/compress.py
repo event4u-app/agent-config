@@ -346,11 +346,17 @@ TOOL_DIRS = {
 SKILLS_SOURCE = PROJECT_ROOT / ".agent-src" / "skills"
 COMMANDS_SOURCE = PROJECT_ROOT / ".agent-src" / "commands"
 PERSONAS_SOURCE = PROJECT_ROOT / ".agent-src" / "personas"
+USER_TYPES_SOURCE = PROJECT_ROOT / ".agent-src" / "user-types"
 CLAUDE_SKILLS_DIR = PROJECT_ROOT / ".claude" / "skills"
 
 PERSONA_TOOL_DIRS = {
     ".claude/personas": "../../.agent-src/personas",
     ".cursor/personas": "../../.agent-src/personas",
+}
+
+USER_TYPE_TOOL_DIRS = {
+    ".claude/user-types": "../../.agent-src/user-types",
+    ".cursor/user-types": "../../.agent-src/user-types",
 }
 
 # Map tool-projection directories to the canonical tool ID used by
@@ -361,6 +367,8 @@ _DIR_TOOL_ID = {
     ".clinerules": "cline",
     ".claude/personas": "claude-code",
     ".cursor/personas": "cursor",
+    ".claude/user-types": "claude-code",
+    ".cursor/user-types": "cursor",
 }
 
 
@@ -901,6 +909,43 @@ def generate_persona_symlinks() -> int:
     return total
 
 
+def generate_user_type_symlinks() -> int:
+    """Create symlink directories for user-types (.claude/user-types/, .cursor/user-types/).
+
+    Symlinks each user-type .md file from .agent-src/user-types/ into tool-specific
+    directories. Excludes README.md and _template/ — those are authoring scaffolding,
+    not user-type lenses.
+    """
+    if not USER_TYPES_SOURCE.exists():
+        print("  ⚠️  .agent-src/user-types/ not found — skipping user-types")
+        return 0
+
+    user_types = sorted([
+        f.name for f in USER_TYPES_SOURCE.glob("*.md") if f.stem != "README"
+    ])
+    tool_dirs = _filter_tool_dirs(USER_TYPE_TOOL_DIRS)
+    total = 0
+    for tool_dir, rel_prefix in tool_dirs.items():
+        target_dir = PROJECT_ROOT / tool_dir
+        target_dir.mkdir(parents=True, exist_ok=True)
+
+        # Clean stale symlinks
+        for item in target_dir.iterdir():
+            if item.is_symlink() and item.name not in user_types and item.name != "README.md":
+                item.unlink()
+
+        for user_type in user_types:
+            link = target_dir / user_type
+            target = Path(rel_prefix) / user_type
+            if link.exists() or link.is_symlink():
+                link.unlink()
+            link.symlink_to(target)
+            total += 1
+
+    info(f"  ✅  Created {total} user-type symlinks across {len(tool_dirs)} tool directories ({len(user_types)} user-types each)")
+    return total
+
+
 def generate_tools() -> None:
     """Generate all tool-specific directories and files.
 
@@ -916,13 +961,14 @@ def generate_tools() -> None:
     skills = generate_claude_skills() if _tool_active("claude-code") else 0
     commands = generate_claude_commands() if _tool_active("claude-code") else 0
     personas = generate_persona_symlinks()
+    user_types = generate_user_type_symlinks()
     cursor_mdc = generate_cursor_mdc_rules() if _tool_active("cursor") else 0
     windsurf_modern = generate_windsurf_modern_rules() if _tool_active("windsurf") else 0
     cursor_cmds = generate_cursor_commands() if _tool_active("cursor") else 0
     windsurf_wf = generate_windsurf_workflows() if _tool_active("windsurf") else 0
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
-        f"commands={commands} personas={personas} "
+        f"commands={commands} personas={personas} user_types={user_types} "
         f"cursor_mdc={cursor_mdc} windsurf_rules={windsurf_modern} "
         f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf} "
         f"windsurfrules={windsurfrules}"
@@ -943,7 +989,7 @@ def generate_tools() -> None:
 # them to symlinks (everything else is always symlinked).
 
 # Subdirectories of .agent-src/ that map into .augment/ as symlinks.
-AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "templates", "contexts", "scripts")
+AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas", "user-types", "templates", "contexts", "scripts")
 # Top-level files to symlink into .augment/ (README, etc.)
 AUGMENT_SYMLINK_FILES = ("README.md",)
 
