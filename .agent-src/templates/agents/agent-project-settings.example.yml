@@ -124,6 +124,21 @@ personas:
     # Leave empty to require explicit --personas=+<id> opt-in.
     auto_include: [qa]
 
+# --- Ghostwriter (optional) ---
+#
+# Toggles for the /ghostwriter command cluster. Consumer-only —
+# the package itself ignores this block (fixtures never carry aliases).
+# See docs/contracts/ghostwriter-schema.md § Aliases.
+ghostwriter:
+  # When true, `/ghostwriter:write --as=<value>` resolves <value> against
+  # both slug filenames AND every profile's `aliases:` list
+  # (case-insensitive). Conflicts are rejected at lint time
+  # (task lint-ghostwriter-source), never at runtime.
+  # Set to false to disable alias resolution (slug-only matching);
+  # any `aliases:` already in profiles are then ignored at resolve time
+  # but still validated by the lint.
+  aliases: true
+
 # --- Quality pipeline (optional) ---
 #
 # Per-language gate tools the `quality-fix` command invokes. Empty

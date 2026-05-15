@@ -55,6 +55,9 @@ identity:
   fetched_at: "2026-05-15"   # required — ISO date of last fetch
   confidence: "med"          # required — low | med | high (see § Confidence)
   attestation_recorded_at: "2026-05-15T10:00:00Z"  # required — when the user attested (NOT consent, see § Ethics floor)
+aliases:                     # optional, consumer-only — alternative names that resolve to this slug
+  - "Hawking"                # case-insensitive match, case-preserving storage
+  - "Prof. Hawking"          # min 2 chars, no homoglyphs (see § Aliases)
 style:
   fingerprint:
     sentence_length_avg: 18  # avg words per sentence across samples
@@ -103,6 +106,7 @@ section for the user's own observations on the profile. Hard cap:
 | `identity.fetched_at` | yes | ISO date of the most recent fetch. |
 | `identity.confidence` | yes | `low` \| `med` \| `high` — derived from source count/diversity. |
 | `identity.attestation_recorded_at` | yes | ISO timestamp the user attested the public-figure gate. |
+| `aliases` | no | Consumer-only list of alternative names that resolve to this profile's slug. See [§ Aliases](#aliases). Banned on `fictional: true` fixtures. |
 | `style.fingerprint.*` | yes | Structured shape of the voice. All sub-fields required. |
 | `style.free_form_notes` | yes | Free-form supplement to the structured fingerprint. |
 | `voice_samples` | yes | Max 3 items; each `≤ 200 words`; each source-attributed. |
@@ -126,6 +130,71 @@ Derived deterministically from `source_provenance.count` and `types`:
 `/ghostwriter:fetch` refuses to write a profile with fewer than 3 distinct
 authoritative sources.
 
+
+## Aliases
+
+`aliases` is an **optional, consumer-only** field listing alternative
+names that resolve to this profile's slug. It is a portability win
+over per-user shell aliases — team-shared profiles become immediately
+usable without per-developer config.
+
+The list is read by `/ghostwriter:write --as=<value>` (and the
+`/post-as:ghostwriter` thin alias) when resolving the style source:
+
+1. Exact slug match (case-insensitive on filename stem).
+2. **If no slug match**, scan every consumer profile's `aliases` list
+   for a case-insensitive equality match against `<value>`.
+3. If neither matches, fall through to the interactive numbered menu.
+
+### Storage rules
+
+- **Case-insensitive match, case-preserving storage** — the resolver
+  treats `--as=hawking` and `--as=Hawking` as identical, but the YAML
+  preserves the author's chosen casing.
+- **Minimum length: 2 characters** — single-character aliases are
+  collision magnets and are rejected by the consumer-side lint.
+- **No homoglyphs** — aliases must use Latin script (ASCII letters,
+  digits, common punctuation, common Latin diacritics). Cyrillic,
+  Greek, or other confusable scripts are rejected. Prevents spoofing
+  like `Stephеn` (Cyrillic `е`) shadowing `Stephen`.
+- **Case-insensitive uniqueness within a profile** — a single profile
+  cannot list both `"Hawking"` and `"hawking"`.
+- **Case-insensitive uniqueness across consumer profiles** — two
+  different profiles in the same consumer tree cannot share an alias
+  (including alias-vs-slug collisions). Conflicts fail the consumer-side
+  lint (Option B — lint-time rejection, never a runtime disambiguation
+  menu). Determinism contract trumps UX convenience.
+
+### Footer integrity (canonical name only)
+
+The mandatory [disclosure footer](#mandatory-disclosure-footer-deterministic)
+**always** uses `identity.name`, never the alias that triggered the
+command. A user invoking `/ghostwriter:write --as=Hawking` against a
+profile with `identity.name: "Stephen Hawking"` produces a footer
+reading *"Written in the style of Stephen Hawking, not by them."* —
+not *"…of Hawking, not by them."* This makes aliases UX-only; identity
+attribution stays deterministic.
+
+### Package-source ban
+
+`aliases:` is **forbidden** on any file with `fictional: true`. Package
+fixtures are schema examples for a single canonical name; aliases are a
+consumer-only deployment feature. The package-source lint
+(`task lint-ghostwriter-source`) fails on `aliases:` in
+`.agent-src.uncompressed/ghostwriter/`.
+
+### Settings toggle (consumer-only)
+
+The consumer enables alias resolution via `.agent-project-settings.yml`:
+
+```yaml
+ghostwriter:
+  aliases: true   # default: true — set to false to disable resolver
+```
+
+Toggling `aliases: false` makes `/ghostwriter:write --as=<value>` resolve
+against slug names only; any `aliases:` entries in profiles are ignored
+at resolve time (but the lint still validates them on commit).
 
 ## Verification
 
@@ -227,8 +296,14 @@ The lint runs in `task ci` and fails on:
 1. Any file under `.agent-src.uncompressed/ghostwriter/` whose stem is
    **not** on the fixture allowlist (`scripts/ghostwriter_fixture_allowlist.txt`).
 2. Any allowlisted file missing `fictional: true` in frontmatter.
-3. Any consumer-side file under `agents/ghostwriter/` with `fictional: true`
+3. Any package-source file (`fictional: true`) carrying an `aliases:`
+   field (aliases are a consumer-only feature; see [§ Aliases](#aliases)).
+4. Any consumer-side file under `agents/ghostwriter/` with `fictional: true`
    (fictional profiles belong in the package source, not consumer trees).
+5. Any consumer-side `aliases:` entry that violates the storage rules:
+   shorter than 2 characters, non-Latin scripts (homoglyph protection),
+   duplicate within a profile (case-insensitive), or colliding across
+   profiles (case-insensitive — alias-vs-alias or alias-vs-slug).
 
 New package-side fixtures require updating the allowlist + reviewer
 sign-off.
