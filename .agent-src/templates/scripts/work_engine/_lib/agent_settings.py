@@ -17,11 +17,21 @@ when shipped into consumer projects) with a read-fallback to the legacy
 ``~/.config/agent-config/agent-settings.yml`` so pre-2.4 installs keep
 working during the namespace migration.
 
-``<repo-root>`` is the nearest ancestor that contains ``.git`` (directory
-**or** file — submodule support). The walk stops there — it never drifts
-into a parent repo or ``$HOME``. When ``cwd`` is ``None`` (default), the
-loader behaves identically to the pre-cascade contract: project file +
-user-global only, no ancestor walk. Back-compat is hard.
+``<repo-root>`` is the nearest ancestor that anchors the project. As of
+Step 7 the anchor set is (closest-leaf wins; tiebreaker
+``.agent-settings.yml`` > ``agents/`` > ``.git``):
+
+* ``.agent-settings.yml`` file,
+* ``agents/`` directory containing ``roadmaps/``, ``.ai-council.yml``,
+  or ``roadmaps-progress.md`` (bare ``agents/`` does **not** anchor),
+* ``.git`` file or directory (submodule support).
+
+Set ``AGENT_CONFIG_LEGACY_ANCHOR=1`` to revert to the pre-Step-7
+``.git``-only walk for one minor-version soak. The walk stops at the
+first anchor — it never drifts into a parent repo or ``$HOME``. When
+``cwd`` is ``None`` (default), the loader behaves identically to the
+pre-cascade contract: project file + user-global only, no ancestor
+walk. Back-compat is hard.
 
 Whitelisted keys (``MERGEABLE_KEYS``) are exact dotted paths. A
 non-whitelisted key in the user-global file is silently ignored — the
@@ -41,6 +51,7 @@ Contract — pure, read-only, tolerant:
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Any, Iterator
 
@@ -81,25 +92,293 @@ MERGEABLE_KEYS: tuple[str, ...] = (
 _DEFAULTS: dict[str, Any] = {}
 
 
-def find_project_root(start: Path) -> Path | None:
-    """Walk up from ``start`` looking for ``.git`` (file or directory).
+#: Anchor identifier returned by :func:`find_project_root_with_anchor`.
+ANCHOR_AGENT_SETTINGS = "agent-settings"
+ANCHOR_AGENTS_DIR = "agents-dir"
+ANCHOR_GIT = "git"
 
-    Returns the first ancestor that contains ``.git`` as a file (submodule
-    pointer) or directory (regular checkout), or ``None`` if the walk
-    reaches the filesystem root without finding one. The walk stops at
-    the project boundary — it never drifts into a parent repo or
-    ``$HOME``.
+#: Marker subpaths that qualify a bare ``agents/`` directory as a project
+#: anchor (D1). Any one is sufficient. Bare ``agents/`` without a marker
+#: is **not** an anchor.
+_AGENTS_DIR_MARKERS: tuple[str, ...] = (
+    "roadmaps",
+    ".ai-council.yml",
+    "roadmaps-progress.md",
+)
 
-    Pure read-only; never touches the filesystem beyond ``exists()``
-    probes on the ``.git`` entry.
+#: Kill-switch (D5). When set to ``"1"``, :func:`find_project_root` and
+#: :func:`find_project_root_with_anchor` revert to the pre-Step-7
+#: ``.git``-only walk for one minor-version soak.
+_LEGACY_ANCHOR_ENV = "AGENT_CONFIG_LEGACY_ANCHOR"
+
+
+def _boundary_anchor_at(path: Path) -> str | None:
+    """Return the boundary-anchor name at ``path`` or ``None``.
+
+    Boundary anchors stop the walk and define the project root:
+
+    * ``agents/`` containing a D1 marker → ``"agents-dir"``
+    * ``.git`` (file or directory) → ``"git"``
+
+    ``.agent-settings.yml`` is a **layer marker**, not a boundary
+    anchor (decision: ``step-7-d3-cascade-conflict-decision``). It
+    only anchors when no boundary is found in any ancestor — handled
+    by :func:`find_project_root_with_anchor` as a second pass.
+
+    Pure read-only — at most ``1 + len(_AGENTS_DIR_MARKERS)``
+    ``exists()`` probes per call (D6 perf budget).
+    """
+    agents_dir = path / "agents"
+    if agents_dir.is_dir():
+        for marker in _AGENTS_DIR_MARKERS:
+            if (agents_dir / marker).exists():
+                return ANCHOR_AGENTS_DIR
+    if (path / ".git").exists():
+        return ANCHOR_GIT
+    return None
+
+
+def find_project_root_with_anchor(start: Path) -> tuple[Path, str] | None:
+    """Walk up from ``start`` and return ``(root, anchor_name)`` or ``None``.
+
+    Two-tier lookup (boundary vs layer split — see council decision
+    ``step-7-d3-cascade-conflict-decision``):
+
+    1. **Boundary pass.** Walk up from ``start``. First ancestor with
+       a boundary anchor wins:
+
+       * ``agents/`` containing **any** of ``roadmaps/``,
+         ``.ai-council.yml``, or ``roadmaps-progress.md`` (D1) →
+         ``"agents-dir"``
+       * ``.git`` (file or directory; submodule support) → ``"git"``
+
+       When both coexist at the same ancestor, ``agents/`` wins
+       (D3 ordering minus the layer marker).
+
+    2. **Layer fallback.** No boundary found in the chain. Walk again
+       and return the **outermost** ancestor containing
+       ``.agent-settings.yml`` → ``"agent-settings"``. This delivers
+       Step-7's minimal-init goal without breaking the cascade.
+
+    When ``AGENT_CONFIG_LEGACY_ANCHOR=1`` is set (D5 kill-switch), only
+    the ``.git`` anchor is considered.
+
+    Pure read-only; never writes, never raises on missing paths.
     """
     current = start.resolve() if start.exists() else start
-    # ``Path.parents`` excludes ``current`` itself, so probe it first.
-    for candidate in [current, *current.parents]:
-        git_marker = candidate / ".git"
-        if git_marker.exists():
-            return candidate
+    legacy = os.environ.get(_LEGACY_ANCHOR_ENV) == "1"
+    chain = [current, *current.parents]
+    if legacy:
+        for candidate in chain:
+            if (candidate / ".git").exists():
+                return candidate, ANCHOR_GIT
+        return None
+    # Boundary pass.
+    for candidate in chain:
+        anchor = _boundary_anchor_at(candidate)
+        if anchor is not None:
+            return candidate, anchor
+    # Layer fallback — outermost .agent-settings.yml wins so the
+    # cascade can layer deeper files below it.
+    outermost: Path | None = None
+    for candidate in chain:
+        if (candidate / DEFAULT_PROJECT_FILE).exists():
+            outermost = candidate
+    if outermost is not None:
+        return outermost, ANCHOR_AGENT_SETTINGS
     return None
+
+
+def find_project_root(start: Path) -> Path | None:
+    """Walk up from ``start`` and return the project root or ``None``.
+
+    Thin wrapper over :func:`find_project_root_with_anchor` that drops
+    the anchor-name component. Kept for back-compat — every pre-Step-7
+    caller already takes a ``Path | None`` here.
+    """
+    result = find_project_root_with_anchor(start)
+    return result[0] if result is not None else None
+
+
+def find_project_root_with_trace(
+    start: Path,
+) -> tuple[Path | None, str | None, list[dict[str, Any]]]:
+    """Walk up from ``start`` and return ``(root, anchor, trace)``.
+
+    Step 8 A1 — diagnostic variant of :func:`find_project_root_with_anchor`.
+    Returns the same ``(root, anchor)`` pair (or ``(None, None)`` when no
+    anchor is found) plus an ordered list of trace records describing
+    every ancestor probed.
+
+    Each trace record is a dict:
+
+    * ``ancestor``  — absolute path probed (string).
+    * ``pass``      — ``"boundary"`` or ``"layer"``.
+    * ``hit``       — anchor name on hit, ``None`` on miss.
+    * ``reason``    — one-line explanation (``agents/ has roadmaps/``,
+      ``no .git``, ``layer marker``, ``legacy: only .git considered``,
+      etc.).
+
+    Pure read-only. No additional ``exists()`` cost beyond
+    :func:`find_project_root_with_anchor` — the trace records reuse the
+    same probes.
+    """
+    trace: list[dict[str, Any]] = []
+    current = start.resolve() if start.exists() else start
+    legacy = os.environ.get(_LEGACY_ANCHOR_ENV) == "1"
+    chain = [current, *current.parents]
+
+    if legacy:
+        for candidate in chain:
+            hit = (candidate / ".git").exists()
+            trace.append({
+                "ancestor": str(candidate),
+                "pass": "boundary",
+                "hit": ANCHOR_GIT if hit else None,
+                "reason": (
+                    "legacy: .git found" if hit
+                    else "legacy: no .git"
+                ),
+            })
+            if hit:
+                return candidate, ANCHOR_GIT, trace
+        return None, None, trace
+
+    # Boundary pass — same probes as find_project_root_with_anchor.
+    for candidate in chain:
+        agents_dir = candidate / "agents"
+        if agents_dir.is_dir():
+            for marker in _AGENTS_DIR_MARKERS:
+                if (agents_dir / marker).exists():
+                    trace.append({
+                        "ancestor": str(candidate),
+                        "pass": "boundary",
+                        "hit": ANCHOR_AGENTS_DIR,
+                        "reason": f"agents/ has {marker}",
+                    })
+                    return candidate, ANCHOR_AGENTS_DIR, trace
+        if (candidate / ".git").exists():
+            trace.append({
+                "ancestor": str(candidate),
+                "pass": "boundary",
+                "hit": ANCHOR_GIT,
+                "reason": ".git present",
+            })
+            return candidate, ANCHOR_GIT, trace
+        trace.append({
+            "ancestor": str(candidate),
+            "pass": "boundary",
+            "hit": None,
+            "reason": "no agents/ marker, no .git",
+        })
+
+    # Layer fallback — outermost .agent-settings.yml wins.
+    outermost: Path | None = None
+    for candidate in chain:
+        present = (candidate / DEFAULT_PROJECT_FILE).exists()
+        trace.append({
+            "ancestor": str(candidate),
+            "pass": "layer",
+            "hit": ANCHOR_AGENT_SETTINGS if present else None,
+            "reason": (
+                f"{DEFAULT_PROJECT_FILE} present" if present
+                else f"no {DEFAULT_PROJECT_FILE}"
+            ),
+        })
+        if present:
+            outermost = candidate
+    if outermost is not None:
+        return outermost, ANCHOR_AGENT_SETTINGS, trace
+    return None, None, trace
+
+
+#: Origin tag returned by :func:`resolve_project_root` alongside the
+#: anchor names defined above. Distinct values let callers (doctor,
+#: tests, future telemetry) surface *how* the root was chosen.
+ORIGIN_ROOT_FLAG = "root-flag"    # --root global flag (Step 8 A3)
+ORIGIN_EXPLICIT = "explicit"      # --project arg on a subcommand
+ORIGIN_ENV = "env"                # AGENT_CONFIG_PROJECT_ROOT (wrapper-pinned)
+ORIGIN_CWD_FALLBACK = "cwd-fallback"  # no anchor found
+
+PROJECT_ROOT_ENV = "AGENT_CONFIG_PROJECT_ROOT"
+ROOT_OVERRIDE_ENV = "AGENT_CONFIG_ROOT_OVERRIDE"
+
+
+class ProjectRootError(Exception):
+    """Raised when an explicit project-root override points to an invalid path.
+
+    Step 8 A3: ``--root <path>`` and ``AGENT_CONFIG_PROJECT_ROOT`` must
+    fail loudly when the target does not exist or is not a directory.
+    Callers translate this into exit code 2 (no silent CWD fallback).
+    """
+
+
+def _validate_root_path(path: Path, origin_label: str) -> Path:
+    """Resolve ``path``; raise :class:`ProjectRootError` when invalid.
+
+    ``origin_label`` is one of ``--root``, ``AGENT_CONFIG_PROJECT_ROOT``,
+    or ``--project``; surfaced verbatim in the error message so the
+    operator can see which channel injected the bad value.
+    """
+    resolved = Path(path).expanduser()
+    if not resolved.exists():
+        raise ProjectRootError(
+            f"{origin_label} points to a path that does not exist: {resolved}",
+        )
+    if not resolved.is_dir():
+        raise ProjectRootError(
+            f"{origin_label} points to a non-directory: {resolved}",
+        )
+    return resolved.resolve()
+
+
+def resolve_project_root(
+    arg: str | Path | None,
+    *,
+    cwd: Path | None = None,
+) -> tuple[Path, str]:
+    """Return ``(root, origin)`` for any ``cmd_*`` entry point.
+
+    Resolution order (Step 8 A3 — explicit override hardening):
+
+    1. ``AGENT_CONFIG_PROJECT_ROOT`` env var with
+       ``AGENT_CONFIG_ROOT_OVERRIDE=1`` set by the master CLI's ``--root``
+       flag → ``ORIGIN_ROOT_FLAG``. Fail-loud on invalid path.
+    2. Explicit ``--project`` / ``--target`` argument → ``ORIGIN_EXPLICIT``.
+       Fail-loud on invalid path.
+    3. ``AGENT_CONFIG_PROJECT_ROOT`` environment variable, set by the
+       project-local ``./agent-config`` wrapper → ``ORIGIN_ENV``.
+       Fail-loud on invalid path.
+    4. Anchor walk from ``cwd`` via
+       :func:`find_project_root_with_anchor` → anchor name
+       (``agents-dir`` / ``git`` / ``agent-settings``).
+    5. Fall back to ``cwd`` itself → ``ORIGIN_CWD_FALLBACK``.
+
+    The ``--root`` channel wins over a subcommand-level ``--project``
+    because it is a deliberate global override (Step 8 council decision).
+    Wrapper-set env (3) still wins over the anchor walk so subdir
+    invocations stay pinned.
+
+    Raises :class:`ProjectRootError` when any explicit override points
+    to a missing path or non-directory — callers map this to exit 2.
+    """
+    if os.environ.get(ROOT_OVERRIDE_ENV) == "1":
+        env_value = os.environ.get(PROJECT_ROOT_ENV)
+        if env_value:
+            return _validate_root_path(Path(env_value), "--root"), ORIGIN_ROOT_FLAG
+    if arg is not None and str(arg) != "":
+        return _validate_root_path(Path(arg), "--project"), ORIGIN_EXPLICIT
+    env_value = os.environ.get(PROJECT_ROOT_ENV)
+    if env_value:
+        return (
+            _validate_root_path(Path(env_value), PROJECT_ROOT_ENV),
+            ORIGIN_ENV,
+        )
+    start = (cwd or Path.cwd()).resolve()
+    walked = find_project_root_with_anchor(start)
+    if walked is not None:
+        return walked
+    return start, ORIGIN_CWD_FALLBACK
 
 
 def _resolve_cascade_paths(
@@ -111,7 +390,7 @@ def _resolve_cascade_paths(
     When ``cwd`` is provided and ``find_project_root(cwd)`` succeeds, the
     list contains every ``<dir>/.agent-settings.yml`` from the repo root
     down to ``cwd`` (inclusive on both ends), shallowest first. When
-    ``cwd`` is ``None`` or no ``.git`` is reached, falls back to the
+    ``cwd`` is ``None`` or no anchor is reached, falls back to the
     single legacy project path — back-compat with the pre-cascade
     loader.
     """

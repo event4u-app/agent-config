@@ -38,14 +38,15 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from scripts._lib import fs_atomic, installed_lock, installed_tools
+from scripts._lib.agent_settings import resolve_project_root
 from scripts._lib.json_pointers import subtract_pointers
 from scripts.install import PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS
 
 
 def _resolve_project_root(arg: str | None) -> Path:
-    if arg:
-        return Path(arg).expanduser().resolve()
-    return Path.cwd().resolve()
+    """Resolve the project root using the shared Phase-3 helper."""
+    root, _ = resolve_project_root(arg)
+    return root
 
 
 def _filter_tools(all_tools: Iterable[str], requested: str | None) -> list[str]:

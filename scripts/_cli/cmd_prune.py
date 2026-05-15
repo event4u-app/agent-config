@@ -43,13 +43,18 @@ import sys
 from pathlib import Path
 
 from scripts._lib import installed_tools
+from scripts._lib.agent_settings import resolve_project_root
 from scripts.install import PROJECT_BRIDGE_MARKERS
 
 
 def _resolve_project_root(arg: str | None) -> Path:
-    if arg:
-        return Path(arg).expanduser().resolve()
-    return Path.cwd().resolve()
+    """Resolve the project root using the shared Phase-3 helper.
+
+    Drops the origin tag — ``prune`` does not surface it in output but
+    still honors ``AGENT_CONFIG_PROJECT_ROOT`` and the anchor walk.
+    """
+    root, _ = resolve_project_root(arg)
+    return root
 
 
 def _load_manifest(project_root: Path, *, force_empty: bool

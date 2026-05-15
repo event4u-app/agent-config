@@ -865,6 +865,70 @@ run_update_check_banner() {
   python3 "$banner_script" --cwd "$CONSUMER_ROOT" 2>/dev/null || true
 }
 
+# Global `--root <path>` / `--root=<path>` parsing (Step 8 A3).
+# Strips the flag from $@, validates the path is an existing directory,
+# and exports `AGENT_CONFIG_PROJECT_ROOT` + `AGENT_CONFIG_ROOT_OVERRIDE=1`
+# so the Python resolver picks origin=root-flag with fail-loud semantics.
+# Invalid path → exit 2 immediately, no fallback to anchor walk or CWD.
+parse_global_root_flag() {
+  local -a filtered=()
+  local root_value=""
+  local saw_flag=false
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --root)
+        saw_flag=true
+        if [[ $# -lt 2 ]]; then
+          echo "❌  agent-config: --root requires a path argument" >&2
+          exit 2
+        fi
+        root_value="$2"
+        shift 2
+        ;;
+      --root=*)
+        saw_flag=true
+        root_value="${1#--root=}"
+        shift
+        ;;
+      *)
+        filtered+=("$1")
+        shift
+        ;;
+    esac
+  done
+  if $saw_flag; then
+    if [[ -z "$root_value" ]]; then
+      echo "❌  agent-config: --root requires a non-empty path" >&2
+      exit 2
+    fi
+    if [[ ! -e "$root_value" ]]; then
+      echo "❌  agent-config: --root points to a path that does not exist: $root_value" >&2
+      exit 2
+    fi
+    if [[ ! -d "$root_value" ]]; then
+      echo "❌  agent-config: --root points to a non-directory: $root_value" >&2
+      exit 2
+    fi
+    # Absolutize so downstream Python sees a fully-resolved path.
+    root_value="$(cd "$root_value" && pwd)"
+    export AGENT_CONFIG_PROJECT_ROOT="$root_value"
+    export AGENT_CONFIG_ROOT_OVERRIDE=1
+    # Wrapper-coupling guard: when invoked through a consumer-root wrapper
+    # (CONSUMER_ROOT != root_value), surface a one-line warning on stderr
+    # so the operator notices the divergence. Non-fatal: --root is the
+    # deliberate override channel.
+    if [[ "$CONSUMER_ROOT" != "$root_value" ]]; then
+      echo "⚠️   agent-config: --root ($root_value) differs from wrapper CWD ($CONSUMER_ROOT)" >&2
+    fi
+  fi
+  # Re-emit the filtered argv via a global array consumed by main().
+  GLOBAL_FILTERED_ARGS=("${filtered[@]+"${filtered[@]}"}")
+}
+
+declare -a GLOBAL_FILTERED_ARGS
+parse_global_root_flag "$@"
+set -- "${GLOBAL_FILTERED_ARGS[@]+"${GLOBAL_FILTERED_ARGS[@]}"}"
+
 # Pin re-exec runs before dispatch — if it triggers, the process is
 # replaced and nothing else here matters.
 maybe_pin_reexec "$@"

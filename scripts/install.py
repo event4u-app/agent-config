@@ -3223,6 +3223,19 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "explicit guarantee for air-gapped / CI runs."
         ),
     )
+    parser.add_argument(
+        "--minimal",
+        "--settings-only",
+        dest="minimal",
+        action="store_true",
+        help=(
+            "bootstrap only the project-local override layer: writes "
+            "agents/.gitkeep and a .agent-settings.yml stub. No tool "
+            "payload, no AGENTS.md, no symlinks. Refuses to install "
+            "inside an existing agent-config project (nested-install "
+            "guard). See docs/installation.md → Minimal init."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -3282,6 +3295,148 @@ def _is_tool_enabled(tools: set[str], tool_id: str) -> bool:
     return tool_id in tools
 
 
+# --- Minimal init (Step 7 Phase 2) ---
+
+
+def _minimal_templates_root() -> Path:
+    """Resolve the bundled ``templates/minimal/`` directory.
+
+    Walks up from this file looking for ``templates/minimal/``; this
+    works both in development mode (running the source tree) and from
+    an ``npm install -g`` install (the script lives under the package
+    root regardless).
+    """
+    for ancestor in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+        candidate = ancestor / "templates" / "minimal"
+        if candidate.is_dir():
+            return candidate
+    fail("Could not locate templates/minimal/ — package install is corrupt.")
+    return Path()  # unreachable
+
+
+#: Relative path of the install-mode marker file written by both the
+#: minimal short-circuit and the full install path (Step 8 A5). Read by
+#: ``doctor --context`` (and any future tooling) instead of inferring
+#: install state from filesystem heuristics like ``AGENTS.md`` presence.
+INSTALL_MODE_MARKER_REL = "agents/.agent-state/install-mode.txt"
+
+
+def _write_install_mode_marker(project_root: Path, mode: str) -> None:
+    """Write ``agents/.agent-state/install-mode.txt`` = ``mode\\n``.
+
+    Idempotent: overwrites unconditionally so re-installs flip the
+    state correctly (e.g. minimal → full upgrade). Failure to write
+    is non-fatal — install proceeds and ``doctor --context`` falls
+    back to the filesystem heuristic. ``mode`` must be ``minimal``
+    or ``full``.
+    """
+    if mode not in ("minimal", "full"):
+        return
+    marker = project_root / INSTALL_MODE_MARKER_REL
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(f"{mode}\n", encoding="utf-8")
+    except OSError:
+        # Marker is advisory; install must not abort because the
+        # state dir is unwritable (e.g. read-only mount in CI).
+        pass
+
+
+def install_minimal(target_root: Path, force: bool) -> int:
+    """Bootstrap the project-local override layer only (D2-compliant).
+
+    Writes:
+
+    * ``agents/.gitkeep`` so the folder is committable.
+    * ``.agent-settings.yml`` stub (cost_profile=balanced, version pin
+      commented out per D4).
+
+    Refuses (exit 1) when ``target_root`` is **inside** an existing
+    agent-config project (Phase-1 anchor walk above the target). The
+    in-target case is allowed and treated as idempotent — re-running
+    ``--minimal`` in a folder that already has ``.agent-settings.yml``
+    does nothing unless ``--force`` is passed.
+
+    Does **not** touch ``.gitignore`` (D2 — user owns the ignore file).
+    The ``./agent-config`` wrapper is installed by ``scripts/install.sh``
+    in its own minimal short-circuit.
+    """
+    try:
+        from scripts._lib.agent_settings import find_project_root_with_anchor  # noqa: PLC0415
+    except ImportError:  # pragma: no cover — alt sys.path layout
+        from _lib.agent_settings import find_project_root_with_anchor  # type: ignore[no-redef]  # noqa: PLC0415
+
+    target_root = target_root.resolve()
+    target_root.mkdir(parents=True, exist_ok=True)
+
+    # Nested-install guard: walk up from the *parent* of target_root.
+    # An anchor at target_root itself is allowed (re-running --minimal
+    # in the same project is idempotent); only a root *above* target
+    # blocks the install.
+    parent = target_root.parent
+    if parent != target_root:  # not filesystem root
+        existing = find_project_root_with_anchor(parent)
+        if existing is not None and existing[0] != target_root:
+            root, anchor = existing
+            fail(
+                "Refusing to nest an agent-config layer inside an existing "
+                f"project (anchor: {anchor}). Existing root: {root}. "
+                "Remove the parent layer first or run `--minimal` outside it."
+            )
+            return 1  # unreachable; fail() exits
+
+    templates = _minimal_templates_root()
+    settings_src = templates / SETTINGS_FILE
+    gitkeep_src = templates / "agents-gitkeep"
+
+    if not settings_src.is_file() or not gitkeep_src.is_file():
+        fail(f"Bundled minimal templates missing under {templates}")
+
+    info(f"Minimal init → {target_root}")
+
+    # 1. agents/.gitkeep
+    agents_dir = target_root / "agents"
+    agents_dir.mkdir(exist_ok=True)
+    gitkeep_dst = agents_dir / ".gitkeep"
+    if gitkeep_dst.exists() and not force:
+        skip(f"agents/.gitkeep already exists (use --force to overwrite)")
+    else:
+        gitkeep_dst.write_text(gitkeep_src.read_text(encoding="utf-8"), encoding="utf-8")
+        success("Wrote agents/.gitkeep")
+
+    # 2. .agent-settings.yml stub
+    settings_dst = target_root / SETTINGS_FILE
+    if settings_dst.exists() and not force:
+        skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
+    else:
+        settings_dst.write_text(settings_src.read_text(encoding="utf-8"), encoding="utf-8")
+        success(f"Wrote {SETTINGS_FILE}")
+
+    # 3. install-mode marker (Step 8 A5) — authoritative state for
+    # doctor --context and future install-aware tooling. Written even
+    # on idempotent re-runs so the marker is repaired if removed.
+    _write_install_mode_marker(target_root, "minimal")
+
+    # Stderr upgrade hint (Step 8 A5) — minimal installs are intentionally
+    # stripped; surface the upgrade path on stderr so it appears in
+    # human terminals without polluting stdout-parsed output. Suppressed
+    # under --quiet to honor scripted-install contracts.
+    if not QUIET:
+        print(
+            "ℹ️   Minimal install — run `agent-config install --force` "
+            "to add AGENTS.md, bridges, and tool integrations.",
+            file=sys.stderr,
+        )
+
+    if not QUIET:
+        print()
+        info("Next steps:")
+        info("  • Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config")
+        info("  • Add `.agent-settings.yml` and `agents/` to git (or to .gitignore — your call).")
+        info("  • Run `agent-config doctor` to verify the layer is picked up.")
+    return 0
+
+
 # --- Main ---
 
 def main(argv: list[str]) -> int:
@@ -3301,6 +3456,17 @@ def main(argv: list[str]) -> int:
 
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
+
+    # Minimal-init short-circuit (Step 7 Phase 2): bypass scope
+    # detection, conflict policy, and the full bridge install. Writes
+    # only the project-local override layer (agents/.gitkeep +
+    # .agent-settings.yml stub). The bash wrapper handles the
+    # `./agent-config` script; everything else is intentionally absent.
+    if opts.minimal:
+        target_root = Path(
+            opts.custom_path or opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
+        ).resolve()
+        return install_minimal(target_root, opts.force)
 
     # Multi-signal scope detection (Phase 1.3) + scope resolution
     # (Phase 1.4). Order of precedence (highest first):
@@ -3375,6 +3541,11 @@ def _main_project_install(
         print()
 
     ensure_agent_settings(project_root, package_root, opts.profile, opts.force)
+
+    # Install-mode marker (Step 8 A5) — full path flips any prior
+    # minimal marker to "full" so doctor --context reflects the
+    # upgraded state. Idempotent on re-runs of the same scope.
+    _write_install_mode_marker(project_root, "full")
 
     tools = parsed_tools
 

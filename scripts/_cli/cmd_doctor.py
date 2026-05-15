@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shutil
 import sys
@@ -42,6 +43,13 @@ from pathlib import Path
 from typing import Any
 
 from scripts._lib import installed_tools
+from scripts._lib.agent_settings import (
+    PROJECT_ROOT_ENV,
+    ROOT_OVERRIDE_ENV,
+    ProjectRootError,
+    find_project_root_with_trace,
+    resolve_project_root,
+)
 
 
 class _Sentinel:
@@ -56,10 +64,155 @@ class _Sentinel:
 NO_FRONTMATTER = _Sentinel()
 
 
-def _resolve_project_root(arg: str | None) -> Path:
-    if arg:
-        return Path(arg).expanduser().resolve()
-    return Path.cwd().resolve()
+def _resolve_project_root(arg: str | None) -> tuple[Path, str]:
+    """Resolve the doctor's project root via the shared Phase-3 helper.
+
+    Returns ``(root, origin)`` where ``origin`` is one of the anchor
+    names from :mod:`scripts._lib.agent_settings` (``agents-dir``,
+    ``git``, ``agent-settings``) or one of the origin tags
+    ``root-flag`` / ``explicit`` / ``env`` / ``cwd-fallback``. The tag
+    is surfaced in both human and JSON output so subdir invocations
+    are auditable.
+    """
+    return resolve_project_root(arg)
+
+
+#: Path of the install-mode marker file (Step 8 A5). One-line file:
+#: ``minimal\n`` or ``full\n``. Written by ``install.py``; consumed by
+#: ``doctor --context`` to surface install state without re-deriving it
+#: from filesystem heuristics.
+_INSTALL_MODE_MARKER_REL = "agents/.agent-state/install-mode.txt"
+
+
+def _detect_install_mode(project_root: Path) -> tuple[str, str]:
+    """Return ``(mode, source)`` for the project install state.
+
+    Hybrid detection (Step 8 council decision Q5):
+
+    1. ``agents/.agent-state/install-mode.txt`` if present (authoritative
+       for installs since Step 8) → ``source="marker-file"``.
+    2. Filesystem heuristic for back-compat: ``AGENTS.md`` + copilot
+       bridges → ``full``; otherwise ``minimal`` → ``source="heuristic"``.
+
+    Heuristic is fragile by design — users who delete ``AGENTS.md`` but
+    keep copilot bridges get misreported. The marker file is the
+    intended source of truth for installs from Step 8 onward.
+    """
+    marker = project_root / _INSTALL_MODE_MARKER_REL
+    if marker.is_file():
+        try:
+            value = marker.read_text(encoding="utf-8").strip()
+        except OSError:
+            value = ""
+        if value in ("minimal", "full"):
+            return value, "marker-file"
+    has_agents_md = (project_root / "AGENTS.md").exists()
+    has_copilot = (project_root / ".github" / "copilot-instructions.md").exists()
+    if has_agents_md and has_copilot:
+        return "full", "heuristic"
+    return "minimal", "heuristic"
+
+
+def _settings_layer_chain(project_root: Path) -> list[str]:
+    """Return the ordered ``.agent-settings.yml`` layer files that exist.
+
+    Shallowest first (user-global → project root). Used by ``--context``
+    to surface which layers will participate in the cascade merge.
+    """
+    layers: list[str] = []
+    from scripts._lib import user_global_paths
+    user_global = user_global_paths.resolve_with_fallback("agent-settings.yml")
+    if user_global is not None and user_global.is_file():
+        layers.append(str(user_global))
+    project_settings = project_root / ".agent-settings.yml"
+    if project_settings.is_file():
+        layers.append(str(project_settings))
+    return layers
+
+
+def _detect_wrapper(project_root: Path) -> dict[str, Any]:
+    """Return ``{path, exists, embedded_root}`` for the project wrapper.
+
+    The ``./agent-config`` wrapper at the project root pins
+    ``AGENT_CONFIG_PROJECT_ROOT`` to its own ``SELF_DIR``, so the
+    "embedded root" is just the wrapper's directory. Surfaced for
+    debugging wrapper-coupling issues (Step 8 A3-coupling).
+    """
+    wrapper = project_root / "agent-config"
+    if not wrapper.exists():
+        return {"path": str(wrapper), "exists": False, "embedded_root": None}
+    return {
+        "path": str(wrapper),
+        "exists": True,
+        "embedded_root": str(project_root),
+    }
+
+
+def _emit_trace_text(
+    root: Path | None,
+    anchor: str | None,
+    trace: list[dict[str, Any]],
+    origin: str,
+) -> None:
+    """Render the discovery trace as human-readable text."""
+    print(f"  📍  start: {Path.cwd()}")
+    print(f"  📍  origin: {origin}")
+    if trace:
+        print("  trace:")
+        for record in trace:
+            hit = record["hit"]
+            symbol = "✅" if hit else "·"
+            tag = f"[{record['pass']}]"
+            anchor_str = f" → {hit}" if hit else ""
+            print(
+                f"    {symbol} {tag} {record['ancestor']}"
+                f"{anchor_str}  ({record['reason']})"
+            )
+    if root is not None:
+        print(f"  📍  resolved root: {root} (anchor: {anchor or 'n/a'})")
+    else:
+        print("  ⚠️   no anchor found in chain")
+
+
+def _emit_trace_json(
+    root: Path | None,
+    anchor: str | None,
+    trace: list[dict[str, Any]],
+    origin: str,
+) -> None:
+    """Render the discovery trace as a JSON payload."""
+    payload: dict[str, Any] = {
+        "start": str(Path.cwd()),
+        "origin": origin,
+        "resolved_root": str(root) if root is not None else None,
+        "anchor": anchor,
+        "trace": trace,
+    }
+    print(json.dumps(payload, indent=2))
+
+
+def _emit_context_text(ctx: dict[str, Any]) -> None:
+    """Render the install / discovery context as human-readable text."""
+    print(f"  📍  project_root: {ctx['project_root']}  (origin: {ctx['origin']})")
+    print(f"  📦  install_mode: {ctx['install_mode']}  (source: {ctx['install_mode_source']})")
+    env_pin = ctx.get("env_pin")
+    if env_pin:
+        marker = " (--root override)" if ctx.get("root_override") else ""
+        print(f"  🔒  env_pin: {env_pin}{marker}")
+    else:
+        print("  🔒  env_pin: (unset)")
+    layers = ctx.get("settings_layers") or []
+    if layers:
+        print(f"  📑  settings layers ({len(layers)}):")
+        for layer in layers:
+            print(f"        - {layer}")
+    else:
+        print("  📑  settings layers: (none)")
+    wrapper = ctx.get("wrapper") or {}
+    if wrapper.get("exists"):
+        print(f"  🧩  wrapper: {wrapper['path']}  (embedded root: {wrapper.get('embedded_root')})")
+    else:
+        print(f"  🧩  wrapper: (not present at {wrapper.get('path')})")
 
 
 def _resolve_path(project_root: Path, raw: str) -> Path:
@@ -872,6 +1025,7 @@ def _emit_json(
     foreign: list[dict[str, Any]],
     tag_drift: list[dict[str, Any]],
     checks: list[dict[str, Any]] | None = None,
+    origin: str | None = None,
 ) -> None:
     payload: dict[str, Any] = {
         "project_root": str(project_root),
@@ -880,6 +1034,8 @@ def _emit_json(
         "foreign": foreign,
         "tag_drift": tag_drift,
     }
+    if origin is not None:
+        payload["project_root_origin"] = origin
     if checks is not None:
         payload["checks"] = checks
     print(json.dumps(payload, indent=2))
@@ -948,17 +1104,89 @@ def _parse(argv: list[str]) -> argparse.Namespace:
         help=("run a single health check by id "
               f"({' · '.join(CHECK_IDS)})"),
     )
+    parser.add_argument(
+        "--trace-root", action="store_true",
+        help=("print every ancestor checked during project-root discovery "
+              "plus the winning anchor; short-circuits the drift report"),
+    )
+    parser.add_argument(
+        "--context", action="store_true",
+        help=("print effective project root, anchor, env-pin, settings "
+              "layer chain, wrapper, and install-mode; short-circuits "
+              "the drift report"),
+    )
     return parser.parse_args(argv)
+
+
+def _run_trace_root(opts: argparse.Namespace) -> int:
+    """Handle ``--trace-root``: discovery walk + records, no drift report."""
+    start = Path.cwd()
+    root, anchor, trace = find_project_root_with_trace(start)
+    # Determine origin label even when no anchor is found.
+    if os.environ.get(ROOT_OVERRIDE_ENV) == "1" and os.environ.get(PROJECT_ROOT_ENV):
+        origin = "root-flag"
+    elif opts.project:
+        origin = "explicit"
+    elif os.environ.get(PROJECT_ROOT_ENV):
+        origin = "env"
+    elif root is not None:
+        origin = anchor or "unknown"
+    else:
+        origin = "cwd-fallback"
+    if opts.json:
+        _emit_trace_json(root, anchor, trace, origin)
+    else:
+        _emit_trace_text(root, anchor, trace, origin)
+    return 0
+
+
+def _run_context(opts: argparse.Namespace) -> int:
+    """Handle ``--context``: install + discovery snapshot, no drift report."""
+    try:
+        project_root, origin = _resolve_project_root(opts.project)
+    except ProjectRootError as exc:
+        print(f"❌  doctor: {exc}", file=sys.stderr)
+        return 2
+    mode, mode_source = _detect_install_mode(project_root)
+    ctx: dict[str, Any] = {
+        "project_root": str(project_root),
+        "origin": origin,
+        "install_mode": mode,
+        "install_mode_source": mode_source,
+        "env_pin": os.environ.get(PROJECT_ROOT_ENV) or None,
+        "root_override": os.environ.get(ROOT_OVERRIDE_ENV) == "1",
+        "settings_layers": _settings_layer_chain(project_root),
+        "wrapper": _detect_wrapper(project_root),
+    }
+    if opts.json:
+        print(json.dumps(ctx, indent=2))
+    else:
+        _emit_context_text(ctx)
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     opts = _parse(list(argv) if argv is not None else sys.argv[1:])
-    project_root = _resolve_project_root(opts.project)
+    if opts.trace_root:
+        return _run_trace_root(opts)
+    if opts.context:
+        return _run_context(opts)
+    try:
+        project_root, origin = _resolve_project_root(opts.project)
+    except ProjectRootError as exc:
+        print(f"❌  doctor: {exc}", file=sys.stderr)
+        return 2
     manifest_pth = installed_tools.manifest_path(project_root)
     manifest = installed_tools.read_manifest(manifest_pth)
     if manifest is None:
-        print(f"❌  doctor: no project lockfile at {manifest_pth}",
-              file=sys.stderr)
+        print(
+            f"❌  doctor: no project lockfile at {manifest_pth}",
+            file=sys.stderr,
+        )
+        print(
+            f"    project_root: {project_root} (origin: {origin})",
+            file=sys.stderr,
+        )
         print("    run `./agent-config init` to create one",
               file=sys.stderr)
         return 2
@@ -978,9 +1206,11 @@ def main(argv: list[str] | None = None) -> int:
     if opts.json:
         _emit_json(
             project_root, missing, modified, foreign, tag_drift,
-            checks=checks,
+            checks=checks, origin=origin,
         )
     else:
+        if opts.check is None:
+            print(f"  📍  project_root: {project_root} (origin: {origin})")
         _emit_checks_text(checks)
         if opts.check is None:
             _emit_text(project_root, missing, modified, foreign, tag_drift)

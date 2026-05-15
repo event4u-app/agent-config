@@ -41,6 +41,9 @@ __pycache__/
 .agent-settings.yml
 .agent-settings
 .agent-settings.backup.key-value
+# Exception: the bundled stub for `agent-config init --minimal` is a
+# real package asset, not a user-local settings file (Step 7 Phase 2).
+!templates/minimal/.agent-settings.yml
 
 # Persistent chat-history log (crash recovery; written by
 # scripts/chat_history.py, governed by the chat-history rule). Never
