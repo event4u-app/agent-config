@@ -102,6 +102,17 @@ The init writes:
 - per-tool glue: `.claude/`, `.cursor/`, `.clinerules/`,
   `.windsurfrules`, `GEMINI.md`, `.github/copilot-instructions.md`
 
+Want to keep the runtime global and commit only the per-project
+shell (`.agent-settings.yml`, `agents/`, `./agent-config` wrapper —
+no `.augment/` / `.claude/` / `.cursor/` in the repo)?
+
+```bash
+npm install -g @event4u/agent-config && agent-config init --minimal
+```
+
+See [`docs/installation.md § Global CLI + per-project settings`](docs/installation.md#global-cli--per-project-settings-minimal-flow)
+for the decision table and migration notes.
+
 → Migrating from a pre-vX.0 install? See
 [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md). The one-shot
 `npx @event4u/agent-config migrate` removes the legacy

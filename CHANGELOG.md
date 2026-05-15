@@ -16,6 +16,56 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+**Agent-folder discovery + `--minimal` init (`step-7-agent-folder-discovery-and-minimal-init`)** —
+project-root discovery widens beyond `.git` so non-git checkouts,
+monorepo sub-trees, and `agent-config`-only worktrees resolve
+correctly, and a new minimal-init payload lets teams keep the
+runtime global while committing only the per-project shell. New
+surfaces:
+
+- **Boundary anchors (D1+D3)** — `.git` plus `agents/` containing
+  **any** of `roadmaps/`, `.ai-council.yml`, `roadmaps-progress.md`.
+  Bare `agents/` is **not** an anchor (false-positive guard). When
+  no boundary anchor exists in any ancestor, the **outermost**
+  `.agent-settings.yml` becomes the root so the layered-settings
+  cascade survives. Same-level tiebreaker:
+  `.agent-settings.yml` > `agents/` > `.git` (diagnostic anchor
+  name only — resolved path is identical).
+- **`resolve_project_root(arg)` helper** (`scripts/_lib/agent_settings.py`)
+  — single entry point used by every `cmd_*.py`. Precedence:
+  explicit `--project`/`--target` → `AGENT_CONFIG_PROJECT_ROOT` env
+  → anchor walk → CWD fallback. Returns `(root, origin)` so doctor
+  can surface which step resolved.
+- **`AGENT_CONFIG_PROJECT_ROOT` env pin** — the `./agent-config`
+  wrapper exports its own directory before forwarding to the master
+  CLI, so subcommands invoked from a subdirectory (or after
+  `os.chdir`) stay pinned to the right root without re-walking.
+- **`agent-config init --minimal`** — writes exactly three files:
+  `.agent-settings.yml`, `agents/.gitkeep`, and the `./agent-config`
+  wrapper. No `.augment/` / `.claude/` / `.cursor/` / `AGENTS.md`.
+  Refuses to run when an ancestor already carries an anchor
+  (nested-install guard); override with explicit `--target`.
+  Does **not** pin `agent_config_version` (D4) — consumer follows
+  the global CLI.
+- **`AGENT_CONFIG_LEGACY_ANCHOR=1` kill-switch (D5)** — reverts
+  discovery to the pre-step-7 `.git`-only walk for one minor-version
+  soak. Scheduled for removal after the soak window unless
+  telemetry surfaces a missing case.
+- **Performance budget (D6)** — anchor walk is `O(depth)` with at
+  most three `Path.exists()` calls per level. Test asserts
+  `< 5 ms` at depth 20 (`tests/test_anchor_perf.py`).
+- **Test coverage** — `tests/test_project_root_anchors.py`
+  (precedence, mixed-anchor edge case, bare `agents/` rejection),
+  `tests/test_kill_switch.py`, `tests/test_minimal_init.py`
+  (payload shape + nested-install refusal), `tests/test_subdir_invocation.py`
+  (env-var precedence, wrapper-pin surviving `chdir`),
+  `tests/test_anchor_perf.py`.
+
+Council artefacts: `agents/council-sessions/step-7-d3-cascade-conflict-{question,decision}.md`
+— D3 strict closest-leaf-wins was relaxed to boundary-vs-layer
+split after the analysis lens flagged four pre-existing cascade
+tests as the contract, not edge cases.
+
 **PR #150 follow-up hardening (`step-9-pr150-feedback-hardening`)** —
 twelve-phase response to the Claude+GPT review findings on PR #150 plus
 three user-requested settings-shape changes (CLI-default, preferred-single

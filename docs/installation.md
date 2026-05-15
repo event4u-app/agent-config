@@ -235,6 +235,57 @@ The global install puts `agent-config` on `$PATH` so the project
 wrapper (`./agent-config`) can fall through to it when no
 `node_modules/@event4u/agent-config/` exists.
 
+### Global CLI + per-project settings (minimal flow)
+
+For teams that want to keep the runtime global (one install per
+machine) but still version a per-project `.agent-settings.yml` and a
+project-local `agents/` folder, use the `--minimal` init:
+
+```bash
+# 1. Install the runtime once per machine
+npm install -g @event4u/agent-config
+
+# 2. Inside the project, write only the per-project shell
+agent-config init --minimal
+# or, without a global install:
+npx @event4u/agent-config init --minimal
+```
+
+`--minimal` writes exactly three files into the project root:
+
+- `.agent-settings.yml` — per-project cost profile, member config,
+  feature flags. Committed.
+- `agents/.gitkeep` — placeholder so the directory is committed
+  before the first roadmap, decision, or council session lands.
+- `./agent-config` — bash wrapper that pins
+  `AGENT_CONFIG_PROJECT_ROOT` to the project root and forwards every
+  subcommand to the globally installed CLI. Committed.
+
+Nothing else — no `.augment/`, no `.claude/`, no `.cursor/`, no
+`AGENTS.md`. The shipped tool payload stays in the user's home (or
+the npx cache) and is shared across every project on the machine.
+
+#### Decision table — `--minimal` vs full `init`
+
+| Pick `--minimal` when | Pick full `init` when |
+|---|---|
+| Runtime is already installed globally (`npm i -g`). | First-time setup on a fresh machine. |
+| Team wants one source of truth for skills / rules / commands across every repo (shared via the global install). | Team wants per-repo skills / rules / commands committed alongside the code. |
+| `agents/` content (roadmaps, decisions) is the only per-project state worth committing. | `AGENTS.md`, `GEMINI.md`, or `.github/copilot-instructions.md` need project-specific overrides. |
+| The repo runs in CI and you do not want to vendor the full payload. | The repo cannot rely on a global install (air-gapped, sandboxed CI without npm). |
+| Migrating an existing project from the legacy `.git`-anchored install. | Starting a new project that has never seen `agent-config`. |
+
+Nested-install guard: `init --minimal` refuses to run when an
+ancestor already contains an anchor (`.git`, an `agents/` directory
+with a marker, or another `.agent-settings.yml`). This prevents
+shadow installs inside an existing project. Override with explicit
+`--target <dir>` if the nesting is intentional.
+
+`--minimal` does **not** pin `agent_config_version` — the project
+follows whichever version the global CLI was installed at. Pin
+explicitly by adding `agent_config_version: <semver>` to
+`.agent-settings.yml` when you want a reproducible runtime.
+
 ### Installer orchestrator (`scripts/install`)
 
 The orchestrator chains payload sync and bridge generation:
@@ -673,8 +724,84 @@ or sandbox testing:
 - `AGENT_CONFIG_NO_EVENTS_LOG=1` — disables every write to
   `agents/council-events.log` in-process. Quota counter and council
   output stay untouched.
-- `AGENT_CONFIG_LEGACY_ANCHOR=1` — opt back into the pre-step-7
-  legacy-anchor behaviour for `.agent-settings.yml` migration.
+- `AGENT_CONFIG_LEGACY_ANCHOR=1` — reverts project-root discovery to
+  the pre-step-7 `.git`-only walk. See [Migration — Step 7 anchor
+  discovery](#migration--step-7-anchor-discovery) below for the
+  precedence rules and when to use this.
+- `AGENT_CONFIG_PROJECT_ROOT=<abs-path>` — pins the resolved project
+  root, skipping the anchor walk entirely. Set automatically by the
+  `./agent-config` wrapper; set manually in CI when the working
+  directory is not a descendant of the project root.
+
+---
+
+## Migration — Step 7 anchor discovery
+
+Before Step 7, the CLI located the project root by walking up for a
+`.git` directory only. Step 7 widens the anchor set so non-git
+projects (sparse checkouts, monorepo sub-trees, `agent-config`-only
+worktrees) resolve correctly and so subdirectory invocations stop
+falling back to `cwd`.
+
+### Anchor precedence (D3 — cascade-conflict decision)
+
+Walk up from CWD. The first ancestor containing a **boundary
+anchor** wins:
+
+1. `.git` (file or directory).
+2. `agents/` directory containing **any** of `roadmaps/`,
+   `.ai-council.yml`, or `roadmaps-progress.md` — bare `agents/`
+   does **not** anchor (D1).
+
+If no boundary anchor exists in any ancestor, the **outermost**
+(closest-to-fs-root) `.agent-settings.yml` becomes the root. This
+preserves the layered-settings cascade — see
+[`agents/council-sessions/step-7-d3-cascade-conflict-decision.md`](../agents/council-sessions/step-7-d3-cascade-conflict-decision.md)
+for the rationale.
+
+When a single ancestor carries multiple anchors, the **diagnostic
+anchor name** reported by `agent-config doctor` follows the D3
+tie-break order (`.agent-settings.yml` > `agents/` > `.git`). The
+resolved path is identical either way.
+
+### Resolution precedence (which root wins)
+
+In order, first match wins:
+
+1. Explicit `--project <dir>` / `--target <dir>` on the CLI.
+2. `AGENT_CONFIG_PROJECT_ROOT=<abs-path>` env var.
+3. Anchor walk from CWD (rules above).
+4. Fallback to CWD.
+
+The `./agent-config` wrapper sets step 2 to its own directory, so
+subcommands invoked from a subdirectory still target the right root
+even after `os.chdir`.
+
+### When to set `AGENT_CONFIG_LEGACY_ANCHOR=1`
+
+Set this only as a temporary escape hatch — for example, when the
+new anchor set surfaces an unexpected ancestor in a CI pipeline that
+already passes the legacy walk. Behaviour:
+
+- Walk up for `.git` only (Step-6 behaviour).
+- `agents/` and `.agent-settings.yml` are ignored as anchors.
+- Cascade order is unchanged — layered `.agent-settings.yml` files
+  still merge.
+
+The kill-switch is scheduled for removal after one minor-version
+soak (D5). File an issue if you need it longer-term so the precedence
+table can absorb the missing case.
+
+### Verifying the resolved root
+
+```bash
+agent-config doctor
+```
+
+prints the resolved project root and the anchor that resolved it,
+plus the active resolution step (CLI arg / env var / anchor walk /
+fallback). Use this when a command appears to read the wrong
+`.agent-settings.yml`.
 
 ---
 
