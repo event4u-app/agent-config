@@ -58,17 +58,17 @@ complexity: structural
 
 ### Phase 4 — Docs & release notes
 
-- [ ] `docs/installation.md` — add a "Global CLI + per-project settings" section explaining the minimal flow.
-- [ ] `README.md` — one-liner under the npx block: `npm install -g @event4u/agent-config && agent-config init --minimal`.
-- [ ] `CHANGELOG.md` — entry under the 2.13.x current era.
-- [ ] ADR or short note under `docs/decisions/` if the anchor-precedence rule needs a permanent home.
+- [x] `docs/installation.md` — add a "Global CLI + per-project settings" section explaining the minimal flow.
+- [x] `README.md` — one-liner under the npx block: `npm install -g @event4u/agent-config && agent-config init --minimal`.
+- [x] `CHANGELOG.md` — entry under `[Unreleased]` (current era is 2.11.x / 2.15.0; new features land under Unreleased per existing project pattern).
+- [x] ADR or short note under `docs/decisions/` if the anchor-precedence rule needs a permanent home. → Covered by `agents/council-sessions/step-7-d3-cascade-conflict-decision.md`; no separate ADR needed.
 
 ### Phase 5 — Tests + CI
 
 - [x] `tests/test_minimal_init.py` — covers payload shape (only 3 files written), wrapper present, refusal of nested init.
 - [x] `tests/test_project_root_anchors.py` — covers `.git`, `agents/`, `.agent-settings.yml` anchors and precedence.
 - [x] `tests/test_subdir_invocation.py` — covers anchor walk from a deep cwd, `AGENT_CONFIG_PROJECT_ROOT` env override, explicit `--project` precedence, no-anchor fallback, and wrapper-pinned root surviving `chdir`.
-- [ ] CI job `python-tests` already covers these — no new workflow needed.
+- [x] CI job `python-tests` already covers these — no new workflow needed.
 
 ## Decisions (resolved via AI Council, design + analysis lens)
 
@@ -101,12 +101,12 @@ Phase 3 **must not** ship before Phase 1 lands (subdir resolution depends on the
 
 ## Additional acceptance criteria (Council follow-ups)
 
-- [ ] `tests/test_project_root_anchors.py` covers the mixed-anchor edge case from D3: ancestor with both `.git` and `.agent-settings.yml` resolves to that ancestor; `.agent-settings.yml` wins for downstream cascade order, but the **root path** is the same.
-- [ ] `tests/test_project_root_anchors.py` covers the `agents/`-without-markers case from D1 (must **not** anchor).
-- [ ] `tests/test_kill_switch.py` covers `AGENT_CONFIG_LEGACY_ANCHOR=1` reverting to `.git`-only behaviour.
-- [ ] `tests/test_anchor_perf.py` asserts the < 5 ms walk budget at depth 20.
-- [ ] `docs/installation.md` "Migration" section explains transition for projects on the pre-Step-7 (`.git`-only) anchor logic; includes the kill-switch escape hatch.
-- [ ] `docs/installation.md` clarifies `--minimal` vs full `init` decision table (when to pick which).
+- [x] `tests/test_project_root_anchors.py` covers the mixed-anchor edge case from D3: ancestor with both `.git` and `.agent-settings.yml` resolves to that ancestor; `.agent-settings.yml` wins for downstream cascade order, but the **root path** is the same.
+- [x] `tests/test_project_root_anchors.py` covers the `agents/`-without-markers case from D1 (must **not** anchor).
+- [x] `tests/test_kill_switch.py` covers `AGENT_CONFIG_LEGACY_ANCHOR=1` reverting to `.git`-only behaviour.
+- [x] `tests/test_anchor_perf.py` asserts the < 5 ms walk budget at depth 20.
+- [x] `docs/installation.md` "Migration" section explains transition for projects on the pre-Step-7 (`.git`-only) anchor logic; includes the kill-switch escape hatch.
+- [x] `docs/installation.md` clarifies `--minimal` vs full `init` decision table (when to pick which).
 
 ## Council brief
 
