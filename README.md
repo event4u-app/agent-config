@@ -499,18 +499,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ## Data governance & domain safety
 
-`agent-config` ships **12 domain-safety rules** (`.agent-src.uncompressed/rules/domain-safety-*.md`) that act as a per-domain output floor — PII redaction, disclaimer requirements, and retention guidance. Rules fire automatically via the router when their triggers match.
-
-| Surface | Rule(s) | Floor |
-|---|---|---|
-| Support / CRM drafts | `domain-safety-pii-support` · `domain-safety-retention-support` | Redact customer names, emails, phones, account IDs to placeholders before output |
-| Finance / invoicing | `domain-safety-pii-finance` · `domain-safety-retention-finance` | Redact counterparty PII and bank identifiers; flag retention under audit hold |
-| Recruiting | `domain-safety-pii-recruiting` | Redact candidate PII from notes, scorecards, rejection emails |
-| Marketing testimonials | `domain-safety-pii-marketing` | Require consent record before customer-identifying copy ships |
-| Legal · financial · medical · consulting drafts | `domain-safety-disclaimer-*` | "Not legal/financial/medical advice" disclaimers; refuse diagnostic / dosage / specific tax positions |
-| Logs · exports | `domain-safety-logging-pii-floor` · `domain-safety-export-redact` | No raw PII in logs or exports; allowlist-driven structured fields only |
-
-Each rule declares `applies_to_user_types:` in frontmatter — rules load only when the matching user-type is active (forward-compatible with the user-types axis shipping in `step-9-user-types-axis`). The set is opt-in by domain, never overrides higher Iron Laws, and cross-references the `privacy-review` and `data-handling-judgment` skills for deeper regime checks (GDPR · CCPA · HIPAA).
+12 domain-safety rules (`.agent-src.uncompressed/rules/domain-safety-*.md`) act as a per-domain output floor — PII redaction for support / finance / recruiting / marketing, advice disclaimers for legal / financial / medical / consulting drafts, retention guidance for finance / support, and ops floors for logging / export. Full surface → rule(s) → floor matrix: [`docs/safety.md`](docs/safety.md).
 
 ---
 
@@ -701,22 +690,7 @@ step (package manager + `rm -rf` of generated dirs).
 
 ### Maintainer telemetry (opt-in, default-off)
 
-A local-only artefact-engagement log can be enabled by maintainers to see
-which skills, rules, commands, and guidelines the agent actually consults
-and applies during a `/implement-ticket` or `/work` run. The log is a
-JSONL file under the project root; nothing is uploaded, nothing is shared
-across projects. Default is off; consumers see no prompts.
-
-```yaml
-# .agent-settings.yml — opt in only when you want measurement
-telemetry:
-  artifact_engagement:
-    enabled: true
-```
-
-Reports: `./agent-config telemetry:report`. Full contract,
-privacy/redaction floor, and quartile semantics:
-[`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
+Local-only artefact-engagement log (`telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`) records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded, nothing shared. Reports via `./agent-config telemetry:report`. Contract + privacy floor: [`contexts/contracts/artifact-engagement-flow.md`](.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) (beta).
 
 ### Context-aware command suggestion
 
