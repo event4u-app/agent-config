@@ -3314,6 +3314,34 @@ def _minimal_templates_root() -> Path:
     return Path()  # unreachable
 
 
+#: Relative path of the install-mode marker file written by both the
+#: minimal short-circuit and the full install path (Step 8 A5). Read by
+#: ``doctor --context`` (and any future tooling) instead of inferring
+#: install state from filesystem heuristics like ``AGENTS.md`` presence.
+INSTALL_MODE_MARKER_REL = "agents/.agent-state/install-mode.txt"
+
+
+def _write_install_mode_marker(project_root: Path, mode: str) -> None:
+    """Write ``agents/.agent-state/install-mode.txt`` = ``mode\\n``.
+
+    Idempotent: overwrites unconditionally so re-installs flip the
+    state correctly (e.g. minimal → full upgrade). Failure to write
+    is non-fatal — install proceeds and ``doctor --context`` falls
+    back to the filesystem heuristic. ``mode`` must be ``minimal``
+    or ``full``.
+    """
+    if mode not in ("minimal", "full"):
+        return
+    marker = project_root / INSTALL_MODE_MARKER_REL
+    try:
+        marker.parent.mkdir(parents=True, exist_ok=True)
+        marker.write_text(f"{mode}\n", encoding="utf-8")
+    except OSError:
+        # Marker is advisory; install must not abort because the
+        # state dir is unwritable (e.g. read-only mount in CI).
+        pass
+
+
 def install_minimal(target_root: Path, force: bool) -> int:
     """Bootstrap the project-local override layer only (D2-compliant).
 
@@ -3383,6 +3411,22 @@ def install_minimal(target_root: Path, force: bool) -> int:
     else:
         settings_dst.write_text(settings_src.read_text(encoding="utf-8"), encoding="utf-8")
         success(f"Wrote {SETTINGS_FILE}")
+
+    # 3. install-mode marker (Step 8 A5) — authoritative state for
+    # doctor --context and future install-aware tooling. Written even
+    # on idempotent re-runs so the marker is repaired if removed.
+    _write_install_mode_marker(target_root, "minimal")
+
+    # Stderr upgrade hint (Step 8 A5) — minimal installs are intentionally
+    # stripped; surface the upgrade path on stderr so it appears in
+    # human terminals without polluting stdout-parsed output. Suppressed
+    # under --quiet to honor scripted-install contracts.
+    if not QUIET:
+        print(
+            "ℹ️   Minimal install — run `agent-config install --force` "
+            "to add AGENTS.md, bridges, and tool integrations.",
+            file=sys.stderr,
+        )
 
     if not QUIET:
         print()
@@ -3497,6 +3541,11 @@ def _main_project_install(
         print()
 
     ensure_agent_settings(project_root, package_root, opts.profile, opts.force)
+
+    # Install-mode marker (Step 8 A5) — full path flips any prior
+    # minimal marker to "full" so doctor --context reflects the
+    # upgraded state. Idempotent on re-runs of the same scope.
+    _write_install_mode_marker(project_root, "full")
 
     tools = parsed_tools
 
