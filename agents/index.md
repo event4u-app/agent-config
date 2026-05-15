@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **473 artefacts** in this package.
+Maintainer-facing index of all **485 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -222,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (67)
+## Rules (79)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -249,6 +249,18 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`docker-commands`](../.agent-src.uncompressed/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`docs-sync`](../.agent-src.uncompressed/rules/docs-sync.md) | auto | Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra |
 | rule | [`domain-adoption-policy`](../.agent-src.uncompressed/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
+| rule | [`domain-safety-disclaimer-consulting`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md) | auto | Drafting strategic recommendations, executive memos, board decks, or consulting deliverables — cite the assumptions every recommendation rests on; flag low-confidence claims |
+| rule | [`domain-safety-disclaimer-financial`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md) | auto | Drafting investment memos, valuation models, tax positions, or any financial-advice-shaped content — require 'not financial advice' disclaimer in the output |
+| rule | [`domain-safety-disclaimer-legal`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md) | auto | Drafting legal briefs, contract redlines, terms of service, privacy policies, or any legal-shaped content — require 'not legal advice' disclaimer in the output |
+| rule | [`domain-safety-disclaimer-medical`](../.agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md) | auto | Drafting health, wellness, medical, or therapeutic content — require 'not medical advice' disclaimer; refuse diagnostic or dosage outputs |
+| rule | [`domain-safety-export-redact`](../.agent-src.uncompressed/rules/domain-safety-export-redact.md) | auto | Generating CSV / Excel / API exports, data-shares with partners, or analyst handoffs — redact direct identifiers; flag re-identification risk on quasi-identifier combinations |
+| rule | [`domain-safety-logging-pii-floor`](../.agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md) | auto | Writing logging code, structured logger configuration, or log-line generation — refuse to log raw PII; require redaction at the logger or structured-field allowlist |
+| rule | [`domain-safety-pii-finance`](../.agent-src.uncompressed/rules/domain-safety-pii-finance.md) | auto | Drafting invoices, financial reports, AR/AP statements, or finance memos — redact counterparty PII and account/bank identifiers before output |
+| rule | [`domain-safety-pii-marketing`](../.agent-src.uncompressed/rules/domain-safety-pii-marketing.md) | auto | Drafting customer testimonials, case studies, social proof, or marketing emails referencing real customers — require consent record and redact identifying details if consent absent |
+| rule | [`domain-safety-pii-recruiting`](../.agent-src.uncompressed/rules/domain-safety-pii-recruiting.md) | auto | Drafting candidate notes, interview scorecards, rejection emails, or hiring memos — redact candidate PII before output |
+| rule | [`domain-safety-pii-support`](../.agent-src.uncompressed/rules/domain-safety-pii-support.md) | auto | Generating support macros, ticket responses, or help-desk drafts — redact customer PII before output (names, emails, phones, account IDs, addresses) |
+| rule | [`domain-safety-retention-finance`](../.agent-src.uncompressed/rules/domain-safety-retention-finance.md) | auto | Generating finance data retention guidance — flag jurisdiction dependence, default to longest applicable retention, never recommend deletion of records under audit hold |
+| rule | [`domain-safety-retention-support`](../.agent-src.uncompressed/rules/domain-safety-retention-support.md) | auto | Generating support / CRM data retention guidance — surface DSR-readiness, consent-window expiry, and the difference between ticket body retention vs. analytics aggregate retention |
 | rule | [`downstream-changes`](../.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src.uncompressed/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`external-reference-deep-dive`](../.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | User names an external repo, file, URL, or artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
