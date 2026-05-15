@@ -1,0 +1,149 @@
+# Non-developer evaluation corpus — step-12 Phase 1 deliverable
+#
+# Purpose: prove agent-config skills cover non-developer workflows
+# (content, consulting, finance/ops) before any messaging change ships.
+# Each prompt declares the expected skill set; the eval runner (to be
+# wired by step-4 measurement-and-benchmark) computes selection
+# accuracy. Target: >= 0.60 across all 15 prompts.
+#
+# Schema is intentionally minimal and forward-compatible with the
+# step-4 dev corpus shape. Fields beyond `id`, `category`, `prompt`,
+# `expected_skills` are advisory until the runner exists.
+#
+# Status: data-only. `task bench --corpus non-dev` is not yet wired
+# (depends on step-4). When the runner ships, it consumes this file
+# unchanged.
+
+version: 1
+corpus_id: non-dev
+selection_accuracy_target: 0.60
+
+prompts:
+  # ---------------- content (5) ----------------
+  - id: content-01
+    category: content
+    user_type_candidates: [creator, marketer]
+    prompt: "Define brand voice for a B2B SaaS targeting indie developers — three voice attributes plus tone-by-context matrix."
+    expected_skills: [voice-and-tone-design]
+    rubric:
+      must_include: ["three named voice attributes", "tone-by-context matrix"]
+
+  - id: content-02
+    category: content
+    user_type_candidates: [marketer, founder]
+    prompt: "Draft a launch email for a new pricing tier — single CTA, under 200 words, segmented for existing customers."
+    expected_skills: [messaging-architecture, voice-and-tone-design]
+    rubric:
+      must_include: ["single primary CTA", "audience-segmented opener"]
+      length_words: { max: 200 }
+
+  - id: content-03
+    category: content
+    user_type_candidates: [marketer]
+    prompt: "Plan an editorial cadence for the next quarter — evergreen vs campaign vs reactive split, three channels."
+    expected_skills: [editorial-calendar]
+    rubric:
+      must_include: ["evergreen / campaign / reactive split", "per-channel beats"]
+
+  - id: content-04
+    category: content
+    user_type_candidates: [marketer, founder]
+    prompt: "Turn this changelog into a release announcement targeted at non-technical buyers."
+    expected_skills: [release-comms]
+    rubric:
+      must_include: ["value framing, not feature list", "audience-segmented surfaces"]
+
+  - id: content-05
+    category: content
+    user_type_candidates: [creator]
+    prompt: "Map a content funnel from awareness to paid — leverage point per stage, fix the mid-funnel leak."
+    expected_skills: [content-funnel-design]
+    rubric:
+      must_include: ["per-stage content shape", "leverage-point identification"]
+
+  # ---------------- consulting (5) ----------------
+  - id: consulting-01
+    category: consulting
+    user_type_candidates: [consultant, founder]
+    prompt: "Build a discovery interview guide for a switch-event JTBD study — bias audit, falsifiable hypothesis."
+    expected_skills: [discovery-interview, customer-research]
+    rubric:
+      must_include: ["switch-event focus", "bias audit", "falsifiable hypothesis"]
+
+  - id: consulting-02
+    category: consulting
+    user_type_candidates: [consultant, founder]
+    prompt: "Where-to-play analysis for entering the German Mittelstand market — moat reasoning, segment sequencing."
+    expected_skills: [competitive-moat-analysis, market-entry-analysis]
+    rubric:
+      must_include: ["moat reasoning", "segment sequencing", "regulatory-delta note"]
+
+  - id: consulting-03
+    category: consulting
+    user_type_candidates: [consultant]
+    prompt: "Compare our positioning to two named competitors — ours-vs-theirs verdict table, adoption queue."
+    expected_skills: [competitive-positioning]
+    rubric:
+      must_include: ["verdict table with axes", "adoption queue with priority"]
+
+  - id: consulting-04
+    category: consulting
+    user_type_candidates: [consultant, founder]
+    prompt: "Extract voice-of-customer themes from the last 30 GitHub issues — recurring complaints, signal vs noise."
+    expected_skills: [voc-extract]
+    rubric:
+      must_include: ["recurring themes with frequency", "verbatim quotes"]
+
+  - id: consulting-05
+    category: consulting
+    user_type_candidates: [consultant, founder]
+    prompt: "Stakeholders disagree on the roadmap — ops wants stability, PO wants velocity. Build a trade-off matrix."
+    expected_skills: [stakeholder-tradeoff]
+    rubric:
+      must_include: ["per-lens framing", "trade-off matrix with cost per choice"]
+
+  # ---------------- finance / ops (5) ----------------
+  - id: finance-01
+    category: finance
+    user_type_candidates: [founder, finance]
+    prompt: "How long is our runway given current burn and last quarter's revenue? Layoff vs cut vs grow decision."
+    expected_skills: [runway-cognition]
+    rubric:
+      must_include: ["burn shape", "fundraise trigger", "cut vs grow recommendation"]
+
+  - id: finance-02
+    category: finance
+    user_type_candidates: [founder, finance]
+    prompt: "Model unit economics for a $99/month SaaS — CAC, LTV, payback period, contribution margin."
+    expected_skills: [unit-economics-modeling]
+    rubric:
+      must_include: ["CAC computation", "LTV computation", "payback period"]
+
+  - id: finance-03
+    category: finance
+    user_type_candidates: [finance, founder]
+    prompt: "Build base / upside / downside scenarios for next year — three-statement modeling, sensitivity analysis."
+    expected_skills: [scenario-modeling, forecasting]
+    rubric:
+      must_include: ["three named scenarios", "sensitivity table", "top-down vs bottom-up reconciliation"]
+
+  - id: finance-04
+    category: ops
+    user_type_candidates: [ops, founder]
+    prompt: "Is this data-processing flow GDPR-compatible? Cross-border transfer, consent shape, breach impact."
+    expected_skills: [privacy-review, data-handling-judgment]
+    rubric:
+      must_include: ["regulatory-regime delta", "cross-border test", "breach-impact triage"]
+
+  - id: finance-05
+    category: ops
+    user_type_candidates: [gtm, founder]
+    prompt: "Audit the sales pipeline — stage exit criteria, per-cell conversion, where is the leak?"
+    expected_skills: [pipeline-strategy, forecast-accuracy]
+    rubric:
+      must_include: ["stage exit criteria", "per-stage conversion rate", "leak diagnosis"]
+
+# ---------------- meta ----------------
+notes:
+  - "PII-redaction test prompt deferred to step-12 Phase 4 wiring — no support-domain skill exists yet to anchor it; corpus stays clean until the skill ships."
+  - "Runner (`task bench --corpus non-dev`) is the deliverable of step-4 Phase 1, not this file."
