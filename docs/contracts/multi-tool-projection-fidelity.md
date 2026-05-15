@@ -112,4 +112,4 @@ These are **architectural facts**, not regressions. They are documented so insta
 - [`augment-projection`](../architecture/augment-projection.md) — pipeline B (Augment-specific)
 - [`multi-tool-projection`](../architecture/multi-tool-projection.md) — pipeline C (the per-tool emitters)
 - [`rule-router`](rule-router.md) — the `triggers:` / `routes_to:` grammar this contract pins
-- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback
+- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback <!-- council-ref-allowed: contract origin trace -->
