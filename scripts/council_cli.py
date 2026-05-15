@@ -77,6 +77,7 @@ from scripts.ai_council.clients import (  # noqa: E402
 from scripts.ai_council.advisors import (  # noqa: E402
     AdvisorPlan, build_persona_labels, plan_advisor_swap,
 )
+from scripts.ai_council.cli_hints import format_install_hints  # noqa: E402
 from scripts.ai_council.config import (  # noqa: E402
     AdvisorConfig, CouncilConfig, CouncilConfigError,
     load_council_config, resolve_api_key,
@@ -948,6 +949,7 @@ def cmd_estimate(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -956,6 +958,7 @@ def cmd_estimate(
                 advisor_plans, explicit_overrides,
             ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
+            skipped=skipped,
         )
     if table is None:
         table = load_prices()
@@ -972,6 +975,7 @@ def cmd_estimate(
     if getattr(args, "debate", False):
         return _emit_debate_estimate(
             args, ai_cfg, members, billable, estimates, advisor_plans,
+            skipped=skipped,
         )
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
@@ -986,6 +990,8 @@ def cmd_estimate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -1005,6 +1011,8 @@ def _emit_debate_estimate(
     billable: list[ExternalAIClient],
     estimates: list[Any],
     advisor_plans: Any,
+    *,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> int:
     """Render the round-by-round debate cost projection.
 
@@ -1039,6 +1047,8 @@ def _emit_debate_estimate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     for round_idx in range(1, rounds + 1):
         sys.stdout.write(f"\nRound {round_idx} of {rounds}:\n")
         sys.stdout.write(format_estimate_table(billable, estimates) + "\n")
@@ -1421,6 +1431,7 @@ def cmd_run(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -1429,6 +1440,7 @@ def cmd_run(
                 advisor_plans, explicit_overrides,
             ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
+            skipped=skipped,
         )
     if table is None:
         table = load_prices()
@@ -1471,6 +1483,8 @@ def cmd_run(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -1733,6 +1747,7 @@ def cmd_debate(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -1743,6 +1758,7 @@ def cmd_debate(
             siblings_overrides=_parse_siblings_overrides(
                 getattr(args, "siblings", None),
             ),
+            skipped=skipped,
         )
     if table is None:
         table = load_prices()
@@ -1801,6 +1817,8 @@ def cmd_debate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(billable, estimates) + "\n"
     )
