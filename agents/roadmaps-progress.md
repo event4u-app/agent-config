@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 159 steps done · 0%**
+**1 / 157 steps done · 1%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 32 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md) | 5 | 32 | 29 | 1 | 0 | 2 | ░░░░░░░░░░ 3% |
 | 2 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md) | 5 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -28,15 +28,15 @@
 
 ### [step-3-agent-user-persona.md](roadmaps/step-3-agent-user-persona.md)
 
-**`.agent-user.md` + User-Persona Cluster + Sparring Command** — 0 / 32 done (0%)
+**`.agent-user.md` + User-Persona Cluster + Sparring Command** — 1 / 30 done (3%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Core file + `init` command + external-enrichment sub-commands | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Core file + `init` command | ⬜ not started | 5 | 0 | 0 | 2 | 0% |
 | 2 | `show` + reading integration | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 3 | Maintenance — observation buffer | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | `/sparring` command (after Phase 1–3 proves stable) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 5 | Documentation + migration cleanup | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 5 | Documentation + migration cleanup | 🟡 in progress | 11 | 1 | 0 | 0 | 8% |
 
 ### [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md)
 
