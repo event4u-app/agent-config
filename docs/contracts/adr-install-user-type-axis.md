@@ -6,12 +6,12 @@ keep-beta-until: 2026-08-13
 # ADR — Install-time user-type axis
 
 > **Status:** Decided · 2026-05-15
-> **Context:** [`agents/roadmaps/step-9-user-types-axis.md`](../../agents/roadmaps/step-9-user-types-axis.md)
-> Phase 1. Council verdict
+> **Source:** Council verdict
 > [`agents/council-responses/2026-05-15-step12-closure-run2.json`](../../agents/council-responses/2026-05-15-step12-closure-run2.json)
-> (D1 ACCEPT with amendments — seed all 7, ≤5 phases, cap deliverables).
-> **Parent vision:** [`step-12-universal-os-reframe.md`](../../agents/roadmaps/archive/step-12-universal-os-reframe.md) L15.
-> **Sibling axis (distinct layer):** [`step-6-user-types-axis.md`](../../agents/roadmaps/step-6-user-types-axis.md).
+> (D1 ACCEPT with amendments — seed all 7 user-types, ≤5 phases, cap deliverables).
+> **Sibling axis (distinct layer):** the runtime `personas/` ladder. The
+> install-time `user_type` axis filters *which skills load*; personas filter
+> *which voice reviews*. The two compose orthogonally.
 
 ## Decision
 
