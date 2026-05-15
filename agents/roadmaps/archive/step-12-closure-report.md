@@ -1,5 +1,6 @@
 ---
-status: report
+status: draft
+report_status: report
 related_roadmap: step-12-universal-os-reframe.md
 generated: 2026-05-15
 council_sessions:
