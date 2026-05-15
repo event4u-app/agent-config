@@ -6,9 +6,7 @@ keep-beta-until: 2026-08-13
 # ADR — Install-time user-type axis
 
 > **Status:** Decided · 2026-05-15
-> **Source:** Council verdict
-> [`agents/council-responses/2026-05-15-step12-closure-run2.json`](../../agents/council-responses/2026-05-15-step12-closure-run2.json)
-> (D1 ACCEPT with amendments — seed all 7 user-types, ≤5 phases, cap deliverables).
+> **Source:** AI Council session 2026-05-15-step12-closure-run2 (Reviewer-A, Reviewer-B, Reviewer-C) D1 verdict — ACCEPT with amendments: seed all 7 user-types, cap roadmap at ≤5 phases, cap deliverables per phase.
 > **Sibling axis (distinct layer):** the runtime `personas/` ladder. The
 > install-time `user_type` axis filters *which skills load*; personas filter
 > *which voice reviews*. The two compose orthogonally.

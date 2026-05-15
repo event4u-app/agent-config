@@ -11,7 +11,7 @@ complexity: lightweight
 
 ## Source
 
-- **Council verdict:** `agents/council-responses/2026-05-15-step12-closure-run2.json`
+- **Council verdict:** `agents/council-responses/2026-05-15-step12-closure-run2.json` <!-- council-ref-allowed: roadmap source-trail -->
   D2 ACCEPT with amendment ("rewrite L153 to allow step-12 closure while
   deferred work tracks here, not blocks it").
 - **Parent roadmap:** [`archive/step-12-universal-os-reframe.md`](archive/step-12-universal-os-reframe.md) *(archived on closure run #2)*.
