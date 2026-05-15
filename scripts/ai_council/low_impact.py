@@ -247,17 +247,59 @@ def _build_user_prompt(question_text: str) -> str:
 
 
 def _aborted_marker(reason: str, members: tuple[MemberConfig, ...]) -> str:
+    """Build the normative ``aborted`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council aborted (<reason>) — escalating to user:``.
+    The members-tried list trails on the same prefix so downstream
+    pattern matchers can still extract who was called.
+    """
     names = ", ".join(m.name for m in members) if members else "no members"
     return (
-        f"[fast-path aborted: {reason} — escalating to user "
-        f"(members tried: {names})]"
+        f"> Low-impact council aborted ({reason}) — escalating to user: "
+        f"members tried: {names}."
     )
 
 
 def _split_marker(answers: tuple[MemberAnswer, ...]) -> str:
-    parts = " · ".join(f"{a.member}: {a.text.splitlines()[0].strip()[:80]}"
-                       for a in answers if a.ok)
-    return f"[fast-path split — escalating to user ({parts})]"
+    """Build the normative ``split`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):``.
+    """
+    parts = " / ".join(
+        f"{a.member}: {a.text.splitlines()[0].strip()[:80]}"
+        for a in answers if a.ok
+    )
+    return f"> Low-impact council split — escalating to user ({parts}):"
+
+
+def _unavailable_marker() -> str:
+    """Build the normative ``unavailable`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council unavailable (no opted-in members) — escalating to user.``.
+    """
+    return (
+        "> Low-impact council unavailable (no opted-in members) — "
+        "escalating to user."
+    )
+
+
+def _resolved_marker(ok_answers: tuple[MemberAnswer, ...]) -> str:
+    """Build the normative ``resolved`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Resolved via low-impact council fast-path: <verdict>.``. The
+    verdict short-string distinguishes single-member from 2-member
+    consensus so the host agent can preserve provenance without
+    paraphrasing the answer body.
+    """
+    if len(ok_answers) <= 1:
+        verdict = "single-member answer"
+    else:
+        verdict = f"{len(ok_answers)}-member consensus"
+    return f"> Resolved via low-impact council fast-path: {verdict}."
 
 
 def _answer_line(text: str) -> str:
@@ -388,7 +430,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="unavailable",
             answer="",
-            marker=_aborted_marker("no opted-in member", ()),
+            marker=_unavailable_marker(),
         )
 
     user_prompt = _build_user_prompt(question_text)
@@ -450,7 +492,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="resolved",
             answer=ok_answers[0].text,
-            marker=plan.marker,
+            marker=_resolved_marker(ok_answers),
             answers=answers_t,
             total_cost_usd=total_cost,
             session_log_line=_session_log_line(
@@ -464,7 +506,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="resolved",
             answer=ok_answers[0].text,
-            marker=plan.marker,
+            marker=_resolved_marker(ok_answers),
             answers=answers_t,
             total_cost_usd=total_cost,
             session_log_line=_session_log_line(

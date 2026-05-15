@@ -188,7 +188,10 @@ def test_resolve_unavailable_when_plan_has_no_members() -> None:
     result = resolve_low_impact("Q?", plan, clients={})
     assert result.status == "unavailable"
     assert result.answer == ""
-    assert "no opted-in member" in result.marker
+    # Normative marker per fast-path-marker-visibility Iron Law.
+    assert result.marker.startswith("> Low-impact council unavailable")
+    assert "no opted-in members" in result.marker
+    assert "escalating to user" in result.marker
 
 
 def test_resolve_single_member_returns_answer() -> None:
@@ -197,7 +200,11 @@ def test_resolve_single_member_returns_answer() -> None:
     result = resolve_low_impact("Q?", plan, clients={"anthropic": client})
     assert result.status == "resolved"
     assert result.answer == "Yes.\nBecause X."
-    assert "fast-path" in result.marker
+    # Normative marker per fast-path-marker-visibility Iron Law.
+    assert result.marker.startswith(
+        "> Resolved via low-impact council fast-path:"
+    )
+    assert "single-member answer" in result.marker
     assert len(client.calls) == 1
     # Token cap from the budget reaches the client.
     assert client.calls[0][2] == plan.budget.max_output_tokens
@@ -212,6 +219,10 @@ def test_resolve_two_members_consensus_returns_answer() -> None:
     result = resolve_low_impact("Q?", plan, clients=clients)
     assert result.status == "resolved"
     assert result.answer.startswith("Yes.")
+    assert result.marker.startswith(
+        "> Resolved via low-impact council fast-path:"
+    )
+    assert "2-member consensus" in result.marker
 
 
 def test_resolve_two_members_split_escalates() -> None:
@@ -223,7 +234,9 @@ def test_resolve_two_members_split_escalates() -> None:
     result = resolve_low_impact("Q?", plan, clients=clients)
     assert result.status == "split"
     assert result.answer == ""
-    assert "fast-path split" in result.marker
+    # Normative marker per fast-path-marker-visibility Iron Law.
+    assert result.marker.startswith("> Low-impact council split")
+    assert "escalating to user" in result.marker
     assert "anthropic" in result.marker and "openai" in result.marker
 
 
@@ -235,7 +248,10 @@ def test_resolve_aborts_when_all_members_fail() -> None:
     }
     result = resolve_low_impact("Q?", plan, clients=clients)
     assert result.status == "aborted"
+    # Normative marker per fast-path-marker-visibility Iron Law.
+    assert result.marker.startswith("> Low-impact council aborted")
     assert "all members failed" in result.marker
+    assert "escalating to user" in result.marker
 
 
 def test_resolve_skips_missing_client() -> None:
