@@ -505,12 +505,6 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ---
 
-## Featured Domain: Laravel Development
-
-Laravel is the package's deepest reference stack — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant — with end-to-end workflows for tickets, CI, and PR review. New here and shipping Laravel? Start at [`docs/getting-started-laravel.md`](docs/getting-started-laravel.md) — it wires up `.agent-settings.yml`, picks the right quality tools, and walks through a full `/implement-ticket` loop. For other stacks (Symfony, Next.js, React, Node) or non-dev surfaces (founder / creator / consultant), see [`docs/getting-started-by-role.md`](docs/getting-started-by-role.md).
-
----
-
 ## Data governance & domain safety
 
 12 domain-safety rules (`.agent-src.uncompressed/rules/domain-safety-*.md`) act as a per-domain output floor — PII redaction for support / finance / recruiting / marketing, advice disclaimers for legal / financial / medical / consulting drafts, retention guidance for finance / support, and ops floors for logging / export. Full surface → rule(s) → floor matrix: [`docs/safety.md`](docs/safety.md).
