@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **457 artefacts** in this package.
+Maintainer-facing index of all **458 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -222,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (66)
+## Rules (67)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -252,6 +252,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`downstream-changes`](../.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src.uncompressed/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`external-reference-deep-dive`](../.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | When the user names an external repo, file, URL, or artifact as a reference — fetch the actual tree and inspect, never summarize from README or metadata |
+| rule | [`fast-path-marker-visibility`](../.agent-src.uncompressed/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host agent MUST surface the transparency marker verbatim in the reply opening; never swallow, paraphrase, or replace it with a same-sounding summary. |
 | rule | [`guidelines`](../.agent-src.uncompressed/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src.uncompressed/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src.uncompressed/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
@@ -355,7 +356,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`judge:steps`](../.agent-src.uncompressed/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`judge`](../.agent-src.uncompressed/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`memory:add`](../.agent-src.uncompressed/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
-| command | [`memory:learn-low-impact`](../.agent-src.uncompressed/commands/memory/learn-low-impact.md) | cluster: memory | Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed. |
+| command | [`memory:learn-low-impact`](../.agent-src.uncompressed/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
 | command | [`memory:load`](../.agent-src.uncompressed/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
 | command | [`memory:mine-session`](../.agent-src.uncompressed/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |
 | command | [`memory:promote`](../.agent-src.uncompressed/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
