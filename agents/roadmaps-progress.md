@@ -6,17 +6,17 @@
 
 ## Overall
 
-**5 / 99 steps done · 5%**
+**9 / 99 steps done · 9%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 25 | 5 | 0 | 0 | ██░░░░░░░░ 17% |
+| 1 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 21 | 9 | 0 | 0 | ███░░░░░░░ 30% |
 | 2 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,12 +26,12 @@
 
 ### [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md)
 
-**`/ghostwriter` cluster + `/post-as:me` + `/post-as:ghostwriter`** — 5 / 30 done (17%)
+**`/ghostwriter` cluster + `/post-as:me` + `/post-as:ghostwriter`** — 9 / 30 done (30%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Schema + storage + privacy gate + fictional fixtures | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | `/ghostwriter:fetch` (URL + name-only modes) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 2 | `/ghostwriter:fetch` (URL + name-only modes) | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 3 | `/ghostwriter:write` + `/post-as:me` + `/post-as:ghostwriter` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Maintenance — list / show / delete / refetch | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Documentation + cross-references | ⬜ not started | 13 | 0 | 0 | 0 | 0% |
