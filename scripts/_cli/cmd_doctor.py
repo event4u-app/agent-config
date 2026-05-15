@@ -42,6 +42,7 @@ from pathlib import Path
 from typing import Any
 
 from scripts._lib import installed_tools
+from scripts._lib.agent_settings import resolve_project_root
 
 
 class _Sentinel:
@@ -56,10 +57,16 @@ class _Sentinel:
 NO_FRONTMATTER = _Sentinel()
 
 
-def _resolve_project_root(arg: str | None) -> Path:
-    if arg:
-        return Path(arg).expanduser().resolve()
-    return Path.cwd().resolve()
+def _resolve_project_root(arg: str | None) -> tuple[Path, str]:
+    """Resolve the doctor's project root via the shared Phase-3 helper.
+
+    Returns ``(root, origin)`` where ``origin`` is one of the anchor
+    names from :mod:`scripts._lib.agent_settings` (``agents-dir``,
+    ``git``, ``agent-settings``) or one of the origin tags
+    ``explicit`` / ``env`` / ``cwd-fallback``. The tag is surfaced in
+    both human and JSON output so subdir invocations are auditable.
+    """
+    return resolve_project_root(arg)
 
 
 def _resolve_path(project_root: Path, raw: str) -> Path:
@@ -872,6 +879,7 @@ def _emit_json(
     foreign: list[dict[str, Any]],
     tag_drift: list[dict[str, Any]],
     checks: list[dict[str, Any]] | None = None,
+    origin: str | None = None,
 ) -> None:
     payload: dict[str, Any] = {
         "project_root": str(project_root),
@@ -880,6 +888,8 @@ def _emit_json(
         "foreign": foreign,
         "tag_drift": tag_drift,
     }
+    if origin is not None:
+        payload["project_root_origin"] = origin
     if checks is not None:
         payload["checks"] = checks
     print(json.dumps(payload, indent=2))
@@ -953,12 +963,18 @@ def _parse(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str] | None = None) -> int:
     opts = _parse(list(argv) if argv is not None else sys.argv[1:])
-    project_root = _resolve_project_root(opts.project)
+    project_root, origin = _resolve_project_root(opts.project)
     manifest_pth = installed_tools.manifest_path(project_root)
     manifest = installed_tools.read_manifest(manifest_pth)
     if manifest is None:
-        print(f"❌  doctor: no project lockfile at {manifest_pth}",
-              file=sys.stderr)
+        print(
+            f"❌  doctor: no project lockfile at {manifest_pth}",
+            file=sys.stderr,
+        )
+        print(
+            f"    project_root: {project_root} (origin: {origin})",
+            file=sys.stderr,
+        )
         print("    run `./agent-config init` to create one",
               file=sys.stderr)
         return 2
@@ -978,9 +994,11 @@ def main(argv: list[str] | None = None) -> int:
     if opts.json:
         _emit_json(
             project_root, missing, modified, foreign, tag_drift,
-            checks=checks,
+            checks=checks, origin=origin,
         )
     else:
+        if opts.check is None:
+            print(f"  📍  project_root: {project_root} (origin: {origin})")
         _emit_checks_text(checks)
         if opts.check is None:
             _emit_text(project_root, missing, modified, foreign, tag_drift)

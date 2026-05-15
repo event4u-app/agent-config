@@ -42,6 +42,7 @@ from scripts._lib.agent_settings import (
     DEFAULT_PROJECT_FILE,
     _resolve_cascade_paths,
     find_project_root,
+    resolve_project_root,
 )
 
 PACKAGE_NAME = "@event4u/agent-config"
@@ -164,7 +165,10 @@ def main(
                              "(without --to there is no source for 'latest').")
     args = parser.parse_args(argv)
 
-    cwd = (cwd or Path.cwd()).resolve()
+    # Phase 3 — anchor walk + AGENT_CONFIG_PROJECT_ROOT honored so
+    # ``agent-config update`` from a subdir writes to the right file.
+    # ``cwd`` is kept as a kwarg for test injection.
+    cwd, _ = resolve_project_root(None, cwd=cwd)
     installed_version = installed_version or _detect_installed_version()
     state_path = state_path or update_check.DEFAULT_STATE_PATH
 

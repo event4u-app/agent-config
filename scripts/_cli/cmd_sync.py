@@ -19,6 +19,7 @@ from pathlib import Path
 from typing import Iterable
 
 from scripts._lib import installed_tools
+from scripts._lib.agent_settings import resolve_project_root
 from scripts.install import main as install_main
 
 
@@ -108,9 +109,12 @@ def _emit(quiet: bool, msg: str) -> None:
 
 def main(argv: list[str]) -> int:
     opts = _parse(argv)
-    project_root = Path(
-        opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
-    ).resolve()
+    # Phase 3 — shared helper honors AGENT_CONFIG_PROJECT_ROOT (set by
+    # the ./agent-config wrapper) and the Step-7 anchor walk. Legacy
+    # ``PROJECT_ROOT`` env var is preserved as an explicit fallback so
+    # existing CI scripts that set it keep working.
+    arg = opts.project or os.environ.get("PROJECT_ROOT")
+    project_root, _ = resolve_project_root(arg)
     manifest = installed_tools.manifest_path(project_root)
     data = installed_tools.read_manifest(manifest)
 

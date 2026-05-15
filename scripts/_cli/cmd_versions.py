@@ -18,14 +18,27 @@ import subprocess
 import sys
 from pathlib import Path
 
+from scripts._lib.agent_settings import resolve_project_root
+
 PACKAGE_NAME = "@event4u/agent-config"
+
+
+def _project_root() -> Path:
+    """Resolve the consumer project root via the Phase-3 helper.
+
+    Honors ``AGENT_CONFIG_PROJECT_ROOT`` and the Step-7 anchor walk so
+    ``agent-config versions`` invoked from a subdir reads the correct
+    ``.agent-settings.yml`` / ``package.json``.
+    """
+    root, _ = resolve_project_root(None)
+    return root
 
 
 def _local_package_version() -> str:
     """Return ``version`` from the local ``package.json``, or ``""`` if absent."""
     candidates = [
         Path(__file__).resolve().parents[2] / "package.json",
-        Path.cwd() / "package.json",
+        _project_root() / "package.json",
     ]
     for p in candidates:
         if p.exists():
@@ -38,7 +51,7 @@ def _local_package_version() -> str:
 
 def _pinned_version() -> str:
     """Return the ``agent_config_version`` pin from ``.agent-settings.yml``."""
-    settings = Path.cwd() / ".agent-settings.yml"
+    settings = _project_root() / ".agent-settings.yml"
     if not settings.exists():
         return ""
     try:

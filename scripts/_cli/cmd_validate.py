@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Iterable
 
 from scripts._lib import installed_lock, installed_tools
+from scripts._lib.agent_settings import resolve_project_root
 from scripts.install import PROJECT_BRIDGE_MARKERS, USER_SCOPE_PATHS
 
 
@@ -121,9 +122,11 @@ def _format(issue: dict) -> str:
 
 def main(argv: list[str]) -> int:
     opts = _parse(argv)
-    project_root = Path(
-        opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
-    ).resolve()
+    # Phase 3 — honor AGENT_CONFIG_PROJECT_ROOT + anchor walk via the
+    # shared helper. Legacy ``PROJECT_ROOT`` env var stays as a fallback
+    # so existing CI scripts keep working.
+    arg = opts.project or os.environ.get("PROJECT_ROOT")
+    project_root, _ = resolve_project_root(arg)
     manifest = installed_tools.manifest_path(project_root)
     data = installed_tools.read_manifest(manifest)
 

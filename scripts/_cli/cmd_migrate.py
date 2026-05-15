@@ -32,6 +32,8 @@ import sys
 from pathlib import Path
 from typing import Iterable, Optional
 
+from scripts._lib.agent_settings import resolve_project_root
+
 PACKAGE_NAME_NPM = "@event4u/agent-config"
 PACKAGE_NAME_COMPOSER = "event4u/agent-config"
 LEGACY_DIRS = ("vendor", "node_modules")
@@ -221,7 +223,10 @@ def main(
                         help="Detect only; do not write any files.")
     args = parser.parse_args(argv)
 
-    project = (cwd or Path.cwd()).resolve()
+    # Phase 3 — honor AGENT_CONFIG_PROJECT_ROOT + anchor walk so
+    # ``agent-config migrate`` invoked from a subdir still targets the
+    # real project root. ``cwd`` kwarg is preserved for test injection.
+    project, _ = resolve_project_root(None, cwd=cwd)
     version = version or _detect_installed_version()
 
     if _detect_already_migrated(project):
