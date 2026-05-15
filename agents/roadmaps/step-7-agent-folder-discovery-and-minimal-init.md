@@ -1,3 +1,7 @@
+---
+complexity: structural
+---
+
 # Step 7 — Agent-Folder Discovery & Minimal Init
 
 **Status:** open · **Owner:** Matze · **Depends on:** —

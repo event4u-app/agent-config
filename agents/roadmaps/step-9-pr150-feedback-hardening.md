@@ -1,3 +1,7 @@
+---
+complexity: structural
+---
+
 # Step 9 — PR #150 Follow-up Hardening
 
 **Status:** open · **Owner:** Matze · **Depends on:** PR #150 merged (✓), Step 8 (parallel, no hard dep)
