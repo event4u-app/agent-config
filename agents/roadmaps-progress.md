@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 117 steps done · 0%**
+**6 / 117 steps done · 5%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md) | 7 | 48 | 48 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md) | 7 | 48 | 42 | 6 | 0 | 0 | █░░░░░░░░░ 12% |
 | 2 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,14 +26,14 @@
 
 ### [step-12-universal-os-reframe.md](roadmaps/step-12-universal-os-reframe.md)
 
-**Road to Universal-OS Reframe (audience expansion, capability-preserving)** — 0 / 48 done (0%)
+**Road to Universal-OS Reframe (audience expansion, capability-preserving)** — 6 / 48 done (12%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Non-developer evaluation corpus (prerequisite gate) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Role-based documentation (fast win, zero code) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | Interactive initialization (MCP-compatible) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Domain safety rules (data governance) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Domain safety rules (data governance) | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 5 | Cross-domain skill bridging (schema) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | README identity rewrite (post-validation) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 7 | Community validation (proof of concept) | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
