@@ -1,0 +1,15 @@
+id: creator
+description: Content creators, ghostwriters, voice modeling, editorial cadence
+primary_workflows:
+  - voice_profile_authoring
+  - editorial_calendar_management
+  - content_funnel_design
+  - post_drafting_in_voice
+default_skill_priority:
+  - ghostwriter
+  - post-as
+  - voice-and-tone-design
+  - editorial-calendar
+  - content-funnel-design
+notes: Ghostwriter cluster is the entry-point primitive. Voice modeling
+  and editorial cadence skills support the daily drafting loop.

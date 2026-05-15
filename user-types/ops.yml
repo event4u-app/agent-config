@@ -1,0 +1,15 @@
+id: ops
+description: Operations, support, retention, ticketing, incident response
+primary_workflows:
+  - support_macro_and_ticket_response
+  - retention_and_churn_loops
+  - onboarding_program_design
+  - incident_response
+default_skill_priority:
+  - churn-prevention
+  - retention-loops
+  - onboarding-design
+  - incident-commander
+  - voc-extract
+notes: Overlap with developer for incident work; with founder for early-stage
+  onboarding design.

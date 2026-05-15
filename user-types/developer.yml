@@ -1,0 +1,15 @@
+id: developer
+description: Software engineers, codebase work, CI / tests, infrastructure
+primary_workflows:
+  - feature_implementation
+  - bug_investigation_and_fix
+  - test_authoring
+  - ci_and_pr_workflow
+default_skill_priority:
+  - developer-like-execution
+  - systematic-debugging
+  - test-driven-development
+  - quality-tools
+  - git-workflow
+notes: Historical default audience. Every developer-tagged skill should
+  also work without the flag set (legacy behavior preserved).

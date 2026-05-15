@@ -1,0 +1,16 @@
+id: founder
+description: Solo founders, early-stage operators, multi-hat decision-making
+primary_workflows:
+  - vision_and_positioning_articulation
+  - fundraising_narrative_construction
+  - hiring_and_org_design
+  - runway_and_scenario_decisions
+default_skill_priority:
+  - vision-articulation
+  - fundraising-narrative
+  - positioning-strategy
+  - runway-cognition
+  - okr-tree-modeling
+notes: Founders typically wear gtm + finance + ops hats; this filter is
+  *primary*-workflow, not exclusive. Crossover skills surface from
+  gtm.yml and finance.yml on demand.

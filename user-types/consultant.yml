@@ -1,0 +1,15 @@
+id: consultant
+description: Independent consultants, contract work, deliverable framing, client memos
+primary_workflows:
+  - client_engagement_framing
+  - executive_memo_drafting
+  - scenario_and_tradeoff_modeling
+  - case_study_capture
+default_skill_priority:
+  - doc-coauthoring
+  - contracts-cognition
+  - stakeholder-tradeoff
+  - decision-record
+  - deal-qualification-meddic
+notes: Many consultant-tagged skills overlap with founder and finance — defaults
+  here lean toward client-facing deliverables rather than internal modeling.
