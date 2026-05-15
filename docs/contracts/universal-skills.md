@@ -44,7 +44,7 @@ A skill earns the universal label when **all three** hold:
 
 ## Exclusion criteria
 
-- **Domain anchor.** `voice-and-tone-design` (creator), `runway-cognition` (founder), `quality-tools` (developer), `pipeline-strategy` (GTM) — strong-fit for one user-type, weak for the other five. These tag via `recommended_for_user_types:` ([`step-5`](../../agents/roadmaps/step-5-schema-rigor.md) frontmatter contract).
+- **Domain anchor.** `voice-and-tone-design` (creator), `runway-cognition` (founder), `quality-tools` (developer), `pipeline-strategy` (GTM) — strong-fit for one user-type, weak for the other five. These tag via the `recommended_for_user_types:` frontmatter field defined in [`skill.schema.json`](../../scripts/schemas/skill.schema.json).
 - **Tool-specific.** `laravel-horizon`, `nextjs-patterns`, `mcp-builder`, `terraform` — load only when the matching stack flag is set.
 - **Council / role review.** `judge-bug-hunter`, `judge-security-auditor`, `architecture-review-lens` — load via subagent orchestration, not via universal allowlist.
 
@@ -67,7 +67,7 @@ The host agent's skill loader is expected to:
 2. Union with this universal allowlist (always, no opt-out).
 3. Surface a `loaded_skills_count` in the agent's debug / status output so the operator can verify filtering ran.
 
-**Runtime filter status:** the prefix-filter pass is gated on [`step-9-user-types-axis`](../../agents/roadmaps/step-9-user-types-axis.md) shipping the `user-types/` directory and `--user-type` flag. Until then, every skill loads (current v2.x behavior); this contract is the forward declaration of the eventual filter, not its implementation.
+**Runtime filter status:** the prefix-filter pass is gated on the user-types axis shipping the `user-types/` directory and `--user-type` flag. Until then, every skill loads (current v2.x behavior); this contract is the forward declaration of the eventual filter, not its implementation.
 
 ## Change procedure
 
@@ -83,7 +83,6 @@ Removing a skill is breaking. It must be announced in `STABILITY.md` with a depr
 ## Versioning
 
 - This contract is **beta**. Once non-dev selection-accuracy ≥ 0.60 sustains across two consecutive `task bench --corpus non-dev` runs, status promotes to **stable** and entries become semver-protected.
-- Tracked against [`step-12-universal-os-reframe`](../../agents/roadmaps/step-12-universal-os-reframe.md) Phase 3 + Phase 5.
 
 ## Related
 

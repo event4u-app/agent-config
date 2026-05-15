@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-13
 
 # Router Blending — Cross-Domain Skill Mix Contract
 
-> **Status:** beta · **Owner:** step-12 Phase 5 · **Depends on:** [`universal-skills.md`](universal-skills.md), [`step-9-user-types-axis`](../../agents/roadmaps/step-9-user-types-axis.md) (axis seeds)
+> **Status:** beta · **Owner:** router governance · **Depends on:** [`universal-skills.md`](universal-skills.md), the user-types axis (axis seeds — schema field defined under [`skill.schema.json`](../../scripts/schemas/skill.schema.json) → `recommended_for_user_types`).
 
 ## Purpose
 
@@ -44,7 +44,7 @@ Each pool entry is a `recommended_for_user_types:` frontmatter tag on the skill.
 
 1. **Read** `.agent-config.local.json` → `user_type`.
 2. **Filter** all 210 skills: keep the skill iff `user_type ∈ recommended_for_user_types` **or** `recommended_for_user_types` is absent (universal).
-3. **Stack overlay.** If `stack` is set (laravel / nextjs / python / …), also keep skills whose body cites that stack — language-keyed bridge. Implementation: pattern match on the skill `description:` frontmatter; details land with [`step-5-schema-rigor`](../../agents/roadmaps/step-5-schema-rigor.md).
+3. **Stack overlay.** If `stack` is set (laravel / nextjs / python / …), also keep skills whose body cites that stack — language-keyed bridge. Implementation: pattern match on the skill `description:` frontmatter; details land with the schema-rigor contract once the schema bridge for stack-keyed bridge tagging is finalised.
 4. **Cap.** No filter is applied if the result drops below 50 skills (safety floor — under-filtering is recoverable, over-filtering hides essentials).
 5. **Surface** `loaded_skills_count` + per-pool counts in the agent debug output.
 
@@ -67,6 +67,5 @@ Wired into `task ci` as a non-blocking warning until the user-types axis stabili
 ## Related
 
 - [`universal-skills.md`](universal-skills.md) — the always-loaded floor under the blend.
-- [`agents/roadmaps/step-9-user-types-axis.md`](../../agents/roadmaps/step-9-user-types-axis.md) — user-type seed contract this blending consumes.
-- [`agents/roadmaps/step-5-schema-rigor.md`](../../agents/roadmaps/step-5-schema-rigor.md) — frontmatter field that carries the tags.
+- [`skill.schema.json`](../../scripts/schemas/skill.schema.json) — `recommended_for_user_types` field that carries the tags.
 - [`tests/eval/corpus-non-dev.yaml`](../../tests/eval/corpus-non-dev.yaml) — empirical validation of the blends.
