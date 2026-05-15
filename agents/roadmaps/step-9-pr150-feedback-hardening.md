@@ -78,9 +78,9 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 4 — Corpus parser hardening (G2)
 
-- [ ] New test file `tests/test_low_impact_corpus_robustness.py` — seven failure-mode fixtures under `tests/fixtures/corpus-robust/` (one per case in AC).
-- [ ] Harden `scripts/ai_council/low_impact_corpus.py` (or wherever the parser lives) to raise typed errors (`CorpusParseError` with `reason` field), not silent skip.
-- [ ] Document the contract in `docs/contracts/low-impact-corpus-format.md` (parser-visible invariants).
+- [x] New test file `tests/test_low_impact_corpus_robustness.py` — seven failure-mode fixtures under `tests/fixtures/corpus-robust/` (one per case in AC).
+- [x] Harden `scripts/ai_council/low_impact_corpus.py` (or wherever the parser lives) to raise typed errors (`CorpusParseError` with `reason` field), not silent skip.
+- [x] Document the contract in `docs/contracts/low-impact-corpus-format.md` (parser-visible invariants).
 
 ### Phase 5 — Fuzzy matching with safety vetoes (G3)
 
