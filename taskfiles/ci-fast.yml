@@ -46,6 +46,11 @@ tasks:
     desc: Validate that every slash command under .agent-src.uncompressed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
     cmd: python3 scripts/lint_command_tiers.py {{.QUIET_FLAG}}
 
+  lint-ghostwriter-source:
+    silent: true
+    desc: "Enforce ghostwriter storage tiers — package fixtures must be allowlisted + fictional; consumer-tree profiles must not be fictional (see docs/contracts/ghostwriter-schema.md)"
+    cmd: python3 scripts/lint_ghostwriter_source.py {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1

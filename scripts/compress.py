@@ -77,6 +77,11 @@ def _tool_active(tool_id: str) -> bool:
 # Files to copy as-is even if .md (not compressed by agent)
 COPY_AS_IS = {"README.md"}
 
+# Directories (relative to SOURCE_DIR) whose .md content is data, not prose,
+# and must be copied verbatim. Ghostwriter fixtures carry voice_samples that
+# would be destroyed by caveman compression.
+COPY_AS_IS_DIRS = frozenset({"ghostwriter"})
+
 
 def _read_augment_rules_use_symlinks() -> bool:
     """Read augment.rules_use_symlinks from .agent-settings.yml.
@@ -234,6 +239,12 @@ def should_compress(filepath: Path) -> bool:
     if filepath.suffix != ".md":
         return False
     if filepath.name in COPY_AS_IS:
+        return False
+    try:
+        rel_parts = filepath.relative_to(SOURCE_DIR).parts
+    except ValueError:
+        rel_parts = filepath.parts
+    if rel_parts and rel_parts[0] in COPY_AS_IS_DIRS:
         return False
     return True
 

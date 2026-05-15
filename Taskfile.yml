@@ -107,6 +107,7 @@ tasks:
       - task: lint-skills
       - task: lint-rule-tiers
       - task: lint-command-tiers
+      - task: lint-ghostwriter-source
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-hook-concern-budget
@@ -172,6 +173,7 @@ tasks:
       - task: lint-skills-strict
       - task: lint-rule-tiers
       - task: lint-command-tiers
+      - task: lint-ghostwriter-source
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-hook-concern-budget
