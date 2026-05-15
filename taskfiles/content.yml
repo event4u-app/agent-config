@@ -192,6 +192,11 @@ tasks:
     desc: Fail if council-* artefacts are placed outside the canonical agents/council-{questions,responses,sessions}/ dirs (ai-council § Output path convention)
     cmd: python3 scripts/check_council_layout.py {{.QUIET_FLAG}}
 
+  check-role-doc-links:
+    silent: true
+    desc: "Fail if any skill link in docs/getting-started-by-role.md or getting-started-laravel.md does not resolve (step-12 Phase 2 CI gate)"
+    cmd: python3 scripts/check_role_doc_links.py {{.QUIET_FLAG}}
+
   council-prune:
     desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs
     cmd: python3 scripts/council_prune.py

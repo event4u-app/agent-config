@@ -124,6 +124,7 @@ tasks:
       - task: runtime-e2e
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
 
@@ -190,5 +191,6 @@ tasks:
       - task: runtime-e2e
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme-strict
