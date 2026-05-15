@@ -13,7 +13,7 @@ council_sessions:
 
 `/roadmap:process-full agents/roadmaps/step-12-universal-os-reframe.md` reached the mechanical halt condition from [`roadmap-process-loop`](../../.augment/contexts/execution/roadmap-process-loop.md) § 5 ("step reveals work outside the roadmap's scope"). Every remaining open checkbox in step-12 is a deliberate cross-roadmap, external-recruit, or missing-runtime dependency authored as such by the roadmap.
 
-In-branch scope: **closed**. 25 / 48 boxes done (52% via dashboard math). All 23 opens are scope-out for this branch.
+In-branch scope: **closed**. 26 / 48 boxes done (54% via dashboard math). All 22 remaining opens are scope-out for this branch.
 
 ## Decision provenance
 
@@ -33,7 +33,7 @@ AI Council polled twice on this roadmap run, both rounds with anthropic/claude-s
 - **Phase 3** (4/6) — `agent-config init --interactive`, `.agent-config.local.json` schema, universal-skills allowlist (15 skills) in `docs/contracts/universal-skills.md`. Opens = MCP runtime + step-9 measurement.
 - **Phase 4** (6/6) — 12 `domain-safety-*` rules (PII redaction, output disclaimers, retention), `safety-01` corpus prompt, README "Data governance" section.
 - **Phase 5** (5/5) — `recommended_for_user_types` schema field, 32 skills tagged, router-blending contract in `docs/contracts/router-blending.md`.
-- **Phase 6** (3/6) — README H1 reframe ("Universal AI Agent OS"), 3-column audience hero, Laravel relocated below the fold. Opens = GitHub repo settings (user action — reviewable script drafted in [`scripts/update-github-metadata.sh`](../../scripts/update-github-metadata.sh)) + A/B validation (external).
+- **Phase 6** (4/6) — README H1 reframe ("Universal AI Agent OS"), 3-column audience hero, Laravel relocated below the fold, GitHub repo description + topics applied 2026-05-15 via [`scripts/update-github-metadata.sh`](../../scripts/update-github-metadata.sh). Opens = A/B validation + iteration (external).
 
 ## Preparatory deliverables (final-push pass 2)
 
@@ -50,7 +50,7 @@ Two artefacts added on this branch that do **not** close their roadmap boxes but
 | Phase 2 × 1 (non-dev tester walkthrough) | External recruit (Indie Hackers / ContentWritingJobs) | External human action |
 | Phase 3 × 1 (MCP-native prompts) | MCP runtime wiring | Missing runtime |
 | Phase 3 × 1 (≥40% skill-count reduction) | `step-6-user-types-axis.md` (47 opens, 0 closed) | Cross-roadmap dependency on incomplete roadmap |
-| Phase 6 × 3 (GitHub settings, A/B, iteration) | User action + external recruits | External human action |
+| Phase 6 × 2 (A/B, iteration) | External recruits + 90-day observation | External human action |
 | Phase 7 × 14 (announcements, telemetry, 5 case studies, 90-day window, interview gate) | Post-merge field validation + `step-9` telemetry + `init --user-type=X` flag | External + cross-roadmap + missing runtime |
 
 The roadmap's Phase 7 header (`step-12-universal-os-reframe.md` § Phase 7) declares these "stay open intentionally" — they are tracked work, not orphans. No checkbox rewriting performed; `[ ]` semantics preserved per roadmap-author intent.
