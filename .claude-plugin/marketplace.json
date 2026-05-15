@@ -5,8 +5,8 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Shared agent configuration — skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
-    "version": "2.16.0",
+    "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
+    "version": "2.17.0",
     "keywords": [
       "agent-config",
       "skills",
@@ -26,7 +26,7 @@
   "plugins": [
     {
       "name": "agent-config",
-      "description": "Full skill catalog — writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
       "keywords": [
         "skills",
         "rules",
