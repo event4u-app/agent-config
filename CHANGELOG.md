@@ -16,6 +16,51 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+**Council quota & necessity transparency (`step-8-quota-necessity-transparency`)** —
+the council's two pre-flight gates (`cli_call_budget` and
+`necessity_classifier`) become observable and aligned with the
+"Council always active when enabled" mental model. New surfaces:
+
+- `council run` / `council debate` print a one-line
+  `council:quota · <provider> used/limit · …` summary before the
+  first member fires. Only providers with a configured per-day cap
+  appear; uncapped providers are omitted (no false metering).
+- `cli_call_budget.warn_at` (float, default `0.8`) — once
+  `used / max_calls_per_day >= warn_at`, the summary line is
+  prefixed `⚠️` and a `council:quota · WARN` line names the
+  providers near the wall.
+- New `agent-config council quota` subcommand dumps today's
+  `~/.event4u/agent-config/cli-calls.json` state plus the configured
+  caps. `--reset <provider> --confirm` clears today's counter for one
+  provider for manual rollover.
+- **Necessity tier split (D2):** `necessity_classifier.user_explicit_mode`
+  (default `warn-only`) separates the agent and user_explicit tiers.
+  User-typed `/council` calls proceed by default with an annotated
+  stdout line; agent-initiated dispatches keep `educate` behaviour.
+  New `warn-only` mode joins the existing `off | educate | block`
+  enum — annotates the verdict but never skips.
+- **Persistent events log (D3):** every necessity-gate decision
+  (`proceed` / `skip_necessity`) and every quota block
+  (`block_quota`) appends one JSON line to `agents/council-events.log`
+  (gitignored; never committed). Schema v1 with `schema_version`,
+  `ts_utc`, `lens`, `invocation`, `action`, `verdict`,
+  `provider_caps`, `original_ask_hash`. `original_ask` is hashed
+  `sha256[:12]` before write — the raw prompt is never persisted
+  (privacy floor per `agents/low-impact-decisions.md`).
+- **Kill-switch (D5):** `AGENT_CONFIG_NO_EVENTS_LOG=1` disables
+  every events-log write in-process. Mirrors the
+  `AGENT_CONFIG_LEGACY_ANCHOR=1` pattern from step-7.
+
+Surface delta: **1 new subcommand** (`council quota`), **2 new
+config knobs** (`cli_call_budget.warn_at`,
+`necessity_classifier.user_explicit_mode`), **1 new local-only file**
+(`agents/council-events.log`, gitignored). Backward-compat:
+existing `.agent-settings.yml` and `agents/.ai-council.yml` work
+unchanged; new knobs are optional. Docs:
+[`docs/contracts/ai-council-config.md`](docs/contracts/ai-council-config.md)
++ [`docs/installation.md`](docs/installation.md) § AI Council local
+state.
+
 Four roadmaps land in this release.
 
 **Tier-0 trim (`road-to-surface-discipline` Phase 1)** — six CLI

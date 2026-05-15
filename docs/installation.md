@@ -646,6 +646,38 @@ the symlinks and regenerates derived files (`.windsurfrules`,
 
 ---
 
+## AI Council local state
+
+The AI Council ([`docs/contracts/ai-council-config.md`](contracts/ai-council-config.md))
+writes two local-only files outside the repo contract:
+
+- `~/.event4u/agent-config/cli-calls.json` — per-day call counter for
+  `mode: cli` members. Daily UTC reset. Inspect with
+  `agent-config council quota`; clear today's counter for one provider
+  with `agent-config council quota --reset <provider> --confirm`.
+- `agents/council-events.log` — JSONL audit trail. One line per
+  necessity-gate decision and per quota block. Gitignored by the
+  installer (managed `.gitignore` block); never committed.
+  `original_ask` is hashed `sha256[:12]` before write — the raw prompt
+  is never persisted.
+
+Both are opt-in by construction: the quota counter only fires when a
+provider has `cli_call_budget.max_calls_per_day.<provider>` set, and
+the events log is purely additive (deletable at any time).
+
+### Kill-switches
+
+Per-feature environment overrides for ephemeral worktrees, CI runners,
+or sandbox testing:
+
+- `AGENT_CONFIG_NO_EVENTS_LOG=1` — disables every write to
+  `agents/council-events.log` in-process. Quota counter and council
+  output stay untouched.
+- `AGENT_CONFIG_LEGACY_ANCHOR=1` — opt back into the pre-step-7
+  legacy-anchor behaviour for `.agent-settings.yml` migration.
+
+---
+
 ## Windows
 
 Native Windows is not a first-class target. Use one of the following:

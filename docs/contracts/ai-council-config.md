@@ -46,6 +46,7 @@ cost_budget:                    # hard caps per /council invocation, required
 cli_call_budget:                # optional; per-day call-count guard for mode: cli members
   max_calls_per_day:
     <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
+  warn_at: <float in [0.0, 1.0]>          # default 0.8 — pre-run summary line prefixes "⚠️" once used/limit >= warn_at (step-8 D4)
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
@@ -61,7 +62,8 @@ advisors:                       # Thinking-style replace-mode advisors
     persona: <path>                       # optional; defaults to personas/advisors/<advisor-key>.md
 necessity_classifier:           # Phase 6 — optional, default enabled+educate
   enabled: <bool>                         # master switch (default true)
-  mode: <"off" | "educate" | "block">     # default "educate"
+  mode: <"off" | "educate" | "block" | "warn-only">       # default "educate" (agent invocation)
+  user_explicit_mode: <"off" | "educate" | "block" | "warn-only">  # default "warn-only" — step-8 D2; applies when invocation=user_explicit
 decision_replay:                # Phase 9 — optional, default enabled+full
   enabled: <bool>                         # master switch (default true)
   include_member_arguments: <bool>        # default true; false = redacted view
@@ -116,6 +118,51 @@ Implications:
   user opt into a per-day cap; counter state persists at
   `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
   Phase 1 of the CLI-transport roadmap).
+- **Quota observability (step-8 D1, D4):** every `council run` /
+  `council debate` prints a one-line `council:quota · <provider>
+  used/limit · …` summary before the first member fires. Only
+  providers with a configured `max_calls_per_day` cap appear; uncapped
+  providers are omitted (no false sense of metering). When
+  `used / max_calls_per_day >= cli_call_budget.warn_at` (default
+  `0.8`) the line is prefixed `⚠️` and lists the providers near the
+  limit on the next line. The standalone `agent-config council
+  quota` subcommand dumps the same state plus the configured caps,
+  and `--reset <provider> --confirm` clears today's counter for that
+  provider.
+
+### Persistent events log (step-8 D3)
+
+The orchestrator appends one JSON line to `agents/council-events.log`
+on every necessity-gate decision (`proceed` / `skip_necessity`) and on
+every `cli_call_budget` block (`block_quota`). The log is gitignored
+by default — it is a local-only audit trail, never part of the
+repository contract.
+
+Schema v1:
+
+```json
+{
+  "schema_version": 1,
+  "ts_utc": "2026-05-15T03:38:45Z",
+  "lens": "analysis",
+  "invocation": "user_explicit",
+  "action": "proceed",
+  "verdict": "necessary",
+  "provider_caps": {"anthropic": {"mode": "cli", "model": "sonnet-4"}},
+  "original_ask_hash": "abc123def456"
+}
+```
+
+- `action` ∈ `proceed | skip_necessity | block_quota`.
+- `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
+  is **never** written — privacy floor per
+  [`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md).
+- Diagnostic fields outside the reserved set (`category`, `mode`,
+  `cli_calls_used`, …) pass through verbatim. Consumers MUST treat
+  unknown keys as forward-compatible.
+- `AGENT_CONFIG_NO_EVENTS_LOG=1` (step-8 D5) disables every write
+  in-process — useful for ephemeral worktrees, CI runners that
+  shouldn't accumulate state, or sandbox testing.
 
 ### Advisor block (Phase 6, replace-mode)
 
@@ -160,8 +207,8 @@ is invoked.
 - `necessity_classifier.enabled` (bool, default `true`) — master switch.
   `false` short-circuits the gate entirely; legacy "always run" behaviour
   is restored.
-- `necessity_classifier.mode` (`"off" | "educate" | "block"`, default
-  `"educate"`).
+- `necessity_classifier.mode` (`"off" | "educate" | "block" | "warn-only"`,
+  default `"educate"`). Governs the **agent** invocation tier.
   - `off` — gate disabled while keeping the classifier module loaded
     (cheap toggle for experiments).
   - `educate` — agent-initiated invocation + `unnecessary` verdict skips
@@ -173,10 +220,20 @@ is invoked.
     `unnecessary` is rejected regardless of invocation source. Even
     `--proceed-anyway` is ignored (power-user opt-in for cost-strict
     environments).
+  - `warn-only` (step-8 D2) — annotate the verdict on stdout but
+    **never** skip. Useful when the user wants observability without
+    losing council coverage.
+- `necessity_classifier.user_explicit_mode` (same enum, default
+  `"warn-only"`, step-8 D2) — governs the **user_explicit** invocation
+  tier. The two-tier split reconciles "Council always active when
+  enabled" with "skip trivial agent-side requests": user-typed
+  `/council` calls proceed by default, agent-initiated dispatches keep
+  `educate` behaviour. Override via `.agent-settings.yml`.
 - `lens_overrides.necessity_classifier_mode.<lens>` — per-lens override.
-  Wins over the global `mode`. Typical use: leave the global at
-  `educate` and force `debate` lens to `block` because debate is the
-  most expensive transport.
+  Wins over the global `mode` for the matching invocation tier (agent
+  vs user_explicit follow the same lens map). Typical use: leave the
+  global at `educate` and force `debate` lens to `block` because
+  debate is the most expensive transport.
 
 **Invocation context (CLI flags).**
 
