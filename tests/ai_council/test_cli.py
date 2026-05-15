@@ -89,6 +89,105 @@ def test_parser_run_accepts_depth_deep() -> None:
     assert parsed.depth == "deep"
 
 
+# ── --single flag (step-9 P9) ────────────────────────────────────────
+
+
+def test_parser_run_single_defaults_to_false() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json"],
+    )
+    assert parsed.single is False
+
+
+def test_parser_run_accepts_single() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json", "--single"],
+    )
+    assert parsed.single is True
+
+
+def _solo_cfg(members_dict, chain):
+    from scripts.ai_council import config as cfg_mod
+    return cfg_mod.CouncilConfig(
+        enabled=True,
+        defaults=cfg_mod.DefaultsConfig(),
+        cost_budget=cfg_mod.CostBudgetConfig(),
+        members=members_dict,
+        routing=cfg_mod.RoutingConfig(solo_member_fallback_chain=chain),
+    )
+
+
+def _solo_member(name: str, model: str):
+    from scripts.ai_council import config as cfg_mod
+    return cfg_mod.MemberConfig(
+        name=name, enabled=True, model=model, api_key_ref=None,
+    )
+
+
+def test_apply_solo_dispatch_filters_members_to_chain_pick(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+        _StubMember("openai", "gpt-x", CouncilResponse("openai", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {
+            "anthropic": _solo_member("anthropic", "claude-x"),
+            "openai": _solo_member("openai", "gpt-x"),
+        },
+        ("openai", "anthropic"),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.delenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", raising=False)
+
+    filtered, banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert [m.name for m in filtered] == ["openai"]
+    assert banner is not None and "openai" in banner
+
+
+def test_apply_solo_dispatch_empty_chain_returns_full_with_warn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {"anthropic": _solo_member("anthropic", "claude-x")},
+        (),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.delenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", raising=False)
+
+    filtered, banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert filtered is members_runtime
+    assert banner is not None and "WARN" in banner
+
+
+def test_apply_solo_dispatch_force_full_env_returns_unfiltered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+        _StubMember("openai", "gpt-x", CouncilResponse("openai", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {
+            "anthropic": _solo_member("anthropic", "claude-x"),
+            "openai": _solo_member("openai", "gpt-x"),
+        },
+        ("openai", "anthropic"),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.setenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", "1")
+
+    filtered, _banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert [m.name for m in filtered] == ["anthropic", "openai"]
+
+
 # ── --prompt-mode lens override ──────────────────────────────────────
 
 

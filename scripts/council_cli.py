@@ -82,6 +82,9 @@ from scripts.ai_council.config import (  # noqa: E402
     AdvisorConfig, CouncilConfig, CouncilConfigError,
     load_council_config, resolve_api_key,
 )
+from scripts.ai_council.solo_dispatch import (  # noqa: E402
+    AuthCache, select_solo_member,
+)
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
@@ -1418,6 +1421,66 @@ def _debate_refusal_cap(
     return float(debate_block.get("max_cost_usd", 5.00) or 0.0)
 
 
+def _apply_solo_dispatch(
+    members: list[ExternalAIClient],
+) -> tuple[list[ExternalAIClient], str | None]:
+    """Filter ``members`` to a single solo-dispatch pick (step-9 P9).
+
+    Loads the routing chain from ``agents/.ai-council.yml`` and asks
+    :func:`select_solo_member` for the first chain entry whose member
+    is runtime-present. The probe is conservative: a member counts as
+    auth-valid iff ``build_members`` returned a runtime client for it
+    \u2014 build_members has already filtered out missing binaries / bad
+    keys via the ``skipped`` list. Deep CLI auth probes (e.g.
+    ``claude auth status``) are reserved for the shadow-mode path.
+
+    Returns ``(filtered_members, marker)``. ``marker`` is a one-line
+    info banner the caller prints to stdout (``None`` when no banner
+    is needed, e.g. config missing). Returns the unfiltered list when
+    no solo member can be picked \u2014 caller never fails the decision.
+    """
+    try:
+        cfg = load_council_config(AI_COUNCIL_FILE)
+    except (CouncilConfigError, FileNotFoundError):
+        return members, None
+    if not cfg.routing.solo_member_fallback_chain:
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 --single requested but "
+            "routing.solo_member_fallback_chain is empty \u2014 "
+            "escalating to full council.",
+        )
+    runtime_names = {getattr(m, "name", "") for m in members}
+    pick = select_solo_member(
+        cfg.routing,
+        cfg.members,
+        auth_cache=AuthCache(),
+        probe=lambda name, _t: name in runtime_names,
+    )
+    if pick is None:
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 solo dispatch unavailable "
+            "(no chain member runtime-present) \u2014 escalating to "
+            "full council.",
+        )
+    filtered = [m for m in members if getattr(m, "name", "") == pick]
+    if not filtered:
+        # Defensive: ``pick`` came from runtime_names so this should
+        # be unreachable. If we ever get here, escalate rather than
+        # ship an empty council.
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 selected member vanished "
+            "between probe and filter \u2014 escalating to full council.",
+        )
+    return (
+        filtered,
+        f"council:solo \u00b7 dispatching to {pick} only "
+        f"(routing.solo_member_fallback_chain).",
+    )
+
+
 def cmd_run(
     args: argparse.Namespace,
     *,
@@ -1442,6 +1505,10 @@ def cmd_run(
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
             skipped=skipped,
         )
+    if getattr(args, "single", False):
+        members, solo_banner = _apply_solo_dispatch(members)
+        if solo_banner:
+            sys.stdout.write(solo_banner + "\n")
     if table is None:
         table = load_prices()
     question, artefact = build_question(
@@ -2285,6 +2352,13 @@ def build_parser() -> argparse.ArgumentParser:
                             "verdict for this invocation (Phase 6). Has no "
                             "effect when the classifier verdict is "
                             "`necessary` or `borderline`.")
+    p_run.add_argument("--single", action="store_true", default=False,
+                       help="Dispatch to a single member from "
+                            "routing.solo_member_fallback_chain (step-9 P9). "
+                            "Falls back to the full council when the chain is "
+                            "empty or no chain member is runtime-present. "
+                            "Overridden by env "
+                            "AGENT_CONFIG_FORCE_FULL_COUNCIL=1.")
     _add_prose_synthesis_arg(p_run)
 
     p_deb = sub.add_parser(
