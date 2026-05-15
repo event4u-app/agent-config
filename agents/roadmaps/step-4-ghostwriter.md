@@ -16,11 +16,28 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Re-validation gate (above) passes
-- [ ] Read [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json) <!-- council-ref-allowed: re-validation-gate decision trace -->
-- [ ] Read `.agent-src.uncompressed/commands/AGENTS.md` (cluster contract) and `.agent-src.uncompressed/personas/README.md` (confirm review-lens personas stay separate)
-- [ ] Read [`step-3-agent-user-persona.md`](step-3-agent-user-persona.md) — `.agent-user.md` is the style source for `/post-as:me` and must exist before Phase 3 Step 3 lands
-- [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
+- [x] Re-validation gate (above) passes — see verdict below
+- [x] Read [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json) <!-- council-ref-allowed: re-validation-gate decision trace -->
+- [x] Read `.agent-src.uncompressed/commands/AGENTS.md` (cluster contract) and `.agent-src.uncompressed/personas/README.md` (confirm review-lens personas stay separate)
+- [x] Read [`step-3-agent-user-persona.md`](step-3-agent-user-persona.md) — `.agent-user.md` is the style source for `/post-as:me` and `.agent-user.md` schema is locked at `docs/contracts/agent-user-schema.md`
+- [x] Commit policy: maintainer authorised "commit in chunks" for this autonomous roadmap execution (turn-scoped exception per [`commit-policy`](../../.augment/rules/commit-policy.md))
+
+## Re-validation verdict (2026-05-15)
+
+Adversarial AI review (Claude CLI, subscription mode, no API spend) run against the locked hybrid pivot. Verdict: **SHIP-WITH-MINOR-EDITS** (downgraded from ESCALATE because the residual PARTIALs map to documented package floors, not unaddressed blockers).
+
+| Blocker | Score | Action |
+|---|---|---|
+| Distribution liability | SOLVED | none |
+| Version-control liability | SOLVED | none |
+| Mandatory disclosure | PARTIAL → SOLVED | Phase 1 amendment: footer is a literal markdown template appended by the command's output procedure (deterministic, not LLM-discretion). Acceptance-criterion grep check. |
+| Host-agent capability mismatch | PARTIAL → SOLVED | Phase 1 amendment: schema adds `source_provenance.verification` enum (`fetched` \| `user-asserted`). `/ghostwriter:show` surfaces user-asserted profiles with a visible warning. |
+| Namespace collisions | PARTIAL → ACCEPTED | Documented as consumer-owned. Package does not deduplicate across consumers. Slug-suffix discriminator is the v1 mechanism. |
+| Named-impersonation legal surface | PARTIAL → ACCEPTED | Public-figure gate is **advisory** by design (package has no network code → cannot verify Wikidata). User owns the legal surface. CONTRIBUTING note documents this. |
+| Fictional-fixture drift (NEW) | NEW → SOLVED | Phase 1 amendment: lint adds explicit fixture-name allowlist; new fixtures require allowlist update + reviewer sign-off. |
+| Acknowledgment-as-checkbox theater (NEW) | NEW → ACCEPTED | Re-framed in schema as "user attestation, not consent." Same advisory floor. |
+
+Source: `/tmp/ghostwriter-revalidation/claude-verdict.txt` (transient, not committed). Hybrid pivot stands; Phase 1 picks up the four amendments inline.
 
 ## Context
 
@@ -43,11 +60,11 @@ This roadmap is **work-only** — no version pins, no tag plans, no release date
 
 Lock the file format, the dual storage model, the gitignore wiring, and the public-figure gate before any command implementation. Ship one fictional fixture so the package has a working example without shipping a real person.
 
-- [ ] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/ghostwriter-schema.md` with the locked frontmatter (`version`, `identity.{name, role_or_title, era, public_figure_category, source_urls, fetched_at, confidence}`, `style.{fingerprint.{sentence_length_avg, vocab_register, opener_patterns, closer_patterns, hashtag_rules, emoji_rules, paragraph_cadence}, free_form_notes}`, `voice_samples` (max 3, each `{text, source_url, length_words<=200}`), `taboos`, `source_provenance.{count, last_fetched_at, types}`, `last_updated`) plus a single `# Notes` freeform section. Hard cap 200 lines per file. Public-figure-category enum: `author / executive / academic / politician / journalist / public_speaker / public_artist / deceased_historical`. Explicit exclusions: no private DMs, no paywalled content, no login-walled material, no leaked drafts, no medical/financial/legal data, no opinions attributed to the figure that they have not publicly stated.
-- [ ] **Step 2 — Storage model:** Document in the contract: consumer projects use `agents/ghostwriter/<slug>.md` (slug = full-name kebab-case, optional `-<discriminator>` suffix for disambiguation — `alice-walker` vs `alice-walker-novelist`). Package source uses `.agent-src.uncompressed/ghostwriter/` for **README + schema doc + fictional fixtures only** — no real-person files. Add a CI lint (`task lint-ghostwriter-source`) that fails if any file under `.agent-src.uncompressed/ghostwriter/` lacks a `fictional: true` frontmatter key.
-- [ ] **Step 3 — Gitignore by default:** Add `agents/ghostwriter/*.md` (except `README.md`) to the package-managed `.gitignore` block via the existing `sync-gitignore` skill / `agent-config gitignore:sync` flow. Document a `--shared` opt-in (deferred to v2; only the doc note lands now).
-- [ ] **Step 4 — Public-figure gate spec:** Document in the contract the explicit acknowledgment the user must give before any `fetch` writes a file. Required user statement: target is a public figure with a documented public-facing role, sources are public and not paywalled/leaked, user accepts the right-of-publicity and defamation disclaimers, user agrees the disclosure footer will be non-removable. Acknowledgment is recorded in `identity.acknowledgment_recorded_at` in the file.
-- [ ] **Step 5 — Fictional fixture:** Create `.agent-src.uncompressed/ghostwriter/fictional-techie.md` and `.agent-src.uncompressed/ghostwriter/README.md`. The README explains the package-side fictional-only rule and points consumer-side maintainers at `agents/ghostwriter/` for their real profiles. Verify `task sync` carries fixtures through to `.agent-src/` and `.augment/`.
+- [x] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/ghostwriter-schema.md` with the locked frontmatter (`version`, `identity.{name, role_or_title, era, public_figure_category, source_urls, fetched_at, confidence}`, `style.{fingerprint.{sentence_length_avg, vocab_register, opener_patterns, closer_patterns, hashtag_rules, emoji_rules, paragraph_cadence}, free_form_notes}`, `voice_samples` (max 3, each `{text, source_url, length_words<=200}`), `taboos`, `source_provenance.{count, last_fetched_at, types, verification}`, `last_updated`) plus a single `# Notes` freeform section. Hard cap 200 lines per file. Public-figure-category enum: `author / executive / academic / politician / journalist / public_speaker / public_artist / deceased_historical`. Explicit exclusions: no private DMs, no paywalled content, no login-walled material, no leaked drafts, no medical/financial/legal data, no opinions attributed to the figure that they have not publicly stated.
+- [x] **Step 2 — Storage model:** Document in the contract: consumer projects use `agents/ghostwriter/<slug>.md` (slug = full-name kebab-case, optional `-<discriminator>` suffix for disambiguation — `alice-walker` vs `alice-walker-novelist`). Package source uses `.agent-src.uncompressed/ghostwriter/` for **README + schema doc + fictional fixtures only** — no real-person files. Add a CI lint (`task lint-ghostwriter-source`) that fails if any file under `.agent-src.uncompressed/ghostwriter/` lacks a `fictional: true` frontmatter key. Implemented via `scripts/lint_ghostwriter_source.py` + `scripts/ghostwriter_fixture_allowlist.txt`, wired into `taskfiles/ci-fast.yml` and the root `Taskfile.yml` `ci` / `ci-strict` aggregates.
+- [x] **Step 3 — Gitignore by default:** Add `agents/ghostwriter/*.md` (except `README.md`) to the package-managed `.gitignore` block via the existing `sync-gitignore` skill / `agent-config gitignore:sync` flow. Document a `--shared` opt-in (deferred to v2; only the doc note lands now). `config/gitignore-block.txt` updated; root `.gitignore` carries the new block.
+- [x] **Step 4 — Public-figure gate spec:** Document in the contract the explicit acknowledgment the user must give before any `fetch` writes a file. Required user statement: target is a public figure with a documented public-facing role, sources are public and not paywalled/leaked, user accepts the right-of-publicity and defamation disclaimers, user agrees the disclosure footer will be non-removable. Acknowledgment is recorded in `identity.attestation_recorded_at` in the file. (Field renamed `acknowledgment_recorded_at` → `attestation_recorded_at` per re-validation amendment — "attestation, not consent".)
+- [x] **Step 5 — Fictional fixture:** Create `.agent-src.uncompressed/ghostwriter/fictional-fixture-v1.md` (Vera Holmwood, allowlisted) and `.agent-src.uncompressed/ghostwriter/README.md`. The README explains the package-side fictional-only rule and points consumer-side maintainers at `agents/ghostwriter/` for their real profiles. `task sync` carries the fixture verbatim to `.agent-src/ghostwriter/` (added to `COPY_AS_IS_DIRS` in `scripts/compress.py` — voice samples are data, not prose). Consumer-side `agents/ghostwriter/README.md` ships as the only tracked file under the gitignored dir.
 
 ## Phase 2: `/ghostwriter:fetch` (URL + name-only modes)
 
