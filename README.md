@@ -31,8 +31,8 @@ replay it. [Core Principles](#core-principles) names the four invariants.
 [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
 draws the scope boundary. [Documentation](#documentation) lists the
 contracts the package ships against, including
-[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) and
-[`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) (beta) and
+[`decision-trace-v1`](docs/contracts/decision-trace-v1.md) (beta).
 
 ## Contribute
 

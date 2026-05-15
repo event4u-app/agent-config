@@ -17,11 +17,11 @@ MCP Lite/Full        → Hosted read-only (Lite) · local stdio (Full)        �
 
 | Layer | Canonical contract | Tier |
 |---|---|---|
-| **Distribution** | [`installed-tools-lockfile.md`](contracts/installed-tools-lockfile.md) + the "Distribution model" subsection below | stable |
-| **Governance** | [`command-clusters.md`](contracts/command-clusters.md) + [`command-surface-tiers.md`](contracts/command-surface-tiers.md) | stable |
-| **Router-Kernel** | [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) | stable |
+| **Distribution** | [`installed-tools-lockfile.md`](contracts/installed-tools-lockfile.md) + the "Distribution model" subsection below | (beta) |
+| **Governance** | [`command-clusters.md`](contracts/command-clusters.md) + [`command-surface-tiers.md`](contracts/command-surface-tiers.md) | (beta) |
+| **Router-Kernel** | [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) | (beta) |
 | **Projection** | [`architecture/source-projection.md`](architecture/source-projection.md), [`augment-projection.md`](architecture/augment-projection.md), [`multi-tool-projection.md`](architecture/multi-tool-projection.md), [`claude-bundle.md`](architecture/claude-bundle.md) | stable |
-| **Execution Contracts** | [`implement-ticket-flow.md`](contracts/implement-ticket-flow.md), [`orchestration-dsl-v1.md`](contracts/orchestration-dsl-v1.md), [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) | stable (skills · commands) / beta (work-engine · roadmap engine) |
+| **Execution Contracts** | [`implement-ticket-flow.md`](contracts/implement-ticket-flow.md), [`orchestration-dsl-v1.md`](contracts/orchestration-dsl-v1.md), [`adr-product-ui-track.md`](contracts/adr-product-ui-track.md) | stable (adr-product-ui-track) / (beta) (implement-ticket-flow · orchestration-dsl-v1) |
 | **MCP Lite/Full** | `docs/contracts/mcp-phase-1-scope.md`, `docs/contracts/mcp-cloud-scope.md`, `docs/contracts/mcp-beta-criteria.md` | experimental — promotion to beta gated on `mcp-beta-criteria.md` (six artefact gates, monitored by `agent-config doctor --check mcp-beta-readiness`) |
 
 Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
@@ -34,10 +34,10 @@ Stability tiers follow [`docs/contracts/STABILITY.md`](contracts/STABILITY.md):
 
 Four load-bearing additions reshaped the top of the model between 2.2.2 and the current release. They are listed here so the diagram above reads as the *current* package, not a historical accumulation:
 
-1. **Router-Kernel** — the always-loaded Iron Laws collapsed into a 9-rule kernel with explicit per-rule character budgets enforced by `task lint-rule-budget`; everything else routes via tier-1/2 (`.agent-src/router.json`). Contract: [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md).
+1. **Router-Kernel** — the always-loaded Iron Laws collapsed into a 9-rule kernel with explicit per-rule character budgets enforced by `task lint-rule-budget`; everything else routes via tier-1/2 (`.agent-src/router.json`). Contract: [`kernel-membership.md`](contracts/kernel-membership.md) + [`rule-router.md`](contracts/rule-router.md) — both (beta).
 2. **MCP Lite/Full** — replaces the old "Tool Adapters" layer at the top level. Lite is the hosted read-only surface (Claude.ai, Cloud agents); Full is the local stdio server consumers self-host. Promotion to beta is gated on six falsifiable artefacts in `docs/contracts/mcp-beta-criteria.md`; the old GitHub / Jira adapters remain as an internal detail of the Execution Contracts layer (see Tool Adapters subsection below).
 3. **npx distribution** — Composer and `npm install` paths retired in favour of `npx @event4u/agent-config`, with the lockfile-equivalent role played by `agent_config_version` in `.agent-settings.yml`. Full rationale in the "Distribution model" subsection below.
-4. **Command tiering** — `/`-commands now declare a `tier:` (0 / 1 / 2 / 3) that maps to invocation frequency and surface budget; tier-0 is the trimmed Tier-0 set surfaced in `agent-config --help` after the 2.7.x surface-discipline pass. Contract: [`command-surface-tiers.md`](contracts/command-surface-tiers.md) + [`command-clusters.md`](contracts/command-clusters.md).
+4. **Command tiering** — `/`-commands now declare a `tier:` (0 / 1 / 2 / 3) that maps to invocation frequency and surface budget; tier-0 is the trimmed Tier-0 set surfaced in `agent-config --help` after the 2.7.x surface-discipline pass. Contract: [`command-surface-tiers.md`](contracts/command-surface-tiers.md) + [`command-clusters.md`](contracts/command-clusters.md) — both (beta).
 
 > The previous "observability, feedback, lifecycle" layers were removed in
 > 1.5 — they were scaffolds without production consumers. The "Tool
@@ -161,7 +161,7 @@ note, package-internal path-swap, description budget, and the
 - **Guidelines** → reference-only documentation
 - **Commands** → workflow orchestration
 
-Ensures: no guessing, analysis before action, real verification, consistent outputs. Canonical contracts: [`kernel-membership.md`](contracts/kernel-membership.md), [`rule-router.md`](contracts/rule-router.md), [`command-clusters.md`](contracts/command-clusters.md), [`command-surface-tiers.md`](contracts/command-surface-tiers.md).
+Ensures: no guessing, analysis before action, real verification, consistent outputs. Canonical contracts (all (beta)): [`kernel-membership.md`](contracts/kernel-membership.md), [`rule-router.md`](contracts/rule-router.md), [`command-clusters.md`](contracts/command-clusters.md), [`command-surface-tiers.md`](contracts/command-surface-tiers.md).
 
 ### 2. Runtime Dispatcher — stable mechanism, pilot coverage
 
