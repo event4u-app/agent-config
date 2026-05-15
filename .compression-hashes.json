@@ -57,6 +57,7 @@
   "commands/fix/seeder.md": "00a236eb8052b10fd14582bcf774ad41fbb19929622d537c7759402cc4048f08",
   "commands/ghostwriter.md": "55a1f81eacfc6ec0adb67be12d3081e47587d68f3f7a4522e376dd12e44df09e",
   "commands/ghostwriter/fetch.md": "65f1b2a343ba84366566c8f6d09b45532d09d5b8cadbac7f0e7507ccf3237ace",
+  "commands/ghostwriter/write.md": "6bf065d6c5aaed1bc5455cf6c3cf66186c154e27b74d56b1844e2e638d7f2dd8",
   "commands/grill-me.md": "50a4b993f36bd2e79eddef3e6603b65296b11ffb12a7f8f3a424b50c5b442e5c",
   "commands/implement-ticket.md": "d51e43a9d5a508aa8939f7b84bcd084b2b5e8b2c3cf013ac84ae7cd1f5e2fc0f",
   "commands/jira-ticket.md": "72bad9b6a647cc4e47edbb9e63701ed2f90b385fa535dae43357922876e9dab5",
