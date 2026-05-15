@@ -39,7 +39,7 @@ from validate_frontmatter import (  # noqa: E402
 )
 
 Severity = Literal["error", "warning", "info"]
-ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "unknown"]
+ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "user-type", "unknown"]
 
 REQUIRED_PERSONA_SECTIONS_CORE = [
     "Focus",
@@ -57,6 +57,20 @@ REQUIRED_PERSONA_SECTIONS = REQUIRED_PERSONA_SECTIONS_CORE
 VALID_PERSONA_TIERS = {"core", "specialist"}
 # Locked in docs/contracts/persona-schema.md § 4: core ≤ 120, specialist ≤ 100.
 PERSONA_LINE_BUDGETS = {"core": 120, "specialist": 100}
+
+# User-type spine — locked in docs/contracts/user-type-schema.md § 3.
+# Runtime end-user simulation lens (sister axis to personas — methodology vs
+# end-user). Single tier in v1 (no core/specialist split).
+REQUIRED_USERTYPE_SECTIONS = [
+    "Focus",
+    "Daily Workflow",
+    "Vocabulary",
+    "Operational Constraints",
+    "Unique Questions",
+    "Ticket Red Flags",
+    "Anti-Patterns",
+]
+USERTYPE_LINE_BUDGET = 120
 # Wing-scoped overrides — Wing-3 (GTM) and Wing-4 (Money/Strategy/Ops) carry
 # denser cognition (funnel × channel × lifecycle, or finance × org × strategy)
 # than Wing-1/2 specialists, so the line cap rises to keep the seven-section
@@ -514,6 +528,8 @@ def detect_artifact_type(path: Path, text: str) -> ArtifactType:
         return "guideline"
     if "/personas/" in path_str:
         return "persona"
+    if "/user-types/" in path_str:
+        return "user-type"
     if has_skill_heading:
         return "skill"
     return "unknown"
@@ -1849,6 +1865,106 @@ def lint_persona(path: Path, text: str) -> LintResult:
     )
 
 
+def lint_usertype(path: Path, text: str) -> LintResult:
+    """Lint a user-type .md file (frontmatter schema + required sections + size).
+
+    User-types are the runtime end-user simulation lens (sister axis to
+    personas — methodology vs end-user). Contract:
+    docs/contracts/user-type-schema.md.
+    """
+    issues: List[Issue] = []
+
+    frontmatter = extract_frontmatter(text)
+    if not frontmatter:
+        issues.append(Issue("error", "missing_frontmatter", "User-type requires YAML frontmatter"))
+        return LintResult(
+            file=str(path),
+            artifact_type="user-type",
+            status="fail",
+            issues=issues,
+            suggestions=[".agent-src.uncompressed/user-types/_template/user-type.md"],
+        )
+
+    required = {
+        "id": re.compile(r'^id:\s*"?([\w-]+)"?\s*$', re.MULTILINE),
+        "kind": re.compile(r'^kind:\s*"?([\w-]+)"?\s*$', re.MULTILINE),
+        "label": re.compile(r'^label:\s*"?([^"\n]+?)"?\s*$', re.MULTILINE),
+        "description": re.compile(r'^description:\s*"?([^"\n]+?)"?\s*$', re.MULTILINE),
+        "version": re.compile(r'^version:\s*"?([\d.]+)"?\s*$', re.MULTILINE),
+        "source": re.compile(r'^source:\s*"?(\w+)"?\s*$', re.MULTILINE),
+    }
+    parsed: dict = {}
+    for field, pattern in required.items():
+        value = extract_frontmatter_field(frontmatter, pattern)
+        if not value:
+            issues.append(Issue("error", f"missing_{field}", f"User-type frontmatter must declare `{field}`"))
+        else:
+            parsed[field] = value
+
+    if "id" in parsed and parsed["id"] != path.stem:
+        issues.append(Issue(
+            "error",
+            "id_filename_mismatch",
+            f"User-type id `{parsed['id']}` must match filename stem `{path.stem}`",
+        ))
+
+    if "kind" in parsed and parsed["kind"] != "user-type":
+        issues.append(Issue(
+            "error",
+            "invalid_kind",
+            f"User-type kind must be `user-type` (got `{parsed['kind']}`)",
+        ))
+
+    if "description" in parsed and len(parsed["description"]) > 160:
+        issues.append(Issue(
+            "warning",
+            "long_description",
+            f"User-type description is {len(parsed['description'])} chars (target ≤ 160)",
+        ))
+
+    sections = extract_sections(text)
+    for required_section in REQUIRED_USERTYPE_SECTIONS:
+        if required_section not in sections:
+            issues.append(Issue(
+                "error",
+                "missing_section",
+                f"User-type is missing required section `## {required_section}`",
+            ))
+
+    # Anti-Generic Quality Bar: ≥ 3 Unique Questions
+    uq_block = extract_section_block(text, "Unique Questions")
+    if uq_block:
+        bullet_count = len(re.findall(r"^\s*[-*]\s+", uq_block, re.MULTILINE))
+        if bullet_count < 3:
+            issues.append(Issue(
+                "warning",
+                "too_few_unique_questions",
+                f"User-type has {bullet_count} unique questions (target ≥ 3)",
+            ))
+
+    line_count = len(text.splitlines())
+    if line_count > USERTYPE_LINE_BUDGET:
+        issues.append(Issue(
+            "warning",
+            "size_budget",
+            f"User-type has {line_count} lines (budget ≤ {USERTYPE_LINE_BUDGET})",
+        ))
+
+    if not H1_PATTERN.search(text):
+        issues.append(Issue("warning", "missing_h1", "User-type is missing an H1 heading"))
+
+    if not text.endswith("\n"):
+        issues.append(Issue("warning", "no_trailing_newline", "File must end with exactly one newline"))
+
+    return LintResult(
+        file=str(path),
+        artifact_type="user-type",
+        status=classify_status(issues),
+        issues=issues,
+        suggestions=[],
+    )
+
+
 def gather_all_candidate_files(root: Path) -> list[Path]:
     """Gather all lintable files. Prefers .agent-src.uncompressed/ (source of truth).
     Falls back to .agent-src/ only if uncompressed doesn't exist.
@@ -1901,6 +2017,18 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     personas_base = uncompressed_personas if uncompressed_personas.exists() else augment_personas
     if personas_base.exists():
         for f in personas_base.glob("*.md"):
+            if f.name.lower() == "readme.md":
+                continue
+            if not f.is_symlink():
+                candidates.append(f)
+
+    # User-types (sister axis to personas — methodology vs end-user).
+    # Top-level .md only; README and _template/ subtree excluded.
+    uncompressed_usertypes = root / ".agent-src.uncompressed" / "user-types"
+    augment_usertypes = root / ".agent-src" / "user-types"
+    usertypes_base = uncompressed_usertypes if uncompressed_usertypes.exists() else augment_usertypes
+    if usertypes_base.exists():
+        for f in usertypes_base.glob("*.md"):
             if f.name.lower() == "readme.md":
                 continue
             if not f.is_symlink():
@@ -2093,8 +2221,13 @@ def _is_execution_artifact(path: Path, text: str) -> bool:
     path_lower = str(path).lower()
     text_lower = text.lower()
 
-    # Exclude commands, guidelines, and personas — they are not execution-oriented
-    if "/commands/" in path_lower or "/guidelines/" in path_lower or "/personas/" in path_lower:
+    # Exclude commands, guidelines, personas, user-types — not execution-oriented
+    if (
+        "/commands/" in path_lower
+        or "/guidelines/" in path_lower
+        or "/personas/" in path_lower
+        or "/user-types/" in path_lower
+    ):
         return False
 
     # File name match — strong signal
@@ -2779,7 +2912,7 @@ def lint_output_schema(path: Path, text: str) -> List[Issue]:
 
 
 # Artefact types that carry a JSON-Schema contract for their frontmatter.
-_SCHEMA_ARTEFACT_TYPES = {"skill", "rule", "command", "persona"}
+_SCHEMA_ARTEFACT_TYPES = {"skill", "rule", "command", "persona", "user-type"}
 
 
 def lint_frontmatter_schema(path: Path, text: str, artifact_type: str) -> List[Issue]:
@@ -2840,6 +2973,8 @@ def lint_file(path: Path, repo_root: Path | None = None) -> LintResult:
         result = lint_guideline(display_path, text)
     elif artifact_type == "persona":
         result = lint_persona(display_path, text)
+    elif artifact_type == "user-type":
+        result = lint_usertype(display_path, text)
     else:
         # Frugality charter lives in contexts/ (artifact_type == unknown)
         # but still needs Layer 2 index-integrity validation.
