@@ -98,9 +98,9 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 7 — `/memory learn-low-impact --preview` (G6)
 
-- [ ] Default invocation switches to `--preview`; `--apply` required to actually promote.
-- [ ] Preview output: promoted entries · refused entries with redaction reason · source-project-stripped diff · upstream PR body draft.
-- [ ] Tests in `tests/test_learn_low_impact_preview.py`.
+- [x] Default invocation switches to `--preview`; `--apply` required to actually promote.
+- [x] Preview output: promoted entries · refused entries with redaction reason · source-project-stripped diff · upstream PR body draft.
+- [x] Tests in `tests/ai_council/test_learn_low_impact_preview.py`.
 
 ### Phase 8 — Config schema for the three new settings (U1 · U2 · U3)
 

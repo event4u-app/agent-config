@@ -4,7 +4,7 @@ tier: 2
 cluster: memory
 sub: learn-low-impact
 skills: [ai-council, upstream-contribute]
-description: Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed.
+description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
 disable-model-invocation: true
 suggestion:
   eligible: true
@@ -21,6 +21,16 @@ into the upstream seed at
 PR against the agent-config package. **Validated entries only** — probation
 entries never upstream, they're unconfirmed signal.
 
+## Flags
+
+| Flag | Default | Behaviour |
+|---|---|---|
+| `--preview` | **on** | Build the plan, run the redactor, render promoted / refused / already-seeded buckets + draft PR body. **No file write, no branch, no PR.** Default behaviour. |
+| `--apply` | off | Mutually exclusive with `--preview`. Required to invoke `upstream-contribute` and open the draft PR. Refusals from the redactor still block. |
+
+Iron Law: ``--apply`` never auto-fires on the first invocation. The
+user always sees the preview block first and re-runs explicitly.
+
 ## Iron Law — privacy floor runs TWICE
 
 ```
@@ -33,49 +43,69 @@ for the eight forbidden-content classes.
 
 ## Steps
 
-### 1. Read provenance baseline
+### 1. Build the preview plan
 
-```bash
-grep "^last-upstreamed:" agents/low-impact-decisions.md
+Call
+`scripts/ai_council/learn_low_impact_preview.py::build_preview` with
+the project-local corpus and the package seed:
+
+```python
+from scripts.ai_council.learn_low_impact_preview import build_preview
+plan = build_preview(
+    corpus_path="agents/low-impact-decisions.md",
+    seed_path=".agent-src.uncompressed/data/low-impact-decisions-seed.md",
+    repo_slug="<owner>/<repo>",  # from `git remote get-url origin`
+    repo_root="<absolute repo root>",
+    private_domains=(),   # from .agent-settings.yml policy
+    customer_names=(),    # from .agent-settings.yml policy
+    sql_identifiers=(),   # from .agent-settings.yml policy
+)
 ```
 
-Extract the trailing SHA. `0000…0000` → first-ever upstream;
-otherwise it's the git SHA of the last seed update.
+The builder runs all three contract checks in one pass:
 
-### 2. Collect candidates
+1. Parses `## Validated` (strict mode — drift surfaces as
+   `CorpusParseError`).
+2. Diffs against the seed file — already-seeded entries land in
+   `plan.already_seeded` and never upstream.
+3. Re-runs `redact_low_impact_entry` on every candidate. Failures
+   land in `plan.refused`.
 
-Parse `agents/low-impact-decisions.md`:
+### 2. Surface the preview block
 
-- Read every bullet under `## Validated` (skip probation, skip
-  anti-examples).
-- For each, compare against the existing
-  `.agent-src.uncompressed/data/low-impact-decisions-seed.md` in
-  the package repo. Already-seeded entries are skipped.
+Print `plan.render()` verbatim. Always. This is the user-facing
+audit trail per `fast-path-marker-visibility` Iron Law — the host
+agent MUST NOT swallow or paraphrase it.
 
-Empty candidate set → exit 0 with `> No new validated entries to upstream.`
+```
+## learn-low-impact preview — repo=<slug>
+last-upstreamed: <sha>
+seed: <path>
 
-### 3. Re-redact (defence in depth)
+### Promoted (N) …
+### Refused (M) — redactor blocked …
+### Already seeded (K) …
+```
 
-For each candidate, run
-`scripts/ai_council/redact_low_impact_entry.py::redact_low_impact_entry`
-again. Any `RedactionResult.ok == False` → **refuse the PR**, surface
-the violation, do not continue. The author is asked to drop / rewrite
-the offending entry locally and re-run.
+### 3. Decide based on the flag
 
-### 4. Open draft PR via `upstream-contribute`
+- **`--preview` (default)** — stop here. If `plan.would_open_pr` is
+  true, the rendered block ends with
+  `> Re-run with \`--apply\` to open the draft PR via \`upstream-contribute\`.`
+  Hand control back to the user.
+- **`--apply`** — refuse when `plan.refused` is non-empty; surface
+  the refusals and stop. Otherwise invoke
+  [`upstream-contribute`](../skills/upstream-contribute/SKILL.md)
+  with:
+    - **target file:** `.agent-src.uncompressed/data/low-impact-decisions-seed.md`
+    - **PR title:** `plan.render_pr_body()` first heading
+    - **PR body:** `plan.render_pr_body()`
+    - **patch:** `plan.render_diff()`
+    - **draft:** `true` — never auto-merge; review is a human gate.
 
-Invoke the [`upstream-contribute`](../skills/upstream-contribute/SKILL.md)
-skill with:
+### 4. Advance the local baseline (`--apply` path only)
 
-- **target file:** `.agent-src.uncompressed/data/low-impact-decisions-seed.md`
-- **PR title:** `feat(low-impact-seed): add N validated entries from <repo-slug>`
-- **PR body:** lists each entry plus its source provenance line
-  (validated date only — never the original `seen` timestamps).
-- **draft:** `true` — never auto-merge; review is a human gate.
-
-### 5. Advance the local baseline
-
-When the PR is opened (step 4 returns a PR URL + new commit SHA on
+When the PR is opened (step 3 returns a PR URL + new commit SHA on
 the package branch):
 
 ```bash
@@ -85,7 +115,7 @@ sed -i.bak -E "s|^last-upstreamed: .*|last-upstreamed: <new-sha>|" \
 rm agents/low-impact-decisions.md.bak
 ```
 
-### 6. Surface result
+### 5. Surface result (`--apply` path only)
 
 ```
 > Drafted PR <url>
@@ -95,8 +125,10 @@ rm agents/low-impact-decisions.md.bak
 
 ## Halt conditions
 
-- Redactor refuses (any class) — surface, stop.
-- No candidates — exit 0, no PR.
+- Redactor refuses (any class) — surface, stop. `--apply` is rejected.
+- No candidates (`plan.has_work == False`) — exit 0 with the preview
+  block; no PR even on `--apply`.
+- `--preview` (default) — always stops before any side-effect.
 - Package repo unavailable per `upstream-contribute § Step 4` — surface
   the access options, stop.
 - User explicitly declines the PR option — exit 0, no PR.
