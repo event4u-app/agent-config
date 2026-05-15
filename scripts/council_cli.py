@@ -26,6 +26,40 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
 AI_COUNCIL_FILE = REPO_ROOT / "agents" / ".ai-council.yml"
 
+# Canonical output dirs per ai-council § "Output path convention".
+# Enforced at write-time by `_validate_council_output_path` so shell-side
+# `>` redirects and forgetful agents can't strand artefacts at agents/ root.
+COUNCIL_CANONICAL_DIRS: dict[str, str] = {
+    "responses": "agents/council-responses",
+    "sessions":  "agents/council-sessions",
+    "questions": "agents/council-questions",
+}
+
+
+def _validate_council_output_path(
+    path_str: str, *, kind: str, subcommand: str,
+) -> Path:
+    """Reject non-canonical --output paths at write-time.
+
+    `kind` selects the expected canonical dir (`responses`, `sessions`,
+    `questions`). Raises `argparse.ArgumentTypeError` on violation so
+    `main()` surfaces a clean ❌ message and returns 2.
+    """
+    expected_rel = COUNCIL_CANONICAL_DIRS[kind]
+    expected_abs = (REPO_ROOT / expected_rel).resolve()
+    p = Path(path_str)
+    target = p if p.is_absolute() else (REPO_ROOT / p)
+    target_resolved = target.resolve()
+    try:
+        target_resolved.relative_to(expected_abs)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"council:{subcommand} --output must live under "
+            f"{expected_rel}/ (per ai-council § Output path convention); "
+            f"got {path_str!r}."
+        ) from exc
+    return p
+
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.ai_council.bundler import (  # noqa: E402
@@ -1449,7 +1483,9 @@ def cmd_run(
         payload["peer_review"] = _serialise_peer_review(peer_review)
     if consensus is not None:
         payload["consensus"] = _serialise_consensus(consensus)
-    out_path = Path(args.output)
+    out_path = _validate_council_output_path(
+        args.output, kind="responses", subcommand="run",
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     sys.stdout.write(
@@ -1722,7 +1758,9 @@ def cmd_debate(
         max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
     )
 
-    out_dir = Path(args.output)
+    out_dir = _validate_council_output_path(
+        args.output, kind="responses", subcommand="debate",
+    )
     seed: list[CouncilResponse] | None = None
     if getattr(args, "continue_as_debate", None):
         seed = _load_debate_seed(Path(args.continue_as_debate), billable)
@@ -1796,7 +1834,8 @@ def cmd_render(args: argparse.Namespace) -> int:
     Lens resolution order: explicit ``--prompt-mode`` > ``prompt_mode``
     in the payload > ``mode`` in the payload > ``None`` (default decision
     template). R4 Q4 escape hatch ``--prose-synthesis`` overrides the
-    table.
+    table. ``--output`` writes to ``agents/council-sessions/`` (enforced);
+    omit it for stdout.
     """
     payload = json.loads(Path(args.responses).read_text(encoding="utf-8"))
     items = payload.get("responses") or []
@@ -1807,16 +1846,22 @@ def cmd_render(args: argparse.Namespace) -> int:
         prose = payload.get("prose_synthesis")
     consensus = _deserialise_consensus(payload.get("consensus"))
     peer_review = _deserialise_peer_review(payload.get("peer_review"))
-    sys.stdout.write(
-        render(
-            _deserialise_responses(items),
-            mode=mode,
-            prose_synthesis=prose,
-            consensus=consensus,
-            peer_review=peer_review,
-        )
-        + "\n"
+    body = render(
+        _deserialise_responses(items),
+        mode=mode,
+        prose_synthesis=prose,
+        consensus=consensus,
+        peer_review=peer_review,
     )
+    if getattr(args, "output", None):
+        out_path = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="render",
+        )
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(body + "\n", encoding="utf-8")
+        sys.stdout.write(f"council:render · wrote {out_path}\n")
+        return 0
+    sys.stdout.write(body + "\n")
     return 0
 
 
@@ -1844,7 +1889,9 @@ def _cmd_replay_low_impact_stats(args: argparse.Namespace) -> int:
     stats = parse_low_impact_log(body)
     out = render_low_impact_stats(stats)
     if getattr(args, "output", None):
-        target = Path(args.output)
+        target = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="replay",
+        )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(out, encoding="utf-8")
         sys.stdout.write(f"council:replay · wrote {target}\n")
@@ -1892,7 +1939,9 @@ def cmd_replay(args: argparse.Namespace) -> int:
         ),
     )
     if getattr(args, "output", None):
-        out_path = Path(args.output)
+        out_path = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="replay",
+        )
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(body, encoding="utf-8")
         sys.stdout.write(f"council:replay · wrote {out_path}\n")
@@ -2105,6 +2154,11 @@ def build_parser() -> argparse.ArgumentParser:
                        default=None, dest="prompt_mode",
                        help="Override the synthesis-template lens. Defaults "
                             "to the `mode` recorded in the responses JSON.")
+    p_ren.add_argument("--output", default=None,
+                       help="Write the rendered markdown to a file under "
+                            "agents/council-sessions/ (enforced). Omit for "
+                            "stdout. Prefer this over shell redirects so "
+                            "the canonical-path check fires at write-time.")
     _add_prose_synthesis_arg(p_ren)
 
     p_rep = sub.add_parser(
