@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **461**
-- Edges (incl. self-WRITE): **1259**
+- Files indexed: **470**
+- Edges (incl. self-WRITE): **1299**
 
 ## READ_ONLY edges
 
@@ -83,6 +83,28 @@
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/commands/refine-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/estimate-ticket.md` | `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter.md` | `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter.md` | `.agent-src.uncompressed/commands/post-as/me.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/delete.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/delete.md` | `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/delete.md` | `.agent-src.uncompressed/commands/ghostwriter/list.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/delete.md` | `.agent-src.uncompressed/commands/ghostwriter/show.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `.agent-src.uncompressed/commands/agents/user/accept.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `.agent-src.uncompressed/commands/ghostwriter/write.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/list.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/list.md` | `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/list.md` | `.agent-src.uncompressed/commands/ghostwriter/show.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/list.md` | `.agent-src.uncompressed/commands/ghostwriter/write.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/show.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/show.md` | `.agent-src.uncompressed/commands/ghostwriter/delete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/show.md` | `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/show.md` | `.agent-src.uncompressed/commands/ghostwriter/list.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/show.md` | `.agent-src.uncompressed/commands/ghostwriter/write.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/write.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/write.md` | `.agent-src.uncompressed/commands/ghostwriter/fetch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/write.md` | `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/ghostwriter/write.md` | `.agent-src.uncompressed/commands/post-as/me.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/grill-me.md` | `.agent-src.uncompressed/commands/challenge-me.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
@@ -115,6 +137,15 @@
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/skills/override-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/orchestrate.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as.md` | `.agent-src.uncompressed/commands/ghostwriter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `.agent-src.uncompressed/commands/ghostwriter/write.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `.agent-src.uncompressed/commands/post-as.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `.agent-src.uncompressed/commands/post-as/me.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/me.md` | `.agent-src.uncompressed/commands/agents/user/init.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/me.md` | `.agent-src.uncompressed/commands/agents/user/update.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/me.md` | `.agent-src.uncompressed/commands/ghostwriter/write.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/me.md` | `.agent-src.uncompressed/commands/post-as.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/post-as/me.md` | `.agent-src.uncompressed/commands/post-as/ghostwriter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/estimate-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/refine-ticket.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -815,7 +846,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 115 |
+| `command` | 124 |
 | `context` | 31 |
 | `persona` | 29 |
 | `rule` | 67 |

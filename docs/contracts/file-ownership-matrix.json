@@ -339,6 +339,42 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/ghostwriter.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/ghostwriter/delete.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/ghostwriter/fetch.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/ghostwriter/list.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/ghostwriter/show.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/ghostwriter/write.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/grill-me.md": {
       "kind": "command",
       "rule_type": "orchestrator",
@@ -520,6 +556,24 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/package-test.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/post-as.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/post-as/ghostwriter.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/post-as/me.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -3688,6 +3742,202 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/post-as/me.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/delete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/list.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/show.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/fetch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "target": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "target": ".agent-src.uncompressed/commands/post-as/me.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/commands/grill-me.md",
       "target": ".agent-src.uncompressed/commands/challenge-me.md",
       "type": "READ_ONLY",
@@ -4124,6 +4374,90 @@
     {
       "source": ".agent-src.uncompressed/commands/package-test.md",
       "target": ".agent-src.uncompressed/commands/package-test.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as.md",
+      "target": ".agent-src.uncompressed/commands/post-as.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/post-as.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "target": ".agent-src.uncompressed/commands/post-as/me.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/ghostwriter/write.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/post-as.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/post-as/ghostwriter.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/post-as/me.md",
+      "target": ".agent-src.uncompressed/commands/post-as/me.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

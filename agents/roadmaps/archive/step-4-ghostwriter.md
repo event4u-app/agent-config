@@ -62,7 +62,7 @@ Lock the file format, the dual storage model, the gitignore wiring, and the publ
 
 - [x] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/ghostwriter-schema.md` with the locked frontmatter (`version`, `identity.{name, role_or_title, era, public_figure_category, source_urls, fetched_at, confidence}`, `style.{fingerprint.{sentence_length_avg, vocab_register, opener_patterns, closer_patterns, hashtag_rules, emoji_rules, paragraph_cadence}, free_form_notes}`, `voice_samples` (max 3, each `{text, source_url, length_words<=200}`), `taboos`, `source_provenance.{count, last_fetched_at, types, verification}`, `last_updated`) plus a single `# Notes` freeform section. Hard cap 200 lines per file. Public-figure-category enum: `author / executive / academic / politician / journalist / public_speaker / public_artist / deceased_historical`. Explicit exclusions: no private DMs, no paywalled content, no login-walled material, no leaked drafts, no medical/financial/legal data, no opinions attributed to the figure that they have not publicly stated.
 - [x] **Step 2 — Storage model:** Document in the contract: consumer projects use `agents/ghostwriter/<slug>.md` (slug = full-name kebab-case, optional `-<discriminator>` suffix for disambiguation — `alice-walker` vs `alice-walker-novelist`). Package source uses `.agent-src.uncompressed/ghostwriter/` for **README + schema doc + fictional fixtures only** — no real-person files. Add a CI lint (`task lint-ghostwriter-source`) that fails if any file under `.agent-src.uncompressed/ghostwriter/` lacks a `fictional: true` frontmatter key. Implemented via `scripts/lint_ghostwriter_source.py` + `scripts/ghostwriter_fixture_allowlist.txt`, wired into `taskfiles/ci-fast.yml` and the root `Taskfile.yml` `ci` / `ci-strict` aggregates.
-- [x] **Step 3 — Gitignore by default:** Add `agents/ghostwriter/*.md` (except `README.md`) to the package-managed `.gitignore` block via the existing `sync-gitignore` skill / `agent-config gitignore:sync` flow. Document a `--shared` opt-in (deferred to v2; only the doc note lands now). `config/gitignore-block.txt` updated; root `.gitignore` carries the new block.
+- [x] **Step 3 — Gitignore by default:** Add `agents/ghostwriter/*.md` (except `README.md`) to the package-managed `.gitignore` block via the existing `/sync-gitignore` command / `agent-config gitignore:sync` flow. Document a `--shared` opt-in (deferred to v2; only the doc note lands now). `config/gitignore-block.txt` updated; root `.gitignore` carries the new block.
 - [x] **Step 4 — Public-figure gate spec:** Document in the contract the explicit acknowledgment the user must give before any `fetch` writes a file. Required user statement: target is a public figure with a documented public-facing role, sources are public and not paywalled/leaked, user accepts the right-of-publicity and defamation disclaimers, user agrees the disclosure footer will be non-removable. Acknowledgment is recorded in `identity.attestation_recorded_at` in the file. (Field renamed `acknowledgment_recorded_at` → `attestation_recorded_at` per re-validation amendment — "attestation, not consent".)
 - [x] **Step 5 — Fictional fixture:** Create `.agent-src.uncompressed/ghostwriter/fictional-fixture-v1.md` (Vera Holmwood, allowlisted) and `.agent-src.uncompressed/ghostwriter/README.md`. The README explains the package-side fictional-only rule and points consumer-side maintainers at `agents/ghostwriter/` for their real profiles. `task sync` carries the fixture verbatim to `.agent-src/ghostwriter/` (added to `COPY_AS_IS_DIRS` in `scripts/compress.py` — voice samples are data, not prose). Consumer-side `agents/ghostwriter/README.md` ships as the only tracked file under the gitignored dir.
 
@@ -79,38 +79,38 @@ Wire the host-agent fetch / search procedural commands. Zero network code in the
 
 The consume side. Numbered menu, mandatory disclosure, shared write engine for the user-self path.
 
-- [ ] **Step 1 — Implement `/ghostwriter:write`:** Create `commands/ghostwriter/write.md`. Flow: (a) list available ghostwriters from `agents/ghostwriter/*.md` (excluding `README.md`) as a numbered menu, (b) accept selection (or `--as=<slug>` for non-interactive), (c) prompt for topic, (d) optional flags `--tone=<formal|casual>`, `--length=<words>`, `--channel=<linkedin-post|tweet|blog>`, `--audience=<text>`, (e) emit a copyable markdown block in the chosen ghostwriter's voice, (f) **append the mandatory disclosure footer** (`Written in the style of <name>, not by them.`) — no `--no-disclosure` flag. Error-out (do not default) when no ghostwriter exists or none is selected.
-- [ ] **Step 2 — Implement `/post-as:ghostwriter` alias:** Create `commands/post-as/ghostwriter.md` as a thin alias that invokes `/ghostwriter:write` with all passed flags. Document the alias status — same flags, same output, same disclosure rules.
-- [ ] **Step 3 — Implement `/post-as:me`:** Create `commands/post-as/me.md`. Reads `.agent-user.md.voice_sample` (depends on persona-roadmap Phase 1 having shipped). Shares the same write engine as `/ghostwriter:write` (extract to a shared procedural section `docs/contracts/write-engine.md`) — style source differs, disclosure footer omitted (the user IS the author). Error-out if `.agent-user.md` is missing with a pointer to `/agents user init`.
-- [ ] **Step 4 — Cluster cross-references:** Update `docs/contracts/command-clusters.md` with the new `/ghostwriter` cluster and the two `/post-as:*` commands. Verify `task lint-skills` passes.
+- [x] **Step 1 — Implement `/ghostwriter:write`:** `commands/ghostwriter/write.md` ships the numbered-menu + topic-prompt + optional `--tone / --length / --channel / --audience` flag flow, emits the copyable markdown block in the selected ghostwriter's voice, and appends the mandatory disclosure footer (`Written in the style of <name>, not by them.`) verbatim from the command's output template — no `--no-disclosure` flag exists. Errors out when no profile is selected.
+- [x] **Step 2 — Implement `/post-as:ghostwriter` alias:** `commands/post-as/ghostwriter.md` is a thin alias that invokes `/ghostwriter:write` with all passed flags; the disclosure footer is inherited from the underlying command.
+- [x] **Step 3 — Implement `/post-as:me`:** `commands/post-as/me.md` reads `.agent-user.md.voice_sample` and shares the procedural contract in `docs/contracts/write-engine.md` with `/ghostwriter:write` — disclosure footer omitted (the user IS the author). Errors out with a pointer to `/agents user init` when `.agent-user.md` is missing.
+- [x] **Step 4 — Cluster cross-references:** `docs/contracts/command-clusters.md` registers the `/ghostwriter` cluster and the `/post-as` cluster (me · ghostwriter). `task lint-skills` clean.
 
 ## Phase 4: Maintenance — list / show / delete / refetch
 
 Round out the cluster. Read-only and destructive operations land last so the write path proves stable first.
 
-- [ ] **Step 1 — Implement `/ghostwriter:list`:** Create `commands/ghostwriter/list.md`. Numbered listing of all `agents/ghostwriter/*.md` profiles with name, role, confidence, last-updated, stale-warning flag.
-- [ ] **Step 2 — Implement `/ghostwriter:show`:** Create `commands/ghostwriter/show.md`. Renders a single profile (selection by number or slug) — identity, style fingerprint summary, voice-sample previews, taboos, source URLs. Read-only.
-- [ ] **Step 3 — Implement `/ghostwriter:delete`:** Create `commands/ghostwriter/delete.md`. Selection by number or slug, two-step confirmation, hard-deletes the file. Reminds the user that git history may still contain the file if the consumer ever committed it (per the gitignore-by-default rule, this should not normally happen).
-- [ ] **Step 4 — Re-fetch refresh path:** Confirm Phase 2 Step 2's diff-and-accept flow handles `--force-refresh` (rebuilds from scratch instead of merging). Documented in the contract.
+- [x] **Step 1 — Implement `/ghostwriter:list`:** Create `commands/ghostwriter/list.md`. Numbered listing of all `agents/ghostwriter/*.md` profiles with name, role, confidence, last-updated, stale-warning flag.
+- [x] **Step 2 — Implement `/ghostwriter:show`:** Create `commands/ghostwriter/show.md`. Renders a single profile (selection by number or slug) — identity, style fingerprint summary, voice-sample previews, taboos, source URLs. Read-only.
+- [x] **Step 3 — Implement `/ghostwriter:delete`:** Create `commands/ghostwriter/delete.md`. Selection by number or slug, two-step confirmation, hard-deletes the file. Reminds the user that git history may still contain the file if the consumer ever committed it (per the gitignore-by-default rule, this should not normally happen).
+- [x] **Step 4 — Re-fetch refresh path:** Confirm Phase 2 Step 2's diff-and-accept flow handles `--force-refresh` (rebuilds from scratch instead of merging). Documented in `docs/contracts/ghostwriter-schema.md § Re-fetch flow` and `commands/ghostwriter/fetch.md` Step 1.
 
 ## Phase 5: Documentation + cross-references
 
-- [ ] **Step 1 — README section:** Add a "Ghostwriter" section to the package README. Two paragraphs max: what it is, the public-figure-only + disclosure-footer + no-package-distribution constraints, pointer at `/ghostwriter:fetch`.
-- [ ] **Step 2 — Persona / user cross-link:** Update `personas/README.md` and `docs/contracts/agent-user-schema.md` with a "see also" pointer at the ghostwriter contract — clarifies the three-primitive model (reviewer · self · external author).
-- [ ] **Step 3 — Skill cross-reference audit:** Run `agent-config check:refs` (or the equivalent `check-refs` skill). Fix any broken pointer.
+- [x] **Step 1 — README section:** Add a "Ghostwriter" section to the package README. Two paragraphs max: what it is, the public-figure-only + disclosure-footer + no-package-distribution constraints, pointer at `/ghostwriter:fetch`.
+- [x] **Step 2 — Persona / user cross-link:** Update `personas/README.md` and `docs/contracts/agent-user-schema.md` with a "see also" pointer at the ghostwriter contract — clarifies the three-primitive model (reviewer · self · external author).
+- [x] **Step 3 — Skill cross-reference audit:** Run `agent-config check:refs` (or the equivalent `check-refs` skill). Fix any broken pointer.
 
 ## Acceptance Criteria
 
-- [ ] Re-validation gate executed; verdict recorded in this file before any phase starts
-- [ ] Phase 1 — Schema contract exists; dual storage model documented and CI-enforced (no real profiles in package source); gitignore wired; public-figure gate spec exists; one fictional fixture shipped
-- [ ] Phase 2 — `/ghostwriter:fetch` works in URL mode and name-only mode via host-agent; minimum source count enforced; diff-and-accept on re-fetch; 90-day stale warning surfaces
-- [ ] Phase 3 — `/ghostwriter:write` emits markdown + mandatory disclosure footer; `/post-as:ghostwriter` alias works; `/post-as:me` reads `.agent-user.md` and shares the write engine
-- [ ] Phase 4 — `list / show / delete` work; re-fetch refresh path documented
-- [ ] Phase 5 — README updated; cross-references valid; `check:refs` passes
-- [ ] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`, `task lint-ghostwriter-source`)
-- [ ] **Zero network code in the `agent-config` package itself** — verified by grep (no `requests`, `urllib`, `httpx`, `fetch`, etc. introduced by Phase 2)
-- [ ] **Zero real-person profiles in `.agent-src.uncompressed/ghostwriter/` or any generated `.agent-src/` / `.augment/` tree** — verified by `task lint-ghostwriter-source`
-- [ ] Every `/ghostwriter:write` and `/post-as:ghostwriter` output ends with the disclosure footer — verified by command-doc inspection (no `--no-disclosure` flag exists)
+- [x] Re-validation gate executed; verdict recorded in this file before any phase starts
+- [x] Phase 1 — Schema contract exists; dual storage model documented and CI-enforced (no real profiles in package source); gitignore wired; public-figure gate spec exists; one fictional fixture shipped
+- [x] Phase 2 — `/ghostwriter:fetch` works in URL mode and name-only mode via host-agent; minimum source count enforced; diff-and-accept on re-fetch; 90-day stale warning surfaces
+- [x] Phase 3 — `/ghostwriter:write` emits markdown + mandatory disclosure footer; `/post-as:ghostwriter` alias works; `/post-as:me` reads `.agent-user.md` and shares the write engine
+- [x] Phase 4 — `list / show / delete` work; re-fetch refresh path documented
+- [x] Phase 5 — README updated; cross-references valid; `check:refs` passes
+- [x] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`, `task lint-ghostwriter-source`)
+- [x] **Zero network code in the `agent-config` package itself** — verified by grep (no `requests`, `urllib`, `httpx`, `fetch`, etc. introduced by Phase 2)
+- [x] **Zero real-person profiles in `.agent-src.uncompressed/ghostwriter/` or any generated `.agent-src/` / `.augment/` tree** — verified by `task lint-ghostwriter-source`
+- [x] Every `/ghostwriter:write` and `/post-as:ghostwriter` output ends with the disclosure footer — verified by command-doc inspection (no `--no-disclosure` flag exists)
 
 ## Notes
 

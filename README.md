@@ -633,32 +633,25 @@ fallback when `.agent-user.md` is absent.
 
 ## Ghostwriter (`agents/ghostwriter/<slug>.md`)
 
-The third voice primitive — captures the **public-facing writing
-voice of documented public figures** (authors, executives, academics,
-journalists, public speakers, deceased historical figures) for
-AI-assisted drafting. `/ghostwriter:fetch <url-or-name>` runs a
-public-figure attestation gate, delegates the fetch / search to the
-host agent's `web-fetch` / `web-search` (zero network code in the
-package), and writes the profile under `agents/ghostwriter/<slug>.md`
-— **gitignored by default**, never shipped in the OSS package.
-`/ghostwriter:write --as=<slug>` drafts in that voice and appends the
-**mandatory non-removable disclosure footer** (`*Written in the style
-of <name>, not by them.*`); `/post-as:ghostwriter` is a thin alias.
-Schema locked in
-[`docs/contracts/ghostwriter-schema.md`](docs/contracts/ghostwriter-schema.md).
-
-Private individuals are rejected — no fair-use defence. Paywalled,
-login-walled, leaked, retracted, and private DM content is banned at
-the schema level. `/ghostwriter:list`, `/ghostwriter:show`, and
-`/ghostwriter:delete` round out the cluster.
-
-Three voice primitives, three purposes:
+Third voice primitive — captures **public-facing writing voice of
+documented public figures** (authors, executives, academics,
+journalists, public speakers, deceased historical figures).
+`/ghostwriter:fetch <url-or-name>` runs an attestation gate, delegates
+to the host agent's `web-fetch` / `web-search` (zero network code in
+the package), and writes `agents/ghostwriter/<slug>.md` — **gitignored
+by default**, never shipped in the OSS package. `/ghostwriter:write
+--as=<slug>` drafts in that voice and appends the **mandatory
+non-removable disclosure footer** (`*Written in the style of <name>,
+not by them.*`); `/post-as:ghostwriter` is a thin alias. Private
+individuals are rejected; paywalled / leaked / DM content banned at
+the schema level. `:list`, `:show`, `:delete` round out the cluster.
+Schema: [`docs/contracts/ghostwriter-schema.md`](docs/contracts/ghostwriter-schema.md).
 
 | Primitive | Voice | Disclosure footer |
 |---|---|---|
-| `personas/*.md` | review-lens (internal critique) | n/a — never produces author-attributed output |
-| `.agent-user.md` | the maintainer's own voice (`/post-as:me`) | none — you are the author |
-| `agents/ghostwriter/<slug>.md` | external public-figure voice (`/post-as:ghostwriter`) | mandatory, non-removable |
+| `personas/*.md` | review-lens (internal critique) | n/a |
+| `.agent-user.md` | maintainer's own voice (`/post-as:me`) | none — you are the author |
+| `agents/ghostwriter/<slug>.md` | external public-figure (`/post-as:ghostwriter`) | mandatory, non-removable |
 
 ## Core Principles
 
