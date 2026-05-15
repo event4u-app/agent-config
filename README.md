@@ -1,10 +1,12 @@
-# Agent Config — Governed Agent System
+# Agent Config — Universal AI Agent OS
 
-> **agent-config is not a runtime, but it ships a deterministic orchestration contract / state machine for host agents.**
+> **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
-Give your AI agents an audit-disciplined orchestration contract — testing, Git, CI, code review, and **120+ stack-aware skills** — with quality guardrails built in.
+Give your AI agents an audit-disciplined execution layer: **210 skills**, **79 governance rules**, **124 commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
 
-> Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
+| 👩‍💻 Developers | 🚀 Founders & Operators | ✍️ Creators & Consultants |
+|---|---|---|
+| Implement tickets, fix CI, write tests, run PR reviews — `/implement-ticket`, `/work`, `/commit`, `/fix ci`, `/create-pr` — with stack-aware skills for Laravel · Symfony · Next.js · React · Node. | Pitch decks, runway math, OKR trees, GTM launches, pricing reviews — `runway-cognition`, `unit-economics-modeling`, `fundraising-narrative`, `gtm-launch`, `okr-tree-modeling`. | Editorial calendars, brand voice, ghostwriting, content funnels, discovery interviews — `voice-and-tone-design`, `editorial-calendar`, `ghostwriter`, `content-funnel-design`, `discovery-interview`. |
 
 <p align="center">
   <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
@@ -67,6 +69,12 @@ work-engine phases ran end-to-end. Stack-aware skills auto-load.
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
 > below. Contributors rebuilding the package — jump to
 > [**Development**](#development).
+>
+> **Non-developer? No terminal?** Skip `npx` entirely — host
+> agent-config as a [Cloudflare MCP endpoint](#self-hosted-mcp-on-cloudflare--zero-local-install)
+> and connect from Claude Desktop. The [role-based getting started](docs/getting-started-by-role.md)
+> guide names the three skills each role reaches for first (Creator,
+> Founder, Consultant, GTM, Finance/Ops, Developer).
 
 ### Detailed installation
 
@@ -494,6 +502,12 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | Cross-stack | API design · testing · security · database · Docker · Git · CI · review · threat modeling · observability |
 
 **Deepest reference stack today: Laravel** — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant. **Workflow-grade second tier: Symfony** (`symfony-workflow` — DI, Doctrine, Messenger, voters, Twig) and **Next.js App Router** (`nextjs-patterns` — RSC boundaries, Server Actions, caching, route handlers). Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
+
+---
+
+## Featured Domain: Laravel Development
+
+Laravel is the package's deepest reference stack — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant — with end-to-end workflows for tickets, CI, and PR review. New here and shipping Laravel? Start at [`docs/getting-started-laravel.md`](docs/getting-started-laravel.md) — it wires up `.agent-settings.yml`, picks the right quality tools, and walks through a full `/implement-ticket` loop. For other stacks (Symfony, Next.js, React, Node) or non-dev surfaces (founder / creator / consultant), see [`docs/getting-started-by-role.md`](docs/getting-started-by-role.md).
 
 ---
 
