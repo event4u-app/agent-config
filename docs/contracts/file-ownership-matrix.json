@@ -39,6 +39,42 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/agents/user.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/agents/user/accept.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/agents/user/init.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/agents/user/review.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/agents/user/show.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/agents/user/update.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/analyze-reference-repo.md": {
       "kind": "command",
       "rule_type": null,
@@ -2901,6 +2937,160 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user.md",
+      "target": ".agent-src.uncompressed/commands/agents/init.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/accept.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/init.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/review.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "target": ".agent-src.uncompressed/commands/agents/user/update.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/commands/analyze-reference-repo.md",

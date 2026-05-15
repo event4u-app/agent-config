@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **455**
-- Edges (incl. self-WRITE): **1237**
+- Files indexed: **461**
+- Edges (incl. self-WRITE): **1259**
 
 ## READ_ONLY edges
 
@@ -26,6 +26,22 @@
 | `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/agents/optimize.md` | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user.md` | `.agent-src.uncompressed/commands/agents/init.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/accept.md` | `.agent-src.uncompressed/commands/agents/user.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/accept.md` | `.agent-src.uncompressed/commands/agents/user/review.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/accept.md` | `.agent-src.uncompressed/commands/agents/user/update.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/init.md` | `.agent-src.uncompressed/commands/agents/user.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/review.md` | `.agent-src.uncompressed/commands/agents/user.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/review.md` | `.agent-src.uncompressed/commands/agents/user/accept.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/review.md` | `.agent-src.uncompressed/commands/agents/user/update.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/show.md` | `.agent-src.uncompressed/commands/agents/user.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/show.md` | `.agent-src.uncompressed/commands/agents/user/init.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/show.md` | `.agent-src.uncompressed/commands/agents/user/update.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/accept.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/init.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/review.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/show.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/challenge-me/vision.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/council/default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/grill-me.md` | `body_link` | 1 |
@@ -799,7 +815,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 109 |
+| `command` | 115 |
 | `context` | 31 |
 | `persona` | 29 |
 | `rule` | 67 |

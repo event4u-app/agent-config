@@ -40,6 +40,10 @@ personal:
   open_edited_files: false
 
   # User's first name — used to address the user personally
+  # NOTE (legacy fallback): Source of truth for user identity is now the
+  # project-root `.agent-user.md` file, created via `/agents user init`.
+  # This key is retained for backward compatibility; the agent only falls
+  # back to it when `.agent-user.md` is absent.
   user_name: ""
 
   # rtk (Rust Token Killer) installed for output filtering (true, false)

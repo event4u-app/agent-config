@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>109 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>115 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -524,7 +524,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 109 active commands](.agent-src/commands/)
+→ [Browse all 115 active commands](.agent-src/commands/)
 
 ---
 
@@ -556,7 +556,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 210 skills + 109 native commands); Augment Code gets the
+> package (rules + 210 skills + 115 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
@@ -604,6 +604,21 @@ for the rationale and
 for the per-rule routing.
 
 ---
+
+## User persona (`.agent-user.md`)
+
+A project-root `.agent-user.md` file captures who the user is — name,
+primary language, role, work style, and a single voice sample — so the
+agent can address them correctly from the first turn. The file is
+gitignored by default, paste-only, and contains zero PII beyond what the
+user explicitly volunteers. Schema is locked v1 in
+[`docs/contracts/agent-user-schema.md`](docs/contracts/agent-user-schema.md).
+
+Create it interactively with `/agents user init`. Inspect with
+`/agents user show`. Updates happen only through the explicit
+`review` / `accept` / `update` flow — never silent auto-writes. The
+legacy `personal.user_name` key in `.agent-settings.yml` stays as a
+fallback when `.agent-user.md` is absent.
 
 ## Core Principles
 

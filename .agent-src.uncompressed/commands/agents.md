@@ -28,6 +28,7 @@ agent infrastructure (rules, skills, pointers).
 | `/agents init` | `commands/agents/init.md` | Bootstrap the agent layer — create `AGENTS.md` + tool stubs from the canonical template |
 | `/agents optimize` | `commands/agents/optimize.md` | Refactor `AGENTS.md` to the Thin-Root contract; propagate to multi-tool stubs |
 | `/agents audit` | `commands/agents/audit.md` | Read-only health check — token overhead, rule triggers, AGENTS.md health, stale references |
+| `/agents user` | `commands/agents/user.md` | User-persona file (`.agent-user.md`) — interview, render, maintenance |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -43,6 +44,7 @@ Sub-command names match the locked contract in
    > 1. init — bootstrap AGENTS.md + tool stubs
    > 2. optimize — refactor AGENTS.md to the Thin-Root contract
    > 3. audit — read-only health check on the agent layer
+   > 4. user — manage `.agent-user.md` (user-persona file)
 
 ## Rules
 
