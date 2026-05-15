@@ -203,6 +203,9 @@ def build_preview(
     Steps mirror the command doc:
 
     1. Parse the local corpus (strict — drift surfaces as ParseError).
+       Step-10: the preview deliberately stays on the Markdown parser
+       (not the YAML lockfile) because it runs *before* ``task sync``
+       rebuilds the lockfile from a user's local corpus edits.
     2. Diff Validated entries against the upstream seed.
     3. Run the redactor on every candidate.
     4. Bucket into promoted / refused / already-seeded.

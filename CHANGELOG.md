@@ -110,6 +110,45 @@ existing behaviour (`dispatch=full`, empty chain, `member_mode=cli`
 in fresh installs; existing configs read unchanged). No migration
 script — defaults are silent-safe.
 
+**Low-impact corpus YAML lockfile (`step-10-corpus-yaml-lockfile`)** —
+follow-up to the PR #150 review (Punkt 4): the Markdown parser used to
+be the runtime source-of-truth for the low-impact decisions corpus,
+making every human edit-variation (curly quotes, bullet style,
+whitespace, heading rename) a potential parser bomb on the hot path.
+Switched the runtime to a generated YAML lockfile while keeping
+Markdown as the human-editable source. New surfaces:
+
+- **`scripts/ai_council/compile_corpus.py`** — build tool that runs
+  `parse_corpus_strict()` over `agents/low-impact-decisions.md` and
+  emits `agents/low-impact-decisions.lock.yaml` (schema-v1, sorted
+  keys, deterministic). `--check` mode exits `1` on drift, `2` on
+  parse error.
+- **`agents/low-impact-decisions.lock.yaml`** — generated, **committed**
+  lockfile. Schema `{schema_version: 1, provenance: {source_path,
+  source_sha256, last_upstreamed}, validated, probation, anti_examples}`.
+  Diffed in PR reviews alongside the Markdown source.
+- **`low_impact_corpus.load_corpus_lock()`** — new primitive that
+  loads the YAML lockfile and re-materialises a `CorpusParseResult`.
+  Schema-version mismatch raises `CorpusParseError` with reason
+  `schema_version_mismatch`.
+- **Lenient loaders prefer YAML** — `load_validated_phrases` and
+  `load_anti_example_phrases` (consumed by `necessity.py` and
+  `low_impact.py` on the hot path) check for the sibling `.lock.yaml`
+  first. Missing / malformed lockfile → silent fallback to lenient
+  Markdown parsing, so a fresh clone before `task sync` still works.
+- **CI gate** — `task compile-corpus` runs as part of `task sync` and
+  `task consistency` (before `git diff --quiet`). A stale lockfile
+  fails CI the same way `.agent-src/` drift does.
+- **Preview tool unchanged** — `learn_low_impact_preview.py` keeps
+  reading the Markdown directly via `parse_corpus_strict`; it runs
+  *before* `task sync` rebuilds the lockfile, so it must read whatever
+  the user just edited.
+
+The Markdown parser stays in the repo as a build-time dependency, not
+a runtime dependency — a parser regression breaks `task consistency`,
+never the live council. Privacy floor (`low-impact-corpus-privacy-floor`)
+unchanged: the redactor scans entry text, not file format.
+
 **Council quota & necessity transparency (`step-8-quota-necessity-transparency`)** —
 the council's two pre-flight gates (`cli_call_budget` and
 `necessity_classifier`) become observable and aligned with the

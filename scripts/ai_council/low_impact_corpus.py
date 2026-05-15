@@ -332,22 +332,108 @@ def parse_corpus_strict(corpus_path: "object") -> CorpusParseResult:
 def load_validated_phrases(corpus_path: "object") -> tuple[str, ...]:
     """Back-compat shim used by routing (lenient mode).
 
+    Step-10: prefers the YAML lockfile (``<corpus>.lock.yaml`` sibling
+    of ``corpus_path``) when present. Falls back to lenient Markdown
+    parsing when the lockfile is missing (fresh clone before
+    ``task sync``, or callers that haven't run the compiler).
+
     Silently drops malformed lines so a broken corpus never blocks
     classification. Strict-mode contract validation lives in
     :func:`parse_corpus_strict` and the CI lint job.
     """
+    yaml_phrases = _load_section_from_lock(corpus_path, "validated")
+    if yaml_phrases is not None:
+        return yaml_phrases
     return _load_section_lenient(corpus_path, "validated")
 
 
 def load_anti_example_phrases(corpus_path: "object") -> tuple[str, ...]:
     """Lenient loader for the ``Anti-Examples`` section (step-9 P5).
 
+    Step-10: prefers the YAML lockfile (see :func:`load_validated_phrases`).
+
     Mirrors :func:`load_validated_phrases` for the anti-example
     bucket. Consumed by the fuzzy-match classifier to apply the
     anti-example-veto: if the query is at least as similar to an
     anti-example as to a validated phrase, the match is rejected.
     """
+    yaml_phrases = _load_section_from_lock(corpus_path, "anti_examples")
+    if yaml_phrases is not None:
+        return yaml_phrases
     return _load_section_lenient(corpus_path, "anti_examples")
+
+
+def load_corpus_lock(yaml_path: "object") -> CorpusParseResult:
+    """Load a step-10 YAML lockfile and re-materialise a :class:`CorpusParseResult`.
+
+    Returns an empty result if the file does not exist (matches the
+    Markdown-source contract). Malformed YAML raises ``yaml.YAMLError``;
+    a schema-version mismatch raises :class:`CorpusParseError` so
+    consumers see the same typed failure they would from the Markdown
+    parser. Lenient callers (:func:`load_validated_phrases`,
+    :func:`load_anti_example_phrases`) catch these errors and fall back
+    to lenient Markdown parsing.
+    """
+    import yaml  # local import: parser path stays import-light
+
+    p = Path(str(yaml_path))
+    if not p.exists():
+        return CorpusParseResult()
+    doc = yaml.safe_load(p.read_text(encoding="utf-8")) or {}
+    schema_version = doc.get("schema_version")
+    if schema_version != 1:
+        raise CorpusParseError(
+            "schema_version_mismatch",
+            detail=f"expected schema_version=1, got {schema_version!r}",
+        )
+
+    def _entries(key: Section) -> tuple[CorpusEntry, ...]:
+        return tuple(
+            CorpusEntry(
+                phrase=item.get("phrase", ""),
+                normalised=item.get("normalised", ""),
+                section=key,
+                line_no=int(item.get("line_no", 0)),
+                trailing_metadata=item.get("trailing_metadata", ""),
+            )
+            for item in (doc.get(key) or ())
+            if item.get("normalised")
+        )
+
+    return CorpusParseResult(
+        validated=_entries("validated"),
+        probation=_entries("probation"),
+        anti_examples=_entries("anti_examples"),
+    )
+
+
+def _derive_lock_path(corpus_path: Path) -> Path:
+    """Return the sibling lockfile path for a given corpus Markdown path."""
+    if corpus_path.suffix == ".yaml":
+        return corpus_path
+    if corpus_path.name.endswith(".lock.yaml"):
+        return corpus_path
+    stem = corpus_path.name[: -len(corpus_path.suffix)] if corpus_path.suffix else corpus_path.name
+    return corpus_path.with_name(f"{stem}.lock.yaml")
+
+
+def _load_section_from_lock(
+    corpus_path: "object", section: Section,
+) -> "tuple[str, ...] | None":
+    """Read ``section`` phrases from the sibling lockfile.
+
+    Returns ``None`` when the lockfile is absent or malformed so the
+    caller can fall back to lenient Markdown parsing.
+    """
+    p = Path(str(corpus_path))
+    lock_path = _derive_lock_path(p)
+    if not lock_path.exists():
+        return None
+    try:
+        result = load_corpus_lock(lock_path)
+    except (CorpusParseError, Exception):  # noqa: BLE001
+        return None
+    return result.phrases(section)
 
 
 def _load_section_lenient(corpus_path: "object", section: Section) -> tuple[str, ...]:
@@ -374,6 +460,7 @@ __all__ = (
     "CorpusParseResult",
     "Section",
     "load_anti_example_phrases",
+    "load_corpus_lock",
     "load_validated_phrases",
     "parse_corpus_strict",
 )

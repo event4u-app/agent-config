@@ -7,6 +7,7 @@ tasks:
     cmds:
       - bash scripts/compress.sh --sync
       - python3 scripts/update_counts.py
+      - task: compile-corpus
       - task: sync-agent-settings
 
   sync-agent-settings:
@@ -95,6 +96,16 @@ tasks:
     desc: Verify router.json matches a fresh compile (fails on drift)
     cmd: python3 scripts/compile_router.py --check
 
+  compile-corpus:
+    silent: true
+    desc: Compile agents/low-impact-decisions.md → .lock.yaml (runtime source-of-truth)
+    cmd: python3 -m scripts.ai_council.compile_corpus
+
+  check-corpus:
+    silent: true
+    desc: Verify agents/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
+    cmd: python3 -m scripts.ai_council.compile_corpus --check
+
   check-augmentignore:
     silent: true
     desc: Advisory check — reminds to refresh .augmentignore (non-blocking, always exits 0)
@@ -119,6 +130,7 @@ tasks:
       - task: sync
       - task: generate-tools
       - task: compile-router
+      - task: compile-corpus
       - git diff --quiet
 
   consistency-fix:
@@ -128,6 +140,7 @@ tasks:
       - task: sync
       - task: generate-tools
       - task: compile-router
+      - task: compile-corpus
 
   check-compression:
     silent: true
