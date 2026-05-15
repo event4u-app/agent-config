@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafting strategic recommendations, executive memos, board decks, or consulting deliverables — cite the assumptions every recommendation rests on; flag low-confidence claims"
+description: "Drafting strategic recommendations, executive memos, board decks, or consulting deliverables — cite assumptions; flag low-confidence claims"
 source: package
 triggers:
   - keyword: "strategic recommendation"

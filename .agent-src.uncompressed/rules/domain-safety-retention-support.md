@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Generating support / CRM data retention guidance — surface DSR-readiness, consent-window expiry, and the difference between ticket body retention vs. analytics aggregate retention"
+description: "Support / CRM data retention guidance — surface DSR-readiness, consent-window expiry, ticket-body retention vs. analytics aggregate retention"
 source: package
 triggers:
   - keyword: "ticket retention"

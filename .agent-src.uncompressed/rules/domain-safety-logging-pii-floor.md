@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Writing logging code, structured logger configuration, or log-line generation — refuse to log raw PII; require redaction at the logger or structured-field allowlist"
+description: "Writing logging code, structured logger config, or log lines — refuse to log raw PII; require redaction or a structured-field allowlist"
 source: package
 triggers:
   - keyword: "log"

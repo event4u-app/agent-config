@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Generating CSV / Excel / API exports, data-shares with partners, or analyst handoffs — redact direct identifiers; flag re-identification risk on quasi-identifier combinations"
+description: "Generating CSV / Excel / API exports, partner data-shares, or analyst handoffs — redact direct identifiers; flag re-identification on quasi-IDs"
 source: package
 triggers:
   - keyword: "export to CSV"
