@@ -15,6 +15,10 @@
 #   --source <dir>    Package source directory (default: auto-detect)
 #   --target <dir>    Target project root (default: cwd)
 #   --profile <name>  Cost profile for bridges (minimal|balanced|full)
+#   --user-type <id>  Primary user-type for skill filtering (step-9 axis).
+#                     Valid ids: consultant | creator | developer | finance
+#                     | founder | gtm | ops. Default: empty (no filter).
+#                     Written to personal.user_type in .agent-settings.yml.
 #   --tools <list>    Comma-separated tool IDs to install (default: all).
 #                     Valid: claude-code,claude-desktop,cursor,windsurf,
 #                            cline,gemini-cli,copilot,augment,aider,codex,
@@ -82,12 +86,13 @@ SCOPE=""
 CUSTOM_PATH=""
 OFFLINE=false
 MINIMAL=false
+USER_TYPE=""
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
-    sed -n '3,54p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,58p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -146,6 +151,8 @@ while [[ $# -gt 0 ]]; do
         --target=*)      TARGET_DIR="${1#*=}"; shift ;;
         --profile)       PROFILE="$2"; shift 2 ;;
         --profile=*)     PROFILE="${1#*=}"; shift ;;
+        --user-type)     USER_TYPE="$2"; shift 2 ;;
+        --user-type=*)   USER_TYPE="${1#*=}"; shift ;;
         --tools)         TOOLS="${TOOLS:+$TOOLS,}$2"; TOOLS_EXPLICIT=true; shift 2 ;;
         --tools=*)       TOOLS="${TOOLS:+$TOOLS,}${1#*=}"; TOOLS_EXPLICIT=true; shift ;;
         --ai)            TOOLS="${TOOLS:+$TOOLS,}$2"; TOOLS_EXPLICIT=true; shift 2 ;;
@@ -309,6 +316,7 @@ run_bridges() {
 
     local args=(--project "$TARGET_DIR" --package "$SOURCE_DIR")
     [[ -n "$PROFILE" ]] && args+=(--profile="$PROFILE")
+    [[ -n "$USER_TYPE" ]] && args+=(--user-type="$USER_TYPE")
     $FORCE && args+=(--force)
     $QUIET && args+=(--quiet)
     $GLOBAL && args+=(--global)

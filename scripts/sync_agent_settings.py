@@ -113,6 +113,12 @@ def main(argv: list[str] | None = None) -> int:
             print(f"error: unsupported profile {profile!r}", file=sys.stderr)
             return 2
         profile_values = load_profile(profile_dir, profile)
+        # Preserve existing user_type (step-9 axis) so the template's
+        # __USER_TYPE__ placeholder renders without forcing the user to
+        # re-pass --user-type on every sync. Empty string = no filter.
+        personal = user_data.get("personal") if isinstance(user_data.get("personal"), dict) else {}
+        existing_user_type = str(personal.get("user_type") or "") if personal else ""
+        profile_values["user_type"] = existing_user_type
         template_body = load_template(template_path, profile_values)
     except FileNotFoundError as exc:
         print(f"error: {exc}", file=sys.stderr)

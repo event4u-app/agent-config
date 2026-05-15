@@ -1,5 +1,5 @@
 ---
-complexity: cross-runtime
+complexity: lightweight
 ---
 
 # Roadmap: MCP runtime stub (Claude-Desktop-native invocation)
@@ -12,7 +12,7 @@ complexity: cross-runtime
 
 ## Source
 
-- **Council verdict:** `agents/council-responses/2026-05-15-step12-closure-run2.json`
+- **Council verdict:** `agents/council-responses/2026-05-15-step12-closure-run2.json` <!-- council-ref-allowed: roadmap source-trail -->
   D3 (c) — author a tracking stub instead of burying L72 in an annotation
   (Reviewer-A precedent argument; pattern-consistency with step-9 / step-13).
 - **Parent roadmap:** [`archive/step-12-universal-os-reframe.md`](archive/step-12-universal-os-reframe.md) L72 *(archived on closure run #2)*.

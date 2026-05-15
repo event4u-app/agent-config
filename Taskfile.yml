@@ -113,6 +113,7 @@ tasks:
       - task: lint-hook-concern-budget
       - task: lint-showcase-sessions
       - task: lint-marketplace
+      - task: lint-user-type-axis
       - task: lint-skill-tools
       - task: lint-agents-md
       - task: lint-projection-fidelity
@@ -180,6 +181,7 @@ tasks:
       - task: lint-hook-concern-budget
       - task: lint-showcase-sessions
       - task: lint-marketplace
+      - task: lint-user-type-axis
       - task: lint-skill-tools
       - task: lint-agents-md
       - task: lint-projection-fidelity

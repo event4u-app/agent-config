@@ -18,7 +18,8 @@ helpers (caller decides whether to log).
 """
 from __future__ import annotations
 
-from dataclasses import dataclass
+import dataclasses
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Literal
 
@@ -36,6 +37,7 @@ PHASE_1_SKILLS: tuple[str, ...] = (
 )
 
 PromptKind = Literal["skill", "command"]
+UserTypeMatch = Literal["", "match", "universal", "outside"]
 
 
 @dataclass(frozen=True)
@@ -46,6 +48,12 @@ class SkillPrompt:
     field is the frontmatter `name:` value verbatim (e.g.
     `test-driven-development` or `research:report`); MCP wire names
     are derived in `to_mcp_prompt_meta` with `kind`-aware prefixing.
+
+    `recommended_for_user_types` mirrors the SKILL.md frontmatter
+    array (step-9 user-type axis). Empty tuple = universal (no
+    user-type constraint declared). `user_type_match` is the
+    cache-computed match label against the active `personal.user_type`
+    in `.agent-settings.yml`; empty string means filtering is disabled.
     """
 
     name: str
@@ -53,6 +61,8 @@ class SkillPrompt:
     body: str
     source: str
     kind: PromptKind = "skill"
+    recommended_for_user_types: tuple[str, ...] = ()
+    user_type_match: UserTypeMatch = ""
 
 
 def _project_root() -> Path:
@@ -84,6 +94,69 @@ def _strip_frontmatter(text: str) -> tuple[dict[str, str], str]:
     return meta, body.lstrip("\n")
 
 
+def _parse_inline_array(value: str) -> tuple[str, ...]:
+    """Parse `[a, b, c]` inline-array frontmatter value into a tuple.
+
+    Returns `()` for any malformed or empty value. Quotes around items
+    are stripped. This is intentionally a tiny parser — the canonical
+    schema for skill frontmatter is enforced upstream by
+    `task lint-skills` / `scripts/validate_frontmatter.py`.
+    """
+    v = value.strip()
+    if not (v.startswith("[") and v.endswith("]")):
+        return ()
+    inner = v[1:-1].strip()
+    if not inner:
+        return ()
+    items: list[str] = []
+    for raw in inner.split(","):
+        item = raw.strip().strip('"').strip("'")
+        if item:
+            items.append(item)
+    return tuple(items)
+
+
+def _load_active_user_type(root: Path) -> str:
+    """Read `personal.user_type` from `.agent-settings.yml`.
+
+    Returns `""` when the file is missing, the key is unset, or the
+    value is still the install-time placeholder (`__USER_TYPE__`).
+    Empty string disables the runtime filter (legacy behavior — every
+    skill surfaces with its native sort order).
+
+    Tiny line-based parser to avoid a `pyyaml` runtime dependency for
+    the loader (consistent with `_strip_frontmatter`). Only matches
+    `user_type:` directly under the top-level `personal:` block.
+    """
+    settings = root / ".agent-settings.yml"
+    if not settings.is_file():
+        return ""
+    try:
+        text = settings.read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    in_personal = False
+    for raw in text.splitlines():
+        if not raw or raw.lstrip().startswith("#"):
+            continue
+        if not raw[0].isspace():
+            # Top-level key — flip in_personal based on whether it's `personal:`.
+            head = raw.split("#", 1)[0].strip().rstrip(":")
+            in_personal = head == "personal"
+            continue
+        if not in_personal:
+            continue
+        stripped = raw.strip()
+        if not stripped.startswith("user_type:"):
+            continue
+        _, _, value = stripped.partition(":")
+        value = value.split("#", 1)[0].strip().strip('"').strip("'")
+        if value.startswith("__") and value.endswith("__"):
+            return ""
+        return value
+    return ""
+
+
 def load_skill(name: str, root: Path | None = None) -> SkillPrompt:
     """Load a single skill by name. Raises FileNotFoundError if missing."""
     base = root or _project_root()
@@ -107,6 +180,9 @@ def _load_file(
         body=body.rstrip() + "\n",
         source=meta.get("source", "package"),
         kind=kind,
+        recommended_for_user_types=_parse_inline_array(
+            meta.get("recommended_for_user_types", "")
+        ),
     )
 
 
@@ -231,18 +307,46 @@ def to_mcp_prompt_meta(prompt: SkillPrompt) -> dict[str, Any]:
     Colons in command names (e.g. `research:report`) become `.` so
     the wire identifier is a single-segment dotted path that survives
     every MCP client we have tested.
+
+    When the user-type axis is active (`PromptCache` resolves a
+    non-empty `personal.user_type`), each prompt carries a
+    `user_type_match` label and the projected `_meta` surfaces it so
+    MCP clients can render the "outside <id> filter" collapse group.
+    Absent / empty label means filtering is off — meta is unchanged
+    from the legacy shape, preserving back-compat.
     """
     if prompt.kind == "command":
         wire = f"command.{prompt.name.replace(':', '.')}"
     else:
         wire = f"skill.{prompt.name}"
+    meta: dict[str, Any] = {"source": prompt.source, "kind": prompt.kind}
+    if prompt.user_type_match:
+        meta["user_type_match"] = prompt.user_type_match
     return {
         "name": wire,
         "title": prompt.name,
         "description": prompt.description,
         "arguments": [],
-        "_meta": {"source": prompt.source, "kind": prompt.kind},
+        "_meta": meta,
     }
+
+
+def _user_type_rank(prompt: SkillPrompt, user_type: str) -> tuple[int, UserTypeMatch]:
+    """Return `(sort_rank, match_label)` for the step-9 axis.
+
+    Ranks (lower sorts first):
+        0 = match     — user_type is in `recommended_for_user_types`
+        1 = universal — prompt declares no recommended_for_user_types
+        2 = outside   — declared, but user_type is not in the list
+
+    Caller must guarantee `user_type` is non-empty (filter is on).
+    """
+    declared = prompt.recommended_for_user_types
+    if not declared:
+        return (1, "universal")
+    if user_type in declared:
+        return (0, "match")
+    return (2, "outside")
 
 
 class PromptCache:
@@ -264,6 +368,7 @@ class PromptCache:
         self._errors: list[str] = []
         self._signature: tuple[tuple[str, float], ...] = ()
         self._index: dict[str, SkillPrompt] = {}
+        self._active_user_type: str = ""
 
     def _current_signature(self) -> tuple[tuple[str, float], ...]:
         entries: list[tuple[str, float]] = []
@@ -278,10 +383,32 @@ class PromptCache:
             for path in sorted(cmd_root.rglob("*.md")):
                 if path.is_file():
                     entries.append((str(path), path.stat().st_mtime))
+        # `.agent-settings.yml` participates in the signature so a
+        # user_type flip (re-run install with a different --user-type)
+        # invalidates the cache without needing a SKILL.md touch.
+        settings = self._root / ".agent-settings.yml"
+        if settings.is_file():
+            entries.append((str(settings), settings.stat().st_mtime))
         return tuple(entries)
 
     def _refresh(self) -> None:
         prompts, errors = load_all_prompts(self._root)
+        user_type = _load_active_user_type(self._root)
+        self._active_user_type = user_type
+        if user_type:
+            # Tag every prompt with its match label and resort:
+            #   match (0) → universal (1) → outside (2), then wire name.
+            tagged: list[SkillPrompt] = []
+            for prompt in prompts:
+                _rank, label = _user_type_rank(prompt, user_type)
+                tagged.append(dataclasses.replace(prompt, user_type_match=label))
+            prompts = sorted(
+                tagged,
+                key=lambda p: (
+                    _user_type_rank(p, user_type)[0],
+                    to_mcp_prompt_meta(p)["name"],
+                ),
+            )
         self._prompts = prompts
         self._errors = errors
         self._index = {to_mcp_prompt_meta(p)["name"]: p for p in prompts}
@@ -298,6 +425,11 @@ class PromptCache:
     def signature(self) -> tuple[tuple[str, float], ...]:
         """Cached `(path, mtime)` tuples (Phase-6 F1 input). Call `get()` first."""
         return self._signature
+
+    @property
+    def active_user_type(self) -> str:
+        """Currently resolved `personal.user_type` (or `""` if no filter)."""
+        return self._active_user_type
 
     def lookup(self, wire_name: str) -> SkillPrompt | None:
         """Resolve an MCP wire name to its SkillPrompt, refreshing first."""

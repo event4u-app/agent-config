@@ -73,6 +73,13 @@ personal:
   # See rules/autonomous-execution.md for the full definition.
   autonomy: auto
 
+  # Primary user-type for skill filtering (step-9 axis).
+  # Empty string ("") = no filter (legacy behavior — every skill surfaces).
+  # Set this via `bash scripts/install --user-type=<id>` or hand-edit later.
+  # Valid ids: consultant | creator | developer | finance | founder | gtm | ops
+  # See user-types/README.md for the per-id contract.
+  user_type: "__USER_TYPE__"
+
 # --- Project / team preferences ---
 project:
   # Path to the PR template file (relative to project root)

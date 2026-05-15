@@ -4,7 +4,7 @@
 
 `agent-config` ships ~210 skills, ~67 rules, and ~124 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
 
-> **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates. See [`agents/roadmaps/step-12-universal-os-reframe.md`](../agents/roadmaps/step-12-universal-os-reframe.md).
+> **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.
 
 ---
 

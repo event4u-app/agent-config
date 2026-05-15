@@ -1,11 +1,11 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-15
+keep-beta-until: 2026-08-13
 ---
 
 # Init Telemetry v1
 
-> **Status:** beta · **Owner:** step-12 Phase 7 (`agents/roadmaps/step-12-universal-os-reframe.md`) · **Depends on:** [`step-9-user-types-axis`](../../agents/roadmaps/step-99-north-star-restructure.md) telemetry wire-up · **Stability:** additive only
+> **Status:** beta · **Depends on:** install-time `user_type` axis telemetry wire-up · **Stability:** additive only
 
 ## Purpose
 
@@ -123,7 +123,6 @@ When `telemetry.init: false`, the producer:
 
 ## Cross-references
 
-- [`step-12-universal-os-reframe.md`](../../agents/roadmaps/step-12-universal-os-reframe.md) Phase 7 L127 — the box this contract pre-authors.
 - [`universal-skills.md`](universal-skills.md) — sibling contract for the allowlist this telemetry validates against.
 - [`router-blending.md`](router-blending.md) — the user-type → skill blend that telemetry confirms is being used.
 - [`STABILITY.md`](STABILITY.md) — schema_version bump rules.

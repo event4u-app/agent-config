@@ -30,12 +30,19 @@ def make_fake_package(root: Path) -> Path:
 
     Copies the real template + profile presets from the repo so tests exercise
     the actual rendering code path without depending on the repo layout.
+    Also seeds ``user-types/*.yml`` so install paths that validate the
+    step-9 axis can run without a fully-checked-out package.
     """
     package = root / "pkg"
     (package / "config" / "profiles").mkdir(parents=True)
     shutil.copy(REPO_ROOT / "config" / "agent-settings.template.yml", package / "config" / "agent-settings.template.yml")
     for profile in install.SUPPORTED_PROFILES:
         shutil.copy(REPO_ROOT / "config" / "profiles" / f"{profile}.ini", package / "config" / "profiles" / f"{profile}.ini")
+    user_types_src = REPO_ROOT / "user-types"
+    if user_types_src.is_dir():
+        (package / "user-types").mkdir(parents=True, exist_ok=True)
+        for yml in user_types_src.glob("*.yml"):
+            shutil.copy(yml, package / "user-types" / yml.name)
     return package
 
 
@@ -720,6 +727,120 @@ class TestEnsureAgentSettings(SilentTest):
         with redirect_stderr(io.StringIO()):
             with self.assertRaises(SystemExit):
                 install.ensure_agent_settings(self.project, self.package, "minimal", force=False)
+
+
+# --- user-type axis (step-9 Phase 5) ---
+
+class TestUserTypeFlag(unittest.TestCase):
+    """parse_options wiring for --user-type (step-9 Phase 2)."""
+
+    def test_user_type_default_empty(self) -> None:
+        opts = install.parse_options([])
+        self.assertEqual(opts.user_type, "")
+
+    def test_user_type_explicit_consultant(self) -> None:
+        opts = install.parse_options(["--user-type=consultant"])
+        self.assertEqual(opts.user_type, "consultant")
+
+    def test_user_type_explicit_long_form(self) -> None:
+        opts = install.parse_options(["--user-type", "developer"])
+        self.assertEqual(opts.user_type, "developer")
+
+
+class TestValidateUserType(SilentTest):
+    """_validate_user_type — accepts shipped slugs, rejects unknowns."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.tmpdir = Path(tempfile.mkdtemp())
+        self.package = make_fake_package(self.tmpdir)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmpdir)
+        super().tearDown()
+
+    def test_empty_returns_empty(self) -> None:
+        self.assertEqual(install._validate_user_type(self.package, ""), "")
+
+    def test_whitespace_returns_empty(self) -> None:
+        self.assertEqual(install._validate_user_type(self.package, "   "), "")
+
+    def test_all_seven_seed_slugs_accepted(self) -> None:
+        for slug in ("consultant", "creator", "developer", "finance", "founder", "gtm", "ops"):
+            self.assertEqual(
+                install._validate_user_type(self.package, slug), slug,
+                f"slug {slug!r} should be accepted",
+            )
+
+    def test_unknown_slug_rejected(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_user_type(self.package, "wizard")
+
+    def test_missing_user_types_dir_rejected(self) -> None:
+        # Strip user-types/ to simulate older payload — non-empty slug must fail.
+        shutil.rmtree(self.package / "user-types")
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_user_type(self.package, "consultant")
+
+    def test_missing_user_types_dir_empty_slug_ok(self) -> None:
+        # Empty slug + missing dir → no filter requested, no failure.
+        shutil.rmtree(self.package / "user-types")
+        self.assertEqual(install._validate_user_type(self.package, ""), "")
+
+
+class TestEnsureAgentSettingsUserType(SilentTest):
+    """ensure_agent_settings renders __USER_TYPE__ placeholder (step-9 Phase 5)."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.tmpdir = Path(tempfile.mkdtemp())
+        self.project = self.tmpdir / "proj"
+        self.project.mkdir()
+        self.package = make_fake_package(self.tmpdir)
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.tmpdir)
+        super().tearDown()
+
+    def _settings(self) -> str:
+        return (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
+
+    def test_default_renders_empty_user_type(self) -> None:
+        install.ensure_agent_settings(self.project, self.package, "balanced", force=False)
+        content = self._settings()
+        self.assertIn('user_type: ""', content)
+        self.assertNotIn(install.USER_TYPE_PLACEHOLDER, content)
+
+    def test_consultant_renders_consultant(self) -> None:
+        install.ensure_agent_settings(
+            self.project, self.package, "balanced", force=False, user_type="consultant",
+        )
+        content = self._settings()
+        self.assertIn('user_type: "consultant"', content)
+        self.assertNotIn(install.USER_TYPE_PLACEHOLDER, content)
+
+    def test_invalid_user_type_fails(self) -> None:
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install.ensure_agent_settings(
+                    self.project, self.package, "balanced", force=False,
+                    user_type="wizard",
+                )
+
+    def test_no_placeholder_left_for_any_seed_slug(self) -> None:
+        for slug in install._load_valid_user_types(self.package):
+            target = self.project / ".agent-settings.yml"
+            if target.exists():
+                target.unlink()
+            install.ensure_agent_settings(
+                self.project, self.package, "minimal", force=False, user_type=slug,
+            )
+            content = target.read_text(encoding="utf-8")
+            leftover = install._PLACEHOLDER_RE.findall(content)
+            self.assertEqual(leftover, [], f"{slug}: leftover placeholders {leftover}")
+            self.assertIn(f'user_type: "{slug}"', content)
 
 
 # --- bridge generators ---

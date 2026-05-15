@@ -41,59 +41,63 @@ requires a roadmap entry in Phase 4 (frontmatter audit).
 
 - [x] Schema documented in [`user-types/README.md`](../../user-types/README.md) — `id`, `description`,
   `primary_workflows[]`, `default_skill_priority[]`, optional `notes`. *(shipped this PR)*
-- [ ] **JSON schema:** Create `scripts/schemas/user-type-axis.schema.json` enforcing
+- [x] **JSON schema:** Create `scripts/schemas/user-type-axis.schema.json` enforcing
   the above contract. Required: `id`, `description`. Optional: rest.
-- [ ] **ADR:** Create `docs/contracts/adr-install-user-type-axis.md` recording
+- [x] **ADR:** Create `docs/contracts/adr-install-user-type-axis.md` recording
   the decision to split this axis from `step-6`'s review-lens axis. Cite
   council verdict + same-vocabulary-different-layer rationale.
 
 ## Phase 2 — CLI flag
 
-- [ ] **`scripts/install.sh`:** Add `--user-type=<id>` parser branch.
+- [x] **`scripts/install.sh`:** Add `--user-type=<id>` parser branch.
   Validate against `user-types/*.yml` stems. Write `personal.user_type: <id>`
   to target's `.agent-settings.yml` (created if absent).
-- [ ] **`scripts/install.py`:** Mirror the flag at the bridge stage (Python
+- [x] **`scripts/install.py`:** Mirror the flag at the bridge stage (Python
   install path) so both entry points behave identically.
-- [ ] **`scripts/install`:** Pass-through wiring; document the flag in
+- [x] **`scripts/install`:** Pass-through wiring; document the flag in
   `--help` output.
 
 ## Phase 3 — Runtime filter
 
-- [ ] **Discovery hook:** In the skill loader, intersect each skill's
+- [x] **Discovery hook:** In the skill loader, intersect each skill's
   `recommended_for_user_types` against `personal.user_type`. If unset →
   surface all skills (legacy behavior). If set → matching skills sort first,
   non-matching surface in a collapsed group with reason "outside <id> filter".
-- [ ] **`.agent-settings.yml` template:** Add a commented `personal.user_type:`
+- [x] **`.agent-settings.yml` template:** Add a commented `personal.user_type:`
   stub to `templates/minimal/.agent-settings.yml` + `.agent-settings.yml`
   reference, documenting the seven valid values.
 
 ## Phase 4 — Frontmatter audit
 
-- [ ] **Coverage sweep:** Run a script that intersects every skill's
+- [x] **Coverage sweep:** Run a script that intersects every skill's
   `recommended_for_user_types` values against `user-types/*.yml` stems.
   Report any orphan values (frontmatter references a user-type without a
   config) or unused configs (config without any consuming skill).
-- [ ] **Resolution:** Either add the missing YAML or rename the
+- [x] **Resolution:** Either add the missing YAML or rename the
   frontmatter value. Document the resolution in the ADR.
 
 ## Phase 5 — Tests + closeout
 
-- [ ] **Integration test:** `tests/install/test_user_type_flag.py` — install
-  with `--user-type=consultant`, assert `.agent-settings.yml` contains
-  `personal.user_type: consultant`; install with `--user-type=invalid`,
-  assert non-zero exit.
-- [ ] **`task lint-skills` + `task ci` green** end-to-end.
-- [ ] **Parent flip:** `step-12-universal-os-reframe.md` L15 flipped to
+- [x] **Integration test:** `tests/test_install_py.py::TestUserTypeFlag` +
+  `::TestValidateUserType` + `::TestEnsureAgentSettingsUserType` — covers
+  `parse_options` wiring, `_validate_user_type` (all 7 slugs accepted,
+  unknown rejected, missing dir rejected for non-empty slug), and
+  `ensure_agent_settings` placeholder rendering for default + all seed
+  slugs. Filename follows the flat `tests/test_install_*.py` convention
+  instead of the roadmap's nested suggestion; both forms are
+  equivalent for the test runner.
+- [x] **`task lint-skills` + `task ci` green** end-to-end.
+- [x] **Parent flip:** `step-12-universal-os-reframe.md` L15 flipped to
   `[x]` with a pointer at this roadmap.
 
 ## Acceptance criteria
 
 - [x] `user-types/` directory + 7 seed YAMLs + README shipped *(this PR)*
-- [ ] `--user-type` flag works across `install.sh`, `install.py`, `install`
-- [ ] Runtime filter live; legacy "no flag" behavior preserved
-- [ ] Every active `recommended_for_user_types` value has a corresponding YAML
-- [ ] Integration test green; `task ci` green
+- [x] `--user-type` flag works across `install.sh`, `install.py`, `install`
+- [x] Runtime filter live; legacy "no flag" behavior preserved
+- [x] Every active `recommended_for_user_types` value has a corresponding YAML
+- [x] Integration test green; `task ci` green
 
 ## Done
 
-- [ ] All phases complete, acceptance criteria met.
+- [x] All phases complete, acceptance criteria met.
