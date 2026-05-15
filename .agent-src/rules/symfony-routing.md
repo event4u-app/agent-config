@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "When writing or reviewing Symfony code — DI container, bundles, Doctrine, Messenger, Security voters, console commands — route to the symfony-workflow skill"
+description: "Writing or reviewing Symfony code — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to the symfony-workflow skill"
 source: package
 triggers:
   - keyword: "symfony"

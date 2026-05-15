@@ -623,7 +623,9 @@ def test_necessity_classifier_defaults_when_omitted(tmp_path: Path) -> None:
     cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
     assert cfg.necessity_classifier.enabled is True
     assert cfg.necessity_classifier.mode == "educate"
+    assert cfg.necessity_classifier.user_explicit_mode == "warn-only"
     assert cfg.lens_overrides.necessity_classifier_mode == {}
+    assert cfg.lens_overrides.necessity_classifier_user_explicit_mode == {}
 
 
 def test_necessity_classifier_disabled_via_enabled_flag(tmp_path: Path) -> None:
@@ -641,6 +643,29 @@ def test_necessity_classifier_invalid_mode_rejected(tmp_path: Path) -> None:
         load_council_config(_write_yaml(tmp_path, payload))
 
 
+def test_necessity_classifier_user_explicit_mode_accepts_warn_only(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {
+        "mode": "block", "user_explicit_mode": "educate",
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.necessity_classifier.mode == "block"
+    assert cfg.necessity_classifier.user_explicit_mode == "educate"
+
+
+def test_necessity_classifier_invalid_user_explicit_mode_rejected(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {"user_explicit_mode": "shrug"}
+    with pytest.raises(
+        CouncilConfigError, match="user_explicit_mode",
+    ):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
 def test_lens_overrides_per_lens_mode(tmp_path: Path) -> None:
     payload = dict(_MINIMAL_VALID)
     payload["lenses"] = {
@@ -654,12 +679,38 @@ def test_lens_overrides_per_lens_mode(tmp_path: Path) -> None:
     }
 
 
+def test_lens_overrides_per_lens_user_explicit_mode(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"user_explicit_mode": "block"}},
+        "analysis": {
+            "necessity_classifier": {"user_explicit_mode": "educate"},
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.lens_overrides.necessity_classifier_user_explicit_mode == {
+        "debate": "block",
+        "analysis": "educate",
+    }
+
+
 def test_lens_overrides_invalid_mode_rejected(tmp_path: Path) -> None:
     payload = dict(_MINIMAL_VALID)
     payload["lenses"] = {
         "debate": {"necessity_classifier": {"mode": "shrug"}},
     }
     with pytest.raises(CouncilConfigError, match="lenses.debate"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_lens_overrides_invalid_user_explicit_mode_rejected(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"user_explicit_mode": "shrug"}},
+    }
+    with pytest.raises(CouncilConfigError, match="user_explicit_mode"):
         load_council_config(_write_yaml(tmp_path, payload))
 
 
@@ -912,3 +963,216 @@ def test_participate_low_impact_must_be_bool(tmp_path: Path) -> None:
     with pytest.raises(CouncilConfigError, match="participate_low_impact"):
         load_council_config(_write_yaml(tmp_path, payload))
 
+
+
+# ── step-9 P8: defaults.member_mode ──────────────────────────────────────────
+
+
+def test_defaults_member_mode_defaults_to_cli(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.defaults.member_mode == "cli"
+
+
+def test_defaults_member_mode_api_round_trip(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["defaults"] = {"mode": "api", "member_mode": "api"}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.defaults.member_mode == "api"
+
+
+def test_defaults_member_mode_manual_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["defaults"] = {"mode": "api", "member_mode": "manual"}
+    with pytest.raises(CouncilConfigError, match="defaults.member_mode"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_defaults_member_mode_unknown_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["defaults"] = {"mode": "api", "member_mode": "telepathic"}
+    with pytest.raises(CouncilConfigError, match="defaults.member_mode"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── step-9 P8: routing.solo_member_fallback_chain ───────────────────────────
+
+
+def test_routing_defaults_to_empty_chain(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.routing.solo_member_fallback_chain == ()
+    assert cfg.routing.auth_check_timeout_seconds == 3
+
+
+def test_routing_chain_round_trip(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"solo_member_fallback_chain": ["anthropic"]}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.routing.solo_member_fallback_chain == ("anthropic",)
+
+
+def test_routing_chain_must_be_list(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"solo_member_fallback_chain": "anthropic"}
+    with pytest.raises(CouncilConfigError, match="must be a list"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_routing_chain_rejects_duplicates(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {
+        "solo_member_fallback_chain": ["anthropic", "anthropic"],
+    }
+    with pytest.raises(CouncilConfigError, match="duplicate entry"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_routing_chain_rejects_unknown_member(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"solo_member_fallback_chain": ["openai"]}
+    with pytest.raises(CouncilConfigError, match="no such member"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_routing_chain_rejects_empty_string(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"solo_member_fallback_chain": [""]}
+    with pytest.raises(CouncilConfigError, match="non-empty string"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_routing_auth_timeout_out_of_range(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"auth_check_timeout_seconds": 0}
+    with pytest.raises(CouncilConfigError, match="auth_check_timeout_seconds"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_routing_auth_timeout_too_high(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"auth_check_timeout_seconds": 31}
+    with pytest.raises(CouncilConfigError, match="auth_check_timeout_seconds"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── step-9 P8: low_impact.dispatch ──────────────────────────────────────────
+
+
+def test_low_impact_defaults_to_full(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.low_impact.dispatch == "full"
+    assert cfg.low_impact.shadow_sample_rate == pytest.approx(0.1)
+
+
+def test_low_impact_dispatch_single_requires_chain(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"dispatch": "single"}
+    with pytest.raises(CouncilConfigError, match="solo_member_fallback_chain"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_low_impact_dispatch_single_with_chain(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["routing"] = {"solo_member_fallback_chain": ["anthropic"]}
+    payload["low_impact"] = {"dispatch": "single"}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.low_impact.dispatch == "single"
+
+
+def test_low_impact_dispatch_unknown_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"dispatch": "telepathic"}
+    with pytest.raises(CouncilConfigError, match="low_impact.dispatch"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_low_impact_shadow_rate_out_of_range(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"shadow_sample_rate": 1.5}
+    with pytest.raises(CouncilConfigError, match="shadow_sample_rate"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_low_impact_shadow_rate_wrong_type(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"shadow_sample_rate": "half"}
+    with pytest.raises(CouncilConfigError, match="shadow_sample_rate"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── step-9 P8: Iron Law — locked-class dispatch rejection ───────────────────
+
+
+def test_high_impact_dispatch_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["decision_resolution"] = {
+        "classes": {"high_impact": {"dispatch": "single"}},
+    }
+    with pytest.raises(CouncilConfigError, match="not configurable"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_user_required_dispatch_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["decision_resolution"] = {
+        "classes": {"user_required": {"dispatch": "single"}},
+    }
+    with pytest.raises(CouncilConfigError, match="not configurable"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_high_impact_dispatch_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["high_impact"] = {"dispatch": "single"}
+    with pytest.raises(CouncilConfigError, match="not configurable"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_user_required_dispatch_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["user_required"] = {"dispatch": "full"}
+    with pytest.raises(CouncilConfigError, match="not configurable"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+
+# ── step-9 P13: solo_confidence_floor ──────────────────────────────────────
+
+
+def test_solo_confidence_floor_defaults_to_07(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, dict(_MINIMAL_VALID)))
+    assert cfg.low_impact.solo_confidence_floor == pytest.approx(0.7)
+
+
+def test_solo_confidence_floor_accepts_valid_value(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": 0.85}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.low_impact.solo_confidence_floor == pytest.approx(0.85)
+
+
+def test_solo_confidence_floor_out_of_range(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": 1.5}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_solo_confidence_floor_wrong_type(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["low_impact"] = {"solo_confidence_floor": "high"}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_high_impact_solo_floor_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["high_impact"] = {"solo_confidence_floor": 0.8}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_top_level_user_required_solo_floor_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["user_required"] = {"solo_confidence_floor": 0.8}
+    with pytest.raises(CouncilConfigError, match="solo_confidence_floor"):
+        load_council_config(_write_yaml(tmp_path, payload))

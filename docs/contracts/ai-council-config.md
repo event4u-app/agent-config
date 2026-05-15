@@ -6,11 +6,10 @@ keep-beta-until: 2026-08-12
 # AI-Council Config (`agents/.ai-council.yml`)
 
 **Purpose.** Lock the schema, validation, and precedence rules for the
-centralized council config file. Every later phase of
-[`step-2-ai-council-consolidation.md`](../../agents/roadmaps/step-2-ai-council-consolidation.md)
-reads from this file; the contract here is the boundary that prevents
-drift across the loader, the CLI, the orchestrator, and the
-`agents/.ai-council.yml` file itself.
+centralized council config file. Every phase of the AI-Council
+consolidation work reads from this file; the contract here is the
+boundary that prevents drift across the loader, the CLI, the
+orchestrator, and the `agents/.ai-council.yml` file itself.
 
 **Audience.** Authors of `scripts/ai_council/config.py`, `council_cli.py`,
 `scripts/ai_council/orchestrator.py`, and the `agents/.ai-council.yml`
@@ -46,6 +45,7 @@ cost_budget:                    # hard caps per /council invocation, required
 cli_call_budget:                # optional; per-day call-count guard for mode: cli members
   max_calls_per_day:
     <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
+  warn_at: <float in [0.0, 1.0]>          # default 0.8 — pre-run summary line prefixes "⚠️" once used/limit >= warn_at (step-8 D4)
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
@@ -61,7 +61,8 @@ advisors:                       # Thinking-style replace-mode advisors
     persona: <path>                       # optional; defaults to personas/advisors/<advisor-key>.md
 necessity_classifier:           # Phase 6 — optional, default enabled+educate
   enabled: <bool>                         # master switch (default true)
-  mode: <"off" | "educate" | "block">     # default "educate"
+  mode: <"off" | "educate" | "block" | "warn-only">       # default "educate" (agent invocation)
+  user_explicit_mode: <"off" | "educate" | "block" | "warn-only">  # default "warn-only" — step-8 D2; applies when invocation=user_explicit
 decision_replay:                # Phase 9 — optional, default enabled+full
   enabled: <bool>                         # master switch (default true)
   include_member_arguments: <bool>        # default true; false = redacted view
@@ -116,6 +117,51 @@ Implications:
   user opt into a per-day cap; counter state persists at
   `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
   Phase 1 of the CLI-transport roadmap).
+- **Quota observability (step-8 D1, D4):** every `council run` /
+  `council debate` prints a one-line `council:quota · <provider>
+  used/limit · …` summary before the first member fires. Only
+  providers with a configured `max_calls_per_day` cap appear; uncapped
+  providers are omitted (no false sense of metering). When
+  `used / max_calls_per_day >= cli_call_budget.warn_at` (default
+  `0.8`) the line is prefixed `⚠️` and lists the providers near the
+  limit on the next line. The standalone `agent-config council
+  quota` subcommand dumps the same state plus the configured caps,
+  and `--reset <provider> --confirm` clears today's counter for that
+  provider.
+
+### Persistent events log (step-8 D3)
+
+The orchestrator appends one JSON line to `agents/council-events.log`
+on every necessity-gate decision (`proceed` / `skip_necessity`) and on
+every `cli_call_budget` block (`block_quota`). The log is gitignored
+by default — it is a local-only audit trail, never part of the
+repository contract.
+
+Schema v1:
+
+```json
+{
+  "schema_version": 1,
+  "ts_utc": "2026-05-15T03:38:45Z",
+  "lens": "analysis",
+  "invocation": "user_explicit",
+  "action": "proceed",
+  "verdict": "necessary",
+  "provider_caps": {"anthropic": {"mode": "cli", "model": "sonnet-4"}},
+  "original_ask_hash": "abc123def456"
+}
+```
+
+- `action` ∈ `proceed | skip_necessity | block_quota`.
+- `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
+  is **never** written — privacy floor per
+  [`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md).
+- Diagnostic fields outside the reserved set (`category`, `mode`,
+  `cli_calls_used`, …) pass through verbatim. Consumers MUST treat
+  unknown keys as forward-compatible.
+- `AGENT_CONFIG_NO_EVENTS_LOG=1` (step-8 D5) disables every write
+  in-process — useful for ephemeral worktrees, CI runners that
+  shouldn't accumulate state, or sandbox testing.
 
 ### Advisor block (Phase 6, replace-mode)
 
@@ -160,8 +206,8 @@ is invoked.
 - `necessity_classifier.enabled` (bool, default `true`) — master switch.
   `false` short-circuits the gate entirely; legacy "always run" behaviour
   is restored.
-- `necessity_classifier.mode` (`"off" | "educate" | "block"`, default
-  `"educate"`).
+- `necessity_classifier.mode` (`"off" | "educate" | "block" | "warn-only"`,
+  default `"educate"`). Governs the **agent** invocation tier.
   - `off` — gate disabled while keeping the classifier module loaded
     (cheap toggle for experiments).
   - `educate` — agent-initiated invocation + `unnecessary` verdict skips
@@ -173,10 +219,20 @@ is invoked.
     `unnecessary` is rejected regardless of invocation source. Even
     `--proceed-anyway` is ignored (power-user opt-in for cost-strict
     environments).
+  - `warn-only` (step-8 D2) — annotate the verdict on stdout but
+    **never** skip. Useful when the user wants observability without
+    losing council coverage.
+- `necessity_classifier.user_explicit_mode` (same enum, default
+  `"warn-only"`, step-8 D2) — governs the **user_explicit** invocation
+  tier. The two-tier split reconciles "Council always active when
+  enabled" with "skip trivial agent-side requests": user-typed
+  `/council` calls proceed by default, agent-initiated dispatches keep
+  `educate` behaviour. Override via `.agent-settings.yml`.
 - `lens_overrides.necessity_classifier_mode.<lens>` — per-lens override.
-  Wins over the global `mode`. Typical use: leave the global at
-  `educate` and force `debate` lens to `block` because debate is the
-  most expensive transport.
+  Wins over the global `mode` for the matching invocation tier (agent
+  vs user_explicit follow the same lens map). Typical use: leave the
+  global at `educate` and force `debate` lens to `block` because
+  debate is the most expensive transport.
 
 **Invocation context (CLI flags).**
 
@@ -315,6 +371,146 @@ decision_resolution:
       mode: user            # LOCKED — Iron Law
       confidence_threshold: 0.6
 ```
+
+### Low-impact council opt-in
+
+The default route for `low_impact` is `agent` — the host resolves locally
+and the council is not invoked. Sending `low_impact` to the council is
+an **explicit, two-knob opt-in**; missing either knob keeps the question
+on the host:
+
+1. `decision_resolution.classes.low_impact.mode: council` (default
+   `agent`) — flips the class route.
+2. **At least one** enabled member sets `participate_low_impact: true`
+   (default `false`) — names which members run on the fast-path.
+
+When both knobs are set, the lightweight-QA fast-path
+(`ai_council.fast_path`) handles the resolution under hard caps:
+`max_members ∈ {1, 2}`, `max_rounds: 1` (LOCKED — Iron Law of the
+fast-path; the loader rejects any other value), `max_tokens: 2500`
+combined input + output budget, `max_cost_usd: 0.05` per resolution.
+No advisors, no peer-review, no consensus scoring run on this path.
+
+`high_impact` and `user_required` cannot reach the fast-path at all —
+the impact-class Iron Law above takes precedence.
+
+Worked example — opt the Anthropic and OpenAI members in, leave the
+others off, and switch the `low_impact` class to `council`:
+
+```yaml
+ai_council:
+  members:
+    anthropic:
+      enabled: true
+      model: claude-sonnet-4-5
+      api_key_ref: file:anthropic.key
+      participate_low_impact: true   # eligible for fast-path
+    openai:
+      enabled: true
+      model: gpt-4o
+      api_key_ref: file:openai.key
+      participate_low_impact: true   # eligible for fast-path
+    gemini:
+      enabled: false                  # disabled — opt-in ignored even if set
+
+  fast_path:
+    max_members: 2          # 1 or 2 only
+    max_rounds: 1           # LOCKED
+    max_tokens: 2500
+    max_cost_usd: 0.05
+
+decision_resolution:
+  classes:
+    low_impact:
+      mode: council          # ← flip from default `agent`
+      confidence_threshold: 0.6
+```
+
+Validation behaviour:
+
+- `participate_low_impact: true` on a member with `enabled: false`,
+  or with the global council disabled, parses but is treated as
+  `false` with a one-line loader warning — never silently runs.
+- `fast_path.max_rounds != 1` → `CouncilConfigError` at load time.
+- `fast_path.max_members ∉ {1, 2}` → `CouncilConfigError`.
+- `low_impact.mode: council` with zero opted-in enabled members →
+  the resolver falls back to `agent` (or escalates to user when the
+  confidence gate trips), with the marker
+  `> Low-impact council unavailable (no opted-in members) — escalating to user`.
+
+Transparency markers on every fast-path attempt:
+
+- **Resolved** — `> Resolved via low-impact council (<member>): <answer>`
+- **Split** — `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):`
+- **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
+
+The marker is mandatory; the agent never silently substitutes a
+fast-path verdict for its own answer. See
+[`ai-council § Lightweight-QA fast-path`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md#lightweight-qa-fast-path-phase-11)
+for the orchestration contract and session-artefact format.
+
+### Solo-member dispatch (step-9 P8/P9 · U1 · U2 · U3)
+
+Three new top-level settings cooperate to make low-impact decisions
+optionally cheap by routing them to a single member instead of the
+full council. Defaults preserve the prior shape — no behaviour
+changes unless every knob is set explicitly.
+
+| Key | Type | Default | Constraint |
+|---|---|---|---|
+| `defaults.member_mode` | `cli` \| `api` | `cli` | Per-member fallback when a member doesn't set `mode`. `manual` is rejected here (manual transport is full-council only). |
+| `routing.solo_member_fallback_chain` | `list[str]` | `[]` | Ordered, unique provider names. Each entry must exist in the `members` block. Empty disables solo dispatch. |
+| `routing.auth_check_timeout_seconds` | `int` | `3` | Range `[1, 30]`. Bounds the lazy auth probe per chain member. |
+| `low_impact.dispatch` | `full` \| `single` | `full` | `single` requires at least one enabled member in the fallback chain — otherwise rejected at load. |
+| `low_impact.shadow_sample_rate` | `float` | `0.1` | Range `[0.0, 1.0]`. Phase 10 shadow-mode sampling probability. |
+| `low_impact.solo_confidence_floor` | `float` | `0.7` | Range `[0.0, 1.0]`. Phase 13 confidence-gate threshold. Solo responses scoring below this floor — or matching split / refusal patterns — auto-escalate to the full council. |
+
+**Iron Law (LOCKED).** `decision_resolution.classes.high_impact.dispatch`
+and `decision_resolution.classes.user_required.dispatch` are rejected
+at load time — high-impact and user-required decisions always run the
+full council, with no opt-out. Top-level `high_impact: { dispatch: … }`,
+`high_impact: { solo_confidence_floor: … }`, `user_required: { dispatch: … }`,
+and `user_required: { solo_confidence_floor: … }` are all rejected the
+same way so a mistaken surface choice cannot bypass the lock — these
+classes never run solo, so a solo-specific knob there is incoherent.
+
+```yaml
+defaults:
+  mode: api
+  member_mode: cli       # use CLI binaries by default for per-member calls
+
+routing:
+  solo_member_fallback_chain: [anthropic, openai]   # try anthropic first
+  auth_check_timeout_seconds: 3
+
+low_impact:
+  dispatch: single             # route low_impact via solo dispatch
+  shadow_sample_rate: 0.1      # 10% shadow to full council for SLO tracking
+  solo_confidence_floor: 0.7   # auto-escalate if confidence < 0.7
+```
+
+### Confidence gate — auto-escalation on uncertain solo runs
+
+When `low_impact.dispatch: single` is enabled, every solo response is
+scored before the verdict is returned. Four escalation reasons can
+trigger an automatic fallback to the full council, in priority order:
+
+| Reason | Trigger | Source |
+|---|---|---|
+| `refusal` | Empty response or refusal markers (`I cannot decide`, `weiß ich nicht`, …). | `confidence_gate.is_refusal` |
+| `split` | Two competing verdicts without a pick (`Option A … Option B`, `Verdict: ship / Verdict: hold`, `Variante 1 / Variante 2`). | `confidence_gate.is_split_response` |
+| `short_response` | Response shorter than ~20 chars — treated as low-signal. | `confidence_gate.extract_confidence` length floor |
+| `low_confidence` | Explicit `Confidence: 0.X` marker below the floor, or hedge-word density (`maybe`, `perhaps`, `not sure`, `vielleicht`) pulling the implicit score below the floor. | `confidence_gate.extract_confidence` |
+
+Escalations are recorded in the shadow-mode log alongside the
+disagreement signal — see the `escalated` and `escalation_reason`
+fields in the `shadow.jsonl` row contract. The shadow SLO banner
+appends a separate auto-escalation rate so a quiet uptick in solo
+uncertainty cannot hide behind a flat disagreement rate.
+
+The escalation path uses zero extra LLM calls — heuristics run on the
+solo response text in process. The fallback `run_full()` only fires
+when the gate flags the response.
 
 ## `api_key_ref` forms
 

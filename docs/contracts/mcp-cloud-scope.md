@@ -31,9 +31,9 @@ alongside auth).
 
 The package ships **two MCP surfaces** governed by named scopes. Every
 MCP-related doc, ADR, and code path carries `mcp_scope: lite|full|deferred`
-in its frontmatter (Phase 1 Step 6 of
-`agents/roadmaps/road-to-distribution-maturity.md`) so the boundary is
-machine-checkable, not prose-only.
+in its frontmatter (Phase 1 Step 6 of the distribution-maturity roadmap,
+under `agents/roadmaps/`) so the boundary is machine-checkable, not
+prose-only.
 
 ### `mcp_scope: lite` — hosted, read-only knowledge surfaces
 
@@ -239,7 +239,8 @@ The README MCP section may **only** name modes that this `## Auth
 surface` section declares. This contract must declare every mode the
 README names. The drift test
 `tests/test_mcp_contract_readme_sync.py` enforces both directions
-per Phase 1 Step 4 of `agents/roadmaps/road-to-distribution-maturity.md`.
+per Phase 1 Step 4 of the distribution-maturity roadmap (under
+`agents/roadmaps/`).
 
 ## A0-cloud invariants
 

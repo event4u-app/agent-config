@@ -16,6 +16,145 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+**PR #150 follow-up hardening (`step-9-pr150-feedback-hardening`)** —
+twelve-phase response to the Claude+GPT review findings on PR #150 plus
+three user-requested settings-shape changes (CLI-default, preferred-single
+member, low-impact dispatch) under one roadmap. New surfaces:
+
+- **`defaults.member_mode: cli | api`** (default `cli`) — flips the
+  global transport default to CLI-first onboarding (subscription auth,
+  no API key). Per-member explicit `mode:` keeps overriding.
+- **`routing.solo_member_fallback_chain: [provider, ...]`** — ordered
+  preference list for single-member dispatch. Disabled members are
+  skipped; duplicates rejected at config-load time; all-invalid
+  escalates to full council (never fails the decision). 15-minute
+  auth cache, 3-second timeout per probe.
+- **`low_impact.dispatch: full | single`** (default `full`) — opt-in
+  cost-efficient routing for low-impact decisions through
+  `routing.solo_member_fallback_chain`. **Iron Law:** `high_impact`
+  and `user_required` dispatch are NOT configurable — config validator
+  rejects both top-level and `decision_resolution.classes.*` forms,
+  including YAML `<<:` anchor smuggling attempts. Sentinel in
+  `tests/test_iron_law_config.py`.
+- **Shadow-mode safety net** — when `low_impact.dispatch: single` is
+  active, sample (default `0.1`) decisions go to both solo + full
+  council. Disagreements append to `agents/council-shadow-log.jsonl`
+  (privacy-redactor enforced). `agent-config council shadow-report`
+  computes the 7-day rolling SLO (`OK <5%` / `WARN 5–8%` / `BREACH
+  >8%`); pre-flight cost disclosure surfaces the verdict. No auto-
+  revert — humans decide.
+- **Confidence gate — auto-escalation on uncertain solo runs**
+  (`scripts/ai_council/confidence_gate.py`) — every solo response is
+  scored before the verdict is returned. Four escalation reasons in
+  priority order: `refusal` (empty / refusal markers), `split`
+  (two-verdict / option-A-vs-B / Variante 1/2), `short_response`
+  (< 20 chars), `low_confidence` (explicit `Confidence: 0.X` marker
+  or hedge-word density below floor). Zero extra LLM calls —
+  heuristics run in-process. Escalations append `escalated: true` +
+  `escalation_reason` to `agents/council-shadow-log.jsonl`; the SLO
+  banner appends the rolling auto-escalation rate so quiet uncertainty
+  cannot hide behind a flat disagreement rate.
+- **`low_impact.solo_confidence_floor: float`** (default `0.7`,
+  range `[0.0, 1.0]`) — threshold for the confidence gate.
+  **Iron Law:** `solo_confidence_floor` is also rejected on
+  top-level `high_impact:` and `user_required:` — those classes
+  never run solo, so a solo-specific knob there is incoherent.
+- **`AGENT_CONFIG_FORCE_FULL_COUNCIL=1`** — per-invocation kill-switch
+  that forces full council regardless of `low_impact.dispatch`.
+- **Airgap detection** (`scripts/ai_council/airgap.py`) — installer
+  first-run probes DNS for `api.anthropic.com`, `api.openai.com`,
+  `generativelanguage.googleapis.com` with 1s timeout per host. All
+  fail → banner `airgapped environment detected — defaulting to
+  mode: api` and `defaults.member_mode: api` recommendation.
+- **Fast-path marker visibility Iron-Law rule**
+  (`.agent-src.uncompressed/rules/fast-path-marker-visibility.md`,
+  kernel-tier, always-active) — host agents MUST surface
+  `Resolved via low-impact council fast-path: …` markers verbatim;
+  swallowing them is a rule violation.
+- **`/memory learn-low-impact --preview`** (default) / `--apply` —
+  preview shows promoted entries, refused entries with redaction
+  reasons, source-project-stripped diff, and the upstream PR body
+  draft before anything is written.
+- **Corpus parser hardening** — typed `CorpusParseError(reason=...)`
+  replaces silent skip; seven failure-mode fixtures in
+  `tests/fixtures/corpus-robust/` (missing anchor · renamed heading ·
+  bullet-without-quotes · duplicate entry · anti-example wrongly
+  under Validated · malformed ISO timestamp · redactor-bypass).
+  Contract in `docs/contracts/low-impact-corpus-format.md`.
+- **Fuzzy corpus matching (opt-in)** —
+  `low_impact.fuzzy_match.{enabled,threshold}` (defaults `false`,
+  `0.92`) using `difflib.SequenceMatcher`. High-impact trigger veto
+  + anti-example veto preserve the Iron Law.
+- **CLI-binary UX** — pre-flight cost disclosure now prints
+  `member X skipped: binary not found, install via <hint>` per
+  skipped CLI member; hints sourced from
+  `scripts/ai_council/cli_hints.py`.
+- **Doctor CLI checks** — `agent-config doctor --check council-cli`
+  reports per CLI member: binary present · auth probe · parse
+  fixture · quota remaining · billable flag.
+- **Iron-Law bypass linter** — `audit_cloud_compatibility.py
+  --iron-law` scans `scripts/` for raw YAML loads of `ai-council.yml`
+  that skip the config validator; baseline is 0 findings; suppress
+  legitimate cases with `# iron-law-ok: <reason>` on the load line.
+
+Surface delta: **4 new config knobs** (`defaults.member_mode`,
+`routing.solo_member_fallback_chain`, `low_impact.dispatch`,
+`low_impact.solo_confidence_floor`),
+**1 new env-var kill-switch** (`AGENT_CONFIG_FORCE_FULL_COUNCIL`),
+**1 new CLI subcommand** (`council shadow-report`), **1 new CLI flag**
+(`council run --single`), **1 new always-active rule**
+(`fast-path-marker-visibility`), **2 new local-only files**
+(`agents/council-shadow-log.jsonl`, gitignored;
+`scripts/ai_council/airgap.py`). Backward-compat: defaults map the
+existing behaviour (`dispatch=full`, empty chain, `member_mode=cli`
+in fresh installs; existing configs read unchanged). No migration
+script — defaults are silent-safe.
+
+**Council quota & necessity transparency (`step-8-quota-necessity-transparency`)** —
+the council's two pre-flight gates (`cli_call_budget` and
+`necessity_classifier`) become observable and aligned with the
+"Council always active when enabled" mental model. New surfaces:
+
+- `council run` / `council debate` print a one-line
+  `council:quota · <provider> used/limit · …` summary before the
+  first member fires. Only providers with a configured per-day cap
+  appear; uncapped providers are omitted (no false metering).
+- `cli_call_budget.warn_at` (float, default `0.8`) — once
+  `used / max_calls_per_day >= warn_at`, the summary line is
+  prefixed `⚠️` and a `council:quota · WARN` line names the
+  providers near the wall.
+- New `agent-config council quota` subcommand dumps today's
+  `~/.event4u/agent-config/cli-calls.json` state plus the configured
+  caps. `--reset <provider> --confirm` clears today's counter for one
+  provider for manual rollover.
+- **Necessity tier split (D2):** `necessity_classifier.user_explicit_mode`
+  (default `warn-only`) separates the agent and user_explicit tiers.
+  User-typed `/council` calls proceed by default with an annotated
+  stdout line; agent-initiated dispatches keep `educate` behaviour.
+  New `warn-only` mode joins the existing `off | educate | block`
+  enum — annotates the verdict but never skips.
+- **Persistent events log (D3):** every necessity-gate decision
+  (`proceed` / `skip_necessity`) and every quota block
+  (`block_quota`) appends one JSON line to `agents/council-events.log`
+  (gitignored; never committed). Schema v1 with `schema_version`,
+  `ts_utc`, `lens`, `invocation`, `action`, `verdict`,
+  `provider_caps`, `original_ask_hash`. `original_ask` is hashed
+  `sha256[:12]` before write — the raw prompt is never persisted
+  (privacy floor per `agents/low-impact-decisions.md`).
+- **Kill-switch (D5):** `AGENT_CONFIG_NO_EVENTS_LOG=1` disables
+  every events-log write in-process. Mirrors the
+  `AGENT_CONFIG_LEGACY_ANCHOR=1` pattern from step-7.
+
+Surface delta: **1 new subcommand** (`council quota`), **2 new
+config knobs** (`cli_call_budget.warn_at`,
+`necessity_classifier.user_explicit_mode`), **1 new local-only file**
+(`agents/council-events.log`, gitignored). Backward-compat:
+existing `.agent-settings.yml` and `agents/.ai-council.yml` work
+unchanged; new knobs are optional. Docs:
+[`docs/contracts/ai-council-config.md`](docs/contracts/ai-council-config.md)
++ [`docs/installation.md`](docs/installation.md) § AI Council local
+state.
+
 Four roadmaps land in this release.
 
 **Tier-0 trim (`road-to-surface-discipline` Phase 1)** — six CLI

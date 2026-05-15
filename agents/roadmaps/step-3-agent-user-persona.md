@@ -9,8 +9,8 @@ complexity: lightweight
 ## Re-validation gate (READ BEFORE EXECUTING)
 
 > **Before any step in this roadmap runs, re-run the AI Council on the three source artefacts and compare the verdict against this roadmap:**
-> 1. [`agents/council-sessions/2026-05-14-agent-user-persona/prompt.md`](../council-sessions/2026-05-14-agent-user-persona/prompt.md) — original architectural design (Q1–Q8)
-> 2. [`agents/council-sessions/2026-05-14-agent-user-external-sources/prompt.md`](../council-sessions/2026-05-14-agent-user-external-sources/prompt.md) + [`prompt-v2-public-only.md`](../council-sessions/2026-05-14-agent-user-external-sources/prompt-v2-public-only.md) — external-source REJECT verdict (no package-level network code)
+> 1. [`agents/council-sessions/2026-05-14-agent-user-persona/prompt.md`](../council-sessions/2026-05-14-agent-user-persona/prompt.md) — original architectural design (Q1–Q8) <!-- council-ref-allowed: re-validation-gate decision trace -->
+> 2. [`agents/council-sessions/2026-05-14-agent-user-external-sources/prompt.md`](../council-sessions/2026-05-14-agent-user-external-sources/prompt.md) + [`prompt-v2-public-only.md`](../council-sessions/2026-05-14-agent-user-external-sources/prompt-v2-public-only.md) — external-source REJECT verdict (no package-level network code) <!-- council-ref-allowed: re-validation-gate decision trace -->
 > 3. This roadmap's Phase 1 additions: demographics in the schema, `/agents user handoff` sub-command, `/agents user linkedin` sub-command (host-agent fetch model, not package network code)
 >
 > The codebase may have changed since drafting (new commands, new personas, schema migrations). If the council's verdict diverges on any decision, pause execution and update this roadmap before proceeding. Pass criterion: every Phase-1 design decision still maps to a "ship" or "minor-edit" verdict. Fail criterion: any decision flips to "rethink" or "reject" — escalate to the user.
@@ -18,7 +18,7 @@ complexity: lightweight
 ## Prerequisites
 
 - [ ] Re-validation gate (above) passes
-- [ ] Read [`agents/council-sessions/2026-05-14-agent-user-persona/prompt.md`](../council-sessions/2026-05-14-agent-user-persona/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-agent-user-persona/responses.json)
+- [ ] Read [`agents/council-sessions/2026-05-14-agent-user-persona/prompt.md`](../council-sessions/2026-05-14-agent-user-persona/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-agent-user-persona/responses.json) <!-- council-ref-allowed: re-validation-gate decision trace -->
 - [ ] Read `.agent-src.uncompressed/commands/AGENTS.md` (the `/agents` cluster contract)
 - [ ] Read `.agent-src.uncompressed/personas/README.md` to confirm review-lens personas stay untouched
 - [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))

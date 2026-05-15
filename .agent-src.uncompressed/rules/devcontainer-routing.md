@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "When wiring DevContainers or GitHub Codespaces — devcontainer.json, container images, VS Code features, port forwarding — route to the devcontainer skill"
+description: "Wiring DevContainers or GitHub Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill"
 source: package
 triggers:
   - keyword: "devcontainer"

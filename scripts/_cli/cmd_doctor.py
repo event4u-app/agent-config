@@ -36,6 +36,7 @@ import argparse
 import hashlib
 import json
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Any
@@ -287,6 +288,7 @@ CHECK_IDS = (
     "offline-readiness",
     "python-runtime",
     "tier-usage-readiness",
+    "council-cli",
     "unsupported-combos",
 )
 
@@ -675,6 +677,137 @@ def _check_tier_usage_readiness(project_root: Path) -> dict[str, Any]:
     }
 
 
+#: Provider → (default binary, billable flag). Mirrors the
+#: ``CliClient`` subclass attributes in ``scripts/ai_council/clients.py``
+#: without importing them at module load time (keeps doctor lightweight
+#: and robust if council deps fail to load).
+_CLI_PROVIDER_META: dict[str, tuple[str, bool]] = {
+    "anthropic": ("claude", False),
+    "openai": ("codex", False),
+    "gemini": ("gemini", False),
+    "xai": ("grok", True),
+    "perplexity": ("perplexity", True),
+}
+
+
+def _check_council_cli(project_root: Path) -> dict[str, Any]:
+    """Health-probe each enabled ``mode: cli`` council member.
+
+    For every CLI member in ``agents/.ai-council.yml`` reports binary
+    presence (via ``shutil.which``), billable flag, daily-quota state
+    (used/cap or used/—), and rolls up to a single status icon.
+
+    No subprocess is spawned: ``--version`` probes would defeat the
+    cheap-by-default contract and surface flaky network paths (Codex
+    talks home on first run). Binary presence + the cached
+    ``cli-calls.json`` counter cover the actionable failure modes.
+
+    Status rules:
+
+    - ``ok`` — every enabled CLI member has its binary on PATH AND
+      (when capped) usage is below ``warn_at``.
+    - ``warn`` — at least one binary is missing OR usage crosses
+      ``warn_at`` for at least one capped member.
+    - returns ``ok`` with "no council config" if
+      ``agents/.ai-council.yml`` is absent (consumer project that
+      hasn't enabled the council yet).
+    """
+    council_path = project_root / "agents" / ".ai-council.yml"
+    if not council_path.exists():
+        return {
+            "id": "council-cli", "status": "ok",
+            "message": "no council config (agents/.ai-council.yml not present)",
+            "remedy": "",
+        }
+    try:
+        from scripts.ai_council.clients import load_cli_call_counts
+        from scripts.ai_council.config import load_council_config
+    except Exception as exc:  # noqa: BLE001 — defensive: doctor must not crash
+        return {
+            "id": "council-cli", "status": "warn",
+            "message": f"council deps unavailable ({type(exc).__name__})",
+            "remedy": "install PyYAML and ensure scripts/ai_council is importable",
+        }
+    try:
+        cfg = load_council_config(council_path)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "id": "council-cli", "status": "warn",
+            "message": f"council config invalid: {exc}",
+            "remedy": "fix agents/.ai-council.yml and re-run doctor",
+        }
+    cli_members: list[tuple[str, Any]] = [
+        (name, m) for name, m in cfg.members.items()
+        if m.enabled and m.mode == "cli" and name in _CLI_PROVIDER_META
+    ]
+    if not cli_members:
+        return {
+            "id": "council-cli", "status": "ok",
+            "message": "no enabled CLI-mode members",
+            "remedy": "",
+        }
+    counts = load_cli_call_counts()
+    caps = cfg.cli_call_budget.max_calls_per_day
+    warn_at = float(cfg.cli_call_budget.warn_at)
+    missing: list[str] = []
+    over_warn: list[str] = []
+    lines: list[str] = []
+    for name, member in cli_members:
+        default_bin, billable = _CLI_PROVIDER_META[name]
+        binary_name = member.binary or default_bin
+        resolved = shutil.which(binary_name)
+        binary_glyph = "✅" if resolved else "❌"
+        if resolved is None:
+            missing.append(name)
+        used = int(counts.get(name, 0))
+        cap = caps.get(name)
+        if cap is not None:
+            ratio = used / cap if cap > 0 else 0.0
+            quota_glyph = "⚠️" if ratio >= warn_at else "✅"
+            if ratio >= warn_at:
+                over_warn.append(name)
+            quota_str = f"{used}/{cap}"
+        else:
+            quota_glyph = "—"
+            quota_str = f"{used}/—"
+        billable_str = "billable" if billable else "subscription"
+        lines.append(
+            f"{name}: binary {binary_glyph} ({binary_name}) · "
+            f"quota {quota_glyph} {quota_str} · {billable_str}"
+        )
+    detail = " | ".join(lines)
+    if missing:
+        return {
+            "id": "council-cli", "status": "warn",
+            "message": (
+                f"{len(missing)}/{len(cli_members)} CLI member(s) missing binary "
+                f"({', '.join(missing)}) · {detail}"
+            ),
+            "remedy": (
+                "install the missing CLI(s) — see `council:estimate` pre-flight "
+                "for per-provider install hints, or flip "
+                "ai_council.members.<name>.mode to 'api'"
+            ),
+        }
+    if over_warn:
+        return {
+            "id": "council-cli", "status": "warn",
+            "message": (
+                f"{len(over_warn)}/{len(cli_members)} CLI member(s) at/over "
+                f"quota warn_at={warn_at} ({', '.join(over_warn)}) · {detail}"
+            ),
+            "remedy": (
+                "wait for UTC rollover or run "
+                "`python3 scripts/council_cli.py quota --reset` to clear the counter"
+            ),
+        }
+    return {
+        "id": "council-cli", "status": "ok",
+        "message": f"{len(cli_members)} CLI member(s) healthy · {detail}",
+        "remedy": "",
+    }
+
+
 def _check_unsupported_combos(manifest: dict[str, Any]) -> dict[str, Any]:
     """Flag tools whose ``scope`` violates the global-only or project-only rules."""
     global_only = {"droid", "qoder"}
@@ -720,6 +853,7 @@ def _run_checks(
         "offline-readiness": lambda: _check_offline_readiness(),
         "python-runtime": lambda: _check_python_runtime(),
         "tier-usage-readiness": lambda: _check_tier_usage_readiness(project_root),
+        "council-cli": lambda: _check_council_cli(project_root),
         "unsupported-combos": lambda: _check_unsupported_combos(manifest),
     }
     out: list[dict[str, Any]] = []

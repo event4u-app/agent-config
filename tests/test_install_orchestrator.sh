@@ -234,8 +234,15 @@ test_source_repo_guard_blocks_project_install() {
 test_source_repo_guard_allows_global_install() {
     setup
     mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    # Sandbox HOME so user-scope deploys (~/.claude/, ~/.cursor/, …) land
+    # under TMPDIR instead of the developer's real config dirs. Mirrors
+    # the `isolated_lock` fixture in tests/test_installed_lock.py.
+    mkdir -p "$TMPDIR/home"
     local out exit_code
     out="$(AGENT_CONFIG_INSTALLED_LOCK="$TMPDIR/installed.lock" \
+        HOME="$TMPDIR/home" \
+        USERPROFILE="$TMPDIR/home" \
+        EVENT4U_CONFIG_HOME="$TMPDIR/home/.event4u/agent-config" \
         bash "$INSTALL" --target "$TMPDIR" --global --tools=claude-code --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 0 on --global into source tree" test "$exit_code" -eq 0
     assert_false "guard: no 'Refusing' message on --global" grep -q "Refusing to install agent-config" <<<"$out"

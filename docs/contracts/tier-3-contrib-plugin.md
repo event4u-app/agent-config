@@ -26,10 +26,9 @@ Last refreshed: 2026-05-12.
 | **Tier-2** | Shipped | Named in roadmaps + has plausible audience | Imperative bridge, same pattern as Tier-1 |
 | **Tier-3** | **Deferred** | Named in scoping/council but zero user demand | Manifest YAML in `agents/manifests/contrib/` (not yet implemented) |
 
-Phase 2.1 + 2.2 of
-[`road-to-global-first-install`](../../agents/roadmaps/road-to-global-first-install.md)
-closed Tier-1 and Tier-2 at **16 AIs**. Tier-3 is the explicit
-overflow bucket.
+Phase 2.1 + 2.2 of the `road-to-global-first-install` roadmap
+(under `agents/roadmaps/`) closed Tier-1 and Tier-2 at **16 AIs**.
+Tier-3 is the explicit overflow bucket.
 
 ## Candidate list (frozen at proposal time)
 
@@ -126,5 +125,5 @@ not "preemptively scaffold" Tier-3 entries.
 - [`ADR-008`](../decisions/ADR-008-installed-tools-manifest.md) —
   `agents/installed-tools.lock` for per-project state, distinct
   from this maintainer-side contract.
-- [`road-to-global-first-install`](../../agents/roadmaps/road-to-global-first-install.md)
-  Phase 2.6 — completion trigger for this contract.
+- The `road-to-global-first-install` roadmap (under
+  `agents/roadmaps/`) Phase 2.6 — completion trigger for this contract.

@@ -89,6 +89,105 @@ def test_parser_run_accepts_depth_deep() -> None:
     assert parsed.depth == "deep"
 
 
+# ── --single flag (step-9 P9) ────────────────────────────────────────
+
+
+def test_parser_run_single_defaults_to_false() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json"],
+    )
+    assert parsed.single is False
+
+
+def test_parser_run_accepts_single() -> None:
+    parsed = council_cli.build_parser().parse_args(
+        ["run", "q.txt", "--output", "o.json", "--single"],
+    )
+    assert parsed.single is True
+
+
+def _solo_cfg(members_dict, chain):
+    from scripts.ai_council import config as cfg_mod
+    return cfg_mod.CouncilConfig(
+        enabled=True,
+        defaults=cfg_mod.DefaultsConfig(),
+        cost_budget=cfg_mod.CostBudgetConfig(),
+        members=members_dict,
+        routing=cfg_mod.RoutingConfig(solo_member_fallback_chain=chain),
+    )
+
+
+def _solo_member(name: str, model: str):
+    from scripts.ai_council import config as cfg_mod
+    return cfg_mod.MemberConfig(
+        name=name, enabled=True, model=model, api_key_ref=None,
+    )
+
+
+def test_apply_solo_dispatch_filters_members_to_chain_pick(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+        _StubMember("openai", "gpt-x", CouncilResponse("openai", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {
+            "anthropic": _solo_member("anthropic", "claude-x"),
+            "openai": _solo_member("openai", "gpt-x"),
+        },
+        ("openai", "anthropic"),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.delenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", raising=False)
+
+    filtered, banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert [m.name for m in filtered] == ["openai"]
+    assert banner is not None and "openai" in banner
+
+
+def test_apply_solo_dispatch_empty_chain_returns_full_with_warn(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {"anthropic": _solo_member("anthropic", "claude-x")},
+        (),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.delenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", raising=False)
+
+    filtered, banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert filtered is members_runtime
+    assert banner is not None and "WARN" in banner
+
+
+def test_apply_solo_dispatch_force_full_env_returns_unfiltered(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    members_runtime = [
+        _StubMember("anthropic", "claude-x", CouncilResponse("anthropic", "x", "")),
+        _StubMember("openai", "gpt-x", CouncilResponse("openai", "x", "")),
+    ]
+    fake_cfg = _solo_cfg(
+        {
+            "anthropic": _solo_member("anthropic", "claude-x"),
+            "openai": _solo_member("openai", "gpt-x"),
+        },
+        ("openai", "anthropic"),
+    )
+    monkeypatch.setattr(council_cli, "load_council_config", lambda _p: fake_cfg)
+    monkeypatch.setenv("AGENT_CONFIG_FORCE_FULL_COUNCIL", "1")
+
+    filtered, _banner = council_cli._apply_solo_dispatch(members_runtime)
+
+    assert [m.name for m in filtered] == ["anthropic", "openai"]
+
+
 # ── --prompt-mode lens override ──────────────────────────────────────
 
 
@@ -307,12 +406,16 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
         name = "anthropic"
         billable = False
 
-        def __init__(self, *, model, binary=None, max_calls_per_day=None):
+        def __init__(
+            self, *, model, binary=None, max_calls_per_day=None,
+            warn_at=0.8,
+        ):
             self.model = model
             self.binary = binary or "/bin/claude"
             constructed.append({
                 "model": model, "binary": binary,
                 "max_calls_per_day": max_calls_per_day,
+                "warn_at": warn_at,
             })
 
         def ask(self, *a, **kw):  # pragma: no cover
@@ -337,6 +440,7 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
         "model": "claude-sonnet-4-5",
         "binary": "/opt/claude",
         "max_calls_per_day": 50,
+        "warn_at": 0.8,
     }]
 
 
@@ -519,9 +623,10 @@ def test_cmd_run_without_confirm_is_estimate_only(tmp_path, capsys) -> None:
 
 
 
-def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys) -> None:
+def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hello", encoding="utf-8")
-    out_path = tmp_path / "session" / "out.json"
+    out_path = tmp_path / "agents" / "council-responses" / "session" / "out.json"
     response = CouncilResponse(
         provider="openai", model="gpt-x", text="reply text",
         input_tokens=42, output_tokens=7, latency_ms=10,
@@ -543,9 +648,10 @@ def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys) -> None:
     assert payload["responses"][0]["text"] == "reply text"
 
 
-def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path) -> None:
+def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hello", encoding="utf-8")
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "agents" / "council-responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -562,9 +668,10 @@ def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path) -> None:
     assert payload["rounds"] == 3
 
 
-def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path) -> None:
+def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "agents" / "council-responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -581,9 +688,10 @@ def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path) -> None:
     assert payload["rounds"] == 2
 
 
-def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path) -> None:
+def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "agents" / "council-responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -600,9 +708,10 @@ def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path) -> None:
     assert payload["rounds"] == 1
 
 
-def test_cmd_run_with_confirm_returns_1_when_all_members_error(tmp_path) -> None:
+def test_cmd_run_with_confirm_returns_1_when_all_members_error(tmp_path, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "out.json"
+    out_path = tmp_path / "agents" / "council-responses" / "out.json"
     err = CouncilResponse(provider="openai", model="gpt-x", text="",
                           error="boom")
     members = [_StubMember("openai", "gpt-x", err)]
@@ -788,7 +897,11 @@ def test_necessity_gate_off_when_mode_off() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=False,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "off"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True, "mode": "off", "user_explicit_mode": "off",
+            },
+        },
         stdout=buf,
     )
     assert proceed is True
@@ -817,7 +930,13 @@ def test_necessity_gate_user_explicit_educates_and_exits_two() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=False,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "educate",
+            },
+        },
         stdout=buf,
     )
     assert proceed is False
@@ -832,7 +951,13 @@ def test_necessity_gate_proceed_anyway_overrides_educate() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=True,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "educate",
+            },
+        },
         stdout=buf,
     )
     assert proceed is True
@@ -847,7 +972,13 @@ def test_necessity_gate_block_mode_ignores_proceed_anyway() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=True,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "block"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "block",
+                "user_explicit_mode": "block",
+            },
+        },
         stdout=buf,
     )
     assert proceed is False
@@ -886,6 +1017,89 @@ def test_resolve_necessity_mode_lens_override_wins() -> None:
     assert mode == "block"
     enabled, mode = council_cli._resolve_necessity_mode(ai_cfg, "analysis")
     assert mode == "educate"
+
+
+# ── step-8 D2: tier split + warn-only ────────────────────────────────
+
+
+def test_resolve_necessity_mode_user_explicit_defaults_to_warn_only() -> None:
+    """User-explicit tier defaults to warn-only when no override is set."""
+    ai_cfg = {"necessity_classifier": {"enabled": True, "mode": "educate"}}
+    enabled, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "analysis", invocation="user_explicit",
+    )
+    assert enabled is True
+    assert mode == "warn-only"
+
+
+def test_resolve_necessity_mode_user_explicit_lens_override_wins() -> None:
+    """Per-lens user_explicit_mode override takes precedence."""
+    ai_cfg = {
+        "necessity_classifier": {
+            "enabled": True,
+            "mode": "educate",
+            "user_explicit_mode": "warn-only",
+        },
+        "lens_overrides": {
+            "necessity_classifier_user_explicit_mode": {"debate": "block"},
+        },
+    }
+    _, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "debate", invocation="user_explicit",
+    )
+    assert mode == "block"
+    _, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "analysis", invocation="user_explicit",
+    )
+    assert mode == "warn-only"
+
+
+def test_necessity_gate_warn_only_proceeds_with_annotation() -> None:
+    """warn-only emits a council:necessity line but never blocks."""
+    buf = io.StringIO()
+    proceed, rc, result = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=False,
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "warn-only",
+            },
+        },
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+    assert result is not None
+    assert result.verdict == "unnecessary"
+    assert "warn-only" in buf.getvalue()
+
+
+def test_necessity_gate_agent_tier_unaffected_by_user_explicit_mode() -> None:
+    """Agent invocation still uses `mode`, not `user_explicit_mode`."""
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="agent",
+        proceed_anyway=False,
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "warn-only",
+            },
+        },
+        stdout=buf,
+    )
+    # Agent path still skips silently in educate mode.
+    assert proceed is False
+    assert rc == 0
+    assert "skipped" in buf.getvalue()
+    assert "warn-only" not in buf.getvalue()
 
 
 # \u2500\u2500 Phase 8: cmd_debate disclosure + refusal cap \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -1111,10 +1325,11 @@ def test_cmd_replay_writes_audit_trail_to_stdout(tmp_path, capsys) -> None:
     assert "Tests green." in out  # full mode includes arguments
 
 
-def test_cmd_replay_writes_to_output_file_when_provided(tmp_path, capsys) -> None:
+def test_cmd_replay_writes_to_output_file_when_provided(tmp_path, capsys, monkeypatch) -> None:
+    monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     src = tmp_path / "saved.json"
     src.write_text(json.dumps(_consensus_payload()), encoding="utf-8")
-    out = tmp_path / "subdir" / "decision-replay.md"
+    out = tmp_path / "agents" / "council-sessions" / "subdir" / "decision-replay.md"
     args = _ns(responses=str(src), output=str(out),
                include_member_arguments=None)
     rc = council_cli.cmd_replay(args)

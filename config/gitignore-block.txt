@@ -37,6 +37,12 @@
 /agents/council-responses/
 /agents/council-sessions/
 
+# Agent config — AI Council persistent events log (step-8 D3).
+# Local JSONL audit trail for necessity / quota decisions. Hashes
+# original_ask before write but is still considered private. Set
+# AGENT_CONFIG_NO_EVENTS_LOG=1 to disable writes entirely.
+/agents/council-events.log
+
 # Agent config — Tier 1 hook runtime state (context-hygiene.json,
 # onboarding-gate.json). Written by SessionStart / PostToolUse hooks
 # on Augment + Claude Code; regenerated on demand, never commit.

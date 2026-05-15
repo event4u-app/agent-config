@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Use when writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the low-impact learning corpus."
+description: "Writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the learning corpus."
 source: package
 triggers:
   - path_prefix: "agents/low-impact-decisions"

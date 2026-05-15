@@ -164,6 +164,21 @@ debate:
 # When omitted, the CliClient resolves the provider's default binary
 # name (`claude`, `codex`, `gemini`) via `shutil.which`. Setting it on
 # an api/manual member is a hard validation error.
+#
+# --- Low-impact fast-path opt-in (Phase 11, default OFF) ---
+# `decision_resolution.classes.low_impact.mode` (see below) defaults
+# to `agent` — low-impact questions resolve on the host and the
+# council never sees them. Routing low-impact to the council is an
+# EXPLICIT TWO-KNOB OPT-IN:
+#   1. flip the class to `mode: council` in `decision_resolution`
+#   2. set `participate_low_impact: true` on each member that should
+#      run on the fast-path (default `false`, per-member opt-in)
+# Missing either knob → fast-path stays unavailable; the loader
+# warns and the resolver falls back to `agent` (or escalates to the
+# user when confidence is below the threshold). See
+# docs/contracts/ai-council-config.md § "Low-impact council opt-in"
+# for the worked example, validation behaviour, and transparency
+# markers.
 members:
   anthropic:
     enabled: true

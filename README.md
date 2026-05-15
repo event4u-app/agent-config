@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>210 Skills</strong> · <strong>66 Rules</strong> · <strong>109 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>109 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---

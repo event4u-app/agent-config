@@ -511,6 +511,69 @@ def record_cli_call(provider: str, path: Path | None = None) -> int:
     return counts[provider]
 
 
+def reset_cli_call_counts(
+    provider: str | None = None,
+    path: Path | None = None,
+) -> dict[str, int]:
+    """Reset the per-provider call counter (step-8 P1, `council quota --reset`).
+
+    ``provider=None`` clears all providers (today's record). Otherwise
+    only the named provider's count is removed; other providers and
+    the UTC date marker are preserved. Returns the post-reset counts.
+    """
+    p = path if path is not None else _cli_calls_state_path()
+    counts = load_cli_call_counts(p)
+    if provider is None:
+        counts = {}
+    else:
+        counts.pop(provider, None)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        json.dumps({"date": _today_utc_iso(), "counts": counts}, indent=2),
+        encoding="utf-8",
+    )
+    return counts
+
+
+def quota_summary_line(
+    clients: "list[CliClient]",
+    *,
+    cli_calls_path: Path | None = None,
+) -> tuple[str, list[str]]:
+    """Build the pre-run quota summary line (step-8 P1, D1 + D4).
+
+    Returns ``(summary, warn_providers)`` where ``summary`` is the
+    formatted one-liner (empty string when no CLI member has a
+    configured cap) and ``warn_providers`` is the subset whose
+    ``used / max_calls_per_day`` ratio crossed ``warn_at``. Uncapped
+    providers (``max_calls_per_day is None``) are omitted from the
+    summary entirely — they cannot exceed a threshold that does not
+    exist.
+
+    Tested in ``tests/test_cli_quota_warn.py``.
+    """
+    capped = [c for c in clients if getattr(c, "max_calls_per_day", None)]
+    if not capped:
+        return "", []
+    # Read state once for the whole summary — call counts only mutate
+    # inside ``CliClient.ask`` (sequential per-member dispatch), so the
+    # pre-run snapshot is always consistent with what's about to fire.
+    counts = load_cli_call_counts(cli_calls_path)
+    parts: list[str] = []
+    warn: list[str] = []
+    for c in capped:
+        name = getattr(c, "name", "?")
+        used = int(counts.get(name, 0))
+        limit = int(c.max_calls_per_day)
+        parts.append(f"{name} {used}/{limit}")
+        ratio = used / limit if limit > 0 else 0.0
+        warn_at = float(getattr(c, "warn_at", 0.8))
+        if ratio >= warn_at:
+            warn.append(name)
+    prefix = "⚠️  " if warn else ""
+    return f"{prefix}council:quota · " + " · ".join(parts), warn
+
+
 class CliClient(ExternalAIClient):
     """Shell-out council member — subscription-authed transport.
 
@@ -574,11 +637,13 @@ class CliClient(ExternalAIClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         self.model = model
         self.timeout_seconds = timeout_seconds
         self.max_calls_per_day = max_calls_per_day
+        self.warn_at = warn_at
         self._cli_calls_path = cli_calls_path
         if binary is not None:
             self.binary = binary
@@ -644,6 +709,27 @@ class CliClient(ExternalAIClient):
             counts = load_cli_call_counts(self._cli_calls_path)
             used = counts.get(self.name, 0)
             if used >= self.max_calls_per_day:
+                # step-8 D3 — record the block on the persistent events
+                # log. Lazy import to keep clients.py independent of the
+                # CLI layer at module load time.
+                try:
+                    from scripts.ai_council.events_log import append_event
+                    append_event({
+                        "lens": "",
+                        "invocation": "",
+                        "action": "block_quota",
+                        "verdict": "",
+                        "provider_caps": {
+                            self.name: {
+                                "mode": "cli", "model": self.model,
+                            },
+                        },
+                        "original_ask": user_prompt,
+                        "cli_calls_used": used,
+                        "cli_calls_max": self.max_calls_per_day,
+                    })
+                except Exception:  # pragma: no cover — never crash ask()
+                    pass
                 return CouncilResponse(
                     provider=self.name, model=self.model, text="",
                     latency_ms=int((time.monotonic() - t0) * 1000),
@@ -765,6 +851,7 @@ class AnthropicCliClient(CliClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         super().__init__(
@@ -772,6 +859,7 @@ class AnthropicCliClient(CliClient):
             binary=binary,
             timeout_seconds=timeout_seconds,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
             cli_calls_path=cli_calls_path,
         )
 
@@ -850,6 +938,7 @@ class OpenAICliClient(CliClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         super().__init__(
@@ -857,6 +946,7 @@ class OpenAICliClient(CliClient):
             binary=binary,
             timeout_seconds=timeout_seconds,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
             cli_calls_path=cli_calls_path,
         )
 
@@ -944,6 +1034,7 @@ class GeminiCliClient(CliClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         super().__init__(
@@ -951,6 +1042,7 @@ class GeminiCliClient(CliClient):
             binary=binary,
             timeout_seconds=timeout_seconds,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
             cli_calls_path=cli_calls_path,
         )
 
@@ -1036,6 +1128,7 @@ class XAICliClient(CliClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         super().__init__(
@@ -1043,6 +1136,7 @@ class XAICliClient(CliClient):
             binary=binary,
             timeout_seconds=timeout_seconds,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
             cli_calls_path=cli_calls_path,
         )
 
@@ -1098,6 +1192,7 @@ class PerplexityCliClient(CliClient):
         binary: str | None = None,
         timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
         max_calls_per_day: int | None = None,
+        warn_at: float = 0.8,
         cli_calls_path: Path | None = None,
     ):
         super().__init__(
@@ -1105,6 +1200,7 @@ class PerplexityCliClient(CliClient):
             binary=binary,
             timeout_seconds=timeout_seconds,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
             cli_calls_path=cli_calls_path,
         )
 

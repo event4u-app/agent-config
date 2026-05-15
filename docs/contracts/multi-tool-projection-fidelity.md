@@ -5,7 +5,8 @@ keep-beta-until: 2026-08-13
 
 # Multi-Tool Projection Fidelity Contract
 
-**Status:** beta · **Phase 4 of [step-1-v2-feedback-followup](../../agents/roadmaps/step-1-v2-feedback-followup.md)**
+**Status:** beta · **Phase 4 of the `step-1-v2-feedback-followup`
+roadmap** (under `agents/roadmaps/`).
 
 Names the **per-tool guarantees** the projection pipeline (`scripts/compress.py --sync` + `scripts/compress.py --generate-tools`) actually delivers. Byte-equivalence is not behaviour-fidelity — each consumer tool has its own frontmatter grammar, its own activation model, and its own surface for skills / rules / commands.
 
@@ -111,4 +112,4 @@ These are **architectural facts**, not regressions. They are documented so insta
 - [`augment-projection`](../architecture/augment-projection.md) — pipeline B (Augment-specific)
 - [`multi-tool-projection`](../architecture/multi-tool-projection.md) — pipeline C (the per-tool emitters)
 - [`rule-router`](rule-router.md) — the `triggers:` / `routes_to:` grammar this contract pins
-- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback
+- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback <!-- council-ref-allowed: contract origin trace -->

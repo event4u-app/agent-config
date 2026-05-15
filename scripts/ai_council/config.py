@@ -55,6 +55,7 @@ class CouncilConfigError(RuntimeError):
 @dataclass(frozen=True)
 class DefaultsConfig:
     mode: str = "api"
+    member_mode: str = "cli"
     min_rounds: int = 2
     deep_min_rounds: int = 3
     max_output_tokens: int = 0
@@ -116,7 +117,7 @@ class ConsensusScoringConfig:
     lenses: tuple[str, ...] = ("analysis",)
 
 
-_VALID_NECESSITY_MODES = frozenset({"off", "educate", "block"})
+_VALID_NECESSITY_MODES = frozenset({"off", "educate", "block", "warn-only"})
 _VALID_DISCLOSURE_MODES = frozenset({"always", "above_threshold", "off"})
 
 
@@ -124,16 +125,26 @@ _VALID_DISCLOSURE_MODES = frozenset({"always", "above_threshold", "off"})
 class NecessityClassifierConfig:
     """Council-necessity classifier toggle (Phase 6).
 
-    ``mode`` ∈ ``{"off", "educate", "block"}``:
+    ``mode`` controls the **agent** invocation path; ``user_explicit_mode``
+    controls the **user-explicit** invocation path (step-8 D2 tier split).
+
+    Valid modes ∈ ``{"off", "educate", "block", "warn-only"}``:
 
     - ``off`` — legacy behaviour: classifier never runs, every request
       proceeds to deliberation.
-    - ``educate`` (default) — agent-initiated `unnecessary` skips
-      silently; user-explicit `unnecessary` emits the educate paragraph
-      and requires ``--proceed-anyway`` (CLI) or a numbered-options
+    - ``educate`` — agent-initiated `unnecessary` skips silently;
+      user-explicit `unnecessary` emits the educate paragraph and
+      requires ``--proceed-anyway`` (CLI) or a numbered-options
       confirmation (agent surface) before firing members.
-    - ``block`` — power-user opt-in: `unnecessary` skips silently even
-      on the user-explicit path, regardless of override flag.
+    - ``block`` — power-user opt-in: `unnecessary` skips silently
+      regardless of override flag.
+    - ``warn-only`` — classifier verdict annotated in stdout but
+      **never** skips. Default for ``user_explicit_mode`` (step-8 D2).
+
+    Default ``mode`` (agent path) = ``educate``;
+    default ``user_explicit_mode`` = ``warn-only``. Reconciles
+    "Council always active when called" with "skip trivial agent-side
+    requests".
 
     Per-lens overrides live in :class:`CouncilConfig.lens_overrides`;
     this dataclass carries only the global default.
@@ -141,6 +152,7 @@ class NecessityClassifierConfig:
 
     enabled: bool = True
     mode: str = "educate"
+    user_explicit_mode: str = "warn-only"
 
 
 @dataclass(frozen=True)
@@ -239,6 +251,28 @@ class DecisionResolutionEntry:
 
 
 @dataclass(frozen=True)
+class FuzzyMatchConfig:
+    """Opt-in fuzzy matching for the corpus-aware classifier (step-9 P5).
+
+    Lives under ``decision_resolution.fast_path.fuzzy_match`` in the
+    YAML. When ``enabled`` is ``False`` the classifier uses
+    exact-after-normalisation matching only (Phase 12 default).
+
+    Attributes:
+        enabled: Master switch. Default ``False`` — exact match only.
+        threshold: ``difflib.SequenceMatcher.ratio()`` cutoff in the
+            range ``(0.0, 1.0]``. Default ``0.92``. Two safety vetoes
+            apply on top of the ratio test (Iron Law preserved):
+            high-impact trigger tokens in the query short-circuit to
+            the base verdict, and anti-example similarity at or above
+            the validated similarity rejects the match.
+    """
+
+    enabled: bool = False
+    threshold: float = 0.92
+
+
+@dataclass(frozen=True)
 class LowImpactFastPathConfig:
     """Hard caps for the lightweight-QA fast-path (Phase 11).
 
@@ -257,12 +291,15 @@ class LowImpactFastPathConfig:
         max_tokens: Combined input+output token budget per resolution.
             Default ``2500``. Passed through to ``CostBudget``.
         max_cost_usd: USD cap per resolution. Default ``0.05``.
+        fuzzy_match: Opt-in fuzzy corpus matching (step-9 P5). Off by
+            default — exact-after-normalisation matching only.
     """
 
     max_members: int = 2
     max_rounds: int = 1
     max_tokens: int = 2500
     max_cost_usd: float = 0.05
+    fuzzy_match: FuzzyMatchConfig = field(default_factory=FuzzyMatchConfig)
 
 
 @dataclass(frozen=True)
@@ -297,9 +334,66 @@ class LensOverridesConfig:
     """
 
     necessity_classifier_mode: dict[str, str] = field(default_factory=dict)
+    necessity_classifier_user_explicit_mode: dict[str, str] = field(
+        default_factory=dict,
+    )
     model_downgrade: dict[str, ModelDowngradeConfig] = field(default_factory=dict)
     cost_disclosure: dict[str, CostDisclosureConfig] = field(default_factory=dict)
     decision_replay: dict[str, DecisionReplayConfig] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class RoutingConfig:
+    """Solo-member dispatch fallback chain (step-9 P8/P9 · U2).
+
+    ``solo_member_fallback_chain`` is the ordered list of provider names
+    consulted when the dispatcher resolves a single-member invocation
+    (CLI ``--single`` flag or ``low_impact.dispatch: single``). The
+    first chain entry whose member is enabled AND has cached-valid auth
+    wins. An empty tuple disables solo dispatch — any caller that
+    requests it falls back to the full council with a WARN log.
+
+    ``auth_check_timeout_seconds`` bounds the lazy auth probe per
+    member (default ``3``). Loader rejects values outside ``[1, 30]``
+    so a misconfigured CLI cannot stall the dispatcher.
+    """
+
+    solo_member_fallback_chain: tuple[str, ...] = ()
+    auth_check_timeout_seconds: int = 3
+
+
+@dataclass(frozen=True)
+class LowImpactConfig:
+    """Low-impact dispatch + shadow-mode config (step-9 P8/P10 · U3).
+
+    ``dispatch`` switches the low-impact resolution shape:
+
+    - ``full`` (default) — the existing fast-path quick-consensus over
+      opted-in members (caps from ``decision_resolution.fast_path``).
+    - ``single`` — solo-member dispatch via
+      :class:`RoutingConfig.solo_member_fallback_chain`. The loader
+      rejects ``single`` when the chain is empty or contains only
+      disabled members, so a misconfigured opt-in cannot silently
+      escalate to the full council on every call.
+
+    ``shadow_sample_rate`` is the per-decision sampling probability
+    for shadow-mode logging (Phase 10). At ``0.0`` shadow is off; at
+    ``1.0`` every solo decision is also dispatched to the full
+    council and the verdicts are compared in
+    ``agents/council-shadow-log.jsonl``. Must be in ``[0.0, 1.0]``.
+
+    ``solo_confidence_floor`` is the auto-escalation threshold for
+    solo-member responses (step-9 P13). When the dispatcher extracts
+    a confidence signal below the floor — or detects a split /
+    refusal response — the decision escalates to the full council
+    on this invocation, independent of shadow sampling. Default
+    ``0.7``; must be in ``[0.0, 1.0]``. The floor is irrelevant when
+    ``dispatch=full`` (no solo step to gate).
+    """
+
+    dispatch: str = "full"
+    shadow_sample_rate: float = 0.1
+    solo_confidence_floor: float = 0.7
 
 
 @dataclass(frozen=True)
@@ -315,9 +409,17 @@ class CliCallBudgetConfig:
     Counter state persists under
     ``~/.event4u/agent-config/cli-calls.json`` with daily UTC reset
     (wired in Phase 1).
+
+    ``warn_at`` is the fractional threshold (0.0–1.0) at which the
+    pre-run quota summary in :func:`council_cli.cmd_run` flips its
+    prefix to ``⚠️`` and surfaces a ``council:quota · WARN`` line
+    (step-8 P1). Default ``0.8`` is the standard ops-monitoring 80 %
+    threshold (step-8 D4). Providers without a configured cap are
+    omitted from the summary regardless.
     """
 
     max_calls_per_day: dict[str, int] = field(default_factory=dict)
+    warn_at: float = 0.8
 
 
 @dataclass(frozen=True)
@@ -346,6 +448,8 @@ class CouncilConfig:
     decision_resolution: DecisionResolutionConfig = field(
         default_factory=DecisionResolutionConfig,
     )
+    routing: RoutingConfig = field(default_factory=RoutingConfig)
+    low_impact: LowImpactConfig = field(default_factory=LowImpactConfig)
     lens_overrides: LensOverridesConfig = field(
         default_factory=LensOverridesConfig,
     )
@@ -423,6 +527,13 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
     decision_resolution = _build_decision_resolution(
         raw.get("decision_resolution") or {},
     )
+    routing = _build_routing(raw.get("routing") or {}, members=members)
+    low_impact = _build_low_impact(
+        raw.get("low_impact") or {},
+        members=members,
+        routing=routing,
+    )
+    _reject_top_level_locked_dispatch(raw)
     lens_overrides = _build_lens_overrides(raw.get("lenses") or {})
 
     return CouncilConfig(
@@ -438,6 +549,8 @@ def _build_config(raw: dict[str, Any], *, source_path: Path) -> CouncilConfig:
         debate=debate,
         decision_replay=decision_replay,
         decision_resolution=decision_resolution,
+        routing=routing,
+        low_impact=low_impact,
         lens_overrides=lens_overrides,
         source_path=source_path,
     )
@@ -455,7 +568,18 @@ def _build_necessity_classifier(d: dict[str, Any]) -> NecessityClassifierConfig:
             f"necessity_classifier.mode={mode!r} not in "
             f"{sorted(_VALID_NECESSITY_MODES)}."
         )
-    return NecessityClassifierConfig(enabled=bool(enabled), mode=mode)
+    user_explicit_mode = d.get("user_explicit_mode", "warn-only")
+    if user_explicit_mode not in _VALID_NECESSITY_MODES:
+        raise CouncilConfigError(
+            f"necessity_classifier.user_explicit_mode="
+            f"{user_explicit_mode!r} not in "
+            f"{sorted(_VALID_NECESSITY_MODES)}."
+        )
+    return NecessityClassifierConfig(
+        enabled=bool(enabled),
+        mode=mode,
+        user_explicit_mode=user_explicit_mode,
+    )
 
 
 def _build_model_downgrade(d: dict[str, Any]) -> ModelDowngradeConfig:
@@ -589,6 +713,16 @@ def _build_decision_resolution(
                 f"high-impact and user-required decisions never bypass "
                 f"the user."
             )
+        # Iron Law: `dispatch` is not configurable for locked classes
+        # (step-9 P8/P11 · U3). Any nested `dispatch` key — including
+        # smuggled-in YAML anchor merges — is a hard schema error.
+        if cls in _LOCKED_IMPACT_CLASSES and "dispatch" in entry_raw:
+            raise CouncilConfigError(
+                f"decision_resolution.classes.{cls}.dispatch="
+                f"{entry_raw['dispatch']!r}: dispatch is not "
+                f"configurable for high-impact / user-required "
+                f"decisions — always full council."
+            )
         threshold = float(entry_raw.get("confidence_threshold", 0.6))
         if not 0.0 <= threshold <= 1.0:
             raise CouncilConfigError(
@@ -663,12 +797,49 @@ def _build_fast_path(d: dict[str, Any]) -> LowImpactFastPathConfig:
             "decision_resolution.fast_path.max_cost_usd must be > 0 "
             f"(got {max_cost!r})."
         )
+    fuzzy_match = _build_fuzzy_match(d.get("fuzzy_match") or {})
     return LowImpactFastPathConfig(
         max_members=max_members,
         max_rounds=1,
         max_tokens=max_tokens,
         max_cost_usd=max_cost,
+        fuzzy_match=fuzzy_match,
     )
+
+
+def _build_fuzzy_match(d: dict[str, Any]) -> FuzzyMatchConfig:
+    """Parse ``decision_resolution.fast_path.fuzzy_match`` (step-9 P5).
+
+    Opt-in only: defaults to ``enabled=False, threshold=0.92``. A
+    threshold outside ``(0.0, 1.0]`` is a hard schema error — sub-0.5
+    matches are noise; ``0.0`` would auto-match anything; ``> 1.0`` is
+    impossible by definition of the ratio.
+    """
+    if not isinstance(d, dict):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match must be a mapping."
+        )
+    enabled = d.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.enabled must be a bool "
+            f"(got {type(enabled).__name__})."
+        )
+    threshold_raw = d.get("threshold", 0.92)
+    if isinstance(threshold_raw, bool) or not isinstance(
+        threshold_raw, (int, float)
+    ):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.threshold must be a "
+            f"number (got {type(threshold_raw).__name__})."
+        )
+    threshold = float(threshold_raw)
+    if not (0.0 < threshold <= 1.0):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.threshold must be in "
+            f"(0.0, 1.0] (got {threshold!r})."
+        )
+    return FuzzyMatchConfig(enabled=enabled, threshold=threshold)
 
 
 
@@ -676,6 +847,7 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
     if not isinstance(d, dict):
         raise CouncilConfigError("`lenses` must be a mapping.")
     nc_overrides: dict[str, str] = {}
+    nc_user_overrides: dict[str, str] = {}
     md_overrides: dict[str, ModelDowngradeConfig] = {}
     cd_overrides: dict[str, CostDisclosureConfig] = {}
     dr_overrides: dict[str, DecisionReplayConfig] = {}
@@ -698,6 +870,15 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
                         f"not in {sorted(_VALID_NECESSITY_MODES)}."
                     )
                 nc_overrides[lens_name] = mode
+            user_mode = nc_block.get("user_explicit_mode")
+            if user_mode is not None:
+                if user_mode not in _VALID_NECESSITY_MODES:
+                    raise CouncilConfigError(
+                        f"lenses.{lens_name}.necessity_classifier."
+                        f"user_explicit_mode={user_mode!r} "
+                        f"not in {sorted(_VALID_NECESSITY_MODES)}."
+                    )
+                nc_user_overrides[lens_name] = user_mode
         md_block = lens_cfg.get("model_downgrade")
         if md_block is not None:
             if not isinstance(md_block, dict):
@@ -730,6 +911,7 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
             )
     return LensOverridesConfig(
         necessity_classifier_mode=nc_overrides,
+        necessity_classifier_user_explicit_mode=nc_user_overrides,
         model_downgrade=md_overrides,
         cost_disclosure=cd_overrides,
         decision_replay=dr_overrides,
@@ -757,6 +939,9 @@ def _build_consensus_scoring(d: dict[str, Any]) -> ConsensusScoringConfig:
     )
 
 
+_VALID_MEMBER_MODES = frozenset({"cli", "api"})
+
+
 def _build_defaults(d: dict[str, Any]) -> DefaultsConfig:
     if not isinstance(d, dict):
         raise CouncilConfigError("`defaults` must be a mapping.")
@@ -765,14 +950,186 @@ def _build_defaults(d: dict[str, Any]) -> DefaultsConfig:
         raise CouncilConfigError(
             f"defaults.mode={mode!r} not in {sorted(_VALID_MODES)}."
         )
+    # `member_mode` (step-9 P8 · U1) — global preference for solo /
+    # CLI-mode invocations. Narrower set than `defaults.mode` because
+    # `manual` makes no sense as a per-member dispatch default.
+    member_mode = d.get("member_mode", "cli")
+    if member_mode not in _VALID_MEMBER_MODES:
+        raise CouncilConfigError(
+            f"defaults.member_mode={member_mode!r} not in "
+            f"{sorted(_VALID_MEMBER_MODES)}."
+        )
     return DefaultsConfig(
         mode=mode,
+        member_mode=member_mode,
         min_rounds=int(d.get("min_rounds", 2)),
         deep_min_rounds=int(d.get("deep_min_rounds", 3)),
         max_output_tokens=int(d.get("max_output_tokens", 0)),
         session_retention_days=int(d.get("session_retention_days", 7)),
         debate_max_rounds=int(d.get("debate_max_rounds", 4)),
     )
+
+
+_VALID_DISPATCH_MODES = frozenset({"full", "single"})
+
+
+def _build_routing(
+    d: dict[str, Any],
+    *,
+    members: dict[str, MemberConfig],
+) -> RoutingConfig:
+    """Parse ``routing`` block (step-9 P8 · U2).
+
+    Validates the solo-member fallback chain shape:
+
+    - Must be a list of strings.
+    - Each entry must be a configured member name.
+    - Duplicate entries are rejected — a chain is an order, not a set.
+
+    Auth-check timeout must be in ``[1, 30]`` seconds. Empty chain
+    is legal; it just disables solo dispatch.
+    """
+    if not isinstance(d, dict):
+        raise CouncilConfigError("`routing` must be a mapping.")
+    chain_raw = d.get("solo_member_fallback_chain", [])
+    if not isinstance(chain_raw, list):
+        raise CouncilConfigError(
+            "`routing.solo_member_fallback_chain` must be a list "
+            f"(got {type(chain_raw).__name__})."
+        )
+    chain: list[str] = []
+    seen: set[str] = set()
+    for idx, entry in enumerate(chain_raw):
+        if not isinstance(entry, str) or not entry.strip():
+            raise CouncilConfigError(
+                f"routing.solo_member_fallback_chain[{idx}]: each "
+                f"entry must be a non-empty string (got {entry!r})."
+            )
+        if entry in seen:
+            raise CouncilConfigError(
+                f"routing.solo_member_fallback_chain[{idx}]: "
+                f"duplicate entry {entry!r} — chain order must be "
+                f"unique."
+            )
+        if entry not in members:
+            raise CouncilConfigError(
+                f"routing.solo_member_fallback_chain[{idx}]={entry!r}: "
+                f"no such member in the `members` block."
+            )
+        seen.add(entry)
+        chain.append(entry)
+    timeout_raw = d.get("auth_check_timeout_seconds", 3)
+    if (
+        not isinstance(timeout_raw, int)
+        or isinstance(timeout_raw, bool)
+        or not 1 <= timeout_raw <= 30
+    ):
+        raise CouncilConfigError(
+            "routing.auth_check_timeout_seconds must be an int in "
+            f"[1, 30] (got {timeout_raw!r})."
+        )
+    return RoutingConfig(
+        solo_member_fallback_chain=tuple(chain),
+        auth_check_timeout_seconds=timeout_raw,
+    )
+
+
+def _build_low_impact(
+    d: dict[str, Any],
+    *,
+    members: dict[str, MemberConfig],
+    routing: RoutingConfig,
+) -> LowImpactConfig:
+    """Parse ``low_impact`` block (step-9 P8 · U3).
+
+    ``dispatch: single`` is only legal when the routing fallback
+    chain has at least one enabled member — otherwise the loader
+    rejects with a clear error. A misconfigured opt-in must not
+    silently escalate to the full council on every call.
+    """
+    if not isinstance(d, dict):
+        raise CouncilConfigError("`low_impact` must be a mapping.")
+    # Iron Law: `dispatch` is the only place where dispatch shape
+    # is configurable. Reject any `dispatch` key on the locked
+    # impact classes — covered separately at top-level by
+    # `_reject_top_level_locked_dispatch`.
+    dispatch = d.get("dispatch", "full")
+    if dispatch not in _VALID_DISPATCH_MODES:
+        raise CouncilConfigError(
+            f"low_impact.dispatch={dispatch!r} not in "
+            f"{sorted(_VALID_DISPATCH_MODES)}."
+        )
+    if dispatch == "single":
+        enabled_in_chain = [
+            name
+            for name in routing.solo_member_fallback_chain
+            if members.get(name) is not None and members[name].enabled
+        ]
+        if not enabled_in_chain:
+            raise CouncilConfigError(
+                "low_impact.dispatch='single' requires at least one "
+                "enabled member in routing.solo_member_fallback_chain "
+                f"(chain={list(routing.solo_member_fallback_chain)!r}). "
+                "Enable a chain member or set dispatch back to 'full'."
+            )
+    shadow_raw = d.get("shadow_sample_rate", 0.1)
+    if isinstance(shadow_raw, bool) or not isinstance(shadow_raw, (int, float)):
+        raise CouncilConfigError(
+            "low_impact.shadow_sample_rate must be a number "
+            f"(got {type(shadow_raw).__name__})."
+        )
+    shadow = float(shadow_raw)
+    if not 0.0 <= shadow <= 1.0:
+        raise CouncilConfigError(
+            "low_impact.shadow_sample_rate must be in [0.0, 1.0] "
+            f"(got {shadow!r})."
+        )
+    floor_raw = d.get("solo_confidence_floor", 0.7)
+    if isinstance(floor_raw, bool) or not isinstance(floor_raw, (int, float)):
+        raise CouncilConfigError(
+            "low_impact.solo_confidence_floor must be a number "
+            f"(got {type(floor_raw).__name__})."
+        )
+    floor = float(floor_raw)
+    if not 0.0 <= floor <= 1.0:
+        raise CouncilConfigError(
+            "low_impact.solo_confidence_floor must be in [0.0, 1.0] "
+            f"(got {floor!r})."
+        )
+    return LowImpactConfig(
+        dispatch=dispatch,
+        shadow_sample_rate=shadow,
+        solo_confidence_floor=floor,
+    )
+
+
+def _reject_top_level_locked_dispatch(raw: dict[str, Any]) -> None:
+    """Iron Law (step-9 P8/P11/P13 · U3) — reject locked-class dispatch keys.
+
+    Some authors will write `high_impact.dispatch: single` at the top
+    level (mirroring `low_impact.dispatch`) rather than nested under
+    `decision_resolution.classes`. Catch that shape too so the Iron
+    Law cannot be bypassed by surface choice. Also covers
+    `solo_confidence_floor` — meaningless on locked classes (they
+    never dispatch solo) and a confusing knob to leave reachable.
+    """
+    for cls in _LOCKED_IMPACT_CLASSES:
+        block = raw.get(cls)
+        if not isinstance(block, dict):
+            continue
+        if "dispatch" in block:
+            raise CouncilConfigError(
+                f"{cls}.dispatch={block['dispatch']!r}: dispatch is "
+                f"not configurable for high-impact / user-required "
+                f"decisions — always full council."
+            )
+        if "solo_confidence_floor" in block:
+            raise CouncilConfigError(
+                f"{cls}.solo_confidence_floor="
+                f"{block['solo_confidence_floor']!r}: irrelevant on "
+                f"high-impact / user-required classes — they never "
+                f"dispatch solo. Set on `low_impact` instead."
+            )
 
 
 def _build_cost_budget(d: dict[str, Any]) -> CostBudgetConfig:
@@ -901,7 +1258,18 @@ def _build_cli_call_budget(d: dict[str, Any]) -> CliCallBudgetConfig:
                 f"non-negative integer (got {value!r})."
             )
         caps[provider] = value
-    return CliCallBudgetConfig(max_calls_per_day=caps)
+    warn_at_raw = d.get("warn_at", 0.8)
+    if isinstance(warn_at_raw, bool) or not isinstance(warn_at_raw, (int, float)):
+        raise CouncilConfigError(
+            f"cli_call_budget.warn_at must be a number in [0.0, 1.0] "
+            f"(got {warn_at_raw!r})."
+        )
+    warn_at = float(warn_at_raw)
+    if not 0.0 <= warn_at <= 1.0:
+        raise CouncilConfigError(
+            f"cli_call_budget.warn_at must be in [0.0, 1.0] (got {warn_at})."
+        )
+    return CliCallBudgetConfig(max_calls_per_day=caps, warn_at=warn_at)
 
 
 def _build_advisor(name: str, cfg: dict[str, Any]) -> AdvisorConfig:

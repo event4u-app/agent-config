@@ -11,10 +11,10 @@ stability: stable
 > package from Level-4 (execution engine) to Level-5 (observable
 > decision system); this roadmap was the Level-5 → Level-6 jump:
 > **steerable + provable + onboardable**.
-> **Cross-links:**
-> [`road-to-productization.md`](../../agents/roadmaps/road-to-productization.md) ·
-> [`road-to-proof-not-features.md`](../../agents/roadmaps/archive/road-to-proof-not-features.md) ·
-> [`road-to-better-skills-and-profiles.md`](../../agents/roadmaps/archive/road-to-better-skills-and-profiles.md).
+> **Cross-links:** sibling roadmaps `road-to-productization`,
+> `road-to-proof-not-features`, and `road-to-better-skills-and-profiles`
+> — see `agents/roadmaps/` (or `agents/roadmaps/archive/` for the
+> closed ones) for current status.
 
 ## What shipped
 
@@ -72,9 +72,8 @@ stability: stable
 - Beta-review marker protocol shipped in [`STABILITY.md`](STABILITY.md)
   § Beta-review markers; `scripts/check_beta_review_markers.py` wired
   into `task ci`; 39 beta contracts back-filled (P5.4).
-- Test-redundancy audit produced
-  [`step-5-test-cleanup.md`](../../agents/roadmaps/step-5-test-cleanup.md)
-  — audit-only, no deletions (P5.5).
+- Test-redundancy audit produced the `step-5-test-cleanup` sibling
+  roadmap — audit-only, no deletions (P5.5).
 
 ### Release-trunk discipline (Phase 1)
 
@@ -118,8 +117,7 @@ keep-beta-until dates beyond the window.
 
 - **Showcase capture** → future `road-to-showcase-capture.md` when a
   hosted-LLM runner is on the table.
-- **Test-suite deletion** →
-  [`step-5-test-cleanup.md`](../../agents/roadmaps/step-5-test-cleanup.md)
+- **Test-suite deletion** → `step-5-test-cleanup` sibling roadmap
   (audit-only sibling spawned by P5.5; non-destructive by default).
 - **Persona Block B** (Architect / Risk-Officer extension) —
   anti-recommended per the sibling closure decision; not deferred,

@@ -247,17 +247,59 @@ def _build_user_prompt(question_text: str) -> str:
 
 
 def _aborted_marker(reason: str, members: tuple[MemberConfig, ...]) -> str:
+    """Build the normative ``aborted`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council aborted (<reason>) — escalating to user:``.
+    The members-tried list trails on the same prefix so downstream
+    pattern matchers can still extract who was called.
+    """
     names = ", ".join(m.name for m in members) if members else "no members"
     return (
-        f"[fast-path aborted: {reason} — escalating to user "
-        f"(members tried: {names})]"
+        f"> Low-impact council aborted ({reason}) — escalating to user: "
+        f"members tried: {names}."
     )
 
 
 def _split_marker(answers: tuple[MemberAnswer, ...]) -> str:
-    parts = " · ".join(f"{a.member}: {a.text.splitlines()[0].strip()[:80]}"
-                       for a in answers if a.ok)
-    return f"[fast-path split — escalating to user ({parts})]"
+    """Build the normative ``split`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):``.
+    """
+    parts = " / ".join(
+        f"{a.member}: {a.text.splitlines()[0].strip()[:80]}"
+        for a in answers if a.ok
+    )
+    return f"> Low-impact council split — escalating to user ({parts}):"
+
+
+def _unavailable_marker() -> str:
+    """Build the normative ``unavailable`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Low-impact council unavailable (no opted-in members) — escalating to user.``.
+    """
+    return (
+        "> Low-impact council unavailable (no opted-in members) — "
+        "escalating to user."
+    )
+
+
+def _resolved_marker(ok_answers: tuple[MemberAnswer, ...]) -> str:
+    """Build the normative ``resolved`` marker.
+
+    Wording is fixed by ``fast-path-marker-visibility.md`` Iron Law:
+    ``> Resolved via low-impact council fast-path: <verdict>.``. The
+    verdict short-string distinguishes single-member from 2-member
+    consensus so the host agent can preserve provenance without
+    paraphrasing the answer body.
+    """
+    if len(ok_answers) <= 1:
+        verdict = "single-member answer"
+    else:
+        verdict = f"{len(ok_answers)}-member consensus"
+    return f"> Resolved via low-impact council fast-path: {verdict}."
 
 
 def _answer_line(text: str) -> str:
@@ -388,7 +430,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="unavailable",
             answer="",
-            marker=_aborted_marker("no opted-in member", ()),
+            marker=_unavailable_marker(),
         )
 
     user_prompt = _build_user_prompt(question_text)
@@ -450,7 +492,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="resolved",
             answer=ok_answers[0].text,
-            marker=plan.marker,
+            marker=_resolved_marker(ok_answers),
             answers=answers_t,
             total_cost_usd=total_cost,
             session_log_line=_session_log_line(
@@ -464,7 +506,7 @@ def resolve_low_impact(
         return FastPathResolution(
             status="resolved",
             answer=ok_answers[0].text,
-            marker=plan.marker,
+            marker=_resolved_marker(ok_answers),
             answers=answers_t,
             total_cost_usd=total_cost,
             session_log_line=_session_log_line(
@@ -570,3 +612,103 @@ def render_low_impact_stats(stats: LowImpactStats) -> str:
         lines.append(f"- members: {parts}")
     lines.append(f"- total cost: ${stats.total_cost_usd:.4f}")
     return "\n".join(lines) + "\n"
+
+
+# --- step-9 P5: fuzzy corpus match with safety vetoes -------------------
+
+def classify_impact_with_corpus_fuzzy(
+    question_text: str,
+    corpus_paths: "tuple[object, ...] | None" = None,
+    *,
+    threshold: float = 0.92,
+):
+    """Fuzzy variant of :func:`necessity.classify_impact_with_corpus`.
+
+    Uses :class:`difflib.SequenceMatcher` to match near-paraphrases of
+    ``Validated`` corpus entries while preserving the Iron Law:
+
+    - **Iron Law (precedence)**: the base verdict from
+      :func:`classify_impact` runs first. If the base class is in
+      ``LOCKED_IMPACT_CLASSES`` (``high_impact`` / ``user_required``),
+      the fuzzy lookup is skipped entirely.
+    - **High-impact-veto**: any whole-word token from
+      :data:`IMPACT_TRIGGERS["high_impact"]` in the (lowered) query
+      short-circuits to the base verdict regardless of similarity.
+      Catches paraphrases that escaped the trigger-bucket vote.
+    - **Anti-example-veto**: if the maximum similarity to any
+      ``Anti-Examples`` phrase is ``>=`` the maximum similarity to any
+      ``Validated`` phrase, the fuzzy match is rejected. Prevents
+      ratio-driven drift onto bullets the corpus has explicitly
+      flagged as user-required.
+
+    Returns the base verdict on every reject path so the caller gets
+    consistent semantics with the exact-match classifier.
+    """
+    import difflib
+    import re as _re
+
+    from scripts.ai_council.low_impact_corpus import (
+        load_anti_example_phrases,
+        load_validated_phrases,
+    )
+    from scripts.ai_council.necessity import (
+        IMPACT_TRIGGERS,
+        ImpactVerdict,
+        LOCKED_IMPACT_CLASSES,
+        classify_impact,
+    )
+
+    base = classify_impact(question_text)
+    if base.impact_class in LOCKED_IMPACT_CLASSES:
+        return base
+    if not corpus_paths or not (0.0 < threshold <= 1.0):
+        return base
+
+    norm_q = _re.sub(r"[^\w\s]", " ", (question_text or "").lower())
+    norm_q = _re.sub(r"\s+", " ", norm_q).strip()
+    if not norm_q:
+        return base
+
+    # High-impact-veto: a paraphrase carrying a security-class trigger
+    # wins the Iron Law regardless of corpus similarity. Whole-word
+    # match against the lowered query, mirroring `_count_matches`.
+    high_triggers = IMPACT_TRIGGERS.get("high_impact", ())
+    lowered_q = (question_text or "").lower()
+    for trig in high_triggers:
+        pattern = r"\b" + _re.escape(trig.lower()) + r"\b"
+        if _re.search(pattern, lowered_q):
+            return base
+
+    validated: list[str] = []
+    anti: list[str] = []
+    for path in corpus_paths:
+        validated.extend(load_validated_phrases(path))
+        anti.extend(load_anti_example_phrases(path))
+
+    if not validated:
+        return base
+
+    def _ratio(a: str, b: str) -> float:
+        return difflib.SequenceMatcher(a=a, b=b).ratio()
+
+    best_validated = max((_ratio(norm_q, p) for p in validated), default=0.0)
+    if best_validated < threshold:
+        return base
+
+    best_anti = max((_ratio(norm_q, p) for p in anti), default=0.0)
+    # Anti-example-veto: if the query is at least as close to an
+    # anti-example as to a validated phrase, the corpus has actively
+    # flagged this shape — don't shortcut.
+    if anti and best_anti >= best_validated:
+        return base
+
+    return ImpactVerdict(
+        impact_class="low_impact",
+        confidence=round(min(0.9, best_validated), 4),
+        rationale=(
+            f"Fuzzy match against Validated corpus "
+            f"(ratio={best_validated:.3f} ≥ {threshold:.2f}) — routing "
+            "as `low_impact` (step-9 P5)."
+        ),
+        category="corpus_validated_fuzzy",
+    )

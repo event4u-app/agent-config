@@ -9,7 +9,7 @@ complexity: lightweight
 ## Re-validation gate (READ BEFORE EXECUTING)
 
 > **Before any step in this roadmap runs, re-run the AI Council on the source artefact and compare the verdict against this roadmap:**
-> 1. [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) + [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json) — Council returned "Mixed leaning Reject" on the named-profile variant. This roadmap encodes the **hybrid constrained pivot** (Variant 3 from the host-agent synthesis): consumer-side named files allowed but gitignored, package-side zero real profiles, public-figure-only gate, mandatory disclosure footer, host-agent fetch.
+> 1. [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) + [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json) — Council returned "Mixed leaning Reject" on the named-profile variant. This roadmap encodes the **hybrid constrained pivot** (Variant 3 from the host-agent synthesis): consumer-side named files allowed but gitignored, package-side zero real profiles, public-figure-only gate, mandatory disclosure footer, host-agent fetch. <!-- council-ref-allowed: re-validation-gate decision trace -->
 > 2. Inherited floors that must still hold: determinism (no package network code, per [`2026-05-14-agent-user-external-sources`](../council-sessions/2026-05-14-agent-user-external-sources/) REJECT) and privacy (no third-party PII beyond the public-figure carve-out documented here, per [`2026-05-14-agent-user-persona`](../council-sessions/2026-05-14-agent-user-persona/)).
 >
 > The codebase may have changed since drafting (new commands, schema migrations, new personas, persona-roadmap progress). Pass criterion: every Phase-1 design decision still maps to a "ship" or "minor-edit" verdict under the hybrid constraints. Fail criterion: any blocker resurfaces that the hybrid does not already address — escalate to the user.
@@ -17,7 +17,7 @@ complexity: lightweight
 ## Prerequisites
 
 - [ ] Re-validation gate (above) passes
-- [ ] Read [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json)
+- [ ] Read [`agents/council-sessions/2026-05-14-ghostwriter/prompt.md`](../council-sessions/2026-05-14-ghostwriter/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-ghostwriter/responses.json) <!-- council-ref-allowed: re-validation-gate decision trace -->
 - [ ] Read `.agent-src.uncompressed/commands/AGENTS.md` (cluster contract) and `.agent-src.uncompressed/personas/README.md` (confirm review-lens personas stay separate)
 - [ ] Read [`step-3-agent-user-persona.md`](step-3-agent-user-persona.md) — `.agent-user.md` is the style source for `/post-as:me` and must exist before Phase 3 Step 3 lands
 - [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))

@@ -11,7 +11,8 @@ keep-beta-until: 2026-08-12
 > points across the 2.x cycle. External readers landing on `main`
 > consistently saw stale README counts and missing skill catalogues
 > relative to the npm/Packagist artefact.
-> **Closes:** [Road to Productization](../../agents/roadmaps/road-to-productization.md) § P1.2.
+> **Closes:** the `road-to-productization` roadmap § P1.2 (under
+> `agents/roadmaps/`).
 
 ## Decision
 
@@ -100,5 +101,5 @@ not orphan the convention.
 - [`.github/workflows/release-guard.yml`](../../.github/workflows/release-guard.yml)
   — tag/version-file integrity gate (orthogonal: this contract handles
   trunk position, release-guard handles version-string integrity).
-- [`agents/roadmaps/road-to-productization.md`](../../agents/roadmaps/road-to-productization.md)
-  § Phase 1.
+- The `road-to-productization` roadmap § Phase 1 (under
+  `agents/roadmaps/`).

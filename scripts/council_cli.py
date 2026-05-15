@@ -26,6 +26,40 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
 AI_COUNCIL_FILE = REPO_ROOT / "agents" / ".ai-council.yml"
 
+# Canonical output dirs per ai-council § "Output path convention".
+# Enforced at write-time by `_validate_council_output_path` so shell-side
+# `>` redirects and forgetful agents can't strand artefacts at agents/ root.
+COUNCIL_CANONICAL_DIRS: dict[str, str] = {
+    "responses": "agents/council-responses",
+    "sessions":  "agents/council-sessions",
+    "questions": "agents/council-questions",
+}
+
+
+def _validate_council_output_path(
+    path_str: str, *, kind: str, subcommand: str,
+) -> Path:
+    """Reject non-canonical --output paths at write-time.
+
+    `kind` selects the expected canonical dir (`responses`, `sessions`,
+    `questions`). Raises `argparse.ArgumentTypeError` on violation so
+    `main()` surfaces a clean ❌ message and returns 2.
+    """
+    expected_rel = COUNCIL_CANONICAL_DIRS[kind]
+    expected_abs = (REPO_ROOT / expected_rel).resolve()
+    p = Path(path_str)
+    target = p if p.is_absolute() else (REPO_ROOT / p)
+    target_resolved = target.resolve()
+    try:
+        target_resolved.relative_to(expected_abs)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(
+            f"council:{subcommand} --output must live under "
+            f"{expected_rel}/ (per ai-council § Output path convention); "
+            f"got {path_str!r}."
+        ) from exc
+    return p
+
 sys.path.insert(0, str(REPO_ROOT))
 
 from scripts.ai_council.bundler import (  # noqa: E402
@@ -33,22 +67,28 @@ from scripts.ai_council.bundler import (  # noqa: E402
 )
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
-    AnthropicClient, AnthropicCliClient, CliClientError,
+    AnthropicClient, AnthropicCliClient, CliClient, CliClientError,
     CouncilResponse, ExternalAIClient, GeminiClient, GeminiCliClient,
     ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient,
     PerplexityCliClient, XAIClient, XAICliClient,
-    load_anthropic_key, load_openai_key,
+    load_anthropic_key, load_cli_call_counts, load_openai_key,
+    quota_summary_line, reset_cli_call_counts,
 )
 from scripts.ai_council.advisors import (  # noqa: E402
     AdvisorPlan, build_persona_labels, plan_advisor_swap,
 )
+from scripts.ai_council.cli_hints import format_install_hints  # noqa: E402
 from scripts.ai_council.config import (  # noqa: E402
     AdvisorConfig, CouncilConfig, CouncilConfigError,
     load_council_config, resolve_api_key,
 )
+from scripts.ai_council.solo_dispatch import (  # noqa: E402
+    AuthCache, select_solo_member,
+)
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
+from scripts.ai_council.events_log import append_event  # noqa: E402
 from scripts.ai_council.necessity import (  # noqa: E402
     ClassificationResult, SizeFitVerdict, classify_necessity,
     classify_size_fit, downgrade_message, educate_message,
@@ -167,10 +207,12 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         },
         "cli_call_budget": {
             "max_calls_per_day": dict(cfg.cli_call_budget.max_calls_per_day),
+            "warn_at": cfg.cli_call_budget.warn_at,
         },
         "necessity_classifier": {
             "enabled": cfg.necessity_classifier.enabled,
             "mode": cfg.necessity_classifier.mode,
+            "user_explicit_mode": cfg.necessity_classifier.user_explicit_mode,
         },
         "model_downgrade": {
             "enabled": cfg.model_downgrade.enabled,
@@ -187,6 +229,9 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         "lens_overrides": {
             "necessity_classifier_mode": dict(
                 cfg.lens_overrides.necessity_classifier_mode,
+            ),
+            "necessity_classifier_user_explicit_mode": dict(
+                cfg.lens_overrides.necessity_classifier_user_explicit_mode,
             ),
             "model_downgrade": {
                 lens: {"enabled": md.enabled, "auto_apply": md.auto_apply}
@@ -251,6 +296,7 @@ def build_members(
     global_mode = ai.get("mode")
     cli_budget_cfg = (ai.get("cli_call_budget") or {}) if isinstance(ai, dict) else {}
     cli_caps = (cli_budget_cfg.get("max_calls_per_day") or {}) if isinstance(cli_budget_cfg, dict) else {}
+    cli_warn_at = float(cli_budget_cfg.get("warn_at", 0.8)) if isinstance(cli_budget_cfg, dict) else 0.8
     overrides = model_overrides or {}
     siblings = siblings_overrides or {}
     unknown = set(overrides) - set(members_cfg)
@@ -311,6 +357,7 @@ def build_members(
                         model,
                         binary=cfg.get("binary"),
                         max_calls_per_day=cli_caps.get(name),
+                        warn_at=cli_warn_at,
                     ),
                 )
             except CliClientError as exc:
@@ -502,6 +549,7 @@ def _construct_cli_member(
     *,
     binary: str | None = None,
     max_calls_per_day: int | None = None,
+    warn_at: float = 0.8,
 ) -> ExternalAIClient:
     """Build a cli-mode client for a known provider name.
 
@@ -509,6 +557,9 @@ def _construct_cli_member(
     ``None`` falls through to ``shutil.which(default_binary)``. The
     daily quota is plumbed through to the subclass; ``None`` disables
     the local counter (only stderr-based quota detection remains).
+    ``warn_at`` (step-8 P1) is the fractional threshold flipping the
+    pre-run quota summary to its ``⚠️`` shape; default 0.8 mirrors
+    ``CliCallBudgetConfig``.
     Lets the subclass' ``CliClientError`` propagate so ``build_members``
     can convert it into a structured per-member skip entry without
     crashing the whole council (the original "fail loudly for the
@@ -523,6 +574,7 @@ def _construct_cli_member(
             model=model or default_model,
             binary=binary,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
         )
     raise CouncilDisabledError(
         f"member {name!r} has no cli transport "
@@ -900,6 +952,7 @@ def cmd_estimate(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -908,6 +961,7 @@ def cmd_estimate(
                 advisor_plans, explicit_overrides,
             ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
+            skipped=skipped,
         )
     if table is None:
         table = load_prices()
@@ -924,6 +978,7 @@ def cmd_estimate(
     if getattr(args, "debate", False):
         return _emit_debate_estimate(
             args, ai_cfg, members, billable, estimates, advisor_plans,
+            skipped=skipped,
         )
     extra_calls, extra_usd = _consensus_cost_delta(
         ai_cfg, question.mode, estimates, len(billable),
@@ -938,6 +993,8 @@ def cmd_estimate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -957,6 +1014,8 @@ def _emit_debate_estimate(
     billable: list[ExternalAIClient],
     estimates: list[Any],
     advisor_plans: Any,
+    *,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> int:
     """Render the round-by-round debate cost projection.
 
@@ -991,6 +1050,8 @@ def _emit_debate_estimate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     for round_idx in range(1, rounds + 1):
         sys.stdout.write(f"\nRound {round_idx} of {rounds}:\n")
         sys.stdout.write(format_estimate_table(billable, estimates) + "\n")
@@ -1070,27 +1131,65 @@ def _deserialise_consensus(data: dict[str, Any] | None) -> ConsensusResult | Non
     )
 
 
-def _resolve_necessity_mode(ai_cfg: dict[str, Any], lens: str) -> tuple[bool, str]:
+def _resolve_necessity_mode(
+    ai_cfg: dict[str, Any],
+    lens: str,
+    invocation: str = "agent",
+) -> tuple[bool, str]:
     """Return ``(enabled, effective_mode)`` for the necessity classifier.
 
-    Per-lens override at ``lenses.<lens>.necessity_classifier.mode`` wins
-    over the global ``necessity_classifier.mode``. Reads the synthesized
-    dict shape produced by :func:`_synthesize_ai_council_block`, so both
-    typed-config and legacy-settings paths are honoured.
+    Two-tier resolution (step-8 D2):
+
+    - ``invocation="agent"`` → reads ``necessity_classifier.mode`` with
+      per-lens override at ``lenses.<lens>.necessity_classifier.mode``
+      (default ``educate``).
+    - ``invocation="user_explicit"`` → reads
+      ``necessity_classifier.user_explicit_mode`` with per-lens override
+      at ``lenses.<lens>.necessity_classifier.user_explicit_mode``
+      (default ``warn-only``).
+
+    Reads the synthesized dict shape produced by
+    :func:`_synthesize_ai_council_block`, so both typed-config and
+    legacy-settings paths are honoured.
     """
     nc_block = ai_cfg.get("necessity_classifier") or {}
     enabled = bool(nc_block.get("enabled", True))
-    global_mode = str(nc_block.get("mode", "educate"))
-    overrides = (
-        (ai_cfg.get("lens_overrides") or {}).get("necessity_classifier_mode")
-        or {}
-    )
+    lens_overrides = ai_cfg.get("lens_overrides") or {}
+    if invocation == "user_explicit":
+        global_mode = str(nc_block.get("user_explicit_mode", "warn-only"))
+        overrides = (
+            lens_overrides.get("necessity_classifier_user_explicit_mode") or {}
+        )
+    else:
+        global_mode = str(nc_block.get("mode", "educate"))
+        overrides = lens_overrides.get("necessity_classifier_mode") or {}
     return enabled, str(overrides.get(lens, global_mode))
+
+
+def _provider_caps_snapshot(ai_cfg: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Return ``{provider: {mode, model}}`` for enabled members.
+
+    Step-8 D3 events-log snapshot. Captures only public capability
+    metadata (no API keys, no prompt content) so the log line stays
+    within the privacy floor. Disabled members are excluded.
+    """
+    members = ai_cfg.get("members") or {}
+    snapshot: dict[str, dict[str, str]] = {}
+    if not isinstance(members, dict):
+        return snapshot
+    for name, cfg in members.items():
+        if not isinstance(cfg, dict) or not cfg.get("enabled", True):
+            continue
+        snapshot[str(name)] = {
+            "mode": str(cfg.get("mode", "")),
+            "model": str(cfg.get("model", "")),
+        }
+    return snapshot
 
 
 def _necessity_gate(
     *, prompt: str, lens: str, invocation: str, proceed_anyway: bool,
-    ai_cfg: dict[str, Any], stdout=None,
+    ai_cfg: dict[str, Any], stdout=None, original_ask: str = "",
 ) -> tuple[bool, int, ClassificationResult | None]:
     """Apply the Phase-6 necessity classifier before any member fires.
 
@@ -1099,20 +1198,49 @@ def _necessity_gate(
     return ``exit_code`` immediately. ``result`` carries the verdict for
     session.md provenance on the proceed path (None when classifier is
     disabled / off).
+
+    Step-8 D3: every non-disabled branch emits one
+    :func:`append_event` line. ``original_ask`` is forwarded to the
+    events log so the sha256[:12] hash anchors the line to the
+    user-side question without leaking content. When the caller does
+    not have an ``original_ask`` value, the prompt itself is hashed
+    (legacy CLIs route through this path).
     """
     out = stdout if stdout is not None else sys.stdout
-    enabled, mode = _resolve_necessity_mode(ai_cfg, lens)
+    enabled, mode = _resolve_necessity_mode(ai_cfg, lens, invocation=invocation)
     if not enabled or mode == "off":
         return True, 0, None
     result = classify_necessity(prompt, lens=lens, invocation=invocation)
+    caps = _provider_caps_snapshot(ai_cfg)
+    hashed = original_ask or prompt
+
+    def _emit(action: str) -> None:
+        append_event({
+            "lens": lens, "invocation": invocation,
+            "action": action, "verdict": result.verdict,
+            "category": result.category,
+            "mode": mode, "provider_caps": caps,
+            "original_ask": hashed,
+        })
+
     if result.verdict != "unnecessary":
         if result.verdict == "borderline":
             out.write(
                 f"council:necessity · borderline ({result.category}) · "
                 f"{result.rationale}\n"
             )
+        _emit("proceed")
         return True, 0, result
     # verdict == "unnecessary"
+    if mode == "warn-only":
+        # Annotated but never skips (step-8 D2). Applies to both
+        # invocation tiers when the mode resolves to warn-only.
+        out.write(
+            f"council:necessity · warn-only ({result.category}) · "
+            f"{result.rationale}\n"
+        )
+        _emit("proceed")
+        return True, 0, result
     if mode == "block":
         out.write(
             f"council:necessity · skipped ({result.category}) · "
@@ -1120,6 +1248,7 @@ def _necessity_gate(
             f"council:necessity · mode=block — `--proceed-anyway` has "
             f"no effect on the block path.\n"
         )
+        _emit("skip_necessity")
         return False, 0, result
     # mode == "educate"
     if invocation == "agent":
@@ -1127,6 +1256,7 @@ def _necessity_gate(
             f"council:necessity · skipped (agent, {result.category}) · "
             f"{result.rationale}\n"
         )
+        _emit("skip_necessity")
         return False, 0, result
     # invocation == "user_explicit"
     if proceed_anyway:
@@ -1135,8 +1265,10 @@ def _necessity_gate(
             f"--proceed-anyway, {result.category}) · "
             f"{result.rationale}\n"
         )
+        _emit("proceed")
         return True, 0, result
     out.write(educate_message(result, lens) + "\n")
+    _emit("skip_necessity")
     return False, 2, result
 
 
@@ -1289,6 +1421,84 @@ def _debate_refusal_cap(
     return float(debate_block.get("max_cost_usd", 5.00) or 0.0)
 
 
+def _emit_shadow_slo_banner() -> None:
+    """Pre-flight SLO banner for solo-dispatch invocations (step-9 P10).
+
+    Reads ``agents/council-shadow-log.jsonl`` and prints the 7-day rolling
+    disagreement rate. ``OK``, ``WARN``, ``BREACH`` are all surfaced so the
+    user can see when single-member quality is drifting. Never auto-flips
+    back to full council \u2014 visibility-first, action-second (D10).
+    """
+    try:
+        from scripts.ai_council import shadow_dispatch as _sd
+        rate, n = _sd.compute_disagreement_rate(_sd.SHADOW_LOG_PATH)
+        if n == 0:
+            return
+        sys.stdout.write(_sd.slo_banner(rate, n) + "\n")
+    except Exception:  # noqa: BLE001 \u2014 banner must never break dispatch.
+        return
+
+
+def _apply_solo_dispatch(
+    members: list[ExternalAIClient],
+) -> tuple[list[ExternalAIClient], str | None]:
+    """Filter ``members`` to a single solo-dispatch pick (step-9 P9).
+
+    Loads the routing chain from ``agents/.ai-council.yml`` and asks
+    :func:`select_solo_member` for the first chain entry whose member
+    is runtime-present. The probe is conservative: a member counts as
+    auth-valid iff ``build_members`` returned a runtime client for it
+    \u2014 build_members has already filtered out missing binaries / bad
+    keys via the ``skipped`` list. Deep CLI auth probes (e.g.
+    ``claude auth status``) are reserved for the shadow-mode path.
+
+    Returns ``(filtered_members, marker)``. ``marker`` is a one-line
+    info banner the caller prints to stdout (``None`` when no banner
+    is needed, e.g. config missing). Returns the unfiltered list when
+    no solo member can be picked \u2014 caller never fails the decision.
+    """
+    try:
+        cfg = load_council_config(AI_COUNCIL_FILE)
+    except (CouncilConfigError, FileNotFoundError):
+        return members, None
+    if not cfg.routing.solo_member_fallback_chain:
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 --single requested but "
+            "routing.solo_member_fallback_chain is empty \u2014 "
+            "escalating to full council.",
+        )
+    runtime_names = {getattr(m, "name", "") for m in members}
+    pick = select_solo_member(
+        cfg.routing,
+        cfg.members,
+        auth_cache=AuthCache(),
+        probe=lambda name, _t: name in runtime_names,
+    )
+    if pick is None:
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 solo dispatch unavailable "
+            "(no chain member runtime-present) \u2014 escalating to "
+            "full council.",
+        )
+    filtered = [m for m in members if getattr(m, "name", "") == pick]
+    if not filtered:
+        # Defensive: ``pick`` came from runtime_names so this should
+        # be unreachable. If we ever get here, escalate rather than
+        # ship an empty council.
+        return (
+            members,
+            "council:solo \u00b7 WARN \u00b7 selected member vanished "
+            "between probe and filter \u2014 escalating to full council.",
+        )
+    return (
+        filtered,
+        f"council:solo \u00b7 dispatching to {pick} only "
+        f"(routing.solo_member_fallback_chain).",
+    )
+
+
 def cmd_run(
     args: argparse.Namespace,
     *,
@@ -1302,6 +1512,7 @@ def cmd_run(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -1310,7 +1521,13 @@ def cmd_run(
                 advisor_plans, explicit_overrides,
             ),
             siblings_overrides=_parse_siblings_overrides(getattr(args, "siblings", None)),
+            skipped=skipped,
         )
+    if getattr(args, "single", False):
+        members, solo_banner = _apply_solo_dispatch(members)
+        if solo_banner:
+            sys.stdout.write(solo_banner + "\n")
+        _emit_shadow_slo_banner()
     if table is None:
         table = load_prices()
     question, artefact = build_question(
@@ -1324,6 +1541,7 @@ def cmd_run(
         invocation=getattr(args, "invocation", "agent"),
         proceed_anyway=getattr(args, "proceed_anyway", False),
         ai_cfg=ai_cfg,
+        original_ask=getattr(args, "original_ask", "") or "",
     )
     if not proceed:
         return gate_exit
@@ -1351,6 +1569,8 @@ def cmd_run(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(
             billable, estimates,
@@ -1360,6 +1580,18 @@ def cmd_run(
             peer_review_extra_calls=pr_extra_calls,
         ) + "\n"
     )
+
+    # Step-8 P1 — pre-run quota summary. After estimate / before
+    # dispatch so the user sees the budget shape before --confirm.
+    # Uncapped providers are omitted by ``quota_summary_line``; when
+    # no CLI member has a configured cap the summary is empty and we
+    # write nothing.
+    cli_members = [m for m in members if isinstance(m, CliClient)]
+    summary, warn_providers = quota_summary_line(cli_members)
+    if summary:
+        sys.stdout.write(summary + "\n")
+        for prov in warn_providers:
+            sys.stdout.write(f"council:quota · WARN · {prov} near limit\n")
 
     # Phase 8 step 5 — opt-in cost disclosure for non-debate lenses.
     # Default mode is "off" for analysis / default (cheap enough that
@@ -1449,7 +1681,9 @@ def cmd_run(
         payload["peer_review"] = _serialise_peer_review(peer_review)
     if consensus is not None:
         payload["consensus"] = _serialise_consensus(consensus)
-    out_path = Path(args.output)
+    out_path = _validate_council_output_path(
+        args.output, kind="responses", subcommand="run",
+    )
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
     sys.stdout.write(
@@ -1599,6 +1833,7 @@ def cmd_debate(
     ai_cfg = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     advisor_plans = _build_advisor_plans(ai_cfg, REPO_ROOT)
     explicit_overrides = _parse_model_overrides(getattr(args, "model", None))
+    skipped: list[dict[str, Any]] = []
     if members is None:
         members = build_members(
             settings,
@@ -1609,6 +1844,7 @@ def cmd_debate(
             siblings_overrides=_parse_siblings_overrides(
                 getattr(args, "siblings", None),
             ),
+            skipped=skipped,
         )
     if table is None:
         table = load_prices()
@@ -1623,6 +1859,7 @@ def cmd_debate(
         invocation=getattr(args, "invocation", "agent"),
         proceed_anyway=getattr(args, "proceed_anyway", False),
         ai_cfg=ai_cfg,
+        original_ask=getattr(args, "original_ask", "") or "",
     )
     if not proceed:
         return gate_exit
@@ -1666,6 +1903,8 @@ def cmd_debate(
     advisor_summary = _format_advisor_summary(advisor_plans, billable)
     if advisor_summary:
         sys.stdout.write(advisor_summary + "\n")
+    if skipped:
+        sys.stdout.write(format_install_hints(skipped) + "\n")
     sys.stdout.write(
         format_estimate_table(billable, estimates) + "\n"
     )
@@ -1722,7 +1961,9 @@ def cmd_debate(
         max_total_usd=float(cost_cfg.get("max_total_usd", 0.0) or 0.0),
     )
 
-    out_dir = Path(args.output)
+    out_dir = _validate_council_output_path(
+        args.output, kind="responses", subcommand="debate",
+    )
     seed: list[CouncilResponse] | None = None
     if getattr(args, "continue_as_debate", None):
         seed = _load_debate_seed(Path(args.continue_as_debate), billable)
@@ -1796,7 +2037,8 @@ def cmd_render(args: argparse.Namespace) -> int:
     Lens resolution order: explicit ``--prompt-mode`` > ``prompt_mode``
     in the payload > ``mode`` in the payload > ``None`` (default decision
     template). R4 Q4 escape hatch ``--prose-synthesis`` overrides the
-    table.
+    table. ``--output`` writes to ``agents/council-sessions/`` (enforced);
+    omit it for stdout.
     """
     payload = json.loads(Path(args.responses).read_text(encoding="utf-8"))
     items = payload.get("responses") or []
@@ -1807,16 +2049,22 @@ def cmd_render(args: argparse.Namespace) -> int:
         prose = payload.get("prose_synthesis")
     consensus = _deserialise_consensus(payload.get("consensus"))
     peer_review = _deserialise_peer_review(payload.get("peer_review"))
-    sys.stdout.write(
-        render(
-            _deserialise_responses(items),
-            mode=mode,
-            prose_synthesis=prose,
-            consensus=consensus,
-            peer_review=peer_review,
-        )
-        + "\n"
+    body = render(
+        _deserialise_responses(items),
+        mode=mode,
+        prose_synthesis=prose,
+        consensus=consensus,
+        peer_review=peer_review,
     )
+    if getattr(args, "output", None):
+        out_path = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="render",
+        )
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(body + "\n", encoding="utf-8")
+        sys.stdout.write(f"council:render · wrote {out_path}\n")
+        return 0
+    sys.stdout.write(body + "\n")
     return 0
 
 
@@ -1844,7 +2092,9 @@ def _cmd_replay_low_impact_stats(args: argparse.Namespace) -> int:
     stats = parse_low_impact_log(body)
     out = render_low_impact_stats(stats)
     if getattr(args, "output", None):
-        target = Path(args.output)
+        target = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="replay",
+        )
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(out, encoding="utf-8")
         sys.stdout.write(f"council:replay · wrote {target}\n")
@@ -1892,7 +2142,9 @@ def cmd_replay(args: argparse.Namespace) -> int:
         ),
     )
     if getattr(args, "output", None):
-        out_path = Path(args.output)
+        out_path = _validate_council_output_path(
+            args.output, kind="sessions", subcommand="replay",
+        )
         out_path.parent.mkdir(parents=True, exist_ok=True)
         out_path.write_text(body, encoding="utf-8")
         sys.stdout.write(f"council:replay · wrote {out_path}\n")
@@ -2009,6 +2261,81 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "enabled: true in agents/.ai-council.yml.")
 
 
+def cmd_shadow_report(args: argparse.Namespace) -> int:
+    """Print the 7-day rolling disagreement rate + SLO status (step-9 P10)."""
+    from pathlib import Path as _Path
+
+    from scripts.ai_council import shadow_dispatch as _sd
+
+    log_path = _Path(args.log) if args.log else _sd.SHADOW_LOG_PATH
+    rate, n = _sd.compute_disagreement_rate(
+        log_path, window_days=int(args.window_days)
+    )
+    print(_sd.slo_banner(rate, n))
+    return 0
+
+
+def cmd_quota(
+    args: argparse.Namespace,
+    *,
+    settings: dict[str, Any] | None = None,
+) -> int:
+    """Dump today's CLI-quota state (step-8 P1, D1).
+
+    Reads ``~/.event4u/agent-config/cli-calls.json`` plus the configured
+    caps from ``.agent-settings.yml`` and prints one line per provider
+    that has a configured ``max_calls_per_day``. ``--reset <provider>``
+    (gated behind ``--confirm``) clears the counter for that provider.
+    """
+    s = settings if settings is not None else load_settings()
+    ai_cfg = (s.get("ai_council") or {}) if isinstance(s, dict) else {}
+    cli_budget_cfg = (
+        (ai_cfg.get("cli_call_budget") or {}) if isinstance(ai_cfg, dict) else {}
+    )
+    caps = (
+        (cli_budget_cfg.get("max_calls_per_day") or {})
+        if isinstance(cli_budget_cfg, dict)
+        else {}
+    )
+    warn_at = (
+        float(cli_budget_cfg.get("warn_at", 0.8))
+        if isinstance(cli_budget_cfg, dict)
+        else 0.8
+    )
+
+    if getattr(args, "reset", None):
+        provider = args.reset
+        if not getattr(args, "confirm", False):
+            sys.stderr.write(
+                f"❌  council:quota: --reset {provider} requires --confirm.\n"
+            )
+            return 2
+        reset_cli_call_counts(provider=provider)
+        sys.stdout.write(f"council:quota · reset · {provider}\n")
+        return 0
+
+    counts = load_cli_call_counts()
+    if not caps:
+        sys.stdout.write(
+            "council:quota · no providers have a configured "
+            "cli_call_budget.max_calls_per_day cap.\n"
+        )
+        return 0
+    for provider in sorted(caps):
+        limit = int(caps[provider])
+        used = int(counts.get(provider, 0))
+        ratio = used / limit if limit > 0 else 0.0
+        status = "ok"
+        if used >= limit:
+            status = "exhausted"
+        elif ratio >= warn_at:
+            status = "warn"
+        sys.stdout.write(
+            f"council:quota · {provider} · {used}/{limit} · {status}\n"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-config council",
@@ -2058,6 +2385,13 @@ def build_parser() -> argparse.ArgumentParser:
                             "verdict for this invocation (Phase 6). Has no "
                             "effect when the classifier verdict is "
                             "`necessary` or `borderline`.")
+    p_run.add_argument("--single", action="store_true", default=False,
+                       help="Dispatch to a single member from "
+                            "routing.solo_member_fallback_chain (step-9 P9). "
+                            "Falls back to the full council when the chain is "
+                            "empty or no chain member is runtime-present. "
+                            "Overridden by env "
+                            "AGENT_CONFIG_FORCE_FULL_COUNCIL=1.")
     _add_prose_synthesis_arg(p_run)
 
     p_deb = sub.add_parser(
@@ -2105,6 +2439,11 @@ def build_parser() -> argparse.ArgumentParser:
                        default=None, dest="prompt_mode",
                        help="Override the synthesis-template lens. Defaults "
                             "to the `mode` recorded in the responses JSON.")
+    p_ren.add_argument("--output", default=None,
+                       help="Write the rendered markdown to a file under "
+                            "agents/council-sessions/ (enforced). Omit for "
+                            "stdout. Prefer this over shell redirects so "
+                            "the canonical-path check fires at write-time.")
     _add_prose_synthesis_arg(p_ren)
 
     p_rep = sub.add_parser(
@@ -2131,6 +2470,27 @@ def build_parser() -> argparse.ArgumentParser:
                             "low-impact fast-path resolutions for the session "
                             "(parses `low-impact-resolutions.md` alongside the "
                             "responses JSON).")
+
+    p_quo = sub.add_parser(
+        "quota",
+        help="Dump today's CLI-quota state and configured caps (step-8 P1).",
+    )
+    p_quo.add_argument("--reset", default=None, metavar="PROVIDER",
+                       help="Reset today's counter for one provider. "
+                            "Requires --confirm.")
+    p_quo.add_argument("--confirm", action="store_true", default=False,
+                       help="Confirm a mutating --reset operation.")
+
+    p_sha = sub.add_parser(
+        "shadow-report",
+        help="Read agents/council-shadow-log.jsonl and print the 7-day "
+             "rolling disagreement rate + SLO status (step-9 P10).",
+    )
+    p_sha.add_argument("--log", default=None,
+                       help="Path to the shadow log (default: "
+                            "agents/council-shadow-log.jsonl).")
+    p_sha.add_argument("--window-days", type=int, default=7,
+                       help="Rolling window in days (default: 7).")
 
     return parser
 
@@ -2162,6 +2522,10 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_render(args)
         if args.cmd == "replay":
             return cmd_replay(args)
+        if args.cmd == "quota":
+            return cmd_quota(args)
+        if args.cmd == "shadow-report":
+            return cmd_shadow_report(args)
     except CouncilDisabledError as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2

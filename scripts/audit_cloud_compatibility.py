@@ -207,6 +207,70 @@ def scan() -> list[dict]:
     return rows
 
 
+# step-9 P11 · U3 — Iron-Law bypass scan. Any Python module that loads
+# `agents/.ai-council.yml` directly (yaml.safe_load / open + parse) instead
+# of going through `scripts.ai_council.config.load_council_config` skips the
+# `_reject_top_level_locked_dispatch` gate and is a potential Iron-Law
+# bypass. The scan is intentionally over-broad — false positives are
+# annotated with `# iron-law-ok: …` on the offending line.
+_IRON_LAW_YAML_LOAD_RE = re.compile(
+    r"yaml\.(?:safe_load|load|full_load|unsafe_load)\s*\(",
+)
+_IRON_LAW_AI_COUNCIL_REF_RE = re.compile(
+    r"['\"]\.ai-council\.yml['\"]|ai-council\.yml",
+)
+_IRON_LAW_ALLOWLIST = (
+    # the canonical loader itself
+    "scripts/ai_council/config.py",
+    # tests are allowed to construct synthetic configs directly
+    "tests/",
+    # this audit script's own pattern definitions
+    "scripts/audit_cloud_compatibility.py",
+)
+
+
+def _iron_law_bypass_scan() -> list[dict]:
+    """Scan ``scripts/`` for code that bypasses the Iron-Law validator.
+
+    A bypass is any module that calls a raw YAML loader on a value
+    associated with ``.ai-council.yml`` outside the canonical loader
+    in ``scripts/ai_council/config.py``. Proximity heuristic: the YAML
+    load line, or the 3 lines preceding it, must reference
+    ``ai-council.yml``. Annotate intentional cases with
+    ``# iron-law-ok: <reason>`` on the load line to suppress.
+    """
+    findings: list[dict] = []
+    scripts_dir = ROOT / "scripts"
+    if not scripts_dir.is_dir():
+        return findings
+    for py in sorted(scripts_dir.rglob("*.py")):
+        rel = py.relative_to(ROOT).as_posix()
+        if any(rel.startswith(p) for p in _IRON_LAW_ALLOWLIST):
+            continue
+        try:
+            text = py.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        lines = text.splitlines()
+        offending: list[int] = []
+        for i, line in enumerate(lines, start=1):
+            if not _IRON_LAW_YAML_LOAD_RE.search(line):
+                continue
+            if "iron-law-ok" in line:
+                continue
+            window = "\n".join(lines[max(0, i - 4):i])
+            if _IRON_LAW_AI_COUNCIL_REF_RE.search(window):
+                offending.append(i)
+        if offending:
+            findings.append({
+                "path": rel,
+                "lines": offending,
+                "reason": "raw YAML load on ai-council.yml — bypasses "
+                          "_reject_top_level_locked_dispatch",
+            })
+    return findings
+
+
 def summarize(rows: list[dict]) -> dict:
     by_tier = Counter(r["tier"] for r in rows)
     by_kind_tier: dict[str, Counter] = {}
@@ -251,7 +315,17 @@ def main(argv: list[str] | None = None) -> int:
         help="filter --details to one cloud-action category",
     )
     p.add_argument("--format", choices=["json", "md"], default="json")
+    p.add_argument(
+        "--iron-law",
+        action="store_true",
+        help="scan scripts/ for Iron-Law validator bypasses (step-9 P11 · U3)",
+    )
     args = p.parse_args(argv)
+
+    if args.iron_law:
+        findings = _iron_law_bypass_scan()
+        print(json.dumps({"iron_law_bypass_findings": findings}, indent=2))
+        return 1 if findings else 0
 
     rows = scan()
     summary = summarize(rows)

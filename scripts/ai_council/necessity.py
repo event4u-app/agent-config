@@ -632,37 +632,16 @@ def classify_impact(question_text: str) -> ImpactVerdict:
 def load_validated_phrases(corpus_path: "object") -> tuple[str, ...]:
     """Return normalised `## Validated` question strings from a corpus.
 
-    Reads ``agents/low-impact-decisions.md`` (or the upstream seed) and
-    extracts every bullet under ``## Validated`` as a lowercase,
-    punctuation-stripped, whitespace-collapsed phrase. Probation /
-    anti-example sections are skipped — only Validated entries
-    influence routing (Phase 12 contract).
+    Thin re-export of :func:`scripts.ai_council.low_impact_corpus.load_validated_phrases`
+    — the hardened parser (step-9 P4) lives there; routing stays lenient
+    so a broken corpus never blocks classification. Strict-mode
+    contract validation lives in
+    :func:`scripts.ai_council.low_impact_corpus.parse_corpus_strict`.
     """
-    from pathlib import Path
-    p = Path(str(corpus_path))
-    if not p.exists():
-        return ()
-    text = p.read_text(encoding="utf-8")
-    i = text.find("## Validated")
-    if i < 0:
-        return ()
-    body_start = text.find("\n", i) + 1
-    end = len(text)
-    for other in ("## Anti-Examples", "## Security", "## Provenance",
-                  "## On Probation"):
-        j = text.find("\n" + other, body_start)
-        if 0 <= j < end:
-            end = j
-    body = text[body_start:end]
-    out: list[str] = []
-    for line in body.splitlines():
-        m = re.match(r'^\s*-\s*"([^"]+)"', line)
-        if m:
-            norm = re.sub(r"[^\w\s]", " ", m.group(1).lower())
-            norm = re.sub(r"\s+", " ", norm).strip()
-            if norm:
-                out.append(norm)
-    return tuple(out)
+    from scripts.ai_council.low_impact_corpus import (
+        load_validated_phrases as _load,
+    )
+    return _load(corpus_path)
 
 
 def classify_impact_with_corpus(

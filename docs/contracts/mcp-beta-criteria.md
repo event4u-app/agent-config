@@ -7,8 +7,8 @@ mcp_scope: lite
 
 > **Status:** Active · governs the `experimental → beta` promotion for
 > the MCP surface (`scripts/mcp_server/` local stdio kernel + the
-> hosted `workers/mcp/` bridge). Owned by Phase 3 of
-> [`road-to-surface-discipline.md`](../../agents/roadmaps/road-to-surface-discipline.md).
+> hosted `workers/mcp/` bridge). Owned by Phase 3 of the
+> `road-to-surface-discipline` roadmap (see `agents/roadmaps/`).
 > Companion contract:
 > [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) (local) ·
 > [`mcp-cloud-scope.md`](mcp-cloud-scope.md) (hosted).
@@ -91,8 +91,9 @@ ping. Evidence: the workflow file (`.github/workflows/mcp-no-drift.yml`)
 1. Open a release-candidate branch named `release/mcp-beta-rcN`.
 2. Run `./agent-config doctor --check mcp-beta-readiness` — must
    print all six gates green.
-3. Flip the wording in the **five** surfaces inventoried in
-   [`road-to-surface-discipline.md` Phase 3 Step 1](../../agents/roadmaps/road-to-surface-discipline.md):
+3. Flip the wording in the **five** surfaces inventoried in the
+   `road-to-surface-discipline` roadmap (Phase 3 Step 1, under
+   `agents/roadmaps/`):
    `docs/mcp-server.md` (status banner + Remote-MCP sub-claim),
    `README.md` (pointer line), `scripts/mcp_server/server.py`
    (initialize-result `serverInfo.name`),
@@ -125,5 +126,5 @@ delta for Phase 3: ≤ 0.
 - [`STABILITY.md`](STABILITY.md) — stability tier definitions
   (`experimental` / `beta` / `stable`) and what wording each tier may
   use in user-visible surfaces.
-- [`road-to-surface-discipline.md`](../../agents/roadmaps/road-to-surface-discipline.md)
+- The `road-to-surface-discipline` roadmap (under `agents/roadmaps/`)
   — Phase 3 acceptance criteria and step-level evidence pointers.

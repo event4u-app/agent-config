@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **457 artefacts** in this package.
+Maintainer-facing index of all **458 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -222,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (66)
+## Rules (67)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -243,22 +243,23 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`commit-conventions`](../.agent-src.uncompressed/rules/commit-conventions.md) | auto | Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests |
 | rule | [`commit-policy`](../.agent-src.uncompressed/rules/commit-policy.md) | always | Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked |
 | rule | [`context-hygiene`](../.agent-src.uncompressed/rules/context-hygiene.md) | auto | When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers |
-| rule | [`copilot-routing`](../.agent-src.uncompressed/rules/copilot-routing.md) | auto | When configuring the GitHub Copilot AI assistant — copilot-instructions.md, PR-review comment patterns, suggestion behavior — route to the copilot-config skill |
-| rule | [`devcontainer-routing`](../.agent-src.uncompressed/rules/devcontainer-routing.md) | auto | When wiring DevContainers or GitHub Codespaces — devcontainer.json, container images, VS Code features, port forwarding — route to the devcontainer skill |
+| rule | [`copilot-routing`](../.agent-src.uncompressed/rules/copilot-routing.md) | auto | Configuring GitHub Copilot — copilot-instructions.md, PR-review comment patterns, suggestion behavior — route to the copilot-config skill |
+| rule | [`devcontainer-routing`](../.agent-src.uncompressed/rules/devcontainer-routing.md) | auto | Wiring DevContainers or GitHub Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill |
 | rule | [`direct-answers`](../.agent-src.uncompressed/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../.agent-src.uncompressed/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`docs-sync`](../.agent-src.uncompressed/rules/docs-sync.md) | auto | Keeping .augment/ contexts, counts, cross-references in sync when creating, renaming, or deleting skills, rules, commands, templates, agent infra |
 | rule | [`domain-adoption-policy`](../.agent-src.uncompressed/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
 | rule | [`downstream-changes`](../.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
 | rule | [`e2e-testing`](../.agent-src.uncompressed/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
-| rule | [`external-reference-deep-dive`](../.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | When the user names an external repo, file, URL, or artifact as a reference — fetch the actual tree and inspect, never summarize from README or metadata |
+| rule | [`external-reference-deep-dive`](../.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | User names an external repo, file, URL, or artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
+| rule | [`fast-path-marker-visibility`](../.agent-src.uncompressed/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host agent MUST surface the transparency marker verbatim in the reply opening; never swallow or paraphrase it. |
 | rule | [`guidelines`](../.agent-src.uncompressed/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src.uncompressed/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src.uncompressed/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
 | rule | [`language-and-tone`](../.agent-src.uncompressed/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../.agent-src.uncompressed/rules/laravel-routing.md) | auto | When writing or reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to the laravel skill |
 | rule | [`laravel-translations`](../.agent-src.uncompressed/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
-| rule | [`low-impact-corpus-privacy-floor`](../.agent-src.uncompressed/rules/low-impact-corpus-privacy-floor.md) | auto | Use when writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the low-impact learning corpus. |
+| rule | [`low-impact-corpus-privacy-floor`](../.agent-src.uncompressed/rules/low-impact-corpus-privacy-floor.md) | auto | Writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the learning corpus. |
 | rule | [`markdown-safe-codeblocks`](../.agent-src.uncompressed/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
 | rule | [`minimal-safe-diff`](../.agent-src.uncompressed/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src.uncompressed/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
@@ -283,7 +284,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`skill-improvement-trigger`](../.agent-src.uncompressed/rules/skill-improvement-trigger.md) | auto | After completing a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../.agent-src.uncompressed/rules/skill-quality.md) | auto | Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained |
 | rule | [`slash-command-routing-policy`](../.agent-src.uncompressed/rules/slash-command-routing-policy.md) | auto | When user types a slash command like /create-pr, /commit, or pastes command file content |
-| rule | [`symfony-routing`](../.agent-src.uncompressed/rules/symfony-routing.md) | auto | When writing or reviewing Symfony code — DI container, bundles, Doctrine, Messenger, Security voters, console commands — route to the symfony-workflow skill |
+| rule | [`symfony-routing`](../.agent-src.uncompressed/rules/symfony-routing.md) | auto | Writing or reviewing Symfony code — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to the symfony-workflow skill |
 | rule | [`think-before-action`](../.agent-src.uncompressed/rules/think-before-action.md) | auto | Before coding, modifying, or debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src.uncompressed/rules/token-efficiency.md) | auto | When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |
 | rule | [`token-optimizer-maintenance`](../.agent-src.uncompressed/rules/token-optimizer-maintenance.md) | auto | Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit |
@@ -355,7 +356,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`judge:steps`](../.agent-src.uncompressed/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`judge`](../.agent-src.uncompressed/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`memory:add`](../.agent-src.uncompressed/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
-| command | [`memory:learn-low-impact`](../.agent-src.uncompressed/commands/memory/learn-low-impact.md) | cluster: memory | Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed. |
+| command | [`memory:learn-low-impact`](../.agent-src.uncompressed/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
 | command | [`memory:load`](../.agent-src.uncompressed/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
 | command | [`memory:mine-session`](../.agent-src.uncompressed/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |
 | command | [`memory:promote`](../.agent-src.uncompressed/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |

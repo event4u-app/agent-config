@@ -371,6 +371,16 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
   + gpt-4o, YYYY-MM-DD) reviewed N candidate strategies; converged
   on …`).
 
+### Exempt
+
+- `agents/audit-*/` — historical audit bundles. Canonical council
+  dirs are gitignored; audit bundles are tracked, cohesive narratives
+  that may include council artefacts as part of their evidence trail
+  (e.g. `audit-2026-05-14-north-star/` bundles its triggering
+  question, raw responses, and synthesis alongside the audit's
+  findings). The layout linter (`scripts/check_council_layout.py`)
+  skips these directories.
+
 `scripts/check_council_layout.py` is the mechanical check for the
 output path convention — wire it into the package's CI pipeline so
 violations break the build.
@@ -832,6 +842,11 @@ activates only when:
 2. `decision_resolution.low_impact.mode: council` AND
 3. ≥1 member has `participate_low_impact: true` (default `false` —
    explicit opt-in per member).
+
+Default `low_impact` route = **`agent`** — nothing reaches council
+without explicit two-knob opt-in (flip class → `council` *and* mark
+≥1 member `participate_low_impact: true`). Worked YAML, validation,
+unavailable-marker contract → [`ai-council-config § Low-impact council opt-in`](../../../docs/contracts/ai-council-config.md#low-impact-council-opt-in).
 
 ### Output marker (always surfaced)
 
