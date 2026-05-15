@@ -372,6 +372,83 @@ decision_resolution:
       confidence_threshold: 0.6
 ```
 
+### Low-impact council opt-in
+
+The default route for `low_impact` is `agent` — the host resolves locally
+and the council is not invoked. Sending `low_impact` to the council is
+an **explicit, two-knob opt-in**; missing either knob keeps the question
+on the host:
+
+1. `decision_resolution.classes.low_impact.mode: council` (default
+   `agent`) — flips the class route.
+2. **At least one** enabled member sets `participate_low_impact: true`
+   (default `false`) — names which members run on the fast-path.
+
+When both knobs are set, the lightweight-QA fast-path
+(`ai_council.fast_path`) handles the resolution under hard caps:
+`max_members ∈ {1, 2}`, `max_rounds: 1` (LOCKED — Iron Law of the
+fast-path; the loader rejects any other value), `max_tokens: 2500`
+combined input + output budget, `max_cost_usd: 0.05` per resolution.
+No advisors, no peer-review, no consensus scoring run on this path.
+
+`high_impact` and `user_required` cannot reach the fast-path at all —
+the impact-class Iron Law above takes precedence.
+
+Worked example — opt the Anthropic and OpenAI members in, leave the
+others off, and switch the `low_impact` class to `council`:
+
+```yaml
+ai_council:
+  members:
+    anthropic:
+      enabled: true
+      model: claude-sonnet-4-5
+      api_key_ref: file:anthropic.key
+      participate_low_impact: true   # eligible for fast-path
+    openai:
+      enabled: true
+      model: gpt-4o
+      api_key_ref: file:openai.key
+      participate_low_impact: true   # eligible for fast-path
+    gemini:
+      enabled: false                  # disabled — opt-in ignored even if set
+
+  fast_path:
+    max_members: 2          # 1 or 2 only
+    max_rounds: 1           # LOCKED
+    max_tokens: 2500
+    max_cost_usd: 0.05
+
+decision_resolution:
+  classes:
+    low_impact:
+      mode: council          # ← flip from default `agent`
+      confidence_threshold: 0.6
+```
+
+Validation behaviour:
+
+- `participate_low_impact: true` on a member with `enabled: false`,
+  or with the global council disabled, parses but is treated as
+  `false` with a one-line loader warning — never silently runs.
+- `fast_path.max_rounds != 1` → `CouncilConfigError` at load time.
+- `fast_path.max_members ∉ {1, 2}` → `CouncilConfigError`.
+- `low_impact.mode: council` with zero opted-in enabled members →
+  the resolver falls back to `agent` (or escalates to user when the
+  confidence gate trips), with the marker
+  `> Low-impact council unavailable (no opted-in members) — escalating to user`.
+
+Transparency markers on every fast-path attempt:
+
+- **Resolved** — `> Resolved via low-impact council (<member>): <answer>`
+- **Split** — `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):`
+- **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
+
+The marker is mandatory; the agent never silently substitutes a
+fast-path verdict for its own answer. See
+[`ai-council § Lightweight-QA fast-path`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md#lightweight-qa-fast-path-phase-11)
+for the orchestration contract and session-artefact format.
+
 ## `api_key_ref` forms
 
 Exactly two forms. Raw keys in the yml are a hard validation error.

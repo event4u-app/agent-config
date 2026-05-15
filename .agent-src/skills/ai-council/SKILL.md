@@ -833,6 +833,11 @@ activates only when:
 3. ≥1 member has `participate_low_impact: true` (default `false` —
    explicit opt-in per member).
 
+Default `low_impact` route = **`agent`** — nothing reaches council
+without explicit two-knob opt-in (flip class → `council` *and* mark
+≥1 member `participate_low_impact: true`). Worked YAML, validation,
+unavailable-marker contract → [`ai-council-config § Low-impact council opt-in`](../../../docs/contracts/ai-council-config.md#low-impact-council-opt-in).
+
 ### Output marker (always surfaced)
 
 * **Resolved** — `> Resolved via low-impact council (anthropic): <answer>`

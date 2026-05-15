@@ -862,6 +862,13 @@ fast-path only activates when:
 3. At least one member has `participate_low_impact: true` (default
    `false` — explicit opt-in per member).
 
+Default route for `low_impact` is **`agent`** — nothing reaches the
+council without an explicit two-knob opt-in (flip the class to
+`council` *and* mark at least one member `participate_low_impact: true`).
+See [`ai-council-config § Low-impact council opt-in`](../../../docs/contracts/ai-council-config.md#low-impact-council-opt-in)
+for the worked YAML example, validation behaviour, and unavailable-marker
+contract.
+
 ### Output marker (always surfaced)
 
 * **Resolved** — `> Resolved via low-impact council (anthropic): <one-line answer>`
