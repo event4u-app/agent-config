@@ -315,9 +315,17 @@ class CliCallBudgetConfig:
     Counter state persists under
     ``~/.event4u/agent-config/cli-calls.json`` with daily UTC reset
     (wired in Phase 1).
+
+    ``warn_at`` is the fractional threshold (0.0–1.0) at which the
+    pre-run quota summary in :func:`council_cli.cmd_run` flips its
+    prefix to ``⚠️`` and surfaces a ``council:quota · WARN`` line
+    (step-8 P1). Default ``0.8`` is the standard ops-monitoring 80 %
+    threshold (step-8 D4). Providers without a configured cap are
+    omitted from the summary regardless.
     """
 
     max_calls_per_day: dict[str, int] = field(default_factory=dict)
+    warn_at: float = 0.8
 
 
 @dataclass(frozen=True)
@@ -901,7 +909,18 @@ def _build_cli_call_budget(d: dict[str, Any]) -> CliCallBudgetConfig:
                 f"non-negative integer (got {value!r})."
             )
         caps[provider] = value
-    return CliCallBudgetConfig(max_calls_per_day=caps)
+    warn_at_raw = d.get("warn_at", 0.8)
+    if isinstance(warn_at_raw, bool) or not isinstance(warn_at_raw, (int, float)):
+        raise CouncilConfigError(
+            f"cli_call_budget.warn_at must be a number in [0.0, 1.0] "
+            f"(got {warn_at_raw!r})."
+        )
+    warn_at = float(warn_at_raw)
+    if not 0.0 <= warn_at <= 1.0:
+        raise CouncilConfigError(
+            f"cli_call_budget.warn_at must be in [0.0, 1.0] (got {warn_at})."
+        )
+    return CliCallBudgetConfig(max_calls_per_day=caps, warn_at=warn_at)
 
 
 def _build_advisor(name: str, cfg: dict[str, Any]) -> AdvisorConfig:

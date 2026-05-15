@@ -67,11 +67,12 @@ from scripts.ai_council.bundler import (  # noqa: E402
 )
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
-    AnthropicClient, AnthropicCliClient, CliClientError,
+    AnthropicClient, AnthropicCliClient, CliClient, CliClientError,
     CouncilResponse, ExternalAIClient, GeminiClient, GeminiCliClient,
     ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient,
     PerplexityCliClient, XAIClient, XAICliClient,
-    load_anthropic_key, load_openai_key,
+    load_anthropic_key, load_cli_call_counts, load_openai_key,
+    quota_summary_line, reset_cli_call_counts,
 )
 from scripts.ai_council.advisors import (  # noqa: E402
     AdvisorPlan, build_persona_labels, plan_advisor_swap,
@@ -201,6 +202,7 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         },
         "cli_call_budget": {
             "max_calls_per_day": dict(cfg.cli_call_budget.max_calls_per_day),
+            "warn_at": cfg.cli_call_budget.warn_at,
         },
         "necessity_classifier": {
             "enabled": cfg.necessity_classifier.enabled,
@@ -285,6 +287,7 @@ def build_members(
     global_mode = ai.get("mode")
     cli_budget_cfg = (ai.get("cli_call_budget") or {}) if isinstance(ai, dict) else {}
     cli_caps = (cli_budget_cfg.get("max_calls_per_day") or {}) if isinstance(cli_budget_cfg, dict) else {}
+    cli_warn_at = float(cli_budget_cfg.get("warn_at", 0.8)) if isinstance(cli_budget_cfg, dict) else 0.8
     overrides = model_overrides or {}
     siblings = siblings_overrides or {}
     unknown = set(overrides) - set(members_cfg)
@@ -345,6 +348,7 @@ def build_members(
                         model,
                         binary=cfg.get("binary"),
                         max_calls_per_day=cli_caps.get(name),
+                        warn_at=cli_warn_at,
                     ),
                 )
             except CliClientError as exc:
@@ -536,6 +540,7 @@ def _construct_cli_member(
     *,
     binary: str | None = None,
     max_calls_per_day: int | None = None,
+    warn_at: float = 0.8,
 ) -> ExternalAIClient:
     """Build a cli-mode client for a known provider name.
 
@@ -543,6 +548,9 @@ def _construct_cli_member(
     ``None`` falls through to ``shutil.which(default_binary)``. The
     daily quota is plumbed through to the subclass; ``None`` disables
     the local counter (only stderr-based quota detection remains).
+    ``warn_at`` (step-8 P1) is the fractional threshold flipping the
+    pre-run quota summary to its ``⚠️`` shape; default 0.8 mirrors
+    ``CliCallBudgetConfig``.
     Lets the subclass' ``CliClientError`` propagate so ``build_members``
     can convert it into a structured per-member skip entry without
     crashing the whole council (the original "fail loudly for the
@@ -557,6 +565,7 @@ def _construct_cli_member(
             model=model or default_model,
             binary=binary,
             max_calls_per_day=max_calls_per_day,
+            warn_at=warn_at,
         )
     raise CouncilDisabledError(
         f"member {name!r} has no cli transport "
@@ -1395,6 +1404,18 @@ def cmd_run(
         ) + "\n"
     )
 
+    # Step-8 P1 — pre-run quota summary. After estimate / before
+    # dispatch so the user sees the budget shape before --confirm.
+    # Uncapped providers are omitted by ``quota_summary_line``; when
+    # no CLI member has a configured cap the summary is empty and we
+    # write nothing.
+    cli_members = [m for m in members if isinstance(m, CliClient)]
+    summary, warn_providers = quota_summary_line(cli_members)
+    if summary:
+        sys.stdout.write(summary + "\n")
+        for prov in warn_providers:
+            sys.stdout.write(f"council:quota · WARN · {prov} near limit\n")
+
     # Phase 8 step 5 — opt-in cost disclosure for non-debate lenses.
     # Default mode is "off" for analysis / default (cheap enough that
     # the disclosure is friction); users opt in by setting
@@ -2058,6 +2079,67 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "enabled: true in agents/.ai-council.yml.")
 
 
+def cmd_quota(
+    args: argparse.Namespace,
+    *,
+    settings: dict[str, Any] | None = None,
+) -> int:
+    """Dump today's CLI-quota state (step-8 P1, D1).
+
+    Reads ``~/.event4u/agent-config/cli-calls.json`` plus the configured
+    caps from ``.agent-settings.yml`` and prints one line per provider
+    that has a configured ``max_calls_per_day``. ``--reset <provider>``
+    (gated behind ``--confirm``) clears the counter for that provider.
+    """
+    s = settings if settings is not None else load_settings()
+    ai_cfg = (s.get("ai_council") or {}) if isinstance(s, dict) else {}
+    cli_budget_cfg = (
+        (ai_cfg.get("cli_call_budget") or {}) if isinstance(ai_cfg, dict) else {}
+    )
+    caps = (
+        (cli_budget_cfg.get("max_calls_per_day") or {})
+        if isinstance(cli_budget_cfg, dict)
+        else {}
+    )
+    warn_at = (
+        float(cli_budget_cfg.get("warn_at", 0.8))
+        if isinstance(cli_budget_cfg, dict)
+        else 0.8
+    )
+
+    if getattr(args, "reset", None):
+        provider = args.reset
+        if not getattr(args, "confirm", False):
+            sys.stderr.write(
+                f"❌  council:quota: --reset {provider} requires --confirm.\n"
+            )
+            return 2
+        reset_cli_call_counts(provider=provider)
+        sys.stdout.write(f"council:quota · reset · {provider}\n")
+        return 0
+
+    counts = load_cli_call_counts()
+    if not caps:
+        sys.stdout.write(
+            "council:quota · no providers have a configured "
+            "cli_call_budget.max_calls_per_day cap.\n"
+        )
+        return 0
+    for provider in sorted(caps):
+        limit = int(caps[provider])
+        used = int(counts.get(provider, 0))
+        ratio = used / limit if limit > 0 else 0.0
+        status = "ok"
+        if used >= limit:
+            status = "exhausted"
+        elif ratio >= warn_at:
+            status = "warn"
+        sys.stdout.write(
+            f"council:quota · {provider} · {used}/{limit} · {status}\n"
+        )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="agent-config council",
@@ -2186,6 +2268,16 @@ def build_parser() -> argparse.ArgumentParser:
                             "(parses `low-impact-resolutions.md` alongside the "
                             "responses JSON).")
 
+    p_quo = sub.add_parser(
+        "quota",
+        help="Dump today's CLI-quota state and configured caps (step-8 P1).",
+    )
+    p_quo.add_argument("--reset", default=None, metavar="PROVIDER",
+                       help="Reset today's counter for one provider. "
+                            "Requires --confirm.")
+    p_quo.add_argument("--confirm", action="store_true", default=False,
+                       help="Confirm a mutating --reset operation.")
+
     return parser
 
 
@@ -2216,6 +2308,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_render(args)
         if args.cmd == "replay":
             return cmd_replay(args)
+        if args.cmd == "quota":
+            return cmd_quota(args)
     except CouncilDisabledError as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2
