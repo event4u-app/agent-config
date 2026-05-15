@@ -6,8 +6,7 @@ keep-beta-until: 2026-08-13
 # `.agent-user.md` schema (v1)
 
 > **Status:** beta — locked for `1.18.0`. Re-evaluate fields after
-> Phase 3 has been in active use for ≥1 week per the
-> [step-3 re-validation gate](../../agents/roadmaps/archive/step-3-agent-user-persona.md).
+> Phase 3 has been in active use for ≥1 week.
 
 `.agent-user.md` is a single, project-root, gitignored Markdown file
 that captures who the user is and how they want the agent to address
@@ -165,4 +164,3 @@ Copy it to the project root as `.agent-user.md` and edit, or run
 
 - [`language-and-tone`](../../.agent-src/rules/language-and-tone.md) — language-mirroring rule the loader feeds.
 - [`agents-md-thin-root`](../../.agent-src/skills/agents-md-thin-root/SKILL.md) — Thin-Root contract that this file complements (user-state vs project-state).
-- Roadmap: [`agents/roadmaps/step-3-agent-user-persona.md`](../../agents/roadmaps/step-3-agent-user-persona.md).

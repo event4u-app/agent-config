@@ -64,4 +64,3 @@ Schema contract:
 - [`agent-user-schema`](../../../docs/contracts/agent-user-schema.md) — locked v1 frontmatter and field reference.
 - [`/agents`](../AGENTS.md) — parent cluster.
 - [`/agents init`](init.md) — project-side bootstrap (separate primitive).
-- Roadmap: [`agents/roadmaps/step-3-agent-user-persona.md`](../../../agents/roadmaps/step-3-agent-user-persona.md).
