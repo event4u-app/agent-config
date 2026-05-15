@@ -59,6 +59,12 @@ application, synthesis, and close-prompt.
 - `--personas=<list>` — comma-separated override of the Core-6 default
   (e.g. `--personas=developer,senior-engineer,critical-challenger`)
 - `--personas=+qa` — add the QA specialist to the Core-6
+- `--user-type=<id>` — load one user-type from `user-types/<id>.md` and
+  add an end-user simulation lens to the persona stack (e.g.
+  `--user-type=galabau-field-crew`). Composes orthogonally with
+  `--personas=`; persona = methodology lens, user-type = end-user lens.
+  v1 is CLI-only (no skill-level default). Contract:
+  [`docs/contracts/user-type-schema.md`](../../docs/contracts/user-type-schema.md).
 - `--fresh-eyes` — reweight toward first-time-reader confusion signals
   (critical-challenger voice gets more lines; less assumed context)
 
@@ -77,6 +83,8 @@ persona voices) plus the close-prompt. Stop there. Do **not** chain into
 /refine-ticket PROJ-123
 /refine-ticket                              # uses current branch
 /refine-ticket --personas=+qa PROJ-123
+/refine-ticket --user-type=galabau-field-crew PROJ-123
+/refine-ticket --personas=+qa --user-type=truck-driver PROJ-123
 /refine-ticket --fresh-eyes https://acme.atlassian.net/browse/PROJ-123
 ```
 

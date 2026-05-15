@@ -205,6 +205,16 @@ reviews the ticket through its lens and produces one paragraph:
 Optional: `--personas=+qa` adds the QA persona (edge cases, regression
 risk, test matrix).
 
+Optional: `--user-type=<id>` loads one user-type from `user-types/<id>.md`
+and adds an end-user simulation lens to the persona stack (e.g.
+`--user-type=galabau-field-crew`). User-types compose orthogonally with
+personas — persona = methodology / role lens; user-type = end-user / field
+lens. v1 is CLI-only (no skill-level default; no frontmatter list). The
+user-type voice renders as one paragraph in *Persona voices* labelled
+`**User: <label>**`, citing Daily Workflow, Vocabulary, Operational
+Constraints, and Ticket Red Flags from the loaded user-type. Contract:
+[`docs/contracts/user-type-schema.md`](../../../docs/contracts/user-type-schema.md).
+
 ### 5. Synthesize + close-prompt
 
 Produce the three-section output (template below). After rendering,
@@ -240,6 +250,9 @@ open questions surfaced>
 - **Critical Challenger** — <one paragraph>
 - **AI Agent** — <one paragraph>
 - **[qa]** — *(only when `--personas=+qa`)* <one paragraph>
+- **User: <label>** — *(only when `--user-type=<id>`)* <one paragraph
+  citing Daily Workflow / Vocabulary / Operational Constraints /
+  Ticket Red Flags from the loaded user-type>
 
 ## Orchestration notes
 
@@ -315,6 +328,7 @@ the session, re-probe on project change.
 - Do NOT duplicate logic from `validate-feature-fit` or `threat-modeling` — orchestrate by reference, cite findings, don't re-derive them.
 - Do NOT skip the close-prompt, even when the ticket looks fine and the user seems eager to move on — the prompt is the contract.
 - Do NOT emit persona voices outside the active set; if the user passed `--personas=+qa`, add QA, otherwise do not.
+- Do NOT emit a user-type voice unless `--user-type=<id>` was passed; loading a user-type proactively (e.g. "this ticket smells like field-crew") is forbidden — the axis is CLI-only in v1.
 
 ## See also
 
