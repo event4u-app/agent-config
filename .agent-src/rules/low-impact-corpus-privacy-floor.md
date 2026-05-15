@@ -25,8 +25,8 @@ and runs at **both** gates:
 
 1. **Write gate** — every intake append to
    `agents/low-impact-decisions.md` (Phase 12 § Step 2).
-2. **Upstream gate** — every `/learn-low-impact` PR draft, before
-   diff leaves repo (Phase 12 § Step 5).
+2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
+   before diff leaves repo (Phase 12 § Step 5).
 
 Failure at either gate refuses the operation, surfaces offending
 pattern, asks user to rephrase. Redactor never auto-rewrites — silent
@@ -55,7 +55,7 @@ rewriting is soft gate, this is hard.
 
 - Host agent just received user intake trigger (see
   `scripts/ai_council/low_impact_intake.TRIGGER_PHRASES`).
-- Host agent about to write entry to corpus or open `/learn-low-impact` PR.
+- Host agent about to write entry to corpus or open `/memory learn-low-impact` PR.
 
 ## What to surface on refusal
 

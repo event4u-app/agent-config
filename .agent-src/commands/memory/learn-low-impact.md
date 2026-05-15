@@ -1,6 +1,8 @@
 ---
-name: learn-low-impact
+name: memory:learn-low-impact
 tier: 2
+cluster: memory
+sub: learn-low-impact
 skills: [ai-council, upstream-contribute]
 description: Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed.
 disable-model-invocation: true
@@ -10,7 +12,7 @@ suggestion:
   trigger_context: "user has accumulated validated entries in agents/low-impact-decisions.md and wants to share with the package"
 ---
 
-# /learn-low-impact
+# /memory learn-low-impact
 
 Promote `## Validated` entries from
 [`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md)

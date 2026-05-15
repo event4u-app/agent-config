@@ -74,7 +74,7 @@ The redaction pass refuses to write an entry containing:
 
 Redaction failure on write → the agent surfaces the offending
 pattern to the user and refuses to save. Redaction failure on
-upstream → the `/learn-low-impact` command refuses to open the PR.
+upstream → the `/memory learn-low-impact` command refuses to open the PR.
 
 ## Provenance
 
