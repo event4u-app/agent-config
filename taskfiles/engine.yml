@@ -13,6 +13,15 @@ tasks:
     desc: Show the recommended first-run experience for new users
     cmd: bash scripts/first-run.sh
 
+  bench:
+    silent: true
+    desc: |
+      Run the skill-selection benchmark against an eval corpus.
+      Usage: task bench -- --corpus non-dev
+             task bench -- --corpus non-dev --top-k 3 --json
+      Step-12 Phase 1 deliverable; corpus YAML in tests/eval/.
+    cmd: python3 scripts/bench_runner.py {{.CLI_ARGS}}
+
   test:
     silent: true
     desc: Run all tests (bash + Python, parallel where safe)
