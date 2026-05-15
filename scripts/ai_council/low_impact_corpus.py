@@ -336,16 +336,33 @@ def load_validated_phrases(corpus_path: "object") -> tuple[str, ...]:
     classification. Strict-mode contract validation lives in
     :func:`parse_corpus_strict` and the CI lint job.
     """
+    return _load_section_lenient(corpus_path, "validated")
+
+
+def load_anti_example_phrases(corpus_path: "object") -> tuple[str, ...]:
+    """Lenient loader for the ``Anti-Examples`` section (step-9 P5).
+
+    Mirrors :func:`load_validated_phrases` for the anti-example
+    bucket. Consumed by the fuzzy-match classifier to apply the
+    anti-example-veto: if the query is at least as similar to an
+    anti-example as to a validated phrase, the match is rejected.
+    """
+    return _load_section_lenient(corpus_path, "anti_examples")
+
+
+def _load_section_lenient(corpus_path: "object", section: Section) -> tuple[str, ...]:
     p = Path(str(corpus_path))
     if not p.exists():
         return ()
     text = p.read_text(encoding="utf-8")
     all_titles = tuple(_SECTION_TITLES.values())
-    bounds = _section_bounds(text, _SECTION_TITLES["validated"], all_titles=all_titles)
+    bounds = _section_bounds(
+        text, _SECTION_TITLES[section], all_titles=all_titles,
+    )
     if bounds is None:
         return ()
     entries, _ = _scan_section(
-        text, "validated",
+        text, section,
         body_start=bounds[0], body_end=bounds[1], strict=False,
     )
     return tuple(e.normalised for e in entries)
@@ -356,6 +373,7 @@ __all__ = (
     "CorpusParseError",
     "CorpusParseResult",
     "Section",
+    "load_anti_example_phrases",
     "load_validated_phrases",
     "parse_corpus_strict",
 )

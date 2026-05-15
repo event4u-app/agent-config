@@ -250,6 +250,28 @@ class DecisionResolutionEntry:
 
 
 @dataclass(frozen=True)
+class FuzzyMatchConfig:
+    """Opt-in fuzzy matching for the corpus-aware classifier (step-9 P5).
+
+    Lives under ``decision_resolution.fast_path.fuzzy_match`` in the
+    YAML. When ``enabled`` is ``False`` the classifier uses
+    exact-after-normalisation matching only (Phase 12 default).
+
+    Attributes:
+        enabled: Master switch. Default ``False`` — exact match only.
+        threshold: ``difflib.SequenceMatcher.ratio()`` cutoff in the
+            range ``(0.0, 1.0]``. Default ``0.92``. Two safety vetoes
+            apply on top of the ratio test (Iron Law preserved):
+            high-impact trigger tokens in the query short-circuit to
+            the base verdict, and anti-example similarity at or above
+            the validated similarity rejects the match.
+    """
+
+    enabled: bool = False
+    threshold: float = 0.92
+
+
+@dataclass(frozen=True)
 class LowImpactFastPathConfig:
     """Hard caps for the lightweight-QA fast-path (Phase 11).
 
@@ -268,12 +290,15 @@ class LowImpactFastPathConfig:
         max_tokens: Combined input+output token budget per resolution.
             Default ``2500``. Passed through to ``CostBudget``.
         max_cost_usd: USD cap per resolution. Default ``0.05``.
+        fuzzy_match: Opt-in fuzzy corpus matching (step-9 P5). Off by
+            default — exact-after-normalisation matching only.
     """
 
     max_members: int = 2
     max_rounds: int = 1
     max_tokens: int = 2500
     max_cost_usd: float = 0.05
+    fuzzy_match: FuzzyMatchConfig = field(default_factory=FuzzyMatchConfig)
 
 
 @dataclass(frozen=True)
@@ -696,12 +721,49 @@ def _build_fast_path(d: dict[str, Any]) -> LowImpactFastPathConfig:
             "decision_resolution.fast_path.max_cost_usd must be > 0 "
             f"(got {max_cost!r})."
         )
+    fuzzy_match = _build_fuzzy_match(d.get("fuzzy_match") or {})
     return LowImpactFastPathConfig(
         max_members=max_members,
         max_rounds=1,
         max_tokens=max_tokens,
         max_cost_usd=max_cost,
+        fuzzy_match=fuzzy_match,
     )
+
+
+def _build_fuzzy_match(d: dict[str, Any]) -> FuzzyMatchConfig:
+    """Parse ``decision_resolution.fast_path.fuzzy_match`` (step-9 P5).
+
+    Opt-in only: defaults to ``enabled=False, threshold=0.92``. A
+    threshold outside ``(0.0, 1.0]`` is a hard schema error — sub-0.5
+    matches are noise; ``0.0`` would auto-match anything; ``> 1.0`` is
+    impossible by definition of the ratio.
+    """
+    if not isinstance(d, dict):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match must be a mapping."
+        )
+    enabled = d.get("enabled", False)
+    if not isinstance(enabled, bool):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.enabled must be a bool "
+            f"(got {type(enabled).__name__})."
+        )
+    threshold_raw = d.get("threshold", 0.92)
+    if isinstance(threshold_raw, bool) or not isinstance(
+        threshold_raw, (int, float)
+    ):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.threshold must be a "
+            f"number (got {type(threshold_raw).__name__})."
+        )
+    threshold = float(threshold_raw)
+    if not (0.0 < threshold <= 1.0):
+        raise CouncilConfigError(
+            "decision_resolution.fast_path.fuzzy_match.threshold must be in "
+            f"(0.0, 1.0] (got {threshold!r})."
+        )
+    return FuzzyMatchConfig(enabled=enabled, threshold=threshold)
 
 
 
