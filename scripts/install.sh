@@ -79,6 +79,13 @@ parse_args() {
             --skip-gitignore) SKIP_GITIGNORE=true; shift ;;
             --tools)   TOOLS="$2"; shift 2 ;;
             --tools=*) TOOLS="${1#*=}"; shift ;;
+            # --user-type is consumed by install.py (settings persistence).
+            # Accepted here so direct `bash scripts/install.sh --user-type=...`
+            # invocations from the `install` wrapper / standalone users do not
+            # trip the "Unknown argument" guard. Value is intentionally unused
+            # by the payload-sync stage.
+            --user-type)   shift 2 ;;
+            --user-type=*) shift ;;
             --minimal|--settings-only) MINIMAL=true; shift ;;
             --help|-h) show_help; exit 0 ;;
             *) log_error "Unknown argument: $1"; show_help; exit 1 ;;

@@ -45,6 +45,8 @@ except ImportError:  # pragma: no cover — alt sys.path layout
 DEFAULT_PROFILE = "balanced"
 SUPPORTED_PROFILES = ("minimal", "balanced", "full")
 COST_PROFILE_PLACEHOLDER = "__COST_PROFILE__"
+USER_TYPE_PLACEHOLDER = "__USER_TYPE__"
+USER_TYPES_DIR = "user-types"
 
 # Env-var equivalent of --force for CI / scripted installs (P3.4).
 # When set to "1" the install run treats every conflict as
@@ -781,7 +783,44 @@ def _render_template(template: str, profile_values: "dict[str, str]") -> str:
     return body
 
 
-def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, force: bool) -> None:
+def _load_valid_user_types(package_root: Path) -> list[str]:
+    """Return the sorted user-type slugs shipped under ``user-types/``.
+
+    Maps `user-types/<id>.yml` → `<id>`. The ``README.md`` is skipped.
+    Empty list when the directory is absent (older package payloads).
+    """
+    directory = package_root / USER_TYPES_DIR
+    if not directory.is_dir():
+        return []
+    return sorted(p.stem for p in directory.glob("*.yml"))
+
+
+def _validate_user_type(package_root: Path, value: str) -> str:
+    """Return the validated user-type slug (empty string allowed → no filter)."""
+    cleaned = (value or "").strip()
+    if not cleaned:
+        return ""
+    valid = _load_valid_user_types(package_root)
+    if not valid:
+        fail(
+            f"--user-type={cleaned} requested but no user-types/*.yml present "
+            f"under {package_root}"
+        )
+    if cleaned not in valid:
+        fail(
+            f"Unknown --user-type={cleaned}. Valid: {', '.join(valid)} "
+            "(empty string disables the filter)."
+        )
+    return cleaned
+
+
+def ensure_agent_settings(
+    project_root: Path,
+    package_root: Path,
+    profile: str,
+    force: bool,
+    user_type: str = "",
+) -> None:
     target = project_root / SETTINGS_FILE
     profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
     template_source = package_root / "config" / "agent-settings.template.yml"
@@ -794,12 +833,16 @@ def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, 
     template = template_source.read_text(encoding="utf-8")
     if COST_PROFILE_PLACEHOLDER not in template:
         fail(f"Template is missing placeholder {COST_PROFILE_PLACEHOLDER}")
+    if USER_TYPE_PLACEHOLDER not in template:
+        fail(f"Template is missing placeholder {USER_TYPE_PLACEHOLDER}")
     profile_values = _parse_profile_ini(profile_source)
     if profile_values.get("cost_profile") != profile:
         fail(
             f"Profile preset {profile_source.name} has cost_profile="
             f"{profile_values.get('cost_profile')!r} but --profile={profile}"
         )
+    # Inject runtime-only values (not part of the .ini profile presets).
+    profile_values["user_type"] = _validate_user_type(package_root, user_type)
     template_body = _render_template(template, profile_values)
 
     legacy_target = project_root / LEGACY_SETTINGS_FILE
@@ -822,7 +865,9 @@ def ensure_agent_settings(project_root: Path, package_root: Path, profile: str, 
         return
 
     write_file(target, template_body)
-    success(f"{SETTINGS_FILE} created (cost_profile={profile})")
+    user_type_value = profile_values.get("user_type", "")
+    suffix = f", user_type={user_type_value}" if user_type_value else ""
+    success(f"{SETTINGS_FILE} created (cost_profile={profile}{suffix})")
 
 
 def ensure_vscode_bridge(project_root: Path, package_type: str, force: bool) -> None:
@@ -3130,6 +3175,17 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         default=DEFAULT_PROFILE,
         help=f"cost_profile value ({'|'.join(SUPPORTED_PROFILES)}, default: {DEFAULT_PROFILE})",
     )
+    parser.add_argument(
+        "--user-type",
+        dest="user_type",
+        default="",
+        help=(
+            "primary user-type for skill filtering (step-9 axis). "
+            "Valid ids: consultant | creator | developer | finance | "
+            "founder | gtm | ops. Default: empty (no filter, every skill "
+            "surfaces). Written to personal.user_type in .agent-settings.yml."
+        ),
+    )
     parser.add_argument("--force", action="store_true", help="overwrite existing files")
     parser.add_argument("--skip-bridges", action="store_true", help="only create .agent-settings.yml")
     parser.add_argument(
@@ -3354,7 +3410,7 @@ def _write_install_mode_marker(project_root: Path, mode: str) -> None:
         pass
 
 
-def install_minimal(target_root: Path, force: bool) -> int:
+def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
     """Bootstrap the project-local override layer only (D2-compliant).
 
     Writes:
@@ -3421,8 +3477,16 @@ def install_minimal(target_root: Path, force: bool) -> int:
     if settings_dst.exists() and not force:
         skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
     else:
-        settings_dst.write_text(settings_src.read_text(encoding="utf-8"), encoding="utf-8")
-        success(f"Wrote {SETTINGS_FILE}")
+        body = settings_src.read_text(encoding="utf-8")
+        if user_type:
+            body = body.rstrip() + (
+                "\n\n# --- Personal (step-9 user-type axis) ---\n"
+                "personal:\n"
+                f"  user_type: {user_type}\n"
+            )
+        settings_dst.write_text(body, encoding="utf-8")
+        suffix = f" (user_type={user_type})" if user_type else ""
+        success(f"Wrote {SETTINGS_FILE}{suffix}")
 
     # 3. install-mode marker (Step 8 A5) — authoritative state for
     # doctor --context and future install-aware tooling. Written even
@@ -3592,7 +3656,13 @@ def main(argv: list[str]) -> int:
         target_root = Path(
             opts.custom_path or opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
         ).resolve()
-        return install_minimal(target_root, opts.force)
+        # Validate --user-type early so the minimal short-circuit fails
+        # fast on a bogus slug instead of writing a half-formed stub.
+        # _minimal_templates_root() returns <package_root>/templates/minimal;
+        # walk two parents up to reach the package root where user-types/ lives.
+        minimal_package_root = _minimal_templates_root().parent.parent
+        validated_user_type = _validate_user_type(minimal_package_root, opts.user_type)
+        return install_minimal(target_root, opts.force, validated_user_type)
 
     # Multi-signal scope detection (Phase 1.3) + scope resolution
     # (Phase 1.4). Order of precedence (highest first):
@@ -3670,9 +3740,13 @@ def _main_project_install(
         info(f"Package:  {package_root}")
         info(f"Type:     {package_type}")
         info(f"Profile:  {opts.profile}")
+        if opts.user_type:
+            info(f"UserType: {opts.user_type}")
         print()
 
-    ensure_agent_settings(project_root, package_root, opts.profile, opts.force)
+    ensure_agent_settings(
+        project_root, package_root, opts.profile, opts.force, opts.user_type
+    )
 
     # Install-mode marker (Step 8 A5) — full path flips any prior
     # minimal marker to "full" so doctor --context reflects the
