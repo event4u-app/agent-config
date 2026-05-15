@@ -47,9 +47,8 @@ Resolution order for `--as=<value>` / positional `<value>`:
 2. **Alias match** (skip when `ghostwriter.aliases: false`) —
    case-insensitive equality against every profile's `aliases:` entry.
    Conflicts are impossible at runtime — the consumer-side lint
-   (`task lint-ghostwriter-source`) rejects cross-profile alias
-   collisions at commit time, so an alias resolves to exactly one
-   profile or zero.
+   rejects cross-profile alias collisions at commit time, so an alias
+   resolves to exactly one profile or zero.
 3. **No match** → abort with: *"No profile matches `<value>` (tried
    slug + aliases). Run `/ghostwriter:list` to see available profiles."*
 
