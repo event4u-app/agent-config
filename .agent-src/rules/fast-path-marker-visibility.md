@@ -12,7 +12,7 @@ triggers:
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
-    reason: "Compressed body back-points to the uncompressed source for full failure-modes detail."
+    reason: "Compressor injects a back-pointer to the uncompressed source for full failure-modes detail."
 ---
 
 # Fast-Path Marker Visibility
