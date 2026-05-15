@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **452 public artefacts** shipped by
+Consumer-facing catalog of all **454 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -222,7 +222,7 @@ are excluded.
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (62)
+## Rules (63)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -255,6 +255,7 @@ are excluded.
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../.agent-src/rules/laravel-routing.md) | auto | When writing or reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to the laravel skill |
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
+| rule | [`low-impact-corpus-privacy-floor`](../.agent-src/rules/low-impact-corpus-privacy-floor.md) | auto | Use when writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the low-impact learning corpus. |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
 | rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
@@ -289,7 +290,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (108)
+## Commands (109)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -350,6 +351,7 @@ are excluded.
 | command | [`judge:solo`](../.agent-src/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge:steps`](../.agent-src/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`learn-low-impact`](../.agent-src/commands/learn-low-impact.md) |  | Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed. |
 | command | [`memory:add`](../.agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
 | command | [`memory:load`](../.agent-src/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
 | command | [`memory:mine-session`](../.agent-src/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |

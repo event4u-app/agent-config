@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **455 artefacts** in this package.
+Maintainer-facing index of all **457 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -222,7 +222,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (65)
+## Rules (66)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -258,6 +258,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`language-and-tone`](../.agent-src.uncompressed/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../.agent-src.uncompressed/rules/laravel-routing.md) | auto | When writing or reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to the laravel skill |
 | rule | [`laravel-translations`](../.agent-src.uncompressed/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
+| rule | [`low-impact-corpus-privacy-floor`](../.agent-src.uncompressed/rules/low-impact-corpus-privacy-floor.md) | auto | Use when writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the low-impact learning corpus. |
 | rule | [`markdown-safe-codeblocks`](../.agent-src.uncompressed/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
 | rule | [`minimal-safe-diff`](../.agent-src.uncompressed/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src.uncompressed/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
@@ -292,7 +293,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interaction`](../.agent-src.uncompressed/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (108)
+## Commands (109)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -353,6 +354,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`judge:solo`](../.agent-src.uncompressed/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge:steps`](../.agent-src.uncompressed/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
 | command | [`judge`](../.agent-src.uncompressed/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`learn-low-impact`](../.agent-src.uncompressed/commands/learn-low-impact.md) |  | Diff project-local `agents/low-impact-decisions.md` against the upstream seed, re-redact validated entries, and open a draft PR to the agent-config package adding them to the seed. |
 | command | [`memory:add`](../.agent-src.uncompressed/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
 | command | [`memory:load`](../.agent-src.uncompressed/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
 | command | [`memory:mine-session`](../.agent-src.uncompressed/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |
