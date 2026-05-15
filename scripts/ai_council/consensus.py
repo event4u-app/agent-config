@@ -57,15 +57,42 @@ class FindingScore:
     reason: str
 
 
+def evidence_quality(mean_score: float) -> str:
+    """Classify mean score into a single-letter evidence-quality bucket.
+
+    H (high)   — mean ≥ 8.0; member agreement ran high.
+    M (medium) — 6.0 ≤ mean < 8.0; majority support, mixed conviction.
+    L (low)    — mean < 6.0 or no scorers; weak or contested.
+
+    Used by Phase 9 to surface a quick "how much did members back this"
+    signal next to the raw consensus_strength number.
+    """
+    if mean_score >= 8.0:
+        return "H"
+    if mean_score >= 6.0:
+        return "M"
+    return "L"
+
+
 @dataclass(frozen=True)
 class ConsensusMetadata:
-    """Aggregate consensus stats for a single finding."""
+    """Aggregate consensus stats for a single finding.
+
+    Phase 9 adds ``concur_count``, ``dissent_reasons`` (per-scorer
+    one-line rationales for disagreement), and ``evidence_quality``
+    (H/M/L bucket of the mean score) so the renderer can emit
+    "N/M members concur; X dissented citing …; mean evidence-quality H"
+    without needing the underlying FindingScore list.
+    """
 
     finding_id: str
     consensus_strength: float  # 0..1
     dissent_count: int
     scorers: tuple[str, ...]
     mean_score: float
+    concur_count: int = 0
+    dissent_reasons: tuple[tuple[str, str], ...] = ()  # (scorer, reason)
+    evidence_quality: str = "L"
 
 
 @dataclass(frozen=True)
@@ -103,17 +130,28 @@ def aggregate_scores(
             out[fid] = ConsensusMetadata(
                 finding_id=fid, consensus_strength=0.0,
                 dissent_count=0, scorers=(), mean_score=0.0,
+                concur_count=0, dissent_reasons=(), evidence_quality="L",
             )
             continue
         mean = sum(s.score for s in fs) / len(fs)
         agree_rate = sum(1 for s in fs if s.agree) / len(fs)
         strength = (mean / 10.0) * agree_rate
         dissent = sum(1 for s in fs if not s.agree)
+        concur = sum(1 for s in fs if s.agree)
         scorers = tuple(s.scorer for s in fs)
+        # Phase 9 — collect (scorer, reason) pairs for dissenters only,
+        # in scoring order, so the renderer surfaces who pushed back
+        # and why without re-walking the FindingScore list.
+        dissent_reasons = tuple(
+            (s.scorer, s.reason) for s in fs if not s.agree
+        )
+        mean_rounded = round(mean, 2)
         out[fid] = ConsensusMetadata(
             finding_id=fid, consensus_strength=round(strength, 3),
             dissent_count=dissent, scorers=scorers,
-            mean_score=round(mean, 2),
+            mean_score=mean_rounded,
+            concur_count=concur, dissent_reasons=dissent_reasons,
+            evidence_quality=evidence_quality(mean_rounded),
         )
     return out
 
@@ -143,6 +181,7 @@ def bucket_by_threshold(
             m = ConsensusMetadata(
                 finding_id=f.id, consensus_strength=0.0,
                 dissent_count=0, scorers=(), mean_score=0.0,
+                concur_count=0, dissent_reasons=(), evidence_quality="L",
             )
         if m.consensus_strength > strong:
             bucket.strong.append((f, m))

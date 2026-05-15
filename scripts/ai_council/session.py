@@ -71,14 +71,32 @@ def _utc_timestamp() -> str:
 
 
 def _serialise_response(r: CouncilResponse) -> dict[str, object]:
-    return {
+    """Project a `CouncilResponse` into the manifest schema.
+
+    Phase 5 / Step 1 — surface ``transport``, ``billable``,
+    ``subscription_label``, ``cost_usd``, and ``tokens_estimated`` so
+    the audit trail can distinguish flat-rate CLI calls from billable
+    api / community-CLI calls. When ``tokens_estimated`` is true the
+    token counts are kept (heuristic) but flagged so consumers can
+    null or disclaim them.
+    """
+    meta = r.metadata or {}
+    payload: dict[str, object] = {
         "provider": r.provider,
         "model": r.model,
         "input_tokens": r.input_tokens,
         "output_tokens": r.output_tokens,
         "latency_ms": r.latency_ms,
         "error": r.error,
+        "transport": meta.get("transport", "api"),
+        "billable": bool(meta.get("billable", True)),
+        "tokens_estimated": bool(meta.get("tokens_estimated", False)),
     }
+    if meta.get("subscription_label"):
+        payload["subscription_label"] = meta["subscription_label"]
+    if "cost_usd" in meta:
+        payload["cost_usd"] = meta["cost_usd"]
+    return payload
 
 
 def _load_retention_days(settings_path: Path | None = None) -> int:

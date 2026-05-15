@@ -475,3 +475,440 @@ def test_raw_key_prefixes_are_all_rejected(tmp_path: Path, raw_key: str) -> None
     }
     with pytest.raises(CouncilConfigError, match="raw API key"):
         load_council_config(_write_yaml(tmp_path, payload))
+
+
+# ── Phase 0 (CLI transport): mode: cli + binary: + cli_call_budget ───────────
+
+
+def test_cli_mode_accepted_without_api_key_ref(tmp_path: Path) -> None:
+    """`mode: cli` is the third transport — keys are CLI-managed, not required."""
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "mode": "cli",
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.members["anthropic"].mode == "cli"
+    assert cfg.members["anthropic"].api_key_ref is None
+
+
+def test_cli_mode_via_defaults_accepted(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "cli"},
+        "members": {
+            "anthropic": {"enabled": True, "model": "claude-sonnet-4-5"},
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.defaults.mode == "cli"
+    assert cfg.members["anthropic"].api_key_ref is None
+
+
+def test_binary_field_accepted_when_member_is_cli(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "api"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "mode": "cli",
+                "binary": "/usr/local/bin/claude",
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.members["anthropic"].binary == "/usr/local/bin/claude"
+
+
+def test_binary_field_rejected_when_effective_mode_is_api(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["members"] = {
+        "anthropic": {
+            "enabled": True,
+            "model": "claude-sonnet-4-5",
+            "api_key_ref": "env:ANTHROPIC_API_KEY",
+            "binary": "/usr/local/bin/claude",
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary.*only valid"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_binary_field_rejected_when_effective_mode_is_manual(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "manual"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "binary": "/usr/local/bin/claude",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary.*only valid"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_binary_field_must_be_non_empty_string(tmp_path: Path) -> None:
+    payload = {
+        "enabled": True,
+        "defaults": {"mode": "cli"},
+        "members": {
+            "anthropic": {
+                "enabled": True,
+                "model": "claude-sonnet-4-5",
+                "binary": "",
+            },
+        },
+    }
+    with pytest.raises(CouncilConfigError, match="binary must be a non-empty"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_optional_block_defaults_empty(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.cli_call_budget.max_calls_per_day == {}
+
+
+def test_cli_call_budget_per_provider_cap_accepted(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {
+        "max_calls_per_day": {"anthropic": 50, "openai": 100},
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.cli_call_budget.max_calls_per_day == {"anthropic": 50, "openai": 100}
+
+
+def test_cli_call_budget_unknown_provider_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {"max_calls_per_day": {"deepmind": 5}}
+    with pytest.raises(CouncilConfigError, match="unknown.*provider"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_negative_cap_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["cli_call_budget"] = {"max_calls_per_day": {"anthropic": -1}}
+    with pytest.raises(CouncilConfigError, match="non-negative integer"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_cli_call_budget_must_be_mapping(tmp_path: Path) -> None:
+    p = tmp_path / "bad.yml"
+    p.write_text(
+        "enabled: true\ndefaults: {mode: api}\nmembers:\n  anthropic:\n"
+        "    enabled: true\n    model: claude-sonnet-4-5\n"
+        "    api_key_ref: env:ANTHROPIC_API_KEY\n"
+        "cli_call_budget:\n  - foo\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(CouncilConfigError, match="cli_call_budget.*mapping"):
+        load_council_config(p)
+
+
+
+# ── necessity classifier (Phase 6) ───────────────────────────────────────────
+
+
+def test_necessity_classifier_defaults_when_omitted(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.necessity_classifier.enabled is True
+    assert cfg.necessity_classifier.mode == "educate"
+    assert cfg.lens_overrides.necessity_classifier_mode == {}
+
+
+def test_necessity_classifier_disabled_via_enabled_flag(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {"enabled": False, "mode": "block"}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.necessity_classifier.enabled is False
+    assert cfg.necessity_classifier.mode == "block"
+
+
+def test_necessity_classifier_invalid_mode_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {"mode": "shrug"}
+    with pytest.raises(CouncilConfigError, match="necessity_classifier.mode"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_lens_overrides_per_lens_mode(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"mode": "block"}},
+        "analysis": {"necessity_classifier": {"mode": "off"}},
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.lens_overrides.necessity_classifier_mode == {
+        "debate": "block",
+        "analysis": "off",
+    }
+
+
+def test_lens_overrides_invalid_mode_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"mode": "shrug"}},
+    }
+    with pytest.raises(CouncilConfigError, match="lenses.debate"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_lens_overrides_must_be_mapping(tmp_path: Path) -> None:
+    p = tmp_path / "bad.yml"
+    p.write_text(
+        "enabled: true\ndefaults: {mode: api}\nmembers:\n  anthropic:\n"
+        "    enabled: true\n    model: claude-sonnet-4-5\n"
+        "    api_key_ref: env:ANTHROPIC_API_KEY\n"
+        "lenses:\n  - foo\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(CouncilConfigError, match="lenses.*mapping"):
+        load_council_config(p)
+
+
+# ── Phase 8: debate cost-visibility + refusal cap ─────────────────────────────
+
+
+def test_debate_defaults_when_block_omitted(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, dict(_MINIMAL_VALID)))
+    assert cfg.debate.max_cost_usd == 5.00
+    assert cfg.debate.cost_disclosure.mode == "always"
+    assert cfg.debate.cost_disclosure.threshold_usd == 1.00
+    assert cfg.debate.cost_disclosure.show_per_member is True
+
+
+def test_debate_block_parsed_from_yaml(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["debate"] = {
+        "max_cost_usd": 2.50,
+        "cost_disclosure": {
+            "mode": "above_threshold",
+            "threshold_usd": 0.25,
+            "show_per_member": False,
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.debate.max_cost_usd == 2.50
+    assert cfg.debate.cost_disclosure.mode == "above_threshold"
+    assert cfg.debate.cost_disclosure.threshold_usd == 0.25
+    assert cfg.debate.cost_disclosure.show_per_member is False
+
+
+def test_debate_max_cost_usd_zero_disables_cap(tmp_path: Path) -> None:
+    """``max_cost_usd: 0`` parses fine and signals 'disabled' downstream."""
+    payload = dict(_MINIMAL_VALID)
+    payload["debate"] = {"max_cost_usd": 0}
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.debate.max_cost_usd == 0
+
+
+def test_debate_max_cost_usd_negative_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["debate"] = {"max_cost_usd": -1.0}
+    with pytest.raises(CouncilConfigError, match="max_cost_usd"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_debate_cost_disclosure_invalid_mode_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["debate"] = {"cost_disclosure": {"mode": "sometimes"}}
+    with pytest.raises(CouncilConfigError, match="debate.cost_disclosure.mode"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_debate_cost_disclosure_threshold_negative_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["debate"] = {
+        "cost_disclosure": {"mode": "above_threshold", "threshold_usd": -0.10},
+    }
+    with pytest.raises(CouncilConfigError, match="threshold_usd"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_lens_overrides_cost_disclosure(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "analysis": {
+            "cost_disclosure": {
+                "mode": "above_threshold",
+                "threshold_usd": 0.50,
+                "show_per_member": False,
+            },
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    cd = cfg.lens_overrides.cost_disclosure["analysis"]
+    assert cd.mode == "above_threshold"
+    assert cd.threshold_usd == 0.50
+    assert cd.show_per_member is False
+
+
+def test_lens_overrides_cost_disclosure_invalid_mode_rejected(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "default": {"cost_disclosure": {"mode": "maybe"}},
+    }
+    with pytest.raises(CouncilConfigError, match="lenses.default.cost_disclosure"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+# --- Phase 10: decision_resolution schema -------------------------------
+
+
+def _with_resolution(payload: dict, block: dict) -> dict:
+    cp = {k: v for k, v in payload.items()}
+    cp["decision_resolution"] = block
+    return cp
+
+
+def test_decision_resolution_defaults_present_without_block(
+    tmp_path: Path,
+) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    assert cfg.decision_resolution.enabled is True
+    # All five classes get seeded with defaults.
+    for cls in (
+        "trivial", "low_impact", "medium_impact",
+        "high_impact", "user_required",
+    ):
+        assert cls in cfg.decision_resolution.classes
+    assert cfg.decision_resolution.classes["high_impact"].mode == "user"
+    assert cfg.decision_resolution.classes["user_required"].mode == "user"
+
+
+def test_decision_resolution_user_can_remap_low_impact_to_council(
+    tmp_path: Path,
+) -> None:
+    block = {
+        "enabled": True,
+        "classes": {"low_impact": {"mode": "council"}},
+    }
+    cfg = load_council_config(
+        _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+    )
+    assert cfg.decision_resolution.classes["low_impact"].mode == "council"
+
+
+def test_decision_resolution_high_impact_locked_to_user(
+    tmp_path: Path,
+) -> None:
+    block = {"classes": {"high_impact": {"mode": "agent"}}}
+    with pytest.raises(CouncilConfigError) as exc:
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+    assert "high_impact" in str(exc.value)
+    assert "LOCKED" in str(exc.value) or "Iron Law" in str(exc.value)
+
+
+def test_decision_resolution_user_required_locked_to_user(
+    tmp_path: Path,
+) -> None:
+    block = {"classes": {"user_required": {"mode": "council"}}}
+    with pytest.raises(CouncilConfigError) as exc:
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+    assert "user_required" in str(exc.value)
+
+
+def test_decision_resolution_invalid_mode_rejected(tmp_path: Path) -> None:
+    block = {"classes": {"trivial": {"mode": "bogus"}}}
+    with pytest.raises(CouncilConfigError):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+def test_decision_resolution_threshold_out_of_range(tmp_path: Path) -> None:
+    block = {"classes": {"low_impact": {"confidence_threshold": 1.5}}}
+    with pytest.raises(CouncilConfigError):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+def test_decision_resolution_enabled_must_be_bool(tmp_path: Path) -> None:
+    block = {"enabled": "yes"}
+    with pytest.raises(CouncilConfigError):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+# --- Phase 11: fast_path + participate_low_impact ----------------------
+
+
+def test_fast_path_defaults_present(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    fp = cfg.decision_resolution.fast_path
+    assert fp.max_members == 2
+    assert fp.max_rounds == 1
+    assert fp.max_tokens == 2500
+    assert fp.max_cost_usd == 0.05
+
+
+def test_fast_path_user_can_tune_caps(tmp_path: Path) -> None:
+    block = {
+        "fast_path": {
+            "max_members": 1, "max_tokens": 1500, "max_cost_usd": 0.10,
+        },
+    }
+    cfg = load_council_config(
+        _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+    )
+    fp = cfg.decision_resolution.fast_path
+    assert fp.max_members == 1
+    assert fp.max_tokens == 1500
+    assert fp.max_cost_usd == 0.10
+
+
+def test_fast_path_max_rounds_locked_to_one(tmp_path: Path) -> None:
+    block = {"fast_path": {"max_rounds": 2}}
+    with pytest.raises(CouncilConfigError, match="LOCKED"):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+def test_fast_path_max_members_out_of_range_rejected(tmp_path: Path) -> None:
+    block = {"fast_path": {"max_members": 5}}
+    with pytest.raises(CouncilConfigError, match="max_members"):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+def test_fast_path_negative_cost_rejected(tmp_path: Path) -> None:
+    block = {"fast_path": {"max_cost_usd": 0}}
+    with pytest.raises(CouncilConfigError, match="max_cost_usd"):
+        load_council_config(
+            _write_yaml(tmp_path, _with_resolution(_MINIMAL_VALID, block)),
+        )
+
+
+def test_participate_low_impact_defaults_false(tmp_path: Path) -> None:
+    cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
+    for m in cfg.members.values():
+        assert m.participate_low_impact is False
+
+
+def test_participate_low_impact_must_be_bool(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["members"] = dict(payload["members"])
+    first = next(iter(payload["members"]))
+    payload["members"][first] = dict(payload["members"][first])
+    payload["members"][first]["participate_low_impact"] = "yes"
+    with pytest.raises(CouncilConfigError, match="participate_low_impact"):
+        load_council_config(_write_yaml(tmp_path, payload))
+

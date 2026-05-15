@@ -33,8 +33,10 @@ from scripts.ai_council.bundler import (  # noqa: E402
 )
 from scripts.ai_council.clients import (  # noqa: E402
     DEFAULT_MAX_TOKENS, UNLIMITED_TOKENS_FALLBACK,
-    AnthropicClient, CouncilResponse, ExternalAIClient, GeminiClient,
-    ManualClient, OpenAIClient, PerplexityClient, XAIClient,
+    AnthropicClient, AnthropicCliClient, CliClientError,
+    CouncilResponse, ExternalAIClient, GeminiClient, GeminiCliClient,
+    ManualClient, OpenAIClient, OpenAICliClient, PerplexityClient,
+    PerplexityCliClient, XAIClient, XAICliClient,
     load_anthropic_key, load_openai_key,
 )
 from scripts.ai_council.advisors import (  # noqa: E402
@@ -47,22 +49,38 @@ from scripts.ai_council.config import (  # noqa: E402
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
+from scripts.ai_council.necessity import (  # noqa: E402
+    ClassificationResult, SizeFitVerdict, classify_necessity,
+    classify_size_fit, downgrade_message, educate_message,
+)
 from scripts.ai_council.orchestrator import (  # noqa: E402
     ConsensusResult,
     CostBudget, CouncilQuestion, DebateCapExceeded, DebateCheckpoint,
-    PeerReviewResult, consult, estimate, render,
+    DebateCostEstimate,
+    PeerReviewResult, consult, estimate, estimate_debate_cost, render,
     run_consensus_scoring, run_debate, run_peer_review,
 )
 from scripts.ai_council.pricing import (  # noqa: E402
     PriceTable, estimate_cost, load_prices,
 )
 from scripts.ai_council.project_context import detect_project_context  # noqa: E402
+from scripts.ai_council.replay import (  # noqa: E402
+    DecisionReplayInputs, render_decision_replay,
+)
 
 SCHEMA_VERSION = 1
 
 #: Provider names accepted under `mode=api`. Mirrors the routing table
 #: in ``_construct_api_member``; both must stay in sync.
 _API_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
+
+#: Provider names with a wired ``mode=cli`` subclass. Mirrors the
+#: routing table in ``_construct_cli_member``; both must stay in sync.
+#: Phase 2 ships ``anthropic``; Phase 3 adds ``openai`` + ``gemini``;
+#: Phase 4 adds ``xai`` + ``perplexity`` (community CLIs, no
+#: subscription savings — they still consume the API key and remain
+#: ``billable=True``).
+_CLI_PROVIDERS = frozenset({"anthropic", "openai", "gemini", "xai", "perplexity"})
 
 
 class CouncilDisabledError(RuntimeError):
@@ -112,6 +130,10 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             entry["api_key_ref"] = m.api_key_ref
         if m.mode is not None:
             entry["mode"] = m.mode
+        if m.binary is not None:
+            entry["binary"] = m.binary
+        if m.model_ladder:
+            entry["model_ladder"] = list(m.model_ladder)
         members[name] = entry
     advisors: dict[str, dict[str, Any]] = {}
     for name, a in cfg.advisors.items():
@@ -143,6 +165,42 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
             "minority_threshold": cfg.consensus_scoring.minority_threshold,
             "lenses": list(cfg.consensus_scoring.lenses),
         },
+        "cli_call_budget": {
+            "max_calls_per_day": dict(cfg.cli_call_budget.max_calls_per_day),
+        },
+        "necessity_classifier": {
+            "enabled": cfg.necessity_classifier.enabled,
+            "mode": cfg.necessity_classifier.mode,
+        },
+        "model_downgrade": {
+            "enabled": cfg.model_downgrade.enabled,
+            "auto_apply": cfg.model_downgrade.auto_apply,
+        },
+        "debate": {
+            "max_cost_usd": cfg.debate.max_cost_usd,
+            "cost_disclosure": {
+                "mode": cfg.debate.cost_disclosure.mode,
+                "threshold_usd": cfg.debate.cost_disclosure.threshold_usd,
+                "show_per_member": cfg.debate.cost_disclosure.show_per_member,
+            },
+        },
+        "lens_overrides": {
+            "necessity_classifier_mode": dict(
+                cfg.lens_overrides.necessity_classifier_mode,
+            ),
+            "model_downgrade": {
+                lens: {"enabled": md.enabled, "auto_apply": md.auto_apply}
+                for lens, md in cfg.lens_overrides.model_downgrade.items()
+            },
+            "cost_disclosure": {
+                lens: {
+                    "mode": cd.mode,
+                    "threshold_usd": cd.threshold_usd,
+                    "show_per_member": cd.show_per_member,
+                }
+                for lens, cd in cfg.lens_overrides.cost_disclosure.items()
+            },
+        },
         "members": members,
         "advisors": advisors,
     }
@@ -154,6 +212,7 @@ def build_members(
     invocation_mode: str | None = None,
     model_overrides: dict[str, str] | None = None,
     siblings_overrides: dict[str, list[str]] | None = None,
+    skipped: list[dict[str, Any]] | None = None,
 ) -> list[ExternalAIClient]:
     """Construct enabled council members from settings.
 
@@ -171,6 +230,16 @@ def build_members(
     becomes its own billable member with independent cost tracking.
     Mutually exclusive with `model_overrides` for the same provider;
     requires `mode=api`; provider must be enabled in settings.
+
+    `skipped` is an optional caller-owned list. When provided, each
+    cli-mode member that fails to construct (binary missing) is appended
+    as `{"member": <name>, "reason": "binary_missing", "detail": <msg>}`
+    instead of crashing the loop. The skip is also surfaced on stderr
+    as `[council] SKIP <name>: <detail>` so the run log carries it
+    even when the caller passes ``None``. Phase 5 Step 2 contract:
+    a missing CLI binary degrades that member only — never silently
+    drops, never crashes the whole council unless every configured
+    member ends up skipped.
     """
     ai = (settings.get("ai_council") or {}) if isinstance(settings, dict) else {}
     if not ai.get("enabled"):
@@ -180,6 +249,8 @@ def build_members(
         )
     members_cfg = ai.get("members") or {}
     global_mode = ai.get("mode")
+    cli_budget_cfg = (ai.get("cli_call_budget") or {}) if isinstance(ai, dict) else {}
+    cli_caps = (cli_budget_cfg.get("max_calls_per_day") or {}) if isinstance(cli_budget_cfg, dict) else {}
     overrides = model_overrides or {}
     siblings = siblings_overrides or {}
     unknown = set(overrides) - set(members_cfg)
@@ -232,6 +303,36 @@ def build_members(
             members.append(
                 _construct_api_member(name, model, api_key_ref=cfg.get("api_key_ref")),
             )
+        elif mode == "cli" and name in _CLI_PROVIDERS:
+            try:
+                members.append(
+                    _construct_cli_member(
+                        name,
+                        model,
+                        binary=cfg.get("binary"),
+                        max_calls_per_day=cli_caps.get(name),
+                    ),
+                )
+            except CliClientError as exc:
+                _, _, display = _CLI_FACTORY[name]
+                detail = (
+                    f"{exc} Install the {display} CLI or flip "
+                    f"ai_council.members.{name}.mode back to 'api'."
+                )
+                entry = {
+                    "member": name,
+                    "reason": "binary_missing",
+                    "detail": detail,
+                }
+                if skipped is not None:
+                    skipped.append(entry)
+                print(f"[council] SKIP {name}: {detail}", file=sys.stderr)
+                continue
+        elif mode == "cli":
+            raise CouncilDisabledError(
+                f"member {name!r} resolves to mode=cli but no CLI client is "
+                f"wired (known: {sorted(_CLI_PROVIDERS)!r})."
+            )
         elif mode == "manual":
             members.append(ManualClient(name=name, model=model or "manual"))
         elif mode == "playwright":
@@ -244,6 +345,13 @@ def build_members(
                 f"name not in {sorted(_API_PROVIDERS)!r}."
             )
     if not members:
+        if skipped:
+            names = ", ".join(s["member"] for s in skipped)
+            raise CouncilDisabledError(
+                f"no council member could be constructed — every enabled "
+                f"member was skipped ({names}). See [council] SKIP entries "
+                f"on stderr for the per-member reason."
+            )
         raise CouncilDisabledError(
             "no council member has `enabled: true` — enable at least one in "
             ".agent-settings.yml under ai_council.members.*."
@@ -369,6 +477,56 @@ def _construct_api_member(
     raise CouncilDisabledError(
         f"member {name!r} has no api transport "
         f"(known: {sorted(_API_PROVIDERS)!r})."
+    )
+
+
+#: Provider → (class-attribute-name, default_model, human_display) for
+#: cli-mode routing. The class ref is looked up via ``getattr`` on this
+#: module at call time so ``monkeypatch.setattr(council_cli, "AnthropicCliClient", X)``
+#: keeps working from tests. The display string is used by
+#: ``build_members`` to render the "Install the <X> CLI" hint in
+#: skip-with-reason logs without re-importing every subclass at the
+#: call site.
+_CLI_FACTORY: dict[str, tuple[str, str, str]] = {
+    "anthropic": ("AnthropicCliClient", "claude-sonnet-4-5", "Claude"),
+    "openai": ("OpenAICliClient", "gpt-5", "Codex"),
+    "gemini": ("GeminiCliClient", "gemini-2.5-pro", "Gemini"),
+    "xai": ("XAICliClient", "grok-4", "Grok (community)"),
+    "perplexity": ("PerplexityCliClient", "sonar-pro", "Perplexity (community)"),
+}
+
+
+def _construct_cli_member(
+    name: str,
+    model: str | None,
+    *,
+    binary: str | None = None,
+    max_calls_per_day: int | None = None,
+) -> ExternalAIClient:
+    """Build a cli-mode client for a known provider name.
+
+    ``binary`` overrides the provider default (e.g. ``/opt/claude``);
+    ``None`` falls through to ``shutil.which(default_binary)``. The
+    daily quota is plumbed through to the subclass; ``None`` disables
+    the local counter (only stderr-based quota detection remains).
+    Lets the subclass' ``CliClientError`` propagate so ``build_members``
+    can convert it into a structured per-member skip entry without
+    crashing the whole council (the original "fail loudly for the
+    entire council" contract is preserved when no other member
+    survives — the empty-members guard at the end of ``build_members``
+    fires with the skip log attached).
+    """
+    if name in _CLI_FACTORY:
+        attr, default_model, _display = _CLI_FACTORY[name]
+        cls = globals()[attr]
+        return cls(
+            model=model or default_model,
+            binary=binary,
+            max_calls_per_day=max_calls_per_day,
+        )
+    raise CouncilDisabledError(
+        f"member {name!r} has no cli transport "
+        f"(known: {sorted(_CLI_PROVIDERS)!r})."
     )
 
 
@@ -506,12 +664,73 @@ def _serialise_consensus(consensus: ConsensusResult) -> dict[str, Any]:
                 "consensus_strength": m.consensus_strength,
                 "dissent_count": m.dissent_count,
                 "scorers": list(m.scorers),
+                "concur_count": m.concur_count,
+                "dissent_reasons": [list(pair) for pair in m.dissent_reasons],
+                "evidence_quality": m.evidence_quality,
             }
             for fid, m in consensus.metadata.items()
         },
         "extraction_responses": _serialise_responses(consensus.extraction_responses),
         "scoring_responses": _serialise_responses(consensus.scoring_responses),
     }
+
+
+def _decision_replay_settings(
+    ai_cfg: dict[str, Any], lens: str,
+) -> tuple[bool, bool]:
+    """Resolve (enabled, include_member_arguments) for ``lens``.
+
+    Per-lens override under ``lenses.<lens>.decision_replay`` beats the
+    global ``decision_replay`` block. Defaults: enabled=True,
+    include_member_arguments=True (Phase 9 ships ON by default — the
+    artefact is the audit trail GPT review of PR #148 called out as
+    missing).
+    """
+    global_block = ai_cfg.get("decision_replay") or {}
+    enabled = global_block.get("enabled", True)
+    include_args = global_block.get("include_member_arguments", True)
+    lenses = ai_cfg.get("lenses") or {}
+    lens_block = (lenses.get(lens) or {}).get("decision_replay")
+    if isinstance(lens_block, dict):
+        if "enabled" in lens_block:
+            enabled = lens_block["enabled"]
+        if "include_member_arguments" in lens_block:
+            include_args = lens_block["include_member_arguments"]
+    return bool(enabled), bool(include_args)
+
+
+def _maybe_write_decision_replay(
+    *,
+    ai_cfg: dict[str, Any],
+    lens: str,
+    out_path: Path,
+    consensus: ConsensusResult | None,
+    deliberation: list[CouncilResponse],
+    original_ask: str,
+) -> Path | None:
+    """Write ``decision-replay.md`` alongside ``out_path`` when enabled.
+
+    No-op when ``decision_replay.enabled`` resolves to ``False`` for the
+    lens or when ``consensus`` is ``None`` (nothing to replay). Returns
+    the artefact path on success, ``None`` otherwise.
+    """
+    enabled, include_args = _decision_replay_settings(ai_cfg, lens)
+    if not enabled or consensus is None:
+        return None
+    replay = render_decision_replay(
+        DecisionReplayInputs(
+            findings=list(consensus.findings),
+            scores=list(consensus.scores),
+            metadata=dict(consensus.metadata),
+            deliberation=deliberation,
+            original_ask=original_ask,
+            include_member_arguments=include_args,
+        ),
+    )
+    target = out_path.parent / "decision-replay.md"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(replay, encoding="utf-8")
+    return target
 
 
 # ── peer-review (Phase 5 / F1, Karpathy anonymous review) ──────────
@@ -851,6 +1070,225 @@ def _deserialise_consensus(data: dict[str, Any] | None) -> ConsensusResult | Non
     )
 
 
+def _resolve_necessity_mode(ai_cfg: dict[str, Any], lens: str) -> tuple[bool, str]:
+    """Return ``(enabled, effective_mode)`` for the necessity classifier.
+
+    Per-lens override at ``lenses.<lens>.necessity_classifier.mode`` wins
+    over the global ``necessity_classifier.mode``. Reads the synthesized
+    dict shape produced by :func:`_synthesize_ai_council_block`, so both
+    typed-config and legacy-settings paths are honoured.
+    """
+    nc_block = ai_cfg.get("necessity_classifier") or {}
+    enabled = bool(nc_block.get("enabled", True))
+    global_mode = str(nc_block.get("mode", "educate"))
+    overrides = (
+        (ai_cfg.get("lens_overrides") or {}).get("necessity_classifier_mode")
+        or {}
+    )
+    return enabled, str(overrides.get(lens, global_mode))
+
+
+def _necessity_gate(
+    *, prompt: str, lens: str, invocation: str, proceed_anyway: bool,
+    ai_cfg: dict[str, Any], stdout=None,
+) -> tuple[bool, int, ClassificationResult | None]:
+    """Apply the Phase-6 necessity classifier before any member fires.
+
+    Returns ``(proceed, exit_code, result)``. ``proceed=True`` means the
+    dispatcher continues; ``proceed=False`` means the caller should
+    return ``exit_code`` immediately. ``result`` carries the verdict for
+    session.md provenance on the proceed path (None when classifier is
+    disabled / off).
+    """
+    out = stdout if stdout is not None else sys.stdout
+    enabled, mode = _resolve_necessity_mode(ai_cfg, lens)
+    if not enabled or mode == "off":
+        return True, 0, None
+    result = classify_necessity(prompt, lens=lens, invocation=invocation)
+    if result.verdict != "unnecessary":
+        if result.verdict == "borderline":
+            out.write(
+                f"council:necessity · borderline ({result.category}) · "
+                f"{result.rationale}\n"
+            )
+        return True, 0, result
+    # verdict == "unnecessary"
+    if mode == "block":
+        out.write(
+            f"council:necessity · skipped ({result.category}) · "
+            f"{result.rationale}\n"
+            f"council:necessity · mode=block — `--proceed-anyway` has "
+            f"no effect on the block path.\n"
+        )
+        return False, 0, result
+    # mode == "educate"
+    if invocation == "agent":
+        out.write(
+            f"council:necessity · skipped (agent, {result.category}) · "
+            f"{result.rationale}\n"
+        )
+        return False, 0, result
+    # invocation == "user_explicit"
+    if proceed_anyway:
+        out.write(
+            f"council:necessity · override (user_explicit + "
+            f"--proceed-anyway, {result.category}) · "
+            f"{result.rationale}\n"
+        )
+        return True, 0, result
+    out.write(educate_message(result, lens) + "\n")
+    return False, 2, result
+
+
+def _resolve_model_downgrade(
+    ai_cfg: dict[str, Any], lens: str,
+) -> tuple[bool, bool]:
+    """Return ``(enabled, auto_apply)`` for the size-fit downgrade gate.
+
+    Per-lens override at ``lenses.<lens>.model_downgrade`` wins over the
+    global ``model_downgrade`` block. Reads the synthesized dict shape
+    from :func:`_synthesize_ai_council_block` so both typed-config and
+    legacy paths are honoured.
+    """
+    md_block = ai_cfg.get("model_downgrade") or {}
+    enabled = bool(md_block.get("enabled", True))
+    auto_apply = bool(md_block.get("auto_apply", False))
+    overrides = (
+        (ai_cfg.get("lens_overrides") or {}).get("model_downgrade") or {}
+    )
+    lens_override = overrides.get(lens) if isinstance(overrides, dict) else None
+    if isinstance(lens_override, dict):
+        enabled = bool(lens_override.get("enabled", enabled))
+        auto_apply = bool(lens_override.get("auto_apply", auto_apply))
+    return enabled, auto_apply
+
+
+def _size_fit_gate(
+    *, prompt: str, lens: str, members: list[ExternalAIClient],
+    ai_cfg: dict[str, Any], stdout=None,
+) -> list[tuple[str, SizeFitVerdict, bool]]:
+    """Apply the Phase-7 size-fit classifier across enabled members.
+
+    Iterates every member with a configured ``model_ladder`` and runs
+    :func:`classify_size_fit`. When ``auto_apply`` is true and a
+    downgrade is suggested, the member's ``model`` attribute is rewritten
+    in place; otherwise the suggestion is surfaced as a stdout notice
+    and the original model stands. Members without a ladder are skipped
+    silently.
+
+    Returns a list of ``(member_name, verdict, applied)`` tuples for
+    session.md provenance. Never blocks the dispatch — Phase 7 is a
+    suggestion gate, not a refusal gate.
+    """
+    out = stdout if stdout is not None else sys.stdout
+    enabled, auto_apply = _resolve_model_downgrade(ai_cfg, lens)
+    decisions: list[tuple[str, SizeFitVerdict, bool]] = []
+    if not enabled:
+        return decisions
+    members_cfg = ai_cfg.get("members") or {}
+    for member in members:
+        member_cfg = members_cfg.get(member.name) or {}
+        ladder = member_cfg.get("model_ladder") or ()
+        if not ladder:
+            continue
+        verdict = classify_size_fit(
+            prompt, current_model=member.model, ladder=ladder, lens=lens,
+        )
+        applied = False
+        if not verdict.fit and verdict.suggested_model:
+            if auto_apply:
+                out.write(
+                    f"council:size-fit · {member.name} · auto-downgrade "
+                    f"`{member.model}` → `{verdict.suggested_model}` · "
+                    f"{verdict.reason}\n"
+                )
+                member.model = verdict.suggested_model
+                applied = True
+            else:
+                out.write(
+                    f"council:size-fit · {member.name} · "
+                    f"{downgrade_message(verdict, member.model)}\n"
+                )
+        decisions.append((member.name, verdict, applied))
+    return decisions
+
+
+def _resolve_cost_disclosure(
+    ai_cfg: dict[str, Any], lens: str,
+) -> tuple[str, float, bool]:
+    """Return ``(mode, threshold_usd, show_per_member)`` for the lens.
+
+    Per-lens override at ``lenses.<lens>.cost_disclosure`` wins over the
+    global ``debate.cost_disclosure`` block. The ``debate`` lens gets
+    the debate-scoped defaults; other lenses default to ``off`` unless
+    explicitly overridden (Phase 8 step 5 \u2014 cheap lenses are opt-in).
+    """
+    debate_block = ai_cfg.get("debate") or {}
+    debate_disc = debate_block.get("cost_disclosure") or {}
+    if lens == "debate":
+        mode = str(debate_disc.get("mode", "always"))
+        threshold = float(debate_disc.get("threshold_usd", 1.00))
+        show_per_member = bool(debate_disc.get("show_per_member", True))
+    else:
+        mode = "off"
+        threshold = 1.00
+        show_per_member = True
+    overrides = (
+        (ai_cfg.get("lens_overrides") or {}).get("cost_disclosure") or {}
+    )
+    lens_override = overrides.get(lens) if isinstance(overrides, dict) else None
+    if isinstance(lens_override, dict):
+        mode = str(lens_override.get("mode", mode))
+        threshold = float(lens_override.get("threshold_usd", threshold))
+        show_per_member = bool(lens_override.get("show_per_member", show_per_member))
+    return mode, threshold, show_per_member
+
+
+def _format_cost_disclosure(
+    est: DebateCostEstimate, *, lens: str, show_per_member: bool,
+) -> str:
+    """Render the pre-flight disclosure block for stdout.
+
+    Mirrors the roadmap spec: total range across N members \u00d7 R rounds,
+    optional per-member breakdown, and a subscription-member call-out
+    for CLI / manual transports that don't sum into USD totals.
+    """
+    lines = [
+        f"council:{lens} \u00b7 cost-disclosure \u00b7 estimated "
+        f"${est.low_usd:.4f} \u2013 ${est.high_usd:.4f} "
+        f"(expected ${est.expected_usd:.4f}) across "
+        f"{len(est.per_member)} billable members \u00d7 {est.rounds} rounds",
+    ]
+    if show_per_member and est.per_member:
+        lines.append("  per member:")
+        for pm in est.per_member:
+            lines.append(
+                f"    \u00b7 {pm['name']:<14} {pm['model']:<22} "
+                f"${pm['low_usd']:.4f} \u2013 ${pm['high_usd']:.4f}",
+            )
+    if est.subscription_members:
+        lines.append("  subscription (no USD spend):")
+        for sm in est.subscription_members:
+            label = sm.get("subscription_label") or sm.get("transport", "")
+            lines.append(
+                f"    \u00b7 {sm['name']:<14} {sm['model']:<22} ({label})",
+            )
+    return "\n".join(lines) + "\n"
+
+
+def _debate_refusal_cap(
+    ai_cfg: dict[str, Any],
+) -> float:
+    """Resolve the hard refusal cap (``debate.max_cost_usd``).
+
+    Returns 0.0 when disabled. The cap is unconditional \u2014 no
+    ``--proceed-anyway`` override (the user must lower rounds, drop
+    members, or raise the cap explicitly).
+    """
+    debate_block = ai_cfg.get("debate") or {}
+    return float(debate_block.get("max_cost_usd", 5.00) or 0.0)
+
+
 def cmd_run(
     args: argparse.Namespace,
     *,
@@ -880,6 +1318,21 @@ def cmd_run(
         max_tokens=_resolve_max_tokens(args, ai_cfg),
         prompt_mode_override=getattr(args, "prompt_mode", None),
     )
+    proceed, gate_exit, _necessity_result = _necessity_gate(
+        prompt=question.user_prompt,
+        lens=question.mode,
+        invocation=getattr(args, "invocation", "agent"),
+        proceed_anyway=getattr(args, "proceed_anyway", False),
+        ai_cfg=ai_cfg,
+    )
+    if not proceed:
+        return gate_exit
+    _size_fit_gate(
+        prompt=question.user_prompt,
+        lens=question.mode,
+        members=members,
+        ai_cfg=ai_cfg,
+    )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
     estimates = estimate(question, billable, table,
@@ -907,6 +1360,31 @@ def cmd_run(
             peer_review_extra_calls=pr_extra_calls,
         ) + "\n"
     )
+
+    # Phase 8 step 5 — opt-in cost disclosure for non-debate lenses.
+    # Default mode is "off" for analysis / default (cheap enough that
+    # the disclosure is friction); users opt in by setting
+    # `lenses.<name>.cost_disclosure.mode` in agents/.ai-council.yml.
+    disc_mode, disc_threshold, disc_show = _resolve_cost_disclosure(
+        ai_cfg, question.mode,
+    )
+    if disc_mode != "off":
+        run_estimate = estimate_debate_cost(
+            question, members, table,
+            rounds=1, project=project,
+            original_ask=args.original_ask,
+            advisor_plans=advisor_plans,
+        )
+        if disc_mode == "always" or (
+            disc_mode == "above_threshold"
+            and run_estimate.expected_usd > disc_threshold
+        ):
+            sys.stdout.write(
+                _format_cost_disclosure(
+                    run_estimate, lens=question.mode,
+                    show_per_member=disc_show,
+                )
+            )
 
     if not args.confirm:
         sys.stdout.write(
@@ -978,6 +1456,13 @@ def cmd_run(
         f"\ncouncil:run · wrote {out_path} "
         f"(estimated ${estimated_total:.4f} / actual ${actual_total:.4f})\n"
     )
+    replay_path = _maybe_write_decision_replay(
+        ai_cfg=ai_cfg, lens=question.mode, out_path=out_path,
+        consensus=consensus, deliberation=responses,
+        original_ask=args.original_ask,
+    )
+    if replay_path is not None:
+        sys.stdout.write(f"council:run · wrote {replay_path}\n")
     errors = [r for r in responses if r.error]
     return 1 if errors and len(errors) == len(responses) else 0
 
@@ -1132,6 +1617,21 @@ def cmd_debate(
         max_tokens=_resolve_max_tokens(args, ai_cfg),
         prompt_mode_override="debate",
     )
+    proceed, gate_exit, _necessity_result = _necessity_gate(
+        prompt=question.user_prompt,
+        lens="debate",
+        invocation=getattr(args, "invocation", "agent"),
+        proceed_anyway=getattr(args, "proceed_anyway", False),
+        ai_cfg=ai_cfg,
+    )
+    if not proceed:
+        return gate_exit
+    _size_fit_gate(
+        prompt=question.user_prompt,
+        lens="debate",
+        members=members,
+        ai_cfg=ai_cfg,
+    )
     project = detect_project_context(REPO_ROOT)
     billable = [m for m in members if getattr(m, "billable", True)]
 
@@ -1173,6 +1673,39 @@ def cmd_debate(
         f"  × {rounds} rounds (worst case, before progressive disclosure)\n"
         f"  PROJECTED TOTAL:  ${projected_total:.4f}\n"
     )
+
+    # Phase 8 — pre-flight cost disclosure + hard refusal cap.
+    debate_estimate = estimate_debate_cost(
+        question, members, table,
+        rounds=rounds, project=project,
+        original_ask=args.original_ask,
+        advisor_plans=advisor_plans,
+    )
+    disc_mode, disc_threshold, disc_show = _resolve_cost_disclosure(
+        ai_cfg, "debate",
+    )
+    should_disclose = (
+        disc_mode == "always"
+        or (
+            disc_mode == "above_threshold"
+            and debate_estimate.expected_usd > disc_threshold
+        )
+    )
+    if should_disclose:
+        sys.stdout.write(
+            _format_cost_disclosure(
+                debate_estimate, lens="debate", show_per_member=disc_show,
+            )
+        )
+    cap = _debate_refusal_cap(ai_cfg)
+    if cap > 0 and debate_estimate.high_usd > cap:
+        sys.stderr.write(
+            f"❌  council:debate refused · high-end estimate "
+            f"${debate_estimate.high_usd:.4f} exceeds "
+            f"debate.max_cost_usd=${cap:.2f}. Lower --rounds, drop "
+            f"members, or raise the cap in agents/.ai-council.yml.\n"
+        )
+        return 4
 
     if not args.confirm:
         sys.stdout.write(
@@ -1284,6 +1817,87 @@ def cmd_render(args: argparse.Namespace) -> int:
         )
         + "\n"
     )
+    return 0
+
+
+def _cmd_replay_low_impact_stats(args: argparse.Namespace) -> int:
+    """Summarise the session's ``low-impact-resolutions.md`` (Phase 11).
+
+    The log file lives next to the ``responses`` JSON. Missing or empty
+    log → prints an explicit "no entries" line and returns 0 (a session
+    with no low-impact resolutions is not an error).
+    """
+    from scripts.ai_council.low_impact import (  # noqa: WPS433 — local import
+        parse_low_impact_log,
+        render_low_impact_stats,
+    )
+
+    responses_path = Path(args.responses)
+    log_path = responses_path.parent / "low-impact-resolutions.md"
+    if not log_path.exists():
+        sys.stdout.write(
+            "council:replay · no low-impact-resolutions.md alongside "
+            f"{responses_path} — session had no fast-path entries.\n",
+        )
+        return 0
+    body = log_path.read_text(encoding="utf-8")
+    stats = parse_low_impact_log(body)
+    out = render_low_impact_stats(stats)
+    if getattr(args, "output", None):
+        target = Path(args.output)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(out, encoding="utf-8")
+        sys.stdout.write(f"council:replay · wrote {target}\n")
+        return 0
+    sys.stdout.write(out)
+    return 0
+
+
+def cmd_replay(args: argparse.Namespace) -> int:
+    """Re-render the ``decision-replay.md`` audit trail (Phase 9).
+
+    Reads a saved ``council:run`` JSON payload, rebuilds the consensus
+    bundle, and emits the replay markdown to stdout (default) or to
+    ``--output``. Pure re-projection — no model calls. Returns 2 when
+    the payload lacks consensus data (Phase 9 prerequisite).
+
+    When ``--low-impact-stats`` is set, the consensus replay is skipped
+    and the session's ``low-impact-resolutions.md`` (Phase 11) is
+    summarised instead — count, status breakdown, members used, cost.
+    """
+    if getattr(args, "low_impact_stats", False):
+        return _cmd_replay_low_impact_stats(args)
+    payload = json.loads(Path(args.responses).read_text(encoding="utf-8"))
+    consensus = _deserialise_consensus(payload.get("consensus"))
+    if consensus is None:
+        sys.stderr.write(
+            "❌  council:replay: payload has no `consensus` block — "
+            "rerun with consensus_scoring enabled for this lens.\n"
+        )
+        return 2
+    deliberation = _deserialise_responses(payload.get("responses") or [])
+    include_args = (
+        bool(args.include_member_arguments)
+        if args.include_member_arguments is not None
+        else True
+    )
+    body = render_decision_replay(
+        DecisionReplayInputs(
+            findings=list(consensus.findings),
+            scores=list(consensus.scores),
+            metadata=dict(consensus.metadata),
+            deliberation=deliberation,
+            original_ask=str(payload.get("original_ask", "")),
+            include_member_arguments=include_args,
+        ),
+    )
+    if getattr(args, "output", None):
+        out_path = Path(args.output)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        out_path.write_text(body, encoding="utf-8")
+        sys.stdout.write(f"council:replay · wrote {out_path}\n")
+    else:
+        sys.stdout.write(body)
     return 0
 
 
@@ -1431,6 +2045,19 @@ def build_parser() -> argparse.ArgumentParser:
                             "artefacts. Set by the host agent when the consuming "
                             "rule/skill/command declares council_depth: deep. "
                             "Overridden by explicit --rounds.")
+    p_run.add_argument("--invocation", choices=["agent", "user_explicit"],
+                       default="agent",
+                       help="Source signal for the necessity classifier "
+                            "(Phase 6). 'agent' = autonomous (default; silent "
+                            "skip when unnecessary). 'user_explicit' = manual "
+                            "user invocation (educate path when unnecessary, "
+                            "requires --proceed-anyway to override).")
+    p_run.add_argument("--proceed-anyway", action="store_true",
+                       dest="proceed_anyway", default=False,
+                       help="Override the necessity-classifier skip / educate "
+                            "verdict for this invocation (Phase 6). Has no "
+                            "effect when the classifier verdict is "
+                            "`necessary` or `borderline`.")
     _add_prose_synthesis_arg(p_run)
 
     p_deb = sub.add_parser(
@@ -1454,6 +2081,19 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Seed round 1 from an existing council session "
                             "JSON. Members + models must match the current "
                             "invocation.")
+    p_deb.add_argument("--invocation", choices=["agent", "user_explicit"],
+                       default="agent",
+                       help="Source signal for the necessity classifier "
+                            "(Phase 6). 'agent' = autonomous (default; silent "
+                            "skip when unnecessary). 'user_explicit' = manual "
+                            "user invocation (educate path when unnecessary, "
+                            "requires --proceed-anyway to override).")
+    p_deb.add_argument("--proceed-anyway", action="store_true",
+                       dest="proceed_anyway", default=False,
+                       help="Override the necessity-classifier skip / educate "
+                            "verdict for this invocation (Phase 6). Has no "
+                            "effect when the classifier verdict is "
+                            "`necessary` or `borderline`.")
     _add_prose_synthesis_arg(p_deb)
 
     p_ren = sub.add_parser("render", help="Re-render a saved responses JSON.")
@@ -1466,6 +2106,31 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Override the synthesis-template lens. Defaults "
                             "to the `mode` recorded in the responses JSON.")
     _add_prose_synthesis_arg(p_ren)
+
+    p_rep = sub.add_parser(
+        "replay",
+        help="Re-render decision-replay.md from a saved responses JSON (Phase 9).",
+    )
+    p_rep.add_argument("responses",
+                       help="Path to the JSON written by `council run`.")
+    p_rep.add_argument("--output", default=None,
+                       help="Optional file to write the replay markdown. "
+                            "Defaults to stdout.")
+    rep_group = p_rep.add_mutually_exclusive_group()
+    rep_group.add_argument("--redact-member-arguments",
+                           dest="include_member_arguments",
+                           action="store_const", const=False, default=None,
+                           help="Emit the redacted view (consensus + dissent "
+                                "counts only, no per-member arguments).")
+    rep_group.add_argument("--include-member-arguments",
+                           dest="include_member_arguments",
+                           action="store_const", const=True,
+                           help="Include per-member arguments (default).")
+    p_rep.add_argument("--low-impact-stats", action="store_true", default=False,
+                       help="Skip the decision replay and print a summary of "
+                            "low-impact fast-path resolutions for the session "
+                            "(parses `low-impact-resolutions.md` alongside the "
+                            "responses JSON).")
 
     return parser
 
@@ -1495,6 +2160,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_debate(args)
         if args.cmd == "render":
             return cmd_render(args)
+        if args.cmd == "replay":
+            return cmd_replay(args)
     except CouncilDisabledError as exc:
         sys.stderr.write(f"❌  council:{args.cmd}: {exc}\n")
         return 2

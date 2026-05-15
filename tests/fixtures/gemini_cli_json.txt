@@ -1,0 +1,1 @@
+{"response":"The capital of France is Paris.","stats":{"models":{"gemini-2.5-pro":{"tokens":{"prompt":112,"candidates":31,"total":143}}},"tools":{"totalCalls":0}},"sessionId":"sess_3f7a8b2d_91c4_4e6f_a0d8"}

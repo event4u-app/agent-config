@@ -20,7 +20,7 @@ CouncilResponse, never raise) is unchanged.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable
+from typing import Any, Callable
 
 from scripts.ai_council.budget_guard import (
     record_spend as _record_daily_spend,
@@ -97,6 +97,99 @@ class OverrunEvent:
 
 # Callback signature: receive event → return True (proceed) or False (skip + tag error).
 OnOverrunCallback = Callable[[OverrunEvent], bool]
+
+
+@dataclass(frozen=True)
+class DebateCostEstimate:
+    """Pre-flight debate cost summary (Phase 8).
+
+    ``low_usd`` / ``expected_usd`` / ``high_usd`` are the rolled-up
+    spend bounds across every billable member × ``rounds``. The
+    expected estimate matches the per-round ``estimate()`` total
+    multiplied by rounds (worst-case ``max_output_tokens``). ``low_usd``
+    discounts output to 25% of the ceiling — most members do not hit
+    their token budget. ``high_usd`` adds a 20% over-run buffer per the
+    roadmap's ±20% accuracy target.
+
+    ``per_member`` carries one entry per billable member with the same
+    bound triple, plus the member's transport label (api / cli /
+    manual). ``subscription_members`` lists non-billable members so the
+    disclosure block can call out the "covered by subscription" rows
+    without summing them into USD totals.
+    """
+
+    rounds: int
+    low_usd: float
+    expected_usd: float
+    high_usd: float
+    per_member: list[dict[str, Any]]
+    subscription_members: list[dict[str, str]]
+
+
+def estimate_debate_cost(
+    question: CouncilQuestion,
+    members: list[ExternalAIClient],
+    table: PriceTable,
+    *,
+    rounds: int,
+    project: ProjectContext | None = None,
+    original_ask: str = "",
+    advisor_plans: dict[str, AdvisorPlan] | None = None,
+) -> DebateCostEstimate:
+    """Project total spend for an N-round debate across all members.
+
+    Mirrors :func:`estimate` per-member, then multiplies by ``rounds``
+    to account for the per-round preamble + critique pass. CLI / manual
+    members (``billable=False``) are excluded from USD totals and
+    surfaced separately in ``subscription_members`` so the disclosure
+    block can label them as covered by the user's flat-rate plan.
+    """
+    if rounds < 1:
+        raise ValueError(f"rounds must be >= 1 (got {rounds!r}).")
+    billable_members = [m for m in members if getattr(m, "billable", True)]
+    sub_members = [
+        {
+            "name": m.name,
+            "model": m.model,
+            "transport": getattr(m, "transport", "api"),
+            "subscription_label": getattr(m, "subscription_label", ""),
+        }
+        for m in members
+        if not getattr(m, "billable", True)
+    ]
+    per_round = estimate(
+        question, billable_members, table,
+        project=project, original_ask=original_ask,
+        advisor_plans=advisor_plans,
+    )
+    expected = sum(e.total_usd for e in per_round) * rounds
+    # Low bound: output tokens rarely reach `max_output_tokens` ceiling.
+    # Use input-only cost + 25% of the output ceiling — empirical floor
+    # from manual debate traces.
+    low = (
+        sum(e.input_usd + 0.25 * e.output_usd for e in per_round) * rounds
+    )
+    # High bound: +20% over-run buffer (roadmap ±20% accuracy target).
+    high = expected * 1.20
+    per_member: list[dict[str, Any]] = []
+    for member, est in zip(billable_members, per_round):
+        member_expected = est.total_usd * rounds
+        per_member.append({
+            "name": member.name,
+            "model": member.model,
+            "transport": getattr(member, "transport", "api"),
+            "low_usd": (est.input_usd + 0.25 * est.output_usd) * rounds,
+            "expected_usd": member_expected,
+            "high_usd": member_expected * 1.20,
+        })
+    return DebateCostEstimate(
+        rounds=rounds,
+        low_usd=low,
+        expected_usd=expected,
+        high_usd=high,
+        per_member=per_member,
+        subscription_members=sub_members,
+    )
 
 
 def estimate(
@@ -272,6 +365,7 @@ def _run_round(
                     provider=member.name, model=member.model, text="",
                     error=f"{type(exc).__name__}: {exc}",
                 )
+            _stamp_transport_metadata(response, member)
             results.append(response)
             spent["input"] += response.input_tokens
             spent["output"] += response.output_tokens
@@ -341,6 +435,7 @@ def _run_round(
         results.append(response)
         spent["input"] += response.input_tokens
         spent["output"] += response.output_tokens
+        actual_usd: float | None = None
         if estimates is not None and table is not None:
             # Bill the actual output against the budget using the
             # member's per-1M output rate. Re-use estimate_cost with
@@ -349,6 +444,7 @@ def _run_round(
                 member.name, member.model,
                 response.input_tokens, response.output_tokens, table,
             )
+            actual_usd = actual.total_usd
             spent["usd"] += actual.total_usd
             # Persist to the rolling 24h ledger when the daily cap is
             # active. Errors are swallowed inside record_spend.
@@ -356,14 +452,44 @@ def _run_round(
                 _record_daily_spend(
                     actual.total_usd, member.name, member.model,
                 )
+        _stamp_transport_metadata(response, member, cost_usd=actual_usd)
 
     return results
 
 
 def _aborted(member: ExternalAIClient, reason: str) -> CouncilResponse:
-    return CouncilResponse(
+    response = CouncilResponse(
         provider=member.name, model=member.model, text="", error=reason,
     )
+    _stamp_transport_metadata(response, member)
+    return response
+
+
+def _stamp_transport_metadata(
+    response: CouncilResponse,
+    member: ExternalAIClient,
+    *,
+    cost_usd: float | None = None,
+) -> None:
+    """Annotate `response.metadata` with transport / billable / cost info.
+
+    Phase 5 / Step 1 — the session writer and orchestrator renderer key
+    off these fields to format the cost line as either
+    ``cost: subscription (claude-pro)`` (non-billable vendor CLI) or
+    ``cost: $0.NNNN (… in / … out)`` (billable api or community CLI).
+    Stamped here (and not in each client) so the writer stays decoupled
+    from the client class hierarchy.
+    """
+    meta = dict(response.metadata or {})
+    transport = getattr(member, "transport", "api")
+    meta.setdefault("transport", transport)
+    meta.setdefault("billable", bool(getattr(member, "billable", True)))
+    label = getattr(member, "subscription_label", "") or ""
+    if label and not meta.get("billable", True):
+        meta.setdefault("subscription_label", label)
+    if cost_usd is not None:
+        meta["cost_usd"] = float(cost_usd)
+    response.metadata = meta
 
 
 def _augment_for_next_round(
@@ -857,6 +983,57 @@ def run_consensus_scoring(
     )
 
 
+def _render_response_meta(r: CouncilResponse) -> str:
+    """Format the per-member meta line — tokens, cost (or subscription), latency.
+
+    Phase 5 / Step 1 — non-billable vendor-CLI calls render
+    ``cost: subscription (<label>)`` with no token detail (the local
+    session counted them but the user is on a flat rate). Billable
+    calls (api or community CLI) render ``cost: $X.XXXX`` plus tokens.
+    Tokens marked ``estimated=True`` get a ``~`` prefix so the audit
+    trail flags heuristic counts.
+    """
+    meta_dict = r.metadata or {}
+    billable = bool(meta_dict.get("billable", True))
+    estimated = bool(meta_dict.get("tokens_estimated", False))
+    parts: list[str] = []
+    if not billable:
+        label = meta_dict.get("subscription_label") or "flat-rate"
+        parts.append(f"cost: subscription ({label})")
+    else:
+        cost_usd = meta_dict.get("cost_usd")
+        if isinstance(cost_usd, (int, float)):
+            parts.append(f"cost: ${cost_usd:.4f}")
+        prefix = "~" if estimated else ""
+        parts.append(
+            f"tokens: {prefix}{r.input_tokens} in / {prefix}{r.output_tokens} out"
+        )
+    parts.append(f"{r.latency_ms} ms")
+    return f"*{' · '.join(parts)}*"
+
+
+# Lens defaults for the Phase 9 confidence-explanation badge. The PR
+# lens stays terse so the existing "Must-fix / Nice-to-have" structure
+# isn't drowned in scorer prose; every other decision lens shows the
+# explanation by default. Creative lenses (design/optimize) never reach
+# this code path because they skip consensus scoring entirely.
+_DEFAULT_EXPLAIN_LENSES: frozenset[str] = frozenset({
+    "default", "analysis", "debate", "prompt", "roadmap", "diff", "files",
+})
+
+
+def _default_explain_confidence(mode: str | None) -> bool:
+    """Decide whether the confidence-explanation badge fires by default.
+
+    Pulled into a helper so the CLI ``--explain-confidence`` /
+    ``--no-explain-confidence`` flags and the lens override path share
+    one truth source.
+    """
+    if mode is None:
+        return True
+    return mode in _DEFAULT_EXPLAIN_LENSES
+
+
 def render(
     responses: list[CouncilResponse],
     *,
@@ -864,6 +1041,7 @@ def render(
     prose_synthesis: bool | None = None,
     consensus: ConsensusResult | None = None,
     peer_review: PeerReviewResult | None = None,
+    explain_confidence: bool | None = None,
 ) -> str:
     """Render stacked sections + a lens-aware synthesis prompt slot.
 
@@ -885,19 +1063,21 @@ def render(
     `Peer-Review-Surfaced Blind Spots` addendum.
     """
     blocks: list[str] = []
+    explain = (
+        explain_confidence
+        if explain_confidence is not None
+        else _default_explain_confidence(mode)
+    )
     if consensus is not None and (
         consensus.bucket.strong or consensus.bucket.findings or consensus.bucket.minority
     ):
-        blocks.append(_render_consensus(consensus.bucket))
+        blocks.append(_render_consensus(consensus.bucket, explain=explain))
     for r in responses:
         header = f"## {r.provider} · {r.model}"
         if r.error:
             blocks.append(f"{header}\n\n*ERROR:* `{r.error}`")
             continue
-        meta = (
-            f"*tokens: {r.input_tokens} in / {r.output_tokens} out · "
-            f"{r.latency_ms} ms*"
-        )
+        meta = _render_response_meta(r)
         blocks.append(f"{header}\n\n{meta}\n\n{r.text}")
     if peer_review is not None and peer_review.responses:
         blocks.append(_render_peer_review(peer_review))
@@ -937,32 +1117,90 @@ def _render_peer_review(peer_review: PeerReviewResult) -> str:
     return "\n\n".join(lines)
 
 
-def _render_consensus(bucket: ConsensusBucket) -> str:
-    """Render Strong / Findings / Minority sections in renderer order."""
+def _render_consensus(bucket: ConsensusBucket, *, explain: bool = True) -> str:
+    """Render Strong / Findings / Minority sections in renderer order.
+
+    ``explain`` toggles the Phase 9 confidence-explanation badge — when
+    ``False`` the renderer falls back to the terse Phase 4 badge so the
+    PR lens (and any caller passing ``--no-explain-confidence``) keeps
+    its compact output.
+    """
     parts: list[str] = []
     if bucket.strong:
-        parts.append("## Strong Consensus\n\n" + _render_bucket(bucket.strong))
+        parts.append(
+            "## Strong Consensus\n\n"
+            + _render_bucket(bucket.strong, explain=explain),
+        )
     if bucket.findings:
-        parts.append("## Findings\n\n" + _render_bucket(bucket.findings))
+        parts.append(
+            "## Findings\n\n"
+            + _render_bucket(bucket.findings, explain=explain),
+        )
     if bucket.minority:
         parts.append(
             "## Minority Views\n\n"
             "*Sub-threshold by consensus; kept for audit trail.*\n\n"
-            + _render_bucket(bucket.minority)
+            + _render_bucket(bucket.minority, explain=explain),
         )
     return "\n\n".join(parts)
 
 
+def _truncate_reason(reason: str, *, limit: int = 120) -> str:
+    """Collapse a multi-line scorer reason to a single ≤``limit``-char line.
+
+    Phase 9 — the dissent summary must fit on one line; we keep the
+    first sentence-ish chunk and add an ellipsis when truncating. Empty
+    reasons render as ``no rationale``.
+    """
+    flat = " ".join(reason.split()) if reason else ""
+    if not flat:
+        return "no rationale"
+    if len(flat) <= limit:
+        return flat
+    return flat[: limit - 1].rstrip() + "…"
+
+
 def _render_bucket(
     items: list[tuple[Finding, ConsensusMetadata]],
+    *,
+    explain: bool = True,
 ) -> str:
+    """Render one bucket of (finding, metadata) tuples.
+
+    The Phase 4 terse badge (``strength · mean · scorers · dissent``)
+    is preserved on the first line. Phase 9 adds a second
+    confidence-explanation line whenever ``explain`` is true *and* at
+    least one scorer rated the finding — the explanation needs scorer
+    data to be meaningful.
+    """
     lines: list[str] = []
     for f, m in items:
-        badge = (
+        terse_badge = (
             f"strength {m.consensus_strength:.2f} · "
             f"mean {m.mean_score:.1f}/10 · "
             f"{len(m.scorers)} scorers · "
             f"{m.dissent_count} dissent"
         )
-        lines.append(f"- **{f.id}** — {f.text}  \n  _{badge}_")
+        block = f"- **{f.id}** — {f.text}  \n  _{terse_badge}_"
+        if explain and m.scorers:
+            total = m.concur_count + m.dissent_count
+            if total <= 0:
+                total = len(m.scorers)
+            parts: list[str] = [
+                f"{m.concur_count}/{total} members concur",
+            ]
+            if m.dissent_reasons:
+                first = m.dissent_reasons[0]
+                parts.append(
+                    f"{first[0]} dissented citing "
+                    f"{_truncate_reason(first[1])}",
+                )
+                extra = len(m.dissent_reasons) - 1
+                if extra > 0:
+                    parts.append(f"{extra} other dissent(s)")
+            else:
+                parts.append("no dissent")
+            parts.append(f"mean evidence-quality {m.evidence_quality}")
+            block += "  \n  _" + "; ".join(parts) + "_"
+        lines.append(block)
     return "\n".join(lines)

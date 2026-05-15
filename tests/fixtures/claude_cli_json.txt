@@ -1,0 +1,1 @@
+{"type":"result","subtype":"success","is_error":false,"duration_ms":1842,"duration_api_ms":1611,"num_turns":1,"result":"The capital of France is Paris.","session_id":"3f0d9c2e-7b5a-4e1c-9d2b-8a6f5e4c3b2a","total_cost_usd":0.0089,"usage":{"input_tokens":128,"cache_creation_input_tokens":0,"cache_read_input_tokens":0,"output_tokens":42,"server_tool_use":{"web_search_requests":0}}}

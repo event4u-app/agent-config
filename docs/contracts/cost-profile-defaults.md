@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-13
+---
+
 # Cost-Profile Defaults — Contract
 
 > **Status:** beta · **Owner:** package maintainer · **Last reviewed:** 2026-05-14

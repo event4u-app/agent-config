@@ -4,6 +4,11 @@ Each council member runs in exactly one transport mode per invocation:
 
 - ``api``      — direct SDK call against the provider's API (billable).
 - ``manual``   — copy-paste loop with the user as transport (free).
+- ``cli``      — shell out to a locally-installed provider CLI under the
+                 user's subscription auth (Claude Pro/Max, ChatGPT
+                 Plus/Pro via Codex, Google Gemini, …). Spend is covered
+                 by the flat-rate subscription, not per-token; the
+                 ``cost_budget`` gate is skipped (``billable=False``).
 
 Resolution precedence — first non-empty wins:
 
@@ -23,7 +28,7 @@ from __future__ import annotations
 
 from typing import Mapping
 
-VALID_MODES: frozenset[str] = frozenset({"api", "manual"})
+VALID_MODES: frozenset[str] = frozenset({"api", "manual", "cli"})
 
 DEFAULT_MODE: str = "manual"
 

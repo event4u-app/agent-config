@@ -13,21 +13,35 @@ Mirrors the contract from `scripts/skill_trigger_eval.py`:
 Tests inject mock clients via the `client=` constructor argument and
 never hit the real API.
 
-Mode contract (Phase 2b):
-- `billable=True` clients (AnthropicClient, OpenAIClient) participate
-  in the cost gate — projected USD spend is checked before each call.
-- `billable=False` clients (ManualClient, future PlaywrightClient)
-  skip the cost gate entirely. Spend = $0 to us; provider-side rate
+Mode contract:
+- `billable=True` clients (AnthropicClient, OpenAIClient, GeminiClient,
+  XAIClient, PerplexityClient) participate in the cost gate — projected
+  USD spend is checked before each call.
+- `billable=False` clients (ManualClient, vendor-official CliClient
+  subclasses — AnthropicCliClient, OpenAICliClient, GeminiCliClient)
+  skip the USD cost gate entirely. Spend = $0 to us; provider-side
   limits are the user's concern.
+- `billable=True` CLI subclasses (XAICliClient, PerplexityCliClient)
+  wrap community-maintained CLIs that consume the same API key as
+  their `api` counterparts — they participate in the USD cost gate.
+  `mode: cli` here is an ergonomic shortcut, not a billing change.
+
+CLI subclasses additionally consult the optional
+`cli_call_budget.max_calls_per_day.<provider>` quota with state
+persisted at `~/.event4u/agent-config/cli-calls.json` (daily UTC reset).
 """
 
 from __future__ import annotations
 
+import json
+import shutil
 import stat
+import subprocess
 import sys
 import time
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import TextIO
 
@@ -144,6 +158,8 @@ class ExternalAIClient(ABC):
     name: str = ""
     model: str = ""
     billable: bool = True  # API-mode subclasses spend money; manual doesn't.
+    transport: str = "api"  # "api" | "cli" | "manual" — surfaced in session manifest.
+    subscription_label: str = ""  # vendor-CLI label (e.g. "claude") for non-billable transports.
 
     @abstractmethod
     def ask(
@@ -441,6 +457,675 @@ class PerplexityClient(_OpenAICompatibleClient):
         super().__init__(model=model, client=client, api_key=api_key)
 
 
+# ── CLI transport (step-1 Phase 1+) ──────────────────────────────────
+
+
+CLI_CALLS_FILENAME = "cli-calls.json"
+
+#: Default subprocess timeout for a single CLI call. Long enough for the
+#: largest frontier models to think; short enough to surface a hung
+#: subprocess without freezing the council run.
+DEFAULT_CLI_TIMEOUT_SECONDS = 120.0
+
+
+class CliClientError(RuntimeError):
+    """Raised when a CLI member cannot be constructed (binary missing, etc.)."""
+
+
+def _cli_calls_state_path() -> Path:
+    """Return the canonical write target for the daily-quota counter."""
+    return user_global_paths.write_target(CLI_CALLS_FILENAME)
+
+
+def _today_utc_iso() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
+
+
+def load_cli_call_counts(path: Path | None = None) -> dict[str, int]:
+    """Return today's per-provider call counts. Empty dict on UTC rollover."""
+    p = path if path is not None else _cli_calls_state_path()
+    if not p.exists():
+        return {}
+    try:
+        data = json.loads(p.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return {}
+    if not isinstance(data, dict) or data.get("date") != _today_utc_iso():
+        return {}
+    counts = data.get("counts", {})
+    if not isinstance(counts, dict):
+        return {}
+    return {str(k): int(v) for k, v in counts.items() if isinstance(v, (int, str))}
+
+
+def record_cli_call(provider: str, path: Path | None = None) -> int:
+    """Increment today's call count for `provider`. Returns new total."""
+    p = path if path is not None else _cli_calls_state_path()
+    counts = load_cli_call_counts(p)
+    counts[provider] = counts.get(provider, 0) + 1
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(
+        json.dumps({"date": _today_utc_iso(), "counts": counts}, indent=2),
+        encoding="utf-8",
+    )
+    return counts[provider]
+
+
+class CliClient(ExternalAIClient):
+    """Shell-out council member — subscription-authed transport.
+
+    Spawns a locally-installed provider CLI via ``subprocess.run``. Auth
+    is delegated to the binary itself (Claude CLI, Codex CLI, Gemini
+    CLI, etc. use the user's logged-in subscription session). Spend is
+    $0 from this loader's perspective — ``billable=False`` keeps the
+    USD cost gate from firing.
+
+    Provider subscription quotas (Claude Pro 5h windows, ChatGPT Plus
+    message caps, Gemini free-tier limits) are guarded by the optional
+    ``cli_call_budget.max_calls_per_day.<provider>`` config. Counter
+    state lives at ``~/.event4u/agent-config/cli-calls.json`` and
+    resets on UTC date rollover.
+
+    Subclass contract:
+
+    - ``name``: provider key (`anthropic`, `openai`, `gemini`, …).
+    - ``default_binary``: executable name resolved via ``shutil.which``
+      when the member-level ``binary:`` field is not set.
+    - ``_build_command(system_prompt, user_prompt, max_tokens)``:
+      return the argv list to execute.
+    - ``_parse_output(stdout, stderr)``: return a partial
+      ``CouncilResponse`` (``provider``, ``model``, ``text``,
+      ``input_tokens``, ``output_tokens``, ``metadata``). The base
+      ``ask()`` fills in ``latency_ms``.
+
+    Construction validates the binary up front — a missing CLI fails
+    fast with ``CliClientError`` so the loader can surface a structured
+    "skip member with reason" entry rather than crashing the run.
+
+    Stderr heuristics map known failure shapes to short error codes:
+
+    - ``auth_expired`` — authentication / login / unauthorized.
+    - ``timeout`` — subprocess timeout or deadline exceeded.
+    - ``cli_quota_exhausted`` — rate-limit / quota messaging from the
+      provider, OR the local counter has hit ``max_calls_per_day``.
+    - ``parse_failed`` — non-zero exit absent + stdout was not parseable.
+    - ``exit_<N>`` — fallback for any non-zero exit code without a known
+      stderr pattern.
+    """
+
+    billable = False
+    transport = "cli"
+    default_binary: str = ""
+
+    _AUTH_FAILURE_PATTERNS = (
+        "authentication", "unauthorized", "auth failed", "auth_error",
+        "login", "not logged in", "session expired", "invalid credentials",
+    )
+    _TIMEOUT_PATTERNS = ("timeout", "timed out", "deadline exceeded")
+    _QUOTA_PATTERNS = (
+        "rate limit", "rate_limit", "rate-limit", "quota exceeded",
+        "too many requests", "429", "usage limit",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        self.model = model
+        self.timeout_seconds = timeout_seconds
+        self.max_calls_per_day = max_calls_per_day
+        self._cli_calls_path = cli_calls_path
+        if binary is not None:
+            self.binary = binary
+        else:
+            if not self.default_binary:
+                raise CliClientError(
+                    f"{type(self).__name__}: no `default_binary` set on subclass; "
+                    f"either fix the class or pass `binary=` explicitly."
+                )
+            resolved = shutil.which(self.default_binary)
+            if resolved is None:
+                raise CliClientError(
+                    f"{type(self).__name__}: binary {self.default_binary!r} "
+                    f"not found on PATH. Install the provider CLI or set "
+                    f"`members.{self.name}.binary:` in agents/.ai-council.yml."
+                )
+            self.binary = resolved
+
+    # ── subclass hooks ────────────────────────────────────────────
+
+    @abstractmethod
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int
+    ) -> list[str]:
+        """Return the argv list the subprocess should execute.
+
+        ``self.binary`` is already resolved to an absolute path. Subclasses
+        return ``[self.binary, ...flags...]`` and pass the prompt either
+        via argv (small) or via stdin (large) — see ``_stdin_payload``.
+        """
+
+    @abstractmethod
+    def _parse_output(
+        self, stdout: str, stderr: str
+    ) -> CouncilResponse:
+        """Parse provider-specific stdout into a CouncilResponse.
+
+        ``latency_ms`` and ``error`` are set by the base ``ask()`` wrapper;
+        subclasses populate ``provider``, ``model``, ``text``,
+        ``input_tokens``, ``output_tokens``, and any ``metadata``.
+        """
+
+    def _stdin_payload(self, system_prompt: str, user_prompt: str) -> str | None:
+        """Return text to send on stdin, or ``None`` to inherit caller's stdin.
+
+        Default: ``None`` — subclasses that prefer stdin-piped prompts
+        override (typical for long prompts that would blow argv limits).
+        """
+        return None
+
+    # ── ask() ──────────────────────────────────────────────────────
+
+    def ask(
+        self,
+        system_prompt: str,
+        user_prompt: str,
+        max_tokens: int = DEFAULT_MAX_TOKENS,
+    ) -> CouncilResponse:
+        t0 = time.monotonic()
+
+        # 1. quota gate — local counter check before spawning anything.
+        if self.max_calls_per_day is not None:
+            counts = load_cli_call_counts(self._cli_calls_path)
+            used = counts.get(self.name, 0)
+            if used >= self.max_calls_per_day:
+                return CouncilResponse(
+                    provider=self.name, model=self.model, text="",
+                    latency_ms=int((time.monotonic() - t0) * 1000),
+                    error="cli_quota_exhausted",
+                    metadata={
+                        "cli": True,
+                        "cli_calls_used": used,
+                        "cli_calls_max": self.max_calls_per_day,
+                    },
+                )
+
+        # 2. build command + spawn.
+        cmd = self._build_command(system_prompt, user_prompt, max_tokens)
+        stdin_payload = self._stdin_payload(system_prompt, user_prompt)
+        try:
+            proc = subprocess.run(
+                cmd,
+                input=stdin_payload,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout_seconds,
+                check=False,
+            )
+        except subprocess.TimeoutExpired:
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=int((time.monotonic() - t0) * 1000),
+                error="timeout",
+                metadata={"cli": True, "timeout_seconds": self.timeout_seconds},
+            )
+        except FileNotFoundError:
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=int((time.monotonic() - t0) * 1000),
+                error="binary_missing",
+                metadata={"cli": True, "binary": self.binary},
+            )
+        except OSError as exc:
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=int((time.monotonic() - t0) * 1000),
+                error=f"os_error: {type(exc).__name__}",
+                metadata={"cli": True},
+            )
+
+        # 3. record the call — even failures count against the quota so
+        #    a broken CLI cannot burn the whole budget in a tight loop.
+        try:
+            record_cli_call(self.name, self._cli_calls_path)
+        except OSError:  # state-file write failure is non-fatal here.
+            pass
+
+        latency_ms = int((time.monotonic() - t0) * 1000)
+
+        # 4. non-zero exit → classify and bail.
+        if proc.returncode != 0:
+            code = self._classify_stderr(proc.stderr or "", proc.returncode)
+            return CouncilResponse(
+                provider=self.name, model=self.model, text="",
+                latency_ms=latency_ms,
+                error=code,
+                metadata={
+                    "cli": True,
+                    "returncode": proc.returncode,
+                    "stderr_tail": (proc.stderr or "")[-500:],
+                },
+            )
+
+        # 5. parse stdout via the subclass hook.
+        try:
+            response = self._parse_output(proc.stdout or "", proc.stderr or "")
+        except Exception as exc:  # noqa: BLE001 — defensive: parse must never crash the run.
+            return CouncilResponse(
+                provider=self.name, model=self.model,
+                text=proc.stdout or "",
+                latency_ms=latency_ms,
+                error=f"parse_failed: {type(exc).__name__}",
+                metadata={"cli": True, "stderr_tail": (proc.stderr or "")[-500:]},
+            )
+        response.latency_ms = latency_ms
+        meta = dict(response.metadata)
+        meta.setdefault("cli", True)
+        response.metadata = meta
+        return response
+
+    @classmethod
+    def _classify_stderr(cls, stderr: str, returncode: int) -> str:
+        haystack = stderr.lower()
+        if any(p in haystack for p in cls._AUTH_FAILURE_PATTERNS):
+            return "auth_expired"
+        if any(p in haystack for p in cls._TIMEOUT_PATTERNS):
+            return "timeout"
+        if any(p in haystack for p in cls._QUOTA_PATTERNS):
+            return "cli_quota_exhausted"
+        return f"exit_{returncode}"
+
+
+class AnthropicCliClient(CliClient):
+    """Claude via the official `claude` CLI (subscription-authed).
+
+    Invokes ``claude --print --output-format json`` and consumes the
+    structured envelope: ``{"result": str, "usage": {"input_tokens":
+    int, "output_tokens": int}, "session_id": str, ...}``. The prompt
+    is piped on stdin so it never collides with argv length limits.
+
+    Auth is delegated to the CLI's own session — the user runs
+    ``claude /login`` once and the orchestrator inherits the
+    subscription. No API key flows through this process.
+    """
+
+    name = "anthropic"
+    default_binary = "claude"
+    subscription_label = "claude-pro"
+
+    def __init__(
+        self,
+        *,
+        model: str = "claude-sonnet-4-5",
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        return [
+            self.binary,
+            "--print",
+            "--output-format", "json",
+            "--model", self.model,
+            "--append-system-prompt", system_prompt,
+        ]
+
+    def _stdin_payload(self, system_prompt: str, user_prompt: str) -> str | None:  # noqa: ARG002
+        return user_prompt
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        envelope = json.loads(stdout)
+        if not isinstance(envelope, dict):
+            raise ValueError("expected JSON object at the top level of claude CLI output")
+        text = str(envelope.get("result", "")).strip()
+        usage = envelope.get("usage") or {}
+        if not isinstance(usage, dict):
+            usage = {}
+        meta: dict[str, object] = {}
+        session_id = envelope.get("session_id")
+        if session_id:
+            meta["session_id"] = str(session_id)
+        total_cost = envelope.get("total_cost_usd")
+        if total_cost is not None:
+            meta["reported_cost_usd"] = total_cost
+        duration_ms = envelope.get("duration_ms")
+        if duration_ms is not None:
+            meta["reported_duration_ms"] = duration_ms
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=int(usage.get("input_tokens", 0) or 0),
+            output_tokens=int(usage.get("output_tokens", 0) or 0),
+            metadata=meta,
+        )
+
+
+class OpenAICliClient(CliClient):
+    """OpenAI via the official `codex` CLI (subscription-authed).
+
+    Invokes ``codex exec --json <prompt>`` and consumes the
+    newline-delimited JSON event stream. The user prompt rides on
+    argv (Codex does not read prompts from stdin in ``exec`` mode);
+    the system prompt is passed via ``--system`` when non-empty.
+
+    Auth is delegated to the CLI's own session — the user runs
+    ``codex login`` once and the orchestrator inherits the
+    subscription. No API key flows through this process.
+
+    Output shape: one JSON object per line. The terminal event has
+    ``type == "item.completed"`` with the final assistant message in
+    ``item.content[0].text``; a separate ``type == "turn.completed"``
+    event carries token usage in ``usage.input_tokens`` /
+    ``usage.output_tokens``. Robust against the order of events and
+    against unknown event types (silently skipped).
+    """
+
+    name = "openai"
+    default_binary = "codex"
+    subscription_label = "chatgpt-plus"
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "codex login", "auth_required", "401",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = "gpt-5",
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "exec", "--json", "--model", self.model]
+        if system_prompt:
+            cmd.extend(["--system", system_prompt])
+        cmd.append(user_prompt)
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = ""
+        input_tokens = 0
+        output_tokens = 0
+        meta: dict[str, object] = {}
+        for line in stdout.splitlines():
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                event = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(event, dict):
+                continue
+            event_type = event.get("type")
+            if event_type == "item.completed":
+                item = event.get("item") or {}
+                if isinstance(item, dict):
+                    content = item.get("content") or []
+                    if isinstance(content, list):
+                        chunks: list[str] = []
+                        for entry in content:
+                            if isinstance(entry, dict) and entry.get("text"):
+                                chunks.append(str(entry["text"]))
+                        if chunks:
+                            text = "\n".join(chunks).strip()
+                    if item.get("id"):
+                        meta["item_id"] = str(item["id"])
+            elif event_type == "turn.completed":
+                usage = event.get("usage") or {}
+                if isinstance(usage, dict):
+                    input_tokens = int(usage.get("input_tokens", 0) or 0)
+                    output_tokens = int(usage.get("output_tokens", 0) or 0)
+            elif event_type == "session.created":
+                if event.get("session_id"):
+                    meta["session_id"] = str(event["session_id"])
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=input_tokens, output_tokens=output_tokens,
+            metadata=meta,
+        )
+
+
+class GeminiCliClient(CliClient):
+    """Google Gemini via the official `gemini` CLI (free-tier subscription).
+
+    Invokes ``gemini --prompt <prompt> --output-format json`` and
+    consumes the structured envelope: ``{"response": str, "stats":
+    {"models": {"<model>": {"tokens": {"prompt": int, "candidates":
+    int}}}}, ...}``. Prompt is piped on stdin to dodge argv limits.
+
+    Auth is delegated to the CLI's own session — the user runs
+    ``gemini`` once interactively to set up OAuth, then the
+    orchestrator inherits the consent. Free-tier quotas apply at the
+    Google account level; ``cli_call_budget`` enforces a local mirror.
+    """
+
+    name = "gemini"
+    default_binary = "gemini"
+    subscription_label = "gemini-pro"
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "interactive consent could not be obtained",
+        "please run `gemini`",
+        "oauth",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = "gemini-2.5-pro",
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [
+            self.binary,
+            "--output-format", "json",
+            "--model", self.model,
+        ]
+        if system_prompt:
+            cmd.extend(["--system", system_prompt])
+        return cmd
+
+    def _stdin_payload(self, system_prompt: str, user_prompt: str) -> str | None:  # noqa: ARG002
+        return user_prompt
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        envelope = json.loads(stdout)
+        if not isinstance(envelope, dict):
+            raise ValueError("expected JSON object at the top level of gemini CLI output")
+        text = str(envelope.get("response", "")).strip()
+        input_tokens = 0
+        output_tokens = 0
+        stats = envelope.get("stats") or {}
+        if isinstance(stats, dict):
+            models = stats.get("models") or {}
+            if isinstance(models, dict):
+                # gemini emits per-model token counts; pick the configured model
+                # if present, else sum across all models in the envelope.
+                model_stats = models.get(self.model)
+                if not isinstance(model_stats, dict):
+                    model_stats = next(
+                        (v for v in models.values() if isinstance(v, dict)),
+                        {},
+                    )
+                tokens = (model_stats.get("tokens") or {}) if isinstance(model_stats, dict) else {}
+                if isinstance(tokens, dict):
+                    input_tokens = int(tokens.get("prompt", 0) or 0)
+                    output_tokens = int(tokens.get("candidates", 0) or 0)
+        meta: dict[str, object] = {}
+        session_id = envelope.get("sessionId") or envelope.get("session_id")
+        if session_id:
+            meta["session_id"] = str(session_id)
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=input_tokens, output_tokens=output_tokens,
+            metadata=meta,
+        )
+
+
+class XAICliClient(CliClient):
+    """xAI Grok via the community `grok` CLI (Superagent project).
+
+    Community-maintained wrapper around the xAI API — **not** an
+    official subscription transport. The CLI consumes ``XAI_API_KEY``
+    from its own environment, so every call is paid per-token exactly
+    as ``XAIClient`` (api transport) would be. ``mode: cli`` here is
+    an ergonomic shortcut for users who already drive Grok from the
+    shell; it does NOT bypass the USD cost gate.
+
+    Invokes ``grok -p <prompt>``. Output is plain text — no JSON
+    envelope. ``_parse_output`` returns the trimmed stdout and
+    estimates token counts heuristically (chars / 4) for the
+    audit-trail; estimates feed the post-call spend tracker, not the
+    pre-call gate (the orchestrator's ``estimate()`` already projects
+    cost from the prompt before this client is invoked).
+    """
+
+    name = "xai"
+    default_binary = "grok"
+    billable = True  # community CLI consumes an API key — billable applies
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "xai_api_key", "401", "unauthorized",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = DEFAULT_XAI_MODEL,
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "-p", user_prompt]
+        if self.model:
+            cmd.extend(["--model", self.model])
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = stdout.strip()
+        # Plain-text CLIs surface no token usage — estimate from text
+        # length so the audit trail and post-call tracker stay populated.
+        # chars / 4 mirrors `pricing.estimate_input_tokens`.
+        output_tokens = max(1, len(text) // 4) if text else 0
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=0, output_tokens=output_tokens,
+            metadata={"cli_output_format": "plain_text", "tokens_estimated": True},
+        )
+
+
+class PerplexityCliClient(CliClient):
+    """Perplexity via the community `perplexity` CLI (npm package).
+
+    Community-maintained wrapper around the Perplexity API — **not**
+    an official subscription transport. The CLI consumes
+    ``PERPLEXITY_API_KEY`` from its own environment, so every call is
+    paid per-token exactly as ``PerplexityClient`` (api transport)
+    would be. ``mode: cli`` here is an ergonomic shortcut; it does
+    NOT bypass the USD cost gate.
+
+    Invokes ``perplexity -p <prompt>``. Output is plain text — no
+    JSON envelope. Token counts are estimated heuristically for the
+    audit trail; the pre-call cost gate uses the orchestrator's
+    prompt-side estimate.
+    """
+
+    name = "perplexity"
+    default_binary = "perplexity"
+    billable = True  # community CLI consumes an API key — billable applies
+
+    _AUTH_FAILURE_PATTERNS = CliClient._AUTH_FAILURE_PATTERNS + (
+        "perplexity_api_key", "401", "unauthorized",
+    )
+
+    def __init__(
+        self,
+        *,
+        model: str = DEFAULT_PERPLEXITY_MODEL,
+        binary: str | None = None,
+        timeout_seconds: float = DEFAULT_CLI_TIMEOUT_SECONDS,
+        max_calls_per_day: int | None = None,
+        cli_calls_path: Path | None = None,
+    ):
+        super().__init__(
+            model=model,
+            binary=binary,
+            timeout_seconds=timeout_seconds,
+            max_calls_per_day=max_calls_per_day,
+            cli_calls_path=cli_calls_path,
+        )
+
+    def _build_command(
+        self, system_prompt: str, user_prompt: str, max_tokens: int  # noqa: ARG002
+    ) -> list[str]:
+        cmd = [self.binary, "-p", user_prompt]
+        if self.model:
+            cmd.extend(["--model", self.model])
+        return cmd
+
+    def _parse_output(self, stdout: str, stderr: str) -> CouncilResponse:  # noqa: ARG002
+        text = stdout.strip()
+        output_tokens = max(1, len(text) // 4) if text else 0
+        return CouncilResponse(
+            provider=self.name, model=self.model, text=text,
+            input_tokens=0, output_tokens=output_tokens,
+            metadata={"cli_output_format": "plain_text", "tokens_estimated": True},
+        )
+
+
 # ── Manual mode (Phase 2b) ───────────────────────────────────────────
 
 
@@ -479,6 +1164,7 @@ class ManualClient(ExternalAIClient):
     """
 
     billable = False
+    transport = "manual"
 
     def __init__(
         self,

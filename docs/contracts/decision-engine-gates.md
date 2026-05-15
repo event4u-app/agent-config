@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-13
+---
+
 # Decision-engine gates (v1)
 
 **Status:** beta — landed 2026-05-14 via `road-to-productization.md` Phase 2.

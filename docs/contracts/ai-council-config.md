@@ -32,7 +32,7 @@ pointing at this contract.
 ```yaml
 enabled: <bool>                 # master switch, required
 defaults:                       # per-invocation defaults, required
-  mode: <"api" | "manual">
+  mode: <"api" | "manual" | "cli">
   min_rounds: <int >= 1>
   deep_min_rounds: <int >= min_rounds>
   max_output_tokens: <int >= 0>           # 0 widens to provider ceiling
@@ -42,23 +42,80 @@ cost_budget:                    # hard caps per /council invocation, required
   max_input_tokens: <int >= 0>            # 0 disables this cap
   max_output_tokens: <int >= 0>           # 0 disables this cap
   max_calls: <int >= 0>                   # 0 disables this cap
-  max_total_usd: <number >= 0>            # 0 disables the USD ceiling
+  max_total_usd: <number >= 0>            # 0 disables the USD ceiling — applies to billable transports: all `mode: api`, plus `mode: cli` for xai/perplexity (community CLIs that still consume the API key). Does NOT apply to vendor-official `mode: cli` (anthropic/openai/gemini) or to `mode: manual`
+cli_call_budget:                # optional; per-day call-count guard for mode: cli members
+  max_calls_per_day:
+    <provider>: <int >= 0>                # opt-in per provider; default unset = unlimited
 members:                        # per-provider blocks, at least one enabled
   <provider>:
     enabled: <bool>
     model: <string>
-    api_key_ref: <string>                 # see `api_key_ref` forms below
-    mode: <"api" | "manual">              # optional override of defaults.mode
+    api_key_ref: <string>                 # required for mode: api; optional for cli/manual
+    mode: <"api" | "manual" | "cli">      # optional override of defaults.mode
+    binary: <string>                      # optional; only valid when effective mode == "cli"
 advisors:                       # Thinking-style replace-mode advisors
   <advisor-key>:
     enabled: <bool>
     member: <provider>                    # required; references members.<provider>
     model: <string>                       # optional; overrides member.model
     persona: <path>                       # optional; defaults to personas/advisors/<advisor-key>.md
+necessity_classifier:           # Phase 6 — optional, default enabled+educate
+  enabled: <bool>                         # master switch (default true)
+  mode: <"off" | "educate" | "block">     # default "educate"
+decision_replay:                # Phase 9 — optional, default enabled+full
+  enabled: <bool>                         # master switch (default true)
+  include_member_arguments: <bool>        # default true; false = redacted view
+lens_overrides:                 # Phase 6 — optional, per-lens nudges
+  necessity_classifier_mode:
+    <lens>: <"off" | "educate" | "block">
+lenses:                         # Phase 9 — optional, per-lens overrides
+  <lens>:
+    decision_replay:
+      enabled: <bool>
+      include_member_arguments: <bool>
 ```
 
 Supported `<provider>` keys: `anthropic`, `openai`, `gemini`, `xai`,
 `perplexity`. Unknown providers fail validation closed.
+
+### Transport modes
+
+Three first-class transports on the `mode:` axis. Resolution per member:
+`per-member mode > defaults.mode > "api"`.
+
+| Mode | Semantics | Billable | Auth | Cost gate |
+|---|---|---|---|---|
+| `manual` | Copy & paste — the human transports prompt + reply between the agent and an external chat surface. | No | None — human-in-the-loop | n/a |
+| `api` | SDK call against a stored key, per-token billing on the provider's API. | Yes | `api_key_ref` (env or 0600 file) | `cost_budget` (full) |
+| `cli` | Shell out to a locally-installed provider CLI. For `anthropic` / `openai` / `gemini` this runs under the user's subscription auth and is `billable=False`. For `xai` / `perplexity` (community wrappers) the CLI consumes the same API key as `mode: api` and remains `billable=True`. | Mixed — see below | CLI-managed OAuth (vendor) or API key in CLI env (community) | Vendor: `cli_call_budget.max_calls_per_day` only · Community: full `cost_budget` |
+
+Implications:
+
+- **`cost_budget.max_total_usd` applies to `mode: cli` for `xai` and
+  `perplexity`.** Their CLIs (`grok`, `perplexity`) are community-built
+  wrappers around the same paid API — `mode: cli` is an ergonomic
+  shortcut, NOT a billing change. The orchestrator still runs the
+  pre-call USD estimate and the budget gate for these two providers.
+- **`cost_budget.max_total_usd` does NOT apply to `mode: cli` for the
+  vendor-official CLIs (`anthropic`, `openai`, `gemini`) or to
+  `mode: manual`.** All four are `billable=False`; the USD ceiling is
+  a token-billing concept they don't participate in.
+- **`api_key_ref` is required for enabled members whose effective mode
+  is `api`, AND for `xai` / `perplexity` even in `mode: cli`** — the
+  community CLI reads the key from its own env, but the agent still
+  surfaces missing-key as a validation error before the call. The
+  vendor-official CLIs (`anthropic`, `openai`, `gemini`) authenticate
+  via their own login flow and need no `api_key_ref` in `mode: cli`;
+  manual members have no key at all.
+- **`binary:` is only valid when the effective mode is `cli`.** Setting it
+  on an `api` or `manual` member is a hard validation error — no silent
+  ignore, no clutter.
+- **Subscription quotas:** Claude Pro 5h usage windows, ChatGPT Plus
+  message caps, Gemini free-tier per-day limits all live outside this
+  loader's view. `cli_call_budget.max_calls_per_day.<provider>` lets the
+  user opt into a per-day cap; counter state persists at
+  `~/.event4u/agent-config/cli-calls.json` with daily UTC reset (wired in
+  Phase 1 of the CLI-transport roadmap).
 
 ### Advisor block (Phase 6, replace-mode)
 
@@ -87,6 +144,177 @@ step preserves the **advisor persona label** as signal — peer-review
 output renders as `Response A (Contrarian)`, never
 `Response A (Anthropic Opus)`. Plain runs strip identity entirely.
 Hard-coded behaviour — no flag, no opt-out.
+
+### Necessity classifier (Phase 6, pre-flight gate)
+
+A heuristic pre-flight that decides whether the request actually
+warrants a full council deliberation. Three verdicts (`necessary`,
+`borderline`, `unnecessary`) drive three exit paths in the dispatcher
+(skip silently, educate + block, or proceed). Implemented in
+[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py);
+wired into `council_cli.cmd_run` and `cmd_debate` before any member
+is invoked.
+
+**Configuration.**
+
+- `necessity_classifier.enabled` (bool, default `true`) — master switch.
+  `false` short-circuits the gate entirely; legacy "always run" behaviour
+  is restored.
+- `necessity_classifier.mode` (`"off" | "educate" | "block"`, default
+  `"educate"`).
+  - `off` — gate disabled while keeping the classifier module loaded
+    (cheap toggle for experiments).
+  - `educate` — agent-initiated invocation + `unnecessary` verdict skips
+    silently with `skipped_reason: necessity_unnecessary` in
+    `session.md`. User-explicit invocation + `unnecessary` prints a
+    one-paragraph rationale and exits non-zero; `--proceed-anyway`
+    overrides on this single call.
+  - `block` — same as `educate` for `necessary` / `borderline`, but
+    `unnecessary` is rejected regardless of invocation source. Even
+    `--proceed-anyway` is ignored (power-user opt-in for cost-strict
+    environments).
+- `lens_overrides.necessity_classifier_mode.<lens>` — per-lens override.
+  Wins over the global `mode`. Typical use: leave the global at
+  `educate` and force `debate` lens to `block` because debate is the
+  most expensive transport.
+
+**Invocation context (CLI flags).**
+
+- `--invocation {agent,user_explicit}` — defaults to `user_explicit`.
+  Agent orchestration MUST set `--invocation agent` so silent skips are
+  available; user-typed `/council` keeps the default.
+- `--proceed-anyway` — one-shot override of the `educate` block. Does
+  NOT lift `block` mode.
+
+**Classifier shape.**
+
+Word-boundary regex matches against four `necessary` buckets
+(architecture / tradeoff / ambiguity / strategic) and four
+`unnecessary` buckets (bugfix / syntax / single_file / lookup).
+Decision table:
+
+| Necessary hits | Unnecessary hits | Lens strict? | Verdict |
+|---|---|---|---|
+| `> unnecessary` | any | n/a | `necessary` |
+| `>= 1` | `== 0` | n/a | `necessary` |
+| `== 0` | `>= 1` | n/a | `unnecessary` |
+| equal `>= 1` each | both `>= 1` | n/a | `borderline` |
+| `== 0` | `== 0` | yes (`debate`) | `unnecessary` |
+| `== 0` | `== 0` | no | `borderline` |
+
+Trigger word lists live in
+[`scripts/ai_council/necessity.py`](../../scripts/ai_council/necessity.py)
+as `NECESSARY_TRIGGERS` and `UNNECESSARY_TRIGGERS` — extend there with
+a unit test; never edit downstream copies.
+
+### Decision-replay artefact (Phase 9, audit trail)
+
+Per-session `decision-replay.md` written next to `responses.json` whenever
+the consensus round runs. Pure projection of consensus data plus the
+final-round per-member texts — no extra model calls. The artefact
+surfaces, per top finding, the verdict band (Strong/Moderate/Weak), the
+evidence-quality bucket (H/M/L), the agree/dissent member split, and one
+key argument per member. Implementation:
+[`scripts/ai_council/replay.py`](../../scripts/ai_council/replay.py).
+
+**Configuration.**
+
+- `decision_replay.enabled` (bool, default `true`) — master switch.
+  `false` skips the artefact for every lens.
+- `decision_replay.include_member_arguments` (bool, default `true`) —
+  when `false`, the artefact emits the redacted view: verdict +
+  evidence-quality + counts only, no per-member arguments. Use for
+  surfaces where attributing reasoning to a specific model would leak
+  vendor preference signal.
+- `lenses.<lens>.decision_replay.enabled` / `include_member_arguments`
+  — per-lens overrides that beat the global block. Typical use: keep
+  the audit trail on for `analysis` and turn it off for `default` /
+  `prompt` where consensus rarely runs.
+
+**CLI.**
+
+- Written automatically by `council run` when consensus scoring fires.
+- `council replay <responses.json>` re-renders the artefact from a saved
+  session. `--output <path>` writes to a file (otherwise stdout);
+  `--redact-member-arguments` / `--include-member-arguments` toggle the
+  redacted view independent of config.
+
+**Decision-replay schema.** The markdown body follows a fixed shape so
+downstream tooling can scrape it:
+
+```
+# Decision Replay
+
+> <original-ask truncated to 400 chars>
+
+## <finding-id> — <finding-text truncated to 120 chars>
+
+- **Consensus**: Strong|Moderate|Weak (<strength 0.00–1.00>)
+- **Evidence quality**: H|M|L (mean <X>/10)
+- **Agreement**: <concur>/<total> members concur, <dissent> dissent
+
+**Agreeing members**:                        # full mode only
+- _<provider:model>_ — <argument truncated to 200 chars>
+
+**Dissenting members**:                      # full mode only
+- _<provider:model>_ — <argument truncated to 200 chars>
+
+**Synthesis verdict**: <band> consensus — <source> sourced.
+
+---
+
+_artefact mode: full|redacted (counts only)_
+```
+
+Findings are ranked by `consensus_strength` descending. Empty sessions
+emit the heading plus `*No findings were extracted for this session.*`.
+
+### Decision resolution by impact (Phase 10, ask-user routing)
+
+Five-class impact classifier triages every pending agent question
+before it surfaces. Heuristic, shape-based, keyword-driven — no LLM
+call, fully explainable. Lives in `scripts/ai_council/necessity.py`
+(`classify_impact`, `route_decision`).
+
+| Class | Trigger shape | Default mode |
+|---|---|---|
+| `trivial` | naming, whitespace, comments, typo, indent | `agent` |
+| `low_impact` | local idioms, DTO vs value object, test extensions | `agent` |
+| `medium_impact` | API shape, contract change, breaking change, module boundary | `council` |
+| `high_impact` | security, auth, tenant boundary, migration, billing, secrets, PII | `user` (**LOCKED**) |
+| `user_required` | user-fence markers — "ask me", "review first", "plan only" | `user` (**LOCKED**) |
+
+**Iron Law** — `high_impact` and `user_required` ALWAYS route to the
+user. The schema loader rejects any `decision_resolution.classes.<cls>.mode`
+that maps either class to `agent` or `council`. No override path, no
+config flag, no autonomy setting can lift this lock.
+
+**Confidence gate** — each entry carries a `confidence_threshold`
+(default `0.6`). When the classifier's confidence is below the
+threshold, the configured mode is upgraded one rung
+(`agent` → `council` → `user`) so low-certainty calls escalate rather
+than silently auto-resolve.
+
+```yaml
+decision_resolution:
+  enabled: true
+  classes:
+    trivial:
+      mode: agent
+      confidence_threshold: 0.6
+    low_impact:
+      mode: agent
+      confidence_threshold: 0.6
+    medium_impact:
+      mode: council
+      confidence_threshold: 0.6
+    high_impact:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+    user_required:
+      mode: user            # LOCKED — Iron Law
+      confidence_threshold: 0.6
+```
 
 ## `api_key_ref` forms
 
@@ -122,9 +350,18 @@ as comments and the loader enforces them.
   identity.
 - **Autonomy carve-out — no silent spend.** The `/council` command always
   asks before invoking, even under autonomy: on. Cost is real and paid.
-- **Manual vs API transport.** `api` = direct SDK call against the
-  provider's API (billable). `manual` = copy-paste loop, user is the
-  transport (free). Per-invocation flag > per-member override > defaults.
+- **Manual vs API vs CLI transport.** Three first-class modes on the
+  `mode:` axis:
+  - `manual` = copy & paste — the human transports prompt + reply between
+    the agent and an external chat surface. Free, no key.
+  - `api` = direct SDK call against a stored key (per-token billing).
+  - `cli` = shell out to a locally-installed provider CLI under the
+    user's subscription auth — spend is covered by the flat-rate
+    subscription, not per-token. `billable=False` so the `cost_budget`
+    USD ceiling does not apply; subscription quotas are guarded by
+    `cli_call_budget.max_calls_per_day` instead.
+
+  Precedence: per-invocation flag > per-member override > defaults > `api`.
 - **Tokens never stored in this yml.** Keys live in 0600 files
   (`~/.event4u/agent-config/<provider>.key`, installed via
   `bash scripts/install_<provider>_key.sh` for providers that ship an
@@ -165,14 +402,25 @@ error) when any of these hold:
    `sk-`, `pk-`, `xai-`, or matches a provider's key prefix).
 6. `defaults.deep_min_rounds < defaults.min_rounds` is allowed (clamped
    by the monotonic rule at runtime) but logged as a warning.
-7. `defaults.mode` not in `{"api", "manual"}`; per-member `mode` override
-   same constraint.
-8. `advisors.<key>.member` missing, unknown, or pointing at a
-   `members.<provider>` that does not exist or has `enabled: false`
-   (when the advisor itself is `enabled: true`). Silent skips are not
-   allowed — a typo never costs the user money on an unintended call
-   plan.
-9. `advisors.<key>.model` is set but not a string.
+7. `defaults.mode` not in `{"api", "manual", "cli"}`; per-member `mode`
+   override same constraint.
+8. `members.<provider>.binary` set when the member's effective mode is
+   not `cli` — explicit error to keep config clutter-free.
+9. `cli_call_budget` is not a mapping, or
+   `cli_call_budget.max_calls_per_day.<key>` is an unknown provider, or
+   any value is a negative integer / non-integer.
+10. `advisors.<key>.member` missing, unknown, or pointing at a
+    `members.<provider>` that does not exist or has `enabled: false`
+    (when the advisor itself is `enabled: true`). Silent skips are not
+    allowed — a typo never costs the user money on an unintended call
+    plan.
+11. `advisors.<key>.model` is set but not a string.
+12. `necessity_classifier` is not a mapping, or `enabled` is not a bool,
+    or `mode` is not one of `{"off", "educate", "block"}`.
+13. `lens_overrides.necessity_classifier_mode` is not a mapping, or any
+    value is not one of `{"off", "educate", "block"}`. Unknown lens keys
+    are accepted (forward-compatible) but never silently rewrite the
+    global default.
 
 ## Migration footprint (Phase 0)
 

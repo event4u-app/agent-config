@@ -208,6 +208,7 @@
         "./.claude/skills/memory",
         "./.claude/skills/memory-add",
         "./.claude/skills/memory-consolidation",
+        "./.claude/skills/memory-learn-low-impact",
         "./.claude/skills/memory-load",
         "./.claude/skills/memory-mine-session",
         "./.claude/skills/memory-promote",

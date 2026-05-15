@@ -5,6 +5,8 @@ source: package
 domain: process
 ---
 
+<!-- cloud_safe: degrade -->
+
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
 # ai-council
@@ -29,6 +31,45 @@ Do NOT use when:
   bundler's pattern set → ask the user before sending.
 * The user has not configured any council member → state that and stop;
   do not silently fall back to anything.
+
+## When NOT to invoke — necessity self-check
+
+Phase 6 necessity classifier (see
+[`ai-council-config § Necessity classifier`](../../../docs/contracts/ai-council-config.md))
+runs as pre-flight gate inside CLI, skips council when prompt looks
+like routine work. Route around it BEFORE gate fires so user never pays
+classifier-pause cost on request that obviously did not need council.
+
+Skip council, stay in-session for:
+
+* **Bugfix shape** — stack trace, error, crash, failing test, "broken",
+  regression. Use `systematic-debugging` or `bug-investigate`.
+* **Syntax / format / lint** — `typo`, `formatting`, `lint`, `indent`,
+  `import order`, simple rename. Use language skill directly
+  (`php-coder`, `eloquent`, `nextjs-patterns`).
+* **Single-file implementation** — "this function", "this method",
+  "this file", "one-liner", "small change", "add a getter". Use
+  language skill directly.
+* **Documentation lookup** — "what is X", "how does Y work", "example
+  of Z", "syntax of W". Use `codebase-retrieval` or docs skill, never
+  council.
+
+Invoke council when:
+
+* **Architectural / structural** — system boundaries, coupling,
+  refactor strategy, migration plan, rewrite vs redesign.
+* **Multi-axis trade-off** — stakeholders disagree; competing
+  alternatives need weighing; "pros and cons" is the actual ask.
+* **Strategic / direction** — "should we …", "shall we …", roadmap
+  shape, long-term technical direction.
+* **Explicit ambiguity** — user wrote "unsure / uncertain / ambiguous
+  / second opinion / sanity check".
+
+Agent orchestration MUST call `council_cli` with `--invocation agent`
+so gate can skip silently on routine requests. User-typed `/council`
+keeps default (`--invocation user_explicit`); user gets educational
+message + `--proceed-anyway` override path. Mode `block` ignores
+`--proceed-anyway` by design — cost-strict opt-in.
 
 ## Goal
 
@@ -89,8 +130,9 @@ travel changes.
 
 | Mode | Client | Billable | Transport | Status |
 |---|---|---|---|---|
-| `api` | `AnthropicClient` / `OpenAIClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
+| `api` | `AnthropicClient` / `OpenAIClient` / `GeminiClient` / `XAIClient` / `PerplexityClient` | yes | provider SDK + key from `~/.event4u/agent-config/<provider>.key` (legacy `~/.config/agent-config/<provider>.key` read as fallback) | shipped |
 | `manual` | `ManualClient` | no | `stdout` (prompt block) + `stdin` (user pastes the web-UI reply, terminated by a line containing only `END`) | shipped (Phase 2b) |
+| `cli` | `AnthropicCliClient` / `OpenAICliClient` / `GeminiCliClient` | no (subscription-authed) | local subprocess against the vendor CLI (`claude`, `codex`, `gemini`); auth delegated to the CLI's own session, no API key in this process | shipped (anthropic/openai/gemini · Phase 3) |
 
 Resolution lives in `scripts/ai_council/modes.py`:
 `resolve_mode(name, invocation_mode, member_settings, global_mode)`
@@ -118,16 +160,79 @@ thread** (no system prompt repetition). `2` records the round and
 moves to the next member. `3` returns `error="manual_aborted"` for
 that member and the orchestrator stops the fan-out.
 
+### CLI-mode UX
+
+`mode: cli` runs the council through the vendor's local CLI
+instead of the API. Auth is delegated — user logs into each CLI
+once (`claude login`, `codex login`, `gemini`), orchestrator
+inherits the subscription. No API key in this process.
+`billable=False` → cost gate bypassed; the local
+`cli_call_budget.max_calls_per_day.<provider>` quota (state at
+`~/.event4u/agent-config/cli-calls.json`, daily UTC reset) is the
+only per-day brake.
+
+Three vendor CLIs wired:
+
+- **Anthropic / Claude** — invokes `claude --print --output-format json`,
+  parses standard envelope (`result` + `usage` + `session_id` +
+  `total_cost_usd`). Token counts and reported cost survive to
+  `metadata` for audit.
+
+  ```yaml
+  members:
+    anthropic:
+      enabled: true
+      mode: cli
+      model: claude-sonnet-4-5
+  ```
+
+- **OpenAI / Codex** — invokes `codex exec --json`, walks the
+  newline-delimited JSON event stream, pulls text from
+  `item.completed` and tokens from `turn.completed`. Session id
+  preserved.
+
+  ```yaml
+  members:
+    openai:
+      enabled: true
+      mode: cli
+      model: gpt-5
+  ```
+
+- **Google / Gemini** — invokes `gemini --output-format json` with
+  prompt piped on stdin, parses `response` + `stats.models.<m>.tokens`
+  envelope. OAuth consent must be granted once interactively before
+  the CLI is usable from a non-interactive shell.
+
+  ```yaml
+  members:
+    gemini:
+      enabled: true
+      mode: cli
+      model: gemini-2.5-pro
+  ```
+
+Auth-failure stderr from any vendor CLI surfaces as
+`error="auth_expired"` with the original stderr tail in
+`metadata.stderr_tail` so the user knows to re-login. Missing
+binary at construction time fails fast with `CouncilDisabledError`
+naming the binary and the YAML override path — never silently
+substitutes.
+
+`xai` + `perplexity` accept `mode: cli` from Phase 4 onward, but
+their community CLIs DO consume the API key and DO NOT bypass
+per-token billing — contract doc warns explicitly.
+
 ### Cost-gate bypass for non-billable members
 
 `ExternalAIClient.billable` is the contract. Clients with
-`billable=False` (`ManualClient`) bypass the cost gate entirely —
-the orchestrator skips the
-projection check, the `on_overrun` callback, and the USD-budget
-short-circuit for that member, but still records the response's
-token counts (from the manual-paste length heuristic or the
-provider's reply, when available) for observability. Mixed runs
-(one manual + one api) gate only the api members.
+`billable=False` (`ManualClient`, `AnthropicCliClient`,
+`OpenAICliClient`, `GeminiCliClient`) bypass the cost gate entirely —
+orchestrator skips the projection check, the `on_overrun` callback,
+and the USD-budget short-circuit for that member, but still records
+the response's token counts (from the manual-paste length heuristic
+or the provider's reply, when available) for observability. Mixed
+runs (one cli + one api) gate only the api members.
 
 ## Degradation modes
 
@@ -690,6 +795,82 @@ and call count are unaffected. Peer-review preserves the advisor
 label while stripping provider identity (`Response A (Contrarian)`).
 Two enabled advisors on the same member is a config error.
 
+## Decision-replay artefact (Phase 9, audit trail)
+
+Every session that runs consensus scoring drops a `decision-replay.md`
+next to `responses.json`. Pure projection of consensus + final-round
+member texts — **no extra model calls, no extra spend**. Surfaces per
+top finding: verdict band (Strong/Moderate/Weak), evidence-quality
+(H/M/L), agree/dissent split, one key argument per member.
+
+Two render modes — **Full** (per-member arguments attributed to
+`provider:model`) and **Redacted** (verdict + evidence-quality + counts
+only). Toggles: `ai_council.decision_replay.{enabled,
+include_member_arguments}` global; `ai_council.lenses.<lens>.decision_replay.*`
+per-lens override.
+
+CLI — written automatically by `council run` on lenses that score
+consensus. `council replay <responses.json>` re-renders from a saved
+session; `--redact-member-arguments` / `--include-member-arguments`
+flip the view independent of config (share redacted variant of an
+already-paid run).
+
+## Lightweight-QA fast-path (Phase 11)
+
+Low-impact questions from Phase 10's impact router → restricted fast-path
+in place of full debate. Trade-off explicit: **1 round · ≤2 members ·
+$0.05/answer · 2500 tokens**. No advisors, no peer-review, no consensus
+scoring — quick answer + transparency marker, not deliberation.
+
+### Iron Law
+
+`high_impact` and `user_required` **never** route to fast-path,
+regardless of config. Schema validation rejects override. Fast-path
+activates only when:
+
+1. `ai_council.enabled: true` AND
+2. `decision_resolution.low_impact.mode: council` AND
+3. ≥1 member has `participate_low_impact: true` (default `false` —
+   explicit opt-in per member).
+
+### Output marker (always surfaced)
+
+* **Resolved** — `> Resolved via low-impact council (anthropic): <answer>`
+* **Split** — `> Low-impact council split — escalating to user (anthropic: X / openai: Y):`
+* **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
+
+Marker mandatory — agent never silently substitutes fast-path verdict
+for its own answer.
+
+### Session artefact
+
+Every fast-path attempt appends one line to
+`agents/council-sessions/<date>-<slug>/low-impact-resolutions.md`:
+
+```
+2025-05-14T10:00:00Z | resolved | members=2/2 | members(anthropic, openai) cost=$0.0034 | Q=Service vs Repository for this read path?
+```
+
+Append-only, one line per resolution. Parser tolerates free-form
+headers around canonical lines.
+
+### `council replay --low-impact-stats`
+
+Re-projection of session log → summary block:
+
+```
+$ council replay agents/council-sessions/2025-05-14-foo/responses.json --low-impact-stats
+# Low-impact fast-path · session summary
+
+- attempts: 4
+- status: aborted=1 · resolved=2 · split=1
+- members: anthropic=4 · openai=3
+- total cost: $0.0096
+```
+
+No model calls — pure markdown parse. Returns 0 when session has no
+fast-path entries (clean session is not an error).
+
 ## See also
 
 - `/council` command — the user-facing entry point.
@@ -704,3 +885,7 @@ Two enabled advisors on the same member is a config error.
 - `docs/customization.md` § `ai_council.*` — settings reference.
 - `docs/contracts/ai-council-config.md` § advisors — schema + precedence
   contract.
+- `docs/contracts/ai-council-config.md` § Decision-replay artefact —
+  Phase 9 audit trail contract + redaction modes.
+- `scripts/ai_council/replay.py` — pure projection renderer (no model
+  calls).

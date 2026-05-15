@@ -233,6 +233,24 @@
       ]
     },
     {
+      "id": "low-impact-corpus-privacy-floor",
+      "triggers": [
+        {
+          "path_prefix": "agents/low-impact-decisions"
+        },
+        {
+          "keyword": "low-impact-decisions"
+        },
+        {
+          "keyword": "low-impact corpus"
+        },
+        {
+          "keyword": "learn-low-impact"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "no-attribution-footers",
       "triggers": [
         {

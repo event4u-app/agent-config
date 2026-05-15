@@ -1,0 +1,4 @@
+{"type":"session.created","session_id":"01HZK8R2W6X9Q4M7N5T2Y3F6A8","model":"gpt-5"}
+{"type":"item.started","item":{"id":"item_01","type":"message","role":"assistant"}}
+{"type":"item.completed","item":{"id":"item_01","type":"message","role":"assistant","content":[{"type":"output_text","text":"The capital of France is Paris."}]}}
+{"type":"turn.completed","usage":{"input_tokens":146,"output_tokens":38}}
