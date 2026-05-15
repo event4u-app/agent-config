@@ -12,7 +12,8 @@ keep-beta-until: 2026-08-12
 > - **CLI commands** rendered by `./agent-config --help`.
 > - **Slash commands** under `.agent-src.uncompressed/commands/**`.
 >
-> Per Phase 4 of `agents/roadmaps/road-to-distribution-maturity.md`.
+> Per Phase 4 of the distribution-maturity roadmap (see
+> `agents/roadmaps/` for current status).
 
 ## Why tiering
 
@@ -157,6 +158,6 @@ Hooked into `task lint-skills` so it runs in CI.
 
 ## See also
 
-- `agents/roadmaps/road-to-distribution-maturity.md` — Phase 4.
+- The distribution-maturity roadmap — Phase 4 (under `agents/roadmaps/`).
 - `docs/contracts/command-clusters.md` — orchestrator → child wiring.
 - `docs/contracts/STABILITY.md` — surface-stability commitments.

@@ -7,7 +7,8 @@ keep-beta-until: 2026-08-12
 
 > **Status:** Decided · 2026-05-14
 > **Context:** v2 council finding C1 (file [01-bus-factor-and-consensus.md](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md)) flagged that a single-author skill suite cannot detect ontology drift (two skills with overlapping triggers, drift between description and body, generic best-practice patterns repeated across clusters). The package needs a **mechanical consensus signal** that does not depend on the original author's judgment.
-> **Roadmap:** Closes Phase 5.2 of [`step-1-v2-feedback-followup`](../../agents/roadmaps/step-1-v2-feedback-followup.md).
+> **Roadmap:** Closes Phase 5.2 of the v2 feedback follow-up roadmap
+> (see `agents/roadmaps/`).
 
 ## Decision
 

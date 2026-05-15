@@ -6,11 +6,10 @@ keep-beta-until: 2026-08-12
 # AI-Council Config (`agents/.ai-council.yml`)
 
 **Purpose.** Lock the schema, validation, and precedence rules for the
-centralized council config file. Every later phase of
-[`step-2-ai-council-consolidation.md`](../../agents/roadmaps/step-2-ai-council-consolidation.md)
-reads from this file; the contract here is the boundary that prevents
-drift across the loader, the CLI, the orchestrator, and the
-`agents/.ai-council.yml` file itself.
+centralized council config file. Every phase of the AI-Council
+consolidation work reads from this file; the contract here is the
+boundary that prevents drift across the loader, the CLI, the
+orchestrator, and the `agents/.ai-council.yml` file itself.
 
 **Audience.** Authors of `scripts/ai_council/config.py`, `council_cli.py`,
 `scripts/ai_council/orchestrator.py`, and the `agents/.ai-council.yml`

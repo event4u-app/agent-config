@@ -5,7 +5,8 @@ keep-beta-until: 2026-08-13
 
 # Multi-Tool Projection Fidelity Contract
 
-**Status:** beta · **Phase 4 of [step-1-v2-feedback-followup](../../agents/roadmaps/step-1-v2-feedback-followup.md)**
+**Status:** beta · **Phase 4 of the `step-1-v2-feedback-followup`
+roadmap** (under `agents/roadmaps/`).
 
 Names the **per-tool guarantees** the projection pipeline (`scripts/compress.py --sync` + `scripts/compress.py --generate-tools`) actually delivers. Byte-equivalence is not behaviour-fidelity — each consumer tool has its own frontmatter grammar, its own activation model, and its own surface for skills / rules / commands.
 

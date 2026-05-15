@@ -4,7 +4,8 @@ Project-committed bill of materials for AI tooling. Answers the
 question "which AIs does this project use, where do their bridges live,
 and is everyone on the team on the same set?". Canonical schema is
 ADR-008 ([`docs/decisions/ADR-008-installed-tools-manifest.md`](../../decisions/ADR-008-installed-tools-manifest.md)).
-Phase 3 of [`road-to-global-first-install`](../../../agents/roadmaps/road-to-global-first-install.md).
+Delivered under the global-first-install roadmap (Phase 3) — see
+`agents/roadmaps/` for current status.
 
 This file lives at **`agents/installed-tools.lock`** — committed,
 machine-managed, and orthogonal to `.agent-project-settings.yml`

@@ -119,8 +119,8 @@ is `low`.
 **Purpose.** Bound the surface area where a memory hit can be said
 to have *changed* an outcome. Closed list, not open — without this
 bound, every memory call risks the "memory affected everything"
-failure mode (Risk register row 2 of
-[`agents/roadmaps/road-to-proof-not-features.md`](../../agents/roadmaps/road-to-proof-not-features.md)).
+failure mode (Risk register row 2 of the `road-to-proof-not-features`
+roadmap; see `agents/roadmaps/` or `agents/roadmaps/archive/`).
 
 **Closed list (v1).** Exactly four keys. Adding a fifth requires a
 schema bump + entry under `### Breaking` in `CHANGELOG.md`.

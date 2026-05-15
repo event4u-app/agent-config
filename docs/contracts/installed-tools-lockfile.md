@@ -12,7 +12,8 @@ repository.
 - **Authoritative module:** [`scripts/_lib/installed_tools.py`](../../scripts/_lib/installed_tools.py)
 - **ADR:** [`docs/decisions/ADR-008-installed-tools-manifest.md`](../decisions/ADR-008-installed-tools-manifest.md)
 - **Workflow guide:** [`docs/guidelines/agent-infra/installed-tools-manifest.md`](../guidelines/agent-infra/installed-tools-manifest.md)
-- **Active roadmap:** P1.1 of [`agents/roadmaps/road-to-multi-package-coexistence.md`](../../agents/roadmaps/road-to-multi-package-coexistence.md)
+- **Active roadmap:** P1.1 of the `road-to-multi-package-coexistence`
+  roadmap (see `agents/roadmaps/` for current status).
 
 ## Versions
 
