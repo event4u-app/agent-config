@@ -66,9 +66,9 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 2 — CLI-binary UX hint (C1)
 
-- [ ] In `scripts/council_cli.py` pre-flight (`format_estimate_table` + run-time member iteration), detect `binary_missing` errors and print one line per skipped CLI member with install hint sourced from `scripts/ai_council/clients.py` per-provider docs URL.
-- [ ] Install-hint table lives in `scripts/ai_council/cli_hints.py` (new, small): `{provider: (binary, install_hint_url, install_hint_one_liner)}`.
-- [ ] Unit tests in `tests/test_cli_hints.py`.
+- [x] In `scripts/council_cli.py` pre-flight (`cmd_estimate` / `cmd_ask` / `cmd_debate`), detect `binary_missing` skips via the `build_members` `skipped` list and print one line per skipped CLI member with install hint sourced from `scripts/ai_council/cli_hints.py`.
+- [x] Install-hint table lives in `scripts/ai_council/cli_hints.py` (new, small): `{provider: (binary, docs_url, install_one_liner)}`.
+- [x] Unit tests in `tests/test_cli_install_hints.py`.
 
 ### Phase 3 — Doctor CLI checks (G5)
 
