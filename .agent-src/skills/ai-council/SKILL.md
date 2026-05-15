@@ -30,6 +30,45 @@ Do NOT use when:
 * The user has not configured any council member → state that and stop;
   do not silently fall back to anything.
 
+## When NOT to invoke — necessity self-check
+
+Phase 6 necessity classifier (see
+[`ai-council-config § Necessity classifier`](../../../docs/contracts/ai-council-config.md))
+runs as pre-flight gate inside CLI, skips council when prompt looks
+like routine work. Route around it BEFORE gate fires so user never pays
+classifier-pause cost on request that obviously did not need council.
+
+Skip council, stay in-session for:
+
+* **Bugfix shape** — stack trace, error, crash, failing test, "broken",
+  regression. Use `systematic-debugging` or `bug-investigate`.
+* **Syntax / format / lint** — `typo`, `formatting`, `lint`, `indent`,
+  `import order`, simple rename. Use language skill directly
+  (`php-coder`, `eloquent`, `nextjs-patterns`).
+* **Single-file implementation** — "this function", "this method",
+  "this file", "one-liner", "small change", "add a getter". Use
+  language skill directly.
+* **Documentation lookup** — "what is X", "how does Y work", "example
+  of Z", "syntax of W". Use `codebase-retrieval` or docs skill, never
+  council.
+
+Invoke council when:
+
+* **Architectural / structural** — system boundaries, coupling,
+  refactor strategy, migration plan, rewrite vs redesign.
+* **Multi-axis trade-off** — stakeholders disagree; competing
+  alternatives need weighing; "pros and cons" is the actual ask.
+* **Strategic / direction** — "should we …", "shall we …", roadmap
+  shape, long-term technical direction.
+* **Explicit ambiguity** — user wrote "unsure / uncertain / ambiguous
+  / second opinion / sanity check".
+
+Agent orchestration MUST call `council_cli` with `--invocation agent`
+so gate can skip silently on routine requests. User-typed `/council`
+keeps default (`--invocation user_explicit`); user gets educational
+message + `--proceed-anyway` override path. Mode `block` ignores
+`--proceed-anyway` by design — cost-strict opt-in.
+
 ## Goal
 
 Bring in **independent** external models to critique a project
@@ -773,6 +812,62 @@ consensus. `council replay <responses.json>` re-renders from a saved
 session; `--redact-member-arguments` / `--include-member-arguments`
 flip the view independent of config (share redacted variant of an
 already-paid run).
+
+## Lightweight-QA fast-path (Phase 11)
+
+Low-impact questions from Phase 10's impact router → restricted fast-path
+in place of full debate. Trade-off explicit: **1 round · ≤2 members ·
+$0.05/answer · 2500 tokens**. No advisors, no peer-review, no consensus
+scoring — quick answer + transparency marker, not deliberation.
+
+### Iron Law
+
+`high_impact` and `user_required` **never** route to fast-path,
+regardless of config. Schema validation rejects override. Fast-path
+activates only when:
+
+1. `ai_council.enabled: true` AND
+2. `decision_resolution.low_impact.mode: council` AND
+3. ≥1 member has `participate_low_impact: true` (default `false` —
+   explicit opt-in per member).
+
+### Output marker (always surfaced)
+
+* **Resolved** — `> Resolved via low-impact council (anthropic): <answer>`
+* **Split** — `> Low-impact council split — escalating to user (anthropic: X / openai: Y):`
+* **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
+
+Marker mandatory — agent never silently substitutes fast-path verdict
+for its own answer.
+
+### Session artefact
+
+Every fast-path attempt appends one line to
+`agents/council-sessions/<date>-<slug>/low-impact-resolutions.md`:
+
+```
+2025-05-14T10:00:00Z | resolved | members=2/2 | members(anthropic, openai) cost=$0.0034 | Q=Service vs Repository for this read path?
+```
+
+Append-only, one line per resolution. Parser tolerates free-form
+headers around canonical lines.
+
+### `council replay --low-impact-stats`
+
+Re-projection of session log → summary block:
+
+```
+$ council replay agents/council-sessions/2025-05-14-foo/responses.json --low-impact-stats
+# Low-impact fast-path · session summary
+
+- attempts: 4
+- status: aborted=1 · resolved=2 · split=1
+- members: anthropic=4 · openai=3
+- total cost: $0.0096
+```
+
+No model calls — pure markdown parse. Returns 0 when session has no
+fast-path entries (clean session is not an error).
 
 ## See also
 
