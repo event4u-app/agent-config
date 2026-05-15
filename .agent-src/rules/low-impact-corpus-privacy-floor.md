@@ -48,8 +48,8 @@ rewriting is soft gate, this is hard.
 ## Locked target types
 
 - `agents/low-impact-decisions.md` — project-local corpus.
-- `.agent-src.uncompressed/data/low-impact-decisions-seed.md` —
-  upstream seed in agent-config package.
+- `data/low-impact-decisions-seed.md` (agent-config package) —
+  upstream seed shipped with the package.
 
 ## When to invoke
 
