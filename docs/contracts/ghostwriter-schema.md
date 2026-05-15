@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-15
+keep-beta-until: 2026-08-13
 ---
 
 # `ghostwriter/<slug>.md` schema (v1)
@@ -260,4 +260,3 @@ deferred to v2.
 - [`agent-user-schema`](agent-user-schema.md) — the maintainer-self primitive that `/post-as:me` consumes.
 - [`persona-schema`](persona-schema.md) — the review-lens primitive, distinct from ghostwriter.
 - [`command-clusters`](command-clusters.md) — the canonical cluster registry.
-- [`agents/roadmaps/step-4-ghostwriter.md`](../../agents/roadmaps/step-4-ghostwriter.md) — the work-only roadmap.

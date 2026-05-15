@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **461 public artefacts** shipped by
+Consumer-facing catalog of all **470 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -291,7 +291,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (115)
+## Commands (124)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -351,6 +351,12 @@ are excluded.
 | command | [`fix:refs`](../.agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix:seeder`](../.agent-src/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
 | command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
+| command | [`ghostwriter:delete`](../.agent-src/commands/ghostwriter/delete.md) | cluster: ghostwriter | Hard-delete a ghostwriter profile at agents/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance. |
+| command | [`ghostwriter:fetch`](../.agent-src/commands/ghostwriter/fetch.md) | cluster: ghostwriter | Build or refresh a public-figure voice profile at agents/ghostwriter/<slug>.md from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch / web-search to the host agent. |
+| command | [`ghostwriter:list`](../.agent-src/commands/ghostwriter/list.md) | cluster: ghostwriter | List captured ghostwriter profiles under agents/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only. |
+| command | [`ghostwriter:show`](../.agent-src/commands/ghostwriter/show.md) | cluster: ghostwriter | Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only. |
+| command | [`ghostwriter:write`](../.agent-src/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
+| command | [`ghostwriter`](../.agent-src/commands/ghostwriter.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
 | command | [`grill-me`](../.agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
@@ -382,6 +388,9 @@ are excluded.
 | command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`package-reset`](../.agent-src/commands/package-reset.md) |  | /package-reset |
 | command | [`package-test`](../.agent-src/commands/package-test.md) |  | /package-test |
+| command | [`post-as:ghostwriter`](../.agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
+| command | [`post-as:me`](../.agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
+| command | [`post-as`](../.agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`prepare-for-review`](../.agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |

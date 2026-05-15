@@ -56,4 +56,3 @@ Cluster locked in
 - [`write-engine`](../docs/contracts/write-engine.md) — shared procedural contract.
 - [`/ghostwriter`](ghostwriter.md) — producer side for public-figure profiles.
 - [`agent-user-schema`](../docs/contracts/agent-user-schema.md) — `.agent-user.md` source for `:me`.
-- [`agents/roadmaps/step-4-ghostwriter.md`](../../agents/roadmaps/step-4-ghostwriter.md) — design and rollout plan.

@@ -90,8 +90,9 @@ in the user's language; English template below):
 This footer is appended **by this command's output template** as a
 fixed string. It is not produced by the model. No `--no-disclosure`
 flag, no `--internal` flag, no opt-out. The absence of any such flag
-is the acceptance criterion (see [`agents/roadmaps/step-4-ghostwriter.md`
-§ Acceptance Criteria](../../../agents/roadmaps/step-4-ghostwriter.md)).
+is the acceptance criterion (locked in
+[`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md)
+§ Mandatory disclosure footer).
 
 ### 7. Print
 
@@ -115,7 +116,7 @@ Non-blocking.
 - **Do NOT commit, push, or open a PR.** The user owns the git surface.
 - **Do NOT omit the disclosure footer.** It is mandatory on every
   invocation. Any flag that would suppress it is forbidden by design
-  and rejected by `task lint-skills`.
+  and rejected by the package skill linter (`scripts/lint_skills.py`).
 - **Do NOT write the draft to disk.** This command prints only.
 - **Do NOT blend multiple ghostwriter voices.** One style source per
   invocation in v1.

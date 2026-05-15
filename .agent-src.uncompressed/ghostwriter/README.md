@@ -55,8 +55,6 @@ verification enum, ethics floor, lint rules, and command surface.
 
 ## See also
 
-- [`agents/roadmaps/step-4-ghostwriter.md`](../../agents/roadmaps/step-4-ghostwriter.md)
-  — the implementation roadmap.
 - [`personas/README.md`](../personas/README.md) — sibling primitive,
   distinct voice axis.
 - [`docs/contracts/agent-user-schema.md`](../../docs/contracts/agent-user-schema.md)

@@ -163,3 +163,4 @@ Copy it to the project root as `.agent-user.md` and edit, or run
 
 - [`language-and-tone`](../../.agent-src/rules/language-and-tone.md) — language-mirroring rule the loader feeds.
 - [`agents-md-thin-root`](../../.agent-src/skills/agents-md-thin-root/SKILL.md) — Thin-Root contract that this file complements (user-state vs project-state).
+- [`ghostwriter-schema`](ghostwriter-schema.md) — sibling voice primitive for **external public-figure** voices (`/ghostwriter:write`, mandatory disclosure footer). `.agent-user.md` covers the maintainer's **own** voice (`/post-as:me`, no footer); the three-primitive model is summarised in [`personas/README.md § See also — sibling voice primitives`](../../.agent-src/personas/README.md).

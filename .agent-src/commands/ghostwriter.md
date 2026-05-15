@@ -94,4 +94,3 @@ consumer-owned.
 - [`ghostwriter-schema`](../docs/contracts/ghostwriter-schema.md) — locked v1 frontmatter and verification levels.
 - [`/post-as:me`](post-as/me.md) — write in the maintainer's own voice (separate primitive, no disclosure footer).
 - [`/post-as:ghostwriter`](post-as/ghostwriter.md) — thin alias for `/ghostwriter:write`.
-- [`agents/roadmaps/step-4-ghostwriter.md`](../../agents/roadmaps/step-4-ghostwriter.md) — design and rollout plan.

@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-15
+keep-beta-until: 2026-08-13
 ---
 
 # Write-engine contract (v1)
@@ -140,4 +140,3 @@ effects on disk.
 - [`agent-user-schema`](agent-user-schema.md) — the source schema
   for `/post-as:me`.
 - [`command-clusters`](command-clusters.md) — cluster registration.
-- [`agents/roadmaps/step-4-ghostwriter.md`](../../agents/roadmaps/step-4-ghostwriter.md) — design + rollout.

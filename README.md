@@ -7,7 +7,7 @@ Give your AI agents an audit-disciplined orchestration contract — testing, Git
 > Your agent picks up the project's stack, runs tests, prepares PRs, fixes CI — and follows your team's coding standards while doing it. Stack-aware skill sets ship for PHP (Laravel · Symfony · Zend/Laminas), JavaScript (Next.js · React · Node), and cross-stack concerns (API · testing · security · observability).
 
 <p align="center">
-  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>115 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+  <strong>210 Skills</strong> · <strong>67 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
 </p>
 
 ---
@@ -535,7 +535,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 | [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
 | [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
 
-→ [Browse all 115 active commands](.agent-src/commands/)
+→ [Browse all 124 active commands](.agent-src/commands/)
 
 ---
 
@@ -567,7 +567,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 210 skills + 115 native commands); Augment Code gets the
+> package (rules + 210 skills + 124 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
@@ -630,6 +630,35 @@ Create it interactively with `/agents user init`. Inspect with
 `review` / `accept` / `update` flow — never silent auto-writes. The
 legacy `personal.user_name` key in `.agent-settings.yml` stays as a
 fallback when `.agent-user.md` is absent.
+
+## Ghostwriter (`agents/ghostwriter/<slug>.md`)
+
+The third voice primitive — captures the **public-facing writing
+voice of documented public figures** (authors, executives, academics,
+journalists, public speakers, deceased historical figures) for
+AI-assisted drafting. `/ghostwriter:fetch <url-or-name>` runs a
+public-figure attestation gate, delegates the fetch / search to the
+host agent's `web-fetch` / `web-search` (zero network code in the
+package), and writes the profile under `agents/ghostwriter/<slug>.md`
+— **gitignored by default**, never shipped in the OSS package.
+`/ghostwriter:write --as=<slug>` drafts in that voice and appends the
+**mandatory non-removable disclosure footer** (`*Written in the style
+of <name>, not by them.*`); `/post-as:ghostwriter` is a thin alias.
+Schema locked in
+[`docs/contracts/ghostwriter-schema.md`](docs/contracts/ghostwriter-schema.md).
+
+Private individuals are rejected — no fair-use defence. Paywalled,
+login-walled, leaked, retracted, and private DM content is banned at
+the schema level. `/ghostwriter:list`, `/ghostwriter:show`, and
+`/ghostwriter:delete` round out the cluster.
+
+Three voice primitives, three purposes:
+
+| Primitive | Voice | Disclosure footer |
+|---|---|---|
+| `personas/*.md` | review-lens (internal critique) | n/a — never produces author-attributed output |
+| `.agent-user.md` | the maintainer's own voice (`/post-as:me`) | none — you are the author |
+| `agents/ghostwriter/<slug>.md` | external public-figure voice (`/post-as:ghostwriter`) | mandatory, non-removable |
 
 ## Core Principles
 
