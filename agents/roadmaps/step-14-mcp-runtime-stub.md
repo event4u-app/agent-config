@@ -1,5 +1,5 @@
 ---
-complexity: cross-runtime
+complexity: lightweight
 ---
 
 # Roadmap: MCP runtime stub (Claude-Desktop-native invocation)

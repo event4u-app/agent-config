@@ -1,5 +1,5 @@
 ---
-complexity: external
+complexity: lightweight
 ---
 
 # Roadmap: non-dev community validation (post-step-12, 90-day window)
