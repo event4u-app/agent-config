@@ -787,6 +787,18 @@ main() {
         echo ""
         echo "✅  agent-config payload synced."
         echo "    Run scripts/install (or python3 scripts/install.py) to render .agent-settings.yml and bridges."
+        # step-9 P11 · U1 — airgap detection. Probe DNS for provider hosts;
+        # on first-run with no reachable backend, surface the banner so the
+        # installer caller can flip defaults.member_mode to `api`.
+        if command -v python3 >/dev/null 2>&1; then
+            local airgap_mode
+            airgap_mode="$(python3 "$SOURCE_DIR/scripts/ai_council/airgap.py" 2>/dev/null || true)"
+            if [[ "$airgap_mode" == "api" ]]; then
+                echo ""
+                echo "⚠️  airgapped environment detected — defaulting to mode: api"
+                echo "    Set defaults.member_mode: api in agents/.ai-council.yml when configuring the council."
+            fi
+        fi
     elif ! $QUIET; then
         echo "✅  agent-config payload synced."
     fi
