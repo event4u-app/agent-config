@@ -766,16 +766,107 @@ resolved path is identical either way.
 
 ### Resolution precedence (which root wins)
 
-In order, first match wins:
+In order, first match wins (Step 8 adds the `--root` flag at the top):
 
-1. Explicit `--project <dir>` / `--target <dir>` on the CLI.
-2. `AGENT_CONFIG_PROJECT_ROOT=<abs-path>` env var.
-3. Anchor walk from CWD (rules above).
-4. Fallback to CWD.
+1. Global `--root <dir>` flag (Step 8) — escape hatch for monorepos.
+2. Explicit `--project <dir>` / `--target <dir>` on the CLI.
+3. `AGENT_CONFIG_PROJECT_ROOT=<abs-path>` env var.
+4. Anchor walk from CWD (rules above).
+5. Fallback to CWD.
 
-The `./agent-config` wrapper sets step 2 to its own directory, so
+The `./agent-config` wrapper sets step 3 to its own directory, so
 subcommands invoked from a subdirectory still target the right root
 even after `os.chdir`.
+
+### Project-root override — `--root` (Step 8)
+
+The global `--root <dir>` flag pins discovery to a specific directory.
+It is parsed by the bash dispatcher **before** any subcommand and beats
+every other channel, including the wrapper-pinned env var:
+
+```bash
+# Run doctor against a sibling project from anywhere
+agent-config --root /work/projects/site-a doctor --context
+
+# Equivalent — long-form `=` syntax
+agent-config --root=/work/projects/site-a doctor --context
+```
+
+**Fail-loud validation.** Invalid paths exit with code `2` instead of
+silently falling back to CWD:
+
+```text
+❌  agent-config: --root points to a path that does not exist: /nope
+```
+
+The same validation applies to `--project` and
+`AGENT_CONFIG_PROJECT_ROOT` — every explicit override is checked.
+
+**Wrapper coupling.** When the project-local `./agent-config` wrapper
+runs, it pins `AGENT_CONFIG_PROJECT_ROOT` to its own directory. The
+`--root` flag explicitly overrides that pin (the wrapper logs a stderr
+hint when this happens), so monorepo sub-trees can target one another
+without unpinning the wrapper.
+
+### Monorepo semantics
+
+Monorepos with multiple `agent-config` consumers (e.g. one package per
+sub-tree) work out of the box because the anchor walk stops at the
+**nearest** boundary anchor (`agents/<markers>` or `.git`). From inside
+`packages/site-a/`, discovery resolves to `packages/site-a/`, not the
+monorepo root.
+
+When you need to invoke a sibling package's CLI from anywhere, use
+`--root`:
+
+```bash
+# From the monorepo root, target site-b
+agent-config --root packages/site-b validate
+
+# From inside site-a, run a sync against site-b
+agent-config --root ../site-b sync
+```
+
+`--root` is the recommended channel — explicit, fail-loud, and visible
+in `doctor --context` output. Setting `AGENT_CONFIG_PROJECT_ROOT`
+manually still works but is less discoverable.
+
+### Diagnostics — `doctor --trace-root` and `--context`
+
+Two read-only diagnostic flags surface how discovery resolved the
+project root:
+
+```bash
+# Show every ancestor probed + winning anchor
+agent-config doctor --trace-root
+
+# Show effective root, origin, install mode, settings layers, wrapper
+agent-config doctor --context
+```
+
+Sample `--trace-root` output:
+
+```text
+  📍  start: /work/projects/site-a/src
+  📍  origin: agents-dir
+  trace:
+    · [boundary] /work/projects/site-a/src  (no .git, no agents/)
+    ✅ [boundary] /work/projects/site-a → agents-dir  (agents/ has roadmaps/)
+  📍  resolved root: /work/projects/site-a (anchor: agents-dir)
+```
+
+Sample `--context` output:
+
+```text
+  📍  project_root: /work/projects/site-a  (origin: agents-dir)
+  📦  install_mode: full  (source: marker-file)
+  …
+```
+
+Both flags accept `--json` for machine-readable output. The
+`install_mode_source` is `marker-file` when
+`agents/.agent-state/install-mode.txt` exists (written by the
+installer since Step 8) and `heuristic` for back-compat installs.
 
 ### When to set `AGENT_CONFIG_LEGACY_ANCHOR=1`
 
@@ -795,13 +886,14 @@ table can absorb the missing case.
 ### Verifying the resolved root
 
 ```bash
-agent-config doctor
+agent-config doctor --context
 ```
 
-prints the resolved project root and the anchor that resolved it,
-plus the active resolution step (CLI arg / env var / anchor walk /
-fallback). Use this when a command appears to read the wrong
-`.agent-settings.yml`.
+prints the resolved project root, origin (`root-flag` / `explicit` /
+`env` / anchor name / `cwd-fallback`), install mode, settings-layer
+chain, and wrapper state. Use this when a command appears to read the
+wrong `.agent-settings.yml`. Pair with `--trace-root` (above) when the
+**anchor walk itself** needs debugging.
 
 ---
 
