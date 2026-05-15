@@ -84,6 +84,7 @@ from scripts.ai_council.config import (  # noqa: E402
 from scripts.ai_council.modes import (  # noqa: E402
     InvalidModeError, resolve_mode,
 )
+from scripts.ai_council.events_log import append_event  # noqa: E402
 from scripts.ai_council.necessity import (  # noqa: E402
     ClassificationResult, SizeFitVerdict, classify_necessity,
     classify_size_fit, downgrade_message, educate_message,
@@ -1152,9 +1153,30 @@ def _resolve_necessity_mode(
     return enabled, str(overrides.get(lens, global_mode))
 
 
+def _provider_caps_snapshot(ai_cfg: dict[str, Any]) -> dict[str, dict[str, str]]:
+    """Return ``{provider: {mode, model}}`` for enabled members.
+
+    Step-8 D3 events-log snapshot. Captures only public capability
+    metadata (no API keys, no prompt content) so the log line stays
+    within the privacy floor. Disabled members are excluded.
+    """
+    members = ai_cfg.get("members") or {}
+    snapshot: dict[str, dict[str, str]] = {}
+    if not isinstance(members, dict):
+        return snapshot
+    for name, cfg in members.items():
+        if not isinstance(cfg, dict) or not cfg.get("enabled", True):
+            continue
+        snapshot[str(name)] = {
+            "mode": str(cfg.get("mode", "")),
+            "model": str(cfg.get("model", "")),
+        }
+    return snapshot
+
+
 def _necessity_gate(
     *, prompt: str, lens: str, invocation: str, proceed_anyway: bool,
-    ai_cfg: dict[str, Any], stdout=None,
+    ai_cfg: dict[str, Any], stdout=None, original_ask: str = "",
 ) -> tuple[bool, int, ClassificationResult | None]:
     """Apply the Phase-6 necessity classifier before any member fires.
 
@@ -1163,18 +1185,38 @@ def _necessity_gate(
     return ``exit_code`` immediately. ``result`` carries the verdict for
     session.md provenance on the proceed path (None when classifier is
     disabled / off).
+
+    Step-8 D3: every non-disabled branch emits one
+    :func:`append_event` line. ``original_ask`` is forwarded to the
+    events log so the sha256[:12] hash anchors the line to the
+    user-side question without leaking content. When the caller does
+    not have an ``original_ask`` value, the prompt itself is hashed
+    (legacy CLIs route through this path).
     """
     out = stdout if stdout is not None else sys.stdout
     enabled, mode = _resolve_necessity_mode(ai_cfg, lens, invocation=invocation)
     if not enabled or mode == "off":
         return True, 0, None
     result = classify_necessity(prompt, lens=lens, invocation=invocation)
+    caps = _provider_caps_snapshot(ai_cfg)
+    hashed = original_ask or prompt
+
+    def _emit(action: str) -> None:
+        append_event({
+            "lens": lens, "invocation": invocation,
+            "action": action, "verdict": result.verdict,
+            "category": result.category,
+            "mode": mode, "provider_caps": caps,
+            "original_ask": hashed,
+        })
+
     if result.verdict != "unnecessary":
         if result.verdict == "borderline":
             out.write(
                 f"council:necessity · borderline ({result.category}) · "
                 f"{result.rationale}\n"
             )
+        _emit("proceed")
         return True, 0, result
     # verdict == "unnecessary"
     if mode == "warn-only":
@@ -1184,6 +1226,7 @@ def _necessity_gate(
             f"council:necessity · warn-only ({result.category}) · "
             f"{result.rationale}\n"
         )
+        _emit("proceed")
         return True, 0, result
     if mode == "block":
         out.write(
@@ -1192,6 +1235,7 @@ def _necessity_gate(
             f"council:necessity · mode=block — `--proceed-anyway` has "
             f"no effect on the block path.\n"
         )
+        _emit("skip_necessity")
         return False, 0, result
     # mode == "educate"
     if invocation == "agent":
@@ -1199,6 +1243,7 @@ def _necessity_gate(
             f"council:necessity · skipped (agent, {result.category}) · "
             f"{result.rationale}\n"
         )
+        _emit("skip_necessity")
         return False, 0, result
     # invocation == "user_explicit"
     if proceed_anyway:
@@ -1207,8 +1252,10 @@ def _necessity_gate(
             f"--proceed-anyway, {result.category}) · "
             f"{result.rationale}\n"
         )
+        _emit("proceed")
         return True, 0, result
     out.write(educate_message(result, lens) + "\n")
+    _emit("skip_necessity")
     return False, 2, result
 
 
@@ -1396,6 +1443,7 @@ def cmd_run(
         invocation=getattr(args, "invocation", "agent"),
         proceed_anyway=getattr(args, "proceed_anyway", False),
         ai_cfg=ai_cfg,
+        original_ask=getattr(args, "original_ask", "") or "",
     )
     if not proceed:
         return gate_exit
@@ -1709,6 +1757,7 @@ def cmd_debate(
         invocation=getattr(args, "invocation", "agent"),
         proceed_anyway=getattr(args, "proceed_anyway", False),
         ai_cfg=ai_cfg,
+        original_ask=getattr(args, "original_ask", "") or "",
     )
     if not proceed:
         return gate_exit

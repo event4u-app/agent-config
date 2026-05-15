@@ -709,6 +709,27 @@ class CliClient(ExternalAIClient):
             counts = load_cli_call_counts(self._cli_calls_path)
             used = counts.get(self.name, 0)
             if used >= self.max_calls_per_day:
+                # step-8 D3 — record the block on the persistent events
+                # log. Lazy import to keep clients.py independent of the
+                # CLI layer at module load time.
+                try:
+                    from scripts.ai_council.events_log import append_event
+                    append_event({
+                        "lens": "",
+                        "invocation": "",
+                        "action": "block_quota",
+                        "verdict": "",
+                        "provider_caps": {
+                            self.name: {
+                                "mode": "cli", "model": self.model,
+                            },
+                        },
+                        "original_ask": user_prompt,
+                        "cli_calls_used": used,
+                        "cli_calls_max": self.max_calls_per_day,
+                    })
+                except Exception:  # pragma: no cover — never crash ask()
+                    pass
                 return CouncilResponse(
                     provider=self.name, model=self.model, text="",
                     latency_ms=int((time.monotonic() - t0) * 1000),
