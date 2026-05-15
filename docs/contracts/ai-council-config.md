@@ -512,6 +512,34 @@ The escalation path uses zero extra LLM calls — heuristics run on the
 solo response text in process. The fallback `run_full()` only fires
 when the gate flags the response.
 
+### Low-impact corpus build pipeline (step-10)
+
+[`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md)
+remains the **human-editable source of truth** — Validated, Probation,
+and Anti-Example phrases stay in Markdown so PR-reviewers diff prose,
+not YAML. A build step compiles it into a generated YAML lockfile
+[`agents/low-impact-decisions.lock.yaml`](../../agents/low-impact-decisions.lock.yaml)
+that is the **runtime source of truth**: the necessity classifier and
+the solo-dispatch fuzzy matcher load phrases from the lockfile, with
+Markdown parsing reserved as fallback.
+
+| Component | File | Role |
+|---|---|---|
+| Source | `agents/low-impact-decisions.md` | Hand-edited Markdown. Strict parser (step-9 P4) catches drift. |
+| Build tool | `scripts/ai_council/compile_corpus.py` | `parse_corpus_strict()` → schema-v1 YAML. Deterministic output. |
+| Lockfile | `agents/low-impact-decisions.lock.yaml` | Generated, **committed**. Schema `{schema_version: 1, provenance: {…}, validated, probation, anti_examples}`. |
+| Runtime loader | `low_impact_corpus.load_corpus_lock()` + lenient `load_*` shims | YAML preferred; Markdown fallback when the lockfile is missing or schema-mismatched. |
+| CI gate | `task check-corpus` (used by `task consistency`) | Fails on drift between source and lockfile. |
+
+The committed lockfile is the contract: a stale lockfile fails CI the
+same way `.agent-src/` drift does. The Markdown parser stays in the
+repo as a build-time dependency, not a runtime dependency — a parser
+regression breaks `task consistency`, never the live council.
+
+`scripts/ai_council/learn_low_impact_preview.py` deliberately stays on
+`parse_corpus_strict` (Markdown). It runs **before** `task sync`
+rebuilds the lockfile, so it must read whatever the user just edited.
+
 ## `api_key_ref` forms
 
 Exactly two forms. Raw keys in the yml are a hard validation error.
