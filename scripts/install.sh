@@ -37,6 +37,10 @@ DRY_RUN=false
 VERBOSE=false
 QUIET=false
 SKIP_GITIGNORE=false
+# When true, skip payload sync entirely and only install the project-local
+# `./agent-config` wrapper (Step 7 Phase 2). The bridge stage (install.py)
+# handles the .agent-settings.yml stub + nested-install guard.
+MINIMAL=false
 # Comma-separated tool IDs (default: all). Set by --tools or the
 # orchestrator (scripts/install). The .augment/ substrate is always
 # synced because every other tool symlinks back into it.
@@ -75,6 +79,7 @@ parse_args() {
             --skip-gitignore) SKIP_GITIGNORE=true; shift ;;
             --tools)   TOOLS="$2"; shift 2 ;;
             --tools=*) TOOLS="${1#*=}"; shift ;;
+            --minimal|--settings-only) MINIMAL=true; shift ;;
             --help|-h) show_help; exit 0 ;;
             *) log_error "Unknown argument: $1"; show_help; exit 1 ;;
         esac
@@ -725,6 +730,21 @@ install_cli_wrapper() {
 # --- Main ---
 main() {
     parse_args "$@"
+
+    # Minimal-init short-circuit (Step 7 Phase 2): skip every payload-sync
+    # stage and only install the project-local `./agent-config` wrapper.
+    # The bridge stage (install.py) handles the .agent-settings.yml stub
+    # + nested-install guard. No .augment/, no AGENTS.md, no symlinks.
+    if $MINIMAL; then
+        if ! $QUIET; then
+            echo "🔧  Minimal init — installing ./agent-config wrapper only"
+            echo "    Target: $TARGET_DIR"
+            $DRY_RUN && echo "    Mode: DRY RUN"
+        fi
+        install_cli_wrapper "$TARGET_DIR"
+        $QUIET || echo "✅  Wrapper installed (payload sync skipped)."
+        return 0
+    fi
 
     # First-run detection: gate the verbose source/target banner behind the
     # absence of .agent-settings.yml. Re-runs print a single status line.

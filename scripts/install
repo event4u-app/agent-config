@@ -44,6 +44,12 @@
 #                     for child subprocesses. All bridge content is bundled
 #                     in the package, so install itself is already offline-safe;
 #                     this flag is the explicit air-gap / CI guarantee.
+#   --minimal         Bootstrap only `.agent-settings.yml`, `agents/.gitkeep`,
+#                     and the `./agent-config` wrapper. No tool payload, no
+#                     AGENTS.md, no symlinks. Refuses to install inside an
+#                     existing agent-config project (nested-install guard).
+#                     See docs/installation.md → "Minimal init".
+#   --settings-only   Alias for --minimal.
 #   --help, -h        Show this help
 #
 # Examples:
@@ -75,12 +81,13 @@ GLOBAL=false
 SCOPE=""
 CUSTOM_PATH=""
 OFFLINE=false
+MINIMAL=false
 
 # Single source of truth for valid tool IDs (also referenced by install.sh / install.py).
 VALID_TOOLS="claude-code claude-desktop cursor windsurf cline gemini-cli copilot augment aider codex roocode continue kilocode zed jetbrains kiro all"
 
 show_help() {
-    sed -n '3,48p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
+    sed -n '3,54p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'
 }
 
 list_tools() {
@@ -157,6 +164,8 @@ while [[ $# -gt 0 ]]; do
         --custom-path)   CUSTOM_PATH="$2"; shift 2 ;;
         --custom-path=*) CUSTOM_PATH="${1#*=}"; shift ;;
         --offline)       OFFLINE=true; shift ;;
+        --minimal|--settings-only)
+                         MINIMAL=true; shift ;;
         --help|-h)       show_help; exit 0 ;;
         *)               err "Unknown argument: $1"; show_help >&2; exit 1 ;;
     esac
@@ -202,7 +211,7 @@ prompt_tools() {
     echo "  ✅  Selected: $TOOLS"
 }
 
-if ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && [[ -t 0 && -t 1 ]]; then
+if ! $MINIMAL && ! $TOOLS_EXPLICIT && ! $YES && ! $QUIET && ! $LIST_TOOLS && [[ -t 0 && -t 1 ]]; then
     prompt_tools
     TOOLS_EXPLICIT=true
 fi
@@ -280,6 +289,7 @@ run_sync() {
     $DRY_RUN && args+=(--dry-run)
     $VERBOSE && args+=(--verbose)
     $QUIET   && args+=(--quiet)
+    $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
     bash "$INSTALL_SH" "${args[@]}"
 }
@@ -305,11 +315,38 @@ run_bridges() {
     [[ -n "$SCOPE" ]] && args+=(--scope="$SCOPE")
     [[ -n "$CUSTOM_PATH" ]] && args+=(--custom-path="$CUSTOM_PATH")
     $OFFLINE && args+=(--offline)
+    $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
     "$python_bin" "$INSTALL_PY" "${args[@]}"
 }
 
 RC=0
+
+# Minimal init runs the bridge stage *first* so its nested-install guard
+# (Step 7 Phase 2) fires before any wrapper / file is written. The
+# payload sync stage is then a no-op in minimal mode (install.sh
+# short-circuits) but is still invoked so it can install the
+# `./agent-config` wrapper on a confirmed-clean target.
+if $MINIMAL; then
+    if ! $SKIP_BRIDGES; then
+        if [[ ! -f "$INSTALL_PY" ]]; then
+            err "Missing $INSTALL_PY"
+            exit 1
+        fi
+        run_bridges || RC=$?
+    fi
+    if [[ $RC -ne 0 ]]; then
+        exit $RC
+    fi
+    if ! $SKIP_SYNC; then
+        if [[ ! -f "$INSTALL_SH" ]]; then
+            err "Missing $INSTALL_SH"
+            exit 1
+        fi
+        run_sync || RC=$?
+    fi
+    exit $RC
+fi
 
 if ! $SKIP_SYNC; then
     if [[ ! -f "$INSTALL_SH" ]]; then

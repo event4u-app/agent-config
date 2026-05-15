@@ -3223,6 +3223,19 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "explicit guarantee for air-gapped / CI runs."
         ),
     )
+    parser.add_argument(
+        "--minimal",
+        "--settings-only",
+        dest="minimal",
+        action="store_true",
+        help=(
+            "bootstrap only the project-local override layer: writes "
+            "agents/.gitkeep and a .agent-settings.yml stub. No tool "
+            "payload, no AGENTS.md, no symlinks. Refuses to install "
+            "inside an existing agent-config project (nested-install "
+            "guard). See docs/installation.md → Minimal init."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -3282,6 +3295,104 @@ def _is_tool_enabled(tools: set[str], tool_id: str) -> bool:
     return tool_id in tools
 
 
+# --- Minimal init (Step 7 Phase 2) ---
+
+
+def _minimal_templates_root() -> Path:
+    """Resolve the bundled ``templates/minimal/`` directory.
+
+    Walks up from this file looking for ``templates/minimal/``; this
+    works both in development mode (running the source tree) and from
+    an ``npm install -g`` install (the script lives under the package
+    root regardless).
+    """
+    for ancestor in (Path(__file__).resolve(), *Path(__file__).resolve().parents):
+        candidate = ancestor / "templates" / "minimal"
+        if candidate.is_dir():
+            return candidate
+    fail("Could not locate templates/minimal/ — package install is corrupt.")
+    return Path()  # unreachable
+
+
+def install_minimal(target_root: Path, force: bool) -> int:
+    """Bootstrap the project-local override layer only (D2-compliant).
+
+    Writes:
+
+    * ``agents/.gitkeep`` so the folder is committable.
+    * ``.agent-settings.yml`` stub (cost_profile=balanced, version pin
+      commented out per D4).
+
+    Refuses (exit 1) when ``target_root`` is **inside** an existing
+    agent-config project (Phase-1 anchor walk above the target). The
+    in-target case is allowed and treated as idempotent — re-running
+    ``--minimal`` in a folder that already has ``.agent-settings.yml``
+    does nothing unless ``--force`` is passed.
+
+    Does **not** touch ``.gitignore`` (D2 — user owns the ignore file).
+    The ``./agent-config`` wrapper is installed by ``scripts/install.sh``
+    in its own minimal short-circuit.
+    """
+    try:
+        from scripts._lib.agent_settings import find_project_root_with_anchor  # noqa: PLC0415
+    except ImportError:  # pragma: no cover — alt sys.path layout
+        from _lib.agent_settings import find_project_root_with_anchor  # type: ignore[no-redef]  # noqa: PLC0415
+
+    target_root = target_root.resolve()
+    target_root.mkdir(parents=True, exist_ok=True)
+
+    # Nested-install guard: walk up from the *parent* of target_root.
+    # An anchor at target_root itself is allowed (re-running --minimal
+    # in the same project is idempotent); only a root *above* target
+    # blocks the install.
+    parent = target_root.parent
+    if parent != target_root:  # not filesystem root
+        existing = find_project_root_with_anchor(parent)
+        if existing is not None and existing[0] != target_root:
+            root, anchor = existing
+            fail(
+                "Refusing to nest an agent-config layer inside an existing "
+                f"project (anchor: {anchor}). Existing root: {root}. "
+                "Remove the parent layer first or run `--minimal` outside it."
+            )
+            return 1  # unreachable; fail() exits
+
+    templates = _minimal_templates_root()
+    settings_src = templates / SETTINGS_FILE
+    gitkeep_src = templates / "agents-gitkeep"
+
+    if not settings_src.is_file() or not gitkeep_src.is_file():
+        fail(f"Bundled minimal templates missing under {templates}")
+
+    info(f"Minimal init → {target_root}")
+
+    # 1. agents/.gitkeep
+    agents_dir = target_root / "agents"
+    agents_dir.mkdir(exist_ok=True)
+    gitkeep_dst = agents_dir / ".gitkeep"
+    if gitkeep_dst.exists() and not force:
+        skip(f"agents/.gitkeep already exists (use --force to overwrite)")
+    else:
+        gitkeep_dst.write_text(gitkeep_src.read_text(encoding="utf-8"), encoding="utf-8")
+        success("Wrote agents/.gitkeep")
+
+    # 2. .agent-settings.yml stub
+    settings_dst = target_root / SETTINGS_FILE
+    if settings_dst.exists() and not force:
+        skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
+    else:
+        settings_dst.write_text(settings_src.read_text(encoding="utf-8"), encoding="utf-8")
+        success(f"Wrote {SETTINGS_FILE}")
+
+    if not QUIET:
+        print()
+        info("Next steps:")
+        info("  • Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config")
+        info("  • Add `.agent-settings.yml` and `agents/` to git (or to .gitignore — your call).")
+        info("  • Run `agent-config doctor` to verify the layer is picked up.")
+    return 0
+
+
 # --- Main ---
 
 def main(argv: list[str]) -> int:
@@ -3301,6 +3412,17 @@ def main(argv: list[str]) -> int:
 
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
+
+    # Minimal-init short-circuit (Step 7 Phase 2): bypass scope
+    # detection, conflict policy, and the full bridge install. Writes
+    # only the project-local override layer (agents/.gitkeep +
+    # .agent-settings.yml stub). The bash wrapper handles the
+    # `./agent-config` script; everything else is intentionally absent.
+    if opts.minimal:
+        target_root = Path(
+            opts.custom_path or opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
+        ).resolve()
+        return install_minimal(target_root, opts.force)
 
     # Multi-signal scope detection (Phase 1.3) + scope resolution
     # (Phase 1.4). Order of precedence (highest first):
