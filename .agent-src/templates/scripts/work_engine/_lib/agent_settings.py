@@ -200,6 +200,51 @@ def find_project_root(start: Path) -> Path | None:
     return result[0] if result is not None else None
 
 
+#: Origin tag returned by :func:`resolve_project_root` alongside the
+#: anchor names defined above. Distinct values let callers (doctor,
+#: tests, future telemetry) surface *how* the root was chosen.
+ORIGIN_EXPLICIT = "explicit"      # --project arg
+ORIGIN_ENV = "env"                # AGENT_CONFIG_PROJECT_ROOT
+ORIGIN_CWD_FALLBACK = "cwd-fallback"  # no anchor found
+
+PROJECT_ROOT_ENV = "AGENT_CONFIG_PROJECT_ROOT"
+
+
+def resolve_project_root(
+    arg: str | Path | None,
+    *,
+    cwd: Path | None = None,
+) -> tuple[Path, str]:
+    """Return ``(root, origin)`` for any ``cmd_*`` entry point.
+
+    Resolution order (Step 7 Phase 3 — subdir invocation hardening):
+
+    1. Explicit ``--project`` / ``--target`` argument → ``ORIGIN_EXPLICIT``.
+    2. ``AGENT_CONFIG_PROJECT_ROOT`` environment variable, set by the
+       project-local ``./agent-config`` wrapper → ``ORIGIN_ENV``.
+    3. Anchor walk from ``cwd`` via
+       :func:`find_project_root_with_anchor` → anchor name
+       (``agents-dir`` / ``git`` / ``agent-settings``).
+    4. Fall back to ``cwd`` itself → ``ORIGIN_CWD_FALLBACK``.
+
+    Origin (2) wins over (3) so a wrapper-set root is never overridden
+    by a stray anchor in an intermediate directory; that is the whole
+    point of the wrapper-injected pin (Phase 3, decision D2).
+
+    Pure: never writes, never raises on missing paths.
+    """
+    if arg is not None and str(arg) != "":
+        return Path(arg).expanduser().resolve(), ORIGIN_EXPLICIT
+    env_value = os.environ.get(PROJECT_ROOT_ENV)
+    if env_value:
+        return Path(env_value).expanduser().resolve(), ORIGIN_ENV
+    start = (cwd or Path.cwd()).resolve()
+    walked = find_project_root_with_anchor(start)
+    if walked is not None:
+        return walked
+    return start, ORIGIN_CWD_FALLBACK
+
+
 def _resolve_cascade_paths(
     cwd: Path | None,
     project_path: Path | str | None,
