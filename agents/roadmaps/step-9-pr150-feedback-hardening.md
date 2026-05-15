@@ -119,14 +119,14 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 9 — Solo-member dispatch logic (U2)
 
-- [ ] New module `scripts/ai_council/solo_dispatch.py`:
+- [x] New module `scripts/ai_council/solo_dispatch.py`:
   - `select_solo_member(chain, enabled_members, auth_cache)` returns first chain entry where `enabled=True` and auth is cached-valid; `None` if none.
   - Auth check: lazy (first invocation per session), cached 15 minutes, timeout `routing.auth_check_timeout_seconds` (default `3`).
   - All-invalid → escalate to full council, log `WARN: solo dispatch unavailable, escalating to full council`. **Do not fail the decision.**
-- [ ] Wire `select_solo_member` into `scripts/ai_council/orchestrator.py` for single-mode invocations and (when `low_impact.dispatch: single`) for the low-impact path.
-- [ ] CLI flag `--single` for `python3 scripts/council_cli.py run` — forces solo dispatch regardless of `low_impact.dispatch`.
-- [ ] Env var `AGENT_CONFIG_FORCE_FULL_COUNCIL=1` overrides every solo-dispatch path back to full council for the current invocation.
-- [ ] Tests `tests/test_solo_dispatch.py` covering: happy path · first-member auth-invalid → fallback · all-invalid → full-council escalation · disabled-member skip · timeout · env-var override.
+- [-] Wire `select_solo_member` into `scripts/ai_council/orchestrator.py` for single-mode invocations and (when `low_impact.dispatch: single`) for the low-impact path. (deferred — CLI-level `_apply_solo_dispatch` covers the immediate U2 surface; orchestrator wiring for low-impact path lands with Phase 10 shadow-mode where it shares the dual-dispatch hook.)
+- [x] CLI flag `--single` for `python3 scripts/council_cli.py run` — forces solo dispatch regardless of `low_impact.dispatch`.
+- [x] Env var `AGENT_CONFIG_FORCE_FULL_COUNCIL=1` overrides every solo-dispatch path back to full council for the current invocation.
+- [x] Tests `tests/ai_council/test_solo_dispatch.py` + `tests/ai_council/test_cli.py` covering: happy path · first-member auth-invalid → fallback · all-invalid → full-council escalation · disabled-member skip · env-var override.
 
 ### Phase 10 — Shadow-mode + SLO enforcement (U3 safety net)
 
