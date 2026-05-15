@@ -46,59 +46,59 @@ This roadmap is **work-only** — no version pins, no tag plans, no release date
 
 Minimal-viable user-persona file plus the interview command that creates it. External-enrichment sub-commands (`handoff`, `linkedin`) cancelled by the re-validation gate; re-evaluate after Phase 3 has been in active use for ≥1 week.
 
-- [ ] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/agent-user-schema.md` with the locked frontmatter (`version`, `identity.{name,nickname}`, `language`, `role`, `style.{formality,pace}`, `voice_sample`, `last_updated`) plus a single `# Notes` freeform section. Hard cap: 100 lines total file size. Explicit exclusions list (no credentials, no secrets, no health/financial/legal status, no third-party PII even with user consent, no demographics in v1 — deferred to v2 pending usage data per re-validation gate).
-- [ ] **Step 2 — Add the `user` sub-command to `/agents`:** Update `.agent-src.uncompressed/commands/AGENTS.md` dispatch table to add `user` (routes to `commands/agents/user.md`). Create `commands/agents/user.md` as a mini-dispatcher for its sub-sub-commands (`init`, `update`, `show`, `review`, `accept`) — mirrors the master/wrapper pattern from `step-2-ai-council-consolidation.md` Phase 1.
-- [ ] **Step 3 — Implement `/agents user init`:** Create `commands/agents/user/init.md`. Question flow: (a) name/nickname (pre-fill from `personal.user_name` if present), (b) primary language, (c) paste one typical message → captured as `voice_sample`, (d) work style (pragmatic / thorough / rapid) → `style.pace`. Output: `.agent-user.md` at project root. Refuses to overwrite an existing file without `--force`.
+- [x] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/agent-user-schema.md` with the locked frontmatter (`version`, `identity.{name,nickname}`, `language`, `role`, `style.{formality,pace}`, `voice_sample`, `last_updated`) plus a single `# Notes` freeform section. Hard cap: 100 lines total file size. Explicit exclusions list (no credentials, no secrets, no health/financial/legal status, no third-party PII even with user consent, no demographics in v1 — deferred to v2 pending usage data per re-validation gate).
+- [x] **Step 2 — Add the `user` sub-command to `/agents`:** Update `.agent-src.uncompressed/commands/AGENTS.md` dispatch table to add `user` (routes to `commands/agents/user.md`). Create `commands/agents/user.md` as a mini-dispatcher for its sub-sub-commands (`init`, `update`, `show`, `review`, `accept`) — mirrors the master/wrapper pattern from `step-2-ai-council-consolidation.md` Phase 1.
+- [x] **Step 3 — Implement `/agents user init`:** Create `commands/agents/user/init.md`. Question flow: (a) name/nickname (pre-fill from `personal.user_name` if present), (b) primary language, (c) paste one typical message → captured as `voice_sample`, (d) work style (pragmatic / thorough / rapid) → `style.pace`. Output: `.agent-user.md` at project root. Refuses to overwrite an existing file without `--force`.
 - [-] **Step 4 — Implement `/agents user handoff` (cancelled):** Re-validation gate verdict was rethink (Sonnet) / minor-edit (gpt-4o). Compounds the user-modeling surface in v1 before the primary init/show/review/accept loop has any usage signal. Re-evaluate after Phase 3 has been in active use for ≥1 week.
 - [-] **Step 5 — Implement `/agents user linkedin` (cancelled):** Re-validation gate verdict was unanimous reject. Host-agent-fetch model delegates network without solving determinism, privacy-field-floor, or test-surface; creates an untestable dependency on undocumented host capabilities. Re-evaluate only after a written host-agent fetch contract and a "what counts as a public profile field" privacy floor exist.
-- [ ] **Step 6 — Gitignore + template:** Add `.agent-user.md` to the package-managed `.gitignore` block via the existing `sync-gitignore` skill / `agent-config gitignore:sync` flow. Document the `--shared` opt-in (deferred implementation; only the doc note lands now).
-- [ ] **Step 7 — Update `docs/contracts/command-clusters.md`:** Add the new `user` sub-command (with the v1 sub-sub-commands: `init`, `update`, `show`, `review`, `accept`) to the `/agents` cluster table. Verify `task lint-skills` still passes.
+- [x] **Step 6 — Gitignore + template:** Add `.agent-user.md` to the package-managed `.gitignore` block via the existing `sync-gitignore` skill / `agent-config gitignore:sync` flow. Document the `--shared` opt-in (deferred implementation; only the doc note lands now).
+- [x] **Step 7 — Update `docs/contracts/command-clusters.md`:** Add the new `user` sub-command (with the v1 sub-sub-commands: `init`, `update`, `show`, `review`, `accept`) to the `/agents` cluster table. Verify `task lint-skills` still passes.
 
 ## Phase 2: `show` + reading integration
 
 The agent must actually load and act on `.agent-user.md` for the file to be worth maintaining.
 
-- [ ] **Step 1 — Implement `/agents user show`:** Create `commands/agents/user/show.md`. Reads `.agent-user.md`, renders identity + language + role + style + voice sample in a compact summary. Used by the user to confirm what the agent currently sees.
-- [ ] **Step 2 — Loader contract:** Document in `docs/contracts/agent-user-schema.md` how host agents read `.agent-user.md` at session start. Priority order: `.agent-user.md` (project) → `personal.user_name` from `.agent-settings.yml` (legacy fallback) → nothing.
-- [ ] **Step 3 — Sample fixture:** Add `docs/examples/agent-user.example.md` showing a populated file (using a fictional persona, not the maintainer's real one).
+- [x] **Step 1 — Implement `/agents user show`:** Create `commands/agents/user/show.md`. Reads `.agent-user.md`, renders identity + language + role + style + voice sample in a compact summary. Used by the user to confirm what the agent currently sees.
+- [x] **Step 2 — Loader contract:** Document in `docs/contracts/agent-user-schema.md` how host agents read `.agent-user.md` at session start. Priority order: `.agent-user.md` (project) → `personal.user_name` from `.agent-settings.yml` (legacy fallback) → nothing.
+- [x] **Step 3 — Sample fixture:** Add `docs/examples/agent-user.example.md` showing a populated file (using a fictional persona, not the maintainer's real one).
 
 ## Phase 3: Maintenance — observation buffer
 
 Explicit-only update model with an in-memory observation buffer the user reviews on demand.
 
-- [ ] **Step 1 — Observation-buffer spec:** Document in `docs/contracts/agent-user-schema.md` what counts as a safe observation (sentence patterns, idiom use, announced role-switches like "ich poste das gleich auf LinkedIn", commit-message style) and what does NOT (private content, financial figures, health, third-party names). Buffer lives in session memory only — never written to disk without explicit `accept`.
-- [ ] **Step 2 — Implement `/agents user review`:** Create `commands/agents/user/review.md`. Lists numbered observations the agent has buffered during the current session, each with proposed file-section + diff. Read-only — no mutation.
-- [ ] **Step 3 — Implement `/agents user accept`:** Create `commands/agents/user/accept.md`. Takes a numeric list (e.g. `1,3,5`), applies only those observations to `.agent-user.md`, bumps `last_updated`. Refuses if the file would exceed the 100-line cap → instructs user to run `/agents user update` for manual cleanup.
-- [ ] **Step 4 — Implement `/agents user update`:** Create `commands/agents/user/update.md`. Opens `.agent-user.md` in the user's IDE (via `file-editor` skill) for direct manual edit. After save, validates schema and 100-line cap.
-- [ ] **Step 5 — Stale-data warning:** When any `/agents user *` command runs and `last_updated` is older than 90 days, surface a one-line warning (not a blocker). Documented in the contract.
+- [x] **Step 1 — Observation-buffer spec:** Document in `docs/contracts/agent-user-schema.md` what counts as a safe observation (sentence patterns, idiom use, announced role-switches like "ich poste das gleich auf LinkedIn", commit-message style) and what does NOT (private content, financial figures, health, third-party names). Buffer lives in session memory only — never written to disk without explicit `accept`.
+- [x] **Step 2 — Implement `/agents user review`:** Create `commands/agents/user/review.md`. Lists numbered observations the agent has buffered during the current session, each with proposed file-section + diff. Read-only — no mutation.
+- [x] **Step 3 — Implement `/agents user accept`:** Create `commands/agents/user/accept.md`. Takes a numeric list (e.g. `1,3,5`), applies only those observations to `.agent-user.md`, bumps `last_updated`. Refuses if the file would exceed the 100-line cap → instructs user to run `/agents user update` for manual cleanup.
+- [x] **Step 4 — Implement `/agents user update`:** Create `commands/agents/user/update.md`. Opens `.agent-user.md` in the user's IDE (via `file-editor` skill) for direct manual edit. After save, validates schema and 100-line cap.
+- [x] **Step 5 — Stale-data warning:** When any `/agents user *` command runs and `last_updated` is older than 90 days, surface a one-line warning (not a blocker). Documented in the contract.
 
 ## Phase 4: `/sparring` command (after Phase 1–3 proves stable)
 
 Two-axis interactive sparring: pick the agent's role + the user's role. Lands only after the persona file is in active use.
 
-- [ ] **Step 1 — Gate decision:** Before starting Phase 4, confirm with the user that the persona file has been in use for at least one week and that the sparring use case still matters. If not, mark this phase `[-]` (cancelled) and close the roadmap at Phase 3.
-- [ ] **Step 2 — Cluster placement:** Council split — Opus wanted sparring deferred, o1 suggested folding into `/challenge-me`. Decision: standalone `/sparring` top-level command, but the body explicitly cites `/challenge-me` and `/grill-me` as siblings and lists when to use which. Avoids cluster sprawl while preserving discoverability.
-- [ ] **Step 3 — Implement `/sparring`:** Create `commands/sparring.md`. Interactive flow: (a) pick agent role from `personas/*.md` (default: `critical-challenger`), (b) pick user role from `.agent-user.md` `role` field (v1) or, if multi-role lands later, from the role list. Supports `--agent=<persona>` and `--user-role=<role>` flags for non-interactive invocation.
-- [ ] **Step 4 — Sparring contract doc:** Add `docs/contracts/sparring.md` with the role-pairing rules, the system-prompt template (radical-business-partner style from the user's original brief), and the explicit "no easy yes" rule.
-- [ ] **Step 5 — Cross-link:** Update `personas/README.md`, `commands/challenge-me.md`, and `commands/grill-me.md` with a "see also" pointer to `/sparring`. Update `docs/contracts/command-clusters.md`.
+- [-] **Step 1 — Gate decision (cancelled):** Per the gate logic in this step, Phase 4 is cancelled and the roadmap closes at Phase 3 + 5. The persona file (Phase 1–3) has not been in active use for ≥1 week yet — the gate's own precondition is unmet. Re-evaluate as a follow-up roadmap once `.agent-user.md` has real usage signal.
+- [-] **Step 2 — Cluster placement (cancelled):** Deferred with Step 1. Standalone `/sparring` top-level command vs. folding into `/challenge-me` is a decision for the follow-up roadmap.
+- [-] **Step 3 — Implement `/sparring` (cancelled):** Deferred with Step 1.
+- [-] **Step 4 — Sparring contract doc (cancelled):** Deferred with Step 1.
+- [-] **Step 5 — Cross-link (cancelled):** Deferred with Step 1.
 
 ## Phase 5: Documentation + migration cleanup
 
-- [ ] **Step 1 — README section:** Add a "User persona" section to the package README pointing at `/agents user init` and the schema contract. Two-paragraph max.
-- [ ] **Step 2 — `personal.user_name` deprecation note:** Add a comment block in `config/agent-settings.template.yml` marking `personal.user_name` as legacy-fallback. Do not remove the key — keeps backward compatibility per the council's migration verdict.
-- [ ] **Step 3 — Skill cross-reference audit:** Run `agent-config check:refs` (or the equivalent `check-refs` skill) after all phases land. Fix any broken pointer to the new commands / contracts.
+- [x] **Step 1 — README section:** Add a "User persona" section to the package README pointing at `/agents user init` and the schema contract. Two-paragraph max.
+- [x] **Step 2 — `personal.user_name` deprecation note:** Add a comment block in `config/agent-settings.template.yml` marking `personal.user_name` as legacy-fallback. Do not remove the key — keeps backward compatibility per the council's migration verdict.
+- [x] **Step 3 — Skill cross-reference audit:** Run `agent-config check:refs` (or the equivalent `check-refs` skill) after all phases land. Fix any broken pointer to the new commands / contracts.
 
 ## Acceptance Criteria
 
 - [x] Re-validation gate executed; verdict recorded in this file before any phase starts
-- [ ] Phase 1 — `/agents user init` creates a valid `.agent-user.md` from the interview (minimal v1 schema only — name, language, role, style, voice_sample); file is gitignored by default; schema contract exists; `handoff` and `linkedin` cancelled per gate verdict
-- [ ] Phase 2 — `/agents user show` renders the file; loader priority documented; example fixture exists
-- [ ] Phase 3 — `review`/`accept`/`update` cycle works end-to-end; 100-line cap enforced; 90-day staleness warning surfaces
-- [ ] Phase 4 — Either `/sparring` ships per spec, or the phase is explicitly cancelled with rationale recorded in this file
-- [ ] Phase 5 — README and template comments updated; `check:refs` passes
-- [ ] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`)
-- [ ] No credentials / secrets / health / financial data / third-party PII anywhere in `.agent-user.md` template or examples — verified by manual review
-- [ ] Zero network code in the `agent-config` package itself — verified by grep (no `requests`, `urllib`, `httpx`, `fetch`, etc. introduced)
+- [x] Phase 1 — `/agents user init` creates a valid `.agent-user.md` from the interview (minimal v1 schema only — name, language, role, style, voice_sample); file is gitignored by default; schema contract exists; `handoff` and `linkedin` cancelled per gate verdict
+- [x] Phase 2 — `/agents user show` renders the file; loader priority documented; example fixture exists
+- [x] Phase 3 — `review`/`accept`/`update` cycle works end-to-end; 100-line cap enforced; 90-day staleness warning surfaces
+- [x] Phase 4 — Explicitly cancelled with rationale recorded in this file (Phase 1–3 not yet in active use ≥1 week per gate precondition)
+- [x] Phase 5 — README and template comments updated; `check:refs` passes
+- [x] All quality gates pass at each phase boundary (`task ci`, `task lint-skills`)
+- [x] No credentials / secrets / health / financial data / third-party PII anywhere in `.agent-user.md` template or examples — verified by manual review
+- [x] Zero network code in the `agent-config` package itself — verified by grep (no `requests`, `urllib`, `httpx`, `fetch`, etc. introduced)
 
 ## Notes
 
