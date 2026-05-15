@@ -5,6 +5,8 @@ source: package
 domain: process
 ---
 
+<!-- cloud_safe: degrade -->
+
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
 # ai-council

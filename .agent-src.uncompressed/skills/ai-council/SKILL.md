@@ -7,6 +7,8 @@ domain: process
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
+<!-- cloud_safe: degrade -->
+
 # ai-council
 
 ## When to use
