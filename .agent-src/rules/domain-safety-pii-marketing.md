@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafting customer testimonials, case studies, social proof, or marketing emails referencing real customers — require consent record and redact identifying details if consent absent"
+description: "Drafting testimonials, case studies, social proof, or marketing emails referencing real customers — require consent; redact identifiers if absent"
 source: package
 triggers:
   - keyword: "testimonial"

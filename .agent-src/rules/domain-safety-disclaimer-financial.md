@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafting investment memos, valuation models, tax positions, or any financial-advice-shaped content — require 'not financial advice' disclaimer in the output"
+description: "Drafting investment memos, valuation models, tax positions, or financial-advice-shaped content — require 'not financial advice' disclaimer"
 source: package
 triggers:
   - keyword: "investment memo"

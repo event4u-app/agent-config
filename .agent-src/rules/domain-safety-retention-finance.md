@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Generating finance data retention guidance — flag jurisdiction dependence, default to longest applicable retention, never recommend deletion of records under audit hold"
+description: "Finance data retention guidance — flag jurisdiction dependence, default to longest applicable retention, never delete records under audit hold"
 source: package
 triggers:
   - keyword: "retention policy"

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafting legal briefs, contract redlines, terms of service, privacy policies, or any legal-shaped content — require 'not legal advice' disclaimer in the output"
+description: "Drafting legal briefs, contract redlines, ToS, privacy policies, or any legal-shaped content — require 'not legal advice' disclaimer in output"
 source: package
 triggers:
   - keyword: "legal brief"
