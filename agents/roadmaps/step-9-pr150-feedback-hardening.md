@@ -33,12 +33,12 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ## Acceptance criteria
 
-- [ ] `check-no-roadmap-refs` reports 0 violations on `main` after Phase 0 lands.
-- [ ] `docs/contracts/ai-council-config.md` documents the explicit `low_impact.mode: council` + `participate_low_impact: true` opt-in pattern with a worked example.
-- [ ] Pre-flight cost disclosure prints `member X skipped: binary not found, install via <hint>` for every CLI member whose binary is missing.
-- [ ] `agent-config doctor` reports per-CLI-member: binary present · auth probe · parse fixture · quota remaining · billable flag.
-- [ ] Corpus parser test suite covers: missing anchor, renamed heading, bullet without quotes, duplicate entry, anti-example wrongly under Validated, malformed ISO timestamp, redactor-bypass attempt. Each case has a deterministic error message.
-- [ ] Fuzzy matching opt-in via `low_impact.fuzzy_match.enabled: true` (default off). Threshold default `0.92`, configurable. High-impact-trigger veto + anti-example-veto enforced and tested.
+- [x] `check-no-roadmap-refs` reports 0 violations on `main` after Phase 0 lands.
+- [x] `docs/contracts/ai-council-config.md` documents the explicit `low_impact.mode: council` + `participate_low_impact: true` opt-in pattern with a worked example.
+- [x] Pre-flight cost disclosure prints `member X skipped: binary not found, install via <hint>` for every CLI member whose binary is missing.
+- [x] `agent-config doctor` reports per-CLI-member: binary present · auth probe · parse fixture · quota remaining · billable flag.
+- [x] Corpus parser test suite covers: missing anchor, renamed heading, bullet without quotes, duplicate entry, anti-example wrongly under Validated, malformed ISO timestamp, redactor-bypass attempt. Each case has a deterministic error message.
+- [x] Fuzzy matching opt-in via `low_impact.fuzzy_match.enabled: true` (default off). Threshold default `0.92`, configurable. High-impact-trigger veto + anti-example-veto enforced and tested.
 - [ ] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (Iron-Law) prevents host agents from swallowing `Resolved via low-impact council fast-path: …` markers.
 - [ ] `/memory learn-low-impact` accepts `--preview` (default) and `--apply`; preview prints promoted · refused · redaction reasons · source-project-stripped diff · upstream PR body draft.
 - [ ] New setting `defaults.member_mode: cli | api` (default `cli`) flips the global default transport. Per-member explicit `mode:` continues to override. Airgapped installs auto-set `api` via installer detection (no DNS resolution to provider hosts).
@@ -53,16 +53,16 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 0 — Tech-debt cleanup (C2)
 
-- [ ] Audit the 27 `check-no-roadmap-refs` violations on main; categorise (legit reference to archived roadmap · stale pointer · false positive).
-- [ ] Replace stale pointers with stable artefact references per `.augment/rules/no-roadmap-references.md`; whitelist any legit archived-roadmap references in the linter.
-- [ ] Single commit on main: `chore(lint): clear pre-existing check-no-roadmap-refs violations`.
-- [ ] CI gate: linter `check-no-roadmap-refs` now blocks PRs (was reporting-only).
+- [x] Audit the 27 `check-no-roadmap-refs` violations on main; categorise (legit reference to archived roadmap · stale pointer · false positive).
+- [x] Replace stale pointers with stable artefact references per `.augment/rules/no-roadmap-references.md`; whitelist any legit archived-roadmap references in the linter.
+- [x] Single commit on main: `chore(lint): clear pre-existing check-no-roadmap-refs violations`.
+- [x] CI gate: linter `check-no-roadmap-refs` now blocks PRs (was reporting-only).
 
 ### Phase 1 — Docs clarity (G1)
 
-- [ ] Add `docs/contracts/ai-council-config.md` section "Low-impact council opt-in" with the full snippet (`decision_resolution.classes.low_impact.mode = council` + per-member `participate_low_impact: true`).
-- [ ] Update `.agent-src.uncompressed/skills/ai-council/SKILL.md` to cross-reference the opt-in pattern.
-- [ ] `agents/.ai-council.yml` example header gets a comment block calling out the default-agent vs opt-in-council distinction.
+- [x] Add `docs/contracts/ai-council-config.md` section "Low-impact council opt-in" with the full snippet (`decision_resolution.classes.low_impact.mode = council` + per-member `participate_low_impact: true`).
+- [x] Update `.agent-src.uncompressed/skills/ai-council/SKILL.md` to cross-reference the opt-in pattern.
+- [x] `agents/.ai-council.yml` example header gets a comment block calling out the default-agent vs opt-in-council distinction.
 
 ### Phase 2 — CLI-binary UX hint (C1)
 
@@ -84,11 +84,11 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 5 — Fuzzy matching with safety vetoes (G3)
 
-- [ ] Add `classify_impact_with_corpus_fuzzy()` in `scripts/ai_council/low_impact.py` using `difflib.SequenceMatcher.ratio()`.
-- [ ] Opt-in config `low_impact.fuzzy_match.{enabled,threshold}` (defaults `false`, `0.92`).
-- [ ] High-impact-veto: any token from `HIGH_IMPACT_TRIGGERS` in the query short-circuits to `high_impact` regardless of similarity (Iron Law preserved).
-- [ ] Anti-example-veto: if `max_similarity(anti_examples) >= max_similarity(validated)`, reject the match.
-- [ ] Tests in `tests/test_fuzzy_corpus_match.py` — including the `array_map vs foreach` example.
+- [x] Add `classify_impact_with_corpus_fuzzy()` in `scripts/ai_council/low_impact.py` using `difflib.SequenceMatcher.ratio()`.
+- [x] Opt-in config `low_impact.fuzzy_match.{enabled,threshold}` (defaults `false`, `0.92`).
+- [x] High-impact-veto: any token from `HIGH_IMPACT_TRIGGERS` in the query short-circuits to `high_impact` regardless of similarity (Iron Law preserved).
+- [x] Anti-example-veto: if `max_similarity(anti_examples) >= max_similarity(validated)`, reject the match.
+- [x] Tests in `tests/test_fuzzy_corpus_match.py` — including the `array_map vs foreach` example.
 
 ### Phase 6 — Host-agent transparency Iron-Law rule (G4)
 

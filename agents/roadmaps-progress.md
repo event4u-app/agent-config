@@ -6,10 +6,10 @@
 
 ## Overall
 
-**9 / 229 steps done · 4%**
+**21 / 229 steps done · 9%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md) | 5 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md) | 13 | 51 | 42 | 9 | 0 | 0 | ██░░░░░░░░ 18% |
+| 6 | [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md) | 13 | 51 | 30 | 21 | 0 | 0 | ████░░░░░░ 41% |
 | 7 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -91,16 +91,16 @@
 
 ### [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md)
 
-**Step 9 — PR #150 Follow-up Hardening** — 9 / 51 done (18%)
+**Step 9 — PR #150 Follow-up Hardening** — 21 / 51 done (41%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Tech-debt cleanup (C2) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Docs clarity (G1) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 0 | Tech-debt cleanup (C2) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 1 | Docs clarity (G1) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 2 | CLI-binary UX hint (C1) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Doctor CLI checks (G5) | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Corpus parser hardening (G2) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 5 | Fuzzy matching with safety vetoes (G3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 5 | Fuzzy matching with safety vetoes (G3) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 6 | Host-agent transparency Iron-Law rule (G4) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 7 | `/memory learn-low-impact --preview` (G6) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 8 | Config schema for the three new settings (U1 · U2 · U3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
