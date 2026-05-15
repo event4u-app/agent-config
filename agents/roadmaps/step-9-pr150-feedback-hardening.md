@@ -39,14 +39,14 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 - [x] `agent-config doctor` reports per-CLI-member: binary present · auth probe · parse fixture · quota remaining · billable flag.
 - [x] Corpus parser test suite covers: missing anchor, renamed heading, bullet without quotes, duplicate entry, anti-example wrongly under Validated, malformed ISO timestamp, redactor-bypass attempt. Each case has a deterministic error message.
 - [x] Fuzzy matching opt-in via `low_impact.fuzzy_match.enabled: true` (default off). Threshold default `0.92`, configurable. High-impact-trigger veto + anti-example-veto enforced and tested.
-- [ ] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (Iron-Law) prevents host agents from swallowing `Resolved via low-impact council fast-path: …` markers.
-- [ ] `/memory learn-low-impact` accepts `--preview` (default) and `--apply`; preview prints promoted · refused · redaction reasons · source-project-stripped diff · upstream PR body draft.
-- [ ] New setting `defaults.member_mode: cli | api` (default `cli`) flips the global default transport. Per-member explicit `mode:` continues to override. Airgapped installs auto-set `api` via installer detection (no DNS resolution to provider hosts).
-- [ ] New setting `routing.solo_member_fallback_chain: [provider, ...]` selects the preferred single member for solo-mode dispatch. Disabled members skipped; duplicates rejected at config-load time; all-invalid escalates to full council (does not fail the decision).
-- [ ] New setting `low_impact.dispatch: full | single` (default `full`). When `single`, dispatch uses `routing.solo_member_fallback_chain`. Iron Law: `high_impact.dispatch` and `user_required.dispatch` rejected by config validator with explicit error.
-- [ ] Shadow-mode logger `agents/council-shadow-log.jsonl` records single-vs-full disagreement rate when `low_impact.dispatch: single` is active. SLO threshold `5%` over 7-day rolling window; above threshold prints warning in pre-flight disclosure.
-- [ ] Env var `AGENT_CONFIG_FORCE_FULL_COUNCIL=1` kill-switch overrides `low_impact.dispatch: single` for the current invocation.
-- [ ] Migration script `scripts/_cli/cmd_migrate_council_dispatch.py` scans existing `.agent-settings.yml` / `agents/.ai-council.yml`, adds explicit `dispatch: full` where `low_impact.mode: council` is set without `dispatch`. Idempotent.
+- [x] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (Iron-Law) prevents host agents from swallowing `Resolved via low-impact council fast-path: …` markers.
+- [x] `/memory learn-low-impact` accepts `--preview` (default) and `--apply`; preview prints promoted · refused · redaction reasons · source-project-stripped diff · upstream PR body draft.
+- [x] New setting `defaults.member_mode: cli | api` (default `cli`) flips the global default transport. Per-member explicit `mode:` continues to override. Airgapped installs auto-set `api` via installer detection (no DNS resolution to provider hosts).
+- [x] New setting `routing.solo_member_fallback_chain: [provider, ...]` selects the preferred single member for solo-mode dispatch. Disabled members skipped; duplicates rejected at config-load time; all-invalid escalates to full council (does not fail the decision).
+- [x] New setting `low_impact.dispatch: full | single` (default `full`). When `single`, dispatch uses `routing.solo_member_fallback_chain`. Iron Law: `high_impact.dispatch` and `user_required.dispatch` rejected by config validator with explicit error.
+- [x] Shadow-mode logger `agents/council-shadow-log.jsonl` records single-vs-full disagreement rate when `low_impact.dispatch: single` is active. SLO threshold `5%` over 7-day rolling window; above threshold prints warning in pre-flight disclosure.
+- [x] Env var `AGENT_CONFIG_FORCE_FULL_COUNCIL=1` kill-switch overrides `low_impact.dispatch: single` for the current invocation.
+- [-] Migration script `scripts/_cli/cmd_migrate_council_dispatch.py` scans existing `.agent-settings.yml` / `agents/.ai-council.yml`, adds explicit `dispatch: full` where `low_impact.mode: council` is set without `dispatch`. Idempotent. (deferred — Phase 8 defaults are backward-compatible; missing `dispatch` reads as `full`, no migration required.)
 - [ ] All new tests pass; `task ci` green; no Iron-Law regression.
 
 ## Phases
@@ -92,9 +92,9 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 6 — Host-agent transparency Iron-Law rule (G4)
 
-- [ ] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (always-active, kernel-tier).
-- [ ] Iron Law: host agent MUST surface the fast-path marker verbatim in the reply opening.
-- [ ] Mirror to `.agent-src/`, regenerate `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` via `task sync && task generate-tools`.
+- [x] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (always-active, kernel-tier).
+- [x] Iron Law: host agent MUST surface the fast-path marker verbatim in the reply opening.
+- [x] Mirror to `.agent-src/`, regenerate `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` via `task sync && task generate-tools`.
 
 ### Phase 7 — `/memory learn-low-impact --preview` (G6)
 
@@ -130,23 +130,23 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 10 — Shadow-mode + SLO enforcement (U3 safety net)
 
-- [ ] When `low_impact.dispatch: single` is active and shadow mode opt-in `low_impact.shadow_sample_rate: 0.0–1.0` (default `0.1`) fires, dispatch the same decision to both solo member and full council. Log to `agents/council-shadow-log.jsonl` (one JSONL row per shadowed decision: timestamp · query-hash · solo-verdict · full-verdict · agreed: bool · source-project-stripped).
-- [ ] Privacy: shadow log is subject to the same `low-impact-corpus-privacy-floor.md` rules — redactor-refused entries are dropped, not softened.
-- [ ] New CLI `python3 scripts/council_cli.py shadow-report` reads `council-shadow-log.jsonl`, computes 7-day rolling disagreement rate, prints SLO status (`OK <5%` / `WARN 5–8%` / `BREACH >8%`).
-- [ ] Pre-flight cost disclosure surfaces SLO status when `low_impact.dispatch: single` is active. `WARN` and `BREACH` both print a one-line recommendation.
-- [ ] **No auto-flip back to `full`.** Default flip / revert is a user decision, scheduled separately in Step 9.4. This phase delivers the data; humans decide.
-- [ ] Tests `tests/test_shadow_dispatch.py`: shadow-log writes · disagreement-rate computation · SLO threshold transitions · pre-flight banner rendering · privacy-redactor integration.
+- [x] When `low_impact.dispatch: single` is active and shadow mode opt-in `low_impact.shadow_sample_rate: 0.0–1.0` (default `0.1`) fires, dispatch the same decision to both solo member and full council. Log to `agents/council-shadow-log.jsonl` (one JSONL row per shadowed decision: timestamp · query-hash · solo-verdict · full-verdict · agreed: bool · source-project-stripped).
+- [x] Privacy: shadow log is subject to the same `low-impact-corpus-privacy-floor.md` rules — redactor-refused entries are dropped, not softened.
+- [x] New CLI `python3 scripts/council_cli.py shadow-report` reads `council-shadow-log.jsonl`, computes 7-day rolling disagreement rate, prints SLO status (`OK <5%` / `WARN 5–8%` / `BREACH >8%`).
+- [x] Pre-flight cost disclosure surfaces SLO status when `low_impact.dispatch: single` is active. `WARN` and `BREACH` both print a one-line recommendation.
+- [x] **No auto-flip back to `full`.** Default flip / revert is a user decision, scheduled separately in Step 9.4. This phase delivers the data; humans decide.
+- [x] Tests `tests/test_shadow_dispatch.py`: shadow-log writes · disagreement-rate computation · SLO threshold transitions · pre-flight banner rendering · privacy-redactor integration.
 
 ### Phase 11 — Iron-Law config validator + airgap detection (U1 · U3 safeguards)
 
-- [ ] Iron-Law tests `tests/test_iron_law_config.py`:
+- [x] Iron-Law tests `tests/test_iron_law_config.py`:
   - `high_impact.dispatch: single` → config-load rejects with explicit error.
   - `user_required.dispatch: single` → rejects.
   - `decision_resolution.classes.high_impact.dispatch` (nested form) → rejects.
   - Smuggled-in dispatch via `!include` / `<<:` YAML anchors → rejects.
-- [ ] Airgap detection in installer / first-run: probe DNS for `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` with 1s timeout per host. All fail → auto-set `defaults.member_mode: api` in generated config with banner: `airgapped environment detected — defaulting to mode: api`.
-- [ ] Tests `tests/test_airgap_detection.py` covering: all-reachable → `cli` · all-unreachable → `api` · partial-reachable → `cli` (single working CLI is enough).
-- [ ] Update `scripts/audit_cloud_compatibility.py` to flag any new code path that bypasses the Iron-Law validator.
+- [x] Airgap detection in installer / first-run: probe DNS for `api.anthropic.com`, `api.openai.com`, `generativelanguage.googleapis.com` with 1s timeout per host. All fail → auto-set `defaults.member_mode: api` in generated config with banner: `airgapped environment detected — defaulting to mode: api`. (module `scripts/ai_council/airgap.py` + first-run hook in `scripts/install.sh`)
+- [x] Tests `tests/test_airgap_detection.py` covering: all-reachable → `cli` · all-unreachable → `api` · partial-reachable → `cli` (single working CLI is enough).
+- [x] Update `scripts/audit_cloud_compatibility.py` to flag any new code path that bypasses the Iron-Law validator. (`--iron-law` flag scans `scripts/` for raw YAML loads of `ai-council.yml`; `# iron-law-ok: <reason>` annotation suppresses; current baseline: 0 findings.)
 
 ### Phase 12 — Final wire-up
 

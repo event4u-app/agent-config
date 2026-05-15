@@ -213,6 +213,27 @@
       ]
     },
     {
+      "id": "fast-path-marker-visibility",
+      "triggers": [
+        {
+          "keyword": "low-impact council"
+        },
+        {
+          "keyword": "fast-path"
+        },
+        {
+          "keyword": "Resolved via low-impact council"
+        },
+        {
+          "keyword": "low_impact"
+        },
+        {
+          "intent": "low-impact council dispatch"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "laravel-routing",
       "triggers": [
         {
