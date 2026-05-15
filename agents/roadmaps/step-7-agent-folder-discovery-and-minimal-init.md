@@ -43,12 +43,12 @@ complexity: structural
 
 ### Phase 2 — `agent-config init --minimal`
 
-- [ ] Add `--minimal` / `--settings-only` flag in `scripts/install` (bash) and `scripts/install.sh`, plumbed through to `scripts/install.py`.
-- [ ] Template file: `templates/minimal/.agent-settings.yml` — empty stub with the version pin commented out, `cost_profile: balanced`, `agent_config_version: <current>`.
-- [ ] Template file: `templates/minimal/agents-gitkeep` — placeholder so `agents/` is committable.
-- [ ] CLI wrapper `./agent-config` is still installed (delegates to global via `templates/agent-config-wrapper.sh` — already supports this).
-- [ ] Nested-install guard: walk up from CWD with the Phase-1 anchors; if a root is found above CWD, refuse with exit 1 and print the existing root path.
-- [ ] `cmd_init` in `scripts/agent-config` accepts and forwards the flag.
+- [x] Add `--minimal` / `--settings-only` flag in `scripts/install` (bash) and `scripts/install.sh`, plumbed through to `scripts/install.py`.
+- [x] Template file: `templates/minimal/.agent-settings.yml` — empty stub with the version pin commented out, `cost_profile: balanced`, `agent_config_version: <current>`.
+- [x] Template file: `templates/minimal/agents-gitkeep` — placeholder so `agents/` is committable.
+- [x] CLI wrapper `./agent-config` is still installed (delegates to global via `templates/agent-config-wrapper.sh` — already supports this).
+- [x] Nested-install guard: walk up from CWD with the Phase-1 anchors; if a root is found above CWD, refuse with exit 1 and print the existing root path.
+- [x] `cmd_init` in `scripts/agent-config` accepts and forwards the flag.
 
 ### Phase 3 — Subdir invocation hardening
 
@@ -65,8 +65,8 @@ complexity: structural
 
 ### Phase 5 — Tests + CI
 
-- [ ] `tests/test_minimal_init.py` — covers payload shape (only 3 files written), wrapper present, refusal of nested init.
-- [ ] `tests/test_project_root_anchors.py` — covers `.git`, `agents/`, `.agent-settings.yml` anchors and precedence.
+- [x] `tests/test_minimal_init.py` — covers payload shape (only 3 files written), wrapper present, refusal of nested init.
+- [x] `tests/test_project_root_anchors.py` — covers `.git`, `agents/`, `.agent-settings.yml` anchors and precedence.
 - [ ] `tests/test_subdir_invocation.py` — runs `agent-config doctor` from `<repo>/deep/nested/path/`, asserts resolved root.
 - [ ] CI job `python-tests` already covers these — no new workflow needed.
 
