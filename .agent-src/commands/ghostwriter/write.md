@@ -29,20 +29,37 @@ template (not by the model, no opt-out).
 Argument shapes:
 
 - `/ghostwriter:write` → interactive numbered menu (see below).
-- `/ghostwriter:write --as=<slug> [...modifiers]` → non-interactive.
-- `/ghostwriter:write <slug> [...modifiers]` → positional shorthand.
+- `/ghostwriter:write --as=<value> [...modifiers]` → non-interactive.
+- `/ghostwriter:write <value> [...modifiers]` → positional shorthand.
+
+`<value>` resolves against **slugs** and (when
+`ghostwriter.aliases: true` in `.agent-project-settings.yml` — default
+on) the `aliases:` list of every consumer profile. See
+[`ghostwriter-schema § Aliases`](../../../docs/contracts/ghostwriter-schema.md#aliases).
 
 Scan `agents/ghostwriter/*.md`, excluding `README.md` and any file
 with `fictional: true` (fixtures are not consumable from this
 command — they live in the package source as schema examples).
 
+Resolution order for `--as=<value>` / positional `<value>`:
+
+1. **Slug match** — case-insensitive equality against filename stem.
+2. **Alias match** (skip when `ghostwriter.aliases: false`) —
+   case-insensitive equality against every profile's `aliases:` entry.
+   Conflicts are impossible at runtime — the consumer-side lint
+   (`task lint-ghostwriter-source`) rejects cross-profile alias
+   collisions at commit time, so an alias resolves to exactly one
+   profile or zero.
+3. **No match** → abort with: *"No profile matches `<value>` (tried
+   slug + aliases). Run `/ghostwriter:list` to see available profiles."*
+
 | State | Action |
 |---|---|
 | Zero non-fixture profiles | **Abort.** Print: *"No ghostwriter profiles exist. Run `/ghostwriter:fetch <url-or-name>` first."* |
 | One or more profiles, interactive | Numbered menu: `1. <slug> — <identity.name> · <confidence> · <last_updated>` |
-| `--as=<slug>` / positional | Resolve directly; abort if slug missing |
+| `--as=<value>` / positional | Resolve via the order above; abort on no match |
 
-User picks by number or slug. No default — explicit choice required.
+User picks by number or value. No default — explicit choice required.
 
 ### 2. Load the style source
 
@@ -93,6 +110,12 @@ flag, no `--internal` flag, no opt-out. The absence of any such flag
 is the acceptance criterion (locked in
 [`ghostwriter-schema`](../../../docs/contracts/ghostwriter-schema.md)
 § Mandatory disclosure footer).
+
+**The footer always uses `identity.name`, never the alias that
+triggered the command.** Invoking `--as=Hawking` against a profile
+with `identity.name: "Stephen Hawking"` produces *"Written in the
+style of Stephen Hawking, not by them."* — never *"…of Hawking…"*.
+Aliases are UX-only; identity attribution stays deterministic.
 
 ### 7. Print
 
