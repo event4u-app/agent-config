@@ -9,6 +9,10 @@ triggers:
   - keyword: "Resolved via low-impact council"
   - keyword: "low_impact"
   - intent: "low-impact council dispatch"
+validator_ignore:
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Compressor injects a back-pointer to the uncompressed source for full failure-modes detail."
 ---
 
 # Fast-Path Marker Visibility
