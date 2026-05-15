@@ -110,7 +110,7 @@ Only after Phases 1–5 prove non-dev workflows succeed: rewrite messaging to ma
 - [x] New H1 positioning replaces stack-specific framing: "Agent Config — Universal AI Agent OS" + subtitle naming OS framing and three audience types (developers / founders / creators)
 - [x] Hero section restructured to 3-column grid — Developers · Founders & Operators · Creators & Consultants — with named entry-point skills/commands per column
 - [x] Laravel content relocated below the fold under `Featured Domain: Laravel Development` with link to [`docs/getting-started-laravel.md`](../../docs/getting-started-laravel.md) and pointer to [`docs/getting-started-by-role.md`](../../docs/getting-started-by-role.md) for non-dev audiences
-- [ ] GitHub repository tagline + description updated to match the new H1 (single edit via repo settings — **user action**, deferred)
+- [ ] GitHub repository tagline + description updated to match the new H1 (single edit via repo settings — **user action**, deferred; reviewable script drafted in [`scripts/update-github-metadata.sh`](../../scripts/update-github-metadata.sh) per AI-Council 2026-05-15-step12-final-push verdict D3 AMEND — `./scripts/update-github-metadata.sh --apply` to execute)
 - [ ] A/B validation: 3 non-dev recruits read the new README and confirm "understood purpose and relevance to my work"; 10 existing dev users polled, ≥8/10 approve (**out-of-band, deferred to post-merge sampling**)
 - [ ] If < 8/10 dev users approve, iterate messaging once and re-poll; second failure → halt and reopen with the AI Council (**conditional on box above, deferred**)
 
@@ -124,7 +124,7 @@ Final gate: all prior phases are hypothesis until non-developers actually adopt.
 > **Deferred to post-merge field validation.** Every checkbox in this phase requires either real external users, a 90-day observation window, telemetry infrastructure gated on `step-9` (user-type axis), or a `init --user-type=X` flag that does not yet exist. None can be discharged within this branch's scope. The boxes stay open intentionally; the phase reopens once `step-9` lands and Phase 6's README is in the wild long enough to draw non-dev recruits.
 
 - [ ] Ship announcement targeting 3 non-dev communities (Product Hunt no-code tag, ContentWritingJobs subreddit, Indie Hackers consulting forum) — announcement text drafted via the `ghostwriter` cluster *(post-merge, external)*
-- [ ] Anonymous opt-in telemetry tracks `init --user-type=X` selections (GDPR-compliant; contract in `docs/contracts/init-telemetry.md`) *(gated on `step-9` user-type filtering)*
+- [ ] Anonymous opt-in telemetry tracks `init --user-type=X` selections (GDPR-compliant; contract drafted in [`docs/contracts/init-telemetry.md`](../../docs/contracts/init-telemetry.md) per AI-Council 2026-05-15-step12-final-push verdict D2 ACCEPT) *(producer wire-up gated on `step-9` user-type filtering)*
 - [ ] Collect 5 case studies covering ≥3 distinct user-types (≥2 content, ≥1 consulting, ≥1 founder / ops); each documents specific workflow enabled with before/after metrics *(post-merge, external)*
 - [ ] Case studies published in `docs/case-studies/` with anonymized metrics (e.g., "brief drafting: 90 min → 25 min, 73% time reduction") *(post-merge, external)*
 - [ ] Verified: ≥3 of 5 case studies show top-10 skill invocations contain zero `test`, `deploy`, `ci` (proof of non-dev workflow, not disguised dev work) *(post-merge, external)*

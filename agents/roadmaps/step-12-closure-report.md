@@ -2,7 +2,9 @@
 status: report
 related_roadmap: step-12-universal-os-reframe.md
 generated: 2026-05-15
-council_session: agents/council-responses/2026-05-15-step12-process-full-scope
+council_sessions:
+  - agents/council-responses/2026-05-15-step12-process-full-scope
+  - agents/council-responses/2026-05-15-step12-final-push.json
 ---
 
 # Step-12 Closure Report — feat/ghostwriter branch terminal state
@@ -15,7 +17,15 @@ In-branch scope: **closed**. 25 / 48 boxes done (52% via dashboard math). All 23
 
 ## Decision provenance
 
-AI Council polled with explicit scope question (`.tmp/council-step12-scope.md` → `agents/council-responses/2026-05-15-step12-process-full-scope`). Two members (anthropic/claude-sonnet-4-5, openai/gpt-4o), two rounds, $0.05 actual cost. Convergent verdict: **halt with closure report**, do not scaffold premature directories, do not escalate scope into `step-6` / `step-4`.
+AI Council polled twice on this roadmap run, both rounds with anthropic/claude-sonnet-4-5 + openai/gpt-4o.
+
+**Pass 1 — scope question** (`agents/council-responses/2026-05-15-step12-process-full-scope`, 2 rounds, $0.05). Convergent verdict: **halt with closure report**, do not scaffold premature directories, do not escalate scope into `step-6` / `step-4`.
+
+**Pass 2 — final-push deltas** after the maintainer re-invoked `/roadmap:process-full` with explicit "do not stop, ask Council not user" framing (`agents/council-responses/2026-05-15-step12-final-push.json`, 1 round, $0.03). Three decisions:
+
+- **D1 (author missing `step-4-measurement-and-benchmark.md`)** — REJECT (unanimous). Scope creep beyond "complete step-12"; future work, separate PR/branch.
+- **D2 (pre-author `docs/contracts/init-telemetry.md`)** — ACCEPT (unanimous). Preparatory deliverable inside Phase 7 scope; zero risk; drafted on this branch.
+- **D3 (execute GitHub repo description/topics live)** — AMEND (anthropic) + ACCEPT (openai). Honored the stricter AMEND verdict: drafted `scripts/update-github-metadata.sh` as a reviewable dry-run-by-default script; live execution still requires maintainer `--apply` invocation. Respects the roadmap author's `user action` fence while advancing the work to its edge.
 
 ## In-scope work completed on this branch
 
@@ -23,7 +33,14 @@ AI Council polled with explicit scope question (`.tmp/council-step12-scope.md` �
 - **Phase 3** (4/6) — `agent-config init --interactive`, `.agent-config.local.json` schema, universal-skills allowlist (15 skills) in `docs/contracts/universal-skills.md`. Opens = MCP runtime + step-9 measurement.
 - **Phase 4** (6/6) — 12 `domain-safety-*` rules (PII redaction, output disclaimers, retention), `safety-01` corpus prompt, README "Data governance" section.
 - **Phase 5** (5/5) — `recommended_for_user_types` schema field, 32 skills tagged, router-blending contract in `docs/contracts/router-blending.md`.
-- **Phase 6** (3/6) — README H1 reframe ("Universal AI Agent OS"), 3-column audience hero, Laravel relocated below the fold. Opens = GitHub repo settings (user action) + A/B validation (external).
+- **Phase 6** (3/6) — README H1 reframe ("Universal AI Agent OS"), 3-column audience hero, Laravel relocated below the fold. Opens = GitHub repo settings (user action — reviewable script drafted in [`scripts/update-github-metadata.sh`](../../scripts/update-github-metadata.sh)) + A/B validation (external).
+
+## Preparatory deliverables (final-push pass 2)
+
+Two artefacts added on this branch that do **not** close their roadmap boxes but advance the work to its edge:
+
+- [`docs/contracts/init-telemetry.md`](../../docs/contracts/init-telemetry.md) — binding wire-shape, opt-out floor, and GDPR fit for the `init.user_type.selected` event. Pre-authors the contract referenced by Phase 7 L127. Producer wire-up still gated on `step-9`.
+- [`scripts/update-github-metadata.sh`](../../scripts/update-github-metadata.sh) — dry-run-by-default script with the proposed description + topics for Phase 6 L113. Maintainer runs `./scripts/update-github-metadata.sh --apply` to execute; rollback documented in script header.
 
 ## Dependency chain blocking the 23 opens
 
