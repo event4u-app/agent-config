@@ -200,6 +200,108 @@ def test_prompt_cache_lookup_uses_wire_name(tmp_path: Path) -> None:
 
 
 # ----------------------------------------------------------------------
+# Phase 3 (step-9 user-type axis) — runtime filter
+# ----------------------------------------------------------------------
+
+
+def _seed_user_type_tree(root: Path) -> None:
+    """Seed a tmp tree with three skills covering match / universal / outside."""
+    skills = root / ".agent-src" / "skills"
+    (skills / "match-skill").mkdir(parents=True)
+    (skills / "match-skill" / "SKILL.md").write_text(
+        "---\nname: match-skill\ndescription: \"matches\"\n"
+        "recommended_for_user_types: [developer, founder]\n---\nbody\n",
+        encoding="utf-8",
+    )
+    (skills / "universal-skill").mkdir(parents=True)
+    (skills / "universal-skill" / "SKILL.md").write_text(
+        '---\nname: universal-skill\ndescription: "no filter"\n---\nbody\n',
+        encoding="utf-8",
+    )
+    (skills / "outside-skill").mkdir(parents=True)
+    (skills / "outside-skill" / "SKILL.md").write_text(
+        "---\nname: outside-skill\ndescription: \"other axis\"\n"
+        "recommended_for_user_types: [consultant]\n---\nbody\n",
+        encoding="utf-8",
+    )
+
+
+def test_user_type_axis_no_filter_keeps_alpha_order(tmp_path: Path) -> None:
+    """Empty / missing user_type → legacy alphabetical sort, no meta tag."""
+    _seed_user_type_tree(tmp_path)
+    cache = PromptCache(root=tmp_path)
+    prompts, _errors = cache.get()
+    assert cache.active_user_type == ""
+    assert [p.name for p in prompts] == [
+        "match-skill",
+        "outside-skill",
+        "universal-skill",
+    ]
+    for p in prompts:
+        assert p.user_type_match == ""
+        assert "user_type_match" not in to_mcp_prompt_meta(p)["_meta"]
+
+
+def test_user_type_axis_filter_sorts_match_first(tmp_path: Path) -> None:
+    """Active user_type → match → universal → outside, alpha within rank."""
+    _seed_user_type_tree(tmp_path)
+    (tmp_path / ".agent-settings.yml").write_text(
+        "personal:\n  user_type: developer\n",
+        encoding="utf-8",
+    )
+    cache = PromptCache(root=tmp_path)
+    prompts, _errors = cache.get()
+    assert cache.active_user_type == "developer"
+    assert [p.name for p in prompts] == [
+        "match-skill",
+        "universal-skill",
+        "outside-skill",
+    ]
+    labels = {p.name: p.user_type_match for p in prompts}
+    assert labels == {
+        "match-skill": "match",
+        "universal-skill": "universal",
+        "outside-skill": "outside",
+    }
+    for p in prompts:
+        meta = to_mcp_prompt_meta(p)["_meta"]
+        assert meta["user_type_match"] == p.user_type_match
+
+
+def test_user_type_axis_placeholder_disables_filter(tmp_path: Path) -> None:
+    """Unrendered `__USER_TYPE__` placeholder must not engage the filter."""
+    _seed_user_type_tree(tmp_path)
+    (tmp_path / ".agent-settings.yml").write_text(
+        'personal:\n  user_type: "__USER_TYPE__"\n',
+        encoding="utf-8",
+    )
+    cache = PromptCache(root=tmp_path)
+    _prompts, _errors = cache.get()
+    assert cache.active_user_type == ""
+
+
+def test_user_type_axis_settings_flip_invalidates_cache(tmp_path: Path) -> None:
+    """Editing `.agent-settings.yml` re-sorts on next get()."""
+    import os
+
+    _seed_user_type_tree(tmp_path)
+    settings = tmp_path / ".agent-settings.yml"
+    settings.write_text("personal:\n  user_type: developer\n", encoding="utf-8")
+    cache = PromptCache(root=tmp_path)
+    first, _ = cache.get()
+    assert first[0].name == "match-skill"
+
+    settings.write_text("personal:\n  user_type: consultant\n", encoding="utf-8")
+    future = settings.stat().st_mtime + 2
+    os.utime(settings, (future, future))
+
+    second, _ = cache.get()
+    assert cache.active_user_type == "consultant"
+    # outside-skill (recommended_for_user_types=[consultant]) now wins rank 0.
+    assert second[0].name == "outside-skill"
+
+
+# ----------------------------------------------------------------------
 # Import-surface guard — A0 contract enforcement
 # ----------------------------------------------------------------------
 
