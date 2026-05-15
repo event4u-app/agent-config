@@ -449,6 +449,42 @@ fast-path verdict for its own answer. See
 [`ai-council § Lightweight-QA fast-path`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md#lightweight-qa-fast-path-phase-11)
 for the orchestration contract and session-artefact format.
 
+### Solo-member dispatch (step-9 P8/P9 · U1 · U2 · U3)
+
+Three new top-level settings cooperate to make low-impact decisions
+optionally cheap by routing them to a single member instead of the
+full council. Defaults preserve the prior shape — no behaviour
+changes unless every knob is set explicitly.
+
+| Key | Type | Default | Constraint |
+|---|---|---|---|
+| `defaults.member_mode` | `cli` \| `api` | `cli` | Per-member fallback when a member doesn't set `mode`. `manual` is rejected here (manual transport is full-council only). |
+| `routing.solo_member_fallback_chain` | `list[str]` | `[]` | Ordered, unique provider names. Each entry must exist in the `members` block. Empty disables solo dispatch. |
+| `routing.auth_check_timeout_seconds` | `int` | `3` | Range `[1, 30]`. Bounds the lazy auth probe per chain member. |
+| `low_impact.dispatch` | `full` \| `single` | `full` | `single` requires at least one enabled member in the fallback chain — otherwise rejected at load. |
+| `low_impact.shadow_sample_rate` | `float` | `0.1` | Range `[0.0, 1.0]`. Phase 10 shadow-mode sampling probability. |
+
+**Iron Law (LOCKED).** `decision_resolution.classes.high_impact.dispatch`
+and `decision_resolution.classes.user_required.dispatch` are rejected
+at load time — high-impact and user-required decisions always run the
+full council, with no opt-out. Top-level `high_impact: { dispatch: … }`
+and `user_required: { dispatch: … }` are rejected the same way so a
+mistaken surface choice cannot bypass the lock.
+
+```yaml
+defaults:
+  mode: api
+  member_mode: cli       # use CLI binaries by default for per-member calls
+
+routing:
+  solo_member_fallback_chain: [anthropic, openai]   # try anthropic first
+  auth_check_timeout_seconds: 3
+
+low_impact:
+  dispatch: single        # route low_impact via solo dispatch
+  shadow_sample_rate: 0.1 # 10% shadow to full council for SLO tracking
+```
+
 ## `api_key_ref` forms
 
 Exactly two forms. Raw keys in the yml are a hard validation error.

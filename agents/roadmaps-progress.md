@@ -6,10 +6,10 @@
 
 ## Overall
 
-**24 / 229 steps done · 10%**
+**28 / 228 steps done · 12%**
 
 ```text
-████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   10%
+█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   12%
 ```
 
 ## Open roadmaps
@@ -21,7 +21,7 @@
 | 3 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md) | 5 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md) | 13 | 51 | 27 | 24 | 0 | 0 | █████░░░░░ 47% |
+| 6 | [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md) | 13 | 52 | 22 | 28 | 0 | 2 | ██████░░░░ 56% |
 | 7 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -91,7 +91,7 @@
 
 ### [step-9-pr150-feedback-hardening.md](roadmaps/step-9-pr150-feedback-hardening.md)
 
-**Step 9 — PR #150 Follow-up Hardening** — 24 / 51 done (47%)
+**Step 9 — PR #150 Follow-up Hardening** — 28 / 50 done (56%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -103,7 +103,7 @@
 | 5 | Fuzzy matching with safety vetoes (G3) | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 6 | Host-agent transparency Iron-Law rule (G4) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 7 | `/memory learn-low-impact --preview` (G6) | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 8 | Config schema for the three new settings (U1 · U2 · U3) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 8 | Config schema for the three new settings (U1 · U2 · U3) | ✅ done | 0 | 4 | 0 | 2 | 100% |
 | 9 | Solo-member dispatch logic (U2) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 10 | Shadow-mode + SLO enforcement (U3 safety net) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 11 | Iron-Law config validator + airgap detection (U1 · U3 safeguards) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

@@ -104,18 +104,18 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 8 — Config schema for the three new settings (U1 · U2 · U3)
 
-- [ ] Extend `scripts/ai_council/config.py` (or equivalent loader) with three new typed sections:
+- [x] Extend `scripts/ai_council/config.py` (or equivalent loader) with three new typed sections:
   - `defaults.member_mode: Literal["cli", "api"]` (default `cli`).
   - `routing.solo_member_fallback_chain: list[str]` (default `[]`; empty = solo-mode unavailable).
   - `low_impact.dispatch: Literal["full", "single"]` (default `full`).
-- [ ] Config validator additions (fail at load time, do not silent-skip):
+- [x] Config validator additions (fail at load time, do not silent-skip):
   - **Iron Law:** reject `high_impact.dispatch` and `user_required.dispatch` keys with explicit error message ("dispatch is not configurable for high-impact / user-required decisions — always full council").
   - Reject duplicates in `routing.solo_member_fallback_chain`.
   - Reject `low_impact.dispatch: single` if `routing.solo_member_fallback_chain` is empty or contains only disabled members.
-  - Warn (not error) if `defaults.member_mode: cli` is set but no CLI binary is detectable for any configured member.
-- [ ] Migration script `scripts/_cli/cmd_migrate_council_dispatch.py` — idempotent; backs up the edited file with `.bak` suffix; logs every change to stdout.
-- [ ] Docs: extend `docs/contracts/ai-council-config.md` with the full three-setting matrix (default value · constraint · interaction with existing keys).
-- [ ] Tests `tests/test_config_dispatch_validation.py` — every reject path has a fixture, every warn path has a fixture.
+  - [-] Warn (not error) if `defaults.member_mode: cli` is set but no CLI binary is detectable for any configured member. (deferred — orchestrator-side runtime check in P9, not load-time)
+- [-] Migration script `scripts/_cli/cmd_migrate_council_dispatch.py` — defaults are backward-compatible (empty chain, dispatch=full, member_mode=cli), no migration needed.
+- [x] Docs: extend `docs/contracts/ai-council-config.md` with the full three-setting matrix (default value · constraint · interaction with existing keys).
+- [x] Tests in `tests/ai_council/test_config.py` (extended) — every reject path has a fixture, every warn path has a fixture.
 
 ### Phase 9 — Solo-member dispatch logic (U2)
 
