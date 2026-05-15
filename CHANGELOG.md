@@ -16,6 +16,51 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+**Discovery polish — `--root` override, doctor diagnostics, install-mode marker (`step-8-discovery-polish`)** —
+follow-up to step-7 driven by AI Council review of PR #157. Adds an
+explicit escape hatch for monorepos, surfaces the resolution decision
+path, and replaces install-mode heuristics with an authoritative
+marker file. New surfaces:
+
+- **Global `--root <dir>` flag** — parsed by the bash dispatcher
+  before any subcommand and wins over every other channel (subcommand
+  `--project`, `AGENT_CONFIG_PROJECT_ROOT` env-pin, anchor walk).
+  Implemented as `AGENT_CONFIG_ROOT_OVERRIDE=1` +
+  `AGENT_CONFIG_PROJECT_ROOT` plus a new `ORIGIN_ROOT_FLAG` so doctor
+  can attribute the resolution. Wrapper-coupling warning emitted on
+  stderr when `--root` overrides a wrapper-pinned env-pin.
+- **Fail-loud root validation** — `--root`, `--project`, and
+  `AGENT_CONFIG_PROJECT_ROOT` all reject non-existent paths and
+  non-directories via `ProjectRootError` mapped to exit code `2`. No
+  silent CWD fallback when the operator explicitly named a path.
+- **`agent-config doctor --trace-root`** — read-only diagnostic that
+  prints every ancestor probed during root discovery, the winning
+  anchor, and the originating channel. `--json` for machine-readable
+  output. Short-circuits the drift report.
+- **`agent-config doctor --context`** — prints effective project
+  root, origin, install mode + source, settings-layer chain, wrapper
+  state, and env-pin/override flags. `--json` available.
+- **Install-mode marker file** — `agents/.agent-state/install-mode.txt`
+  written by `install.py` with `minimal\n` or `full\n`. Doctor uses
+  the marker authoritatively for new installs; back-compat heuristic
+  (`AGENTS.md` + copilot bridges) only fires when the marker is absent.
+- **Minimal-install upgrade hint** — `install.py` emits a stderr
+  hint after a `--minimal` install describing how to upgrade to a
+  full install when the user is ready.
+- **Test coverage** — `tests/test_root_override.py` (precedence,
+  fail-loud for each channel, end-to-end CLI exit-2 check),
+  `tests/test_doctor_trace.py` (text + JSON shape for both flags,
+  marker-vs-heuristic install-mode detection, origin propagation).
+  Twenty new tests, full suite green.
+
+Council artefacts:
+`agents/council-sessions/step-8-discovery-polish-decision.md` — 2
+rounds + peer-review, $0.12. Decision cut `template-gen` (A4) and
+`anchor-freeze AC` (A6), kept `--trace-root` and `--context` as two
+distinct flags (host override of Claude's consolidation proposal),
+and added the install-mode marker file as the hybrid resolution to
+Q5 (marker for new installs, filesystem heuristic for back-compat).
+
 **Agent-folder discovery + `--minimal` init (`step-7-agent-folder-discovery-and-minimal-init`)** —
 project-root discovery widens beyond `.git` so non-git checkouts,
 monorepo sub-trees, and `agent-config`-only worktrees resolve
