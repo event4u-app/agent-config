@@ -51,9 +51,11 @@ because annotations bury cross-cutting work; a stub surfaces in
   [`scripts/mcp_server/requirements.txt`](../../scripts/mcp_server/requirements.txt)._
 - [x] **Tool surface scoping:** Which CLI commands warrant MCP exposure?
   _Closed 2026-05-10 via the AI Council Phase 4 design call
-  ([`agents/council-questions/mcp-phase-4-tools.md`](../council-questions/mcp-phase-4-tools.md)
-  → verdict
-  [`agents/council-responses/mcp-phase-4-tools-verdict.md`](../council-responses/mcp-phase-4-tools-verdict.md)).
+  (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.06; verdict captured in
+  the package's stable contract surface at
+  [`docs/contracts/mcp-phase-1-scope.md`](../../docs/contracts/mcp-phase-1-scope.md)
+  Phase 4 amendment + [`docs/contracts/adr-mcp-runtime.md`](../../docs/contracts/adr-mcp-runtime.md)
+  Tool surface section).
   Locked ALLOWLIST: **`lint_skills`** (read-only) +
   **`chat_history_append`** (path-scoped write under
   `agents/.agent-chat-history` / `.agent-chat-history` only). All other

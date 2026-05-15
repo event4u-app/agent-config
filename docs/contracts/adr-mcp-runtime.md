@@ -79,10 +79,11 @@ entries.
 `agent-config init`, `agent-config skills list`, and
 `agent-config council estimate` (the speculative tool surface in the
 step-14 stub) are **not** exposed today. They stay terminal-gated because
-their natural shape is a stateful CLI, and the council Phase 4 verdict
-([`agents/council-responses/mcp-phase-4-tools-verdict.md`](../../agents/council-responses/mcp-phase-4-tools-verdict.md))
-locked the rule that engine-state-bearing operations stay off the MCP wire
-until a real consumer ask justifies amending the A0 boundary.
+their natural shape is a stateful CLI. The AI Council (claude-sonnet-4-5 +
+gpt-4o, 2026-05-10, 2 rounds, $0.06) converged on a hardcoded module-level
+ALLOWLIST with mandatory path-scoping for any write tool, and locked the
+rule that engine-state-bearing operations stay off the MCP wire until a
+real consumer ask justifies amending the A0 boundary.
 
 ## Install surface
 
