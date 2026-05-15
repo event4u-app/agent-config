@@ -5,7 +5,7 @@
     "email": "dev@event4u.app"
   },
   "metadata": {
-    "description": "Shared agent configuration \u2014 skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
+    "description": "Shared agent configuration — skills for AI coding tools (Claude Code, Augment, Cursor, Cline, Windsurf, Gemini CLI).",
     "version": "2.16.0",
     "keywords": [
       "agent-config",
@@ -26,7 +26,7 @@
   "plugins": [
     {
       "name": "agent-config",
-      "description": "Full skill catalog \u2014 writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
+      "description": "Full skill catalog — writing, reviewing, managing, and analyzing agent content, plus stack-specific skills for Laravel, PHP, Docker, AWS, Playwright, and more.",
       "keywords": [
         "skills",
         "rules",
@@ -170,6 +170,9 @@
         "./.claude/skills/form-handler",
         "./.claude/skills/fundraising-narrative",
         "./.claude/skills/funnel-analysis",
+        "./.claude/skills/ghostwriter",
+        "./.claude/skills/ghostwriter-fetch",
+        "./.claude/skills/ghostwriter-write",
         "./.claude/skills/git-workflow",
         "./.claude/skills/github-ci",
         "./.claude/skills/grafana",
@@ -264,6 +267,9 @@
         "./.claude/skills/playwright-testing",
         "./.claude/skills/po-discovery",
         "./.claude/skills/positioning-strategy",
+        "./.claude/skills/post-as",
+        "./.claude/skills/post-as-ghostwriter",
+        "./.claude/skills/post-as-me",
         "./.claude/skills/prepare-for-review",
         "./.claude/skills/privacy-review",
         "./.claude/skills/project-analysis-core",

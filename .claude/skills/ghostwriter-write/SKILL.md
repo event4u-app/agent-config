@@ -1,0 +1,1 @@
+../../../.agent-src/commands/ghostwriter/write.md
