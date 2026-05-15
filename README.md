@@ -605,6 +605,21 @@ for the per-rule routing.
 
 ---
 
+## User persona (`.agent-user.md`)
+
+A project-root `.agent-user.md` file captures who the user is — name,
+primary language, role, work style, and a single voice sample — so the
+agent can address them correctly from the first turn. The file is
+gitignored by default, paste-only, and contains zero PII beyond what the
+user explicitly volunteers. Schema is locked v1 in
+[`docs/contracts/agent-user-schema.md`](docs/contracts/agent-user-schema.md).
+
+Create it interactively with `/agents user init`. Inspect with
+`/agents user show`. Updates happen only through the explicit
+`review` / `accept` / `update` flow — never silent auto-writes. The
+legacy `personal.user_name` key in `.agent-settings.yml` stays as a
+fallback when `.agent-user.md` is absent.
+
 ## Core Principles
 
 - **Analyze before implementing** — no guessing, no blind edits
