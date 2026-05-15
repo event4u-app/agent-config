@@ -35,11 +35,11 @@ complexity: structural
 
 ### Phase 1 — Anchor extension in `find_project_root`
 
-- [ ] Extend `scripts/_lib/agent_settings.py:find_project_root()` with the closest-leaf anchor walk per **D1** + **D3**. Anchors: `.git`, `agents/` (only when marker subpath present — D1), `.agent-settings.yml`. Tiebreaker within an ancestor: `.agent-settings.yml` > `agents/` > `.git`.
-- [ ] Kill-switch (**D5**): when `AGENT_CONFIG_LEGACY_ANCHOR=1` is set, `find_project_root()` reverts to `.git`-only walk for one minor-version soak.
-- [ ] Update `scripts/_lib/agents_overlay.py:99` caller — no behaviour change for `.git`-anchored projects.
-- [ ] Mirror the change into the vendored copy at `.agent-src/templates/scripts/work_engine/_lib/agent_settings.py`.
-- [ ] Unit tests in `tests/test_agent_settings.py` for each anchor + precedence.
+- [x] Extend `scripts/_lib/agent_settings.py:find_project_root()` with the closest-leaf anchor walk per **D1** + **D3**. Anchors: `.git`, `agents/` (only when marker subpath present — D1), `.agent-settings.yml`. Tiebreaker within an ancestor: `.agent-settings.yml` > `agents/` > `.git`. **Refinement:** `.agent-settings.yml` is a layer marker (not a boundary anchor); see `agents/council-sessions/step-7-d3-cascade-conflict-decision.md`.
+- [x] Kill-switch (**D5**): when `AGENT_CONFIG_LEGACY_ANCHOR=1` is set, `find_project_root()` reverts to `.git`-only walk for one minor-version soak.
+- [x] Update `scripts/_lib/agents_overlay.py:99` caller — no behaviour change for `.git`-anchored projects.
+- [x] Mirror the change into the vendored copy at `.agent-src/templates/scripts/work_engine/_lib/agent_settings.py`.
+- [x] Unit tests in `tests/test_project_root_anchors.py`, `tests/test_kill_switch.py`, `tests/test_anchor_perf.py` for each anchor + precedence.
 
 ### Phase 2 — `agent-config init --minimal`
 

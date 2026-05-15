@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 127 steps done · 0%**
+**5 / 127 steps done · 4%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [step-4-ghostwriter.md](roadmaps/step-4-ghostwriter.md) | 5 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md) | 5 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md) | 5 | 28 | 23 | 5 | 0 | 0 | ██░░░░░░░░ 18% |
 | 4 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -54,11 +54,11 @@
 
 ### [step-7-agent-folder-discovery-and-minimal-init.md](roadmaps/step-7-agent-folder-discovery-and-minimal-init.md)
 
-**Step 7 — Agent-Folder Discovery & Minimal Init** — 0 / 28 done (0%)
+**Step 7 — Agent-Folder Discovery & Minimal Init** — 5 / 28 done (18%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Anchor extension in `find_project_root` | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 1 | Anchor extension in `find_project_root` | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | `agent-config init --minimal` | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | Subdir invocation hardening | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Docs & release notes | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
