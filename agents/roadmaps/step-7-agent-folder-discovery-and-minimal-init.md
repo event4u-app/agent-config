@@ -24,10 +24,10 @@ complexity: structural
 
 ## Acceptance criteria
 
-- [ ] `agent-config <any-command>` invoked from `<repo-root>/path/to/deep/subdir` resolves to `<repo-root>` for project-root-aware operations. Anchors: `.git`, `agents/` (only when it contains `roadmaps/` OR `.ai-council.yml` OR `roadmaps-progress.md` — see **D1**), `.agent-settings.yml`. Closest-leaf wins; tiebreaker order per **D3**.
+- [x] `agent-config <any-command>` invoked from `<repo-root>/path/to/deep/subdir` resolves to `<repo-root>` for project-root-aware operations. Anchors: `.git`, `agents/` (only when it contains `roadmaps/` OR `.ai-council.yml` OR `roadmaps-progress.md` — see **D1**), `.agent-settings.yml`. Closest-leaf wins; tiebreaker order per **D3**.
 - [ ] New subcommand `agent-config init --minimal` (alias `--settings-only`) creates only `agents/.gitkeep` + `.agent-settings.yml` (template) + `./agent-config` wrapper. No tool payload, no AGENTS.md, no copilot-instructions, no symlinks.
 - [ ] Running `agent-config init --minimal` in a folder **inside** an existing agent-config project refuses with exit 1 and points at the existing root (no silent nested install).
-- [ ] `agent-config doctor` reports the resolved project root and which anchor file matched.
+- [x] `agent-config doctor` reports the resolved project root and which anchor file matched.
 - [ ] `npm install -g @event4u/agent-config` documented as the canonical "make `agent-config` available everywhere" path in `docs/installation.md`.
 - [ ] Tests cover: ancestor-walk for each anchor type, `--minimal` payload shape, refusal of nested init, subdirectory invocation of `doctor` / `update` / `versions`.
 
@@ -52,9 +52,9 @@ complexity: structural
 
 ### Phase 3 — Subdir invocation hardening
 
-- [ ] Audit every `scripts/_cli/cmd_*.py` for `Path.cwd()` / `Path('.')` usage that should be `find_project_root(cwd=Path.cwd())`. Fix call sites.
-- [ ] `cmd_doctor.py` prints the resolved root + anchor name in its output.
-- [ ] `./agent-config` wrapper (`templates/agent-config-wrapper.sh`) sets `AGENT_CONFIG_PROJECT_ROOT` env var so the master CLI does not re-walk the tree.
+- [x] Audit every `scripts/_cli/cmd_*.py` for `Path.cwd()` / `Path('.')` usage that should be `find_project_root(cwd=Path.cwd())`. Fix call sites. Centralized via `resolve_project_root()` in `scripts/_lib/agent_settings.py`; updated `cmd_doctor`, `cmd_migrate`, `cmd_prune`, `cmd_sync`, `cmd_uninstall`, `cmd_update`, `cmd_validate`, `cmd_versions`.
+- [x] `cmd_doctor.py` prints the resolved root + anchor name in its output (text + JSON via `project_root_origin`).
+- [x] `./agent-config` wrapper (`templates/agent-config-wrapper.sh`) sets `AGENT_CONFIG_PROJECT_ROOT` env var so the master CLI does not re-walk the tree.
 
 ### Phase 4 — Docs & release notes
 
@@ -67,7 +67,7 @@ complexity: structural
 
 - [x] `tests/test_minimal_init.py` — covers payload shape (only 3 files written), wrapper present, refusal of nested init.
 - [x] `tests/test_project_root_anchors.py` — covers `.git`, `agents/`, `.agent-settings.yml` anchors and precedence.
-- [ ] `tests/test_subdir_invocation.py` — runs `agent-config doctor` from `<repo>/deep/nested/path/`, asserts resolved root.
+- [x] `tests/test_subdir_invocation.py` — covers anchor walk from a deep cwd, `AGENT_CONFIG_PROJECT_ROOT` env override, explicit `--project` precedence, no-anchor fallback, and wrapper-pinned root surviving `chdir`.
 - [ ] CI job `python-tests` already covers these — no new workflow needed.
 
 ## Decisions (resolved via AI Council, design + analysis lens)
