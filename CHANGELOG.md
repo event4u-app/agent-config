@@ -702,6 +702,35 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.16.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.18.0](https://github.com/event4u-app/agent-config/compare/2.17.0...2.18.0) (2026-05-16)
+
+### Features
+
+* **lint:** user-type axis frontmatter audit + task wiring ([322bf1d](https://github.com/event4u-app/agent-config/commit/322bf1dc805550cb8c234808bde4235aaf0ba39e))
+* **mcp:** filter skill prompts by personal.user_type ([0b09911](https://github.com/event4u-app/agent-config/commit/0b09911ea6ed2870b12b52ee67a922c3df1f919c))
+* **install:** wire --user-type flag across install entrypoints ([6589c6b](https://github.com/event4u-app/agent-config/commit/6589c6bce4682d521c12727adc4903e7333a421d))
+* **install:** add user_type schema + template placeholder + ADR ([3ede84d](https://github.com/event4u-app/agent-config/commit/3ede84d79ce0d3612ae6d2a862ae239cb01f8762))
+
+### Documentation
+
+* **roadmaps:** close step-9 user-types axis + flip parent step-12 ([f1926dc](https://github.com/event4u-app/agent-config/commit/f1926dc6905128bfcb909dc03e47a37c7754e4e3))
+
+### Tests
+
+* **install:** cover --user-type + sync user_type preservation ([349478f](https://github.com/event4u-app/agent-config/commit/349478fccc608a2a9818585f7c2a43368ee076c0))
+
+### Chores
+
+* **docs:** drop broken step-12 link from getting-started-by-role ([351505a](https://github.com/event4u-app/agent-config/commit/351505a8fbc6626db5dd26cea494d2a4dbaead89))
+* **contracts:** inline council verdict + pragma roadmap source-trails ([4442030](https://github.com/event4u-app/agent-config/commit/4442030543b02511ced3643d9c6062e0722448d9))
+* **contracts:** drop transient roadmap refs from stable artifacts ([ecad21e](https://github.com/event4u-app/agent-config/commit/ecad21e16b7269257ba95d104b2dce06a9f140a5))
+* **contracts:** align keep-beta-until with 90-day window cap ([5c87588](https://github.com/event4u-app/agent-config/commit/5c8758854d19f5790b21bba41c4631e8460caa5e))
+* **roadmaps:** retag step-13/14 complexity to lightweight ([e87cd35](https://github.com/event4u-app/agent-config/commit/e87cd35483cb16eb39574a10318c2f9cb720e9a7))
+* **template:** bump agent_config_version pin to 2.17.0 ([f6bb24e](https://github.com/event4u-app/agent-config/commit/f6bb24e1267623bd49dffd1deb0c9ae071ea4906))
+* **index:** regenerate index after upstream privacy-review desc edit ([fd7fe24](https://github.com/event4u-app/agent-config/commit/fd7fe248b2297021912ec41aff5dd5b1596c9989))
+
+Tests: 4476 (+17 since 2.17.0)
+
 ## [2.17.0](https://github.com/event4u-app/agent-config/compare/2.16.0...2.17.0) (2026-05-15)
 
 ### Features
