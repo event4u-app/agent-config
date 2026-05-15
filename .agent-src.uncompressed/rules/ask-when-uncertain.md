@@ -8,7 +8,7 @@ source: package
 
 # Ask When Uncertain
 
-**When in doubt, ask.** Don't guess, assume, or improvise. One question too many beats one wrong assumption.
+**When in doubt, ask.** Don't guess or improvise. One question too many beats one wrong assumption.
 
 ## Iron Law — one question per turn, ALWAYS
 
@@ -17,7 +17,7 @@ ONE QUESTION PER TURN. NO EXCEPTIONS.
 ASK. WAIT FOR THE ANSWER. THEN ASK THE NEXT.
 ```
 
-Even if trivial, independent, or batchable — exactly one.
+Even if trivial or independent — exactly one.
 
 ## When to ask
 
@@ -49,18 +49,18 @@ Any "yes" → **collapse to ONE question**. Hold the rest for their own turn. Ra
 
 ### Ordering & handoff
 
-- **Session handoff** (`/agent-handoff`, fresh-chat) — ask LAST, after domain / clarifying questions, so answers fold into the handoff. Full: [`agent-interaction-and-decision-quality § handoff`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
-- **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone, not appended.
-- **Blocking clarification** — ask FIRST, alone, before any research or planning output.
+- **Session handoff** — ask LAST, after domain / clarifying questions. Full: [`agent-interaction-and-decision-quality § handoff`](../../docs/guidelines/agent-infra/agent-interaction-and-decision-quality.md#handoff--model-switch-questions).
+- **Model switch** — [`model-recommendation`](model-recommendation.md) STOP-AND-WAIT gate is standalone.
+- **Blocking clarification** — ask FIRST, alone, before research / planning output.
 - **Optional refinement** — don't ask; state the assumption, proceed.
 
 ## Impact-based routing (AI Council)
 
-When the AI Council is enabled, every pending question is classified by the five-class impact heuristic (`trivial` / `low_impact` / `medium_impact` / `high_impact` / `user_required`) and routed to `agent` / `council` / `user` per `decision_resolution` in `agents/.ai-council.yml`. **Iron Law: `high_impact` and `user_required` ALWAYS reach the user** — security, auth, migrations, billing, secrets, tenant boundaries, and explicit "ask me" / "review first" fences never bypass. Contract: [`ai-council-config § decision resolution`](../../docs/contracts/ai-council-config.md#decision-resolution-by-impact-phase-10-ask-user-routing).
+AI Council enabled → questions classified and routed per `decision_resolution`. **Iron Law: `high_impact` and `user_required` ALWAYS reach the user.** Contract: [`ai-council-config`](../../docs/contracts/ai-council-config.md#decision-resolution-by-impact-phase-10-ask-user-routing).
 
 ## Creating new agent artifacts
 
-Skill / rule / command / guideline creation or major rewrite → [`artifact-drafting-protocol`](artifact-drafting-protocol.md) (Understand → Research → Draft). Don't improvise questions.
+Skill / rule / command / guideline → [`artifact-drafting-protocol`](artifact-drafting-protocol.md) (Understand → Research → Draft).
 
 ## Examples
 
