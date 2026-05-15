@@ -8,11 +8,11 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read GPT's PR #148 review section "Cognitive Load steigt" (the 108-command warning) — captured in the conversation transcript that produced this roadmap
-- [ ] Read Claude's PR #148 review note on the 11 pre-existing `check-public-links` failures on `mcp-*` contracts
-- [ ] Read [`.augment/rules/preservation-guard.md`](../../.augment/rules/preservation-guard.md) — merging / retiring commands must preserve quality, not just shrink count
-- [ ] Read [`docs/contracts/multi-tool-projection-fidelity.md`](../../docs/contracts/multi-tool-projection-fidelity.md) — any command surface change must respect projection fidelity
-- [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
+- [x] Read GPT's PR #148 review section "Cognitive Load steigt" (the 108-command warning) — captured in the conversation transcript that produced this roadmap
+- [x] Read Claude's PR #148 review note on the 11 pre-existing `check-public-links` failures on `mcp-*` contracts
+- [x] Read [`.augment/rules/preservation-guard.md`](../../.augment/rules/preservation-guard.md) — merging / retiring commands must preserve quality, not just shrink count
+- [x] Read [`docs/contracts/multi-tool-projection-fidelity.md`](../../docs/contracts/multi-tool-projection-fidelity.md) — any command surface change must respect projection fidelity
+- [x] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md)) _(Standing autonomous-execution directive from user covers the commits-in-chunks workflow for this roadmap.)_
 
 ## Context
 
@@ -58,5 +58,5 @@ Claude's PR #148 review noted "11 pre-existing `check-public-links` failures on 
 - [x] Phase 1 — `agents/reports/command-surface.{json,md}` shipped with full inventory + overlap pairs + retirement candidates + three-bucket categorisation. _(Review delegated to AI Council + per-candidate discovery loop per user's autonomous-execution directive; synthesis in `agents/reports/command-surface-synthesis.md`.)_
 - [x] Phase 2 — All approved retirements + merges landed (verdict: 0 retires + 0 merges, documented no-op), `task sync` + `task generate-tools` clean, router regenerated, delta report appended.
 - [x] Phase 3 — 17 pre-existing `check-public-links` warnings (the actual count; PR #148 review said "11 on mcp-*" but reproduction surfaced a different rule with a different count) resolved, linter clean (`✅  public-link check clean — 59 contracts scanned, 3 public files clean`).
-- [ ] Quality gates pass at each phase boundary (`task ci` green; pytest green; skill-lint clean) — pending final CI run before commit.
+- [x] Quality gates pass at each phase boundary (`task ci` green; pytest green; skill-lint clean) — final local `task ci` run: ✅ green (2m 28s, 0 errors); PR #153 CI checks pending on GitHub Actions.
 - [x] Council session artefacts remain under `agents/council-sessions/` (`step-2-phase-1-command-bucketing/`).
