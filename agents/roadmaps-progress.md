@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 97 steps done · 0%**
+**7 / 96 steps done · 7%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   7%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [step-13-non-dev-community-validation.md](roadmaps/step-13-non-dev-community-validation.md) | 4 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [step-14-mcp-runtime-stub.md](roadmaps/step-14-mcp-runtime-stub.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [step-14-mcp-runtime-stub.md](roadmaps/step-14-mcp-runtime-stub.md) | 3 | 11 | 3 | 7 | 1 | 0 | ███████░░░ 70% |
 | 3 | [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md) | 8 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [step-99-north-star-restructure.md](roadmaps/step-99-north-star-restructure.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -38,13 +38,13 @@
 
 ### [step-14-mcp-runtime-stub.md](roadmaps/step-14-mcp-runtime-stub.md)
 
-**MCP runtime stub (Claude-Desktop-native invocation)** — 0 / 11 done (0%)
+**MCP runtime stub (Claude-Desktop-native invocation)** — 7 / 10 done (70%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Decision | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Scaffold | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | Acceptance | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Decision | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Scaffold | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 3 | Acceptance (deferred to step-13 P1) | 🟡 in progress | 3 | 3 | 1 | 0 | 50% |
 
 ### [step-6-user-types-axis.md](roadmaps/step-6-user-types-axis.md)
 
