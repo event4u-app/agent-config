@@ -607,6 +607,117 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.12.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.14.0](https://github.com/event4u-app/agent-config/compare/2.13.0...2.14.0) (2026-05-15)
+
+### Features
+
+* **ai-council:** switch low-impact corpus runtime to YAML lockfile ([c8a4b9c](https://github.com/event4u-app/agent-config/commit/c8a4b9c318f3b0c04b6fcd974790ba2bc2623554))
+* **ai-council:** add corpus YAML compiler and lockfile ([50ffcb8](https://github.com/event4u-app/agent-config/commit/50ffcb809d633aeb760ea0865a90208be431de43))
+* **council:** wire confidence gate into solo dispatch + shadow log ([fcd19d7](https://github.com/event4u-app/agent-config/commit/fcd19d7bd6e12b2c198ec2f3771da5c8c562cd17))
+* **council:** add confidence_gate heuristics module ([acee171](https://github.com/event4u-app/agent-config/commit/acee17182770a7aa31574669b1f74b269ae34c27))
+* **council:** add solo_confidence_floor config knob + Iron Law lock ([2afef0b](https://github.com/event4u-app/agent-config/commit/2afef0b8d853298be6b73da57bb53415acac798d))
+* **audit:** --iron-law flag scans for validator bypasses (step-9 phase 11) ([2e0ef55](https://github.com/event4u-app/agent-config/commit/2e0ef55d625b60ef073b74e9a91a40478e6ff1e3))
+* **ai-council:** airgap detection + installer first-run hook (step-9 phase 11) ([d528d88](https://github.com/event4u-app/agent-config/commit/d528d8832fba6893f52bad587365019016f060aa))
+* **ai-council:** shadow-mode logger + shadow-report CLI (step-9 phase 10) ([052ed1f](https://github.com/event4u-app/agent-config/commit/052ed1f0355fb35277f80d1193cf912d3943753a))
+* **ai-council:** solo-member dispatch via routing fallback chain ([4cf5738](https://github.com/event4u-app/agent-config/commit/4cf5738c209e5fc6ce3c7681112d4f3b4bb89ce9))
+* **ai-council:** config schema for solo dispatch + Iron Law (step-9 phase 8) ([779f302](https://github.com/event4u-app/agent-config/commit/779f3025f3f78b1b275ce1ffb9364ae970d18424))
+* **low-impact:** preview builder for learn-low-impact (step-9 phase 7) ([234647c](https://github.com/event4u-app/agent-config/commit/234647c81336aa30aac648774e0d2fa0416e8dcf))
+* **low_impact:** emit normative fast-path markers per Iron-Law rule ([95b528b](https://github.com/event4u-app/agent-config/commit/95b528ba7dc1ec445c52cbe1844846612afd3d79))
+* **rules:** add fast-path-marker-visibility Iron-Law rule ([82d97c2](https://github.com/event4u-app/agent-config/commit/82d97c206a5b439d535f1cac7777be82ff51269d))
+* **council:** opt-in fuzzy corpus matching with safety vetoes (step-9 P5) ([903b9f1](https://github.com/event4u-app/agent-config/commit/903b9f1f244ee72f6e01ebdc4e8f3be51c76ef23))
+* **council:** harden low-impact corpus parser with typed errors (step-9 P4) ([6e56737](https://github.com/event4u-app/agent-config/commit/6e567375ef8c379ec1696d5f35c41804276f6bbf))
+* **doctor:** add council-cli health check (step-9 P3) ([fcb36f5](https://github.com/event4u-app/agent-config/commit/fcb36f584df423613d353c2119a13e842b52117d))
+* **council:** surface CLI install hints when binary missing (step-9 phase 2) ([2507eea](https://github.com/event4u-app/agent-config/commit/2507eea06d8739bfffe1a036b284f6459ee329e4))
+* **council:** persistent events log with privacy floor (step-8 phase 3) ([e2b30de](https://github.com/event4u-app/agent-config/commit/e2b30de6811b8affedf87c938f32d27d527222d0))
+* **council:** necessity tier split with warn-only default (step-8 phase 2) ([3837299](https://github.com/event4u-app/agent-config/commit/3837299194ae20e09ab076e55f824d596815f1d7))
+* **council:** add CLI quota observability (step-8 phase 1) ([c17d29b](https://github.com/event4u-app/agent-config/commit/c17d29b1ef4113f032ab492a6862aca624c45f48))
+* **council:** enforce canonical output paths at runtime ([9fa50c4](https://github.com/event4u-app/agent-config/commit/9fa50c4d6ea759dd38ff32dbb114163037979b75))
+* **ai-council:** Phase 12 — low-impact decisions corpus ([d82509b](https://github.com/event4u-app/agent-config/commit/d82509bcc91dc4de519a080e44f5aa296de34d5e))
+* **ai-council:** Phase 11 — replay engine + Lightweight-QA fast-path ([8fa5da8](https://github.com/event4u-app/agent-config/commit/8fa5da8b5de982b93c4608c38d95f64ad60c048b))
+* **ai-council:** Phase 10 — impact-based decision routing + cost disclosure ([5dbe837](https://github.com/event4u-app/agent-config/commit/5dbe83743e782351f5eea54a86071b4414208976))
+* **ai-council:** Phase 8-9 — necessity classifier with corpus consultation ([5adfe71](https://github.com/event4u-app/agent-config/commit/5adfe7190f0c379a07c1e51ebe634a7f439ec79b))
+* **ai-council:** Phase 5 — session-trail + negative-test backfill ([dd64874](https://github.com/event4u-app/agent-config/commit/dd648744a5cd3fc3b516851704d943d9625602de))
+* **ai-council:** wire XAI + Perplexity community CLI transports ([4df827c](https://github.com/event4u-app/agent-config/commit/4df827c80c9b6bf51ff41e4e56844c9263dab281))
+* **ai-council:** phase 3 — Codex + Gemini CLI clients wired ([16dd7fe](https://github.com/event4u-app/agent-config/commit/16dd7fe987b685c290d2be2f7594f514979db1fd))
+* **ai-council:** phase 2 — wire AnthropicCliClient end-to-end ([e965ab1](https://github.com/event4u-app/agent-config/commit/e965ab1cf67d5f18b64bafd7370d4ee7d70124af))
+* **ai-council:** phase 1 — CliClient + AnthropicCliClient + daily quota ([df0d88c](https://github.com/event4u-app/agent-config/commit/df0d88c686c02f1e45707787ae196ac7e8371ef6))
+* **ai-council:** phase 0 — extend schema for CLI transport ([cb45344](https://github.com/event4u-app/agent-config/commit/cb45344e6e686af430677a61c2026e972f1bfe45))
+* **readme:** add Personas and Advisors to hero badge ([f11b85e](https://github.com/event4u-app/agent-config/commit/f11b85ea82fd0f0a04b68d18444d4a8c73d86de1))
+
+### Bug Fixes
+
+* **council:** allowlist audit-* dirs in layout linter ([09d6900](https://github.com/event4u-app/agent-config/commit/09d69003204c2a86a2cc9f1193b8c33145d856b4))
+* **rules:** align validator_ignore reason between source and projection ([89b7fac](https://github.com/event4u-app/agent-config/commit/89b7facf48d2a4fe39558028bdf15ff40d98c59a))
+* **rules:** allowlist .agent-src.uncompressed/ back-pointer in fast-path-marker ([e74383b](https://github.com/event4u-app/agent-config/commit/e74383b62253ab990e938d1dfdc631d20db94181))
+* **ask-when-uncertain:** trim AI Council prose to clear 12% concentration cap ([59abb4a](https://github.com/event4u-app/agent-config/commit/59abb4a3f827b4f8ecb24b63568b057462ae7649))
+* **ai-council:** mark skill cloud-safe with degrade tier ([3c568e6](https://github.com/event4u-app/agent-config/commit/3c568e6eed6c50f8fee2c1685d25dc7aef9d82ec))
+* **low-impact-floor:** drop forbidden authoring-tree path from rule ([8962291](https://github.com/event4u-app/agent-config/commit/89622914c375d01629ed3795d37fd7adf7a07c60))
+* **ai-council:** restore Phase 11 sections in compressed SKILL.md ([52e4f14](https://github.com/event4u-app/agent-config/commit/52e4f14177acd90fd63b4c1c283b3dbda41a6437))
+
+### Documentation
+
+* add (beta) markers next to beta-stability contract links ([0eb55dc](https://github.com/event4u-app/agent-config/commit/0eb55dc1303eb06b52b7f1a88cb2a137a6cde8f9))
+* **reports:** command-surface inventory + AI Council synthesis ([38c3cc3](https://github.com/event4u-app/agent-config/commit/38c3cc39176cefb1c92431c0485659fa442002cf))
+* **council:** document confidence-gate auto-escalation ([4202dac](https://github.com/event4u-app/agent-config/commit/4202dace49401598bb8b7e3033768c99333d1659))
+* **roadmap:** mark step-9 complete and archive ([1c0ca06](https://github.com/event4u-app/agent-config/commit/1c0ca06495f718cda5d1f7065b2d7b07dd4e63f8))
+* **contracts:** declare stability=beta for low-impact-corpus-format ([2114086](https://github.com/event4u-app/agent-config/commit/21140864621b8c1eb9bdb38a0d6b5146e562915a))
+* CHANGELOG + roadmap step-9 phases 10-12 complete ([9f1a220](https://github.com/event4u-app/agent-config/commit/9f1a220f7b44bb96788898f2662782e0d6b4ec99))
+* **roadmap:** mark step-9 Phase 9 complete + regen dashboard ([ae29fbf](https://github.com/event4u-app/agent-config/commit/ae29fbfe32eaf77d847bc00fcee76210e5f17848))
+* **ai-council:** document solo dispatch + Iron Law contract (step-9 phase 8) ([ed12ca9](https://github.com/event4u-app/agent-config/commit/ed12ca9dabc585b0962f82d740a682206caeb2df))
+* **low-impact:** switch /memory learn-low-impact default to --preview (step-9 phase 7) ([493ef5d](https://github.com/event4u-app/agent-config/commit/493ef5d91024761ee2b7a845b992257b76e71671))
+* **roadmap:** mark step-9 phases 0/1/5 complete + regen dashboard ([5f55bad](https://github.com/event4u-app/agent-config/commit/5f55bad0495532431b2451130a2397c144374b58))
+* **roadmap:** mark step-9 phase 4 complete (corpus parser hardening) ([5b35aaa](https://github.com/event4u-app/agent-config/commit/5b35aaa3ab27dd348ef161c4a78321f886775b6a))
+* **roadmap:** mark step-9 phase 2 complete (CLI install hints) ([11ae2ee](https://github.com/event4u-app/agent-config/commit/11ae2ee97753abf6f1e2a18583b5efd84924f208))
+* **council:** document low-impact council opt-in (step-9 phase 1) ([c0fd395](https://github.com/event4u-app/agent-config/commit/c0fd395423693f525fe628a744e6b324a87cf589))
+* **roadmap:** mark step-8 complete and archive ([e7d328d](https://github.com/event4u-app/agent-config/commit/e7d328d7f85acb1df5ce01c559e2809640ee2096))
+* **council:** document quota/necessity transparency surface (step-8 phase 4) ([ba72154](https://github.com/event4u-app/agent-config/commit/ba72154f02bcb791e2864f8ee7818a946710d630))
+* **roadmap:** add step-9 pr-150 feedback hardening + regen progress dashboard ([bf89e80](https://github.com/event4u-app/agent-config/commit/bf89e80e3e238a449daab1399942b6866de920a6))
+* **roadmap:** add step-8 quota necessity transparency ([8aa2385](https://github.com/event4u-app/agent-config/commit/8aa23857583a7e434e9bca1372ef18436f9933e5))
+* **roadmap:** add step-7 agent-folder discovery + minimal init ([a13c963](https://github.com/event4u-app/agent-config/commit/a13c96335bc8244eeeee9bb3dfb1e30aa292e179))
+* **roadmap:** add step-2 feedback follow-up roadmap ([b9f34d3](https://github.com/event4u-app/agent-config/commit/b9f34d39d94d28d6e2d9eba2748995d579b36373))
+* **roadmap:** expand step-1 with safety net, impact routing, and low-impact corpus ([3925a74](https://github.com/event4u-app/agent-config/commit/3925a74b5cdba6d9c6b92fbaf1c0cf6e05fb1cd3))
+
+### Refactoring
+
+* **commands:** nest learn-low-impact under memory cluster ([473dc97](https://github.com/event4u-app/agent-config/commit/473dc9776cd3dfb55f66e06977c1abaf02afcc01))
+
+### Tests
+
+* **install:** sandbox HOME for --global guard test ([189baef](https://github.com/event4u-app/agent-config/commit/189baefe91d72392753ca144ae290a23e253a266))
+* **ai-council:** Iron-Law sentinel for locked dispatch (step-9 phase 11) ([c5b617a](https://github.com/event4u-app/agent-config/commit/c5b617aeae79431ba4071a436f12a7ca35dd144b))
+* **council:** cover step-8 quota + necessity-tier surface (phase 5) ([be4eba3](https://github.com/event4u-app/agent-config/commit/be4eba3dba54c5f6926924e80dd56ff312a4124a))
+
+### Build
+
+* **ai-council:** wire compile-corpus into consistency + sync ([5a35b90](https://github.com/event4u-app/agent-config/commit/5a35b9037ee161f24224b71b2431e1c6bdbe6f86))
+
+### Chores
+
+* **roadmap:** close out + archive step-2-feedback-followup ([fc347d2](https://github.com/event4u-app/agent-config/commit/fc347d28d93b1237300bbc3b31b1877a147857ca))
+* **roadmap:** mark step-2-feedback-followup phases 1-3 complete ([6f8c456](https://github.com/event4u-app/agent-config/commit/6f8c4567993067b039ca9aebf680aaf76bd5e69c))
+* **scripts:** add command-surface audit tool ([e118870](https://github.com/event4u-app/agent-config/commit/e11887001cf0e5bd68ee46164bb8d27a7f9a7a32))
+* **roadmaps:** archive step-10 (corpus YAML lockfile complete) ([1d5ecfa](https://github.com/event4u-app/agent-config/commit/1d5ecfa07f63103456d4647a121a83e662a2d686))
+* **index:** regenerate after auto-rule description trims ([fb39853](https://github.com/event4u-app/agent-config/commit/fb398539a22b82c530ec9cc39adb4343475edf6b))
+* **rules:** trim auto-rule descriptions to fit 150-char Augment cap ([7755665](https://github.com/event4u-app/agent-config/commit/77556655e9db859a3c8bb3ca90931724bb144b9f))
+* **ownership:** regenerate ownership matrix ([3661223](https://github.com/event4u-app/agent-config/commit/3661223dea90d842239a947c8d605ac22257cfc1))
+* **lint:** suppress pre-existing council references with allowed pragma ([3770fb7](https://github.com/event4u-app/agent-config/commit/3770fb76f661a7042fd014ce18537babf6d6a127))
+* **roadmaps:** tag step-7 and step-9 as structural ([99e8801](https://github.com/event4u-app/agent-config/commit/99e88019d2f8352e3c61932433a159c3e9b1136c))
+* **index:** regenerate agents/index.md + docs/catalog.md ([e3adea4](https://github.com/event4u-app/agent-config/commit/e3adea43c1a8a4bf184f4476ef0a158e48a4c7ce))
+* **lint:** clear pre-existing check-no-roadmap-refs violations (step-9 phase 0) ([41284d4](https://github.com/event4u-app/agent-config/commit/41284d4f990d3beb0efbe31dc8b9782a57a528b5))
+* **changelog:** split off pre-2.11.0 era into archive ([913da95](https://github.com/event4u-app/agent-config/commit/913da950c07ab8221e8fc7b96b28fde3ae6aa83f))
+* **roadmap:** archive step-1-ai-council-cli-transport (100% complete) ([2a9eaa5](https://github.com/event4u-app/agent-config/commit/2a9eaa558178349819609cf73f33300dcc3b846f))
+* **index:** regenerate after learn-low-impact cluster move ([6d38afb](https://github.com/event4u-app/agent-config/commit/6d38afbca4ff8b2f75ea6d3669f9a15a1a49b2f4))
+* **counts:** bump documented command count 108 to 109 ([6ada77d](https://github.com/event4u-app/agent-config/commit/6ada77d42b367909c68381f5c1bd9480960dd85f))
+* **index:** regenerate after low-impact-corpus + learn-low-impact ([e256dd0](https://github.com/event4u-app/agent-config/commit/e256dd0d56492fbe390ab60b7902a99d1b509d50))
+* **roadmap:** mark Phase 8-12 complete + regenerate dashboards ([8f14a9c](https://github.com/event4u-app/agent-config/commit/8f14a9c8e5ba16348c45f8ac9cfbeb1f053b26bd))
+* **contracts:** pull keep-beta-until back inside 90-day window ([8b4c8c9](https://github.com/event4u-app/agent-config/commit/8b4c8c9de4fab092e8bc4c7580b2b435de85e973))
+* **docs:** clear pre-existing check-public-links failures ([822c40e](https://github.com/event4u-app/agent-config/commit/822c40e9f90d81ffdcdb1a3fa590dc0d0e89c9f5))
+* **roadmap:** stub agents/low-impact-decisions.md for Phase 12 forward-ref ([3af26f6](https://github.com/event4u-app/agent-config/commit/3af26f67f3ad86afc5a964a75ac3173526772b95))
+* **templates:** bump agent_config_version to 2.13.0 ([1e5ddcd](https://github.com/event4u-app/agent-config/commit/1e5ddcd6d6aeed485253e8476c002262a3e95962))
+* **roadmap:** regenerate roadmaps progress dashboard ([3a33c7e](https://github.com/event4u-app/agent-config/commit/3a33c7eda801c25aacb13ec2e58680f9f856cc91))
+
+Tests: 4340 (+472 since 2.13.0)
+
 ## [2.13.0](https://github.com/event4u-app/agent-config/compare/2.12.0...2.13.0) (2026-05-14)
 
 ### Features
