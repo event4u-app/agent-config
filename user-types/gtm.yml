@@ -1,0 +1,15 @@
+id: gtm
+description: Go-to-market — sales, marketing, positioning, pipeline, launches
+primary_workflows:
+  - positioning_and_messaging_locking
+  - pipeline_and_forecast_management
+  - launch_sequencing
+  - deal_qualification
+default_skill_priority:
+  - positioning-strategy
+  - messaging-architecture
+  - pipeline-strategy
+  - gtm-launch
+  - deal-qualification-meddic
+notes: Sales and marketing converge here. Creator overlaps for content-funnel
+  work; finance overlaps for forecast accuracy.

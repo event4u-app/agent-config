@@ -1,0 +1,16 @@
+id: finance
+description: Finance / FP&A operators, DCF modeling, runway, scenario analysis
+primary_workflows:
+  - dcf_and_intrinsic_value_modeling
+  - runway_and_burn_analysis
+  - scenario_and_sensitivity_modeling
+  - forecast_construction
+default_skill_priority:
+  - dcf-modeling
+  - runway-cognition
+  - scenario-modeling
+  - forecasting
+  - unit-economics-modeling
+notes: Heavy overlap with founder for early-stage operators. The defaults
+  here lean toward pure finance work (modeling, forecasting) over
+  pitch / fundraise narrative.
