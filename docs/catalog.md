@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **455 public artefacts** shipped by
+Consumer-facing catalog of all **461 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -291,7 +291,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (109)
+## Commands (115)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -300,6 +300,12 @@ are excluded.
 | command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply. |
 | command | [`agents:init`](../.agent-src/commands/agents/init.md) | cluster: agents | Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`agents:optimize`](../.agent-src/commands/agents/optimize.md) | cluster: agents | Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply. |
+| command | [`agents:user-accept`](../.agent-src/commands/agents/user/accept.md) | cluster: agents | Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer. |
+| command | [`agents:user-init`](../.agent-src/commands/agents/user/init.md) | cluster: agents | Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample). |
+| command | [`agents:user-review`](../.agent-src/commands/agents/user/review.md) | cluster: agents | List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually. |
+| command | [`agents:user-show`](../.agent-src/commands/agents/user/show.md) | cluster: agents | Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start. |
+| command | [`agents:user-update`](../.agent-src/commands/agents/user/update.md) | cluster: agents | Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save. |
+| command | [`agents:user`](../.agent-src/commands/agents/user.md) | cluster: agents | User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed. |
 | command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
