@@ -8,12 +8,12 @@ complexity: structural
 
 ## Prerequisites
 
-- [ ] Read [`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md) — the contract this work extends
-- [ ] Read [`scripts/ai_council/clients.py`](../../scripts/ai_council/clients.py) (ExternalAIClient base, billable contract, key-gate pattern) and [`scripts/ai_council/config.py`](../../scripts/ai_council/config.py) (`_VALID_MODES`, schema validation)
-- [ ] Read [`agents/.ai-council.yml`](../.ai-council.yml) — the live config the loader parses
-- [ ] Read the archived precursor [`step-2-ai-council-consolidation.md`](archive/step-2-ai-council-consolidation.md) Phase 0 + Phase 8 for schema-extension and negative-test patterns
-- [ ] Read [`.agent-src.uncompressed/skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) — the skill that the safety-net classifier will gate
-- [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
+- [x] Read [`docs/contracts/ai-council-config.md`](../../docs/contracts/ai-council-config.md) — the contract this work extends
+- [x] Read [`scripts/ai_council/clients.py`](../../scripts/ai_council/clients.py) (ExternalAIClient base, billable contract, key-gate pattern) and [`scripts/ai_council/config.py`](../../scripts/ai_council/config.py) (`_VALID_MODES`, schema validation)
+- [x] Read [`agents/.ai-council.yml`](../.ai-council.yml) — the live config the loader parses
+- [x] Read the archived precursor [`step-2-ai-council-consolidation.md`](archive/step-2-ai-council-consolidation.md) Phase 0 + Phase 8 for schema-extension and negative-test patterns
+- [x] Read [`.agent-src.uncompressed/skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) — the skill that the safety-net classifier will gate
+- [x] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md)) — user granted standing authorization for autonomous commit-in-chunks for this roadmap
 
 ## Context
 
@@ -196,5 +196,5 @@ Counter-validated learning loop with an explicit probation period. When the user
 - [x] Phase 10 — Five-class impact classifier (`trivial` / `low_impact` / `medium_impact` / `high_impact` / `user_required`) wired into the ask-user chokepoint; `high_impact` + `user_required` structurally locked to user; per-class `confidence_threshold` configurable; contract + rule update shipped
 - [x] Phase 11 — Lightweight-QA fast-path with `participate_low_impact:` per-member opt-in (default OFF), hard caps (`max_rounds: 1` locked, `max_members: 2`, `max_tokens: 2500`, `max_cost_usd: 0.05`), transparency marker in output, negative-path coverage (disabled council / split verdict / token cap / provider failure)
 - [x] Phase 12 — `agents/low-impact-decisions.md` corpus with `## On Probation` / `## Validated` / `## Anti-Examples` / `## Security & Privacy Floor` sections + intake trigger with dedup + probation gate (3-in-30-days promote, 30-day timestamp prune, one-way promotion) + non-bypassable redaction pass (secrets, emails, project paths, internal hostnames, business context) + `/learn-low-impact` draft-PR command (Validated entries only) + classifier reads Validated + upstream seed on startup (probation entries excluded)
-- [ ] Quality gates pass at each phase boundary (`task ci` green; pytest green; skill-lint clean)
-- [ ] Council session artefacts (if any council runs are invoked during this work) remain under `agents/council-sessions/`
+- [x] Quality gates pass at each phase boundary (`task ci` green; pytest green; skill-lint clean) — all gates green except pre-existing `check-no-roadmap-refs` baseline (27 violations on `origin/main`, unrelated to this work; tracked separately)
+- [x] Council session artefacts (if any council runs are invoked during this work) remain under `agents/council-sessions/`
