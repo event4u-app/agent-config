@@ -29,6 +29,14 @@
 # never shared). Feeds /agents user review / accept only.
 .agent-user.observations.jsonl
 
+# Agent config — ghostwriter profiles (real-person public-figure voices,
+# written by /ghostwriter:fetch). Local-only by default; commit explicitly
+# only via the deferred --shared opt-in. README.md stays tracked.
+# See docs/contracts/ghostwriter-schema.md.
+/agents/ghostwriter/*.md
+!/agents/ghostwriter/README.md
+/agents/ghostwriter/*.md.bak
+
 # Agent config — persistent chat history (crash recovery, never commit)
 /agents/.agent-chat-history
 /agents/.agent-chat-history.bak
