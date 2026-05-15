@@ -1,0 +1,1 @@
+../../.agent-src/rules/domain-safety-retention-finance.md
