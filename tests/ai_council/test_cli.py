@@ -307,12 +307,16 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
         name = "anthropic"
         billable = False
 
-        def __init__(self, *, model, binary=None, max_calls_per_day=None):
+        def __init__(
+            self, *, model, binary=None, max_calls_per_day=None,
+            warn_at=0.8,
+        ):
             self.model = model
             self.binary = binary or "/bin/claude"
             constructed.append({
                 "model": model, "binary": binary,
                 "max_calls_per_day": max_calls_per_day,
+                "warn_at": warn_at,
             })
 
         def ask(self, *a, **kw):  # pragma: no cover
@@ -337,6 +341,7 @@ def test_build_members_dispatches_cli_anthropic(monkeypatch) -> None:
         "model": "claude-sonnet-4-5",
         "binary": "/opt/claude",
         "max_calls_per_day": 50,
+        "warn_at": 0.8,
     }]
 
 
@@ -788,7 +793,11 @@ def test_necessity_gate_off_when_mode_off() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=False,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "off"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True, "mode": "off", "user_explicit_mode": "off",
+            },
+        },
         stdout=buf,
     )
     assert proceed is True
@@ -817,7 +826,13 @@ def test_necessity_gate_user_explicit_educates_and_exits_two() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=False,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "educate",
+            },
+        },
         stdout=buf,
     )
     assert proceed is False
@@ -832,7 +847,13 @@ def test_necessity_gate_proceed_anyway_overrides_educate() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=True,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "educate"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "educate",
+            },
+        },
         stdout=buf,
     )
     assert proceed is True
@@ -847,7 +868,13 @@ def test_necessity_gate_block_mode_ignores_proceed_anyway() -> None:
         lens="analysis",
         invocation="user_explicit",
         proceed_anyway=True,
-        ai_cfg={"necessity_classifier": {"enabled": True, "mode": "block"}},
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "block",
+                "user_explicit_mode": "block",
+            },
+        },
         stdout=buf,
     )
     assert proceed is False
@@ -886,6 +913,89 @@ def test_resolve_necessity_mode_lens_override_wins() -> None:
     assert mode == "block"
     enabled, mode = council_cli._resolve_necessity_mode(ai_cfg, "analysis")
     assert mode == "educate"
+
+
+# ── step-8 D2: tier split + warn-only ────────────────────────────────
+
+
+def test_resolve_necessity_mode_user_explicit_defaults_to_warn_only() -> None:
+    """User-explicit tier defaults to warn-only when no override is set."""
+    ai_cfg = {"necessity_classifier": {"enabled": True, "mode": "educate"}}
+    enabled, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "analysis", invocation="user_explicit",
+    )
+    assert enabled is True
+    assert mode == "warn-only"
+
+
+def test_resolve_necessity_mode_user_explicit_lens_override_wins() -> None:
+    """Per-lens user_explicit_mode override takes precedence."""
+    ai_cfg = {
+        "necessity_classifier": {
+            "enabled": True,
+            "mode": "educate",
+            "user_explicit_mode": "warn-only",
+        },
+        "lens_overrides": {
+            "necessity_classifier_user_explicit_mode": {"debate": "block"},
+        },
+    }
+    _, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "debate", invocation="user_explicit",
+    )
+    assert mode == "block"
+    _, mode = council_cli._resolve_necessity_mode(
+        ai_cfg, "analysis", invocation="user_explicit",
+    )
+    assert mode == "warn-only"
+
+
+def test_necessity_gate_warn_only_proceeds_with_annotation() -> None:
+    """warn-only emits a council:necessity line but never blocks."""
+    buf = io.StringIO()
+    proceed, rc, result = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="user_explicit",
+        proceed_anyway=False,
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "warn-only",
+            },
+        },
+        stdout=buf,
+    )
+    assert proceed is True
+    assert rc == 0
+    assert result is not None
+    assert result.verdict == "unnecessary"
+    assert "warn-only" in buf.getvalue()
+
+
+def test_necessity_gate_agent_tier_unaffected_by_user_explicit_mode() -> None:
+    """Agent invocation still uses `mode`, not `user_explicit_mode`."""
+    buf = io.StringIO()
+    proceed, rc, _ = council_cli._necessity_gate(
+        prompt="fix the typo crash failing test bug",
+        lens="analysis",
+        invocation="agent",
+        proceed_anyway=False,
+        ai_cfg={
+            "necessity_classifier": {
+                "enabled": True,
+                "mode": "educate",
+                "user_explicit_mode": "warn-only",
+            },
+        },
+        stdout=buf,
+    )
+    # Agent path still skips silently in educate mode.
+    assert proceed is False
+    assert rc == 0
+    assert "skipped" in buf.getvalue()
+    assert "warn-only" not in buf.getvalue()
 
 
 # \u2500\u2500 Phase 8: cmd_debate disclosure + refusal cap \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500

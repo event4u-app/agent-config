@@ -116,7 +116,7 @@ class ConsensusScoringConfig:
     lenses: tuple[str, ...] = ("analysis",)
 
 
-_VALID_NECESSITY_MODES = frozenset({"off", "educate", "block"})
+_VALID_NECESSITY_MODES = frozenset({"off", "educate", "block", "warn-only"})
 _VALID_DISCLOSURE_MODES = frozenset({"always", "above_threshold", "off"})
 
 
@@ -124,16 +124,26 @@ _VALID_DISCLOSURE_MODES = frozenset({"always", "above_threshold", "off"})
 class NecessityClassifierConfig:
     """Council-necessity classifier toggle (Phase 6).
 
-    ``mode`` ∈ ``{"off", "educate", "block"}``:
+    ``mode`` controls the **agent** invocation path; ``user_explicit_mode``
+    controls the **user-explicit** invocation path (step-8 D2 tier split).
+
+    Valid modes ∈ ``{"off", "educate", "block", "warn-only"}``:
 
     - ``off`` — legacy behaviour: classifier never runs, every request
       proceeds to deliberation.
-    - ``educate`` (default) — agent-initiated `unnecessary` skips
-      silently; user-explicit `unnecessary` emits the educate paragraph
-      and requires ``--proceed-anyway`` (CLI) or a numbered-options
+    - ``educate`` — agent-initiated `unnecessary` skips silently;
+      user-explicit `unnecessary` emits the educate paragraph and
+      requires ``--proceed-anyway`` (CLI) or a numbered-options
       confirmation (agent surface) before firing members.
-    - ``block`` — power-user opt-in: `unnecessary` skips silently even
-      on the user-explicit path, regardless of override flag.
+    - ``block`` — power-user opt-in: `unnecessary` skips silently
+      regardless of override flag.
+    - ``warn-only`` — classifier verdict annotated in stdout but
+      **never** skips. Default for ``user_explicit_mode`` (step-8 D2).
+
+    Default ``mode`` (agent path) = ``educate``;
+    default ``user_explicit_mode`` = ``warn-only``. Reconciles
+    "Council always active when called" with "skip trivial agent-side
+    requests".
 
     Per-lens overrides live in :class:`CouncilConfig.lens_overrides`;
     this dataclass carries only the global default.
@@ -141,6 +151,7 @@ class NecessityClassifierConfig:
 
     enabled: bool = True
     mode: str = "educate"
+    user_explicit_mode: str = "warn-only"
 
 
 @dataclass(frozen=True)
@@ -297,6 +308,9 @@ class LensOverridesConfig:
     """
 
     necessity_classifier_mode: dict[str, str] = field(default_factory=dict)
+    necessity_classifier_user_explicit_mode: dict[str, str] = field(
+        default_factory=dict,
+    )
     model_downgrade: dict[str, ModelDowngradeConfig] = field(default_factory=dict)
     cost_disclosure: dict[str, CostDisclosureConfig] = field(default_factory=dict)
     decision_replay: dict[str, DecisionReplayConfig] = field(default_factory=dict)
@@ -463,7 +477,18 @@ def _build_necessity_classifier(d: dict[str, Any]) -> NecessityClassifierConfig:
             f"necessity_classifier.mode={mode!r} not in "
             f"{sorted(_VALID_NECESSITY_MODES)}."
         )
-    return NecessityClassifierConfig(enabled=bool(enabled), mode=mode)
+    user_explicit_mode = d.get("user_explicit_mode", "warn-only")
+    if user_explicit_mode not in _VALID_NECESSITY_MODES:
+        raise CouncilConfigError(
+            f"necessity_classifier.user_explicit_mode="
+            f"{user_explicit_mode!r} not in "
+            f"{sorted(_VALID_NECESSITY_MODES)}."
+        )
+    return NecessityClassifierConfig(
+        enabled=bool(enabled),
+        mode=mode,
+        user_explicit_mode=user_explicit_mode,
+    )
 
 
 def _build_model_downgrade(d: dict[str, Any]) -> ModelDowngradeConfig:
@@ -684,6 +709,7 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
     if not isinstance(d, dict):
         raise CouncilConfigError("`lenses` must be a mapping.")
     nc_overrides: dict[str, str] = {}
+    nc_user_overrides: dict[str, str] = {}
     md_overrides: dict[str, ModelDowngradeConfig] = {}
     cd_overrides: dict[str, CostDisclosureConfig] = {}
     dr_overrides: dict[str, DecisionReplayConfig] = {}
@@ -706,6 +732,15 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
                         f"not in {sorted(_VALID_NECESSITY_MODES)}."
                     )
                 nc_overrides[lens_name] = mode
+            user_mode = nc_block.get("user_explicit_mode")
+            if user_mode is not None:
+                if user_mode not in _VALID_NECESSITY_MODES:
+                    raise CouncilConfigError(
+                        f"lenses.{lens_name}.necessity_classifier."
+                        f"user_explicit_mode={user_mode!r} "
+                        f"not in {sorted(_VALID_NECESSITY_MODES)}."
+                    )
+                nc_user_overrides[lens_name] = user_mode
         md_block = lens_cfg.get("model_downgrade")
         if md_block is not None:
             if not isinstance(md_block, dict):
@@ -738,6 +773,7 @@ def _build_lens_overrides(d: dict[str, Any]) -> LensOverridesConfig:
             )
     return LensOverridesConfig(
         necessity_classifier_mode=nc_overrides,
+        necessity_classifier_user_explicit_mode=nc_user_overrides,
         model_downgrade=md_overrides,
         cost_disclosure=cd_overrides,
         decision_replay=dr_overrides,

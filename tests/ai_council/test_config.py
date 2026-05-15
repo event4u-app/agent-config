@@ -623,7 +623,9 @@ def test_necessity_classifier_defaults_when_omitted(tmp_path: Path) -> None:
     cfg = load_council_config(_write_yaml(tmp_path, _MINIMAL_VALID))
     assert cfg.necessity_classifier.enabled is True
     assert cfg.necessity_classifier.mode == "educate"
+    assert cfg.necessity_classifier.user_explicit_mode == "warn-only"
     assert cfg.lens_overrides.necessity_classifier_mode == {}
+    assert cfg.lens_overrides.necessity_classifier_user_explicit_mode == {}
 
 
 def test_necessity_classifier_disabled_via_enabled_flag(tmp_path: Path) -> None:
@@ -641,6 +643,29 @@ def test_necessity_classifier_invalid_mode_rejected(tmp_path: Path) -> None:
         load_council_config(_write_yaml(tmp_path, payload))
 
 
+def test_necessity_classifier_user_explicit_mode_accepts_warn_only(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {
+        "mode": "block", "user_explicit_mode": "educate",
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.necessity_classifier.mode == "block"
+    assert cfg.necessity_classifier.user_explicit_mode == "educate"
+
+
+def test_necessity_classifier_invalid_user_explicit_mode_rejected(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["necessity_classifier"] = {"user_explicit_mode": "shrug"}
+    with pytest.raises(
+        CouncilConfigError, match="user_explicit_mode",
+    ):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
 def test_lens_overrides_per_lens_mode(tmp_path: Path) -> None:
     payload = dict(_MINIMAL_VALID)
     payload["lenses"] = {
@@ -654,12 +679,38 @@ def test_lens_overrides_per_lens_mode(tmp_path: Path) -> None:
     }
 
 
+def test_lens_overrides_per_lens_user_explicit_mode(tmp_path: Path) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"user_explicit_mode": "block"}},
+        "analysis": {
+            "necessity_classifier": {"user_explicit_mode": "educate"},
+        },
+    }
+    cfg = load_council_config(_write_yaml(tmp_path, payload))
+    assert cfg.lens_overrides.necessity_classifier_user_explicit_mode == {
+        "debate": "block",
+        "analysis": "educate",
+    }
+
+
 def test_lens_overrides_invalid_mode_rejected(tmp_path: Path) -> None:
     payload = dict(_MINIMAL_VALID)
     payload["lenses"] = {
         "debate": {"necessity_classifier": {"mode": "shrug"}},
     }
     with pytest.raises(CouncilConfigError, match="lenses.debate"):
+        load_council_config(_write_yaml(tmp_path, payload))
+
+
+def test_lens_overrides_invalid_user_explicit_mode_rejected(
+    tmp_path: Path,
+) -> None:
+    payload = dict(_MINIMAL_VALID)
+    payload["lenses"] = {
+        "debate": {"necessity_classifier": {"user_explicit_mode": "shrug"}},
+    }
+    with pytest.raises(CouncilConfigError, match="user_explicit_mode"):
         load_council_config(_write_yaml(tmp_path, payload))
 
 

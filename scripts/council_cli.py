@@ -207,6 +207,7 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         "necessity_classifier": {
             "enabled": cfg.necessity_classifier.enabled,
             "mode": cfg.necessity_classifier.mode,
+            "user_explicit_mode": cfg.necessity_classifier.user_explicit_mode,
         },
         "model_downgrade": {
             "enabled": cfg.model_downgrade.enabled,
@@ -223,6 +224,9 @@ def _synthesize_ai_council_block(cfg: CouncilConfig) -> dict[str, Any]:
         "lens_overrides": {
             "necessity_classifier_mode": dict(
                 cfg.lens_overrides.necessity_classifier_mode,
+            ),
+            "necessity_classifier_user_explicit_mode": dict(
+                cfg.lens_overrides.necessity_classifier_user_explicit_mode,
             ),
             "model_downgrade": {
                 lens: {"enabled": md.enabled, "auto_apply": md.auto_apply}
@@ -1113,21 +1117,38 @@ def _deserialise_consensus(data: dict[str, Any] | None) -> ConsensusResult | Non
     )
 
 
-def _resolve_necessity_mode(ai_cfg: dict[str, Any], lens: str) -> tuple[bool, str]:
+def _resolve_necessity_mode(
+    ai_cfg: dict[str, Any],
+    lens: str,
+    invocation: str = "agent",
+) -> tuple[bool, str]:
     """Return ``(enabled, effective_mode)`` for the necessity classifier.
 
-    Per-lens override at ``lenses.<lens>.necessity_classifier.mode`` wins
-    over the global ``necessity_classifier.mode``. Reads the synthesized
-    dict shape produced by :func:`_synthesize_ai_council_block`, so both
-    typed-config and legacy-settings paths are honoured.
+    Two-tier resolution (step-8 D2):
+
+    - ``invocation="agent"`` → reads ``necessity_classifier.mode`` with
+      per-lens override at ``lenses.<lens>.necessity_classifier.mode``
+      (default ``educate``).
+    - ``invocation="user_explicit"`` → reads
+      ``necessity_classifier.user_explicit_mode`` with per-lens override
+      at ``lenses.<lens>.necessity_classifier.user_explicit_mode``
+      (default ``warn-only``).
+
+    Reads the synthesized dict shape produced by
+    :func:`_synthesize_ai_council_block`, so both typed-config and
+    legacy-settings paths are honoured.
     """
     nc_block = ai_cfg.get("necessity_classifier") or {}
     enabled = bool(nc_block.get("enabled", True))
-    global_mode = str(nc_block.get("mode", "educate"))
-    overrides = (
-        (ai_cfg.get("lens_overrides") or {}).get("necessity_classifier_mode")
-        or {}
-    )
+    lens_overrides = ai_cfg.get("lens_overrides") or {}
+    if invocation == "user_explicit":
+        global_mode = str(nc_block.get("user_explicit_mode", "warn-only"))
+        overrides = (
+            lens_overrides.get("necessity_classifier_user_explicit_mode") or {}
+        )
+    else:
+        global_mode = str(nc_block.get("mode", "educate"))
+        overrides = lens_overrides.get("necessity_classifier_mode") or {}
     return enabled, str(overrides.get(lens, global_mode))
 
 
@@ -1144,7 +1165,7 @@ def _necessity_gate(
     disabled / off).
     """
     out = stdout if stdout is not None else sys.stdout
-    enabled, mode = _resolve_necessity_mode(ai_cfg, lens)
+    enabled, mode = _resolve_necessity_mode(ai_cfg, lens, invocation=invocation)
     if not enabled or mode == "off":
         return True, 0, None
     result = classify_necessity(prompt, lens=lens, invocation=invocation)
@@ -1156,6 +1177,14 @@ def _necessity_gate(
             )
         return True, 0, result
     # verdict == "unnecessary"
+    if mode == "warn-only":
+        # Annotated but never skips (step-8 D2). Applies to both
+        # invocation tiers when the mode resolves to warn-only.
+        out.write(
+            f"council:necessity · warn-only ({result.category}) · "
+            f"{result.rationale}\n"
+        )
+        return True, 0, result
     if mode == "block":
         out.write(
             f"council:necessity · skipped ({result.category}) · "
