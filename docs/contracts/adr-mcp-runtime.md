@@ -4,13 +4,10 @@ stability: stable
 
 # ADR — MCP server runtime: Anthropic `mcp` Python SDK
 
-> **Status:** Decided · 2026-05-10 (recorded 2026-05-15 to close
-> [`agents/roadmaps/step-14-mcp-runtime-stub.md`](../../agents/roadmaps/step-14-mcp-runtime-stub.md)
-> Phase 1).
+> **Status:** Decided · 2026-05-10 (recorded 2026-05-15).
 > **Context:**
 > [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md),
-> [`mcp-cloud-scope.md`](mcp-cloud-scope.md),
-> [`agents/roadmaps/archive/road-to-mcp-server.md`](../../agents/roadmaps/archive/road-to-mcp-server.md).
+> [`mcp-cloud-scope.md`](mcp-cloud-scope.md).
 
 ## Decision
 
@@ -106,9 +103,9 @@ already shipped:
 Writing the global Claude Desktop config from the npx dispatcher without
 an operator pasting JSON is **not** part of this contract — Claude Desktop
 restarts and config-merge semantics make silent rewrites a footgun. The
-copy-paste path stays the canonical install shape until a recruit finding
-under [`step-13-non-dev-community-validation.md`](../../agents/roadmaps/step-13-non-dev-community-validation.md)
-Phase 1 demonstrates the manual step is the actual adoption blocker.
+copy-paste path stays the canonical install shape until non-dev recruit
+evidence under `agents/eval-findings/` demonstrates the manual step is the
+actual adoption blocker.
 
 ## Consequences
 
@@ -128,5 +125,3 @@ Phase 1 demonstrates the manual step is the actual adoption blocker.
 - [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) — Phase 1–6 hard contract.
 - [`mcp-cloud-scope.md`](mcp-cloud-scope.md) — hosted Worker bridge scope.
 - [`mcp-tool-stub-envelope.md`](mcp-tool-stub-envelope.md) — unimplemented-tool wire shape.
-- [`agents/roadmaps/archive/road-to-mcp-server.md`](../../agents/roadmaps/archive/road-to-mcp-server.md) — master roadmap (closed 26/26).
-- [`agents/roadmaps/step-14-mcp-runtime-stub.md`](../../agents/roadmaps/step-14-mcp-runtime-stub.md) — tracking stub closed by this ADR.
