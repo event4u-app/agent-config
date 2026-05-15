@@ -1257,6 +1257,78 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-export-redact.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-pii-finance.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-pii-support.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-retention-finance.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/domain-safety-retention-support.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/downstream-changes.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -6533,6 +6605,90 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-export-redact.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-export-redact.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-pii-finance.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-pii-finance.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-pii-support.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-pii-support.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-retention-finance.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-retention-finance.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/domain-safety-retention-support.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-retention-support.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/rules/downstream-changes.md",
