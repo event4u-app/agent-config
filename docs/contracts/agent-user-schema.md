@@ -86,12 +86,11 @@ unset) on first reply when the file is present.
 ## Determinism floor
 
 The `agent-config` package itself contains **zero network code**.
-External enrichment (e.g. LinkedIn profile fetch) was rejected by the
-[external-sources council](../../agents/council-sessions/2026-05-14-agent-user-external-sources/prompt-v2-public-only.md)
-on determinism / ToS / test-impossibility grounds, and the host-agent
-delegation workaround was additionally rejected by the
-[step-3 re-validation gate](../../agents/council-responses/step-3-revalidation-gate.json)
-on contract-floor grounds. v1 is paste-only via `/agents user init`.
+External enrichment (e.g. LinkedIn profile fetch) was rejected on
+determinism / ToS / test-impossibility grounds, and the host-agent
+delegation workaround was additionally rejected on contract-floor
+grounds (AI Council convergence — Anthropic, OpenAI, Google · 2026-05-14).
+v1 is paste-only via `/agents user init`.
 
 ## Staleness
 

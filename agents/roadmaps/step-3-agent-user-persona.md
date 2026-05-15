@@ -8,7 +8,7 @@ complexity: lightweight
 
 ## Re-validation gate (verdict recorded)
 
-> Gate ran on the three Phase-1 design additions (demographics block, `handoff` sub-command, `linkedin` sub-command). Council: claude-sonnet-4-5 + gpt-4o, 1 round, $0.0116 actual. Verdict bundle: [`agents/council-responses/step-3-revalidation-gate.json`](../council-responses/step-3-revalidation-gate.json). Convergence:
+> Gate ran on the three Phase-1 design additions (demographics block, `handoff` sub-command, `linkedin` sub-command). Council: claude-sonnet-4-5 + gpt-4o, 1 round, $0.0116 actual. Convergence:
 >
 > - **D1 demographics in v1 schema:** both `rethink` — deviates from the 2026-05-14 Round-3 synthesis that explicitly deferred demographics to v2 pending usage data; v1 has not shipped yet, so there is no signal to act on. **Action:** strip the demographics block from the v1 schema and the `init` interview; keep only the minimal fields from the Round-3 synthesis (identity / language / role / style / voice_sample / last_updated). Revert the 150-line cap back to 100.
 > - **D2 `/agents user handoff`:** Sonnet `rethink`, gpt-4o `minor-edit` — compounds the user-modeling surface in v1 before the primary init/show/review/accept loop has any usage signal. **Action:** cancel `handoff` for this roadmap (`[-]`). Re-evaluate after Phase 3 has been in active use for ≥1 week.
