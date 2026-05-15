@@ -43,6 +43,22 @@ member, low-impact dispatch) under one roadmap. New surfaces:
   computes the 7-day rolling SLO (`OK <5%` / `WARN 5–8%` / `BREACH
   >8%`); pre-flight cost disclosure surfaces the verdict. No auto-
   revert — humans decide.
+- **Confidence gate — auto-escalation on uncertain solo runs**
+  (`scripts/ai_council/confidence_gate.py`) — every solo response is
+  scored before the verdict is returned. Four escalation reasons in
+  priority order: `refusal` (empty / refusal markers), `split`
+  (two-verdict / option-A-vs-B / Variante 1/2), `short_response`
+  (< 20 chars), `low_confidence` (explicit `Confidence: 0.X` marker
+  or hedge-word density below floor). Zero extra LLM calls —
+  heuristics run in-process. Escalations append `escalated: true` +
+  `escalation_reason` to `agents/council-shadow-log.jsonl`; the SLO
+  banner appends the rolling auto-escalation rate so quiet uncertainty
+  cannot hide behind a flat disagreement rate.
+- **`low_impact.solo_confidence_floor: float`** (default `0.7`,
+  range `[0.0, 1.0]`) — threshold for the confidence gate.
+  **Iron Law:** `solo_confidence_floor` is also rejected on
+  top-level `high_impact:` and `user_required:` — those classes
+  never run solo, so a solo-specific knob there is incoherent.
 - **`AGENT_CONFIG_FORCE_FULL_COUNCIL=1`** — per-invocation kill-switch
   that forces full council regardless of `low_impact.dispatch`.
 - **Airgap detection** (`scripts/ai_council/airgap.py`) — installer
@@ -81,8 +97,9 @@ member, low-impact dispatch) under one roadmap. New surfaces:
   that skip the config validator; baseline is 0 findings; suppress
   legitimate cases with `# iron-law-ok: <reason>` on the load line.
 
-Surface delta: **3 new config knobs** (`defaults.member_mode`,
-`routing.solo_member_fallback_chain`, `low_impact.dispatch`),
+Surface delta: **4 new config knobs** (`defaults.member_mode`,
+`routing.solo_member_fallback_chain`, `low_impact.dispatch`,
+`low_impact.solo_confidence_floor`),
 **1 new env-var kill-switch** (`AGENT_CONFIG_FORCE_FULL_COUNCIL`),
 **1 new CLI subcommand** (`council shadow-report`), **1 new CLI flag**
 (`council run --single`), **1 new always-active rule**

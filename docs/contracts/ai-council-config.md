@@ -463,13 +463,16 @@ changes unless every knob is set explicitly.
 | `routing.auth_check_timeout_seconds` | `int` | `3` | Range `[1, 30]`. Bounds the lazy auth probe per chain member. |
 | `low_impact.dispatch` | `full` \| `single` | `full` | `single` requires at least one enabled member in the fallback chain — otherwise rejected at load. |
 | `low_impact.shadow_sample_rate` | `float` | `0.1` | Range `[0.0, 1.0]`. Phase 10 shadow-mode sampling probability. |
+| `low_impact.solo_confidence_floor` | `float` | `0.7` | Range `[0.0, 1.0]`. Phase 13 confidence-gate threshold. Solo responses scoring below this floor — or matching split / refusal patterns — auto-escalate to the full council. |
 
 **Iron Law (LOCKED).** `decision_resolution.classes.high_impact.dispatch`
 and `decision_resolution.classes.user_required.dispatch` are rejected
 at load time — high-impact and user-required decisions always run the
-full council, with no opt-out. Top-level `high_impact: { dispatch: … }`
-and `user_required: { dispatch: … }` are rejected the same way so a
-mistaken surface choice cannot bypass the lock.
+full council, with no opt-out. Top-level `high_impact: { dispatch: … }`,
+`high_impact: { solo_confidence_floor: … }`, `user_required: { dispatch: … }`,
+and `user_required: { solo_confidence_floor: … }` are all rejected the
+same way so a mistaken surface choice cannot bypass the lock — these
+classes never run solo, so a solo-specific knob there is incoherent.
 
 ```yaml
 defaults:
@@ -481,9 +484,33 @@ routing:
   auth_check_timeout_seconds: 3
 
 low_impact:
-  dispatch: single        # route low_impact via solo dispatch
-  shadow_sample_rate: 0.1 # 10% shadow to full council for SLO tracking
+  dispatch: single             # route low_impact via solo dispatch
+  shadow_sample_rate: 0.1      # 10% shadow to full council for SLO tracking
+  solo_confidence_floor: 0.7   # auto-escalate if confidence < 0.7
 ```
+
+### Confidence gate — auto-escalation on uncertain solo runs
+
+When `low_impact.dispatch: single` is enabled, every solo response is
+scored before the verdict is returned. Four escalation reasons can
+trigger an automatic fallback to the full council, in priority order:
+
+| Reason | Trigger | Source |
+|---|---|---|
+| `refusal` | Empty response or refusal markers (`I cannot decide`, `weiß ich nicht`, …). | `confidence_gate.is_refusal` |
+| `split` | Two competing verdicts without a pick (`Option A … Option B`, `Verdict: ship / Verdict: hold`, `Variante 1 / Variante 2`). | `confidence_gate.is_split_response` |
+| `short_response` | Response shorter than ~20 chars — treated as low-signal. | `confidence_gate.extract_confidence` length floor |
+| `low_confidence` | Explicit `Confidence: 0.X` marker below the floor, or hedge-word density (`maybe`, `perhaps`, `not sure`, `vielleicht`) pulling the implicit score below the floor. | `confidence_gate.extract_confidence` |
+
+Escalations are recorded in the shadow-mode log alongside the
+disagreement signal — see the `escalated` and `escalation_reason`
+fields in the `shadow.jsonl` row contract. The shadow SLO banner
+appends a separate auto-escalation rate so a quiet uptick in solo
+uncertainty cannot hide behind a flat disagreement rate.
+
+The escalation path uses zero extra LLM calls — heuristics run on the
+solo response text in process. The fallback `run_full()` only fires
+when the gate flags the response.
 
 ## `api_key_ref` forms
 
