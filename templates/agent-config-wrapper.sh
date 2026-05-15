@@ -21,6 +21,13 @@ set -euo pipefail
 
 SELF_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# Step-7 Phase 3 — pin the project root for the master CLI so subdir
+# invocations of ``./agent-config`` (or symlinks to it) do not re-walk
+# the anchor tree. The wrapper lives at the project root by definition,
+# so SELF_DIR *is* the canonical root. Honor a pre-set value as an
+# escape hatch (test harnesses, supervisors that already pinned it).
+export AGENT_CONFIG_PROJECT_ROOT="${AGENT_CONFIG_PROJECT_ROOT:-$SELF_DIR}"
+
 locate_master() {
   if [[ -n "${AGENT_CONFIG_MASTER:-}" && -x "$AGENT_CONFIG_MASTER" ]]; then
     printf '%s' "$AGENT_CONFIG_MASTER"
