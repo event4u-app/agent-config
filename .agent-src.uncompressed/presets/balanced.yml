@@ -1,0 +1,34 @@
+# Seed preset — balanced (default)
+# Schema: docs/contracts/config-presets.md
+preset:
+  id: balanced
+  autonomy:
+    default: auto
+    trivial_suppress: true
+  confidence:
+    min_band: medium
+    require_evidence: false
+  risk:
+    block_on:
+      - security
+      - prod_data
+    ask_on:
+      - bulk_delete
+      - schema_change
+  council:
+    auto_consult: false
+    cap_per_consult_usd: 0.50
+  mcp:
+    per_call_max_usd: 0.10
+    per_session_max_usd: 2.00
+  cost:
+    daily_max_usd: 10.00
+    weekly_max_usd: 50.00
+    monthly_max_usd: 150.00
+    enforce: hybrid
+  notifications:
+    threshold_pct:
+      - 50
+      - 75
+      - 90
+      - 100

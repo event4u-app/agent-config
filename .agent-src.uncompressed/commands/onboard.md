@@ -38,8 +38,8 @@ command assumes the file and its template-derived defaults are in place.
 
 ### 1. Greet and set expectations
 
-Keep it short. One line explaining this is the one-time setup, six
-questions, one at a time, following the iron law (`user-interaction`).
+Keep it short. One line explaining this is the one-time setup, up to
+nine questions, one at a time, following the iron law (`user-interaction`).
 
 ### 2. Offer user-global cross-project defaults
 
@@ -171,12 +171,138 @@ template — `balanced` + `skill_improvement: true`; rationale lives in
 
 `2` → defer to `/set-cost-profile` and return here. `3` → flip the toggle.
 
+### 7a. Capture `user_type` and `profile.id` (role selection)
+
+Skip if `profile.id` is already set in `.agent-settings.yml` — re-running
+`/onboard` never silently overwrites a previously chosen role. If unset,
+ask:
+
+```
+> Which audience fits you best? This picks the audience profile that
+> shapes which skills, rules, and MCP servers the agent surfaces.
+>
+> 1. Software — coder, engineer, technical lead         → developer
+> 2. Content — writer, creator, editorial               → content_creator
+> 3. Founder — solo founder, early-stage CEO            → founder
+> 4. Consulting — agency, freelance, client work        → agency
+> 5. Marketing — campaigns, growth, brand               → content_creator
+> 6. Finance — bookkeeping, controlling, CFO            → finance
+> 7. Handwerk — operations, trades, admin               → ops
+> 8. Self-configure — leave profile.id empty, I'll edit .agent-settings.yml manually
+```
+
+Map answer → write **both** keys to `.agent-settings.yml` (one block,
+section-aware merge):
+
+- `personal.user_type`: the label as `"software" | "content" | "founder"
+  | "consulting" | "marketing" | "finance" | "handwerk" | "self_configure"`
+  (stable audit field; never auto-mutated).
+- `profile.id`: the profile-loader id from the right column. Choice `8`
+  → leave `profile.id` unset (loader falls back to its default chain
+  documented in [`docs/contracts/profile-system.md`](../../docs/contracts/profile-system.md)).
+
+Six profile YAMLs ship today (`developer` · `content_creator` · `founder`
+· `agency` · `finance` · `ops`) — Marketing collapses into
+`content_creator` per the closest-audience mapping. Verify the chosen
+id exists at
+[`.agent-src.uncompressed/profiles/<id>.yml`](../../.agent-src.uncompressed/profiles/)
+before writing; missing file → fall back to `self_configure` and surface
+the path so the user can author it later.
+
+### 7b. Stack confirmation
+
+Skip if `stack.detected` is already non-empty (re-runnable). Otherwise
+run the offline shell probe and present the result for confirmation —
+no network call, file-existence only:
+
+```bash
+stacks=()
+[ -f composer.json ] && stacks+=("php")
+[ -f package.json ] && stacks+=("node")
+[ -f Cargo.toml ] && stacks+=("rust")
+[ -f go.mod ] && stacks+=("go")
+[ -f pyproject.toml ] || [ -f requirements.txt ] && stacks+=("python")
+[ -f Gemfile ] && stacks+=("ruby")
+```
+
+Then:
+
+- **One stack found** → confirm:
+  `> Detected {stack}. 1. Yes, use it  2. Override (pick from list)  3. Skip — I'll set stack.detected later`
+- **Multiple stacks found** → list them:
+  `> Detected {a, b}. 1. Use all  2. Pick primary  3. Skip`
+- **None found** → ask:
+  ```
+  > No stack manifest found in this project root. Pick the primary stack
+  > so profile-aware presets can resolve (this is advisory; the agent
+  > re-detects on each session):
+  >
+  > 1. php          2. node         3. rust
+  > 4. go           5. python       6. ruby
+  > 7. Skip — leave stack.detected empty
+  ```
+
+Write the result to `.agent-settings.yml`:
+
+```yaml
+stack:
+  detected: ["php"]              # or ["php","node"], or [] for skip
+  source: "wizard"               # audit field: wizard | probe | manual
+```
+
+### 7c. Risk-appetite (`preset.id`)
+
+Skip if `preset.id` is already set. Otherwise ask:
+
+```
+> Risk appetite for autonomy, cost caps, and council usage:
+>
+> 1. fast      — minimal floors, higher daily caps, council auto-consult on
+> 2. balanced  — default — moderate caps, council on-demand    (recommended)
+> 3. strict    — tight caps, council disabled, high-confidence required
+>
+> See docs/contracts/config-presets.md for the per-knob comparison.
+```
+
+Map answer → write `preset.id: "fast" | "balanced" | "strict"` to
+`.agent-settings.yml`. Default fallback (no answer / cloud surface) is
+`balanced`, mirroring the loader default at
+[`scripts/config/presets.py`](../../scripts/config/presets.py).
+
 ### 8. Mark onboarded
 
 Write `onboarding.onboarded: true` to `.agent-settings.yml` using the
 section-aware merge rules from
 [`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, key order, touch only the changed fields).
+
+At this point the file holds the full wizard output:
+
+```yaml
+profile:
+  id: "developer"          # step 7a (omitted if user picked Self-configure)
+preset:
+  id: "balanced"           # step 7c
+personal:
+  user_type: "software"    # step 7a — stable audit field
+  user_name: "..."
+  ide: "..."
+  # ...other personal.* from earlier steps
+stack:
+  detected: ["php"]        # step 7b
+  source: "wizard"
+onboarding:
+  onboarded: true          # this step
+```
+
+Verify the chain resolves before flipping `onboarded: true`:
+
+```bash
+./agent-config explain config --json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['profile']['id'], d['preset']['id'])"
+```
+
+Non-zero exit → surface the error, keep `onboarded: false`, ask the user
+to re-run `/onboard`. Zero exit → write `onboarded: true`.
 
 ### 9. Write user-global file (only if opted in at step 2)
 
@@ -226,6 +352,10 @@ Echo what was captured, in one block:
 ```
 ✅  Onboarding complete.
 
+  profile.id: {value or — (Self-configure)}
+  preset.id: {value or balanced}
+  personal.user_type: {value}
+  stack.detected: {comma-list or —}
   personal.user_name: {value or —}
   personal.ide: {value or —}
   personal.open_edited_files: {value}
@@ -296,8 +426,12 @@ Skip this block in cloud surfaces (no settings file, no log path).
   do not stack questions 2–9 into a single prompt.
 - Re-running `/onboard` when `onboarded: true` is allowed — walk through
   all steps again and rewrite the values the user confirms.
-- Never overwrite a non-empty value without asking (applies to `user_name`
-  and `ide`).
+- Never overwrite a non-empty value without asking (applies to `user_name`,
+  `ide`, `profile.id`, `preset.id`, `personal.user_type`, and
+  `stack.detected`).
+- **Offline-only.** Steps 7a / 7b / 7c never call out to the network.
+  Stack probe = file existence; profile / preset resolution = local YAML
+  reads only.
 - **User-global file is opt-in, one-shot, never silent.** Step 2 captures
   intent, step 9 re-confirms before the actual write. If
   `~/.event4u/agent-config/agent-settings.yml` (or the legacy

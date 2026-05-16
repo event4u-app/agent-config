@@ -168,12 +168,107 @@ Present plainly (sensible defaults from template — `balanced` +
 
 `2` → defer to `/set-cost-profile` and return here. `3` → flip toggle.
 
+### 7a. Capture `user_type` and `profile.id` (role)
+
+Skip if `profile.id` already set — re-run never silent-overwrites. Else ask:
+
+```
+> Audience profile shapes which skills, rules, MCP servers surface:
+>
+> 1. Software — coder, engineer, technical lead       → developer
+> 2. Content — writer, creator, editorial             → content_creator
+> 3. Founder — solo founder, early-stage CEO          → founder
+> 4. Consulting — agency, freelance, client work      → agency
+> 5. Marketing — campaigns, growth, brand             → content_creator
+> 6. Finance — bookkeeping, controlling, CFO          → finance
+> 7. Handwerk — operations, trades, admin             → ops
+> 8. Self-configure — leave profile.id empty, edit yml manually
+```
+
+Map answer → write both keys (one block, section-aware merge):
+
+- `personal.user_type`: stable audit label (`"software" | "content" |
+  "founder" | "consulting" | "marketing" | "finance" | "handwerk" |
+  "self_configure"`), never auto-mutated.
+- `profile.id`: loader id from right column. Choice `8` → leave unset
+  (loader falls back per [`profile-system`](../docs/contracts/profile-system.md)).
+
+Six profiles ship today (`developer` · `content_creator` · `founder` ·
+`agency` · `finance` · `ops`); Marketing collapses into `content_creator`.
+Verify YAML exists at `.agent-src.uncompressed/profiles/<id>.yml` before
+writing; missing file → fall back to `self_configure` and surface path.
+
+### 7b. Stack confirmation
+
+Skip if `stack.detected` non-empty (re-runnable). Else offline probe — file
+existence only, no network:
+
+```bash
+stacks=()
+[ -f composer.json ] && stacks+=("php")
+[ -f package.json ] && stacks+=("node")
+[ -f Cargo.toml ] && stacks+=("rust")
+[ -f go.mod ] && stacks+=("go")
+[ -f pyproject.toml ] || [ -f requirements.txt ] && stacks+=("python")
+[ -f Gemfile ] && stacks+=("ruby")
+```
+
+Present result:
+
+- **One stack** → `> Detected {stack}. 1. Yes  2. Override  3. Skip`
+- **Multiple** → `> Detected {a, b}. 1. Use all  2. Pick primary  3. Skip`
+- **None** → ask `> Pick primary stack: 1. php  2. node  3. rust  4. go  5. python  6. ruby  7. Skip`
+
+Write:
+
+```yaml
+stack:
+  detected: ["php"]        # or list, or [] for skip
+  source: "wizard"         # wizard | probe | manual
+```
+
+### 7c. Risk-appetite (`preset.id`)
+
+Skip if `preset.id` set. Else ask:
+
+```
+> Risk appetite for autonomy, cost caps, council usage:
+>
+> 1. fast      — minimal floors, higher caps, council auto-consult on
+> 2. balanced  — default — moderate caps, council on-demand (recommended)
+> 3. strict    — tight caps, council off, high-confidence required
+>
+> Per-knob: docs/contracts/config-presets.md
+```
+
+Map → write `preset.id: "fast" | "balanced" | "strict"`. Default
+fallback (no answer / cloud) = `balanced`, mirrors loader at
+[`scripts/config/presets.py`](../../scripts/config/presets.py).
+
 ### 8. Mark onboarded
 
 Write `onboarding.onboarded: true` to `.agent-settings.yml` using
 section-aware merge rules from
 [`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
 (preserve comments, key order, touch only changed fields).
+
+File now holds full wizard output:
+
+```yaml
+profile: {id: "developer"}     # 7a (omit on Self-configure)
+preset:  {id: "balanced"}      # 7c
+personal: {user_type: "software", user_name: "...", ide: "..."}
+stack:   {detected: ["php"], source: "wizard"}  # 7b
+onboarding: {onboarded: true}                    # this step
+```
+
+Verify chain resolves before flip:
+
+```bash
+./agent-config explain config --json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['profile']['id'], d['preset']['id'])"
+```
+
+Non-zero exit → surface error, keep `onboarded: false`, ask re-run. Zero → flip.
 
 ### 9. Write user-global file (only if opted in at step 2)
 
@@ -222,6 +317,10 @@ Echo what was captured, in one block:
 ```
 ✅  Onboarding complete.
 
+  profile.id: {value or — (Self-configure)}
+  preset.id: {value or balanced}
+  personal.user_type: {value}
+  stack.detected: {comma-list or —}
   personal.user_name: {value or —}
   personal.ide: {value or —}
   personal.open_edited_files: {value}

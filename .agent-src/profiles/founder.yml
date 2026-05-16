@@ -1,0 +1,25 @@
+# Seed profile — founder
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: founder
+  audience:
+    label: "Solo / early-stage founder"
+    readme_anchor: "founder"
+  defaults:
+    preset_id: fast
+    personas:
+      - product-strategist
+      - reviewer
+    skills_hint:
+      - refine-prompt
+      - rice-prioritization
+      - vision-articulation
+      - fundraising-narrative
+      - runway-cognition
+  surface:
+    commands_hint:
+      - work
+      - feature
+      - challenge-me
+      - council
+    docs_first_pointer: "docs/getting-started-by-role.md#founder"

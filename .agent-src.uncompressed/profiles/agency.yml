@@ -1,0 +1,27 @@
+# Seed profile — agency
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: agency
+  audience:
+    label: "Multi-client delivery shop"
+    readme_anchor: "agency"
+  defaults:
+    preset_id: strict
+    personas:
+      - reviewer
+      - product-strategist
+      - editor
+    skills_hint:
+      - doc-coauthoring
+      - decision-record
+      - refine-ticket
+      - estimate-ticket
+      - perf-feedback-craft
+  surface:
+    commands_hint:
+      - work
+      - implement-ticket
+      - refine-ticket
+      - feature
+      - roadmap
+    docs_first_pointer: "docs/getting-started-by-role.md#agency"

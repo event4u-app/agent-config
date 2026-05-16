@@ -297,4 +297,5 @@ A command that fails either floor drops to **Tier-1** at the next minor release;
 - [`docs/migrations/commands-1.15.0.md`](../migrations/commands-1.15.0.md) — user-facing migration notes.
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — `beta` level rules apply.
 - [`docs/contracts/command-surface-tiers.md`](command-surface-tiers.md) — what each tier means and what `--help` surfaces.
+- [`docs/contracts/command-taxonomy.md`](command-taxonomy.md) — profile axis (discoverability) layered on top of this verb axis (invocation).
 - [`.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md`](../../.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) — sibling telemetry surface; same privacy floor and four-layer enforcement model.

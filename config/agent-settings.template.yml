@@ -30,6 +30,28 @@ agent_config_version: ""
 # custom   = ignore profile — every matrix value must be set explicitly.
 cost_profile: __COST_PROFILE__
 
+# --- Cost tracking + budget enforcement ---
+#
+# USD budgets evaluated against `agents/cost-tracking/sessions.jsonl` by
+# `scripts/cost/budget.mjs`. Empty / 0 = unbudgeted (no enforcement,
+# `cost:check` reports spend only). See docs/contracts/cost-enforcement.md
+# for the full contract (tier ladder, hook surface, bypass mechanism).
+cost:
+  budgets:
+    # Daily USD ceiling (rolling 24h). 0 / null = no daily budget.
+    daily: 0
+    # Weekly USD ceiling (rolling 7d). 0 / null = no weekly budget.
+    weekly: 0
+    # Monthly USD ceiling (rolling 30d). 0 / null = no monthly budget.
+    monthly: 0
+  # Enforcement mode at the HARD_STOP tier (100% utilization):
+  #   advisory  = dashboards and `cost:check` show the breach; agent
+  #               keeps working. Default. Safe for greenfield projects.
+  #   hard-stop = preflight hook (scripts/cost/preflight.mjs) exits
+  #               non-zero on HARD_STOP; CI / shell wrappers refuse to
+  #               start the turn until the budget is raised or reset.
+  enforcement: advisory
+
 # --- Personal preferences ---
 personal:
   # IDE to use for opening files (code, phpstorm, cursor, …)
