@@ -702,6 +702,45 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.16.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.19.0](https://github.com/event4u-app/agent-config/compare/2.18.0...2.19.0) (2026-05-16)
+
+### Features
+
+* **user-types:** land three seed user-types (galabau, metalworking, truck) ([361745e](https://github.com/event4u-app/agent-config/commit/361745ec88d32c7f6faa8f50ac4d350f95f6b6d1))
+* **refine-ticket:** add --user-type lens, orthogonal to --personas ([7d70138](https://github.com/event4u-app/agent-config/commit/7d7013840d92d53ead0b8dba15bf6613398dcd5b))
+* **linter:** add user-type artifact-type support ([bce874c](https://github.com/event4u-app/agent-config/commit/bce874cdb7e925585b74b478b0f4f0e4a7f40380))
+* **user-types:** wire compile pipeline + author scaffolding ([8637dae](https://github.com/event4u-app/agent-config/commit/8637dae4463796726b0d7e737d37169334a0283b))
+* **user-types:** lock schema + ADR for runtime user-type axis ([0ce1549](https://github.com/event4u-app/agent-config/commit/0ce1549a1e5037521cb06e9d1c467fa4ebf87d06))
+* **eval-findings:** add schema template for step-13 closure evidence ([2b2daa4](https://github.com/event4u-app/agent-config/commit/2b2daa46fbf348f5a2901b185c91901de06a1025))
+* **recruits:** add intake template for step-13 P1 recruit walkthroughs ([a569071](https://github.com/event4u-app/agent-config/commit/a569071853d665ca57813fc4c4676bba38716fac))
+
+### Bug Fixes
+
+* **adr:** drop transient roadmap links from user-types axis ADR ([e8d30fe](https://github.com/event4u-app/agent-config/commit/e8d30fe80c2d0b87406571b2c3dbbdd031312998))
+* **contracts:** clamp user-type beta-review markers to 90-day window ([25af8cc](https://github.com/event4u-app/agent-config/commit/25af8ccd650d6ea304f5060ebb55c2d034d746a2))
+* **refine-ticket:** sync compressed SKILL.md with --user-type persona-voice bullet ([14b9dcd](https://github.com/event4u-app/agent-config/commit/14b9dcdab69f063e1dcfc8d9070892b4d56305b1))
+* **refs:** inline AI Council Phase 4 convergence summary ([0e6a578](https://github.com/event4u-app/agent-config/commit/0e6a5780773fbabba6f98a01bd4b25726c996903))
+* **adr:** drop transient roadmap links from MCP runtime ADR ([8f2691e](https://github.com/event4u-app/agent-config/commit/8f2691e90130a9333bd9e01d0863ecb0c9f7ec97))
+* **template:** bump agent_config_version pin to 2.18.0 ([dd7441d](https://github.com/event4u-app/agent-config/commit/dd7441d2fc0fd785a70272b6520eb0eb29a61a66))
+
+### Documentation
+
+* **user-types:** cross-link personas↔user-types and surface metalworking-shop example ([ac0b0ce](https://github.com/event4u-app/agent-config/commit/ac0b0ce2e356654352d3c4caf1528b3d5772047c))
+* **step-13:** link new recruit + eval-finding templates from prerequisites ([57b729a](https://github.com/event4u-app/agent-config/commit/57b729a236bf1b442df140fb2efbdecd9e73ffd9))
+* **adr:** record MCP server runtime as Anthropic Python SDK ([5f5d689](https://github.com/event4u-app/agent-config/commit/5f5d6895d4369b313e1a5058eca21807e5566cfd))
+
+### Tests
+
+* **user-types:** add coverage audit script + tests ([ca403bb](https://github.com/event4u-app/agent-config/commit/ca403bb714fd505f539715fe25b7948714d0ee66))
+* **user-types:** lock schema, lint, and composition contracts ([cfeb48a](https://github.com/event4u-app/agent-config/commit/cfeb48a9d04956ff9d6744383b44bcabeaa57702))
+
+### Chores
+
+* **roadmap:** close step-6 user-types axis and refresh progress dashboard ([2f50a96](https://github.com/event4u-app/agent-config/commit/2f50a96eeec1ea1bf832ed560553d4e940a94812))
+* **roadmap:** close step-14 phases 1+2 against shipped MCP server ([2dcf04b](https://github.com/event4u-app/agent-config/commit/2dcf04bdf5f71bd546b7ec9cf27bbbb7fc6d0ec4))
+
+Tests: 4493 (+17 since 2.18.0)
+
 ## [2.18.0](https://github.com/event4u-app/agent-config/compare/2.17.0...2.18.0) (2026-05-16)
 
 ### Features
