@@ -1,0 +1,25 @@
+# Seed profile — ops
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: ops
+  audience:
+    label: "RevOps, support, SRE-adjacent"
+    readme_anchor: "ops"
+  defaults:
+    preset_id: strict
+    personas:
+      - reviewer
+      - security
+    skills_hint:
+      - incident-commander
+      - dashboard-design
+      - logging-monitoring
+      - threat-modeling
+      - launch-readiness
+  surface:
+    commands_hint:
+      - work
+      - threat-model
+      - review-changes
+      - fix
+    docs_first_pointer: "docs/getting-started-by-role.md#ops"

@@ -1,0 +1,24 @@
+# Seed profile — finance
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: finance
+  audience:
+    label: "CFO / fractional finance / FP&A"
+    readme_anchor: "finance"
+  defaults:
+    preset_id: strict
+    personas:
+      - finance-partner
+      - reviewer
+    skills_hint:
+      - dcf-modeling
+      - forecasting
+      - scenario-modeling
+      - unit-economics-modeling
+      - runway-cognition
+  surface:
+    commands_hint:
+      - work
+      - council
+      - challenge-me
+    docs_first_pointer: "docs/getting-started-by-role.md#finance"

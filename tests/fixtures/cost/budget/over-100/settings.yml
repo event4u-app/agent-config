@@ -1,0 +1,7 @@
+cost_profile: minimal
+cost:
+  budgets:
+    daily: 0
+    weekly: 0
+    monthly: 100
+  enforcement: hard-stop

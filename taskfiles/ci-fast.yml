@@ -6,6 +6,24 @@ tasks:
     desc: Lint all skills and rules
     cmd: python3 scripts/skill_linter.py --all {{.QUIET_FLAG}}
 
+  lint-namespace:
+    silent: true
+    desc: |
+      Namespace contract gate (step-11 Phase 5.1). Enforces
+      `<stem>-<intent>` kebab-case + reserved-names list across
+      skills / rules / commands / personas. Contract:
+      docs/contracts/namespace.md.
+    cmd: python3 scripts/lint_namespace.py {{.QUIET_FLAG}}
+
+  lint-mcp-inventory:
+    silent: true
+    desc: |
+      MCP-tool inventory drift gate (step-11 Phase 5.3). Regenerates
+      docs/contracts/mcp-tool-inventory.md from the source-of-truth
+      catalog and fails if the on-disk file is stale. Run
+      `python3 scripts/audit_mcp_tools.py --write` to refresh.
+    cmd: python3 scripts/audit_mcp_tools.py --check {{.QUIET_FLAG}}
+
   lint-skills-strict:
     silent: true
     desc: Lint all skills and rules, warnings fail too
@@ -30,6 +48,53 @@ tasks:
     silent: true
     desc: Check compression quality between uncompressed and compressed pairs
     cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
+
+  skill-usage:collect:
+    silent: true
+    desc: |
+      Append exposure/mention records from Claude Code session jsonl into
+      agents/metrics/skill-usage.jsonl. Feeds step-2-skill-inventory-rationalization
+      Phase 1. Privacy-safe (SHA-256 prompt-prefix hashes, no bodies).
+    cmd: python3 scripts/skill_usage_collect.py {{.QUIET_FLAG}}
+
+  skill-usage:report:
+    silent: true
+    desc: |
+      Aggregate agents/metrics/skill-usage.jsonl into
+      agents/metrics/skill-usage-report.md (per-skill 30-day rolling window
+      with active / exposed-only / dead status). Baseline only — Phase 2 does
+      the rationalization decisions.
+    cmd: python3 scripts/skill_usage_report.py {{.QUIET_FLAG}}
+
+  skill-overlap:
+    silent: true
+    desc: |
+      Scan .agent-src.uncompressed/skills/*/SKILL.md frontmatter and body
+      symbol references; emit agents/metrics/skill-overlap.md with
+      strong (≥ 0.6) and candidate (≥ 0.30 token / ≥ 0.50 symbol) tiers.
+      Feeds step-2-skill-inventory-rationalization Phase 2 Step 3.
+    cmd: python3 scripts/skill_overlap.py {{.QUIET_FLAG}}
+
+  lint-archived-skills:
+    silent: true
+    desc: |
+      Validate agents/archived-skills/ archive notes against the
+      contract in .agent-src.uncompressed/templates/skill-archive-note.md.
+      Fails if a note is missing required fields, a replacement slug
+      doesn't exist, an archived slug still has a live SKILL.md, or a
+      live skill cites an archived slug as replaced_by. Step-2 Phase 3.
+    cmd: python3 scripts/lint_archived_skills.py {{.QUIET_FLAG}}
+
+  lint-bench:
+    silent: true
+    desc: |
+      Validate tests/eval/corpus-*.yaml against the contract in
+      docs/contracts/benchmark-corpus-spec.md. Enforces per-prompt
+      schema (id format, category enum, language enum, expected_skills
+      non-empty + referencing real skills, destructive prompts carry
+      expected_carve_outs). Composition gate (10/8/5/2) opt-in via
+      `--require-full`. Step-4 Phase 1 Step 3.
+    cmd: python3 scripts/lint_bench_corpus.py {{.QUIET_FLAG}}
 
   lint-skills-regression:
     silent: true

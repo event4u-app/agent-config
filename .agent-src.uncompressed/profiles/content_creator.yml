@@ -1,0 +1,25 @@
+# Seed profile — content_creator
+# Schema: docs/contracts/profile-system.md
+profile:
+  id: content_creator
+  audience:
+    label: "Writers, ghostwriters, marketers"
+    readme_anchor: "content_creator"
+  defaults:
+    preset_id: balanced
+    personas:
+      - editor
+      - brand-voice
+    skills_hint:
+      - voice-and-tone-design
+      - messaging-architecture
+      - editorial-calendar
+      - release-comms
+      - prompt-engineering-patterns
+  surface:
+    commands_hint:
+      - work
+      - post-as
+      - ghostwriter
+      - optimize-prompt
+    docs_first_pointer: "docs/getting-started-by-role.md#content_creator"

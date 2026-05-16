@@ -44,42 +44,63 @@ Do NOT use when:
 
 ## Preconditions
 
-- An ADR directory exists (default `docs/adr/`; `docs/decisions/` is
-  the recognised alias used in this package and many older projects).
+- An ADR directory exists. Two layouts coexist (see
+  [`docs/contracts/adr-layout.md`](../../../docs/contracts/adr-layout.md)):
+  - **Flat** — `docs/decisions/` (or `docs/adr/` alias): cross-cutting
+    governance ADRs, 3-digit numbering (`ADR-NNN-<slug>.md`).
+  - **Per-area** — `docs/adrs/<area>/`: sub-area ADRs, 4-digit
+    numbering (`NNNN-<slug>.md`); `<area>` must match the canonical
+    inventory in [`scripts/audit_adr_coverage.py`](../../../scripts/audit_adr_coverage.py).
 - The decision is **already made** — ADRs record outcomes, they do
   not run the decision process. For unresolved trade-offs, run the
   council or consult `adversarial-review` first.
 
 ## Procedure
 
-### 1. Inspect and resolve the ADR directory
+### 1. Inspect and pick the surface
 
-Identify the canonical directory in this order:
+Ask one question only if both are plausible:
 
-1. `docs/adr/` — default per spec.
-2. `docs/decisions/` — accepted alias if `docs/adr/` is missing.
-3. Anything else — fail, ask the user to pick one of the two
-   canonical paths. Do not invent a third location.
+1. **Flat surface** — chosen when the decision constrains the
+   package's contract with consumers (kernel composition, rule
+   taxonomy, package-wide architecture). Directory: `docs/decisions/`
+   (fallback `docs/adr/`). Filename: `ADR-NNN-<slug>.md`.
+2. **Per-area surface** — chosen when the decision constrains code
+   inside one area folder (one runtime module, one contract group,
+   one CLI surface). Directory: `docs/adrs/<area>/`. Filename:
+   `NNNN-<slug>.md` (4-digit, no `ADR-` prefix).
+3. **Unknown area** — `<area>` not in the inventory: refuse with a
+   hint to add the area to `AREAS` in
+   `scripts/audit_adr_coverage.py` in the same PR. Do not invent.
+4. **In doubt** → per-area (cheaper to surface, easier to relocate).
 
 ### 2. Pick the next ADR number
 
-Scan the directory for `ADR-*.md`, parse the leading 3-digit number,
-take `max + 1` (zero-padded). For an empty directory, start at `001`.
-Reject re-use of an existing number — the index regenerator treats
-duplicates as a hard failure.
+- **Flat surface** — scan `docs/decisions/` (or `docs/adr/`) for
+  `ADR-*.md`, parse the leading 3-digit number, take `max + 1`
+  (zero-padded to 3). For an empty directory, start at `001`.
+- **Per-area surface** — scan `docs/adrs/<area>/` for
+  `[0-9][0-9][0-9][0-9]-*.md`, parse the leading 4-digit number,
+  take `max + 1` (zero-padded to 4). For an empty area, start at
+  `0001`. `README.md` is **not** an ADR — skip it.
+
+Reject re-use of an existing number — index regeneration treats
+duplicates as a hard failure on both surfaces.
 
 ### 3. Pick a slug
 
 Short, hyphen-lowercase, scope-revealing. Match peer ADRs in the
 directory. Examples: `kernel-swap-deferred`, `flat-cluster-subs`,
-`http-bridge-deferred-with-trigger`. Reject slugs longer than 60 chars.
+`http-bridge-deferred-with-trigger`,
+`per-tier-smoke-scripts`. Reject slugs longer than 60 chars.
 
 ### 4. Author the ADR
 
-Use the standard template (frontmatter + body). All sections are
-required; "n/a" is acceptable for genuinely empty Alternatives or
-References blocks but never for Status, Context, Decision, or
-Consequences.
+Use the surface-specific template. All sections are required; "—"
+is acceptable for genuinely empty Alternatives or References blocks
+but never for Status, Context, Decision, or Consequences.
+
+**Flat-surface template** (`docs/decisions/ADR-NNN-<slug>.md`):
 
 ```markdown
 ---
@@ -98,73 +119,64 @@ phase: <roadmap> · <phase-id>
 
 **<Proposed | Accepted | …>** · YYYY-MM-DD.
 
-## Context
-
-What problem forced this decision? What constraints applied? What
-alternatives were on the table at decision time?
-
-## Decision
-
-The chosen variant, in one paragraph. Concrete enough that a reader
-six months later knows what was actually picked.
-
-## Consequences
-
-### Accepted
-
-- Hard guarantees we now make.
-
-### Trade-offs
-
-- What we gave up. Mitigations, if any.
-
-## Alternatives considered
-
-- **Variant X — <name>.** Rejected because <reason>.
-- **Variant Y — <name>.** Rejected because <reason>.
-
-## References
-
-- Linked roadmap, contract, prior ADR, council session id.
+## Context / Decision / Consequences / Alternatives / References
 ```
+
+**Per-area template** (`docs/adrs/<area>/NNNN-<slug>.md`):
+
+```markdown
+# ADR NNNN — <Decision Title>
+
+> Area: `<area>` · Status: accepted · Date: YYYY-MM-DD · Type: retrospective | new
+> Roadmap: `agents/roadmaps/<file>.md` <phase-id>
+> Supersedes: —
+
+## Context / Decision / Considered alternatives / Consequences / References
+```
+
+Per-area ADRs use a quote-style header (no YAML frontmatter) so
+`audit_adr_coverage.py`'s permissive parser can index them. Cite
+the area's contract from the README in
+[`docs/adrs/<area>/README.md`](../../../docs/adrs/).
 
 ### 5. Regenerate the index
 
-Run the dispatcher:
-
-```bash
-python3 scripts/runtime_dispatcher.py run --skill adr-create
-# or directly:
-python3 scripts/adr/regenerate_index.py --dir docs/adr/
-```
-
-The script scans `ADR-*.md`, reads frontmatter (`adr`, `status`,
-`date`, `decision`, `supersedes`), and writes `INDEX.md` with one
-table row per ADR plus broken-supersede warnings on stderr.
+- **Flat surface** — `python3 scripts/adr/regenerate_index.py
+  --dir docs/decisions/` writes `INDEX.md` from `ADR-*.md`.
+- **Per-area surface** — `python3 scripts/audit_adr_coverage.py
+  --regen-area-readme <area>` rewrites `docs/adrs/<area>/README.md`.
+  Coverage gate: run `python3 scripts/audit_adr_coverage.py` (no
+  args) — exit 0 only when every canonical area has ≥ 1 ADR.
 
 ### 6. Validate
 
-- `python3 scripts/adr/regenerate_index.py --check` exits 0
-  (index is up to date, no number gaps, no broken supersedes).
+- Flat: `python3 scripts/adr/regenerate_index.py --check` exits 0.
+- Per-area: `python3 scripts/audit_adr_coverage.py --check` exits 0.
 - The project's CI / quality pipeline passes locally.
 
 ## Output format
 
-1. Path of the new `ADR-NNN-<slug>.md` file.
-2. Path of the regenerated `INDEX.md`.
+1. Path of the new ADR file.
+2. Path of the regenerated index / README.
 3. One-line summary of the decision.
 4. Linked roadmap or phase, if any.
 
 ## Gotchas
 
-- `docs/adr/` is the default path; some projects use
-  `docs/decisions/` (this package included). Pass `--dir` to the
-  index regenerator when running outside the default.
-- Frontmatter `adr:` is the canonical number; the filename prefix
-  must match. The index regenerator fails on mismatch.
+- **Flat default path** is `docs/decisions/` in this package; some
+  projects use `docs/adr/`. Pass `--dir` when running outside the
+  default.
+- **Per-area numbering is 4-digit** (`NNNN-<slug>.md`); the flat
+  surface stays 3-digit (`ADR-NNN-<slug>.md`). Do not mix.
+- **Area inventory is closed** — `<area>` must already exist in
+  `AREAS` in `scripts/audit_adr_coverage.py`. Adding a new area is
+  a separate PR with explicit reviewer sign-off.
+- Frontmatter `adr:` (flat) is the canonical number; the filename
+  prefix must match. The flat regenerator fails on mismatch.
 - ADRs are append-only history. To revise a decision, write a new
-  ADR with `supersedes: ADR-MMM` and flip the old one's status to
-  `superseded`.
+  ADR with `supersedes: ADR-MMM` (flat) or a `Supersedes:` line in
+  the header quote-block (per-area) and flip the old one's status
+  to `superseded`.
 - Never delete an ADR file — supersede it. Deletion breaks
   historical links and round-trips through git history checks.
 

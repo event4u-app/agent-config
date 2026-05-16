@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **482**
-- Edges (incl. self-WRITE): **1311**
+- Edges (incl. self-WRITE): **1310**
 
 ## READ_ONLY edges
 
@@ -349,7 +349,6 @@
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |

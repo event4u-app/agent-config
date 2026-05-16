@@ -97,6 +97,10 @@ Tier 1 — power-user (release shape, audit, migration):
                              Lists missing, modified, and foreign files.
                              Exits 1 on drift, 2 on missing lockfile.
                              Flags: --json | --project=<path>
+  explain                    Read-only decision-chain trace.
+                             Usage: explain config | explain rule <name>
+                                  | explain route "<text>"
+                             Flags: --json | --project=<path>
   migrate                    One-shot migration off legacy composer / npm install paths
                              Flags: --dry-run (detect only)
   first-run                  Guided first-run setup — cost profile, settings, tooling
@@ -749,6 +753,14 @@ cmd_versions() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_versions "$@"
 }
 
+# `agent-config explain <config|rule|route>` — print the decision chain
+# behind a configuration or routing outcome. Read-only diagnostic; never
+# edits state. See scripts/_cli/cmd_explain.py.
+cmd_explain() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_explain "$@"
+}
+
 main() {
   local cmd="${1-}"
   [[ $# -gt 0 ]] && shift || true
@@ -801,6 +813,7 @@ main() {
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
     versions)                cmd_versions "$@" ;;
+    explain)                 cmd_explain "$@" ;;
     help|--help|-h|"")
       # Optional `--tier=0|1|all` filter (default 0).
       local tier_arg="0"

@@ -4,47 +4,67 @@
 
 Give your AI agents an audit-disciplined execution layer: **210 skills**, **79 governance rules**, **124 commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
 
-| 👩‍💻 Developers | 🚀 Founders & Operators | ✍️ Creators & Consultants |
-|---|---|---|
-| Implement tickets, fix CI, write tests, run PR reviews — `/implement-ticket`, `/work`, `/commit`, `/fix ci`, `/create-pr` — with stack-aware skills for Laravel · Symfony · Next.js · React · Node. | Pitch decks, runway math, OKR trees, GTM launches, pricing reviews — `runway-cognition`, `unit-economics-modeling`, `fundraising-narrative`, `gtm-launch`, `okr-tree-modeling`. | Editorial calendars, brand voice, ghostwriting, content funnels, discovery interviews — `voice-and-tone-design`, `editorial-calendar`, `ghostwriter`, `content-funnel-design`, `discovery-interview`. |
+### Pick your profile — six entry paths
+
+`/onboard` writes `profile.id` to `.agent-settings.yml`; each anchor
+below is the first-screen the wizard sends you to. One README, six
+entries, no role-detection guesswork.
+
+| Profile (`profile.id`) | Audience | First commands | First skills |
+|---|---|---|---|
+| 👩‍💻 [`developer`](docs/profiles.md#profile-developer) | IC engineer | `/implement-ticket` · `/work` · `/review-changes` · `/fix` · `/commit` | `developer-like-execution` · `verify-completion-evidence` · `minimal-safe-diff` · `systematic-debugging` · `test-driven-development` |
+| ✍️ [`content_creator`](docs/profiles.md#profile-content_creator) | Writers, ghostwriters, marketers | `/work` · `/post-as` · `/ghostwriter` · `/optimize-prompt` | `voice-and-tone-design` · `messaging-architecture` · `editorial-calendar` · `release-comms` · `prompt-engineering-patterns` |
+| 🚀 [`founder`](docs/profiles.md#profile-founder) | Solo / early-stage founder | `/work` · `/feature` · `/challenge-me` · `/council` | `refine-prompt` · `rice-prioritization` · `vision-articulation` · `fundraising-narrative` · `runway-cognition` |
+| 🏛 [`agency`](docs/profiles.md#profile-agency) | Multi-client delivery shop | `/work` · `/implement-ticket` · `/refine-ticket` · `/feature` · `/roadmap` | `doc-coauthoring` · `decision-record` · `refine-ticket` · `estimate-ticket` · `perf-feedback-craft` |
+| 💼 [`finance`](docs/profiles.md#profile-finance) | CFO / fractional finance / FP&A | `/work` · `/council` · `/challenge-me` | `dcf-modeling` · `forecasting` · `scenario-modeling` · `unit-economics-modeling` · `runway-cognition` |
+| 🛡 [`ops`](docs/profiles.md#profile-ops) | RevOps, support, SRE-adjacent | `/work` · `/threat-model` · `/review-changes` · `/fix` | `incident-commander` · `dashboard-design` · `logging-monitoring` · `threat-modeling` · `launch-readiness` |
+
+**Not sure which one?** Run `npx @event4u/agent-config init` and open
+your AI agent — `/onboard` asks a single 8-option role question and
+maps to the closest profile. Source-of-truth:
+[`.agent-src.uncompressed/profiles/`](.agent-src.uncompressed/profiles/) ·
+schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
+Beyond software: [`user-types/`](.agent-src.uncompressed/user-types/)
+(galabau · metalworking · truck — see [Who this is for](#who-this-is-for)).
 
 <p align="center">
   <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+</p>
+
+<p align="center">
+  <a href="CHANGELOG.md">CHANGELOG</a> ·
+  <a href="https://github.com/event4u-app/agent-config/releases/latest">Latest release</a> ·
+  <a href="https://github.com/event4u-app/agent-config/discussions">Discussions</a>
 </p>
 
 ---
 
 ## Use it in your project
 
-You run the package from a consumer repo — bootstrap via `npx`, let the
-agent pick up your stack, and ship work end-to-end. New install? Start
-with the [Quickstart](#quickstart) to write `.agent-settings.yml`,
-`.augment/`, `.claude/`, …. Already installed? [Supported Tools](#supported-tools)
-shows which AIs the package wires up, and [Featured Commands](#featured-commands)
-lists the end-to-end workflows (`/implement-ticket`, `/work`, `/commit`,
-`/create-pr`). For a deeper tour, see the
-[2-minute demo: `/implement-ticket`](#2-minute-demo-implement-ticket).
+Run from a consumer repo — bootstrap via `npx`, the agent picks up
+your stack, and you ship work end-to-end. New install? Start with the
+[Quickstart](#quickstart). Already installed? [Supported Tools](#supported-tools)
+shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
+lists the end-to-end workflows (`/implement-ticket`, `/work`,
+`/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo-implement-ticket).
 
 ## Prove it
 
-The package is audit-disciplined by construction — every memory consult,
-decision key, and hook concern lands in `agents/state/` so you can
-replay it. [Core Principles](#core-principles) names the four invariants.
+Audit-disciplined by construction — every memory consult, decision
+key, and hook concern lands in `agents/state/` so you can replay it.
+[Core Principles](#core-principles) names the four invariants;
 [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
-draws the scope boundary. [Documentation](#documentation) lists the
-contracts the package ships against, including
-[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) (beta) and
-[`decision-trace-v1`](docs/contracts/decision-trace-v1.md) (beta).
+draws the scope boundary. Beta contracts:
+[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) ·
+[`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
 ## Contribute
 
-Working on the package itself rather than with it?
-[Development](#development) covers the `task ci` pipeline,
-[Requirements](#requirements) the toolchain, and
+Working on the package itself? [Development](#development) covers the
+`task ci` pipeline, [Requirements](#requirements) the toolchain,
 [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
-opt-in measurement loop. The source-of-truth tree is
-`.agent-src.uncompressed/`; never hand-edit the generated `.augment/`
-or `.agent-src/`.
+opt-in measurement loop. Source-of-truth tree is
+`.agent-src.uncompressed/`; never hand-edit `.augment/` or `.agent-src/`.
 
 ## Quickstart
 
@@ -464,18 +484,20 @@ session is explicitly not.
 
 ## You don't need everything
 
-`cost_profile` is the master switch for **rule-tier loading**. The kernel
-(always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
-profile; tier-1 and tier-2 rules are gated by profile and resolved at
-session start from `router.json`.
+Pick how much governance your agent loads up front. The safety floor
+(non-destructive defaults, ask-before-guessing, mirror-the-user's-language)
+ships in **every** profile — what changes is how much extra coaching gets
+pulled in alongside it.
 
-| Profile | Rule tiers loaded | Token footprint | Best for |
-|---|---|---|---|
-| **`minimal`** | kernel only (no router, no auto-rules) | lowest | Cost-sensitive sessions; trivial Q&A; CI runs |
-| **`balanced`** (default) | kernel + tier-1 auto-rules | medium | Day-to-day work — current behaviour superset |
-| **`full`** | kernel + tier-1 + tier-2 (everything) | highest | Agent-config development; full rule fidelity |
+| Profile | What you get | When to pick it |
+|---|---|---|
+| **`minimal`** | The non-negotiable safety floor and nothing else. Cheapest, fastest. | Quick questions · throw-away scripts · running in CI · tight token budgets |
+| **`balanced`** (default) | Safety floor plus the everyday coaching most teams want — sensible defaults, code-review nudges, common pitfalls flagged. | Day-to-day work · the right answer if you're not sure |
+| **`full`** | Everything, including the long-tail rules normally only the package maintainers need. | Working on `agent-config` itself · audits · maximum fidelity demos |
 
-Architecture: [`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta) ·
+Under the hood, this is the rule-tier switch: kernel-only · kernel + tier-1
+auto-rules · kernel + tier-1 + tier-2. Architecture details:
+[`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta) ·
 kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-membership.md) (beta) ·
 [Configure profiles →](docs/customization.md)
 
@@ -503,6 +525,10 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 **Deepest reference stack today: Laravel** — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant. **Workflow-grade second tier: Symfony** (`symfony-workflow` — DI, Doctrine, Messenger, voters, Twig) and **Next.js App Router** (`nextjs-patterns` — RSC boundaries, Server Actions, caching, route handlers). Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
+### …and beyond software (`user-types/`)
+
+The same orchestration core drives non-software trades. Worked-example user types ship as the actual prompt-pack the agent loads: [`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md) (landscaping) · [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) · [`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md). Contributing your own? [5-minute scaffold](.agent-src.uncompressed/user-types/_template/) + [conventions](.agent-src.uncompressed/user-types/README.md). Same governance, command suite, and safety rules apply.
+
 ---
 
 ## Data governance & domain safety
@@ -511,45 +537,15 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ---
 
-## Featured Skills
+## Profile entry paths & featured commands
 
-| Skill | What your agent learns |
-|---|---|
-| [`laravel`](.agent-src/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
-| [`pest-testing`](.agent-src/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
-| [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
-| [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
-| [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to all open review comments on a PR |
-| [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
-| [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
-| [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
-| [`docker`](.agent-src/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
-| [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
-| [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
-| [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
-
-→ [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
-
----
-
-## Featured Commands
-
-| Command | What it does |
-|---|---|
-| [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
-| [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix ci`](.agent-src/commands/fix.md) | Fetch and fix GitHub Actions failures |
-| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to review comments |
-| [`/optimize skills`](.agent-src/commands/optimize.md) | Audit skills, find duplicates, run linter |
-| [`/feature plan`](.agent-src/commands/feature.md) | Interactively plan a feature |
-| [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
-| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
-| [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
-| [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
-
-→ [Browse all 124 active commands](.agent-src/commands/)
+Deep version of the profile table above (audience · first commands ·
+first skills · preset default per profile):
+[`docs/profiles.md`](docs/profiles.md). Curated featured-commands
+subset: [`docs/featured-commands.md`](docs/featured-commands.md).
+[Browse all 124 active commands](.agent-src/commands/) · full catalog:
+[`docs/catalog.md`](docs/catalog.md) ·
+[skills only](docs/skills-catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 

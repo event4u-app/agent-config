@@ -14,10 +14,62 @@ import { dirname } from 'node:path';
 
 const STORE = process.env.BUDGET_STORE || 'agents/cost-tracking/sessions.jsonl';
 const CONFIG = process.env.BUDGET_CONFIG || 'agents/cost-tracking/budget.json';
+const SETTINGS = process.env.AGENT_SETTINGS || '.agent-settings.yml';
+
+// Minimal YAML reader for the `cost:` block — avoids a yaml dep. Reads
+// only the keys this script needs (cost.budgets.{daily,weekly,monthly},
+// cost.enforcement) from the well-formed two-space-indent template.
+function loadSettingsCost() {
+  if (!existsSync(SETTINGS)) return null;
+  let inCost = false, inBudgets = false;
+  const out = { budgets: {}, enforcement: null };
+  for (const raw of readFileSync(SETTINGS, 'utf-8').split('\n')) {
+    const line = raw.replace(/\s+$/, '');
+    if (!line || line.startsWith('#')) continue;
+    if (/^[a-z_]+:/.test(line)) inCost = inBudgets = false;
+    if (line === 'cost:') { inCost = true; continue; }
+    if (!inCost) continue;
+    if (/^  budgets:/.test(line)) { inBudgets = true; continue; }
+    if (inBudgets && /^    [a-z]+:/.test(line)) {
+      const [k, v] = line.trim().split(':').map((s) => s.trim());
+      const n = parseFloat(v);
+      if (Number.isFinite(n) && n > 0) out.budgets[k] = n;
+      continue;
+    }
+    if (/^  enforcement:/.test(line)) {
+      out.enforcement = line.split(':')[1].trim().replace(/['"]/g, '');
+      inBudgets = false;
+    }
+  }
+  const hasAny = Object.keys(out.budgets).length || out.enforcement;
+  return hasAny ? out : null;
+}
 
 function loadConfig() {
+  // Settings file wins when it carries any cost.* values.
+  const fromSettings = loadSettingsCost();
+  if (fromSettings) {
+    const period = process.env.BUDGET_PERIOD || 'all';
+    const periodKey = ({ today: 'daily', week: 'weekly', month: 'monthly' })[period];
+    const budget_usd = periodKey ? fromSettings.budgets[periodKey] : (
+      fromSettings.budgets.monthly || fromSettings.budgets.weekly || fromSettings.budgets.daily
+    );
+    if (Number.isFinite(budget_usd) && budget_usd > 0) {
+      return {
+        budget_usd,
+        enforcement: fromSettings.enforcement || 'advisory',
+        source: 'agent-settings.yml',
+        setAt: null,
+      };
+    }
+  }
   if (!existsSync(CONFIG)) return null;
-  try { return JSON.parse(readFileSync(CONFIG, 'utf-8')); } catch { return null; }
+  try {
+    const cfg = JSON.parse(readFileSync(CONFIG, 'utf-8'));
+    cfg.source = cfg.source || 'budget.json';
+    cfg.enforcement = cfg.enforcement || 'advisory';
+    return cfg;
+  } catch { return null; }
 }
 
 function saveConfig(cfg) {
@@ -123,18 +175,27 @@ function cmdCheck() {
     threshold: alert.threshold,
     recommended_action: recommendedAction(alert.level),
     sessionCount: filtered.length,
+    enforcement: cfg.enforcement || 'advisory',
+    source: cfg.source || 'budget.json',
   };
-  if (process.env.BUDGET_QUIET === '1') return console.log(JSON.stringify(out));
-  console.log(`# Budget check (period: ${period})\n`);
-  console.log('| Metric | Value |\n|---|---:|');
-  console.log(`| Budget | $${cfg.budget_usd.toFixed(2)} |`);
-  console.log(`| Spent | $${totalSpend.toFixed(2)} |`);
-  console.log(`| Remaining | $${out.remaining_usd.toFixed(2)} |`);
-  console.log(`| Utilization | ${out.utilization_pct.toFixed(1)}% |`);
-  console.log(`| Sessions counted | ${filtered.length} |`);
-  console.log(`| **Alert** | **${alert.emoji} ${alert.level}** |`);
-  console.log(`\nAction: ${out.recommended_action}`);
-  if (alert.level === 'HARD_STOP') process.exit(1);
+  const hardStop = alert.level === 'HARD_STOP' && out.enforcement === 'hard-stop';
+  if (process.env.BUDGET_QUIET === '1') {
+    console.log(JSON.stringify(out));
+  } else {
+    console.log(`# Budget check (period: ${period})\n`);
+    console.log('| Metric | Value |\n|---|---:|');
+    console.log(`| Budget | $${cfg.budget_usd.toFixed(2)} |`);
+    console.log(`| Spent | $${totalSpend.toFixed(2)} |`);
+    console.log(`| Remaining | $${out.remaining_usd.toFixed(2)} |`);
+    console.log(`| Utilization | ${out.utilization_pct.toFixed(1)}% |`);
+    console.log(`| Sessions counted | ${filtered.length} |`);
+    console.log(`| **Alert** | **${alert.emoji} ${alert.level}** |`);
+    console.log(`| Enforcement | ${out.enforcement} (source: ${out.source}) |`);
+    console.log(`\nAction: ${out.recommended_action}`);
+  }
+  // Only fail closed when enforcement is hard-stop; advisory mode reports
+  // the breach but exits clean so wrappers keep working.
+  if (hardStop) process.exit(1);
 }
 
 function main() {

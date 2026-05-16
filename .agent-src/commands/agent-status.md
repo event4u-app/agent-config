@@ -41,6 +41,22 @@ Calculate based on these estimates:
 | **Matched skills** | count skills triggered this request × ~1,500 avg | variable |
 | **Platform overhead** | system prompt, tool schemas | ~15,000 |
 
+### 3a. Read session cost ledger (measured, not estimated)
+
+Run `node scripts/cost/track.mjs` (silent — `TRACK_QUIET=1`) and parse
+the last record from `agents/cost-tracking/sessions.jsonl`. If the file
+does not exist (tracker never run for this project), skip this step and
+note `cost ledger: not initialised` in the dashboard.
+
+Extract from latest record:
+
+- `total_usd` — dollars spent in current session
+- `by_model[]` — per-tier (haiku / sonnet / opus) input / output / cache split
+- `budget.tier` — `under` / `50` / `75` / `90` / `100` (from `node scripts/cost/budget.mjs check`)
+
+Pricing source: [`bench/pricing.yaml`](../../bench/pricing.yaml). Reader
+implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
+
 ### 4. Calculate freshness thresholds
 
 - **Message threshold**: Next multiple of 25 ≥ current count
@@ -69,6 +85,19 @@ Use Markdown tables and headings — NOT ASCII box art (breaks in non-monospace 
 | Matched rules (~{n}) | ~{n×800} |
 | Matched skills (~{n}) | ~{n×1500} |
 | **Total input** | **~{sum}** |
+
+**💵 Session cost (measured)**
+
+If ledger exists, render:
+
+| | |
+|---|---|
+| 💵 Session total | ${total_usd} |
+| Haiku / Sonnet / Opus | ${haiku} / ${sonnet} / ${opus} |
+| 🎯 Budget tier | {emoji} {tier} ({utilization_pct}% of cap) |
+
+Tier-emoji map: `under` / `50` → ✅ · `75` → ⚠️ · `90` → ⚠️⚠️ · `100` → ❌.
+If ledger does not exist, render `Session cost: not initialised — run \`task cost:track\` to start measuring`.
 
 **⚡ Freshness**
 

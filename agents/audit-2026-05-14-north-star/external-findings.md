@@ -92,18 +92,24 @@ We ship a framework. Adoption story is harder.
 
 Honesty pass. `+` = we're ahead; `=` = on par; `–` = behind.
 
+> **Refresh 2026-05-16:** Seven rows flipped after [`step-11-ruflo-parity.md`](../roadmaps/step-11-ruflo-parity.md) Phases 1–6 closed. Evidence rows below are mechanism-covered; numbers attached to those mechanisms remain claimed until [`docs/parity/bench.json`](../../docs/parity/bench.json) soak completes. See [`docs/parity/ruflo.md`](../../docs/parity/ruflo.md) for per-row citations.
+
 | Axis | vs Caveman | vs Ruflo | vs Harmonist | vs KW-Plugins |
 |---|:-:|:-:|:-:|:-:|
 | Iron Law rigor (kernel + tier-1/tier-2) | + | + | + | + |
 | Compression / token economy — measurement | – | – | = | = |
-| Cost attribution / budget alerts | = | – | = | = |
+| Cost attribution / budget alerts | = | = | = | = |
 | Schema-driven agent registry + migrations | + | = | – | = |
 | Mechanical enforcement (runtime hooks) | = | = | – | = |
 | Model-tier metadata on skills | = | = | – | = |
 | `## Deep Reference` cut-points | = | = | – | = |
 | `distinguishes_from` / disambiguation | = | = | – | = |
-| Per-plugin / per-tier smoke contract | = | – | = | = |
-| ADR co-location with code | = | – | = | = |
+| Per-plugin / per-tier smoke contract | = | = | = | = |
+| ADR co-location with code | = | = | = | = |
+| Namespace contract (enforced) | = | = | = | = |
+| Topology hints (per-mode swarm shape) | = | = | = | = |
+| MCP-tool inventory with source-line refs | = | = | = | = |
+| Measured-vs-claimed disclaimer (roadmap headers) | = | = | = | = |
 | Multi-tool projection breadth | + | + | + | + |
 | Persona system (review lens count + depth) | + | + | + | + |
 | Roadmap-driven work flow | + | + | + | + |
@@ -113,19 +119,24 @@ Honesty pass. `+` = we're ahead; `=` = on par; `–` = behind.
 | Public benchmark with reproduction script | – | – | = | = |
 | One-line install / one-liner positioning | – | = | = | – |
 
-Hot read:
+Hot read (post-step-11 refresh):
 
-- We are clearly best-in-class on **governance** (Iron Laws, persona depth,
+- We remain best-in-class on **governance** (Iron Laws, persona depth,
   memory trust, multi-tool projection).
-- We are clearly behind on **measurement** (no benchmark corpus, no cost
-  surface, no selection-accuracy number, no telemetry).
-- We are clearly behind on **mechanical enforcement** (Iron Laws are
+- We are now **on par** with Ruflo on cost attribution, smoke contracts,
+  ADR co-location, namespace contract, topology hints, MCP-tool
+  inventory, and the measured-vs-claimed disclaimer — mechanisms cited
+  in [`docs/parity/ruflo.md`](../../docs/parity/ruflo.md).
+- We remain behind on **observable telemetry numbers** (the mechanisms
+  exist; the soak window in [`docs/parity/bench.json`](../../docs/parity/bench.json)
+  has not produced the 30-report baseline yet — earliest flip 2026-07-15).
+- We remain behind on **mechanical enforcement** (Iron Laws are
   agent-side rules; no runtime hook gating the stop event).
-- We are clearly behind on **on-ramp simplicity** (KW-plugins reaches a
+- We remain behind on **on-ramp simplicity** (KW-plugins reaches a
   working state in one install + one settings file; we require
   `.agent-settings.yml` + onboarding + persona compose).
 
-These four gaps are the North Star inputs.
+The remaining gaps are the North Star inputs that survive past step-11.
 
 ---
 

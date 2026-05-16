@@ -1,0 +1,58 @@
+{
+  "schema": "parity-bench-ruflo-v1",
+  "status": "infrastructure_ready_awaiting_corpus_run",
+  "owner_roadmap": "agents/roadmaps/step-11-ruflo-parity.md",
+  "parity_doc": "docs/parity/ruflo.md",
+  "parent_bench": "docs/parity/bench.json",
+  "claim_under_test": {
+    "source": "agents/audit-2026-05-14-north-star/external-findings.md § 2",
+    "headline": "Average dollar cost per 25-prompt corpus run, separated by model tier (Haiku / Sonnet / Opus) and by token class (input / output / cache-read / cache-write).",
+    "comparison_target": "ruflo cost-tracker README (claimed upstream, not yet pulled into this repo)",
+    "type": "claimed_upstream_not_verified_in_repo"
+  },
+  "measurement_protocol": {
+    "corpus": "bench/corpus/* (25-prompt corpus owned by step-4-measurement-and-benchmark.md)",
+    "tracker": "scripts/cost/track.mjs",
+    "pricing": "bench/pricing.yaml",
+    "session_source": "~/.claude/projects/*/sessions/*.jsonl (Claude Code-native, no manual tracking)",
+    "tokens_to_dollars": "track.mjs multiplies input/output/cache-read/cache-write tokens by per-1M pricing from bench/pricing.yaml, separated by model id",
+    "headline_output": "average dollar cost per 25-prompt run, with min / max / p50 / p90 across N reports"
+  },
+  "current_window": {
+    "report_count": 0,
+    "verdict": "awaiting_first_corpus_run",
+    "notes": "Phase 1-5 of step-11 delivered the cost-tracking and bench infrastructure. Phase 6 Step 2 awaits the first end-to-end 25-prompt corpus run against the live tracker. Until then this file exists as a methodology contract, not a verdict surface."
+  },
+  "soak_inheritance": {
+    "follows": "docs/parity/bench.json",
+    "min_days": 60,
+    "min_reports": 30,
+    "earliest_flip": "2026-07-15",
+    "arbiter_command": "task bench:baseline-ready",
+    "notes": "bench-ruflo.json flips status to 'baseline_ready' only after the parent bench.json flips. No independent soak window — same corpus, same arbiter."
+  },
+  "redundancy_verdict": {
+    "status": "pending",
+    "criterion": "Once bench.json soak completes, this verdict is set by comparing the dollar cost in current_window vs ruflo's published table.",
+    "outcome_branches": {
+      "redundant": "Our cost-per-25-prompt-run sits within Ruflo's published range (or beats it). G5 redundancy gate row for cost surface flips green.",
+      "behind": "Our cost-per-run > Ruflo's. Follow-up issue filed; G5 stays open."
+    }
+  },
+  "fields_pending_first_run": [
+    "current_window.avg_cost_per_run_usd",
+    "current_window.cost_by_model.haiku_usd",
+    "current_window.cost_by_model.sonnet_usd",
+    "current_window.cost_by_model.opus_usd",
+    "current_window.cost_by_class.input_usd",
+    "current_window.cost_by_class.output_usd",
+    "current_window.cost_by_class.cache_read_usd",
+    "current_window.cost_by_class.cache_write_usd"
+  ],
+  "decisions_pending": {},
+  "_meta": {
+    "created": "2026-05-16",
+    "created_by": "step-11-ruflo-parity.md Phase 6 Step 2",
+    "spec": "scripts/cost/track.mjs --bench-ruflo (planned wiring); for now the file is a methodology contract"
+  }
+}

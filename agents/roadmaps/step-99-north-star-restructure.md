@@ -6,6 +6,8 @@ complexity: lightweight
 
 > Execute the deferred roadmap-tree restructure produced by the 2026-05-14 north-star audit + council synthesis **and** the user-issued Total Dominance mandate (2026-05-14): rename 6 existing roadmaps into a new sequence, draft new roadmaps (skill inventory rationalization, measurement + benchmark, schema rigor, caveman parity-plus, ruflo parity-plus), and produce a parity verdict that makes `caveman`, `ruflo`, and `harmonist` redundant for our use case. Breaking changes are permitted; v3.0.0 is the target tag.
 
+**Measured-vs-claimed disclaimer:** This is a **meta-restructure roadmap** — it owns no measured outcome of its own. Every parity claim ([`step-10`](step-10-caveman-parity.md), [`step-11`](step-11-ruflo-parity.md)) and rigor claim ([`step-5-schema-rigor.md`](step-5-schema-rigor.md)) belongs to the child roadmap that carries the disclaimer. G0–G5 gate verdicts here stay aspirational until each child roadmap closes its own acceptance gates with measured evidence.
+
 ## Prerequisites
 
 - [ ] Read [`../audit-2026-05-14-north-star/NEXT-ACTIONS.md`](../audit-2026-05-14-north-star/NEXT-ACTIONS.md) — authoritative spec for renames + new drafts
@@ -42,42 +44,48 @@ Zero `[!]` rows at v3.0.0 tag = G5 green = redundancy achieved.
 
 **Breaking changes are permitted.** Field renames, file moves, schema version bumps, default flips — all in scope. Migration registry (harmonist pattern) must carry the load.
 
-## Phase 1: Renames (6 × `git mv`)
+## Phase 1: Renames (6 × `git mv`) — superseded 2026-05-16
 
-Move existing roadmaps into the new slots. Pure history-preserving renames — no content edits in this phase.
+All 5 source files were archived during prior step-12 / step-13 cleanup
+cycles before this restructure executed. Verified 2026-05-16: the
+target slots `step-2/3/4/5/6` under `agents/roadmaps/` are vacant, and
+the source files now live at `agents/roadmaps/archive/step-{2,3,4,5,6}-*.md`.
+Renames are no-ops; the new Phase 2 drafts land directly into the
+freed slots. `step-1-v2-feedback-followup.md` is itself already
+archived, so the "stays in slot 1" check is moot.
 
-- [ ] **Step 1 — `step-2-ai-council-consolidation.md` → `step-3-ai-council-consolidation.md`:** Pillar P2; was step-2, slot freed for the new P0 roadmap.
-- [ ] **Step 2 — `step-3-agent-user-persona.md` → `step-7-agent-user-persona.md`:** Pillar P4 (adoption ramp).
-- [ ] **Step 3 — `step-4-ghostwriter.md` → `step-8-ghostwriter.md`:** Pillar P4 (adoption ramp).
-- [ ] **Step 4 — `step-5-test-cleanup.md` → `step-6-test-cleanup.md`:** Pillar P2 (mechanical enforcement, post-measurement).
-- [ ] **Step 5 — `step-6-user-types-axis.md` → `step-9-user-types-axis.md`:** Pillar P4 (adoption ramp).
-- [ ] **Step 6 — Verify `step-1-v2-feedback-followup.md` stays in slot 1:** No rename. Confirm in `roadmaps-progress.md` after the regen.
+- [-] **Step 1 — `step-2-ai-council-consolidation.md` → `step-3-…`:** cancelled — source already archived.
+- [-] **Step 2 — `step-3-agent-user-persona.md` → `step-7-…`:** cancelled — source already archived.
+- [-] **Step 3 — `step-4-ghostwriter.md` → `step-8-…`:** cancelled — source already archived.
+- [-] **Step 4 — `step-5-test-cleanup.md` → `step-6-…`:** cancelled — source already archived.
+- [-] **Step 5 — `step-6-user-types-axis.md` → `step-9-…`:** cancelled — source already archived.
+- [-] **Step 6 — Verify `step-1-v2-feedback-followup.md` stays in slot 1:** cancelled — `step-1` already archived; the slot-1 check no longer applies.
 
 ## Phase 2: New roadmap drafts (`roadmap-writing` skill)
 
 Each draft uses the `roadmap-writing` skill. None of these touch existing roadmaps. Steps 1–3 land first as the v2.10 follow-up; Steps 4–5 are Domination Mandate additions for full external-repo parity.
 
-- [ ] **Step 1 — `step-2-skill-inventory-rationalization.md` (P0, NEW):** Council Opus #5 + o1 "skill usage stats collector". Target: 208 → ≤ 160 skills. Phases: usage telemetry → merge candidates → archive plan → execute. No deletions without an archive-notes file per removed skill.
-- [ ] **Step 2 — `step-4-measurement-and-benchmark.md` (P1):** 25-prompt corpus, selection-accuracy + token usage + cost tracking (session jsonl reader), 60-day baseline gate, per-tool projection-fidelity check. This roadmap blocks every P2 enforcement step until its baseline is in.
-- [ ] **Step 3 — `step-5-schema-rigor.md` (P3, **FULL SCOPE per Domination Mandate**):** Slug renamed from `step-5-minimal-schema.md`; scope expanded from the council's two-field minimum to the full Harmonist suite. Cover: `model_tier`, `## Deep Reference` cut-point on every skill > 80 lines, `schema_version` + `MIGRATIONS` registry (`_upgrade_v1_to_v2` and forward), `distinguishes_from`, `disambiguation`, `domains:` controlled list with routing intersection, generated `index.json` + `router.json` from frontmatter (hand-curation deprecated), correlation IDs (`<session_id>-<task_seq>`), memory CLI parity with MCP. Breaking-change cadence allowed via the migration registry.
-- [ ] **Step 4 — `step-10-caveman-parity.md` (NEW · Domination Mandate):** Cover every row of [`external-findings.md` § 1](../audit-2026-05-14-north-star/external-findings.md): 6-level intensity ladder (`lite`/`full`/`ultra`/`wenyan-{lite,full,ultra}`), `caveman-compress` in-place rewrite with `<file>.original.md` backup, auto-clarity carve-outs (security / destructive / multi-step), statusline integration (lifetime tokens saved from session jsonl), per-prompt token-delta in `task bench`, honest output-only disclaimer surface. Blocks the compression default-flip in Phase 4.
-- [ ] **Step 5 — `step-11-ruflo-parity.md` (NEW · Domination Mandate):** Cover every row of [`external-findings.md` § 2](../audit-2026-05-14-north-star/external-findings.md): cost-tracker plugin reading Claude Code session jsonl (Haiku / Sonnet / Opus per-1M, input / output / cache-read / cache-write split), 50 / 75 / 90 / 100 % budget ladder with hard stop at 100 %, per-tier smoke contract (`scripts/smoke.sh` per kernel / router / schema / skills with declared baselines), per-plugin ADR directory (`docs/adrs/<area>/0001-*.md`), enforced namespace contract (`<stem>-<intent>` kebab-case + reserved-names list), topology hints for `subagent-orchestration` (hierarchical / mesh / ring / star / adaptive), MCP-tool count with source file:line citations, measured-vs-claimed disclaimer on every roadmap header.
+- [x] **Step 1 — `step-2-skill-inventory-rationalization.md` (P0, NEW):** drafted 2026-05-16.
+- [x] **Step 2 — `step-4-measurement-and-benchmark.md` (P1):** drafted 2026-05-16.
+- [x] **Step 3 — `step-5-schema-rigor.md` (P3, **FULL SCOPE per Domination Mandate**):** drafted 2026-05-16 — full Harmonist suite per Domination Mandate (overrides the council's two-field minimum).
+- [x] **Step 4 — `step-10-caveman-parity.md` (NEW · Domination Mandate):** drafted 2026-05-16 — covers every row of [`external-findings.md` § 1](../audit-2026-05-14-north-star/external-findings.md).
+- [x] **Step 5 — `step-11-ruflo-parity.md` (NEW · Domination Mandate):** drafted 2026-05-16 — covers every row of [`external-findings.md` § 2](../audit-2026-05-14-north-star/external-findings.md).
 
 ## Phase 3: Verification
 
 After Phases 1 + 2 land. Each gate is a runnable check.
 
-- [ ] **Step 1 — `task lint-skills` green:** No new linter regressions from the renames or the new drafts.
-- [ ] **Step 2 — `python3 scripts/check_roadmap_trackable.py` green:** All active roadmaps parseable, all phases have checkboxes.
-- [ ] **Step 3 — `agents/roadmaps-progress.md` regenerated:** Dashboard shows step-1 → step-11 in order plus this step-99. Step counts add up to the new total.
-- [ ] **Step 4 — `task ci` green:** Full pipeline passes before any commit chain starts.
+- [x] **Step 1 — `task lint-skills` green:** 346 pass, 92 warn, 0 fail. Warns are pre-existing, not new regressions.
+- [x] **Step 2 — `python3 scripts/check_roadmap_trackable.py` green:** 9 active roadmaps, all parseable, all phases carry checkboxes.
+- [x] **Step 3 — `agents/roadmaps-progress.md` regenerated:** 9 roadmap(s) · 28/239 steps done; step-2 / step-4 / step-5 / step-10 / step-11 now present in the active set.
+- [~] **Step 4 — `task ci` green:** Per-task checks all green (lint-skills, check-refs, check-roadmap-trackable, lint-roadmap-complexity). The `consistency` task's final `git diff --quiet` is structurally a pre-commit gate — it cannot pass during in-flight work and is re-run as part of the commit-chain that closes this restructure. Not a quality regression.
 
 ## Phase 4: Compression decision (criterion-deferred, do NOT decide in this roadmap)
 
 This phase exists only to keep the parked decision visible. **No action items execute here — the gate is owned by `step-4-measurement-and-benchmark.md` Phase closeout.**
 
-- [ ] **Step 1 — Park the kill-criterion in `docs/contracts/`:** Single-paragraph doc that names the rule per [`council-synthesis.md` § 7](../audit-2026-05-14-north-star/council-synthesis.md): until `task bench` produces a number, `caveman.speak_scope` stays default `off`. After 60-day baseline: < 30 % measured saving → deprecate; ≥ 30 % saving + < 5 % quality regression → flip default on with carve-outs.
-- [ ] **Step 2 — Cross-reference from `step-4-measurement-and-benchmark.md`:** That roadmap's closeout phase reads the kill-criterion and decides. This roadmap does not.
+- [x] **Step 1 — Park the kill-criterion in `docs/contracts/`:** drafted 2026-05-16 → [`compression-default-kill-criterion.md`](../../docs/contracts/compression-default-kill-criterion.md). Names the rule per [`council-synthesis.md` § 7](../audit-2026-05-14-north-star/council-synthesis.md).
+- [x] **Step 2 — Cross-reference from `step-4-measurement-and-benchmark.md`:** Phase 6 Step 2 of `step-4` now cites [`compression-default-kill-criterion.md`](../../docs/contracts/compression-default-kill-criterion.md) and the decision table. The closeout in `step-4` owns the verdict; this roadmap does not.
 
 ## Phase 5: External Parity Coverage (Domination Mandate)
 

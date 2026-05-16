@@ -1,0 +1,41 @@
+# Model pricing for `task bench` cost capture — step-4 Phase 2 Step 2.
+#
+# USD per 1M tokens. Every row carries a `sourced_on` date per
+# external-findings.md § 2 (ruflo "measured-vs-claimed" pattern); stale
+# prices = stale numbers = no trust.
+#
+# Mirrors PRICING in scripts/cost/track.mjs (cost-track session reader).
+# If you bump rates here, bump there too — both surfaces price the same
+# session jsonl.
+
+version: 1
+
+models:
+  - tier: haiku
+    sourced_on: 2026-05-14
+    source: https://www.anthropic.com/pricing
+    input: 0.25
+    output: 1.25
+    cache_write: 0.30
+    cache_read: 0.03
+
+  - tier: sonnet
+    sourced_on: 2026-05-14
+    source: https://www.anthropic.com/pricing
+    input: 3.00
+    output: 15.00
+    cache_write: 3.75
+    cache_read: 0.30
+
+  - tier: opus
+    sourced_on: 2026-05-14
+    source: https://www.anthropic.com/pricing
+    input: 15.00
+    output: 75.00
+    cache_write: 18.75
+    cache_read: 1.50
+
+# Tier resolution: model string is lowercased and matched substring-wise
+# against {haiku, sonnet, opus}; unmatched models price at 0 with a
+# `tier: unknown` marker in the report (NOT silently dropped — surface
+# the gap so pricing rows can be added).

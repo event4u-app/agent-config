@@ -6930,13 +6930,6 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
-      "target": ".agent-src.uncompressed/contexts/contracts/frugality-charter.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
       "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
       "via": "body_link",
