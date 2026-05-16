@@ -702,6 +702,48 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.17.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.20.0](https://github.com/event4u-app/agent-config/compare/2.19.0...2.20.0) (2026-05-16)
+
+### Features
+
+* **product:** step-15 product refinement — profiles + packs + presets + explain CLI ([59e7d6f](https://github.com/event4u-app/agent-config/commit/59e7d6f3ddce025e558da08c1da1b4c8155e68eb))
+* **parity:** step-11 ruflo parity — smoke + ADR + cost + namespace + MCP ([521b4c6](https://github.com/event4u-app/agent-config/commit/521b4c62f5fe266f5c18dfcca2abf4e06d97c217))
+* **caveman:** step-10 default-kill criterion + parity roadmap ([dd7ec3c](https://github.com/event4u-app/agent-config/commit/dd7ec3cae4f8839b28b4d3ff9dbdbb316ec5d035))
+* **bench:** step-4 measurement + benchmark infrastructure ([981d0cd](https://github.com/event4u-app/agent-config/commit/981d0cd1c48e2d23eede29bd86e833cd826ddfd9))
+* **skills:** step-2 skill inventory rationalization ([3fa651d](https://github.com/event4u-app/agent-config/commit/3fa651d2496e4fc483cd7ed452bb39f41dd39365))
+
+### Bug Fixes
+
+* **adr-create:** restore Inspect keyword in step-1 heading ([46c40ad](https://github.com/event4u-app/agent-config/commit/46c40adf4741f1e13d8d275f9363f98047d4b733))
+* **audit_mcp_tools:** drop roadmap link from generated inventory ([d35459e](https://github.com/event4u-app/agent-config/commit/d35459e94d9be473bbb567f7c348be5bff4b5e9d))
+* **audit_mcp_tools:** emit stability frontmatter in generated inventory ([ba7af12](https://github.com/event4u-app/agent-config/commit/ba7af12cf26509f2ea0ddb867303f3b225fea866))
+* **no-cheap-questions:** trim to clear concentration cap ([3516283](https://github.com/event4u-app/agent-config/commit/351628301aa168c31130b62ee306858944ecf9f2))
+* **onboard:** move recommendation off inline (recommended) tag ([6a77a06](https://github.com/event4u-app/agent-config/commit/6a77a06c014d8820662906ca6ab0ee55ac847e05))
+* **refs:** suppress legitimate council-response audit links ([d764329](https://github.com/event4u-app/agent-config/commit/d764329d8718124d150deafcce52bdd206ada740))
+* **contracts:** drop roadmap-file links from stable artefacts ([96ea60f](https://github.com/event4u-app/agent-config/commit/96ea60f8f6e85c6ce04e8042d9d2535938f75d9f))
+* **contracts:** bring beta-review markers into the 90-day window ([4be4a47](https://github.com/event4u-app/agent-config/commit/4be4a47cc30532fa20d1ea7c3311d7eaa154d7e6))
+* **contracts:** add stability frontmatter to 6 new contracts ([8b27577](https://github.com/event4u-app/agent-config/commit/8b27577bc6b4b28c36ccfbea48b4e92e35372fbd))
+* **portability:** replace task cost:* with direct script invocations ([0225f60](https://github.com/event4u-app/agent-config/commit/0225f60d0157edf4b4f74fe8fc1266295d5b90f2))
+* **rules:** restore no-cheap-questions Iron Law block ([e95315f](https://github.com/event4u-app/agent-config/commit/e95315f96323d1ef32328b1c8a630b5aacafee84))
+
+### Documentation
+
+* **readme:** restore three-audience headings, tighten user-types blurb ([fdb03bf](https://github.com/event4u-app/agent-config/commit/fdb03bf314acb1a7a570400c1ba3cadb8098b943))
+* **readme:** restore browse-all-commands canonical line ([d91f6e0](https://github.com/event4u-app/agent-config/commit/d91f6e0d99230792f570b02fab6a1b30a744187c))
+* **readme:** extract profile detail + featured commands to /docs ([e8745f3](https://github.com/event4u-app/agent-config/commit/e8745f33f1da089aefd763cc659be4568177dd07))
+* **roadmap:** regenerate dashboard + cross-roadmap link refresh ([f6b7085](https://github.com/event4u-app/agent-config/commit/f6b7085d3419f1a8b57daf9b949bd55312c17b9b))
+* **roadmap:** step-5 schema rigor + test cleanup ([b043230](https://github.com/event4u-app/agent-config/commit/b043230291222f6d6287d73e0807ea772e227e98))
+
+### Chores
+
+* **changelog:** split era 2.15.x → pre-2.16.0 ([88b81ba](https://github.com/event4u-app/agent-config/commit/88b81bac54ae5f9558a1087c81d453c47d3039bb))
+* **mcp:** regenerate MCP tool inventory ([bce3169](https://github.com/event4u-app/agent-config/commit/bce3169b353c2d240df610e4bf01c91c96d23e0d))
+* **ownership:** regenerate ownership matrix after no-cheap-questions trim ([dbe58a9](https://github.com/event4u-app/agent-config/commit/dbe58a9dfafbca487f11b2501b1f1dabb1053a8d))
+* **template:** bump agent_config_version pin to 2.19.0 ([cfc4c59](https://github.com/event4u-app/agent-config/commit/cfc4c59e288862eccf4e7b9d215adf30e527f5a0))
+* **build:** wire step-2/4/11/15 tooling into Taskfile + gitignore ([0acc9e7](https://github.com/event4u-app/agent-config/commit/0acc9e77515e611eb685c58aeba91f3d5af9423f))
+
+Tests: 4535 (+42 since 2.19.0)
+
 ## [2.19.0](https://github.com/event4u-app/agent-config/compare/2.18.0...2.19.0) (2026-05-16)
 
 ### Features
