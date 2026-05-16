@@ -43,16 +43,16 @@ Calculate based on these estimates:
 
 ### 3a. Read session cost ledger (measured, not estimated)
 
-Run `task cost:track` (silent — `TRACK_QUIET=1`) and parse the last
-record from `agents/cost-tracking/sessions.jsonl`. If the file does not
-exist (no `task cost:track` ever run for this project), skip this step
-and note `cost ledger: not initialised` in the dashboard.
+Run `node scripts/cost/track.mjs` (silent — `TRACK_QUIET=1`) and parse
+the last record from `agents/cost-tracking/sessions.jsonl`. If the file
+does not exist (tracker never run for this project), skip this step and
+note `cost ledger: not initialised` in the dashboard.
 
 Extract from the latest record:
 
 - `total_usd` — dollars spent in the current session
 - `by_model[]` — per-tier (haiku / sonnet / opus) input / output / cache split
-- `budget.tier` — `under` / `50` / `75` / `90` / `100` (from `task cost:budget -- check`)
+- `budget.tier` — `under` / `50` / `75` / `90` / `100` (from `node scripts/cost/budget.mjs check`)
 
 Pricing source: [`bench/pricing.yaml`](../../bench/pricing.yaml). Reader
 implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
