@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-15
+keep-beta-until: 2026-08-14
 ---
 
 # ADR — Runtime user-types axis (review lens, parallel to personas)
