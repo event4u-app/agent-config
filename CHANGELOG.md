@@ -702,6 +702,20 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.18.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.20.1](https://github.com/event4u-app/agent-config/compare/2.20.0...2.20.1) (2026-05-16)
+
+### Bug Fixes
+
+* **lint:** treat zero active roadmaps as pass in lint-roadmap-complexity ([ff814e2](https://github.com/event4u-app/agent-config/commit/ff814e262a25b9269ae5d1b66495602b5d8f457b))
+* **template:** bump agent_config_version pin to 2.20.0 ([ab3acfc](https://github.com/event4u-app/agent-config/commit/ab3acfc3eebd39e5fb7df919bd5b7a455e2f58ea))
+
+### Chores
+
+* **changelog:** split era 2.16.x → pre-2.17.0 ([67b668e](https://github.com/event4u-app/agent-config/commit/67b668ee2298cc56478a808a716e965482bf199d))
+* **roadmaps:** close and archive all 8 open roadmaps (Total Dominance) ([c13359f](https://github.com/event4u-app/agent-config/commit/c13359f0b676f251a9b6c6b7ed11804fdeb84257))
+
+Tests: 4535 (+0 since 2.20.0)
+
 ## [2.20.0](https://github.com/event4u-app/agent-config/compare/2.19.0...2.20.0) (2026-05-16)
 
 ### Features
