@@ -546,8 +546,9 @@ governance, command suite, and safety rules apply.
 Deep version of the profile table above (audience · first commands ·
 first skills · preset default per profile):
 [`docs/profiles.md`](docs/profiles.md). Curated featured-commands
-subset: [`docs/featured-commands.md`](docs/featured-commands.md). Full
-catalog: [`docs/catalog.md`](docs/catalog.md) ·
+subset: [`docs/featured-commands.md`](docs/featured-commands.md).
+[Browse all 124 active commands](.agent-src/commands/) · full catalog:
+[`docs/catalog.md`](docs/catalog.md) ·
 [skills only](docs/skills-catalog.md) · [`llms.txt`](llms.txt).
 
 ---
