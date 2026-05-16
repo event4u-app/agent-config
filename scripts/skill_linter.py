@@ -1885,13 +1885,13 @@ def lint_usertype(path: Path, text: str) -> LintResult:
             suggestions=[".agent-src.uncompressed/user-types/_template/user-type.md"],
         )
 
+    # Required keys per docs/contracts/user-type-schema.md § 1.
     required = {
         "id": re.compile(r'^id:\s*"?([\w-]+)"?\s*$', re.MULTILINE),
         "kind": re.compile(r'^kind:\s*"?([\w-]+)"?\s*$', re.MULTILINE),
-        "label": re.compile(r'^label:\s*"?([^"\n]+?)"?\s*$', re.MULTILINE),
         "description": re.compile(r'^description:\s*"?([^"\n]+?)"?\s*$', re.MULTILINE),
         "version": re.compile(r'^version:\s*"?([\d.]+)"?\s*$', re.MULTILINE),
-        "source": re.compile(r'^source:\s*"?(\w+)"?\s*$', re.MULTILINE),
+        "source": re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE),
     }
     parsed: dict = {}
     for field, pattern in required.items():
