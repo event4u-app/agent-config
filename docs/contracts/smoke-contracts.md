@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-16
+keep-beta-until: 2026-08-14
 ---
 
 # Smoke Contracts — Phase 3 of step-11-ruflo-parity

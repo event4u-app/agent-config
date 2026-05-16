@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-11-16
+keep-beta-until: 2026-08-14
 ---
 
 # Profile System — Contract

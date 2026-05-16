@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-16
+keep-beta-until: 2026-08-14
 ---
 
 # Benchmark Report Schema — step-4 Phase 2
