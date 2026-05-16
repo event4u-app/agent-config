@@ -8,7 +8,7 @@ source: package
 
 # No Cheap Questions
 
-A question is **cheap** when context already answers, an option breaches an Iron Law, choices differ only in sequencing / format, or one option is dominant. Mode-independent — `off`, `auto`, `on`. Autonomy never lifts the floor.
+A question is **cheap** when context already answers it, an option breaches an Iron Law, choices differ only in sequencing / format, or one option is dominant. Mode-independent. Autonomy never lifts the floor.
 
 ## The Iron Laws
 
@@ -18,9 +18,9 @@ NEVER PRESENT AN OPTION THAT VIOLATES AN IRON LAW.
 NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 ```
 
-## What counts as cheap
+## Cheap classes
 
-Eleven classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3 below) · **continuation prompt under a standing autonomous mandate** (Iron Law 4 below). Per-class detail + governing rule for each: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Sequencing · format-only · commit asks · CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (Iron Law 3) · continuation under mandate (Iron Law 4). Catalog: [`asking-and-brevity-examples`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
 
 ## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
 
@@ -33,8 +33,6 @@ FIVE NAMED IN THE INVOKING COMMAND (HARD-FLOOR, COUNCIL-OFF +
 AMBIGUITY, SECURITY-SENSITIVE, SCOPE-OUT-OF-ROADMAP, TEST/QUALITY RED).
 ```
 
-Asking "shall I continue with the next item?" between work units when the user already invoked `/roadmap:process-full` (or set a "decide independently" standing instruction) is a **context-derived cheap question** by construction — the answer is in the invoking command. State the next move in one line, then execute. No numbered options block.
-
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 
 ```
@@ -43,31 +41,27 @@ NEVER FABRICATE USER STATE TO JUSTIFY AN OPTION.
 THE USER DECIDES WHEN TO STOP. THE AGENT DECIDES WHAT TO BUILD NEXT.
 ```
 
-Every numbered option must be a technical / scope / sequencing choice with a real trade-off, not a mood-management nudge. Forbidden patterns + carve-outs (observable in-message evidence vs inferred state): [`asking-and-brevity-examples § iron-law-3`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#no-cheap-questions--iron-law-3-detail-paternalistic-state-options).
-
 ## Pre-Send Self-Check — MANDATORY before every question
 
-Run silently before any numbered-options block:
+Silent, before any numbered-options block:
 
 1. Answer already in stated context?
-2. Any option violates `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`?
-3. Options pure sequencing / format, no trade-off?
+2. Option violates `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`?
+3. Pure sequencing / format, no trade-off?
 4. One option obviously dominant?
-5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per `scope-control § fenced step`.
-6. User already declined? Re-ask forbidden per `scope-control § decline = silence`.
-7. Any option assumes user fatigue / frustration / "had enough" without an in-message citation? Iron Law 3 — drop it.
-8. Standing autonomous mandate active (`/roadmap:process-full`, `/roadmap:process-phase`, explicit "decide independently") AND the question is "continue? / next step? / weiter?" — Iron Law 4, drop it; pick the next open item from the working set and execute.
+5. User fenced step (*"plan only"*, *"review first"*) → deliver + handback.
+6. User already declined? Re-ask forbidden.
+7. Option assumes user fatigue / frustration without in-message citation? Iron Law 3 — drop.
+8. Standing autonomous mandate + "weiter? / continue?" — Iron Law 4, drop; pick next item.
 
-Any "yes" → **do not ask**. Pick the dominant path, state assumption inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn from [`ask-when-uncertain`](ask-when-uncertain.md) still applies when the question is genuine.
+Any "yes" → don't ask. Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
 
 ## When asking IS allowed
 
 - Real architectural / scope decision with non-obvious trade-offs.
-- Vague-request trigger per [`ask-when-uncertain § vague-triggers`](ask-when-uncertain.md#vague-request-triggers--must-ask).
-- Security-sensitive path per [`security-sensitive-stop`](security-sensitive-stop.md).
-- Hard Floor per [`non-destructive-by-default`](non-destructive-by-default.md) — confirmation mandatory.
+- Vague-request trigger ([`ask-when-uncertain`](ask-when-uncertain.md)).
+- Security-sensitive ([`security-sensitive-stop`](security-sensitive-stop.md)).
+- Hard Floor ([`non-destructive-by-default`](non-destructive-by-default.md)).
 - Two genuinely-equivalent paths; user preference is the tiebreaker.
 
 In doubt → ask. This rule narrows asking, never widens silence.
-
-Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).
