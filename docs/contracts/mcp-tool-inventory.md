@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-14
 > [`scripts/mcp_server/consumer_tool_catalog.json`](../../scripts/mcp_server/consumer_tool_catalog.json).
 > Do **not** hand-edit; rerun `python3 scripts/audit_mcp_tools.py --write`.
 >
-> Step-11 Phase 5 Step 3 ([`step-11-ruflo-parity.md`](../../agents/roadmaps/step-11-ruflo-parity.md)).
+> Step-11 Phase 5 Step 3 (`step-11-ruflo-parity.md`).
 
 ## Summary
 
