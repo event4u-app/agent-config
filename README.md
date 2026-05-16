@@ -39,28 +39,31 @@ Beyond software: [`user-types/`](.agent-src.uncompressed/user-types/)
 
 ---
 
-## Use it · prove it · contribute
+## Use it in your project
 
-**Use it.** Run from a consumer repo — bootstrap via `npx`, the agent
-picks up your stack, and you ship work end-to-end. New install? Start
-with the [Quickstart](#quickstart). Already installed?
-[Supported Tools](#supported-tools) shows the wired AIs;
-[`docs/featured-commands.md`](docs/featured-commands.md) lists the
-end-to-end workflows (`/implement-ticket`, `/work`, `/commit`,
-`/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo-implement-ticket).
+Run from a consumer repo — bootstrap via `npx`, the agent picks up
+your stack, and you ship work end-to-end. New install? Start with the
+[Quickstart](#quickstart). Already installed? [Supported Tools](#supported-tools)
+shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
+lists the end-to-end workflows (`/implement-ticket`, `/work`,
+`/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo-implement-ticket).
 
-**Prove it.** Audit-disciplined by construction — every memory consult,
-decision key, and hook concern lands in `agents/state/` so you can
-replay it. [Core Principles](#core-principles) names the four
-invariants; [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
+## Prove it
+
+Audit-disciplined by construction — every memory consult, decision
+key, and hook concern lands in `agents/state/` so you can replay it.
+[Core Principles](#core-principles) names the four invariants;
+[What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
 draws the scope boundary. Beta contracts:
 [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) ·
 [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
-**Contribute.** Working on the package itself? [Development](#development)
-covers the `task ci` pipeline, [Requirements](#requirements) the
-toolchain, [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off)
-the opt-in measurement loop. Source-of-truth tree is
+## Contribute
+
+Working on the package itself? [Development](#development) covers the
+`task ci` pipeline, [Requirements](#requirements) the toolchain,
+[Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
+opt-in measurement loop. Source-of-truth tree is
 `.agent-src.uncompressed/`; never hand-edit `.augment/` or `.agent-src/`.
 
 ## Quickstart
@@ -524,14 +527,7 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ### …and beyond software (`user-types/`)
 
-The same orchestration core drives non-software trades. Worked-example
-user types ship as the actual prompt-pack the agent loads:
-[`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md)
-(landscaping) · [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) ·
-[`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md). Contributing your
-own? [5-minute scaffold](.agent-src.uncompressed/user-types/_template/) +
-[conventions](.agent-src.uncompressed/user-types/README.md). Same
-governance, command suite, and safety rules apply.
+The same orchestration core drives non-software trades. Worked-example user types ship as the actual prompt-pack the agent loads: [`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md) (landscaping) · [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) · [`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md). Contributing your own? [5-minute scaffold](.agent-src.uncompressed/user-types/_template/) + [conventions](.agent-src.uncompressed/user-types/README.md). Same governance, command suite, and safety rules apply.
 
 ---
 
