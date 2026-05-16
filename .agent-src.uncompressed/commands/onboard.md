@@ -258,8 +258,10 @@ Skip if `preset.id` is already set. Otherwise ask:
 > Risk appetite for autonomy, cost caps, and council usage:
 >
 > 1. fast      — minimal floors, higher daily caps, council auto-consult on
-> 2. balanced  — default — moderate caps, council on-demand    (recommended)
+> 2. balanced  — default — moderate caps, council on-demand
 > 3. strict    — tight caps, council disabled, high-confidence required
+>
+> Recommendation: 2 (balanced).
 >
 > See docs/contracts/config-presets.md for the per-knob comparison.
 ```
