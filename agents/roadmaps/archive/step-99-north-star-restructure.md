@@ -8,12 +8,23 @@ complexity: lightweight
 
 **Measured-vs-claimed disclaimer:** This is a **meta-restructure roadmap** — it owns no measured outcome of its own. Every parity claim ([`step-10`](step-10-caveman-parity.md), [`step-11`](step-11-ruflo-parity.md)) and rigor claim ([`step-5-schema-rigor.md`](step-5-schema-rigor.md)) belongs to the child roadmap that carries the disclaimer. G0–G5 gate verdicts here stay aspirational until each child roadmap closes its own acceptance gates with measured evidence.
 
+## Closure decision (2026-05-16, maintainer override)
+
+This meta-roadmap is **closed via partial-completion + sunset of the remaining G3 / G5 gates**:
+
+- **Renames + draft Wave shipped.** Phases 1–3 (renames, new draft roadmaps, parity-table outlines) all landed in the original Restructure Wave PRs through May 2026. step-1, step-3, step-6, step-7, step-8, step-9, step-11, step-12 all reached closure or sunset on their own dashboards.
+- **G3 (schema rigor) sunset** via [`step-5`](step-5-schema-rigor.md) closure — the full Harmonist parity suite is dropped on contributor-base-not-materialised grounds.
+- **G5 (parity verdict) sunset** via [`step-10`](step-10-caveman-parity.md) closure — the parity table chase against caveman's 65 % average is dropped; the published `caveman-speak` rule + `compress` mechanism is the actual delivered surface.
+- **v3.0.0 tag deferred.** Tag is the maintainer's call, not autonomous. The Restructure Wave's breaking-change surface (rename of agents/contexts/ to agents/contexts/authority/, kernel-rule extraction, council/audit cross-cutting moves) is already shipped on `main`; a v3.0.0 cut belongs to a release decision, not this closure.
+
+All remaining `[ ]` checkboxes flip `[-]`. The G5 acceptance row stays explicitly unsatisfied. Parent roadmap closure runs (step-12, step-13 sunset) cascade through this meta-tracker.
+
 ## Prerequisites
 
-- [ ] Read [`../audit-2026-05-14-north-star/NEXT-ACTIONS.md`](../audit-2026-05-14-north-star/NEXT-ACTIONS.md) — authoritative spec for renames + new drafts
-- [ ] Read [`../audit-2026-05-14-north-star/council-synthesis.md`](../audit-2026-05-14-north-star/council-synthesis.md) §§ 6, 7, 9 for the reasoning behind the new step ordering and the compression kill-criterion
-- [ ] Read [`../audit-2026-05-14-north-star/external-findings.md`](../audit-2026-05-14-north-star/external-findings.md) §§ 1–3 for the full feature inventory of caveman, ruflo, and harmonist — every row is in scope for Phase 6
-- [ ] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
+- [-] Read [`../audit-2026-05-14-north-star/NEXT-ACTIONS.md`](../audit-2026-05-14-north-star/NEXT-ACTIONS.md) — authoritative spec for renames + new drafts
+- [-] Read [`../audit-2026-05-14-north-star/council-synthesis.md`](../audit-2026-05-14-north-star/council-synthesis.md) §§ 6, 7, 9 for the reasoning behind the new step ordering and the compression kill-criterion
+- [-] Read [`../audit-2026-05-14-north-star/external-findings.md`](../audit-2026-05-14-north-star/external-findings.md) §§ 1–3 for the full feature inventory of caveman, ruflo, and harmonist — every row is in scope for Phase 6
+- [-] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
 
 ## Context
 
@@ -91,21 +102,21 @@ This phase exists only to keep the parked decision visible. **No action items ex
 
 Produced after step-10 + step-11 + step-5 (full schema) ship their respective acceptance gates. **Output is verifiable, not narrative.** Each parity doc is a checkbox table cited row-by-row against `external-findings.md`.
 
-- [ ] **Step 1 — `docs/parity/caveman.md`:** One row per [`external-findings.md` § 1](../audit-2026-05-14-north-star/external-findings.md) line. Each row: `[x] covered by <file:line>` · `[~] superseded by <approach>` · or `[!] gap` (+ follow-up issue number). Zero `[!]` rows required.
-- [ ] **Step 2 — `docs/parity/ruflo.md`:** Same shape, against [`external-findings.md` § 2](../audit-2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
-- [ ] **Step 3 — `docs/parity/harmonist.md`:** Same shape, against [`external-findings.md` § 3](../audit-2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
-- [ ] **Step 4 — `docs/parity/README.md`:** Index over the three docs + composite scorecard refresh (replaces [`external-findings.md` § 5](../audit-2026-05-14-north-star/external-findings.md)). Every "–" cell from the original scorecard must now be `+` or `=` with a cited mechanism.
-- [ ] **Step 5 — `task bench` redundancy verdict:** Benchmark run produces tokens-saved / cost / selection-accuracy / quality numbers that match or beat caveman's published table (avg 65 %, 22–87 % range) on our 25-prompt corpus. Numbers checked into `docs/parity/bench.json`.
+- [-] **Step 1 — `docs/parity/caveman.md`:** One row per [`external-findings.md` § 1](../audit-2026-05-14-north-star/external-findings.md) line. Each row: `[x] covered by <file:line>` · `[~] superseded by <approach>` · or `[!] gap` (+ follow-up issue number). Zero `[!]` rows required.
+- [-] **Step 2 — `docs/parity/ruflo.md`:** Same shape, against [`external-findings.md` § 2](../audit-2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
+- [-] **Step 3 — `docs/parity/harmonist.md`:** Same shape, against [`external-findings.md` § 3](../audit-2026-05-14-north-star/external-findings.md). Zero `[!]` rows required.
+- [-] **Step 4 — `docs/parity/README.md`:** Index over the three docs + composite scorecard refresh (replaces [`external-findings.md` § 5](../audit-2026-05-14-north-star/external-findings.md)). Every "–" cell from the original scorecard must now be `+` or `=` with a cited mechanism.
+- [-] **Step 5 — `task bench` redundancy verdict:** Benchmark run produces tokens-saved / cost / selection-accuracy / quality numbers that match or beat caveman's published table (avg 65 %, 22–87 % range) on our 25-prompt corpus. Numbers checked into `docs/parity/bench.json`.
 
 ## Phase 6: Closeout
 
 After Phases 1–5 all close. This roadmap and its source spec both retire.
 
-- [ ] **Step 1 — Confirm all new roadmaps + renames + parity docs are committed and on the default branch.**
-- [ ] **Step 2 — Archive `step-99-north-star-restructure.md`:** `git mv` into `agents/roadmaps/archive/` with a one-line completion note appended (date + commit chain + tag).
-- [ ] **Step 3 — Delete `agents/audit-2026-05-14-north-star/NEXT-ACTIONS.md`:** Pending-surface is no longer needed. The rest of the audit bundle (`external-findings.md`, `internal-audit.md`, `council-*.md`, `north-star-plan.md`) stays as historical record.
-- [ ] **Step 4 — Regenerate `agents/roadmaps-progress.md`:** Dashboard should now show the post-restructure active set (step-1 → step-11 with step-2/4/5/10/11 newly created; step-99 archived).
-- [ ] **Step 5 — Tag v3.0.0 "Senior-Dev Bar reached":** Only after G0–G5 all green. Tag commit references the parity index and the bench JSON.
+- [-] **Step 1 — Confirm all new roadmaps + renames + parity docs are committed and on the default branch.**
+- [-] **Step 2 — Archive `step-99-north-star-restructure.md`:** `git mv` into `agents/roadmaps/archive/` with a one-line completion note appended (date + commit chain + tag).
+- [-] **Step 3 — Delete `agents/audit-2026-05-14-north-star/NEXT-ACTIONS.md`:** Pending-surface is no longer needed. The rest of the audit bundle (`external-findings.md`, `internal-audit.md`, `council-*.md`, `north-star-plan.md`) stays as historical record.
+- [-] **Step 4 — Regenerate `agents/roadmaps-progress.md`:** Dashboard should now show the post-restructure active set (step-1 → step-11 with step-2/4/5/10/11 newly created; step-99 archived).
+- [-] **Step 5 — Tag v3.0.0 "Senior-Dev Bar reached":** Only after G0–G5 all green. Tag commit references the parity index and the bench JSON.
 
 ## Acceptance
 
@@ -124,4 +135,4 @@ All six green = v3.0.0 tagged.
 
 ## Done
 
-- [ ] All six phases complete; G0–G5 green; v3.0.0 tagged; this file lives in `archive/`.
+- [-] All six phases complete; G0–G5 green; v3.0.0 tagged; this file lives in `archive/`.

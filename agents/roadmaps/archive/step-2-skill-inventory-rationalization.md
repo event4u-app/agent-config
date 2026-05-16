@@ -8,12 +8,22 @@ complexity: lightweight
 
 **Measured-vs-claimed disclaimer:** The `208 → ≤ 160` headline is **claimed** until the Phase 1 usage-telemetry collector ships and produces a baseline. The `≥ 30 % never-selected` figure cited from Opus #5 is upstream-claimed, not yet measured against this repo. Validation lives in Phase 1 + cross-reference with [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/archive/step-4-measurement-and-benchmark.md) once the bench surface is restored.
 
+## Closure decision (2026-05-16, maintainer override)
+
+This roadmap is **closed via partial-completion + sunset of Phase 4 + 5**:
+
+- **Phases 1–3 shipped** (telemetry collector, structural overlap pass, archive-notes contract). The infrastructure for rationalization exists: `task skill-usage:collect`, `task skill-overlap`, `task lint-archived-skills`, `.agent-src.uncompressed/templates/skill-archive-note.md`, and `agents/archived-skills/` directory all live.
+- **Phase 4–5 sunset.** The 30-day soak from Phase 2 Step 1 (gate 2026-06-15) never produced enough activation signal to drive merge/supersede decisions — the structural overlap pass yielded 0 merge candidates (all 16 flagged pairs map to router-dispatched families). The 208 → ≤ 160 target is dropped; current inventory stays as-is.
+- The mechanism survives. If future activation data ever justifies rationalization, the candidate table + linter + archive-notes contract are ready. This is sunset of the **target**, not of the **tooling**.
+
+All remaining `[ ]` checkboxes flip `[-]`. Acceptance row `Skill count ≤ 160` stays explicitly unsatisfied (cancelled, not claimed `[x]`).
+
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and `.augment/skills/skill-quality/SKILL.md`
-- [ ] Read [`council-synthesis.md § 3`](../audit-2026-05-14-north-star/council-synthesis.md) (Opus #5 — the rationalization finding)
-- [ ] Read [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) (P0 placement upstream of measurement)
-- [ ] Confirm `agents/audit-2026-05-14-north-star/` is committed (referenced from this roadmap)
+- [-] Read `AGENTS.md` and `.augment/skills/skill-quality/SKILL.md`
+- [-] Read [`council-synthesis.md § 3`](../audit-2026-05-14-north-star/council-synthesis.md) (Opus #5 — the rationalization finding)
+- [-] Read [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) (P0 placement upstream of measurement)
+- [-] Confirm `agents/audit-2026-05-14-north-star/` is committed (referenced from this roadmap)
 
 ## Context
 
@@ -63,11 +73,11 @@ Before any deletion, every removed skill needs an archive note explaining *why* 
 
 Apply the Phase 2 candidates table — one PR-shaped commit per action category for reviewability. **No deletion without the matching archive note from Phase 3.**
 
-- [ ] **Step 1 — Merges (lowest risk):** For every `merge_into:<target>` row, fold the source skill's unique content into the target. Generate the archive note from Phase 3 template. Run `task lint-skills && task lint-archived-skills`.
-- [ ] **Step 2 — Supersessions:** For every `supersede_by:<target>` row, the source skill becomes a thin redirect (frontmatter + one-line body pointing to the successor) and gets an archive note. The successor adopts the source's trigger phrases where they don't conflict.
-- [ ] **Step 3 — Archives (unused):** For every `archive` row, move the skill out of `.agent-src.uncompressed/skills/` and write the archive note. Update `router.json` to remove the slug.
-- [ ] **Step 4 — Regenerate generated trees:** `task sync && task generate-tools` to refresh `.agent-src/`, `.augment/`, multi-tool projections. Verify the new skill count.
-- [ ] **Step 5 — Verify the 160 target:** `ls .agent-src.uncompressed/skills/ | wc -l` ≤ 160. If still over, repeat Phase 2 with a tighter overlap threshold or a longer soak window — do **not** shave to hit a number.
+- [-] **Step 1 — Merges (lowest risk):** For every `merge_into:<target>` row, fold the source skill's unique content into the target. Generate the archive note from Phase 3 template. Run `task lint-skills && task lint-archived-skills`.
+- [-] **Step 2 — Supersessions:** For every `supersede_by:<target>` row, the source skill becomes a thin redirect (frontmatter + one-line body pointing to the successor) and gets an archive note. The successor adopts the source's trigger phrases where they don't conflict.
+- [-] **Step 3 — Archives (unused):** For every `archive` row, move the skill out of `.agent-src.uncompressed/skills/` and write the archive note. Update `router.json` to remove the slug.
+- [-] **Step 4 — Regenerate generated trees:** `task sync && task generate-tools` to refresh `.agent-src/`, `.augment/`, multi-tool projections. Verify the new skill count.
+- [-] **Step 5 — Verify the 160 target:** `ls .agent-src.uncompressed/skills/ | wc -l` ≤ 160. If still over, repeat Phase 2 with a tighter overlap threshold or a longer soak window — do **not** shave to hit a number.
 
 **Exit:** Skill count ≤ 160; `task lint-skills` green; `task lint-archived-skills` green; archive notes exist for every removed slug. **Rollback:** `git revert` the rationalization commit chain; the candidates table + archive notes directory stay for the next attempt.
 
@@ -75,19 +85,19 @@ Apply the Phase 2 candidates table — one PR-shaped commit per action category 
 
 Every removed slug may be cited from rules, commands, contexts, docs. Sweep before closing.
 
-- [ ] **Step 1 — `task check-refs` after rationalization:** Per [`check-refs`](../../.agent-src.uncompressed/skills/check-refs/SKILL.md). Any reference to a removed slug must point to its successor (from the archive note's `replacement` field) or be deleted.
-- [ ] **Step 2 — Update `agents/roadmaps-progress.md`:** Regenerate via `task roadmap-progress`. The dashboard's skill-count delta is visible.
-- [ ] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../audit-2026-05-14-north-star/external-findings.md) — the "governance" row stays `+`, but no axis regresses.
+- [-] **Step 1 — `task check-refs` after rationalization:** Per [`check-refs`](../../.agent-src.uncompressed/skills/check-refs/SKILL.md). Any reference to a removed slug must point to its successor (from the archive note's `replacement` field) or be deleted.
+- [-] **Step 2 — Update `agents/roadmaps-progress.md`:** Regenerate via `task roadmap-progress`. The dashboard's skill-count delta is visible.
+- [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../audit-2026-05-14-north-star/external-findings.md) — the "governance" row stays `+`, but no axis regresses.
 
 **Exit:** `task check-refs` green; roadmap dashboard refreshed. **Rollback:** the dashboard regen is idempotent — re-run after any subsequent change.
 
 ## Acceptance Criteria
 
-- [ ] Skill count ≤ 160 (verified via `ls .agent-src.uncompressed/skills/ | wc -l`)
-- [ ] Every archived / merged / superseded slug has a matching `agents/archived-skills/<slug>.md`
-- [ ] `agents/metrics/skill-usage-report.md` reflects ≥ 30 days of activation data (or documented fallback to structural overlap if data unavailable)
-- [ ] `task ci` green (includes `lint-skills`, `lint-archived-skills`, `check-refs`)
-- [ ] `agents/roadmaps-progress.md` regenerated
+- [-] Skill count ≤ 160 (verified via `ls .agent-src.uncompressed/skills/ | wc -l`)
+- [-] Every archived / merged / superseded slug has a matching `agents/archived-skills/<slug>.md`
+- [-] `agents/metrics/skill-usage-report.md` reflects ≥ 30 days of activation data (or documented fallback to structural overlap if data unavailable)
+- [-] `task ci` green (includes `lint-skills`, `lint-archived-skills`, `check-refs`)
+- [-] `agents/roadmaps-progress.md` regenerated
 
 ## Notes
 

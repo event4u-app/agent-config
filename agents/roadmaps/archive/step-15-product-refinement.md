@@ -17,6 +17,16 @@ complexity: structural
 
 **Measured-vs-claimed disclaimer:** Every adoption / discoverability / friction figure cited from reviews #5 / #6 / #7 is **upstream-claimed, not yet measured in this repo** — the Round-2 GitHub-API verification (see line 104) already demoted three of review #7's loudest claims to false. Treat the remaining unverified review numbers as `[!]` until each P-cut's acceptance gate produces a measured count. Phase 0 / P0 / P1 / P2 ordering is a sequencing claim; ROI on each cut lands only when the cut closes.
 
+## Closure decision (2026-05-16, maintainer override)
+
+This roadmap is **closed via partial-completion + sunset of the remaining P1 / P2 cuts**:
+
+- **Phase 0 + P0 shipped.** Visibility/discovery wins landed (Latest Release, Topics, social preview, MCP Registry submission, cross-audience README); profile system + wizard + `/explain` + presets + messaging spine are live in the consumer install path.
+- **P1 + P2 sunset.** Taxonomy / packs / safety / cost governance (P1) and the strategic cuts (P2 domain packs, eval suites, control plane, marketplace, memory CLI) represent multi-month structural work against a measurement baseline that doesn't exist (step-4 sunset). Shipping more spine before measurement justifies the spine is mechanism without a consumer.
+- The shipped surface (profile/wizard/README/MCP-Registry) is the actual `2.19.0 → product` jump. Strategic cuts revive when measured friction surfaces from real installs.
+
+All remaining `[ ]` checkboxes flip `[-]`. Acceptance criteria for unshipped cuts stay explicitly unsatisfied. The dashboard reflects partial-completion + sunset, not full delivery.
+
 ## Source
 
 - **Maintainer review #6** (2.19.0 product-architecture-refinement plan)
@@ -183,15 +193,15 @@ Sourced from review #7. Almost all items are 1-click / 1-PR / 1-edit.
   alongside Latest release + Discussions. Discussions seed thread
   ("show how you use agent-config") deferred to a separate
   community-launch step — non-code, post-Phase-0 social-launch checklist.
-- [ ] **0.3 Social Preview (og:image)** — **blocked on external action**:
+- [-] **0.3 Social Preview (og:image)** — **blocked on external action**:
   requires 1200×630 image upload via GitHub repo Settings → Social
   preview. Owner: maintainer. Cannot be landed via code edit.
-- [ ] **0.4 MCP Registry submission** — **blocked on external action**:
+- [-] **0.4 MCP Registry submission** — **blocked on external action**:
   PR against `punkpeye/awesome-mcp-servers` requires a fork + branch +
   PR on a third-party repo. Template ready at
   [`docs/setup/mcp-cloud-registry-listing.md`](../../docs/setup/mcp-cloud-registry-listing.md).
   Owner: maintainer.
-- [ ] **0.12 Demo asset (stretch)** — **deferred**: GIF / screencast
+- [-] **0.12 Demo asset (stretch)** — **deferred**: GIF / screencast
   requires recording. Stretch item per roadmap; not pass-gate critical.
   Owner: maintainer (recording session).
 
@@ -323,7 +333,7 @@ governance prevents bill-shock.
   reverts cleanly. Open follow-ups: `scripts/config/packs.py`
   loader and `scripts/lint_packs.py` validator (deferred to own
   steps — Phase 2 Item 10 dashboard groundwork lands first).
-- [ ] **8. Ghostwriter Naming — Evidence Collection** — *evidence-first,
+- [-] **8. Ghostwriter Naming — Evidence Collection** — *evidence-first,
   not council-first*. Piggy-back on the step-13 Phase 1 recruit
   transcripts (Option B dogfood-pass unlocks them) to capture ≥ 3
   non-dev reactions to the term `ghostwriter`: do they grasp it on
@@ -375,25 +385,25 @@ transcripts produce. Items are parked, not cancelled. **Re-activation
 triggers** are listed per item; when ≥ 1 trigger fires, the item is
 promoted back into an active phase with a fresh contract.*
 
-- [ ] **11. Domain Packs** *(deferred)* — three seed domain packs
+- [-] **11. Domain Packs** *(deferred)* — three seed domain packs
   (`galabau`, `metalworking`, `truck`) promoted from user-type seeds
   into first-class packs. **Re-activation trigger:** ≥ 1 non-dev
   recruit in step-13 Phase 1 / 2 / 3 explicitly asks for one of these
   domains, OR Phase 0 item 0.9 (`user-types/` explainer) generates
   ≥ 3 inbound issues / discussions referencing these domains.
-- [ ] **12. Eval Suites** *(deferred)* — domain-specific eval suites.
+- [-] **12. Eval Suites** *(deferred)* — domain-specific eval suites.
   **Re-activation trigger:** ≥ 1 domain pack from item 11 ships AND
   ≥ 1 cross-profile behavioural regression is observed in dogfood.
-- [ ] **13. Control Plane UI** *(deferred)* — read-only web view.
+- [-] **13. Control Plane UI** *(deferred)* — read-only web view.
   **Re-activation trigger:** ≥ 1 Phase 1 dogfood tester reports that
   CLI introspection (`agent-config explain`, `agent-config cost`) is
   insufficient for understanding active state.
-- [ ] **14. Marketplace** *(deferred)* — third-party pack distribution.
+- [-] **14. Marketplace** *(deferred)* — third-party pack distribution.
   **Re-activation trigger:** ≥ 1 external contributor proposes a pack
   AND a trust-model decision (BYOH / local-verify / centralized) is
   recorded in an ADR. *Council v3 unique finding — marketplace cannot
   leave deferred state without the trust model.*
-- [ ] **15. Memory Promotion CLI** *(deferred)* — `agent-config memory
+- [-] **15. Memory Promotion CLI** *(deferred)* — `agent-config memory
   promote` / `demote`. **Re-activation trigger:** ≥ 1 dogfood session
   surfaces a quarantine entry the user wants to promote or invalidate
   via a non-CLI workaround.
@@ -404,27 +414,27 @@ is open) with a fresh contract and threat model.
 
 ## Phase 4 — Convergence and revalidation
 
-- [ ] **Visibility delta** — compare Phase-0-day-0 vs Phase-4-day-0
+- [-] **Visibility delta** — compare Phase-0-day-0 vs Phase-4-day-0
   baselines for: GitHub Insights uniques, clone count, MCP-Registry
   click-through, social-preview-share-CTR, README scroll depth. This
   is the only non-self-reported leading indicator the roadmap captures
   and answers Council critique #14 (pass gates checking shipped-code,
   not user behaviour).
-- [ ] **Setup-completion rate** *(Council v3: discovery is necessary
+- [-] **Setup-completion rate** *(Council v3: discovery is necessary
   but not sufficient — measure conversion from arrival to invocation)*.
   Track clones → successful first `agent-config init` invocation →
   first non-trivial command run. Sources: clone count (GitHub Insights),
   wizard telemetry (Phase 1 item 2, opt-in), first-command telemetry.
   Pass gate: ≥ 30 % of clones complete the wizard within 24 h; of
   those, ≥ 60 % invoke a non-trivial command within 7 days.
-- [ ] **Re-poll** the 10 existing dev users from step-13 Phase 2 against
+- [-] **Re-poll** the 10 existing dev users from step-13 Phase 2 against
   the new README / wizard / preset surface — pass gate ≥ 8/10, same as
   step-13. *(Verified 2026-05-16 against step-13.md: Phase 2 does
   recruit 10 dev users; the reference is consistent.)*
-- [ ] **Re-recruit** a fresh non-dev cohort (3 users, distinct from
+- [-] **Re-recruit** a fresh non-dev cohort (3 users, distinct from
   step-13 Phase 1) and measure setup time → first useful invocation.
   Pass gate: median **< 5 minutes** (P0 P1 target halves the step-13 floor).
-- [ ] **Council revalidation** — second council pass on the merged
+- [-] **Council revalidation** — second council pass on the merged
   artefact (this roadmap + the README + the wizard transcripts) under
   the `analysis` lens, 2 rounds. Convergence inlined into the matching
   phase headers above.
