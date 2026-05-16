@@ -1,0 +1,126 @@
+name: Bench Drift
+
+# Step-4 Phase 3 Step 3 — warn-only drift signal on PR.
+# Runs `task bench` against tests/eval/corpus-dev.yaml, then
+# `task bench:drift` against the rolling baseline. Posts a PR comment
+# with the verdict. Never fails the job — drift is informational until
+# `task bench:baseline-ready` returns 0 (60 days + ≥30 reports). At that
+# point this workflow flips to a required check via a separate PR.
+
+on:
+  pull_request:
+    paths:
+      - "scripts/bench_run.py"
+      - "scripts/bench_drift_check.py"
+      - "scripts/bench_baseline_ready.py"
+      - "scripts/bench_runner.py"
+      - "scripts/_lib/bench_*.py"
+      - "tests/eval/**"
+      - "bench/**"
+      - ".github/workflows/bench-drift.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bench-drift:
+    name: Bench drift (warn-only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: arduino/setup-task@v2
+
+      - name: Install bench deps
+        run: pip install pyyaml
+
+      - name: Run task bench (dev corpus)
+        id: bench
+        continue-on-error: true
+        run: |
+          task bench -- --corpus dev --quiet | tee /tmp/bench.out
+          echo "headline=$(grep -E '^bench ' /tmp/bench.out | head -1)" >> "$GITHUB_OUTPUT"
+
+      - name: Run drift detector (JSON)
+        id: drift
+        continue-on-error: true
+        run: |
+          python3 scripts/bench_drift_check.py --corpus dev --json \
+            | tee /tmp/drift.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Run baseline-ready probe
+        id: baseline
+        continue-on-error: true
+        run: |
+          python3 scripts/bench_baseline_ready.py --json \
+            | tee /tmp/baseline.json
+          echo "exit_code=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Render PR comment body
+        id: render
+        run: |
+          python3 - <<'PY' > /tmp/comment.md
+          import json, pathlib
+          drift = json.loads(pathlib.Path("/tmp/drift.json").read_text()
+                             or '{"status":"unknown"}')
+          base  = json.loads(pathlib.Path("/tmp/baseline.json").read_text()
+                             or '{"status":"unknown"}')
+          headline = pathlib.Path("/tmp/bench.out").read_text().strip().splitlines()
+          headline = headline[0] if headline else "(no bench output)"
+
+          status_emoji = {"ok": "✅", "drift": "⚠️", "warmup": "⏳",
+                          "ready": "✅", "error": "❌"}
+          de = status_emoji.get(drift.get("status"), "❔")
+          be = status_emoji.get(base.get("status"),  "❔")
+
+          lines = [
+              "## Bench drift — warn-only",
+              "",
+              f"**Headline:** `{headline}`",
+              "",
+              f"**Drift:** {de} `{drift.get('status', 'unknown')}` · "
+              f"latest=`{drift.get('latest_report', '—')}` · "
+              f"window={drift.get('baseline_window', '—')} · "
+              f"findings={len(drift.get('findings', []))}",
+          ]
+          for f in drift.get("findings", []):
+              lines.append(
+                  f"- `{f['axis']}`: latest={f['latest']:.4f} "
+                  f"baseline_mean={f['baseline_mean']:.4f}"
+              )
+          lines += [
+              "",
+              f"**Baseline:** {be} `{base.get('status', 'unknown')}` · "
+              f"days={base.get('days_elapsed', '?')}/"
+              f"{base.get('min_days', '?')} · "
+              f"reports={base.get('report_count', '?')}/"
+              f"{base.get('min_reports', '?')}",
+              "",
+              "_Informational only — drift does not block this PR until "
+              "`task bench:baseline-ready` returns 0 "
+              "(step-4 Phase 3 Step 4)._",
+          ]
+          pathlib.Path("/tmp/comment.md").write_text("\n".join(lines) + "\n")
+          PY
+
+      - name: Post / update PR comment
+        if: github.event_name == 'pull_request'
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: bench-drift
+          path: /tmp/comment.md
+
+      - name: Job summary
+        if: always()
+        run: cat /tmp/comment.md >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,111 @@
+# Developer evaluation corpus — step-4 Phase 1 Step 4 deliverable
+#
+# Schema: docs/contracts/benchmark-corpus-spec.md
+# Composition: 25 prompts total — 10 canonical, 8 ambiguous, 5 destructive,
+#              2 long-context. Phase 1 Step 4 ships the first 10 canonical
+#              prompts; the remaining 15 expand in subsequent phases.
+#
+# Runner: `task bench -- --corpus dev` invokes scripts/bench_runner.py.
+# Linter: `task lint-bench` invokes scripts/lint_bench_corpus.py.
+#
+# Status: 10 / 25 prompts (canonical bucket complete).
+
+version: 1
+corpus_id: dev
+selection_accuracy_target: 0.60
+
+prompts:
+  # ---------------- routing-canonical (10) ----------------
+  - id: canonical-01
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Add a `formatCurrency` helper to the PHP utils class — accepts int cents, returns string with EUR symbol and two decimals."
+    expected_skills: [php-coder]
+    rubric:
+      must_include: ["int", "string"]
+
+  - id: canonical-02
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Build a Laravel controller action that exposes the current user's invoices as paginated JSON, gated by a policy."
+    expected_skills: [laravel]
+    rubric:
+      must_include: ["policy", "paginate"]
+
+  - id: canonical-03
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Write Pest tests for the InvoiceRefund service — happy path, partial refund, and refund-after-window edge case."
+    expected_skills: [pest-testing]
+    rubric:
+      must_include: ["it(", "expect"]
+
+  - id: canonical-04
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "PHPStan reports `Parameter $user of method UserService::ban() expects User, mixed given` on line 87 — fix the type narrowing."
+    expected_skills: [quality-tools]
+    rubric:
+      must_include: ["type", "narrow"]
+
+  - id: canonical-05
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "The OrderTest::test_partial_refund fails intermittently — same input, different outcome across CI runs. Find the source of the flake."
+    expected_skills: [systematic-debugging]
+    rubric:
+      must_include: ["reproduce", "isolate"]
+
+  - id: canonical-06
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Review this 200-line diff that adds rate-limiting middleware to the public API and surface the top three concerns."
+    expected_skills: [code-review]
+    rubric:
+      must_include: ["concern", "review"]
+
+  - id: canonical-07
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Capture the decision to switch from MySQL to PostgreSQL as an ADR — status, context, decision, consequences."
+    expected_skills: [adr-create]
+    rubric:
+      must_include: ["ADR", "consequences"]
+
+  - id: canonical-08
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Provision an S3 bucket with versioning and a 90-day lifecycle expiry via Terraform, output the bucket ARN."
+    expected_skills: [terraform]
+    rubric:
+      must_include: ["resource", "lifecycle"]
+
+  - id: canonical-09
+    category: canonical
+    user_type_candidates: [developer]
+    language: de
+    prompt: "Schreib eine Conventional-Commit-Nachricht für den Fix, der den Off-by-one in der Pagination behebt — Scope `api`."
+    expected_skills: [conventional-commits-writing]
+    rubric:
+      must_include: ["fix", "api"]
+
+  - id: canonical-10
+    category: canonical
+    user_type_candidates: [developer]
+    language: en
+    prompt: "Sentry shows a recurring `TypeError: cannot read property 'id' of null` in the checkout flow — analyse the stack trace and propose a root cause."
+    expected_skills: [bug-analyzer]
+    rubric:
+      must_include: ["root cause", "stack"]
+
+# ---------------- ambiguous (8) — TODO Phase 1 follow-up ----------------
+# ---------------- destructive / security (5) — TODO Phase 1 follow-up ----------------
+# ---------------- long-context (2) — TODO Phase 1 follow-up ----------------

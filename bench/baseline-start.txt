@@ -1,0 +1,8 @@
+# Baseline start marker — step-4 Phase 3 Step 1.
+#
+# First ISO-8601 UTC date a complete `task bench` run was recorded.
+# Read by `scripts/bench_baseline_ready.py` to enforce the 60-day clock.
+# Council Iron Law: no enforcement decision before this date + 60 days.
+#
+# Format: ISO-8601 UTC date on the first non-comment line. Comments allowed.
+2026-05-16

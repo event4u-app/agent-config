@@ -1,0 +1,291 @@
+{
+  "schema": "projection-fidelity-v1",
+  "generated_at": "2026-05-16T06:13:07Z",
+  "corpus_id": "dev",
+  "top_k": 3,
+  "threshold": 0.85,
+  "reference_tool": "augment",
+  "reference_accuracy": 0.5,
+  "tools": {
+    "augment": {
+      "prompts_total": 10,
+      "prompts_hit": 5,
+      "selection_accuracy": 0.5,
+      "skill_count": 195,
+      "per_prompt": [
+        {
+          "id": "canonical-01",
+          "expected": [
+            "php-coder"
+          ],
+          "ranked": [
+            "php-service",
+            "laravel",
+            "symfony-workflow"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-02",
+          "expected": [
+            "laravel"
+          ],
+          "ranked": [
+            "laravel-mail",
+            "composer-packages",
+            "laravel-pennant"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-03",
+          "expected": [
+            "pest-testing"
+          ],
+          "ranked": [
+            "pest-testing",
+            "testing-anti-patterns",
+            "traefik"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-04",
+          "expected": [
+            "quality-tools"
+          ],
+          "ranked": [
+            "quality-tools",
+            "test-driven-development",
+            "data-flow-mapper"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-05",
+          "expected": [
+            "systematic-debugging"
+          ],
+          "ranked": [
+            "test-performance",
+            "security-audit",
+            "security"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-06",
+          "expected": [
+            "code-review"
+          ],
+          "ranked": [
+            "voice-and-tone-design",
+            "judge-code-quality",
+            "judge-bug-hunter"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-07",
+          "expected": [
+            "adr-create"
+          ],
+          "ranked": [
+            "adr-create",
+            "decision-record",
+            "doc-coauthoring"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-08",
+          "expected": [
+            "terraform"
+          ],
+          "ranked": [
+            "terraform",
+            "skill-management",
+            "copilot-config"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-09",
+          "expected": [
+            "conventional-commits-writing"
+          ],
+          "ranked": [
+            "skill-reviewer",
+            "validate-feature-fit",
+            "one-on-one-cadence"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-10",
+          "expected": [
+            "bug-analyzer"
+          ],
+          "ranked": [
+            "bug-analyzer",
+            "voc-extract",
+            "react-shadcn-ui"
+          ],
+          "hit": true
+        }
+      ],
+      "status": "ok",
+      "path": ".augment/skills",
+      "fidelity": 1.0,
+      "passed_threshold": true
+    },
+    "claude": {
+      "prompts_total": 10,
+      "prompts_hit": 5,
+      "selection_accuracy": 0.5,
+      "skill_count": 314,
+      "per_prompt": [
+        {
+          "id": "canonical-01",
+          "expected": [
+            "php-coder"
+          ],
+          "ranked": [
+            "update-form-request-messages",
+            "php-service",
+            "tests:execute"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-02",
+          "expected": [
+            "laravel"
+          ],
+          "ranked": [
+            "laravel-mail",
+            "composer-packages",
+            "sync-agent-settings"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-03",
+          "expected": [
+            "pest-testing"
+          ],
+          "ranked": [
+            "tests:create",
+            "pest-testing",
+            "testing-anti-patterns"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-04",
+          "expected": [
+            "quality-tools"
+          ],
+          "ranked": [
+            "quality-tools",
+            "agents:user-update",
+            "memory:load"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-05",
+          "expected": [
+            "systematic-debugging"
+          ],
+          "ranked": [
+            "roadmap:process-full",
+            "fix:refs",
+            "e2e-heal"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-06",
+          "expected": [
+            "code-review"
+          ],
+          "ranked": [
+            "voice-and-tone-design",
+            "judge-code-quality",
+            "sync-gitignore"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-07",
+          "expected": [
+            "adr-create"
+          ],
+          "ranked": [
+            "adr-create",
+            "challenge-me:with-docs",
+            "decision-record"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-08",
+          "expected": [
+            "terraform"
+          ],
+          "ranked": [
+            "terraform",
+            "skill-management",
+            "copilot-config"
+          ],
+          "hit": true
+        },
+        {
+          "id": "canonical-09",
+          "expected": [
+            "conventional-commits-writing"
+          ],
+          "ranked": [
+            "fix:ci",
+            "fix:pr-developer-comments",
+            "fix:refs"
+          ],
+          "hit": false
+        },
+        {
+          "id": "canonical-10",
+          "expected": [
+            "bug-analyzer"
+          ],
+          "ranked": [
+            "bug-investigate",
+            "bug-analyzer",
+            "jira-ticket"
+          ],
+          "hit": true
+        }
+      ],
+      "status": "ok",
+      "path": ".claude/skills",
+      "fidelity": 1.0,
+      "passed_threshold": true
+    },
+    "cursor": {
+      "status": "not_applicable",
+      "reason": "surface is rules_only; no SKILL.md projection",
+      "path": ".cursor/rules"
+    },
+    "cline": {
+      "status": "not_applicable",
+      "reason": "surface is rules_only; no SKILL.md projection",
+      "path": ".clinerules"
+    },
+    "windsurf": {
+      "status": "not_applicable",
+      "reason": "surface is single_file; no SKILL.md projection",
+      "path": ".windsurfrules"
+    }
+  },
+  "below_threshold": []
+}
