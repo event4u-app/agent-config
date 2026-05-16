@@ -9,6 +9,8 @@ complexity: lightweight
 > action (recruits, case studies, dev-user poll). The maintainer triggers
 > closure manually; no autonomous path exists.
 
+**Measured-vs-claimed disclaimer:** The recruit / cohort / case-study targets in this roadmap are **aspirational gates**, not measured outcomes. Closure requires real external humans completing the loop; every percentage and count in the acceptance gates stays `[!]` until human-confirmed by the maintainer. No autonomous path closes this — and no benchmark substitutes for it.
+
 ## Source
 
 - **Council verdict:** `agents/council-responses/2026-05-15-step12-closure-run2.json` <!-- council-ref-allowed: roadmap source-trail -->
