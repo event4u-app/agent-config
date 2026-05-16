@@ -16,11 +16,59 @@ tasks:
   bench:
     silent: true
     desc: |
-      Run the skill-selection benchmark against an eval corpus.
-      Usage: task bench -- --corpus non-dev
-             task bench -- --corpus non-dev --top-k 3 --json
-      Step-12 Phase 1 deliverable; corpus YAML in tests/eval/.
+      Run the unified bench orchestrator (selection + cost + quality).
+      Emits versioned JSON + Markdown reports under bench/reports/.
+      Usage: task bench -- --corpus dev
+             task bench -- --corpus dev --top-k 3 --quiet
+             task bench -- --corpus dev --agent-output outputs.json
+      Step-4 Phase 2 deliverable; schema in
+      docs/contracts/benchmark-report-schema.md.
+    cmd: python3 scripts/bench_run.py {{.CLI_ARGS}}
+
+  bench:baseline:
+    silent: true
+    desc: |
+      Run the legacy selection-only baseline collector
+      (scripts/bench_runner.py). Use when you only need top-K hit
+      ratios without cost or quality scoring.
+      Usage: task bench:baseline -- --corpus dev --json
     cmd: python3 scripts/bench_runner.py {{.CLI_ARGS}}
+
+  bench:drift:
+    silent: true
+    desc: |
+      Compare the latest bench report against the previous N runs for
+      the same corpus. Step-4 Phase 3 Step 2. Exit 0 = no drift /
+      warmup; exit 2 = drift detected (warn-only in CI per roadmap —
+      not a merge gate until baseline closes).
+      Usage: task bench:drift
+             task bench:drift -- --corpus dev --window 5 --json
+    cmd: python3 scripts/bench_drift_check.py {{.CLI_ARGS}}
+
+  bench:baseline-ready:
+    silent: true
+    desc: |
+      Single arbiter of "is the 60-day measurement baseline closed".
+      Step-4 Phase 3 Step 4. Exit 0 iff days_elapsed ≥ 60 AND
+      report_count ≥ 30. Read by P2 enforcement roadmaps (step-99 G1).
+      Usage: task bench:baseline-ready
+             task bench:baseline-ready -- --json
+    cmd: python3 scripts/bench_baseline_ready.py {{.CLI_ARGS}}
+
+  bench:projection:
+    silent: true
+    desc: |
+      Per-tool projection-fidelity scorer (Augment / Claude / Cursor /
+      Cline / Windsurf). Step-4 Phase 4. Computes
+      selection_accuracy(tool) / selection_accuracy(reference=augment).
+      Threshold 0.85 = fit-for-purpose; below = generate_tools.py
+      mapping needs attention. Cursor / Cline / Windsurf are rules-only
+      surfaces — reported as not_applicable. Exit 0 = all OK, exit 1 =
+      one or more below threshold.
+      Usage: task bench:projection
+             task bench:projection -- --corpus dev --write-report
+             task bench:projection -- --threshold 0.85 --json
+    cmd: python3 scripts/bench_per_tool.py {{.CLI_ARGS}}
 
   test:
     silent: true
@@ -258,4 +306,111 @@ tasks:
     silent: true
     desc: "Per-type shadow counts from the repo-vs-operational conflict rule (weekly cron target)"
     cmd: python3 scripts/check_memory.py --shadow-report {{.CLI_ARGS}}
+
+  cost:
+    silent: true
+    desc: |
+      Capture the active Claude Code session into
+      agents/cost-tracking/sessions.jsonl, then check the budget.
+      Surfaces the 50/75/90/100% alert ladder (sibling of the
+      /cost:report skill). Step-4 Phase 2 Step 4.
+      Usage: task cost
+             BUDGET_PERIOD=week task cost
+    cmds:
+      - node scripts/cost/track.mjs {{.CLI_ARGS}}
+      - node scripts/cost/budget.mjs check
+
+  cost:budget:
+    silent: true
+    desc: |
+      Get / set / check the project's cost budget. Wraps
+      scripts/cost/budget.mjs — local jsonl store, no MCP.
+      Usage: task cost:budget -- check
+             task cost:budget -- set 50
+             task cost:budget -- get
+    cmd: node scripts/cost/budget.mjs {{.CLI_ARGS}}
+
+  cost:track:
+    silent: true
+    desc: |
+      Capture the active Claude Code session only (no budget check).
+      Usage: task cost:track
+             TRACK_QUIET=1 task cost:track
+    cmd: node scripts/cost/track.mjs {{.CLI_ARGS}}
+
+  cost:preflight:
+    silent: true
+    desc: |
+      Hard-stop preflight hook (step-11 Phase 2 Step 3). Wraps
+      scripts/cost/budget.mjs check; exits non-zero only when
+      cost.enforcement is hard-stop AND level is HARD_STOP.
+      Fail-open when no budget is configured.
+      Surface: shell / CI wrappers invoke BEFORE composing a turn.
+      Contract: docs/contracts/cost-enforcement.md
+      ADR: docs/adrs/cost/0001-hard-stop-hook.md
+      Usage: task cost:preflight
+             PREFLIGHT_QUIET=1 task cost:preflight
+    cmd: node scripts/cost/preflight.mjs
+
+  test-cost-budget:
+    silent: true
+    desc: |
+      Run the cost-budget fixture suite (step-11 Phase 2 Step 5).
+      Exercises scripts/cost/budget.mjs and scripts/cost/preflight.mjs
+      against tests/fixtures/cost/budget/{under-50,mid-75,high-90,at-100,over-100}.
+      Asserts budget.mjs JSON matches expected.json and preflight exit
+      code matches expected_exit. See tests/fixtures/cost/budget/README.md.
+    cmd: node tests/cost/budget-fixtures.mjs
+
+  smoke:
+    silent: true
+    desc: |
+      Run all per-tier smoke contracts (step-11 Phase 3). Aggregates
+      kernel, router, schema, skills smokes. Each ≤ 30 s wall.
+      Contract: docs/contracts/smoke-contracts.md
+    cmds:
+      - task: smoke:kernel
+      - task: smoke:router
+      - task: smoke:schema
+      - task: smoke:skills
+
+  smoke:kernel:
+    silent: true
+    desc: |
+      Kernel smoke (step-11 Phase 3.2): 9 rules · 8 Iron-Law fences ·
+      ≤ 2 budget breaches. Contract: docs/contracts/smoke-contracts.md § 3.1
+    cmd: scripts/smoke/kernel.sh
+
+  smoke:router:
+    silent: true
+    desc: |
+      Router smoke (step-11 Phase 3.3): 75 router ids · 0 broken rule
+      pointers · ≤ 2 missing contracts.
+      Contract: docs/contracts/smoke-contracts.md § 3.2
+    cmd: scripts/smoke/router.sh
+
+  smoke:schema:
+    silent: true
+    desc: |
+      Schema smoke (step-11 Phase 3.4): 0 schema FAILs · ≤ 92 warns ·
+      ≥ 438 lintable artefacts.
+      Contract: docs/contracts/smoke-contracts.md § 3.3
+    cmd: scripts/smoke/schema.sh
+
+  smoke:skills:
+    silent: true
+    desc: |
+      Skills smoke (step-11 Phase 3.5): 5 random skills (epoch-day seed)
+      resolve, frontmatter validates, name matches directory.
+      Contract: docs/contracts/smoke-contracts.md § 3.4
+    cmd: scripts/smoke/skills.sh
+
+  lint-adr-coverage:
+    silent: true
+    desc: |
+      Per-area ADR coverage gate (step-11 Phase 4.5). Exits non-zero on
+      hard failures (number gaps, missing area README, malformed
+      filenames); emits warnings on missing bootstrap ADRs without
+      failing. Contract: docs/contracts/adr-layout.md.
+    cmd: python3 scripts/audit_adr_coverage.py --check
 

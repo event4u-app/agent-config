@@ -105,6 +105,11 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: lint-skills
+      - task: lint-namespace
+      - task: lint-mcp-inventory
+      - task: lint-adr-coverage
+      - task: lint-archived-skills
+      - task: lint-bench
       - task: lint-rule-tiers
       - task: lint-command-tiers
       - task: lint-ghostwriter-source
@@ -173,6 +178,11 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: lint-skills-strict
+      - task: lint-namespace
+      - task: lint-mcp-inventory
+      - task: lint-adr-coverage
+      - task: lint-archived-skills
+      - task: lint-bench
       - task: lint-rule-tiers
       - task: lint-command-tiers
       - task: lint-ghostwriter-source

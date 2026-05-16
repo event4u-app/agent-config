@@ -4,12 +4,42 @@
 
 Give your AI agents an audit-disciplined execution layer: **210 skills**, **79 governance rules**, **124 commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
 
-| 👩‍💻 Developers | 🚀 Founders & Operators | ✍️ Creators & Consultants |
-|---|---|---|
-| Implement tickets, fix CI, write tests, run PR reviews — `/implement-ticket`, `/work`, `/commit`, `/fix ci`, `/create-pr` — with stack-aware skills for Laravel · Symfony · Next.js · React · Node. | Pitch decks, runway math, OKR trees, GTM launches, pricing reviews — `runway-cognition`, `unit-economics-modeling`, `fundraising-narrative`, `gtm-launch`, `okr-tree-modeling`. | Editorial calendars, brand voice, ghostwriting, content funnels, discovery interviews — `voice-and-tone-design`, `editorial-calendar`, `ghostwriter`, `content-funnel-design`, `discovery-interview`. |
+### Pick your profile — six entry paths
+
+`/onboard` writes `profile.id` to `.agent-settings.yml`; each anchor
+below is the first-screen the wizard sends you to. One README, six
+entries, no role-detection guesswork.
+
+| Profile (`profile.id`) | Audience | First commands | First skills |
+|---|---|---|---|
+| 👩‍💻 [`developer`](#profile-developer) | IC engineer | `/implement-ticket` · `/work` · `/review-changes` · `/fix` · `/commit` | `developer-like-execution` · `verify-completion-evidence` · `minimal-safe-diff` · `systematic-debugging` · `test-driven-development` |
+| ✍️ [`content_creator`](#profile-content_creator) | Writers, ghostwriters, marketers | `/work` · `/post-as` · `/ghostwriter` · `/optimize-prompt` | `voice-and-tone-design` · `messaging-architecture` · `editorial-calendar` · `release-comms` · `prompt-engineering-patterns` |
+| 🚀 [`founder`](#profile-founder) | Solo / early-stage founder | `/work` · `/feature` · `/challenge-me` · `/council` | `refine-prompt` · `rice-prioritization` · `vision-articulation` · `fundraising-narrative` · `runway-cognition` |
+| 🏛 [`agency`](#profile-agency) | Multi-client delivery shop | `/work` · `/implement-ticket` · `/refine-ticket` · `/feature` · `/roadmap` | `doc-coauthoring` · `decision-record` · `refine-ticket` · `estimate-ticket` · `perf-feedback-craft` |
+| 💼 [`finance`](#profile-finance) | CFO / fractional finance / FP&A | `/work` · `/council` · `/challenge-me` | `dcf-modeling` · `forecasting` · `scenario-modeling` · `unit-economics-modeling` · `runway-cognition` |
+| 🛡 [`ops`](#profile-ops) | RevOps, support, SRE-adjacent | `/work` · `/threat-model` · `/review-changes` · `/fix` | `incident-commander` · `dashboard-design` · `logging-monitoring` · `threat-modeling` · `launch-readiness` |
+
+**Not sure which one?** Run `npx @event4u/agent-config init` and open
+your AI agent — `/onboard` asks a single 8-option role question and
+maps to the closest profile. Source-of-truth for the table:
+[`.agent-src.uncompressed/profiles/`](.agent-src.uncompressed/profiles/) ·
+schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
+
+**Also usable beyond software.** The package ships worked-example
+user types for non-software trades — galabau (landscaping) ·
+metalworking · truck — see
+[`user-types/`](.agent-src.uncompressed/user-types/) and the
+[scaffold](.agent-src.uncompressed/user-types/_template/) for
+contributing your own.
 
 <p align="center">
   <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
+</p>
+
+<p align="center">
+  <a href="CHANGELOG.md">CHANGELOG</a> ·
+  <a href="https://github.com/event4u-app/agent-config/releases/latest">Latest release</a> ·
+  <a href="https://github.com/event4u-app/agent-config/discussions">Discussions</a>
 </p>
 
 ---
@@ -464,18 +494,20 @@ session is explicitly not.
 
 ## You don't need everything
 
-`cost_profile` is the master switch for **rule-tier loading**. The kernel
-(always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
-profile; tier-1 and tier-2 rules are gated by profile and resolved at
-session start from `router.json`.
+Pick how much governance your agent loads up front. The safety floor
+(non-destructive defaults, ask-before-guessing, mirror-the-user's-language)
+ships in **every** profile — what changes is how much extra coaching gets
+pulled in alongside it.
 
-| Profile | Rule tiers loaded | Token footprint | Best for |
-|---|---|---|---|
-| **`minimal`** | kernel only (no router, no auto-rules) | lowest | Cost-sensitive sessions; trivial Q&A; CI runs |
-| **`balanced`** (default) | kernel + tier-1 auto-rules | medium | Day-to-day work — current behaviour superset |
-| **`full`** | kernel + tier-1 + tier-2 (everything) | highest | Agent-config development; full rule fidelity |
+| Profile | What you get | When to pick it |
+|---|---|---|
+| **`minimal`** | The non-negotiable safety floor and nothing else. Cheapest, fastest. | Quick questions · throw-away scripts · running in CI · tight token budgets |
+| **`balanced`** (default) | Safety floor plus the everyday coaching most teams want — sensible defaults, code-review nudges, common pitfalls flagged. | Day-to-day work · the right answer if you're not sure |
+| **`full`** | Everything, including the long-tail rules normally only the package maintainers need. | Working on `agent-config` itself · audits · maximum fidelity demos |
 
-Architecture: [`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta) ·
+Under the hood, this is the rule-tier switch: kernel-only · kernel + tier-1
+auto-rules · kernel + tier-1 + tier-2. Architecture details:
+[`docs/contracts/rule-router.md`](docs/contracts/rule-router.md) (beta) ·
 kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-membership.md) (beta) ·
 [Configure profiles →](docs/customization.md)
 
@@ -503,6 +535,27 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 **Deepest reference stack today: Laravel** — Pest, PHPStan, Rector, Eloquent, Livewire/Flux, Horizon, Pulse, Reverb, Pennant. **Workflow-grade second tier: Symfony** (`symfony-workflow` — DI, Doctrine, Messenger, voters, Twig) and **Next.js App Router** (`nextjs-patterns` — RSC boundaries, Server Actions, caching, route handlers). Other stacks ship in the order they are battle-tested, not second-class. Adopting on a thin stack? Open an issue so we can prioritize the right skills for extraction.
 
+### …and beyond software (`user-types/`)
+
+The same orchestration core also drives non-software trades. The
+package ships three worked-example **user types** that show what a
+day-to-day agent looks like for a domain operator — not as marketing,
+but as the actual prompt-pack the agent loads:
+
+| User type | What the agent helps with |
+|---|---|
+| [`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md) | Landscaping field crew — site logs, material lists, weather-aware scheduling, customer-facing reports |
+| [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) | Metalworking shop — quotes, cutting lists, machine setup notes, invoices |
+| [`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md) | Truck driver — pre-trip checks, mileage logs, expense capture, customer messages |
+
+Contributing your own user type? Start from
+[`user-types/_template/`](.agent-src.uncompressed/user-types/_template/) —
+a 5-minute scaffold for a new domain. The same governance, command
+suite, and safety rules apply; only the persona and the everyday
+artefacts change. See
+[`.agent-src.uncompressed/user-types/README.md`](.agent-src.uncompressed/user-types/README.md)
+for the conventions.
+
 ---
 
 ## Data governance & domain safety
@@ -511,24 +564,92 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ---
 
-## Featured Skills
+## Six entry paths — by `profile.id`
 
-| Skill | What your agent learns |
-|---|---|
-| [`laravel`](.agent-src/skills/laravel/SKILL.md) | Write Laravel code following framework conventions and project architecture |
-| [`pest-testing`](.agent-src/skills/pest-testing/SKILL.md) | Write Pest tests with clear intent, good coverage, and project conventions |
-| [`eloquent`](.agent-src/skills/eloquent/SKILL.md) | Eloquent models, relationships, scopes, eager loading, type safety |
-| [`create-pr`](.agent-src/commands/create-pr.md) | Create GitHub PRs with structured descriptions from Jira tickets |
-| [`commit`](.agent-src/commands/commit.md) | Stage and commit changes following Conventional Commits |
-| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI errors from GitHub Actions and fix them |
-| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to all open review comments on a PR |
-| [`quality-fix`](.agent-src/commands/quality-fix.md) | Run PHPStan/Rector/ECS and fix all errors |
-| [`bug-analyzer`](.agent-src/skills/bug-analyzer/SKILL.md) | Root cause analysis from Sentry errors or Jira tickets |
-| [`improve-before-implement`](.agent-src/rules/improve-before-implement.md) | Challenge weak requirements before coding |
-| [`docker`](.agent-src/skills/docker/SKILL.md) | Dockerfile, docker-compose, container management |
-| [`security`](.agent-src/skills/security/SKILL.md) | Auth, policies, CSRF, rate limiting, secure coding |
-| [`api-design`](.agent-src/skills/api-design/SKILL.md) | REST conventions, versioning, deprecation |
-| [`database`](.agent-src/skills/database/SKILL.md) | MariaDB optimization, indexing, query performance |
+Each block below is the first-screen for one shipped profile. The
+`profile.id` written by `/onboard` selects the anchor; the block names
+the audience, the first three things the agent does for that role,
+and the exact commands and skills wired into the profile YAML at
+[`.agent-src.uncompressed/profiles/<id>.yml`](.agent-src.uncompressed/profiles/).
+
+<a id="profile-developer"></a>
+### 👩‍💻 `developer` — IC engineer
+
+Implement a ticket end-to-end, fix CI red, run a self-review before
+the PR. `/implement-ticket` refines the ticket, plans, edits, tests,
+and verifies; `/work` is the free-form sibling; `/review-changes`
+dispatches five judges (bug, security, tests, quality, architecture)
+on the local diff. Stack-aware skills cover Laravel · Symfony ·
+Next.js · React · Node. **Preset default: `balanced`.**
+[Profile YAML](.agent-src.uncompressed/profiles/developer.yml) ·
+[Role guide](docs/getting-started-by-role.md#developer-the-original-audience).
+
+<a id="profile-content_creator"></a>
+### ✍️ `content_creator` — writers, ghostwriters, marketers
+
+Draft in someone else's voice, plan a quarter of content, ship a
+launch announcement. `/ghostwriter` fetches and writes against a
+public-figure voice profile; `/post-as` is the same primitive for
+your own voice (`.agent-user.md`); `voice-and-tone-design` and
+`messaging-architecture` lock the brand frame before any copy ships.
+**Preset default: `balanced`.**
+[Profile YAML](.agent-src.uncompressed/profiles/content_creator.yml) ·
+[Role guide](docs/getting-started-by-role.md#creator-writer-marketer-indie-content-shop).
+
+<a id="profile-founder"></a>
+### 🚀 `founder` — solo / early-stage founder
+
+Sharpen a fuzzy idea, rank what to build, write the why-now slide.
+`/challenge-me` runs a grill-style interview that turns a vague plan
+into a copyable pitch; `/council` polls external AIs for a neutral
+second opinion; `rice-prioritization` ranks the backlog;
+`vision-articulation` and `fundraising-narrative` shape the
+internal-vs-external story. **Preset default: `fast`.**
+[Profile YAML](.agent-src.uncompressed/profiles/founder.yml) ·
+[Role guide](docs/getting-started-by-role.md#founder-early-stage-operator-wearing-every-hat).
+
+<a id="profile-agency"></a>
+### 🏛 `agency` — multi-client delivery shop
+
+Refine a fuzzy client ask into an estimated, AC-tight ticket; turn a
+phase into a roadmap; ship per client without losing decision
+provenance. `/refine-ticket` rewrites the ticket and surfaces top-5
+risks; `estimate-ticket` sizes and splits; `decision-record` anchors
+the trade-off in an ADR before code starts. **Preset default:
+`strict`.**
+[Profile YAML](.agent-src.uncompressed/profiles/agency.yml) ·
+[Role guide](docs/getting-started-by-role.md#consultant-advisory-freelance-fractional).
+
+<a id="profile-finance"></a>
+### 💼 `finance` — CFO / fractional finance / FP&A
+
+Build a DCF, stress-test the plan, frame the runway call. `dcf-modeling`
+walks the WACC / terminal-value / 5-year-hold reasoning; `forecasting`
+reconciles top-down vs bottom-up; `scenario-modeling` produces the
+base / upside / downside cuts; `runway-cognition` frames the
+fundraise-vs-cut-vs-grow decision. **Preset default: `strict`.**
+[Profile YAML](.agent-src.uncompressed/profiles/finance.yml) ·
+[Role guide](docs/getting-started-by-role.md#finance--ops-cfo-controller-ops-lead-founder-finance).
+
+<a id="profile-ops"></a>
+### 🛡 `ops` — RevOps, support, SRE-adjacent
+
+Threat-model a change before it ships, command the incident when it
+breaks, build the dashboard that catches it next time.
+`/threat-model` enumerates abuse cases and trust boundaries before
+the first line of code; `incident-commander` frames severity and
+post-mortem; `dashboard-design` chooses the right RED / USE / Golden
+Signal panel. **Preset default: `strict`.**
+[Profile YAML](.agent-src.uncompressed/profiles/ops.yml) ·
+[Role guide](docs/getting-started-by-role.md#finance--ops-cfo-controller-ops-lead-founder-finance).
+
+> **Universal AI Agent OS, not "for developers only".** The same
+> orchestration core also drives non-software trades. Worked-example
+> user types ship for [galabau](.agent-src.uncompressed/user-types/galabau-field-crew.md),
+> [metalworking](.agent-src.uncompressed/user-types/metalworking-shop.md),
+> [truck driving](.agent-src.uncompressed/user-types/truck-driver.md) —
+> with a [scaffold](.agent-src.uncompressed/user-types/_template/) for
+> contributing your own.
 
 → [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
 
@@ -536,18 +657,25 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ## Featured Commands
 
+### For developers
+
 | Command | What it does |
 |---|---|
-| [`/commit`](.agent-src/commands/commit.md) | Stage and commit with Conventional Commits |
-| [`/create-pr`](.agent-src/commands/create-pr.md) | Create PR with Jira-linked description |
-| [`/fix ci`](.agent-src/commands/fix.md) | Fetch and fix GitHub Actions failures |
-| [`/fix pr-comments`](.agent-src/commands/fix.md) | Fix and reply to review comments |
-| [`/optimize skills`](.agent-src/commands/optimize.md) | Audit skills, find duplicates, run linter |
-| [`/feature plan`](.agent-src/commands/feature.md) | Interactively plan a feature |
-| [`/quality-fix`](.agent-src/commands/quality-fix.md) | Run and fix all quality checks |
-| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review before creating a PR |
-| [`/jira-ticket`](.agent-src/commands/jira-ticket.md) | Read ticket from branch, implement feature |
-| [`/compress`](.agent-src/commands/compress.md) | Compress skills for token efficiency |
+| [`/implement-ticket`](.agent-src/commands/implement-ticket.md) | Drive a Jira / Linear ticket end-to-end through refine → plan → implement → test → verify |
+| [`/work`](.agent-src/commands/work.md) | Same end-to-end loop for a free-form prompt — confidence-band gated |
+| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI failures from GitHub Actions and fix them |
+| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review local changes before creating a PR (five judges) |
+| [`/create-pr`](.agent-src/commands/create-pr.md) | Create a GitHub PR with Jira-linked description |
+
+### For everyone
+
+| Command | What it does |
+|---|---|
+| [`/research`](.agent-src/commands/research.md) | Survey / benchmark / competitive scan scaffolder — picks objects, defines fields |
+| [`po-discovery`](.agent-src/skills/po-discovery/SKILL.md) | Shape a fuzzy product ask into a refined backlog item — problem framing, AC tightening |
+| [`/ghostwriter:write`](.agent-src/commands/ghostwriter/write.md) | Draft in a public-figure voice profile (mandatory disclosure footer) |
+| [`/challenge-me`](.agent-src/commands/challenge-me.md) | Interactive grill-style interview that sharpens a fuzzy plan into a copyable pitch |
+| [`/fundraising-narrative`](.agent-src/skills/fundraising-narrative/SKILL.md) | Shape a capital-raise pitch — why-now / why-us / why-this framing |
 
 → [Browse all 124 active commands](.agent-src/commands/)
 

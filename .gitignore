@@ -132,6 +132,12 @@ evals/results/
 # records into a queryable store; the local file is dev-time scratch.
 /agents/.mcp-telemetry/
 
+# Skill-usage telemetry (step-2-skill-inventory-rationalization Phase 1).
+# Raw per-turn JSONL is local-only because it carries SHA-256 prompt
+# hashes derived from the maintainer's own sessions. The aggregated
+# report (skill-usage-report.md) IS committed as the 0-day baseline.
+/agents/metrics/skill-usage.jsonl
+
 # AI Council runtime price cache (refreshed weekly by
 # `python3 scripts/update_prices.py`; bootstrapped on first /council
 # call from scripts/ai_council/_default_prices.py). User-editable —
