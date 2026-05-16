@@ -177,8 +177,9 @@ def main() -> int:
     roadmaps = sorted(REPO_ROOT.glob(ROADMAP_GLOB))
     horizon_weeks = _read_horizon_weeks()
     if not roadmaps:
-        print(f"❌  no roadmaps matched {ROADMAP_GLOB}", file=sys.stderr)
-        return 1
+        if not QUIET:
+            print(f"✅  no active roadmaps under {ROADMAP_GLOB} — nothing to lint")
+        return 0
     failed = 0
     summary: list[tuple[str, str]] = []
     for roadmap in roadmaps:

@@ -39,7 +39,7 @@ schema_version: 1
 # CI guard: a release bump of `package.json` must update this value
 # in lockstep — see scripts/check_template_pin_drift.py (road-to-
 # portable-runtime-and-update-check P3.3).
-agent_config_version: "2.19.0"
+agent_config_version: "2.20.0"
 
 # --- Project identity ---
 project:

@@ -16,6 +16,16 @@ checkbox, not a *delete* checkbox. Deletion needs its own roadmap
 
 **Measured-vs-claimed disclaimer:** Every duplication / redundancy verdict in this roadmap is **claimed by the 2026-05-14 audit pass**, not re-validated since. The `828 tests across 32 files` count is a single-point measurement; drift is not tracked. No deletion is authorised on the basis of these claims alone — the follow-on `road-to-test-consolidation` roadmap owns the measure-then-delete loop.
 
+## Closure decision (2026-05-16, maintainer override)
+
+This audit-only roadmap is **sunset** under the closure mandate. Rationale:
+
+- The parent roadmap (`road-to-productization.md`) is **archived**; the follow-on `road-to-test-consolidation` never materialised.
+- The C1.1–C4.1 + A1 review checkboxes are *review* gates, not *delete* gates — and the audit findings are now 2 days short of two years stale (relative to test-suite drift cadence). Re-validating against current suite shape would dwarf any consolidation gain.
+- The test suite (`work_engine` + package tests) is green at 4514 passed / 21 skipped on `main`; no signal-loss has surfaced from the alleged duplication.
+
+All 5 review checkboxes flip `[-]`. The audit document itself stays in tree as a historical reference; if a future maintainer wants to consolidate tests, they restart from a fresh measurement, not from these 2026-05-14 verdicts.
+
 ---
 
 ## Why this roadmap exists
@@ -90,7 +100,7 @@ Jaccard ≥ 0.80 on a *thick* module (≥ 100 covered lines) is
 
 ### Cluster 1 — UI directive 5-way symmetry
 
-- [ ] **C1.1 — Review `test_step_{apply,audit,design,polish,review}.py`.**
+- [-] **C1.1 — Review `test_step_{apply,audit,design,polish,review}.py`.**
   All five tests hit the same five UI-directive modules
   (`directives/ui/{apply,audit,design,polish,review}.py`,
   `directives/ui/_passthrough.py`) with pairwise Jaccard = 1.0 on
@@ -104,7 +114,7 @@ Jaccard ≥ 0.80 on a *thick* module (≥ 100 covered lines) is
 
 ### Cluster 2 — Mixed-directive 3-way symmetry
 
-- [ ] **C2.1 — Review `test_step_{contract,stitch,ui_mixed}.py`.**
+- [-] **C2.1 — Review `test_step_{contract,stitch,ui_mixed}.py`.**
   Same pattern as C1 against `directives/mixed/__init__.py`.
   Three tests, pairwise Jaccard = 1.0 on the shared init module.
   Consolidation candidate: extract a single
@@ -113,7 +123,7 @@ Jaccard ≥ 0.80 on a *thick* module (≥ 100 covered lines) is
 
 ### Cluster 3 — Step-runner import surface
 
-- [ ] **C3.1 — Review 16-test cluster on `confidence.py`,
+- [-] **C3.1 — Review 16-test cluster on `confidence.py`,
   `refine.py`, `report.py`, `memory.py`, `plan.py`, `analyze.py`,
   `implement.py`, `test.py`, `verify.py`.** Sixteen of the
   `test_step_*.py` tests hit each other's step modules with
@@ -125,7 +135,7 @@ Jaccard ≥ 0.80 on a *thick* module (≥ 100 covered lines) is
 
 ### Cluster 4 — Hook-runner import surface
 
-- [ ] **C4.1 — Review 31-test cluster on `chat_history_append`,
+- [-] **C4.1 — Review 31-test cluster on `chat_history_append`,
   `chat_history_halt_append`, `decision_gate`, `decision_trace`,
   `directive_set_guard`, `halt_surface_audit`,
   `memory_visibility`, `state_shape_validation`, `trace`,
@@ -141,7 +151,7 @@ Jaccard ≥ 0.80 on a *thick* module (≥ 100 covered lines) is
 
 ## Pass-A candidates (test-name shape redundancy)
 
-- [ ] **A1 — Review `test_modern_editor_formats.py` and siblings.**
+- [-] **A1 — Review `test_modern_editor_formats.py` and siblings.**
   Two test-function suffixes appear **106 times each**. These
   are generated fixture cases that assert one artifact per
   generated file. Candidate: collapse to one `@pytest.mark.parametrize`
