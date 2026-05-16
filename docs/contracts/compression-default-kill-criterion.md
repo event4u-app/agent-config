@@ -1,3 +1,7 @@
+---
+stability: beta
+---
+
 # Compression default — kill-criterion
 
 > **Status:** parked, criterion-deferred · **Owner:** `step-4-measurement-and-benchmark.md`

@@ -1,3 +1,7 @@
+---
+stability: stable
+---
+
 # Namespace contract — skills, rules, commands, personas
 
 > Every artefact name is a **stable identifier**: routed to from

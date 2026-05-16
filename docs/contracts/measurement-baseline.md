@@ -1,3 +1,7 @@
+---
+stability: stable
+---
+
 # Measurement baseline — contract
 
 > **Status:** locked 2026-05-16 · **Owner:** [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md)

@@ -1,3 +1,7 @@
+---
+stability: stable
+---
+
 # ADR Layout — Per-area Directories
 
 > Status: accepted · 2026-05-16 · Roadmap: [`step-11-ruflo-parity`](../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4

@@ -1,3 +1,7 @@
+---
+stability: stable
+---
+
 # Cost Enforcement Contract
 
 > Status: stable · Owner: `step-11-measurement-governance-parity` · Last reviewed: 2026-05-16
