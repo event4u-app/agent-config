@@ -12,25 +12,20 @@ entries, no role-detection guesswork.
 
 | Profile (`profile.id`) | Audience | First commands | First skills |
 |---|---|---|---|
-| 👩‍💻 [`developer`](#profile-developer) | IC engineer | `/implement-ticket` · `/work` · `/review-changes` · `/fix` · `/commit` | `developer-like-execution` · `verify-completion-evidence` · `minimal-safe-diff` · `systematic-debugging` · `test-driven-development` |
-| ✍️ [`content_creator`](#profile-content_creator) | Writers, ghostwriters, marketers | `/work` · `/post-as` · `/ghostwriter` · `/optimize-prompt` | `voice-and-tone-design` · `messaging-architecture` · `editorial-calendar` · `release-comms` · `prompt-engineering-patterns` |
-| 🚀 [`founder`](#profile-founder) | Solo / early-stage founder | `/work` · `/feature` · `/challenge-me` · `/council` | `refine-prompt` · `rice-prioritization` · `vision-articulation` · `fundraising-narrative` · `runway-cognition` |
-| 🏛 [`agency`](#profile-agency) | Multi-client delivery shop | `/work` · `/implement-ticket` · `/refine-ticket` · `/feature` · `/roadmap` | `doc-coauthoring` · `decision-record` · `refine-ticket` · `estimate-ticket` · `perf-feedback-craft` |
-| 💼 [`finance`](#profile-finance) | CFO / fractional finance / FP&A | `/work` · `/council` · `/challenge-me` | `dcf-modeling` · `forecasting` · `scenario-modeling` · `unit-economics-modeling` · `runway-cognition` |
-| 🛡 [`ops`](#profile-ops) | RevOps, support, SRE-adjacent | `/work` · `/threat-model` · `/review-changes` · `/fix` | `incident-commander` · `dashboard-design` · `logging-monitoring` · `threat-modeling` · `launch-readiness` |
+| 👩‍💻 [`developer`](docs/profiles.md#profile-developer) | IC engineer | `/implement-ticket` · `/work` · `/review-changes` · `/fix` · `/commit` | `developer-like-execution` · `verify-completion-evidence` · `minimal-safe-diff` · `systematic-debugging` · `test-driven-development` |
+| ✍️ [`content_creator`](docs/profiles.md#profile-content_creator) | Writers, ghostwriters, marketers | `/work` · `/post-as` · `/ghostwriter` · `/optimize-prompt` | `voice-and-tone-design` · `messaging-architecture` · `editorial-calendar` · `release-comms` · `prompt-engineering-patterns` |
+| 🚀 [`founder`](docs/profiles.md#profile-founder) | Solo / early-stage founder | `/work` · `/feature` · `/challenge-me` · `/council` | `refine-prompt` · `rice-prioritization` · `vision-articulation` · `fundraising-narrative` · `runway-cognition` |
+| 🏛 [`agency`](docs/profiles.md#profile-agency) | Multi-client delivery shop | `/work` · `/implement-ticket` · `/refine-ticket` · `/feature` · `/roadmap` | `doc-coauthoring` · `decision-record` · `refine-ticket` · `estimate-ticket` · `perf-feedback-craft` |
+| 💼 [`finance`](docs/profiles.md#profile-finance) | CFO / fractional finance / FP&A | `/work` · `/council` · `/challenge-me` | `dcf-modeling` · `forecasting` · `scenario-modeling` · `unit-economics-modeling` · `runway-cognition` |
+| 🛡 [`ops`](docs/profiles.md#profile-ops) | RevOps, support, SRE-adjacent | `/work` · `/threat-model` · `/review-changes` · `/fix` | `incident-commander` · `dashboard-design` · `logging-monitoring` · `threat-modeling` · `launch-readiness` |
 
 **Not sure which one?** Run `npx @event4u/agent-config init` and open
 your AI agent — `/onboard` asks a single 8-option role question and
-maps to the closest profile. Source-of-truth for the table:
+maps to the closest profile. Source-of-truth:
 [`.agent-src.uncompressed/profiles/`](.agent-src.uncompressed/profiles/) ·
 schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
-
-**Also usable beyond software.** The package ships worked-example
-user types for non-software trades — galabau (landscaping) ·
-metalworking · truck — see
-[`user-types/`](.agent-src.uncompressed/user-types/) and the
-[scaffold](.agent-src.uncompressed/user-types/_template/) for
-contributing your own.
+Beyond software: [`user-types/`](.agent-src.uncompressed/user-types/)
+(galabau · metalworking · truck — see [Who this is for](#who-this-is-for)).
 
 <p align="center">
   <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
@@ -44,37 +39,29 @@ contributing your own.
 
 ---
 
-## Use it in your project
+## Use it · prove it · contribute
 
-You run the package from a consumer repo — bootstrap via `npx`, let the
-agent pick up your stack, and ship work end-to-end. New install? Start
-with the [Quickstart](#quickstart) to write `.agent-settings.yml`,
-`.augment/`, `.claude/`, …. Already installed? [Supported Tools](#supported-tools)
-shows which AIs the package wires up, and [Featured Commands](#featured-commands)
-lists the end-to-end workflows (`/implement-ticket`, `/work`, `/commit`,
-`/create-pr`). For a deeper tour, see the
-[2-minute demo: `/implement-ticket`](#2-minute-demo-implement-ticket).
+**Use it.** Run from a consumer repo — bootstrap via `npx`, the agent
+picks up your stack, and you ship work end-to-end. New install? Start
+with the [Quickstart](#quickstart). Already installed?
+[Supported Tools](#supported-tools) shows the wired AIs;
+[`docs/featured-commands.md`](docs/featured-commands.md) lists the
+end-to-end workflows (`/implement-ticket`, `/work`, `/commit`,
+`/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo-implement-ticket).
 
-## Prove it
-
-The package is audit-disciplined by construction — every memory consult,
+**Prove it.** Audit-disciplined by construction — every memory consult,
 decision key, and hook concern lands in `agents/state/` so you can
-replay it. [Core Principles](#core-principles) names the four invariants.
-[What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
-draws the scope boundary. [Documentation](#documentation) lists the
-contracts the package ships against, including
-[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) (beta) and
-[`decision-trace-v1`](docs/contracts/decision-trace-v1.md) (beta).
+replay it. [Core Principles](#core-principles) names the four
+invariants; [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
+draws the scope boundary. Beta contracts:
+[`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) ·
+[`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
-## Contribute
-
-Working on the package itself rather than with it?
-[Development](#development) covers the `task ci` pipeline,
-[Requirements](#requirements) the toolchain, and
-[Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
-opt-in measurement loop. The source-of-truth tree is
-`.agent-src.uncompressed/`; never hand-edit the generated `.augment/`
-or `.agent-src/`.
+**Contribute.** Working on the package itself? [Development](#development)
+covers the `task ci` pipeline, [Requirements](#requirements) the
+toolchain, [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off)
+the opt-in measurement loop. Source-of-truth tree is
+`.agent-src.uncompressed/`; never hand-edit `.augment/` or `.agent-src/`.
 
 ## Quickstart
 
@@ -537,24 +524,14 @@ kernel set: [`docs/contracts/kernel-membership.md`](docs/contracts/kernel-member
 
 ### …and beyond software (`user-types/`)
 
-The same orchestration core also drives non-software trades. The
-package ships three worked-example **user types** that show what a
-day-to-day agent looks like for a domain operator — not as marketing,
-but as the actual prompt-pack the agent loads:
-
-| User type | What the agent helps with |
-|---|---|
-| [`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md) | Landscaping field crew — site logs, material lists, weather-aware scheduling, customer-facing reports |
-| [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) | Metalworking shop — quotes, cutting lists, machine setup notes, invoices |
-| [`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md) | Truck driver — pre-trip checks, mileage logs, expense capture, customer messages |
-
-Contributing your own user type? Start from
-[`user-types/_template/`](.agent-src.uncompressed/user-types/_template/) —
-a 5-minute scaffold for a new domain. The same governance, command
-suite, and safety rules apply; only the persona and the everyday
-artefacts change. See
-[`.agent-src.uncompressed/user-types/README.md`](.agent-src.uncompressed/user-types/README.md)
-for the conventions.
+The same orchestration core drives non-software trades. Worked-example
+user types ship as the actual prompt-pack the agent loads:
+[`galabau-field-crew`](.agent-src.uncompressed/user-types/galabau-field-crew.md)
+(landscaping) · [`metalworking-shop`](.agent-src.uncompressed/user-types/metalworking-shop.md) ·
+[`truck-driver`](.agent-src.uncompressed/user-types/truck-driver.md). Contributing your
+own? [5-minute scaffold](.agent-src.uncompressed/user-types/_template/) +
+[conventions](.agent-src.uncompressed/user-types/README.md). Same
+governance, command suite, and safety rules apply.
 
 ---
 
@@ -564,120 +541,14 @@ for the conventions.
 
 ---
 
-## Six entry paths — by `profile.id`
+## Profile entry paths & featured commands
 
-Each block below is the first-screen for one shipped profile. The
-`profile.id` written by `/onboard` selects the anchor; the block names
-the audience, the first three things the agent does for that role,
-and the exact commands and skills wired into the profile YAML at
-[`.agent-src.uncompressed/profiles/<id>.yml`](.agent-src.uncompressed/profiles/).
-
-<a id="profile-developer"></a>
-### 👩‍💻 `developer` — IC engineer
-
-Implement a ticket end-to-end, fix CI red, run a self-review before
-the PR. `/implement-ticket` refines the ticket, plans, edits, tests,
-and verifies; `/work` is the free-form sibling; `/review-changes`
-dispatches five judges (bug, security, tests, quality, architecture)
-on the local diff. Stack-aware skills cover Laravel · Symfony ·
-Next.js · React · Node. **Preset default: `balanced`.**
-[Profile YAML](.agent-src.uncompressed/profiles/developer.yml) ·
-[Role guide](docs/getting-started-by-role.md#developer-the-original-audience).
-
-<a id="profile-content_creator"></a>
-### ✍️ `content_creator` — writers, ghostwriters, marketers
-
-Draft in someone else's voice, plan a quarter of content, ship a
-launch announcement. `/ghostwriter` fetches and writes against a
-public-figure voice profile; `/post-as` is the same primitive for
-your own voice (`.agent-user.md`); `voice-and-tone-design` and
-`messaging-architecture` lock the brand frame before any copy ships.
-**Preset default: `balanced`.**
-[Profile YAML](.agent-src.uncompressed/profiles/content_creator.yml) ·
-[Role guide](docs/getting-started-by-role.md#creator-writer-marketer-indie-content-shop).
-
-<a id="profile-founder"></a>
-### 🚀 `founder` — solo / early-stage founder
-
-Sharpen a fuzzy idea, rank what to build, write the why-now slide.
-`/challenge-me` runs a grill-style interview that turns a vague plan
-into a copyable pitch; `/council` polls external AIs for a neutral
-second opinion; `rice-prioritization` ranks the backlog;
-`vision-articulation` and `fundraising-narrative` shape the
-internal-vs-external story. **Preset default: `fast`.**
-[Profile YAML](.agent-src.uncompressed/profiles/founder.yml) ·
-[Role guide](docs/getting-started-by-role.md#founder-early-stage-operator-wearing-every-hat).
-
-<a id="profile-agency"></a>
-### 🏛 `agency` — multi-client delivery shop
-
-Refine a fuzzy client ask into an estimated, AC-tight ticket; turn a
-phase into a roadmap; ship per client without losing decision
-provenance. `/refine-ticket` rewrites the ticket and surfaces top-5
-risks; `estimate-ticket` sizes and splits; `decision-record` anchors
-the trade-off in an ADR before code starts. **Preset default:
-`strict`.**
-[Profile YAML](.agent-src.uncompressed/profiles/agency.yml) ·
-[Role guide](docs/getting-started-by-role.md#consultant-advisory-freelance-fractional).
-
-<a id="profile-finance"></a>
-### 💼 `finance` — CFO / fractional finance / FP&A
-
-Build a DCF, stress-test the plan, frame the runway call. `dcf-modeling`
-walks the WACC / terminal-value / 5-year-hold reasoning; `forecasting`
-reconciles top-down vs bottom-up; `scenario-modeling` produces the
-base / upside / downside cuts; `runway-cognition` frames the
-fundraise-vs-cut-vs-grow decision. **Preset default: `strict`.**
-[Profile YAML](.agent-src.uncompressed/profiles/finance.yml) ·
-[Role guide](docs/getting-started-by-role.md#finance--ops-cfo-controller-ops-lead-founder-finance).
-
-<a id="profile-ops"></a>
-### 🛡 `ops` — RevOps, support, SRE-adjacent
-
-Threat-model a change before it ships, command the incident when it
-breaks, build the dashboard that catches it next time.
-`/threat-model` enumerates abuse cases and trust boundaries before
-the first line of code; `incident-commander` frames severity and
-post-mortem; `dashboard-design` chooses the right RED / USE / Golden
-Signal panel. **Preset default: `strict`.**
-[Profile YAML](.agent-src.uncompressed/profiles/ops.yml) ·
-[Role guide](docs/getting-started-by-role.md#finance--ops-cfo-controller-ops-lead-founder-finance).
-
-> **Universal AI Agent OS, not "for developers only".** The same
-> orchestration core also drives non-software trades. Worked-example
-> user types ship for [galabau](.agent-src.uncompressed/user-types/galabau-field-crew.md),
-> [metalworking](.agent-src.uncompressed/user-types/metalworking-shop.md),
-> [truck driving](.agent-src.uncompressed/user-types/truck-driver.md) —
-> with a [scaffold](.agent-src.uncompressed/user-types/_template/) for
-> contributing your own.
-
-→ [Public catalog](docs/catalog.md) (all rules, skills, commands, guidelines) · [Skills only](docs/skills-catalog.md) · [llms.txt](llms.txt)
-
----
-
-## Featured Commands
-
-### For developers
-
-| Command | What it does |
-|---|---|
-| [`/implement-ticket`](.agent-src/commands/implement-ticket.md) | Drive a Jira / Linear ticket end-to-end through refine → plan → implement → test → verify |
-| [`/work`](.agent-src/commands/work.md) | Same end-to-end loop for a free-form prompt — confidence-band gated |
-| [`/fix ci`](.agent-src/commands/fix.md) | Fetch CI failures from GitHub Actions and fix them |
-| [`/review-changes`](.agent-src/commands/review-changes.md) | Self-review local changes before creating a PR (five judges) |
-| [`/create-pr`](.agent-src/commands/create-pr.md) | Create a GitHub PR with Jira-linked description |
-
-### For everyone
-
-| Command | What it does |
-|---|---|
-| [`/research`](.agent-src/commands/research.md) | Survey / benchmark / competitive scan scaffolder — picks objects, defines fields |
-| [`po-discovery`](.agent-src/skills/po-discovery/SKILL.md) | Shape a fuzzy product ask into a refined backlog item — problem framing, AC tightening |
-| [`/ghostwriter:write`](.agent-src/commands/ghostwriter/write.md) | Draft in a public-figure voice profile (mandatory disclosure footer) |
-| [`/challenge-me`](.agent-src/commands/challenge-me.md) | Interactive grill-style interview that sharpens a fuzzy plan into a copyable pitch |
-| [`/fundraising-narrative`](.agent-src/skills/fundraising-narrative/SKILL.md) | Shape a capital-raise pitch — why-now / why-us / why-this framing |
-
-→ [Browse all 124 active commands](.agent-src/commands/)
+Deep version of the profile table above (audience · first commands ·
+first skills · preset default per profile):
+[`docs/profiles.md`](docs/profiles.md). Curated featured-commands
+subset: [`docs/featured-commands.md`](docs/featured-commands.md). Full
+catalog: [`docs/catalog.md`](docs/catalog.md) ·
+[skills only](docs/skills-catalog.md) · [`llms.txt`](llms.txt).
 
 ---
 
