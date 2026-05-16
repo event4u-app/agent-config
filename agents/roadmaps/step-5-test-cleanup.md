@@ -14,6 +14,8 @@ checkbox, not a *delete* checkbox. Deletion needs its own roadmap
 (`road-to-test-consolidation`) plus operator sign-off per
 [`non-destructive-by-default`](../../.agent-src.uncompressed/rules/non-destructive-by-default.md).
 
+**Measured-vs-claimed disclaimer:** Every duplication / redundancy verdict in this roadmap is **claimed by the 2026-05-14 audit pass**, not re-validated since. The `828 tests across 32 files` count is a single-point measurement; drift is not tracked. No deletion is authorised on the basis of these claims alone — the follow-on `road-to-test-consolidation` roadmap owns the measure-then-delete loop.
+
 ---
 
 ## Why this roadmap exists
