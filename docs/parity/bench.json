@@ -1,0 +1,41 @@
+{
+  "schema": "parity-bench-v1",
+  "status": "soak_in_progress",
+  "owner_roadmap": "agents/roadmaps/step-4-measurement-and-benchmark.md",
+  "contract": "docs/contracts/measurement-baseline.md",
+  "soak": {
+    "start_date": "2026-05-16",
+    "min_days": 60,
+    "min_reports": 30,
+    "earliest_flip": "2026-07-15",
+    "arbiter_command": "task bench:baseline-ready"
+  },
+  "current_window": {
+    "report_count": 1,
+    "days_elapsed": 0,
+    "verdict": "warmup",
+    "notes": "First infrastructure-shakedown run only. Numbers below are not the baseline."
+  },
+  "shakedown_run": {
+    "report": "bench/reports/2026-05-16T06-13-07Z-dev-projection.md",
+    "corpus": "dev",
+    "selection_accuracy_augment": 0.5,
+    "selection_accuracy_claude": 0.5,
+    "projection_fidelity_claude": 1.0,
+    "projection_fidelity_cursor": "not_applicable",
+    "projection_fidelity_cline": "not_applicable",
+    "projection_fidelity_windsurf": "not_applicable"
+  },
+  "decisions_pending": {
+    "compression_default": {
+      "kill_criterion": "docs/contracts/compression-default-kill-criterion.md",
+      "verdict": "deferred_until_baseline_closes",
+      "decision_owner": "step-4 closeout phase"
+    }
+  },
+  "downstream_consumers": [
+    "agents/roadmaps/step-99-north-star-restructure.md#G1",
+    "agents/roadmaps/step-2-skill-inventory-rationalization.md#G0",
+    "docs/contracts/compression-default-kill-criterion.md"
+  ]
+}

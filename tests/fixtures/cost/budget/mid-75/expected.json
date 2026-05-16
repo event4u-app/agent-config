@@ -1,0 +1,1 @@
+{"period":"all","budget_usd":100,"spent_usd":77,"remaining_usd":23,"utilization_pct":77,"level":"WARNING","threshold":75,"recommended_action":"75% consumed — suggest /set-cost-profile balanced→minimal.","sessionCount":1,"enforcement":"advisory","source":"agent-settings.yml"}

@@ -1,0 +1,1 @@
+{"period":"all","budget_usd":100,"spent_usd":150,"remaining_usd":0,"utilization_pct":150,"level":"HARD_STOP","threshold":100,"recommended_action":"100% consumed — halt non-essential work; review /cost:report before continuing.","sessionCount":1,"enforcement":"hard-stop","source":"agent-settings.yml"}

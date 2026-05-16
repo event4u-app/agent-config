@@ -1,0 +1,81 @@
+name: Smoke Contracts
+
+# Per-tier smoke contracts from step-11 Phase 3. Each smoke runs ≤ 30 s,
+# asserts measured baselines (not aspirational), and locks regression
+# without forcing aspirational fixes on unrelated PRs.
+#
+# Path filters dispatch only the smokes whose tier the PR actually
+# touched (kernel / router / schema / skills). Pushes to main run all
+# four so the baseline numbers stay tracked.
+#
+# Contract: docs/contracts/smoke-contracts.md
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - ".agent-src.uncompressed/rules/**"
+      - ".agent-src/rules/**"
+      - ".agent-src.uncompressed/skills/**"
+      - "router.json"
+      - "scripts/smoke/**"
+      - "scripts/measure_rule_budget.py"
+      - "scripts/skill_linter.py"
+      - "scripts/validate_frontmatter.py"
+      - "scripts/schemas/**"
+      - "docs/contracts/**"
+      - "docs/guidelines/**"
+      - "docs/contracts/smoke-contracts.md"
+      - ".github/workflows/smoke.yml"
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke-kernel:
+    name: Smoke — kernel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run kernel smoke
+        run: scripts/smoke/kernel.sh
+
+  smoke-router:
+    name: Smoke — router
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run router smoke
+        run: scripts/smoke/router.sh
+
+  smoke-schema:
+    name: Smoke — schema
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run schema smoke
+        run: scripts/smoke/schema.sh
+
+  smoke-skills:
+    name: Smoke — skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run skills smoke
+        run: scripts/smoke/skills.sh

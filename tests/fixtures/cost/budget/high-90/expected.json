@@ -1,0 +1,1 @@
+{"period":"all","budget_usd":100,"spent_usd":92,"remaining_usd":8,"utilization_pct":92,"level":"CRITICAL","threshold":90,"recommended_action":"90% consumed — recommend model downgrades, consider /set-cost-profile minimal.","sessionCount":1,"enforcement":"advisory","source":"agent-settings.yml"}
