@@ -56,6 +56,8 @@ Post-rewrite validator runs on every reply when `speak_scope != off`:
 The rule documents the algorithm; agents apply it inline before
 sending. The mechanism is the rule, not a hidden script.
 
+Optional CI-side regression lock: [`scripts/validate_caveman_carveouts.py`](../../scripts/validate_caveman_carveouts.py) takes a pre/post reply pair and asserts byte-identical preservation across all seven carve-out categories — runtime mechanism stays algorithmic; the script is the offline check.
+
 ## Caveman grammar
 
 - Drop articles (`the`, `a`, `an`).
@@ -74,5 +76,7 @@ Example: *"I will now check the file and see if it exists"* →
 | `caveman.enabled` | `true` | Master — `false` forces all sub-switches off. |
 | `caveman.speak` | `true` | Compile-time include in `router.json`. |
 | `caveman.speak_scope` | `prose_only` | Runtime scope of caveman grammar. |
+
+Input-side memory compression (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`compress-memory`](../skills/compress-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.
 
 Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).

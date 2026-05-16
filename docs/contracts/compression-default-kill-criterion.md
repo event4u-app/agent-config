@@ -5,14 +5,16 @@ keep-beta-until: 2026-08-14
 
 # Compression default — kill-criterion
 
-> **Status:** parked, criterion-deferred · **Owner:** `step-4-measurement-and-benchmark.md`
-> closeout phase · **Source:** [`council-synthesis.md` § 7](../../agents/audit-2026-05-14-north-star/council-synthesis.md)
+> **Status:** v1-measured · criterion not met · default stays `off` · **Owner:** `step-16-caveman-substance.md`
+> Phase 1 closeout · **Sources:** [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) ·
+> [`council-synthesis.md` § 7](../../agents/audit-2026-05-14-north-star/council-synthesis.md) ·
+> [`caveman-v1-kc-verdict.json`](../../agents/council-responses/caveman-v1-kc-verdict.json)
 
 ## Rule
 
 ```
-DEFAULT STAYS OFF UNTIL `task bench` PRODUCES A NUMBER.
-DECISION OWNED BY step-4 CLOSEOUT, NOT BY THIS DOC OR BY step-99.
+DEFAULT STAYS OFF UNTIL `task bench -- --caveman` PRODUCES A POSITIVE vs_terse MEDIAN.
+DECISION OWNED BY THE NEXT BENCH CLOSEOUT, NOT BY THIS DOC.
 ```
 
 1. **Current state.** `caveman.speak_scope` defaults `off`. Carve-outs
@@ -21,49 +23,94 @@ DECISION OWNED BY step-4 CLOSEOUT, NOT BY THIS DOC OR BY step-99.
    [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md)
    but the feature is non-promoted: no skill recommends turning it on,
    no preset enables it, no profile depends on it.
-2. **Baseline window.** 60 days from the first green run of
-   `task bench` against the locked 25-prompt corpus
-   (`step-4-measurement-and-benchmark.md`
-   Phase 2). The corpus, the model, and the cost-tracker are frozen
-   for the window; mid-window changes restart the clock.
-3. **Decision points.** After the window closes, `step-4` closeout
-   reads `docs/parity/bench.json` and applies exactly one of:
+2. **Baselines.** Every published `bench/reports/caveman-v<N>.{json,md}`
+   measures three arms (`compressed` · `terse-control` ·
+   `uncompressed`) and reports two savings columns:
+   - `vs_raw` — median savings against the uncompressed arm.
+   - `vs_terse` — **load-bearing** median savings against the
+     `Answer concisely.` terse-control arm. `vs_raw` is inflated by the
+     carve-out-tax-free pure-prose case and is **not** the gate metric.
+3. **Decision table.** Read the latest `bench/reports/caveman-v<N>.md`
+   and apply exactly one of:
 
-   | Measured tokens saved | Quality regression on corpus | Verdict |
+   | Measured `vs_terse` median | Quality regression on corpus | Verdict |
    |---|---|---|
-   | < 30 % | any | **Deprecate** — remove `caveman-speak` rule, archive `caveman-compress` script, retire `caveman.*` settings keys with a one-release deprecation window |
-   | ≥ 30 % | < 5 % | **Flip default on** — `caveman.speak_scope` defaults to a non-`off` value, carve-outs stay, statusline surfaces lifetime tokens saved |
-   | ≥ 30 % | ≥ 5 % | **Hold** — repeat the window once with tuned intensity ladder; second hold → deprecate |
+   | < 0 % | any | **Criterion not met — defer.** Keep default `off`. No telemetry multiplier. Next move owned by the corpus-widening / methodology-revision step that produces `caveman-v<N+1>`. |
+   | 0 % – < 30 % | any | **Hold.** Keep default `off`. Authorised follow-up: widen corpus or tune carve-out share; no default flip. |
+   | ≥ 30 % | < 5 % | **Flip default on** — `caveman.speak_scope` defaults to a non-`off` value (separate roadmap), carve-outs stay, statusline surfaces lifetime tokens saved. |
+   | ≥ 30 % | ≥ 5 % | **Hold** — repeat the window once with tuned intensity ladder; second hold → deprecate. |
 
    "Quality regression" = host-side rubric on the corpus per
-   `step-4-measurement-and-benchmark.md` Phase 3. Numbers checked into
-   `docs/parity/bench.json` as the decision artefact.
+   `benchmark-report-schema.md`. Numbers checked into the published
+   `caveman-v<N>.json` as the decision artefact.
 4. **No interim flip.** The default does not move on anecdote,
-   gut feeling, or a single benchmark snapshot. The 60-day window and
-   the table above are the only path to a default change.
+   gut feeling, or a single positive prompt. Only a published
+   `caveman-v<N>` report with a `vs_terse` median in the "Flip" row
+   above authorises a default change, under a follow-up roadmap.
+
+## v1 verdict (2026-05-16)
+
+[`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
+landed 30 calls · $0.0805 · 0 errors · `claude-sonnet-4-5`:
+
+| Metric | Median | p10 | p90 |
+|---|---:|---:|---:|
+| `vs_raw` savings | +23.51 % | -18.29 % | +52.53 % |
+| **`vs_terse` savings** | **−9.27 %** | **−109.85 %** | +51.32 % |
+| Realised carve-out share (compressed arm) | 30.67 % | — | — |
+
+Per row 1 of the table, the v1 verdict is **criterion not met — defer**.
+Default stays `off`; no telemetry multiplier ships; no rule retirement
+in this roadmap. Wins exist only on pure-prose prompts (caveman-09
++50.5 %, caveman-10 +58.4 %); carve-out-heavy prompts drag the median
+negative (caveman-04 path-list −108 %, caveman-06 mode-marker −123 %).
+
+### Council split (recorded, not decisive)
+
+Council run [`caveman-v1-kc-verdict.json`](../../agents/council-responses/caveman-v1-kc-verdict.json)
+(2 members · 1 round · $0.0514 actual) split:
+
+- **`claude-sonnet-4-5`** → Decision A.1 (deprecate now) + Decision B.3
+  (suspend telemetry). Reasoning: the roadmap pinned `vs_terse` as
+  load-bearing; the data falsified it; retreating to `vs_raw` is
+  post-hoc rationalisation.
+- **`gpt-4o`** → Decision A.3 (hold + re-bench with widened corpus +
+  revised terse-control prompt) + Decision B.2 (per-category
+  multipliers, suppress negatives). Reasoning: 10 prompts is a
+  razor-thin sample; the terse-control prompt may under-compress; the
+  carve-out validator (Phase 4) is not yet shipped, so we are
+  measuring a half-implemented feature.
+
+**Synthesis (criterion-not-met + defer).** Both members agreed `vs_terse`
+is the right gate. Neither's strongest path is taken in full inside
+step-16: deprecation is reserved for a follow-up roadmap once v2 confirms
+v1; re-bench is reserved for a follow-up roadmap with the methodology
+revision the council requested. Step-16 ships the infrastructure (corpus,
+bench arm, validator), records the v1 verdict, suspends the telemetry
+multiplier, and hands the deprecate-vs-rebench call to the v2 roadmap.
 
 ## Why this is parked, not decided
 
-The council split (Opus = remove now, o1 = measure-then-decide) is
-real. Either branch is wrong-shaped without numbers. The kill-criterion
-gives the audit a deterministic resolution path and stops every
-downstream roadmap from re-litigating compression on every PR.
+The 2026-05-14 council split (Opus = remove now, o1 = measure-then-decide)
+predated v1 numbers. The 2026-05-16 council split (Sonnet = deprecate now,
+GPT-4o = re-bench) is informed by v1 but disagrees on which methodological
+weakness is decisive. The kill table above gives every future bench run a
+deterministic resolution path and stops every downstream roadmap from
+re-litigating compression on every PR.
 
 ## Cross-references
 
-- ``step-99-north-star-restructure.md` § Phase 4`
-  — parks this criterion, does not decide.
-- `step-4-measurement-and-benchmark.md`
-  — owns `task bench`, the corpus, and the closeout that applies the
-  table above.
-- `step-10-caveman-parity.md`
-  — implements the carve-outs and the statusline integration the
-  "flip default on" branch depends on; blocks the default flip until
-  acceptance is green.
+- [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
+  — v1 measurement; canonical baseline this doc cites.
+- [`docs/benchmarks.md`](../benchmarks.md)
+  — cadence + when the next bench run is mandatory.
+- `agents/roadmaps/step-16-caveman-substance.md` Phase 1
+  — produced v1; Phase 3 telemetry suspended pending v2.
 - [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md)
   — runtime rule; reads `caveman.speak_scope` from settings.
 
 ## Done
 
-This doc exists to keep the decision visible. It is **not** an action
-item. `step-4` closeout closes the loop.
+This doc reflects the v1 verdict. It is **not** an action item. The next
+bench closeout (against `caveman-v2` once a widened corpus or revised
+methodology is shipped) closes the loop.
