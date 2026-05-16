@@ -240,6 +240,9 @@ open questions surfaced>
 - **Critical Challenger** — <one paragraph>
 - **AI Agent** — <one paragraph>
 - **[qa]** — *(only when `--personas=+qa`)* <one paragraph>
+- **User: <label>** — *(only when `--user-type=<id>`)* <one paragraph
+  citing Daily Workflow / Vocabulary / Operational Constraints /
+  Ticket Red Flags from the loaded user-type>
 
 ## Orchestration notes
 
