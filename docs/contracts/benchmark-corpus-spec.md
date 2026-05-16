@@ -12,7 +12,7 @@ and validation invariants.
 
 ## Path decision
 
-Roadmap [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md)
+Roadmap `step-4-measurement-and-benchmark.md`
 Phase 1 Step 2 names `bench/corpus.yaml`. The existing benchmark
 infrastructure (runner + non-dev corpus + `task bench`) lives under
 `tests/eval/` and `scripts/bench_runner.py` hardcodes that directory.

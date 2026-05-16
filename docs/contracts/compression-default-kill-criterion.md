@@ -23,7 +23,7 @@ DECISION OWNED BY step-4 CLOSEOUT, NOT BY THIS DOC OR BY step-99.
    no preset enables it, no profile depends on it.
 2. **Baseline window.** 60 days from the first green run of
    `task bench` against the locked 25-prompt corpus
-   ([`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md)
+   (`step-4-measurement-and-benchmark.md`
    Phase 2). The corpus, the model, and the cost-tracker are frozen
    for the window; mid-window changes restart the clock.
 3. **Decision points.** After the window closes, `step-4` closeout
@@ -51,12 +51,12 @@ downstream roadmap from re-litigating compression on every PR.
 
 ## Cross-references
 
-- [`step-99-north-star-restructure.md` § Phase 4](../../agents/roadmaps/step-99-north-star-restructure.md)
+- ``step-99-north-star-restructure.md` § Phase 4`
   — parks this criterion, does not decide.
-- [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md)
+- `step-4-measurement-and-benchmark.md`
   — owns `task bench`, the corpus, and the closeout that applies the
   table above.
-- [`step-10-caveman-parity.md`](../../agents/roadmaps/step-10-caveman-parity.md)
+- `step-10-caveman-parity.md`
   — implements the carve-outs and the statusline integration the
   "flip default on" branch depends on; blocks the default flip until
   acceptance is green.

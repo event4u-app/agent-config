@@ -64,7 +64,7 @@ constant in the script body and the row below.
   (`kernel-bucket > 26000`, `no-cheap-questions > 4000`). The smoke
   asserts the count does not grow; reductions update `EXPECTED_BREACHES`
   in `scripts/smoke/kernel.sh`. See
-  [`road-to-kernel-and-router.md`](../../agents/roadmaps/road-to-kernel-and-router.md)
+  `road-to-kernel-and-router.md`
   for the path back to zero.
 
 ### § 3.2 — Router (`scripts/smoke/router.sh`)
@@ -81,7 +81,7 @@ constant in the script body and the row below.
 - **2 missing contracts** — measured 2026-05-16:
   `contract:artifact-engagement-flow`,
   `contract:command-suggestion-flow`. Tracked separately under
-  [`step-11` Phase 4 (ADR layout)](../../agents/roadmaps/step-11-ruflo-parity.md);
+  ``step-11` Phase 4 (ADR layout)`;
   smoke asserts the count is `≤ EXPECTED_MISSING_CONTRACTS=2`.
 
 ### § 3.3 — Schema (`scripts/smoke/schema.sh`)
@@ -95,7 +95,7 @@ constant in the script body and the row below.
 - **≤ 92 warns** — measured 2026-05-16; locks regression. Warns
   trending down updates the constant.
 - **v2 schema (step-5) deferred** — when
-  [`step-5-schema-rigor.md`](../../agents/roadmaps/step-5-schema-rigor.md)
+  `step-5-schema-rigor.md`
   Phase 1 closes, this smoke gains a `model_tier` presence assertion;
   Phase 3 adds `schema_version: "2"`. Until then, v1 schema in
   `scripts/schemas/skill.schema.json` is the contract.
@@ -141,4 +141,4 @@ the final baseline line) for CI summary parsing.
 - [`cost-enforcement.md`](cost-enforcement.md) — cost ladder, sibling smoke surface.
 - [`kernel-membership.md`](kernel-membership.md) — the 9-rule kernel set.
 - [`rule-router.md`](rule-router.md) — router contract.
-- [`road-to-kernel-and-router.md`](../../agents/roadmaps/road-to-kernel-and-router.md) — kernel budget reduction path.
+- `road-to-kernel-and-router.md` — kernel budget reduction path.

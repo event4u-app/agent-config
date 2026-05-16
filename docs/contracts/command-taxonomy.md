@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Command taxonomy
 
 > **Status:** beta — first draft 2026-05-16 (Phase 2 Item 6 of
-> `agents/roadmaps/step-15-product-refinement.md`).
+> `step-15-product-refinement`).
 
 The taxonomy answers **"how is the command surface organized so each
 profile finds their three first commands in under 30 seconds?"** It is
@@ -134,4 +134,4 @@ line is a Phase 2 deliverable.
 - [`command-clusters`](command-clusters.md) — verb-axis (invocation)
 - [`profile-system`](profile-system.md) — profile-axis (discoverability)
 - [`command-surface-tiers`](command-surface-tiers.md) — tier-axis (`./agent-config --help` visibility)
-- `agents/roadmaps/step-15-product-refinement.md` § Phase 2 Item 6
+- `step-15-product-refinement` § Phase 2 Item 6

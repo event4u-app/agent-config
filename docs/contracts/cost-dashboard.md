@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Cost governance dashboard
 
 > **Status:** beta — first draft 2026-05-16 (Phase 2 Item 10 of
-> `agents/roadmaps/step-15-product-refinement.md`).
+> `step-15-product-refinement`).
 >
 > **Related:** [`config-presets`](config-presets.md) (caps schema) ·
 > [`cost-profile-defaults`](cost-profile-defaults.md) (default
@@ -140,4 +140,4 @@ shipped) fails CI on:
 - [`cost-profile-defaults`](cost-profile-defaults.md) — default preset selection
 - [`safety-model`](safety-model.md) — `mcp_call_costly` domain
 - `scripts/cost/budget.mjs`, `scripts/cost/track.mjs` — wrapped primitives
-- `agents/roadmaps/step-15-product-refinement.md` § Phase 2 Item 10
+- `step-15-product-refinement` § Phase 2 Item 10

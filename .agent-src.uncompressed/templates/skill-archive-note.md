@@ -1,7 +1,7 @@
 # Skill Archive Note Template
 
 > Template for `agents/archived-skills/<slug>.md`. Created during
-> [`step-2-skill-inventory-rationalization.md`](../../agents/roadmaps/step-2-skill-inventory-rationalization.md)
+> `step-2-skill-inventory-rationalization.md`
 > Phase 4 execution. Every skill removed from
 > `.agent-src.uncompressed/skills/` MUST have a matching archive note
 > here — enforced by `scripts/lint_archived_skills.py`.

@@ -4,7 +4,7 @@ stability: stable
 
 # Measurement baseline — contract
 
-> **Status:** locked 2026-05-16 · **Owner:** [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md)
+> **Status:** locked 2026-05-16 · **Owner:** `step-4-measurement-and-benchmark.md`
 > · **Cited by:** every P2 enforcement roadmap (skill rationalization G0, north-star G1, compression default decision).
 
 Single source of truth for what `task bench` measures, what counts as
@@ -76,9 +76,9 @@ on the 30-report floor.
 
 Downstream consumers:
 
-- [`step-99-north-star-restructure.md` § Acceptance G1](../../agents/roadmaps/step-99-north-star-restructure.md) — reads this exit code.
+- ``step-99-north-star-restructure.md` § Acceptance G1` — reads this exit code.
 - [`compression-default-kill-criterion.md` § 3](compression-default-kill-criterion.md) — reads the decision table after baseline closes.
-- [`step-2-skill-inventory-rationalization.md` § G0](../../agents/roadmaps/step-2-skill-inventory-rationalization.md) — usage-data soak floor.
+- ``step-2-skill-inventory-rationalization.md` § G0` — usage-data soak floor.
 
 ## What the closeout writes
 
@@ -99,4 +99,4 @@ P2 roadmap reads — not the live `bench/reports/` directory.
 - [`benchmark-report-schema.md`](benchmark-report-schema.md) · per-report JSON schema
 - [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md) · corpus YAML schema
 - [`compression-default-kill-criterion.md`](compression-default-kill-criterion.md) · decision table read by step-4 closeout
-- [`step-4-measurement-and-benchmark.md`](../../agents/roadmaps/step-4-measurement-and-benchmark.md) · the owning roadmap
+- `step-4-measurement-and-benchmark.md` · the owning roadmap

@@ -1,7 +1,7 @@
 # Skill Archive Note Template
 
 > Template for `agents/archived-skills/<slug>.md`. Created during
-> [`step-2-skill-inventory-rationalization.md`](../../agents/roadmaps/step-2-skill-inventory-rationalization.md)
+> `step-2-skill-inventory-rationalization.md`
 > Phase 4 execution. Every skill removed from
 > `.agent-src.uncompressed/skills/` MUST have a matching archive note
 > here — enforced by `scripts/lint_archived_skills.py`.
@@ -10,8 +10,8 @@
 
 1. Create the file: `agents/archived-skills/{slug}.md`.
 2. Copy the template body below and fill every required field.
-3. Commit alongside the SKILL.md removal in same PR (linter refuses
-   to pass if pair drifts).
+3. Commit alongside the SKILL.md removal in the same PR (the linter
+   refuses to pass if the pair drifts).
 
 ## Required frontmatter
 
@@ -63,32 +63,32 @@ references the removed slug without pointing at this note.}
 
 ## Field semantics
 
-- **`slug`** — must match removed directory name exactly. Linter keys
-  on this.
+- **`slug`** — must match the removed directory name exactly. The
+  linter keys on this.
 - **`archived_on`** — UTC date string `YYYY-MM-DD`. Used for cohort
-  reporting (e.g. "skills archived in May 2026 rationalization").
-- **`last_seen_count`** — `mentions_30d` value from activation
-  report at moment of archival. `0` is dominant case; non-zero
+  reporting (e.g. "skills archived in the May 2026 rationalization").
+- **`last_seen_count`** — `mentions_30d` value from the activation
+  report at the moment of archival. `0` is the dominant case; non-zero
   values demand extra justification in *Why archived*.
 - **`reason`** — exactly one of:
-  - `unused` — `mentions_30d == 0` over soak window.
+  - `unused` — `mentions_30d == 0` over the soak window.
   - `merged` — content folded into another skill; trigger phrases
     transferred.
   - `superseded` — thin-redirect successor exists (`replaced_by`
-    relationship documented in successor's frontmatter).
+    relationship documented in the successor's frontmatter).
   - `deprecated` — capability retired; no successor needed.
 - **`replacement`** — successor slug (must exist under
-  `.agent-src.uncompressed/skills/`) or literal `none`. Linter
-  validates successor's existence.
+  `.agent-src.uncompressed/skills/`) or literal `none`. The linter
+  validates the successor's existence.
 - **`last_known_callers`** — references found by
   `scripts/check_references.py` at archival time. Empty list is valid
-  only when check truly returned zero hits.
+  only when the check truly returned zero hits.
 
 ## Lint contract
 
 `scripts/lint_archived_skills.py` enforces:
 
-1. Every file under `agents/archived-skills/*.md` (except README)
+1. Every file under `agents/archived-skills/*.md` (except the README)
    has a frontmatter block with the six required fields.
 2. `reason` is one of the four allowed values.
 3. When `reason ∈ {merged, superseded}`, the `replacement` slug exists

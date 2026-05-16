@@ -95,7 +95,7 @@ After the loader runs, the session has:
 ```
 
 The `source` field is mandatory and feeds the
-[`/agent-config explain`](../../agents/roadmaps/step-15-product-refinement.md)
+`/agent-config explain`
 command (Phase 1 item 3).
 
 ## User-defined profiles
@@ -139,4 +139,4 @@ Only changes to the **seed set** require an ADR.
 - [`ADR-010`](../decisions/ADR-010-profile-pack-preset-boundary.md) — axis boundary.
 - [`config-presets.md`](config-presets.md) — preset knobs.
 - [`cost-profile-defaults.md`](cost-profile-defaults.md) — rule-tier axis (orthogonal).
-- [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 item 1.
+- `step-15-product-refinement` — Phase 1 item 1.

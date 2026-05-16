@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Workflow packs
 
 > **Status:** beta — first draft 2026-05-16 (Phase 2 Item 7 of
-> `agents/roadmaps/step-15-product-refinement.md`).
+> `step-15-product-refinement`).
 
 A **workflow pack** bundles a `(profile + preset + command-set +
 skill-allowlist)` combination into a single YAML so a user can adopt
@@ -118,4 +118,4 @@ covered by the validation rules above.
 - [`config-presets`](config-presets.md) — preset axis (risk appetite)
 - [`command-clusters`](command-clusters.md) — verb axis (invocation)
 - [`command-taxonomy`](command-taxonomy.md) — discoverability axis
-- `agents/roadmaps/step-15-product-refinement.md` § Phase 2 Item 7
+- `step-15-product-refinement` § Phase 2 Item 7

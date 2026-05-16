@@ -128,7 +128,7 @@ suite is wired to `task test-cost-budget` per `step-11` Phase 2 Step 5.
 
 ## See also
 
-- `agents/roadmaps/step-11-ruflo-parity.md` — Measurement & Governance Parity roadmap.
+- `step-11-ruflo-parity` — Measurement & Governance Parity roadmap.
 - `docs/contracts/cost-dashboard.md` — companion dashboard contract.
 - `scripts/cost/budget.mjs` — evaluator implementation.
 - `bench/pricing.yaml` — per-model USD pricing table.

@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Universal safety model
 
 > **Status:** beta — first draft 2026-05-16 (Phase 2 Item 9 of
-> `agents/roadmaps/step-15-product-refinement.md`).
+> `step-15-product-refinement`).
 >
 > **Baseline:** [`docs/architecture/current-safety-behavior.md`](../architecture/current-safety-behavior.md)
 > documents the pre-step-15 surface this contract replaces.
@@ -126,4 +126,4 @@ Until the linter lands, profiles are reviewed by hand at PR time.
 - [`config-presets`](config-presets.md) — cost caps and enforcement
 - [`profile-system`](profile-system.md) — profile axis
 - [`workflow-packs`](workflow-packs.md) — pack-level overrides
-- `agents/roadmaps/step-15-product-refinement.md` § Phase 2 Item 9
+- `step-15-product-refinement` § Phase 2 Item 9
