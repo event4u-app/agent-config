@@ -1,0 +1,167 @@
+{
+  "generated_at": "2026-05-16T23:21:29Z",
+  "schema": "caveman-v2",
+  "rows": [
+    {
+      "path": "AGENTS.md",
+      "category": "thin-root-package",
+      "before_chars": 2987,
+      "after_chars": 3104,
+      "delta_chars": 117,
+      "saving_pct_chars": -3.916973552058922,
+      "before_tokens_est": 747,
+      "after_tokens_est": 776,
+      "delta_tokens_est": 29,
+      "saving_pct_tokens_est": -3.8821954484605086
+    },
+    {
+      "path": ".agent-src.uncompressed/templates/AGENTS.md",
+      "category": "thin-root-consumer-template",
+      "before_chars": 2272,
+      "after_chars": 2382,
+      "delta_chars": 110,
+      "saving_pct_chars": -4.841549295774648,
+      "before_tokens_est": 568,
+      "after_tokens_est": 596,
+      "delta_tokens_est": 28,
+      "saving_pct_tokens_est": -4.929577464788732
+    },
+    {
+      "path": ".agent-src/templates/AGENTS.md",
+      "category": "thin-root-consumer-generated",
+      "before_chars": 2272,
+      "after_chars": 2382,
+      "delta_chars": 110,
+      "saving_pct_chars": -4.841549295774648,
+      "before_tokens_est": 568,
+      "after_tokens_est": 596,
+      "delta_tokens_est": 28,
+      "saving_pct_tokens_est": -4.929577464788732
+    },
+    {
+      "path": "docs/contracts/ai-council-config.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 32659,
+      "after_chars": 31413,
+      "delta_chars": -1246,
+      "saving_pct_chars": 3.8151811139349032,
+      "before_tokens_est": 8165,
+      "after_tokens_est": 7853,
+      "delta_tokens_est": -312,
+      "saving_pct_tokens_est": 3.8211879975505205
+    },
+    {
+      "path": "docs/contracts/implement-ticket-flow.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 28395,
+      "after_chars": 27136,
+      "delta_chars": -1259,
+      "saving_pct_chars": 4.433879204085226,
+      "before_tokens_est": 7099,
+      "after_tokens_est": 6784,
+      "delta_tokens_est": -315,
+      "saving_pct_tokens_est": 4.437244682349626
+    },
+    {
+      "path": "docs/contracts/command-clusters.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 20831,
+      "after_chars": 20180,
+      "delta_chars": -651,
+      "saving_pct_chars": 3.1251500168018818,
+      "before_tokens_est": 5208,
+      "after_tokens_est": 5045,
+      "delta_tokens_est": -163,
+      "saving_pct_tokens_est": 3.129800307219662
+    },
+    {
+      "path": "docs/contracts/mental-models.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 15255,
+      "after_chars": 14263,
+      "delta_chars": -992,
+      "saving_pct_chars": 6.5027859718125205,
+      "before_tokens_est": 3814,
+      "after_tokens_est": 3566,
+      "delta_tokens_est": -248,
+      "saving_pct_tokens_est": 6.502359727320399
+    },
+    {
+      "path": "docs/contracts/kernel-membership.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 14633,
+      "after_chars": 14161,
+      "delta_chars": -472,
+      "saving_pct_chars": 3.2255860042369986,
+      "before_tokens_est": 3658,
+      "after_tokens_est": 3540,
+      "delta_tokens_est": -118,
+      "saving_pct_tokens_est": 3.225806451612903
+    },
+    {
+      "path": "docs/contracts/load-context-budget-model.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 11759,
+      "after_chars": 11163,
+      "delta_chars": -596,
+      "saving_pct_chars": 5.06845820222808,
+      "before_tokens_est": 2940,
+      "after_tokens_est": 2791,
+      "delta_tokens_est": -149,
+      "saving_pct_tokens_est": 5.068027210884353
+    },
+    {
+      "path": "docs/contracts/mcp-cloud-scope.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 17402,
+      "after_chars": 16459,
+      "delta_chars": -943,
+      "saving_pct_chars": 5.418917365820021,
+      "before_tokens_est": 4350,
+      "after_tokens_est": 4115,
+      "delta_tokens_est": -235,
+      "saving_pct_tokens_est": 5.402298850574713
+    },
+    {
+      "path": "docs/contracts/context-spine.md",
+      "category": "prose-heavy-contract",
+      "before_chars": 9353,
+      "after_chars": 8914,
+      "delta_chars": -439,
+      "saving_pct_chars": 4.69368117181653,
+      "before_tokens_est": 2338,
+      "after_tokens_est": 2228,
+      "delta_tokens_est": -110,
+      "saving_pct_tokens_est": 4.704875962360992
+    },
+    {
+      "path": "docs/contracts/rule-classification.md",
+      "category": "rule-classification",
+      "before_chars": 9803,
+      "after_chars": 9794,
+      "delta_chars": -9,
+      "saving_pct_chars": 0.09180863001122105,
+      "before_tokens_est": 2451,
+      "after_tokens_est": 2448,
+      "delta_tokens_est": -3,
+      "saving_pct_tokens_est": 0.12239902080783353
+    }
+  ],
+  "aggregate": {
+    "calls": 12,
+    "errors": 0,
+    "median_saving_pct": 3.5203835590859507,
+    "p10_saving_pct": -4.841549295774648,
+    "p90_saving_pct": 6.177625390014771,
+    "stdev_saving_pct": 4.007934775307251,
+    "total_chars_saved": 6270,
+    "total_tokens_est_saved": 1568,
+    "by_category_median_pct": {
+      "thin-root-package": -3.916973552058922,
+      "thin-root-consumer-template": -4.841549295774648,
+      "thin-root-consumer-generated": -4.841549295774648,
+      "prose-heavy-contract": 4.5637801879508775,
+      "rule-classification": 0.09180863001122105
+    }
+  }
+}

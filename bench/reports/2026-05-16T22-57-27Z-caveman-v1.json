@@ -1,0 +1,479 @@
+{
+  "schema_version": "caveman-v1",
+  "generated_at": "2026-05-16T22:57:27Z",
+  "corpus": {
+    "id": "caveman",
+    "path": "bench/corpora/caveman/prompts.yaml",
+    "prompt_count": 10
+  },
+  "runner": {
+    "bench_run_version": "0.2.0",
+    "transport": "api",
+    "model": "claude-sonnet-4-5"
+  },
+  "caveman": {
+    "arms": [
+      "compressed",
+      "terse_control",
+      "uncompressed"
+    ],
+    "aggregate": {
+      "savings_vs_raw": {
+        "n": 10,
+        "median": 0.23513071895424836,
+        "p10": -0.18294205794205803,
+        "p90": 0.5252826883261665,
+        "stdev": 0.36844032412718963
+      },
+      "savings_vs_terse": {
+        "n": 10,
+        "median": -0.09270881167406497,
+        "p10": -1.098529411764706,
+        "p90": 0.5131526836894216,
+        "stdev": 0.5625401815535399
+      },
+      "realised_carve_out_pct": {
+        "n": 10,
+        "median": 0.30665437297867554,
+        "p10": 0.0,
+        "p90": 0.7441810466760962,
+        "stdev": 0.31278226308280493
+      },
+      "expected_carve_out_pct": {
+        "n": 10,
+        "median": 0.42500000000000004,
+        "p10": 0.0,
+        "p90": 0.6359999999999999,
+        "stdev": 0.2601538006641456
+      },
+      "output_tokens": {
+        "compressed": {
+          "n": 10,
+          "median": 150.5,
+          "p10": 46.5,
+          "p90": 250.29999999999998,
+          "stdev": 79.04277323070086
+        },
+        "terse_control": {
+          "n": 10,
+          "median": 98.0,
+          "p10": 70.7,
+          "p90": 211.0,
+          "stdev": 58.41960287437771
+        },
+        "uncompressed": {
+          "n": 10,
+          "median": 124.5,
+          "p10": 90.4,
+          "p90": 293.2,
+          "stdev": 90.43013878127137
+        }
+      }
+    },
+    "per_prompt": [
+      {
+        "id": "caveman-01",
+        "category": "iron-law-fence",
+        "expected_carve_out_pct": 0.45,
+        "realised_carve_out_pct": 0.4458874458874459,
+        "savings_vs_raw": 0.4476190476190476,
+        "savings_vs_terse": 0.18309859154929575,
+        "arms": {
+          "compressed": {
+            "input_tokens": 324,
+            "output_tokens": 58,
+            "latency_ms": 3064,
+            "output_chars": 231,
+            "carve_out_chars": 103,
+            "error": null,
+            "text": "```\nYOU MUST NEVER COMMIT FILES THAT CONTAIN SECRETS, API KEYS, PASSWORDS, OR OTHER SENSITIVE DATA.\n```\n\nPrevent accidental commit of credentials/secrets into version control where they become permanently searchable in Git history."
+          },
+          "terse_control": {
+            "input_tokens": 77,
+            "output_tokens": 71,
+            "latency_ms": 3352,
+            "output_chars": 324,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "I don't have access to a specific document containing the \"Iron Law of the commit-policy rule\" to quote it verbatim. This appears to be a reference to a particular project's or organization's documentation that I haven't been provided. If you can share the relevant documentation or context, I can help quote and explain it."
+          },
+          "uncompressed": {
+            "input_tokens": 51,
+            "output_tokens": 105,
+            "latency_ms": 4227,
+            "output_chars": 483,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "I don't have access to a specific document containing the \"Iron Law of the commit-policy rule\" that I can quote verbatim. This appears to be a reference to a particular style guide, development policy, or internal documentation that I haven't been trained on.\n\nCould you provide more context about where this rule comes from (e.g., a specific company's guidelines, a popular development methodology, or a particular book/resource)? That would help me give you a more accurate answer."
+          }
+        }
+      },
+      {
+        "id": "caveman-02",
+        "category": "numbered-options",
+        "expected_carve_out_pct": 0.55,
+        "realised_carve_out_pct": 0.22711471610660486,
+        "savings_vs_raw": 0.08518518518518514,
+        "savings_vs_terse": -0.19323671497584538,
+        "arms": {
+          "compressed": {
+            "input_tokens": 344,
+            "output_tokens": 247,
+            "latency_ms": 8488,
+            "output_chars": 863,
+            "carve_out_chars": 196,
+            "error": null,
+            "text": "**Incident triage \u2014 4 options:**\n\n1. **Recommendation: Rollback**  \n   Trade-off: Lose latest deploy features but restore stable state fastest (minutes).\n\n2. **Recommendation: Hotfix**  \n   Trade-off: Fix root cause in prod now\u2014fast if bug simple, risky if complex or multi-system.\n\n3. **Recommendation: Feature-flag-off**  \n   Trade-off: Kill bad feature instantly, keep rest of deploy\u2014only works if flagged + flag exists.\n\n4. **Recommendation: Bisect-and-revert**  \n   Trade-off: Find exact bad commit, revert clean\u2014takes longer (tens of minutes), good when rollback too broad.\n\n---\n\n**Recommendation:** **Option 1 (Rollback)**  \nReason: 5 min into incident = need stable state NOW. Rollback fastest, lowest risk. Investigate root cause after system stable. If specific feature flagged + suspect, then 3 (flag-off) faster\u2014but rollback safer default when unsure."
+          },
+          "terse_control": {
+            "input_tokens": 97,
+            "output_tokens": 207,
+            "latency_ms": 7733,
+            "output_chars": 806,
+            "carve_out_chars": 529,
+            "error": null,
+            "text": "# Four Triage Options\n\n1. **Rollback** \u2013 Fastest recovery (minutes) but loses all changes since last deploy; may break dependencies expecting new code.\n\n2. **Hotfix** \u2013 Fixes root cause permanently but takes 30-60+ minutes to write, test, and deploy while customers suffer.\n\n3. **Feature-flag-off** \u2013 Instant mitigation if culprit feature is flagged; fails if incident isn't feature-specific or flag doesn't exist.\n\n4. **Bisect-and-revert** \u2013 Surgically removes problem commit while keeping other changes, but requires 15-30 minutes to identify and test.\n\n## Recommendation\n\n**Rollback immediately** if you're within 2 hours of deploy and traffic/revenue impact is severe. It's the only option that guarantees recovery in under 5 minutes. Then investigate and either hotfix forward or re-deploy with fixes."
+          },
+          "uncompressed": {
+            "input_tokens": 71,
+            "output_tokens": 270,
+            "latency_ms": 9200,
+            "output_chars": 1084,
+            "carve_out_chars": 644,
+            "error": null,
+            "text": "# Incident Triage Options\n\n1. **Rollback** - Fastest path to stability (2-5 min) but loses all changes from the last deployment, including any unrelated fixes or features.\n\n2. **Hotfix** - Keeps good changes and surgically fixes the bug (15-45 min) but requires writing, testing, and deploying code under pressure with higher error risk.\n\n3. **Feature-flag-off** - Instant mitigation if the problem feature is flagged (30 sec) but only works if feature flags exist and the bug is isolated to that feature.\n\n4. **Bisect-and-revert** - Identifies and removes only the problematic commit (10-20 min) but requires time to test each candidate commit while users remain impacted.\n\n## Recommendation\n**Try feature-flag-off first (if applicable), otherwise rollback immediately.**\n\nAt 5 minutes in, user impact is mounting. Check if the incident maps to a feature flag\u2014if yes, toggle it off instantly. If no feature flags exist or the issue persists, execute a full rollback to restore service. Once stable, you can investigate the root cause and deploy a proper hotfix without time pressure."
+          }
+        }
+      },
+      {
+        "id": "caveman-03",
+        "category": "code-heavy",
+        "expected_carve_out_pct": 0.78,
+        "realised_carve_out_pct": 0.7942857142857143,
+        "savings_vs_raw": 0.5124223602484472,
+        "savings_vs_terse": -0.11347517730496448,
+        "arms": {
+          "compressed": {
+            "input_tokens": 363,
+            "output_tokens": 157,
+            "latency_ms": 4022,
+            "output_chars": 525,
+            "carve_out_chars": 417,
+            "error": null,
+            "text": "```python\nimport pathlib\nimport yaml\n\n\ndef load_yaml_keys(path: pathlib.Path) -> list[str]:\n    \"\"\"\n    Load YAML file, validate top-level mapping, return sorted keys.\n    \"\"\"\n    with open(path, 'r') as f:\n        data = yaml.safe_load(f)\n    \n    if not isinstance(data, dict):\n        raise ValueError(f\"Expected mapping at top level, got {type(data).__name__}\")\n    \n    return sorted(data.keys())\n```\n\nDone. Function opens file, parses YAML, checks dict type, raises `ValueError` if not mapping, returns sorted key list."
+          },
+          "terse_control": {
+            "input_tokens": 116,
+            "output_tokens": 141,
+            "latency_ms": 3359,
+            "output_chars": 454,
+            "carve_out_chars": 454,
+            "error": null,
+            "text": "```python\nimport pathlib\nimport yaml\n\n\ndef load_yaml_keys(path: pathlib.Path) -> list[str]:\n    \"\"\"\n    Load a YAML file and return its top-level keys as a sorted list.\n    \n    Raises ValueError if the YAML content is not a mapping.\n    \"\"\"\n    with open(path, 'r') as f:\n        data = yaml.safe_load(f)\n    \n    if not isinstance(data, dict):\n        raise ValueError(\"YAML content must be a top-level mapping\")\n    \n    return sorted(data.keys())\n```"
+          },
+          "uncompressed": {
+            "input_tokens": 90,
+            "output_tokens": 322,
+            "latency_ms": 5845,
+            "output_chars": 1061,
+            "carve_out_chars": 837,
+            "error": null,
+            "text": "```python\nimport pathlib\nimport yaml\n\n\ndef load_yaml_keys(path: pathlib.Path) -> list[str]:\n    \"\"\"\n    Load a YAML file and return its top-level keys as a sorted list.\n    \n    Validates that the YAML file contains a top-level mapping (dictionary).\n    Raises ValueError if the top-level structure is not a mapping.\n    \"\"\"\n    with open(path, 'r') as f:\n        data = yaml.safe_load(f)\n    \n    if not isinstance(data, dict):\n        raise ValueError(f\"Expected top-level mapping, got {type(data).__name__}\")\n    \n    return sorted(data.keys())\n```\n\n**Usage example:**\n\n```python\n# Example YAML file content (config.yaml):\n# database:\n#   host: localhost\n# api:\n#   timeout: 30\n# logging:\n#   level: INFO\n\npath = pathlib.Path(\"config.yaml\")\nkeys = load_yaml_keys(path)\nprint(keys)  # Output: ['api', 'database', 'logging']\n```\n\nThe function:\n- Opens and parses the YAML file using `yaml.safe_load()`\n- Validates that the result is a dictionary (mapping)\n- Raises `ValueError` with a descriptive message if validation fails\n- Returns the keys as a sorted list"
+          }
+        }
+      },
+      {
+        "id": "caveman-04",
+        "category": "path-list",
+        "expected_carve_out_pct": 0.5,
+        "realised_carve_out_pct": 0.7386138613861386,
+        "savings_vs_raw": 0.3055555555555556,
+        "savings_vs_terse": -1.0833333333333335,
+        "arms": {
+          "compressed": {
+            "input_tokens": 351,
+            "output_tokens": 175,
+            "latency_ms": 4716,
+            "output_chars": 505,
+            "carve_out_chars": 373,
+            "error": null,
+            "text": "Need touch these files for new rule `example-foo`:\n\n1. **Rule implementation:**\n   - `.agent-src.uncompressed/rules/example-foo.ts`\n\n2. **Rule registration:**\n   - `.agent-src.uncompressed/rules/index.ts` (add import + export)\n\n3. **Test file:**\n   - `.agent-src.uncompressed/rules/__tests__/example-foo.test.ts`\n\n4. **Documentation:**\n   - `.agent-src.uncompressed/docs/rules/example-foo.md`\n\n5. **Rule index doc:**\n   - `.agent-src.uncompressed/docs/rules/index.md` (add entry in table)\n\nTotal: 5 files."
+          },
+          "terse_control": {
+            "input_tokens": 104,
+            "output_tokens": 84,
+            "latency_ms": 2796,
+            "output_chars": 254,
+            "carve_out_chars": 216,
+            "error": null,
+            "text": "To add a new rule named `example-foo` scoped to `.agent-src.uncompressed/`:\n\n1. `.agent-src.uncompressed/rules/example-foo.yml` - Create the rule definition file\n2. `.agent-src.uncompressed/rules/index.yml` - Add `example-foo` to the rules index/registry"
+          },
+          "uncompressed": {
+            "input_tokens": 78,
+            "output_tokens": 252,
+            "latency_ms": 5679,
+            "output_chars": 879,
+            "carve_out_chars": 480,
+            "error": null,
+            "text": "To add a new rule named `example-foo` scoped to `.agent-src.uncompressed/` only, you would need to touch the following files:\n\n1. **Rule definition file:**\n   - `.agent-src.uncompressed/rules/example-foo.yml`\n\n2. **Rule test file:**\n   - `.agent-src.uncompressed/rules/example-foo.test.yml` or `.agent-src.uncompressed/tests/rules/example-foo.test.yml` (depending on test directory structure)\n\n3. **Rule registry/index file (if one exists):**\n   - `.agent-src.uncompressed/rules/index.yml` or `.agent-src.uncompressed/rules.yml` (if the project maintains a central registry)\n\n4. **Documentation file (if separate from rule file):**\n   - `.agent-src.uncompressed/docs/rules/example-foo.md` (if documentation is maintained separately)\n\nThe exact files depend on the project's structure conventions, but at minimum you'll need the rule definition file itself in the rules directory."
+          }
+        }
+      },
+      {
+        "id": "caveman-05",
+        "category": "status-marker",
+        "expected_carve_out_pct": 0.4,
+        "realised_carve_out_pct": 0.0,
+        "savings_vs_raw": 0.16470588235294115,
+        "savings_vs_terse": 0.01388888888888884,
+        "arms": {
+          "compressed": {
+            "input_tokens": 344,
+            "output_tokens": 71,
+            "latency_ms": 2996,
+            "output_chars": 186,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "# CI Results\n\n## \u274c Failures (1)\n- One hard failure\n\n## \u26a0\ufe0f Warnings (1)\n- One warning\n\n## \u2705 Passing (3)\n- Three checks pass\n\n---\n\n**Overall:** CI fail. Must fix hard failure before merge."
+          },
+          "terse_control": {
+            "input_tokens": 97,
+            "output_tokens": 72,
+            "latency_ms": 2955,
+            "output_chars": 195,
+            "carve_out_chars": 58,
+            "error": null,
+            "text": "\u274c **Hard Failure (1)**\n- 1 check failed critically\n\n\u26a0\ufe0f **Warnings (1)**\n- 1 check produced a warning\n\n\u2705 **Passing (3)**\n- 3 checks passed successfully\n\n**Overall**: CI failed due to hard failure."
+          },
+          "uncompressed": {
+            "input_tokens": 71,
+            "output_tokens": 85,
+            "latency_ms": 3505,
+            "output_chars": 237,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "# CI Task Summary\n\n## \u274c Failures (1)\n- 1 hard failure detected\n\n## \u26a0\ufe0f Warnings (1)\n- 1 warning found\n\n## \u2705 Passed (3)\n- 3 checks passed successfully\n\n---\n**Overall Result:** FAILED - Action required to fix hard failure before proceeding."
+          }
+        }
+      },
+      {
+        "id": "caveman-06",
+        "category": "mode-marker",
+        "expected_carve_out_pct": 0.25,
+        "realised_carve_out_pct": 0.38619402985074625,
+        "savings_vs_raw": -0.6703296703296704,
+        "savings_vs_terse": -1.2352941176470589,
+        "arms": {
+          "compressed": {
+            "input_tokens": 336,
+            "output_tokens": 152,
+            "latency_ms": 6975,
+            "output_chars": 536,
+            "carve_out_chars": 207,
+            "error": null,
+            "text": "```\n\u250c\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n\u2502 MODE: STRATEGIST                    \u2502\n\u2502 speak_scope: aggressive (caveman)   \u2502\n\u2502 token_budget: 200000                \u2502\n\u2514\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2510\n```\n\n**Strategist contract:**\n\n\u2022 **Core mandate:** Define solution architecture, design patterns, tradeoffs, technical strategy. No code implementation.\n\n\u2022 **Deliverables:** ADRs, design docs, diagrams (Mermaid/ASCII), numbered recommendation lists with tradeoff analysis, strategic roadmaps.\n\n---\n\nReady. What need strategic input?"
+          },
+          "terse_control": {
+            "input_tokens": 89,
+            "output_tokens": 68,
+            "latency_ms": 3343,
+            "output_chars": 304,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "<mode>strategist</mode>\n\n\u2022 **Strategic thinking**: Focus on high-level analysis, trade-offs, options, and long-term implications rather than tactical execution details.\n\n\u2022 **Concise frameworks**: Deliver insights through clear frameworks, prioritization, and decision criteria\u2014no unnecessary elaboration."
+          },
+          "uncompressed": {
+            "input_tokens": 63,
+            "output_tokens": 91,
+            "latency_ms": 3755,
+            "output_chars": 433,
+            "carve_out_chars": 24,
+            "error": null,
+            "text": "```\nMODE: strategist\n```\n\n**Strategist Mode Contract:**\n\n\u2022 **Focus on high-level strategy, frameworks, and decision-making** - I'll analyze situations from a strategic perspective, considering long-term implications, trade-offs, and competitive positioning.\n\n\u2022 **Provide structured thinking and actionable recommendations** - I'll break down complex problems into clear components and offer concrete strategic options with rationale."
+          }
+        }
+      },
+      {
+        "id": "caveman-07",
+        "category": "deliverable",
+        "expected_carve_out_pct": 0.62,
+        "realised_carve_out_pct": 0.6947535771065183,
+        "savings_vs_raw": -0.1287878787878789,
+        "savings_vs_terse": -0.07194244604316546,
+        "arms": {
+          "compressed": {
+            "input_tokens": 352,
+            "output_tokens": 149,
+            "latency_ms": 5170,
+            "output_chars": 629,
+            "carve_out_chars": 437,
+            "error": null,
+            "text": "Each approach trades fidelity against compression ratio: lossless preserves everything but saves least; semantic loses nuance but keeps meaning; caveman drops grammar for maximum brevity.\n\n| approach | strength | weakness |\n|----------|----------|----------|\n| lossless gzip | Perfect reconstruction. No info lost. | Minimal token saving. Context window still fills fast. |\n| semantic summarisation | Preserve core meaning. Readable summaries. | Subjective cuts. May drop critical detail. Hard automate. |\n| caveman-speak | Extreme compression. Keep key facts. Fast scan. | Grammar gone. Ambiguity risk. Professional tone lost. |"
+          },
+          "terse_control": {
+            "input_tokens": 105,
+            "output_tokens": 139,
+            "latency_ms": 4623,
+            "output_chars": 636,
+            "carve_out_chars": 430,
+            "error": null,
+            "text": "Memory compression trades off fidelity against compression ratio: lossless methods preserve everything but compress less, while lossy methods achieve higher compression at the cost of information loss.\n\n| approach | strength | weakness |\n|----------|----------|----------|\n| lossless gzip | Perfect reconstruction of original data | Low compression ratio (~2-3x for text) |\n| semantic summarisation | Preserves key meaning while achieving high compression | Loses details, nuance, and exact phrasing |\n| caveman-speak | Extreme compression by stripping grammar and function words | Sacrifices clarity, tone, and relational information |"
+          },
+          "uncompressed": {
+            "input_tokens": 79,
+            "output_tokens": 132,
+            "latency_ms": 5711,
+            "output_chars": 535,
+            "carve_out_chars": 406,
+            "error": null,
+            "text": "Memory compression trades off fidelity against compression ratio\u2014preserving either exact bytes, core meaning, or crude gist.\n\n| approach | strength | weakness |\n|----------|----------|----------|\n| lossless gzip | Perfect reconstruction of original data | Low compression ratio for text (~2-3\u00d7) |\n| semantic summarisation | Preserves key ideas with good compression (~5-10\u00d7) | Loses nuance, details, and exact wording |\n| caveman-speak | Maximum compression (~20\u00d7+) by stripping grammar | Loses structure, context, and subtle meaning |"
+          }
+        }
+      },
+      {
+        "id": "caveman-08",
+        "category": "pure-prose",
+        "expected_carve_out_pct": 0.0,
+        "realised_carve_out_pct": 0.0,
+        "savings_vs_raw": 0.03448275862068961,
+        "savings_vs_terse": -0.1336032388663968,
+        "arms": {
+          "compressed": {
+            "input_tokens": 338,
+            "output_tokens": 280,
+            "latency_ms": 10261,
+            "output_chars": 1495,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Deterministic carve-outs matter for LLM-assisted compression of agent context because they define rigid preservation boundaries that prevent the model from applying heuristic transformations to content where byte-level fidelity is operationally critical. Without explicit carve-outs, an LLM will probabilistically rephrase code snippets, alter command syntax, merge table cells, renumber options, or compress technical identifiers under the assumption that semantic equivalence suffices, but in agentic workflows these seemingly minor changes cascade into execution failures when downstream parsers expect exact strings, filesystem paths must match character-for-character, or user-facing deliverables like commit messages require professional tone rather than compressed artifacts. By anchoring carve-outs to syntactic patterns rather than semantic intent, the system creates machine-verifiable zones where compression is categorically forbidden, allowing aggressive token reduction everywhere else while guaranteeing that the skeleton of executable instructions, traceable references, and polished outputs remains intact. This determinism transforms lossy compression from a risky approximation into a reliable primitive because both the model and any downstream validator can mechanically identify protected spans without interpreting meaning, eliminating the class of bugs where well-intentioned paraphrasing breaks tooling integration or produces user-visible regressions in output quality."
+          },
+          "terse_control": {
+            "input_tokens": 91,
+            "output_tokens": 247,
+            "latency_ms": 8350,
+            "output_chars": 1309,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Deterministic carve-outs matter for LLM-assisted compression of agent context because they preserve critical information that must survive the lossy compression process intact. When an LLM compresses conversation history or agent state to fit within context windows, it naturally summarizes and paraphrases content, which introduces the risk of losing exact values, identifiers, timestamps, or structured data that downstream systems depend on for correct execution. By explicitly carving out deterministic elements like user IDs, transaction references, API keys, schema definitions, or precise numerical values before compression and then reinserting them afterward, we ensure that the agent maintains perfect fidelity for information where approximation would break functionality. This hybrid approach leverages the LLM's strength at semantic compression of natural language while preventing hallucination or drift in the factual anchors that tie the agent's reasoning to real-world constraints. Without such carve-outs, compressed context might contain subtly altered facts that cause the agent to reference wrong database entries, miscalculate values, or violate business rules, ultimately undermining the reliability gains that compression was meant to provide by extending the agent's effective memory."
+          },
+          "uncompressed": {
+            "input_tokens": 65,
+            "output_tokens": 290,
+            "latency_ms": 9645,
+            "output_chars": 1634,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Deterministic carve-outs matter for LLM-assisted compression of agent context because they preserve critical information that must remain intact and unmodified to maintain system functionality and consistency across conversation turns. When an LLM compresses an agent's accumulated context to fit within token limits, it naturally applies lossy summarization that prioritizes semantic meaning over exact preservation, which can inadvertently alter or omit structured data like identifiers, timestamps, function call results, API responses, state flags, or system-level metadata that downstream processes depend on for correct execution. By explicitly carving out these deterministic elements before compression and reinserting them afterward, systems ensure that the compressed context retains both human-readable narrative continuity through LLM summarization and machine-readable precision for programmatic operations. This approach prevents subtle bugs where slightly rephrased or summarized versions of critical data cause cache misses, broken references, incorrect state transitions, or failed validations, while still gaining the benefits of intelligent context compression that helps agents operate effectively within bounded memory constraints. The carve-out strategy essentially recognizes that agent contexts serve dual purposes as both natural language dialogue history for the LLM and structured data storage for the broader system, requiring hybrid treatment that applies lossy compression only where semantic flexibility is acceptable while maintaining byte-level fidelity for elements where exactness is non-negotiable."
+          }
+        }
+      },
+      {
+        "id": "caveman-09",
+        "category": "pure-prose",
+        "expected_carve_out_pct": 0.0,
+        "realised_carve_out_pct": 0.0,
+        "savings_vs_raw": 0.4946236559139785,
+        "savings_vs_terse": 0.5052631578947369,
+        "arms": {
+          "compressed": {
+            "input_tokens": 335,
+            "output_tokens": 47,
+            "latency_ms": 3401,
+            "output_chars": 229,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Senior engineer remember: premature optimization root of all evil, but junior need learn *when* optimize matters. Focus junior on readability first, explain performance cost only when real bottleneck exist or pattern scale badly."
+          },
+          "terse_control": {
+            "input_tokens": 88,
+            "output_tokens": 95,
+            "latency_ms": 4158,
+            "output_chars": 529,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "A senior engineer should recognize that premature optimization often stems from a junior's eagerness to demonstrate technical skill, so the review should gently redirect focus toward code clarity, maintainability, and whether the change actually solves a measured performance problem. The goal is to cultivate judgment about when optimization matters while encouraging the refactoring instinct itself, making it clear that readable code that works correctly is the foundation upon which selective optimization can later be built."
+          },
+          "uncompressed": {
+            "input_tokens": 62,
+            "output_tokens": 93,
+            "latency_ms": 3628,
+            "output_chars": 502,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "A senior engineer should recognize that premature optimization often stems from a junior's eagerness to demonstrate technical skill, so the review should gently redirect focus toward clarity, correctness, and measurable performance problems rather than theoretical improvements. The goal is to cultivate judgment about when optimization matters by asking questions like \"what problem does this solve?\" and \"how did we measure that this is actually slow?\" rather than simply rejecting the work outright."
+          }
+        }
+      },
+      {
+        "id": "caveman-10",
+        "category": "pure-prose",
+        "expected_carve_out_pct": 0.05,
+        "realised_carve_out_pct": 0.0,
+        "savings_vs_raw": 0.641025641025641,
+        "savings_vs_terse": 0.5841584158415842,
+        "arms": {
+          "compressed": {
+            "input_tokens": 328,
+            "output_tokens": 42,
+            "latency_ms": 6719,
+            "output_chars": 193,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Long session mean more token in context. Cost go up each turn but agent remember better what happen before. Trade-off: pay more token for better memory or reset context lose history save money."
+          },
+          "terse_control": {
+            "input_tokens": 81,
+            "output_tokens": 101,
+            "latency_ms": 4349,
+            "output_chars": 614,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "Long-running agent sessions face a fundamental tension where maintaining full conversation history improves answer quality through coherent context but quickly exhausts token budgets and increases latency. Strategies like aggressive summarization or selective context pruning reduce costs but risk losing critical details that affect reasoning accuracy and user experience. The optimal balance depends on the specific use case, with transactional tasks tolerating more context loss while complex problem-solving or creative collaboration demands richer historical preservation despite higher computational expense."
+          },
+          "uncompressed": {
+            "input_tokens": 55,
+            "output_tokens": 117,
+            "latency_ms": 6746,
+            "output_chars": 710,
+            "carve_out_chars": 0,
+            "error": null,
+            "text": "As AI agent sessions accumulate more conversation history, the context window grows larger and becomes more expensive to process with each new interaction, creating a direct financial cost that scales with session length. However, truncating or summarizing earlier context to reduce costs risks losing important information that could be critical for maintaining consistency, remembering user preferences, or understanding references to previous exchanges, thereby degrading answer quality. This tension forces system designers to choose between expensive but high-fidelity responses that preserve full context and cheaper but potentially less accurate responses that operate on compressed or selective memory."
+          }
+        }
+      }
+    ]
+  },
+  "cost": {
+    "totals": {
+      "input_tokens": 5045,
+      "output_tokens": 4360,
+      "calls": 30,
+      "errors": 0,
+      "total_cost_usd": 0.080535
+    },
+    "per_arm": {
+      "compressed": {
+        "input_tokens": 3415,
+        "output_tokens": 1378,
+        "calls": 10
+      },
+      "terse_control": {
+        "input_tokens": 945,
+        "output_tokens": 1225,
+        "calls": 10
+      },
+      "uncompressed": {
+        "input_tokens": 685,
+        "output_tokens": 1757,
+        "calls": 10
+      }
+    },
+    "source": "live-api",
+    "model": "claude-sonnet-4-5",
+    "pricing_sourced_on": "2026-05-14"
+  },
+  "verdict": {
+    "overall": "measured",
+    "errors": 0
+  }
+}
