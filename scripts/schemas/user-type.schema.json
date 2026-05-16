@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/user-type.schema.json",
+  "title": "User-type frontmatter",
+  "$comment": "Source: docs/contracts/user-type-schema.md. The runtime review-lens axis seeded under .agent-src.uncompressed/user-types/. Distinct from the install-time user-type-axis YAMLs in user-types/ (root) which carry their own user-type-axis.schema.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["id", "kind", "description", "version", "source"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Must match the user-type filename stem."
+    },
+    "kind": {
+      "type": "string",
+      "const": "user-type",
+      "description": "Discriminator — locks this file as a review-lens user-type, distinct from the install-time user-type-axis YAMLs."
+    },
+    "description": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 240
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+(\\.[0-9]+){0,2}$"
+    },
+    "source": {
+      "type": "string",
+      "enum": ["package", "project"],
+      "description": "Project-specific the typical case — most end-user simulations are consumer-domain, not package-defaults."
+    }
+  }
+}

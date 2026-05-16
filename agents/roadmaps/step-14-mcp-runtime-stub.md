@@ -7,8 +7,10 @@ complexity: lightweight
 > Stub roadmap owning the **MCP-native invocation surface** so commands
 > currently runnable only from a terminal become invocable from Claude
 > Desktop without local CLI access. Closes `step-12-universal-os-reframe.md`
-> L72. Stub status — phases are intentionally coarse; refinement happens
-> when the MCP-server scaffold lands.
+> L72. Phase 1 + Phase 2 closed 2026-05-15 against work already delivered by
+> [`archive/road-to-mcp-server.md`](archive/road-to-mcp-server.md); Phase 3
+> is deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md)
+> Phase 1 (it owns the recruit-validation surface this Phase 3 depends on).
 
 ## Source
 
@@ -23,8 +25,9 @@ complexity: lightweight
 
 - [x] CLI prompt path live (step-12 P4 closed earlier) — this stub upgrades
   the CLI path to MCP-native.
-- [ ] MCP server scaffold chosen (FastMCP Python vs. MCP TS SDK) — Phase 1
-  decision.
+- [x] MCP server scaffold chosen (FastMCP Python vs. MCP TS SDK) — Phase 1
+  decision recorded in [`docs/contracts/adr-mcp-runtime.md`](../../docs/contracts/adr-mcp-runtime.md)
+  (Anthropic `mcp` Python SDK, pinned to `mcp==1.27.1`).
 
 ## Context
 
@@ -38,43 +41,95 @@ because annotations bury cross-cutting work; a stub surfaces in
 
 ## Phase 1 — Decision
 
-- [ ] **MCP server runtime selection:** FastMCP (Python) vs. MCP TS SDK
-  — decision recorded as an ADR (`docs/contracts/adr-mcp-runtime.md`)
-  with the trade-offs (latency, packaging, install footprint).
-- [ ] **Tool surface scoping:** Which CLI commands warrant MCP exposure?
-  Minimum viable list: `agent-config init`, `agent-config skills list`,
-  `agent-config council estimate`. Out: any destructive command
-  (write / push / merge) — those stay terminal-gated.
+- [x] **MCP server runtime selection:** FastMCP (Python) vs. MCP TS SDK
+  — decision recorded as an ADR ([`docs/contracts/adr-mcp-runtime.md`](../../docs/contracts/adr-mcp-runtime.md))
+  with the trade-offs (runtime in repo, A0 safety boundary fit, import-surface
+  audit, pin / supply-chain footprint, smoke-test path). _Closed 2026-05-15 —
+  Anthropic `mcp` Python SDK low-level (`mcp==1.27.1`); FastMCP rejected on
+  safety-audit width; MCP TS SDK rejected on Node-runtime addition. Evidence:
+  [`scripts/mcp_server/server.py`](../../scripts/mcp_server/server.py),
+  [`scripts/mcp_server/requirements.txt`](../../scripts/mcp_server/requirements.txt)._
+- [x] **Tool surface scoping:** Which CLI commands warrant MCP exposure?
+  _Closed 2026-05-10 via the AI Council Phase 4 design call
+  (claude-sonnet-4-5 + gpt-4o, 2 rounds, $0.06; verdict captured in
+  the package's stable contract surface at
+  [`docs/contracts/mcp-phase-1-scope.md`](../../docs/contracts/mcp-phase-1-scope.md)
+  Phase 4 amendment + [`docs/contracts/adr-mcp-runtime.md`](../../docs/contracts/adr-mcp-runtime.md)
+  Tool surface section).
+  Locked ALLOWLIST: **`lint_skills`** (read-only) +
+  **`chat_history_append`** (path-scoped write under
+  `agents/.agent-chat-history` / `.agent-chat-history` only). All other
+  catalog entries return the
+  [`mcp-tool-stub-envelope.md`](../../docs/contracts/mcp-tool-stub-envelope.md)
+  `not_implemented` shape. `agent-config init / skills list / council estimate`
+  (the speculative list in this stub) stay terminal-gated — they bear engine
+  state and the A0 boundary in
+  [`docs/contracts/mcp-phase-1-scope.md`](../../docs/contracts/mcp-phase-1-scope.md)
+  forbids coupling MCP wire to engine state. No `push` / `merge` / `commit` /
+  prod-write surface is exposed._
 
 ## Phase 2 — Scaffold
 
-- [ ] **MCP server scaffold:** `mcp_server/` directory with the chosen
+- [x] **MCP server scaffold:** `mcp_server/` directory with the chosen
   runtime, registered tools matching Phase 1 scope, native input prompt
-  shapes (no CLI argument parsing).
-- [ ] **Install path:** `agent-config install --mcp` writes the
+  shapes (no CLI argument parsing). _Closed 2026-05-10 —
+  [`scripts/mcp_server/`](../../scripts/mcp_server/) ships
+  `__init__.py`, `__main__.py`, `server.py` (stdio handlers),
+  `prompts.py` (278 prompts at HEAD), `resources.py` (160 resources),
+  `tools.py` (2-item ALLOWLIST), `metadata.py` (identity), `telemetry.py`,
+  and `consumer_tool_catalog.json`. 12 import-surface + behaviour tests
+  in [`tests/test_mcp_server.py`](../../tests/test_mcp_server.py) lock the
+  A0 boundary. Master roadmap closure trail:
+  [`archive/road-to-mcp-server.md`](archive/road-to-mcp-server.md) (26/26)._
+- [x] **Install path:** `agent-config install --mcp` writes the
   Claude-Desktop config (`~/Library/Application Support/Claude/claude_desktop_config.json`
-  on macOS) and validates the server boots.
+  on macOS) and validates the server boots. _Closed 2026-05-10 — shipped as
+  two existing entrypoints, not a new `--mcp` flag (rationale in the ADR
+  `Install surface` section): (a) `task mcp:setup` runs
+  [`scripts/mcp_setup.sh`](../../scripts/mcp_setup.sh) — creates `.venv-mcp/`,
+  installs `mcp`, smoke-imports `scripts.mcp_server`, prints the Claude
+  Desktop JSON snippet to paste; (b) `./agent-config mcp:render --claude-desktop`
+  writes the user-scope config directly. Operator docs:
+  [`docs/mcp-server.md`](../../docs/mcp-server.md). Silent global-config
+  rewrites from the npx dispatcher remain out of scope until a recruit
+  finding under step-13 P1 proves the manual paste step is the adoption
+  blocker._
 
-## Phase 3 — Acceptance
+## Phase 3 — Acceptance (deferred to step-13 P1)
+
+> **Halt status:** Phase 3 is structurally blocked on
+> [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md)
+> Phase 1 by design — line 60 explicitly couples this Phase 3 to that
+> roadmap's non-dev recruit slice. step-13 has 17 open steps including the
+> recruit slice; flipping these boxes here without that evidence would
+> fabricate completion. Re-opened automatically when step-13 P1 closes
+> with at least one recruit finding committed under
+> `agents/eval-findings/`.
 
 - [ ] **Cold-install validation:** A non-developer recruit (coordinated
   with `step-13-non-dev-community-validation.md` Phase 1) reaches a useful
   invocation entirely inside Claude Desktop, zero terminal commands.
+  _Blocked-on-step-13 P1 (2026-05-15)._
 - [ ] **Parent flip:** `step-12-universal-os-reframe.md` L72 flipped
   `[x]` with a pointer at this roadmap and a citation of the recruit
-  finding in `agents/eval-findings/`.
+  finding in `agents/eval-findings/`. _Blocked-on-step-13 P1 (depends on
+  the recruit evidence above)._
 
 ## Acceptance criteria
 
-- [ ] ADR recording runtime choice merged
-- [ ] `mcp_server/` scaffold runs locally; smoke test green
-- [ ] `agent-config install --mcp` wires Claude Desktop without manual
-  config-file editing
-- [ ] Phase 3 recruit confirms zero-terminal flow
+- [x] ADR recording runtime choice merged — [`docs/contracts/adr-mcp-runtime.md`](../../docs/contracts/adr-mcp-runtime.md)
+- [x] `mcp_server/` scaffold runs locally; smoke test green —
+  [`tests/test_mcp_server.py`](../../tests/test_mcp_server.py) (`task mcp:test`)
+- [x] Install path wires Claude Desktop without manual config-file editing
+  beyond a single JSON paste — `task mcp:setup` +
+  `./agent-config mcp:render --claude-desktop`. *(Full silent rewrite is
+  an explicit non-goal per ADR `Install surface`.)*
+- [ ] Phase 3 recruit confirms zero-terminal flow. _Deferred to step-13 P1._
 
 ## Done
 
-- [ ] All phases complete; step-12 L72 flipped.
+- [~] Phases 1 + 2 complete (2026-05-15); Phase 3 deferred to step-13 P1;
+  step-12 L72 flip stays parked until the recruit evidence lands.
 
 ## Notes
 
