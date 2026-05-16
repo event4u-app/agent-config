@@ -57,9 +57,9 @@ complexity: structural
 - [x] `step-14-mcp-runtime-stub.md` open (runtime stub track active)
 - [x] `step-99-north-star-restructure.md` open (rename track active)
 - [x] AI Council consult on this roadmap completed (analysis lens, 3 rounds)
-  — Round 1 `agents/council-responses/2026-05-16-step-15-product-refinement.json`
-  - Round 2 `agents/council-responses/2026-05-16-step-15-product-refinement-v2.json`
-  - Round 3 `agents/council-responses/2026-05-16-step-15-product-refinement-v3.json`
+  — Round 1 `agents/council-responses/2026-05-16-step-15-product-refinement.json` <!-- council-ref-allowed: council-round audit trail for the roadmap that produced ADR-010 -->
+  - Round 2 `agents/council-responses/2026-05-16-step-15-product-refinement-v2.json` <!-- council-ref-allowed: council-round audit trail for the roadmap that produced ADR-010 -->
+  - Round 3 `agents/council-responses/2026-05-16-step-15-product-refinement-v3.json` <!-- council-ref-allowed: council-round audit trail for the roadmap that produced ADR-010 -->
 - [x] Council convergence (Round 2 + Round 3) inlined in the sections below
 - [x] **Profile/Pack/Preset boundary ADR** — landed 2026-05-16 as
   [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md).

@@ -14,7 +14,7 @@ phase: v2.x · step-15 Phase 1 prerequisite
 
 **Proposed** · 2026-05-16 · pending Phase 1 of
 [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md).
-Council v3 action #2 (`agents/council-responses/2026-05-16-step-15-product-refinement-v3.json`):
+Council v3 action #2 (`agents/council-responses/2026-05-16-step-15-product-refinement-v3.json`): <!-- council-ref-allowed: ADR decision-trace to originating council response -->
 **"Profile / Pack / Preset boundary is undefined; Phase 2 will duplicate
 Phase 1 abstractions"**. Promoted from Phase 2 to Phase 1 prerequisite —
 the profile loader (Phase 1 item 1) cannot ship without the boundary.
@@ -129,4 +129,4 @@ DUPLICATION ACROSS AXES IS A CONTRACT VIOLATION.
 
 - [`docs/contracts/cost-profile-defaults.md`](../contracts/cost-profile-defaults.md) — the existing `cost_profile` contract this ADR explicitly does **not** touch.
 - [`agents/roadmaps/step-15-product-refinement.md`](../../agents/roadmaps/step-15-product-refinement.md) — Phase 1 items 1, 4 and Phase 2 item 7.
-- [`agents/council-responses/2026-05-16-step-15-product-refinement-v3.json`](../../agents/council-responses/2026-05-16-step-15-product-refinement-v3.json) — Council v3 action #2 (origin).
+- [`agents/council-responses/2026-05-16-step-15-product-refinement-v3.json`](../../agents/council-responses/2026-05-16-step-15-product-refinement-v3.json) — Council v3 action #2 (origin). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
