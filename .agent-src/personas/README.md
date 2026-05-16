@@ -5,6 +5,14 @@
 > expectations. Skills cite personas in a `personas:` frontmatter key.
 > Users invoke them via `--personas=<id>`.
 
+> For end-user-of-the-software lenses (galabau field crew, truck
+> driver, metalworking shop), see the parallel
+> [`user-types/`](../user-types/README.md) axis — personas describe
+> **how** we review (methodology), user-types describe **who** we
+> simulate (end user). They compose orthogonally on the CLI:
+> `--personas=qa --user-type=truck-driver`. No existing persona moves
+> to `user-types/`.
+
 ## Why this directory exists
 
 Before personas, every multi-lens skill (`adversarial-review`,

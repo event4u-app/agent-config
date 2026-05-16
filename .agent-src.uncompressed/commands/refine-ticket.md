@@ -85,6 +85,7 @@ persona voices) plus the close-prompt. Stop there. Do **not** chain into
 /refine-ticket --personas=+qa PROJ-123
 /refine-ticket --user-type=galabau-field-crew PROJ-123
 /refine-ticket --personas=+qa --user-type=truck-driver PROJ-123
+/refine-ticket --user-type=metalworking-shop PROJ-123
 /refine-ticket --fresh-eyes https://acme.atlassian.net/browse/PROJ-123
 ```
 
