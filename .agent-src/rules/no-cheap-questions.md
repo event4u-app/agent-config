@@ -20,7 +20,20 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 
 ## What counts as cheap
 
-Ten classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3 below). Per-class detail + governing rule: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Eleven classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3) · **continuation prompt under autonomous mandate** (Iron Law 4). Per-class detail: [`asking-and-brevity-examples § cheap-question-catalog`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+
+## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
+
+```
+WHEN A STANDING AUTONOMOUS MANDATE IS ACTIVE — /roadmap:process-full,
+/roadmap:process-phase, EXPLICIT "ENTSCHEIDE SELBST / DECIDE AND DON'T
+ASK" — NEVER ASK "WEITER? / NEXT STEP? / SHALL I CONTINUE?".
+A CLEAN EDIT-BATCH IS NOT A HALT CONDITION. THE ONLY HALTS ARE THE
+FIVE NAMED IN THE INVOKING COMMAND (HARD-FLOOR, COUNCIL-OFF +
+AMBIGUITY, SECURITY-SENSITIVE, SCOPE-OUT-OF-ROADMAP, TEST/QUALITY RED).
+```
+
+"Shall I continue with the next item?" between work units when user invoked `/roadmap:process-full` (or set "decide independently" standing instruction) = **context-derived cheap question**. Answer lives in invoking command. State next move in one line, execute. No numbered options.
 
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 

@@ -20,7 +20,20 @@ NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
 
 ## What counts as cheap
 
-Ten classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3 below). Per-class detail + governing rule for each: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Eleven classes — sequencing · format-only · commit asks · CI / test asks · fenced-step re-asks · Iron-Law option · context-derived · dominant option · re-ask after decline · **paternalistic state-assuming option** (Iron Law 3 below) · **continuation prompt under a standing autonomous mandate** (Iron Law 4 below). Per-class detail + governing rule for each: [`asking-and-brevity-examples § cheap-question-catalog`](../../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+
+## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
+
+```
+WHEN A STANDING AUTONOMOUS MANDATE IS ACTIVE — /roadmap:process-full,
+/roadmap:process-phase, EXPLICIT "ENTSCHEIDE SELBST / DECIDE AND DON'T
+ASK" — NEVER ASK "WEITER? / NEXT STEP? / SHALL I CONTINUE?".
+A CLEAN EDIT-BATCH IS NOT A HALT CONDITION. THE ONLY HALTS ARE THE
+FIVE NAMED IN THE INVOKING COMMAND (HARD-FLOOR, COUNCIL-OFF +
+AMBIGUITY, SECURITY-SENSITIVE, SCOPE-OUT-OF-ROADMAP, TEST/QUALITY RED).
+```
+
+Asking "shall I continue with the next item?" between work units when the user already invoked `/roadmap:process-full` (or set a "decide independently" standing instruction) is a **context-derived cheap question** by construction — the answer is in the invoking command. State the next move in one line, then execute. No numbered options block.
 
 ## Iron Law 3 — No Paternalistic State-Assuming Options
 
@@ -43,6 +56,7 @@ Run silently before any numbered-options block:
 5. User fenced next step (*"plan only"*, *"review first"*) → deliver + handback per `scope-control § fenced step`.
 6. User already declined? Re-ask forbidden per `scope-control § decline = silence`.
 7. Any option assumes user fatigue / frustration / "had enough" without an in-message citation? Iron Law 3 — drop it.
+8. Standing autonomous mandate active (`/roadmap:process-full`, `/roadmap:process-phase`, explicit "decide independently") AND the question is "continue? / next step? / weiter?" — Iron Law 4, drop it; pick the next open item from the working set and execute.
 
 Any "yes" → **do not ask**. Pick the dominant path, state assumption inline (*"assuming X — adjust if wrong"*), hand back. One-question-per-turn from [`ask-when-uncertain`](ask-when-uncertain.md) still applies when the question is genuine.
 
