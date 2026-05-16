@@ -99,7 +99,7 @@
   "commands/project-analyze.md": "7ce86391d0dba6b8791a380c9f65a7ce79e9000d3324780d80ea8d3864317ecd",
   "commands/project-health.md": "94e21e09043340d7647e36b07a171c6462ec958dbdfc51511c81f4de08e80885",
   "commands/quality-fix.md": "5c6145853920ee8c3ca114dc500e75ee29e3d439b0fc86ffbae7f9c9a4313933",
-  "commands/refine-ticket.md": "35b86509976af8ac8f5f2ca81bb2bdc64f24771d71aaf0e138273d5a7852fa58",
+  "commands/refine-ticket.md": "528d98b7e88be78f43528be449d33be30eea787425b00d4c80b03d30c579371e",
   "commands/research.md": "c77c3be971891caee7284d529421812feeeeb82daacc0835c47506bb223d1140",
   "commands/research/deep.md": "610415e5cf3fabd2c789bf07de43b2b635cc1a447bab6e845061b572dfeef7c6",
   "commands/research/report.md": "a07d4631d306354730f02b2d3fe1da4d9d1c205e71a31ebe49c8e41ab2391af3",
@@ -155,7 +155,7 @@
   "contexts/skills-and-commands.md": "bf91a730463bb0a0c0cc3a9c053168600bbfe971330f0692f993f920845ef412",
   "contexts/subagent-configuration.md": "b0af2b9bd008e5aac714e11ec1547dc70cf8bd3cdd32bde40dbae40cdf651517",
   "ghostwriter/README.md": "b90e55f7884062597d1ede31e09071752ed9e9dc22689e00c515d4a73b43bcbe",
-  "personas/README.md": "49af8454c89cbbee1bb2c8a5c33aa5fc98ecca94dc07ae285f855b629f117430",
+  "personas/README.md": "6aa47ec31706a8ad953f43eb921e8c0be816b11b057800712c7b3cab6adc1815",
   "personas/_template-specialist/persona.md": "56c5b896c692d34b442b0cba6c1e615a6ce46e28613bd19a1ce9769433d6f35e",
   "personas/advisors/contrarian.md": "39c330e9c653164998d9402fd1d8ee904402c18d0ccf7e619e75aefa48f07e0b",
   "personas/advisors/executor.md": "fd8a5f17e745ce4eb998de80bb4bf78c7b89a117322851e956f8a05aba07d9a7",
@@ -421,7 +421,7 @@
   "skills/readme-writing/SKILL.md": "b49532a069f7c3572e16e9c64f485165b2fd3f213cb41c3ca9e087439285cbe1",
   "skills/receiving-code-review/SKILL.md": "605adbbe370f37c39f06a4d78a34f8186506b350dd45bb4d1b244649c401209d",
   "skills/refine-prompt/SKILL.md": "f6195a2dcb7148ce83f2aaa2a5cf106e2b58eaf056dd4115b4b76dde10e9616a",
-  "skills/refine-ticket/SKILL.md": "a32334091874bd84c533a92b442a00d0d7725e440faedf81d7f69f6b27246ff2",
+  "skills/refine-ticket/SKILL.md": "57033b9736bfa8f6fef2a46256ac7fcd4ced3070b4575b76d167674a275ee6dc",
   "skills/release-comms/SKILL.md": "47b5b0d764bbdd75161989d2636e764ca0dc5d4bd02aa8ac2e9455228b97c3f9",
   "skills/repomix-packer/SKILL.md": "97273a623064debb2ba42e592f033a486ebc6f791f42014b9c99777c43ff0503",
   "skills/requesting-code-review/SKILL.md": "3177f50a070f02a67ce19690afd66ae8aba8b5df60af273a8d6132bef1447dd6",
@@ -503,5 +503,8 @@
   "templates/roadmaps.md": "6455a8010660c32da822ea4e48ff5c0ae171f582dec5da95191f7794b24c4118",
   "templates/rule.md": "6462b73f17ad052490078c6b5c92616dceff1a6749c6e26afefb764e88a7827f",
   "templates/skill.md": "a9819ff604611a9bc2afc56e5c565d5f7bd66fa01044c5d753a77d367208c030",
-  "user-types/_template/user-type.md": "7db4c3a036404b107aac5a8f29826eb1bfcff380c8c8d6f68910b94b0b4c8d7b"
+  "user-types/_template/user-type.md": "7db4c3a036404b107aac5a8f29826eb1bfcff380c8c8d6f68910b94b0b4c8d7b",
+  "user-types/galabau-field-crew.md": "fef447ebcf59badf1252c745c2c4fea773eda1e56ebc73e044460176dc1ad03b",
+  "user-types/metalworking-shop.md": "23671ee73b59deb18522e5942cedba8fe133838933373d1426d0d990dcee88e7",
+  "user-types/truck-driver.md": "97552f00a9544ed5e16d574617a487b2776682bd249576257082de39dd0b32ca"
 }
