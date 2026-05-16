@@ -7,7 +7,6 @@ keep-beta-until: 2026-08-14
 
 > **Status:** Decided · 2026-05-15
 > **Source:** user-authored brief (no council session — direct user spec)
-> **Owner roadmap:** [`agents/roadmaps/step-6-user-types-axis.md`](../../agents/roadmaps/step-6-user-types-axis.md)
 > **Sibling axis (distinct layer):** [`adr-install-user-type-axis`](adr-install-user-type-axis.md) — install-time `personal.user_type` filter; same vocabulary, different layer
 
 ## Context
@@ -126,4 +125,3 @@ intent is end-user simulation rather than methodology review.
 - [`user-type-schema`](user-type-schema.md) — locked shape, 7-section spine, size budget, quality bar
 - [`persona-schema`](persona-schema.md) — sister axis (untouched by this ADR)
 - [`adr-install-user-type-axis`](adr-install-user-type-axis.md) — install-time `personal.user_type` filter (distinct layer)
-- [`agents/roadmaps/step-6-user-types-axis.md`](../../agents/roadmaps/step-6-user-types-axis.md) — work plan, 7 phases
