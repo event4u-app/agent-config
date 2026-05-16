@@ -57,7 +57,7 @@ Do NOT use when:
 
 ## Procedure
 
-### 1. Pick the surface
+### 1. Inspect and pick the surface
 
 Ask one question only if both are plausible:
 
