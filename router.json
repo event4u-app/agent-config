@@ -1304,6 +1304,45 @@
       ]
     },
     {
+      "id": "roadmap-ci-steps-policy",
+      "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        },
+        {
+          "path_prefix": "app/Modules/"
+        },
+        {
+          "keyword": "task ci"
+        },
+        {
+          "keyword": "make test"
+        },
+        {
+          "keyword": "npm run check"
+        },
+        {
+          "keyword": "pnpm run check"
+        },
+        {
+          "keyword": "yarn check"
+        },
+        {
+          "keyword": "composer test"
+        },
+        {
+          "phrase": "run the quality pipeline"
+        },
+        {
+          "phrase": "run task ci"
+        },
+        {
+          "phrase": "run the full ci"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "role-mode-adherence",
       "triggers": [
         {
