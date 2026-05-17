@@ -702,6 +702,28 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.21.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.24.0](https://github.com/event4u-app/agent-config/compare/2.23.0...2.24.0) (2026-05-17)
+
+### Features
+
+* **settings:** add quality.local_auto_run / wait_for_remote_ci ([a463bf1](https://github.com/event4u-app/agent-config/commit/a463bf1925a7fb192707a80c696740ba73c30ff9))
+* **ai-video:** banana-arc reference project + shared prompt library ([f3afc6d](https://github.com/event4u-app/agent-config/commit/f3afc6dddff8d70cc17572d43a4839a157d62296))
+* **ai-video:** /video:* command cluster (from-script, scene, storyboard, stitch) ([272f2ec](https://github.com/event4u-app/agent-config/commit/272f2ec82539e58a0b8d14c63bf0806618d88c88))
+* **ai-video:** 3 specialist personas (hollywood-director, pixar-storyboard-artist, ai-video-technical-director) ([b16fb50](https://github.com/event4u-app/agent-config/commit/b16fb50c47336da6d0ad6d3864f9aaf489f91f68))
+* **ai-video:** 5 specialist skills + scene-blueprint schema ([b77ecd9](https://github.com/event4u-app/agent-config/commit/b77ecd9df6d894826f172739d534db54969f9818))
+* **ai-video:** adapter contract + 5 provider adapters + smoke test ([b86f1e5](https://github.com/event4u-app/agent-config/commit/b86f1e53661d6ff0e2a7154eee0136fe77ed6d24))
+
+### Bug Fixes
+
+* **schema:** trim ai-video-technical-director persona description to 148 chars ([b1afbb1](https://github.com/event4u-app/agent-config/commit/b1afbb1d8d94b62cb49e306d104ae33d84d06f09))
+
+### Chores
+
+* **ai-video:** wire pipeline into docs, ownership, schemas, marketplace ([18a98fa](https://github.com/event4u-app/agent-config/commit/18a98fa9098d9cc7a07782e9a6a07cf47e63d842))
+* move council audit ([54074f1](https://github.com/event4u-app/agent-config/commit/54074f18db69682f656719b4de231ea8b1cbd152))
+
+Tests: 4569 (+10 since 2.23.0)
+
 ## [2.23.0](https://github.com/event4u-app/agent-config/compare/2.21.0...2.23.0) (2026-05-17)
 
 ### Features
