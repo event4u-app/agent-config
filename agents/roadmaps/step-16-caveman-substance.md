@@ -10,8 +10,8 @@ complexity: lightweight
 
 ## Source
 
-- **AI Council audit (2026-05-16):** `agents/council-questions/caveman-token-savings-audit.md` + `agents/council-responses/caveman-token-savings-audit.json` (Anthropic `claude-sonnet-4-5` + OpenAI `gpt-4o`, 2 rounds, $0.0955 actual spend).
-- **Upstream-deepscan amendment (2026-05-16):** `agents/council-questions/upstream-deepscan-audit.md` + `agents/council-responses/upstream-deepscan-audit.json` (2 rounds, $0.2042 actual spend). Reopened step-10 sunset (40 % premature) and step-11 closure (premature for telemetry surfaces). Added 7 high-leverage steps spanning P1/P2/P3; aggregate ICE leverage = 146.8 (≈ 11.5 d work).
+- **AI Council audit (2026-05-16):** caveman-token-savings audit, Anthropic `claude-sonnet-4-5` + OpenAI `gpt-4o`, 2 rounds, $0.0955 actual spend.
+- **Upstream-deepscan amendment (2026-05-16):** 2 rounds, $0.2042 actual spend. Reopened step-10 sunset (40 % premature) and step-11 closure (premature for telemetry surfaces). Added 7 high-leverage steps spanning P1/P2/P3; aggregate ICE leverage = 146.8 (≈ 11.5 d work).
 - **Predecessor (sunset):** `agents/roadmaps/archive/step-10-caveman-parity.md` — closed 2026-05-16; chased parity (intensity tiers, statusline, lifetime counter) without measurement infrastructure.
 - **Predecessor (closure premature for telemetry):** `agents/roadmaps/archive/step-11-ruflo-parity.md` — closed 2026-05-13 at "9/9 patterns covered"; the metric missed per-conversation cost lens, summary JSON contract, and published bench runs.
 - **Upstream evidence:** `https://github.com/JuliusBrussee/caveman` @ `63a91ec` (`plugins/caveman/skills/caveman-compress/scripts/compress.py` for the sensitive-path denylist; `evals/measure.py` + `evals/llm_run.py` for the terse-control-arm methodology) · `https://github.com/ruvnet/ruflo` @ `5b71c7a` (`plugins/ruflo-cost-tracker/scripts/{conversation,summary}.mjs` for the telemetry primitives; `docs/benchmarks/runs/*.json` for the publication cadence).
