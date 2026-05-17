@@ -6,7 +6,7 @@
 
 > **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
-Give your AI agents an audit-disciplined execution layer: **210 skills**, **79 governance rules**, **129 commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
+Give your AI agents an audit-disciplined execution layer: multiple **skills**, **governance rules**, **commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
 
 ### Pick your profile — six entry paths
 
