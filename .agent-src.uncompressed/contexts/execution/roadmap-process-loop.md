@@ -79,6 +79,20 @@ still mandates fresh quality output before any "complete" claim.
 
 For each open step in the working set (scope-bound — see wrapper):
 
+0. **CI-step gate** — per
+   [`roadmap-ci-steps-policy`](../../rules/roadmap-ci-steps-policy.md).
+   When `quality.local_auto_run: false` and the step text matches a
+   CI-shaped literal (`task ci`, `task ci-fast`, `task ci-strict`,
+   `make ci`, `make test`, `npm/pnpm run check`, `yarn check`,
+   `composer test`, whole-suite `vendor/bin/phpunit`, whole-suite
+   `php artisan test`) **without** an inline
+   `<!-- carve-out: new-gate-verification -->` marker → flip the
+   checkbox to `[-]`, append
+   `<!-- skipped: quality.local_auto_run=false → remote CI is the gate -->`
+   on the same line, regenerate the dashboard, continue to the next
+   step. Never run the gate. Carve-out marker present → run normally
+   (new gate must be verified once locally). Setting `true` → run
+   normally.
 1. Read the step description and inline notes.
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**

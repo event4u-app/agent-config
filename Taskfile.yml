@@ -82,6 +82,7 @@ tasks:
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity
+      - task: lint-roadmap-ci-steps
       - task: lint-context-spine-usage
       - task: check-public-links
       - task: check-beta-review-markers
@@ -157,6 +158,7 @@ tasks:
       - task: smoke-quickstart
       - task: check-examples-shape
       - task: lint-roadmap-complexity
+      - task: lint-roadmap-ci-steps
       - task: lint-context-spine-usage
       - task: check-public-links
       - task: check-beta-review-markers

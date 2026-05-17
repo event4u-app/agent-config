@@ -236,6 +236,11 @@ tasks:
     desc: Enforce roadmap-complexity-standard contract on agents/roadmaps/*.md (Phase 5.2 of road-to-context-layer-maturity)
     cmd: python3 scripts/lint_roadmap_complexity.py {{.QUIET_FLAG}}
 
+  lint-roadmap-ci-steps:
+    silent: true
+    desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
+    cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
+
   lint-context-spine-usage:
     silent: true
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)
