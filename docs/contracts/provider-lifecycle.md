@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-17
+keep-beta-until: 2026-08-15
 ---
 
 # Provider Lifecycle — AI Video / Image / Audio Adapter Tiers

@@ -10463,13 +10463,6 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
-      "target": ".agent-src.uncompressed/rules/persona-governance.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
       "target": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",

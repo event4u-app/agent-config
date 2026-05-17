@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When generating AI video, image, or voice — surface the project-local media governance policies (likeness, style, public-figures, voice-cloning, disclosure, brand-impersonation, transparency)"
+description: "When generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)"
 source: package
 triggers:
   - keyword: "/video:"
@@ -61,7 +61,7 @@ Seven media policies live under [`agents/policies/media/`](../../agents/policies
 
 1. **Consumed by skills + adapters**, not surfaced as standalone always-loaded prose. Cost non-trivial (7 × ~80 lines = ~560 lines always-context if hoisted to rules), and most sessions never touch video / image / voice surface.
 2. **Enforcement model project-local** — working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) + audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncompressed/` are tool-portable governance; these policies are domain-specific bindings.
-3. **Phase 6 ADR placeholder in [`agents/roadmaps/universal-platform-refinement.md`](../../agents/roadmaps/universal-platform-refinement.md)** tracks when (and whether) to extract this layer into reusable domain pack — that decision unlocks only after second non-video domain shows same shape.
+3. **Extraction to reusable domain pack explicitly deferred** until second non-video domain (audio, image, docs, exports) lands with overlapping execution surfaces. Until then, one-domain abstraction structurally premature — policies stay project-local, routing rule on-demand bridge.
 
 This routing rule is the bridge: sits in always-loaded rule set so trigger keywords surface project-local policies into context on demand, without paying full always-loaded cost.
 

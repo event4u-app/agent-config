@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When picking or editing an AI video / image / audio provider adapter — surface the lifecycle tier (experimental | stable | deprecated | community) and refuse to default to non-stable silently"
+description: "When editing an AI video/image/audio adapter — declare lifecycle tier (experimental | stable | deprecated | community); never default to non-stable"
 source: package
 triggers:
   - keyword: "/video:"

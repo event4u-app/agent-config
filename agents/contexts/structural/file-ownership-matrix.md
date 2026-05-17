@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **498**
-- Edges (incl. self-WRITE): **1362**
+- Edges (incl. self-WRITE): **1361**
 
 ## READ_ONLY edges
 
@@ -666,7 +666,6 @@
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/deal-qualification-meddic/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/rules/persona-governance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/video-director/SKILL.md` | `body_link` | 1 |

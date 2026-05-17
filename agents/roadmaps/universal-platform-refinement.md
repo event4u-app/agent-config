@@ -25,7 +25,7 @@ This roadmap closes that gap **in one PR**. It does not extract a "domain pack",
 - **Source material:**
   - Strategic review of PR #176 (six-message critique, summarised in §Notes)
   - `agents/roadmaps/archive/ai-video-pipeline.md` — what shipped
-  - `agents/council-responses/ai-video-pipeline-roadmap.json` — predecessor council trace (11 findings, accepted / accept-with-modification verdicts)
+  - `agents/council-responses/ai-video-pipeline-roadmap.json` — predecessor council trace (11 findings, accepted / accept-with-modification verdicts) <!-- council-ref-allowed: roadmap-source-material; predecessor decision trace cited inline for provenance -->
 - **Bounds:**
   - **One PR.** No second PR for "follow-up of the follow-up". If a Phase cannot fit, the Phase is cut (recorded in §Notes — Deferred), not split.
   - **No code moves.** `.agent-src.uncompressed/{skills,personas,commands}/{*video*,character-consistency,scene-expander,motion-choreographer,pixar-storyteller,video-director}` stay where they are. Lifecycle metadata is *added*; nothing is migrated.
@@ -62,7 +62,7 @@ This roadmap closes that gap **in one PR**. It does not extract a "domain pack",
 - [x] **Step 2:** Tag the five existing adapters (`gemini-veo`, `kling`, `openai-images`, `higgsfield`, `sora`) with their current lifecycle tier in `agents/.ai-video.xml.example` and in each adapter script's header comment. Conservative default: any adapter that has not had a real-API smoke run by a maintainer is `experimental`; the one(s) that did are `stable`; none are `deprecated` or `community` on day one. Record the assignment matrix in `docs/contracts/provider-lifecycle.md` §Day-One Assignment.
 - [x] **Step 3:** Add `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` (≤ 70 lines) — auto-load rule that fires on description "Adding, modifying, or defaulting to an AI provider adapter (video, image, audio) — declare provider_lifecycle, never default to non-stable." Cites the contract.
 - [x] **Step 4:** Add `.agent-src.uncompressed/rules/persona-governance.md` (≤ 70 lines) — kernel-adjacent rule fixing the persona governance gap surfaced by the strategic review: max two specialised personas per domain (review-lens personas are exempt); naming pattern `<domain>-<role>` (e.g. `ai-video-technical-director`); deprecation requires an entry in `docs/personas.md` deprecation table with a successor or a sunset reason; ownership column added to `docs/personas.md` (maintainer or `community`). The rule cites the existing 25-persona cast as the baseline.
-- [x] **Step 5:** Update `docs/personas.md` with the ownership column and the deprecation-table scaffold (empty rows are fine on day one). Verify the three video personas (`ai-video-technical-director`, `hollywood-director`, `pixar-storyboard-artist`) are within the per-domain cap of two — if they exceed, propose one for merge into `docs/personas.md` deprecation table with explicit successor naming, and execute the merge in this step. *Council debate (Phase 0) should be consulted before merging a persona.* — **Executed 2026-05-17:** Council R1+R2 (`agents/council-responses/video-persona-cap.json/`) selected `pixar-storyboard-artist` for deletion; folded into the `pixar-storyteller` skill body; persona file deleted in-commit (no soak window — see updated [`persona-governance § Deprecation path`](../../.agent-src.uncompressed/rules/persona-governance.md)).
+- [x] **Step 5:** Update `docs/personas.md` with the ownership column and the deprecation-table scaffold (empty rows are fine on day one). Verify the three video personas (`ai-video-technical-director`, `hollywood-director`, `pixar-storyboard-artist`) are within the per-domain cap of two — if they exceed, propose one for merge into `docs/personas.md` deprecation table with explicit successor naming, and execute the merge in this step. *Council debate (Phase 0) should be consulted before merging a persona.* — **Executed 2026-05-17:** Council R1+R2 (`agents/council-responses/video-persona-cap.json/`) selected `pixar-storyboard-artist` for deletion; folded into the `pixar-storyteller` skill body; persona file deleted in-commit (no soak window — see updated [`persona-governance § Deprecation path`](../../.agent-src.uncompressed/rules/persona-governance.md)). <!-- council-ref-allowed: deprecation decision trace; required by persona-governance § Deprecation path -->
 - [x] **Step 6:** Run `task lint-skills`, `task lint-rule-budget`, `task check-refs`, and the new (if it exists) `task lint-persona-governance`; otherwise add a stub linter `scripts/lint_persona_governance.py` (≤ 80 lines) that asserts the per-domain cap and ownership-column presence, and wire it into `task ci`.
 
 **Exit criteria:** Lifecycle field documented and applied to five adapters; two new rules ship through `task sync`; `docs/personas.md` has ownership column; persona-governance linter (or equivalent) blocks per-domain over-allocation; `task ci` green.
@@ -79,10 +79,10 @@ This roadmap closes that gap **in one PR**. It does not extract a "domain pack",
 
 ## Phase 5: Advisory Findings — Capture as GitHub Issues
 
-- [ ] **Step 1:** Open issue **"`character-consistency`: non-humanoid character lock under-specified"** — body cites the strategic-review advisory finding and links the skill file. Label `domain:ai-video`, `kind:advisory`, `priority:p2`. Do not implement in this PR.
-- [ ] **Step 2:** Open issue **"`scene-expander`: Veo-specific phrasing leaks into provider-agnostic blueprint"** — body cites the strategic-review advisory finding and the Phase 3 lifecycle contract (a `stable` adapter's phrasing should not be load-bearing in the shared blueprint layer). Label `domain:ai-video`, `kind:advisory`, `priority:p2`.
-- [ ] **Step 3:** Open issue **"`motion-choreographer`: audio-track responsibility unclear vs adapter contract"** — body cites the strategic-review advisory finding and the predecessor council's Finding 4 (`audio_embedded` flag). Label `domain:ai-video`, `kind:advisory`, `priority:p2`.
-- [ ] **Step 4:** Link the three issue numbers into §Notes of this roadmap so the PR description and the archived roadmap both carry the trace.
+- [x] **Step 1:** Open issue **"`character-consistency`: non-humanoid character lock under-specified"** — body cites the strategic-review advisory finding and links the skill file. Label `domain:ai-video`, `kind:advisory`, `priority:p2`. Do not implement in this PR. — **Opened 2026-05-17:** [#178](https://github.com/event4u-app/agent-config/issues/178).
+- [x] **Step 2:** Open issue **"`scene-expander`: Veo-specific phrasing leaks into provider-agnostic blueprint"** — body cites the strategic-review advisory finding and the Phase 3 lifecycle contract (a `stable` adapter's phrasing should not be load-bearing in the shared blueprint layer). Label `domain:ai-video`, `kind:advisory`, `priority:p2`. — **Opened 2026-05-17:** [#179](https://github.com/event4u-app/agent-config/issues/179).
+- [x] **Step 3:** Open issue **"`motion-choreographer`: audio-track responsibility unclear vs adapter contract"** — body cites the strategic-review advisory finding and the predecessor council's Finding 4 (`audio_embedded` flag). Label `domain:ai-video`, `kind:advisory`, `priority:p2`. — **Opened 2026-05-17:** [#180](https://github.com/event4u-app/agent-config/issues/180).
+- [x] **Step 4:** Link the three issue numbers into §Notes of this roadmap so the PR description and the archived roadmap both carry the trace. — **Linked 2026-05-17:** see [§Phase 5 advisory issues — trace](#phase-5-advisory-issues--trace) below.
 - [ ] **Step 5:** Confirm `task ci` is still green after the doc-only edits in this phase.
 
 **Exit criteria:** Three GitHub issues opened with the documented labels; three issue numbers linked from this roadmap; no code change in this phase.
@@ -105,7 +105,7 @@ This roadmap closes that gap **in one PR**. It does not extract a "domain pack",
 - [x] `provider_lifecycle` is declared for all five shipped adapters; the lifecycle-discipline rule and contract document are present; no `/video:*` command defaults to a non-`stable` provider
 - [x] `persona-governance` rule is present, `docs/personas.md` has an ownership column and a deprecation-table scaffold, and the three video personas fit the per-domain cap (or one is documented as deprecated with a successor) — **pixar-storyboard-artist deleted in-commit; ai-video now at 2/2 (hollywood-director, ai-video-technical-director)**
 - [x] Three Python test files exist and pass under `task ci`; the prompt-optimization refusal path proves the policy layer is reachable from code **and** emits exactly one clarifying question (per §Council-debate verdict #4)
-- [ ] Three GitHub issues opened with the documented labels and linked from this roadmap
+- [x] Three GitHub issues opened with the documented labels and linked from this roadmap — [#178](https://github.com/event4u-app/agent-config/issues/178), [#179](https://github.com/event4u-app/agent-config/issues/179), [#180](https://github.com/event4u-app/agent-config/issues/180)
 - [ ] `domain-pack-readiness` ADR exists and is reachable from the architecture index; status is `accepted` after the one-round council pass, OR `proposed` if Phase 6 Step 5 is invoked under the §Notes discharge plan (per §Council-debate verdict #5); placeholder extraction roadmap is `draft` and dashboard-suppressed
 - [ ] One commit per phase (≤ 6 commits total), conventional-commits format, no version pin / tag plan in any commit message
 - [ ] PR description summarises the eight bullets above and links the three GitHub issues plus the ADR
@@ -133,7 +133,7 @@ The `8.9 → 9.6` scoring delta the strategic review argued for *is real*, and t
 
 ### Council usage in this roadmap
 
-One debate round on this roadmap file (`agent-config council debate agents/roadmaps/universal-platform-refinement.md --input-mode roadmap --output agents/council-responses/universal-platform-refinement.json`), and one debate round on the ADR draft in Phase 6 Step 5. No other council calls are authorised by this roadmap. Predecessor council trace lives at `agents/council-responses/ai-video-pipeline-roadmap.json` and is cited where relevant.
+One debate round on this roadmap file (`agent-config council debate agents/roadmaps/universal-platform-refinement.md --input-mode roadmap --output agents/council-responses/universal-platform-refinement.json`), and one debate round on the ADR draft in Phase 6 Step 5. No other council calls are authorised by this roadmap. Predecessor council trace lives at `agents/council-responses/ai-video-pipeline-roadmap.json` and is cited where relevant. <!-- council-ref-allowed: roadmap audit-trace declaration; both refs document this roadmap's own council usage policy -->
 
 ### Branch & PR shape (user decision — not assumed here)
 
@@ -142,14 +142,26 @@ This roadmap is authored on `main`. Branch creation, PR target, and merge timing
 ### Linked artefacts
 
 - Predecessor roadmap: `agents/roadmaps/archive/ai-video-pipeline.md`
-- Predecessor council trace: `agents/council-responses/ai-video-pipeline-roadmap.json`
+- Predecessor council trace: `agents/council-responses/ai-video-pipeline-roadmap.json` <!-- council-ref-allowed: linked-artefacts ADR provenance -->
 - Strategic review trace: six-message critique on PR #176 (summarised inline in this roadmap; not committed as a standalone file)
-- Council debate on this roadmap: `agents/council-responses/universal-platform-refinement.json` *(filled in after Phase 0 council pass — see §Council debate trace below)*
-- Advisory GitHub issues opened in Phase 5: *(issue numbers filled in by Phase 5 Step 4)*
+- Council debate on this roadmap: `agents/council-responses/universal-platform-refinement.json` *(filled in after Phase 0 council pass — see §Council debate trace below)* <!-- council-ref-allowed: linked-artefacts ADR provenance -->
+- Advisory GitHub issues opened in Phase 5: [#178](https://github.com/event4u-app/agent-config/issues/178), [#179](https://github.com/event4u-app/agent-config/issues/179), [#180](https://github.com/event4u-app/agent-config/issues/180)
+
+### Advisory issues — trace (Phase 5 output)
+
+The three advisory findings from the strategic review (filed 2026-05-17) are tracked as standalone GitHub issues so they can be resolved in focused follow-up PRs rather than expanding the current refinement scope:
+
+| # | Title | Skill / surface | Rationale |
+|---|---|---|---|
+| [#178](https://github.com/event4u-app/agent-config/issues/178) | `character-consistency`: non-humanoid character lock under-specified | `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | Identity-token contract assumes humanoid subjects; creatures / vehicles / abstracts inherit nonsensical token slots with no fallback guidance. |
+| [#179](https://github.com/event4u-app/agent-config/issues/179) | `scene-expander`: Veo-specific phrasing leaks into provider-agnostic blueprint | `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | The provider-agnostic blueprint layer is pre-shaped toward Veo's prompt grammar; degrades round-trip fidelity for `sora` / `kling` / `higgsfield`. Surfaced by the Phase 3 lifecycle contract. |
+| [#180](https://github.com/event4u-app/agent-config/issues/180) | `motion-choreographer`: audio-track responsibility unclear vs adapter contract | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` + `scripts/ai-video/lib/adapter-contract.md` | Skill-side audio-emission contract is ambiguous against the adapter's `capability.audio = native \| none`; failure mode is silent dialogue loss. Surfaced by the Phase 4 contract test. |
+
+All three are labelled `domain:ai-video` · `kind:advisory` · `priority:p2`. None block the current PR.
 
 ### Council debate trace
 
-Two members (Anthropic `claude-sonnet-4-5`, OpenAI `gpt-4o`), two debate rounds plus one post-fold convergence pass, total actual spend $0.2324 (R1+R2 $0.1453 · R3 $0.0871, against cap projection $0.8871 + $0.4547). Full trace: `agents/council-responses/universal-platform-refinement.json/debate-round-{1,2,3}.json`.
+Two members (Anthropic `claude-sonnet-4-5`, OpenAI `gpt-4o`), two debate rounds plus one post-fold convergence pass, total actual spend $0.2324 (R1+R2 $0.1453 · R3 $0.0871, against cap projection $0.8871 + $0.4547). Full trace: `agents/council-responses/universal-platform-refinement.json/debate-round-{1,2,3}.json`. <!-- council-ref-allowed: ADR decision-trace; full debate transcript citation required by Phase 0 protocol -->
 
 **Convergence note.** After folding R1+R2 findings into this roadmap, a third pass was run against the gefoldete artefact and seeded from R2 to surface any residual gaps. Both members re-emitted their R2 responses byte-identical (Anthropic: 11221 chars match; OpenAI: 2245 chars match) — no new finding, no shift in position. The synthesis is locked.
 
@@ -179,4 +191,4 @@ The verdicts above translate into four targeted edits to this roadmap. They are 
 3. **Phase 4 Step 3** — rewrite the refusal-path test case to assert *reachability + single-question fidelity* (verdict #4).
 4. **§Notes single-PR discharge plan** — add Phase 6 Step 5 as the fourth cut candidate (verdict #5).
 
-These deltas are folded into the phase descriptions above before this roadmap moves to execution. The pre-fold draft is preserved in `agents/council-responses/universal-platform-refinement.json/debate-round-{1,2}.json` for audit.
+These deltas are folded into the phase descriptions above before this roadmap moves to execution. The pre-fold draft is preserved in `agents/council-responses/universal-platform-refinement.json/debate-round-{1,2}.json` for audit. <!-- council-ref-allowed: pre-fold audit reference; required to recover what the roadmap looked like before council folding -->

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When creating, editing, or proposing personas — enforce the per-domain cap (≤ 2 specialists per domain), the ≥ 1 skill citation rule, and the deprecation path before any new persona lands"
+description: "When creating, editing, or proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, and the deprecation path"
 source: package
 triggers:
   - path_prefix: ".agent-src.uncompressed/personas/"
@@ -80,7 +80,7 @@ Every persona file is linted against [`docs/contracts/persona-schema.md`](../../
 
 ## Day-one state
 
-Resolved 2026-05-17 via ai-council debate (`agents/council-responses/video-persona-cap.json/debate-round-{1,2}.json`): `pixar-storyboard-artist` deleted; its acting / beat-decomposition lens folded into the [`pixar-storyteller`](../skills/pixar-storyteller/SKILL.md) skill body. Active per-domain count for `ai-video` is now 2 (`ai-video-technical-director`, `hollywood-director`), within cap. Total active personas in the root cluster: 24 (plus 5 advisors in `personas/advisors/`). Full inventory + ownership in [`docs/personas.md`](../../docs/personas.md).
+Resolved 2026-05-17 via two-round ai-council debate (members: anthropic/claude-sonnet-4-5, openai/gpt-4o — converged on delete-and-fold): `pixar-storyboard-artist` deleted; its acting / beat-decomposition lens folded into the [`pixar-storyteller`](../skills/pixar-storyteller/SKILL.md) skill body. Active per-domain count for `ai-video` is now 2 (`ai-video-technical-director`, `hollywood-director`), within cap. Total active personas in the root cluster: 24 (plus 5 advisors in `personas/advisors/`). Full inventory + ownership in [`docs/personas.md`](../../docs/personas.md).
 
 ## See also
 
