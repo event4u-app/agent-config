@@ -1,0 +1,108 @@
+# Scene Blueprint Schema (v1)
+#
+# Maps the 12 labeled blocks emitted by `scene-expander` to the
+# adapter-contract JSON consumed by every adapter under
+# `scripts/ai-video/adapters/`. Validation lives in
+# `scripts/ai-video/lib/parse-blueprint.sh`.
+#
+# Source format: plain-text, one labeled block per line OR per
+# heading. Labels are case-insensitive; whitespace around `:` is
+# tolerated. Block order is the canonical order below — out-of-order
+# blocks are accepted but logged as a warning.
+
+version: 1
+
+blocks:
+  STYLE:
+    required: true
+    target: prompt.style
+    description: "Film stock + decade (live-action) or film title + year (animated)."
+
+  SUBJECT:
+    required: true
+    target: prompt.subject
+    description: "Character read. Verbatim from character.json when locked."
+
+  ENVIRONMENT:
+    required: true
+    target: prompt.environment
+    description: "Location, time-of-day, weather, era; world reaction."
+
+  ACTION:
+    required: true
+    target: prompt.action
+    description: "Anticipation / action / reaction with beat counts."
+
+  CAMERA:
+    required: true
+    target: prompt.camera
+    description: "Position, height, distance, move."
+
+  LENS:
+    required: true
+    target: prompt.lens
+    description: "Focal length in mm + aperture intent (live-action). Animated runs may emit 'n/a' but the block must be present."
+
+  LIGHTING:
+    required: true
+    target: prompt.lighting
+    description: "Key / fill / back / practical with direction."
+
+  MOOD:
+    required: true
+    target: prompt.mood
+    description: "Single emotional read."
+
+  DIALOGUE:
+    required: false
+    target: audio.dialogue
+    description: "Optional. Marks audio.native requirement when present."
+    null_when_absent: true
+
+  AMBIENT SOUND:
+    required: false
+    target: audio.ambient
+    description: "Optional ambient layer list."
+    null_when_absent: true
+
+  DURATION:
+    required: true
+    target: duration
+    type: number
+    description: "Seconds. Integer or one decimal."
+
+  NEGATIVE:
+    required: true
+    target: negative
+    description: "Clichés to reject, load-bearing top-first."
+
+# Adapter-contract JSON shape produced by parse-blueprint.sh
+output_shape: |
+  {
+    "prompt": {
+      "style": "...",
+      "subject": "...",
+      "environment": "...",
+      "action": "...",
+      "camera": "...",
+      "lens": "...",
+      "lighting": "...",
+      "mood": "..."
+    },
+    "audio": {
+      "dialogue": [...] | null,
+      "ambient": [...] | null,
+      "enable_native_audio": true | false
+    },
+    "duration": 5.0,
+    "negative": ["...", "..."],
+    "requires": {
+      "audio_native": true | false
+    }
+  }
+
+# `enable_native_audio` derives from: DIALOGUE present OR AMBIENT SOUND present.
+# Orchestrator uses `requires.audio_native` to pick an adapter with
+# `audio: native` capability (Phase 4 Step 1). When no native adapter
+# is available the orchestrator routes audio.* to ffmpeg mux at
+# stitch time (Phase 4 Step 7) and clears `enable_native_audio`.

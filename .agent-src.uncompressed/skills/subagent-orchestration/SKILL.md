@@ -56,7 +56,7 @@ model pairing. Defaults come from
 Descriptive, not enforced. Documents the **expected agent-to-agent
 communication topology** so consumers can predict latency, failure
 modes, and where consensus is required. Cited from
-[`external-findings.md § 2`](../../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md)
+[`external-findings.md § 2`](../../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md) <!-- council-ref-allowed: ADR decision trace for topology anti-drift defaults -->
 row 7 (Ruflo's `hierarchical, 6–8 agents, raft consensus` anti-drift
 default).
 
