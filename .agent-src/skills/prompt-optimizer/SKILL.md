@@ -29,13 +29,29 @@ domain: product
 
 1. **Deconstruct** — extract core intent, key entities, output shape, constraints; map what's provided vs missing.
 2. **Diagnose** — audit clarity gaps, ambiguity, missing specificity, missing structure; flag unstated assumptions.
-3. **Develop** — pick techniques by request type:
-   - *Creative* → multi-perspective + tone anchoring
-   - *Technical* → constraint-based + precision focus
-   - *Educational* → few-shot examples + clear structure
-   - *Complex* → chain-of-thought + systematic framing
+3. **Develop** — pick technique + template by request type:
+   - *Creative* → multi-perspective + tone anchoring (template: **CO-STAR** or **CRISPE**)
+   - *Technical* → constraint-based + precision focus (template: **RTF** or **File-Scope**)
+   - *Educational* → few-shot examples + clear structure (template: **Few-Shot** or **RISEN**)
+   - *Complex / multi-step* → chain-of-thought + systematic framing (template: **CoT** or **ReAct**)
+   - *Image AI (Midjourney / SD / DALL·E)* → **Visual Descriptor** or **Reference-Image-Edit**
    - Assign an AI role/expertise; layer context; add logical structure.
+   - Full template catalogue + when-to-pick rubric: [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md).
 4. **Deliver** — output the optimized prompt + a short "what changed" + (DETAIL only) techniques applied + one pro-tip.
+
+## Setting awareness
+
+The skill reads `prompt_optimization.outbound` (or `.default` when no
+outbound override is set) from `.agent-project-settings.yml`:
+
+| Mode | Behaviour |
+|---|---|
+| `off` | The skill refuses; the dispatcher echoes the user's prompt verbatim with a one-line note. |
+| `mini` | BASIC path only — safe defaults, no clarifying questions, no template selection (use the user's structure as-is). Hard cap: 1 turn. |
+| `max` *(default)* | Full 4-D + template selection. DETAIL mode auto-detects per the table below. |
+
+Any prompt starting with the configured `prompt_optimization.bypass_prefix`
+(default `/raw`) is echoed verbatim, no shaping, no template.
 
 ## Modes — BASIC vs DETAIL
 
@@ -100,6 +116,7 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 - The model tends to over-engineer BASIC mode — for a one-line ask, the optimized prompt should still be short. No 800-word system prompts for "help with my resume".
 - Don't drift into German welcome text. The optimized prompt mirrors the user's source-language preference; the skill's own scaffolding stays English (per `language-and-tone` for `.md`).
 - The model tends to **mix languages** in the optimized prompt when the user wrote in German but named an English-speaking target audience — pick one language for the whole optimized prompt body (default: source-language of the rough prompt unless the user explicitly named the target audience's language).
+- The model tends to inherit upstream dogma that "only 5 techniques are safe" (few-shot, role, structured-output, constraint-based, chain-of-thought). That claim travels with `nidhinjs/prompt-master` and is **rejected here** — CO-STAR, RISEN, CRISPE, ReAct, and the image-AI templates land in [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) and are first-class. Pick by request type, not by upstream whitelist.
 
 ## Do NOT
 
@@ -107,3 +124,10 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 - Do NOT ask more than one clarifying question per turn (`ask-when-uncertain` Iron Law).
 - Do NOT add an "I'm Lyra" preamble on every turn — the welcome belongs to the command entry point, not every reply.
 - Do NOT modify project files — this skill is conversational, no file writes, no commits.
+- Do NOT restructure a prompt that starts with the configured `bypass_prefix` (default `/raw`). Echo it verbatim with a one-line note.
+
+## See also
+
+- [`refine-prompt`](../refine-prompt/SKILL.md) — engine-inbound sibling; same `prompt_optimization` setting controls its mode
+- [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) — 12-template catalogue cited from Develop step
+- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) — analysis behind template adoption and the 5-safe-dogma rejection

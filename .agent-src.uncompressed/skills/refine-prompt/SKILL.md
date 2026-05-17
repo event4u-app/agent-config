@@ -54,6 +54,50 @@ calling command (`/work`) owns prompt capture; this skill only refines.
 If `raw` is missing, empty, or whitespace-only the resolver already
 raised `PromptResolverError`. The skill never receives that input.
 
+## Modes and bypass
+
+The skill honours `prompt_optimization.inbound` (or
+`prompt_optimization.default` when no inbound override is set) from
+`.agent-project-settings.yml` / `.agent-settings.yml`. Three modes:
+
+| Mode | Behaviour |
+|---|---|
+| `off` | The skill is a no-op. The dispatcher writes `confidence={"band":"high","score":1.0}` directly and the engine proceeds with the literal prompt. No assumption inference, no clarifying questions. |
+| `mini` | Stack-aware light shaping. Steps 1-2 run; step 3 only emits `assumes:` lines for *implicit stack constraints* (framework, package manager) detected from config files. Steps 4-5 produce 3 AC bullets max. Low-band halts ask at most one question; medium-band halts are auto-confirmed silently. |
+| `max` *(default)* | Full procedure — every step 1–6 runs. Medium-band halts surface the assumption list verbatim; low-band halts ask one clarifying question. This is the existing behaviour. |
+
+**Bypass prefix.** If the raw prompt starts with the configured
+`prompt_optimization.bypass_prefix` (default `/raw`), the skill
+becomes a no-op regardless of mode. The dispatcher strips the
+prefix, passes the remainder through verbatim, and records
+`bypass:true` in the envelope so downstream surfaces (delivery
+report, `--no-prose-synthesis`) can attribute the skip.
+
+```
+/raw migrate auth.service.ts to use jose, keep the API shape
+```
+
+`/raw` is reserved at the prompt boundary only — it has no meaning
+mid-prompt and is not stripped when it appears inside the body.
+
+### Stack-config read (mini / max only)
+
+When the mode is `mini` or `max`, step 3 may read these config files
+(read-only, scope-locked) to enrich the `assumes:` block:
+
+- `package.json` — JS / TS framework detection (Next.js App vs Pages,
+  Remix, SvelteKit, Astro, Expo, …)
+- `composer.json` — PHP framework detection (Laravel, Symfony,
+  framework-less)
+- `pyproject.toml` / `requirements.txt` — Python framework detection
+- `CLAUDE.md` / `AGENTS.md` — project-declared stack hints
+- `.cursorrules` — project-declared stack hints
+- `tsconfig.json` — TS path-alias / module-resolution hints
+
+The skill MUST NOT read source files, `.env*`, secrets, or user
+data. Detection lands as a single `assumes: stack=<framework>@<version>`
+line; the medium-band halt is the user's chance to flip it.
+
 ## Procedure
 
 ### 1. Read and analyze the prompt
@@ -220,11 +264,24 @@ For `low`, the question replaces the AC list:
   `data.reconstructed_ac` and `data.assumptions`.
 - Do NOT re-derive band thresholds in prose. They live in
   `confidence.py` and only there.
+- Do NOT read source files, `.env*`, secrets, or arbitrary user
+  files when stack-detecting in mini / max mode. The allowlist
+  above (`package.json`, `composer.json`, `pyproject.toml`,
+  `requirements.txt`, `CLAUDE.md`, `AGENTS.md`, `.cursorrules`,
+  `tsconfig.json`) is exhaustive.
+- Do NOT strip the `bypass_prefix` mid-prompt. The prefix is only
+  recognised at the prompt boundary; matches inside the body stay
+  literal.
+- Do NOT silently rewrite the prompt in `max` mode without
+  surfacing the assumption list on a medium-band halt. The diff
+  is the contract.
 
 ## See also
 
 - [`refine-ticket`](../refine-ticket/SKILL.md) — sibling for ticket-shaped input
+- [`prompt-optimizer`](../prompt-optimizer/SKILL.md) — engine-outbound sibling; same `prompt_optimization` setting controls its mode
 - [`work_engine.resolvers.prompt`](../../templates/scripts/work_engine/resolvers/prompt.py) — envelope builder
 - [`work_engine.scoring.confidence`](../../templates/scripts/work_engine/scoring/confidence.py) — rubric + band thresholds
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it
+- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) — analysis behind the mini/max split and `/raw` bypass
