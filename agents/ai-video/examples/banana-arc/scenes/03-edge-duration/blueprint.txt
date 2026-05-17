@@ -1,0 +1,10 @@
+STYLE: live-action photoreal, 28mm film stock, present day
+SUBJECT: small upright cartoon banana, ~30cm tall, slightly curved; ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base; tiny red bowtie, no other clothing; always carries a small leather-bound notebook in left peel
+ENVIRONMENT: forest path at golden hour, dappled light through leaves, exterior late-day
+ACTION: Banana walks the path with steady cadence, notebook held in left peel; camera tracks alongside
+CAMERA: fast pan-left, tracking, eye-level, MS framing, subject centered
+LENS: 28mm f/2.8
+LIGHTING: golden-hour backlight, soft amber rim on character, no key from front
+MOOD: forward momentum
+DURATION: 10
+NEGATIVE: no text overlay, no watermark, no extra characters, no lens flare, no fish-eye distortion, no chromatic aberration

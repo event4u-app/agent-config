@@ -1,0 +1,12 @@
+{
+  "characters": [
+    {
+      "name": "Banana",
+      "silhouette": "small upright cartoon banana, ~30cm tall, slightly curved",
+      "palette": "ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base",
+      "wardrobe": "tiny red bowtie, no other clothing",
+      "prop": "always carries a small leather-bound notebook in left peel",
+      "voice": "warm tenor, slight drawl, mid-tempo"
+    }
+  ]
+}

@@ -225,6 +225,34 @@ roadmap:
   # only if your team genuinely commits work on a calendar plate.
   horizon_weeks: 0
 
+# --- Quality / CI execution ---
+#
+# Controls whether the agent runs the project's quality pipeline
+# (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector,
+# test suites) and whether it waits on remote CI after pushing.
+# Iron Law `verify-before-complete` still applies — when these
+# toggles suppress automatic runs, the agent MUST surface that and
+# ask before claiming completion rather than silently skipping
+# verification.
+quality:
+  # Run local quality / CI tasks and tests autonomously (true, false)
+  # true  = agent runs the quality pipeline whenever work is ready
+  #         for verification, without asking (default)
+  # false = agent asks before running quality tools / tests locally
+  #
+  # Carve-out (always runs regardless of this flag): when the change
+  # introduces a NEW CI gate, smoke test, or test file, the agent
+  # MUST execute it locally to prove the gate works. Without that
+  # execution the new gate is unverified evidence.
+  local_auto_run: true
+
+  # Wait for remote CI to finish on the PR / pipeline (true, false)
+  # true  = after push, poll GitHub check-runs / pipeline status and
+  #         report green / red before handing back
+  # false = push and hand back immediately; user inspects CI
+  #         themselves (default — saves agent runtime and tokens)
+  wait_for_remote_ci: false
+
 # --- Subagent orchestration ---
 #
 # Controls model selection and parallelism for subagent-based workflows

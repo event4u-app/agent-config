@@ -56,7 +56,7 @@ model pairing. Defaults come from
 Descriptive, not enforced. Documents the **expected agent-to-agent
 communication topology** so consumers can predict latency, failure
 modes, and where consensus is required. Cited from
-[`external-findings.md § 2`](../../../agents/audit-2026-05-14-north-star/external-findings.md)
+[`external-findings.md § 2`](../../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md) <!-- council-ref-allowed: ADR decision trace for topology anti-drift defaults -->
 row 7 (Ruflo's `hierarchical, 6–8 agents, raft consensus` anti-drift
 default).
 
@@ -72,8 +72,8 @@ default).
 
 **Anti-drift default** (Ruflo convention, descriptive only):
 `hierarchical, 6–8 agents, raft consensus`. Consumers free to
-override per orchestration — table is **starting point**, not a
-constraint. Topology is metadata for capacity planning, not
+override per orchestration — the table is the **starting point**,
+not a constraint. Topology is metadata for capacity planning, not
 runtime-enforced.
 
 **Glossary:**
@@ -81,7 +81,7 @@ runtime-enforced.
 - `mesh` — agents see each other's outputs (e.g. competing diffs).
 - `hierarchical-mesh` — peer debate followed by hub reconciliation.
 - `ring` — output of step N feeds input of step N+1 in order.
-- `star` — N agents fan out from single hub; no peer comms.
+- `star` — N agents fan out from a single hub; no peer comms.
 - `adaptive` — topology shifts per step; outer chain remains hub.
 
 ### 1. do-and-judge
@@ -193,17 +193,19 @@ step is under ~30 minutes. The branch-creation, context-switch, and
 worktree-cleanup cost dominates. Stick with mode 1 (do-and-judge)
 or mode 3 (do-in-steps) for those.
 
-**Competitive variant — per-candidate isolation.** Mode 5
-(`do-competitively`) + worktrees: each candidate runs in its own
-worktree (no cross-candidate state leak). Selection rules:
+**Competitive variant — per-candidate isolation.** When mode 5
+(`do-competitively`) is combined with worktrees, each candidate
+implementer runs in its own worktree (so candidates cannot read each
+other's open files or branch state). Selection rules:
 
-- **No auto-merge.** Orchestrator never merges candidate branches.
-  Hard Floor per [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) —
-  applies even under standing autonomy. ADR-005 records reasoning.
-- **Ranked presentation.** Judge ranks 1..N with one-line
-  justifications; user picks winner.
-- **Loser worktrees stay.** Orchestrator does not auto-delete losing
-  worktrees — user keeps option to harvest a partial idea before cleanup.
+- **No auto-merge.** The orchestrator never merges a candidate
+  branch. Hard Floor per [`non-destructive-by-default`](../../rules/non-destructive-by-default.md) —
+  applies even under standing autonomy. ADR-005 records the reasoning.
+- **Ranked presentation.** Judge ranks candidates (1..N) with a
+  one-line justification per rank; user picks the winner.
+- **Loser worktrees stay.** The orchestrator does not delete losing
+  worktrees automatically — the user keeps the option to harvest a
+  partial idea before cleanup.
 
 ## Status taxonomy — every subagent return uses one envelope
 

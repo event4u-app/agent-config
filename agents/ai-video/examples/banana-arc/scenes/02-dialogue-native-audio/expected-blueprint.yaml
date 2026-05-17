@@ -1,0 +1,41 @@
+# Expected scene-expander output — Scene 02-dialogue-native-audio
+# (tier: dialogue + native-audio). Asserts the audio.* branching of
+# the adapter contract: DIALOGUE or AMBIENT SOUND present →
+# enable_native_audio: true → requires.audio_native: true → orchestrator
+# routes to a Veo/Sora-class adapter or falls back to ffmpeg mux.
+
+version: 1
+scene_id: "02-dialogue-native-audio"
+tier: dialogue-native-audio
+
+prompt:
+  style: "live-action photoreal, 50mm film stock, present day"
+  subject: "small upright cartoon banana, ~30cm tall, slightly curved; ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base; tiny red bowtie, no other clothing; always carries a small leather-bound notebook in left peel"
+  environment: "same wooden writing desk by a window, dusk light, deep blue exterior, warm interior"
+  action: "Banana looks up from the notebook, draws a quiet breath, speaks one line; subtle shoulder shift forward marking the decision"
+  camera: "slow dolly-in, eye-level, MCU framing, subject centered"
+  lens: "50mm f/1.8"
+  lighting: "warm key from camera-right, deep blue fill from window behind, no rim flare"
+  mood: "reluctant courage"
+
+audio:
+  dialogue:
+    - speaker: "Banana"
+      line: "I think it's time to go."
+      voice: "warm tenor, slight drawl, mid-tempo"
+  ambient:
+    - "soft room tone"
+    - "distant clock ticking"
+  enable_native_audio: true
+
+duration: 6
+
+negative:
+  - "no text overlay"
+  - "no watermark"
+  - "no extra characters"
+  - "no soap-opera lighting"
+  - "no lens flare"
+
+requires:
+  audio_native: true

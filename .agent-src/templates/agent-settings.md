@@ -217,6 +217,23 @@ roadmap:
   # mandatory before any "roadmap complete" claim, regardless of cadence.
   quality_cadence: end_of_roadmap
 
+# --- Quality / CI execution ---
+quality:
+  # Run local quality / CI tasks and tests autonomously (true, false)
+  # true  = agent runs the quality pipeline whenever work is ready
+  #         for verification, without asking (default)
+  # false = agent asks before running quality tools / tests locally
+  # Carve-out: NEW CI gates / smoke tests / test files MUST run
+  # locally regardless of this flag — without execution the gate is
+  # unverified evidence. Iron Law `verify-before-complete` still applies.
+  local_auto_run: true
+
+  # Wait for remote CI to finish on the PR / pipeline (true, false)
+  # true  = poll GitHub check-runs / pipeline after push and report
+  #         green / red before handing back
+  # false = push and hand back immediately (default)
+  wait_for_remote_ci: false
+
 # --- Subagent orchestration ---
 subagents:
   # Model for implementer subagents (empty = same tier as the session model)
@@ -447,6 +464,8 @@ the canonical narrative lives in
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |
+| `quality.local_auto_run` | `true`, `false` | `true` | When `true`: agent runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) autonomously when work is ready for verification. When `false`: agent asks before running locally. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs require the agent to surface the gap before claiming completion. |
+| `quality.wait_for_remote_ci` | `true`, `false` | `false` | When `true`: after `git push`, the agent polls GitHub check-runs / pipeline status on the PR and reports green / red before handing back. When `false`: agent pushes and hands back immediately; the user inspects CI themselves (default — saves agent runtime and tokens). |
 | `subagents.implementer_model` | model alias or empty | _(empty)_ | Model for implementer subagents. Empty = same tier as session model. See [subagent-configuration](../contexts/subagent-configuration.md). |
 | `subagents.judge_model` | model alias or empty | _(empty)_ | Model for judge subagents. Empty = one tier above implementer (opus if sonnet, sonnet if haiku). |
 | `subagents.max_parallel` | integer | `3` | Maximum parallel subagent invocations. `1` serializes. |

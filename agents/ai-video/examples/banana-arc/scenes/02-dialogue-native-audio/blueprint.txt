@@ -1,0 +1,12 @@
+STYLE: live-action photoreal, 50mm film stock, present day
+SUBJECT: small upright cartoon banana, ~30cm tall, slightly curved; ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base; tiny red bowtie, no other clothing; always carries a small leather-bound notebook in left peel
+ENVIRONMENT: same wooden writing desk by a window, dusk light, deep blue exterior, warm interior
+ACTION: Banana looks up from the notebook, draws a quiet breath, speaks one line; subtle shoulder shift forward marking the decision
+CAMERA: slow dolly-in, eye-level, MCU framing, subject centered
+LENS: 50mm f/1.8
+LIGHTING: warm key from camera-right, deep blue fill from window behind, no rim flare
+MOOD: reluctant courage
+DIALOGUE: Banana: I think it's time to go.
+AMBIENT SOUND: soft room tone, distant clock ticking
+DURATION: 6
+NEGATIVE: no text overlay, no watermark, no extra characters, no soap-opera lighting, no lens flare

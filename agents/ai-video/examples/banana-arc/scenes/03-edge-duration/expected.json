@@ -1,0 +1,29 @@
+{
+  "prompt": {
+    "style": "live-action photoreal, 28mm film stock, present day",
+    "subject": "small upright cartoon banana, ~30cm tall, slightly curved; ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base; tiny red bowtie, no other clothing; always carries a small leather-bound notebook in left peel",
+    "environment": "forest path at golden hour, dappled light through leaves, exterior late-day",
+    "action": "Banana walks the path with steady cadence, notebook held in left peel; camera tracks alongside",
+    "camera": "fast pan-left, tracking, eye-level, MS framing, subject centered",
+    "lens": "28mm f/2.8",
+    "lighting": "golden-hour backlight, soft amber rim on character, no key from front",
+    "mood": "forward momentum"
+  },
+  "audio": {
+    "dialogue": null,
+    "ambient": null,
+    "enable_native_audio": false
+  },
+  "duration": 10,
+  "negative": [
+    "no text overlay",
+    "no watermark",
+    "no extra characters",
+    "no lens flare",
+    "no fish-eye distortion",
+    "no chromatic aberration"
+  ],
+  "requires": {
+    "audio_native": false
+  }
+}

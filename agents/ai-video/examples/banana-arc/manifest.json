@@ -1,0 +1,33 @@
+{
+  "project": "banana-arc",
+  "stitch_order": ["01-simple", "02-dialogue-native-audio", "03-edge-duration"],
+  "scenes": [
+    {
+      "id": "01-simple",
+      "tier": "simple",
+      "duration": 4,
+      "audio_embedded": false,
+      "expected_clip": "scenes/01-simple/out/clip.mp4",
+      "expected_frame": "scenes/01-simple/fixtures/frames/locked.png"
+    },
+    {
+      "id": "02-dialogue-native-audio",
+      "tier": "dialogue-native-audio",
+      "duration": 6,
+      "audio_embedded": true,
+      "expected_clip": "scenes/02-dialogue-native-audio/out/clip.mp4",
+      "expected_frame": "scenes/02-dialogue-native-audio/fixtures/frames/locked.png"
+    },
+    {
+      "id": "03-edge-duration",
+      "tier": "edge-duration",
+      "duration": 10,
+      "audio_embedded": false,
+      "expected_clip": "scenes/03-edge-duration/out/clip.mp4",
+      "expected_frame": "scenes/03-edge-duration/fixtures/frames/locked.png"
+    }
+  ],
+  "total_duration": 20,
+  "audio_track": "muxed",
+  "stitch_output": "out/banana-arc.mp4"
+}

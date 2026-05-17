@@ -1,0 +1,36 @@
+# Expected scene-expander output — Scene 01-simple (tier: simple).
+# Asserted verbatim by scripts/ai-video/test-pipeline.sh against the
+# YAML emitted from script.md "## Scene 01-simple". Character
+# descriptors are verbatim substrings of character.json fields, per
+# the load-bearing contract in prompts/character-lock.md.
+
+version: 1
+scene_id: "01-simple"
+tier: simple
+
+prompt:
+  style: "live-action photoreal, 35mm film stock, present day"
+  subject: "small upright cartoon banana, ~30cm tall, slightly curved; ripe-yellow skin (#F4D03F) with three brown freckles, ivory peel-base; tiny red bowtie, no other clothing; always carries a small leather-bound notebook in left peel"
+  environment: "quiet wooden writing desk by a window, soft afternoon light, interior daytime"
+  action: "Banana stands at the desk, looking thoughtfully at the notebook in left peel; no movement beyond a slow inhale"
+  camera: "static, eye-level, MS framing, subject on left third, soft bokeh background"
+  lens: "35mm f/2.0"
+  lighting: "warm window key from camera-right, soft ambient fill, no rim"
+  mood: "quiet contemplation"
+
+audio:
+  dialogue: null
+  ambient: null
+  enable_native_audio: false
+
+duration: 4
+
+negative:
+  - "no text overlay"
+  - "no watermark"
+  - "no extra characters"
+  - "no motion blur on static shots"
+  - "no lens flare"
+
+requires:
+  audio_native: false
