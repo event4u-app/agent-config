@@ -27,7 +27,7 @@ Use when:
 
 - Compress a reply, commit message, PR body, ticket summary, or any deliverable written *for* a human reader — those are carve-outs in [`caveman-speak § Carve-outs`](../../rules/caveman-speak.md) and stay verbatim.
 - Compress a path matching the sensitive-file denylist (`.env*`, `.netrc`, `credentials*`, `secrets*`, `id_rsa*`, `*.pem|key|p12|pfx|crt|cer|jks`, `.ssh/*`) — the script refuses with `SensitivePathError` and so should you.
-- Compress a generated file (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit the source in `.agent-src.uncompressed/` and regenerate via `task sync` + `task generate-tools`.
+- Compress a generated file (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) — edit the source in `.agent-src.uncompressed/` and regenerate via the package's sync + generate-tools scripts (`scripts/compress.sh --sync` + `scripts/compress.py --generate-tools`).
 - Hand-edit a compressed memory file in place — run `--decompress` first; the next compress pass refuses on body-hash drift (`CompressionRefused`).
 - Commit the compressed file without committing the matching `.original.md` backup — round-trip breaks otherwise.
 
@@ -97,7 +97,7 @@ CLI exit codes:
 - **Denylist false positive** — a sensitive-looking filename outside the denylist surface (project-specific naming) will still pass `assert_safe()`. The denylist is necessary but not sufficient; the maintainer is responsible for never feeding secrets to the compressor.
 - **Frontmatter ordering with existing keys** — if the target already has frontmatter, the compressor preserves existing keys, drops any prior `original_sha256:` / `compressed_at:` entries, and appends the new pair. Other agents reading the file should treat the SHA + timestamp pair as the canonical compression marker, not the file size.
 - **Negative savings on pointer-heavy files** — a `templates/AGENTS.md` that already follows Thin-Root (≥ 40 % pointers, ≥ 60-char *why*-clauses) has little prose left to drop; compression may net near-zero or even add bytes via frontmatter. Run [`agents-md-thin-root`](../agents-md-thin-root/SKILL.md) first to maximise pointer share, then measure whether this skill still pays.
-- **Generated-tree drift** — compressing `.agent-src.uncompressed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until `task sync` + `task generate-tools` run. Always regenerate after compressing a templated file.
+- **Generated-tree drift** — compressing `.agent-src.uncompressed/templates/AGENTS.md` does NOT propagate to `.augment/`, `.claude/`, etc. until the package's sync + generate-tools scripts run (`scripts/compress.sh --sync` + `scripts/compress.py --generate-tools`). Always regenerate after compressing a templated file.
 
 ## Measurement — when to compress
 
