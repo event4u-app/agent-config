@@ -195,7 +195,7 @@
   "rules/augment-source-of-truth.md": "3fba6d7cb4acb74d282d02e126d8f3ed15a598095bfd04864bfa91fac3a1581f",
   "rules/autonomous-execution.md": "f9a084ebf3f040347912db578a55643291f5da3bf2757ee01ac3500acd23f9a3",
   "rules/capture-learnings.md": "4f81e685776062652d7fb0c922921adf92663173a6e32b085800a82cfef8c0da",
-  "rules/caveman-speak.md": "3dd425c2a5e3cba8470768b1ca8f08517469de8fbe7ecedc5709aa233d519ced",
+  "rules/caveman-speak.md": "29feea1e552f800a5d3b8d209e521946a32e6df3b2b0614831a743a13852f729",
   "rules/cli-output-handling.md": "c4db723c46c984f9ee42eeaf685794e769ddb31fcc4ca791c4a59cc89a9bd0df",
   "rules/command-suggestion-policy.md": "2a2190691cd13dd49b0d745cb74abfed6a51e6377be61899a84f6771d041cd38",
   "rules/commit-conventions.md": "b8b844787b0e89a9cc0fbe90c0a97c019a97a831ae19c7ec9830c728c107ed54",
