@@ -1,7 +1,7 @@
 ---
 id: ai-video-technical-director
 role: AI Video Technical Director
-description: "Provider-tuning specialist — maps a clean scene blueprint to Veo / Kling / OpenAI / Higgsfield / Sora grammar with token caps, aspect ranges, and audio capability flags."
+description: "Provider-tuning specialist — maps a scene blueprint to Veo / Kling / OpenAI / Higgsfield / Sora grammar with token caps, aspect ranges, audio flags."
 tier: specialist
 mode: developer
 version: "1.0"
