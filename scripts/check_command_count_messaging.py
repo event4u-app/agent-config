@@ -17,7 +17,7 @@ Canonical counts:
 Patterns checked (per file):
 
     README.md
-      hero row     "<strong>{N} Commands</strong>"            → active
+      hero badge   "/badge/Commands-{N}-…"                    → active
       browse line  "Browse all {N} active commands"           → active
       browse meta  "{N} files total"                          → total
       browse meta  "{N} are deprecation shims"                → shims
@@ -84,7 +84,7 @@ def main() -> int:
 
     checks = [
         # README.md
-        (README, r"<strong>(\d+) Commands</strong>", active, "hero row"),
+        (README, r"/badge/Commands-(\d+)-", active, "hero badge"),
         (README, r"Browse all (\d+) active commands", active, "browse line"),
         (README, r"\+ (\d+) native commands\)", active, "tools blurb"),
         # docs/getting-started.md

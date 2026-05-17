@@ -7,9 +7,10 @@ pre-1.15 numbers for two release cycles. The 1.16 follow-up roadmap
 (F13 → 0b.1) requires a regression test so the next divergence fails
 CI instead of shipping silently.
 
-The hero badge in `README.md` line ~10 must list:
+The hero badges in `README.md` (shields.io URLs near the top) must list:
 
-    {S} Skills · {R} Rules · {C} Commands · {G} Guidelines · {P} Personas · {A} Advisors · 8 AI Tools
+    Skills-{S}- · Rules-{R}- · Commands-{C}- · Guidelines-{G}- ·
+    Personas-{P}- · Advisors-{A}-
 
 where the counts come from disk:
 
@@ -44,14 +45,18 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SRC = REPO_ROOT / ".agent-src.uncompressed"
 
-HERO_RE = re.compile(
-    r"<strong>(\d+)\s+Skills</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Rules</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Commands</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Guidelines</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Personas</strong>\s*·\s*"
-    r"<strong>(\d+)\s+Advisors</strong>"
-)
+# Hero badges are shields.io URLs of the form
+# `https://img.shields.io/badge/<Label>-<N>-<hex>?style=flat-square`.
+# Each label is matched independently so badge ordering may change
+# without breaking the sentinel.
+BADGE_RES = {
+    "Skills": re.compile(r"/badge/Skills-(\d+)-"),
+    "Rules": re.compile(r"/badge/Rules-(\d+)-"),
+    "Commands": re.compile(r"/badge/Commands-(\d+)-"),
+    "Guidelines": re.compile(r"/badge/Guidelines-(\d+)-"),
+    "Personas": re.compile(r"/badge/Personas-(\d+)-"),
+    "Advisors": re.compile(r"/badge/Advisors-(\d+)-"),
+}
 
 
 def _count_skills() -> int:
@@ -99,21 +104,13 @@ def _count_advisors() -> int:
 
 def test_readme_hero_counts_match_disk() -> None:
     readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
-    m = HERO_RE.search(readme)
-    assert m, (
-        "README.md is missing the hero badge line — expected pattern "
-        "`<strong>N Skills</strong> · <strong>N Rules</strong> · "
-        "<strong>N Commands</strong> · <strong>N Guidelines</strong> · "
-        "<strong>N Personas</strong> · <strong>N Advisors</strong>`"
+    missing = [label for label, rx in BADGE_RES.items() if not rx.search(readme)]
+    assert not missing, (
+        "README.md is missing hero shields.io badge(s) for: "
+        + ", ".join(missing)
+        + " — expected `/badge/<Label>-<N>-<hex>?style=flat-square`."
     )
-    claimed = {
-        "Skills": int(m.group(1)),
-        "Rules": int(m.group(2)),
-        "Commands": int(m.group(3)),
-        "Guidelines": int(m.group(4)),
-        "Personas": int(m.group(5)),
-        "Advisors": int(m.group(6)),
-    }
+    claimed = {label: int(rx.search(readme).group(1)) for label, rx in BADGE_RES.items()}
     actual = {
         "Skills": _count_skills(),
         "Rules": _count_rules(),

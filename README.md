@@ -1,4 +1,19 @@
+<div align="center">
+  <a href="https://event4u.app">
+    <img alt="event4u Agent Config" src=".github/assets/banner.png">
+  </a>
+</div>
+
 # Agent Config — Universal AI Agent OS
+
+[![Skills](https://img.shields.io/badge/Skills-211-1f6feb?style=flat-square)](.augment/skills/)
+[![Rules](https://img.shields.io/badge/Rules-79-d73a49?style=flat-square)](.augment/rules/)
+[![Commands](https://img.shields.io/badge/Commands-124-2da44e?style=flat-square)](.augment/commands/)
+[![Guidelines](https://img.shields.io/badge/Guidelines-72-8957e5?style=flat-square)](docs/guidelines/)
+[![Personas](https://img.shields.io/badge/Personas-22-bf8700?style=flat-square)](docs/personas.md)
+[![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md)
+[![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 > **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
@@ -26,10 +41,6 @@ maps to the closest profile. Source-of-truth:
 schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
 Beyond software: [`user-types/`](.agent-src.uncompressed/user-types/)
 (galabau · metalworking · truck — see [Who this is for](#who-this-is-for)).
-
-<p align="center">
-  <strong>211 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
-</p>
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
