@@ -64,11 +64,12 @@ Document it in `philosophy.md` under `## Subtle reference`.
 Produce `agents/design-assets/{slug}/{slug}.{pdf|png}`:
 
 1. Pick the execution tool (Pillow, matplotlib, SVG, or framework-native)
-2. Limited palette — 2–5 colors, intentional and cohesive
-3. Geometric or organic forms per philosophy
-4. Text — sparse, design-forward, integrated as visual element; never overlapping, never falling off canvas
-5. Margins — every element contained, breathing room
-6. Repeating patterns, layered elements, systematic markers as the philosophy permits
+2. **Font selection** — pick a font that earns the philosophy. Inspect a working dir (e.g. `agents/design-assets/{slug}/fonts/` — create if missing) and place the chosen file there before render. System defaults (Arial, Helvetica, DejaVu, the matplotlib default sans) are the AI-template tell; reach for them only as deliberate fallback, never as the unexamined default
+3. Limited palette — 2–5 colors, intentional and cohesive
+4. Geometric or organic forms per philosophy
+5. Text — sparse, design-forward, integrated as visual element; never overlapping, never falling off canvas
+6. Margins — every element contained, breathing room
+7. Repeating patterns, layered elements, systematic markers as the philosophy permits
 
 ### 5. Refinement pass
 
@@ -103,9 +104,13 @@ If the user requests a series, treat each page as a story beat — distinct but 
 * **No artist mimicry** — copying a living artist's signature style is copyright risk and breaks the original-work mandate. Propose an original direction.
 * **Text discipline** — most pieces fail because text creeps in as paragraphs. Words are visual accents, not explanation.
 * **One canvas** — single page unless multi-page is explicitly requested.
-* **Font availability** — the environment may not ship your target font. Pick a fallback before render time, or download into the working dir first.
+* **Font availability** — the environment may not ship your target font. Procedure step 4.2 governs selection; pick a fallback before render time and place the file in the working fonts dir.
 * **Output location** — always `agents/design-assets/{slug}/`. Never write binary artifacts to the repo root or to source-of-truth dirs.
 * **Refinement loop is real** — first render is the draft, not the deliverable.
+
+## Craftsmanship standard
+
+The deliverable is judged against human-crafted work, not against AI-generated comparables. Visible deliberation, intentional asymmetry, and palette restraint are the markers; default templates, generic gradients, and centered safe layouts are the failure mode. If the artifact would pass for "auto-generated stock visual", it has not earned its place — refine until intent is legible.
 
 ## Frugality Standards
 
