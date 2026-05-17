@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **482**
-- Edges (incl. self-WRITE): **1310**
+- Files indexed: **483**
+- Edges (incl. self-WRITE): **1315**
 
 ## READ_ONLY edges
 
@@ -312,6 +312,7 @@
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `contexts/execution/autonomy-examples.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `contexts/execution/autonomy-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/caveman-speak.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/caveman-speak.md` | `.agent-src.uncompressed/skills/compress-memory/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/command-suggestion-policy.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
@@ -449,6 +450,9 @@
 | `.agent-src.uncompressed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncompressed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/competitive-positioning/SKILL.md` | `.agent-src.uncompressed/skills/upstream-contribute/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/compress-memory/SKILL.md` | `.agent-src.uncompressed/rules/caveman-speak.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/compress-memory/SKILL.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/compress-memory/SKILL.md` | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/content-funnel-design/SKILL.md` | `.agent-src.uncompressed/skills/activation-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/content-funnel-design/SKILL.md` | `.agent-src.uncompressed/skills/editorial-calendar/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/content-funnel-design/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
@@ -849,5 +853,5 @@
 | `context` | 31 |
 | `persona` | 29 |
 | `rule` | 79 |
-| `skill` | 219 |
+| `skill` | 220 |
 
