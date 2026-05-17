@@ -1,6 +1,6 @@
 ---
 name: adversarial-review
-description: "ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback."
+description: "ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review."
 personas:
   - critical-challenger
 source: package
@@ -16,6 +16,7 @@ Use this skill when:
 - You've completed a plan, design, or proposed fix and are about to present it.
 - The change is non-trivial (affects multiple files, changes behavior, touches critical paths).
 - You're about to recommend an architecture or design decision.
+- The user submits **finished work** (draft, post, naming decision, design proposal) and asks for an honest critical take — "what do you actually think?", "be brutal", "was hältst du wirklich davon". The flow is the same Attack-Defend-Revise loop, but on the user's artifact rather than the agent's plan.
 
 Do NOT use when:
 - The task is trivial (renaming, formatting, simple config change).

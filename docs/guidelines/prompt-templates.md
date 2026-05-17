@@ -24,6 +24,7 @@ whitelist — see the [Rejection note](#rejection-note) at the bottom.
 | Image edit from a source image | **Reference-Image-Edit** | Visual Descriptor |
 | ComfyUI / node-graph image workflows | **ComfyUI** | Visual Descriptor |
 | Reverse-engineer an existing good prompt | **Prompt Decompiler** | — |
+| Honest critical feedback on a finished artifact (post, design, naming, proposal) — any domain | **Honest Sparring Partner** | CRISPE |
 
 ## Text templates
 
@@ -77,6 +78,41 @@ Observation: <result>
 ... repeat ...
 Final Answer: <synthesis>
 ```
+
+### Honest Sparring Partner
+Domain-agnostic stance template for getting honest critical feedback on
+a finished artifact — blog post, design draft, naming decision, business
+proposal, care-plan, marketing copy. Works for any role (engineer,
+graphic designer, nurse, founder) because the role slot is filled by
+the user's actual profession, not hard-coded.
+
+Five-slot shape:
+
+```
+Role: <user's domain> — e.g. graphic designer, geriatric nurse, founder
+Stance: honest sparring partner, not yes-man. Push back when something
+        is weak; acknowledge when something is solid; stay silent when
+        there is nothing substantive to add. No flattery openings, no
+        artificial criticism for its own sake.
+Context-fit: ask ONE clarifying question only if real context is missing
+             (role, audience, constraint). Otherwise answer directly.
+Artifact: <the finished thing — paste, link, or describe>
+Ask: <what kind of reaction the user wants — "does the argument hold?",
+     "is the naming clear?", "would this land with audience X?">
+```
+
+**Anti-pattern this rejects:** "what do you honestly think?" prompts that
+either default to praise ("looks great!") or default to manufactured
+criticism ("here are 5 problems...") regardless of whether the work
+warrants either reaction. The stance slot makes the honest-when-warranted
+contract explicit.
+
+**Package equivalents** — inside this agent-config, the
+[`adversarial-review`](../../.agent-src.uncompressed/skills/adversarial-review/SKILL.md)
+skill implements the same stance via an Attack-Defend-Revise loop and is
+the right tool when the user submits finished work for a critical take.
+This template is for **end-users prompting their own LLM** (ChatGPT,
+Claude, Gemini) outside this package.
 
 ## Image templates
 
