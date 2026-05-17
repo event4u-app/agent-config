@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-15
+---
+
 # caveman telemetry — multiplier contract
 
 > **Status:** suspended (kill-criterion not met in `caveman-v1`).

@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-15
+---
+
 # cost-summary schema (`cost-summary/v1`)
 
 Stable JSON contract for inter-tool consumption of cost-tracking data
