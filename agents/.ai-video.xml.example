@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  agents/.ai-video.xml.example
+  ============================
+
+  Operator-facing provider configuration for the /video:* command cluster.
+
+  Copy this file to `agents/.ai-video.xml` and fill in the API keys for the
+  providers you actually use. The real file is gitignored and MUST NEVER be
+  committed.
+
+  Loader: scripts/ai-video/lib/load-config.sh
+  Redaction: scripts/ai-video/lib/redact.sh
+  Docs: agents/ai-video/README.md
+-->
+<ai-video version="1">
+
+  <!--
+    Defaults: pick which provider a /video:* run uses when the command
+    does not pass the image-provider / video-provider flags. Must match
+    a provider id="..." declared below.
+  -->
+  <default-image-provider>openai-images</default-image-provider>
+  <default-video-provider>gemini-veo</default-video-provider>
+
+  <!-- ============================================================ -->
+  <!-- Image providers                                              -->
+  <!-- ============================================================ -->
+
+  <provider id="openai-images" kind="image">
+    <api-key>sk-REPLACE-ME</api-key>
+    <endpoint>https://api.openai.com/v1</endpoint>
+    <default-model>gpt-image-1</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <quality>high</quality>
+      <best-of-n>4</best-of-n>
+    </tuning>
+  </provider>
+
+  <provider id="higgsfield" kind="image+video">
+    <api-key>hf-REPLACE-ME</api-key>
+    <endpoint>https://api.higgsfield.ai/v1</endpoint>
+    <default-model>higgsfield-soul</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <preset>cinematic</preset>
+      <max-duration>5</max-duration>
+      <best-of-n>2</best-of-n>
+    </tuning>
+  </provider>
+
+  <!-- ============================================================ -->
+  <!-- Video providers                                              -->
+  <!-- ============================================================ -->
+
+  <provider id="gemini-veo" kind="video">
+    <api-key>AIza-REPLACE-ME</api-key>
+    <endpoint>https://generativelanguage.googleapis.com/v1beta</endpoint>
+    <default-model>veo-3.0-generate-001</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <fps>24</fps>
+      <max-duration>8</max-duration>
+      <audio-native>true</audio-native>
+    </tuning>
+  </provider>
+
+  <provider id="kling" kind="video">
+    <api-key>kling-REPLACE-ME</api-key>
+    <endpoint>https://api.klingai.com/v1</endpoint>
+    <default-model>kling-v2-master</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <fps>30</fps>
+      <max-duration>10</max-duration>
+      <audio-native>false</audio-native>
+    </tuning>
+  </provider>
+
+  <provider id="sora" kind="video">
+    <api-key>sora-REPLACE-ME</api-key>
+    <endpoint>https://api.openai.com/v1</endpoint>
+    <default-model>sora-2</default-model>
+    <dry-run>true</dry-run>
+    <tuning>
+      <aspect>16:9</aspect>
+      <fps>30</fps>
+      <max-duration>20</max-duration>
+      <audio-native>true</audio-native>
+    </tuning>
+  </provider>
+
+  <!-- ============================================================ -->
+  <!-- Extra slot — future providers without schema bump            -->
+  <!-- Use kind="image" | "video" | "image+video".                  -->
+  <!-- ============================================================ -->
+
+  <extra>
+    <!--
+    <provider id="my-future-backend" kind="video">
+      <api-key>REPLACE-ME</api-key>
+      <endpoint>https://example.invalid/v1</endpoint>
+      <default-model>example-1</default-model>
+      <dry-run>true</dry-run>
+      <tuning>
+        <aspect>16:9</aspect>
+        <fps>24</fps>
+        <max-duration>6</max-duration>
+        <audio-native>false</audio-native>
+      </tuning>
+    </provider>
+    -->
+  </extra>
+
+</ai-video>
