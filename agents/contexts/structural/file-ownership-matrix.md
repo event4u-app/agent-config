@@ -6,7 +6,7 @@
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
 - Files indexed: **483**
-- Edges (incl. self-WRITE): **1315**
+- Edges (incl. self-WRITE): **1316**
 
 ## READ_ONLY edges
 
@@ -670,6 +670,7 @@
 | `.agent-src.uncompressed/skills/receiving-code-review/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-prompt/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/commands/jira-ticket.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
