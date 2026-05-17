@@ -702,6 +702,41 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.18.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.21.0](https://github.com/event4u-app/agent-config/compare/2.20.1...2.21.0) (2026-05-17)
+
+### Features
+
+* **telemetry:** caveman stats + per-conversation cost lens ([13300cc](https://github.com/event4u-app/agent-config/commit/13300cc2d709ec2cce58520621cf560fbd6414c3))
+* **memory:** input-side compression for always-loaded files ([abfd5b1](https://github.com/event4u-app/agent-config/commit/abfd5b120f2effd2abd68adea45c8b15f315dfec))
+* **bench:** add caveman v1 benchmark with terse-control arm ([1e37062](https://github.com/event4u-app/agent-config/commit/1e37062cada6f9be5bfa0dfe4083753ade87f2f2))
+* **security:** add safe-paths denylist and caveman carve-outs validators ([249114d](https://github.com/event4u-app/agent-config/commit/249114d900a9d6960aee7bbeda5c28f85be718ad))
+
+### Bug Fixes
+
+* **caveman-speak:** bullet-format prose lines to satisfy structural-density lock ([5c8006d](https://github.com/event4u-app/agent-config/commit/5c8006d8bd70fea93671361160e6b7c4399302c6))
+* **refs:** inline roadmap council citations + mark contract council-refs as ADR trace ([5a11951](https://github.com/event4u-app/agent-config/commit/5a11951ebff87ba95465c0a6b9b59fd9a4d4cee2))
+* **contracts:** drop roadmap reference from compression-default-kill-criterion ([f2b2124](https://github.com/event4u-app/agent-config/commit/f2b212495744dae1904b256aa11d47e230e7b534))
+* **contracts:** add stability frontmatter to caveman-telemetry + cost-summary-schema ([c7efa54](https://github.com/event4u-app/agent-config/commit/c7efa54cc3587f42f3a21ca18b783b5504c56e04))
+* **portability:** apply task-invocation fix in .agent-src/ projection ([be87c2b](https://github.com/event4u-app/agent-config/commit/be87c2be1637570a61b7a8863216288f3828609c))
+* **portability:** swap task invocations for script paths in compress-memory skill ([886f9f4](https://github.com/event4u-app/agent-config/commit/886f9f4a615fa2351b9261a62fd49173f8e87c2f))
+* **roadmap:** clarify agent-status is a command not a skill in step-16 ([96df39d](https://github.com/event4u-app/agent-config/commit/96df39de7a7562df946c37fea8bc42927851071f))
+* **template:** bump agent_config_version pin to 2.20.1 ([c275864](https://github.com/event4u-app/agent-config/commit/c2758641718077baaaaefea1191760d397f6b47e))
+
+### Documentation
+
+* **readme:** compact banner and badge row to stay under 750-line lint budget ([2f411a7](https://github.com/event4u-app/agent-config/commit/2f411a78993260d3bd1f5fb819779cad2b19ed07))
+* **readme:** add hero banner and migrate count display to shields.io badges ([980fe1a](https://github.com/event4u-app/agent-config/commit/980fe1ac1c529e3c57c967db148f2b162240ff27))
+* **caveman:** v1 kill-criterion verdict + Suspended state ([ca1751e](https://github.com/event4u-app/agent-config/commit/ca1751e8957783fa4e40ddfb89172702619f12bc))
+
+### Chores
+
+* **ownership:** regenerate ownership matrix ([1331bce](https://github.com/event4u-app/agent-config/commit/1331bce63d223adb971a931babe5e163b5a8aa12))
+* **index:** regenerate agents/index.md + docs/catalog.md for compress-memory ([6d16e7f](https://github.com/event4u-app/agent-config/commit/6d16e7fb3ca0a2fbe76a18337a94e98607262d06))
+* **sync:** bump skill count 210 -> 211 (compress-memory) ([bb361ed](https://github.com/event4u-app/agent-config/commit/bb361edb4e5e65cbc4e7eb41382f88f1909e5583))
+* **roadmaps:** close step-16 caveman-substance + archive-phantom-scan ([9388f9b](https://github.com/event4u-app/agent-config/commit/9388f9be662da17b98eb4000f16ff8fcf376e626))
+
+Tests: 4559 (+24 since 2.20.1)
+
 ## [2.20.1](https://github.com/event4u-app/agent-config/compare/2.20.0...2.20.1) (2026-05-16)
 
 ### Bug Fixes
