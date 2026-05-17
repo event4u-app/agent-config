@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **486 artefacts** in this package.
+Maintainer-facing index of all **487 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -436,7 +436,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`upstream-contribute`](../.agent-src.uncompressed/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src.uncompressed/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (72)
+## Guidelines (73)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -511,4 +511,5 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | guideline | [`sql`](../docs/guidelines/php/sql.md) | php |  |
 | guideline | [`validations`](../docs/guidelines/php/validations.md) | php |  |
 | guideline | [`websocket`](../docs/guidelines/php/websocket.md) | php |  |
+| guideline | [`prompt-templates`](../docs/guidelines/prompt-templates.md) | (root) |  |
 | guideline | [`wing4-handoff`](../docs/guidelines/wing4-handoff.md) | (root) |  |

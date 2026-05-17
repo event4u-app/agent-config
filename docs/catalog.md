@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **483 public artefacts** shipped by
+Consumer-facing catalog of all **484 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -433,7 +433,7 @@ are excluded.
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
-## Guidelines (72)
+## Guidelines (73)
 
 | kind | name | category | description |
 |---|---|---|---|
@@ -508,6 +508,7 @@ are excluded.
 | guideline | [`sql`](../docs/guidelines/php/sql.md) | php |  |
 | guideline | [`validations`](../docs/guidelines/php/validations.md) | php |  |
 | guideline | [`websocket`](../docs/guidelines/php/websocket.md) | php |  |
+| guideline | [`prompt-templates`](../docs/guidelines/prompt-templates.md) | (root) |  |
 | guideline | [`wing4-handoff`](../docs/guidelines/wing4-handoff.md) | (root) |  |
 
 ---

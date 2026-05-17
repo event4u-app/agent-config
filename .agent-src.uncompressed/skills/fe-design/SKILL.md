@@ -199,6 +199,14 @@ Step indicator (1 — 2 — 3)
 5. **Loading states** — Skeleton screens or spinners, never blank screens
 6. **Error recovery** — Clear error messages with suggested actions
 
+## Aesthetic direction
+
+Audit-pinned tokens and components always take precedence (see `existing-ui-audit`). When the audit pins an aesthetic, honor it without deviation. When the audit shows **no pinned aesthetic** — greenfield surface, marketing landing page, brand-new feature without design-system precedent — the design brief is allowed (and expected) to commit to a deliberate direction instead of defaulting to safe centered hero + 3-column features + CTA.
+
+Pick one direction up front and let composition, typography, and color follow from it. Avoid the "neutral AI default": uniform grid, system fonts as the visible body face, purple-to-blue gradients on white, predictable spacing. A direction that fits the brand intent (editorial / brutalist / refined / playful / retro / maximal / minimal / etc.) and is consistent across the page beats hedging.
+
+Surface the chosen direction in the design brief as a one-line statement (e.g. `aesthetic: editorial-magazine — asymmetric grid, serif display + sans body, generous gutters`). The apply step (`react-shadcn-ui` / `blade-ui` / `livewire` / `flux`) reads this line and matches typography, spacing, and motion to it; if no line is present, the apply step uses project defaults.
+
 ## Procedure
 
 When `directives/ui/design.py` (or any caller) cites this skill:

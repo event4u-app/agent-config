@@ -117,6 +117,20 @@ Risks:          <arbitrary values, !important, dark-mode gaps>
   break the design system; they accumulate silently.
 - `@apply` inside component CSS interacts with PurgeCSS — keep it
   in files Tailwind scans, not in vendor CSS.
+- **Anti-AI-slop: gradients.** Unless audit-pinned or brief-explicit,
+  avoid the default purple-to-blue / cyan-to-pink gradients on white —
+  they read as auto-generated. Reach for a single accent from the
+  token map, or a duotone built from configured tokens.
+- **Anti-AI-slop: typography.** Unless audit-pinned, avoid surfacing
+  the system stack (`font-sans` fallback to Arial / Helvetica / Inter
+  via system defaults) as the *visible* body face. If `tailwind.config`
+  pins a font family, use it; if not, treat the missing token as a
+  gap to flag, not a license to ship the OS default.
+- **Anti-AI-slop: layout.** Unless audit-pinned, the centered hero +
+  3-column features + CTA stack is the AI-template tell. Break the
+  grid intentionally (asymmetric column split, overlap, diagonal
+  flow) when the brief allows; cite the design brief's `aesthetic:`
+  line if `fe-design`'s aesthetic-direction section produced one.
 
 ## Do NOT
 

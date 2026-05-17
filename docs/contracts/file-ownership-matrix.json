@@ -10485,6 +10485,13 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/prompt-optimizer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
       "target": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
       "type": "WRITE",
       "via": "self",

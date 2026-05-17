@@ -49,6 +49,15 @@ Do NOT use when:
 - Every interactive primitive must declare a focus-visible state via
   `focus-visible:ring-2 focus-visible:ring-ring`; that comes for free with
   the generated primitives but is easy to remove during a refactor.
+- **Anti-AI-slop: shadcn-default look.** The out-of-the-box shadcn
+  theme + `Inter`-as-system-fallback + neutral grays reads as
+  template across projects. Unless `state.ui_audit.design_tokens`
+  pins the neutral palette as the project's identity, the polish
+  step should match typography and color tokens to the design
+  brief's `aesthetic:` line (from `fe-design` aesthetic-direction).
+  Theme/font drift within a single audited project breaks
+  consistency — variation lives between projects, not between
+  components in the same surface.
 
 ## Covered primitives
 
