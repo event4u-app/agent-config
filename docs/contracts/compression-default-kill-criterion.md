@@ -104,8 +104,8 @@ re-litigating compression on every PR.
   — v1 measurement; canonical baseline this doc cites.
 - [`docs/benchmarks.md`](../benchmarks.md)
   — cadence + when the next bench run is mandatory.
-- `agents/roadmaps/step-16-caveman-substance.md` Phase 1
-  — produced v1; Phase 3 telemetry suspended pending v2.
+- [`caveman-telemetry`](caveman-telemetry.md)
+  — multiplier contract; records the suspended state v2 must lift.
 - [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md)
   — runtime rule; reads `caveman.speak_scope` from settings.
 
