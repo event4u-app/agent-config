@@ -105,3 +105,15 @@ Any "no" → revise that block.
 - Do NOT emit provider-specific tokens — that is `motion-choreographer`.
 - Do NOT cite "Pixar-style" without a specific film + year.
 - Do NOT compound emotional beats ("sad but hopeful and tired").
+
+## Policies
+
+Pixar-storyteller anchors prompts to named films + studios by design — largest policy surface in video cluster:
+
+- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — naming film + year as *primary* anchor → "in the style of [STUDIO]" trigger; surface and refuse without transformative-intent rationale.
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — beat references named animator's signature character (real-person extension of style).
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — character is recognised public figure rendered in Pixar shape.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every Pixar-style output ships AI-generation disclosure; parody / commentary → flag for human review.
+
+Refuse-and-surface when style ⇒ primary signature, not one influence among several.
+

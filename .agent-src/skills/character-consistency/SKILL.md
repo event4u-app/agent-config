@@ -118,3 +118,15 @@ the lock.
 - Do NOT skip the reference frame after the first render — visual
   regression has nothing to compare against.
 - Do NOT lock a character that appears in only one scene.
+
+## Policies
+
+Lock identifies real person → consult before emitting JSON:
+
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — real-person identity tokens need cited release.
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — public figures → harder gate (publicity rights + transformative-intent).
+- [`agents/policies/media/voice-cloning.md`](../../../agents/policies/media/voice-cloning.md) — `voice_note` → real person's voice.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — real-person lock → non-removable AI-generation disclosure downstream.
+
+Refuse-and-surface file path; never silently sanitise prompt.
+

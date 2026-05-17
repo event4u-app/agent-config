@@ -120,3 +120,16 @@ Any "no" → revise that block.
 - Do NOT paraphrase identity tokens when a lock exists.
 - Do NOT mix live-action LENS prescriptions with animated STYLE
   anchors in the same scene — pick one mode.
+
+## Policies
+
+12-block Cinematic Scene Blueprint is policy choke point — every downstream skill (`motion-choreographer`, `video-director`) inherits whatever blueprint encodes. Before emitting:
+
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — SUBJECT block names / visually identifies real person.
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — SUBJECT block is recognised public figure.
+- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — STYLE / ENVIRONMENT references recognised brand's visual identity.
+- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — STYLE anchors to named living artist / studio as primary signature.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed blueprint output carries AI-generation disclosure downstream.
+
+Refuse-and-surface at blueprint layer; never push policy questions down to adapter.
+

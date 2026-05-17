@@ -1068,6 +1068,56 @@
       "routes_to": []
     },
     {
+      "id": "media-governance-routing",
+      "triggers": [
+        {
+          "keyword": "/video:"
+        },
+        {
+          "keyword": "/image:"
+        },
+        {
+          "keyword": "/audio:"
+        },
+        {
+          "keyword": "deepfake"
+        },
+        {
+          "keyword": "voice clone"
+        },
+        {
+          "keyword": "voice cloning"
+        },
+        {
+          "keyword": "likeness"
+        },
+        {
+          "keyword": "brand impersonation"
+        },
+        {
+          "phrase": "in the style of"
+        },
+        {
+          "phrase": "in the voice of"
+        },
+        {
+          "phrase": "as [public figure]"
+        },
+        {
+          "phrase": "impersonate"
+        }
+      ],
+      "routes_to": [
+        "policy:media/brand-impersonation",
+        "policy:media/disclosure",
+        "policy:media/likeness",
+        "policy:media/public-figures",
+        "policy:media/style",
+        "policy:media/transparency",
+        "policy:media/voice-cloning"
+      ]
+    },
+    {
       "id": "minimal-safe-diff",
       "triggers": [
         {

@@ -116,6 +116,11 @@ tasks:
     desc: "Enforce ghostwriter storage tiers — package fixtures must be allowlisted + fictional; consumer-tree profiles must not be fictional (see docs/contracts/ghostwriter-schema.md)"
     cmd: python3 scripts/lint_ghostwriter_source.py {{.QUIET_FLAG}}
 
+  lint-media-policy-linkage:
+    silent: true
+    desc: "Enforce structural reachability of media governance policies — every agents/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/policies/media/README.md § Enforcement model)"
+    cmd: python3 scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
