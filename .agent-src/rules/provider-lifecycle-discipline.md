@@ -63,7 +63,7 @@ All five shipped adapters (`openai-images`, `gemini-veo`, `kling`, `higgsfield`,
 
 ## Why agent-in-the-loop, not Python gate
 
-A Python pre-run gate enumerating tier-by-command rules would either be too coarse (`experimental → block`, breaking dev workflow) or too detailed (per-command tier matrix, drifting from reality on every new provider). The agent reading the tag at run time, surfacing the tier, and asking is the correct enforcement surface: the model that picked the provider is the model that surfaces the obligation, and the human is the policy decision point.
+A Python pre-run gate enumerating tier-by-command rules would either be too coarse (`experimental → block`, breaking day-to-day dev iteration) or too detailed (per-command tier matrix, drifting from reality on every new provider). The agent reading the tag at run time, surfacing the tier, and asking is the correct enforcement surface: the model that picked the provider is the model that surfaces the obligation, and the human is the policy decision point.
 
 The CI guarantee is structural reachability — the linter would fail if a provider was declared in `agents/.ai-video.xml.example` without a lifecycle tag (extension planned). It does not enforce the runtime obligation; the agent does.
 
