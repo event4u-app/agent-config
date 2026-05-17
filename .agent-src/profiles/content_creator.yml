@@ -16,10 +16,15 @@ profile:
       - editorial-calendar
       - release-comms
       - prompt-engineering-patterns
+      - character-consistency
   surface:
     commands_hint:
       - work
       - post-as
       - ghostwriter
       - optimize-prompt
+      - video:from-script
+      - video:storyboard
+      - video:scene
+      - video:stitch
     docs_first_pointer: "docs/getting-started-by-role.md#content_creator"

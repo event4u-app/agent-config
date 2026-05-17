@@ -16,6 +16,16 @@
 - [`messaging-architecture`](../.agent-src/skills/messaging-architecture/SKILL.md) — primary message + supporting proofs + audience-by-message matrix.
 - [`editorial-calendar`](../.agent-src/skills/editorial-calendar/SKILL.md) — evergreen vs campaign vs reactive cadence across channels.
 
+### Video
+
+- [`/video:from-script`](../.agent-src/commands/video/from-script.md) — end-to-end pipeline: script → character-locked image → motion+audio prompt → provider render → stitched clip.
+- [`/video:storyboard`](../.agent-src/commands/video/storyboard.md) — expand a one-line idea into the 12-block Cinematic Scene Blueprint (provider-agnostic).
+- [`/video:scene`](../.agent-src/commands/video/scene.md) — render a single scene from an existing blueprint against the configured provider adapter.
+- [`/video:stitch`](../.agent-src/commands/video/stitch.md) — assemble rendered scenes into the final clip via ffmpeg.
+- [`character-consistency`](../.agent-src/skills/character-consistency/SKILL.md) — lock identity tokens (silhouette, palette, wardrobe, prop) so a character stays visually identical across scenes.
+
+`AIV_DRYRUN=true` is the mandatory default — no provider call, no spend until you opt in.
+
 **Install path:** **MCP recommended.** Claude Desktop is the lowest-friction entry; no terminal required. See [`docs/mcp.md`](mcp.md). CLI install works too if you already use a code editor.
 
 ---
