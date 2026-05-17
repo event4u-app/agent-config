@@ -3,7 +3,6 @@ name: scene-expander
 description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'."
 personas:
   - hollywood-director
-  - pixar-storyboard-artist
 source: package
 domain: product
 ---
@@ -13,9 +12,10 @@ domain: product
 > Expand a one-line idea or script line into the **Cinematic Scene
 > Blueprint** — 12 labeled blocks consumed by
 > [`parse-blueprint.sh`](./scene-blueprint.schema.yaml). Picks
-> `hollywood-director` for live-action and `pixar-storyboard-artist`
-> for animated beats. Output is provider-agnostic — provider tuning
-> is [`motion-choreographer`](../motion-choreographer/SKILL.md).
+> `hollywood-director` for live-action; hands off animated beats to
+> [`pixar-storyteller`](../pixar-storyteller/SKILL.md). Output is
+> provider-agnostic — provider tuning is
+> [`motion-choreographer`](../motion-choreographer/SKILL.md).
 
 ## When to use
 
@@ -38,9 +38,11 @@ Do NOT use when:
 
 1. Read the input line. Classify as **live-action / photoreal** or
    **animated / stylized**.
-2. Live-action → load `hollywood-director` voice. Animated → load
-   `pixar-storyboard-artist`. Hybrid (live-action with VFX) →
-   `hollywood-director`; record VFX intent in ENVIRONMENT.
+2. Live-action → load `hollywood-director` voice. Animated → hand
+   off to [`pixar-storyteller`](../pixar-storyteller/SKILL.md) (its
+   procedure carries the acting / beat-decomposition lens). Hybrid
+   (live-action with VFX) → `hollywood-director`; record VFX intent
+   in ENVIRONMENT.
 3. Check for an existing `character.json` lock under
    `agents/ai-video/<project>/characters/`.
 
@@ -123,13 +125,13 @@ Any "no" → revise that block.
 
 ## Policies
 
-12-block Cinematic Scene Blueprint is policy choke point — every downstream skill (`motion-choreographer`, `video-director`) inherits whatever blueprint encodes. Before emitting:
+The 12-block Cinematic Scene Blueprint is the policy choke point — every downstream skill (`motion-choreographer`, `video-director`) inherits whatever the blueprint encodes. Before emitting:
 
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — SUBJECT block names / visually identifies real person.
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — SUBJECT block is recognised public figure.
-- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — STYLE / ENVIRONMENT references recognised brand's visual identity.
-- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — STYLE anchors to named living artist / studio as primary signature.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed blueprint output carries AI-generation disclosure downstream.
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — when the SUBJECT block names or visually identifies a real person.
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — when the SUBJECT block is a recognised public figure.
+- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — when STYLE / ENVIRONMENT references a recognised brand's visual identity.
+- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — when STYLE anchors to a named living artist or studio as the primary signature.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed blueprint output carries the AI-generation disclosure downstream.
 
-Refuse-and-surface at blueprint layer; never push policy questions down to adapter.
+Refuse-and-surface at the blueprint layer; do not push policy questions down to the adapter.
 

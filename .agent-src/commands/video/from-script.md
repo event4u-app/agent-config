@@ -5,7 +5,7 @@ cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation.
 disable-model-invocation: true
-personas: [hollywood-director, ai-video-technical-director, pixar-storyboard-artist]
+personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
   eligible: true
@@ -19,7 +19,7 @@ suggestion:
 
 Drives a Markdown script through the full pipeline. Provider flags
 override the `<default-image-provider>` / `<default-video-provider>`
-from [`agents/.ai-video.xml`](../../agents/.ai-video.xml.example);
+from [`agents/.ai-video.xml`](../../../agents/.ai-video.xml.example);
 absent flags fall back to the XML defaults.
 
 **Block-on-ambiguity:** a missing scene heading, an unparseable
@@ -49,7 +49,7 @@ provider in this order: command flag → `agents/.ai-video.xml` default
 Run the `scene-expander` skill: split on `## Scene N` headings, extract
 dialogue / action / ambient blocks, and emit one `scene-blueprint.yaml`
 per scene under `<project>/scenes/<id>/`. Schema:
-[`scene-blueprint.schema.yaml`](../skills/scene-expander/scene-blueprint.schema.yaml).
+[`scene-blueprint.schema.yaml`](../../skills/scene-expander/scene-blueprint.schema.yaml).
 
 ### 4. Character lock
 
@@ -66,7 +66,7 @@ For each scene blueprint:
 2. **Safety gate (Phase 5 Step 6).** If `AIV_DRYRUN=false`, print the
    adapter, model, scene count, and estimated cost; refuse to continue
    without an explicit operator confirmation **in this turn**. Mirrors
-   [`non-destructive-by-default`](../rules/non-destructive-by-default.md).
+   [`non-destructive-by-default`](../../rules/non-destructive-by-default.md).
 3. Call the image adapter (`run` subcommand) N times where N =
    `<tuning/best-of-n>` (default 1).
 
@@ -120,4 +120,4 @@ estimated cost (live mode) or `dry-run` marker. No commit. No push.
 - [`/video:scene`](scene.md) — single-scene iteration
 - [`/video:storyboard`](storyboard.md) — image-only contact sheet
 - [`/video:stitch`](stitch.md) — re-stitch after operator edits
-- [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md)
+- [`scripts/ai-video/lib/adapter-contract.md`](../../../scripts/ai-video/lib/adapter-contract.md)

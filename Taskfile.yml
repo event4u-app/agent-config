@@ -114,6 +114,7 @@ tasks:
       - task: lint-command-tiers
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
+      - task: lint-persona-governance
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-hook-concern-budget
@@ -188,6 +189,7 @@ tasks:
       - task: lint-command-tiers
       - task: lint-ghostwriter-source
       - task: lint-media-policy-linkage
+      - task: lint-persona-governance
       - task: lint-handoffs
       - task: lint-hook-manifest
       - task: lint-hook-concern-budget

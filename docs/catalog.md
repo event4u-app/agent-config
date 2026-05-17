@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **494 public artefacts** shipped by
+Consumer-facing catalog of all **497 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -228,7 +228,7 @@ are excluded.
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (76)
+## Rules (79)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -276,6 +276,7 @@ are excluded.
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
 | rule | [`low-impact-corpus-privacy-floor`](../.agent-src/rules/low-impact-corpus-privacy-floor.md) | auto | Writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the learning corpus. |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
+| rule | [`media-governance-routing`](../.agent-src/rules/media-governance-routing.md) | auto | When generating AI video, image, or voice — surface the project-local media governance policies (likeness, style, public-figures, voice-cloning, disclosure, brand-impersonation, transparency) |
 | rule | [`minimal-safe-diff`](../.agent-src/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect complexity and recommend optimal model (Opus/Sonnet/GPT) before work |
@@ -286,8 +287,10 @@ are excluded.
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
 | rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
+| rule | [`persona-governance`](../.agent-src/rules/persona-governance.md) | auto | When creating, editing, or proposing personas — enforce the per-domain cap (≤ 2 specialists per domain), the ≥ 1 skill citation rule, and the deprecation path before any new persona lands |
 | rule | [`php-coding`](../.agent-src/rules/php-coding.md) | auto | Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions |
 | rule | [`preservation-guard`](../.agent-src/rules/preservation-guard.md) | auto | When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss |
+| rule | [`provider-lifecycle-discipline`](../.agent-src/rules/provider-lifecycle-discipline.md) | auto | When picking or editing an AI video / image / audio provider adapter — surface the lifecycle tier (experimental \| stable \| deprecated \| community) and refuse to default to non-stable silently |
 | rule | [`reviewer-awareness`](../.agent-src/rules/reviewer-awareness.md) | auto | When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary |
 | rule | [`roadmap-progress-sync`](../.agent-src/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline |
 | rule | [`role-mode-adherence`](../.agent-src/rules/role-mode-adherence.md) | auto | When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker |

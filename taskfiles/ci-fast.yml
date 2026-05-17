@@ -121,6 +121,11 @@ tasks:
     desc: "Enforce structural reachability of media governance policies — every agents/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/policies/media/README.md § Enforcement model)"
     cmd: python3 scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
 
+  lint-persona-governance:
+    silent: true
+    desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncompressed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
+    cmd: python3 scripts/lint_persona_governance.py {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1

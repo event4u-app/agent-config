@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **497 artefacts** in this package.
+Maintainer-facing index of all **500 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -228,7 +228,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voice-and-tone-design`](../.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 | skill | [`websocket`](../.agent-src.uncompressed/skills/websocket/SKILL.md) |  | Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'. |
 
-## Rules (79)
+## Rules (82)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -279,6 +279,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`laravel-translations`](../.agent-src.uncompressed/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text |
 | rule | [`low-impact-corpus-privacy-floor`](../.agent-src.uncompressed/rules/low-impact-corpus-privacy-floor.md) | auto | Writing, editing, or upstreaming entries in `agents/low-impact-decisions.md` — non-bypassable privacy floor for the learning corpus. |
 | rule | [`markdown-safe-codeblocks`](../.agent-src.uncompressed/rules/markdown-safe-codeblocks.md) | auto | Generating markdown output that contains code blocks — prevent broken nesting |
+| rule | [`media-governance-routing`](../.agent-src.uncompressed/rules/media-governance-routing.md) | auto | When generating AI video, image, or voice — surface the project-local media governance policies (likeness, style, public-figures, voice-cloning, disclosure, brand-impersonation, transparency) |
 | rule | [`minimal-safe-diff`](../.agent-src.uncompressed/rules/minimal-safe-diff.md) | auto | When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting |
 | rule | [`missing-tool-handling`](../.agent-src.uncompressed/rules/missing-tool-handling.md) | auto | When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently |
 | rule | [`model-recommendation`](../.agent-src.uncompressed/rules/model-recommendation.md) | auto | Starting a new task, switching task type, or invoking a command — detect complexity and recommend optimal model (Opus/Sonnet/GPT) before work |
@@ -289,8 +290,10 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`non-destructive-by-default`](../.agent-src.uncompressed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src.uncompressed/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
 | rule | [`package-ci-checks`](../.agent-src.uncompressed/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
+| rule | [`persona-governance`](../.agent-src.uncompressed/rules/persona-governance.md) | auto | When creating, editing, or proposing personas — enforce the per-domain cap (≤ 2 specialists per domain), the ≥ 1 skill citation rule, and the deprecation path before any new persona lands |
 | rule | [`php-coding`](../.agent-src.uncompressed/rules/php-coding.md) | auto | Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions |
 | rule | [`preservation-guard`](../.agent-src.uncompressed/rules/preservation-guard.md) | auto | When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss |
+| rule | [`provider-lifecycle-discipline`](../.agent-src.uncompressed/rules/provider-lifecycle-discipline.md) | auto | When picking or editing an AI video / image / audio provider adapter — surface the lifecycle tier (experimental \| stable \| deprecated \| community) and refuse to default to non-stable silently |
 | rule | [`reviewer-awareness`](../.agent-src.uncompressed/rules/reviewer-awareness.md) | auto | When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary |
 | rule | [`roadmap-progress-sync`](../.agent-src.uncompressed/rules/roadmap-progress-sync.md) | auto | Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline |
 | rule | [`role-mode-adherence`](../.agent-src.uncompressed/rules/role-mode-adherence.md) | auto | When roles.active_role is set in .agent-settings.yml — closing outputs must match the mode's contract and emit the structured mode marker |

@@ -1,18 +1,19 @@
 ---
 name: pixar-storyteller
 description: "Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'."
-personas:
-  - pixar-storyboard-artist
 source: package
 domain: product
 ---
 
 # pixar-storyteller
 
-> Turn an animation beat into the **four-block storyboard** the
-> `pixar-storyboard-artist` persona ships: CHARACTER SHEET · SCENE
-> PROMPT · IMAGE PROMPT · VIDEO PROMPT. Output is provider-agnostic;
-> provider tuning is [`motion-choreographer`](../motion-choreographer/SKILL.md).
+> Turn an animation beat into the **four-block storyboard**:
+> CHARACTER SHEET · SCENE PROMPT · IMAGE PROMPT · VIDEO PROMPT.
+> Output is provider-agnostic; provider tuning is
+> [`motion-choreographer`](../motion-choreographer/SKILL.md).
+>
+> The acting / storyboard lens is enforced inline by the procedure
+> and self-review below.
 
 ## When to use
 

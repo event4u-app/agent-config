@@ -1107,15 +1107,7 @@
           "phrase": "impersonate"
         }
       ],
-      "routes_to": [
-        "policy:media/brand-impersonation",
-        "policy:media/disclosure",
-        "policy:media/likeness",
-        "policy:media/public-figures",
-        "policy:media/style",
-        "policy:media/transparency",
-        "policy:media/voice-cloning"
-      ]
+      "routes_to": []
     },
     {
       "id": "minimal-safe-diff",
@@ -1198,6 +1190,38 @@
       "routes_to": []
     },
     {
+      "id": "persona-governance",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/personas/"
+        },
+        {
+          "path_prefix": ".agent-src/personas/"
+        },
+        {
+          "keyword": "persona"
+        },
+        {
+          "keyword": "personas"
+        },
+        {
+          "phrase": "new persona"
+        },
+        {
+          "phrase": "add a persona"
+        },
+        {
+          "phrase": "specialist persona"
+        },
+        {
+          "phrase": "review lens"
+        }
+      ],
+      "routes_to": [
+        "contract:persona-schema"
+      ]
+    },
+    {
       "id": "preservation-guard",
       "triggers": [
         {
@@ -1214,6 +1238,50 @@
         }
       ],
       "routes_to": []
+    },
+    {
+      "id": "provider-lifecycle-discipline",
+      "triggers": [
+        {
+          "keyword": "/video:"
+        },
+        {
+          "keyword": "/image:"
+        },
+        {
+          "keyword": "/audio:"
+        },
+        {
+          "keyword": "ai-video"
+        },
+        {
+          "keyword": "ai-image"
+        },
+        {
+          "keyword": "ai-audio"
+        },
+        {
+          "keyword": "adapter"
+        },
+        {
+          "keyword": "provider"
+        },
+        {
+          "path_prefix": "scripts/ai-video/adapters/"
+        },
+        {
+          "path_prefix": "agents/.ai-video.xml"
+        },
+        {
+          "phrase": "lifecycle"
+        },
+        {
+          "phrase": "default provider"
+        }
+      ],
+      "routes_to": [
+        "contract:provider-lifecycle"
+      ]
     },
     {
       "id": "reviewer-awareness",

@@ -16,18 +16,17 @@ triggers:
   - phrase: "in the voice of"
   - phrase: "as [public figure]"
   - phrase: "impersonate"
-routes_to:
-  - "policy:media/likeness"
-  - "policy:media/style"
-  - "policy:media/public-figures"
-  - "policy:media/voice-cloning"
-  - "policy:media/disclosure"
-  - "policy:media/brand-impersonation"
-  - "policy:media/transparency"
 applies_to_user_types:
   - "creator"
   - "marketing"
   - "gtm"
+validator_ignore:
+  - type: "substring"
+    pattern: "../../agents/"
+    reason: "Routing rule whose subject matter is the project-local agents/policies/media/ tree; every body link points there by design."
+  - type: "substring"
+    pattern: ".agent-src.uncompressed/"
+    reason: "Rule contrasts project-local placement with the .agent-src.uncompressed/rules/ alternative — mentioning the path is the argument."
 ---
 
 # Media Governance Routing

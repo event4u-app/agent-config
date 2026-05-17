@@ -63,11 +63,12 @@ the linter check list.
 |---|---|---|
 | `qa` | specialist | testability, failure scenarios |
 | `hollywood-director` | specialist | live-action cinematic prompts — lens, lighting, blocking, negative constraints |
-| `pixar-storyboard-artist` | specialist | animation acting — emotional beat, want / obstacle, environment reaction |
 | `ai-video-technical-director` | specialist | provider tuning — Veo / Kling / OpenAI / Higgsfield / Sora grammar, token caps, audio flags |
 
 More specialists may land in v1.1+ — each must pass the
-Unique-Questions heuristic before being drafted.
+Unique-Questions heuristic before being drafted. Removed personas
+are deleted in-commit (no soak window) per
+[`persona-governance § Deprecation path`](../rules/persona-governance.md).
 
 ## How skills use personas
 

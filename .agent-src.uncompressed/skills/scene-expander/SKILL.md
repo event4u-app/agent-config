@@ -3,7 +3,6 @@ name: scene-expander
 description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'."
 personas:
   - hollywood-director
-  - pixar-storyboard-artist
 source: package
 domain: product
 ---
@@ -13,9 +12,10 @@ domain: product
 > Expand a one-line idea or script line into the **Cinematic Scene
 > Blueprint** — 12 labeled blocks consumed by
 > [`parse-blueprint.sh`](./scene-blueprint.schema.yaml). Picks
-> `hollywood-director` for live-action and `pixar-storyboard-artist`
-> for animated beats. Output is provider-agnostic — provider tuning
-> is [`motion-choreographer`](../motion-choreographer/SKILL.md).
+> `hollywood-director` for live-action; hands off animated beats to
+> [`pixar-storyteller`](../pixar-storyteller/SKILL.md). Output is
+> provider-agnostic — provider tuning is
+> [`motion-choreographer`](../motion-choreographer/SKILL.md).
 
 ## When to use
 
@@ -38,9 +38,11 @@ Do NOT use when:
 
 1. Read the input line. Classify as **live-action / photoreal** or
    **animated / stylized**.
-2. Live-action → load `hollywood-director` voice. Animated → load
-   `pixar-storyboard-artist`. Hybrid (live-action with VFX) →
-   `hollywood-director`; record VFX intent in ENVIRONMENT.
+2. Live-action → load `hollywood-director` voice. Animated → hand
+   off to [`pixar-storyteller`](../pixar-storyteller/SKILL.md) (its
+   procedure carries the acting / beat-decomposition lens). Hybrid
+   (live-action with VFX) → `hollywood-director`; record VFX intent
+   in ENVIRONMENT.
 3. Check for an existing `character.json` lock under
    `agents/ai-video/<project>/characters/`.
 

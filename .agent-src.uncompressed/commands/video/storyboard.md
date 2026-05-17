@@ -5,7 +5,7 @@ cluster: video
 sub: storyboard
 description: Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
 disable-model-invocation: true
-personas: [hollywood-director, pixar-storyboard-artist]
+personas: [hollywood-director]
 skills: [scene-expander, video-director, character-consistency]
 suggestion:
   eligible: true

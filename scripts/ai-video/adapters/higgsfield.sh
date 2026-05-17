@@ -11,6 +11,12 @@
 # agents/.ai-video.xml. Preset → motion-choreographer profile mapping
 # is documented in agents/ai-video/prompts/motion-choreography.md
 # (Phase 6).
+#
+# Lifecycle: experimental — capability-discovery path conformant; no
+# maintainer real-API smoke trace captured yet. See
+# docs/contracts/provider-lifecycle.md for promotion criteria. The
+# agent must surface this tier and ask before defaulting to this
+# adapter.
 
 set -euo pipefail
 

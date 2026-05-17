@@ -1,18 +1,19 @@
 ---
 name: pixar-storyteller
 description: "Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'."
-personas:
-  - pixar-storyboard-artist
 source: package
 domain: product
 ---
 
 # pixar-storyteller
 
-> Turn an animation beat into the **four-block storyboard** the
-> `pixar-storyboard-artist` persona ships: CHARACTER SHEET · SCENE
-> PROMPT · IMAGE PROMPT · VIDEO PROMPT. Output is provider-agnostic;
-> provider tuning is [`motion-choreographer`](../motion-choreographer/SKILL.md).
+> Turn an animation beat into the **four-block storyboard**:
+> CHARACTER SHEET · SCENE PROMPT · IMAGE PROMPT · VIDEO PROMPT.
+> Output is provider-agnostic; provider tuning is
+> [`motion-choreographer`](../motion-choreographer/SKILL.md).
+>
+> The acting / storyboard lens is enforced inline by the procedure
+> and self-review below.
 
 ## When to use
 
@@ -108,12 +109,12 @@ Any "no" → revise that block.
 
 ## Policies
 
-Pixar-storyteller anchors prompts to named films + studios by design — largest policy surface in video cluster:
+The Pixar-storyteller skill anchors prompts to named films and studios by design — the policy surface is the largest in the video cluster:
 
-- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — naming film + year as *primary* anchor → "in the style of [STUDIO]" trigger; surface and refuse without transformative-intent rationale.
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — beat references named animator's signature character (real-person extension of style).
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — character is recognised public figure rendered in Pixar shape.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every Pixar-style output ships AI-generation disclosure; parody / commentary → flag for human review.
+- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — naming a film + year as the *primary* anchor crosses the "in the style of [STUDIO]" trigger; surface and refuse without a transformative-intent rationale.
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — when a beat references a named animator's signature character (real-person extension of style).
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — when the storyteller's character is a recognised public figure rendered in Pixar shape.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every Pixar-style output ships with the AI-generation disclosure; parody / commentary cases are flagged for human review.
 
 Refuse-and-surface when style ⇒ primary signature, not one influence among several.
 
