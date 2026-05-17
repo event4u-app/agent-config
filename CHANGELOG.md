@@ -702,6 +702,32 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.21.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.22.0](https://github.com/event4u-app/agent-config/compare/2.21.0...2.22.0) (2026-05-17)
+
+### Features
+
+* integrate anti-AI-slop heuristics into design skills ([f157d02](https://github.com/event4u-app/agent-config/commit/f157d02e56aa4abe139eaf042ad060de4815f36b))
+* add Honest Sparring Partner template and adversarial-review trigger ([122f0ad](https://github.com/event4u-app/agent-config/commit/122f0adfd3b6a334b1191e9fa58e6b3328c77365))
+* **skills:** refine-prompt + prompt-optimizer honor prompt_optimization setting ([9f8f20e](https://github.com/event4u-app/agent-config/commit/9f8f20e11627342c1e656d978d7a82ea30925cf3))
+* **settings:** add prompt_optimization block (off/mini/max, /raw bypass) ([c6d3715](https://github.com/event4u-app/agent-config/commit/c6d371510979d044e5724d5ed2d390be0af24562))
+
+### Bug Fixes
+
+* **refs:** suppress allowed council-ref links with ADR-decision-trace markers ([053bf9a](https://github.com/event4u-app/agent-config/commit/053bf9ae9c17a470f3838e989c597d66a24ac556))
+* **template:** bump agent_config_version pin to 2.21.0 ([58cc67f](https://github.com/event4u-app/agent-config/commit/58cc67f9eb4c7a3ca9b1adddbfdbefbbfe80fa3b))
+
+### Documentation
+
+* **guidelines:** add prompt-templates.md (12-template catalogue) ([ec91b31](https://github.com/event4u-app/agent-config/commit/ec91b31d71d7169f2aef6184d5e5f8d01b237f9b))
+* **roadmap:** close out step-16-caveman-substance (38/38, kill-criterion deferred) ([7a60f1e](https://github.com/event4u-app/agent-config/commit/7a60f1eddd66dfdf54bc2664b45c97954eb2b7e3))
+
+### Chores
+
+* **index:** regenerate agents/index.md + docs/catalog.md for new guideline ([f7b47e8](https://github.com/event4u-app/agent-config/commit/f7b47e870042abb3a33d26edb0caf9d0529c7828))
+* **changelog:** split era 2.17.x → pre-2.20.0 ([c842766](https://github.com/event4u-app/agent-config/commit/c8427660de6914505edf1a3d21c05ba2313ffbb7))
+
+Tests: 4559 (+0 since 2.21.0)
+
 ## [2.21.0](https://github.com/event4u-app/agent-config/compare/2.20.1...2.21.0) (2026-05-17)
 
 ### Features
