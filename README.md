@@ -1,4 +1,8 @@
+<p align="center"><a href="https://event4u.app"><img alt="event4u Agent Config" src=".github/assets/banner.png"></a></p>
+
 # Agent Config — Universal AI Agent OS
+
+[![Skills](https://img.shields.io/badge/Skills-211-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-79-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-124-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-72-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-22-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 > **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
@@ -26,10 +30,6 @@ maps to the closest profile. Source-of-truth:
 schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
 Beyond software: [`user-types/`](.agent-src.uncompressed/user-types/)
 (galabau · metalworking · truck — see [Who this is for](#who-this-is-for)).
-
-<p align="center">
-  <strong>210 Skills</strong> · <strong>79 Rules</strong> · <strong>124 Commands</strong> · <strong>72 Guidelines</strong> · <strong>22 Personas</strong> · <strong>5 Advisors</strong> · <strong>8 AI Tools</strong>
-</p>
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
@@ -577,7 +577,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 210 skills + 124 native commands); Augment Code gets the
+> package (rules + 211 skills + 124 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are

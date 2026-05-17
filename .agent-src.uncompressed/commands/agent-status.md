@@ -57,6 +57,23 @@ Extract from the latest record:
 Pricing source: [`bench/pricing.yaml`](../../bench/pricing.yaml). Reader
 implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
 
+### 3b. Read caveman delta + per-conversation cost lens
+
+Run two read-only Python helpers (both stdlib-only, both no-op safe if the
+JSONL is missing):
+
+- `python3 scripts/caveman_stats.py --format json` — per-session +
+  per-conversation + lifetime caveman delta. Honors the suspended
+  multiplier (see [`docs/contracts/caveman-telemetry.md`](../../docs/contracts/caveman-telemetry.md)) — delta reads `0` while suspended; display the version + ACTIVE/SUSPENDED state regardless.
+- `python3 scripts/cost_by_conversation.py --format json` — per-conversation
+  total cost + model breakdown for the current conversation, sourced
+  from the same `agents/cost-tracking/sessions.jsonl` ledger.
+
+Surface in the dashboard as one line:
+`[caveman: {lifetime.delta_tokens:+,} tok lifetime · {current_conv.delta_tokens:+,} this conv · multiplier v{multiplier_version} {ACTIVE|SUSPENDED}] · [conv cost: ${current_conv.total_cost_usd:.4f}]`.
+
+If both JSONLs are missing or empty, omit the line silently.
+
 ### 4. Calculate freshness thresholds
 
 - **Message threshold**: Next multiple of 25 ≥ current count

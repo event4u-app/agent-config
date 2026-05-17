@@ -56,6 +56,8 @@ Post-rewrite validator runs on every reply when `speak_scope != off`:
 The rule documents the algorithm; agents apply it inline before
 sending. The mechanism is the rule, not a hidden script.
 
+Optional CI-side regression lock: [`scripts/validate_caveman_carveouts.py`](../../scripts/validate_caveman_carveouts.py) takes pre/post reply pair and asserts byte-identical preservation across all seven carve-out categories — runtime mechanism stays algorithmic; script is offline check.
+
 ## Caveman grammar
 
 - Drop articles (`the`, `a`, `an`).

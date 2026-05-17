@@ -55,11 +55,13 @@ TARGETS: list[tuple[str, list[tuple[str, str]]]] = [
         [
             (r"(Browse all )(\d+)( commands\])", "commands"),
             (r"(package \(rules \+ )(\d+)( skills)", "skills"),
-            # Hero line: **NNN Skills** · **NNN Rules** · **NNN Commands** · **NNN Guidelines**
-            (r"(<strong>)(\d+)( Skills</strong>)", "skills"),
-            (r"(<strong>)(\d+)( Rules</strong>)", "rules"),
-            (r"(<strong>)(\d+)( Guidelines</strong>)", "guidelines"),
-            # NOTE: hero `<strong>N Commands</strong>` and tools-blurb
+            # Hero badges: shields.io URLs `Skills-NNN-<color>` etc.
+            # Format: https://img.shields.io/badge/<Label>-<N>-<hex>?style=flat-square
+            (r"(/badge/Skills-)(\d+)(-)", "skills"),
+            (r"(/badge/Rules-)(\d+)(-)", "rules"),
+            (r"(/badge/Guidelines-)(\d+)(-)", "guidelines"),
+            (r"(/badge/Personas-)(\d+)(-)", "personas"),
+            # NOTE: hero `Commands-N` badge and tools-blurb
             # `skills + N native commands` are owned by
             # `check_command_count_messaging.py` (Phase-1.2 of
             # road-to-pr-34-followups). Those surfaces advertise the

@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **485 artefacts** in this package.
+Maintainer-facing index of all **486 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (210)
+## Skills (211)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -43,6 +43,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`competitive-moat-analysis`](../.agent-src.uncompressed/skills/competitive-moat-analysis/SKILL.md) |  | Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'. |
 | skill | [`competitive-positioning`](../.agent-src.uncompressed/skills/competitive-positioning/SKILL.md) |  | Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'. |
 | skill | [`composer-packages`](../.agent-src.uncompressed/skills/composer-packages/SKILL.md) |  | Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'. |
+| skill | [`compress-memory`](../.agent-src.uncompressed/skills/compress-memory/SKILL.md) |  | Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via caveman grammar — refuses sensitive paths, round-trips via .original.md backup. |
 | skill | [`content-funnel-design`](../.agent-src.uncompressed/skills/content-funnel-design/SKILL.md) |  | Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'. |
 | skill | [`context-authoring`](../.agent-src.uncompressed/skills/context-authoring/SKILL.md) |  | Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel. |
 | skill | [`context-document`](../.agent-src.uncompressed/skills/context-document/SKILL.md) |  | Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation. |
