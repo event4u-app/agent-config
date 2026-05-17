@@ -152,6 +152,58 @@ quality:
     # Known: eslint, prettier, tsc, biome.
     tools: [eslint, prettier, tsc]
 
+# --- Prompt optimization (engine-inbound + engine-outbound) ---
+#
+# Controls how aggressively the agent reshapes a free-form prompt
+# *before* the engine plans (`/work "<prompt>"`) and how the
+# outbound `/optimize-prompt` skill polishes a copy-and-paste
+# prompt for an external AI.
+#
+# Single-knob model — `default:` applies to both inbound and
+# outbound surfaces unless an override key is set:
+#
+#   off  — engine runs the user's literal prompt. No reconstruction,
+#          no AC inference, no template selection. Closest to "raw"
+#          behaviour; useful for power users who already write
+#          structured prompts.
+#   mini — light shaping. Inbound: `refine-prompt` runs in
+#          stack-aware mode (reads `package.json` / `CLAUDE.md` /
+#          `.cursorrules` only to infer the framework), asks at
+#          most 5 targeted clarifying questions, emits a structured
+#          6-block prompt. Outbound: BASIC mode of `prompt-optimizer`
+#          (4-D pass with safe defaults, no clarifying questions).
+#   max  — full restructure. Inbound: `refine-prompt` runs the
+#          5-dimension confidence rubric + assumption inference;
+#          medium-band halts surface the assumption list, low-band
+#          asks one clarifying question. Outbound: DETAIL mode of
+#          `prompt-optimizer` with template selection (RTF, CO-STAR,
+#          RISEN, CRISPE, …) per `docs/guidelines/prompt-templates.md`.
+#
+# Default `max` reshapes every prompt before the engine plans —
+# the AI Council (anthropic/openai, 2026-05-17) warned this risks
+# latency, token cost, and loss of author intent on the inbound
+# side. If that bites you, uncomment `inbound: mini` below. The
+# outbound side (explicit `/optimize-prompt`) is opt-in and stays
+# at `max` regardless.
+#
+# Bypass: any prompt starting with `bypass_prefix` skips both
+# inbound and outbound shaping verbatim. `/`-prefixed slash
+# commands (`/work`, `/commit`, …) and `#`-prefixed memory entries
+# auto-bypass.
+prompt_optimization:
+  default: max
+
+  # Optional per-surface overrides. Leave commented to inherit
+  # `default:`. Council-recommended split is `inbound: mini,
+  # outbound: max` — uncomment if you want fewer interceptions
+  # on `/work` but full polish on `/optimize-prompt`.
+  # inbound: mini
+  # outbound: max
+
+  # Prefix that skips all shaping. Must start with `/` to align
+  # with this project's slash-command convention. Default `/raw`.
+  bypass_prefix: "/raw"
+
 # --- Locked keys (override this file only; never locks .agent-settings.yml) ---
 #
 # List keys from this file whose values cannot be overridden by a
