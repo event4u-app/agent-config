@@ -741,6 +741,36 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/video.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/video/from-script.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/video/scene.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/video/stitch.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/video/storyboard.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/work.md": {
       "kind": "command",
       "rule_type": null,
@@ -981,6 +1011,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/ai-video-technical-director.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/backend-architect.md": {
       "kind": "persona",
       "rule_type": null,
@@ -1047,7 +1083,19 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/personas/hollywood-director.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/personas/people-strategist.md": {
+      "kind": "persona",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/personas/pixar-storyboard-artist.md": {
       "kind": "persona",
       "rule_type": null,
       "load_context": [],
@@ -1740,6 +1788,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/character-consistency/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/check-refs/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2304,6 +2358,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/multi-tenancy/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2407,6 +2467,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/pipeline-strategy/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2641,6 +2707,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/scenario-modeling/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/scene-expander/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2899,6 +2971,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/video-director/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -5178,6 +5256,132 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/video.md",
+      "target": ".agent-src.uncompressed/commands/video.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/from-script.md",
+      "target": ".agent-src.uncompressed/commands/video/from-script.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/from-script.md",
+      "target": ".agent-src.uncompressed/commands/video/scene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/from-script.md",
+      "target": ".agent-src.uncompressed/commands/video/stitch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/from-script.md",
+      "target": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/from-script.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/scene.md",
+      "target": ".agent-src.uncompressed/commands/video/from-script.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/scene.md",
+      "target": ".agent-src.uncompressed/commands/video/scene.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/scene.md",
+      "target": ".agent-src.uncompressed/commands/video/stitch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/scene.md",
+      "target": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/stitch.md",
+      "target": ".agent-src.uncompressed/commands/video/from-script.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/stitch.md",
+      "target": ".agent-src.uncompressed/commands/video/scene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/stitch.md",
+      "target": ".agent-src.uncompressed/commands/video/stitch.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "target": ".agent-src.uncompressed/commands/video/from-script.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "target": ".agent-src.uncompressed/commands/video/scene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "target": ".agent-src.uncompressed/commands/video/stitch.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "target": ".agent-src.uncompressed/commands/video/storyboard.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/work.md",
       "target": ".agent-src.uncompressed/commands/commit.md",
       "type": "READ_ONLY",
@@ -5962,6 +6166,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/personas/ai-video-technical-director.md",
+      "target": ".agent-src.uncompressed/personas/ai-video-technical-director.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/backend-architect.md",
       "target": ".agent-src.uncompressed/personas/backend-architect.md",
       "type": "WRITE",
@@ -6039,8 +6250,22 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/personas/hollywood-director.md",
+      "target": ".agent-src.uncompressed/personas/hollywood-director.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/personas/people-strategist.md",
       "target": ".agent-src.uncompressed/personas/people-strategist.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/personas/pixar-storyboard-artist.md",
+      "target": ".agent-src.uncompressed/personas/pixar-storyboard-artist.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -7857,6 +8082,34 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/check-refs/SKILL.md",
@@ -9791,6 +10044,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/multi-tenancy/SKILL.md",
       "target": ".agent-src.uncompressed/skills/multi-tenancy/SKILL.md",
       "type": "WRITE",
@@ -10132,6 +10399,34 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/playwright-architect/SKILL.md",
@@ -11035,6 +11330,20 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/skills/script-writing/SKILL.md",
@@ -12033,6 +12342,34 @@
     {
       "source": ".agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md",
       "target": ".agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/character-consistency/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/video-director/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/video-director/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0

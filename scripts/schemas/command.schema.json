@@ -34,6 +34,14 @@
         "pattern": "^[a-z][a-z0-9-]*$"
       }
     },
+    "personas": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9-]*$"
+      },
+      "description": "Personas this command invokes (see .agent-src.uncompressed/personas/). Mirrors `skills:`; each entry must match a persona slug."
+    },
     "cluster": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",

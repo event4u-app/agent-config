@@ -1,20 +1,20 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **484 public artefacts** shipped by
+Consumer-facing catalog of all **494 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (211)
+## Skills (216)
 
 | kind | name | extra | description |
 |---|---|---|---|
 | skill | [`accessibility-auditor`](../.agent-src/skills/accessibility-auditor/SKILL.md) |  | Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'. |
 | skill | [`activation-design`](../.agent-src/skills/activation-design/SKILL.md) |  | Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable definition. Triggers on 'what is our aha moment', 'redefine activation'. |
 | skill | [`adr-create`](../.agent-src/skills/adr-create/SKILL.md) |  | Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'. |
-| skill | [`adversarial-review`](../.agent-src/skills/adversarial-review/SKILL.md) |  | ONLY when user explicitly requests adversarial review, devil's advocate analysis, stress-testing a plan, or 'poke holes in this' — NOT for regular code review or design feedback. |
+| skill | [`adversarial-review`](../.agent-src/skills/adversarial-review/SKILL.md) |  | ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review. |
 | skill | [`agent-docs-writing`](../.agent-src/skills/agent-docs-writing/SKILL.md) |  | Use when reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md. Understands the full .augment/, agents/, and copilot-instructions structure. |
 | skill | [`agents-md-thin-root`](../.agent-src/skills/agents-md-thin-root/SKILL.md) |  | Use when editing AGENTS.md (package root) or templates/AGENTS.md (consumer) — enforces Thin-Root contract: hard char ceilings, ≥40% pointer ratio, mandatory emergency-triage block. |
 | skill | [`ai-council`](../.agent-src/skills/ai-council/SKILL.md) |  | Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'. |
@@ -33,6 +33,7 @@ are excluded.
 | skill | [`bug-analyzer`](../.agent-src/skills/bug-analyzer/SKILL.md) |  | Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs. |
 | skill | [`build-buy-partner`](../.agent-src/skills/build-buy-partner/SKILL.md) |  | Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'. |
 | skill | [`canvas-design`](../.agent-src/skills/canvas-design/SKILL.md) |  | Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'. |
+| skill | [`character-consistency`](../.agent-src/skills/character-consistency/SKILL.md) |  | Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'. |
 | skill | [`check-refs`](../.agent-src/skills/check-refs/SKILL.md) |  | Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions. |
 | skill | [`churn-prevention`](../.agent-src/skills/churn-prevention/SKILL.md) |  | Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'. |
 | skill | [`code-refactoring`](../.agent-src/skills/code-refactoring/SKILL.md) |  | Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools. |
@@ -127,6 +128,7 @@ are excluded.
 | skill | [`migration-creator`](../.agent-src/skills/migration-creator/SKILL.md) |  | Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness. |
 | skill | [`mobile-e2e-strategy`](../.agent-src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
 | skill | [`module-management`](../.agent-src/skills/module-management/SKILL.md) |  | Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions. |
+| skill | [`motion-choreographer`](../.agent-src/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../.agent-src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
 | skill | [`nextjs-patterns`](../.agent-src/skills/nextjs-patterns/SKILL.md) |  | Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture. |
 | skill | [`okr-tree-modeling`](../.agent-src/skills/okr-tree-modeling/SKILL.md) |  | Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering. |
@@ -145,6 +147,7 @@ are excluded.
 | skill | [`php-debugging`](../.agent-src/skills/php-debugging/SKILL.md) |  | Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'. |
 | skill | [`php-service`](../.agent-src/skills/php-service/SKILL.md) |  | Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage. |
 | skill | [`pipeline-strategy`](../.agent-src/skills/pipeline-strategy/SKILL.md) |  | Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'. |
+| skill | [`pixar-storyteller`](../.agent-src/skills/pixar-storyteller/SKILL.md) |  | Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'. |
 | skill | [`playwright-architect`](../.agent-src/skills/playwright-architect/SKILL.md) |  | Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'. |
 | skill | [`playwright-testing`](../.agent-src/skills/playwright-testing/SKILL.md) |  | Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns. |
 | skill | [`po-discovery`](../.agent-src/skills/po-discovery/SKILL.md) |  | Use when shaping a fuzzy product ask into a refined backlog item — problem framing, user-story rewrite, AC tightening — even if the user just says 'help me write this ticket'. |
@@ -184,6 +187,7 @@ are excluded.
 | skill | [`rule-writing`](../.agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
 | skill | [`runway-cognition`](../.agent-src/skills/runway-cognition/SKILL.md) |  | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
 | skill | [`scenario-modeling`](../.agent-src/skills/scenario-modeling/SKILL.md) |  | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
+| skill | [`scene-expander`](../.agent-src/skills/scene-expander/SKILL.md) |  | Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'. |
 | skill | [`script-writing`](../.agent-src/skills/script-writing/SKILL.md) |  | Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'. |
 | skill | [`secrets-management`](../.agent-src/skills/secrets-management/SKILL.md) |  | Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized. |
 | skill | [`security`](../.agent-src/skills/security/SKILL.md) |  | Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding. |
@@ -218,6 +222,7 @@ are excluded.
 | skill | [`using-git-worktrees`](../.agent-src/skills/using-git-worktrees/SKILL.md) |  | Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'. |
 | skill | [`validate-feature-fit`](../.agent-src/skills/validate-feature-fit/SKILL.md) |  | Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit |
 | skill | [`verify-completion-evidence`](../.agent-src/skills/verify-completion-evidence/SKILL.md) |  | Use when claiming 'done', suggesting a commit, push, or PR — runs the evidence gate so completion claims come from fresh output in this message, not memory or earlier runs. |
+| skill | [`video-director`](../.agent-src/skills/video-director/SKILL.md) |  | Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'. |
 | skill | [`vision-articulation`](../.agent-src/skills/vision-articulation/SKILL.md) |  | Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'. |
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
@@ -304,7 +309,7 @@ are excluded.
 | rule | [`user-interaction`](../.agent-src/rules/user-interaction.md) | auto | Asking the user a question, presenting options, or summarizing progress — numbered-options Iron Law, single-recommendation rule, progress indicators |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (124)
+## Commands (129)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -431,6 +436,11 @@ are excluded.
 | command | [`threat-model`](../.agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones |
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
+| command | [`video:from-script`](../.agent-src/commands/video/from-script.md) | cluster: video | Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation. |
+| command | [`video:scene`](../.agent-src/commands/video/scene.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation. |
+| command | [`video:stitch`](../.agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
+| command | [`video:storyboard`](../.agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
+| command | [`video`](../.agent-src/commands/video.md) | cluster: video | Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch. |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
 ## Guidelines (73)

@@ -166,3 +166,16 @@ agents/council-events.log
 # Written by SessionStart / PostToolUse hooks on Augment + Claude Code;
 # regenerated on demand, never committed.
 /agents/state/
+
+# AI Video pipeline (Phase 1 of agents/roadmaps/ai-video-pipeline.md).
+# The real provider-secrets file MUST NEVER be committed.
+# Operator scratch under agents/ai-video/ is gitignored except the
+# README, prompts library, examples, and committed fixtures used by
+# the offline smoke test.
+agents/.ai-video.xml
+agents/ai-video/*
+!agents/ai-video/README.md
+!agents/ai-video/prompts/
+!agents/ai-video/prompts/**
+!agents/ai-video/examples/
+!agents/ai-video/examples/**

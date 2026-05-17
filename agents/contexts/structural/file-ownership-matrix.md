@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **483**
-- Edges (incl. self-WRITE): **1316**
+- Files indexed: **496**
+- Edges (incl. self-WRITE): **1353**
 
 ## READ_ONLY edges
 
@@ -210,6 +210,19 @@
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/threat-model.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/from-script.md` | `.agent-src.uncompressed/commands/video/scene.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/from-script.md` | `.agent-src.uncompressed/commands/video/stitch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/from-script.md` | `.agent-src.uncompressed/commands/video/storyboard.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/from-script.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/scene.md` | `.agent-src.uncompressed/commands/video/from-script.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/scene.md` | `.agent-src.uncompressed/commands/video/stitch.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/scene.md` | `.agent-src.uncompressed/commands/video/storyboard.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/stitch.md` | `.agent-src.uncompressed/commands/video/from-script.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/stitch.md` | `.agent-src.uncompressed/commands/video/scene.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/storyboard.md` | `.agent-src.uncompressed/commands/video/from-script.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/storyboard.md` | `.agent-src.uncompressed/commands/video/scene.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/video/storyboard.md` | `.agent-src.uncompressed/commands/video/stitch.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/work.md` | `.agent-src.uncompressed/commands/commit.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/work.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/work.md` | `.agent-src.uncompressed/commands/implement-ticket.md` | `body_link` | 1 |
@@ -431,6 +444,9 @@
 | `.agent-src.uncompressed/skills/build-buy-partner/SKILL.md` | `.agent-src.uncompressed/skills/org-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/build-buy-partner/SKILL.md` | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/canvas-design/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `.agent-src.uncompressed/skills/video-director/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/expansion-playbook/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/retention-loops/SKILL.md` | `body_link` | 1 |
@@ -613,6 +629,7 @@
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/migration-creator/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/rice-prioritization/SKILL.md` | `body_link` | 1 |
@@ -644,6 +661,9 @@
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/deal-qualification-meddic/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/forecast-accuracy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/pipeline-strategy/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `.agent-src.uncompressed/skills/video-director/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/playwright-architect/SKILL.md` | `.agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/playwright-architect/SKILL.md` | `.agent-src.uncompressed/skills/playwright-testing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/po-discovery/SKILL.md` | `.agent-src.uncompressed/skills/refine-ticket/SKILL.md` | `body_link` | 1 |
@@ -734,6 +754,7 @@
 | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncompressed/skills/forecasting/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -834,6 +855,9 @@
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/quality-tools/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/video-director/SKILL.md` | `.agent-src.uncompressed/skills/character-consistency/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/video-director/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/video-director/SKILL.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/vision-articulation/SKILL.md` | `.agent-src.uncompressed/skills/competitive-moat-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/vision-articulation/SKILL.md` | `.agent-src.uncompressed/skills/fundraising-narrative/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/vision-articulation/SKILL.md` | `.agent-src.uncompressed/skills/messaging-architecture/SKILL.md` | `body_link` | 1 |
@@ -850,9 +874,9 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 124 |
+| `command` | 129 |
 | `context` | 31 |
-| `persona` | 29 |
+| `persona` | 32 |
 | `rule` | 79 |
-| `skill` | 220 |
+| `skill` | 225 |
 

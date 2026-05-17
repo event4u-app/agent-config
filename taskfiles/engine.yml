@@ -79,6 +79,13 @@ tasks:
       - bash tests/test_install_openai_key.sh
       - bash tests/test_install_anthropic_key.sh
       - python3 -m pytest tests/ -n auto -q
+      - task: test-ai-video
+
+  test-ai-video:
+    silent: true
+    desc: Offline smoke test for the /video:* pipeline against banana-arc (Phase 6 Step 4)
+    cmds:
+      - bash scripts/ai-video/test-pipeline.sh
 
   test-install:
     silent: true
