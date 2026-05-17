@@ -6,17 +6,17 @@
 
 ## Overall
 
-**21 / 42 steps done · 50%**
+**27 / 42 steps done · 64%**
 
 ```text
-████████████████████░░░░░░░░░░░░░░░░░░░░   50%
+██████████████████████████░░░░░░░░░░░░░░   64%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [universal-platform-refinement.md](roadmaps/universal-platform-refinement.md) | 6 | 42 | 21 | 21 | 0 | 0 | █████░░░░░ 50% |
+| 1 | [universal-platform-refinement.md](roadmaps/universal-platform-refinement.md) | 6 | 42 | 15 | 27 | 0 | 0 | ██████░░░░ 64% |
 
 ---
 
@@ -24,14 +24,14 @@
 
 ### [universal-platform-refinement.md](roadmaps/universal-platform-refinement.md)
 
-**Universal Platform Refinement — Governance, Visibility & Scope-Bounding for the AI Video Pipeline** — 21 / 42 done (50%)
+**Universal Platform Refinement — Governance, Visibility & Scope-Bounding for the AI Video Pipeline** — 27 / 42 done (64%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Visibility & Positioning | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | Media Governance Policy Layer | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Provider Lifecycle & Persona Governance | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 4 | Python Test Coverage | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Python Test Coverage | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 5 | Advisory Findings — Capture as GitHub Issues | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Domain-Pack Readiness ADR | 🟡 in progress | 11 | 4 | 0 | 0 | 27% |
+| 6 | Domain-Pack Readiness ADR | 🟡 in progress | 10 | 5 | 0 | 0 | 33% |
 
