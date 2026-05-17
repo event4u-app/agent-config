@@ -284,4 +284,4 @@ For `low`, the question replaces the AC list:
 - [`work_engine.scoring.confidence`](../../templates/scripts/work_engine/scoring/confidence.py) — rubric + band thresholds
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law
 - [`artifact-drafting-protocol`](../../rules/artifact-drafting-protocol.md) — this skill was drafted under it
-- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) — analysis behind the mini/max split and `/raw` bypass
+- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) — analysis behind the mini/max split and `/raw` bypass <!-- council-ref-allowed: ADR decision trace -->

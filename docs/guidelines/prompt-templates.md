@@ -117,8 +117,7 @@ This package **rejects** that whitelist. CO-STAR, RISEN, CRISPE,
 ReAct, and the image-AI templates above are first-class. The
 "5 safe" framing came from a single benchmark on a single LLM
 generation — it does not generalise. See AI Council session
-`agents/council-responses/prompt-master-mini.json` (2026-05-17) for
-the analysis behind this rejection.
+`agents/council-responses/prompt-master-mini.json` (2026-05-17) for the analysis behind this rejection. <!-- council-ref-allowed: ADR decision trace -->
 
 The right gate is request-type fit, not technique-whitelist
 membership.
@@ -128,4 +127,4 @@ membership.
 - [`prompt-optimizer`](../../.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md) — engine-outbound; cites this catalogue in its Develop step
 - [`refine-prompt`](../../.agent-src.uncompressed/skills/refine-prompt/SKILL.md) — engine-inbound; uses templates in `mini` mode for stack-aware shaping
 - [`prompt-engineering-patterns`](../../.agent-src.uncompressed/skills/prompt-engineering-patterns/SKILL.md) — production-LLM prompt patterns (sibling skill, not a catalogue)
-- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17)
+- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) <!-- council-ref-allowed: ADR decision trace -->
