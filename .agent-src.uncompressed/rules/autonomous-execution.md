@@ -57,8 +57,39 @@ When the user later issues a **new** request — different ticket, different roa
 
 In doubt whether the new request inherits or needs fresh confirmation → fresh confirmation. The Hard Floor and [`scope-control`](scope-control.md) gates apply to every task regardless.
 
+## User interrupts override the current task
+
+A new instruction from the user mid-flight is **not** a continuation — see [`user-interrupt-priority`](user-interrupt-priority.md) for the mandatory STOP → run new task → ASK before resume protocol. Autonomy never authorizes silent-resume of the prior task.
+
+## Validation-loop budget — hard cap N=3 per target
+
+Autonomous flows must not iterate indefinitely on the same validation target. **Validation target** = a single identifiable artefact: a file path, a lint rule ID, a test name, a CI sub-task name. Natural-language clustering ("the linter stuff") does **not** count as a target — agents will rename their way out of the budget.
+
+```
+3 CONSECUTIVE FAILED ATTEMPTS ON THE SAME VALIDATION TARGET → STOP.
+SURFACE THE 3 ATTEMPTS + BLOCKING ISSUE. ASK USER FOR GUIDANCE.
+DO NOT ITERATE BEYOND N=3 WITHOUT EXPLICIT USER APPROVAL.
+COUNTER RESETS ONLY ON A DIFFERENT TARGET OR USER-APPROVED CONTINUATION.
+```
+
+A "failed attempt" is an iteration that did not move the target from red to green. Tuning the tool around the target (e.g. growing an allowlist, loosening a threshold, suppressing a check) counts as an attempt — and is usually a sign the **tool**, not the content, is wrong.
+
+### Antipattern — allowlist-growth as silent budget bypass
+
+```
+ALLOWLIST > 20 ENTRIES IN ONE SESSION = THE LINTER IS WRONG.
+STOP. PROPOSE LINTER REDESIGN OR REMOVAL. DO NOT EXPAND THE ALLOWLIST FURTHER.
+```
+
+Crossing the 20-entry threshold counts as the 3rd validation-target failure for the linter in question, regardless of prior attempt count. The fix is a tool-shape change (heuristic tightening, scope narrowing, deletion), not more entries. Same logic for: warning-suppression lists growing past ~20, `// noqa` / `# type: ignore` sweeps over many files in one session, test `skip` / `xfail` bulk-adds to chase green.
+
+### Probe efficiency — direct over orchestration
+
+When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (`python3 scripts/<check>.py`, `task <specific-check>`, `pytest tests/<file>::<test>`) rather than `task ci` / `task all` / the full pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
+
 ## See also
 
+- [`user-interrupt-priority`](user-interrupt-priority.md) — STOP-ASK-RESUME on new tasks; overrides autonomy
 - [`non-destructive-by-default`](non-destructive-by-default.md) — universal safety floor; never overridden by autonomy
 - [`scope-control`](scope-control.md) — git-ops permission gate
 - [`ask-when-uncertain`](ask-when-uncertain.md) — vague-request triggers that always require asking
