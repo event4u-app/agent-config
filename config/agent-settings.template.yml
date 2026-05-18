@@ -209,6 +209,32 @@ roadmap:
   # is mandatory before any "roadmap complete" claim regardless of cadence.
   quality_cadence: end_of_roadmap
 
+  # Dashboard regen cadence inside autonomous runs (process-step /
+  # process-phase / process-full). Controls how often
+  # `./agent-config roadmap:progress` runs **between** steps in a
+  # single session. The dashboard is always regenerated at the start
+  # of the run, at every phase boundary, and at run end — this knob
+  # only affects the inter-step beat.
+  #
+  #   per_step         = legacy default: regen after every checkbox flip.
+  #                      Safest for crash recovery; highest subprocess
+  #                      overhead. Use when a session may be killed
+  #                      mid-roadmap and a fresh dashboard must always
+  #                      reflect the last-saved step.
+  #   every_5_steps    = batch flips, regen every 5 closed steps + at
+  #                      every phase boundary. Balanced cost/freshness
+  #                      for runs of 20–100 steps.
+  #   phase_boundary   = regen only at phase boundaries + run end.
+  #                      Cheapest for long roadmaps (100+ steps).
+  #                      The checkbox flip itself is still inline per
+  #                      Iron Law 2 — only the subprocess regen batches.
+  #
+  # `process-step` ignores this knob (single-step runs always regen
+  # at the end of the step). The Iron Law 1 mandate to regen on any
+  # file-shape touch (rename / phase add / archive) still fires
+  # immediately regardless of this setting.
+  dashboard_regen_cadence: per_step
+
   # Visible-horizon framing in roadmap authoring (integer weeks, default 0).
   # 0  = off (default). Time-boxed plate / horizon framing is forbidden:
   #      no `## Horizon (N-week visible plate)` sections, no
