@@ -1,6 +1,6 @@
 ---
 name: rule-refactor
-description: "Use when the rule set is over the Augment budget cap, when adding a rule would push it over, or when asked to audit / clean up / merge / prune rules — runs the audit pipeline and proposes merge / delete / move-to-context / promote-to-skill per rule."
+description: "Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule."
 source: package
 domain: process
 ---
@@ -33,7 +33,7 @@ budget-growth move is an ADR that raises `TOTAL_CAP`.
 
 ## Procedure
 
-### 1. Snapshot the current state
+### 1. Inspect the current budget state
 
 ```bash
 python3 scripts/measure_augment_budget.py --json > /tmp/budget-before.json
