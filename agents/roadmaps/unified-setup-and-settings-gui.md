@@ -63,7 +63,7 @@ Derived from `config/agent-settings.template.yml` and `/onboard`:
 - `personal.rtk_installed` (auto-detected, then user-confirmed)
 - `personal.minimal_output` (toggle)
 - `personal.play_by_play` (toggle)
-- `.agent-user.md` body (multi-line; pre-filled with the template under `templates/agent-user.md` if present, otherwise empty)
+- `.agent-user.md` body (multi-line; pre-filled with the template under `templates/agent-user.md` if present, otherwise empty) <!-- ref-ignore -->
 - `agent_config_version` pin (auto-filled from `package.json`, user can clear to leave unpinned)
 
 ### What the settings editor MUST expose
