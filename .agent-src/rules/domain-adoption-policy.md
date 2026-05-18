@@ -104,7 +104,7 @@ in any plate that imports volatile upstream content:
 - The `check-refs` and `check-portability` linters apply unchanged.
 
 Adopting a domain does not exempt it from any other suite-wide rule —
-`augment-portability`, `skill-quality`, `size-enforcement`, `docs-sync`,
+`augment-edit-discipline`, `skill-quality`, `size-enforcement`,
 `rule-type-governance`. Every domain artefact passes the same gates as a
 core artefact.
 
@@ -146,12 +146,11 @@ core artefact.
 
 ## See also
 
-- [`augment-portability`](augment-portability.md) — `.agent-src/`
-  must stay project-agnostic; domain plates inherit the floor
+- [`augment-edit-discipline`](augment-edit-discipline.md) —
+  `.agent-src/` must stay project-agnostic and cross-references must stay
+  in sync; domain plates inherit both floors
 - [`size-enforcement`](size-enforcement.md) — size budgets apply per
   artefact regardless of domain
-- [`docs-sync`](docs-sync.md) — keep cross-references in sync when
-  opening a domain plate
 - [`rule-type-governance`](rule-type-governance.md) — within-domain rules
   still pick `always` vs `auto` per the governance table
 - [`skill-quality`](skill-quality.md) — every domain skill passes the

@@ -103,7 +103,7 @@ properties:
 Upstream (`Weizhena/Deep-Research-skills`) shipped a `validate_json.py`
 Pydantic-based validator that assumed `~/.claude/` paths and a Python
 runtime in the consumer environment. Both are
-`augment-portability` violations for this package (zero-runtime-Python
+`augment-edit-discipline` violations for this package (zero-runtime-Python
 goal, host-agnostic distribution). The schema reference above lets the
 agent validate by reading; consumers needing programmatic validation
 can pipe the YAML through any JSON-Schema validator they prefer

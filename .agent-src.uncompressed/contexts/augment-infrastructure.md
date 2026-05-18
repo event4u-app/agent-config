@@ -57,17 +57,14 @@ Define hard constraints: coding standards, Docker usage, language preferences, s
 |---|---|
 | `quality-workflow.md` | PHP (PHPStan → Rector → PHPStan) and JS/TS pipelines |
 | `downstream-changes.md` | After every edit, find and update ALL callers, tests, imports |
-| `docs-sync.md` | Keep docs in sync when skills/rules change |
+| `augment-edit-discipline.md` | Edits inside `.augment/` / `.agent-src.uncompressed/` stay project-agnostic AND sync counts + cross-references in the same edit |
 | `context-hygiene.md` | 3-failure rule, state dumps |
 | `architecture.md` | Architecture principles, file placement |
 | `docker-commands.md` | All PHP commands run inside Docker containers |
 | `commit-conventions.md` | Conventional Commits format |
 | `dev-efficiency.md` | Running CLI commands with verbose output — git, tests, linters, docker, build tools |
-| `e2e-testing.md` | Playwright E2E tests — locators, assertions, Page Objects, CI |
 | `lang-files.md` | Laravel lang files, both de/ and en/ always in sync |
 | `rtk.md` | Using rtk for token-efficient CLI output filtering |
-| `agent-docs.md` | When to read/create/update documentation |
-| `augment-portability.md` | Everything in `.augment/` must be project-agnostic |
 | `roadmap-progress-sync.md` | Checkbox edits in `agents/roadmaps/*.md` must regenerate `agents/roadmaps-progress.md` in the same response |
 
 ### Skills (`.augment/skills/`)

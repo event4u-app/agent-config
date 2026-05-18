@@ -83,7 +83,7 @@ Use ONLY when the user explicitly authorized a squash on a branch that
 is already on origin. The whole sequence runs in **one turn** — never
 end the session between rewrite and push.
 
-Trigger context: `post-push-rewrite-discipline` rule routed here.
+Trigger context: `git-history-discipline` rule routed here.
 
 ### 1. Snapshot before touching anything
 
@@ -159,7 +159,7 @@ A blind `git pull --rebase` here replays remote commits on top of a
 local history that may already represent the same work in a different
 shape — guaranteed conflict storm in derived files, possible
 double-application of the same change. This is the documented failure
-mode behind `post-push-rewrite-discipline`.
+mode behind `git-history-discipline`.
 
 ### 2. Tag both sides immediately
 

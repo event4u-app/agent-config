@@ -198,7 +198,6 @@ Only consider rules with a `description` frontmatter (auto-loaded by topic match
 
 | Rule | Ignore when... |
 |---|---|
-| `e2e-testing.md` | No Playwright / no E2E tests in project |
 | `lang-files.md` | No `lang/` directory in project |
 
 **Conservative approach:**
