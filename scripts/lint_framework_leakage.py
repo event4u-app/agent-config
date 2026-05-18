@@ -85,12 +85,57 @@ FAMILY: dict[str, str] = {
 }
 
 
+# Cross-stack hint keywords. Their presence near a hit signals legitimate
+# multi-stack documentation. They do NOT themselves produce hits.
+CROSS_STACK_HINTS: dict[str, list[str]] = {
+    "ruby": [r"\bRails\b", r"\bbin/rails\b", r"\bGemfile\b", r"\bbundle exec\b"],
+    "python": [r"\bDjango\b", r"\bFastAPI\b", r"\bFlask\b", r"\bpoetry\b",
+               r"\buv (add|sync|run|pip)\b", r"\bvenv\b"],
+    "node": [r"\bExpress\b", r"\bNext\.?js\b", r"\bNode\.?js\b", r"\bnpx\b",
+             r"\bvitest\b", r"\bjest\b", r"\beslint\b", r"\bprettier\b"],
+    "go": [r"\bgo (test|build|run|mod)\b", r"\bgolangci-lint\b", r"\bGoLand\b"],
+    "rust": [r"\bcargo (test|build|run|check|fmt|clippy|add|update)\b",
+             r"\bClippy\b", r"\brustfmt\b", r"\bCargo\.toml\b"],
+    "dotnet": [r"\bdotnet (test|build|run|add|restore)\b", r"\b\.NET\b"],
+    "java": [r"\bSpring\b", r"\bmvn (test|clean|install|package)\b",
+             r"\bgradle\b", r"\bMaven\b"],
+}
+CROSS_STACK_RE = {fam: re.compile("|".join(pats)) for fam, pats in CROSS_STACK_HINTS.items()}
+
+FRONTMATTER_FRAMEWORK_RE = re.compile(
+    r"^---\s*\n(.*?)\n---", re.DOTALL | re.MULTILINE
+)
+# Match top-level `framework:` or nested `scope.framework:` (one or more
+# leading spaces tolerated for the nested form).
+FRAMEWORK_KEY_RE = re.compile(
+    r"^(?:framework|\s+framework)\s*:\s*(\S+)", re.MULTILINE
+)
+
+
 def is_carve_out(path: Path) -> bool:
     for p in path.parts:
         stem = p.removesuffix(".md")
         if CARVE_OUT_RE.search(stem):
             return True
     return False
+
+
+def has_framework_frontmatter(path: Path) -> str | None:
+    """Return the framework name if the file declares one in YAML frontmatter."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore")
+    except OSError:
+        return None
+    m = FRONTMATTER_FRAMEWORK_RE.match(text)
+    if not m:
+        return None
+    fm = m.group(1)
+    key = FRAMEWORK_KEY_RE.search(fm)
+    if key:
+        val = key.group(1).strip().strip('"').strip("'")
+        if val and val.lower() not in {"none", "null", "~", ""}:
+            return val
+    return None
 
 
 def _load_allowlist() -> dict:
@@ -115,7 +160,13 @@ def _allowlisted(rel_path: str, line_no: int, allowlist: dict) -> bool:
     return False
 
 
-def _families_in_window(lines: list[str], idx: int, radius: int = 2) -> set[str]:
+def _families_in_window(lines: list[str], idx: int, radius: int = 10) -> set[str]:
+    """Families found within ±radius lines.
+
+    The radius is intentionally wider than a tight paragraph so multi-stack
+    sections (e.g. composer / npm / pip blocks separated by a few lines of
+    prose) are reliably detected as cross-stack documentation.
+    """
     families: set[str] = set()
     lo = max(0, idx - radius)
     hi = min(len(lines), idx + radius + 1)
@@ -129,6 +180,13 @@ def _families_in_window(lines: list[str], idx: int, radius: int = 2) -> set[str]
                 if re.search(pat, line):
                     families.add(fam)
                     break
+        # Cross-stack hints — keywords that signal multi-stack docs without
+        # themselves being leakage patterns (Rails, Django, Express, Go, Rust…).
+        for fam, rx in CROSS_STACK_RE.items():
+            if fam in families:
+                continue
+            if rx.search(line):
+                families.add(fam)
     return families
 
 
@@ -188,6 +246,8 @@ def main(argv: list[str] | None = None) -> int:
 
     for f in iter_md_files(args.paths):
         if is_carve_out(f):
+            continue
+        if has_framework_frontmatter(f):
             continue
         rel = str(f.relative_to(REPO_ROOT))
         raw_hits = scan_file(f)
