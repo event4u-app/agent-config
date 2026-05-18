@@ -1,11 +1,12 @@
 ---
-name: websocket
-description: "Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'."
+name: laravel-websocket
+description: "Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the framework-native skill (Node ws, Python websockets, Go gorilla, Rust tokio-tungstenite)."
 source: package
 domain: engineering
+framework: laravel
 ---
 
-# websocket
+# laravel-websocket
 
 ## When to use
 

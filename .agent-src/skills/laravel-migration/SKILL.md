@@ -1,11 +1,12 @@
 ---
-name: migration-creator
-description: "Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness."
+name: laravel-migration
+description: "Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan make:migration. For Symfony use Doctrine migrations, for Rails use bin/rails generate migration, for Prisma use prisma migrate, for Alembic use alembic revision."
 source: package
 domain: engineering
+framework: laravel
 ---
 
-# migration-creator
+# laravel-migration
 
 ## When to use
 
@@ -27,9 +28,9 @@ Use this skill when the user asks to create a database migration, add a column, 
 
 ## Laravel projects
 
-### Multi-DB architecture
+### Multi-database architecture
 
-Some projects use multiple DB connections. Check `config/database.php` for connections.
+Some projects use multiple database connections. Check `config/database.php` for connections.
 
 | Check | How |
 |---|---|
@@ -37,9 +38,9 @@ Some projects use multiple DB connections. Check `config/database.php` for conne
 | Migration directories | `database/migrations/` (default), check for additional directories |
 | Custom migrate commands | `php artisan list migrate` — look for project-specific commands |
 
-**Always determine which DB the table belongs to before creating a migration.**
+**Always determine which database the table belongs to before creating a migration.**
 
-### API DB migration
+### API database migration
 
 ```bash
 php artisan make:migration create_example_table
@@ -73,13 +74,13 @@ return new class extends Migration {
 };
 ```
 
-### Customer DB migration
+### Customer database migration
 
 ```bash
 php artisan make:migration:customer AddWeatherColumn --table=cl_lv_weather
 ```
 
-Customer DB tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
+Customer database tables use the `cl_` prefix (e.g. `cl_user`, `cl_lv_weather`).
 
 ### Adding a column (with explicit connection)
 
@@ -153,7 +154,7 @@ Focus on the "Database migrations" attack questions: Can this destroy data? Is r
 
 ## Auto-trigger keywords
 
-- DB migration
+- database migration
 - create migration
 - table prefix
 - column naming

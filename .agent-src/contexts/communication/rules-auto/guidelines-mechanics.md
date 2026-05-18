@@ -33,7 +33,7 @@ before writing or reviewing code); this file is the catalog.
 | `performance.md` | Performance conventions — caching, Redis, eager loading, response time targets |
 | `security.md` | Security conventions — auth, authorization, SQL injection, XSS, CSRF, headers |
 | `sql.md` | Raw SQL conventions — parameterization, MariaDB syntax, common mistakes |
-| `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management |
+| `laravel-websocket.md` | Laravel Broadcasting conventions — channel types, connection management, Echo client |
 | `patterns.md` | Design patterns index (links to `patterns/` subdirectory) |
 
 ## PHP Patterns (`docs/guidelines/php/patterns/`)

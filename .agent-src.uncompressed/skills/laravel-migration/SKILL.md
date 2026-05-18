@@ -1,11 +1,12 @@
 ---
-name: migration-creator
-description: "Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness."
+name: laravel-migration
+description: "Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan make:migration. For Symfony use Doctrine migrations, for Rails use bin/rails generate migration, for Prisma use prisma migrate, for Alembic use alembic revision."
 source: package
 domain: engineering
+framework: laravel
 ---
 
-# migration-creator
+# laravel-migration
 
 ## When to use
 

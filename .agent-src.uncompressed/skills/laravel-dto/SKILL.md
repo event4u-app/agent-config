@@ -1,11 +1,12 @@
 ---
-name: dto-creator
-description: "Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping."
+name: laravel-dto
+description: "Use when creating a Laravel/PHP DTO with the SimpleDto base class and attribute mapping. For DTOs in other stacks, use the stack-native skill (TypeScript class-validator/zod, Python dataclass/pydantic, Rust serde struct, Go struct + tags)."
 source: package
 domain: engineering
+framework: laravel
 ---
 
-# dto-creator
+# laravel-dto
 
 ## When to use
 

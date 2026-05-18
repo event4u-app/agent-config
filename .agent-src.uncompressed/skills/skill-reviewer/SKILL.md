@@ -193,7 +193,7 @@ Before scoring the 5 Killers, verify structure:
 ```markdown
 | Skill | K1 Desc | K2 Over | K3 Obvious | K4 Gotcha | K5 Size | K6 Pointer | K7 Analysis | Verdict |
 |---|---|---|---|---|---|---|---|---|
-| dto-creator | ❌ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | Fix description |
+| laravel-dto | ❌ | ✅ | ✅ | ⚠️ | ✅ | ✅ | ✅ | Fix description |
 ```
 
 ## Output format

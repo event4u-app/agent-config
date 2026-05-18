@@ -15,7 +15,7 @@ Use when designing schemas, optimizing queries, adding indexes, or troubleshooti
 
 Do NOT use when:
 - Writing framework-specific ORM models (use the matching skill — e.g. `eloquent` for Laravel, `symfony-workflow` for Doctrine, framework-native skill for Prisma / TypeORM / SQLAlchemy / GORM / Diesel)
-- Creating migrations only (use `migration-creator` skill)
+- Creating migrations only — use the framework-specific migration skill (`laravel-migration` for Laravel, framework-native for others)
 
 ## Procedure: Optimize a query
 

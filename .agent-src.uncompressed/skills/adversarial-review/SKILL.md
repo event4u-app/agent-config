@@ -104,7 +104,7 @@ Only surface trade-offs or concerns that need the user's input.
 - **feature-planning** — adversarial review after Understanding Lock, before presenting the plan.
 - **bug-analyzer** — review the proposed fix before implementing.
 - **code-review** — self-review before creating a PR.
-- **migration-creator** — review migration for data safety.
+- **laravel-migration** (or framework-native equivalent) — review migration for data safety.
 - **api-design** — review API design for consistency and breaking changes.
 - **security** — review security-sensitive changes for attack surface.
 

@@ -16,7 +16,7 @@ Use this skill for anything specific to **Laravel Reverb** as the WebSocket serv
 - Pusher protocol compatibility questions
 
 For **general WebSocket patterns**, broadcasting events, channel authorization,
-and Laravel Echo client setup, see the [websocket](../websocket/SKILL.md) skill.
+and Laravel Echo client setup, see the [laravel-websocket](../laravel-websocket/SKILL.md) skill.
 
 ## Procedure: Set up Reverb
 
