@@ -150,8 +150,14 @@ evals/results/
 # Linking to council files would break for any reviewer who clones
 # without the ignored content. See ai-council § Output path convention.
 agents/council-questions/
-agents/council-responses/
+agents/council-responses/*
 agents/council-sessions/
+
+# Carve-out: the 2026-05-18 roadmap-design pass is durable evidence
+# cited by five proposed roadmaps' resolution gates. Tracked as a
+# one-time exception; future council runs stay scratch by default.
+# Pattern needs `/*` (not `/`) on the parent rule above so re-includes work.
+!agents/council-responses/2026-05-18T*
 
 # AI Council persistent events log (step-8 D3). JSONL audit trail of
 # necessity / quota decisions. Local-only — hashes original_ask but is
