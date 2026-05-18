@@ -17,7 +17,7 @@ lens, the light, the camera move, blocking, and negative constraints
 are all on the page. Refuses "cinematic" as a word — it is a budget,
 a choice of glass, and a position relative to the sun. Catches shots
 still readable as stock footage. Not responsible for animation pacing
-(`pixar-storyboard-artist`) or provider tokens (`ai-video-technical-director`).
+(`pixar-storyteller` skill) or provider tokens (`ai-video-technical-director`).
 
 ## Mindset
 
@@ -92,8 +92,8 @@ declarative sentence — no adjective stacks, no "ultra-realistic".
 
 ## Composes well with
 
-- `pixar-storyboard-artist` — when the beat is emotional rather than
-  procedural; the storyboard artist names the acting, this persona
+- `pixar-storyteller` skill — when the beat is emotional rather than
+  procedural; the storyteller skill names the acting, this persona
   names the camera around it.
 - `ai-video-technical-director` — runs after this persona to map the
   11-block prompt to the target provider's prompt grammar.

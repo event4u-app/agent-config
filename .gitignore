@@ -179,3 +179,4 @@ agents/ai-video/*
 !agents/ai-video/prompts/**
 !agents/ai-video/examples/
 !agents/ai-video/examples/**
+/agents/tmp/

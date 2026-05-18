@@ -2,7 +2,6 @@
 name: character-consistency
 description: "Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'."
 personas:
-  - pixar-storyboard-artist
   - hollywood-director
 source: package
 domain: product
@@ -118,3 +117,15 @@ the lock.
 - Do NOT skip the reference frame after the first render — visual
   regression has nothing to compare against.
 - Do NOT lock a character that appears in only one scene.
+
+## Policies
+
+When a character lock would identify or render a real person, consult before emitting the JSON:
+
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — real-person identity tokens require a cited likeness release.
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — recognised public figures carry the harder gate (publicity rights + transformative-intent).
+- [`agents/policies/media/voice-cloning.md`](../../../agents/policies/media/voice-cloning.md) — when `voice_note` references a real person's voice.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — outputs carrying a real-person lock require the non-removable AI-generation disclosure downstream.
+
+Refuse-and-surface the file path; do not silently sanitise the prompt.
+

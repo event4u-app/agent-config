@@ -61,9 +61,12 @@ matching `commit:` / `git commit` / `Commit phase` patterns).
 - **Commit steps present, non-autonomous** → ask before each commit
   step inside the loop.
 
-## 4. Resolve quality cadence
+## 4. Resolve cadences — read once, cache for the run
 
-Read `roadmap.quality_cadence` from `.agent-settings.yml` once:
+Read both keys from `.agent-settings.yml` once and cache for the whole
+run. Do **not** re-read inside the step loop.
+
+**`roadmap.quality_cadence`** — when to run the quality pipeline:
 
 | Value | Pipeline runs |
 |---|---|
@@ -75,28 +78,80 @@ Missing / unreadable / unknown → fall back to `end_of_roadmap`.
 The Iron Law [`verify-before-complete`](../../rules/verify-before-complete.md)
 still mandates fresh quality output before any "complete" claim.
 
+**`roadmap.dashboard_regen_cadence`** — when to run the dashboard
+subprocess between steps:
+
+| Value | `./agent-config roadmap:progress` runs |
+|---|---|
+| `per_step` (default) | After every checkbox flip |
+| `every_5_steps` | Every 5th closed step + at phase boundary + at reply end |
+| `phase_boundary` | Only at phase boundaries + run end |
+
+`process-step` ignores this — single-step runs always regen at step
+end. Any file-shape touch (rename / phase add / archive — Iron Law 1
+of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md))
+forces an immediate regen regardless of cadence. The checkbox flip
+itself is **never** batchable — only the subprocess.
+
 ## 5. Step loop
 
 For each open step in the working set (scope-bound — see wrapper):
 
-1. Read the step description and inline notes.
+0. **CI-step gate** — per
+   [`roadmap-ci-steps-policy`](../../rules/roadmap-ci-steps-policy.md).
+   When `quality.local_auto_run: false` and the step text matches a
+   CI-shaped literal (`task ci`, `task ci-fast`, `task ci-strict`,
+   `make ci`, `make test`, `npm/pnpm run check`, `yarn check`,
+   `composer test`, whole-suite `vendor/bin/phpunit`, whole-suite
+   `php artisan test`) **without** an inline
+   `<!-- carve-out: new-gate-verification -->` marker → flip the
+   checkbox to `[-]`, append
+   `<!-- skipped: quality.local_auto_run=false → remote CI is the gate -->`
+   on the same line, regenerate the dashboard, continue to the next
+   step. Never run the gate. Carve-out marker present → run normally
+   (new gate must be verified once locally). Setting `true` → run
+   normally.
+1. **Bundled read — one parallel tool-call block.** The step
+   description, the immediately-relevant code files, and any
+   guideline/context the step cites are **independent** reads and
+   **must** be dispatched together, not serially.
+
+   ```
+   parallel:
+     - view agents/roadmaps/<file>.md     (the step's section)
+     - view <files cited in the step text>
+     - codebase-retrieval (only if the step is vague)
+   ```
+
+   Anti-pattern: `view step` → think → `view file A` → think →
+   `view file B`. That's 3 round-trips for what should be 1.
 2. Analyze the codebase for what the step requires.
 3. Decide and act — implement. **No "should I implement this?" prompt.**
 4. **Open question handling:**
    - **Council on** → invoke per [`ai-council`](../../skills/ai-council/SKILL.md),
      integrate convergence, proceed. Token spend was opted in.
    - **Council off** → halt, surface once, wait. Resume on next turn.
-5. **Atomic flip + regen** — before moving to step N+1, in the **same
-   reply** that landed step N's work:
-   1. Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
-      `[~]` partial · `[-]` skipped.
-   2. Run `./agent-config roadmap:progress` to regenerate the
-      dashboard.
-   This pair is **non-skippable** and **non-batchable** per Iron Law 2
-   of [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md). A
-   loop iteration that lands work without flipping its box is a rule
-   violation. Do not save flips for the archive commit.
-6. Run quality pipeline if cadence is `per_step`.
+5. **Atomic flip — same reply, every step.**
+   Flip the checkbox in `agents/roadmaps/<file>.md`: `[x]` done ·
+   `[~]` partial · `[-]` skipped. **Non-skippable, non-batchable**
+   per Iron Law 2 of
+   [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
+   A loop iteration that lands work without flipping its box is a
+   rule violation. Do not save flips for the archive commit.
+6. **Dashboard regen — cadence-gated.** Run
+   `./agent-config roadmap:progress` when due per
+   `roadmap.dashboard_regen_cadence` (resolved in § 4):
+   - `per_step` → always after the flip.
+   - `every_5_steps` → after the 5th, 10th, … closed step **of this
+     run**, or when the reply ends with closed steps pending regen.
+   - `phase_boundary` → skip; the boundary handler in § 5 wrapper /
+     § 6 runs the regen.
+   - Any file-shape touch (rename / phase add / archive — Iron Law 1)
+     → run immediately regardless of cadence.
+
+   Skipped regens accumulate into the next due regen — the markdown
+   file is the source of truth between regens.
+7. Run quality pipeline if cadence is `per_step`.
 
 ### Halt conditions
 

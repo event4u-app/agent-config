@@ -9,6 +9,12 @@
 # Contract: scripts/ai-video/lib/adapter-contract.md
 # Provider: top-level <provider id="sora" kind="video"> in
 # agents/.ai-video.xml.
+#
+# Lifecycle: experimental — structural-prompt path conformant; no
+# maintainer real-API smoke trace captured yet. See
+# docs/contracts/provider-lifecycle.md for promotion criteria. The
+# agent must surface this tier and ask before defaulting to this
+# adapter.
 
 set -euo pipefail
 

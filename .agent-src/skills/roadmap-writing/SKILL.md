@@ -137,6 +137,16 @@ to every roadmap you author.
   user (`commit-policy` Iron Law). A roadmap is "implementation-complete"
   once its checkboxes are ticked and verification has been run — merge
   timing is tracked outside the roadmap.
+* Schedule full-pipeline CI literals (`task ci`, `task ci-fast`,
+  `task ci-strict`, `make ci`, `make test`, `npm/pnpm run check`,
+  `yarn check`, `composer test`, whole-suite `vendor/bin/phpunit`,
+  whole-suite `php artisan test`) as checkbox steps when
+  `quality.local_auto_run: false` — blocked by
+  `task lint-roadmap-ci-steps` per
+  [`roadmap-ci-steps-policy`](../../rules/roadmap-ci-steps-policy.md).
+  Reword as narrow verifications, or mark with
+  `<!-- carve-out: new-gate-verification -->` when it verifies a NEW
+  gate this roadmap introduces.
 * Use ALL-CAPS Iron-Law fenced blocks — those belong in
   [`kernel-membership`](../../../docs/contracts/kernel-membership.md)-listed
   rules, not roadmaps.

@@ -147,3 +147,15 @@ stdin shape. The orchestrator pipes this into the video adapter's
 - Do NOT paraphrase identity tokens from `character.json`.
 - Do NOT call any network API — this skill is provider-tuning
   prose only.
+
+## Policies
+
+Motion prompts inherit every constraint the upstream blueprint carries. Before emitting provider-tuned prose:
+
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed clip carries the non-removable AI-generation disclosure; refuse adapter flags that would suppress it.
+- [`agents/policies/media/transparency.md`](../../../agents/policies/media/transparency.md) — provider provenance (C2PA / SynthID) is preserved; refuse re-encode flags whose effect is to strip provenance.
+- [`agents/policies/media/voice-cloning.md`](../../../agents/policies/media/voice-cloning.md) — when the motion prompt requests `audio: native` narration in a named voice.
+- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — when the motion prompt copies a recognised brand's chyron / mascot / signature transition.
+
+Refuse-and-surface; the motion prompt cannot launder a policy gap upstream skills should have caught.
+

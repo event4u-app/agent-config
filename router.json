@@ -1068,6 +1068,48 @@
       "routes_to": []
     },
     {
+      "id": "media-governance-routing",
+      "triggers": [
+        {
+          "keyword": "/video:"
+        },
+        {
+          "keyword": "/image:"
+        },
+        {
+          "keyword": "/audio:"
+        },
+        {
+          "keyword": "deepfake"
+        },
+        {
+          "keyword": "voice clone"
+        },
+        {
+          "keyword": "voice cloning"
+        },
+        {
+          "keyword": "likeness"
+        },
+        {
+          "keyword": "brand impersonation"
+        },
+        {
+          "phrase": "in the style of"
+        },
+        {
+          "phrase": "in the voice of"
+        },
+        {
+          "phrase": "as [public figure]"
+        },
+        {
+          "phrase": "impersonate"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "minimal-safe-diff",
       "triggers": [
         {
@@ -1148,6 +1190,76 @@
       "routes_to": []
     },
     {
+      "id": "persona-governance",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/personas/"
+        },
+        {
+          "path_prefix": ".agent-src/personas/"
+        },
+        {
+          "keyword": "persona"
+        },
+        {
+          "keyword": "personas"
+        },
+        {
+          "phrase": "new persona"
+        },
+        {
+          "phrase": "add a persona"
+        },
+        {
+          "phrase": "specialist persona"
+        },
+        {
+          "phrase": "review lens"
+        }
+      ],
+      "routes_to": [
+        "contract:persona-schema"
+      ]
+    },
+    {
+      "id": "post-push-rewrite-discipline",
+      "triggers": [
+        {
+          "intent": "squash the pushed branch"
+        },
+        {
+          "intent": "clean up commits on the PR branch"
+        },
+        {
+          "intent": "tidy history after pushing"
+        },
+        {
+          "keyword": "git rebase -i"
+        },
+        {
+          "keyword": "--amend"
+        },
+        {
+          "keyword": "force-push"
+        },
+        {
+          "keyword": "--force-with-lease"
+        },
+        {
+          "phrase": "branch diverged"
+        },
+        {
+          "phrase": "pull --rebase failed"
+        },
+        {
+          "phrase": "ahead and behind"
+        }
+      ],
+      "routes_to": [
+        "skill:git-workflow"
+      ]
+    },
+    {
       "id": "preservation-guard",
       "triggers": [
         {
@@ -1164,6 +1276,50 @@
         }
       ],
       "routes_to": []
+    },
+    {
+      "id": "provider-lifecycle-discipline",
+      "triggers": [
+        {
+          "keyword": "/video:"
+        },
+        {
+          "keyword": "/image:"
+        },
+        {
+          "keyword": "/audio:"
+        },
+        {
+          "keyword": "ai-video"
+        },
+        {
+          "keyword": "ai-image"
+        },
+        {
+          "keyword": "ai-audio"
+        },
+        {
+          "keyword": "adapter"
+        },
+        {
+          "keyword": "provider"
+        },
+        {
+          "path_prefix": "scripts/ai-video/adapters/"
+        },
+        {
+          "path_prefix": "agents/.ai-video.xml"
+        },
+        {
+          "phrase": "lifecycle"
+        },
+        {
+          "phrase": "default provider"
+        }
+      ],
+      "routes_to": [
+        "contract:provider-lifecycle"
+      ]
     },
     {
       "id": "reviewer-awareness",
@@ -1184,6 +1340,45 @@
       "routes_to": [
         "skill:review-routing"
       ]
+    },
+    {
+      "id": "roadmap-ci-steps-policy",
+      "triggers": [
+        {
+          "path_prefix": "agents/roadmaps/"
+        },
+        {
+          "path_prefix": "app/Modules/"
+        },
+        {
+          "keyword": "task ci"
+        },
+        {
+          "keyword": "make test"
+        },
+        {
+          "keyword": "npm run check"
+        },
+        {
+          "keyword": "pnpm run check"
+        },
+        {
+          "keyword": "yarn check"
+        },
+        {
+          "keyword": "composer test"
+        },
+        {
+          "phrase": "run the quality pipeline"
+        },
+        {
+          "phrase": "run task ci"
+        },
+        {
+          "phrase": "run the full ci"
+        }
+      ],
+      "routes_to": []
     },
     {
       "id": "role-mode-adherence",

@@ -1095,12 +1095,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/personas/pixar-storyboard-artist.md": {
-      "kind": "persona",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/personas/product-owner.md": {
       "kind": "persona",
       "rule_type": null,
@@ -1451,6 +1445,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/media-governance-routing.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/minimal-safe-diff.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1513,6 +1513,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/persona-governance.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/php-coding.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1520,6 +1526,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/preservation-guard.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -6117,6 +6129,13 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/personas/README.md",
+      "target": ".agent-src.uncompressed/rules/persona-governance.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
       "target": ".agent-src.uncompressed/personas/_template-specialist/persona.md",
       "type": "WRITE",
@@ -6259,13 +6278,6 @@
     {
       "source": ".agent-src.uncompressed/personas/people-strategist.md",
       "target": ".agent-src.uncompressed/personas/people-strategist.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/personas/pixar-storyboard-artist.md",
-      "target": ".agent-src.uncompressed/personas/pixar-storyboard-artist.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -7118,6 +7130,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/media-governance-routing.md",
+      "target": ".agent-src.uncompressed/rules/media-governance-routing.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/rules/minimal-safe-diff.md",
       "target": ".agent-src.uncompressed/rules/minimal-safe-diff.md",
       "type": "WRITE",
@@ -7328,6 +7347,27 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/persona-governance.md",
+      "target": ".agent-src.uncompressed/rules/persona-governance.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/persona-governance.md",
+      "target": ".agent-src.uncompressed/rules/skill-quality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/persona-governance.md",
+      "target": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/php-coding.md",
       "target": ".agent-src.uncompressed/rules/php-coding.md",
       "type": "WRITE",
@@ -7337,6 +7377,27 @@
     {
       "source": ".agent-src.uncompressed/rules/preservation-guard.md",
       "target": ".agent-src.uncompressed/rules/preservation-guard.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md",
+      "target": ".agent-src.uncompressed/rules/media-governance-routing.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md",
+      "target": ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -11334,6 +11395,13 @@
     {
       "source": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
       "target": ".agent-src.uncompressed/skills/motion-choreographer/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/scene-expander/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pixar-storyteller/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

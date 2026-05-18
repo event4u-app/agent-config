@@ -19,6 +19,13 @@
     Defaults: pick which provider a /video:* run uses when the command
     does not pass the image-provider / video-provider flags. Must match
     a provider id="..." declared below.
+
+    Each provider carries a <lifecycle> tag — experimental | stable |
+    deprecated | community — per docs/contracts/provider-lifecycle.md.
+    Day-one shipped tiers are conservative: every adapter is
+    `experimental` until a maintainer captures a real-API smoke trace.
+    The agent refuses to *default* to a non-stable provider silently;
+    it surfaces the tier and asks before running.
   -->
   <default-image-provider>openai-images</default-image-provider>
   <default-video-provider>gemini-veo</default-video-provider>
@@ -28,6 +35,7 @@
   <!-- ============================================================ -->
 
   <provider id="openai-images" kind="image">
+    <lifecycle>experimental</lifecycle>
     <api-key>sk-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>gpt-image-1</default-model>
@@ -40,6 +48,7 @@
   </provider>
 
   <provider id="higgsfield" kind="image+video">
+    <lifecycle>experimental</lifecycle>
     <api-key>hf-REPLACE-ME</api-key>
     <endpoint>https://api.higgsfield.ai/v1</endpoint>
     <default-model>higgsfield-soul</default-model>
@@ -57,6 +66,7 @@
   <!-- ============================================================ -->
 
   <provider id="gemini-veo" kind="video">
+    <lifecycle>experimental</lifecycle>
     <api-key>AIza-REPLACE-ME</api-key>
     <endpoint>https://generativelanguage.googleapis.com/v1beta</endpoint>
     <default-model>veo-3.0-generate-001</default-model>
@@ -70,6 +80,7 @@
   </provider>
 
   <provider id="kling" kind="video">
+    <lifecycle>experimental</lifecycle>
     <api-key>kling-REPLACE-ME</api-key>
     <endpoint>https://api.klingai.com/v1</endpoint>
     <default-model>kling-v2-master</default-model>
@@ -83,6 +94,7 @@
   </provider>
 
   <provider id="sora" kind="video">
+    <lifecycle>experimental</lifecycle>
     <api-key>sora-REPLACE-ME</api-key>
     <endpoint>https://api.openai.com/v1</endpoint>
     <default-model>sora-2</default-model>
@@ -103,6 +115,7 @@
   <extra>
     <!--
     <provider id="my-future-backend" kind="video">
+      <lifecycle>experimental</lifecycle>
       <api-key>REPLACE-ME</api-key>
       <endpoint>https://example.invalid/v1</endpoint>
       <default-model>example-1</default-model>

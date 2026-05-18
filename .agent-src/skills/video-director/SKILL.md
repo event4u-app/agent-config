@@ -111,3 +111,16 @@ Any "no" → revise that block before handing off.
 - Do NOT collapse anticipation / action / reaction into one verb.
 - Do NOT use "cinematic" without lens + lighting + camera move.
 - Do NOT invent character details when a `character.json` exists.
+
+## Policies
+
+11-block cinematic prompt is live-action shape — real-person + brand-impersonation risks highest in cluster. Before emitting:
+
+- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — prompt names / visually identifies real person on camera.
+- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — subject is recognised public figure.
+- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — prompt copies journalism / broadcaster / regulated-industry visual identity.
+- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — LIGHT / LENS anchored to named living cinematographer's signature.
+- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed live-action AI clip carries non-removable AI-generation disclosure.
+
+Refuse-and-surface at directorial layer; live-action realism amplifies every downstream policy gap.
+

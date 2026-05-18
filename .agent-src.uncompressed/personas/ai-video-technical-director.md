@@ -18,7 +18,7 @@ audio capability. Refuses one-prompt-fits-all; demands a tuned variant
 per adapter. Catches prompts that would silently truncate, fall back
 to a default aspect, or drop audio on a video-only model. Not
 responsible for camera grammar (`hollywood-director`) or acting
-(`pixar-storyboard-artist`).
+(`pixar-storyteller` skill).
 
 ## Mindset
 
@@ -77,5 +77,5 @@ count.
 ## Composes well with
 
 - `hollywood-director` — consumes the 11-block prompt; folds it into provider grammar.
-- `pixar-storyboard-artist` — consumes the four-block storyboard; preserves beat counts in MOTION PROMPT.
+- `pixar-storyteller` skill — consumes the four-block storyboard; preserves beat counts in MOTION PROMPT.
 - `motion-choreographer` skill — drafts per-provider motion + audio directions against this output.

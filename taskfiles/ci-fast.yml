@@ -116,6 +116,16 @@ tasks:
     desc: "Enforce ghostwriter storage tiers — package fixtures must be allowlisted + fictional; consumer-tree profiles must not be fictional (see docs/contracts/ghostwriter-schema.md)"
     cmd: python3 scripts/lint_ghostwriter_source.py {{.QUIET_FLAG}}
 
+  lint-media-policy-linkage:
+    silent: true
+    desc: "Enforce structural reachability of media governance policies — every agents/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/policies/media/README.md § Enforcement model)"
+    cmd: python3 scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
+
+  lint-persona-governance:
+    silent: true
+    desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncompressed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
+    cmd: python3 scripts/lint_persona_governance.py {{.QUIET_FLAG}}
+
   lint-rule-budget:
     silent: true
     desc: Enforce kernel-bucket + per-rule size caps (Council R2 amendments) — see road-to-kernel-and-router.md P5.1
@@ -225,6 +235,11 @@ tasks:
     silent: true
     desc: Enforce roadmap-complexity-standard contract on agents/roadmaps/*.md (Phase 5.2 of road-to-context-layer-maturity)
     cmd: python3 scripts/lint_roadmap_complexity.py {{.QUIET_FLAG}}
+
+  lint-roadmap-ci-steps:
+    silent: true
+    desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
+    cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
 
   lint-context-spine-usage:
     silent: true

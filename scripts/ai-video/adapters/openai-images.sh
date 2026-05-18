@@ -9,6 +9,11 @@
 # Contract: scripts/ai-video/lib/adapter-contract.md
 # Provider: top-level <provider id="openai-images" kind="image"> in
 # agents/.ai-video.xml.
+#
+# Lifecycle: experimental — structural shape conformant; no maintainer
+# real-API smoke trace captured yet. See docs/contracts/provider-lifecycle.md
+# for promotion criteria. The agent must surface this tier and ask
+# before defaulting to this adapter.
 
 set -euo pipefail
 

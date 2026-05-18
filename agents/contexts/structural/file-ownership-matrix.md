@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **496**
-- Edges (incl. self-WRITE): **1353**
+- Files indexed: **498**
+- Edges (incl. self-WRITE): **1361**
 
 ## READ_ONLY edges
 
@@ -295,6 +295,7 @@
 | `.agent-src.uncompressed/contexts/subagent-configuration.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/personas/_template-specialist/persona.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/personas/README.md` | `.agent-src.uncompressed/rules/persona-governance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/product-owner.md` | `.agent-src.uncompressed/skills/customer-research/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/personas/product-owner.md` | `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
@@ -380,6 +381,10 @@
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/user-interaction.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `contexts/authority/destructive-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/media-governance-routing.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -755,6 +760,7 @@
 | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/scenario-modeling/SKILL.md` | `.agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/script-writing/SKILL.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
@@ -876,7 +882,7 @@
 |---|---:|
 | `command` | 129 |
 | `context` | 31 |
-| `persona` | 32 |
-| `rule` | 79 |
+| `persona` | 31 |
+| `rule` | 82 |
 | `skill` | 225 |
 

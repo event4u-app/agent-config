@@ -84,6 +84,22 @@ php artisan test                     # Tests (or: vendor/bin/phpunit)
 
 Check `AGENTS.md` or `Makefile` / `Taskfile.yml` for the exact commands.
 
+### CI-step gate (when `quality.local_auto_run: false`)
+
+Roadmaps **must not** schedule full-pipeline literals (`task ci`,
+`task ci-fast`, `task ci-strict`, `make ci`, `make test`,
+`npm/pnpm run check`, `yarn check`, `composer test`, whole-suite
+`vendor/bin/phpunit`, whole-suite `php artisan test`) as checkbox
+steps when `quality.local_auto_run` is `false` in
+`.agent-settings.yml` — `task lint-roadmap-ci-steps` blocks them.
+Reword as narrow verifications (`vendor/bin/phpstan analyse
+app/Modules/X`, `php artisan test --filter=…`) or mark with
+`<!-- carve-out: new-gate-verification -->` when the step verifies a
+**new** gate this roadmap introduces. At execution,
+`/roadmap:process-*` flips matching steps to `[-]` with reason and
+skips them. Full contract:
+[`roadmap-ci-steps-policy`](../rules/roadmap-ci-steps-policy.md).
+
 ---
 
 ## Template

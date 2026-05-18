@@ -25,10 +25,15 @@ Next.js · React · Node. **Preset default: `balanced`.**
 ## ✍️ `content_creator` — writers, ghostwriters, marketers
 
 Draft in someone else's voice, plan a quarter of content, ship a
-launch announcement. `/ghostwriter` fetches and writes against a
-public-figure voice profile; `/post-as` is the same primitive for
-your own voice (`.agent-user.md`); `voice-and-tone-design` and
-`messaging-architecture` lock the brand frame before any copy ships.
+launch announcement, render a cinematic AI video. `/ghostwriter`
+fetches and writes against a public-figure voice profile; `/post-as`
+is the same primitive for your own voice (`.agent-user.md`);
+`voice-and-tone-design` and `messaging-architecture` lock the brand
+frame before any copy ships; `/video:from-script` and `/video:storyboard`
+drive the AI video pipeline (script → character-locked image →
+motion+audio prompt → provider render → stitched clip), with
+`character-consistency` locking identity tokens across scenes and
+`AIV_DRYRUN=true` as the cost-safety default.
 **Preset default: `balanced`.**
 [Profile YAML](../.agent-src.uncompressed/profiles/content_creator.yml) ·
 [Role guide](getting-started-by-role.md#creator-writer-marketer-indie-content-shop).
