@@ -702,6 +702,49 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.21.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [2.25.0](https://github.com/event4u-app/agent-config/compare/2.24.0...2.25.0) (2026-05-18)
+
+### Features
+
+* **rules:** add post-push-rewrite-discipline tier-2a guard ([1af51e1](https://github.com/event4u-app/agent-config/commit/1af51e1809de3522bd344453cc7e6206032f5d4a))
+* enforce roadmap CI-steps policy as Hard Gate ([a2ec868](https://github.com/event4u-app/agent-config/commit/a2ec868e81a9d9a4644d04704ff964b67754b2b2))
+* **provider-lifecycle:** tier adapters and enforce safety gates ([e9771e6](https://github.com/event4u-app/agent-config/commit/e9771e672e07804ff80b4f182c7b095acec6995d))
+* **policy:** add media governance policy layer ([4adc2ac](https://github.com/event4u-app/agent-config/commit/4adc2ac19fa31a6b0393ba4f662d91e85e6c63d0))
+
+### Bug Fixes
+
+* **ci:** extend portability skip-list with roadmap-ci-steps-policy files ([c68893d](https://github.com/event4u-app/agent-config/commit/c68893dfcb6189a951deb0ebab9802683e705d7a))
+* **ci:** repair archived-roadmap refs + bump smoke warn baseline ([11e181b](https://github.com/event4u-app/agent-config/commit/11e181b78a8303fc54cc4aa79138753b1c0c4148))
+
+### Performance
+
+* **roadmap:** batchable dashboard regen + parallel step reads in autonomous runs ([c1aa3a5](https://github.com/event4u-app/agent-config/commit/c1aa3a51cf1d99e71151f1d7116ab970d36cd85b))
+* **create-pr:** mandate single github-api call and parallel context fetch ([cbade08](https://github.com/event4u-app/agent-config/commit/cbade08df40b0d501791eeb6847e6452b2971d1d))
+
+### Documentation
+
+* **skills:** expand git-workflow with safe-squash and divergent-state recovery ([745859f](https://github.com/event4u-app/agent-config/commit/745859f100c1ffd6d607de81f701dacefb1feff0))
+* **roadmap:** add framework-neutrality-audit roadmap + scan evidence ([6daf8b8](https://github.com/event4u-app/agent-config/commit/6daf8b8a0a16880f02a7afb1fb07cf7526be3c28))
+* **adr:** record ADR-011 domain-pack readiness (Phase 6) ([830cefa](https://github.com/event4u-app/agent-config/commit/830cefafdbec8474d1f6f71421457d1761f746ab))
+* **roadmap:** file Phase 5 advisory issues #178-#180 and sync dashboard ([3859d08](https://github.com/event4u-app/agent-config/commit/3859d085ebf7cf9bc091ae55d3e8ad1e15893dcb))
+* **roadmap:** add universal-platform-refinement roadmap ([0912bb5](https://github.com/event4u-app/agent-config/commit/0912bb505dac59ac5d4cc5e25b42b2f1d6efa694))
+
+### Tests
+
+* **ai-video:** add blueprint, prompt-optimizer, adapter-contract suites (Phase 4) ([7762df7](https://github.com/event4u-app/agent-config/commit/7762df720412049f6d3b12bd328cd7c9a78b215b))
+
+### Chores
+
+* add claude rules ([744328d](https://github.com/event4u-app/agent-config/commit/744328d57b4ba3c502ab3b41ded10e25ba3db8cf))
+* compress 4 .md files into .agent-src/ ([96ef2f9](https://github.com/event4u-app/agent-config/commit/96ef2f94504661f71b86a3fb16762069c39caaa7))
+* regenerate compiled trees for new rule (82 to 83) ([8b8af6a](https://github.com/event4u-app/agent-config/commit/8b8af6a4a918e927dbaafaeadc4402e3a7220981))
+
+### Other
+
+* Clarify skills, rules, and commands description ([b586a0c](https://github.com/event4u-app/agent-config/commit/b586a0c6895da701a2719aeb4758f14cbe3fc2db))
+
+Tests: 4664 (+95 since 2.24.0)
+
 ## [2.24.0](https://github.com/event4u-app/agent-config/compare/2.23.0...2.24.0) (2026-05-17)
 
 ### Features
