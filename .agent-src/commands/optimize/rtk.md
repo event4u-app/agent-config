@@ -26,21 +26,29 @@ which rtk
 
 Scan the project to determine which CLI tools are used:
 
-| Check | Tool detected |
-|---|---|
-| `composer.json` contains `phpstan` or `larastan` | PHPStan |
-| `composer.json` contains `pestphp/pest` or `phpunit/phpunit` | Pest / PHPUnit |
-| `composer.json` contains `symplify/easy-coding-standard` | ECS |
-| `composer.json` contains `rector/rector` | Rector |
-| `composer.json` contains scripts like `quality:phpstan` | Artisan quality commands |
-| `package.json` contains `playwright` | Playwright |
-| `package.json` contains `vitest` or `jest` | JS test runner |
-| `package.json` contains `biome` or `eslint` | JS linter |
-| `package.json` contains `typescript` | TypeScript compiler |
-| `docker-compose.yml` or `docker-compose.yaml` exists | Docker Compose |
-| `Makefile` exists | Make targets |
-| `Cargo.toml` exists | Rust / Cargo |
-| `go.mod` exists | Go |
+| Detection                                                                                      | Tool                       |
+|------------------------------------------------------------------------------------------------|----------------------------|
+| `composer.json` contains `phpstan` or `larastan`                                               | PHPStan                    |
+| `composer.json` contains `pestphp/pest` or `phpunit/phpunit`                                   | Pest / PHPUnit             |
+| `composer.json` contains `symplify/easy-coding-standard`                                       | ECS                        |
+| `composer.json` contains `rector/rector`                                                       | Rector                     |
+| `composer.json` contains scripts like `quality:phpstan`                                        | Artisan / Composer quality wrappers |
+| `package.json` contains `typescript`                                                            | tsc                        |
+| `package.json` contains `eslint`                                                                | ESLint                     |
+| `package.json` contains `prettier`                                                              | Prettier                   |
+| `package.json` contains `@biomejs/biome`                                                        | Biome                      |
+| `package.json` contains `vitest`                                                                | Vitest                     |
+| `package.json` contains `jest`                                                                  | Jest                       |
+| `package.json` contains `playwright` / `@playwright/test`                                       | Playwright                 |
+| `pyproject.toml` / `requirements*.txt` contains `ruff`                                          | Ruff                       |
+| `pyproject.toml` / `requirements*.txt` contains `mypy` / `pyright`                              | mypy / Pyright             |
+| `pyproject.toml` / `requirements*.txt` contains `pytest`                                        | pytest                     |
+| `.golangci.yml` exists OR `golangci-lint` in `go.mod` tool dependencies                         | golangci-lint              |
+| `go.mod` exists                                                                                 | `go test` / `go vet`       |
+| `Cargo.toml` exists                                                                             | cargo (build / test / clippy / fmt) |
+| `Gemfile` contains `rubocop` / `standard`                                                       | RuboCop / Standard         |
+| `docker-compose.yml` or `docker-compose.yaml` exists                                            | Docker Compose             |
+| `Makefile` exists                                                                               | Make targets               |
 
 ### 3. Read existing filters
 
@@ -77,16 +85,24 @@ max_lines = <appropriate limit>
 
 **Common noise patterns per tool:**
 
-| Tool | Noise to strip |
-|---|---|
-| PHPStan | Progress bars (`\d+/\d+`), separator lines (`━`), notes |
-| Pest/PHPUnit | Empty lines, box-drawing chars (`│`, `⇂`) |
-| ECS/Rector | Separator lines, empty lines |
-| Composer | Download progress, "Loading composer" |
-| Docker Compose | Build context lines, pull progress |
-| npm/yarn | Audit warnings, funding messages |
-| Playwright | Browser download progress |
-| cargo | Compiling lines (keep errors), download progress |
+| Tool           | Noise to strip                                                               |
+|----------------|------------------------------------------------------------------------------|
+| PHPStan        | Progress bars (`\d+/\d+`), separator lines (`━`), notes                      |
+| Pest / PHPUnit | Empty lines, box-drawing chars (`│`, `⇂`)                                    |
+| ECS / Rector   | Separator lines, empty lines                                                 |
+| Composer       | Download progress, "Loading composer"                                        |
+| tsc            | Progress dots, repeated cache-hit notes, watch-mode banners                  |
+| ESLint         | Numeric prefix per line (`123:45`), summary divider, `0 errors / 0 warnings` |
+| Prettier       | File-list output when only formatting (`✔ src/foo.ts`)                       |
+| Vitest / Jest  | Spinner frames, watch banner, coverage summary table when not requested      |
+| Playwright     | Browser launch banner, retry notices, trace-file paths repeated per run      |
+| Ruff           | Progress (`Checking N files`), repeated file headers in `--watch`            |
+| mypy / Pyright | `Daemon running` banners, success summary repeated per file                  |
+| golangci-lint  | Progress (`linters`), divider lines between linters                          |
+| `go test`      | `=== RUN` / `--- PASS` per sub-test (suppress in passing runs)               |
+| Cargo          | `   Compiling …` lines for dependencies, `Finished release` banner           |
+| npm / yarn     | Audit warnings, funding messages                                             |
+| Docker Compose | Build-context lines, pull progress                                           |
 
 ### 5. Write the filters file
 
@@ -114,11 +130,21 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 - `full` → multi-line summary table:
 
   ```
-  | # | Filter | Match | Max Lines |
-  |---|---|---|---|
-  | 1 | phpstan | phpstan\|quality:phpstan\|vendor/bin/phpstan | 80 |
-  | 2 | pest | pest\|phpunit\|artisan test | 60 |
-  | ... | ... | ... | ... |
+  | #   | Filter       | Match                                                         | Max  |
+  |-----|--------------|---------------------------------------------------------------|------|
+  | 1   | phpstan      | phpstan\|quality:phpstan\|vendor/bin/phpstan                  | 80   |
+  | 2   | pest         | pest\|phpunit\|artisan test                                   | 60   |
+  | 3   | tsc          | tsc\|tsc --noEmit                                             | 60   |
+  | 4   | eslint       | eslint\|next lint                                             | 50   |
+  | 5   | vitest       | vitest\|jest                                                  | 50   |
+  | 6   | playwright   | playwright\|@playwright/test                                  | 40   |
+  | 7   | ruff         | ruff check\|ruff format                                       | 60   |
+  | 8   | mypy         | mypy\|pyright                                                 | 50   |
+  | 9   | pytest       | pytest\|python -m pytest                                      | 50   |
+  | 10  | golangci     | golangci-lint\|go vet                                         | 50   |
+  | 11  | gotest       | go test                                                       | 40   |
+  | 12  | cargo        | cargo build\|cargo check\|cargo clippy\|cargo test\|cargo fmt | 50   |
+  | ... | ...          | (add per project as the toolchain grows)                      | ...  |
   ```
 
 ### Rules

@@ -31,11 +31,24 @@ and creates/updates `.augmentignore` accordingly. Also identifies irrelevant
 | `go.mod` exists | `go.sum` |
 | `.idea/` exists | `.idea/` |
 | `.vscode/` exists | `.vscode/` |
-| `_ide_helper.php` exists | `_ide_helper.php`, `_ide_helper_models.php`, `.phpstorm.meta.php` |
+| `_ide_helper.php` exists (Laravel `barryvdh/laravel-ide-helper`) | `_ide_helper.php`, `_ide_helper_models.php`, `.phpstorm.meta.php` |
 | `public/build/` exists | `public/build/` |
-| `storage/` exists (Laravel) | `storage/logs/`, `storage/framework/cache/`, `storage/framework/sessions/`, `storage/framework/views/` |
+| `storage/` exists AND `artisan` exists (Laravel) | `storage/logs/`, `storage/framework/cache/`, `storage/framework/sessions/`, `storage/framework/views/` |
 | `docker-compose.yml` exists | `.storage/`, `.composer/` |
 | `.env` exists | `.env`, `.env.*` |
+| `pyproject.toml` exists | `__pycache__/`, `*.pyc`, `*.pyo`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.tox/`, `.nox/`, `dist/`, `build/`, `*.egg-info/` |
+| `Pipfile` or `Pipfile.lock` exists | `Pipfile.lock` |
+| `poetry.lock` exists | `poetry.lock` |
+| `Cargo.toml` exists | `target/`, `Cargo.lock` (binaries only — keep for libraries) |
+| `go.mod` exists | `go.sum`, `vendor/` (if `go mod vendor` is used) |
+| `Gemfile` exists | `.bundle/`, `vendor/bundle/`, `Gemfile.lock` (apps only — keep for gems) |
+| `next.config.js` / `next.config.mjs` / `next.config.ts` exists | `.next/`, `out/` |
+| `nuxt.config.ts` / `nuxt.config.js` exists | `.nuxt/`, `.output/` |
+| `vite.config.*` exists | `dist/`, `.vite/` |
+| `astro.config.*` exists | `.astro/`, `dist/` |
+| `svelte.config.*` exists | `.svelte-kit/`, `build/` |
+| `tsconfig.json` exists | `*.tsbuildinfo`, `.tscache/` |
+| `.terraform/` exists | `.terraform/`, `*.tfstate`, `*.tfstate.backup`, `.terraform.lock.hcl` (debatable — keep if collaborating) |
 
 ### 2. Find large files polluting the index
 
@@ -62,7 +75,9 @@ For each large file, decide: is this **source code** (keep) or **generated/fixtu
 | `**/.docker/**/*.json` | Generated dashboard/config JSONs (Grafana, etc.) |
 | `.github/workflows/` | CI YAML — large, rarely relevant for code context |
 | `.github/actions/` | CI actions — same reason |
-| `lang/*/validation.php` | Translation files — huge, static, rarely needed |
+| `lang/*/validation.php` (Laravel) | Translation files — huge, static, rarely needed |
+| `locales/**/*.json` (i18next / next-intl / vue-i18n) | Translation bundles — large, mostly static |
+| `messages/**/*.{json,po,properties}` (gettext / Java-style) | Same reason |
 
 ### 3. Find duplicate content
 
@@ -88,21 +103,33 @@ If many exist in specific dirs, add the directory pattern.
 
 ### 6. Whitelist own packages
 
-Check `composer.json` for the project's own organization namespace:
-- Look at `name` field (e.g., `your-org/project-name` → org is `your-org`)
-- Look at `repositories` for private packages from the same org
-- Add negation pattern: `!vendor/{org}/` to keep own packages in the retrieval index
+Detect the project's own organization namespace from whichever manifest is present.
+Add a negation pattern after the broad ignore so the agent can still index
+first-party packages via `codebase-retrieval`:
 
-This ensures the agent can find code in own packages via `codebase-retrieval`,
-while still excluding the thousands of third-party vendor files.
+| Manifest         | Where the org lives                                         | Negation pattern                          |
+|------------------|-------------------------------------------------------------|-------------------------------------------|
+| `composer.json`  | `name` (`vendor/pkg`) + `repositories[]` for private repos  | `!vendor/{org}/`                          |
+| `package.json`   | `name` (`@scope/pkg`) — derive `@scope`                     | `!node_modules/@{scope}/`                 |
+| `pyproject.toml` | `[project].name` + `[tool.poetry].repositories`             | `!**/site-packages/{org}*/` (rare — most Python projects don't vendor) |
+| `go.mod`         | `module example.com/{org}/{repo}` — derive `example.com/{org}` | `!vendor/example.com/{org}/` (only if `go mod vendor` is used) |
+| `Cargo.toml`     | `[package].name` / workspace members                        | Not applicable — Cargo does not vendor by default; skip |
+| `Gemfile`        | Git source URLs pointing to the org                         | `!vendor/bundle/ruby/*/gems/{org-prefix}*/` |
+
+Effect: the broad ignore (`vendor/` / `node_modules/` / `vendor/bundle/`) excludes
+thousands of third-party files; the negation keeps first-party packages indexed.
 
 ### 7. Cross-reference with .gitignore
 
 Read `.gitignore` — most entries there should also be in `.augmentignore`.
-But `.augmentignore` should ALSO include:
-- Lock files (`composer.lock`, `package-lock.json`) — tracked in Git but useless for retrieval.
-- IDE helpers (`_ide_helper.php`) — tracked in Git but huge generated files.
-- OpenAPI specs — tracked but too large for context.
+But `.augmentignore` should ALSO include the following — these are typically
+tracked in Git (so absent from `.gitignore`) yet useless for the retrieval
+index because they are large, generated, or duplicate first-class source:
+
+- Lock files (`composer.lock`, `package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`, `poetry.lock`, `Pipfile.lock`, `Gemfile.lock`, `go.sum`, `Cargo.lock` for binaries) — tracked but useless for code understanding.
+- IDE helpers and codegen artefacts (`_ide_helper.php`, `_ide_helper_models.php`, `.phpstorm.meta.php`, `*.generated.ts`, `*.gen.go`, `__generated__/`) — tracked but huge.
+- API contracts that are generated, not authored (`openapi.{yaml,json}` produced by codegen, `schema.graphql` generated from resolvers, `swagger.json`) — keep the source, drop the generated.
+- Translation bundles when the project ships them in source control (`lang/`, `locales/`, `i18n/` files larger than ~20 KB).
 
 ### 8. Analyze irrelevant agent skills
 
@@ -112,10 +139,16 @@ Each ignored skill saves ~3 lines of system prompt tokens per request.
 **How:**
 
 1. Read `AGENTS.md` — extract tech stack (framework, language, DB, frontend, infra).
-2. Read `composer.json` — extract `require` and `require-dev` packages.
-3. Read `package.json` (if exists) — extract frontend dependencies.
-4. List all skills: `ls .augment/skills/`
-5. For each skill, decide: **is this relevant to the detected stack?**
+2. Read every package manifest present in the project root — extract dependencies:
+   - `composer.json` → `require`, `require-dev`
+   - `package.json` → `dependencies`, `devDependencies`, `peerDependencies`
+   - `pyproject.toml` → `[project].dependencies`, `[tool.poetry.dependencies]`, `[dependency-groups]`
+   - `requirements*.txt` / `Pipfile` → package list
+   - `go.mod` → `require` blocks
+   - `Cargo.toml` → `[dependencies]`, `[dev-dependencies]`, workspace members
+   - `Gemfile` → `gem` lines
+3. List all skills: `ls .augment/skills/`
+4. For each skill, decide: **is this relevant to the detected stack?**
 
 **Decision matrix — ignore when ALL conditions are true:**
 
@@ -264,7 +297,7 @@ echo "Rules ignored: $rules_count"
 - **When in doubt, ignore files** — false positive is easy to fix, false negative wastes tokens silently.
 - **When in doubt, keep skills** — ignoring a needed skill causes bad output, keeping an unneeded one just wastes ~3 lines.
 - **Never ignore always-active rules** — only auto-loaded rules (those with `description` frontmatter) may be ignored.
-- **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context-create`, `override-management`, `guidelines`, `project-docs`, `roadmap-management`, `naming`, `skill-reviewer`, `file-editor`, `copilot-config`, `copilot-agents-optimization`.
+- **Never ignore meta / agent-system skills** — these are framework-independent and used by every project regardless of stack: `agent-docs-writing`, `agents-md-thin-root`, `check-refs`, `command-routing`, `command-writing`, `compress-memory`, `context-authoring`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `file-editor`, `guideline-writing`, `learning-to-rule-or-skill`, `lint-skills`, `md-language-check`, `override-management`, `persona-writing`, `project-analyzer`, `project-docs`, `project-health`, `roadmap-writing`, `rule-writing`, `skill-improvement-pipeline`, `skill-management`, `skill-reviewer`, `skill-writing`.
 - **Restore previously ignored skills** when the stack changes (e.g., Vue added to project → restore `vue` skill).
 
 ## Cloud Behavior
