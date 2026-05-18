@@ -1222,6 +1222,44 @@
       ]
     },
     {
+      "id": "post-push-rewrite-discipline",
+      "triggers": [
+        {
+          "intent": "squash the pushed branch"
+        },
+        {
+          "intent": "clean up commits on the PR branch"
+        },
+        {
+          "intent": "tidy history after pushing"
+        },
+        {
+          "keyword": "git rebase -i"
+        },
+        {
+          "keyword": "--amend"
+        },
+        {
+          "keyword": "force-push"
+        },
+        {
+          "keyword": "--force-with-lease"
+        },
+        {
+          "phrase": "branch diverged"
+        },
+        {
+          "phrase": "pull --rebase failed"
+        },
+        {
+          "phrase": "ahead and behind"
+        }
+      ],
+      "routes_to": [
+        "skill:git-workflow"
+      ]
+    },
+    {
       "id": "preservation-guard",
       "triggers": [
         {
