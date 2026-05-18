@@ -83,6 +83,7 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links
       - task: check-beta-review-markers
@@ -159,6 +160,7 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links
       - task: check-beta-review-markers

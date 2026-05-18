@@ -1,0 +1,36 @@
+{
+  "version": 1,
+  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
+  "entries": [
+    {
+      "file": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md",
+      "lines": [130, 131, 132],
+      "reason": "Multi-stack package-manager comparison table"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
+      "lines": [88, 90, 92, 269],
+      "reason": "Project-detection enumeration listing all supported stacks"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/onboard.md",
+      "lines": [220, 221, 224],
+      "reason": "Stack-detection enumeration in onboard flow"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
+      "lines": [62],
+      "reason": "Manifest-file enumeration across ecosystems"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/optimize/augmentignore.md",
+      "lines": "*",
+      "reason": "Per-stack augmentignore rules — by definition stack-aware"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/optimize/rtk.md",
+      "lines": "*",
+      "reason": "Per-tool rtk filter detection — by definition tool-aware"
+    }
+  ]
+}

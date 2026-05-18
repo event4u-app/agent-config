@@ -988,6 +988,60 @@
       "routes_to": []
     },
     {
+      "id": "framework-neutrality-in-generic-skills",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/skills/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/rules/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/commands/"
+        },
+        {
+          "keyword": "FormRequest"
+        },
+        {
+          "keyword": "PHPStan"
+        },
+        {
+          "keyword": "php artisan"
+        },
+        {
+          "keyword": "composer.json"
+        },
+        {
+          "keyword": "Eloquent"
+        },
+        {
+          "keyword": "Pest"
+        },
+        {
+          "keyword": "Blade"
+        },
+        {
+          "keyword": "vendor/bin"
+        },
+        {
+          "keyword": "Artisan"
+        },
+        {
+          "keyword": "Rector"
+        },
+        {
+          "phrase": "every controller"
+        },
+        {
+          "phrase": "all controllers"
+        },
+        {
+          "phrase": "generic skill"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "improve-before-implement",
       "triggers": [
         {

@@ -241,6 +241,11 @@ tasks:
     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
     cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
 
+  lint-framework-leakage:
+    silent: true
+    desc: "Block PHP/Laravel/etc. leakage in generic skills/rules/commands (framework-neutrality-in-generic-skills rule)"
+    cmd: python3 scripts/lint_framework_leakage.py {{.QUIET_FLAG}}
+
   lint-context-spine-usage:
     silent: true
     desc: Verify every skill that declares context_spine cites each slot in its body (closes lint gap from 1.34.0)

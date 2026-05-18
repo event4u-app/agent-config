@@ -142,7 +142,7 @@ note, package-internal path-swap, description budget, and the
 | Layer | Count | Purpose |
 |---|---|---|
 | **Skills** | 216 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
-| **Rules** | 84 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
+| **Rules** | 85 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
 | **Commands** | 129 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
 | **Guidelines** | 73 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
