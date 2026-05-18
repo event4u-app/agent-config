@@ -9,7 +9,7 @@ RELEASE. SYNTHETIC GENERIC VOICES ARE ALLOWED. WHEN UNSURE, ASK.
 
 "Voice cloning" means producing audio that a reasonable listener could attribute to a specific real person — by timbre, accent, cadence, signature phrasing, or named context (e.g., *"in the voice of [HOST]"*, *"clone [CEO]'s narration"*). Generic synthetic voices (provider defaults, anonymous presenter voices) are out of scope.
 
-> This roadmap **writes** the policy. It does not authorise voice-cloning *implementation*. The five shipped video adapters do not currently render voice clones (see `Bounds` in `agents/roadmaps/universal-platform-refinement.md`). This file gates the surface for when an `/audio:*` or voice-capable adapter lands.
+> This roadmap **writes** the policy. It does not authorise voice-cloning *implementation*. The five shipped video adapters do not currently render voice clones (see `Bounds` in `agents/roadmaps/archive/universal-platform-refinement.md`). This file gates the surface for when an `/audio:*` or voice-capable adapter lands.
 
 ## Triggers
 

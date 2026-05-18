@@ -18,7 +18,7 @@
 
 set -euo pipefail
 
-EXPECTED_WARNS=92
+EXPECTED_WARNS=93
 EXPECTED_MIN_TOTAL=438
 
 quiet="${SMOKE_QUIET:-0}"

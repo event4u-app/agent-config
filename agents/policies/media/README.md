@@ -47,11 +47,11 @@ The `.agent-src.uncompressed/rules/media-governance-routing.md` tier-2 rule auto
 
 - Image-only and audio-only pipelines (`/image:*`, `/audio:*`) are pre-implementation. The policies are pre-wired in this directory; the rules and skill see-also blocks land when the surfaces ship.
 - Runtime voice-fingerprint detection, runtime face-detection on real-person matches, automated C2PA verification on user-uploaded reference material — out of scope by design (category error per the agent-in-the-loop model).
-- Domain-pack extraction of this policy set into a reusable downstream artifact — deferred until a second non-video domain demonstrates the pattern (see the Phase 6 ADR placeholder in `agents/roadmaps/universal-platform-refinement.md`).
+- Domain-pack extraction of this policy set into a reusable downstream artifact — deferred until a second non-video domain demonstrates the pattern (see the Phase 6 ADR placeholder in `agents/roadmaps/archive/universal-platform-refinement.md`).
 
 ## See also
 
-- [`agents/roadmaps/universal-platform-refinement.md`](../../roadmaps/universal-platform-refinement.md) — the roadmap that introduced this policy layer.
+- [`agents/roadmaps/archive/universal-platform-refinement.md`](../../roadmaps/archive/universal-platform-refinement.md) — the roadmap that introduced this policy layer.
 - [`agents/council-responses/universal-platform-refinement.json/`](../../council-responses/) — the AI Council debate that anchored the agent-in-the-loop model.
 - [`docs/contracts/write-engine.md`](../../../docs/contracts/write-engine.md) — the prose disclosure precedent (`/ghostwriter:*` mandatory footer).
 - [`.agent-src.uncompressed/rules/media-governance-routing.md`](../../../.agent-src.uncompressed/rules/media-governance-routing.md) — the tier-2 routing rule that surfaces these policies into context.
