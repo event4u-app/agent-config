@@ -27,8 +27,8 @@ Do NOT use when:
 
 ## Procedure: Before opening a PR
 
-1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).
-2. Run tests: `php artisan test`.
+1. Run the project's quality pipeline (see `quality-tools` skill) — typically: type-checker → auto-fixer → linter → type-checker.
+2. Run the project's test command — detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go).
 3. Rebase onto `main`.
 4. Fill in PR template completely.
 

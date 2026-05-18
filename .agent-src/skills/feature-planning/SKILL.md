@@ -145,7 +145,7 @@ Structural roadmap tasks must include:
 
 1. **Exact file path** — `app/Modules/Auth/Services/LoginService.php`, never *"the login service"*.
 2. **Complete code** — every method body, import, and signature ready to paste; no `// existing code` ellipses, no `…`.
-3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*.
+3. **Exact command** — the precise CLI invocation, never *"run the migration"*. Examples: `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php` (Laravel), `bin/console doctrine:migrations:migrate --no-interaction` (Symfony), `bin/rails db:migrate VERSION=20260509…` (Rails), `npx prisma migrate deploy` (Prisma), `alembic upgrade +1` (Python / Alembic), `sqlx migrate run` (Rust).
 4. **Expected output** — what success looks like (`Migrated: 2026_05_09_create_logins`) and the exit code.
 5. **No placeholders** — angle-bracket placeholders, `TODO`, `FIXME`, `tbd`, and `???` are blockers; resolve before the task ships.
 

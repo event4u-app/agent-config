@@ -61,7 +61,7 @@ Run the full end-of-work gate before presenting any options — see
 
 1. Targeted tests green
 2. Full test suite green
-3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green
+3. Quality pipeline green — the project's full sequence (type-checker → auto-fixer dry-run → linter → type-checker; e.g. PHPStan → Rector → ECS → PHPStan for Laravel-PHP, tsc → eslint --fix → eslint → tsc for TS, mypy → ruff --fix → ruff → mypy for Python)
 4. `git status` clean — nothing unstaged, no stray files
 5. Branch is pushed or explicitly marked local-only
 

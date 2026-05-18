@@ -1,6 +1,9 @@
 ---
 name: multi-tenancy
 description: "Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations."
+scope:
+  framework: laravel
+  rationale: "Uses Eloquent model conventions, Laravel Context, and Artisan traits — concepts not portable across frameworks. Other stacks need a stack-native multi-tenancy skill."
 source: package
 domain: engineering
 ---
@@ -9,11 +12,11 @@ domain: engineering
 
 ## When to use
 
-Use this skill when working with tenant-specific data, customer database connections, or any code that touches the dual-DB architecture.
+Use this skill when working with tenant-specific data, customer database connections, or any code that touches the dual-database architecture.
 
 
 Do NOT use when:
-- Single-DB applications
+- Single-database applications
 - Frontend-only changes
 
 ## Procedure: Work with multi-tenancy
@@ -33,7 +36,7 @@ Request → Identify Tenant (JWT / subdomain / API key)
         → All tenant queries use tenant connection
 ```
 
-### Dual-DB pattern
+### Dual-database pattern
 
 | Connection type | Purpose | Scope |
 |---|---|---|
@@ -49,12 +52,14 @@ Projects may have additional connections for admin operations, provisioning, or 
 
 ## Core tenant switching service
 
+**Scope**: Laravel-specific (see frontmatter). For non-Laravel multi-tenant systems, the concepts below still apply but the implementation differs — consult the framework's connection / session / DI conventions.
+
 Search the codebase for the service responsible for tenant switching. Typical responsibilities:
 
 1. Store tenant context (e.g., in Laravel Context or a singleton)
 2. Load tenant configuration
 3. Set monitoring context (tenant ID, name, domain)
-4. Reconfigure the DB connection with tenant credentials
+4. Reconfigure the database connection with tenant credentials
 5. Bind tenant-specific services via the container
 
 ## Model conventions
@@ -90,7 +95,7 @@ Check the project for the actual connection names and namespace conventions.
 ## Testing with tenants
 
 - Tests use dedicated tenant seeders (check `agents/docs/` for seeder conventions).
-- The testing DB may consolidate multiple connections into a single DB for simplicity.
+- The testing database may consolidate multiple connections into a single DB for simplicity.
 - Use `RefreshDatabase` or manual seeding — never assume a specific tenant state from previous tests.
 
 ## Common pitfalls
@@ -112,19 +117,19 @@ Check the project for the actual connection names and namespace conventions.
 
 - multi-tenant
 - tenant isolation
-- customer DB
+- customer database
 - FQDN routing
 
 ## Gotcha
 
-- Always verify which DB connection is active before running queries — cross-tenant data leaks are critical bugs.
+- Always verify which database connection is active before running queries — cross-tenant data leaks are critical bugs.
 - The model forgets to switch back to the main connection after tenant operations.
 - Queue jobs serialize the connection state — ensure the tenant context is restored when the job runs.
 - Don't use `DB::connection()` directly — use the tenant switching helpers.
 
 ## Do NOT
 
-- Do NOT hardcode DB names — always use connection names.
+- Do NOT hardcode database names — always use connection names.
 - Do NOT assume `customer_database` is available in service providers or early boot.
 - Do NOT access tenant data in global middleware that runs before customer identification.
 - Do NOT store tenant DB credentials in code — they come from the `customer_databases` table.

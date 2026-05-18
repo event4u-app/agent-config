@@ -61,7 +61,7 @@ Run the full end-of-work gate before presenting any options — see
 
 1. Targeted tests green
 2. Full test suite green
-3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green
+3. Quality pipeline green — the project's full sequence (type-checker → auto-fixer dry-run → linter → type-checker; e.g. PHPStan → Rector → ECS → PHPStan for Laravel-PHP, tsc → eslint --fix → eslint → tsc for TS, mypy → ruff --fix → ruff → mypy for Python)
 4. `git status` clean — nothing unstaged, no stray files
 5. Branch is pushed or explicitly marked local-only
 
@@ -102,7 +102,7 @@ a different sub-procedure (steps 5a–5d).
 1. Ensure the branch is up to date with the base →
    [`prepare-for-review`](../../commands/prepare-for-review.md)
 2. Self-review the full diff → [`review-changes`](../../commands/review-changes.md)
-3. Write the PR description → [`create-pr-description`](../../commands/create-pr-description.md)
+3. Write the PR description → [`create-pr-description`](../../commands/create-pr/description-only.md)
 4. Open the PR → [`create-pr`](../../commands/create-pr.md)
 5. Confirm the PR opened green, not red
 

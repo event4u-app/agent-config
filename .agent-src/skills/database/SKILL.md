@@ -2,7 +2,7 @@
 name: database
 description: "Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'."
 personas:
-  - eloquent-tamer
+  - eloquent-tamer    # Laravel-specific carve-out
 source: package
 domain: engineering
 ---
@@ -14,7 +14,7 @@ domain: engineering
 Use when designing schemas, optimizing queries, adding indexes, or troubleshooting database performance.
 
 Do NOT use when:
-- Writing Eloquent models (use `eloquent` skill)
+- Writing framework-specific ORM models (use the matching skill — e.g. `eloquent` for Laravel, `symfony-workflow` for Doctrine, framework-native skill for Prisma / TypeORM / SQLAlchemy / GORM / Diesel)
 - Creating migrations only (use `migration-creator` skill)
 
 ## Procedure: Optimize a query
@@ -52,7 +52,12 @@ Re-run `EXPLAIN` and confirm improved plan.
 
 1. **Read migrations** — source of truth
 2. **Read models** — `$table`, `$connection`, `$fillable`, `$casts`, relationships
-3. **Run schema queries** — `php artisan tinker --execute="Schema::getColumnListing('table')"`
+3. **Run schema queries** — use the project's REPL or a raw introspection query:
+   - Laravel: `php artisan tinker --execute="Schema::getColumnListing('table')"`
+   - Symfony / Doctrine: `bin/console doctrine:mapping:info`
+   - Rails: `bin/rails runner "p ActiveRecord::Base.connection.columns('table').map(&:name)"`
+   - Prisma: `npx prisma db pull --print | grep -A20 "model Table"`
+   - Generic SQL: `psql -d mydb -c "\d table"` / `mysql -e "DESCRIBE table"`
 4. **Check project docs** — `agents/docs/` for conventions
 
 | Trap | Reality |

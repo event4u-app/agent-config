@@ -3,7 +3,10 @@ name: module:explore
 tier: 2
 cluster: module
 sub: explore
-skills: [laravel]
+skills: [laravel, symfony-workflow, php-coder]
+scope:
+  structure: modular-monolith
+  rationale: "Targets projects with a Modules/ or src/<Domain>/ folder convention (HMVC, DDD-lite, Symfony bundles). Pure-flat repositories have nothing to explore."
 description: Explore a module — load its structure, docs, and context into the current conversation
 disable-model-invocation: true
 suggestion:
@@ -17,17 +20,21 @@ suggestion:
 
 ### 1. Check for modules
 
-- **Laravel projects**: Check if `app/Modules/` exists.
-- **Composer projects / packages**: Check `./agents/` or `src/` for domain directories.
-- If neither exists:
+- **Laravel HMVC**: Check `app/Modules/`.
+- **Symfony / DDD-lite**: Check `src/<Domain>/` or `src/Module/<Domain>/`.
+- **Composer packages / libraries**: Check `./agents/` or `src/` for domain directories.
+- **Node / TS monorepo**: Check `packages/`, `apps/`, or `modules/`.
+- **Python**: Check top-level package dirs under `src/<package>/` or flat `<package>/`.
+- **Go**: Check `internal/<domain>/` or `cmd/<service>/`.
+- If none of the above exists:
   ```
-  ⚠️  No module system found (no app/Modules/ directory).
+  ⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
   ```
   Stop.
 
 ### 2. List available modules
 
-Scan `app/Modules/` and show all modules (skip `.module-template` and hidden dirs):
+Scan the detected modules directory (see step 1) and show all modules. Skip `.module-template`, `.example`, and hidden dirs:
 
 ```
 📦 Available modules:
