@@ -1,6 +1,6 @@
 ---
 complexity: lightweight
-status: draft
+status: proposed
 ---
 
 # Implementation Sequence — TS-Foundation · Discovery · GUI · Explain · Visibility
