@@ -1,6 +1,6 @@
 ---
 name: migration-architect
-description: "Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill (`laravel-migration`, Doctrine `bin/console make:migration`, etc.) for DDL once locked."
+description: "Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked."
 personas:
   - backend-architect
   - senior-engineer

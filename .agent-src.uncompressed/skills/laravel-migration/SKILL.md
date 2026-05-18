@@ -1,6 +1,6 @@
 ---
 name: laravel-migration
-description: "Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan make:migration. For Symfony use Doctrine migrations, for Rails use bin/rails generate migration, for Prisma use prisma migrate, for Alembic use alembic revision."
+description: "Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan make:migration. Other stacks: use stack-native migration tooling."
 source: package
 domain: engineering
 framework: laravel

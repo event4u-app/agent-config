@@ -1,6 +1,6 @@
 ---
 name: laravel-dto
-description: "Use when creating a Laravel/PHP DTO with the SimpleDto base class and attribute mapping. For DTOs in other stacks, use the stack-native skill (TypeScript class-validator/zod, Python dataclass/pydantic, Rust serde struct, Go struct + tags)."
+description: "Use when creating a Laravel/PHP DTO with the SimpleDto base class and attribute mapping. For DTOs in other stacks, use the stack-native skill (TypeScript, Python, Rust, Go)."
 source: package
 domain: engineering
 framework: laravel

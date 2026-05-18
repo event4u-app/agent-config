@@ -1,12 +1,14 @@
 ---
 name: multi-tenancy
 description: "Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations."
-scope:
-  framework: laravel
-  rationale: "Uses Eloquent model conventions, Laravel Context, and Artisan traits — concepts not portable across frameworks. Other stacks need a stack-native multi-tenancy skill."
 source: package
 domain: engineering
+framework: laravel
 ---
+
+<!-- Framework scope: Laravel only. Uses Eloquent model conventions,
+     Laravel Context, and Artisan traits — concepts not portable across
+     frameworks. Other stacks need a stack-native multi-tenancy skill. -->
 
 # multi-tenancy
 

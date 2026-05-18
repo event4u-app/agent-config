@@ -3,7 +3,7 @@ name: update-form-request-messages
 tier: 2
 framework: laravel
 skills: [laravel-validation]
-description: "Sync the messages() method of a Laravel FormRequest class — add missing entries, link them to language keys, and clean up stale ones. Laravel-specific: only triggers in projects with app/Http/Requests/*.php files."
+description: "Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones."
 disable-model-invocation: true
 suggestion:
   eligible: true

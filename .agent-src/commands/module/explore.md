@@ -4,9 +4,6 @@ tier: 2
 cluster: module
 sub: explore
 skills: [laravel, symfony-workflow, php-coder]
-scope:
-  structure: modular-monolith
-  rationale: "Targets projects with a Modules/ or src/<Domain>/ folder convention (HMVC, DDD-lite, Symfony bundles). Pure-flat repositories have nothing to explore."
 description: Explore a module — load its structure, docs, and context into the current conversation
 disable-model-invocation: true
 suggestion:

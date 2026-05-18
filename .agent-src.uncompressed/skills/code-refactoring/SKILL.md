@@ -1,6 +1,6 @@
 ---
 name: code-refactoring
-description: "Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, and verifies with the project's quality tools."
+description: "Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools."
 source: package
 domain: engineering
 ---

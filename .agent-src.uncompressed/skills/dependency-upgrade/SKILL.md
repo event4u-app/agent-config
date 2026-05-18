@@ -1,6 +1,6 @@
 ---
 name: dependency-upgrade
-description: "Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking change detection, and verification. Stack-agnostic (Composer, npm/pnpm, pip/poetry, go.mod, Cargo)."
+description: "Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic."
 source: package
 domain: engineering
 ---
