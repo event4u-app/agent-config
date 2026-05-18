@@ -39,17 +39,45 @@ The user may or may not provide a PR URL or branch name.
    - If no PR found → use `git diff origin/{default}..HEAD --stat` for the branch diff.
 3. **Never** reuse a PR number from earlier in the conversation.
 
-### 2. Gather context
+### 2. Gather context — **one parallel tool-call block**
 
-- **Jira ticket**: Extract ticket ID from branch name (e.g. `fix/DEV-4673-description` → `DEV-4673`).
-  - If found → fetch via Jira API (`GET /issue/{ticketId}`).
-  - If not found → ask the user for a ticket number. Proceed without if none.
-- **Diff summary**: `git diff origin/{default}..HEAD --stat` for changed files.
-- **Commit messages**: `git log origin/{default}..HEAD --format="%s"` for what was done.
-- **PR template**: **MUST** read `.github/pull_request_template.md`. This is mandatory, not optional.
-- **Read key changed files** to understand what was done — look for migrations, new classes,
-  modified services, route changes, config changes.
-- **Check roadmap/agent docs** that describe the feature intent (if they exist).
+The four primary fetches below are **independent** and **must** be
+dispatched in a single parallel tool-call block, not serially. Serial
+reads here add 3+ round-trips per PR for zero benefit.
+
+```
+parallel:
+  1. Jira API           — GET /issue/{ticketId}   (skip when no ticket ID)
+  2. git diff           — git diff origin/{default}..HEAD --stat
+  3. git log            — git log origin/{default}..HEAD --format="%s"
+  4. view PR template   — .github/pull_request_template.md
+```
+
+After the block returns:
+
+- **Jira ticket**: ticket ID is extracted from the branch name
+  (e.g. `fix/DEV-4673-description` → `DEV-4673`) **before** the
+  parallel block. No ticket → skip fetch 1 silently; ask the user
+  for a number only after the block, and only if needed.
+- **PR template missing** → fall back to the structure in § 4.
+- **Read key changed files** (migrations, new classes, modified
+  services, route/config changes) — second parallel block, keyed
+  off the diff summary. Group all file reads in one block.
+- **Check roadmap/agent docs** that describe the feature intent
+  (if they exist) — fold into the second block.
+
+Anti-pattern (do **not** do this):
+
+```
+turn 1: fetch Jira
+turn 2: git diff
+turn 3: git log
+turn 4: view template
+turn 5: view file A
+turn 6: view file B
+```
+
+That's 6 round-trips for what should be 2.
 
 ### 3. Build the PR title
 

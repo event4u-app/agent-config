@@ -94,6 +94,44 @@ Resolve `"draft"` (first match wins):
 3. `routine_confirmations: true` → ask `1. draft / 2. ready`.
 4. Default → `true` (silent draft).
 
+#### 3a. Tool selection — single-call mandate
+
+```
+POST THE PR WITH ONE github-api CALL.
+NEVER COMPOSE THE BODY THROUGH SHELL, PYTHON, OR TEMP FILES.
+```
+
+Use the `github-api` tool **directly** with the markdown body in the
+JSON `data` field. The body is a regular JSON string — escaping is the
+tool's job, not yours.
+
+```
+github-api
+  method: POST
+  path:   /repos/{owner}/{repo}/pulls
+  data:   { "title": "...", "body": "<markdown>", "head": "<branch>",
+            "base": "main", "draft": <bool> }
+```
+
+**Hard prohibitions** (each one cost 3+ extra tool calls in past runs):
+
+- ❌ `python3 -c "import urllib..."` / `python3 - <<PY ... PY` heredocs
+  to serialize the body or POST it.
+- ❌ `save-file PR_BODY.md` → read back → `curl -d @PR_BODY.md`.
+- ❌ `gh pr create --body-file …` shelling out when `github-api` is
+  available in this surface.
+- ❌ Splitting `title` and `body` into two API calls (create + PATCH).
+
+The body may contain any Markdown — code fences, tables, multi-line
+HTML, emoji. Do **not** preprocess, escape, or strip newlines before
+handing it to `github-api`.
+
+If the surface genuinely lacks `github-api` (rare), fall back to
+`gh pr create --title "..." --body-file <(echo -n "<body>")` as a
+**single** shell call, never the python-urllib path.
+
+#### 3b. Submit
+
 Create the PR with the approved title/body and the resolved `draft`.
 
 **Verify after `draft: false`** — the GitHub REST API sometimes ignores
@@ -126,18 +164,21 @@ Run this strip-pass **after PR creation and after every body PATCH**:
    - `Pull Request opened by [Augment Code]`
    - `Co-authored by Augment Code`
    - Any `augmentcode.com` link the user did not ask for
-3. If any pattern is present, remove it together with surrounding
+3. **No match → done.** Skip steps 4–5; the body is already clean.
+   This is the common path and **must not** spend a verify-GET.
+4. Match found → remove the footer(s) together with surrounding
    `---` separators and trailing whitespace, then:
    ```
    PATCH /repos/{owner}/{repo}/pulls/{number}
    { "body": "<cleaned body>" }
    ```
-4. Re-fetch the body once more to verify the strip stuck. If a
-   pattern reappears (server re-injection), repeat steps 2–4 once;
+   Re-fetch the body **once** to verify the strip stuck. If a
+   pattern reappears (server re-injection), repeat the PATCH once;
    if it still reappears, surface the issue to the user and stop
    (do not enter a strip/PATCH loop).
-5. Briefly note in the reply how many footers were removed (or
-   "no footers found" if clean).
+5. Briefly note in the reply how many footers were removed (omit
+   the line entirely when nothing was stripped — silence is the
+   expected path, not "no footers found").
 
 #### 4b. Show the PR URL (verbosity-gated)
 
@@ -153,6 +194,19 @@ Per `verbosity.post_action_reports` (default `minimal`):
 Linked ticket + `routine_confirmations: true` → ask `1. Yes / 2. No`.
 Default (`false`) → skip silently. **Only emit a transition line when
 an actual Jira API call succeeded** — never announce "skipped".
+
+#### 4d. Settings short-circuit — single read per run
+
+`verbosity.routine_confirmations`, `verbosity.post_action_reports`, and
+`commands.create_pr.preview_description` are read **once** at the top
+of the run and cached for the whole `/create-pr` invocation. Do **not**
+re-read `.agent-settings.yml` in 4b / 4c — both branches resolve from
+the cached values from step 1.
+
+When all three resolve to their silent defaults (`false` / `minimal` /
+`false`), steps 4b–4c collapse to the single `→ #N opened: <url>` line
+from 4b and a silent 4c. No extra file reads, no "checking settings…"
+narration, no confirmation prompts.
 
 ### Rules
 
