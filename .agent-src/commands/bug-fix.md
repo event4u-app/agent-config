@@ -9,6 +9,7 @@ suggestion:
   eligible: true
   trigger_description: "fix this bug, patch the issue, resolve this error"
   trigger_context: "branch name matches fix/* or bug/*"
+framework: laravel
 ---
 
 # bug-fix

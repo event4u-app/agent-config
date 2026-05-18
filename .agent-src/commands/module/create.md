@@ -10,6 +10,7 @@ suggestion:
   eligible: true
   trigger_description: "create a new module, scaffold a module for X"
   trigger_context: "prompt mentions a new domain area without an existing module"
+framework: laravel
 ---
 
 # /module create

@@ -4,8 +4,7 @@ description: "Use when designing monitoring dashboards — visualization selecti
 source: package
 domain: devops
 recommended_for_user_types: [ops, gtm]
-
-
+framework: laravel
 ---
 
 # dashboard-design
