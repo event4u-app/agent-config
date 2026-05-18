@@ -319,6 +319,12 @@ _TASK_DETECTOR_SKIP = (
     "rules/package-ci-checks.md",
     "contexts/communication/rules-auto/package-ci-checks-mechanics.md",
     "contexts/contracts/agents-md-anatomy.md",
+    # roadmap-ci-steps-policy defines the gate by listing the forbidden
+    # CI-shaped literals; its mechanics doc and the execution loop +
+    # authoring skill enumerate the same literals to detect them.
+    "rules/roadmap-ci-steps-policy.md",
+    "contexts/execution/roadmap-process-loop.md",
+    "skills/roadmap-writing/SKILL.md",
 )
 
 
