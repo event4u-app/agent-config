@@ -11,6 +11,13 @@ Carve-out semantics: an artifact whose filename or any parent directory
 matches an explicit framework/language marker (e.g. `laravel-*`,
 `nextjs-*`, `pest-*`) is exempt — these are correctly framework-specific.
 
+Inventory exemption: descriptive files that name carve-outs as
+*catalog entries* rather than mandating them in a generic skill are
+exempt. This covers `contexts/**/*.md` (cross-reference tables,
+guideline indexes) and the top-level `README.md` (skills inventory).
+A linter that targets mandate-leakage cannot meaningfully scan an
+inventory of mandate-bearing artifacts.
+
 Auto cross-stack detection (Step 0.5 of audit roadmap): when a hit's
 line OR any of the ±2 surrounding lines contains a pattern from a
 different ecosystem family (php / js / python), the hit is marked
@@ -117,6 +124,35 @@ def is_carve_out(path: Path) -> bool:
         stem = p.removesuffix(".md")
         if CARVE_OUT_RE.search(stem):
             return True
+    return False
+
+
+def is_inventory_file(path: Path) -> bool:
+    """Descriptive files that name carve-outs in catalog tables.
+
+    A leakage linter targets *mandates* in generic skills/rules/commands.
+    Files that list carve-outs (skills inventory, guideline indexes,
+    cross-reference tables) name `laravel-*`, PHPStan, npm, etc. as data,
+    not as the only path. Scanning them produces structural false
+    positives that no allowlist can sensibly cover.
+
+    Exempt scopes:
+      - `<src>/contexts/**/*.md` — cross-reference tables, guideline
+        catalogs, infrastructure maps.
+      - top-level `README.md` directly under `.agent-src.uncompressed/`
+        or `.agent-src/` — package surface inventory.
+    """
+    try:
+        rel = path.relative_to(REPO_ROOT)
+    except ValueError:
+        return False
+    parts = rel.parts
+    if "contexts" in parts:
+        return True
+    if rel.name == "README.md" and len(parts) == 2 and parts[0] in {
+        ".agent-src.uncompressed", ".agent-src",
+    }:
+        return True
     return False
 
 
@@ -246,6 +282,8 @@ def main(argv: list[str] | None = None) -> int:
 
     for f in iter_md_files(args.paths):
         if is_carve_out(f):
+            continue
+        if is_inventory_file(f):
             continue
         if has_framework_frontmatter(f):
             continue

@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **498**
-- Edges (incl. self-WRITE): **1361**
+- Files indexed: **504**
+- Edges (incl. self-WRITE): **1417**
 
 ## READ_ONLY edges
 
@@ -272,6 +272,8 @@
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/commands/roadmap/create.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/commands/roadmap/process-full.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/commands/roadmap/process-phase.md` | `body_link` | 1 |
@@ -279,6 +281,7 @@
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/contexts/authority/commit-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
@@ -304,6 +307,10 @@
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/agent-authority.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/architecture.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/architecture.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/architecture.md` | `.agent-src.uncompressed/skills/laravel/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/architecture.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/architecture.md` | `.agent-src.uncompressed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/artifact-engagement-recording.md` | `contexts/contracts/artifact-engagement-flow.md` | `load_context` | 1 |
@@ -322,6 +329,7 @@
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/autonomous-execution.md` | `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `contexts/execution/autonomy-detection.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `contexts/execution/autonomy-examples.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/autonomous-execution.md` | `contexts/execution/autonomy-mechanics.md` | `load_context` | 1 |
@@ -351,6 +359,11 @@
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/rules/think-before-action.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/guidelines.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/guidelines.md` | `contexts/communication/rules-auto/guidelines-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/improve-before-implement.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -383,8 +396,14 @@
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `contexts/authority/destructive-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/rules/no-unsolicited-rebase.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/media-governance-routing.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -403,6 +422,12 @@
 | `.agent-src.uncompressed/rules/ui-audit-gate.md` | `.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/user-interaction.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/user-interaction.md` | `contexts/communication/rules-auto/user-interaction-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `contexts/execution/interrupt-examples.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `contexts/execution/verification-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/skills/accessibility-auditor/SKILL.md` | `.agent-src.uncompressed/skills/fe-design/SKILL.md` | `body_link` | 1 |
@@ -420,6 +445,10 @@
 | `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md` | `.agent-src.uncompressed/skills/copilot-agents-optimization/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/architecture-review-lens/SKILL.md` | `.agent-src.uncompressed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/architecture-review-lens/SKILL.md` | `.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/architecture-review-lens/SKILL.md` | `.agent-src.uncompressed/skills/judge-code-quality/SKILL.md` | `body_link` | 1 |
@@ -455,6 +484,18 @@
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/expansion-playbook/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/onboarding-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/churn-prevention/SKILL.md` | `.agent-src.uncompressed/skills/retention-loops/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-refactoring/SKILL.md` | `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-refactoring/SKILL.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-refactoring/SKILL.md` | `.agent-src.uncompressed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/blade-ui/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/eloquent/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/laravel/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/pest-testing/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/php-coder/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/code-review/SKILL.md` | `.agent-src.uncompressed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/command-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/command-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/command-writing/SKILL.md` | `.agent-src.uncompressed/rules/size-enforcement.md` | `body_link` | 1 |
@@ -599,10 +640,12 @@
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/judge-test-coverage/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/api-design/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` | `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-horizon/SKILL.md` | `.agent-src.uncompressed/skills/jobs-events/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-mail/SKILL.md` | `.agent-src.uncompressed/skills/laravel-notifications/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/laravel-notifications/SKILL.md` | `.agent-src.uncompressed/skills/laravel-mail/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/laravel-reverb/SKILL.md` | `.agent-src.uncompressed/skills/websocket/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/laravel-reverb/SKILL.md` | `.agent-src.uncompressed/skills/laravel-websocket/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/launch-readiness/SKILL.md` | `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/launch-readiness/SKILL.md` | `.agent-src.uncompressed/skills/release-comms/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/launch-readiness/SKILL.md` | `.agent-src.uncompressed/skills/stakeholder-tradeoff/SKILL.md` | `body_link` | 1 |
@@ -633,7 +676,7 @@
 | `.agent-src.uncompressed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/decision-record/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/migration-creator/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/laravel-migration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
@@ -738,6 +781,7 @@
 | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
@@ -773,9 +817,15 @@
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/performance-analysis/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/security/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/adversarial-review/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/authz-review/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/laravel-middleware/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/laravel/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/multi-tenancy/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/security-audit/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/symfony-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/security/SKILL.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -881,8 +931,8 @@
 | Kind | Count |
 |---|---:|
 | `command` | 129 |
-| `context` | 31 |
+| `context` | 32 |
 | `persona` | 31 |
-| `rule` | 82 |
-| `skill` | 225 |
+| `rule` | 86 |
+| `skill` | 226 |
 

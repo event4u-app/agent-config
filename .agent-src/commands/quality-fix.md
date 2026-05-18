@@ -37,7 +37,7 @@ git diff --name-only origin/{default}..HEAD
   1. Project ships a wrapper script — prefer the wrapper over invoking tools directly:
      - PHP: `php artisan quality:*` (Laravel), `composer run quality`, `composer run lint`
      - JS / TS: `npm run lint`, `npm run typecheck`, `pnpm lint`, `pnpm typecheck`, `yarn lint`, `yarn typecheck`
-     - Python: `make lint`, `task lint`, `nox -s lint`, `tox -e lint`
+     - Python: `make lint`, `nox -s lint`, `tox -e lint`
      - Polyglot: `Taskfile.yml`, `Makefile`, or `justfile` with a `quality` / `lint` / `check` target
   2. No wrapper — invoke tools directly based on which are installed:
      - PHP: `vendor/bin/phpstan analyse`, `vendor/bin/rector process`, `vendor/bin/ecs check --fix`

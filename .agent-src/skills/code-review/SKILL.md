@@ -101,7 +101,7 @@ The checks below are stack-agnostic. For framework-specific conventions (PSR-12 
 ## Before creating a PR
 
 1. Run the project's quality pipeline (see the stack carve-out for the exact commands — PHP: `quality-tools`).
-2. Run tests via the project's runner (`task test`, `make test`, `npm test`, `pytest`, `go test ./...`).
+2. Run tests via the project's runner (`make test`, `npm test`, `pytest`, `go test ./...`, or the project's wrapper script).
 3. Ensure CI passes on the branch.
 4. Self-review the diff: `git diff origin/main..HEAD`.
 

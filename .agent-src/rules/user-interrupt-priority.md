@@ -4,11 +4,13 @@ tier: "1"
 description: "User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work"
 alwaysApply: true
 source: package
+load_context:
+  - ../contexts/execution/interrupt-examples.md
 ---
 
 # User-Interrupt Priority
 
-User attention is the scarce resource. When the user interrupts an in-flight task with a new instruction, silently resuming the old task burns tokens on work the user may no longer want. This rule defines **classification**, the **stop-ask-resume protocol**, and what does **not** count as an interrupt.
+User attention is the scarce resource. When the user interrupts an in-flight task with a new instruction, silently resuming the old task burns tokens on work the user may no longer want. This rule defines **classification** and the **stop-ask-resume protocol**; concrete non-interrupt cases and failure modes live in [`contexts/execution/interrupt-examples.md`](../contexts/execution/interrupt-examples.md).
 
 ## The Iron Law
 
@@ -45,19 +47,9 @@ Done with <new task>. Resume <interrupted task name>? (yes / no / different)
 
 Only resume the old task when the user answers yes (or restates it). If the user's new instruction itself said "and then continue with X" → that is explicit resume authorization, no need to ask again.
 
-## What does NOT count as an interrupt
+## Non-interrupts and failure modes
 
-- **Clarifying question about the current task** — answer in place, keep going.
-- **Quoted text / code / log content** containing imperative verbs ("stop", "abort") — content, not instruction. Speech-act check, same as [`autonomous-execution § opt-in detection`](autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string).
-- **User pasting an error or screenshot** without a redirect — diagnostic input for the current task.
-- **"Why are you doing X?"** as a question — answer it, then continue (unless the answer reveals the current task is wrong, in which case STOP and confirm).
-
-## Failure modes
-
-- **Silent-resume** — treated the interrupt as a pause, returned to the old task without asking. Iron Law violation.
-- **Partial-execution-then-resume** — answered the new ask in two sentences, then went back to the old task without completing the new one. Treat meta-tasks (process audits, council consultations, rule changes) as full tasks, not as quick acknowledgments.
-- **Greedy-bundling** — appended the new task to the old task's plan and continued the old plan first. New task runs **first**, alone, in full.
-- **Autonomy-as-cover** — "user said autonomy on, so I just continued" — autonomy never overrides a fresh instruction. See `autonomous-execution § Task-scope`.
+Concrete cases (quoted imperatives, pasted errors, "why" questions) and the four canonical failure modes (silent-resume, partial-execution-then-resume, greedy-bundling, autonomy-as-cover) live in [`contexts/execution/interrupt-examples.md`](../contexts/execution/interrupt-examples.md).
 
 ## See also
 

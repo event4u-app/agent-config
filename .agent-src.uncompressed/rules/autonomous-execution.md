@@ -85,7 +85,7 @@ Crossing the 20-entry threshold counts as the 3rd validation-target failure for 
 
 ### Probe efficiency — direct over orchestration
 
-When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (`python3 scripts/<check>.py`, `task <specific-check>`, `pytest tests/<file>::<test>`) rather than `task ci` / `task all` / the full pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
+When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (the specific script invocation, the specific runner target, the single-test filter for the project's test runner) rather than the full CI meta-pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
 
 ## See also
 

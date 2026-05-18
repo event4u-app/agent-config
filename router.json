@@ -9,6 +9,7 @@
     "no-cheap-questions",
     "non-destructive-by-default",
     "scope-control",
+    "user-interrupt-priority",
     "verify-before-complete"
   ],
   "tier_1": [

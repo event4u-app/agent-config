@@ -25,7 +25,7 @@ status: proposed
 - [ ] Read [`agents/tmp/feedback2.txt`](../tmp/feedback2.txt) §5 "Explainability noch nicht genug" and §749 "Explainability v2"
 - [ ] Read [`.agent-src.uncompressed/templates/scripts/work_engine/state.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/state.py) — the v1 WorkState wire format is the primary input
 - [ ] Read [`.agent-src.uncompressed/templates/scripts/work_engine/state_io.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/state_io.py) — the loader is reused, not duplicated
-- [ ] Skim the council session shape under `agents/council-sessions/*/council-responses.json` (the format the council emitter writes)
+- [ ] Skim the council session shape under `agents/council-sessions/*/council-responses.json` (the format the council emitter writes)  <!-- council-ref-allowed: explainability v2 must consume council-session output; the wire-format path is the contract -->
 
 ## Context
 
@@ -149,7 +149,7 @@ displayed, not enforced. Enforcement is a separate roadmap
   - `__init__.py` — public `build_trace(project_root, state_file) -> ExplainTrace` function
   - `inputs.py` — reads `.agent-settings.yml`, `config/profiles/*.yml`, `config/presets/*.yml`; reuses `scripts.config.profiles.resolve_profile()` and `presets.resolve_preset()` from v1; records the source per knob (one of: `pack | profile | preset | user | env | runtime | default`)
   - `route.py` — reads `<root>/router.json`; cross-references the `state.directive_set` to surface matched tier-1 rules and the active persona
-  - `council.py` — globs `<root>/agents/council-sessions/*/council-responses.json` plus `<root>/tmp/council-*.json`; picks the file with the most recent `mtime` that lies inside the run window (`state.created_at` ± 1h); returns `null` if none match
+  - `council.py` — globs `<root>/agents/council-sessions/*/council-responses.json` plus `<root>/tmp/council-*.json`; picks the file with the most recent `mtime` that lies inside the run window (`state.created_at` ± 1h); returns `null` if none match  <!-- council-ref-allowed: implementation spec for the council loader; the glob path is the contract it implements -->
   - `memory.py` — opens `<root>/agents/metrics/skill-usage.jsonl` (already exists) and any `<root>/.agent-memory/hits.jsonl` (optional, may be absent); returns the entries marked with the active `run_id`; `null` if no hits
   - `assumptions.py` — reads `state.input.data.assumptions[]` if present; the work-engine writes those out at the end of `refine` and on every `halt`
 

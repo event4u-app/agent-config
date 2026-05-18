@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When editing a generic skill, rule, or command — block single-stack mandates (PHP/Laravel/Symfony only). Generic artifacts use language-agnostic procedures with carve-out pointers."
+description: "When editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers."
 source: package
 triggers:
   - path_prefix: ".agent-src.uncompressed/skills/"
@@ -108,8 +108,8 @@ inlines stack-specific code.
 
 ## Enforcement
 
-`scripts/lint_framework_leakage.py` runs in `task ci-fast` and `task
-ci`. Exit codes:
+`scripts/lint_framework_leakage.py` runs in the package CI pipeline.
+Exit codes:
 
 - `0` — no hits, or every hit is auto-detected as cross-stack, or
   every hit is allowlisted in

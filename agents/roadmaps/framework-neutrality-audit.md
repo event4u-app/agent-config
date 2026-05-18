@@ -409,12 +409,12 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 - [ ] **Edit L98–L99** (Before creating a PR — quality pipeline). Find:
   ```
   1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill for commands)
-  2. Run tests: `make test` (or project equivalent)
+  2. Run tests: `make test` (or project equivalent)  <!-- carve-out: new-gate-verification -->
   ```
   Replace with:
   ```
   1. Run the project's quality pipeline — for PHP that is PHPStan → Rector → ECS → PHPStan (see [`quality-tools`](../quality-tools/SKILL.md)); for other stacks consult `Taskfile.yml` / `package.json scripts` / `Makefile`.
-  2. Run tests via the project's test runner (`task test`, `make test`, `npm test`, `pytest`, `go test ./...`, `cargo test` — whichever the project uses).
+  2. Run tests via the project's test runner (`task test`, `make test`, `npm test`, `pytest`, `go test ./...`, `cargo test` — whichever the project uses).  <!-- carve-out: new-gate-verification -->
   ```
 
 - [ ] **Edit L214**. Find: `- Do NOT nitpick style issues that ECS/Rector handle automatically.`
@@ -759,7 +759,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ### Step 6: Run tests
 
   - Run tests related to the changed code first (`php artisan test --filter=...`).
-  - Then run the full test suite (`php artisan test`).
+  - Then run the full test suite (`php artisan test`).  <!-- carve-out: new-gate-verification -->
   - All tests must pass before the refactoring is considered complete.
   ```
   Replace with:
@@ -767,7 +767,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ### Step 6: Run tests
 
   - Run tests related to the changed code first (`php artisan test --filter=...`, `pnpm test -- <pattern>`, `pytest -k <pattern>`, `go test ./{path}/...`, `cargo test {pattern}`).
-  - Then run the full test suite (`php artisan test`, `pnpm test`, `pytest`, `go test ./...`, `cargo test`).
+  - Then run the full test suite (`php artisan test`, `pnpm test`, `pytest`, `go test ./...`, `cargo test`).  <!-- carve-out: new-gate-verification -->
   - All tests must pass before the refactoring is considered complete.
   ```
 
@@ -865,7 +865,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
   | Stack | Type-check | Lint / autofix | Tests |
   |---|---|---|---|
-  | PHP / Laravel | `vendor/bin/phpstan analyse` | `vendor/bin/rector process` + `vendor/bin/ecs check --fix` | `php artisan test` (or `vendor/bin/pest`) |
+  | PHP / Laravel | `vendor/bin/phpstan analyse` | `vendor/bin/rector process` + `vendor/bin/ecs check --fix` | `php artisan test` (or `vendor/bin/pest`) |  <!-- carve-out: new-gate-verification -->
   | TypeScript | `tsc --noEmit` | `eslint --fix` + `prettier --write` | `pnpm test` (or `vitest run`, `jest`) |
   | Python | `mypy` / `pyright` | `ruff check --fix` + `ruff format` | `pytest` |
   | Go | `go vet ./...` | `golangci-lint run --fix` | `go test ./...` |
@@ -1912,7 +1912,7 @@ Files NOT in this phase (verified acceptable on re-scan): `error-handling-patter
 - [ ] **Edit L30**. Find: `1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).`
   Replace with: `1. Run the project's quality pipeline (see `quality-tools` skill) — typically: type-checker → auto-fixer → linter → type-checker.`
 
-- [ ] **Edit L31**. Find: `` 2. Run tests: `php artisan test`. ``
+- [ ] **Edit L31**. Find: `` 2. Run tests: `php artisan test`. ``  <!-- carve-out: new-gate-verification -->
   Replace with: `2. Run the project's test command — detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go).`
 
 ### Step 4.4: `.agent-src.uncompressed/skills/security/SKILL.md` (5 hits — heaviest cosmetic fix)
@@ -2287,7 +2287,7 @@ The four projections regenerate from `.agent-src.uncompressed/` in a fixed order
 
 ### Step 6.4: Full CI gate
 
-- [ ] `task ci` — full pipeline (~70 sub-tasks). Must exit 0.
+- [ ] `task ci` — full pipeline (~70 sub-tasks). Must exit 0.  <!-- carve-out: new-gate-verification -->
   - If a failure surfaces, classify it: (a) caused by Phase 0–5 edits → fix; (b) pre-existing unrelated failure → file follow-up issue, do NOT mask in this roadmap.
 
 ### Step 6.5: AI Council validation (optional but recommended)
@@ -2322,7 +2322,7 @@ The diff touches ~50 source files + ~150 generated files. Land it in **three com
 
 ## Phase 6 acceptance criteria
 
-- [ ] `task ci` green
+- [ ] `task ci` green  <!-- carve-out: new-gate-verification -->
 - [ ] 3 commits staged locally, in the order above
 - [ ] No pushed branch / opened PR until the user explicitly authorizes (per `commit-policy`)
 - [ ] Council verdict (if invoked) recorded in `agents/council-*/framework-neutrality-audit-{date}.md`
@@ -2333,7 +2333,7 @@ The diff touches ~50 source files + ~150 generated files. Land it in **three com
 - [ ] `framework-neutrality-in-generic-skills` rule appears in `router.json` at Tier 2 and blocks future leakage in CI
 - [ ] All 4 renamed carve-outs (`laravel-websocket`, `laravel-dto`, `laravel-migration`, framework-tagged `update-form-request-messages`) carry `framework: laravel` in their frontmatter
 - [ ] Generic artifacts touched in Phases 1–4 either (a) have no framework mention, or (b) name PHP/Laravel as one of ≥2 parallel examples ("e.g. PHPStan for PHP, mypy for Python, tsc for TS")
-- [ ] `task ci` green across all 70+ sub-tasks
+- [ ] `task ci` green across all 70+ sub-tasks  <!-- carve-out: new-gate-verification -->
 - [ ] All 4 projections (`.agent-src/`, `.augment/`, `.claude/` + tool family, `cloud-bundle`) regenerate without manual fixup
 
 ## Success definition
@@ -2354,6 +2354,16 @@ If any phase introduces a regression that surfaces post-merge:
 - **Commit C only** — revert restores old names; cross-references in B will become broken — revert B as well, or land a compensating commit that restores the old cross-refs.
 
 In all three cases, the revert is a single `git revert <sha>` per commit — no schema migration, no data fixup. The roadmap is **fully reversible**.
+
+## Postscript — actual rollout (2026-05-18)
+
+The original Step 6.6 plan was **3 commits**. The branch shipped as **11 commits** (9 phase-bounded edits + 2 process-hardening / Phase-6-polish commits added mid-Phase-6 per AI Council verdicts in `agents/council-responses/2026-05-18-process-hardening.md` and `agents/council-responses/2026-05-18-phase6-finalization.md`). Rationale:  <!-- council-ref-allowed: rollout-record traces commit SHAs to council verdicts that justified them; inlining the multi-member synthesis would lose the citation chain -->
+
+- **Bisectability over commit-count minimalism.** Phases 0–5 each touched a distinct concern (linter scaffolding, Tier-1 mandates, Tier-2 leakage, multi-stack examples, relocations, frontmatter carve-outs). Squashing them into Commit B would have made `git bisect` useless for a regression in any single phase.
+- **Schema + linter refinements landed mid-Phase-6** (commits `05d13f29` cross-stack heuristic, `c486de2d` framework carve-out tags, `fbac3f99` process hardening with `user-interrupt-priority` + validation budget) — these are scope-adjacent process changes, not body edits, and deserved their own SHAs.
+- **Rollback is still single-revert per concern**: the rollback matrix above generalises to `git revert <sha>` for whichever commit reintroduces the regression. The 11-commit shape strictly extends, never violates, the 3-commit invariant (every concern is still atomic).
+
+The 11-commit final shape is the authoritative rollout record; the 3-commit plan in Step 6.6 reflects the pre-execution estimate.
 
 ## See also
 

@@ -915,6 +915,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/contexts/execution/interrupt-examples.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md": {
       "kind": "context",
       "rule_type": null,
@@ -1395,6 +1401,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/guidelines.md": {
       "kind": "rule",
       "rule_type": "manual",
@@ -1525,6 +1537,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/preservation-guard.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1538,6 +1556,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/reviewer-awareness.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1657,6 +1681,14 @@
       "rule_type": "auto",
       "load_context": [
         "contexts/communication/rules-auto/user-interaction-mechanics.md"
+      ],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/user-interrupt-priority.md": {
+      "kind": "rule",
+      "rule_type": "always",
+      "load_context": [
+        "contexts/execution/interrupt-examples.md"
       ],
       "load_context_eager": []
     },
@@ -2022,12 +2054,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/skills/dto-creator/SKILL.md": {
-      "kind": "skill",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/skills/editorial-calendar/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2202,6 +2228,18 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/laravel-dto/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/laravel-horizon/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -2215,6 +2253,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/laravel-middleware/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/laravel-migration/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2251,6 +2295,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/laravel-validation/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/skills/laravel-websocket/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -2347,12 +2397,6 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/migration-architect/SKILL.md": {
-      "kind": "skill",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/skills/migration-creator/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -3007,12 +3051,6 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md": {
-      "kind": "skill",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/skills/websocket/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
       "load_context": [],
@@ -5905,6 +5943,27 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
+      "target": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
+      "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
+      "target": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md",
       "target": ".agent-src.uncompressed/commands/roadmap/create.md",
       "type": "READ_ONLY",
@@ -5956,6 +6015,13 @@
     {
       "source": ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md",
       "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6430,6 +6496,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/rules/architecture.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/architecture.md",
+      "target": ".agent-src.uncompressed/skills/laravel/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/architecture.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/architecture.md",
+      "target": ".agent-src.uncompressed/skills/symfony-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
       "target": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
       "type": "WRITE",
@@ -6593,6 +6687,13 @@
     {
       "source": ".agent-src.uncompressed/rules/autonomous-execution.md",
       "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "target": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7004,6 +7105,48 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/rules/skill-quality.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/guidelines.md",
       "target": ".agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md",
       "type": "READ_ONLY",
@@ -7375,6 +7518,34 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
+      "target": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
+      "target": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
+      "target": ".agent-src.uncompressed/skills/git-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/preservation-guard.md",
       "target": ".agent-src.uncompressed/rules/preservation-guard.md",
       "type": "WRITE",
@@ -7408,6 +7579,34 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "target": ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
@@ -7662,6 +7861,55 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
+      "target": "contexts/execution/interrupt-examples.md",
+      "type": "READ_ONLY",
+      "via": "load_context",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/verify-before-complete.md",
       "target": ".agent-src.uncompressed/contexts/execution/verification-mechanics.md",
       "type": "READ_ONLY",
@@ -7859,10 +8107,38 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
       "target": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/symfony-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/api-testing/SKILL.md",
@@ -8215,11 +8491,95 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/code-refactoring/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-refactoring/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-refactoring/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/symfony-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/blade-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
       "target": ".agent-src.uncompressed/skills/code-review/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/eloquent/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/pest-testing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/php-coder/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/symfony-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/command-routing/SKILL.md",
@@ -8833,13 +9193,6 @@
     {
       "source": ".agent-src.uncompressed/skills/docker/SKILL.md",
       "target": ".agent-src.uncompressed/skills/docker/SKILL.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/dto-creator/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/dto-creator/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -9664,6 +10017,34 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-design/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/laravel-dto/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-dto/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/skills/laravel-horizon/SKILL.md",
       "target": ".agent-src.uncompressed/skills/jobs-events/SKILL.md",
       "type": "READ_ONLY",
@@ -9694,6 +10075,13 @@
     {
       "source": ".agent-src.uncompressed/skills/laravel-middleware/SKILL.md",
       "target": ".agent-src.uncompressed/skills/laravel-middleware/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/laravel-migration/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-migration/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -9735,7 +10123,7 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/laravel-reverb/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/websocket/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-websocket/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -9750,6 +10138,13 @@
     {
       "source": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
       "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/laravel-websocket/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-websocket/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -10071,21 +10466,14 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-migration/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/migration-creator/SKILL.md",
+      "source": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/migration-architect/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -11212,6 +11600,13 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/roadmap-writing/SKILL.md",
+      "target": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/roadmap-writing/SKILL.md",
       "target": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -11520,6 +11915,13 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/adversarial-review/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
       "target": ".agent-src.uncompressed/skills/authz-review/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -11527,7 +11929,35 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel-middleware/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
       "target": ".agent-src.uncompressed/skills/laravel-validation/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/laravel/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/multi-tenancy/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -11545,6 +11975,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/symfony-workflow/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/security/SKILL.md",
@@ -12536,13 +12973,6 @@
     {
       "source": ".agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md",
       "target": ".agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/websocket/SKILL.md",
-      "target": ".agent-src.uncompressed/skills/websocket/SKILL.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
