@@ -1,0 +1,1 @@
+../../.agent-src/rules/post-push-rewrite-discipline.md
