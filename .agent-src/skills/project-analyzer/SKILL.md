@@ -171,47 +171,73 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 
 ## Detection checklist
 
-### Framework & language
+### Framework & language (multi-stack)
 
-| Check                 | How to detect                                 |
-|-----------------------|-----------------------------------------------|
-| PHP version           | `composer.json` → `require.php`               |
-| Laravel version       | `composer.json` → `require.laravel/framework` |
-| Laravel or standalone | `artisan` file exists → Laravel               |
-| Node.js               | `package.json` exists                         |
-| Frontend framework    | `package.json` → Vue, React, etc.             |
-| TypeScript            | `tsconfig.json` exists                        |
+| Check                  | How to detect                                                                |
+|------------------------|------------------------------------------------------------------------------|
+| PHP runtime + version  | `composer.json` → `require.php`                                              |
+| Laravel application    | `artisan` file at repo root + `laravel/framework` in `composer.json`         |
+| Symfony application    | `bin/console` + `symfony/framework-bundle` in `composer.json`                |
+| Composer package       | `composer.json` without `artisan` / `bin/console`                            |
+| Node.js runtime        | `package.json` exists                                                        |
+| TypeScript             | `tsconfig.json` exists                                                       |
+| Frontend framework     | `package.json` → `react`, `vue`, `svelte`, `solid`, `astro`, `@angular/core` |
+| Meta-framework         | `package.json` → `next`, `nuxt`, `remix`, `sveltekit`, `astro`               |
+| Python runtime         | `pyproject.toml`, `requirements.txt`, `setup.py`, or `Pipfile`               |
+| Python framework       | `pyproject.toml` / `requirements.txt` → `django`, `fastapi`, `flask`         |
+| Go module              | `go.mod` exists                                                              |
+| Rust crate / workspace | `Cargo.toml` exists                                                          |
+| Ruby app               | `Gemfile` → `rails`, `sinatra`                                               |
+| .NET project           | `*.csproj`, `*.fsproj`, or `global.json`                                     |
+| Java / Kotlin          | `pom.xml`, `build.gradle`, or `build.gradle.kts`                             |
+
+After detecting **any** match, record the stack in the analysis output and select the matching `project-analysis-*` sub-skill (Laravel, Symfony, Next.js, React, Node/Express, Zend/Laminas) — fall back to `project-analysis-core` if no framework-specific sub-skill applies.
 
 ### Project type
 
-| Signal                             | Type                           |
-|------------------------------------|--------------------------------|
-| `artisan` + `laravel/framework`    | Laravel application            |
-| `composer.json` without `artisan`  | Composer package or legacy PHP |
-| Module system (`app/Modules/`)     | Modular Laravel                |
-| Multi-tenant (`customer_database`) | Multi-tenant SaaS              |
+| Signal                                                                | Type                                  |
+|-----------------------------------------------------------------------|---------------------------------------|
+| `artisan` + `laravel/framework`                                       | Laravel application                   |
+| `bin/console` + `symfony/framework-bundle`                            | Symfony application                   |
+| `composer.json` without `artisan` / `bin/console`                     | Composer package or legacy PHP        |
+| `package.json` with `next` / `nuxt` / `remix` / `sveltekit` / `astro` | Meta-framework SSR/SSG app            |
+| `package.json` with `express` / `fastify` / `koa` / `hapi`            | Node HTTP service                     |
+| `package.json` with `@nestjs/core`                                    | NestJS application                    |
+| `pyproject.toml` with `django` / `fastapi` / `flask`                  | Python web app                        |
+| `go.mod` with `gin-gonic/gin` / `labstack/echo` / `gofiber/fiber`     | Go HTTP service                       |
+| Module system (`app/Modules/`, `src/modules/`, `packages/*`)          | Modular monolith / monorepo           |
+| Multi-tenant signal (`customer_database`, tenant middleware, `RLS`)   | Multi-tenant SaaS                     |
+| `apps/*` + `packages/*` + `turbo.json` / `nx.json` / `pnpm-workspace` | Monorepo                              |
 
-### Legacy indicators
+### Legacy indicators (stack-aware)
 
-| Signal                                     | Meaning                   |
-|--------------------------------------------|---------------------------|
-| No `declare(strict_types=1)` in most files | Legacy codebase           |
-| No typed properties / return types         | Legacy PHP (< 7.4)        |
-| `var_dump()` / `print_r()` in code         | Legacy debugging patterns |
-| No tests or very few tests                 | Low test coverage         |
-| No PHPStan / Rector config                 | No static analysis        |
-| Mixed naming conventions                   | Inconsistent standards    |
+| Signal                                                                       | Meaning                       |
+|------------------------------------------------------------------------------|-------------------------------|
+| PHP: no `declare(strict_types=1)` in most files                              | Pre-modern PHP style          |
+| PHP: no typed properties / return types                                      | Legacy PHP (< 7.4)            |
+| PHP: no `phpstan.neon` / `rector.php`                                        | No static analysis            |
+| TS: `// @ts-ignore` / `// @ts-nocheck` density; `any` widespread             | Untyped TypeScript            |
+| TS: no `tsconfig.json` `strict: true`                                        | Loose TypeScript              |
+| JS: no ESLint config or `eslint.config.*`                                    | No linting                    |
+| Python: no type hints in most signatures; no `py.typed`                      | Untyped Python                |
+| Python: no `mypy.ini` / `pyrightconfig.json` / `ruff.toml`                   | No static analysis            |
+| Go: no `golangci.yml`                                                        | No lint pipeline              |
+| Rust: no `clippy.toml` and warnings ignored                                  | No lint hygiene               |
+| `var_dump()` / `console.log()` / `print()` / `fmt.Println()` left in code   | Legacy debugging patterns     |
+| No tests or very few tests                                                   | Low test coverage             |
+| Mixed naming conventions across the same module                              | Inconsistent standards        |
 
-### Build & tooling
+### Build & tooling (stack-agnostic)
 
-| Check         | How to detect                                             |
-|---------------|-----------------------------------------------------------|
-| Task runner   | `Makefile` or `Taskfile.yml`                              |
-| Docker        | `docker-compose.yml` or `compose.yaml`                    |
-| CI/CD         | `.github/workflows/`                                      |
-| Quality tools | `phpstan.neon`, `ecs.php`, `rector.php`, or `config-dev/` |
-| Editor config | `.editorconfig`                                           |
-| Code review   | `CODEOWNERS`, PR templates                                |
+| Check         | How to detect                                                                                                                                                       |
+|---------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Task runner   | `Makefile`, `Taskfile.yml`, `justfile`, `package.json scripts`, `composer.json scripts`                                                                             |
+| Docker        | `docker-compose.yml`, `compose.yaml`, `Dockerfile`                                                                                                                  |
+| CI/CD         | `.github/workflows/`, `.gitlab-ci.yml`, `.circleci/config.yml`, `azure-pipelines.yml`                                                                               |
+| Quality tools | PHP: `phpstan.neon`, `ecs.php`, `rector.php`. TS/JS: `eslint.config.*`, `.prettierrc*`, `tsconfig.json`. Python: `ruff.toml`, `mypy.ini`. Go: `.golangci.yml`. Rust: `clippy.toml` |
+| Editor config | `.editorconfig`                                                                                                                                                     |
+| Code review   | `CODEOWNERS`, PR templates (`.github/pull_request_template.md`)                                                                                                     |
+| Dependencies  | Lockfile presence: `composer.lock`, `package-lock.json`, `pnpm-lock.yaml`, `yarn.lock`, `poetry.lock`, `uv.lock`, `go.sum`, `Cargo.lock`                            |
 
 ## Analysis phases
 
@@ -234,7 +260,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 ### Phase 3: Data layer
 
 - List all models with their connections, tables, and key relationships
-- Map DB schema: tables, foreign keys, indexes
+- Map database schema: tables, foreign keys, indexes
 - Document multi-tenant split (which tables in which DB)
 - **Output:** `agents/analysis/models/api-database.md`, `customer-database.md`
 
@@ -243,7 +269,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 - Identify domains from models, services, routes, and directory structure
 - For each domain: map models → services → controllers → jobs → events
 - Document business rules and data flows
-- Document inter-domain deps
+- Document inter-domain dependencies
 - **Output:** `agents/analysis/domains/{domain}.md` (one per domain)
 
 ### Phase 5: API surface
@@ -255,7 +281,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 
 ### Phase 6: Service map
 
-- List all services with purpose, key methods, and deps
+- List all services with purpose, key methods, and dependencies
 - Map service → repository → model relationships
 - Identify God services (too many responsibilities)
 - **Output:** `agents/analysis/services/service-map.md`
@@ -316,7 +342,7 @@ Each module gets its own file in `agents/analysis/modules/`. Format:
 ## Output format
 
 1. Structured analysis document in agents/analysis/
-2. Tech stack inventory with versions and deps
+2. Tech stack inventory with versions and dependencies
 3. Architecture diagram or module map
 
 ## Auto-trigger keywords

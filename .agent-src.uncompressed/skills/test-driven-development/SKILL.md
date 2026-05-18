@@ -172,7 +172,7 @@ For mock-isolation failure modes (separate concern), see
 
 ## Examples
 
-### PHP / Pest
+### Example A — PHP / Pest
 
 ```php
 // tests/Unit/EmailValidatorTest.php — RED
@@ -203,7 +203,7 @@ final class EmailValidator
 Run the filter again → passes. No additional rules (format, MX, length)
 until a next failing test drives them.
 
-### JS / Vitest
+### Example B — TypeScript / Vitest
 
 ```ts
 // src/retry.test.ts — RED
@@ -270,8 +270,8 @@ wait for their own failing tests.
 
 ## When to hand over to another skill
 
-* Quality tools, PHPStan, ECS, Rector → [`quality-tools`](../quality-tools/SKILL.md)
-* Full Pest conventions, Laravel testing helpers → [`pest-testing`](../pest-testing/SKILL.md)
+* Project type-checker / linter / formatter (PHPStan, ECS, Rector for PHP — tsc / eslint / prettier for TS — ruff / mypy for Python) → [`quality-tools`](../quality-tools/SKILL.md)
+* Full Pest conventions and Laravel test helpers → [`pest-testing`](../pest-testing/SKILL.md)
 * Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
 * Investigating why a test is failing for non-obvious reasons →
   [`systematic-debugging`](../systematic-debugging/SKILL.md)

@@ -153,10 +153,15 @@ When debugging or reviewing diffs, **always run the raw command** without rtk.
 
 ## Project-Local Filters
 
-Custom filters for the project's PHP/Laravel toolchain live in `.rtk/filters.toml`
-(project root, versioned in Git). These override global filters for matching commands.
+Project-local custom filters live in `.rtk/filters.toml` (project root, versioned in Git). These override global filters for matching commands. Add entries for whatever tools the project actually runs.
 
-Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
+Coverage shipped with this package (extend per project):
+- PHP / Laravel: PHPStan, Pest, PHPUnit, ECS, Rector, Composer, Artisan
+- JS / TS: tsc, eslint, prettier, vitest, jest, playwright, pnpm/npm/yarn install + run
+- Python: ruff, mypy, pyright, pytest, pip / poetry / uv
+- Go: `go test`, `go build`, `go vet`, `golangci-lint`
+- Rust: `cargo build`, `cargo test`, `cargo clippy`, `cargo fmt`
+- Infra / runtime: Docker Compose, Terraform, kubectl
 
 To generate or update project-local filters → use the `/optimize-rtk-filters` command.
 

@@ -51,19 +51,29 @@ For each conflicted file:
 | Auto-generated files (OpenAPI spec, baselines) | **Regenerate** — resolve source, then regenerate the output |
 | Formatting-only conflicts | **Accept either** — then run quality tools to normalize |
 
-### 4. File-type specific rules
+### 4. File-type specific rules (stack-aware)
 
-#### PHP files
+#### Source files (any language)
 
-- After resolving, check that `use` statements are correct (no duplicates, no missing imports).
-- Verify the resolved code compiles: `php -l filename.php`
-- Run PHPStan on the file: `vendor/bin/phpstan analyse` (see `quality-tools` skill)
+- After resolving, check that import statements are correct (no duplicates, no missing imports). Applies to PHP `use`, JS/TS `import`, Python `import`, Go `import`, Rust `use`.
+- Verify the resolved file parses with the project's type-checker / linter on just the touched file:
+  - PHP: `php -l filename.php` then `vendor/bin/phpstan analyse path/to/file.php`
+  - TypeScript: `tsc --noEmit` (full project) or `eslint path/to/file.ts`
+  - Python: `python -m py_compile path/to/file.py` then `mypy path/to/file.py`
+  - Go: `go vet ./path/to/pkg/...`
+  - Rust: `cargo check`
 
-#### Migrations
+#### Database migrations
 
 - Never merge two migrations that modify the same table into one.
-- If both branches added migrations, keep both — adjust timestamps if they collide.
-- After resolving, run migrations to verify: `php artisan migrate --env=testing`
+- If both branches added migrations, keep both — adjust timestamps / ordering to avoid collision.
+- After resolving, run migrations against a disposable database to verify:
+  - Laravel: `php artisan migrate --env=testing`
+  - Symfony / Doctrine: `php bin/console doctrine:migrations:migrate --env=test --no-interaction`
+  - Node / Prisma: `pnpm prisma migrate dev --schema=...`
+  - Node / Knex: `pnpm knex migrate:latest --env test`
+  - Python / Alembic: `alembic upgrade head` (against a test DB URL)
+  - Go / golang-migrate: `migrate -path ./migrations -database "$TEST_DATABASE_URL" up`
 
 #### Config files
 
@@ -95,18 +105,40 @@ For each conflicted file:
 After resolving ALL conflicts:
 
 ```bash
-# 1. Check no conflict markers remain
-grep -rn "<<<<<<< \|======= \|>>>>>>> " --include="*.php" --include="*.js" --include="*.ts" .
+# 1. Check no conflict markers remain (stack-agnostic — no --include filter)
+grep -rn "<<<<<<< \|======= \|>>>>>>> " . \
+  --exclude-dir=node_modules --exclude-dir=vendor --exclude-dir=.git
+```
 
-# 2. Syntax check PHP files
-find . -name "*.php" -newer .git/MERGE_HEAD -exec php -l {} \;
+```bash
+# 2. Syntax-check changed files (stack-dependent — pick the row that matches the project)
+# PHP:    find . -name "*.php" -newer .git/MERGE_HEAD -exec php -l {} \;
+# TS:     tsc --noEmit
+# Python: python -m compileall -q .
+# Go:     go build ./...
+# Rust:   cargo check
+```
 
-# 3. Run quality tools
-vendor/bin/phpstan analyse
+```bash
+# 3. Run the project's quality tools — resolve via the quality-tools skill, Taskfile,
+#    package.json scripts, composer.json scripts, or Makefile. Examples per stack:
+# PHP:    vendor/bin/phpstan analyse
+# TS:     pnpm lint
+# Python: ruff check && mypy
+# Go:     golangci-lint run
+# Rust:   cargo clippy
+```
 
-# 4. Run tests
-php artisan test
+```bash
+# 4. Run tests — full suite, not just the touched files
+# PHP:    php artisan test    (or vendor/bin/pest)
+# TS:     pnpm test
+# Python: pytest
+# Go:     go test ./...
+# Rust:   cargo test
+```
 
+```bash
 # 5. Complete the merge/rebase
 git add .
 # Don't commit — let the user decide when to commit
@@ -156,4 +188,4 @@ git add .
 
 - Do NOT rebase or force-push without explicit permission.
 - Do NOT leave conflict markers (`<<<<<<<`) in any file.
-- Do NOT skip verification (PHPStan + tests) after resolving.
+- Do NOT skip verification (project type-checker + tests) after resolving.
