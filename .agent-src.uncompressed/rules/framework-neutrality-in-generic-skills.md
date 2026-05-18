@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When editing a generic skill, rule, or command in .agent-src.uncompressed/ — block PHP/Laravel/Symfony as the only path. Generic artifacts must offer language-agnostic procedures with framework-specific carve-out pointers."
+description: "When editing a generic skill, rule, or command — block single-stack mandates (PHP/Laravel/Symfony only). Generic artifacts use language-agnostic procedures with carve-out pointers."
 source: package
 triggers:
   - path_prefix: ".agent-src.uncompressed/skills/"

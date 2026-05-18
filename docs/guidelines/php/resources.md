@@ -2,7 +2,7 @@
 
 > Project-specific API Resource conventions. Base class, versioning (v1/v2), OpenAPI schemas.
 
-**Related Skills:** `api-endpoint`, `api-design`, `openapi`
+**Related Skills:** `laravel-api-endpoint`, `api-design`, `openapi`
 **Related Guidelines:** [controllers.md](controllers.md)
 
 ## Core Rule

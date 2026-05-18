@@ -61,7 +61,7 @@ When **3 consecutive attempts** at the same task fail (code fix, test fix, confi
 
 - Code change that doesn't fix the problem
 - Test that still fails after the fix
-- Quality check (PHPStan, ECS) that still errors
+- Quality check (type-checker, linter, formatter) that still errors
 - Build/deploy that fails after config change
 
 **Does NOT reset the counter:** Unrelated tasks. User providing new information (course correction).

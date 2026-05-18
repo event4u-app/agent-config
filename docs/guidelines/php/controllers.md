@@ -2,7 +2,7 @@
 
 > Project-specific controller conventions. Thin controllers, single-action pattern, OpenAPI annotations.
 
-**Related Skills:** `api-endpoint`, `laravel`, `openapi`
+**Related Skills:** `laravel-api-endpoint`, `laravel`, `openapi`
 **Related Guidelines:** [validations.md](validations.md), [resources.md](resources.md)
 
 ## Core Rules

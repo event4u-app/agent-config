@@ -31,6 +31,41 @@
       "file": ".agent-src.uncompressed/commands/optimize/rtk.md",
       "lines": "*",
       "reason": "Per-tool rtk filter detection — by definition tool-aware"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "lines": "*",
+      "reason": "The neutrality rule itself enumerates the forbidden tokens to forbid them"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "lines": [4, 11, 12, 66],
+      "reason": "Roadmap CI policy explicitly enumerates forbidden commands and trigger keywords"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/architecture.md",
+      "lines": [19, 20, 26, 27, 62],
+      "reason": "Stack-routing pointers and cross-stack enumeration of validation/handler primitives"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
+      "lines": [41, 58],
+      "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "lines": [40, 41, 42, 49, 62, 63, 74, 83, 85, 87, 219],
+      "reason": "Cross-stack code-review checklist enumerates handler shape, validation, authz, ORM, escaping per framework"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/security/SKILL.md",
+      "lines": [16, 23, 27, 28, 37, 41, 48, 58, 76],
+      "reason": "Cross-stack security review enumerates auth primitives (Policies, voters, guards, middleware) and config paths"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md",
+      "lines": [53, 54, 55, 100, 177],
+      "reason": "Evidence-mapping table enumerates the type-checker / linter / refactor tool per stack including PHPStan, Rector, ECS"
     }
   ]
 }

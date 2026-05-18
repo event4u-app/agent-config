@@ -1,6 +1,6 @@
 ---
 name: api-endpoint
-description: "Use when the user says "create endpoint", "new API route", or "add controller". Creates a complete endpoint with Controller, FormRequest, Resource, route, and OpenAPI docs."
+description: "Use when creating an API endpoint or HTTP route handler — detects the project stack and routes to the matching carve-out (laravel-api-endpoint, nextjs-patterns, symfony-workflow)."
 source: package
 domain: engineering
 ---
@@ -9,178 +9,82 @@ domain: engineering
 
 ## When to use
 
-Use this skill when the user asks to create a new API endpoint, REST route, or controller action.
-
+Use this skill when the user asks to create a new API endpoint, REST route, or HTTP handler.
 
 Do NOT use when:
-- Modifying existing endpoints (use `code-refactoring` skill)
-- API design decisions (use `api-design` skill)
+- Modifying existing endpoints — use the code-refactoring skill.
+- API design decisions (versioning, deprecation, contract shape) — use [`api-design`](../api-design/SKILL.md).
 
-## Procedure: Create an API endpoint
+## Stack routing
 
-1. **Read project docs** — Check `./agents/` and `AGENTS.md` for controller conventions, resource patterns, routing.
-2. **Create route** — Add to the correct `routes/api.php` or module route file.
-3. **Create controller** — Thin controller, delegate logic to service.
-4. **Create FormRequest** — Validate all input at the boundary.
-5. **Create Resource** — Transform model output via API Resource.
-6. **Verify** — Run PHPStan, run tests, confirm response shape matches conventions.
+Detect the stack, then hand off to the matching carve-out skill for the framework-specific procedure (file layout, validation primitive, response-shaping convention).
 
-## Laravel projects
-
-### What to generate
-
-1. **Controller** — Single Action (invokable). Read `agents/docs/controller.md` and `../../../docs/guidelines/php/controllers.md`.
-2. **FormRequest** — Validation rules, `authorize()` via policies. Read `../../../docs/guidelines/php/validations.md`.
-3. **Resource** — JSON response transformation. Read `agents/docs/api-resources.md`.
-4. **Route** — Add to the correct versioned route file.
-5. **Policy** — If authorization is needed.
-6. **Filter classes** — If it's a list endpoint with filtering. Read `agents/docs/query-filter.md` (if it exists).
-
-### Conventions
-
-- Controllers are thin — delegate to Services.
-- **Every controller MUST return an API Resource** — never raw arrays, models, or `response()->json()`.
-- Controllers type-hint the return value as the Resource class (e.g. `): ProjectResource`).
-- Use `Resource::make()` for single items, `Resource::collection()` for lists.
-- Use method injection on `__invoke()` for new controllers.
-- Use DTOs for data transfer between layers.
-
-### Show endpoint example
-
-```php
-declare(strict_types=1);
-
-namespace App\Http\Controllers\v1\Project;
-
-use App\Http\Controllers\Controller;
-use App\Http\Requests\v1\Projects\ShowProjectRequest;
-use App\Http\Resources\v1\Project\ProjectResource;
-use App\Models\ExternalCustomerDatabase\Project\Project;
-use App\OpenApi\Schema\Request\ShowResourceRequestSchema;
-use App\OpenApi\Schema\Response\ResourceNotFoundResponse;
-use App\OpenApi\Schema\Response\ShowResourceResponseSchema;
-
-class ShowProjectController extends Controller
-{
-    #[ShowResourceRequestSchema(path: '/projects/{id}', version: '1', resource: ProjectResource::class)]
-    #[ShowResourceResponseSchema(ProjectResource::class, wrapInDataObject: false)]
-    #[ResourceNotFoundResponse(ProjectResource::class)]
-    public function __invoke(ShowProjectRequest $request, Project $project): ProjectResource
-    {
-        return ProjectResource::make($project);
-    }
-}
-```
-
-### Create endpoint with service injection
-
-```php
-class CreateCustomerController extends Controller
-{
-    #[CreateCustomerRequestSchema(path: '/customers', version: '1', resource: CustomerResource::class)]
-    #[CreateResourceResponseSchema(resource: CreatedCustomerResource::class, wrapInDataObject: false)]
-    #[ValidationErrorResponse]
-    public function __invoke(
-        CreateCustomerRequest $request,
-        CustomerModelService $customerService,
-    ): CustomerResource {
-        $result = $customerService->create(CreateCustomerDTO::fromRequest($request));
-
-        return CreatedCustomerResource::make($result);
-    }
-}
-```
-
-### FormRequest example
-
-```php
-declare(strict_types=1);
-
-namespace App\Http\Requests\v1\Projects;
-
-use Illuminate\Foundation\Http\FormRequest;
-
-class ShowProjectRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return $this->user()->can('view', $this->route('project'));
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [];
-    }
-}
-```
-
-### List endpoint with CollectionFormRequest
-
-For list endpoints, extend `CollectionFormRequest` which provides `perPage`, `page`, and `orderBy` rules:
-
-```php
-use App\Contracts\Http\Requests\CollectionFormRequest;
-
-class ListProjectsRequest extends CollectionFormRequest
-{
-    public string $model = Project::class;
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            ...parent::rules(),
-            'status' => ['sometimes', 'string'],
-        ];
-    }
-}
-```
-
-### File locations
-
-| Component | Path |
+| Detected stack | Carve-out skill |
 |---|---|
-| Controller | `app/Http/Controllers/v{N}/{Domain}/{Action}{Entity}Controller.php` |
-| FormRequest | `app/Http/Requests/v{N}/{Domain}/{Action}{Entity}Request.php` |
-| Resource | `app/Http/Resources/v{N}/{Domain}/{Entity}Resource.php` |
-| Route | `routes/api/v{N}/{domain}.php` |
-| Policy | `app/Policies/{Entity}Policy.php` |
+| Laravel (`artisan` + `composer.json` with `laravel/framework`) | [`laravel-api-endpoint`](../laravel-api-endpoint/SKILL.md) |
+| Symfony (`bin/console` + `composer.json` with `symfony/framework-bundle`) | [`symfony-workflow`](../symfony-workflow/SKILL.md) |
+| Next.js (`next` in `package.json`) | [`nextjs-patterns`](../nextjs-patterns/SKILL.md) |
+| Express / Fastify / NestJS / plain Node | follow project conventions in `agents/` + `package.json scripts` |
+| FastAPI / Django / Flask | follow project conventions in `agents/` + `pyproject.toml` |
+| Go (`net/http`, `gin`, `echo`, `fiber`) | follow project conventions in `agents/` + `go.mod` |
+| Rust (`axum`, `actix-web`, `rocket`) | follow project conventions in `agents/` + `Cargo.toml` |
 
-### OpenAPI documentation
+If the project doc folder (`agents/`) has an endpoint-creation guide, that is the source of truth — read it before generating code.
 
-Controllers use PHP 8 attributes for OpenAPI spec generation from `App\OpenApi\Schema\`:
+## Procedure: Create an API endpoint (stack-neutral)
 
-- `ShowResourceRequestSchema`, `ListResourceRequestSchema`, `CreateResourceRequestSchema`
-- `ShowResourceResponseSchema`, `ListResourceResponseSchema`, `CreateResourceResponseSchema`
-- `ResourceNotFoundResponse`, `ValidationErrorResponse`
+1. **Read project docs** — Check `./agents/` and `AGENTS.md` for endpoint conventions, routing layout, response shape.
+2. **Detect stack** and route to the carve-out per the table above.
+3. **Plan the endpoint** — method, path, request shape, response shape, auth requirement, idempotency.
+4. **Create the route registration** in the project's routing surface (route file, decorator-annotated handler, file-based router).
+5. **Create the request handler / controller** — thin; delegate business logic to a service / use-case.
+6. **Validate input at the boundary** via the framework's validation primitive (FormRequest, Zod, class-validator, Pydantic, struct-tag validators, etc.) — never inline ad-hoc `if` checks.
+7. **Authorize the action** via the framework's authz primitive (Policy, voter, guard, middleware, route dependency).
+8. **Shape the response** through a transformer / serializer / DTO — never return raw ORM entities.
+9. **Document** the endpoint (OpenAPI annotations / generated spec / project doc).
+10. **Verify** — run the project type-checker + targeted tests + smoke probe (`curl` / Bruno / Postman / integration test).
+
+## Conventions (apply on every stack)
+
+- **One handler, one responsibility** — prefer single-purpose handlers over multi-action controllers when the framework supports it.
+- **No business logic in the handler** — delegate to a service / use-case layer.
+- **Validate at the boundary** — never trust raw request data inside the handler.
+- **Authorize every state-changing action** — no unprotected mutating endpoints.
+- **Shape responses through a transformer** — DTO, serializer, API resource, response model — never expose raw ORM entities.
+- **Version the API surface** explicitly (`/v1/`, header, content-type) — don't rely on implicit versioning.
+
+## Stack-specific procedures
+
+For Laravel projects (the most fully-fleshed-out carve-out in this package), see [`laravel-api-endpoint`](../laravel-api-endpoint/SKILL.md) — covers single-action controllers, `FormRequest`, `Resource`, `Policy`, `CollectionFormRequest`, OpenAPI attributes, and the versioned route layout.
+
+For other stacks, read the matching carve-out from the table above and combine with the project's `agents/` docs.
 
 ## Output format
 
-1. Generated files — controller, route registration, FormRequest, Resource, Policy
-2. Test file with happy path and validation error cases
-3. Summary of created files and their locations
+1. Generated files — route registration, handler, request validator, response shaper, authorization rule.
+2. Test file with happy path and validation-error cases (using the project's test framework).
+3. Summary of created files and their locations.
 
 ## Gotcha
 
-- Don't forget to register the route — creating the controller without the route is a common miss.
+- Don't forget to register the route — creating the handler without the route is a common miss.
 - Always check if a similar endpoint already exists — duplicates cause confusion.
-- FormRequest validation rules must match the OpenAPI schema — keep them in sync.
-- The model tends to forget the `return` type on Resource `toArray()` methods.
+- Validation rules must match the documented contract (OpenAPI / schema / typed client) — keep them in sync.
+- Response shapes are part of the public contract — adding a field is additive; renaming or removing is breaking.
 
 ## Do NOT
 
-- Do NOT put business logic in controllers — delegate to services.
-- Do NOT skip FormRequest validation — every controller needs a FormRequest.
-- Do NOT return raw Eloquent models — always use API Resources.
-- Do NOT create routes without proper authorization (Policy in FormRequest or middleware).
-- Do NOT create multi-action controllers — only single-action with `__invoke()`.
-- Do NOT use `response()->json()` — use `Resource::make()`.
+- Do NOT put business logic in the handler — delegate to services / use-cases.
+- Do NOT skip request validation — every handler validates at the boundary via the framework's primitive.
+- Do NOT return raw ORM entities — always go through a transformer / serializer / response model.
+- Do NOT create unprotected state-changing endpoints — authorize every mutation.
+- Do NOT improvise framework idioms — read the carve-out (`laravel-api-endpoint`, `nextjs-patterns`, etc.) for the stack-correct shape.
 
 ## Auto-trigger keywords
 
 - create endpoint
 - new API route
+- route handler
 - controller creation
-- form request
-- API resource
+- REST endpoint
+- add endpoint

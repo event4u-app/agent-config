@@ -15,24 +15,32 @@ triggers:
 
 ## General Principles
 
-- **Controllers are thin** — no business logic, delegate to services.
-- **Only Single Action Controllers** — every new controller MUST use `__invoke()`. No multi-action / resource controllers. See `../docs/guidelines/php/controllers.md` for naming conventions.
-- **Every controller needs a FormRequest** — never validate inline with `$request->validate()`. Use a dedicated `FormRequest` subclass.
-- **Services contain business logic** — calculations, orchestration, validation.
-- **Models have no business logic** — only relationships, scopes, accessors/mutators.
+- **HTTP handlers stay thin** — no business logic; delegate to a service / use-case / domain layer.
+- **Validate at the request boundary** — never inline-validate user input inside the handler. Use the framework's request-validation primitive (Laravel `FormRequest`, Symfony validator, Zod / class-validator in TS, Pydantic in Python).
+- **One handler, one responsibility** — prefer single-purpose handlers over multi-action controllers when the framework supports it (Laravel `__invoke`, Next.js route handlers, Express handler-per-route).
+- **Business logic lives in services / use-cases** — calculations, orchestration, cross-aggregate validation.
+- **Domain models stay behavior-rich but I/O-free** — no HTTP, no DB transactions in the model; only domain rules, relationships, derived properties.
 - Always check the existing directory structure before creating new files.
 - Respect existing patterns — apply modern standards to **new** code only.
+
+→ Laravel-specific patterns (FormRequest, single-action `__invoke`, Eloquent scopes): see [`laravel`](../skills/laravel/SKILL.md), [`laravel-validation`](../skills/laravel-validation/SKILL.md).
+→ Symfony: see [`symfony-workflow`](../skills/symfony-workflow/SKILL.md).
+→ Next.js / TypeScript backends: see [`nextjs-patterns`](../skills/nextjs-patterns/SKILL.md).
 
 ## Project Detection
 
 Detect the current project type from the **Git remote URL**, **directory name**, or **project files**:
 
-- Check `composer.json` for framework (Laravel, Symfony, standalone).
-- Check if `artisan` exists → Laravel project.
-- Check `package.json` for frontend framework (React, Vue, Next.js, etc.).
+- **PHP** — `composer.json` (framework slot: Laravel via `artisan`, Symfony via `bin/console`, standalone otherwise).
+- **JS / TS** — `package.json` (framework slot: Next.js via `next` dep, Nuxt via `nuxt`, Express / Fastify / NestJS via deps; plain Node otherwise).
+- **Python** — `pyproject.toml` / `requirements.txt` (framework slot: Django via `django`, FastAPI via `fastapi`, Flask via `flask`).
+- **Go** — `go.mod` (framework slot: `gin`, `echo`, `fiber`, stdlib `net/http`).
+- **Ruby** — `Gemfile` (framework slot: Rails via `rails` gem, Sinatra otherwise).
+- **Rust** — `Cargo.toml` (framework slot: `axum`, `actix-web`, `rocket`).
 - Check `AGENTS.md` or `agents/` for project-specific documentation.
 
-For tooling detection (artisan vs composer), check if `artisan` exists in the project root.
+Tooling lives in a runner file at the project root — detect once and reuse the result:
+`Taskfile.yml` → `task`, `Makefile` → `make`, `package.json` `scripts:` → `npm` / `pnpm` / `yarn`, `pyproject.toml` `[tool.poetry.scripts]` or `[project.scripts]` → `poetry` / `uv`, framework CLIs (`artisan`, `bin/console`, `manage.py`, `bin/rails`) when the matching manifest is present.
 
 ## Project-Specific Architecture
 
@@ -51,7 +59,7 @@ projects use `docs/decisions/`. Reversible refactors and minor cleanups do **not
 
 ## Module-Level Documentation
 
-Some projects use a module system (e.g. `app/Modules/` in Laravel projects).
+Some projects use a module system (e.g. `app/Modules/` in Laravel, `apps/`/`packages/` in a Turborepo, `src/modules/` in NestJS, `internal/` in Go).
 Modules may have their own agent docs in `app/Modules/*/agents/` with:
 
 - Module descriptions and feature docs

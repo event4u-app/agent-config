@@ -1,6 +1,6 @@
 ---
 name: security
-description: "Use when applying security best practices — authentication, authorization via Policies, CSRF protection, input sanitization, rate limiting, or secure coding."
+description: "Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic."
 source: package
 domain: quality
 ---
@@ -13,65 +13,74 @@ Use when implementing authentication, authorization, or any security-sensitive f
 
 Do NOT use when:
 
-* Validation logic only — route to [`laravel-validation`](../laravel-validation/SKILL.md)
-* Full security audit — route to [`security-audit`](../security-audit/SKILL.md)
-* You need a pre-implementation threat model — route to
-  [`threat-modeling`](../threat-modeling/SKILL.md)
-* You need end-to-end authorization analysis — route to
-  [`authz-review`](../authz-review/SKILL.md)
+* Validation logic only — route to the project's validation carve-out ([`laravel-validation`](../laravel-validation/SKILL.md) for Laravel; otherwise the framework-native primitive — Zod / class-validator, Pydantic, struct-tag validators).
+* Full security audit — route to [`security-audit`](../security-audit/SKILL.md).
+* You need a pre-implementation threat model — route to [`threat-modeling`](../threat-modeling/SKILL.md).
+* You need end-to-end authorization analysis — route to [`authz-review`](../authz-review/SKILL.md).
 
-## Procedure: Implement security for a feature
+## Stack-specific carve-outs
+
+The procedure below is stack-agnostic. For framework-specific primitives (Laravel Policies / Gates / FormRequests, Symfony voters, NestJS guards, Next.js middleware), defer to:
+
+| Stack | Carve-out |
+|---|---|
+| Laravel | [`laravel`](../laravel/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md), [`laravel-middleware`](../laravel-middleware/SKILL.md) |
+| Symfony | [`symfony-workflow`](../symfony-workflow/SKILL.md) |
+| Next.js / TS | [`nextjs-patterns`](../nextjs-patterns/SKILL.md) |
+
+## Procedure: Implement security for a feature (stack-neutral)
 
 ### Step 0: Inspect
 
-1. Read `agents/authentication.md` for auth flow.
-2. Read `agents/gates.md` for gate/policy patterns.
-3. Check existing policies in `app/Policies/`.
+1. Read the project's auth doc (`agents/authentication.md`, `docs/auth.md`, or framework docs).
+2. Read the project's authorization doc (gates / policies / voters / guards).
+3. Locate existing authorization rules in the project's idiomatic location (Laravel `app/Policies/`, Symfony `src/Security/Voter/`, NestJS `*.guard.ts`).
 
 ### Step 1: Authentication
 
-- Check auth setup: `tymon/jwt-auth` or `laravel/sanctum`.
-- Check `config/auth.php` for guards and providers.
-- Customer identification happens after auth — see `multi-tenancy` skill.
+- Identify the auth mechanism in use (session, JWT, OAuth, API token) — read the framework's auth config (`config/auth.php`, `next-auth.config.ts`, Symfony `security.yaml`, FastAPI dependency).
+- Check guard / strategy / provider configuration.
+- Multi-tenant identification happens **after** authentication — see [`multi-tenancy`](../multi-tenancy/SKILL.md).
 
 ### Step 2: Authorization
 
-1. Create policy in `app/Policies/` if needed.
-2. Use in FormRequest `authorize()` or controller `$this->authorize()`.
-3. Check `agents/gates.md` for non-model gates.
+1. Create / locate the authz rule in the framework's idiomatic primitive (Policy, voter, guard, middleware, route dependency).
+2. Apply it at the request boundary (FormRequest `authorize()`, controller / route-handler dependency, middleware chain).
+3. Cover non-model gates (cross-aggregate rules) — keep them centralised, not scattered across handlers.
 
 ### Step 3: Review for adversarial
 
-For security-sensitive changes, run `adversarial-review` skill.
+For security-sensitive changes, run [`adversarial-review`](../adversarial-review/SKILL.md).
 Focus on: attack surface, trusting user input, authorization gaps.
 
 ## Conventions
 
-→ See guideline `php/security.md` for auth, SQL injection, XSS, CSRF, headers, session, mass assignment.
+→ For PHP / Laravel specifics (auth helpers, mass assignment, Blade escaping, CSRF middleware): see guideline `docs/guidelines/php/security.md`.
+→ For other stacks, follow the framework's hardening guide and the carve-outs above.
 
 ### Validate
 
-- Verify all user input is validated via FormRequest before use.
-- Confirm authorization check exists (Policy or Gate) for every state-changing action.
-- Check that no raw user input reaches SQL, HTML output, or shell commands.
-- Run PHPStan — must pass (catches type-safety issues that enable injection).
+- Verify all user input is validated at the boundary via the framework's primitive — never trust raw request data.
+- Confirm an authorization check exists for every state-changing action.
+- Check that no raw user input reaches SQL, HTML output, shell commands, or template renderers without escaping.
+- Run the project's type-checker — must pass (catches type-safety issues that enable injection).
 
 ## Output format
 
-1. Security-hardened code with auth, validation, and sanitization
-2. Policy class for authorization if needed
+1. Security-hardened code with auth, input validation at the boundary, and output encoding.
+2. Authorization rule (Policy / voter / guard / middleware) co-located with the route.
 
 ## Gotcha
 
 - Validation ensures format, not intent — don't trust input after validation alone.
-- `Gate::authorize()` throws, `Gate::allows()` returns bool — choose based on error handling.
-- Rate limiting: ALL public endpoints, not just login.
+- "Throw" vs "boolean" authz APIs behave differently (`Gate::authorize()` throws vs `Gate::allows()` returns bool in Laravel; `CanActivate` in NestJS throws; FastAPI dependencies throw `HTTPException`). Pick based on how the framework expects failure to surface.
+- Rate-limit ALL public endpoints, not just login.
 - Never log passwords, tokens, or API keys.
 
 ## Do NOT
 
-- Do NOT bypass FormRequest validation in controllers.
-- Do NOT use `$request->all()` for mass assignment — use `$request->validated()`.
+- Do NOT bypass the framework's request-validation primitive inside handlers.
+- Do NOT bulk-bind raw request payloads to ORM entities without an explicit allow-list (`$fillable` / `$guarded`, DTO mapping, Pydantic model).
 - Do NOT store plaintext passwords or secrets in the database.
 - Do NOT expose internal error details in production API responses.
 

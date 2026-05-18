@@ -2,7 +2,7 @@
 
 > API conventions — response format, status codes, pagination, error handling, rate limiting, route naming.
 
-**Related Skills:** `api-design`, `api-endpoint`, `api-testing`
+**Related Skills:** `api-design`, `laravel-api-endpoint`, `api-testing`
 **Related Guidelines:** [controllers.md](controllers.md), [resources.md](resources.md)
 
 ## Response Format

@@ -37,68 +37,73 @@ Use this skill when:
 
 ## Review checklist
 
+The checks below are stack-agnostic. For framework-specific conventions (PSR-12 + `declare(strict_types=1)`, FormRequest, single-action `__invoke`, API Resources, Pest, Blade escaping, Eloquent N+1) defer to the carve-outs:
+- PHP / Laravel → [`laravel`](../laravel/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md), [`eloquent`](../eloquent/SKILL.md), [`pest-testing`](../pest-testing/SKILL.md), [`blade-ui`](../blade-ui/SKILL.md), [`php-coder`](../php-coder/SKILL.md)
+- Symfony → [`symfony-workflow`](../symfony-workflow/SKILL.md)
+- Next.js / TS → [`nextjs-patterns`](../nextjs-patterns/SKILL.md), [`react-shadcn-ui`](../react-shadcn-ui/SKILL.md)
+
 ### Code quality
 
 | Check | What to look for |
 |---|---|
-| **Strict types** | `declare(strict_types=1)` in new files, typed properties/params/returns |
-| **PSR-12** | Coding style, line length ≤120, trailing commas, Yoda comparisons |
-| **Naming** | Clear, descriptive names. `camelCase` vars, `snake_case` array keys, `UPPER_SNAKE` constants |
+| **Type discipline** | New code is fully typed in the project's idiom (PHP typed properties + `declare(strict_types=1)`, TS strict, Python type hints, Go / Rust by construction). |
+| **Style conformance** | Matches the project's formatter / linter output — no reformatting battles, no out-of-band style. |
+| **Naming** | Clear, descriptive names; matches the dominant casing in the surrounding code (camelCase / snake_case / PascalCase per the language's idiom). |
 | **Early returns** | No deep nesting. Guard clauses at the top. |
-| **Single responsibility** | Each class/method does one thing. Controllers are thin. |
-| **No magic** | No magic properties on models (use getters/setters). No `$request->input()` without FormRequest. |
-| **PHPDoc** | Only where type hints are insufficient (generics, complex arrays). No redundant docblocks. |
+| **Single responsibility** | Each class / module / function does one thing. HTTP handlers stay thin. |
+| **No magic** | No reach-through to globals (`app()`, `$_GET`, ambient context). No untyped data shapes leaking out of the I/O boundary. |
+| **Doc comments** | Only where the type system is insufficient (generics, complex shapes). No redundant docblocks. |
 
 ### Architecture
 
 | Check | What to look for |
 |---|---|
-| **Layer separation** | Business logic in services, not controllers. Models have no business logic. |
-| **Single-action controllers** | New controllers use `__invoke()`. No multi-action controllers. |
-| **FormRequest** | Every controller has a dedicated FormRequest. No inline `$request->validate()`. |
-| **API Resources** | Controllers return Resources, never raw models or `response()->json()`. |
-| **DTOs** | Structured data transfer between layers, not raw arrays. |
-| **Dependency injection** | Constructor injection, no `new Service()` or `app()` calls in business logic. |
+| **Layer separation** | Business logic in services / use-cases, not in HTTP handlers. Domain models stay I/O-free. |
+| **Handler shape** | New handlers follow the framework's recommended shape (Laravel single-action `__invoke`, Next.js route handler, Express handler-per-route). See the stack carve-out. |
+| **Input validation** | Validated at the request boundary via the framework's primitive (Laravel `FormRequest`, Zod / class-validator, Pydantic, struct-tag validators). No ad-hoc inline `if` checks. |
+| **Response shaping** | Returns through a transformer / serializer / DTO. Never returns raw ORM entities. |
+| **DTOs / value objects** | Structured data between layers, not raw associative arrays / `any` / `dict[str, Any]`. |
+| **Dependency injection** | Constructor injection (or framework-idiomatic equivalent). No service-locator calls in business logic. |
 
 ### Database & Performance
 
 | Check | What to look for |
 |---|---|
-| **N+1 queries** | Relationship access in loops without eager loading |
-| **Missing indexes** | New columns used in WHERE/JOIN without index |
-| **Unbounded queries** | `Model::all()` or queries without pagination/limit |
-| **Raw SQL** | Parameterized queries only. No string concatenation with user input. |
-| **Migrations** | Reversible (has `down()`). Correct connection. Correct table prefix. |
-| **Money** | Uses `decimal` or `Math` helper, never `float` |
+| **N+1 queries** | Relationship / association access in loops without eager / batch loading. |
+| **Missing indexes** | New columns used in `WHERE` / `JOIN` without a supporting index. |
+| **Unbounded queries** | Full-table reads (`Model::all()`, `SELECT *` without `LIMIT`, unpaged list endpoints). |
+| **Raw SQL** | Parameterised queries only. No string concatenation with user input. |
+| **Migrations** | Reversible. Targets the right connection / schema. Idempotent where the platform supports it. |
+| **Money / precision** | Uses an exact-precision type (PHP `decimal` / `Math` helper, TS bigint / decimal lib, Python `Decimal`), never `float`. |
 
 ### Security
 
 | Check | What to look for |
 |---|---|
-| **Authorization** | Policy check in FormRequest or middleware. No unprotected endpoints. |
-| **Input validation** | All user input validated via FormRequest rules. |
-| **Mass assignment** | No `$model->fill($request->all())` without `$fillable`/`$guarded`. |
-| **SQL injection** | No raw queries with unescaped user input. |
-| **XSS** | Blade output escaped (`{{ }}` not `{!! !!}`) unless intentional. |
-| **Sensitive data** | No secrets, tokens, or passwords in code or logs. |
+| **Authorization** | Authz check at every state-changing endpoint (Laravel Policy, Symfony voter, NestJS guard, framework middleware). No unprotected mutating routes. |
+| **Input validation** | All user input validated at the boundary via the framework's primitive. |
+| **Mass assignment** | No bulk-binding raw request payloads to ORM entities without an explicit allow-list (`$fillable` / `$guarded` in Laravel, DTO mapping in TS / Python). |
+| **Injection** | No raw queries / command lines / template strings with unescaped user input. |
+| **Output encoding** | Template output is escaped by default; raw / unescaped output is intentional and reviewed (Blade `{{ }}` vs `{!! !!}`, React `dangerouslySetInnerHTML`, Jinja `\|safe`). |
+| **Sensitive data** | No secrets, tokens, or passwords in code, logs, or error responses. |
 
 ### Tests
 
 | Check | What to look for |
 |---|---|
-| **Coverage** | New code paths have tests. Bug fixes have regression tests. |
-| **Test quality** | Tests verify behavior, not implementation details. |
-| **Pest syntax** | Correct Pest conventions. No `readonly`/`final` on test classes. |
-| **Seeders** | Test data via seeders (or factories where allowed). |
+| **Coverage** | New code paths have tests. Bug fixes have regression tests (RED → GREEN). |
+| **Test quality** | Tests verify behaviour, not implementation details. |
+| **Framework idiom** | Correct conventions for the project's test framework (Pest / PHPUnit, Jest / Vitest, pytest, `go test`, `cargo test`) — see the stack carve-out for specifics. |
+| **Test data** | Provisioned via the project's idiom (seeders, factories, fixtures, builders). |
 | **Assertions** | Meaningful assertions. Not just "no exception thrown". |
-| **Flaky risks** | Time-dependent tests use `travel()`. No reliance on execution speed. |
+| **Flaky risks** | Time-dependent tests freeze the clock (`travel()`, `jest.useFakeTimers()`, `freezegun`). No reliance on execution speed. |
 
 ## Before creating a PR
 
-1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill for commands)
-2. Run tests: `make test` (or project equivalent)
+1. Run the project's quality pipeline (see the stack carve-out for the exact commands — PHP: `quality-tools`).
+2. Run tests via the project's runner (`task test`, `make test`, `npm test`, `pytest`, `go test ./...`).
 3. Ensure CI passes on the branch.
-4. Self-review the diff: `git diff origin/main..HEAD`
+4. Self-review the diff: `git diff origin/main..HEAD`.
 
 ## Receiving feedback
 
@@ -181,7 +186,7 @@ Description and suggested improvement.
 Description.
 ```
 
-Group related findings. Don't repeat what linters/PHPStan already catch — focus on
+Group related findings. Don't repeat what the project's linter / type-checker already catches — focus on
 logic, architecture, and things tools can't detect.
 
 ## Adversarial review
@@ -211,5 +216,5 @@ Focus on the "Code changes / Refactoring" attack questions.
 - Do NOT approve without actually reading the code.
 - Do NOT agree with review comments without verifying them against the codebase.
 - Do NOT use performative language when responding to feedback ("Great point!", "Excellent catch!").
-- Do NOT nitpick style issues that ECS/Rector handle automatically.
+- Do NOT nitpick style issues the project's formatter / auto-refactor (ECS, Prettier, Ruff, gofmt) handles automatically.
 - Do NOT merge without CI passing and quality checks green.
