@@ -429,4 +429,49 @@ dispatcher integration lives in [`scripts/agent-config`](../scripts/agent-config
 
 ---
 
+## Explainability — `explain last`
+
+`agent-config explain last` reconstructs the execution trace for the
+most recent `/work`, `/implement-ticket`, `/council`, or `/video` run.
+Read-only by construction — never writes back, never opens a network
+socket. Output is the `ExplainTrace` v1 contract
+([`docs/contracts/explain-trace.schema.json`](contracts/explain-trace.schema.json));
+free-form strings pass through the shared PII scrubber before they hit
+your terminal.
+
+```
+agent-config explain last              # Markdown trace
+agent-config explain last --json       # ExplainTrace JSON
+agent-config explain last --quiet      # no trailing tip footer
+```
+
+Sample Markdown output:
+
+```markdown
+# explain last — run PROJ-1234
+
+**Subject:** /implement-ticket · **Started:** 2026-05-19 10:14:22Z
+
+## Why this route?
+- Active rules: architecture, downstream-changes
+- Kernel rules: 9
+- Persona: senior-engineer
+
+## Why this profile / preset?
+| knob | value | source |
+|---|---|---|
+| profile.id | developer | user (.agent-settings.yml) |
+| preset.id  | balanced  | profile.developer |
+
+## Assumptions
+- [x] api-rate-limit-is-100rpm — accepted in step `refine`
+```
+
+Disable for `cost_profile: minimal` CI runs by setting `explain.enable_last: false`
+in `.agent-settings.yml`; the command then exits 0 with a one-line
+notice instead of producing a trace. Exit codes: `0` rendered or
+disabled · `1` no recent run found · `2` invocation error.
+
+---
+
 ← [Back to README](../README.md)
