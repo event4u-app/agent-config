@@ -1,0 +1,142 @@
+# Discovery packs — closed vocabulary
+#
+# Source of truth: docs/decisions/ADR-013-discovery-frontmatter-contract.md §packs
+# Amendments require an ADR-013 amendment in the same PR.
+# `requires_hint` is advisory metadata only; runtime does NOT act on it.
+# Lint: scripts/lint_discovery_vocabulary.py
+
+- id: engineering-base
+  label: Engineering Base
+  description: Framework-neutral engineering hygiene — git, tests, reviews.
+  workspaces: [engineering]
+  trust_level_default: core
+
+- id: php
+  label: PHP
+  description: PHP-language patterns (framework-free).
+  workspaces: [engineering]
+  requires_hint: [engineering-base]
+  trust_level_default: professional
+
+- id: laravel
+  label: Laravel
+  description: Laravel framework patterns; depends on PHP at the artefact level.
+  workspaces: [engineering]
+  requires_hint: [php, engineering-base]
+  trust_level_default: professional
+
+- id: symfony
+  label: Symfony
+  description: Symfony framework patterns; depends on PHP at the artefact level.
+  workspaces: [engineering]
+  requires_hint: [php, engineering-base]
+  trust_level_default: professional
+
+- id: javascript
+  label: JavaScript
+  description: JavaScript-language patterns.
+  workspaces: [engineering]
+  requires_hint: [engineering-base]
+  trust_level_default: professional
+
+- id: typescript
+  label: TypeScript
+  description: TypeScript-language patterns.
+  workspaces: [engineering]
+  requires_hint: [javascript, engineering-base]
+  trust_level_default: professional
+
+- id: react
+  label: React
+  description: React framework patterns.
+  workspaces: [engineering]
+  requires_hint: [javascript, engineering-base]
+  trust_level_default: professional
+
+- id: nextjs
+  label: Next.js
+  description: Next.js framework patterns.
+  workspaces: [engineering]
+  requires_hint: [react, typescript, engineering-base]
+  trust_level_default: professional
+
+- id: python
+  label: Python
+  description: Python-language patterns.
+  workspaces: [engineering]
+  requires_hint: [engineering-base]
+  trust_level_default: professional
+
+- id: product-basic
+  label: Product Basic
+  description: Core PO/PM artefacts (ticket refinement, AC, estimation).
+  workspaces: [product]
+  trust_level_default: professional
+
+- id: product-discovery
+  label: Product Discovery
+  description: JTBD, interviews, VoC, hypothesis testing.
+  workspaces: [product]
+  requires_hint: [product-basic]
+  trust_level_default: professional
+
+- id: finance-basic
+  label: Finance Basic
+  description: Cashflow, runway, basic forecasting.
+  workspaces: [finance, founder]
+  trust_level_default: professional
+
+- id: finance-advanced
+  label: Finance Advanced
+  description: DCF, scenario modelling, comp banding.
+  workspaces: [finance]
+  requires_hint: [finance-basic]
+  trust_level_default: core
+
+- id: gtm-sales
+  label: GTM — Sales
+  description: Pipeline, MEDDIC, forecast accuracy.
+  workspaces: [gtm]
+  trust_level_default: professional
+
+- id: gtm-marketing
+  label: GTM — Marketing
+  description: Positioning, messaging, editorial, content funnel.
+  workspaces: [gtm, founder]
+  trust_level_default: professional
+
+- id: ops-people
+  label: Operations — People
+  description: Hiring loops, onboarding programs, comp banding.
+  workspaces: [ops]
+  trust_level_default: professional
+
+- id: founder-strategy
+  label: Founder — Strategy
+  description: Vision, fundraising narrative, competitive moat.
+  workspaces: [founder]
+  trust_level_default: core
+
+- id: small-business
+  label: Small Business
+  description: SMB-shaped owner workflows.
+  workspaces: [small-business]
+  trust_level_default: professional
+
+- id: construction
+  label: Construction
+  description: Trade-business workflows.
+  workspaces: [construction]
+  trust_level_default: professional
+
+- id: ai-video
+  label: AI Video
+  description: AI video pipeline (per ADR-011, the only heavyweight domain).
+  workspaces: [small-business]
+  trust_level_default: experimental
+
+- id: meta
+  label: Meta
+  description: Artefacts that maintain this package (agent-config itself).
+  workspaces: [agent-config-maintainer]
+  trust_level_default: core

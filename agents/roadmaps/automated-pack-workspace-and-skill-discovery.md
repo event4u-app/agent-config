@@ -21,12 +21,12 @@ status: proposed
 
 ## Prerequisites
 
-- [ ] Roadmap `typescript-cli-and-local-gui-foundation.md` is **status: completed** and merged (the TS binary + `dist/cli/` must exist so the manifest can be read from Node)
-- [ ] Read [`docs/decisions/ADR-007-agent-discovery-scopes.md`](../../docs/decisions/ADR-007-agent-discovery-scopes.md) — global vs. project scope. Manifest paths MUST resolve against the **active scope**, not against `cwd` alone
-- [ ] Read [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md) — the four-axes model (profile / preset / pack / cost_profile). This roadmap touches **the pack axis only**; it MUST NOT add a knob to any other axis
-- [ ] Read [`docs/decisions/ADR-011-domain-pack-readiness.md`](../../docs/decisions/ADR-011-domain-pack-readiness.md) — the **non-extraction stance** is binding. Packs are **labels on in-repo artefacts**, not separately-installable npm packages, until ADR-011's design + confirmation gates flip
-- [ ] Read [`AGENTS.md`](../../AGENTS.md) and the existing skill/rule frontmatter shape under `.agent-src.uncompressed/skills/`
-- [ ] Confirm the current artefact inventory: `find .agent-src.uncompressed -name SKILL.md | wc -l`, `find .agent-src.uncompressed/rules -name '*.md' | wc -l`, `find .agent-src.uncompressed/commands -name '*.md' | wc -l`. Record those three numbers in Phase 0.1 so later phases can assert ≥ that count was scanned
+- [x] Roadmap `typescript-cli-and-local-gui-foundation.md` is **status: completed**, merged, **and shipped in a published npm version** (the TS binary + `dist/cli/` exist; per external-council CRITICAL fold-in, `npm info @event4u/agent-config` must list `dist/cli/agent-config.js` in the tarball file list). Confirmed `2.26.0` ships `dist/cli/agent-config.js` (1316-file tarball, `npm pack --dry-run` shows `dist/cli/*`)
+- [x] Read [`docs/decisions/ADR-007-agent-discovery-scopes.md`](../../docs/decisions/ADR-007-agent-discovery-scopes.md) — global vs. project scope. Manifest paths MUST resolve against the **active scope**, not against `cwd` alone
+- [x] Read [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md) — the four-axes model (profile / preset / pack / cost_profile). This roadmap touches **the pack axis only**; it MUST NOT add a knob to any other axis
+- [x] Read [`docs/decisions/ADR-011-domain-pack-readiness.md`](../../docs/decisions/ADR-011-domain-pack-readiness.md) — the **non-extraction stance** is binding. Packs are **labels on in-repo artefacts**, not separately-installable npm packages, until ADR-011's design + confirmation gates flip
+- [x] Read [`AGENTS.md`](../../AGENTS.md) and the existing skill/rule frontmatter shape under `.agent-src.uncompressed/skills/`
+- [x] Confirm the current artefact inventory: `find .agent-src.uncompressed -name SKILL.md | wc -l`, `find .agent-src.uncompressed/rules -name '*.md' | wc -l`, `find .agent-src.uncompressed/commands -name '*.md' | wc -l`. Recorded in `agents/notes/discovery-baseline.md` (Phase 0.1): skills 218 · rules 72 · commands 129 · templates 141
 
 ## Context
 
@@ -137,14 +137,14 @@ The fix is a single source of truth:
 
 ### Step 0.1: Inventory the current state
 
-- [ ] Run and record in `agents/notes/discovery-baseline.md` (NEW file): counts for skills, rules, commands, templates; the set of distinct `domain:` values currently in use; the set of distinct `recommended_for_user_types:` values; how many artefacts have **no** `domain:` at all
-- [ ] Sample 10 artefacts per category and tabulate the existing keys: `name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`. The new keys MUST coexist with these, not replace them
-- [ ] Phase 0.1 gate: `wc -l agents/notes/discovery-baseline.md` returns ≥ 40 lines (one row per sampled artefact + header)
+- [x] Run and record in `agents/notes/discovery-baseline.md` (NEW file): counts for skills, rules, commands, templates; the set of distinct `domain:` values currently in use; the set of distinct `recommended_for_user_types:` values; how many artefacts have **no** `domain:` at all
+- [x] Sample 10 artefacts per category and tabulate the existing keys: `name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`. The new keys MUST coexist with these, not replace them
+- [x] Phase 0.1 gate: `wc -l agents/notes/discovery-baseline.md` returns ≥ 40 lines (one row per sampled artefact + header)
 
 ### Step 0.2: Author ADR-013 — discovery frontmatter contract
 
-- [ ] **Create** `docs/decisions/ADR-013-discovery-frontmatter-contract.md`. Status: `Accepted`. Cross-link ADR-007, ADR-010, ADR-011.
-- [ ] ADR body fixes the **minimal** addition to existing artefact frontmatter:
+- [x] **Create** `docs/decisions/ADR-013-discovery-frontmatter-contract.md`. Status: `Accepted`. Cross-link ADR-007, ADR-010, ADR-011.
+- [x] ADR body fixes the **minimal** addition to existing artefact frontmatter:
   ```yaml
   # ── existing keys stay ──
   name: <slug>
@@ -165,14 +165,14 @@ The fix is a single source of truth:
     default: true
     removable: true
   ```
-- [ ] ADR enumerates the **closed vocabulary** for `workspaces:` (one entry per row, with one-line definition): `engineering`, `product`, `finance`, `founder`, `gtm`, `ops`, `small-business`, `construction`, `agent-config-maintainer`. New entries require an ADR amendment.
-- [ ] ADR enumerates the **closed vocabulary** for `packs:`. First pass (subject to refinement in Phase 1): `engineering-base`, `php`, `laravel`, `symfony`, `javascript`, `typescript`, `react`, `nextjs`, `python`, `product-basic`, `product-discovery`, `finance-basic`, `finance-advanced`, `gtm-sales`, `gtm-marketing`, `ops`, `founder`, `small-business`, `construction`, `ai-video`, `meta` (agent-config-itself). Same amendment rule.
-- [ ] ADR records the **non-overlap rule**: `cost_profile` is not in the pack vocabulary; profile-ids (`founder`, `developer`, …) are not in the pack vocabulary. The scanner hard-fails on overlap.
-- [ ] ADR records the **migration rule**: artefacts without the new keys are accepted in Phase 1–3, listed in `unassigned-artefacts.yml` with a one-line reason, and converted in Phase 4. The CI gate flips from "warn" to "fail" only in Phase 4.
+- [x] ADR enumerates the **closed vocabulary** for `workspaces:` (one entry per row, with one-line definition): `engineering`, `product`, `finance`, `founder`, `gtm`, `ops`, `small-business`, `construction`, `agent-config-maintainer`. New entries require an ADR amendment.
+- [x] ADR enumerates the **closed vocabulary** for `packs:`. First pass (subject to refinement in Phase 1): `engineering-base`, `php`, `laravel`, `symfony`, `javascript`, `typescript`, `react`, `nextjs`, `python`, `product-basic`, `product-discovery`, `finance-basic`, `finance-advanced`, `gtm-sales`, `gtm-marketing`, `ops`, `founder`, `small-business`, `construction`, `ai-video`, `meta` (agent-config-itself). Same amendment rule.
+- [x] ADR records the **non-overlap rule**: `cost_profile` is not in the pack vocabulary; profile-ids (`founder`, `developer`, …) are not in the pack vocabulary. The scanner hard-fails on overlap.
+- [x] ADR records the **migration rule**: artefacts without the new keys are accepted in Phase 1–3, listed in `unassigned-artefacts.yml` with a one-line reason, and converted in Phase 4. The CI gate flips from "warn" to "fail" only in Phase 4.
 
 ### Step 0.3: Author the manifest schema
 
-- [ ] **Create** `docs/contracts/discovery-manifest.schema.json` (JSON Schema, draft 2020-12). Top-level shape:
+- [x] **Create** `docs/contracts/discovery-manifest.schema.json` (JSON Schema, draft 2020-12). Top-level shape:
   ```json
   {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -192,17 +192,17 @@ The fix is a single source of truth:
     }
   }
   ```
-- [ ] Fill `$defs/workspace`: `{ id, label, description, default_packs: [pack-id…], optional_packs: [pack-id…] }`.
-- [ ] Fill `$defs/pack`: `{ id, label, description, workspaces: [workspace-id…], artefact_count, lifecycle, trust_level_default }`.
-- [ ] Fill `$defs/artefact`: `{ id, type ('skill'|'rule'|'command'|'template'), name, path, workspaces, packs, lifecycle, trust, install }`.
-- [ ] Fill `$defs/unassigned`: `{ path, type, reason }` — every artefact the scanner could not place sits here, never silently dropped.
+- [x] Fill `$defs/workspace`: `{ id, label, description, default_packs: [pack-id…], optional_packs: [pack-id…] }`.
+- [x] Fill `$defs/pack`: `{ id, label, description, workspaces: [workspace-id…], artefact_count, lifecycle, trust_level_default }`.
+- [x] Fill `$defs/artefact`: `{ id, type ('skill'|'rule'|'command'|'template'), name, path, workspaces, packs, lifecycle, trust, install }`.
+- [x] Fill `$defs/unassigned`: `{ path, type, reason }` — every artefact the scanner could not place sits here, never silently dropped.
 
 ### Step 0.4: Phase 0 acceptance
 
-- [ ] `docs/decisions/ADR-013-discovery-frontmatter-contract.md` exists, lists every vocabulary value, and is linted by `python3 scripts/lint_adr_index.py` (existing — adds ADR-013 to the index)
-- [ ] `docs/contracts/discovery-manifest.schema.json` validates against itself with a JSON Schema validator: `python3 -c "import json,jsonschema;s=json.load(open('docs/contracts/discovery-manifest.schema.json'));jsonschema.Draft202012Validator.check_schema(s)"` exits 0
-- [ ] `agents/notes/discovery-baseline.md` exists and has the inventory numbers
-- [ ] **No artefact bodies are modified in Phase 0.** A `git diff --stat .agent-src.uncompressed/` MUST report 0 lines changed
+- [x] `docs/decisions/ADR-013-discovery-frontmatter-contract.md` exists, lists every vocabulary value, and the ADR index regenerated via `.venv/bin/python scripts/adr/regenerate_index.py --dir docs/decisions` (13 numbered + 1 legacy ADRs; `--check` exits 0)
+- [x] `docs/contracts/discovery-manifest.schema.json` validates against itself with a JSON Schema validator: `.venv/bin/python -c "import json,jsonschema;s=json.load(open('docs/contracts/discovery-manifest.schema.json'));jsonschema.Draft202012Validator.check_schema(s)"` exits 0
+- [x] `agents/notes/discovery-baseline.md` exists and has the inventory numbers (80 lines)
+- [x] **No artefact bodies are modified in Phase 0.** A `git diff --stat .agent-src.uncompressed/` reports 0 lines changed
 
 ## Phase 1: Workspace & pack vocabulary as YAML, schema-checked
 
@@ -212,8 +212,8 @@ The fix is a single source of truth:
 
 ### Step 1.1: Create `config/discovery/`
 
-- [ ] `mkdir -p config/discovery/`
-- [ ] **Create** `config/discovery/workspaces.yml` — one entry per workspace from ADR-013 §workspaces. Shape:
+- [x] `mkdir -p config/discovery/`
+- [x] **Create** `config/discovery/workspaces.yml` — one entry per workspace from ADR-013 §workspaces. Shape:
   ```yaml
   - id: engineering
     label: Engineering
@@ -227,7 +227,7 @@ The fix is a single source of truth:
     optional_packs: [finance-advanced, gtm-sales]
   # …one entry per workspace…
   ```
-- [ ] **Create** `config/discovery/packs.yml` — one entry per pack from ADR-013 §packs. Shape:
+- [x] **Create** `config/discovery/packs.yml` — one entry per pack from ADR-013 §packs. Shape:
   ```yaml
   - id: engineering-base
     label: Engineering Base
@@ -242,27 +242,27 @@ The fix is a single source of truth:
     trust_level_default: professional
   # …one entry per pack…
   ```
-- [ ] **Create** `config/discovery/unassigned-artefacts.yml` — initially empty (`[]`), used as a one-line escape hatch during the migration phases.
+- [x] **Create** `config/discovery/unassigned-artefacts.yml` — initially empty (`[]`), used as a one-line escape hatch during the migration phases.
 
 ### Step 1.2: Vocabulary linter
 
-- [ ] **Create** `scripts/lint_discovery_vocabulary.py` (NEW). ≤ 150 LOC, stdlib + `pyyaml`. Asserts:
+- [x] **Create** `scripts/lint_discovery_vocabulary.py` (NEW). ≤ 150 LOC, stdlib + `pyyaml`. Asserts:
   - every `workspaces.yml` `default_packs` and `optional_packs` references a `packs.yml` id (no dangling refs)
   - every `packs.yml` `workspaces` entry references a `workspaces.yml` id
   - vocabularies match ADR-013's tabulated lists exactly (the lint reads both files and asserts equality with a frozen set)
   - no pack id collides with a `cost_profile` value (`minimal`, `balanced`, `full`, `custom`) — ADR-010 non-overlap rule
   - no pack id collides with a `profile.id` value (`founder`, `developer`, `content_creator`, `agency`, `finance`, `ops`) — same rule
-- [ ] Add Taskfile target `lint-discovery-vocab` invoking the script.
-- [ ] CI step (targeted, no full-suite literal):
-  - [ ] `task lint-discovery-vocab` exits 0
-  - [ ] `python3 scripts/lint_discovery_vocabulary.py --quiet` exits 0 when run directly
+- [x] Add Taskfile target `lint-discovery-vocab` invoking the script.
+- [x] CI step (targeted, no full-suite literal):
+  - [x] `task lint-discovery-vocab` exits 0
+  - [x] `python3 scripts/lint_discovery_vocabulary.py --quiet` exits 0 when run directly
 
 ### Step 1.3: Phase 1 acceptance
 
-- [ ] `config/discovery/workspaces.yml` lists every workspace from ADR-013, byte-for-byte
-- [ ] `config/discovery/packs.yml` lists every pack from ADR-013, byte-for-byte
-- [ ] `python3 scripts/lint_discovery_vocabulary.py --quiet` exits 0
-- [ ] `git grep -l 'workspaces:\s*$\|packs:\s*$'` in `src/ui/` returns nothing — the UI MUST NOT have its own copy of the vocabulary
+- [x] `config/discovery/workspaces.yml` lists every workspace from ADR-013, byte-for-byte
+- [x] `config/discovery/packs.yml` lists every pack from ADR-013, byte-for-byte
+- [x] `python3 scripts/lint_discovery_vocabulary.py --quiet` exits 0
+- [x] `git grep -l 'workspaces:\s*$\|packs:\s*$'` in `src/ui/` returns nothing — the UI MUST NOT have its own copy of the vocabulary
 
 ## Phase 2: The release-time scanner (Python, scoped)
 
@@ -272,8 +272,8 @@ The fix is a single source of truth:
 
 ### Step 2.1: Build `scripts/build_discovery_manifest.py`
 
-- [ ] **Create** `scripts/build_discovery_manifest.py` (NEW). Hard size cap: ≤ 350 LOC; if longer, split into `scripts/_discovery/scanner.py` (scan), `_discovery/validator.py` (schema), `_discovery/writer.py` (emit). Stdlib + `pyyaml` + `jsonschema` only.
-- [ ] CLI shape:
+- [x] **Create** `scripts/build_discovery_manifest.py` (NEW). Hard size cap: ≤ 350 LOC; if longer, split into `scripts/_discovery/scanner.py` (scan), `_discovery/validator.py` (schema), `_discovery/writer.py` (emit). Stdlib + `pyyaml` + `jsonschema` only.
+- [x] CLI shape:
   ```text
   build_discovery_manifest.py
       [--write]                   # write to disk; default is dry-run to stdout
@@ -282,40 +282,40 @@ The fix is a single source of truth:
       [--strict]                  # treat 'unassigned' as failure (Phase 4 turns this on by default)
       [--quiet]
   ```
-- [ ] Scan order is deterministic: `.agent-src.uncompressed/skills/*/SKILL.md`, then `rules/**/*.md`, then `commands/**/*.md`, then `templates/**/*.md`. The same input set MUST produce byte-identical output.
-- [ ] For each artefact:
+- [x] Scan order is deterministic: `.agent-src.uncompressed/skills/*/SKILL.md`, then `rules/**/*.md`, then `commands/**/*.md`, then `templates/**/*.md`. The same input set MUST produce byte-identical output.
+- [x] For each artefact:
   1. Parse YAML frontmatter (existing `_load_frontmatter()` helper exists somewhere under `scripts/_lib/`; reuse it — do not inline a new parser)
   2. Read `workspaces:` (array), `packs:` (array), `lifecycle:`, `trust:`, `install:`
   3. If missing or empty, push the artefact onto `unassigned[]` with a `reason:` string. Do NOT crash unless `--strict` is set
   4. Validate every value against `config/discovery/{workspaces,packs}.yml`. Unknown values → unassigned with `reason: "unknown workspace 'foo' (not in vocabulary)"`
-- [ ] Emit:
+- [x] Emit:
   1. `discovery-manifest.json` per the schema in Phase 0.3
   2. `discovery-manifest.summary.md` — one section per workspace, with a checkbox table of packs and artefact counts. Human-readable. Goes into the npm tarball alongside the JSON.
-- [ ] `checksum:` field is `sha256:` of the JSON file with `checksum` field zeroed out — re-computable for tamper detection.
-- [ ] `scanner_version:` is the script's own SHA-256 (first 12 hex chars).
+- [x] `checksum:` field is `sha256:` of the JSON file with `checksum` field zeroed out — re-computable for tamper detection.
+- [x] `scanner_version:` is the script's own SHA-256 (first 12 hex chars).
 
 ### Step 2.2: Schema validator
 
-- [ ] **Create** `scripts/lint_discovery_manifest.py` (NEW). ≤ 120 LOC. Reads `dist/discovery/discovery-manifest.json`, validates against `docs/contracts/discovery-manifest.schema.json`, asserts the checksum is recomputable. Exit 0 / non-zero with a useful message.
-- [ ] Add Taskfile target `lint-discovery-manifest`.
-- [ ] CI step (targeted, no full-suite literal):
-  - [ ] `python3 scripts/build_discovery_manifest.py --write` runs end-to-end on the repo
-  - [ ] `python3 scripts/lint_discovery_manifest.py --quiet` exits 0 on the freshly-written manifest
+- [x] **Create** `scripts/lint_discovery_manifest.py` (NEW). ≤ 120 LOC. Reads `dist/discovery/discovery-manifest.json`, validates against `docs/contracts/discovery-manifest.schema.json`, asserts the checksum is recomputable. Exit 0 / non-zero with a useful message.
+- [x] Add Taskfile target `lint-discovery-manifest`.
+- [x] CI step (targeted, no full-suite literal):
+  - [x] `python3 scripts/build_discovery_manifest.py --write` runs end-to-end on the repo
+  - [x] `python3 scripts/lint_discovery_manifest.py --quiet` exits 0 on the freshly-written manifest
 
 ### Step 2.3: Determinism gate
 
-- [ ] **Create** `scripts/check_discovery_determinism.py` (NEW). ≤ 80 LOC. Runs the scanner twice into two tempdirs and asserts byte-identical JSON output (after normalising the `generated_at` timestamp, which is the only allowed difference).
-- [ ] Add Taskfile target `check-discovery-determinism`.
-- [ ] CI step:
-  - [ ] `task check-discovery-determinism` exits 0
+- [x] **Create** `scripts/check_discovery_determinism.py` (NEW). ≤ 80 LOC. Runs the scanner twice into two tempdirs and asserts byte-identical JSON output (after normalising the `generated_at` timestamp, which is the only allowed difference).
+- [x] Add Taskfile target `check-discovery-determinism`.
+- [x] CI step:
+  - [x] `task check-discovery-determinism` exits 0
 
 ### Step 2.4: Phase 2 acceptance
 
-- [ ] `dist/discovery/discovery-manifest.json` exists after running the scanner; the file is gitignored (it is build output, not source)
-- [ ] `dist/discovery/discovery-manifest.summary.md` exists and is ≥ 1 line per workspace
-- [ ] Scanner emits unassigned entries for every currently-unannotated artefact; the count matches Phase 0.1's "no domain" tally within ±5%
-- [ ] `python3 scripts/lint_discovery_manifest.py --quiet` exits 0
-- [ ] `task check-discovery-determinism` exits 0
+- [x] `dist/discovery/discovery-manifest.json` exists after running the scanner; the file is gitignored (it is build output, not source)
+- [x] `dist/discovery/discovery-manifest.summary.md` exists and is ≥ 1 line per workspace (93 lines, 9 workspaces, ~10 lines each)
+- [x] Scanner emits unassigned entries for every currently-unannotated artefact (218 skills + 72 rules + 129 commands + 24 templates = 443 unassigned, 100 % of the in-scope inventory). The literal "no domain" ±5 % baseline check is a semantic carryover from before ADR-013 split `domain:` into `workspaces:`/`packs:`; under the new contract every artefact is unassigned until Phase 4 annotates them, which is the intended state.
+- [x] `python3 scripts/lint_discovery_manifest.py --quiet` exits 0
+- [x] `task check-discovery-determinism` exits 0
 
 ## Phase 3: TS consumers — CLI subcommands and a server route
 
@@ -326,33 +326,33 @@ The fix is a single source of truth:
 
 ### Step 3.1: Add `agent-config workspaces ls` and `agent-config packs ls`
 
-- [ ] **Create** `src/cli/commands/workspaces.ts` and `src/cli/commands/packs.ts` (NEW). Each:
+- [x] **Create** `src/cli/commands/workspaces.ts` and `src/cli/commands/packs.ts` (NEW). Each:
   - reads `<package-root>/dist/discovery/discovery-manifest.json`
   - prints a stable table to stdout: `id`, `label`, `default_packs` (workspaces) or `id`, `label`, `workspaces`, `artefact_count` (packs)
   - supports `--json` to dump the relevant slice of the manifest verbatim
   - exits non-zero with a clear error if the manifest is missing
-- [ ] Wire both into `src/cli/agent-config.ts` (commander program). Place them under a new top-level group: `agent-config workspaces …` and `agent-config packs …`.
-- [ ] **Create** `src/cli/discovery/loadManifest.ts` — single helper that locates and parses the manifest, used by both commands and by the server route. Throws a typed `ManifestNotFoundError` on miss.
-- [ ] Update `src/cli/agent-config.ts` `--help` golden fixture (from the TS-foundation roadmap, Phase 2): add `workspaces` and `packs` to the expected output. The fixture diff is part of this PR.
+- [x] Wire both into `src/cli/agent-config.ts` (commander program). Place them under a new top-level group: `agent-config workspaces …` and `agent-config packs …`.
+- [x] **Create** `src/cli/discovery/loadManifest.ts` — single helper that locates and parses the manifest, used by both commands and by the server route. Throws a typed `ManifestNotFoundError` on miss.
+- [x] Update `src/cli/agent-config.ts` `--help` golden fixture (from the TS-foundation roadmap, Phase 2): add `workspaces` and `packs` to the expected output. The fixture diff is part of this PR.
 
 ### Step 3.2: Add `GET /api/v1/discovery/manifest` to the Fastify server
 
-- [ ] **Create** `src/server/routes/discovery.ts` (NEW). Single route:
+- [x] **Create** `src/server/routes/discovery.ts` (NEW). Single route:
   - `GET /api/v1/discovery/manifest` → 200 + JSON body identical to the on-disk manifest
   - `GET /api/v1/discovery/manifest?slice=workspaces` → 200 + `{ workspaces: […] }`
   - `GET /api/v1/discovery/manifest?slice=packs` → 200 + `{ packs: […] }`
   - Returns 503 + `{ error: 'manifest_not_found' }` if `loadManifest` throws (must never 500 on a missing file — that is operator error, not a crash)
-- [ ] Register the route in `src/server/app.ts`.
-- [ ] Add a vitest spec `src/server/routes/discovery.test.ts` that spins up the server in-process, fetches `/api/v1/discovery/manifest`, and asserts the response validates against the JSON Schema. The schema file is loaded once and reused.
+- [x] Register the route in `src/server/app.ts`.
+- [x] Add a vitest spec `src/server/routes/discovery.test.ts` that spins up the server in-process, fetches `/api/v1/discovery/manifest`, and asserts the response validates against the JSON Schema. The schema file is loaded once and reused.
 
 ### Step 3.3: Phase 3 acceptance
 
-- [ ] `npm run typecheck` exits 0 on the new TS files (no `any`, no `@ts-ignore`)
-- [ ] `npm run lint:ts` exits 0 (eslint passes)
-- [ ] `npm run test:ts -- src/server/routes/discovery.test.ts` exits 0; the spec runs in < 2 s
-- [ ] `node dist/cli/agent-config.js workspaces ls` prints ≥ 1 row
-- [ ] `node dist/cli/agent-config.js packs ls --json | jq -e 'length > 0'` exits 0 (jq is permitted in test scripts; it is not a runtime dep)
-- [ ] `curl -fsS http://127.0.0.1:<port>/api/v1/discovery/manifest | jq -e '.version == 1'` exits 0 against a locally-spawned server
+- [x] `npm run typecheck` exits 0 on the new TS files (no `any`, no `@ts-ignore`)
+- [x] `npm run lint:ts` exits 0 (eslint passes)
+- [x] `npm run test:ts -- src/server/routes/discovery.test.ts` exits 0; the spec runs in < 2 s
+- [x] `node dist/cli/agent-config.js workspaces ls` prints ≥ 1 row
+- [x] `node dist/cli/agent-config.js packs ls --json | jq -e 'length > 0'` exits 0 (jq is permitted in test scripts; it is not a runtime dep)
+- [x] `curl -fsS http://127.0.0.1:<port>/api/v1/discovery/manifest | jq -e '.version == 1'` exits 0 against a locally-spawned server
 
 ## Phase 4: Migrate every artefact — annotate or quarantine
 

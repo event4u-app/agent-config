@@ -44,6 +44,16 @@ export const BASH_SHIM = resolve(PACKAGE_ROOT, 'scripts', 'agent-config');
 export const PACKAGE_JSON = resolve(PACKAGE_ROOT, 'package.json');
 
 /**
+ * Absolute path to the release-time discovery manifest.
+ *
+ * Release-only artefact — built by `scripts/build_discovery_manifest.py`
+ * into `dist/discovery/discovery-manifest.json` and shipped inside the
+ * published tarball. Never present in PR working trees; absence at
+ * runtime is operator error, not a crash (see Roadmap R3 Phase 3).
+ */
+export const DISCOVERY_MANIFEST = resolve(PACKAGE_ROOT, 'dist', 'discovery', 'discovery-manifest.json');
+
+/**
  * Resolve a script that may live in either the package root or one
  * of the projected template paths. Mirrors `resolve_script` in the
  * Bash dispatcher.

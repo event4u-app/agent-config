@@ -83,6 +83,9 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-discovery-vocab
+      - task: lint-discovery-manifest
+      - task: check-discovery-determinism
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links
@@ -164,6 +167,9 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-discovery-vocab
+      - task: lint-discovery-manifest
+      - task: check-discovery-determinism
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links

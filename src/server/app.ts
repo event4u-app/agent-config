@@ -23,6 +23,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { tokensMatch } from './token.js';
 import { pingRoute } from './routes/ping.js';
+import { discoveryRoute } from './routes/discovery.js';
 
 export interface CreateAppOptions {
     projectRoot: string;
@@ -33,6 +34,8 @@ export interface CreateAppOptions {
     expectedPort: number;
     /** Override the Fastify logger level (defaults to `warn`). */
     logLevel?: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
+    /** Override the discovery-manifest path (tests only). */
+    discoveryManifestPath?: string;
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -99,6 +102,9 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     });
 
     await app.register(pingRoute({ projectRoot: opts.projectRoot }));
+    await app.register(
+        discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
+    );
 
     return app;
 }

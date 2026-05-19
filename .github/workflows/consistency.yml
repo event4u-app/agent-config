@@ -59,8 +59,9 @@ jobs:
         uses: arduino/setup-task@v2
 
       - name: Install Python dependencies
-        # pyyaml: required by check_always_budget.py (parses rule frontmatter).
-        run: pip install pytest pyyaml
+        # pyyaml:     required by check_always_budget.py (parses rule frontmatter).
+        # jsonschema: required by scripts/lint_discovery_manifest.py (R3 Phase 2).
+        run: pip install pytest pyyaml jsonschema
 
       - name: Show tool versions
         run: |
@@ -114,6 +115,15 @@ jobs:
 
       - name: Linear digest dry-run (no per-rule drift, under budget)
         run: task ci-linear-digest
+
+      - name: Build discovery manifest (R3 Phase 2.1)
+        run: python3 scripts/build_discovery_manifest.py --write --quiet
+
+      - name: Lint discovery manifest — schema + checksum + vocab (R3 Phase 2.2)
+        run: python3 scripts/lint_discovery_manifest.py --quiet
+
+      - name: Discovery scanner determinism (R3 Phase 2.3)
+        run: python3 scripts/check_discovery_determinism.py
 
       - name: Lint README
         run: python3 scripts/readme_linter.py README.md --root .

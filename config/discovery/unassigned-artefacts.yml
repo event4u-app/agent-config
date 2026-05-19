@@ -1,0 +1,16 @@
+# Discovery — unassigned-artefact quarantine
+#
+# Catch-all for artefacts that legitimately resist workspace/pack
+# assignment. Each entry MUST carry a `reason:` field.
+#
+# Stays empty through Phases 1–3 of
+# `agents/roadmaps/automated-pack-workspace-and-skill-discovery.md`.
+# Phase 4 may populate it with genuinely cross-cutting cases.
+#
+# Lint: scripts/lint_artefact_frontmatter.py (added in Phase 6)
+# Schema entry shape:
+#
+#   - path: <repo-relative-path-to-artefact>
+#     reason: <one-line explanation>
+
+[]

@@ -241,6 +241,27 @@ tasks:
     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
     cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
 
+  lint-discovery-vocab:
+    silent: true
+    desc: Validate config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
+    cmd: python3 scripts/lint_discovery_vocabulary.py {{.QUIET_FLAG}}
+
+  build-discovery-manifest:
+    silent: true
+    desc: Run the release-time discovery scanner — writes dist/discovery/discovery-manifest.{json,summary.md} (R3 Phase 2.1)
+    cmd: python3 scripts/build_discovery_manifest.py --write {{.QUIET_FLAG}}
+
+  lint-discovery-manifest:
+    silent: true
+    desc: Validate dist/discovery/discovery-manifest.json against schema, checksum, and vocabulary cross-refs (R3 Phase 2.2)
+    deps: [build-discovery-manifest]
+    cmd: python3 scripts/lint_discovery_manifest.py {{.QUIET_FLAG}}
+
+  check-discovery-determinism:
+    silent: true
+    desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)
+    cmd: python3 scripts/check_discovery_determinism.py
+
   lint-framework-leakage:
     silent: true
     desc: "Block PHP/Laravel/etc. leakage in generic skills/rules/commands (framework-neutrality-in-generic-skills rule)"

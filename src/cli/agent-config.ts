@@ -20,6 +20,8 @@ import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
+import { runWorkspacesLs } from './commands/workspaces.js';
+import { runPacksLs } from './commands/packs.js';
 import { logger } from './log/logger.js';
 import { REGISTRY } from './registry.js';
 
@@ -91,6 +93,30 @@ async function main(argv: readonly string[]): Promise<number> {
             process.exit(code);
         });
 
+    const workspaces = program
+        .command('workspaces')
+        .description('Inspect workspaces from the discovery manifest');
+    workspaces
+        .command('ls')
+        .description('List workspaces (id, label, default_packs)')
+        .option('--json', 'Emit machine-readable JSON')
+        .action((opts: { json?: boolean }) => {
+            const code = runWorkspacesLs(opts);
+            process.exit(code);
+        });
+
+    const packs = program
+        .command('packs')
+        .description('Inspect packs from the discovery manifest');
+    packs
+        .command('ls')
+        .description('List packs (id, label, workspaces, artefact_count)')
+        .option('--json', 'Emit machine-readable JSON')
+        .action((opts: { json?: boolean }) => {
+            const code = runPacksLs(opts);
+            process.exit(code);
+        });
+
     program
         .command('help')
         .description('Show help (delegates to Bash for --tier=1|all)')
@@ -123,7 +149,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'workspaces', 'packs', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;
