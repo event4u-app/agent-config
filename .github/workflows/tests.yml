@@ -6,6 +6,13 @@ on:
     paths:
       - "scripts/**"
       - "tests/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vite.config.ts"
+      - "vitest.config.ts"
+      - "eslint.config.js"
       - "Taskfile.yml"
       - "taskfiles/**"
       - "install.sh"
@@ -18,6 +25,13 @@ on:
     paths:
       - "scripts/**"
       - "tests/**"
+      - "src/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "vite.config.ts"
+      - "vitest.config.ts"
+      - "eslint.config.js"
       - "Taskfile.yml"
       - "taskfiles/**"
       - "install.sh"
@@ -173,6 +187,53 @@ jobs:
         # show up in the PR UI with their stderr tail.
         if: always()
         run: python3 scripts/ci_summary.py --runs agents/reports/runs
+
+  typescript-tests:
+    # Phase 5.2 of typescript-cli-and-local-gui-foundation — guards the
+    # TS CLI shell + local UI bundle. Narrow harnesses match the
+    # roadmap-ci-steps-policy contract: lint, typecheck, build, vitest.
+    # The build step also exercises the `chmod +x` hook that
+    # prepack-check.mjs asserts on `npm pack`.
+    name: TypeScript Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: ESLint (src/**/*.ts)
+        run: npm run lint:ts --silent
+
+      - name: Typecheck (tsc --noEmit)
+        run: npm run typecheck --silent
+
+      - name: Build CLI (dist/cli/agent-config.js)
+        run: npm run build:cli --silent
+
+      - name: Build UI (dist/ui/)
+        run: npm run build:ui --silent
+
+      - name: Vitest (tests/{cli,server,ui}/**/*.ts)
+        run: npm run test:ts --silent
+
+      - name: Prepack guard (dist sanity-check)
+        run: node scripts/prepack-check.mjs
+
+      - name: Build (dist/cli + UI bundle)
+        run: npm run build --silent
+
+      - name: prepack-check (compiled bin shape gate)
+        run: node scripts/prepack-check.mjs
 
   windows-lockfile-export:
     # Phase 1.7 of road-to-global-first-install — guards the global-

@@ -6,7 +6,7 @@
 
 ## Overall
 
-**6 / 431 steps done · 1%**
+**5 / 540 steps done · 1%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   1%
@@ -18,8 +18,8 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [automated-pack-workspace-and-skill-discovery.md](roadmaps/automated-pack-workspace-and-skill-discovery.md) | 8 | 120 | 119 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
 | 2 | [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md) | 10 | 60 | 58 | 2 | 0 | 0 | ░░░░░░░░░░ 3% |
-| 3 | [strategic-visibility-mcp-topics-positioning.md](roadmaps/strategic-visibility-mcp-topics-positioning.md) | 8 | 61 | 60 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
-| 4 | [typescript-cli-and-local-gui-foundation.md](roadmaps/typescript-cli-and-local-gui-foundation.md) | 7 | 98 | 97 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
+| 3 | [framework-neutrality-audit.md](roadmaps/framework-neutrality-audit.md) | 10 | 207 | 207 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [strategic-visibility-mcp-topics-positioning.md](roadmaps/strategic-visibility-mcp-topics-positioning.md) | 8 | 61 | 60 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 | 5 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 91 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
 
 ---
@@ -72,20 +72,6 @@
 | 3 | exit gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 4 | Docs, contributor surface, and the AI-Council pass | 🟡 in progress | 15 | 1 | 0 | 0 | 6% |
 | 4 | exit gate | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-
-### [typescript-cli-and-local-gui-foundation.md](roadmaps/typescript-cli-and-local-gui-foundation.md)
-
-**TypeScript CLI & Local Web-UI Foundation** — 1 / 98 done (1%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Decide the shell — argv parser, package shape, lockfile | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
-| 1 | Scaffold the TS toolchain (no behaviour change) | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
-| 2 | Build the TS entry binary as a thin forwarder | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
-| 3 | Embed the Fastify server + free-port picker | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
-| 4 | Add the Vite UI scaffold + static-file pipeline | ⬜ not started | 9 | 0 | 0 | 0 | 0% |
-| 5 | Flip the `bin`, deprecate Bash, wire CI | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
-| 6 | AI-Council review | 🟡 in progress | 17 | 1 | 0 | 0 | 6% |
 
 ### [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md)
 

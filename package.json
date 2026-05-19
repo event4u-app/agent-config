@@ -1,9 +1,10 @@
 {
     "name": "@event4u/agent-config",
     "version": "2.26.0",
-    "description": "Shared agent configuration \u2014 skills, rules, commands, guidelines, and templates for AI coding tools",
+    "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
     "license": "MIT",
     "private": false,
+    "type": "module",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/event4u-app/agent-config.git"
@@ -17,6 +18,7 @@
         ".augment-plugin/",
         ".claude-plugin/",
         "config/",
+        "dist/",
         "docs/",
         "scripts/",
         "templates/",
@@ -28,7 +30,19 @@
         "llms.txt"
     ],
     "bin": {
-        "agent-config": "scripts/agent-config"
+        "agent-config": "dist/cli/agent-config.js"
+    },
+    "engines": {
+        "node": ">=20.11.0"
+    },
+    "scripts": {
+        "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",
+        "build:ui": "vite build",
+        "build": "npm run build:cli && npm run build:ui",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "lint:ts": "eslint 'src/**/*.ts'",
+        "test:ts": "vitest run",
+        "prepack": "npm run build && node scripts/prepack-check.mjs"
     },
     "publishConfig": {
         "access": "public",
@@ -41,5 +55,25 @@
         "@event4u/agent-memory": {
             "optional": true
         }
+    },
+    "devDependencies": {
+        "@types/js-yaml": "^4.0.9",
+        "@types/node": "^20.19.41",
+        "@typescript-eslint/eslint-plugin": "^8.59.4",
+        "@typescript-eslint/parser": "^8.59.4",
+        "eslint": "^9.39.4",
+        "tsx": "^4.22.3",
+        "typescript": "^5.9.3",
+        "vite": "^5.4.21",
+        "vitest": "^2.1.9"
+    },
+    "dependencies": {
+        "@fastify/static": "^9.1.3",
+        "commander": "^12.1.0",
+        "execa": "^9.6.1",
+        "fastify": "^5.8.5",
+        "js-yaml": "^4.1.1",
+        "open": "^10.2.0",
+        "zod": "^3.25.76"
     }
 }

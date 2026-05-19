@@ -16,6 +16,42 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+**TypeScript CLI shell + local server foundation (`typescript-cli-and-local-gui-foundation`)** —
+Phase-5 cutover of the `agent-config` binary from a 955-line Bash
+dispatcher to a compiled TypeScript entry point. The shell handles
+native commands (`versions`, `doctor-shell`, `ui:serve`) and forwards
+every other subcommand to the legacy logic, now living at
+`scripts/_dispatch.bash`. New surfaces:
+
+- **TS bin entry** — `package.json#bin` flipped to
+  `dist/cli/agent-config.js`. `npm run build:cli` compiles and
+  `chmod +x`-es the entry; `scripts/prepack-check.mjs` runs on
+  `npm pack` / `npm publish` and asserts the compiled file exists,
+  is executable, and carries the Node shebang.
+- **Bash shim** — the old path `scripts/agent-config` is now a
+  ~30-line deprecation shim that forwards to the TS binary. The real
+  dispatch logic moved to `scripts/_dispatch.bash` to prevent the
+  forward-and-back loop. Doctor probes both paths.
+- **Embedded Fastify server** — `agent-config ui:serve` boots a
+  local server bound to `127.0.0.1`, on the first free port in
+  `41000–41999`. Wire shape locked in
+  [`docs/contracts/local-server-api.md`](docs/contracts/local-server-api.md)
+  (beta): per-process bearer token, Host-header guard, Origin
+  allow-list, `GET /api/v1/ping` liveness probe.
+- **CI gates** — `task lint-ts`, `task typecheck-ts`, `task test-ts`,
+  `task build-ts` wired into `task ci` and `task ci-strict`. New
+  GitHub Actions job `TypeScript Tests` runs the same harness across
+  `ubuntu-latest` and `macos-latest` on Node 20, including the
+  `prepack-check.mjs` gate.
+- **Test coverage** — 47 Vitest tests across
+  `tests/cli/{paths,registry,cli-e2e}.test.ts`,
+  `tests/server/{app,port,token}.test.ts`, and
+  `tests/ui/build.test.ts`. CLI-e2e exercises the shim → dispatcher
+  → TS round trip; server tests cover the auth gate and 421/403/401
+  failure modes.
+
+Decision record: [`docs/decisions/ADR-012-typescript-cli-shell.md`](docs/decisions/ADR-012-typescript-cli-shell.md).
+
 **Discovery polish — `--root` override, doctor diagnostics, install-mode marker (`step-8-discovery-polish`)** —
 follow-up to step-7 driven by AI Council review of PR #157. Adds an
 explicit escape hatch for monorepos, surfaces the resolution decision

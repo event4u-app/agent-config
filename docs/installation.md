@@ -127,6 +127,14 @@ the per-IDE index above.
 >
 > Python 3.10+ is required for bridges. If it is missing, the orchestrator
 > prints a warning and continues with the payload sync only.
+>
+> **Node.js 20.11+** is required for the `agent-config` binary itself.
+> Starting with the TypeScript CLI shell (ADR-012, road
+> `typescript-cli-and-local-gui-foundation`), the published `bin/`
+> entry is the compiled `dist/cli/agent-config.js`; `npx` resolves it
+> through the registry, so consumers do not need to install Node
+> dependencies into their own project. The package's `engines.node`
+> pin is the source of truth.
 
 | Mode | Best for | Scope |
 |---|---|---|

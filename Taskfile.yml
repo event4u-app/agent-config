@@ -132,6 +132,10 @@ tasks:
       - task: golden-replay
       - task: test
       - task: runtime-e2e
+      - task: lint-ts
+      - task: typecheck-ts
+      - task: test-ts
+      - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
       - task: check-role-doc-links
@@ -209,6 +213,10 @@ tasks:
       - task: golden-replay
       - task: test
       - task: runtime-e2e
+      - task: lint-ts
+      - task: typecheck-ts
+      - task: test-ts
+      - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
       - task: check-role-doc-links
