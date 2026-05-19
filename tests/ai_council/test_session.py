@@ -211,7 +211,10 @@ def test_prune_handles_missing_directory(tmp_path: Path) -> None:
 
 def test_save_triggers_prune_via_retention_days_param(tmp_path: Path) -> None:
     old = _make_session(tmp_path, "2026-01-01T00-00-00Z")
-    fresh_ts = "2026-05-04T12-00-00Z"
+    # Anchor the fresh session to now() — save() invokes prune with the
+    # wall-clock, so a hardcoded fresh_ts eventually drifts past the
+    # 14-day retention window and turns this test into a time-bomb.
+    fresh_ts = _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
 
     session_dir = save(
         manifest=SessionManifest(

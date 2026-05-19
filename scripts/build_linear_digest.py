@@ -93,7 +93,6 @@ WORKSPACE: list[RuleEntry] = [
 TEAM: list[RuleEntry] = [
     RuleEntry("docker-commands"),
     RuleEntry("laravel-translations"),
-    RuleEntry("e2e-testing"),
     RuleEntry("php-coding"),
 ]
 
