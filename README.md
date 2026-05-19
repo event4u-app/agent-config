@@ -2,7 +2,7 @@
 
 # Agent Config — Universal AI Agent OS
 
-[![Skills](https://img.shields.io/badge/Skills-217-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-86-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-129-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Skills](https://img.shields.io/badge/Skills-218-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-72-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-129-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 > **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
@@ -579,7 +579,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 217 skills + 129 native commands); Augment Code gets the
+> package (rules + 218 skills + 129 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
