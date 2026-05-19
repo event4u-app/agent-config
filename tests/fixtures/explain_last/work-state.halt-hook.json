@@ -1,0 +1,33 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "ticket",
+    "data": {
+      "id": "PROJ-1234",
+      "title": "rewrite OAuth callback",
+      "acceptance_criteria": ["callback returns 200", "session cookie set"],
+      "assumptions": [
+        "session lifetime defaults to 7 days"
+      ]
+    }
+  },
+  "intent": "backend-coding",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [
+    {"entry_id": "mem-oauth-pattern", "hit_score": 0.85, "used_in": "plan"}
+  ],
+  "halts": [
+    {
+      "reason": "verify failed: 2 pytest cases red",
+      "step": "post-verify",
+      "surface": [
+        "❌  pytest: 2 failed in 4.21s",
+        "Re-run with --pdb to investigate."
+      ],
+      "timestamp": "2026-05-19T11:42:11Z"
+    }
+  ],
+  "outcomes": {"verify": "fail"},
+  "report": ""
+}

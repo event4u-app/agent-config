@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "id": "run-council-001",
+      "raw": "should we split the discovery manifest into per-pack files?",
+      "reconstructed_ac": ["decision recorded as ADR"],
+      "assumptions": []
+    }
+  },
+  "intent": "decision-record",
+  "directive_set": "backend",
+  "persona": "senior-engineer",
+  "memory": [],
+  "halts": [],
+  "outcomes": {"verify": "pass"},
+  "report": "ADR drafted"
+}

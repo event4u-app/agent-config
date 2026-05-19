@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "id": "run-success-001",
+      "raw": "add a logout button to the header",
+      "reconstructed_ac": [
+        "logout button visible in header for authenticated users",
+        "click invokes /auth/logout and redirects to /"
+      ],
+      "assumptions": [
+        {"id": "uses-existing-Button-primitive", "accepted": true, "source": "refine"},
+        {"id": "no-confirm-dialog-needed", "accepted": true, "source": "refine"}
+      ]
+    }
+  },
+  "intent": "ui-coding",
+  "directive_set": "ui",
+  "stack": {"frontend": "react-shadcn", "mtime": 1715000000.0},
+  "persona": "senior-engineer",
+  "memory": [
+    {"entry_id": "mem-header-pattern", "hit_score": 0.91, "used_in": "plan"},
+    {"entry_id": "mem-button-primitive", "hit_score": 0.78, "used_in": "implement"}
+  ],
+  "halts": [],
+  "outcomes": {"verify": "pass"},
+  "report": "shipped"
+}
