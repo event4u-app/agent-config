@@ -453,7 +453,7 @@ The fix is a single source of truth:
 
 - [x] Update `AGENTS.md` (≤ 5 added lines): add a pointer to ADR-013 under the "Discovery & install" section.
 - [x] Update `docs/customization.md` (existing): add a short subsection "Workspaces & packs" linking to ADR-013 and explaining what the user sees in the wizard.
-- [x] Update `agents/roadmaps/00-overview.md` (or its replacement at draft time): add this roadmap with its complexity tag.
+- [x] Update `agents/roadmaps/archive/00-overview.md` (or its replacement at draft time): add this roadmap with its complexity tag.
 
 ### Step 6.3: Phase 6 acceptance
 
