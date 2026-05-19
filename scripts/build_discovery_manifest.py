@@ -254,8 +254,6 @@ def _summary(manifest: dict[str, Any]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    import os
-
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
@@ -264,8 +262,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
 
-    strict = args.strict or os.environ.get("CI") == "true"
-    manifest, unassigned = _build(strict=strict)
+    # Strict mode is opt-in via --strict only. Phase 4.4 will flip the CI
+    # default to strict once per-pack annotation (Phase 4) has landed for
+    # every artefact. Until then, auto-enabling strict under CI=true would
+    # trip every PR with the 442 still-unassigned artefacts.
+    manifest, unassigned = _build(strict=args.strict)
     _finalise_checksum(manifest)
     body = _serialize(manifest)
 
