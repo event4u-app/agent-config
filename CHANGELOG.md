@@ -702,6 +702,70 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 2.26.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## 2.26.0 (2026-05-19)
+
+### Features
+
+* **linter:** refine procedural_rule + has_inspect_step heuristics ([7cb040b](https://github.com/event4u-app/agent-config/commit/7cb040b76bd8ddb2333f7b6302f36f3e700c3257))
+* **kernel:** admit user-interrupt-priority as 10th kernel rule ([7a782c8](https://github.com/event4u-app/agent-config/commit/7a782c8af803cf0ce29f9a81834d39201cd0214c))
+* **skills:** rule-refactor — Budget-Discipline-Gate workflow ([c246a8c](https://github.com/event4u-app/agent-config/commit/c246a8cf8edab8cbef410c301e387fea39ed074c))
+* **rules:** user-interrupt priority + validation-loop budget ([fbac3f9](https://github.com/event4u-app/agent-config/commit/fbac3f9949846670737f529c2b85fd70c7566cf2))
+* **rules:** framework-neutrality linter + Tier-2 rule ([f0bf7b5](https://github.com/event4u-app/agent-config/commit/f0bf7b5fb37543f97dfbe13253fecc3cf122d3da))
+
+### Bug Fixes
+
+* **agents:** repair augment-portability → augment-edit-discipline pointer ([eb09867](https://github.com/event4u-app/agent-config/commit/eb09867155f3406593d676dabcdf73797d15e3d7))
+* **ci:** repair stale digest ref, time-bomb retention test, marketplace manifest ([779725d](https://github.com/event4u-app/agent-config/commit/779725d32588af1497b4618603203761b8ebdf0a))
+* **lint:** allowlist 'markitdown' as bare-noun skill name ([18fe51d](https://github.com/event4u-app/agent-config/commit/18fe51d8252eb4d0f1f7640485ad7671300c352d))
+* **commands:** declare skills: frontmatter for 16 commands ([9f766ac](https://github.com/event4u-app/agent-config/commit/9f766ac52e921b599600e33913c2a51ac50fa494))
+* **refs:** retarget pii rule, archived roadmap, drop validation-budget mention ([7c784b0](https://github.com/event4u-app/agent-config/commit/7c784b0414a8022629843d375fcfc56027a2b694))
+* **router:** repair 19 broken pointers, add 5 consolidated entries ([a2bfdd6](https://github.com/event4u-app/agent-config/commit/a2bfdd65084f5bbf0fbcb6b98ad063a0b6de9f75))
+* **lint:** rule-refactor SKILL.md — trim description, rename step 1 ([d44d956](https://github.com/event4u-app/agent-config/commit/d44d956a9ab9c3698faa7ea02dffd92360330882))
+
+### Documentation
+
+* **changelog:** split era pre-2.25.0 into archive ([0a1c60d](https://github.com/event4u-app/agent-config/commit/0a1c60d2b872053a97340d7c0770182462439ddd))
+* **roadmap:** archive rule-governance-and-budget-discipline ([d0f26a5](https://github.com/event4u-app/agent-config/commit/d0f26a50b359786bcfcee9a0b43a9d5b9370a619))
+* **counts:** bump skills 216 \xe2\x86\x92 217 after framework-neutrality skill split ([154ae86](https://github.com/event4u-app/agent-config/commit/154ae8697b9c3a01e2430280419b6dfb0d5486ed))
+
+### Refactoring
+
+* framework-neutrality audit — remove framework-specific phrasing from generic rules and skills ([eb8357b](https://github.com/event4u-app/agent-config/commit/eb8357bd24d56324685bff8a74231ab8becec91d))
+* **rules:** tighten user-interrupt-priority prose ([69d70b3](https://github.com/event4u-app/agent-config/commit/69d70b3d05d31ea064a1c941fbfc6882617899f5))
+* **rules:** merge 2 domain-safety-retention-* into one ([2c3f3af](https://github.com/event4u-app/agent-config/commit/2c3f3af407167c6353c45b31f032cb29c60b1eb3))
+* **rules:** merge 6 PII rules into one domain-safety-pii ([64f263a](https://github.com/event4u-app/agent-config/commit/64f263a20b48e99ffdde4069d5cf5603dea7b893))
+* **rules:** merge 4 domain-safety-disclaimer-* into one ([b0dc78f](https://github.com/event4u-app/agent-config/commit/b0dc78fda2e6912d9e2d942010af2b88c274a07f))
+* **rules:** drop redundant routing stubs ([906d99a](https://github.com/event4u-app/agent-config/commit/906d99abe4da865235f20acdb5cbc8055337b289))
+* **rules:** consolidate git rewrite rules into git-history-discipline ([3633e0d](https://github.com/event4u-app/agent-config/commit/3633e0d9cf833ce3f0eb2d4270a2b0b961625f95))
+* **rules:** consolidate augment routing stubs into augment-edit-discipline ([f0d1b3c](https://github.com/event4u-app/agent-config/commit/f0d1b3c089f425e4c295a38f537600fbe4c65b9a))
+* **skills,commands:** Phase 5 — relocate 4 misclassified carve-outs ([4422af0](https://github.com/event4u-app/agent-config/commit/4422af03742b026700cd269b6a2110ee4afa55a3))
+* **skills,commands:** Phase 4 — multi-stack examples (14 generic artefacts) ([b9b4c6d](https://github.com/event4u-app/agent-config/commit/b9b4c6d610799c14553ca0104efbcd99008604c7))
+* **commands:** make generic commands multi-stack (Phase 3) ([ba1d196](https://github.com/event4u-app/agent-config/commit/ba1d196806968d16c25ec2f70abc9628cad8cf15))
+* **skills:** Phase 2 - eliminate Tier-2 command & logic leakage ([448d7d6](https://github.com/event4u-app/agent-config/commit/448d7d669fe5f0bc26c8b325c1370559827eb119))
+* **skills,rules:** Phase 1 - eliminate Tier-1 mandate leakage ([97fbec1](https://github.com/event4u-app/agent-config/commit/97fbec105309db279f64da0354c7fe2cced95190))
+
+### Chores
+
+* finalize chances ([ae94d29](https://github.com/event4u-app/agent-config/commit/ae94d29b86d21d912c5c6f6371960606c82d6a68))
+* sync .claude/ rules and skills projections ([ce84265](https://github.com/event4u-app/agent-config/commit/ce84265e916b1f6da68663a803f993f95a6bb2c6))
+* regenerate compressed mirror and hashes after framework-neutrality refactor ([534277a](https://github.com/event4u-app/agent-config/commit/534277a930b8c45b78d02c325600fdcc6d73c42e))
+* **smoke:** lift schema warns baseline 93 → 95 ([901625e](https://github.com/event4u-app/agent-config/commit/901625e9f9826b1c704381c3066d7f1bed17efdd))
+* **compress:** refresh hash for rule-refactor SKILL.md ([866b9af](https://github.com/event4u-app/agent-config/commit/866b9af4cc9d4607150aee27ce310cf56ae7210c))
+* **counts:** sync README + docs after rule consolidation ([1959123](https://github.com/event4u-app/agent-config/commit/19591234f38dad54f06451dc1f732838ebbf4bc7))
+* **compress:** update cross-refs and refresh projected layer ([43191ae](https://github.com/event4u-app/agent-config/commit/43191ae8928b8eeff099b22ab7d6c53b60f09f07))
+* **index:** regenerate after phase-6 description trims ([12f6a2d](https://github.com/event4u-app/agent-config/commit/12f6a2d68d8ab33b8945988018aeeec930e8eddc))
+* **phase-6:** polish — trim descriptions, drop scope blocks, add rtk analyze step ([3b3f66c](https://github.com/event4u-app/agent-config/commit/3b3f66ced56252a1dda7279a9ec8b8c9f2e4c6c4))
+* **phase-6:** framework schema prop + linter inventory exemption ([91b7b0e](https://github.com/event4u-app/agent-config/commit/91b7b0e341d60a49d60af45728d69db627bac051))
+* **carve-outs:** tag 6 Laravel-coupled artefacts with framework: laravel ([c486de2](https://github.com/event4u-app/agent-config/commit/c486de2dea785646a74c9a8cf642a04ba7c1a30e))
+* **lint:** widen cross-stack heuristic + frontmatter exemption ([05d13f2](https://github.com/event4u-app/agent-config/commit/05d13f295edd8ee8a0cbe794230ae25dffa30edd))
+
+### Other
+
+* Revert "chore(smoke): lift schema warns baseline 93 → 95" ([772553b](https://github.com/event4u-app/agent-config/commit/772553b93567921b8d8d989a432e5901332ffd0c))
+* Merge pull request #183 from event4u-app/chore/new-roadmaps ([032a244](https://github.com/event4u-app/agent-config/commit/032a244a3d66e510d023ed6a6341ebb0fd805120))
+
+Tests: 4645
+
 ## [2.25.0](https://github.com/event4u-app/agent-config/compare/2.24.0...2.25.0) (2026-05-18)
 
 ### Features
