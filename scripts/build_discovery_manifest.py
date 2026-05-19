@@ -229,9 +229,14 @@ def _serialize(manifest: dict[str, Any]) -> str:
 
 
 def _finalise_checksum(manifest: dict[str, Any]) -> None:
+    # Checksum covers structural content only — `generated_at` is wall-clock
+    # and intentionally excluded so the hash stays byte-stable across runs.
+    generated_at = manifest.get("generated_at")
     manifest["checksum"] = "sha256:" + "0" * 64
+    manifest["generated_at"] = "<normalised>"
     raw = _serialize(manifest).encode("utf-8")
     digest = hashlib.sha256(raw).hexdigest()
+    manifest["generated_at"] = generated_at
     manifest["checksum"] = f"sha256:{digest}"
 
 
