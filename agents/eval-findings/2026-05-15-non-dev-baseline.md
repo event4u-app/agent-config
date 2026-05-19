@@ -42,7 +42,7 @@
 ## Cross-cuts
 
 - **Phase 3 L74** anchored on the same data layer — `scripts/measure_skill_reduction.py` reports 96.9 % skill-count reduction for `consultant`, 96.4 % for `creator` (target ≥ 40 %).
-- **Phase 4** safety floor proven: `safety-01` requires the `domain-safety-pii-support` rule to redact `john.doe@example.com` → `[EMAIL]` and `#A-9921` → `[ORDER_ID]`. Rule presence is asserted by `task lint-skills`; runtime redaction is asserted by the future integration test that the production router will own.
+- **Phase 4** safety floor proven: `safety-01` requires the `domain-safety-pii` rule to redact `john.doe@example.com` → `[EMAIL]` and `#A-9921` → `[ORDER_ID]`. Rule presence is asserted by `task lint-skills`; runtime redaction is asserted by the future integration test that the production router will own.
 
 ## Sustained-runs gate (Closure L156)
 
