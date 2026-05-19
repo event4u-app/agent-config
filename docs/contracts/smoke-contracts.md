@@ -87,13 +87,16 @@ constant in the script body and the row below.
 ### § 3.3 — Schema (`scripts/smoke/schema.sh`)
 
 ```
-438 lintable artefacts · 0 schema FAILs · ≤ 92 warns
+438 lintable artefacts · 0 schema FAILs · ≤ 95 warns
 ```
 
 - **0 FAILs** — hard assertion. `scripts/skill_linter.py --all` returns
   exit 0/1 (warns) but never 2 (fail).
-- **≤ 92 warns** — measured 2026-05-16; locks regression. Warns
-  trending down updates the constant.
+- **≤ 95 warns** — measured 2026-05-19 after rule consolidation
+  (admitted `user-interrupt-priority` + `git-history-discipline`, both
+  hit the `procedural_rule` heuristic on legitimate `workflow` skill
+  references); previous baseline 92 (2026-05-16). Warns trending down
+  updates the constant.
 - **v2 schema (step-5) deferred** — when
   `step-5-schema-rigor.md`
   Phase 1 closes, this smoke gains a `model_tier` presence assertion;
