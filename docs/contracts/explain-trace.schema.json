@@ -1,0 +1,144 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event4u.app/agent-config/schemas/explain-trace.schema.json",
+  "title": "ExplainTrace v1",
+  "description": "Execution-trace contract emitted by `agent-config explain last`. The CLI's --json output is the wire format; the Markdown renderer is a deterministic projection of this same object. See agents/roadmaps/explainability-v2-explain-last.md and the in-tree builder at scripts/_cli/explain_last/.",
+  "type": "object",
+  "required": [
+    "version",
+    "generated_at",
+    "run_id",
+    "subject",
+    "inputs",
+    "route",
+    "council",
+    "memory",
+    "pack",
+    "assumptions",
+    "halt",
+    "provider"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Schema version. Bumps require a sibling roadmap; readers MUST refuse unknown versions."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 UTC timestamp at which the trace was built (renderer-deterministic only when fixed by the test harness)."
+    },
+    "run_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identifier of the originating /work run. Pulled from state.input.data.id, with fallback to the state file mtime serialised as ISO-8601."
+    },
+    "subject": {
+      "type": "string",
+      "enum": ["work", "implement-ticket", "council", "video", "unknown"],
+      "description": "Originating directive set. `unknown` fires when state.directive_set is absent or unrecognised."
+    },
+    "inputs": {
+      "type": ["object", "null"],
+      "description": "Profile / preset / cost_profile resolution chain. Null when the loader could not resolve any of them (broken settings).",
+      "required": ["profile", "preset", "cost_profile", "source_per_knob"],
+      "additionalProperties": false,
+      "properties": {
+        "profile": {"type": ["string", "null"]},
+        "preset": {"type": ["string", "null"]},
+        "cost_profile": {"type": ["string", "null"]},
+        "source_per_knob": {
+          "type": "object",
+          "description": "Map<knob, source>; source ∈ pack | profile | preset | user | env | runtime | default.",
+          "additionalProperties": {"type": "string"}
+        }
+      }
+    },
+    "route": {
+      "type": ["object", "null"],
+      "description": "Rule-router activation snapshot. Null when router.json is absent.",
+      "required": ["matched_rules", "kernel_rules", "persona"],
+      "additionalProperties": false,
+      "properties": {
+        "matched_rules": {"type": "array", "items": {"type": "string"}},
+        "kernel_rules": {"type": "array", "items": {"type": "string"}},
+        "persona": {"type": ["string", "null"]}
+      }
+    },
+    "council": {
+      "type": ["array", "null"],
+      "description": "List of council member responses attached to this run. Null when no session file matched the run window.",
+      "items": {
+        "type": "object",
+        "required": ["member_id", "verdict", "citations"],
+        "additionalProperties": false,
+        "properties": {
+          "member_id": {"type": "string"},
+          "verdict": {"type": "string"},
+          "citations": {"type": "array", "items": {"type": "string"}}
+        }
+      }
+    },
+    "memory": {
+      "type": ["array", "null"],
+      "description": "Memory-MCP hits that influenced this run. Null when no memory layer was consulted.",
+      "items": {
+        "type": "object",
+        "required": ["entry_id", "hit_score", "used_in"],
+        "additionalProperties": false,
+        "properties": {
+          "entry_id": {"type": "string"},
+          "hit_score": {"type": "number"},
+          "used_in": {"type": "string"}
+        }
+      }
+    },
+    "pack": {
+      "type": ["object", "null"],
+      "description": "Active workspace pack selection. Null when no pack was active.",
+      "required": ["id", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "reason": {"type": "string"}
+      }
+    },
+    "assumptions": {
+      "type": "array",
+      "description": "Assumptions the engine recorded; empty list when none were captured.",
+      "items": {
+        "type": "object",
+        "required": ["id", "accepted", "source"],
+        "additionalProperties": false,
+        "properties": {
+          "id": {"type": "string"},
+          "accepted": {"type": "boolean"},
+          "source": {"type": "string"}
+        }
+      }
+    },
+    "halt": {
+      "type": ["object", "null"],
+      "description": "Most recent halt persisted by the engine. Null on clean runs.",
+      "required": ["reason", "step", "surface"],
+      "additionalProperties": false,
+      "properties": {
+        "reason": {"type": "string"},
+        "step": {"type": "string"},
+        "surface": {"type": "array", "items": {"type": "string"}}
+      }
+    },
+    "provider": {
+      "type": ["object", "null"],
+      "description": "Video provider selection record. Non-null only when state.directive_set == 'video' AND state.video_provider was written.",
+      "required": ["id", "selection_reason"],
+      "additionalProperties": false,
+      "properties": {
+        "id": {"type": "string"},
+        "selection_reason": {"type": "string"}
+      }
+    }
+  }
+}
