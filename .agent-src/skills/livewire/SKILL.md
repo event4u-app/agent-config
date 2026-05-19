@@ -3,6 +3,18 @@ name: livewire
 description: "Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # livewire

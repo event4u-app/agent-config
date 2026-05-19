@@ -4,6 +4,18 @@ description: "Use when creating a Laravel/PHP DTO with the SimpleDto base class 
 source: package
 domain: engineering
 framework: laravel
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-dto

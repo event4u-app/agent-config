@@ -4,6 +4,18 @@ description: "Use when building Laravel real-time features — Broadcasting even
 source: package
 domain: engineering
 framework: laravel
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-websocket

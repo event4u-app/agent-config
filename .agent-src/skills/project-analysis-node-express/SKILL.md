@@ -3,6 +3,18 @@ name: project-analysis-node-express
 description: "Use for deep Node.js / Express project analysis: boot flow, middleware order, async behavior, data layer, auth/security, and Node-specific runtime failure patterns."
 source: package
 domain: discovery
+workspaces:
+  - engineering
+packs:
+  - typescript
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # project-analysis-node-express

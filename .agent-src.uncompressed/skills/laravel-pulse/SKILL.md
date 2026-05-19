@@ -3,6 +3,18 @@ name: laravel-pulse
 description: "Use when setting up Laravel Pulse — real-time dashboard, built-in cards, custom recorders, performance insights — even when the user just says 'I need app monitoring' without naming Pulse."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-pulse

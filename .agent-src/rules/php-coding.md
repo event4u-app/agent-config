@@ -9,6 +9,18 @@ triggers:
   - keyword: "ecs"
 routes_to:
   - "guideline:php/php-coding-patterns"
+workspaces:
+  - engineering
+packs:
+  - php
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # Php Coding
