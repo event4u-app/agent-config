@@ -84,8 +84,8 @@ When UI changes are involved:
 - `rg`, `grep` for text: specific patterns, not full files
 - `head`, `tail`, `cut`, `sort`, `uniq` for narrowing results
 - `--filter`, `--json`, `--format` flags on CLI tools — always use them
-- Laravel: `route:list --json | jq '.[] | select(.uri | test("users"))'`
-- Logs: `rg "request_id=abc123" storage/logs` — never `cat storage/logs/laravel.log`
+- Route lookup — Laravel `php artisan route:list --json | jq '…'`, Rails `bin/rails routes | grep users`, Express `console.log(app._router.stack)`, FastAPI `app.routes`, Symfony `bin/console debug:router`.
+- Logs — `rg "request_id=abc123" <log-dir>` — never `cat <log-file>`. Log dirs by stack: Laravel `storage/logs/`, Rails `log/`, Node `./logs/` or `journalctl`, Python `./logs/` or `journalctl`, Docker `docker compose logs <svc> --since 5m`.
 
 ### Avoid large output by default
 
@@ -156,22 +156,33 @@ If full TDD is not practical: at least write down the expected output before cod
 #### Backend examples
 
 ```bash
-# Laravel route lookup — targeted, not full dump
-php artisan route:list --json | jq '.[] | select(.uri == "api/users") | {method, uri, name, action, middleware}'
+# Route lookup — pick the project's framework
+php artisan route:list --json | jq '.[] | select(.uri == "api/users") | {method, uri, name, action, middleware}'   # Laravel
+bin/console debug:router --format=json | jq '.[] | select(.path == "/api/users")'                                  # Symfony
+bin/rails routes -g users                                                                                          # Rails
+curl -s http://localhost:3000/__routes | jq '.[] | select(.path == "/api/users")'                                  # Express custom-introspection
+curl -s http://localhost:8000/openapi.json | jq '.paths["/api/users"]'                                             # FastAPI
 
-# Config/debug
-php artisan config:show app | grep env
+# Config inspection
+php artisan config:show app | grep env       # Laravel
+bin/console debug:config framework            # Symfony
+bin/rails runner 'puts Rails.application.config_for(:database)'  # Rails
 
 # API inspection — extract only what you need
 curl -s http://localhost/api/users | jq '.[0] | {id, email, status}'
 curl -s http://localhost/api/users/1 | jq '{id, name, roles: [.roles[].name]}'
 
-# Logs — scoped by request ID, timestamp, or error type
-rg "request_id=abc123|OrderFailed" storage/logs
-tail -n 200 storage/logs/laravel.log | rg "payment|timeout"
+# Recent logs — targeted, not full dump
+tail -n 200 storage/logs/laravel.log | rg "payment|timeout"             # Laravel
+tail -n 200 log/development.log | rg "payment|timeout"                   # Rails
+docker compose logs api --since 5m --no-color | rg "payment|timeout"     # any container stack
+journalctl -u myapp --since "5 min ago" | rg "payment|timeout"           # systemd
 
-# Database — targeted queries, not full table dumps
-php artisan tinker --execute="User::where('email', 'test@example.com')->first(['id','email','status'])"
+# DB-state probe — targeted single record, not full table
+php artisan tinker --execute="User::where('email','x@y')->first(['id','email','status'])"   # Laravel
+bin/rails runner "p User.where(email: 'x@y').first&.slice(:id,:email,:status)"               # Rails
+bin/console doctrine:query:sql "SELECT id,email,status FROM users WHERE email='x@y' LIMIT 1" # Symfony
+psql -d mydb -c "SELECT id,email,status FROM users WHERE email='x@y' LIMIT 1"                 # raw SQL fallback
 ```
 
 #### Debugging with Xdebug
@@ -218,7 +229,7 @@ Never load full output into context when a filter gives you the answer.
 
 Tests are mandatory when behavior changes or bugs are fixed.
 
-Prefer: failing test first → impl → passing test.
+Prefer: failing test first → implementation → passing test.
 
 Test types: unit (isolated logic), feature/integration (behavior), UI (frontend), regression (bugs).
 

@@ -3,6 +3,7 @@ name: ghostwriter:list
 tier: 2
 cluster: ghostwriter
 sub: list
+skills: [ghostwriter]
 description: List captured ghostwriter profiles under agents/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
 disable-model-invocation: true
 suggestion:

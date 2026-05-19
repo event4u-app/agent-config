@@ -57,17 +57,14 @@ Define hard constraints: coding standards, Docker usage, language preferences, s
 |---|---|
 | `quality-workflow.md` | PHP (PHPStan → Rector → PHPStan) and JS/TS pipelines |
 | `downstream-changes.md` | After every edit, find and update ALL callers, tests, imports |
-| `docs-sync.md` | Keep docs in sync when skills/rules change |
+| `augment-edit-discipline.md` | Edits inside `.augment/` / `.agent-src.uncompressed/` stay project-agnostic AND sync counts + cross-references in the same edit |
 | `context-hygiene.md` | 3-failure rule, state dumps |
 | `architecture.md` | Architecture principles, file placement |
 | `docker-commands.md` | All PHP commands run inside Docker containers |
 | `commit-conventions.md` | Conventional Commits format |
 | `dev-efficiency.md` | Running CLI commands with verbose output — git, tests, linters, docker, build tools |
-| `e2e-testing.md` | Playwright E2E tests — locators, assertions, Page Objects, CI |
 | `lang-files.md` | Laravel lang files, both de/ and en/ always in sync |
 | `rtk.md` | Using rtk for token-efficient CLI output filtering |
-| `agent-docs.md` | When to read/create/update documentation |
-| `augment-portability.md` | Everything in `.augment/` must be project-agnostic |
 | `roadmap-progress-sync.md` | Checkbox edits in `agents/roadmaps/*.md` must regenerate `agents/roadmaps-progress.md` in the same response |
 
 ### Skills (`.augment/skills/`)
@@ -79,14 +76,14 @@ Skills organized by domain:
 
 | Category | Skills |
 |---|---|
-| **PHP/Laravel** | `php`, `php-coder`, `laravel`, `eloquent`, `laravel-validation`, `php-service`, `dto-creator`, `artisan-commands`, `laravel-horizon`, `laravel-mail`, `laravel-middleware`, `laravel-notifications`, `laravel-pennant`, `laravel-pulse`, `laravel-reverb`, `laravel-scheduling` |
+| **PHP/Laravel** | `php`, `php-coder`, `laravel`, `eloquent`, `laravel-validation`, `php-service`, `laravel-dto`, `artisan-commands`, `laravel-horizon`, `laravel-mail`, `laravel-middleware`, `laravel-notifications`, `laravel-pennant`, `laravel-pulse`, `laravel-reverb`, `laravel-scheduling` |
 | **API** | `api-endpoint`, `api-design`, `api-versioning`, `api-testing`, `openapi` |
 | **Analysis** | `analysis-autonomous-mode`, `universal-project-analysis`, `project-analysis-laravel`, `bug-analyzer`, `security-audit`, `performance-analysis` |
 | **Testing** | `pest-testing`, `test-generator`, `test-performance`, `php-debugging`, `playwright-testing` |
 | **Frontend** | `javascript`, `typescript`, `vue`, `react`, `nextjs`, `nuxt`, `tailwind`, `livewire`, `flux`, `blade-ui`, `fe-design` |
 | **Infrastructure** | `docker`, `aws-infrastructure`, `terraform`, `terragrunt`, `devcontainer`, `github-ci`, `cloudflare-workers`, `traefik` |
-| **Data** | `database`, `migration-creator`, `multi-tenancy`, `performance`, `sql-writing` |
-| **Jobs/Events** | `jobs-events`, `logging-monitoring`, `grafana`, `websocket` |
+| **Data** | `database`, `laravel-migration`, `multi-tenancy`, `performance`, `sql-writing` |
+| **Jobs/Events** | `jobs-events`, `logging-monitoring`, `grafana`, `laravel-websocket` |
 | **Packages** | `composer`, `composer-packages`, `npm`, `npm-packages` |
 | **Design** | `dashboard-design`, `design-review`, `fe-design` |
 | **Agent System** | `agent-docs-writing`, `agents-audit`, `context-create`, `commands`, `copilot-config`, `copilot-agents-optimization`, `feature-planning`, `file-editor`, `guidelines`, `mcp`, `override-management`, `project-docs`, `roadmap-management`, `module-management`, `naming`, `project-analyzer`, `sequential-thinking`, `skill-reviewer` |

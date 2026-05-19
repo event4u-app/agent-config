@@ -3,6 +3,7 @@ name: agents:user-init
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
 disable-model-invocation: true
 suggestion:

@@ -97,7 +97,7 @@ For each roadmap, work through the phases interactively:
 - [ ] {concrete task with file reference}
 - [ ] {concrete task}
 - [ ] Tests: {what to test}
-- [ ] Quality: PHPStan + Rector
+- [ ] Quality: project's type-checker + auto-fixer (see `quality-tools` skill — e.g. PHPStan + Rector for PHP, tsc + eslint --fix for TS, mypy + ruff for Python)
 ```
 
 ### 4. Generate the roadmap(s)
@@ -206,7 +206,7 @@ What's next?
 - **Always link roadmaps back to the feature** and vice versa.
 - **Use the roadmap template** at `.augment/templates/roadmaps.md`.
 - **Reference specific files** in roadmap tasks — not vague descriptions.
-- **Include quality gates** (PHPStan, Rector, tests) in every phase.
+- **Include quality gates** in every phase — the project's type-checker, auto-fixer, and full test run. Look up the actual commands via `quality-tools` instead of hardcoding stack-specific tool names in the roadmap.
 - **Research the codebase** to make tasks concrete and realistic.
 
 ## See also

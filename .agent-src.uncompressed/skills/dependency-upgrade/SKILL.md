@@ -1,6 +1,6 @@
 ---
 name: dependency-upgrade
-description: "Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection, and verification."
+description: "Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic."
 source: package
 domain: engineering
 ---
@@ -9,7 +9,7 @@ domain: engineering
 
 ## When to use
 
-Use this skill when upgrading Composer packages, npm packages, or any project dependency.
+Use this skill when upgrading project dependencies on any stack — Composer (PHP), npm / pnpm / yarn (JS/TS), pip / poetry / uv (Python), go.mod (Go), Cargo (Rust), or any other language-level package manager.
 
 Do NOT use when:
 - Installing new dependencies for the first time
@@ -25,7 +25,7 @@ Before upgrading:
 - **Identify breaking changes** — look for "BREAKING", "BC break", major version bumps.
 - **Check deprecation notices** — code using deprecated APIs needs updating.
 - **Review upgrade guides** — many packages provide migration docs.
-- **Check PHP/Node version requirements** — does the new version need a newer runtime?
+- **Check runtime version requirements** — does the new version need a newer PHP / Node / Python / Go / Rust toolchain?
 
 ### 2. Plan
 
@@ -73,22 +73,68 @@ npm install package-name@latest
 npm audit
 ```
 
-### 4. Verify
-
-After upgrading, run the full verification pipeline:
+#### pip / poetry / uv (Python)
 
 ```bash
-# PHP/Laravel
-vendor/bin/phpstan analyse           # Check for type errors
-vendor/bin/rector process            # Auto-fix refactoring
-vendor/bin/ecs check --fix           # Auto-fix code style
-php artisan test                     # Run all tests
+# Check outdated packages
+pip list --outdated         # pip
+poetry show --outdated       # poetry
+uv pip list --outdated       # uv
 
-# JavaScript
-npm run build     # Check build succeeds
-npm test          # Run all tests
-npm run lint      # Check code style
+# Upgrade a specific package
+pip install --upgrade package-name
+poetry update package-name
+uv pip install --upgrade package-name
+
+# Check for vulnerabilities
+pip-audit                    # via pip-audit
+safety check                 # via safety
 ```
+
+#### go.mod (Go)
+
+```bash
+# List available updates
+go list -u -m all
+
+# Upgrade a specific module
+go get example.com/pkg@latest
+go get example.com/pkg@v1.2.3
+
+# Tidy after upgrade
+go mod tidy
+
+# Check for known vulnerabilities
+govulncheck ./...
+```
+
+#### Cargo (Rust)
+
+```bash
+# Check outdated
+cargo outdated               # requires cargo-outdated
+
+# Upgrade
+cargo update -p crate-name
+cargo add crate-name@1.2     # edition-aware add
+
+# Audit
+cargo audit                  # requires cargo-audit
+```
+
+### 4. Verify
+
+After upgrading, run the project's full verification pipeline. The exact commands depend on the stack — resolve via the project's `Taskfile.yml`, `package.json scripts`, `composer.json scripts`, `Makefile`, or the `quality-tools` skill.
+
+| Stack | Type-check | Lint / autofix | Tests |
+|---|---|---|---|
+| PHP / Laravel | `vendor/bin/phpstan analyse` | `vendor/bin/rector process` + `vendor/bin/ecs check --fix` | `php artisan test` (or `vendor/bin/pest`) |
+| TypeScript | `tsc --noEmit` | `eslint --fix` + `prettier --write` | `pnpm test` (or `vitest run`, `jest`) |
+| Python | `mypy` / `pyright` | `ruff check --fix` + `ruff format` | `pytest` |
+| Go | `go vet ./...` | `golangci-lint run --fix` | `go test ./...` |
+| Rust | `cargo check` | `cargo clippy --fix` + `cargo fmt` | `cargo test` |
+
+Re-run the type-checker after any auto-fixer that can rewrite types (Rector for PHP, `eslint --fix` for TS).
 
 ### 5. Document
 
@@ -100,7 +146,7 @@ npm run lint      # Check code style
 When upgrading multiple packages:
 
 - **Upgrade one at a time** — easier to identify which upgrade broke something.
-- **Exception:** Tightly coupled packages (e.g., `laravel/framework` + `laravel/*`) can be upgraded together.
+- **Exception:** Tightly coupled packages can be upgraded together (e.g., `laravel/framework` + `laravel/*`; `@nestjs/core` + `@nestjs/*`; `react` + `react-dom`; `next` + `@next/*`).
 - **Run tests after each upgrade** — don't batch upgrades and test once at the end.
 
 ## Common pitfalls
@@ -111,7 +157,7 @@ When upgrading multiple packages:
 | Upgrading all packages at once | One package at a time (or tightly coupled groups) |
 | Trusting `composer update` blindly | Use `--dry-run` first, review changes |
 | Ignoring deprecation warnings | Fix deprecations before they become errors |
-| Skipping tests after upgrade | Full test suite + PHPStan after every upgrade |
+| Skipping tests after upgrade | Full test suite + project type-checker (PHPStan / tsc / mypy / `go vet` / `cargo check`) after every upgrade |
 | Lock file conflicts | Coordinate upgrades with the team |
 
 ## Version constraint guidelines

@@ -137,6 +137,6 @@ Read `verbosity.post_action_reports` from `.agent-settings.yml` (default
 
 - [`engineering-memory-data-format`](../../docs/guidelines/agent-infra/engineering-memory-data-format.md)
   — full schema
-- [`capture-learnings`](../rules/capture-learnings.md) — when a
-  learning is better captured as an `incident-learnings` entry vs a
-  rule/skill proposal
+- [`skill:learning-to-rule-or-skill`](../skills/learning-to-rule-or-skill/SKILL.md) —
+  when a learning is better captured as an `incident-learnings` entry vs
+  a rule/skill proposal

@@ -67,6 +67,11 @@
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$",
       "description": "Semver release in which this command became a shim (e.g. '1.15.0')."
     },
+    "framework": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Framework carve-out marker. Set on commands that are 100% coupled to one stack (e.g. `framework: laravel` on update-form-request-messages). Generic, multi-stack commands MUST omit this key. Routed by .agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md (Tier 2)."
+    },
     "council_depth": {
       "type": "string",
       "enum": ["deep"],

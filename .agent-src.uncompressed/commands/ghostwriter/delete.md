@@ -3,6 +3,7 @@ name: ghostwriter:delete
 tier: 2
 cluster: ghostwriter
 sub: delete
+skills: [ghostwriter]
 description: Hard-delete a ghostwriter profile at agents/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
 disable-model-invocation: true
 suggestion:

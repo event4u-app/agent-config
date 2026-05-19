@@ -3,6 +3,7 @@ name: test-performance
 description: "Use when optimizing test suite performance — database setup, seeder optimization, parallel testing, CI pipeline efficiency, or RefreshDatabase alternatives."
 source: package
 domain: quality
+framework: laravel
 ---
 
 # test-performance
@@ -16,7 +17,7 @@ Use this skill when:
 - Parallel testing needs optimization
 - Seeders need performance analysis
 - CI pipeline test jobs need to be faster
-- Investigating flaky tests caused by DB state
+- Investigating flaky tests caused by database state
 
 ## Procedure: Analyze test performance
 
@@ -56,7 +57,7 @@ Check these areas in order of typical impact:
 | **Migration count** | How many CREATE TABLE statements? | High if >20 |
 | **Schema dump** | Is `database/schema/` used? | High if missing |
 | **Seeder INSERT method** | Individual `save()` vs bulk insert? | Medium |
-| **Truncation** | Per-seeder truncate vs centralized? | Low (but → correctness issues) |
+| **Truncation** | Per-seeder truncate vs centralized? | Low (but causes correctness issues) |
 | **Connection discovery** | Dynamic `getPdo()` probing? | Low |
 | **Parallel worker setup** | Does each worker re-migrate? | High |
 
@@ -77,7 +78,7 @@ php artisan schema:dump --database=api_database
 #### B. Template DB Cloning (high ROI for parallel tests)
 
 Instead of each parallel worker running migrate+seed independently:
-1. Prepare ONE template DB (migrate + seed)
+1. Prepare ONE template database (migrate + seed)
 2. Clone template for each worker via mysqldump
 
 ```bash
@@ -93,7 +94,7 @@ mysqldump template_db | mysql worker_db_test_1
 
 #### C. Skip Migrate+Seed Flag (high ROI for local dev)
 
-Add a config flag to skip DB setup when DB is already prepared:
+Add a config flag to skip database setup when DB is already prepared:
 
 ```php
 // config/testing.php
@@ -159,7 +160,7 @@ Replace dynamic `getPdo()` probing with explicit config:
 ## Gotcha
 
 - Don't use RefreshDatabase when DatabaseTransactions suffices — full refresh is 10x slower.
-- The model forgets that parallel tests share the DB — use unique identifiers in test data.
+- The model forgets that parallel tests share the database — use unique identifiers in test data.
 - Seeder optimization has the highest ROI — a 2s seeder running 100 times = 200s wasted.
 - Don't add indexes to test databases just for test performance — the real fix is better test design.
 

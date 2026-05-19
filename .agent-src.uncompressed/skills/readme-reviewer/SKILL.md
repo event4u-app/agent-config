@@ -143,6 +143,10 @@ splitting strategies, and anti-patterns.
 
 ## Output format
 
+1. Produce three subsections in order: Summary, Findings, Confidence; no prose outside them.
+2. Findings table must use the severity vocabulary (❌ Critical / ⚠️ Major / ℹ️ Minor) and cite the exact section name.
+3. Close the report with a *Confidence* block that separates confirmed-correct, needs-verification, and unclear-due-to-missing-context.
+
 ### 1. Summary
 
 | Field | Value |

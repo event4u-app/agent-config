@@ -119,8 +119,8 @@ resolve at agent runtime. The patterns below are correct by design:
 - **`path_prefix:` triggers containing `.agent-src.uncompressed/`**
   in YAML frontmatter. This is a literal match pattern for the
   host's router, **not** a file reference — source-of-truth meta-rules
-  (`augment-source-of-truth`, `augment-portability`, `skill-quality`,
-  `docs-sync`, `rule-type-governance`) legitimately match against the
+  (`augment-source-of-truth`, `augment-edit-discipline`, `skill-quality`,
+  `rule-type-governance`) legitimately match against the
   authoring tree.
 - **Symlinked rule / skill / command files** under `.claude/`,
   `.cursor/`, `.clinerules/`. Targets resolve into `.augment/rules/`,

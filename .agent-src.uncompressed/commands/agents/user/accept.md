@@ -3,6 +3,7 @@ name: agents:user-accept
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer.
 disable-model-invocation: true
 suggestion:

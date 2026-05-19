@@ -2,7 +2,7 @@
 # scripts/smoke/router.sh — router-tier smoke (step-11 Phase 3 Step 3).
 #
 # Asserts router.json structural integrity:
-#   1. 75 ids = 9 kernel + 24 tier_1 + 42 tier_2 (locked count).
+#   1. 68 ids = 10 kernel + 23 tier_1 + 35 tier_2 (locked count).
 #   2. Every id resolves to .agent-src/rules/<id>.md (0 broken).
 #   3. Every routes_to ref resolves through its prefix
 #      (skill:, command:, guideline:, contract:); missing-contract
@@ -15,7 +15,7 @@
 
 set -euo pipefail
 
-EXPECTED_TOTAL_IDS=75
+EXPECTED_TOTAL_IDS=68
 EXPECTED_MISSING_CONTRACTS=2
 
 quiet="${SMOKE_QUIET:-0}"

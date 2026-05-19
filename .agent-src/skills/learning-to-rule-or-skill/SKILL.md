@@ -79,7 +79,7 @@ Before proceeding, the learning MUST pass all gates:
 | Minimal | Update existing preferred over creation? |
 
 If ANY gate fails → **stop**. Do not create or update anything.
-→ See `capture-learnings` rule for rejection criteria.
+Memory-entry rejection criteria live in `/memory:add` (see § "When to skip").
 
 ### 1. State the learning clearly
 

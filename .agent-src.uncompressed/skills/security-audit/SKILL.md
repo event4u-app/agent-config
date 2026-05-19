@@ -94,6 +94,10 @@ User Input → Controller → Validation → Service → DB/File/External
 
 ## Output format
 
+1. Emit one entry per vulnerability using the field list below; one finding = one block, never merge.
+2. Category must map to an OWASP Top 10 (or LLM Top 10) bucket; Severity must use Low / Medium / High / Critical with a single Exploitability tag.
+3. Close with a *Recommended Fix Order* ranked by exploitability × blast radius and tag each line with Confidence.
+
 For each vulnerability:
 
 - **Vulnerability:** concise title

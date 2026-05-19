@@ -151,6 +151,17 @@ expect($data['title'])->toBeString();
 expect($data['total'])->toBeString(); // Money as string, not float
 ```
 
+When a failing test dumps the full JSON body, narrow the diagnosis with `jq` or `grep`
+instead of scrolling the whole payload:
+
+```bash
+# Extract only the failing assertion path
+echo "$RESPONSE_JSON" | jq '.data.status, .errors'
+
+# Targeted log scan
+rg --json 'API call failed' storage/logs/laravel.log | jq -r '.data.lines.text'
+```
+
 ## External service mocking
 
 ```php

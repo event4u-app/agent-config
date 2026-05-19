@@ -1,6 +1,6 @@
 ---
 name: code-refactoring
-description: "Use when the user says "refactor this", "rename class", or "move method". Safely refactors PHP code — finds all callers, updates downstream dependencies, and verifies with quality tools."
+description: "Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools."
 source: package
 domain: engineering
 ---
@@ -20,7 +20,7 @@ Do NOT use when:
 ## Before refactoring
 
 1. **Read the agent docs** — check `agents/docs/` and `agents/contexts/` for the area you're refactoring.
-   For modules, also read `app/Modules/{Module}/agents/`. See the `project-docs` skill for the mapping.
+   For modules, also read the project's module-docs directory (path varies by stack — Laravel: `app/Modules/{Module}/agents/`; Nx: `apps/{app}/docs/`; mono-repo: per-package `docs/`). See the `project-docs` skill for the mapping.
 2. **Understand the scope** — what exactly needs to change and why?
 3. **Find ALL references** — use `codebase-retrieval` and `view` with `search_query_regex` to find every
    caller, implementation, test, and configuration that references the code being changed.
@@ -41,27 +41,28 @@ For each affected file (from the impact analysis):
 - **Callers**: Update method calls, constructor arguments, imports.
 - **Interfaces / abstract methods**: Update all implementations to match new signatures.
 - **Subclasses**: Update overridden methods.
-- **Type hints / PHPDoc**: Update type references.
+- **Type hints / annotations**: Update type references (PHPDoc, TypeScript types, Python type hints, Go generics, Rust generics).
 - **Config / bindings**: Update service container bindings, route references, etc.
-- **Imports**: Add or update `use` statements.
+- **Imports**: Add or update import statements (`use` for PHP, `import` for JS/TS/Python, `import` blocks for Go, `use` for Rust).
 
-### Step 3: Update API layer (if controllers/endpoints are affected)
+### Step 3: Update API layer (if request handlers / endpoints are affected)
 
-When refactoring touches controllers, requests, resources, or routes:
+When refactoring touches handlers, route registrations, request validators, or response shapers, walk the stack-appropriate boundary. Use the carve-out skill for the project's framework if one exists; otherwise consult the table below for what to check on each stack.
 
-| Component | What to check and update |
+| Layer | What to check and update |
 |---|---|
-| **Controller** | `__invoke()` signature, injected services, return type |
-| **FormRequest** | `authorize()`, `rules()`, validated field names |
-| **Resource** | `toArray()` field mapping, conditional fields, nested resources |
-| **OpenAPI Schema Attributes** | Request schemas (`ShowResourceRequestSchema`, `CreateResourceRequestSchema`, etc.) |
-| **OpenAPI Response Attributes** | Response schemas (`ShowResourceResponseSchema`, `CreateResourceResponseSchema`, etc.) |
-| **OpenAPI Error Attributes** | `ResourceNotFoundResponse`, `ValidationErrorResponse` |
-| **Custom Request Schemas** | Extended schema classes in `app/OpenApi/Schema/Request/v{N}/` |
-| **Route definition** | Route file in `routes/api/v{N}/`, route name, URL path, HTTP method |
-| **Route model binding** | Parameter name in route must match variable name in controller |
-| **Version inheritance** | If v1 extends v2 (or vice versa), check both versions |
-| **Module routes** | Module routes in `app/Modules/*/Routes/api.php` with version prefix |
+| **Route registration** | Route file / decorator / file-based-router entry — name, URL, HTTP method, parameter binding |
+| **Handler / Controller** | Entry signature, injected dependencies, return type |
+| **Request validator** | Validation rule definitions, allowlisted fields (FormRequest, Zod schema, class-validator DTO, Pydantic model, struct tags) |
+| **Response shaper** | Field mapping in the transformer (API Resource, serializer, DTO mapper, response model) |
+| **API contract** | OpenAPI annotations, generated spec, typed client (regenerate if generated) |
+| **Authorization rule** | Policy / voter / guard / middleware / route dependency that protects the route |
+| **Module routes** | Module-local routing surface (Laravel `app/Modules/*/Routes/`, Nx `apps/*/src/routes`, mono-repo per-package routes) |
+
+Carve-out routing:
+- Laravel: [`laravel-api-endpoint`](../laravel-api-endpoint/SKILL.md)
+- Next.js: [`nextjs-patterns`](../nextjs-patterns/SKILL.md)
+- Symfony: [`symfony-workflow`](../symfony-workflow/SKILL.md)
 
 ### Step 4: Update tests — with user approval
 
@@ -89,19 +90,24 @@ When refactoring touches controllers, requests, resources, or routes:
 - Do NOT delete tests — adapt them to the new code structure.
 - Do NOT reduce test coverage — if you split a class, split the test too.
 
-### Step 5: Verify with quality tools
+### Step 5: Verify with the project's quality tools
 
-Run quality tools after each significant step — do NOT batch everything to the end:
+Run the project's type-checker and linter after each significant step — do NOT batch everything to the end. The exact command set depends on the stack; resolve via `quality-tools` skill or the project's `Taskfile.yml` / `package.json scripts` / `composer.json scripts` / `Makefile`.
 
-- Run PHPStan: `vendor/bin/phpstan analyse` (see `quality-tools` skill for detection).
-- If PHPStan finds new errors from the refactoring → fix immediately before continuing.
-- Run Rector + ECS: `vendor/bin/rector process && vendor/bin/ecs check --fix`.
-- Run PHPStan again after Rector (Rector can introduce issues).
+| Stack | Typical pipeline |
+|---|---|
+| Laravel / PHP | `vendor/bin/phpstan analyse` → `vendor/bin/rector process` → `vendor/bin/ecs check --fix` → re-run PHPStan |
+| TypeScript | `tsc --noEmit` → `eslint --fix` → `prettier --write` |
+| Python | `mypy` (or `pyright`) → `ruff check --fix` → `ruff format` |
+| Go | `go vet ./...` → `golangci-lint run --fix` → `gofmt -w` |
+| Rust | `cargo check` → `cargo clippy --fix` → `cargo fmt` |
+
+If auto-fixers can rewrite types (Rector for PHP, `eslint --fix` for TS), re-run the type-checker after them — auto-fixers can introduce new errors.
 
 ### Step 6: Run tests
 
-- Run tests related to the changed code first (`php artisan test --filter=...`).
-- Then run the full test suite (`php artisan test`).
+- Run tests related to the changed code first (`php artisan test --filter=...`, `pnpm test -- <pattern>`, `pytest -k <pattern>`, `go test ./{path}/...`, `cargo test {pattern}`).
+- Then run the full test suite (`php artisan test`, `pnpm test`, `pytest`, `go test ./...`, `cargo test`).
 - All tests must pass before the refactoring is considered complete.
 
 ### Step 7: Update documentation

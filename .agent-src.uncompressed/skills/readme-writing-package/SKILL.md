@@ -51,9 +51,9 @@ what it does, whether it fits their stack, how to install it, and how to use it.
 
 ### 2. Inspect package truth sources
 
-Read files that define actual package behavior:
+Read and **verify** files that define actual package behavior (confirm each claim against the source — never paraphrase from memory):
 
-- `composer.json` / `package.json` — name, description, requirements, scripts
+- Manifest: `composer.json`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or `*.gemspec` — name, description, requirements, scripts
 - Source entrypoints — public API surface, main classes/functions
 - Config files — publishable configs, defaults
 - CI workflows — what gets tested, supported versions matrix
@@ -83,32 +83,103 @@ Skip sections that have no real content. Never pad.
 
 ### 4. Write requirements and compatibility
 
-State only what is tested and supported:
+State only what is tested and supported. Pull the values from the package's manifest, not from memory. Examples per stack:
 
 ```
-## Requirements
+## Requirements (PHP)
 
 - PHP ^8.2
-- Laravel 11.x
+- Laravel 11.x (optional integration)
 - ext-json
 ```
 
-Do NOT imply broad compatibility if only tested in narrow range.
-Include framework version, language version, required extensions, services.
+```
+## Requirements (JS / TS)
+
+- Node.js >= 20
+- TypeScript >= 5.4 (for typed consumers)
+- npm / pnpm / yarn / bun
+```
+
+```
+## Requirements (Python)
+
+- Python >= 3.11
+- pip / poetry / uv
+- Optional: `fastapi >= 0.110` for the FastAPI integration
+```
+
+```
+## Requirements (Go)
+
+- Go >= 1.22
+```
+
+```
+## Requirements (Rust)
+
+- Rust >= 1.78 (stable)
+- `cargo` workspace member or standalone crate
+```
+
+```
+## Requirements (Ruby)
+
+- Ruby >= 3.2
+- Bundler >= 2.5
+- Optional: Rails 7.1+ for the Rails integration
+```
+
+Do NOT imply broad compatibility if only tested in a narrow range.
+Include language version, framework version, required extensions, and services.
 
 ### 5. Write installation that actually works
 
-Document the exact install command and any required follow-up:
+Document the exact install command and any required follow-up. Use the
+package manager native to the stack — never edit manifests by hand.
 
 ```bash
+# PHP / Composer
 composer require vendor/package
-
-# If framework integration needed:
+# Optional Laravel integration:
 php artisan vendor:publish --tag=package-config
 ```
 
+```bash
+# JS / TS — pick whichever the consumer uses
+npm install <package>
+pnpm add <package>
+yarn add <package>
+bun add <package>
+```
+
+```bash
+# Python
+pip install <package>
+poetry add <package>
+uv add <package>
+```
+
+```bash
+# Go
+go get github.com/<owner>/<package>@latest
+```
+
+```bash
+# Rust
+cargo add <package>
+```
+
+```bash
+# Ruby
+bundle add <package>
+# or, for a standalone gem:
+gem install <package>
+```
+
 Validate each step against the actual codebase.
-Include post-install steps (publish, register, env setup) if required.
+Include post-install steps (config publish, service / module / provider
+registration, env vars, codegen, migrations) if the package requires them.
 
 ### 6. Write the minimal working example
 
@@ -175,7 +246,7 @@ README = enough to adopt. Docs = enough to master.
 ### 8. Validate
 
 - [ ] Install command is correct and complete
-- [ ] Compatibility/requirements match `composer.json` / `package.json` / CI matrix
+- [ ] Compatibility/requirements match the manifest (`composer.json`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `*.gemspec`) and the CI matrix
 - [ ] First example matches real API (verified against source code)
 - [ ] All documented commands exist in repo
 - [ ] No invented features or capabilities
@@ -199,8 +270,8 @@ README = enough to adopt. Docs = enough to master.
 - Model tends to invent compatibility claims or setup steps
 - First example is often too large, too abstract, or uses pseudo-code
 - Model over-explains internals before showing how to use the package
-- Existing README may be outdated — verify against actual `composer.json` / source, not old text
-- Model forgets post-install steps (config publish, service provider, env vars)
+- Existing README may be outdated — verify against the actual manifest (`composer.json`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `*.gemspec`) and source, not the old prose
+- Model forgets post-install steps (config publish, service / module / provider registration, env vars, codegen, migrations) — list whichever the stack requires
 
 ## Frugality Standards
 

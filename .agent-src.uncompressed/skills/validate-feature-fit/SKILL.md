@@ -96,7 +96,9 @@ Format as a clear, concise summary:
 
 ## Output format
 
-Always end with numbered options. The user should be able to reply with just a number.
+1. Always close with a numbered options block — the user must be able to reply with a single digit.
+2. Each option is one line: action verb + scope + reversibility hint (e.g., "1. Drop the duplicate — keep existing X (reversible)").
+3. Never present more than 5 options; if more exist, group them under "other" with a follow-up question.
 
 ## Gotchas
 

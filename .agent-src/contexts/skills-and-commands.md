@@ -95,13 +95,13 @@ Commands often chain together. Here are the main workflows:
 | Area | Skills |
 |---|---|
 | API endpoints | `api-endpoint`, `api-design`, `api-versioning`, `api-testing`, `openapi`, `laravel-validation` |
-| Database | `eloquent`, `database`, `migration-creator`, `multi-tenancy`, `sql-writing` |
+| Database | `eloquent`, `database`, `laravel-migration`, `multi-tenancy`, `sql-writing` |
 | Background jobs | `jobs-events`, `laravel-horizon`, `laravel-scheduling`, `performance` |
 | Email/Notifications | `laravel-mail`, `laravel-notifications` |
 | Middleware/Auth | `laravel-middleware`, `security` |
 | Feature flags | `laravel-pennant` |
 | Monitoring | `laravel-pulse`, `logging-monitoring`, `grafana`, `sentry-integration` |
-| Real-time | `laravel-reverb`, `websocket` |
+| Real-time | `laravel-reverb`, `laravel-websocket` |
 | Testing | `pest-testing`, `test-generator`, `playwright-testing` |
 | Frontend | `livewire`, `flux`, `blade-ui`, `tailwind`, `vue`, `react`, `fe-design` |
 | Infrastructure | `docker`, `aws-infrastructure`, `terraform`, `terragrunt`, `cloudflare-workers`, `traefik` |

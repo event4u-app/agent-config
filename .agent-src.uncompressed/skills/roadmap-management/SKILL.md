@@ -93,7 +93,7 @@ Every roadmap follows this structure:
 ## Acceptance Criteria
 
 - [ ] {Observable, testable criterion}
-- [ ] All quality gates pass (PHPStan, Rector, tests)
+- [ ] All quality gates pass — the project's type-checker, auto-fixer, linter, and full test suite (see the `quality-tools` skill for stack-specific invocations)
 
 ## Notes
 

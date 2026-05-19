@@ -9,6 +9,7 @@
     "no-cheap-questions",
     "non-destructive-by-default",
     "scope-control",
+    "user-interrupt-priority",
     "verify-before-complete"
   ],
   "tier_1": [
@@ -48,7 +49,7 @@
       ]
     },
     {
-      "id": "augment-portability",
+      "id": "augment-edit-discipline",
       "triggers": [
         {
           "path_prefix": ".augment/"
@@ -58,10 +59,17 @@
         },
         {
           "keyword": "portable"
+        },
+        {
+          "keyword": "rename"
+        },
+        {
+          "keyword": "delete"
         }
       ],
       "routes_to": [
-        "guideline:augment-portability-patterns"
+        "guideline:augment-portability-patterns",
+        "skill:agent-docs-writing"
       ]
     },
     {
@@ -193,23 +201,6 @@
       ],
       "routes_to": [
         "skill:docker"
-      ]
-    },
-    {
-      "id": "e2e-testing",
-      "triggers": [
-        {
-          "keyword": "playwright"
-        },
-        {
-          "keyword": "e2e"
-        },
-        {
-          "phrase": "page object"
-        }
-      ],
-      "routes_to": [
-        "command:e2e-heal"
       ]
     },
     {
@@ -429,26 +420,6 @@
   ],
   "tier_2": [
     {
-      "id": "agent-docs",
-      "triggers": [
-        {
-          "path_prefix": "agents/"
-        },
-        {
-          "path_prefix": ".github/copilot-instructions"
-        },
-        {
-          "keyword": "AGENTS.md"
-        },
-        {
-          "keyword": "roadmap"
-        }
-      ],
-      "routes_to": [
-        "skill:agent-docs-writing"
-      ]
-    },
-    {
       "id": "artifact-drafting-protocol",
       "triggers": [
         {
@@ -465,23 +436,6 @@
         }
       ],
       "routes_to": []
-    },
-    {
-      "id": "capture-learnings",
-      "triggers": [
-        {
-          "phrase": "after completing a task"
-        },
-        {
-          "keyword": "learning"
-        },
-        {
-          "keyword": "lesson"
-        }
-      ],
-      "routes_to": [
-        "skill:learning-to-rule-or-skill"
-      ]
     },
     {
       "id": "cli-output-handling",
@@ -524,26 +478,6 @@
       ]
     },
     {
-      "id": "docs-sync",
-      "triggers": [
-        {
-          "path_prefix": ".agent-src.uncompressed/"
-        },
-        {
-          "path_prefix": ".augment/"
-        },
-        {
-          "keyword": "rename"
-        },
-        {
-          "keyword": "delete"
-        }
-      ],
-      "routes_to": [
-        "skill:agent-docs-writing"
-      ]
-    },
-    {
       "id": "domain-adoption-policy",
       "triggers": [
         {
@@ -571,70 +505,7 @@
       "routes_to": []
     },
     {
-      "id": "domain-safety-disclaimer-consulting",
-      "triggers": [
-        {
-          "keyword": "strategic recommendation"
-        },
-        {
-          "keyword": "board memo"
-        },
-        {
-          "keyword": "executive summary"
-        },
-        {
-          "keyword": "consulting deliverable"
-        },
-        {
-          "keyword": "go-to-market plan"
-        },
-        {
-          "phrase": "what should we do"
-        },
-        {
-          "phrase": "recommend a strategy"
-        }
-      ],
-      "routes_to": [
-        "skill:decision-record",
-        "skill:stakeholder-tradeoff"
-      ]
-    },
-    {
-      "id": "domain-safety-disclaimer-financial",
-      "triggers": [
-        {
-          "keyword": "investment memo"
-        },
-        {
-          "keyword": "valuation"
-        },
-        {
-          "keyword": "DCF"
-        },
-        {
-          "keyword": "tax position"
-        },
-        {
-          "keyword": "portfolio allocation"
-        },
-        {
-          "keyword": "should I invest"
-        },
-        {
-          "phrase": "is this a good investment"
-        },
-        {
-          "phrase": "tax implications of"
-        }
-      ],
-      "routes_to": [
-        "skill:dcf-modeling",
-        "skill:scenario-modeling"
-      ]
-    },
-    {
-      "id": "domain-safety-disclaimer-legal",
+      "id": "domain-safety-disclaimer",
       "triggers": [
         {
           "keyword": "legal brief"
@@ -649,26 +520,6 @@
           "keyword": "privacy policy"
         },
         {
-          "keyword": "MSA"
-        },
-        {
-          "keyword": "DPA"
-        },
-        {
-          "phrase": "draft a clause"
-        },
-        {
-          "phrase": "review this contract"
-        }
-      ],
-      "routes_to": [
-        "skill:contracts-cognition"
-      ]
-    },
-    {
-      "id": "domain-safety-disclaimer-medical",
-      "triggers": [
-        {
           "keyword": "diagnosis"
         },
         {
@@ -681,118 +532,66 @@
           "keyword": "medication"
         },
         {
-          "keyword": "therapy"
+          "keyword": "investment memo"
         },
         {
-          "keyword": "treatment plan"
+          "keyword": "valuation"
         },
         {
-          "phrase": "should I take"
+          "keyword": "DCF"
+        },
+        {
+          "keyword": "tax position"
+        },
+        {
+          "keyword": "strategic recommendation"
+        },
+        {
+          "keyword": "board memo"
+        },
+        {
+          "keyword": "executive summary"
+        },
+        {
+          "phrase": "review this contract"
         },
         {
           "phrase": "is this symptom"
+        },
+        {
+          "phrase": "should I invest"
+        },
+        {
+          "phrase": "what should we do"
         }
       ],
       "routes_to": [
-        "skill:privacy-review"
+        "skill:contracts-cognition",
+        "skill:privacy-review",
+        "skill:dcf-modeling",
+        "skill:scenario-modeling",
+        "skill:stakeholder-tradeoff",
+        "skill:decision-record"
       ]
     },
     {
-      "id": "domain-safety-export-redact",
+      "id": "domain-safety-pii",
       "triggers": [
         {
-          "keyword": "export to CSV"
+          "keyword": "support macro"
         },
         {
-          "keyword": "data export"
+          "keyword": "ticket response"
         },
         {
-          "keyword": "share with analyst"
+          "keyword": "help desk"
         },
         {
-          "keyword": "send dataset"
+          "keyword": "Zendesk"
         },
         {
-          "keyword": "partner integration"
+          "keyword": "Intercom"
         },
-        {
-          "phrase": "dump the data"
-        },
-        {
-          "phrase": "send them the spreadsheet"
-        }
-      ],
-      "routes_to": [
-        "skill:data-handling-judgment",
-        "skill:privacy-review"
-      ]
-    },
-    {
-      "id": "domain-safety-logging-pii-floor",
-      "triggers": [
-        {
-          "keyword": "log"
-        },
-        {
-          "keyword": "logger"
-        },
-        {
-          "keyword": "logging"
-        },
-        {
-          "keyword": "Sentry"
-        },
-        {
-          "keyword": "Datadog"
-        },
-        {
-          "keyword": "structured log"
-        },
-        {
-          "phrase": "log the user"
-        },
-        {
-          "phrase": "log the request"
-        }
-      ],
-      "routes_to": [
-        "skill:logging-monitoring",
-        "skill:secrets-management"
-      ]
-    },
-    {
-      "id": "domain-safety-pii-finance",
-      "triggers": [
-        {
-          "keyword": "invoice"
-        },
-        {
-          "keyword": "accounts receivable"
-        },
-        {
-          "keyword": "accounts payable"
-        },
-        {
-          "keyword": "finance memo"
-        },
-        {
-          "keyword": "AR aging"
-        },
-        {
-          "keyword": "AP run"
-        },
-        {
-          "phrase": "draft a financial report"
-        }
-      ],
-      "routes_to": [
-        "skill:data-handling-judgment",
-        "skill:privacy-review"
-      ]
-    },
-    {
-      "id": "domain-safety-pii-marketing",
-      "triggers": [
         {
           "keyword": "testimonial"
         },
@@ -800,25 +599,8 @@
           "keyword": "case study"
         },
         {
-          "keyword": "social proof"
-        },
-        {
           "keyword": "customer story"
         },
-        {
-          "keyword": "logo wall"
-        },
-        {
-          "phrase": "marketing email featuring"
-        }
-      ],
-      "routes_to": [
-        "skill:privacy-review"
-      ]
-    },
-    {
-      "id": "domain-safety-pii-recruiting",
-      "triggers": [
         {
           "keyword": "candidate"
         },
@@ -835,47 +617,66 @@
           "keyword": "offer letter"
         },
         {
-          "keyword": "hiring memo"
+          "keyword": "invoice"
         },
         {
-          "phrase": "draft feedback for"
-        }
-      ],
-      "routes_to": [
-        "skill:privacy-review"
-      ]
-    },
-    {
-      "id": "domain-safety-pii-support",
-      "triggers": [
-        {
-          "keyword": "support macro"
+          "keyword": "accounts receivable"
         },
         {
-          "keyword": "ticket response"
+          "keyword": "accounts payable"
         },
         {
-          "keyword": "help desk"
+          "keyword": "finance memo"
         },
         {
-          "keyword": "customer reply"
+          "keyword": "log"
         },
         {
-          "keyword": "Zendesk"
+          "keyword": "logger"
         },
         {
-          "keyword": "Intercom"
+          "keyword": "Sentry"
+        },
+        {
+          "keyword": "Datadog"
+        },
+        {
+          "keyword": "structured log"
+        },
+        {
+          "keyword": "export to CSV"
+        },
+        {
+          "keyword": "data export"
+        },
+        {
+          "keyword": "partner integration"
         },
         {
           "phrase": "draft a response to"
+        },
+        {
+          "phrase": "marketing email featuring"
+        },
+        {
+          "phrase": "draft feedback for"
+        },
+        {
+          "phrase": "log the user"
+        },
+        {
+          "phrase": "send them the spreadsheet"
         }
       ],
       "routes_to": [
-        "skill:privacy-review"
+        "skill:privacy-review",
+        "skill:data-handling-judgment",
+        "skill:logging-monitoring",
+        "skill:secrets-management"
       ]
     },
     {
-      "id": "domain-safety-retention-finance",
+      "id": "domain-safety-retention",
       "triggers": [
         {
           "keyword": "retention policy"
@@ -887,30 +688,16 @@
           "keyword": "record retention"
         },
         {
-          "keyword": "delete financial"
-        },
-        {
-          "keyword": "purge invoice"
-        },
-        {
-          "phrase": "how long should we keep"
-        },
-        {
-          "phrase": "when can we delete"
-        }
-      ],
-      "routes_to": [
-        "skill:data-handling-judgment"
-      ]
-    },
-    {
-      "id": "domain-safety-retention-support",
-      "triggers": [
-        {
           "keyword": "ticket retention"
         },
         {
           "keyword": "CRM retention"
+        },
+        {
+          "keyword": "delete financial"
+        },
+        {
+          "keyword": "purge invoice"
         },
         {
           "keyword": "DSAR"
@@ -920,6 +707,12 @@
         },
         {
           "keyword": "right to be forgotten"
+        },
+        {
+          "phrase": "how long should we keep"
+        },
+        {
+          "phrase": "when can we delete"
         },
         {
           "phrase": "delete customer data"
@@ -986,6 +779,110 @@
         }
       ],
       "routes_to": []
+    },
+    {
+      "id": "framework-neutrality-in-generic-skills",
+      "triggers": [
+        {
+          "path_prefix": ".agent-src.uncompressed/skills/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/rules/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/commands/"
+        },
+        {
+          "keyword": "FormRequest"
+        },
+        {
+          "keyword": "PHPStan"
+        },
+        {
+          "keyword": "php artisan"
+        },
+        {
+          "keyword": "composer.json"
+        },
+        {
+          "keyword": "Eloquent"
+        },
+        {
+          "keyword": "Pest"
+        },
+        {
+          "keyword": "Blade"
+        },
+        {
+          "keyword": "vendor/bin"
+        },
+        {
+          "keyword": "Artisan"
+        },
+        {
+          "keyword": "Rector"
+        },
+        {
+          "phrase": "every controller"
+        },
+        {
+          "phrase": "all controllers"
+        },
+        {
+          "phrase": "generic skill"
+        }
+      ],
+      "routes_to": []
+    },
+    {
+      "id": "git-history-discipline",
+      "triggers": [
+        {
+          "intent": "rebase the branch"
+        },
+        {
+          "intent": "squash commits"
+        },
+        {
+          "intent": "clean up commit history"
+        },
+        {
+          "intent": "fold this into the previous commit"
+        },
+        {
+          "intent": "tidy history after pushing"
+        },
+        {
+          "keyword": "git rebase"
+        },
+        {
+          "keyword": "fixup"
+        },
+        {
+          "keyword": "--amend"
+        },
+        {
+          "keyword": "force-push"
+        },
+        {
+          "keyword": "--force-with-lease"
+        },
+        {
+          "keyword": "squash-merge"
+        },
+        {
+          "phrase": "branch diverged"
+        },
+        {
+          "phrase": "pull --rebase failed"
+        },
+        {
+          "phrase": "ahead and behind"
+        }
+      ],
+      "routes_to": [
+        "skill:git-workflow"
+      ]
     },
     {
       "id": "improve-before-implement",
@@ -1157,39 +1054,6 @@
       ]
     },
     {
-      "id": "no-unsolicited-rebase",
-      "triggers": [
-        {
-          "intent": "rebase the branch"
-        },
-        {
-          "intent": "squash commits"
-        },
-        {
-          "intent": "clean up commit history"
-        },
-        {
-          "intent": "fold this into the previous commit"
-        },
-        {
-          "keyword": "git rebase"
-        },
-        {
-          "keyword": "fixup"
-        },
-        {
-          "keyword": "--amend"
-        },
-        {
-          "keyword": "force-push"
-        },
-        {
-          "keyword": "squash-merge"
-        }
-      ],
-      "routes_to": []
-    },
-    {
       "id": "persona-governance",
       "triggers": [
         {
@@ -1219,44 +1083,6 @@
       ],
       "routes_to": [
         "contract:persona-schema"
-      ]
-    },
-    {
-      "id": "post-push-rewrite-discipline",
-      "triggers": [
-        {
-          "intent": "squash the pushed branch"
-        },
-        {
-          "intent": "clean up commits on the PR branch"
-        },
-        {
-          "intent": "tidy history after pushing"
-        },
-        {
-          "keyword": "git rebase -i"
-        },
-        {
-          "keyword": "--amend"
-        },
-        {
-          "keyword": "force-push"
-        },
-        {
-          "keyword": "--force-with-lease"
-        },
-        {
-          "phrase": "branch diverged"
-        },
-        {
-          "phrase": "pull --rebase failed"
-        },
-        {
-          "phrase": "ahead and behind"
-        }
-      ],
-      "routes_to": [
-        "skill:git-workflow"
       ]
     },
     {

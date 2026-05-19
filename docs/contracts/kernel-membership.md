@@ -145,6 +145,23 @@ Future edits to any kernel rule must keep the Iron-Law SHA stable
 (or land a deliberate ADR-tracked SHA update). Cap re-raise requires
 a new ADR.
 
+### § 4.2 — Post-P2.2 kernel addition (`user-interrupt-priority`)
+
+After the P2.2 lock, `user-interrupt-priority` was admitted as the
+10th kernel rule. It satisfies criterion (1) (Iron Law: stop → ask
+→ resume on user-interrupt signals) and criterion (3a) (pre-send
+gate — must fire before continuing the current task). The smoke
+baseline is bumped accordingly:
+
+- `scripts/smoke/kernel.sh` — `EXPECTED_KERNEL_COUNT=10`,
+  `EXPECTED_FENCE_CARRIERS=9`.
+- `docs/contracts/smoke-contracts.md` § 3.1 — `10 kernel rules · 9
+  carry Iron-Law fences · 1 dispatch index · ≤ 2 budget breaches`.
+
+The § 4 / § 4.1 tables remain the locked P2.2 baseline (9-rule
+snapshot, 2026-05-06); the 10th rule is tracked separately here
+until the next kernel re-measurement.
+
 † **agent-authority swap candidate (P1.4 ADR).** Sonnet 4.5 argues
 this is a routing index (zero Iron Law fences, dispatches to other
 kernel rules) and should be `compress-and-keep` (auto-tier-3),

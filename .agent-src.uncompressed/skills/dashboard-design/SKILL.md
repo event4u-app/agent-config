@@ -4,7 +4,7 @@ description: "Use when designing monitoring dashboards — visualization selecti
 source: package
 domain: devops
 recommended_for_user_types: [ops, gtm]
-
+framework: laravel
 ---
 
 # dashboard-design
@@ -18,6 +18,11 @@ Do NOT use when:
 - Building Livewire components (use `livewire` skill)
 
 ## Procedure: Design a dashboard
+
+1. **Inspect the data sources** — Identify which signals already exist (logs, metrics, app queries) and where they live (Grafana / Loki / app DB) before designing a new panel.
+2. **Pick the surface** — Use the decision tables below to choose Grafana, app dashboard, or embed; document audience and refresh cadence.
+3. **Draft the layout** — Sketch panels, choose visualization per signal (RED / USE / Golden Signals), define filters and thresholds.
+4. **Implement and verify** — Build the dashboard, load realistic data, and confirm every panel answers a named question for the named audience.
 
 | Domain | Technology | Purpose |
 |---|---|---|

@@ -20,6 +20,11 @@ For **writing queue jobs** themselves, see [jobs-events](../jobs-events/SKILL.md
 
 ## Procedure: Configure Horizon
 
+1. **Inspect current queue setup** — Read `config/queue.php`, `config/horizon.php` (if present), and `composer.json` to identify the current driver, supervisors, and queues in use.
+2. **Pick environments and balance strategy** — Decide per-env `maxProcesses`, `balance`, `tries`, `timeout` based on workload; review the config block below.
+3. **Apply configuration** — Edit `config/horizon.php`, register supervisors and queue priority.
+4. **Verify** — Run `php artisan horizon` locally, hit `/horizon` dashboard, confirm jobs flow and metrics appear.
+
 ### config/horizon.php
 
 ```php

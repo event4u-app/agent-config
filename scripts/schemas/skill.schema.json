@@ -35,6 +35,11 @@
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$"
     },
+    "framework": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]*$",
+      "description": "Framework carve-out marker. Set on skills that are 100% coupled to one stack (e.g. `framework: laravel` on laravel-* skills). Generic, multi-stack skills MUST omit this key. Routed by .agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md (Tier 2)."
+    },
     "personas": {
       "type": "array",
       "items": {

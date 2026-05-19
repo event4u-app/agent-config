@@ -10,6 +10,7 @@ suggestion:
   eligible: true
   trigger_description: "the seeder is broken, foreign key errors in seeders"
   trigger_context: "seeder error output or recent edits in database/seeders/"
+framework: laravel
 ---
 
 # /fix seeder

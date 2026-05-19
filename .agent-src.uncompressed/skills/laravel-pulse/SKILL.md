@@ -17,10 +17,11 @@ Use this skill when working with Laravel Pulse:
 
 ## Procedure: Set up Pulse
 
-1. **Install** — `composer require laravel/pulse`, publish config, run migrations.
-2. **Configure** — Set up recorders in `config/pulse.php`.
-3. **Add dashboard** — Register route and authorize access.
-4. **Verify** — Visit `/pulse` dashboard, confirm data is being recorded.
+1. **Inspect current monitoring** — Check `composer.json`, existing telemetry packages, and `config/` for Pulse, Telescope, or Horizon already installed; identify gaps.
+2. **Install** — `composer require laravel/pulse`, publish config, run migrations.
+3. **Configure** — Set up recorders in `config/pulse.php`.
+4. **Add dashboard** — Register route and authorize access.
+5. **Verify** — Visit `/pulse` dashboard, confirm data is being recorded.
 
 ### Installation
 

@@ -71,7 +71,7 @@ source when the user is unsure.
 |---|---|
 | `auth-model.md` | Policy classes, Gate definitions, permission seeders, role enums, `@can` directives, middleware |
 | `tenant-boundaries.md` | Base query scopes, connection-switching middleware, tenant-resolution service, global scopes, `.env` vars like `TENANT_*` |
-| `data-sensitivity.md` | Eloquent `$hidden` / `$casts`, Sentry `beforeSend`, logging helpers, API resources, export commands |
+| `data-sensitivity.md` | ORM hidden-field config (Eloquent `$hidden` / `$casts`, Symfony `#[Ignore]`, Prisma `select` defaults, SQLAlchemy `__init__` filters), Sentry `beforeSend`, logging redaction helpers, API serialisers / resources, export commands |
 | `deployment-order.md` | `database/migrations/`, feature-flag config (Pennant / LaunchDarkly), deploy scripts, CI workflow, rollback runbooks in `docs/` |
 | `observability.md` | `config/logging.php`, Sentry init, dashboard links in READMEs, alert rules in Terraform/Grafana dashboards |
 

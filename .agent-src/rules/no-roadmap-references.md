@@ -126,8 +126,10 @@ Failure modes:
 
 ## See also
 
-- [`docs-sync`](docs-sync.md) — cross-reference sync after rename / delete
-- [`agent-docs`](agent-docs.md) — roadmap layer conventions
+- [`augment-edit-discipline`](augment-edit-discipline.md) — portability
+  + cross-reference sync after rename / delete
+- [`skill:agent-docs-writing`](../skills/agent-docs-writing/SKILL.md) —
+  roadmap layer conventions
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
   on roadmap touch
 - [`augment-source-of-truth`](augment-source-of-truth.md) — edit

@@ -40,7 +40,7 @@ Relevant settings for this skill:
 
 | Key | Values | Default | Description |
 |---|---|---|---|
-| `personal.ide` | `code`, `phpstorm` | _(empty)_ | CLI command to open files |
+| `personal.ide` | `code`, `cursor`, `windsurf`, `phpstorm`, `webstorm`, `idea`, `goland`, `rubymine`, `pycharm`, `rider`, `subl`, `vim`, `nvim`, `emacs`, `zed` | _(empty)_ | CLI command to open files |
 | `personal.open_edited_files` | `true`, `false` | `false` | Whether to auto-open edited files |
 
 ## Behavior
@@ -62,31 +62,49 @@ cat .agent-settings.yml 2>/dev/null
 After editing one or more files, open them using the `ide` setting.
 **Always jump to the first edited line.** The syntax depends on the IDE:
 
-**PhpStorm** (`personal.ide: phpstorm`):
+**JetBrains IDEs** (`personal.ide: phpstorm` / `webstorm` / `idea` / `pycharm` / `goland` / `rubymine` / `rider`):
 ```bash
-phpstorm --line {line} {file}
+phpstorm --line {line} {file}        # PHP
+webstorm --line {line} {file}        # JS / TS
+idea     --line {line} {file}        # Java / Kotlin / general
+pycharm  --line {line} {file}        # Python
+goland   --line {line} {file}        # Go
 ```
 
-**VS Code** (`personal.ide: code`):
+**VS Code-family** (`personal.ide: code` / `cursor` / `windsurf`):
 ```bash
-code -g {file}:{line}
+code    --goto {file}:{line}
+cursor  --goto {file}:{line}
+windsurf --goto {file}:{line}
+```
+
+**Zed** (`personal.ide: zed`):
+```bash
+zed {file}:{line}
+```
+
+**Terminal editors** (`personal.ide: vim` / `nvim` / `emacs`):
+```bash
+vim  +{line} {file}
+nvim +{line} {file}
+emacs +{line} {file}
 ```
 
 For multiple files, run one command per file:
 ```bash
-# PhpStorm
-phpstorm --line 42 app/Models/User.php
-phpstorm --line 15 app/Services/UserService.php
+# JetBrains (PhpStorm / WebStorm / GoLand / PyCharm)
+phpstorm --line 42 src/Services/UserService.php
+webstorm --line 15 src/services/user-service.ts
+goland   --line 27 internal/user/service.go
+pycharm  --line 88 app/services/user_service.py
 
-# VS Code
-code -g app/Models/User.php:42
-code -g app/Services/UserService.php:15
-```
+# VS Code-family
+code     --goto src/services/user-service.ts:15
+cursor   --goto app/services/user_service.py:88
 
-If the line number is unknown (e.g. new file), omit the line parameter:
-```bash
-phpstorm app/Models/User.php
-code app/Models/User.php
+# Open file without jumping to a line
+code     src/services/user-service.ts
+phpstorm src/Services/UserService.php
 ```
 
 ### Rules
@@ -102,8 +120,16 @@ code app/Models/User.php
 
 | IDE | Command | Install |
 |---|---|---|
-| VS Code | `code {file}` | Shell Command: Install 'code' in PATH |
-| PhpStorm | `phpstorm {file}` | JetBrains Toolbox CLI or `Create command-line launcher` in PhpStorm |
+| VS Code         | `code {file}`     | Shell Command: Install 'code' in PATH                                        |
+| Cursor          | `cursor {file}`   | Settings → "Install 'cursor' shell command"                                  |
+| Windsurf        | `windsurf {file}` | Settings → "Install 'windsurf' shell command"                                |
+| Zed             | `zed {file}`      | Settings → "Install CLI" (creates `zed` in PATH)                             |
+| PhpStorm        | `phpstorm {file}` | JetBrains Toolbox CLI or *Tools → Create command-line launcher* in PhpStorm  |
+| WebStorm        | `webstorm {file}` | JetBrains Toolbox CLI or *Tools → Create command-line launcher* in WebStorm  |
+| IntelliJ IDEA   | `idea {file}`     | JetBrains Toolbox CLI or *Tools → Create command-line launcher* in IDEA      |
+| PyCharm         | `pycharm {file}`  | JetBrains Toolbox CLI or *Tools → Create command-line launcher* in PyCharm   |
+| GoLand          | `goland {file}`   | JetBrains Toolbox CLI or *Tools → Create command-line launcher* in GoLand    |
+| Vim / Neovim    | `vim {file}` / `nvim {file}` | Bundled with most distros                                         |
 
 ## Output format
 
@@ -121,8 +147,8 @@ code app/Models/User.php
 ## Gotcha
 
 - Check `.agent-settings.yml` for `personal.open_edited_files` before opening anything — the user may have disabled it.
-- Don't open files during batch operations (e.g., fixing 20 PHPStan errors) — only open when specifically relevant.
-- PHPStorm sometimes locks files when opening — wait briefly before editing the same file.
+- Don't open files during batch operations (e.g., fixing 20 type-checker errors across PHPStan / tsc / mypy / `cargo check`) — only open when specifically relevant.
+- JetBrains IDEs (PhpStorm, WebStorm, IDEA, PyCharm, GoLand, RubyMine, Rider) sometimes briefly lock a file on open — wait a moment before editing the same file.
 
 ## Do NOT
 

@@ -43,6 +43,13 @@ Mechanical backstop:
 (non-zero exit on any rule below). Self-scan is the primary gate;
 the script is the deterministic safety net.
 
+## Question pacing — simple vs complex
+
+- **Simple, binary, or independent questions** may be grouped into a single reply with numbered options.
+- **Complex, dependent, or branching questions** must be asked **one at a time** — one question per turn — so each answer informs the next.
+
+If in doubt, prefer one question at a time over a long batched prompt.
+
 ## Mechanics — rationale, failure modes, format details, examples
 
 The "why take a position", position-agnostic clause, format
@@ -55,3 +62,8 @@ progress indicators, and summary-table patterns all live in
 [`contexts/communication/rules-auto/user-interaction-mechanics.md`](../contexts/communication/rules-auto/user-interaction-mechanics.md).
 The rule above is the obligation surface; the mechanics file is the
 lookup material.
+
+When the user pastes large tool output, logs, JSON, or API responses,
+keep the reply narrow: extract only the relevant fields with targeted
+filters (`jq`, `rg`, `grep`) before quoting, instead of echoing the
+whole blob back.

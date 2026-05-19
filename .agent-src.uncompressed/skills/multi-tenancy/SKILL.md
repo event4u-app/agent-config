@@ -3,7 +3,12 @@ name: multi-tenancy
 description: "Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations."
 source: package
 domain: engineering
+framework: laravel
 ---
+
+<!-- Framework scope: Laravel only. Uses Eloquent model conventions,
+     Laravel Context, and Artisan traits — concepts not portable across
+     frameworks. Other stacks need a stack-native multi-tenancy skill. -->
 
 # multi-tenancy
 
@@ -48,6 +53,8 @@ The tenant connection starts **empty** and is configured dynamically per request
 Projects may have additional connections for admin operations, provisioning, or monitoring. Check `config/database.php`.
 
 ## Core tenant switching service
+
+**Scope**: Laravel-specific (see frontmatter). For non-Laravel multi-tenant systems, the concepts below still apply but the implementation differs — consult the framework's connection / session / DI conventions.
 
 Search the codebase for the service responsible for tenant switching. Typical responsibilities:
 

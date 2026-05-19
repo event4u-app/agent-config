@@ -95,12 +95,13 @@ A single blocking call (sync I/O, time.sleep, CPU-heavy parse, large JSON load) 
 
 ## Procedure: Apply to a new async feature
 
-1. Run Step 1; reject if work is CPU-bound.
-2. Sketch the call graph; tag each `await` site with its primitive (Step 2).
-3. Mark every sync↔async boundary; pick the bridge per Step 3.
-4. For each long-running coroutine, write the cancel-safety contract (Step 4).
-5. Grep the leaf calls for blocking sins (Step 5); replace or push to executor.
-6. Hand the sketch to a reviewer **before** coding; cite this skill.
+1. Inspect the existing call graph and identify each `await` site, sync↔async boundary, and any blocking leaf calls before touching code.
+2. Run Step 1; reject if work is CPU-bound.
+3. Sketch the call graph; tag each `await` site with its primitive (Step 2).
+4. Mark every sync↔async boundary; pick the bridge per Step 3.
+5. For each long-running coroutine, write the cancel-safety contract (Step 4).
+6. Grep the leaf calls for blocking sins (Step 5); replace or push to executor.
+7. Hand the sketch to a reviewer **before** coding; cite this skill.
 
 ## Output format
 

@@ -2,7 +2,7 @@
 
 > Project-specific FormRequest conventions. Array syntax, route params, property mapping.
 
-**Related Skills:** `laravel-validation`, `api-endpoint`
+**Related Skills:** `laravel-validation`, `laravel-api-endpoint`
 **Related Guidelines:** [controllers.md](controllers.md)
 
 ## Core Rules

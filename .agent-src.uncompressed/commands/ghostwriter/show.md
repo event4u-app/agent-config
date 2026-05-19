@@ -3,6 +3,7 @@ name: ghostwriter:show
 tier: 2
 cluster: ghostwriter
 sub: show
+skills: [ghostwriter]
 description: Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only.
 disable-model-invocation: true
 suggestion:

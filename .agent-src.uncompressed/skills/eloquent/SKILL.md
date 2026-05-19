@@ -15,7 +15,7 @@ Use when creating/modifying Eloquent models, relationships, scopes, or writing d
 
 Do NOT use when:
 - Schema design or query optimization (use `database` skill)
-- Creating migrations only (use `migration-creator` skill)
+- Creating migrations only (use `laravel-migration` skill)
 
 ## Procedure: Create or modify a model
 

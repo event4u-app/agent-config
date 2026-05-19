@@ -1,0 +1,1 @@
+../../.agent-src/rules/git-history-discipline.md

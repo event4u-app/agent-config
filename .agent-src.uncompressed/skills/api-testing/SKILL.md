@@ -151,6 +151,19 @@ expect($data['title'])->toBeString();
 expect($data['total'])->toBeString(); // Money as string, not float
 ```
 
+### Filter noisy responses
+
+When a failing test dumps the full JSON body, narrow the diagnosis with `jq` or `grep`
+instead of scrolling the whole payload:
+
+```bash
+# Extract only the failing assertion path
+echo "$RESPONSE_JSON" | jq '.data.status, .errors'
+
+# Targeted log scan
+rg --json 'API call failed' storage/logs/laravel.log | jq -r '.data.lines.text'
+```
+
 ## External service mocking
 
 ```php
@@ -177,6 +190,10 @@ it('handles external API failure gracefully', function () {
 | **Response** | JSON structure, field types, pagination meta |
 | **Side effects** | Database changes, events dispatched, jobs queued |
 | **Edge cases** | Empty results, large payloads, concurrent access |
+
+## Bridge to UI verification
+
+API tests cover the contract layer. When an endpoint feeds a UI surface (Livewire component, Blade-rendered page, SPA route), complement the API test with a thin UI probe: a `livewire test` for wired components, or a Playwright spec / browser `screenshot` for the rendered shell. Never assume the UI works just because the API test is green.
 
 ## Output format
 
@@ -205,3 +222,11 @@ it('handles external API failure gracefully', function () {
 - Do not skip auth tests — always test both authenticated and unauthenticated.
 - Do not assert entire JSON responses — assert only meaningful fields.
 - Do not use `Http::fake()` without also testing the real integration path.
+
+## Anti-bruteforce — diagnose before retry
+
+When a test fails, do not retry blindly with tweaked assertions until something passes. Diagnose the root cause first: print the actual response shape once, compare it to the contract, then write a targeted fix. Trial-and-error retries hide real regressions.
+
+## Clarification guard — ambiguous contract → ask
+
+If the endpoint contract is ambiguous (unclear status code, optional fields, error envelope shape), do not assume. Ask the user or check the OpenAPI spec / route definition before writing assertions — never guess the response shape from the route name.

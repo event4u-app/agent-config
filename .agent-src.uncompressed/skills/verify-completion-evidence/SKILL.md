@@ -50,9 +50,9 @@ mapping before running anything:
 | Claim | Evidence command |
 |---|---|
 | "tests pass" | full or targeted test suite |
-| "no static errors" | PHPStan / TypeScript / mypy on changed scope |
-| "style is clean" | ECS / Prettier / ESLint |
-| "no automated refactor pending" | Rector --dry-run clean |
+| "no static errors" | project's type-checker on changed scope (PHPStan, `tsc --noEmit`, mypy / pyright, `go vet`, `cargo check`) |
+| "style is clean" | project's linter + formatter (ECS / Prettier / ESLint / Ruff / Black / gofmt / rustfmt) |
+| "no automated refactor pending" | project's auto-refactor dry-run if one exists (Rector for PHP — otherwise skip this row) |
 | "endpoint works" | curl / Postman / integration test output |
 | "UI renders" | Playwright snapshot or manual browser check |
 | "bug is fixed" | regression test passes |
@@ -60,8 +60,7 @@ mapping before running anything:
 ### 2. Run the command fresh
 
 * Run against the current working tree, not a cached summary.
-* For PHP projects inside Docker: run inside the container (see
-  [`docker`](../docker/SKILL.md) and [`tests-execute`](../tests-execute/SKILL.md)).
+* If the project runs commands inside a container or VM (Docker, Devcontainer, Vagrant), run them there — not on the host. See [`docker`](../docker/SKILL.md) and [`tests-execute`](../tests-execute/SKILL.md).
 * Use targeted runs during iteration (`--filter=`, `--testNamePattern`).
   Run the full suite only in the final verification pass.
 
@@ -77,40 +76,38 @@ mapping before running anything:
 Ask: *"Does this output actually support what I am about to say?"*
 
 * 248/250 tests passed with 2 skipped → do not say "all green"; name the skips.
-* PHPStan exit 0 but only analyzed one file → do not say "no static
+* Type-checker exit 0 but only analyzed one file → do not say "no static
   errors"; name the scope that was checked.
 * `curl` returned 200 → check the body, not just the status.
 
 ### 5. Only then make the claim
 
-Reference the evidence: *"Tests: 250/250 passed. PHPStan: level 8, 0
-errors on `app/Services/`."* — not *"everything looks good"*.
+Reference the evidence: *"Tests: 250/250 passed. Type-checker: 0 errors
+on the changed scope."* — not *"everything looks good"*.
 
-## The end-of-work sequence (PHP projects)
+## The end-of-work sequence
 
 When all code changes are done and you are ready to report completion:
 
-1. **Targeted tests** — the test(s) covering the changed code pass
-2. **Full test suite** — only after targeted pass is green
-3. **PHPStan** → **Rector --dry-run** → **ECS** → **PHPStan** (second pass
-   catches issues Rector / ECS may have introduced)
-4. Fix any output from steps 1–3 and restart the sequence
-5. Only then: claim completion or suggest `/commit`, push, or PR
+1. **Targeted tests** — the test(s) covering the changed code pass.
+2. **Full test suite** — only after targeted pass is green.
+3. **Static analysis pipeline** — run the project's type-checker → auto-refactor dry-run (if any) → linter / formatter → type-checker (second pass catches issues the refactor / formatter may have introduced).
+4. Fix any output from steps 1–3 and restart the sequence.
+5. Only then: claim completion or suggest `/commit`, push, or PR.
 
-Do not run the full quality pipeline between intermediate edits — it
-burns time and tokens. Use it once, at the end.
+Do not run the full quality pipeline between intermediate edits — it burns time and tokens. Use it once, at the end.
 
-See [`quality-tools`](../quality-tools/SKILL.md) for the exact commands
-per tool.
+→ For the **exact PHP commands** (PHPStan → Rector → ECS → PHPStan): see [`quality-tools`](../quality-tools/SKILL.md).
+→ For TS / JS, Python, Go, Rust pipelines: the project's `Taskfile.yml` / `package.json scripts` / `Makefile` is the source of truth — read it before improvising.
 
 ## Minimum evidence per task type
 
 | Task type | Required evidence |
 |---|---|
-| Code change (logic) | Targeted tests + PHPStan on changed scope |
-| New feature | Tests (new + suite) + PHPStan + smoke check (curl/UI) |
+| Code change (logic) | Targeted tests + project's type-checker on changed scope |
+| New feature | Tests (new + suite) + type-checker + smoke check (curl / UI / integration probe) |
 | Bug fix | Regression test (RED → GREEN) + full suite |
-| Refactoring | Full suite + PHPStan + Rector dry-run |
+| Refactoring | Full suite + type-checker + auto-refactor dry-run if available |
 | Config / env change | Relevant command or service output (not just file diff) |
 | Migration | Migration run output + rollback dry-run + tests |
 | API endpoint | HTTP response body + status + content-type |
@@ -140,7 +137,7 @@ When reporting completion to the user:
 
 * A "no output" result from a linter is not proof it ran — check the
   exit code and the analyzed-file count.
-* Silencing a warning with `@phpstan-ignore-next-line` or `// @ts-expect-error`
+* Silencing a warning with `@phpstan-ignore-next-line`, `// @ts-expect-error`, `# type: ignore`, or `//nolint`
   without a reason code passes the linter but defers the real problem.
 * Running tests with `--stop-on-failure` then reporting "passed" — it
   only ran until the first failure; the green streak after it is
@@ -150,7 +147,7 @@ When reporting completion to the user:
   change is large.
 * Running the test suite on the wrong branch (forgot to switch or
   rebase) — verify `git status` and `git log -1` before the final gate.
-* A previously green PHPStan run in the same conversation is stale as
+* A previously green static-analysis run in the same conversation is stale as
   soon as any edit lands. Run it again.
 
 ## Red flags — STOP and run the gate
@@ -159,7 +156,7 @@ When reporting completion to the user:
   command-output reference in the same message
 * About to suggest `/commit` / push / PR without a verification block
 * Relying on an earlier-in-conversation test run
-* Partial evidence (tests green, PHPStan not run — or vice versa)
+* Partial evidence (tests green, type-checker / linter not run — or vice versa)
 * "The failing test is unrelated, let me skip it" — verify first, then
   decide
 * Reporting a green run by paraphrasing instead of quoting exit code
@@ -177,8 +174,8 @@ When reporting completion to the user:
 
 ## When to hand over to another skill
 
-* Exact PHPStan / Rector / ECS commands → [`quality-tools`](../quality-tools/SKILL.md)
-* Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
+* Exact PHP quality commands (PHPStan / Rector / ECS) → [`quality-tools`](../quality-tools/SKILL.md)
+* Running tests inside a container / VM → [`tests-execute`](../tests-execute/SKILL.md)
 * Writing the regression test that the gate requires →
   [`test-driven-development`](../test-driven-development/SKILL.md)
 * Diagnosing why the gate failed → [`systematic-debugging`](../systematic-debugging/SKILL.md)

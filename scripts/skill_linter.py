@@ -472,6 +472,21 @@ def _command_delegation_signal(text: str, frontmatter: Optional[str]) -> bool:
     return False
 
 
+def _strip_markdown_for_check(text: str) -> str:
+    """Strip fenced code, inline code spans, and markdown links so heuristic
+    regex matches operate on prose only.
+
+    Used by rule-body heuristics whose targets (e.g. ``procedural_rule``)
+    must not flip on legitimate skill pointers like ``[git-workflow](…)``
+    or ``` `skill:symfony-workflow` ```. Frontmatter is handled by the
+    caller via ``text.split("---", 2)[-1]``.
+    """
+    text = re.sub(r"```[^\n]*\n.*?```", "", text, flags=re.DOTALL)
+    text = re.sub(r"`[^`\n]+`", "", text)
+    text = re.sub(r"\[[^\]]*\]\([^)]*\)", "", text)
+    return text
+
+
 def _iron_law_blocks(text: str) -> int:
     """Count fenced blocks that look like verbatim Iron-Law imperatives.
 
@@ -575,10 +590,36 @@ def has_validation_step(procedure_block: str) -> bool:
     return any(signal in lowered for signal in good_signals)
 
 
+_INSPECT_VERB_PATTERN = re.compile(
+    r"\b(?:"
+    # Direct inspection
+    r"inspect|examine|audit|survey"
+    # Read / look
+    r"|read|look\s+at"
+    # Check (word-boundary — matches "check that", "check current", "check what")
+    r"|check"
+    # Review (broad — matches "review existing", "review the failures")
+    r"|review"
+    # Comprehension / orientation
+    r"|understand|identify|analyze|analyse"
+    # Discovery
+    r"|detect|gather|discover"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
 def has_inspect_step(procedure_block: str) -> bool:
-    lowered = procedure_block.lower()
-    inspect_signals = ["inspect", "check current", "review existing", "identify", "analyze"]
-    return any(signal in lowered for signal in inspect_signals)
+    """Return True if the procedure block opens with an inspect / read step.
+
+    Corpus-driven verb list (see docs/contracts/linter-structural-model.md):
+    the first ordered step in a skill procedure should orient the agent in
+    the live system — read existing code, examine current state, detect
+    stack — before mutating anything. Regex uses word boundaries to avoid
+    substring matches inside unrelated words (e.g. ``read`` inside
+    ``already``).
+    """
+    return bool(_INSPECT_VERB_PATTERN.search(procedure_block))
 
 
 def find_vague_validation(text: str) -> list[str]:
@@ -678,8 +719,9 @@ def lint_skill(path: Path, text: str) -> LintResult:
     if skill_name and "-" not in skill_name and len(skill_name) >= 3:
         # Single word without qualifier — likely too generic
         ALLOWED_BARE_NOUNS = {"database", "devcontainer", "docker", "eloquent", "flux", "forecasting",
-                              "grafana", "laravel", "livewire", "mcp", "openapi", "performance",
-                              "security", "terraform", "terragrunt", "traefik", "websocket"}
+                              "grafana", "laravel", "livewire", "markitdown", "mcp", "openapi",
+                              "performance", "security", "terraform", "terragrunt", "traefik",
+                              "websocket"}
         if skill_name.lower() not in ALLOWED_BARE_NOUNS:
             issues.append(Issue("warning", "bare_noun_name",
                                 f"Bare-noun skill name `{skill_name}` — consider adding a qualifier (e.g., `{skill_name}-management`)"))
@@ -1504,9 +1546,20 @@ def lint_rule(path: Path, text: str) -> LintResult:
         if bad_sign in text:
             issues.append(Issue("error", "rule_looks_like_skill", f"Rule contains skill-like section: {bad_sign}"))
 
-    # Exclude frontmatter from procedural check (frontmatter may contain "type")
+    # Procedural-rule heuristic: a rule "looks procedural" only when its own
+    # prose AND its own structure both signal a procedure. We:
+    #   1. Exclude frontmatter (may contain "type", path strings, etc.).
+    #   2. Strip code spans, fenced blocks, and markdown links — so legitimate
+    #      pointers to procedural skills (e.g. `skill:git-workflow`,
+    #      [symfony-workflow](…)) do not flip the keyword count.
+    #   3. Require ≥ 2 keyword occurrences in stripped prose AND ≥ 3 ordered
+    #      steps AND no Iron-Law block — that combination distinguishes a
+    #      mis-classified procedure from a rule that merely references one.
     body = text.split("---", 2)[-1] if frontmatter else text
-    if re.search(r"\b(procedure|workflow)\b", body, re.IGNORECASE):
+    stripped_body = _strip_markdown_for_check(body)
+    kw_count = len(re.findall(r"\b(procedure|workflow)\b", stripped_body, re.IGNORECASE))
+    ordered_steps = len(re.findall(r"^\s*\d+\.\s+", body, re.MULTILINE))
+    if kw_count >= 2 and ordered_steps >= 3 and _iron_law_blocks(text) == 0:
         issues.append(Issue("warning", "procedural_rule", "Rule looks procedural; consider a skill instead"))
 
     return LintResult(

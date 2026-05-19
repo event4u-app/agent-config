@@ -64,6 +64,18 @@ Do NOT use when:
 - Do NOT use `$request->all()` — use `$request->validated()`.
 - Do NOT put business logic in validation classes.
 
+## Verification
+
+Confirm new rules with a concrete probe: a Pest feature test that POSTs with `curl`-shaped payloads through the browser/HTTP client, or a `phpunit`/`pest` run against the FormRequest. Add at least one negative case per rule (missing, wrong type, boundary). Never claim rules work without running them.
+
+## Anti-bruteforce — diagnose before retry
+
+When a rule fires unexpectedly, do not blindly toggle `required` / `nullable` / `sometimes` until tests pass. Print `$request->all()` once, compare against the rule set, identify the root cause, then make a targeted fix.
+
+## Clarification guard — ambiguous field → ask
+
+If a field's intent is unclear (is `tags` a CSV string, an array, or JSON? is `email` required at create or only at update?), ask the user or check the existing schema / API contract before guessing. Hidden assumptions in validation rules surface as production 422s.
+
 ## Auto-trigger keywords
 
 - validation

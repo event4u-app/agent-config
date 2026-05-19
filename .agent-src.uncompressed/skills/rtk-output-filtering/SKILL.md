@@ -37,12 +37,22 @@ rtk npm test          # same for JS/TS
 rtk docker compose ps # compact container status
 ```
 
-## Procedure: Wrap commands with rtk
+## Procedure: Analyze, then wrap commands with rtk
 
-1. Read `personal.rtk_installed` from `.agent-settings.yml`.
-2. **If `true`** → prefix commands with `rtk` when output >30 lines expected.
-3. **If `false` or missing** → use plain commands. Do not prompt the user.
-4. After wrapping: verify output is useful (not truncated on completeness-critical commands).
+### 1. Analyze the current setup
+
+- Read `personal.rtk_installed` from `.agent-settings.yml`.
+- Review the command about to run: estimated output size, whether
+  completeness matters (e.g. diff review), and whether a project-local
+  filter exists in `.rtk/filters.toml`.
+
+### 2. Wrap (or skip)
+
+1. **If `personal.rtk_installed: true`** → prefix commands with `rtk`
+   when output >30 lines expected.
+2. **If `false` or missing** → use plain commands. Do not prompt the user.
+3. After wrapping: verify output is useful (not truncated on
+   completeness-critical commands).
 
 Installation and one-time setup are owned by
 [`/onboard`](../../commands/onboard.md). If the user asks to install rtk
@@ -153,10 +163,15 @@ When debugging or reviewing diffs, **always run the raw command** without rtk.
 
 ## Project-Local Filters
 
-Custom filters for the project's PHP/Laravel toolchain live in `.rtk/filters.toml`
-(project root, versioned in Git). These override global filters for matching commands.
+Project-local custom filters live in `.rtk/filters.toml` (project root, versioned in Git). These override global filters for matching commands. Add entries for whatever tools the project actually runs.
 
-Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
+Coverage shipped with this package (extend per project):
+- PHP / Laravel: PHPStan, Pest, PHPUnit, ECS, Rector, Composer, Artisan
+- JS / TS: tsc, eslint, prettier, vitest, jest, playwright, pnpm/npm/yarn install + run
+- Python: ruff, mypy, pyright, pytest, pip / poetry / uv
+- Go: `go test`, `go build`, `go vet`, `golangci-lint`
+- Rust: `cargo build`, `cargo test`, `cargo clippy`, `cargo fmt`
+- Infra / runtime: Docker Compose, Terraform, kubectl
 
 To generate or update project-local filters → use the `/optimize-rtk-filters` command.
 

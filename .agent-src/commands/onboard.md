@@ -217,7 +217,15 @@ no network call, file-existence only:
 
 ```bash
 stacks=()
-[ -f composer.json ] && stacks+=("php")
+if [ -f composer.json ]; then
+  if grep -q '"laravel/framework"' composer.json 2>/dev/null; then
+    stacks+=("php-laravel")
+  elif grep -q '"symfony/framework-bundle"' composer.json 2>/dev/null; then
+    stacks+=("php-symfony")
+  else
+    stacks+=("php")
+  fi
+fi
 [ -f package.json ] && stacks+=("node")
 [ -f Cargo.toml ] && stacks+=("rust")
 [ -f go.mod ] && stacks+=("go")

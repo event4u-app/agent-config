@@ -72,6 +72,12 @@ create new bugs. Quick patches mask underlying issues.
 
 ## Procedure: Analyze a bug
 
+1. **Inspect inputs and reproducers** — Pull every source named in *Input sources* (branch, Jira, Sentry, error string, user description) before forming a hypothesis.
+2. **Investigate root cause** — Run Phase 1 below; gather evidence, walk the stacktrace, consult engineering memory.
+3. **Find the pattern** — Run Phase 2; check for similar bugs elsewhere in the codebase.
+4. **Form and test a hypothesis** — Run Phase 3; write a failing test that reproduces the bug.
+5. **Fix and verify** — Run Phase 4; apply the minimal change, re-run the failing test plus the wider suite.
+
 ### Phase 1: Root Cause Investigation
 
 Gather all available evidence before forming any hypothesis:
@@ -234,6 +240,12 @@ Focus on the "Bug fixes" attack questions: Is this the root cause or a symptom? 
 1. Root cause analysis with evidence trail
 2. Fix implementation or fix plan with specific files and changes
 3. Regression test covering the failure scenario
+
+## Verification examples
+
+- **Backend bug**: reproduce with `curl` against the failing route (or an `actingAs()` HTTP test) before and after the fix; assert the new response shape with `assertJsonPath`.
+- **Runtime bug**: place a `xdebug` breakpoint at the suspect frame, step through, and inspect the stack trace; for log-only repros, dump the failing variable with `dd(` once, then remove.
+- **Regression test**: add a test that reproduces the original failure first (red), then makes it green — never write the test post-fix from memory.
 
 ## Gotcha
 

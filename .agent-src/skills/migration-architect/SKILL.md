@@ -1,6 +1,6 @@
 ---
 name: migration-architect
-description: "Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to `migration-creator` for DDL once locked."
+description: "Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked."
 personas:
   - backend-architect
   - senior-engineer
@@ -13,8 +13,8 @@ domain: process
 > Shape the **rollout strategy** for a migration before any DDL or
 > code is written. Plans phases, dual-write windows, cutover
 > sequencing, deprecation cycles, and cross-service coordination.
-> Hands off to [`migration-creator`](../migration-creator/SKILL.md)
-> for tactical DDL once the plan is locked.
+> Hands off to [`laravel-migration`](../laravel-migration/SKILL.md)
+> (or the framework-native equivalent) for tactical DDL once the plan is locked.
 
 ## When to use
 
@@ -28,7 +28,7 @@ domain: process
 Do NOT use when:
 
 - The change is a single additive migration safe in one deploy →
-  route to [`migration-creator`](../migration-creator/SKILL.md).
+  route to [`laravel-migration`](../laravel-migration/SKILL.md) (or framework-native equivalent).
 - The decision is *whether* to migrate at all → route to
   [`decision-record`](../decision-record/SKILL.md) first.
 - The concern is data correctness during the migration → route to
@@ -100,7 +100,7 @@ Phases:
 Deprecation cycle (if any):
   Announce <duration>  →  soft-fail <duration>  →  hard-fail <duration>  →  remove
 
-Next: /migration-creator for the DDL of phase 1
+Next: /laravel-migration (or framework-native equivalent) for the DDL of phase 1
 ```
 
 ## Gotcha
@@ -112,7 +112,7 @@ Next: /migration-creator for the DDL of phase 1
 
 ## Do NOT
 
-- Do NOT write DDL — that is `migration-creator`'s job.
+- Do NOT write DDL — that is the framework-specific migration skill's job (`laravel-migration` for Laravel).
 - Do NOT collapse phases to "ship it" because the user is impatient;
   surface the risk and let the user decide.
 - Do NOT skip the deprecation cycle because nobody is using the old

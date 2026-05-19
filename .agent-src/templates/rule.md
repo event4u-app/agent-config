@@ -39,8 +39,8 @@ both reject the legacy prefix.
 the file the agent is editing — it is **not** a file reference and is
 **not rewritten**. Rules that fire when the agent edits source-of-truth
 files legitimately keep the `.agent-src.uncompressed/` prefix (see
-`skill-quality`, `docs-sync`, `rule-type-governance`,
-`augment-portability`). Rules that fire on consumer-project paths use
+`skill-quality`, `rule-type-governance`,
+`augment-edit-discipline`). Rules that fire on consumer-project paths use
 `agents/`, `lang/`, `.augment/`, etc.
 
 | Use case | Example `path_prefix:` |

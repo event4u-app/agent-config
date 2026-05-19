@@ -51,11 +51,11 @@ constant in the script body and the row below.
 ### § 3.1 — Kernel (`scripts/smoke/kernel.sh`)
 
 ```
-9 kernel rules · 8 carry Iron-Law fences · 1 dispatch index · ≤ 2 budget breaches
+10 kernel rules · 9 carry Iron-Law fences · 1 dispatch index · ≤ 2 budget breaches
 ```
 
-- **9 kernel rules** — fixed by [`kernel-membership.md`](kernel-membership.md).
-- **8 carry Iron-Law fences** — measured 2026-05-16. `agent-authority`
+- **10 kernel rules** — fixed by [`kernel-membership.md`](kernel-membership.md).
+- **9 carry Iron-Law fences** — measured 2026-05-16. `agent-authority`
   is the **dispatch index** (priority table pointing at the other four
   authority rules); it is structurally exempt from the Iron-Law-fence
   requirement and listed in the script's `EXEMPT_FROM_FENCE` set.
@@ -70,13 +70,13 @@ constant in the script body and the row below.
 ### § 3.2 — Router (`scripts/smoke/router.sh`)
 
 ```
-75 router ids · 0 broken rule pointers · 35 routes_to refs · 2 missing contracts
+68 router ids · 0 broken rule pointers · 36 routes_to refs · 2 missing contracts
 ```
 
-- **75 ids** — 9 kernel + 24 tier_1 + 42 tier_2; every id resolves to
+- **68 ids** — 10 kernel + 23 tier_1 + 35 tier_2; every id resolves to
   `.agent-src/rules/<id>.md`.
 - **0 broken rule pointers** — hard assertion; smoke fails on any miss.
-- **35 routes_to refs** across tier_1 + tier_2; resolver honours the
+- **36 routes_to refs** across tier_1 + tier_2; resolver honours the
   four prefixes (`skill:`, `command:`, `guideline:`, `contract:`).
 - **2 missing contracts** — measured 2026-05-16:
   `contract:artifact-engagement-flow`,
@@ -130,7 +130,7 @@ the final baseline line) for CI summary parsing.
 
 | Symptom | Likely cause | Fix |
 |---|---|---|
-| `kernel.sh` reports > 8 missing fences | Kernel rule lost its Iron Law block during edit | Restore the fence; update `EXEMPT_FROM_FENCE` only for new dispatch indexes |
+| `kernel.sh` reports > 9 missing fences | Kernel rule lost its Iron Law block during edit | Restore the fence; update `EXEMPT_FROM_FENCE` only for new dispatch indexes |
 | `router.sh` reports > 0 broken pointers | `router.json` references an id without a rule file | Add the rule or remove the route — never edit the smoke baseline up |
 | `schema.sh` reports FAILs | A skill / rule lost a required field | Restore via [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json) |
 | `skills.sh` 5/5 random sample fails | Hand-edit broke frontmatter or renamed directory without updating `name:` | Restore filename ↔ slug coupling |
@@ -139,6 +139,6 @@ the final baseline line) for CI summary parsing.
 
 - [`measurement-baseline.md`](measurement-baseline.md) — measurement substrate.
 - [`cost-enforcement.md`](cost-enforcement.md) — cost ladder, sibling smoke surface.
-- [`kernel-membership.md`](kernel-membership.md) — the 9-rule kernel set.
+- [`kernel-membership.md`](kernel-membership.md) — the 10-rule kernel set.
 - [`rule-router.md`](rule-router.md) — router contract.
 - `road-to-kernel-and-router.md` — kernel budget reduction path.

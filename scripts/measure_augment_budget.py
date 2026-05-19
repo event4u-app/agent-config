@@ -42,6 +42,12 @@ RULES_DIR = REPO_ROOT / ".augment" / "rules"
 TREND_FILE = REPO_ROOT / "agents" / ".augment-budget-history.jsonl"
 
 # Augment workspace-guidelines ceiling — empirical 2026-05-08.
+# TOTAL_CAP is the hard ceiling Augment itself enforces. FAIL_THRESHOLD is the
+# soft safety-margin gate (0.95). When a branch breaches it, the discipline
+# is: DO NOT loosen the threshold — invoke the `rule-refactor` skill, which
+# audits all rules for merge / delete / move-to-context / promote-to-skill
+# candidates. Threshold-lift is explicitly rejected as a tool-shape anti-
+# pattern (see the validation-budget rule). Only an ADR may grow the cap.
 TOTAL_CAP = 49_512
 WARN_THRESHOLD = 0.85
 FAIL_THRESHOLD = 0.95

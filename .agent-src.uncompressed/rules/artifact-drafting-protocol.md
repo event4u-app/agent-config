@@ -13,6 +13,12 @@ triggers:
 
 # Artifact Drafting Protocol
 
+```
+NEVER START WRITING WITHOUT THE UNDERSTAND → RESEARCH → DRAFT PHASES.
+EVERY PHASE ENDS WITH A NUMBERED-OPTIONS PROMPT. NO SILENT PROGRESSION.
+ZERO AUTOPILOT. AGENT PROPOSES, HUMAN DECIDES. COMMIT ONLY ON APPROVAL.
+```
+
 When the user asks to build or significantly rewrite a **skill, rule,
 command, or guideline**, the agent does **not** start writing. It runs
 three phases: **Understand → Research → Draft**. Each phase ends with a

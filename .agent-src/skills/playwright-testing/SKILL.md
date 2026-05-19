@@ -18,7 +18,6 @@ Use this skill when:
 - Configuring Playwright for CI/CD
 
 **Guideline:** `../../../docs/guidelines/e2e/playwright.md` — full conventions, config templates, CI setup.
-**Rule:** `.augment/rules/e2e-testing.md` — constraints enforced during E2E test work.
 **Mobile:** for native iOS/Android or React Native E2E, do NOT reuse Playwright — see the `mobile-e2e-strategy` skill for framework selection.
 
 ## Procedure: Write Playwright tests
@@ -162,6 +161,22 @@ npx playwright show-report
 
 # Run specific test
 npx playwright test -g "should login"
+```
+
+### Filter noisy Playwright output
+
+Use `--grep`, `--reporter=json`, plus `jq`/`rg` to keep diagnosis scoped:
+
+```bash
+# Targeted run — only matching specs
+npx playwright test --grep '@smoke'
+
+# JSON report, narrowed to failures via jq
+npx playwright test --reporter=json > pw.json
+jq '.suites[].specs[] | select(.tests[].results[].status=="failed")' pw.json
+
+# Scan trace logs for one selector
+rg --color=never 'getByRole.*Submit' test-results/
 ```
 
 ## Avoiding flaky tests

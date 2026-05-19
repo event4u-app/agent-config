@@ -71,7 +71,7 @@ event payload, job constructor), assess the impact:
 
 After completing all downstream changes:
 
-1. **No broken imports** — `php -l` or PHPStan catches these
-2. **No broken tests** — run the test suite
-3. **No broken types** — PHPStan Level 9 catches signature mismatches
-4. **No stale references** — grep for the old name/namespace to confirm zero results
+1. **No broken imports / parse errors** — language-native syntax check (`php -l`, `tsc --noEmit`, `python -m py_compile`, `go build ./...`, `cargo check`).
+2. **No broken tests** — run the project test suite (Pest / PHPUnit, Jest / Vitest, pytest, `go test ./...`, `cargo test`).
+3. **No broken types / signatures** — project's type-checker (PHPStan / Psalm, TypeScript, mypy / pyright, `go vet`, `cargo check`).
+4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.

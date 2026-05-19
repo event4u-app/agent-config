@@ -13,7 +13,7 @@ Use when creating a new service, extracting business logic from a controller, or
 
 Do NOT use when:
 - Controllers (use `laravel` skill)
-- DTOs (use `dto-creator` skill)
+- DTOs (use `laravel-dto` skill for Laravel/PHP; framework-native skill for other stacks)
 - Models (use `eloquent` skill)
 
 ## When to create a service

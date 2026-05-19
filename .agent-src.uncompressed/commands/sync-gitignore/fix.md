@@ -3,6 +3,7 @@ name: sync-gitignore:fix
 tier: 2
 cluster: sync-gitignore
 sub: fix
+skills: [sync-gitignore]
 description: Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
 disable-model-invocation: true
 suggestion:

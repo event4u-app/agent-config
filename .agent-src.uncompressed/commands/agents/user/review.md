@@ -3,6 +3,7 @@ name: agents:user-review
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 disable-model-invocation: true
 suggestion:

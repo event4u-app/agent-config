@@ -129,12 +129,38 @@ the PR or split by responsibility.
 * Run the full CI pipeline locally (see `Taskfile.yml` in this repo for
   the script list) — must exit 0 except for tolerated warnings.
 
+### 5b. Budget-discipline gate — hard stop
+
+After validation, before declaring the rule done, run:
+
+```bash
+python3 scripts/measure_augment_budget.py --check
+```
+
+If utilisation is `≥ 0.95` (or the check exits non-zero), **STOP** and
+invoke [`rule-refactor`](../rule-refactor/SKILL.md). Do NOT:
+
+* Trim the new rule further to "just fit" — if it needs that body to
+  do its job, the rule is right and the rule set around it is wrong.
+* Raise `FAIL_THRESHOLD` in `scripts/measure_augment_budget.py` —
+  threshold-lift is explicitly forbidden (see the
+  [`validation-budget`](../../rules/validation-budget.md) rule and
+  the `rule-refactor` Iron Law).
+* Promote an always-rule to auto to dodge the cap if the rule's
+  semantics require always-on visibility — that breaks the rule, not
+  the budget.
+
+The discipline: budget pressure is the signal that the rule **set**
+needs a cleanup pass, not that the new rule needs to be smaller. The
+`rule-refactor` skill runs the audit and proposes merge / delete /
+move-to-context / promote-to-skill so the new rule earns its space.
+
 ### 6. Governance baseline (when introducing a new linter check)
 
 **Advisory, reviewer-checked — no CI gate.** When the same PR adds a
-new check to `scripts/skill_linter.py` (or strengthens an existing one)
-such that previously-clean rules now warn, the PR body MUST record the
-pre-existing violations on `main` in a Markdown table:
+new check to `scripts/skill_linter.py` (or strengthens an existing
+one) such that previously-clean rules now warn, the PR body MUST
+record the pre-existing violations on `main` in a Markdown table:
 
 ```markdown
 ### Pre-existing baseline (informational)
@@ -144,11 +170,11 @@ pre-existing violations on `main` in a Markdown table:
 | {new_code} | N | (a) genuine fix · (b) accept · (c) check too aggressive |
 ```
 
-Forward-only: the new check applies to **the rule under review** and to
-**future** edits. The baseline table is informational so reviewers can
-distinguish genuine debt from acceptable carry-overs without diffing the
-full lint output. See `agents/analysis/lint-warning-triage.md` for the
-3-bucket reference.
+Forward-only: the new check applies to **the rule under review** and
+to **future** edits. The baseline table is informational so reviewers
+can distinguish genuine debt from acceptable carry-overs without
+diffing the full lint output. See
+`agents/analysis/lint-warning-triage.md` for the 3-bucket reference.
 
 ## Frontmatter shape
 
