@@ -3,8 +3,10 @@
 Pure-function ``render(trace) -> str``. Same input ``ExplainTrace``
 always yields byte-identical Markdown — Phase 4 snapshot tests rely on
 this. Each section lives in its own module under :mod:`sections/`; the
-orchestrator only fixes the order. Phase 3 will append ``halt`` and
-``provider`` sections without invalidating existing snapshots.
+orchestrator only fixes the order. Phase 3 wired ``halt`` and
+``provider`` sections; ``halt`` always renders (clean / dirty branch
+both deterministic), ``provider`` emits an empty string on non-video
+runs so the orchestrator drops it silently.
 """
 from __future__ import annotations
 
@@ -18,6 +20,8 @@ _SECTION_ORDER = (
     sections.inputs,
     sections.memory,
     sections.council,
+    sections.halt,
+    sections.provider,
     sections.assumptions,
     sections.pack,
 )

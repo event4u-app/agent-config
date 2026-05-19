@@ -27,8 +27,10 @@ from typing import Any
 from scripts._cli.explain_last import (
     assumptions as _assumptions,
     council as _council,
+    halt as _halt,
     inputs as _inputs,
     memory as _memory,
+    provider as _provider,
     route as _route,
 )
 from scripts._cli.explain_last.scrubber import scrub_string
@@ -106,8 +108,8 @@ def build_trace(
         "memory": _memory.build(project_root, state),
         "pack": _inputs.build_pack(project_root),
         "assumptions": _assumptions.build(state),
-        "halt": None,  # Phase 3 wires this slot.
-        "provider": None,  # Phase 3 wires the /video provider slot.
+        "halt": _halt.build(state),
+        "provider": _provider.build(state),
     }
 
 
