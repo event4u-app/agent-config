@@ -496,3 +496,13 @@ decision_engine:
 # matrix and the road-to-portable-runtime-and-update-check roadmap (P2).
 update_check:
   enabled: true
+
+# ─── explain ──────────────────────────────────────────────────────────────
+# `agent-config explain last` renders the read-only execution trace for the
+# most recent /work run (state file `.work-state.json`). Trace output is
+# PII-scrubbed before emission; the command never makes network calls and
+# never writes to state. Set `enable_last: false` to suppress the subcommand
+# (the call still exits 0 with a one-line notice — used by air-gapped
+# tenants that disable diagnostics surface-wide).
+explain:
+  enable_last: true
