@@ -5,6 +5,9 @@ description: "Any roadmap touch (file move, checkbox flip, phase change) regens 
 source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
+  - command: "/roadmap:process-step"
+  - command: "/roadmap:process-phase"
+  - command: "/roadmap:process-full"
 routes_to:
   - "guideline:agent-infra/roadmap-progress-mechanics"
 ---
@@ -30,6 +33,8 @@ IS A RULE VIOLATION, NOT AN OVERSIGHT.
 ```
 
 `/roadmap:process-step`, `/roadmap:process-phase`, `/roadmap:process-full`, and any other multi-step autonomous run flip the box for step N **before** moving on to step N+1. The checkbox itself is the real-time monitor — the markdown file is the source of truth, the dashboard is a derived view.
+
+The `command:` triggers in this rule's frontmatter ensure it loads the moment one of the `/roadmap:process-*` commands is invoked and stays loaded for the whole run — independent of whether the agent is currently editing files under `agents/roadmaps/`. The loop carries its own deterministic flip-guard at [`roadmap-process-loop § 5b`](../contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic) — defense-in-depth, not a substitute for the inline flip.
 
 **Step counts as done** when its code/doc change is written and saved AND the verification cited in the step has passed (fresh output in this reply or an earlier one).
 

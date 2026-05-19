@@ -49,30 +49,6 @@
       ]
     },
     {
-      "id": "augment-edit-discipline",
-      "triggers": [
-        {
-          "path_prefix": ".augment/"
-        },
-        {
-          "path_prefix": ".agent-src.uncompressed/"
-        },
-        {
-          "keyword": "portable"
-        },
-        {
-          "keyword": "rename"
-        },
-        {
-          "keyword": "delete"
-        }
-      ],
-      "routes_to": [
-        "guideline:augment-portability-patterns",
-        "skill:agent-docs-writing"
-      ]
-    },
-    {
       "id": "augment-source-of-truth",
       "triggers": [
         {
@@ -345,6 +321,15 @@
       "triggers": [
         {
           "path_prefix": "agents/roadmaps/"
+        },
+        {
+          "command": "/roadmap:process-step"
+        },
+        {
+          "command": "/roadmap:process-phase"
+        },
+        {
+          "command": "/roadmap:process-full"
         }
       ],
       "routes_to": [
@@ -436,6 +421,30 @@
         }
       ],
       "routes_to": []
+    },
+    {
+      "id": "augment-edit-discipline",
+      "triggers": [
+        {
+          "path_prefix": ".augment/"
+        },
+        {
+          "path_prefix": ".agent-src.uncompressed/"
+        },
+        {
+          "keyword": "portable"
+        },
+        {
+          "keyword": "rename"
+        },
+        {
+          "keyword": "delete"
+        }
+      ],
+      "routes_to": [
+        "guideline:augment-portability-patterns",
+        "skill:agent-docs-writing"
+      ]
     },
     {
       "id": "cli-output-handling",
@@ -567,11 +576,11 @@
       ],
       "routes_to": [
         "skill:contracts-cognition",
-        "skill:privacy-review",
         "skill:dcf-modeling",
+        "skill:decision-record",
+        "skill:privacy-review",
         "skill:scenario-modeling",
-        "skill:stakeholder-tradeoff",
-        "skill:decision-record"
+        "skill:stakeholder-tradeoff"
       ]
     },
     {
@@ -669,9 +678,9 @@
         }
       ],
       "routes_to": [
-        "skill:privacy-review",
         "skill:data-handling-judgment",
         "skill:logging-monitoring",
+        "skill:privacy-review",
         "skill:secrets-management"
       ]
     },
