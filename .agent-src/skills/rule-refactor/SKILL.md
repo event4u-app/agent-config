@@ -93,8 +93,10 @@ bash scripts/compress.sh --sync
 python3 scripts/compress.py --generate-tools
 python3 scripts/measure_augment_budget.py --check   # must exit 0
 python3 scripts/skill_linter.py --all               # 0 FAIL
-task ci                                              # full pipeline
 ```
+
+Then run your package's full CI pipeline (see `Taskfile.yml` for the
+canonical sequence) before pushing.
 
 ### 7. Record the delta
 
