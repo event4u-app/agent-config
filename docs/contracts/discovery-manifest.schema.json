@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event4u.app/agent-config/schemas/discovery-manifest.schema.json",
+  "title": "Discovery Manifest",
+  "description": "Release-time scan output for @event4u/agent-config. See ADR-013 and agents/roadmaps/automated-pack-workspace-and-skill-discovery.md.",
+  "type": "object",
+  "required": ["version", "generated_at", "scanner_version", "checksum", "workspaces", "packs", "artefacts", "unassigned"],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Manifest schema version. Bump on breaking change."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "UTC ISO-8601 timestamp; the only field allowed to differ between determinism runs."
+    },
+    "scanner_version": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{12}$",
+      "description": "First 12 hex chars of sha256(scripts/build_discovery_manifest.py)."
+    },
+    "checksum": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$",
+      "description": "sha256 of the JSON file with the checksum field zeroed out."
+    },
+    "workspaces": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/workspace" },
+      "minItems": 1
+    },
+    "packs": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/pack" },
+      "minItems": 1
+    },
+    "artefacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artefact" }
+    },
+    "unassigned": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unassigned" },
+      "description": "Artefacts that failed assignment. Each entry MUST carry a reason."
+    }
+  },
+  "$defs": {
+    "workspace_id": {
+      "type": "string",
+      "enum": ["engineering", "product", "finance", "founder", "gtm", "ops", "small-business", "construction", "agent-config-maintainer"]
+    },
+    "pack_id": {
+      "type": "string",
+      "enum": [
+        "engineering-base", "php", "laravel", "symfony", "javascript", "typescript", "react", "nextjs", "python",
+        "product-basic", "product-discovery",
+        "finance-basic", "finance-advanced",
+        "gtm-sales", "gtm-marketing",
+        "ops-people", "founder-strategy", "small-business", "construction", "ai-video", "meta"
+      ]
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["active", "deprecated", "experimental", "archived"]
+    },
+    "trust_level": {
+      "type": "string",
+      "enum": ["core", "professional", "experimental", "advisory", "restricted"]
+    },
+    "workspace": {
+      "type": "object",
+      "required": ["id", "label", "description", "default_packs"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/workspace_id" },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "default_packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
+        "optional_packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } }
+      }
+    },
+    "pack": {
+      "type": "object",
+      "required": ["id", "label", "description", "workspaces", "trust_level_default", "artefact_count"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "#/$defs/pack_id" },
+        "label": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
+        "requires_hint": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
+        "trust_level_default": { "$ref": "#/$defs/trust_level" },
+        "artefact_count": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "artefact": {
+      "type": "object",
+      "required": ["path", "category", "workspaces", "packs", "lifecycle", "trust", "install"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "description": "POSIX path relative to repo root." },
+        "category": { "type": "string", "enum": ["skill", "rule", "command", "template"] },
+        "name": { "type": "string" },
+        "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
+        "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "minItems": 1 },
+        "lifecycle": { "$ref": "#/$defs/lifecycle" },
+        "trust": {
+          "type": "object",
+          "required": ["level", "confidence", "human_review_required"],
+          "additionalProperties": false,
+          "properties": {
+            "level": { "$ref": "#/$defs/trust_level" },
+            "confidence": { "type": "string", "enum": ["high", "medium", "low"] },
+            "human_review_required": { "type": "boolean" }
+          }
+        },
+        "install": {
+          "type": "object",
+          "required": ["default", "removable"],
+          "additionalProperties": false,
+          "properties": {
+            "default": { "type": "boolean" },
+            "removable": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "unassigned": {
+      "type": "object",
+      "required": ["path", "category", "reason"],
+      "additionalProperties": false,
+      "properties": {
+        "path": { "type": "string", "minLength": 1 },
+        "category": { "type": "string", "enum": ["skill", "rule", "command", "template", "unknown"] },
+        "reason": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}
