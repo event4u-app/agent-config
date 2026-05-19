@@ -45,8 +45,12 @@ def _check_checksum(manifest: dict[str, Any]) -> str | None:
     actual = manifest.get("checksum", "")
     if not isinstance(actual, str) or not actual.startswith("sha256:"):
         return f"checksum: malformed value {actual!r}"
+    # Mirror scripts/build_discovery_manifest.py::_finalise_checksum —
+    # `generated_at` is wall-clock and excluded from the digest input so
+    # the hash stays byte-stable across runs.
     snapshot = dict(manifest)
     snapshot["checksum"] = "sha256:" + "0" * 64
+    snapshot["generated_at"] = "<normalised>"
     raw = _serialize(snapshot).encode("utf-8")
     expected = "sha256:" + hashlib.sha256(raw).hexdigest()
     if expected != actual:
