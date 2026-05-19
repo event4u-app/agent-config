@@ -6,17 +6,17 @@
 
 ## Overall
 
-**70 / 333 steps done · 21%**
+**113 / 333 steps done · 34%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [automated-pack-workspace-and-skill-discovery.md](roadmaps/automated-pack-workspace-and-skill-discovery.md) | 8 | 120 | 54 | 66 | 0 | 0 | ██████░░░░ 55% |
+| 1 | [automated-pack-workspace-and-skill-discovery.md](roadmaps/automated-pack-workspace-and-skill-discovery.md) | 8 | 120 | 11 | 109 | 0 | 0 | █████████░ 91% |
 | 2 | [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md) | 10 | 60 | 58 | 2 | 0 | 0 | ░░░░░░░░░░ 3% |
 | 3 | [strategic-visibility-mcp-topics-positioning.md](roadmaps/strategic-visibility-mcp-topics-positioning.md) | 8 | 61 | 60 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 | 4 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 91 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
@@ -27,7 +27,7 @@
 
 ### [automated-pack-workspace-and-skill-discovery.md](roadmaps/automated-pack-workspace-and-skill-discovery.md)
 
-**Automated Pack, Workspace & Skill Discovery** — 66 / 120 done (55%)
+**Automated Pack, Workspace & Skill Discovery** — 109 / 120 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -35,10 +35,10 @@
 | 1 | Workspace & pack vocabulary as YAML, schema-checked | ✅ done | 0 | 13 | 0 | 0 | 100% |
 | 2 | The release-time scanner (Python, scoped) | ✅ done | 0 | 21 | 0 | 0 | 100% |
 | 3 | TS consumers — CLI subcommands and a server route | ✅ done | 0 | 13 | 0 | 0 | 100% |
-| 4 | Migrate every artefact — annotate or quarantine | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
-| 5 | Release-pipeline wiring | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-| 6 | Lint, docs, and the guard against future drift | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
-| 7 | AI-Council review | 🟡 in progress | 17 | 1 | 0 | 0 | 6% |
+| 4 | Migrate every artefact — annotate or quarantine | ✅ done | 0 | 16 | 0 | 0 | 100% |
+| 5 | Release-pipeline wiring | ✅ done | 0 | 10 | 0 | 0 | 100% |
+| 6 | Lint, docs, and the guard against future drift | ✅ done | 0 | 11 | 0 | 0 | 100% |
+| 7 | AI-Council review | 🟡 in progress | 11 | 7 | 0 | 0 | 39% |
 
 ### [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md)
 
