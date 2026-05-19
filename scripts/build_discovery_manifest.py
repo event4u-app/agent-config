@@ -17,6 +17,7 @@ import argparse
 import datetime as _dt
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -266,11 +267,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
 
-    # Strict mode is opt-in via --strict only. Phase 4.4 will flip the CI
-    # default to strict once per-pack annotation (Phase 4) has landed for
-    # every artefact. Until then, auto-enabling strict under CI=true would
-    # trip every PR with the 442 still-unassigned artefacts.
-    manifest, unassigned = _build(strict=args.strict)
+    # Phase 4.4 gate: in CI, behave as if --strict were passed. Local
+    # invocations stay permissive unless --strict is explicit.
+    strict = args.strict or os.environ.get("CI", "").lower() in ("true", "1")
+    manifest, unassigned = _build(strict=strict)
     _finalise_checksum(manifest)
     body = _serialize(manifest)
 
