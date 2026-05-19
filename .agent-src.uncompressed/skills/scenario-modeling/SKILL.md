@@ -7,7 +7,18 @@ source: package
 domain: process
 context_spine: [org-stage, fiscal-period, product]
 recommended_for_user_types: [founder, finance]
-
+workspaces:
+  - finance
+packs:
+  - finance-advanced
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # scenario-modeling

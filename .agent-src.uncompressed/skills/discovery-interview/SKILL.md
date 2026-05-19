@@ -7,7 +7,18 @@ source: package
 domain: product
 context_spine: [product]
 recommended_for_user_types: [consultant, founder]
-
+workspaces:
+  - product
+packs:
+  - product-discovery
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # discovery-interview

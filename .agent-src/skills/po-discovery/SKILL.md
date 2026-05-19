@@ -6,6 +6,18 @@ personas:
   - stakeholder
 source: package
 domain: product
+workspaces:
+  - product
+packs:
+  - product-basic
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # po-discovery

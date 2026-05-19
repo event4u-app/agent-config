@@ -3,6 +3,18 @@ name: pixar-storyteller
 description: "Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'."
 source: package
 domain: product
+workspaces:
+  - small-business
+packs:
+  - ai-video
+lifecycle: experimental
+trust:
+  level: experimental
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # pixar-storyteller

@@ -4,6 +4,18 @@ description: "Use when the user says "write a spec", "create RFC", "write a PRD"
 source: package
 domain: product
 council_depth: deep
+workspaces:
+  - product
+packs:
+  - product-basic
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # technical-specification

@@ -7,8 +7,18 @@ source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, org-stage]
 recommended_for_user_types: [consultant, finance, ops]
-
-
+workspaces:
+  - ops
+packs:
+  - ops-people
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # contracts-cognition

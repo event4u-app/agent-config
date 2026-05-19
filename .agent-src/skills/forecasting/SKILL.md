@@ -7,8 +7,18 @@ source: package
 domain: process
 context_spine: [product, fiscal-period, customer-segment]
 recommended_for_user_types: [finance, founder]
-
-
+workspaces:
+  - finance
+packs:
+  - finance-basic
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # forecasting

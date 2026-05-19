@@ -7,8 +7,18 @@ source: package
 domain: process
 context_spine: [customer-segment, product, org-stage]
 recommended_for_user_types: [consultant, founder]
-
-
+workspaces:
+  - founder
+packs:
+  - founder-strategy
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # competitive-moat-analysis
