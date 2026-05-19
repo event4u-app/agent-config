@@ -6,17 +6,17 @@
 
 ## Overall
 
-**4 / 213 steps done · 2%**
+**10 / 213 steps done · 5%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md) | 10 | 60 | 58 | 2 | 0 | 0 | ░░░░░░░░░░ 3% |
+| 1 | [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md) | 10 | 60 | 52 | 8 | 0 | 0 | █░░░░░░░░░ 13% |
 | 2 | [strategic-visibility-mcp-topics-positioning.md](roadmaps/strategic-visibility-mcp-topics-positioning.md) | 8 | 61 | 60 | 1 | 0 | 0 | ░░░░░░░░░░ 2% |
 | 3 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 91 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
 
@@ -26,7 +26,7 @@
 
 ### [explainability-v2-explain-last.md](roadmaps/explainability-v2-explain-last.md)
 
-**Explainability v2 — `agent-config explain last`** — 2 / 60 done (3%)
+**Explainability v2 — `agent-config explain last`** — 8 / 60 done (13%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -34,7 +34,7 @@
 | 1 | exit gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | 2 | `explain last` core, five why-slots answered | 🟡 in progress | 8 | 1 | 0 | 0 | 11% |
 | 2 | exit gate | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Halt and provider why-slots | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | Halt and provider why-slots | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | exit gate | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 4 | Fixtures, tests, and the no-network gate | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | exit gate | ⬜ not started | 2 | 0 | 0 | 0 | 0% |

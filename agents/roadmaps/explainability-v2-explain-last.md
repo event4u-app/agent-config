@@ -213,18 +213,18 @@ displayed, not enforced. Enforcement is a separate roadmap
 
 ### Step 3.1: Persist halt reason into state
 
-- [ ] In `work_engine/emitters.py`, when `_emit_halt(halt)` runs, also append a one-line entry to `state.history[]` (or a new `state.halts[]` slot — pick the one that does NOT bump the schema version; if either bumps the version, the bump and migration go in the *implementing* PR's commit and update `state.py` doc-comment in lockstep).
-- [ ] Update `state.py` schema doc-comment to reflect the chosen slot.
+- [x] In `work_engine/emitters.py`, when `_emit_halt(halt)` runs, also append a one-line entry to `state.history[]` (or a new `state.halts[]` slot — pick the one that does NOT bump the schema version; if either bumps the version, the bump and migration go in the *implementing* PR's commit and update `state.py` doc-comment in lockstep). — chose `state.halts[]` (new optional slot, no schema bump; tolerant `from_dict` read keeps older state files valid)
+- [x] Update `state.py` schema doc-comment to reflect the chosen slot.
 
 ### Step 3.2: Halt-aware trace
 
-- [ ] In `scripts/_cli/explain_last/__init__.py` `build_trace()`, if `state.halts` is non-empty, populate `trace.halt = { reason, step, surface }` from the last entry.
-- [ ] Renderer adds a `## Why halted?` section before the closing `## Assumptions` block.
+- [x] In `scripts/_cli/explain_last/__init__.py` `build_trace()`, if `state.halts` is non-empty, populate `trace.halt = { reason, step, surface }` from the last entry.
+- [x] Renderer adds a `## Why halted?` section before the closing `## Assumptions` block.
 
 ### Step 3.3: Provider why-slot for `/video:*`
 
-- [ ] For runs where `state.directive_set == "video"`, read the provider-selection record from `state.video_provider` (already written by the video dispatcher in PR #176 — confirm by `git grep -n video_provider .agent-src.uncompressed/templates/scripts/work_engine/`); if absent, leave `trace.provider = null`. Do not invent the field.
-- [ ] Renderer adds `## Why this provider?` section *only* when `trace.provider` is non-null. Empty-state path: section omitted entirely (not "(none)") — the section is video-specific and clutters non-video runs.
+- [x] For runs where `state.directive_set == "video"`, read the provider-selection record from `state.video_provider` (already written by the video dispatcher in PR #176 — confirm by `git grep -n video_provider .agent-src.uncompressed/templates/scripts/work_engine/`); if absent, leave `trace.provider = null`. Do not invent the field. — `git grep` returned no hits (video dispatcher not yet shipped); builder reads `state.video_provider` defensively with `state.contract.video_provider` as a fallback shape, returns null when absent
+- [x] Renderer adds `## Why this provider?` section *only* when `trace.provider` is non-null. Empty-state path: section omitted entirely (not "(none)") — the section is video-specific and clutters non-video runs.
 
 ### Phase 3 exit gate
 
