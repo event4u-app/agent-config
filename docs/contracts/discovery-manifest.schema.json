@@ -44,6 +44,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/unassigned" },
       "description": "Artefacts that failed assignment. Each entry MUST carry a reason."
+    },
+    "documented_unassigned": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unassigned" },
+      "description": "Artefacts explicitly skipped via config/discovery/unassigned-artefacts.yml. Each entry MUST carry a reason."
     }
   },
   "$defs": {
