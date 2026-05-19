@@ -9,7 +9,7 @@ plus a human-readable Markdown summary.
 
 CLI: see `--help`. Stdlib + pyyaml only at runtime.
 Schema: docs/contracts/discovery-manifest.schema.json
-Roadmap: agents/roadmaps/automated-pack-workspace-and-skill-discovery.md §2
+Roadmap: agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md §2 (archived, status: completed)
 """
 from __future__ import annotations
 
@@ -283,6 +283,11 @@ def main(argv: list[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(body, encoding="utf-8")
         args.summary.write_text(_summary(manifest), encoding="utf-8")
+        # Sidecar SHA-256 of the on-disk manifest bytes for tamper detection
+        # by downstream consumers (security-engineer council fold-in, R3 Phase 7).
+        sidecar = args.out.with_suffix(args.out.suffix + ".sha256")
+        file_digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        sidecar.write_text(f"{file_digest}  {args.out.name}\n", encoding="utf-8")
         if not args.quiet:
             print(
                 f"wrote {args.out.relative_to(ROOT)} "

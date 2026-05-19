@@ -4,8 +4,9 @@
 # assignment. Each entry MUST carry a `reason:` field.
 #
 # Stays empty through Phases 1–3 of
-# `agents/roadmaps/automated-pack-workspace-and-skill-discovery.md`.
-# Phase 4 may populate it with genuinely cross-cutting cases.
+# `agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md`
+# (archived, status: completed). Phase 4 populated it with the
+# genuinely cross-cutting cases listed below.
 #
 # Lint: scripts/lint_artefact_frontmatter.py (added in Phase 6)
 # Schema entry shape:

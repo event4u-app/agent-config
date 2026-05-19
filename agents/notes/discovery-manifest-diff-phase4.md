@@ -73,4 +73,4 @@ field in the YAML; see that file for the per-artefact rationale.
 - Schema: [`discovery-manifest.schema.json`](../../docs/contracts/discovery-manifest.schema.json)
 - Vocabulary: [`config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml), [`packs.yml`](../../config/discovery/packs.yml), [`unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml)
 - Baseline: [`discovery-baseline.md`](discovery-baseline.md)
-- Roadmap: [`automated-pack-workspace-and-skill-discovery.md`](../roadmaps/automated-pack-workspace-and-skill-discovery.md)
+- Roadmap (archived, status: completed): [`automated-pack-workspace-and-skill-discovery.md`](../roadmaps/archive/automated-pack-workspace-and-skill-discovery.md)

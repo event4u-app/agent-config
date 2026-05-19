@@ -356,6 +356,21 @@ tarball and is the source of truth consumed by:
 - the installer's pack-selection prompts
 - downstream tools that resolve "which skills install for workspace X".
 
+> **Virtual packs and workspaces — a tag, not a directory.** A pack is a
+> label in an artefact's frontmatter, not a folder on disk. A workspace
+> is a label that groups packs, not a git submodule. The discovery
+> scanner emits a JSON catalogue; it does **not** move files, create
+> sub-`package.json` entries, or generate per-pack `node_modules/`.
+> When you read "the Laravel pack", picture a filter over the shared
+> artefact tree — not a separate npm package. The day ADR-011's
+> extraction trigger flips, the same scan output drives the split;
+> until then, every artefact lives under `.agent-src.uncompressed/`.
+
+Alongside the JSON manifest, the scanner writes
+`dist/discovery/discovery-manifest.json.sha256` — a sidecar hash that
+lets downstream consumers detect tampering before trusting the
+manifest's `trust.level` claims.
+
 CI gates: `task lint-discovery-vocab` (vocabulary integrity),
 `task lint-discovery-manifest` (manifest validity),
 `task lint-artefact-frontmatter` (per-file frontmatter sanity), and
