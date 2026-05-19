@@ -3,6 +3,7 @@ name: fix:portability
 tier: 2
 cluster: fix
 sub: portability
+skills: [check-refs]
 description: Find and fix project-specific references in shared .augment/ package files
 disable-model-invocation: true
 suggestion:

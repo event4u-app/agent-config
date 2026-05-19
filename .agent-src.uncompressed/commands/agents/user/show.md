@@ -3,6 +3,7 @@ name: agents:user-show
 tier: 2
 cluster: agents
 sub: user
+skills: [agents]
 description: Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 disable-model-invocation: true
 suggestion:

@@ -3,6 +3,7 @@ name: post-as:me
 tier: 2
 cluster: post-as
 sub: me
+skills: [post-as]
 description: Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
 disable-model-invocation: true
 suggestion:
