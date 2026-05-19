@@ -13,6 +13,12 @@ triggers:
 
 # Architecture Rules
 
+```
+HTTP HANDLERS STAY THIN. BUSINESS LOGIC LIVES IN SERVICES OR USE-CASES.
+ALWAYS VALIDATE AT THE REQUEST BOUNDARY. NEVER INLINE-VALIDATE INSIDE THE HANDLER.
+ALWAYS READ AGENTS.MD AND PROJECT-LOCAL DOCS BEFORE STRUCTURAL DECISIONS.
+```
+
 ## General Principles
 
 - **HTTP handlers stay thin** — no business logic; delegate to a service / use-case / domain layer.

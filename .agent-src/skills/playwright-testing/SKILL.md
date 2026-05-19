@@ -163,6 +163,22 @@ npx playwright show-report
 npx playwright test -g "should login"
 ```
 
+### Filter noisy Playwright output
+
+Use `--grep`, `--reporter=json`, plus `jq`/`rg` to keep diagnosis scoped:
+
+```bash
+# Targeted run — only matching specs
+npx playwright test --grep '@smoke'
+
+# JSON report, narrowed to failures via jq
+npx playwright test --reporter=json > pw.json
+jq '.suites[].specs[] | select(.tests[].results[].status=="failed")' pw.json
+
+# Scan trace logs for one selector
+rg --color=never 'getByRole.*Submit' test-results/
+```
+
 ## Avoiding flaky tests
 
 | Problem | Solution |
