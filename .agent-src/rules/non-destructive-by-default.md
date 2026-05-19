@@ -6,6 +6,18 @@ alwaysApply: true
 source: package
 load_context:
   - ../contexts/authority/destructive-mechanics.md
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Non-Destructive by Default

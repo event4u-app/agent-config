@@ -7,6 +7,18 @@ domain: discovery
 external_source: "https://github.com/ginobefun/deep-reading-analyst-skill/tree/26cd7dc9920e025d39751e396e707399022e49ef/src/deep-reading-analyst"
 refresh_trigger: "Upstream `ginobefun/deep-reading-analyst-skill` major rewrite (new framework added, dispatch table reshaped, or SHA pin invalidated by reference rename)."
 sunset_criterion: "Replace with a 50-line pointer skill if (a) all referenced modules are adopted as project-local guidelines (`docs/guidelines/agent-infra/{framework}.md`) AND (b) the dispatch logic moves into a project-native router."
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 > **Pinned upstream:** `ginobefun/deep-reading-analyst-skill` @ SHA `26cd7dc9` (MIT). Re-verify per upstream major rewrite. Reference modules below link to the same SHA.

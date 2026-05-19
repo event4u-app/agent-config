@@ -9,6 +9,18 @@ triggers:
   - phrase: "conventional commits"
 routes_to:
   - "skill:conventional-commits-writing"
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Commit Conventions
