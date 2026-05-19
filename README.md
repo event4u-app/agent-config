@@ -400,11 +400,7 @@ to `/implement-ticket`. UI-shaped prompts are routed through the
 Free-form goal, no ticket → `/work`. The two share `.work-state.json`
 and refuse to switch envelopes mid-flight.
 
-**After the run:** `agent-config explain last` reconstructs the
-execution trace (route · profile · memory · council · assumptions ·
-halts · provider) from `.work-state.json`. Read-only, PII-scrubbed,
-never hits the network.
-→ [Explainability docs](docs/customization.md#explainability--explain-last)
+**After the run:** `agent-config explain last` reconstructs the trace (route · memory · council · halts · provider) — read-only, PII-scrubbed, offline. [Docs](docs/customization.md#explainability--explain-last)
 
 ### Product UI track
 
