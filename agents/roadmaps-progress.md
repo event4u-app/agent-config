@@ -58,23 +58,6 @@
 | 5 | Docs and the AI-Council pass | 🟡 in progress | 16 | 1 | 0 | 0 | 6% |
 | 5 | exit gate | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
-### [framework-neutrality-audit.md](roadmaps/framework-neutrality-audit.md)
-
-**Framework Neutrality Audit — Remove PHP/Laravel Leakage from Generic Skills, Rules & Commands** — 0 / 207 done (0%)
-
-| # | Phase | State | Open | Done | Deferred | Cancelled | % |
-|---|---|---|---:|---:|---:|---:|---:|
-| 0 | Foundation — Tier-2 rule + permanent linter | ⬜ not started | 22 | 0 | 0 | 0 | 0% |
-| 1 | Tier-1 — Iron-Law mandate leakage | ⬜ not started | 34 | 0 | 0 | 0 | 0% |
-| 1 | acceptance criteria | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Tier-2 Skills — Generalize generic skills with PHP/Laravel leakage | ⬜ not started | 36 | 0 | 0 | 0 | 0% |
-| 3 | Generic Commands (PHP/Laravel as default → multi-stack dispatch) | ⬜ not started | 26 | 0 | 0 | 0 | 0% |
-| 4 | Cosmetic / Examples (14 generic artefacts) | ⬜ not started | 28 | 0 | 0 | 0 | 0% |
-| 5 | Relocation (4 misclassified carve-outs) | ⬜ not started | 21 | 0 | 0 | 0 | 0% |
-| 5 | acceptance criteria | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Validation, Regeneration & Rollout | ⬜ not started | 21 | 0 | 0 | 0 | 0% |
-| 6 | acceptance criteria | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-
 ### [strategic-visibility-mcp-topics-positioning.md](roadmaps/strategic-visibility-mcp-topics-positioning.md)
 
 **Strategic Visibility — MCP Listing, GitHub Topics-as-Code, Positioning Lint** — 1 / 61 done (2%)
