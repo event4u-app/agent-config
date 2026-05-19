@@ -360,3 +360,30 @@ tasks:
     silent: true
     desc: Generate quality score report (per artifact type)
     cmd: python3 scripts/skill_linter.py --report
+
+  # ---------------------------------------------------------------------------
+  # TypeScript CLI shell gates — Phase 5.2 of
+  # typescript-cli-and-local-gui-foundation. Narrow per-tool harnesses so each
+  # phase's checkbox names exactly what it just produced (per
+  # roadmap-ci-steps-policy). Wired into `task ci` below.
+  # ---------------------------------------------------------------------------
+
+  lint-ts:
+    silent: true
+    desc: ESLint over src/**/*.ts (TS CLI shell — ADR-012)
+    cmd: npm run lint:ts --silent
+
+  typecheck-ts:
+    silent: true
+    desc: tsc --noEmit over tsconfig.json (TS CLI shell — ADR-012)
+    cmd: npm run typecheck --silent
+
+  build-ts:
+    silent: true
+    desc: Build dist/cli (TS CLI shell + UI bundle) — ADR-012
+    cmd: npm run build --silent
+
+  test-ts:
+    silent: true
+    desc: Vitest run over tests/{cli,server,ui}/**/*.ts (TS CLI shell — ADR-012)
+    cmd: npm run test:ts --silent

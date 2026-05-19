@@ -182,7 +182,7 @@ in this roadmap, is the cheaper sequence.
 ### Step 1.1: Initialise the TypeScript project
 
 - [ ] `npm install --save-dev typescript@^5.5 tsx@^4 @types/node@^20 eslint@^9 @typescript-eslint/eslint-plugin@^8 @typescript-eslint/parser@^8` — pinned majors, no `^`-creep beyond what is listed
-- [ ] `npm install --save commander@^12 fastify@^4 @fastify/static@^7 open@^10 zod@^3 execa@^9 js-yaml@^4` — runtime deps
+- [ ] `npm install --save commander@^12 fastify@^5 @fastify/static@^9 open@^10 zod@^3 execa@^9 js-yaml@^4` — runtime deps (bumped from `fastify@^4` + `@fastify/static@^7` after Phase 1 install: `npm audit --audit-level=high` flagged 5 high-sev advisories in fastify-v4 transitive deps; ADR-012 §Runtime dependencies records the bump)
 - [ ] `npm install --save-dev @types/js-yaml@^4` — only TS types
 - [ ] **Create `tsconfig.json`** at repo root with strict mode:
   ```json
