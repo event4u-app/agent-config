@@ -9,6 +9,18 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Project init — only deliberately during onboarding."
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents init

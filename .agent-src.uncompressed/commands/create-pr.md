@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "open a PR, create a pull request, make a PR for this branch"
   trigger_context: "branch is ahead of base and not yet on a PR"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /create-pr

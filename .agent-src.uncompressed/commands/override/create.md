@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "override this skill for the project, customize this rule locally"
   trigger_context: "prompt names a shared skill/rule needing project-specific behavior"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /override create

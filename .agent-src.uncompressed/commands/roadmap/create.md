@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "create a roadmap for X, plan this work as a roadmap"
   trigger_context: "multi-phase work without an existing agents/roadmaps/*.md"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap create

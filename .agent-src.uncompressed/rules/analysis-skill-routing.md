@@ -9,6 +9,18 @@ triggers:
   - phrase: "dig into the codebase"
 routes_to:
   - "skill:analysis-skill-router"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Analysis Skill Routing

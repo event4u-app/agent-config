@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "council on PR #N, external review of pull request, second opinion on a PR"
   trigger_context: "user has a PR number / URL and wants an external review before approve/merge"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /council pr

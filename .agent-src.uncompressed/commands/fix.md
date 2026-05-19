@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "fix CI, fix references, fix the broken seeder, fix PR comments, address bot review"
   trigger_context: "user wants to fix something that has a dedicated sub-command"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix

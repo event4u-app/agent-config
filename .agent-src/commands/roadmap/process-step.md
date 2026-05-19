@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "process the next step, do the next roadmap step, einen schritt abarbeiten"
   trigger_context: "existing agents/roadmaps/*.md and user wants exactly one step done autonomously"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap:process-step

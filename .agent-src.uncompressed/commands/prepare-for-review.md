@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "get this branch ready for review, rebase and prep for PR"
   trigger_context: "branch behind base or part of a PR chain"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # prepare-for-review

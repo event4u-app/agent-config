@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "external second opinion, cross-AI review, devil's advocate on a plan/roadmap/diff, council on PR/design/optimize, polling another model"
   trigger_context: "user wants an outside critique on an artefact (roadmap, diff, prompt, files, PR, design doc, optimization target) without polluting the reviewer with the host agent's framing"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /council

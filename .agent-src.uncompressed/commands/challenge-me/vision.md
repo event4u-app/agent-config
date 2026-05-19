@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "challenge me on this plan, grill me, grill me on this, grill me on the vision, grill me on the idea, grill me until it's clear, grill me hard, frag mich durch, dreh mich durch die Mangel"
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /challenge-me vision

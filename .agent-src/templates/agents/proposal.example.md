@@ -21,6 +21,18 @@ target_artifact: ""                # .agent-src/<type>/<name>.md (for upstream s
 author: ""                         # name or team slug
 created: 2026-01-01                # ISO date
 last_updated: 2026-01-01
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Proposal: <short title>

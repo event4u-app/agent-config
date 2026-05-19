@@ -12,6 +12,18 @@ execution:
     - python3
     - scripts/skill_linter.py
     - "--all"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # lint-skills

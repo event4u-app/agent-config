@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "council on this design, second opinion on the ADR, external review of architecture proposal"
   trigger_context: "user has a design doc / ADR / architecture proposal and wants an external review before commitment"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /council design

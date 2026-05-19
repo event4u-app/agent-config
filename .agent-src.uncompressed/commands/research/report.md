@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "summarise research results, build research report, render outline.yaml results"
   trigger_context: "user has finished `/research:deep` and wants a single markdown summary"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /research:report

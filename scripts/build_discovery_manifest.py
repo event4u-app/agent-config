@@ -150,13 +150,15 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     unassigned: list[dict[str, Any]] = []
     pack_counts: dict[str, int] = {pid: 0 for pid in pack_ids}
 
+    documented_unassigned: list[dict[str, Any]] = []
+
     for path, category in _iter_artefacts():
         rel = path.relative_to(ROOT).as_posix()
         if not _trusted(path):
             unassigned.append({"path": rel, "category": category, "reason": "outside trusted-root allow-list"})
             continue
         if rel in overrides:
-            unassigned.append({"path": rel, "category": category, "reason": overrides[rel]})
+            documented_unassigned.append({"path": rel, "category": category, "reason": overrides[rel]})
             continue
         fm = _parse(path)
         payload, reason = _classify(fm, ws_ids, pack_ids)
@@ -174,6 +176,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
     artefacts.sort(key=lambda e: e["path"])
     unassigned.sort(key=lambda e: e["path"])
+    documented_unassigned.sort(key=lambda e: e["path"])
 
     ws_out = [
         {
@@ -214,6 +217,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         "packs": pk_out,
         "artefacts": artefacts,
         "unassigned": unassigned,
+        "documented_unassigned": documented_unassigned,
     }
     return manifest, unassigned
 

@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "show chat-history status, inspect agents/.agent-chat-history log, import a prior session into the current chat, mine a prior session for project-improving learnings"
   trigger_context: "user wants to inspect the persistent agents/.agent-chat-history log, pull a prior session in verbatim, or extract learnings from a prior session"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- cloud_safe: noop -->

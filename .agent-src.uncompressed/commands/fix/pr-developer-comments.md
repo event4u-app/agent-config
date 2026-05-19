@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "fix the human reviewer comments, address the developer feedback"
   trigger_context: "open PR with unresolved human-reviewer comments"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix pr-developer-comments

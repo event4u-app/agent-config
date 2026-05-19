@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "grill me, grill me on this, grill me on this plan, grill me through this, grill me on the idea, grill me until it's clear, grill me hard"
   trigger_context: "user has a fuzzy plan/idea/feature draft and wants it sharpened interactively rather than reconstructed in one shot"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /grill-me

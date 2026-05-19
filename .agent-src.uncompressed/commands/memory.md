@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "add a memory entry, load all memories, promote a signal, propose a finding"
   trigger_context: "user wants to write to or curate engineering memory"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /memory

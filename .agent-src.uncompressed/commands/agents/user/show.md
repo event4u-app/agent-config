@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "show user persona, render .agent-user.md, print who the user is"
   trigger_context: "user wants to see what's currently in .agent-user.md without editing"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents user show

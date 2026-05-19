@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "run a saved orchestration / pipeline / chain"
   trigger_context: "user names a pipeline file or asks to replay a chain"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # orchestrate

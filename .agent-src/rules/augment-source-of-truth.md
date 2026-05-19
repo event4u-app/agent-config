@@ -14,6 +14,18 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
     reason: "Rule documents the source-of-truth boundary; mentioning the path is its purpose."
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Source of Truth

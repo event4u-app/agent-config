@@ -8,6 +8,18 @@ disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Mutates .agent-user.md — only run from /agents user review or explicit user invocation."
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents user accept

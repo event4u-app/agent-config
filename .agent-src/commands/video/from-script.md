@@ -11,6 +11,18 @@ suggestion:
   eligible: true
   trigger_description: "render a video from a script, full AI video pipeline, multi-scene generation"
   trigger_context: "user supplies a Markdown script with `## Scene N` headings and wants a final MP4"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /video:from-script

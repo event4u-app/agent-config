@@ -16,6 +16,18 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
     reason: "Rule names the authoring tree as the gated-entry location for new domain plates."
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Domain Adoption Policy

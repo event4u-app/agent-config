@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "write tests for these changes, add tests for this branch"
   trigger_context: "code changes on the branch without matching test changes"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /tests create

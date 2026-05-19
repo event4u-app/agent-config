@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "challenge me against the docs, grill me with our context, grill me against the docs, grill me against CONTEXT.md, grill me with the project context, frag mich durch und prüf gegen CONTEXT.md, challenge plan with domain docs"
   trigger_context: "user wants the seed challenged against existing project glossary, CONTEXT.md, or ADRs — not a greenfield interview"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /challenge-me with-docs

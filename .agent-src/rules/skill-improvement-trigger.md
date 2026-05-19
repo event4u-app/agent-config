@@ -9,6 +9,18 @@ triggers:
   - keyword: "pipeline"
 routes_to:
   - "skill:skill-improvement-pipeline"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Skill Improvement Trigger

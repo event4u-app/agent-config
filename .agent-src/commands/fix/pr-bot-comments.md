@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "address the Copilot/Greptile comments, fix the bot review feedback"
   trigger_context: "open PR with bot review comments unresolved"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix pr-bot-comments

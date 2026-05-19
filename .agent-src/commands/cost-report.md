@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "check this session's token cost, see budget utilization, surface 50/75/90/100% alert ladder"
   trigger_context: "user wants to know how expensive the active Claude Code session is or whether it crosses a budget threshold"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- cloud_safe: noop -->

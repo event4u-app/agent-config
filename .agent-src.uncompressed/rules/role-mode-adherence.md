@@ -8,6 +8,18 @@ triggers:
   - keyword: "active_role"
   - keyword: "role-mode"
   - intent: "mode marker"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Role Mode Adherence

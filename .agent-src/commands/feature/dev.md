@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "build this feature end-to-end, run the full feature workflow"
   trigger_context: "long-form feature description spanning multiple components"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /feature:dev

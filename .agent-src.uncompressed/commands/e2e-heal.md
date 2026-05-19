@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "fix the failing E2E tests, playwright tests are red"
   trigger_context: "failing test output from tests/e2e/"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # e2e-heal

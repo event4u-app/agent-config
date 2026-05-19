@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "initialize agent layer, optimize AGENTS.md, audit agent infrastructure, AGENTS.md health-check"
   trigger_context: "user wants to bootstrap, refactor, or health-check the agent layer (AGENTS.md + tool stubs + rules + skills)"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents

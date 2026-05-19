@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "create a roadmap, process a roadmap, work through a roadmap autonomously, plan or abarbeiten"
   trigger_context: "user wants to scaffold or autonomously execute a roadmap under agents/roadmaps/"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap

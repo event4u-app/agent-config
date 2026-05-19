@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "upstream low-impact decisions, share validated council questions, contribute the learning corpus"
   trigger_context: "user has accumulated validated entries in agents/low-impact-decisions.md and wants to share with the package"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /memory learn-low-impact

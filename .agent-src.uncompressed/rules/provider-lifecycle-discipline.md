@@ -22,6 +22,18 @@ applies_to_user_types:
   - "creator"
   - "developer"
   - "maintainer"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Provider Lifecycle Discipline

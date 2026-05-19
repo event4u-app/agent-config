@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "how big is this ticket, estimate PROJ-123, should we split this"
   trigger_context: "ticket key matching [A-Z]+-[0-9]+ in the prompt and no plan yet"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # estimate-ticket

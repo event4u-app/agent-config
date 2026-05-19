@@ -4,6 +4,18 @@ description: "Use when designing production-LLM prompts — few-shot, chain-of-t
 source: package
 domain: product
 status: active
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # prompt-engineering-patterns

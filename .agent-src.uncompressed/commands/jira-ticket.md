@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "implement the ticket on this branch, work on the Jira ticket from the branch"
   trigger_context: "branch name matching feat/PROJ-123-* or similar"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # jira-ticket

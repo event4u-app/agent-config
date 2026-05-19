@@ -11,6 +11,18 @@ suggestion:
   eligible: true
   trigger_description: "render a single video scene, iterate on one shot, test a prompt without a full script"
   trigger_context: "user supplies a one-line scene idea and wants a single clip, no multi-scene stitching"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /video:scene

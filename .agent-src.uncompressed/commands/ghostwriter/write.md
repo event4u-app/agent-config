@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "draft post in style of public figure, write in someone's voice, ghostwriter draft, LinkedIn post in style of X"
   trigger_context: "user wants to generate a copyable draft in a previously captured public-figure voice with the mandatory disclosure footer"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /ghostwriter:write

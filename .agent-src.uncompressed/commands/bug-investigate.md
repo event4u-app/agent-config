@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "why is this broken, investigate this error, trace the root cause"
   trigger_context: "Sentry URL, Jira bug ticket key, or stack trace pasted in the prompt"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # bug-investigate

@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "check project health, what's the state of my docs and modules"
   trigger_context: "routine health check, no destructive intent"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # project-health

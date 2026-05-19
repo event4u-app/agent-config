@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "deep research, populate the research scaffold, fill outline.yaml items"
   trigger_context: "user has run `/research <topic>` and now wants per-item depth"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /research:deep

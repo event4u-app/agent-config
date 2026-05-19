@@ -11,6 +11,18 @@ suggestion:
   eligible: true
   trigger_description: "build a storyboard, contact sheet of scenes, image-only preview, validate a script visually before video render"
   trigger_context: "user wants to see all scenes as stills before committing to motion calls"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /video:storyboard

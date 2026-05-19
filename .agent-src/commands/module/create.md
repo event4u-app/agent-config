@@ -11,6 +11,18 @@ suggestion:
   trigger_description: "create a new module, scaffold a module for X"
   trigger_context: "prompt mentions a new domain area without an existing module"
 framework: laravel
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /module create

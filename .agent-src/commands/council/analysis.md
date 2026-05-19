@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "council on this analysis, critique the project-analyze output, second opinion on the audit findings, turn analysis into roadmap"
   trigger_context: "user has a local analysis artefact (agents/analysis/*.md|json) and wants an external critique of the analysis quality + roadmap-ready follow-ups"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /council analysis
