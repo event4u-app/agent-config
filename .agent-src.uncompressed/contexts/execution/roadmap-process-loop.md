@@ -138,6 +138,26 @@ For each open step in the working set (scope-bound — see wrapper):
    [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md).
    A loop iteration that lands work without flipping its box is a
    rule violation. Do not save flips for the archive commit.
+
+### 5b. Flip-guard — deterministic
+
+   Before advancing to step 6, run:
+
+   ```bash
+   git diff --name-only -- agents/roadmaps/<file>.md
+   ```
+
+   Empty output → Iron Law 2 was violated this iteration: the step
+   landed work but no checkbox flipped. **Halt loudly**, surface
+   "step <N> landed without checkbox flip — flip then resume", and
+   stop the run. Do not auto-fix; the user resumes on the next turn.
+
+   This guard is the deterministic counterpart to the rule's
+   pre-send self-check — it catches a forgotten flip per step, not
+   only at run end. It runs in every scope (`process-step`,
+   `process-phase`, `process-full`); the cost is one `git diff` per
+   step.
+
 6. **Dashboard regen — cadence-gated.** Run
    `./agent-config roadmap:progress` when due per
    `roadmap.dashboard_regen_cadence` (resolved in § 4):

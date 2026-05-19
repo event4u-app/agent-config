@@ -146,6 +146,15 @@ dashboard, commit if commit policy allows.
 **Required:** each turn — implement step, flip `[x]`, regen, commit (if policy allows).
 A reply that lands a verified step without flipping its checkbox is a rule violation.
 
+**Deterministic flip-guard.** The autonomous loop carries a per-step
+guard at [`roadmap-process-loop § 5b`](../../.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
+after the atomic flip, the loop runs
+`git diff --name-only -- agents/roadmaps/<file>.md` and halts loudly
+when the diff is empty. The `command:` triggers on
+`roadmap-progress-sync` keep the rule loaded for the entire
+`/roadmap:process-*` run; the guard is the deterministic backstop
+that catches a forgotten flip per step rather than at run end.
+
 **In-progress marker:** when a step takes more than one reply,
 mark it `[~]` the moment work starts on it and regenerate. The
 user sees one row move from `[ ]` to `[~]` to `[x]` instead of
