@@ -168,13 +168,16 @@ def invoke_engine(
 
     env = os.environ.copy()
     # Keep stdout deterministic across machines: strip user locale,
-    # force UTF-8, disable Python hash randomisation.
+    # force UTF-8, disable Python hash randomisation. Silence the
+    # scripts/agent-config deprecation banner so the captured stderr
+    # surface stays engine-only (Freeze Guard pins transcript.json).
     env.update({
         "PYTHONIOENCODING": "utf-8",
         "PYTHONHASHSEED": "0",
         "LC_ALL": "C.UTF-8",
         "LANG": "C.UTF-8",
         "NO_COLOR": "1",
+        "AGENT_CONFIG_QUIET_DEPRECATION": "1",
     })
     proc = subprocess.run(
         cmd,
