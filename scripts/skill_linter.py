@@ -719,8 +719,9 @@ def lint_skill(path: Path, text: str) -> LintResult:
     if skill_name and "-" not in skill_name and len(skill_name) >= 3:
         # Single word without qualifier — likely too generic
         ALLOWED_BARE_NOUNS = {"database", "devcontainer", "docker", "eloquent", "flux", "forecasting",
-                              "grafana", "laravel", "livewire", "mcp", "openapi", "performance",
-                              "security", "terraform", "terragrunt", "traefik", "websocket"}
+                              "grafana", "laravel", "livewire", "markitdown", "mcp", "openapi",
+                              "performance", "security", "terraform", "terragrunt", "traefik",
+                              "websocket"}
         if skill_name.lower() not in ALLOWED_BARE_NOUNS:
             issues.append(Issue("warning", "bare_noun_name",
                                 f"Bare-noun skill name `{skill_name}` — consider adding a qualifier (e.g., `{skill_name}-management`)"))
