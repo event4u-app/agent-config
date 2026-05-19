@@ -16,7 +16,8 @@ type: prospective
 **Accepted** · 2026-05-19 · in-session + external AI Council pass complete
 (`agents/council-responses/2026-05-18T*-r3-automated-discovery/`). Cost: $0.19.
 The 5 external CRITICAL/HIGH items have been folded into Phases 1, 2, 3, 5
-of `agents/roadmaps/automated-pack-workspace-and-skill-discovery.md`.
+of `agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md`
+(archived 2026-05-19, status: completed).
 
 ## Context
 
@@ -205,5 +206,5 @@ discovery-driven action.
 - [ADR-011 — Domain-Pack Readiness](ADR-011-domain-pack-readiness.md):
   packs are **labels on in-repo artefacts**, not separately-installable
   npm packages. Extraction stays blocked until ADR-011's trigger flips.
-- [Implementing roadmap](../../agents/roadmaps/automated-pack-workspace-and-skill-discovery.md).
+- [Implementing roadmap (archived, status: completed)](../../agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md).
 - Schema artefact: [`docs/contracts/discovery-manifest.schema.json`](../contracts/discovery-manifest.schema.json).

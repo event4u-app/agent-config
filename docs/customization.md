@@ -334,6 +334,57 @@ between the code constants (`CASCADE_ELIGIBLE_KINDS`,
 
 ---
 
+## Workspaces & packs (discovery)
+
+Every shipped artefact (skill, rule, command, template) carries five
+discovery keys in its frontmatter — `workspaces:`, `packs:`,
+`lifecycle:`, `trust:`, `install:`. The contract is defined in
+[ADR-013](decisions/ADR-013-discovery-frontmatter-contract.md) and the
+closed vocabularies live in
+[`config/discovery/workspaces.yml`](../config/discovery/workspaces.yml)
+(9 workspaces) and
+[`config/discovery/packs.yml`](../config/discovery/packs.yml) (21
+packs).
+
+At release time, `scripts/build_discovery_manifest.py` walks the source
+trees, validates frontmatter against the vocabularies, and writes
+`dist/discovery/discovery-manifest.json` + the human-readable
+`discovery-manifest.summary.md`. The manifest ships inside the published
+tarball and is the source of truth consumed by:
+
+- `npx @event4u/agent-config workspaces ls` / `packs ls` (CLI)
+- the installer's pack-selection prompts
+- downstream tools that resolve "which skills install for workspace X".
+
+> **Virtual packs and workspaces — a tag, not a directory.** A pack is a
+> label in an artefact's frontmatter, not a folder on disk. A workspace
+> is a label that groups packs, not a git submodule. The discovery
+> scanner emits a JSON catalogue; it does **not** move files, create
+> sub-`package.json` entries, or generate per-pack `node_modules/`.
+> When you read "the Laravel pack", picture a filter over the shared
+> artefact tree — not a separate npm package. The day ADR-011's
+> extraction trigger flips, the same scan output drives the split;
+> until then, every artefact lives under `.agent-src.uncompressed/`.
+
+Alongside the JSON manifest, the scanner writes
+`dist/discovery/discovery-manifest.json.sha256` — a sidecar hash that
+lets downstream consumers detect tampering before trusting the
+manifest's `trust.level` claims.
+
+CI gates: `task lint-discovery-vocab` (vocabulary integrity),
+`task lint-discovery-manifest` (manifest validity),
+`task lint-artefact-frontmatter` (per-file frontmatter sanity), and
+`task check-discovery-determinism` (byte-identical re-runs).
+`task check-release-includes-discovery` is the prepublish guard that
+refuses to ship a tarball without the manifest.
+
+Consumer projects do **not** edit these YAMLs directly — they pick
+packs at install time via `npx @event4u/agent-config install` and the
+resulting `.agent-settings.yml` records which packs the project opted
+into.
+
+---
+
 ## Update check
 
 `npx @event4u/agent-config <cmd>` checks the npm registry once per

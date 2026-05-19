@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "optimize this prompt, make it better for ChatGPT, rewrite for Claude, sharpen this AI prompt"
   trigger_context: "user pastes a rough prompt or names a target AI and asks for it to be improved"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /optimize-prompt

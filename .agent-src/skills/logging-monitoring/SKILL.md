@@ -3,6 +3,18 @@ name: logging-monitoring
 description: "Use when working with logging or monitoring — Sentry error tracking, Grafana/Loki log aggregation, structured logging channels, or monitoring helpers."
 source: package
 domain: devops
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # logging-monitoring

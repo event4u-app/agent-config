@@ -6,6 +6,18 @@ tier: senior
 source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
+workspaces:
+  - founder
+packs:
+  - founder-strategy
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # build-buy-partner

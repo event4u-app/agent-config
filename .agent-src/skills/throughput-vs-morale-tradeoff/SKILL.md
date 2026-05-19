@@ -6,6 +6,18 @@ tier: senior
 source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
+workspaces:
+  - ops
+packs:
+  - ops-people
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # throughput-vs-morale-tradeoff

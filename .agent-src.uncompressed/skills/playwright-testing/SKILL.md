@@ -3,6 +3,18 @@ name: playwright-testing
 description: "Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns."
 source: package
 domain: quality
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # playwright-testing

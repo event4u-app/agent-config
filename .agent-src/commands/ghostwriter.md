@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "fetch a public figure's writing voice, write in someone's style, list ghostwriter profiles, refresh stale profile"
   trigger_context: "user wants to capture or use the public-facing writing voice of a documented public figure for AI-assisted drafting"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /ghostwriter

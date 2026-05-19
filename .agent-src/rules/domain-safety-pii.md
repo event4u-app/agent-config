@@ -41,6 +41,18 @@ routes_to:
   - "skill:secrets-management"
 applies_to_user_types:
   - "all"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Domain Safety — PII Redaction

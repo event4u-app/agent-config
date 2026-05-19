@@ -3,6 +3,18 @@ name: rule-writing
 description: "Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'."
 source: package
 domain: process
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- cloud_safe: degrade -->

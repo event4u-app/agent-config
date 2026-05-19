@@ -5,6 +5,18 @@ personas:
   - ai-video-technical-director
 source: package
 domain: product
+workspaces:
+  - small-business
+packs:
+  - ai-video
+lifecycle: experimental
+trust:
+  level: experimental
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # motion-choreographer

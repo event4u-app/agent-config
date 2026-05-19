@@ -7,8 +7,18 @@ source: package
 domain: product
 context_spine: [product, team]
 recommended_for_user_types: [creator, gtm, founder]
-
-
+workspaces:
+  - gtm
+packs:
+  - gtm-marketing
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # release-comms

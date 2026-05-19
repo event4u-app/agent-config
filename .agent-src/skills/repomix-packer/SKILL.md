@@ -3,6 +3,18 @@ name: repomix-packer
 description: "Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI."
 source: package
 domain: process
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 > **Pinned upstream:** `repomix` CLI (npm: `repomix`, brew: `repomix`). Re-verify per minor bump. Repomix is an **optional dependency** — this skill never installs it silently.

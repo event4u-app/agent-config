@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "fix .gitignore garbage, clean up legacy agent-config entries, my .gitignore has stale agent entries, /sync-gitignore is not picking up the right paths"
   trigger_context: "consumer project carries pre-/agents/ runtime patterns (.agent-chat-history, .agent-prices.md) at the root from an older install"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /sync-gitignore:fix

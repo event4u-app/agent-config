@@ -56,9 +56,14 @@ CONCENTRATION_TOP3_PCT = 0.30
 # the measured extended-size ceiling at the day road-to-path-fixes was
 # closed; growth above the ceiling regresses CI. Future kernel-aware
 # trimming work retires entries here.
+# R3 Phase 4 mass-annotation added 12 lines of ADR-013 discovery
+# frontmatter (workspaces / packs / lifecycle / trust / install — 189
+# chars) to every always-rule. Both ceilings below were re-baselined
+# +189 to absorb that frontmatter-only growth, mirroring the Phase 2
+# feedback-consolidation `tier: "safety-floor"` precedent (+21).
 KNOWN_CONCENTRATION_BREACHES: dict[str, int] = {
-    "language-and-tone.md": 3_985,
-    "no-cheap-questions.md": 3_530,
+    "language-and-tone.md": 4_174,
+    "no-cheap-questions.md": 3_719,
 }
 # Top-3 non-floor concentration ceiling — same rationale as the
 # per-rule allowlist above. The current top-3 sum (language-and-tone +

@@ -4,6 +4,18 @@ description: "Use when working with the multi-tenant architecture — customer D
 source: package
 domain: engineering
 framework: laravel
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- Framework scope: Laravel only. Uses Eloquent model conventions,

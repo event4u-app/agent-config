@@ -7,8 +7,18 @@ source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage]
 recommended_for_user_types: [gtm]
-
-
+workspaces:
+  - gtm
+packs:
+  - gtm-sales
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # pipeline-strategy

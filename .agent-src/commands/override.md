@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "create an override, manage existing overrides, refactor an override"
   trigger_context: "user wants to add or curate project-level overrides under agents/overrides/"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /override

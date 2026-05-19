@@ -13,6 +13,18 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
     reason: "Rule references the authoring tree as the operand of compression/preservation."
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Preservation Guard

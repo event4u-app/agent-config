@@ -98,6 +98,46 @@
         }
       },
       "description": "Per-rule allowlist consumed by the post-compression validator (scripts/check_compressed_paths.py). Rules that document forbidden path substrings as their subject matter (e.g. augment-portability, no-roadmap-references) declare the literal strings here so the gate does not flag itself. road-to-path-fixes.md P5.1."
+    },
+    "workspaces": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "ADR-013 workspace ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/workspaces.yml."
+    },
+    "packs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "ADR-013 pack ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["active", "deprecated", "experimental", "archived"],
+      "description": "ADR-013 lifecycle state."
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "confidence", "human_review_required"],
+      "properties": {
+        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"]},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "human_review_required": {"type": "boolean"}
+      },
+      "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "removable"],
+      "properties": {
+        "default": {"type": "boolean"},
+        "removable": {"type": "boolean"}
+      },
+      "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     }
   }
 }

@@ -1,26 +1,26 @@
 {
   "version": 1,
-  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly \u2014 first ask whether the file should be neutralized instead.",
+  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
   "entries": [
     {
       "file": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md",
       "lines": [
-        130,
-        131,
-        132,
-        152
+        142,
+        143,
+        144,
+        164
       ],
       "reason": "Multi-stack package-manager comparison table"
     },
     {
       "file": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md",
       "lines": [
-        88,
-        90,
-        92,
-        137,
-        180,
-        269
+        100,
+        102,
+        104,
+        149,
+        192,
+        281
       ],
       "reason": "Project-detection enumeration listing all supported stacks"
     },
@@ -43,12 +43,12 @@
     {
       "file": ".agent-src.uncompressed/commands/optimize/augmentignore.md",
       "lines": "*",
-      "reason": "Per-stack augmentignore rules \u2014 by definition stack-aware"
+      "reason": "Per-stack augmentignore rules — by definition stack-aware"
     },
     {
       "file": ".agent-src.uncompressed/commands/optimize/rtk.md",
       "lines": "*",
-      "reason": "Per-tool rtk filter detection \u2014 by definition tool-aware"
+      "reason": "Per-tool rtk filter detection — by definition tool-aware"
     },
     {
       "file": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
@@ -68,94 +68,94 @@
     {
       "file": ".agent-src.uncompressed/rules/architecture.md",
       "lines": [
-        19,
-        20,
-        26,
-        27,
-        62
+        31,
+        32,
+        38,
+        39,
+        74
       ],
       "reason": "Stack-routing pointers and cross-stack enumeration of validation/handler primitives"
     },
     {
       "file": ".agent-src.uncompressed/skills/api-endpoint/SKILL.md",
       "lines": [
-        41,
-        58
+        53,
+        70
       ],
       "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
     },
     {
       "file": ".agent-src.uncompressed/skills/code-review/SKILL.md",
       "lines": [
-        40,
-        41,
-        42,
-        49,
-        62,
-        63,
+        52,
+        53,
+        54,
+        61,
         74,
-        83,
-        85,
-        87,
-        219
+        75,
+        86,
+        95,
+        97,
+        99,
+        231
       ],
       "reason": "Cross-stack code-review checklist enumerates handler shape, validation, authz, ORM, escaping per framework"
     },
     {
       "file": ".agent-src.uncompressed/skills/security/SKILL.md",
       "lines": [
-        16,
-        23,
-        27,
         28,
-        37,
-        41,
-        48,
-        58,
-        76
+        35,
+        39,
+        40,
+        49,
+        53,
+        60,
+        70,
+        88
       ],
       "reason": "Cross-stack security review enumerates auth primitives (Policies, voters, guards, middleware) and config paths"
     },
     {
       "file": ".agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md",
       "lines": [
-        53,
-        54,
-        55,
-        100,
-        177
+        65,
+        66,
+        67,
+        112,
+        189
       ],
       "reason": "Evidence-mapping table enumerates the type-checker / linter / refactor tool per stack including PHPStan, Rector, ECS"
     },
     {
       "file": ".agent-src.uncompressed/commands/tests/execute.md",
       "lines": "*",
-      "reason": "Multi-stack test runner dispatch (Pest/PHPUnit/Jest/pytest/cargo-test) \u2014 enumerates per-stack commands by design"
+      "reason": "Multi-stack test runner dispatch (Pest/PHPUnit/Jest/pytest/cargo-test) — enumerates per-stack commands by design"
     },
     {
       "file": ".agent-src.uncompressed/commands/tests/create.md",
       "lines": "*",
-      "reason": "Multi-stack test framework selection \u2014 enumerates Pest/PHPUnit/Jest/pytest options by design"
+      "reason": "Multi-stack test framework selection — enumerates Pest/PHPUnit/Jest/pytest options by design"
     },
     {
       "file": ".agent-src.uncompressed/commands/module/explore.md",
       "lines": "*",
-      "reason": "Multi-stack module detection (Laravel HMVC / Symfony bundles / DDD-lite) \u2014 enumerates per-stack patterns by design"
+      "reason": "Multi-stack module detection (Laravel HMVC / Symfony bundles / DDD-lite) — enumerates per-stack patterns by design"
     },
     {
       "file": ".agent-src.uncompressed/commands/package-test.md",
       "lines": "*",
-      "reason": "Multi-stack package linking (composer/npm/pip/cargo/go) \u2014 declared in skills frontmatter"
+      "reason": "Multi-stack package linking (composer/npm/pip/cargo/go) — declared in skills frontmatter"
     },
     {
       "file": ".agent-src.uncompressed/commands/package-reset.md",
       "lines": "*",
-      "reason": "Multi-stack package reset (composer/npm) \u2014 declared in skills frontmatter"
+      "reason": "Multi-stack package reset (composer/npm) — declared in skills frontmatter"
     },
     {
       "file": ".agent-src.uncompressed/skills/dependency-upgrade/SKILL.md",
       "lines": "*",
-      "reason": "Multi-stack dependency upgrade examples (composer/npm/pip) \u2014 declared stack-agnostic in description"
+      "reason": "Multi-stack dependency upgrade examples (composer/npm/pip) — declared stack-agnostic in description"
     },
     {
       "file": ".agent-src.uncompressed/skills/fe-design/SKILL.md",
@@ -175,7 +175,7 @@
     {
       "file": ".agent-src.uncompressed/commands/project-analyze.md",
       "lines": "*",
-      "reason": "Stack-detection templates show per-framework default outputs (Laravel/Standalone PHP/etc.) \u2014 multi-stack by design"
+      "reason": "Stack-detection templates show per-framework default outputs (Laravel/Standalone PHP/etc.) — multi-stack by design"
     },
     {
       "file": ".agent-src.uncompressed/commands/commit.md",
@@ -185,7 +185,7 @@
     {
       "file": ".agent-src.uncompressed/skills/test-driven-development/SKILL.md",
       "lines": "*",
-      "reason": "Multi-stack TDD examples \u2014 PHP/Pest and TypeScript/Jest sections both present"
+      "reason": "Multi-stack TDD examples — PHP/Pest and TypeScript/Jest sections both present"
     },
     {
       "file": ".agent-src.uncompressed/skills/context-authoring/SKILL.md",
@@ -220,7 +220,7 @@
     {
       "file": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
       "lines": "*",
-      "reason": "Debugging examples drawn from PHP project; the procedure is stack-agnostic (reproduce \u2192 isolate \u2192 hypothesize \u2192 verify)"
+      "reason": "Debugging examples drawn from PHP project; the procedure is stack-agnostic (reproduce → isolate → hypothesize → verify)"
     },
     {
       "file": ".agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md",
@@ -325,7 +325,7 @@
     {
       "file": ".agent-src.uncompressed/commands/quality-fix.md",
       "lines": "*",
-      "reason": "Quality-fix dispatches per stack (PHPStan/ECS/Rector for PHP, tsc/biome for JS) \u2014 multi-stack by design"
+      "reason": "Quality-fix dispatches per stack (PHPStan/ECS/Rector for PHP, tsc/biome for JS) — multi-stack by design"
     },
     {
       "file": ".agent-src.uncompressed/commands/roadmap/create.md",

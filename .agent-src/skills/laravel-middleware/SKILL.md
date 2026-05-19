@@ -3,6 +3,18 @@ name: laravel-middleware
 description: "Use when creating or modifying Laravel middleware — request/response filtering, groups, priority, terminable middleware, or route-level assignment."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-middleware

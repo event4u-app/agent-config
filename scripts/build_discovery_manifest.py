@@ -9,7 +9,7 @@ plus a human-readable Markdown summary.
 
 CLI: see `--help`. Stdlib + pyyaml only at runtime.
 Schema: docs/contracts/discovery-manifest.schema.json
-Roadmap: agents/roadmaps/automated-pack-workspace-and-skill-discovery.md §2
+Roadmap: agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md §2 (archived, status: completed)
 """
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ import argparse
 import datetime as _dt
 import hashlib
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any, Iterable
@@ -150,13 +151,15 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     unassigned: list[dict[str, Any]] = []
     pack_counts: dict[str, int] = {pid: 0 for pid in pack_ids}
 
+    documented_unassigned: list[dict[str, Any]] = []
+
     for path, category in _iter_artefacts():
         rel = path.relative_to(ROOT).as_posix()
         if not _trusted(path):
             unassigned.append({"path": rel, "category": category, "reason": "outside trusted-root allow-list"})
             continue
         if rel in overrides:
-            unassigned.append({"path": rel, "category": category, "reason": overrides[rel]})
+            documented_unassigned.append({"path": rel, "category": category, "reason": overrides[rel]})
             continue
         fm = _parse(path)
         payload, reason = _classify(fm, ws_ids, pack_ids)
@@ -174,6 +177,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
 
     artefacts.sort(key=lambda e: e["path"])
     unassigned.sort(key=lambda e: e["path"])
+    documented_unassigned.sort(key=lambda e: e["path"])
 
     ws_out = [
         {
@@ -214,6 +218,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         "packs": pk_out,
         "artefacts": artefacts,
         "unassigned": unassigned,
+        "documented_unassigned": documented_unassigned,
     }
     return manifest, unassigned
 
@@ -224,9 +229,14 @@ def _serialize(manifest: dict[str, Any]) -> str:
 
 
 def _finalise_checksum(manifest: dict[str, Any]) -> None:
+    # Checksum covers structural content only — `generated_at` is wall-clock
+    # and intentionally excluded so the hash stays byte-stable across runs.
+    generated_at = manifest.get("generated_at")
     manifest["checksum"] = "sha256:" + "0" * 64
+    manifest["generated_at"] = "<normalised>"
     raw = _serialize(manifest).encode("utf-8")
     digest = hashlib.sha256(raw).hexdigest()
+    manifest["generated_at"] = generated_at
     manifest["checksum"] = f"sha256:{digest}"
 
 
@@ -262,11 +272,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
 
-    # Strict mode is opt-in via --strict only. Phase 4.4 will flip the CI
-    # default to strict once per-pack annotation (Phase 4) has landed for
-    # every artefact. Until then, auto-enabling strict under CI=true would
-    # trip every PR with the 442 still-unassigned artefacts.
-    manifest, unassigned = _build(strict=args.strict)
+    # Phase 4.4 gate: in CI, behave as if --strict were passed. Local
+    # invocations stay permissive unless --strict is explicit.
+    strict = args.strict or os.environ.get("CI", "").lower() in ("true", "1")
+    manifest, unassigned = _build(strict=strict)
     _finalise_checksum(manifest)
     body = _serialize(manifest)
 
@@ -274,6 +283,11 @@ def main(argv: list[str] | None = None) -> int:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(body, encoding="utf-8")
         args.summary.write_text(_summary(manifest), encoding="utf-8")
+        # Sidecar SHA-256 of the on-disk manifest bytes for tamper detection
+        # by downstream consumers (security-engineer council fold-in, R3 Phase 7).
+        sidecar = args.out.with_suffix(args.out.suffix + ".sha256")
+        file_digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
+        sidecar.write_text(f"{file_digest}  {args.out.name}\n", encoding="utf-8")
         if not args.quiet:
             print(
                 f"wrote {args.out.relative_to(ROOT)} "

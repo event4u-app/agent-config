@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
   trigger_context: "open PR with failing checks"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix ci

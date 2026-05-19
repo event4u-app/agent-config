@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "audit agent infrastructure, check rule triggers, verify AGENTS.md health, agent-layer health-check"
   trigger_context: "maintainer working on .augment/ files, AGENTS.md, or planning a refactor"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents audit

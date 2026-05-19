@@ -3,6 +3,18 @@ name: laravel-scheduling
 description: "Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-scheduling

@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "council on this perf hot path, second opinion on this optimization, external review of /optimize output"
   trigger_context: "user has an optimization target (code path, query, profile result, /optimize-* output) and wants a ranked external opinion"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /council optimize

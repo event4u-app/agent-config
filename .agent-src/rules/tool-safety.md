@@ -7,6 +7,18 @@ triggers:
   - keyword: "allowed_tools"
   - keyword: "tool registry"
   - intent: "external API"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Tool Safety

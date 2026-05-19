@@ -3,6 +3,18 @@ name: using-git-worktrees
 description: "Use when starting parallel work in isolation from the current branch — spawn a git worktree with ignore-safety checks and a clean test baseline — even when the user says 'try this on the side'."
 source: package
 domain: process
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # using-git-worktrees

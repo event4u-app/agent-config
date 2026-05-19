@@ -1,13 +1,13 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **502 public artefacts** shipped by
+Consumer-facing catalog of all **491 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (217)
+## Skills (218)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -186,6 +186,7 @@ are excluded.
 | skill | [`roadmap-management`](../.agent-src/skills/roadmap-management/SKILL.md) |  | Use when the user says "create roadmap", "show roadmap", or "execute roadmap". Creates, reads, and manages roadmap files with phase tracking. |
 | skill | [`roadmap-writing`](../.agent-src/skills/roadmap-writing/SKILL.md) |  | Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'. |
 | skill | [`rtk-output-filtering`](../.agent-src/skills/rtk-output-filtering/SKILL.md) |  | Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns. |
+| skill | [`rule-refactor`](../.agent-src/skills/rule-refactor/SKILL.md) |  | Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule. |
 | skill | [`rule-writing`](../.agent-src/skills/rule-writing/SKILL.md) |  | Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'. |
 | skill | [`runway-cognition`](../.agent-src/skills/runway-cognition/SKILL.md) |  | Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'. |
 | skill | [`scenario-modeling`](../.agent-src/skills/scenario-modeling/SKILL.md) |  | Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'. |
@@ -229,19 +230,18 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (83)
+## Rules (71)
 
 | kind | name | type | description |
 |---|---|---|---|
 | rule | [`agent-authority`](../.agent-src/rules/agent-authority.md) | always | Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule |
-| rule | [`agent-docs`](../.agent-src/rules/agent-docs.md) | auto | Reading, creating, or updating agent documentation, module docs, roadmaps, or AGENTS.md |
 | rule | [`analysis-skill-routing`](../.agent-src/rules/analysis-skill-routing.md) | manual | When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis |
 | rule | [`architecture`](../.agent-src/rules/architecture.md) | auto | Architecture rules for creating new files, classes, controllers, modules, or making structural decisions about project organization |
 | rule | [`artifact-drafting-protocol`](../.agent-src/rules/artifact-drafting-protocol.md) | auto | Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs mandatory Understand → Research → Draft before drafting |
 | rule | [`artifact-engagement-recording`](../.agent-src/rules/artifact-engagement-recording.md) | auto | After a /implement-ticket or /work phase-step (refine/memory/analyze/plan/implement/test/verify/report) or full task — emit one telemetry:record call |
 | rule | [`ask-when-uncertain`](../.agent-src/rules/ask-when-uncertain.md) | always | Ask when uncertain — don't guess, assume, or improvise |
+| rule | [`augment-edit-discipline`](../.agent-src/rules/augment-edit-discipline.md) | auto | Editing inside .augment/ or .agent-src.uncompressed/ — files MUST stay project-agnostic AND any add/rename/delete syncs counts and cross-references in the same edit |
 | rule | [`autonomous-execution`](../.agent-src/rules/autonomous-execution.md) | auto | Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor in non-destructive-by-default |
-| rule | [`capture-learnings`](../.agent-src/rules/capture-learnings.md) | auto | After completing a task where a repeated mistake or successful pattern appeared — capture as rule or skill |
 | rule | [`caveman-speak`](../.agent-src/rules/caveman-speak.md) | auto | When caveman.speak_scope != off — compress reply prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers |
 | rule | [`cli-output-handling`](../.agent-src/rules/cli-output-handling.md) | auto | Running CLI commands that produce verbose output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback |
 | rule | [`command-suggestion-policy`](../.agent-src/rules/command-suggestion-policy.md) | auto | User prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes |
@@ -253,23 +253,14 @@ are excluded.
 | rule | [`direct-answers`](../.agent-src/rules/direct-answers.md) | always | Always — direct, unembellished answers. No flattery, no invented facts (verify load-bearing claims, otherwise ask). Emojis only as functional markers. Brevity is the default. |
 | rule | [`docker-commands`](../.agent-src/rules/docker-commands.md) | auto | Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution |
 | rule | [`domain-adoption-policy`](../.agent-src/rules/domain-adoption-policy.md) | auto | Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest |
-| rule | [`domain-safety-disclaimer-consulting`](../.agent-src/rules/domain-safety-disclaimer-consulting.md) | auto | Drafting strategic recommendations, executive memos, board decks, or consulting deliverables — cite assumptions; flag low-confidence claims |
-| rule | [`domain-safety-disclaimer-financial`](../.agent-src/rules/domain-safety-disclaimer-financial.md) | auto | Drafting investment memos, valuation models, tax positions, or financial-advice-shaped content — require 'not financial advice' disclaimer |
-| rule | [`domain-safety-disclaimer-legal`](../.agent-src/rules/domain-safety-disclaimer-legal.md) | auto | Drafting legal briefs, contract redlines, ToS, privacy policies, or any legal-shaped content — require 'not legal advice' disclaimer in output |
-| rule | [`domain-safety-disclaimer-medical`](../.agent-src/rules/domain-safety-disclaimer-medical.md) | auto | Drafting health, wellness, medical, or therapeutic content — require 'not medical advice' disclaimer; refuse diagnostic or dosage outputs |
-| rule | [`domain-safety-export-redact`](../.agent-src/rules/domain-safety-export-redact.md) | auto | Generating CSV / Excel / API exports, partner data-shares, or analyst handoffs — redact direct identifiers; flag re-identification on quasi-IDs |
-| rule | [`domain-safety-logging-pii-floor`](../.agent-src/rules/domain-safety-logging-pii-floor.md) | auto | Writing logging code, structured logger config, or log lines — refuse to log raw PII; require redaction or a structured-field allowlist |
-| rule | [`domain-safety-pii-finance`](../.agent-src/rules/domain-safety-pii-finance.md) | auto | Drafting invoices, financial reports, AR/AP statements, or finance memos — redact counterparty PII and account/bank identifiers before output |
-| rule | [`domain-safety-pii-marketing`](../.agent-src/rules/domain-safety-pii-marketing.md) | auto | Drafting testimonials, case studies, social proof, or marketing emails referencing real customers — require consent; redact identifiers if absent |
-| rule | [`domain-safety-pii-recruiting`](../.agent-src/rules/domain-safety-pii-recruiting.md) | auto | Drafting candidate notes, interview scorecards, rejection emails, or hiring memos — redact candidate PII before output |
-| rule | [`domain-safety-pii-support`](../.agent-src/rules/domain-safety-pii-support.md) | auto | Generating support macros, ticket responses, or help-desk drafts — redact customer PII before output (names, emails, phones, account IDs, addresses) |
-| rule | [`domain-safety-retention-finance`](../.agent-src/rules/domain-safety-retention-finance.md) | auto | Finance data retention guidance — flag jurisdiction dependence, default to longest applicable retention, never delete records under audit hold |
-| rule | [`domain-safety-retention-support`](../.agent-src/rules/domain-safety-retention-support.md) | auto | Support / CRM data retention guidance — surface DSR-readiness, consent-window expiry, ticket-body retention vs. analytics aggregate retention |
+| rule | [`domain-safety-disclaimer`](../.agent-src/rules/domain-safety-disclaimer.md) | auto | Drafting advisory-shaped content (legal, medical, financial, strategic-consulting) — require the matching 'not X advice' disclaimer; refuse diagnosis/dosage outright |
+| rule | [`domain-safety-pii`](../.agent-src/rules/domain-safety-pii.md) | auto | Drafts, logs, and exports touching real customer/candidate/counterparty data — redact direct identifiers, use placeholders, flag re-identification on quasi-IDs |
+| rule | [`domain-safety-retention`](../.agent-src/rules/domain-safety-retention.md) | auto | Data retention guidance (finance records, support/CRM data) — name the jurisdiction gap, default to longest applicable floor, honor DSR/audit holds, never delete under inquiry |
 | rule | [`downstream-changes`](../.agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation |
-| rule | [`e2e-testing`](../.agent-src/rules/e2e-testing.md) | auto | Playwright E2E tests — locators, assertions, Page Objects, fixtures, CI, and flaky test prevention |
 | rule | [`external-reference-deep-dive`](../.agent-src/rules/external-reference-deep-dive.md) | auto | User names an external repo, file, URL, or artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
 | rule | [`fast-path-marker-visibility`](../.agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host agent MUST surface the transparency marker verbatim in the reply opening; never swallow or paraphrase it. |
 | rule | [`framework-neutrality-in-generic-skills`](../.agent-src/rules/framework-neutrality-in-generic-skills.md) | auto | When editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers. |
+| rule | [`git-history-discipline`](../.agent-src/rules/git-history-discipline.md) | auto | Git history operations — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push in same turn |
 | rule | [`guidelines`](../.agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
 | rule | [`improve-before-implement`](../.agent-src/rules/improve-before-implement.md) | auto | Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements |
 | rule | [`invite-challenge`](../.agent-src/rules/invite-challenge.md) | auto | Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity |
@@ -285,13 +276,11 @@ are excluded.
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit-message bodies — forbids 'Generated with', 'Co-authored by', or 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/council-*/) from a stable artifact — both layers expire; promote findings |
-| rule | [`no-unsolicited-rebase`](../.agent-src/rules/no-unsolicited-rebase.md) | auto | Working with git history — never rewrite, rebase, squash, fixup, or amend without explicit user request; shape is the user's call, not tidiness |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn of a conversation on a project — check onboarding.onboarded in .agent-settings.yml; when false, prompt to run /onboard before any request |
 | rule | [`package-ci-checks`](../.agent-src/rules/package-ci-checks.md) | manual | Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first |
 | rule | [`persona-governance`](../.agent-src/rules/persona-governance.md) | auto | When creating, editing, or proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, and the deprecation path |
 | rule | [`php-coding`](../.agent-src/rules/php-coding.md) | auto | Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions |
-| rule | [`post-push-rewrite-discipline`](../.agent-src/rules/post-push-rewrite-discipline.md) | auto | Git history after a push — squash/amend/rebase of pushed commits must pair with immediate re-push in same turn; stop on divergent state |
 | rule | [`preservation-guard`](../.agent-src/rules/preservation-guard.md) | auto | When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss |
 | rule | [`provider-lifecycle-discipline`](../.agent-src/rules/provider-lifecycle-discipline.md) | auto | When editing an AI video/image/audio adapter — declare lifecycle tier (experimental \| stable \| deprecated \| community); never default to non-stable |
 | rule | [`reviewer-awareness`](../.agent-src/rules/reviewer-awareness.md) | auto | When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary |

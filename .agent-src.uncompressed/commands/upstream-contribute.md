@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "contribute this back to agent-config, upstream this learning"
   trigger_context: "project-local skill/rule that fits the shared package"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /upstream-contribute

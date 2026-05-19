@@ -3,6 +3,18 @@ name: project-analysis-hypothesis-driven
 description: "Use when a bug has multiple plausible causes across layers — competing hypotheses, validation loops, evidence-based conclusions — even when the user just says 'why is this happening?'."
 source: package
 domain: discovery
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # project-analysis-hypothesis-driven

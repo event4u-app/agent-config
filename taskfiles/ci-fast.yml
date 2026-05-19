@@ -257,10 +257,29 @@ tasks:
     deps: [build-discovery-manifest]
     cmd: python3 scripts/lint_discovery_manifest.py {{.QUIET_FLAG}}
 
+  lint-artefact-frontmatter:
+    silent: true
+    desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
+    cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
+
   check-discovery-determinism:
     silent: true
     desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)
     cmd: python3 scripts/check_discovery_determinism.py
+
+  assert-discovery-in-tarball:
+    silent: true
+    desc: Assert dist/discovery/discovery-manifest.json ships in the `npm pack` tarball (R3 Phase 5.2)
+    deps: [build-discovery-manifest]
+    # --ignore-scripts keeps the JSON output clean — without it, the
+    # prepack chain (vite build, discovery scanner) writes to stdout
+    # and corrupts jq's input.
+    cmd: npm pack --dry-run --json --ignore-scripts --silent | jq -e '.[0].files | map(.path) | any(. == "dist/discovery/discovery-manifest.json")'
+
+  check-release-includes-discovery:
+    silent: true
+    desc: Assert dist/discovery/discovery-manifest.json exists and is non-empty before `npm publish` (R3 Phase 5.3)
+    cmd: python3 scripts/check_release_includes_discovery.py
 
   lint-framework-leakage:
     silent: true

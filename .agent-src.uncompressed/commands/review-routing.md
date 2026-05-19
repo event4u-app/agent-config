@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "who should review this, suggest reviewers for this PR"
   trigger_context: "PR open without assigned reviewers"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # review-routing

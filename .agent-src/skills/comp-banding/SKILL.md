@@ -6,6 +6,18 @@ tier: senior
 source: package
 domain: process
 context_spine: [org-stage, customer-segment, regulatory-regime]
+workspaces:
+  - ops
+packs:
+  - ops-people
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # comp-banding

@@ -7,7 +7,18 @@ status: active
 refresh_trigger: "A cited provider deprecates an auth method, OR External Secrets Operator ships a major version with breaking CRD changes, OR ≥30% of cited scanner tools change their gate semantics."
 sunset_criterion: "When provider docs (Vault, AWS Secrets Manager, Azure Key Vault, GCP Secret Manager) all converge on a single rotation + scanning standard AND consumer projects no longer cite this skill in PR reviews for two consecutive review cycles."
 recommended_for_user_types: [ops, developer]
-
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # secrets-management

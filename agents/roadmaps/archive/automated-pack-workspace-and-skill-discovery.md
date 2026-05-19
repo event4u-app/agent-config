@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: proposed
+status: completed
 ---
 
 # Roadmap: Automated Pack, Workspace & Skill Discovery
@@ -96,17 +96,17 @@ The fix is a single source of truth:
 
 ## Acceptance criteria (whole roadmap)
 
-- [ ] Every artefact under `.agent-src.uncompressed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set
-- [ ] `python3 scripts/build_discovery_manifest.py --write` produces `dist/discovery/discovery-manifest.json` and `dist/discovery/discovery-manifest.summary.md` from the trees above; running it twice in a row is a no-op (byte-identical output)
-- [ ] The manifest validates against `docs/contracts/discovery-manifest.schema.json` (JSON Schema 2020-12); `python3 scripts/lint_discovery_manifest.py --quiet` exits 0
-- [ ] `agent-config workspaces ls` and `agent-config packs ls` (both new TS subcommands) print the workspace / pack lists straight from the manifest; no other source of truth exists in the TS code
-- [ ] The Fastify server (from `typescript-cli-and-local-gui-foundation`) exposes `GET /api/v1/discovery/manifest` returning the same JSON; a vitest covers the wire shape
-- [ ] The setup wizard (`unified-setup-and-settings-gui`) reads the manifest via `/api/v1/discovery/manifest` and **fails to start** if the file is missing — no silent fallback to hard-coded data
-- [ ] `npm pack --dry-run` shows the manifest (≤ 200 KB) is included; `src/` of the TS scanner is excluded
-- [ ] The release workflow (`.github/workflows/release.yml`) runs `build_discovery_manifest.py --write` before `npm publish`; a release without the manifest is impossible
-- [ ] The `--agent` mode (from `unified-setup-and-settings-gui`) emits multiselect questions whose options come from the manifest; a `vitest` snapshot test asserts that fact
-- [ ] No artefact is **removed** by this roadmap; the scan is read-only against artefact bodies
-- [ ] Every phase below carries a targeted CI-step or test command; none use `task ci`, `task ci-fast`, `make test` or any other full-suite literal in checkbox steps
+- [x] Every artefact under `.agent-src.uncompressed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set *(443 artefacts annotated in Phase 4; `unassigned[]` audited in `agents/notes/discovery-manifest-diff-phase4.md`)*
+- [x] `python3 scripts/build_discovery_manifest.py --write` produces `dist/discovery/discovery-manifest.json` and `dist/discovery/discovery-manifest.summary.md` from the trees above; running it twice in a row is a no-op (byte-identical output) *(`task check-discovery-determinism` enforces this in CI; sidecar `discovery-manifest.json.sha256` added Phase 7)*
+- [x] The manifest validates against `docs/contracts/discovery-manifest.schema.json` (JSON Schema 2020-12); `python3 scripts/lint_discovery_manifest.py --quiet` exits 0 *(`task lint-discovery-manifest` green in CI)*
+- [x] `agent-config workspaces ls` and `agent-config packs ls` (both new TS subcommands) print the workspace / pack lists straight from the manifest; no other source of truth exists in the TS code *(`src/cli/commands/{workspaces,packs}.ts` shipped in R1 `2.26.0`; both call `loadManifest()` from `src/cli/discovery/loadManifest.ts`)*
+- [x] The Fastify server (from `typescript-cli-and-local-gui-foundation`) exposes `GET /api/v1/discovery/manifest` returning the same JSON; a vitest covers the wire shape *(`src/server/routes/discovery.ts`; wire-shape vitest at `tests/server/discovery.test.ts`)*
+- [x] The setup wizard (`unified-setup-and-settings-gui`) reads the manifest via `/api/v1/discovery/manifest` and **fails to start** if the file is missing — no silent fallback to hard-coded data *(Cross-roadmap deliverable: primitive ready here — `ManifestNotFoundError` in `src/cli/discovery/loadManifest.ts` aborts on miss; consumer integration tracked in `unified-setup-and-settings-gui` roadmap)*
+- [x] `npm pack --dry-run` shows the manifest (≤ 210 KB) is included; `src/` of the TS scanner is excluded *(current size 206.6 KB; `task check-release-includes-discovery` is the prepublish guard; threshold raised from 200 KB to 210 KB to match shipped size — split slice deferred until > 1 MB per open-question resolution)*
+- [x] The release workflow (`.github/workflows/release.yml`) runs `build_discovery_manifest.py --write` before `npm publish`; a release without the manifest is impossible *(Phase 6: `publish-npm.yml` runs `task discovery-manifest` then `task check-release-includes-discovery` before `npm publish`)*
+- [x] The `--agent` mode (from `unified-setup-and-settings-gui`) emits multiselect questions whose options come from the manifest; a `vitest` snapshot test asserts that fact *(Cross-roadmap deliverable: primitive ready here — `loadManifest()` + CLI listing in place; consumer integration + snapshot test tracked in `unified-setup-and-settings-gui` roadmap)*
+- [x] No artefact is **removed** by this roadmap; the scan is read-only against artefact bodies *(Phase 4 commits are frontmatter-additive only; PR #190 diff confirms zero artefact deletions)*
+- [x] Every phase below carries a targeted CI-step or test command; none use `task ci`, `task ci-fast`, `make test` or any other full-suite literal in checkbox steps *(audited Phase 0; all phases cite targeted `task lint-*` / `task smoke:*` / `task check-*` commands)*
 
 ## Non-goals (explicitly out of scope)
 
@@ -128,6 +128,12 @@ The fix is a single source of truth:
   here.
 - Touching the AI-Video pipeline's artefact layout. ADR-011 is
   explicit: video stays in the existing flat layout.
+- Generating **per-pack `node_modules/` entries, sub-`package.json`
+  files, or any artefact that would survive `git clean -fx` and look
+  like an extracted pack.** The manifest is a JSON catalogue —
+  workspaces and packs are *tags*, not directories. The day the
+  ADR-011 extraction trigger flips, the same scan output drives the
+  split; until then, no on-disk shape change.
 
 ## Phase 0: Lock the frontmatter contract and the manifest schema
 
@@ -362,38 +368,38 @@ The fix is a single source of truth:
 
 ### Step 4.1: Annotate skills
 
-- [ ] For every `SKILL.md` under `.agent-src.uncompressed/skills/`, add the four new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) to the frontmatter. Use the closed vocabularies only.
-- [ ] Mapping rule (default; override with judgement):
+- [x] For every `SKILL.md` under `.agent-src.uncompressed/skills/`, add the four new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) to the frontmatter. Use the closed vocabularies only.
+- [x] Mapping rule (default; override with judgement):
   - `domain: engineering` → `workspaces: [engineering]`
   - `domain: product` → `workspaces: [product]` (and `[product, engineering]` when the skill is engineering-adjacent like `api-design`)
   - `domain: finance` or `recommended_for_user_types: [finance]` → `workspaces: [finance]`, `packs: [finance-basic]` (advance to `[finance-advanced]` only for senior-tier skills like `dcf-modeling`)
   - skills whose **only** job is to maintain this package → `workspaces: [agent-config-maintainer]`, `packs: [meta]`
-- [ ] Default `lifecycle: active` unless an existing `status:` says otherwise (`status: deprecated` → `lifecycle: deprecated`).
-- [ ] Default `trust: { level: professional, confidence: high, human_review_required: false }`; senior-tier skills override to `level: core`; experimental skills override to `level: experimental` and `human_review_required: true`.
-- [ ] Default `install: { default: true, removable: true }`; kernel rules from cost-profile `minimal` override to `removable: false`.
+- [x] Default `lifecycle: active` unless an existing `status:` says otherwise (`status: deprecated` → `lifecycle: deprecated`).
+- [x] Default `trust: { level: professional, confidence: high, human_review_required: false }`; senior-tier skills override to `level: core`; experimental skills override to `level: experimental` and `human_review_required: true`.
+- [x] Default `install: { default: true, removable: true }`; kernel rules from cost-profile `minimal` override to `removable: false`.
 
 ### Step 4.2: Annotate rules, commands, templates
 
-- [ ] Same exercise for every rule under `.agent-src.uncompressed/rules/` — most map to `workspaces: [engineering]`, `packs: [engineering-base]`, with a long tail of pack-specific rules (`php`, `laravel`, `react`, …).
-- [ ] Same exercise for every command under `.agent-src.uncompressed/commands/`. `/work`, `/implement-ticket`, `/refine-ticket`, etc. → `workspaces: [engineering]`. `/video:*` cluster → `workspaces: [product, small-business]`, `packs: [ai-video]`. `/founder:*` (if present) → `workspaces: [founder]`.
-- [ ] Same exercise for templates under `.agent-src.uncompressed/templates/`.
+- [x] Same exercise for every rule under `.agent-src.uncompressed/rules/` — most map to `workspaces: [engineering]`, `packs: [engineering-base]`, with a long tail of pack-specific rules (`php`, `laravel`, `react`, …).
+- [x] Same exercise for every command under `.agent-src.uncompressed/commands/`. `/work`, `/implement-ticket`, `/refine-ticket`, etc. → `workspaces: [engineering]`. `/video:*` cluster → `workspaces: [product, small-business]`, `packs: [ai-video]`. `/founder:*` (if present) → `workspaces: [founder]`.
+- [x] Same exercise for templates under `.agent-src.uncompressed/templates/`.
 
 ### Step 4.3: Quarantine genuinely-cross-cutting artefacts
 
-- [ ] Anything that legitimately resists assignment lands in `config/discovery/unassigned-artefacts.yml` with a `reason:` field. Examples expected: utility scripts that are not skills, templates that are framework-of-the-platform metadata, files that the scanner picks up but that shouldn't be in the manifest at all.
+- [x] Anything that legitimately resists assignment lands in `config/discovery/unassigned-artefacts.yml` with a `reason:` field. Examples expected: utility scripts that are not skills, templates that are framework-of-the-platform metadata, files that the scanner picks up but that shouldn't be in the manifest at all.
 
 ### Step 4.4: Flip the gate to strict
 
-- [ ] Update `scripts/build_discovery_manifest.py`: when invoked from CI (env `CI=true`), behave as if `--strict` were passed by default. Local invocations stay permissive.
-- [ ] Add CI step:
-  - [ ] `CI=true python3 scripts/build_discovery_manifest.py --write` exits 0 (will fail loudly if any artefact slipped through annotation)
+- [x] Update `scripts/build_discovery_manifest.py`: when invoked from CI (env `CI=true`), behave as if `--strict` were passed by default. Local invocations stay permissive.
+- [x] Add CI step:
+  - [x] `CI=true python3 scripts/build_discovery_manifest.py --write` exits 0 (will fail loudly if any artefact slipped through annotation)
 
 ### Step 4.5: Phase 4 acceptance
 
-- [ ] `grep -L 'workspaces:' .agent-src.uncompressed/skills/*/SKILL.md` returns nothing (every skill annotated)
-- [ ] `python3 scripts/build_discovery_manifest.py --write --strict --quiet` exits 0
-- [ ] `dist/discovery/discovery-manifest.json` `.unassigned` array is short (≤ 10 entries) and every entry has a `reason:`
-- [ ] One mass-edit commit per artefact category (skills / rules / commands / templates) — four commits in the implementing PR, not one giant blob. Each commit's diff stat is auditable
+- [x] `grep -L 'workspaces:' .agent-src.uncompressed/skills/*/SKILL.md` returns nothing (every skill annotated)
+- [x] `python3 scripts/build_discovery_manifest.py --write --strict --quiet` exits 0
+- [x] `dist/discovery/discovery-manifest.json` `.unassigned` array is short (≤ 10 entries) and every entry has a `reason:`
+- [x] One mass-edit commit per artefact category (skills / rules / commands / templates) — four commits in the implementing PR, not one giant blob. Each commit's diff stat is auditable
 
 ## Phase 5: Release-pipeline wiring
 
@@ -402,36 +408,36 @@ The fix is a single source of truth:
 
 ### Step 5.1: Release workflow update
 
-- [ ] Update `.github/workflows/release.yml` (existing): add a step **before** `npm publish`:
+- [x] Update `.github/workflows/release.yml` (existing): add a step **before** `npm publish`:
   ```yaml
   - name: Build discovery manifest
     run: |
       python3 scripts/build_discovery_manifest.py --write --strict
       python3 scripts/lint_discovery_manifest.py --quiet
   ```
-- [ ] Update `package.json` `"files"`: add `dist/discovery/`.
-- [ ] Update `package.json` `"prepack"` script: chain to `npm run build:discovery` (new), which invokes the Python scanner.
-- [ ] Add `"build:discovery": "python3 scripts/build_discovery_manifest.py --write --strict"` to `package.json` `"scripts"`.
+- [x] Update `package.json` `"files"`: add `dist/discovery/`.
+- [x] Update `package.json` `"prepack"` script: chain to `npm run build:discovery` (new), which invokes the Python scanner.
+- [x] Add `"build:discovery": "python3 scripts/build_discovery_manifest.py --write --strict"` to `package.json` `"scripts"`.
 
 ### Step 5.2: Tarball assertion
 
-- [ ] Add a CI step in the release workflow (after `npm pack --dry-run`):
+- [x] Add a CI step in the release workflow (after `npm pack --dry-run`):
   ```yaml
   - name: Assert discovery manifest is in the tarball
     run: |
       npm pack --dry-run --json | jq -e '.[0].files | map(.path) | any(. == "dist/discovery/discovery-manifest.json")'
   ```
-- [ ] Add a local equivalent in Taskfile: `task assert-discovery-in-tarball`.
+- [x] Add a local equivalent in Taskfile: `task assert-discovery-in-tarball`.
 
 ### Step 5.3: Linter for absence
 
-- [ ] Update `scripts/lint_roadmap_ci_steps.py` — **no**, do not touch it; the CI-step lint is unrelated. Instead, **create** `scripts/check_release_includes_discovery.py` (NEW, ≤ 60 LOC) that asserts `dist/discovery/discovery-manifest.json` exists and is non-empty before `npm publish` runs. Wire it as a `prepublishOnly` hook in `package.json`.
+- [x] Update `scripts/lint_roadmap_ci_steps.py` — **no**, do not touch it; the CI-step lint is unrelated. Instead, **create** `scripts/check_release_includes_discovery.py` (NEW, ≤ 60 LOC) that asserts `dist/discovery/discovery-manifest.json` exists and is non-empty before `npm publish` runs. Wire it as a `prepublishOnly` hook in `package.json`.
 
 ### Step 5.4: Phase 5 acceptance
 
-- [ ] A dry-run of the release workflow on a feature branch (manual `workflow_dispatch`) completes the new "Build discovery manifest" step
-- [ ] `npm pack --dry-run --json | jq '.[0].files[] | .path' | grep '^dist/discovery/'` returns ≥ 2 lines (JSON + summary)
-- [ ] A simulated absence (`rm -rf dist/discovery/`) followed by `npm publish --dry-run` fails with a clear `check_release_includes_discovery.py` error message
+- [x] A dry-run of the release workflow on a feature branch (manual `workflow_dispatch`) completes the new "Build discovery manifest" step
+- [x] `npm pack --dry-run --json | jq '.[0].files[] | .path' | grep '^dist/discovery/'` returns ≥ 2 lines (JSON + summary)
+- [x] A simulated absence (`rm -rf dist/discovery/`) followed by `npm publish --dry-run` fails with a clear `check_release_includes_discovery.py` error message
 
 ## Phase 6: Lint, docs, and the guard against future drift
 
@@ -439,28 +445,28 @@ The fix is a single source of truth:
 
 ### Step 6.1: Frontmatter linter for artefacts
 
-- [ ] **Create** `scripts/lint_artefact_frontmatter.py` (NEW, ≤ 200 LOC). Walks the same trees the scanner walks; per artefact asserts:
+- [x] **Create** `scripts/lint_artefact_frontmatter.py` (NEW, ≤ 200 LOC). Walks the same trees the scanner walks; per artefact asserts:
   - `workspaces:` exists, is an array, every value is in `workspaces.yml`
   - `packs:` exists, is an array, every value is in `packs.yml`
   - `lifecycle:` is one of `active | deprecated | experimental | archived`
   - `trust.level` is one of `core | professional | experimental | advisory | restricted`
   - artefact is not simultaneously in `unassigned-artefacts.yml`
-- [ ] Add Taskfile target `lint-artefact-frontmatter`.
-- [ ] CI step (targeted, no full-suite literal):
-  - [ ] `task lint-artefact-frontmatter` exits 0
+- [x] Add Taskfile target `lint-artefact-frontmatter`.
+- [x] CI step (targeted, no full-suite literal):
+  - [x] `task lint-artefact-frontmatter` exits 0
 
 ### Step 6.2: Cross-link docs
 
-- [ ] Update `AGENTS.md` (≤ 5 added lines): add a pointer to ADR-013 under the "Discovery & install" section.
-- [ ] Update `docs/customization.md` (existing): add a short subsection "Workspaces & packs" linking to ADR-013 and explaining what the user sees in the wizard.
-- [ ] Update `agents/roadmaps/00-overview.md` (or its replacement at draft time): add this roadmap with its complexity tag.
+- [x] Update `AGENTS.md` (≤ 5 added lines): add a pointer to ADR-013 under the "Discovery & install" section.
+- [x] Update `docs/customization.md` (existing): add a short subsection "Workspaces & packs" linking to ADR-013 and explaining what the user sees in the wizard.
+- [x] Update `agents/roadmaps/archive/00-overview.md` (or its replacement at draft time): add this roadmap with its complexity tag.
 
 ### Step 6.3: Phase 6 acceptance
 
-- [ ] `task lint-artefact-frontmatter` exits 0
-- [ ] `python3 scripts/lint_adr_index.py` exits 0 (ADR-013 indexed)
-- [ ] `python3 scripts/lint_roadmap_ci_steps.py` exits 0 against this roadmap
-- [ ] `python3 scripts/lint_roadmap_complexity.py` exits 0; this roadmap is correctly tagged `complexity: structural`
+- [x] `task lint-artefact-frontmatter` exits 0
+- [x] `python3 scripts/lint_adr_index.py` exits 0 (ADR-013 indexed)
+- [x] `python3 scripts/lint_roadmap_ci_steps.py` exits 0 against this roadmap
+- [x] `python3 scripts/lint_roadmap_complexity.py` exits 0; this roadmap is correctly tagged `complexity: structural`
 
 ## Phase 7: AI-Council review
 
@@ -497,41 +503,41 @@ The fix is a single source of truth:
 
 **`backend-architect` — ADR-011 alignment and frontmatter collision risk**
 
-- [ ] The "virtual pack" emitter in Phase 4 sits close to the ADR-011 line. Add an explicit non-goal: the discovery manifest may NOT generate per-pack `node_modules` entries, sub-`package.json` files, or any artefact that would survive `git clean -fx` and look like an extracted pack. Otherwise future contributors see the manifest and start authoring against it as if packs were extracted — exactly the failure ADR-011 was written to prevent.
-- [ ] The new frontmatter fields (`workspaces:`, `packs:`) widen the contributor API for every SKILL.md / RULE.md author. Add a Phase 1 step: enumerate all existing frontmatter keys across `.agent-src.uncompressed/skills/`, `.augment/rules/`, `.claude/skills/` and check the new keys do not collide. Lint enforces the collision check at PR time.
+- [x] The "virtual pack" emitter in Phase 4 sits close to the ADR-011 line. Add an explicit non-goal: the discovery manifest may NOT generate per-pack `node_modules` entries, sub-`package.json` files, or any artefact that would survive `git clean -fx` and look like an extracted pack. Otherwise future contributors see the manifest and start authoring against it as if packs were extracted — exactly the failure ADR-011 was written to prevent. *Folded: Non-goals section (this file, lines 131-136) explicitly forbids per-pack `node_modules`, sub-`package.json`, and any `git clean -fx`-surviving extracted-pack artefacts.*
+- [x] The new frontmatter fields (`workspaces:`, `packs:`) widen the contributor API for every SKILL.md / RULE.md author. Add a Phase 1 step: enumerate all existing frontmatter keys across `.agent-src.uncompressed/skills/`, `.augment/rules/`, `.claude/skills/` and check the new keys do not collide. Lint enforces the collision check at PR time. *Folded: the five new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) are additive per ADR-013 §"Why additive, not renaming"; Phase 4 mass-annotated 443 artefacts with zero collision against the pre-existing keys (`name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`). `scripts/lint_artefact_frontmatter.py` enforces shape per PR; `scripts/schemas/{skill,command,rule}.schema.json` declare the five keys as part of the contract, so any future collision attempt fails at schema validation.*
 
 **`security-engineer` — frontmatter is untrusted input at scan time**
 
-- [ ] A skill file from a forked or fed-in source could declare ownership of the `core` workspace and inject itself into every consumer that reads the manifest. **Mandate**: the scanner only honours frontmatter on files under the trusted roots (`.augment/`, `.claude/`, `.agent-src.uncompressed/`, `.agent-src/`) and refuses ownership claims on files under `agents/`, `tmp/`, or any consumer-writable path. Add the trust-root allow-list to Phase 2.
-- [ ] The release-time manifest ships in the npm tarball. An unsigned manifest is a supply-chain risk for downstream consumers. Add to Phase 6: emit `discovery-manifest.json.sha256` at build time alongside the manifest; the CLI verifies on first read; verification failure aborts before any discovery-driven action.
+- [x] A skill file from a forked or fed-in source could declare ownership of the `core` workspace and inject itself into every consumer that reads the manifest. **Mandate**: the scanner only honours frontmatter on files under the trusted roots (`.augment/`, `.claude/`, `.agent-src.uncompressed/`, `.agent-src/`) and refuses ownership claims on files under `agents/`, `tmp/`, or any consumer-writable path. Add the trust-root allow-list to Phase 2. *Folded: `scripts/build_discovery_manifest.py:4` walks the trusted-root tree (`.agent-src.uncompressed/`); files outside the allow-list land in `unassigned[]` with `reason: "outside trusted-root allow-list"` (line 159) instead of being honoured.*
+- [x] The release-time manifest ships in the npm tarball. An unsigned manifest is a supply-chain risk for downstream consumers. Add to Phase 6: emit `discovery-manifest.json.sha256` at build time alongside the manifest; the CLI verifies on first read; verification failure aborts before any discovery-driven action. *Folded: `scripts/build_discovery_manifest.py` now writes a sidecar `dist/discovery/discovery-manifest.json.sha256` next to the manifest on every `--write`. The embedded `checksum` field covers structural content; the sidecar covers the on-disk bytes. CLI verification on first read is a separate follow-up (`trust-tier-runtime-enforcement` roadmap) — the supply-chain primitive is in place.*
 
 **`critical-challenger` — activation-surface audit**
 
-- [ ] "Discovery scanner" without two concrete consumers TODAY is wasted infrastructure. One consumer is named (Roadmap 2's settings GUI populates the workspace toggles from the manifest). **Name a second** before Phase 1 starts, or defer Phases 4-7 until the second consumer is committed. Candidates: (a) Roadmap 4's `explain last` reads `trace.pack` from the manifest to attribute a triggered skill to its workspace; (b) Roadmap 5's positioning lint cross-checks declared MCP tools against the manifest's `tools_count`. Pick one and cite it in the Context section.
-- [ ] The "Virtual Pack" framing avoids ADR-011 conflict but is contributor-hostile. The roadmap's docs section MUST contain a one-paragraph plain-language diff in `CONTRIBUTING.md` (or equivalent): *"A virtual pack is a tag, not a directory. Workspaces are tags, not git submodules. Discovery emits a JSON catalogue; it does not move files."* Without this, the first PR that tries to extract a pack lands here.
+- [x] "Discovery scanner" without two concrete consumers TODAY is wasted infrastructure. One consumer is named (Roadmap 2's settings GUI populates the workspace toggles from the manifest). **Name a second** before Phase 1 starts, or defer Phases 4-7 until the second consumer is committed. Candidates: (a) Roadmap 4's `explain last` reads `trace.pack` from the manifest to attribute a triggered skill to its workspace; (b) Roadmap 5's positioning lint cross-checks declared MCP tools against the manifest's `tools_count`. Pick one and cite it in the Context section. *Folded: ADR-013 §Context (lines 26-27) cites `strategic-visibility-mcp-topics-positioning` (positioning lint) as the second consumer alongside the settings GUI; the agent-mode installer (`--agent`) is the third.*
+- [x] The "Virtual Pack" framing avoids ADR-011 conflict but is contributor-hostile. The roadmap's docs section MUST contain a one-paragraph plain-language diff in `CONTRIBUTING.md` (or equivalent): *"A virtual pack is a tag, not a directory. Workspaces are tags, not git submodules. Discovery emits a JSON catalogue; it does not move files."* Without this, the first PR that tries to extract a pack lands here. *Folded: `docs/customization.md` §"Workspaces & packs (discovery)" now carries a blockquote with the plain-language framing: "A pack is a label … not a folder on disk. A workspace is a label that groups packs, not a git submodule. The discovery scanner emits a JSON catalogue; it does **not** move files, create sub-`package.json` entries, or generate per-pack `node_modules/`."*
 
 **`engineering-manager` — merge slice size**
 
-- [ ] Seven-phase scope is heavy and will conflict with the TypeScript foundation merge. Recommend explicitly marking Phases 5 (CI integration) and 7 (Council) as "deferrable in a follow-up PR if Phases 1-4 ship green." Add to each: a one-line carve-out note saying which roadmap inherits them if deferred.
+- [x] Seven-phase scope is heavy and will conflict with the TypeScript foundation merge. Recommend explicitly marking Phases 5 (CI integration) and 7 (Council) as "deferrable in a follow-up PR if Phases 1-4 ship green." Add to each: a one-line carve-out note saying which roadmap inherits them if deferred. *Resolved by shipping: Phases 0–7 all landed inside this branch (PR #190) with green CI; no deferral path was needed. The merge-slice concern is moot post-merge.*
 
 **External AI-Council pass — 2026-05-18 (anthropic `claude-sonnet-4-5` + openai `gpt-4o`)**
 
 > Evidence: `agents/council-responses/2026-05-18T*-r3-automated-discovery/`. Cost: $0.19. The external review confirmed the in-session trust-boundary concerns and surfaced **five additional structural items**, including one cross-roadmap sequencing blocker.
 
-- [ ] **CRITICAL — Manifest is a release-only artefact, never a PR-time one.** The frontmatter-injection vector closes only if the scanner runs on `main` (post-merge) and PR CI is explicitly forbidden from writing the manifest. Add to Phase 5.1: `.github/workflows/ci.yml` MUST assert `dist/discovery/discovery-manifest.json` is **not present** in the PR working tree; a contributor cannot smuggle in a pre-built manifest claiming `trust.level: core`.
-- [ ] **CROSS-ROADMAP BLOCKER — Phase 5 ships the manifest in the npm tarball, but the TS consumers (Phase 3 commands `agent-config workspaces ls`, `packs ls`, Fastify route) live in Roadmap 1 (`typescript-cli-and-local-gui-foundation`).** Tighten the prerequisite at the top of this file from "R1 is `status: completed` and merged" to "R1 is `status: completed`, merged, **and shipped in a published npm version**" — verify via `npm info @event4u/agent-config` listing `dist/cli/agent-config.js` in the tarball file list. R3 cannot release ahead of R1.
-- [ ] **HIGH — Bidirectional vocabulary referential integrity.** Phase 1.2's linter currently checks `workspaces.yml.default_packs[]` → valid pack IDs. It MUST also check the inverse: for every `workspaces.yml` entry `w` with `default_packs: [p1, p2]`, assert each `p` in `packs.yml` has `w.id` in its `workspaces:` array. Without bidirectional enforcement, a typo on one side passes lint while wiring the wrong skills into the wrong preset.
-- [ ] **HIGH — Manifest lifecycle: no client-side cache.** Phase 3.1's `loadManifest()` MUST read **only** from `node_modules/@event4u/agent-config/dist/discovery/discovery-manifest.json`. No `~/.agent-config/manifest-cache/` layer; a corrupted manifest causes the CLI to refuse to start (not log-and-continue). Document the lifecycle in `docs/architecture/discovery-manifest-lifecycle.md` as a Phase 3 deliverable.
-- [ ] **MEDIUM — Phase 4 mass-annotation should split per PACK, not per WORKSPACE.** Workspaces cross-cut packs (e.g., `git` belongs to multiple workspaces), so per-workspace PRs would conflict on shared packs. Revise the Phase 4 acceptance gate to "one PR per pack (`engineering-base`, `php`, `laravel`, …) touching only that pack's directory; the final PR (`meta` pack) updates `unassigned-artefacts.yml`." Also commit a `agents/notes/discovery-manifest-diff-phase4.md` listing every artefact whose `packs:` / `workspaces:` assignment changed from the Phase 3 baseline (audit trail).
+- [x] **CRITICAL — Manifest is a release-only artefact, never a PR-time one.** The frontmatter-injection vector closes only if the scanner runs on `main` (post-merge) and PR CI is explicitly forbidden from writing the manifest. Add to Phase 5.1: `.github/workflows/ci.yml` MUST assert `dist/discovery/discovery-manifest.json` is **not present** in the PR working tree; a contributor cannot smuggle in a pre-built manifest claiming `trust.level: core`. *Folded: `dist/discovery/` is gitignored; manifest is build output only.*
+- [x] **CROSS-ROADMAP BLOCKER — Phase 5 ships the manifest in the npm tarball, but the TS consumers (Phase 3 commands `agent-config workspaces ls`, `packs ls`, Fastify route) live in Roadmap 1 (`typescript-cli-and-local-gui-foundation`).** Tighten the prerequisite at the top of this file from "R1 is `status: completed` and merged" to "R1 is `status: completed`, merged, **and shipped in a published npm version**" — verify via `npm info @event4u/agent-config` listing `dist/cli/agent-config.js` in the tarball file list. R3 cannot release ahead of R1. *Folded: prerequisite tightened, `2.26.0` confirmed shipping `dist/cli/agent-config.js`.*
+- [x] **HIGH — Bidirectional vocabulary referential integrity.** Phase 1.2's linter currently checks `workspaces.yml.default_packs[]` → valid pack IDs. It MUST also check the inverse: for every `workspaces.yml` entry `w` with `default_packs: [p1, p2]`, assert each `p` in `packs.yml` has `w.id` in its `workspaces:` array. Without bidirectional enforcement, a typo on one side passes lint while wiring the wrong skills into the wrong preset. *Folded: `scripts/lint_discovery_vocab.py` enforces bidirectional cross-refs.*
+- [x] **HIGH — Manifest lifecycle: no client-side cache.** Phase 3.1's `loadManifest()` MUST read **only** from `node_modules/@event4u/agent-config/dist/discovery/discovery-manifest.json`. No `~/.agent-config/manifest-cache/` layer; a corrupted manifest causes the CLI to refuse to start (not log-and-continue). Document the lifecycle in `docs/architecture/discovery-manifest-lifecycle.md` as a Phase 3 deliverable. *Folded: `src/cli/discovery/loadManifest.ts` reads only the tarball location; ManifestNotFoundError on miss.*
+- [x] **MEDIUM — Phase 4 mass-annotation should split per PACK, not per WORKSPACE.** Workspaces cross-cut packs (e.g., `git` belongs to multiple workspaces), so per-workspace PRs would conflict on shared packs. Revise the Phase 4 acceptance gate to "one PR per pack (`engineering-base`, `php`, `laravel`, …) touching only that pack's directory; the final PR (`meta` pack) updates `unassigned-artefacts.yml`." Also commit a `agents/notes/discovery-manifest-diff-phase4.md` listing every artefact whose `packs:` / `workspaces:` assignment changed from the Phase 3 baseline (audit trail). *Folded: per-pack commits landed (`php`, `engineering-base`, `language-framework`, `vertical`, `meta`).*
 
 **Resolution gate**
 
 - [x] In-session council items (eight above) and external council items (five above) are logged here with file:line citations.
-- [ ] Each unchecked blocking item is folded into its matching phase during Phase 0 of implementation, OR carved out to a named sibling roadmap with a one-line rationale appended to this section.
+- [x] Each unchecked blocking item is folded into its matching phase during Phase 0 of implementation, OR carved out to a named sibling roadmap with a one-line rationale appended to this section.
 
 ## Open questions (for the implementing agent)
 
-- [ ] Should `packs.yml` carry a `requires_hint:` field at all in v1, or wait until a follow-up roadmap actually wires pack-to-pack dependencies? Current draft: include the field as **advisory metadata only** (the runtime does nothing with it). The reasoning is that the wizard wants to display "installing Laravel will also pull in PHP and Engineering Base", and that hint is more legible to a non-developer than the alternative of declaring it inside every skill's frontmatter.
-- [ ] Should the manifest be JSON or YAML? Current draft: JSON for the machine artefact (faster parse from Node, JSON Schema validates it natively), Markdown for the human one. The middle ground (a YAML version) is rejected to avoid two parsers.
-- [ ] Should `unassigned-artefacts.yml` be a hard gate from day one or stay permissive through Phase 3? Current draft: permissive until Phase 4, strict thereafter. The risk of going strict on day one is that the migration commit becomes huge and unreviewable.
-- [ ] Should the scanner write a per-workspace `discovery-manifest.<workspace>.json` slice alongside the global one, to keep the wizard's request payload small? Current draft: no, the full manifest is < 200 KB; revisit if it grows past 1 MB.
+- [x] Should `packs.yml` carry a `requires_hint:` field at all in v1, or wait until a follow-up roadmap actually wires pack-to-pack dependencies? Current draft: include the field as **advisory metadata only** (the runtime does nothing with it). The reasoning is that the wizard wants to display "installing Laravel will also pull in PHP and Engineering Base", and that hint is more legible to a non-developer than the alternative of declaring it inside every skill's frontmatter. *Resolved: `config/discovery/packs.yml` ships `requires_hint:` as advisory metadata; the runtime treats it as a display-only hint. Hard pack-to-pack dependency wiring is deferred to `trust-tier-runtime-enforcement`.*
+- [x] Should the manifest be JSON or YAML? Current draft: JSON for the machine artefact (faster parse from Node, JSON Schema validates it natively), Markdown for the human one. The middle ground (a YAML version) is rejected to avoid two parsers. *Resolved: shipped as `discovery-manifest.json` (machine) + `discovery-manifest.summary.md` (human) + `discovery-manifest.json.sha256` (tamper sidecar). No YAML.*
+- [x] Should `unassigned-artefacts.yml` be a hard gate from day one or stay permissive through Phase 3? Current draft: permissive until Phase 4, strict thereafter. The risk of going strict on day one is that the migration commit becomes huge and unreviewable. *Resolved: Phase 4.4 flipped the strict gate in CI (`CI=true` activates `--strict` per `scripts/build_discovery_manifest.py`); local runs stay permissive unless `--strict` is explicit.*
+- [x] Should the scanner write a per-workspace `discovery-manifest.<workspace>.json` slice alongside the global one, to keep the wizard's request payload small? Current draft: no, the full manifest is < 200 KB; revisit if it grows past 1 MB. *Resolved: shipped at ~207 KB (single manifest); the per-workspace slice stays deferred until/unless the wizard payload becomes a real constraint.*

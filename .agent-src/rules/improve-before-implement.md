@@ -13,6 +13,18 @@ validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
     reason: "Rule cites the authoring tree when describing where examples live."
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Improve Before Implement

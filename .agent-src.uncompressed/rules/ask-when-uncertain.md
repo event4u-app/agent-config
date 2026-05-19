@@ -4,6 +4,18 @@ tier: "3"
 description: "Ask when uncertain — don't guess, assume, or improvise"
 alwaysApply: true
 source: package
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Ask When Uncertain

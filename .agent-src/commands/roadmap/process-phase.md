@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "process the next phase, finish this phase autonomously, eine phase abarbeiten"
   trigger_context: "existing agents/roadmaps/*.md and user wants the next phase done end-to-end"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap:process-phase

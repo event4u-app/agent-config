@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "write as me, draft in my own voice, post as myself, draft from .agent-user.md"
   trigger_context: "user wants a copyable draft in their own captured voice from .agent-user.md; no third-party voice, no disclosure footer"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /post-as:me

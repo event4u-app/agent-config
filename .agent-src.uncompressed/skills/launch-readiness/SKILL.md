@@ -7,7 +7,18 @@ source: package
 domain: process
 context_spine: [team, product]
 recommended_for_user_types: [ops, developer, founder]
-
+workspaces:
+  - founder
+packs:
+  - founder-strategy
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # launch-readiness

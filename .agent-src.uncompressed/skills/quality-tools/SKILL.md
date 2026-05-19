@@ -8,7 +8,18 @@ execution:
   handler: shell
   allowed_tools: []
 recommended_for_user_types: [developer]
-
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # quality-tools

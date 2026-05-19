@@ -3,6 +3,18 @@ name: code-review
 description: "Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards."
 source: package
 domain: quality
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # code-review

@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "create user persona, render .agent-user.md, review observations, accept observations, edit user file"
   trigger_context: "user wants to bootstrap or maintain the .agent-user.md persona file (name, language, role, style, voice sample)"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents user

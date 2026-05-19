@@ -4,6 +4,18 @@ description: "Use when polling external AIs (OpenAI, Anthropic) outside the host
 source: package
 domain: process
 meta_skill: true
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.

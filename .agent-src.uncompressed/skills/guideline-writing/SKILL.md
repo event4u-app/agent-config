@@ -3,6 +3,18 @@ name: guideline-writing
 description: "Use when creating or editing a guideline in docs/guidelines/ — reference material cited by skills, no auto-triggers — even when the user just says 'write up our naming conventions'."
 source: package
 domain: process
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- cloud_safe: degrade -->

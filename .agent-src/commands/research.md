@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "research a topic, scan competitors, benchmark X, do a tech-selection survey"
   trigger_context: "user names a research topic and wants a structured scaffold (objects + fields), not an immediate answer"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /research

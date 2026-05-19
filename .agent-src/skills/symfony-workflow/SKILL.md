@@ -3,6 +3,18 @@ name: symfony-workflow
 description: "Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - symfony
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # symfony-workflow

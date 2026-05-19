@@ -3,6 +3,18 @@ name: laravel-api-endpoint
 description: "Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annotations — versioned route layout, single-action `__invoke` controllers."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - laravel
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # laravel-api-endpoint

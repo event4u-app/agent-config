@@ -6,7 +6,18 @@ tier: senior
 source: package
 domain: product
 recommended_for_user_types: [founder]
-
+workspaces:
+  - founder
+packs:
+  - founder-strategy
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: true
 ---
 
 # okr-tree-modeling

@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "brainstorm this idea, explore this feature concept"
   trigger_context: "open-ended feature idea without acceptance criteria"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /feature explore

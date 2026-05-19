@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "extract a learning from a past session, mine chat-history for proposals, what did we learn last session, codify a pattern from a prior session"
   trigger_context: "user wants to derive a rule/skill/guideline proposal from the content of one prior session"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 <!-- cloud_safe: noop -->
 

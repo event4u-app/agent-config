@@ -117,6 +117,46 @@
           "description": "Optional per-command override of the global cooldown duration (e.g. '10m'). Defaults to settings."
         }
       }
+    },
+    "workspaces": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "ADR-013 workspace ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/workspaces.yml."
+    },
+    "packs": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"},
+      "description": "ADR-013 pack ids (additive discovery axis). Closed vocabulary enforced by scripts/lint_artefact_frontmatter.py against config/discovery/packs.yml."
+    },
+    "lifecycle": {
+      "type": "string",
+      "enum": ["active", "deprecated", "experimental", "archived"],
+      "description": "ADR-013 lifecycle state."
+    },
+    "trust": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "confidence", "human_review_required"],
+      "properties": {
+        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"]},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+        "human_review_required": {"type": "boolean"}
+      },
+      "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
+    },
+    "install": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["default", "removable"],
+      "properties": {
+        "default": {"type": "boolean"},
+        "removable": {"type": "boolean"}
+      },
+      "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     }
   }
 }

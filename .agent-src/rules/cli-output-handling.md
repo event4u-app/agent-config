@@ -11,6 +11,18 @@ triggers:
   - keyword: "composer"
 routes_to:
   - "skill:rtk-output-filtering"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Cli Output Handling

@@ -10,6 +10,18 @@ triggers:
   - keyword: "messenger"
 routes_to:
   - "skill:symfony-workflow"
+workspaces:
+  - engineering
+packs:
+  - symfony
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # Symfony Routing

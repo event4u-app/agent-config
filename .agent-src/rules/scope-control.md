@@ -7,6 +7,18 @@ source: package
 load_context:
   - ../contexts/authority/scope-mechanics.md
   - ../contexts/authority/kernel-rule-edits.md
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Scope Control

@@ -10,6 +10,18 @@ suggestion:
   trigger_description: "fix this bug, patch the issue, resolve this error"
   trigger_context: "branch name matches fix/* or bug/*"
 framework: laravel
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # bug-fix

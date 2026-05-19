@@ -3,6 +3,18 @@ name: script-writing
 description: "Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'."
 source: package
 domain: process
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 <!-- cloud_safe: degrade -->

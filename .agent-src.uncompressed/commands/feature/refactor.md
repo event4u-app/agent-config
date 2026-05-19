@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "update the feature plan, refine the feature spec"
   trigger_context: "existing agents/features/*.md referenced in the prompt"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /feature refactor

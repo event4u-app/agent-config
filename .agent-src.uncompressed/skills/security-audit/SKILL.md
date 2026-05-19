@@ -3,6 +3,18 @@ name: security-audit
 description: "ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work."
 source: package
 domain: quality
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # security-audit

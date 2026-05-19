@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "update the context doc, refresh this context document"
   trigger_context: "existing agents/contexts/*.md referenced in the prompt"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /context refactor

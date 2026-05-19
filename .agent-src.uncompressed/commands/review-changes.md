@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "self-review my changes, judge this diff before PR"
   trigger_context: "uncommitted or staged changes pre-PR"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # review-changes

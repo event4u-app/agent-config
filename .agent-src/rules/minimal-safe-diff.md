@@ -8,6 +8,18 @@ triggers:
   - intent: "writing a diff"
   - intent: "reviewing a diff"
   - keyword: "drive-by"
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Minimal Safe Diff

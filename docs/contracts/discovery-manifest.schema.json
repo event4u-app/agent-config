@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://event4u.app/agent-config/schemas/discovery-manifest.schema.json",
   "title": "Discovery Manifest",
-  "description": "Release-time scan output for @event4u/agent-config. See ADR-013 and agents/roadmaps/automated-pack-workspace-and-skill-discovery.md.",
+  "description": "Release-time scan output for @event4u/agent-config. See ADR-013 and agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md (archived, status: completed).",
   "type": "object",
   "required": ["version", "generated_at", "scanner_version", "checksum", "workspaces", "packs", "artefacts", "unassigned"],
   "additionalProperties": false,
@@ -44,6 +44,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/unassigned" },
       "description": "Artefacts that failed assignment. Each entry MUST carry a reason."
+    },
+    "documented_unassigned": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unassigned" },
+      "description": "Artefacts explicitly skipped via config/discovery/unassigned-artefacts.yml. Each entry MUST carry a reason."
     }
   },
   "$defs": {

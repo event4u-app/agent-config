@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "look at how X does this, compare with that other repo, study this competitor's approach"
   trigger_context: "external repo URL or path mentioned in the prompt"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # analyze-reference-repo

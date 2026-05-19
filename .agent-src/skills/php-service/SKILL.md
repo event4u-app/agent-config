@@ -3,6 +3,18 @@ name: php-service
 description: "Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage."
 source: package
 domain: engineering
+workspaces:
+  - engineering
+packs:
+  - php
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # php-service

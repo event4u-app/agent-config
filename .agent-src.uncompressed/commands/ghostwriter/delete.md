@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "delete ghostwriter profile, remove public-figure voice, drop ghostwriter, retire captured profile"
   trigger_context: "user wants to permanently remove a captured ghostwriter profile from agents/ghostwriter/"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /ghostwriter:delete

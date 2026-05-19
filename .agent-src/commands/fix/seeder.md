@@ -11,6 +11,18 @@ suggestion:
   trigger_description: "the seeder is broken, foreign key errors in seeders"
   trigger_context: "seeder error output or recent edits in database/seeders/"
 framework: laravel
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix seeder

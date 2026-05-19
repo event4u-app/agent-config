@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "edit user persona, update .agent-user.md, change nickname, change language, refresh voice sample"
   trigger_context: "user wants to manually edit the persona file rather than answer interview questions"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents user update

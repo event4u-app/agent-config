@@ -3,6 +3,18 @@ name: canvas-design
 description: "Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'."
 source: package
 domain: product
+workspaces:
+  - small-business
+packs:
+  - ai-video
+lifecycle: experimental
+trust:
+  level: experimental
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # canvas-design

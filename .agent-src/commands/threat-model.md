@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "threat model this change, what could go wrong security-wise"
   trigger_context: "changes touching auth, webhooks, uploads, secrets, or public endpoints"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # threat-model

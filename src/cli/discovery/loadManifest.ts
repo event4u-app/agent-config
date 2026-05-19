@@ -4,7 +4,8 @@
  * Fastify server route.
  *
  * The manifest is a release-time artefact (see ADR-013 and
- * `agents/roadmaps/automated-pack-workspace-and-skill-discovery.md`).
+ * `agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md`,
+ * archived at status: completed).
  * Absence at runtime is operator error, not a crash — callers either
  * print a clear CLI message or surface HTTP 503.
  */

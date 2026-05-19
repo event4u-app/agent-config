@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "process the whole roadmap, finish the roadmap, komplette roadmap abarbeiten"
   trigger_context: "existing agents/roadmaps/*.md and user wants the entire file done end-to-end"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap:process-full

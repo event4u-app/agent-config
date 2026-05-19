@@ -3,6 +3,18 @@ name: api-testing
 description: "Use when writing API endpoint tests — integration tests, contract validation, response assertions, mocked external services — even when the user says 'test this route' without naming API testing."
 source: package
 domain: quality
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # api-testing

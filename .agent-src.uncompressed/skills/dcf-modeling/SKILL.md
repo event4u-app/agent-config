@@ -6,7 +6,18 @@ tier: senior
 source: package
 domain: product
 recommended_for_user_types: [finance]
-
+workspaces:
+  - finance
+packs:
+  - finance-advanced
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # dcf-modeling

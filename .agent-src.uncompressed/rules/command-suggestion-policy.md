@@ -10,6 +10,18 @@ routes_to:
   - "contract:command-suggestion-flow"
 load_context:
   - "contexts/contracts/command-suggestion-flow.md"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # Command Suggestion Policy

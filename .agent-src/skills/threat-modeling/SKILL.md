@@ -6,6 +6,18 @@ personas:
 source: package
 domain: quality
 council_depth: deep
+workspaces:
+  - engineering
+packs:
+  - engineering-base
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # threat-modeling

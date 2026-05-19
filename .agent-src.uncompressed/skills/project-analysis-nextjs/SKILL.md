@@ -3,6 +3,18 @@ name: project-analysis-nextjs
 description: "Use for deep Next.js analysis: server vs client boundaries, routing, data fetching, caching, rendering modes, and hydration/runtime issues."
 source: package
 domain: discovery
+workspaces:
+  - engineering
+packs:
+  - nextjs
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # project-analysis-nextjs

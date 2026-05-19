@@ -11,6 +11,18 @@ suggestion:
   eligible: true
   trigger_description: "council on roadmap, challenge this roadmap, stress-test the plan, refactor roadmap from council findings"
   trigger_context: "existing agents/roadmaps/*.md the user wants reviewed before execution"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /roadmap:ai-council

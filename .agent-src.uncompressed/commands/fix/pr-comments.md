@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "fix all PR review comments, resolve the review feedback"
   trigger_context: "open PR with unresolved comments (bot + human)"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /fix pr-comments

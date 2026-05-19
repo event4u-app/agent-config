@@ -3,6 +3,18 @@ name: project-analysis-zend-laminas
 description: "Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks."
 source: package
 domain: discovery
+workspaces:
+  - engineering
+packs:
+  - php
+lifecycle: active
+trust:
+  level: professional
+  confidence: high
+  human_review_required: false
+install:
+  default: false
+  removable: true
 ---
 
 # project-analysis-zend-laminas

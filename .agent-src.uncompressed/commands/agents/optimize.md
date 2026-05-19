@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root, optimize agent layer"
   trigger_context: "maintainer working on AGENTS.md (root or consumer template) or its tool stubs"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents optimize

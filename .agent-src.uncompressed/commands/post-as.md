@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "write as me, post as me, draft in my voice, draft as ghostwriter, post-as alias"
   trigger_context: "user wants a copyable draft in their own voice (.agent-user.md) or in a captured public-figure voice (/ghostwriter:write alias)"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /post-as

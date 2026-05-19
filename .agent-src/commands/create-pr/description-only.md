@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "write a PR description, draft the PR text"
   trigger_context: "PR exists or branch ready for review without description"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /create-pr:description-only

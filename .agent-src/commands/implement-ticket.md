@@ -8,6 +8,18 @@ suggestion:
   eligible: true
   trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"
   trigger_context: "ticket key matching [A-Z]+-[0-9]+ in branch name or prompt"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # implement-ticket

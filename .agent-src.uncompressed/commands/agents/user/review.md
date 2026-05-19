@@ -10,6 +10,18 @@ suggestion:
   eligible: true
   trigger_description: "review user observations, see what the agent learned about me, list buffered persona updates"
   trigger_context: "user wants to see what the agent has buffered about their preferences before applying changes"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /agents user review

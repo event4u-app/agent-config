@@ -9,6 +9,18 @@ suggestion:
   eligible: true
   trigger_description: "show ghostwriter profile, inspect public-figure voice, view ghostwriter details, what does this profile contain"
   trigger_context: "user wants to inspect a single captured ghostwriter profile before writing with it or deciding to refresh / delete it"
+workspaces:
+  - agent-config-maintainer
+packs:
+  - meta
+lifecycle: active
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+install:
+  default: true
+  removable: false
 ---
 
 # /ghostwriter:show
