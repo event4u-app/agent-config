@@ -52,6 +52,7 @@
   "ui_polish": null,
   "contract": null,
   "stitch": null,
+  "halts": [],
   "persona": null,
   "memory": [],
   "plan": null,

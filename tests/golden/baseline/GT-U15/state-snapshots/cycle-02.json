@@ -76,6 +76,7 @@
   "ui_polish": null,
   "contract": null,
   "stitch": null,
+  "halts": [],
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,
