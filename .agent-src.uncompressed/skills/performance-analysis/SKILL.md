@@ -85,6 +85,10 @@ Focus on code paths with high execution frequency or large data volumes:
 
 ## Output format
 
+1. Emit one entry per bottleneck using the field list below; never collapse multiple bottlenecks into a single entry.
+2. Severity, Effort, and Confidence are required for every entry and must use the bounded vocabulary (Low / Medium / High / Critical for severity).
+3. Close with a *Recommended Fix Order* ranked by `Impact ÷ Effort` and capped at 5 items.
+
 For each bottleneck:
 
 - **Issue:** concise title

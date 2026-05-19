@@ -163,6 +163,22 @@ npx playwright show-report
 npx playwright test -g "should login"
 ```
 
+### Filter noisy Playwright output
+
+Use `--grep`, `--reporter=json`, plus `jq`/`rg` to keep diagnosis scoped:
+
+```bash
+# Targeted run — only matching specs
+npx playwright test --grep '@smoke'
+
+# JSON report, narrowed to failures via jq
+npx playwright test --reporter=json > pw.json
+jq '.suites[].specs[] | select(.tests[].results[].status=="failed")' pw.json
+
+# Scan trace logs for one selector
+rg --color=never 'getByRole.*Submit' test-results/
+```
+
 ## Avoiding flaky tests
 
 | Problem | Solution |
@@ -243,3 +259,7 @@ await page.route('**/api/users', route =>
 - Do NOT test implementation details — test user-visible behavior.
 - Do NOT put assertions in Page Objects — assertions belong in test files.
 - Do NOT commit `.only` — enforce via `forbidOnly: !!process.env.CI`.
+
+## Anti-bruteforce — diagnose before retry
+
+When a spec fails, do not retry blindly by re-running, swapping locators at random, or bumping timeouts until green. Diagnose the root cause first: open the trace viewer, inspect the failing locator's `aria` tree, identify the real reason (timing, locator, app state), then apply a targeted fix. Trial-and-error locator swaps mask flaky test design.

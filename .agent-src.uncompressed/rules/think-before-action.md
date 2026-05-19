@@ -24,7 +24,7 @@ NO BLIND TRIAL-AND-ERROR. MAX 2 RETRIES PER APPROACH.
 - Always analyze before coding or modifying anything.
 - Never guess behavior — verify using code, data, or tools.
 - Prefer targeted inspection (jq, debugger, logs) over brute-force.
-- Always verify results after changes (API, UI, tests).
+- Always verify results after changes (API, UI, tests) using the concrete tool that exercises that surface — `curl` / Playwright / browser for HTTP and UI, debugger / `xdebug` for runtime frames, the project's test runner for behavior.
 - When behavior can be defined → prefer test-first / TDD.
 - Unclear requirements → precise clarification question, not hidden assumptions.
 - Refactors must preserve behavior, validation, examples, and anti-failure guidance unless explicitly changed.

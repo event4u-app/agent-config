@@ -17,6 +17,11 @@ Use this skill when:
 
 ## Procedure: Use MCP tools
 
+1. **Inspect available MCP servers** — List configured servers (Sentry, Jira, GitHub, Playwright, Context7, Sequential Thinking) and confirm credentials/permissions for the task.
+2. **Pick the right tool per task** — Match user intent to the server table below; prefer the most specific tool over generic search.
+3. **Chain tools when needed** — Apply the *Combining tools in workflows* patterns; capture intermediate IDs (org slug, project slug, ticket key) before deeper calls.
+4. **Verify and handle errors** — Apply *Error handling* and *Permission boundaries*; confirm the result answers the original question before moving on.
+
 ### Sentry (`augment-partner-remote-mcp-sentry`)
 
 Error tracking and performance monitoring.

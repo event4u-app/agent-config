@@ -81,6 +81,12 @@ test for a given discriminator, do not re-ask on the next branch.
 1. Code following project guidelines and existing patterns
 2. All downstream changes (callers, tests, imports) included
 
+## Verification examples
+
+- **Backend changes (service, controller, repository)**: probe the route with `curl` or an `actingAs()` HTTP test under `api/`; assert response shape and side effects.
+- **Frontend-adjacent changes (Blade / Livewire component wiring)**: drive the component with a `livewire test`, a Playwright spec, or a browser `screenshot` snapshot.
+- Always run the targeted test (`pest --filter=…`) and the relevant `phpstan` / `rector` checks before claiming done.
+
 ## Gotcha
 
 - Don't introduce new patterns without being asked.
@@ -93,6 +99,10 @@ test for a given discriminator, do not re-ask on the next branch.
 - Do NOT use native arithmetic (`+`, `-`, `*`, `/`) for business calculations — use `Math` helper.
 - Do NOT refactor code you're not actively working on.
 - Do NOT use `var_dump()`, `print_r()`, `dd()` — disallowed by PHPStan.
+
+## Anti-bruteforce — diagnose before retry
+
+When PHPStan, Rector, or a test goes red after a change, do not retry blindly by toggling type hints, adding `@phpstan-ignore`, or shuffling arguments until it passes. Diagnose the root cause first — read the error, trace the symbol, then apply a targeted fix. Trial-and-error type narrowing hides real type errors.
 
 ## Auto-trigger keywords
 

@@ -158,6 +158,10 @@ When specialist findings conflict:
 
 ## Output format
 
+1. Produce one report covering the five subsections below; no narration outside the report.
+2. Every finding must cite file paths or stack/version evidence; mark unverified items as *Contributing Risks*, not *Confirmed Findings*.
+3. Close with a *Recommended Fix Order*; prioritize by production impact → exploitability → user-facing breakage → effort vs value.
+
 ### Investigation Summary
 - What was analyzed, which skills were used, why
 

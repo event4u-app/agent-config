@@ -51,7 +51,7 @@ what it does, whether it fits their stack, how to install it, and how to use it.
 
 ### 2. Inspect package truth sources
 
-Read files that define actual package behavior:
+Read and **verify** files that define actual package behavior (confirm each claim against the source — never paraphrase from memory):
 
 - Manifest: `composer.json`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, or `*.gemspec` — name, description, requirements, scripts
 - Source entrypoints — public API surface, main classes/functions

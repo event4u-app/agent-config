@@ -32,6 +32,12 @@ A **live preview URL** is required for testing.
 
 ## Procedure: Design review
 
+1. **Inspect the PR and preview** — Read the PR description, diff, and identify changed components/pages; capture a baseline screenshot of the preview URL.
+2. **Walk the interactions** — Run Phase 1; cover hover/focus/active/disabled, keyboard, loading, and form error states.
+3. **Cover responsiveness, polish, a11y, robustness** — Run Phases 2–5 in order; record findings per phase.
+4. **Audit code-health and content** — Run Phases 6–7; check tokens, dead styles, copy, console warnings.
+5. **Verify and report** — Consolidate findings in the report structure; classify each as Blocker / High / Medium / Nit before posting.
+
 ### Phase 0: Preparation
 
 - Read PR description and git diff.

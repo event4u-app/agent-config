@@ -17,6 +17,11 @@ Use this skill when scheduling recurring tasks:
 
 ## Procedure: Create a scheduled task
 
+1. **Inspect existing schedule** — Read `routes/console.php` (Laravel 11+) or `app/Console/Kernel.php` to identify current cadence, overlap-prevention patterns, and output handling.
+2. **Pick frequency and concurrency policy** — Choose a frequency helper (see table) or a cron expression; decide whether `withoutOverlapping()` / `onOneServer()` is required.
+3. **Register the task** — Add the `Schedule::command(...)` / `Schedule::job(...)` entry; wire log destinations and `runInBackground()` if needed.
+4. **Verify** — Run `php artisan schedule:test` (or `schedule:list`) and confirm timing, output path, and overlap behavior.
+
 ### In routes/console.php (Laravel 11+)
 
 ```php

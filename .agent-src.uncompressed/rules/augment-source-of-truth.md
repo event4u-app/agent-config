@@ -33,8 +33,8 @@ Never edit any of these generated layers directly:
 ## The Iron Rule
 
 ```
-NEVER create or edit files in .agent-src/ or .augment/ directly — not even "just a small fix".
-ALWAYS work in .agent-src.uncompressed/ — then compress via /compress command.
+NEVER CREATE OR EDIT FILES IN .agent-src/ OR .augment/ DIRECTLY — NOT EVEN "JUST A SMALL FIX".
+ALWAYS WORK IN .agent-src.uncompressed/ — THEN COMPRESS VIA THE /compress COMMAND.
 ```
 
 **There are ZERO exceptions to this rule.** Even if:

@@ -173,6 +173,10 @@ gh api repos/{owner}/{repo}/pulls/comments/{comment_id}/replies \
 
 ## Output format
 
+1. Structure every finding by severity (Blocker / Suggestion / Nit) using the block below; never mix severities in one block.
+2. Group related findings; skip anything the project's linter or type-checker already catches — focus on logic, architecture, and judgment.
+3. End with a one-line verdict (approve / request-changes / comment) and a count of Blockers vs. Suggestions.
+
 When reviewing code, structure feedback by severity:
 
 ```

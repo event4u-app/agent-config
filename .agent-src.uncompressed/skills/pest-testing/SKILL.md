@@ -282,6 +282,23 @@ When generating Pest tests:
 - assert both response and side effects where relevant
 - keep tests readable, isolated, and maintainable
 
+### Filter Pest output
+
+When triaging a verbose run, narrow the output with `--filter` (Pest)
+plus targeted `grep`/`rg` instead of re-running the whole suite or
+echoing all logs:
+
+```bash
+# Only run failing tests in one file
+vendor/bin/pest tests/Feature/InvoiceTest.php --filter='creates invoice'
+
+# Scan the test log for failures only
+rg --color=never '^FAIL|Tests:' storage/logs/pest.log
+
+# Inspect JSON output from data-driven tests
+vendor/bin/pest --log-junit=pest.xml && rg '<failure' pest.xml
+```
+
 
 ## Output format
 

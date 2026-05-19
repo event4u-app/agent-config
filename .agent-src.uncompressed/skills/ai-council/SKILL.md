@@ -3,6 +3,7 @@ name: ai-council
 description: "Use when polling external AIs (OpenAI, Anthropic) outside the host session for a neutral second opinion on a roadmap, diff, prompt, or file set — or 'cross-check with another model'."
 source: package
 domain: process
+meta_skill: true
 ---
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.

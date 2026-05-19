@@ -18,6 +18,11 @@ Use this skill when:
 
 ## Procedure: Create Grafana dashboard
 
+1. **Inspect existing Grafana assets** — Check the project's Grafana location (Docker config, `dashboards/`, provisioning) and existing datasources (Loki, Prometheus) before adding panels.
+2. **Decide signals and layout** — Pick the queries (LogQL / PromQL) and panel types per signal; reuse naming and label conventions below.
+3. **Author the dashboard JSON** — Add provisioned JSON under the dashboards path; wire datasources and template variables.
+4. **Verify** — Reload Grafana, confirm panels render against real data, and check alert rules fire on synthetic test inputs.
+
 ### Project setup
 
 Check if the project has a dedicated Grafana module or Docker config. Typical structure:

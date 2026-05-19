@@ -98,7 +98,7 @@ For each changed `.md` file:
      "validate copy/paste safety", you can add "Check: no nested backticks, fully selectable".
      But don't add unrelated sections.
    - **Do NOT compress weak skills.** If the source has no procedure or no validation, fix structure first.
-   - **Reference skill:** See `.agent-src.uncompressed/skills/skill-writing/SKILL.md` for the gold standard
+   - **Reference skill:** See [skill-writing](../skills/skill-writing/SKILL.md) for the gold standard
 6. Write the compressed output to `.agent-src/{path}`
 7. **MANDATORY: Run compression quality check on this file:**
 
@@ -193,7 +193,9 @@ If an Iron Law section genuinely contains filler (rare): edit the SOURCE in
 
 ## Compression quality checklist
 
-**Also apply the `preservation-guard` rule** — strongest validation, example, anti-pattern, and decision hints must survive compression. Iron Laws are non-negotiable.
+**Also apply the [preservation-guard](../rules/preservation-guard.md) rule** — strongest validation, example, anti-pattern, and decision hints must survive compression. Iron Laws are non-negotiable.
+
+See also: [markdown-safe-codeblocks](../rules/markdown-safe-codeblocks.md) for fenced-block hygiene.
 
 After compressing each file, verify:
 

@@ -115,8 +115,10 @@ Required fields (ordered):
    omit only when verdict is `apply`
 
 If a finding needs runtime confirmation, note it as a follow-up for
-the implementer (e.g. "run pest/phpunit on the new branch" or "curl
-the endpoint with an empty body") — the judge does not execute tools.
+the implementer with the concrete probe — backend: `curl` or
+`pest`/`phpunit` against the route; frontend: a Playwright spec, a
+`livewire test`, or a browser `screenshot` of the affected component.
+The judge itself never executes tools.
 
 ## Gotcha
 

@@ -87,6 +87,8 @@ Crossing the 20-entry threshold counts as the 3rd validation-target failure for 
 
 When validating a single target, run the **specific** check, not a meta-task that fans out to dozens of sub-tasks. Use the failing tool's direct entry point (the specific script invocation, the specific runner target, the single-test filter for the project's test runner) rather than the full CI meta-pipeline. Full-pipeline runs are appropriate at phase boundaries, not as a per-iteration probe.
 
+Concrete tool mapping — verify with the narrowest tool that proves the target green: a single `curl` / Playwright spec / browser run for HTTP behavior, the project's test runner with a `--filter` for one test, a debugger / `xdebug` step-through for one frame. Never substitute a meta-pipeline for a tool that pinpoints the failure.
+
 ## See also
 
 - [`user-interrupt-priority`](user-interrupt-priority.md) — STOP-ASK-RESUME on new tasks; overrides autonomy

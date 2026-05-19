@@ -22,6 +22,11 @@ Do NOT use when:
 
 ## Procedure: Configure Copilot
 
+1. **Inspect current Copilot config** — Read `.github/copilot-instructions.md` (if any) and the *What Copilot Can and Cannot Read* table below to confirm Copilot Code Review vs. Chat scope.
+2. **Decide self-contained scope** — Identify which rules must live in `copilot-instructions.md` (PR-review-relevant) vs. `.augment/` (agent-only).
+3. **Apply changes** — Edit `copilot-instructions.md` with coding-standards, review-comment rules, and any new conventions; keep it self-contained.
+4. **Verify** — Open a draft PR, confirm Copilot reads the new rules; for Chat, ask Copilot to summarize the active instructions.
+
 ### Configuration File
 
 **`.github/copilot-instructions.md`** — the single source of truth for Copilot behavior.

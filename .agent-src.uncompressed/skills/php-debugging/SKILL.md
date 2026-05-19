@@ -130,6 +130,20 @@ make console-xdebug    # Enter Xdebug container
 php artisan your:command   # Xdebug connects to IDE automatically
 ```
 
+### Verifying CLI fixes
+
+After a fix, verify the command without re-attaching the debugger:
+
+```bash
+# Run the command, capture exit code + command output
+php artisan your:command; echo "exit code: $?"
+
+# Pest CLI assertion — expectsOutput / artisan test
+vendor/bin/pest --filter='ProcessInvoicesCommand'
+```
+
+Assert on the **exit code** and **command output**; never trust "looks fine" from breakpoint inspection alone.
+
 ## Troubleshooting
 
 | Problem | Solution |
@@ -149,6 +163,20 @@ make console              # Fast PHP container (no Xdebug)
 make console-xdebug       # Xdebug container
 make rebuild-php-xdebug   # Rebuild Xdebug container only
 make rebuild-php-all      # Rebuild both PHP containers
+```
+
+### Filter noisy debug output
+
+`tail -f /tmp/xdebug.log` and `docker logs` produce far too much
+data to read line-by-line. Filter with `rg`/`grep` for the relevant
+event:
+
+```bash
+# Only connection / breakpoint events
+rg --color=never 'Connect|Step|breakpoint' /tmp/xdebug.log
+
+# Only this request's frames in the laravel log
+docker compose logs php-xdebug | rg --color=never "$REQUEST_ID"
 ```
 
 ## What NOT to do
@@ -176,6 +204,10 @@ make rebuild-php-all      # Rebuild both PHP containers
 - Do NOT leave breakpoints or debug code in committed files.
 - Do NOT use var_dump() or dd() — use Xdebug breakpoints.
 - Do NOT debug in the fast container — switch to the Xdebug container.
+
+## Clarification guard — ambiguous repro → ask
+
+If the bug repro is unclear (which request, which user, which env, which input shape?), do not start placing breakpoints at random. Ask the user for the failing payload, the exact route, or the Sentry trace. Setting breakpoints based on a guessed flow wastes a session.
 
 ## Auto-trigger keywords
 

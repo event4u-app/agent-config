@@ -99,6 +99,10 @@ The agent is a thought partner, not a gatekeeper. After presenting concerns:
 - **Never validate simple tasks** — only features, architecture, significant changes
 - **Never validate after the user already explained their reasoning**
 
+## Verify with concrete tools, not prose
+
+If the challenge requires you to confirm current behavior before proposing an alternative, use a concrete probe — a `curl` against the endpoint, a Playwright spec, a debugger / `xdebug` step-through, or the project's test runner with a targeted filter. Asserting current behavior from memory is not validation.
+
 ## Creating new agent artifacts
 
 When the request is to create or significantly rewrite a skill, rule, command,

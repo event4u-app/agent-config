@@ -12,6 +12,12 @@ triggers:
 
 # Minimal Safe Diff
 
+```
+THE DIFF CONTAINS THE SMALLEST CHANGE THAT SOLVES THE STATED PROBLEM.
+NEVER REFORMAT, RENAME, OR RESTRUCTURE UNTOUCHED CODE IN THE SAME DIFF.
+NEVER ADD DRIVE-BY EDITS, OPPORTUNISTIC REFACTORS, OR DEPENDENCY BUMPS.
+```
+
 A diff is **safe** when every line in it is traceable to the stated task.
 Every other line is scope creep and must be removed or moved to a separate
 change.
