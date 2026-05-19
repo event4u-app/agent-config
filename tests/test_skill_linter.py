@@ -2405,3 +2405,210 @@ domain: process
         "wing4_transferability", "wing4_stage_agnosticism",
     }
     assert not any(i.code in boundary_codes for i in result.issues)
+
+
+
+# --- procedural_rule heuristic refinements (Phase A) ---
+
+
+def test_procedural_rule_ignores_skill_link_pointer(tmp_path: Path) -> None:
+    """A rule that merely points at a `*-workflow` skill via a markdown link
+    must not flip `procedural_rule`. The keyword `workflow` lives inside the
+    link target and is stripped before counting."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/pointer-rule.md",
+        """---
+type: "always"
+source: package
+description: "Always honour the workflow boundary."
+---
+
+# Pointer Rule
+
+When you need the procedure, see [git-workflow](../skills/git-workflow/SKILL.md)
+or [symfony-workflow](../skills/symfony-workflow/SKILL.md) — the skills own the
+procedure; this rule only states the obligation.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "procedural_rule" for i in result.issues)
+
+
+def test_procedural_rule_ignores_code_span_keyword(tmp_path: Path) -> None:
+    """Keyword inside an inline code span (`skill:procedure-x`) must not count."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/code-span-rule.md",
+        """---
+type: "always"
+source: package
+description: "Always reference the canonical procedure pointer."
+---
+
+# Code Span Rule
+
+The canonical pointer is `skill:git-procedure` and the lookup is
+`skill:symfony-workflow`. Honour both. Never bypass either reference.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "procedural_rule" for i in result.issues)
+
+
+def test_procedural_rule_fires_on_real_procedure(tmp_path: Path) -> None:
+    """A rule with prose keywords *and* numbered steps *and* no iron-law
+    block is mis-classified as procedure — the heuristic must still fire."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/looks-procedural.md",
+        """---
+type: "always"
+source: package
+description: "Always run the procedure when the workflow demands it."
+---
+
+# Looks Procedural
+
+Follow this procedure when the workflow needs it:
+
+1. Run the linter
+2. Read the workflow output
+3. Apply the procedure fix
+4. Verify the workflow passes
+""",
+    )
+    result = lint_file(path)
+    assert any(i.code == "procedural_rule" for i in result.issues)
+
+
+def test_procedural_rule_quiet_when_iron_law_block_present(tmp_path: Path) -> None:
+    """Even with keywords + ordered steps, an Iron-Law block signals the
+    artefact is a rule (verbatim imperative), so `procedural_rule` is suppressed."""
+    path = write_file(
+        tmp_path,
+        ".agent-src/rules/iron-law-rule.md",
+        """---
+type: "always"
+source: package
+description: "Always honour the iron-law workflow constraint."
+---
+
+# Iron Law Rule
+
+```
+NEVER BYPASS THE PROCEDURE. ALWAYS RUN THE WORKFLOW.
+NEVER COMMIT WITHOUT VERIFICATION. ALWAYS READ THE OUTPUT.
+```
+
+When the workflow fires, follow this procedure:
+
+1. Run the workflow linter
+2. Read the procedure output
+3. Apply the workflow fix
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "procedural_rule" for i in result.issues)
+
+
+# --- has_inspect_step verb-list expansion (Phase A) ---
+
+
+def test_inspect_step_accepts_read_verb(tmp_path: Path) -> None:
+    """`Read existing X` is a legitimate inspect step."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/read-verb/SKILL.md",
+        """---
+name: read-verb
+description: "Use when reading existing code before mutating."
+source: project
+domain: process
+---
+
+# read-verb
+
+## When to use
+
+* Before touching shared code
+
+## Procedure
+
+1. Read existing callers in the module
+2. Apply the change
+3. Validate the result
+
+## Output
+
+A short summary of caller impact.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "missing_inspect_step" for i in result.issues)
+
+
+def test_inspect_step_accepts_examine_verb(tmp_path: Path) -> None:
+    """`Examine X` is a legitimate inspect step."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/examine-verb/SKILL.md",
+        """---
+name: examine-verb
+description: "Use when examining the current setup."
+source: project
+domain: process
+---
+
+# examine-verb
+
+## When to use
+
+* Before changing config
+
+## Procedure
+
+1. Examine the current configuration
+2. Plan the diff
+3. Apply the patch
+
+## Output
+
+The applied diff.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "missing_inspect_step" for i in result.issues)
+
+
+def test_inspect_step_still_fires_when_no_orientation_verb(tmp_path: Path) -> None:
+    """A procedure that jumps straight to mutation must still be flagged."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/skills/no-inspect/SKILL.md",
+        """---
+name: no-inspect
+description: "Use when there is no inspection step."
+source: project
+domain: process
+---
+
+# no-inspect
+
+## When to use
+
+* Sometimes
+
+## Procedure
+
+1. Apply the patch
+2. Push the commit
+3. Hope it works
+
+## Output
+
+The pushed commit hash.
+""",
+    )
+    result = lint_file(path)
+    assert any(i.code == "missing_inspect_step" for i in result.issues)
