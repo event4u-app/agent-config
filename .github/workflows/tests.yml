@@ -134,8 +134,9 @@ jobs:
         # pytest drives the suite; pytest-xdist parallelises across CPU
         # cores (`-n auto`); pyyaml is a runtime dep of the memory
         # tooling (check_memory / check_proposal / memory_lookup) that
-        # the tests invoke via subprocess.
-        run: pip install pytest pytest-xdist pyyaml
+        # the tests invoke via subprocess; jsonschema validates the
+        # ExplainTrace v1 payload via scripts/lint_explain_trace.py.
+        run: pip install pytest pytest-xdist pyyaml jsonschema
 
       - name: Bootstrap generated projection (.augment/, .cursor/, …)
         # The Phase-2.4 install_global tests deploy content from
