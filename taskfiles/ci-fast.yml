@@ -257,6 +257,11 @@ tasks:
     deps: [build-discovery-manifest]
     cmd: python3 scripts/lint_discovery_manifest.py {{.QUIET_FLAG}}
 
+  lint-artefact-frontmatter:
+    silent: true
+    desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
+    cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
+
   check-discovery-determinism:
     silent: true
     desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)

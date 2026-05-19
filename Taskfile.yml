@@ -85,6 +85,7 @@ tasks:
       - task: lint-roadmap-ci-steps
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
+      - task: lint-artefact-frontmatter
       - task: check-discovery-determinism
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
@@ -169,6 +170,7 @@ tasks:
       - task: lint-roadmap-ci-steps
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
+      - task: lint-artefact-frontmatter
       - task: check-discovery-determinism
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
