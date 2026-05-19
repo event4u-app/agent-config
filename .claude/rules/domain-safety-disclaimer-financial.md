@@ -1,1 +1,0 @@
-../../.agent-src/rules/domain-safety-disclaimer-financial.md
