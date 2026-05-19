@@ -217,8 +217,17 @@ jobs:
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck --silent
 
+      - name: Build CLI (dist/cli/agent-config.js)
+        run: npm run build:cli --silent
+
+      - name: Build UI (dist/ui/)
+        run: npm run build:ui --silent
+
       - name: Vitest (tests/{cli,server,ui}/**/*.ts)
         run: npm run test:ts --silent
+
+      - name: Prepack guard (dist sanity-check)
+        run: node scripts/prepack-check.mjs
 
       - name: Build (dist/cli + UI bundle)
         run: npm run build --silent

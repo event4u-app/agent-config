@@ -6,27 +6,41 @@
 # then is removed (see ADR-012 + roadmap typescript-cli-and-local-gui-foundation).
 #
 # Behaviour:
-#   - If dist/cli/agent-config.js exists       → forward to the TS binary
-#   - If it is missing AND AGENT_CONFIG_LEGACY_DISPATCH=1 → fall back to
-#     the legacy 955-line Bash dispatcher at scripts/_dispatch.bash
-#   - Otherwise → error with a one-line build hint
+#   - If dist/cli/agent-config.js exists  → forward to the TS binary
+#   - Else if scripts/_dispatch.bash exists → fall back to the legacy
+#     Bash dispatcher (preserves maintainer-internal callers — golden
+#     tests, work_engine harness — that pre-date the TS shell).
+#   - Else → error with a one-line build hint
+#
+# Set AGENT_CONFIG_QUIET_DEPRECATION=1 to suppress the deprecation
+# warning (used by test harnesses that pin the stderr surface).
 set -euo pipefail
 
-here="$(cd -- "$(dirname -- "$0")" && pwd)"
+# Resolve $0 through symlinks (maintainer repo root has a ./agent-config
+# symlink → scripts/agent-config). Portable across macOS and Linux —
+# avoids GNU-only `readlink -f`.
+src="$0"
+while [[ -L "$src" ]]; do
+  dir="$(cd -- "$(dirname -- "$src")" && pwd)"
+  src="$(readlink "$src")"
+  [[ "$src" != /* ]] && src="$dir/$src"
+done
+here="$(cd -- "$(dirname -- "$src")" && pwd)"
 ts_entry="$here/../dist/cli/agent-config.js"
 legacy_entry="$here/_dispatch.bash"
 
-echo "warning: scripts/agent-config is deprecated; use 'npx @event4u/agent-config' instead" >&2
+if [[ "${AGENT_CONFIG_QUIET_DEPRECATION:-0}" != "1" ]]; then
+  echo "warning: scripts/agent-config is deprecated; use 'npx @event4u/agent-config' instead" >&2
+fi
 
 if [[ -f "$ts_entry" ]]; then
   exec node "$ts_entry" "$@"
 fi
 
-if [[ "${AGENT_CONFIG_LEGACY_DISPATCH:-0}" == "1" && -f "$legacy_entry" ]]; then
+if [[ -f "$legacy_entry" ]]; then
   exec bash "$legacy_entry" "$@"
 fi
 
-echo "❌  agent-config: dist/cli/agent-config.js not found" >&2
-echo "    Run 'npm run build' in the package root, or set" >&2
-echo "    AGENT_CONFIG_LEGACY_DISPATCH=1 to use the Bash fallback." >&2
+echo "❌  agent-config: neither dist/cli/agent-config.js nor scripts/_dispatch.bash found" >&2
+echo "    Run 'npm run build' in the package root to produce the TS binary." >&2
 exit 1
