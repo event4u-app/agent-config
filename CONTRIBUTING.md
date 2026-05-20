@@ -308,6 +308,67 @@ a provenance attestation. If the workflow file is renamed or moved, the
 trust link on npm must be updated accordingly or the publish step will
 fail.
 
+## Visibility surface
+
+The repository's outward-facing metadata (GitHub Topics, the *About*
+description and homepage, and the MCP-registry manifest) is
+**visibility-as-code**: every external claim about the package lives
+in a checked-in file under `.github/` or `dist/mcp/`, and a lint
+asserts agreement with the README. **Never edit Topics, description,
+or homepage in the GitHub UI** — those edits are overwritten on the
+next sync.
+
+Sources of truth:
+
+- [`.github/topics.yml`](.github/topics.yml) — the topic list +
+  optional paraphrase map consumed by the positioning lint.
+- [`.github/about.yml`](.github/about.yml) — description + homepage.
+- `dist/mcp/registry-manifest.json` — registry listings (lifecycle
+  status per entry); see
+  [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md).
+
+Tooling:
+
+- `task lint-topics-yaml` — shape gate (slug regex, length, dupes).
+- `task build-mcp-registry-manifest` — render
+  `dist/mcp/registry-manifest.json` + the rendered payloads
+  (awesome-mcp-servers row, Cloudflare catalogue entry). Wired into
+  `npm prepack` so every published tarball carries the manifest.
+- `task lint-mcp-registry-manifest` — schema + payload-shape gate.
+- `task lint-positioning` — asserts the README H1 anchor
+  (*"Universal AI Agent OS"*) appears in `package.json.description`
+  and `.github/about.yml`, and that every topic in
+  `.github/topics.yml` is discoverable in the README body (literal
+  or via the optional `equivalents:` map).
+- `task sync-github-topics` — dry-run diff against the live remote;
+  pass `-- --apply` to mutate (requires `GITHUB_TOKEN` with
+  `administration: write`).
+- `task visibility-check` — runs every visibility lint in sequence
+  (topics + MCP registry + positioning). Run this before opening any
+  PR that touches `.github/topics.yml`, `.github/about.yml`,
+  `package.json.description`, or the README tagline.
+
+Adding a new external registry (e.g. `awesome-claude-code`) follows
+the same contract: extend the schema vocabulary, add a renderer in
+`scripts/build_mcp_registry_manifest.py`, and follow the per-registry
+procedure in
+[`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md).
+Never a UI edit.
+
+**Security trade-off (`administration: write`).** The
+[`sync-visibility.yml`](.github/workflows/sync-visibility.yml)
+workflow holds `administration: write` because
+`PUT /repos/{owner}/{repo}/topics` requires it. That same permission
+allows renaming the repo, changing visibility, or deleting it. The
+workflow is therefore `workflow_dispatch`-only (never auto-triggered)
+and runs under the `production-visibility` environment, which gates
+manual approval. The read-only drift detector
+([`check-visibility-drift.yml`](.github/workflows/check-visibility-drift.yml))
+holds only `contents: read` + `metadata: read` and runs on every
+push / PR. If `administration: write` becomes unacceptable, swap to
+a fine-grained PAT in repo secrets and document the rotation cadence
+here.
+
 ## License of contributions
 
 By contributing you agree that your contributions are licensed under the

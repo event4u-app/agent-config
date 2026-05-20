@@ -735,7 +735,7 @@ task ci               # full pipeline — green before PR
 task test             # unit + integration tests
 ```
 
-→ Full commands and project structure: [**docs/development.md**](docs/development.md)
+→ Full commands and project structure: [**docs/development.md**](docs/development.md). Stack: **TypeScript** CLI/UI (`dist/cli/`, `dist/ui/`) + **Python 3.10+** build/lint scripts. Prompt-engineering primitives — `/optimize-prompt`, `/refine-prompt`, the `prompt-engineering-patterns` skill — ship for every host agent. MCP registry payloads render under `dist/mcp/` (submissions tracked in [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md)).
 
 ## Requirements
 

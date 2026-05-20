@@ -1,0 +1,14 @@
+# GitHub repository "About" manifest for event4u-app/agent-config.
+# Single source of truth for the repo description + homepage shown on
+# https://github.com/event4u-app/agent-config and on the GitHub
+# organisation profile. Edits land here and are pushed via
+# `task sync-github-topics` (which also handles topics) on the
+# manually-dispatched `sync-visibility.yml` workflow.
+#
+# Never edit description / homepage in the GitHub UI.
+#
+# The `description` field is asserted by `scripts/lint_positioning.py`
+# to be consistent with the README tagline and the `package.json`
+# description.
+description: "Universal AI Agent OS — audited skills, governance rules, replayable state. One contract, every host agent."
+homepage: "https://event4u.app"

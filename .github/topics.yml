@@ -1,0 +1,58 @@
+# GitHub Topics for event4u-app/agent-config.
+# Single source of truth. Edits land here and are pushed via
+# `task sync-github-topics`. Never edit topics in the GitHub UI.
+#
+# Contract:
+#   - Every topic must satisfy `^[a-z0-9][a-z0-9-]*$`, ≤ 50 chars.
+#   - No duplicates.
+#   - Adding a topic: open a PR with the addition + one-sentence
+#     rationale appended to `notes:`.
+#   - Removing a topic: same PR shape; do not silently drop entries.
+#   - `equivalents:` lets the positioning lint accept paraphrases of
+#     a topic word inside the README. Entries are added only when the
+#     lint warns about a missing topic that should not appear
+#     literally in prose. Review cadence: see
+#     docs/distribution/topics-equivalents-decay-policy.md.
+topics:
+  - ai-agent
+  - mcp
+  - claude-code
+  - cursor
+  - windsurf
+  - copilot
+  - llm
+  - agent-governance
+  - ai-video
+  - skills
+  - prompt-engineering
+  - typescript
+  - python
+
+notes:
+  # Topics not in this list MUST NOT be set in the GitHub UI.
+  # Rationale anchors live below; one line per topic, free-form.
+  ai-agent: "Primary audience search lands here first."
+  mcp: "Model Context Protocol — package ships an MCP worker."
+  claude-code: "Host agent — `.claude/` projection + cost reports."
+  cursor: "Host agent — `.cursor/` projection."
+  windsurf: "Host agent — `.windsurfrules` projection."
+  copilot: "Host agent — `.github/copilot-instructions.md`."
+  llm: "Catch-all for non-host-specific searches."
+  agent-governance: "Audited skills + rules + replayable state."
+  ai-video: "Cinematic AI video pipeline (`/video:from-script`)."
+  skills: "Skill-based execution model."
+  prompt-engineering: "Skill catalogue covers prompt patterns."
+  typescript: "CLI + UI shipped as TypeScript."
+  python: "Maintenance scripts + build pipeline."
+
+equivalents:
+  # Optional paraphrase map consumed by `scripts/lint_positioning.py`.
+  # Keys are topics from the `topics:` list above. Values are
+  # README phrasings that should satisfy the "topic appears in
+  # README" check without requiring the literal slug in prose.
+  claude-code: ["Claude Code"]
+  ai-video: ["AI video", "Cinematic AI video"]
+  agent-governance: ["governance rules", "audit-disciplined"]
+  ai-agent: ["AI agent", "AI Agent"]
+  prompt-engineering: ["prompt engineering", "prompt-engineering-patterns", "optimize-prompt", "refine-prompt"]
+  typescript: ["TypeScript"]

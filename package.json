@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "version": "2.26.0",
-    "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
+    "description": "Universal AI Agent OS — audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
     "license": "MIT",
     "private": false,
     "type": "module",
@@ -39,11 +39,12 @@
         "build:cli": "tsc -p tsconfig.json && chmod +x dist/cli/agent-config.js",
         "build:ui": "vite build",
         "build:discovery": "python3 scripts/build_discovery_manifest.py --write --strict",
+        "build:mcp-manifest": "python3 scripts/build_mcp_registry_manifest.py --write --strict",
         "build": "npm run build:cli && npm run build:ui",
         "typecheck": "tsc -p tsconfig.json --noEmit",
         "lint:ts": "eslint 'src/**/*.ts'",
         "test:ts": "vitest run",
-        "prepack": "npm run build && npm run build:discovery && node scripts/prepack-check.mjs",
+        "prepack": "npm run build && npm run build:discovery && npm run build:mcp-manifest && node scripts/prepack-check.mjs",
         "prepublishOnly": "python3 scripts/check_release_includes_discovery.py"
     },
     "publishConfig": {
