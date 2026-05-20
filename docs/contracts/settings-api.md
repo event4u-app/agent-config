@@ -4,7 +4,7 @@
 > `agent-config settings`. Listens on `127.0.0.1` only; no auth, no
 > cross-origin. The browser SPA is the sole client today; `/onboard`
 > skill convergence is tracked in
-> [`onboard-skill-wizard-convergence.md`](../../agents/roadmaps/onboard-skill-wizard-convergence.md).
+> [`onboard-skill-wizard-convergence.md`](../../agents/roadmaps/archive/onboard-skill-wizard-convergence.md).
 >
 > Implementing roadmap: [`unified-setup-and-settings-gui.md`](../../agents/roadmaps/unified-setup-and-settings-gui.md).
 > Server-side validators live in `src/server/schemas/`; the JSON-Schema
