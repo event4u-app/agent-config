@@ -115,9 +115,12 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
+            // Wire shape: `userMd` is a bare string (matches the chat
+            // subcommand payload in `cli/commands/onboardFinish.ts`). The
+            // schema wraps it as `{ body }` for length + gray-matter checks.
             const userMdParsed = body.userMd === undefined || body.userMd === null
                 ? null
-                : userMdSchema.safeParse(body.userMd);
+                : userMdSchema.safeParse({ body: body.userMd });
             if (userMdParsed && !userMdParsed.success) {
                 await reply.code(422).send({
                     error: { code: 'VALIDATION', message: 'invalid user-md', fields: zodIssuesToFields(userMdParsed.error.issues) },
