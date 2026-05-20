@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **491**
-- Edges (incl. self-WRITE): **1403**
+- Files indexed: **490**
+- Edges (incl. self-WRITE): **1397**
 
 ## READ_ONLY edges
 
@@ -128,9 +128,6 @@
 | `.agent-src.uncompressed/commands/memory/propose.md` | `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/commands/set-cost-profile.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/rules/onboarding-gate.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/onboard.md` | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize-prompt.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
@@ -202,7 +199,6 @@
 | `.agent-src.uncompressed/commands/roadmap/process-step.md` | `.agent-src.uncompressed/commands/roadmap/process-phase.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/roadmap/process-step.md` | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/commands/set-cost-profile.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/sync-agent-settings.md` | `.agent-src.uncompressed/commands/sync-gitignore.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/sync-gitignore.md` | `.agent-src.uncompressed/commands/sync-gitignore/fix.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/sync-gitignore/fix.md` | `.agent-src.uncompressed/commands/sync-gitignore.md` | `body_link` | 1 |
@@ -242,6 +238,7 @@
 | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/kernel-rule-edits.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -664,7 +661,6 @@
 | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `.agent-src.uncompressed/skills/mcp/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/mcp-builder/SKILL.md` | `.agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/md-language-check/SKILL.md` | `.agent-src.uncompressed/rules/language-and-tone.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncompressed/skills/competitive-positioning/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncompressed/skills/editorial-calendar/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/messaging-architecture/SKILL.md` | `.agent-src.uncompressed/skills/fundraising-narrative/SKILL.md` | `body_link` | 1 |
@@ -784,7 +780,6 @@
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/adr-create/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-refactor/SKILL.md` | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -929,7 +924,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 129 |
+| `command` | 128 |
 | `context` | 32 |
 | `persona` | 31 |
 | `rule` | 72 |

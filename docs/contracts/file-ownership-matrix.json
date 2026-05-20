@@ -483,12 +483,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/commands/onboard.md": {
-      "kind": "command",
-      "rule_type": null,
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/commands/optimize-prompt.md": {
       "kind": "command",
       "rule_type": null,
@@ -4353,34 +4347,6 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/commands/onboard.md",
-      "target": ".agent-src.uncompressed/commands/onboard.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/onboard.md",
-      "target": ".agent-src.uncompressed/commands/set-cost-profile.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/onboard.md",
-      "target": ".agent-src.uncompressed/rules/onboarding-gate.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/onboard.md",
-      "target": ".agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncompressed/commands/optimize-prompt.md",
       "target": ".agent-src.uncompressed/commands/optimize-prompt.md",
       "type": "WRITE",
@@ -5103,13 +5069,6 @@
     },
     {
       "source": ".agent-src.uncompressed/commands/set-cost-profile.md",
-      "target": ".agent-src.uncompressed/commands/onboard.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/commands/set-cost-profile.md",
       "target": ".agent-src.uncompressed/commands/set-cost-profile.md",
       "type": "WRITE",
       "via": "self",
@@ -5517,6 +5476,13 @@
     {
       "source": ".agent-src.uncompressed/contexts/authority/kernel-rule-edits.md",
       "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/authority/scope-mechanics.md",
+      "target": ".agent-src.uncompressed/commands/create-pr.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -10185,13 +10151,6 @@
     },
     {
       "source": ".agent-src.uncompressed/skills/memory-consolidation/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/onboard.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/memory-consolidation/SKILL.md",
       "target": ".agent-src.uncompressed/skills/memory-consolidation/SKILL.md",
       "type": "WRITE",
       "via": "self",
@@ -11449,13 +11408,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md",
-      "target": ".agent-src.uncompressed/commands/onboard.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md",
