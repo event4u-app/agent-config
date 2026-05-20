@@ -3,6 +3,9 @@
     "compilerOptions": {
         "rootDir": ".",
         "noEmit": true,
+        "lib": ["ES2022", "DOM", "DOM.Iterable"],
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
         "types": ["node", "vitest/globals"]
     },
     "include": ["src/**/*", "tests/**/*"],

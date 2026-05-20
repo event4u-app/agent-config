@@ -11,15 +11,22 @@
  */
 
 import { defineConfig } from 'vite';
+import preact from '@preact/preset-vite';
 
 export default defineConfig({
     root: 'src/ui',
     publicDir: false,
+    plugins: [preact()],
     build: {
         outDir: '../../dist/ui',
         emptyOutDir: true,
         target: 'es2022',
         sourcemap: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
+        },
     },
     server: {
         host: '127.0.0.1',

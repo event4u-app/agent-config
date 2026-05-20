@@ -3,7 +3,10 @@
     "compilerOptions": {
         "lib": ["ES2022", "DOM", "DOM.Iterable"],
         "outDir": "dist/ui",
-        "rootDir": "src/ui"
+        "rootDir": "src/ui",
+        "jsx": "react-jsx",
+        "jsxImportSource": "preact",
+        "types": ["vite/client"]
     },
     "include": ["src/ui/**/*"],
     "exclude": ["src/cli/**/*", "src/server/**/*", "node_modules", "dist"]
