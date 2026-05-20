@@ -17,6 +17,8 @@ export interface WizardStep {
     id: string;
     /** H1 line, mirrored to the browser tab title in WizardPage. */
     title: string;
+    /** Short label used in the clickable step navigation. */
+    navLabel: string;
     /** One-line subhead under the title. */
     subtitle: string;
     /** Discriminator for the body renderer. */
@@ -29,6 +31,7 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'identity',
         title: 'Who is using the agent?',
+        navLabel: 'Identity',
         subtitle: 'Name and IDE go into .agent-settings.yml so the agent addresses you and opens files in the right tool.',
         kind: 'form',
         paths: [
@@ -41,6 +44,7 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'personality',
         title: 'How should the agent behave?',
+        navLabel: 'Personality',
         subtitle: 'Autonomy, output verbosity, and PR-comment style.',
         kind: 'form',
         paths: [
@@ -53,6 +57,7 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'cost',
         title: 'Cost profile and budgets',
+        navLabel: 'Cost',
         subtitle: 'Master switch for which rule tiers load, plus optional spending ceilings.',
         kind: 'form',
         paths: [
@@ -66,6 +71,7 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'roadmap-quality',
         title: 'Roadmap & quality cadence',
+        navLabel: 'Roadmap & quality',
         subtitle: 'When the agent runs quality tools and refreshes roadmap dashboards.',
         kind: 'form',
         paths: [
@@ -78,6 +84,7 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'memory',
         title: 'Memory & redaction',
+        navLabel: 'Memory',
         subtitle: 'Inline-review threshold and transcript-redaction regexes.',
         kind: 'form',
         paths: [
@@ -88,12 +95,14 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'user-md',
         title: 'Your .agent-user.md',
+        navLabel: 'User profile',
         subtitle: 'Long-form persona/preferences. Stored at the project root as-is. Skip to leave empty.',
         kind: 'userMd',
     },
     {
         id: 'review',
         title: 'Review & finish',
+        navLabel: 'Review',
         subtitle: 'These keys will change. Confirm to write .agent-settings.yml and .agent-user.md atomically.',
         kind: 'review',
     },

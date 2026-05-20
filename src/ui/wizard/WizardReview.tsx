@@ -1,25 +1,32 @@
 /**
  * WizardReview — diff list shown on the final step.
  *
- * Reuses the visual language from `SettingsPage` (paths + before/after
- * arrow rows). When `userMdChanged` is true we add a single synthetic
- * row pointing at `.agent-user.md` so the user sees both files in one
- * place.
+ * Two blocks:
+ *   1. Clickable step list — every prior step's navLabel as a button that
+ *      calls `onJump(i)` so the user can return to any earlier section to
+ *      adjust values. The review step itself is excluded.
+ *   2. Diff list — paths + from/to arrows, matching SettingsPage. When
+ *      `userMdChanged` is true a synthetic row for `.agent-user.md` is
+ *      appended so both files are visible at once.
  */
 
 import type { JsonValue } from '../forms/schemaTypes.js';
+import type { WizardStep } from './steps.js';
 
 export interface DiffRow {
     path: string;
-    before: JsonValue;
-    after: JsonValue;
+    from: JsonValue;
+    to: JsonValue;
 }
 
 export interface WizardReviewProps {
+    steps: readonly WizardStep[];
+    currentIndex: number;
     changes: DiffRow[];
     userMdChanged: boolean;
     userMdAction: 'create' | 'replace' | null;
     loading: boolean;
+    onJump: (index: number) => void;
 }
 
 function format(value: JsonValue): string {
@@ -29,26 +36,59 @@ function format(value: JsonValue): string {
 }
 
 export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
+    const jumpSteps = props.steps.filter((_, i) => i !== props.currentIndex);
+    const stepNav = (
+        <nav class="ac-wizard__review-nav" aria-label="Jump back to a step">
+            <p class="ac-wizard__review-nav-label">Jump back to a step:</p>
+            <ul class="ac-wizard__review-nav-list">
+                {jumpSteps.map((s) => {
+                    const i = props.steps.indexOf(s);
+                    return (
+                        <li key={s.id}>
+                            <button
+                                type="button"
+                                class="ac-wizard__review-nav-button"
+                                onClick={(): void => { props.onJump(i); }}
+                            >
+                                <span class="ac-wizard__review-nav-index">{i + 1}</span>
+                                <span class="ac-wizard__review-nav-text">{s.navLabel}</span>
+                            </button>
+                        </li>
+                    );
+                })}
+            </ul>
+        </nav>
+    );
+
     if (props.loading) {
-        return <p>Computing diff…</p>;
+        return (
+            <div class="ac-wizard__review">
+                {stepNav}
+                <p>Computing diff…</p>
+            </div>
+        );
     }
     const hasChanges = props.changes.length > 0 || props.userMdChanged;
     if (!hasChanges) {
         return (
-            <p class="ac-banner">
-                Nothing to write — current values already match `.agent-settings.yml`.
-            </p>
+            <div class="ac-wizard__review">
+                {stepNav}
+                <p class="ac-banner">
+                    Nothing to write — current values already match `.agent-settings.yml`.
+                </p>
+            </div>
         );
     }
     return (
         <div class="ac-wizard__review">
+            {stepNav}
             <ul class="ac-diff">
                 {props.changes.map((c) => (
                     <li key={c.path}>
                         <code>{c.path}</code>
-                        <span class="ac-diff__before">{format(c.before)}</span>
+                        <span class="ac-diff__before">{format(c.from)}</span>
                         <span class="ac-diff__arrow">→</span>
-                        <span class="ac-diff__after">{format(c.after)}</span>
+                        <span class="ac-diff__after">{format(c.to)}</span>
                     </li>
                 ))}
                 {props.userMdChanged ? (

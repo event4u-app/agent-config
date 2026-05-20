@@ -135,7 +135,7 @@ async function persistStep(nextIndex: number, partial: Record<string, JsonValue>
 async function refreshDiff(): Promise<void> {
     diffLoading.value = true;
     try {
-        const res = await apiFetch<{ changes: { path: string; before: JsonValue; after: JsonValue }[] }>(
+        const res = await apiFetch<{ changes: { path: string; from: JsonValue; to: JsonValue }[] }>(
             '/api/v1/settings/diff',
             {
                 method: 'POST',
@@ -239,10 +239,13 @@ function StepBody(): preact.JSX.Element | null {
     // review
     return (
         <WizardReview
+            steps={WIZARD_STEPS}
+            currentIndex={stepIndex.value}
             changes={reviewChanges.value}
             userMdChanged={userMdChanged()}
             userMdAction={userMdExists.value ? 'replace' : 'create'}
             loading={diffLoading.value}
+            onJump={(i): void => { void goTo(i); }}
         />
     );
 }
@@ -267,7 +270,11 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
 
     return (
         <div class="ac-page">
-            <StepHeader step={step} index={idx} total={WIZARD_TOTAL_STEPS} />
+            <StepHeader
+                step={step}
+                index={idx}
+                total={WIZARD_TOTAL_STEPS}
+            />
             {banner.value !== null ? <p class="ac-banner">{banner.value}</p> : null}
             <div class="ac-wizard__step">
                 <StepBody />
