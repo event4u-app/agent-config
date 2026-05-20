@@ -45,6 +45,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": null,
@@ -130,6 +131,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": [
@@ -230,6 +232,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": [
@@ -340,6 +343,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": [
@@ -456,6 +460,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": [
@@ -583,6 +588,7 @@
         "ui_polish": null,
         "contract": null,
         "stitch": null,
+        "halts": [],
         "persona": "senior-engineer",
         "memory": [],
         "plan": [

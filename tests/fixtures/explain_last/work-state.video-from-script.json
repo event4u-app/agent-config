@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "file",
+    "data": {
+      "id": "video-run-042",
+      "path": "agents/scripts/launch-announcement.md",
+      "raw": "render the launch announcement script as a 30s vertical clip",
+      "assumptions": []
+    }
+  },
+  "intent": "video-from-script",
+  "directive_set": "video",
+  "persona": "video-director",
+  "memory": [],
+  "video_provider": {
+    "id": "veo-3",
+    "selection_reason": "selected by quality lens: 1080p vertical + native audio sync within the daily cost cap"
+  },
+  "halts": [],
+  "outcomes": {"verify": "pass"},
+  "report": "clip uploaded to artefact bucket"
+}

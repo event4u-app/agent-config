@@ -49,6 +49,15 @@ The wire format adds five envelope fields on top of the legacy
   ``verdict`` (success / blocked / partial), and the
   ``integration_confirmed`` flag the user sets after reviewing the
   integration evidence.
+- ``halts`` — append-only log of :class:`HookHalt` events the engine
+  persisted into state. Populated by :func:`emitters._emit_halt` when
+  it runs against an already-persisted state file (the P3 branch table
+  is preserved: fresh-run halts before the first ``_save`` still leave
+  no state on disk). The ``explain_last`` trace builder reads the
+  tail entry to fill the ``trace.halt`` slot. Each entry is
+  ``{reason, step, surface, timestamp}``. The list defaults to empty
+  and is omitted from older state files via ``from_dict``'s tolerant
+  reader — no schema-version bump.
 
 All other fields keep their v0 names so the dispatcher can read the
 legacy slice unchanged once Phase 3 wires the steps over.
@@ -153,6 +162,7 @@ class WorkState:
     ui_polish: dict[str, Any] | None = None
     contract: dict[str, Any] | None = None
     stitch: dict[str, Any] | None = None
+    halts: list[dict[str, Any]] = field(default_factory=list)
     version: int = SCHEMA_VERSION
     persona: str = "senior-engineer"
     memory: list[dict[str, Any]] = field(default_factory=list)
@@ -187,6 +197,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
     _validate_ui_polish(state.ui_polish)
     _validate_contract(state.contract)
     _validate_stitch(state.stitch)
+    _validate_halts(state.halts)
     return {
         "version": state.version,
         "input": {"kind": state.input.kind, "data": state.input.data},
@@ -199,6 +210,7 @@ def to_dict(state: WorkState) -> dict[str, Any]:
         "ui_polish": state.ui_polish,
         "contract": state.contract,
         "stitch": state.stitch,
+        "halts": list(state.halts),
         "persona": state.persona,
         "memory": state.memory,
         "plan": state.plan,
@@ -269,6 +281,9 @@ def from_dict(payload: Any) -> WorkState:
     stitch = payload.get("stitch")
     _validate_stitch(stitch)
 
+    halts = payload.get("halts", [])
+    _validate_halts(halts)
+
     return WorkState(
         input=Input(kind=kind, data=data),
         intent=payload.get("intent", DEFAULT_INTENT),
@@ -280,6 +295,7 @@ def from_dict(payload: Any) -> WorkState:
         ui_polish=dict(ui_polish) if isinstance(ui_polish, dict) else None,
         contract=dict(contract) if isinstance(contract, dict) else None,
         stitch=dict(stitch) if isinstance(stitch, dict) else None,
+        halts=list(halts) if isinstance(halts, list) else [],
         version=version,
         persona=payload.get("persona", "senior-engineer"),
         memory=list(payload.get("memory", [])),
@@ -623,6 +639,43 @@ def _validate_stitch(stitch: Any) -> None:
         raise SchemaError(
             "state.stitch.integration_confirmed must be a bool when present",
         )
+
+
+def _validate_halts(halts: Any) -> None:
+    """Reject malformed ``halts`` envelopes; tolerate ``[]``.
+
+    Each entry must be a dict with at minimum ``reason`` (str) and
+    ``surface`` (list of str). ``step`` and ``timestamp`` are optional
+    metadata appended by ``emitters._emit_halt``. The schema enforces
+    only shape — the explain renderer is responsible for fallback
+    rendering when optional fields are absent.
+    """
+    if not isinstance(halts, list):
+        raise SchemaError(
+            f"state.halts must be a list; got {type(halts).__name__}",
+        )
+    for idx, entry in enumerate(halts):
+        if not isinstance(entry, dict):
+            raise SchemaError(
+                f"state.halts[{idx}] must be a JSON object; "
+                f"got {type(entry).__name__}",
+            )
+        reason = entry.get("reason")
+        if not isinstance(reason, str) or not reason:
+            raise SchemaError(
+                f"state.halts[{idx}].reason must be a non-empty string",
+            )
+        surface = entry.get("surface", [])
+        if not isinstance(surface, list):
+            raise SchemaError(
+                f"state.halts[{idx}].surface must be a list; "
+                f"got {type(surface).__name__}",
+            )
+        for j, line in enumerate(surface):
+            if not isinstance(line, str):
+                raise SchemaError(
+                    f"state.halts[{idx}].surface[{j}] must be a string",
+                )
 
 
 __all__ = [

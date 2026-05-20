@@ -89,6 +89,7 @@
     "contract_confirmed": false
   },
   "stitch": null,
+  "halts": [],
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,

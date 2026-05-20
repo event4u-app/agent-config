@@ -130,6 +130,7 @@
     "contract_confirmed": true
   },
   "stitch": null,
+  "halts": [],
   "persona": "senior-engineer",
   "memory": [],
   "plan": null,

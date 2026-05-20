@@ -262,6 +262,11 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-explain-trace:
+    silent: true
+    desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)
+    cmd: python3 scripts/lint_explain_trace.py {{.CLI_ARGS}}
+
   check-discovery-determinism:
     silent: true
     desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)

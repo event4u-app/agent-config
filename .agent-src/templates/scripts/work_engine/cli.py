@@ -99,7 +99,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         HookContext(state_file=state_file, args=args),
     )
     if halt is not None:
-        return _emit_halt(halt)
+        return _emit_halt(halt, state_file=state_file, event="BEFORE_LOAD")
 
     try:
         work, fmt = _load_or_build(state_file, args)
@@ -112,7 +112,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         HookContext(state_file=state_file, work=work, fmt=fmt, args=args),
     )
     if halt is not None:
-        return _emit_halt(halt)
+        return _emit_halt(halt, work=work, state_file=state_file, event="AFTER_LOAD")
 
     try:
         set_name = select_directive_set(work)
@@ -129,7 +129,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         HookContext(work=work, delivery=delivery, set_name=set_name, args=args),
     )
     if halt is not None:
-        return _emit_halt(halt)
+        return _emit_halt(halt, work=work, state_file=state_file, event="BEFORE_DISPATCH")
 
     final, halting = dispatch(delivery, steps, hooks=runner)
 
@@ -144,7 +144,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         ),
     )
     if halt is not None:
-        return _emit_halt(halt)
+        return _emit_halt(halt, work=work, state_file=state_file, event="AFTER_DISPATCH")
 
     _sync_back(work, delivery)
 
@@ -153,7 +153,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         HookContext(work=work, delivery=delivery, fmt=fmt, args=args),
     )
     if halt is not None:
-        return _emit_halt(halt)
+        return _emit_halt(halt, work=work, state_file=state_file, event="BEFORE_SAVE")
 
     _save(state_file, work, fmt)
 
@@ -163,7 +163,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     if halt is not None:
         # State is already on disk; exit 2 still per the P3 branch table.
-        return _emit_halt(halt)
+        return _emit_halt(halt, work=work, state_file=state_file, event="AFTER_SAVE")
 
     _emit(work, final, halting)
     return 0 if final is Outcome.SUCCESS else 1

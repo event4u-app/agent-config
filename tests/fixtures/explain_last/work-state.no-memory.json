@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "input": {
+    "kind": "prompt",
+    "data": {
+      "id": "run-no-memory-001",
+      "raw": "tighten the README opening paragraph",
+      "reconstructed_ac": ["README opening reads in <30s"],
+      "assumptions": []
+    }
+  },
+  "intent": "doc-edit",
+  "directive_set": "doc",
+  "persona": "tech-writer",
+  "memory": [],
+  "halts": [],
+  "outcomes": {"verify": "pass"},
+  "report": "README polished"
+}

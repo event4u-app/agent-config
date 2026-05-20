@@ -1,0 +1,24 @@
+{
+  "responses": [
+    {
+      "provider": "anthropic",
+      "model": "claude-opus-4.7",
+      "text": "Defer the split until the manifest crosses 1MB. Per-pack files raise CI cost; the current 210KB ceiling is well below the read budget.",
+      "citations": ["docs/decisions/ADR-013-discovery-frontmatter-contract.md"],
+      "input_tokens": 2100,
+      "output_tokens": 380,
+      "cost_usd": 0.04,
+      "latency_ms": 1842
+    },
+    {
+      "provider": "openai",
+      "model": "gpt-5-pro",
+      "text": "Agree with the defer. Add a Taskfile target that fails CI when the manifest crosses 1MB so the split is forced by data, not opinion.",
+      "citations": ["Taskfile.yml"],
+      "input_tokens": 2050,
+      "output_tokens": 410,
+      "cost_usd": 0.05,
+      "latency_ms": 2103
+    }
+  ]
+}

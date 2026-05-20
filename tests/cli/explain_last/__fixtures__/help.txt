@@ -1,0 +1,37 @@
+usage: agent-config explain last [--project PATH] [--state-file PATH]
+                                 [--json] [--quiet]
+
+Reconstruct the execution trace for the most recent /work,
+/implement-ticket, /council, or /video run. Read-only; never
+makes network calls. Output is the ExplainTrace v1 contract:
+  docs/contracts/explain-trace.schema.json
+
+why-slots answered (Markdown sections; JSON keys in parens):
+
+  inputs       — profile / preset / cost_profile with per-knob source
+                 (pack | profile | preset | user | env | runtime |
+                  default)
+  route        — matched tier-1 rules · kernel rules · active persona
+                 (route)
+  memory       — memory-MCP entries that influenced this run, with
+                 hit-score + step-id (memory)
+  council      — council members consulted with per-member verdict
+                 (council)
+  assumptions  — assumptions recorded during refine + per-halt
+                 (assumptions)
+  pack         — discovery-manifest pack selection rationale (pack)
+  halt         — reason · step · surface for the most recent halt
+                 (halt; Phase 3)
+  provider     — /video provider selection rationale; omitted for
+                 non-video runs (provider; Phase 3)
+
+options:
+  --project PATH       project root (defaults to anchor walk from cwd)
+  --state-file PATH    .work-state.json path (default <root>/.work-state.json)
+  --json               emit ExplainTrace JSON instead of Markdown
+  --quiet              suppress the trailing tip footer
+
+exit codes:
+  0  trace rendered, or disabled by settings (explain.enable_last)
+  1  no recent run found (state file missing or unreadable)
+  2  invocation error (bad project root, bad --state-file path)
