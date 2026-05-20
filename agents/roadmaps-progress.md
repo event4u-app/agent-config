@@ -6,17 +6,17 @@
 
 ## Overall
 
-**2 / 92 steps done · 2%**
+**19 / 85 steps done · 22%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+█████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   22%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 90 | 2 | 0 | 0 | ░░░░░░░░░░ 2% |
+| 1 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 66 | 19 | 0 | 7 | ██░░░░░░░░ 22% |
 
 ---
 
@@ -24,14 +24,14 @@
 
 ### [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md)
 
-**Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)** — 2 / 92 done (2%)
+**Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)** — 19 / 85 done (22%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Decide the UI framework, design tokens, schema strategy | ⬜ not started | 15 | 0 | 0 | 0 | 0% |
 | 1 | Server routes + atomic write pipeline | ⬜ not started | 17 | 0 | 0 | 0 | 0% |
 | 2 | Settings editor UI | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
-| 3 | Wizard UI (reuses settings components) | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
-| 4 | Polish, docs, accessibility audit | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 3 | Wizard UI (reuses settings components) | 🟡 in progress | 1 | 10 | 0 | 5 | 91% |
+| 4 | Polish, docs, accessibility audit | 🟡 in progress | 3 | 7 | 0 | 2 | 70% |
 | 5 | AI-Council pass | 🟡 in progress | 16 | 2 | 0 | 0 | 11% |
 

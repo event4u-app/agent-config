@@ -1,0 +1,128 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://event4u.app/contracts/settings-gui-agent-mode.schema.json",
+    "title": "settings-gui-agent-mode",
+    "description": "Machine-readable mode of `agent-config settings`. When invoked with `--agent`, the CLI emits a single JSON envelope to stdout instead of opening a browser; the caller (chat agent, CI script, IDE extension) drives the wizard or settings editor via the same `/api/v1/*` routes through this envelope. Lives at `docs/contracts/settings-gui-agent-mode.schema.json` per the frontend-engineer council finding (roadmap line 333).",
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["version", "kind", "endpoint", "auth"],
+    "properties": {
+        "version": {
+            "type": "string",
+            "const": "1",
+            "description": "Envelope schema version. Bumped on breaking changes."
+        },
+        "kind": {
+            "type": "string",
+            "enum": ["wizard", "settings"],
+            "description": "Which mode the server booted in. `wizard` = first-run flow; `settings` = settings editor."
+        },
+        "endpoint": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["base", "discoveryFile"],
+            "properties": {
+                "base": {
+                    "type": "string",
+                    "format": "uri",
+                    "pattern": "^http://127\\.0\\.0\\.1:[0-9]+/?$",
+                    "description": "Fastify server URL. Always 127.0.0.1; the port is picked from the foundation roadmap's port-picker."
+                },
+                "discoveryFile": {
+                    "type": "string",
+                    "description": "Absolute path to `.agent-config/skill-bridge.port` / `.token` / `.pid` discovery file the caller should read for handshake."
+                }
+            }
+        },
+        "auth": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["scheme", "token"],
+            "properties": {
+                "scheme": {
+                    "type": "string",
+                    "const": "Bearer"
+                },
+                "token": {
+                    "type": "string",
+                    "description": "Random per-boot token; the caller MUST send `Authorization: Bearer <token>` on every API request. Token rotates on every `agent-config settings` boot."
+                }
+            }
+        },
+        "routes": {
+            "type": "object",
+            "description": "Stable list of routes the caller may use. Schema-bound to roadmap step 0.4; new routes added here MUST land in `docs/contracts/settings-api.md` simultaneously.",
+            "additionalProperties": false,
+            "properties": {
+                "settings": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "get": {"type": "string", "const": "/api/v1/settings"},
+                        "diff": {"type": "string", "const": "/api/v1/settings/diff"},
+                        "put": {"type": "string", "const": "/api/v1/settings"}
+                    }
+                },
+                "userMd": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "get": {"type": "string", "const": "/api/v1/user-md"},
+                        "put": {"type": "string", "const": "/api/v1/user-md"},
+                        "template": {"type": "string", "const": "/api/v1/user-md/template"}
+                    }
+                },
+                "wizard": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "properties": {
+                        "state": {"type": "string", "const": "/api/v1/wizard/state"},
+                        "finish": {"type": "string", "const": "/api/v1/wizard/finish"}
+                    }
+                }
+            }
+        },
+        "shutdown": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["signal", "timeoutSeconds"],
+            "properties": {
+                "signal": {
+                    "type": "string",
+                    "enum": ["SIGTERM", "SIGINT"],
+                    "description": "Signal the caller sends to gracefully stop the server."
+                },
+                "timeoutSeconds": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 60,
+                    "description": "Caller's grace window before SIGKILL. Server drains in-flight requests within this window."
+                }
+            }
+        },
+        "capabilities": {
+            "type": "array",
+            "description": "Optional feature flags the server advertises. Callers MAY ignore unknown values for forward compatibility.",
+            "items": {
+                "type": "string",
+                "enum": ["wizard.resumeState", "settings.diff", "settings.optimisticLock", "userMd.template", "wizard.crashRecovery"]
+            },
+            "uniqueItems": true
+        }
+    },
+    "examples": [
+        {
+            "version": "1",
+            "kind": "settings",
+            "endpoint": {
+                "base": "http://127.0.0.1:41999/",
+                "discoveryFile": "/Users/dev/proj/.agent-config/skill-bridge.port"
+            },
+            "auth": {
+                "scheme": "Bearer",
+                "token": "9f3a7b2c1d4e8f6a"
+            },
+            "capabilities": ["settings.diff", "settings.optimisticLock"]
+        }
+    ]
+}

@@ -56,6 +56,12 @@ export interface UiServeOptions {
     headless?: boolean;
     /** Override CWD as the root used to resolve `.agent-config/`. */
     projectRoot?: string;
+    /**
+     * Initial UI hash route (e.g. `/settings`, `/wizard`). Used by
+     * sibling subcommands (`settings`) to land the browser on a
+     * specific page without forking the server boot path.
+     */
+    initialRoute?: string;
 }
 
 function readPackageVersion(): string {
@@ -146,7 +152,10 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
             `AGENT_CONFIG_READY: port=${port} tokenFile=${tokenPath} pid=${process.pid} version=${readPackageVersion()}\n`,
         );
     } else {
-        const url = `http://127.0.0.1:${port}/?token=${token}`;
+        const hash = opts.initialRoute !== undefined && opts.initialRoute.length > 0
+            ? `#${opts.initialRoute.startsWith('/') ? opts.initialRoute : `/${opts.initialRoute}`}`
+            : '';
+        const url = `http://127.0.0.1:${port}/?token=${token}${hash}`;
         logger.info(`agent-config UI on ${url}  (Ctrl-C to stop)`);
         logger.info(`token file: ${tokenPath}`);
 

@@ -20,9 +20,17 @@ import { promises as fs } from 'node:fs';
 import type { Stats } from 'node:fs';
 import { join } from 'node:path';
 import type { ZodIssue } from 'zod';
+import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+
+// Computed once — Zod → JSON Schema conversion is pure and the schema is static.
+const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
+    name: 'AgentSettings',
+    $refStrategy: 'none',
+    target: 'jsonSchema7',
+});
 
 export interface SettingsRouteOptions {
     /** Project root — `.agent-settings.yml` resolves under this. */
@@ -74,7 +82,12 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                     return reply;
                 }
-                return { values: state.values, lastModified: state.mtimeMs, path: SETTINGS_RELATIVE };
+                return {
+                    values: state.values,
+                    lastModified: state.mtimeMs,
+                    path: SETTINGS_RELATIVE,
+                    schema: SETTINGS_JSON_SCHEMA,
+                };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'YAML parse failed';
                 await reply.code(500).send({ error: { code: 'YAML_PARSE', message } });

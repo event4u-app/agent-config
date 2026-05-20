@@ -20,6 +20,7 @@ import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
+import { runSettings } from './commands/settings.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
 import { runOnboardFinish } from './commands/onboardFinish.js';
@@ -104,6 +105,25 @@ async function main(argv: readonly string[]): Promise<number> {
         });
 
     program
+        .command('settings')
+        .description('Open the local Settings GUI (boots the UI server and lands on #/settings)')
+        .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
+        .option('--no-open', 'Do not launch the browser')
+        .option('--ui-dist <path>', 'Override the dist/ui directory')
+        .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .action(async (opts: {
+            port?: number;
+            open?: boolean;
+            uiDist?: string;
+            allowHeadless?: boolean;
+            projectRoot?: string;
+        }) => {
+            const code = await runSettings(opts);
+            process.exit(code);
+        });
+
+    program
         .command('onboard:finish')
         .description('Commit /onboard payload (stdin JSON; atomic dual-write of .agent-settings.yml + .agent-user.md)')
         .option('--project-root <path>', 'Override the project root used to resolve .agent-settings.yml / .agent-user.md')
@@ -168,7 +188,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'onboard:finish', 'workspaces', 'packs', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'onboard:finish', 'workspaces', 'packs', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;
