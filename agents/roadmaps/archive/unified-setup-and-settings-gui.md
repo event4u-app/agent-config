@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: in-progress
+status: done
 ---
 
 # Roadmap: Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)
@@ -16,11 +16,11 @@ status: in-progress
 
 ## Prerequisites
 
-- [ ] Roadmap `typescript-cli-and-local-gui-foundation.md` is **status: completed** and merged. Without it there is no TS CLI, no Fastify server, no Vite bundle to mount UI into.
-- [ ] Read [`docs/customization.md`](../../docs/customization.md) (settings overview), [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md), [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md)
-- [ ] Read [`config/agent-settings.template.yml`](../../config/agent-settings.template.yml) — every key that the UI exposes lives here as the source of truth
-- [ ] Read `scripts/install.py` — the wizard launches at its tail; this roadmap MUST NOT change `install.py`'s argv contract, only add an opt-out flag
-- [ ] Read `scripts/_cli/cmd_onboard.py` (or equivalent) — the `/onboard` skill collects the same data points as the wizard; both flows MUST converge on identical YAML output
+- [x] Roadmap `typescript-cli-and-local-gui-foundation.md` is **status: completed** and merged. Without it there is no TS CLI, no Fastify server, no Vite bundle to mount UI into.
+- [x] Read [`docs/customization.md`](../../docs/customization.md) (settings overview), [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md), [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md)
+- [x] Read [`config/agent-settings.template.yml`](../../config/agent-settings.template.yml) — every key that the UI exposes lives here as the source of truth
+- [-] Read `scripts/install.py` — the wizard launches at its tail; this roadmap MUST NOT change `install.py`'s argv contract, only add an opt-out flag
+- [-] Read `scripts/_cli/cmd_onboard.py` (or equivalent) — the `/onboard` skill collects the same data points as the wizard; both flows MUST converge on identical YAML output
 
 ## Context
 
@@ -81,16 +81,16 @@ settings editor; the editor has extra fields the wizard does not.
 
 ## Acceptance criteria (whole roadmap)
 
-- [ ] `agent-config init` ends with the wizard URL printed and (unless `--no-ui`) opens the browser to it
-- [ ] `agent-config init --no-ui` skips the wizard entirely and exits as today
-- [ ] `agent-config settings` boots the same UI in **settings mode** (no wizard chrome, just the form tree)
-- [ ] Every field has a zod schema in `src/server/schemas/settings.ts`; every form-submit is validated server-side and rejected with field-level errors on failure
-- [ ] Submitting the wizard writes `.agent-settings.yml` AND `.agent-user.md` (if the user filled it) atomically — both files written, or none. Failure rolls back.
-- [ ] The merge into `.agent-settings.yml` preserves user-added keys not present in the template (the "synced" behaviour of the existing `sync-agent-settings` skill — this roadmap calls that logic, does NOT re-implement it)
-- [ ] No setting is silently overwritten — the diff screen before submit shows every key that will change, old → new
-- [ ] The wizard's last screen has three buttons: **Finish & open settings editor**, **Finish & exit**, **Skip — use defaults**
-- [ ] `python3 scripts/lint_roadmap_ci_steps.py` exits 0 against this roadmap
-- [ ] All phases below carry phase-scoped CI commands; no full-suite literals
+- [-] `agent-config init` ends with the wizard URL printed and (unless `--no-ui`) opens the browser to it
+- [-] `agent-config init --no-ui` skips the wizard entirely and exits as today
+- [x] `agent-config settings` boots the same UI in **settings mode** (no wizard chrome, just the form tree)
+- [x] Every field has a zod schema in `src/server/schemas/settings.ts`; every form-submit is validated server-side and rejected with field-level errors on failure
+- [x] Submitting the wizard writes `.agent-settings.yml` AND `.agent-user.md` (if the user filled it) atomically — both files written, or none. Failure rolls back.
+- [x] The merge into `.agent-settings.yml` preserves user-added keys not present in the template (the "synced" behaviour of the existing `sync-agent-settings` skill — this roadmap calls that logic, does NOT re-implement it)
+- [x] No setting is silently overwritten — the diff screen before submit shows every key that will change, old → new
+- [-] The wizard's last screen has three buttons: **Finish & open settings editor**, **Finish & exit**, **Skip — use defaults**
+- [x] `python3 scripts/lint_roadmap_ci_steps.py` exits 0 against this roadmap
+- [x] All phases below carry phase-scoped CI commands; no full-suite literals
 
 ## Non-goals
 
@@ -111,25 +111,25 @@ settings editor; the editor has extra fields the wizard does not.
 
 ### Step 0.1: Framework choice
 
-- [ ] **Create `docs/decisions/ADR-014-gui-framework-choice.md`** (NEW, status `Accepted`; ADR-013 is already taken by the discovery-frontmatter contract). Decision matrix with rows: Preact, Svelte, lit-html, vanilla + small reactive lib (uhtml / mfsv), React. Columns: bundle size (KB gzip for hello-world + 5 form fields + 1 multi-step wizard), learning curve, ecosystem of form libs, SSR-not-needed bonus, TS support.
-- [ ] **Default recommendation in this roadmap: Preact + signals** — gzip footprint ~5 KB, React-compatible mental model, zero build-time codegen, signals avoid pulling a state lib. The ADR records the chosen option with explicit rejection reasons for the others.
-- [ ] Forbidden adds: Next.js, Remix, Vue, Angular, anything with a router heavier than `wouter-preact` or `preact-router`. The UI has at most 8 screens; a 40 KB router is over-spec.
-- [ ] Forbidden adds: Tailwind, MUI, Chakra, Mantine, shadcn-ui. Reason: shipping a 50 KB CSS framework into an `npx`-installed binary is poor stewardship. We ship hand-written CSS using design tokens (see Step 0.2).
+- [x] **Create `docs/decisions/ADR-014-gui-framework-choice.md`** (NEW, status `Accepted`; ADR-013 is already taken by the discovery-frontmatter contract). Decision matrix with rows: Preact, Svelte, lit-html, vanilla + small reactive lib (uhtml / mfsv), React. Columns: bundle size (KB gzip for hello-world + 5 form fields + 1 multi-step wizard), learning curve, ecosystem of form libs, SSR-not-needed bonus, TS support.
+- [x] **Default recommendation in this roadmap: Preact + signals** — gzip footprint ~5 KB, React-compatible mental model, zero build-time codegen, signals avoid pulling a state lib. The ADR records the chosen option with explicit rejection reasons for the others.
+- [x] Forbidden adds: Next.js, Remix, Vue, Angular, anything with a router heavier than `wouter-preact` or `preact-router`. The UI has at most 8 screens; a 40 KB router is over-spec.
+- [x] Forbidden adds: Tailwind, MUI, Chakra, Mantine, shadcn-ui. Reason: shipping a 50 KB CSS framework into an `npx`-installed binary is poor stewardship. We ship hand-written CSS using design tokens (see Step 0.2).
 
 ### Step 0.2: Design tokens
 
-- [ ] **Create `src/ui/tokens.css`** — CSS custom properties for: colour (`--ac-bg`, `--ac-fg`, `--ac-accent`, `--ac-error`, `--ac-warn`, `--ac-muted`), spacing (`--ac-space-{1..6}` on a 4 px base), type scale (`--ac-text-{xs,sm,base,lg,xl}`), radius, shadow, focus ring. Dark + light variants via `prefers-color-scheme`. No JS-driven theme switch — the OS owns that.
-- [ ] No CSS-in-JS. No `styled-components`. Plain `.css` files imported from each component, Vite handles scoping via `*.module.css`.
+- [x] **Create `src/ui/tokens.css`** — CSS custom properties for: colour (`--ac-bg`, `--ac-fg`, `--ac-accent`, `--ac-error`, `--ac-warn`, `--ac-muted`), spacing (`--ac-space-{1..6}` on a 4 px base), type scale (`--ac-text-{xs,sm,base,lg,xl}`), radius, shadow, focus ring. Dark + light variants via `prefers-color-scheme`. No JS-driven theme switch — the OS owns that.
+- [x] No CSS-in-JS. No `styled-components`. Plain `.css` files imported from each component, Vite handles scoping via `*.module.css`.
 
 ### Step 0.3: Schema strategy
 
-- [ ] **Create `src/server/schemas/settings.ts`** — exports a single zod schema `settingsSchema` whose shape matches `config/agent-settings.template.yml`. Every leaf field has: `.describe(<help text>)`, validation rule, default. The same schema is used by the API route handler **and** consumed by the UI to render form fields (via `zod-to-json-schema` at **build** time → static JSON in `dist/ui/`).
-- [ ] Acceptance gate: a test parses `config/agent-settings.template.yml`, walks every key, and asserts the zod schema has a matching field. New template keys without schema additions fail CI.
-- [ ] The `.agent-user.md` body is **not** in the settings schema (it's markdown, not YAML). It has its own schema `userMdSchema` with one field: `body: z.string().max(8000)`.
+- [x] **Create `src/server/schemas/settings.ts`** — exports a single zod schema `settingsSchema` whose shape matches `config/agent-settings.template.yml`. Every leaf field has: `.describe(<help text>)`, validation rule, default. The same schema is used by the API route handler **and** consumed by the UI to render form fields (via `zod-to-json-schema` at **build** time → static JSON in `dist/ui/`).
+- [x] Acceptance gate: a test parses `config/agent-settings.template.yml`, walks every key, and asserts the zod schema has a matching field. New template keys without schema additions fail CI.
+- [x] The `.agent-user.md` body is **not** in the settings schema (it's markdown, not YAML). It has its own schema `userMdSchema` with one field: `body: z.string().max(8000)`.
 
 ### Step 0.4: API contract
 
-- [ ] **Create `docs/contracts/settings-api.md`** (NEW). Routes:
+- [x] **Create `docs/contracts/settings-api.md`** (NEW). Routes:
   - `GET /api/v1/settings` → `{ values: <current .agent-settings.yml as object>, schema: <JSON schema>, hasUserMd: boolean }`
   - `GET /api/v1/settings/diff?body=<base64>` → `{ changes: Array<{ key: string, from: unknown, to: unknown }> }` (preview before save)
   - `PUT /api/v1/settings` → body: validated values; response: `{ ok: true, writtenPaths: string[] }` or `{ ok: false, errors: Array<{ path: string[], message: string }> }`
@@ -137,14 +137,14 @@ settings editor; the editor has extra fields the wizard does not.
   - `PUT /api/v1/user-md` → body: `{ body: string }`
   - `GET /api/v1/wizard/state` → wizard-only: `{ step: number, totalSteps: number, partial: object }` (persisted in `.agent-config/wizard-state.json`, deleted on finish)
   - `POST /api/v1/wizard/finish` → applies all wizard fields + .agent-user.md atomically
-- [ ] Every response is zod-validated server-side; every request body is zod-validated server-side; CSRF is covered by the Host-header guard from the foundation roadmap.
+- [x] Every response is zod-validated server-side; every request body is zod-validated server-side; CSRF is covered by the Host-header guard from the foundation roadmap.
 
 ### Step 0.5: Phase 0 acceptance
 
-- [ ] ADR-014 exists and is in the ADR index (`python3 scripts/lint_adr_index.py` passes)
-- [ ] `docs/contracts/settings-api.md` exists and is linked from `docs/customization.md`
-- [ ] `src/server/schemas/settings.ts` and `src/server/schemas/userMd.ts` exist, compile, and the schema↔template parity test described in 0.3 passes
-- [ ] No UI components written yet — Phase 0 is contract only
+- [x] ADR-014 exists and is in the ADR index (`python3 scripts/lint_adr_index.py` passes)
+- [x] `docs/contracts/settings-api.md` exists and is linked from `docs/customization.md`
+- [x] `src/server/schemas/settings.ts` and `src/server/schemas/userMd.ts` exist, compile, and the schema↔template parity test described in 0.3 passes
+- [x] No UI components written yet — Phase 0 is contract only
 
 ## Phase 1: Server routes + atomic write pipeline
 
@@ -155,43 +155,43 @@ settings editor; the editor has extra fields the wizard does not.
 
 ### Step 1.1: Settings read/diff/write routes
 
-- [ ] **Create `src/server/routes/settings.ts`** with `GET /api/v1/settings`, `GET /api/v1/settings/diff`, `PUT /api/v1/settings`. The PUT handler:
+- [x] **Create `src/server/routes/settings.ts`** with `GET /api/v1/settings`, `GET /api/v1/settings/diff`, `PUT /api/v1/settings`. The PUT handler:
   1. Validates the body against `settingsSchema`
   2. Loads the current `.agent-settings.yml`
   3. Computes the merged result (call `python3 scripts/sync_agent_settings.py --stdin --stdout` if that script exists; otherwise re-implement the documented merge rules: user-added keys preserved, removed-from-template keys preserved, type changes blocked)
   4. Writes via the atomic-write helper from Step 1.3
   5. Returns `{ ok, writtenPaths }` on success, the zod error list on failure
-- [ ] Each route handler has a corresponding test in `tests/server/settings.*.test.ts` using `app.inject` (Fastify's in-process test harness — no port binding needed).
+- [x] Each route handler has a corresponding test in `tests/server/settings.*.test.ts` using `app.inject` (Fastify's in-process test harness — no port binding needed).
 
 ### Step 1.2: `.agent-user.md` routes
 
-- [ ] **Create `src/server/routes/userMd.ts`** with `GET /api/v1/user-md` and `PUT /api/v1/user-md`. Both routes operate on `<projectRoot>/.agent-user.md`. PUT validates against `userMdSchema`, then writes atomically. GET returns `{ body: '', exists: false }` when the file is missing.
-- [ ] If `templates/agent-user.md` exists in the package, expose it via `GET /api/v1/user-md/template` so the wizard can pre-fill the textarea. Otherwise the field starts empty.
+- [x] **Create `src/server/routes/userMd.ts`** with `GET /api/v1/user-md` and `PUT /api/v1/user-md`. Both routes operate on `<projectRoot>/.agent-user.md`. PUT validates against `userMdSchema`, then writes atomically. GET returns `{ body: '', exists: false }` when the file is missing.
+- [x] If `templates/agent-user.md` exists in the package, expose it via `GET /api/v1/user-md/template` so the wizard can pre-fill the textarea. Otherwise the field starts empty.
 
 ### Step 1.3: Atomic write helper
 
-- [ ] **Create `src/server/io/atomicWrite.ts`** — exports `async function writeAtomic(targetPath: string, contents: string | Buffer): Promise<void>`. Writes to `targetPath + '.tmp-<pid>-<random>'`, fsyncs, renames over the target. On Windows, falls back to a copy-rename loop. Test: kill the process between write and rename and assert the target file is either untouched (old contents) or fully written (new contents), never half-written.
-- [ ] **Create `src/server/io/atomicMultiWrite.ts`** — wraps `writeAtomic` for the wizard's "both files or none" guarantee: writes both `.tmp` files first, then renames both. On any rename failure, deletes both `.tmp` files and reports the error.
+- [x] **Create `src/server/io/atomicWrite.ts`** — exports `async function writeAtomic(targetPath: string, contents: string | Buffer): Promise<void>`. Writes to `targetPath + '.tmp-<pid>-<random>'`, fsyncs, renames over the target. On Windows, falls back to a copy-rename loop. Test: kill the process between write and rename and assert the target file is either untouched (old contents) or fully written (new contents), never half-written.
+- [x] **Create `src/server/io/atomicMultiWrite.ts`** — wraps `writeAtomic` for the wizard's "both files or none" guarantee: writes both `.tmp` files first, then renames both. On any rename failure, deletes both `.tmp` files and reports the error.
 
 ### Step 1.4: Wizard state persistence
 
-- [ ] **Create `src/server/routes/wizard.ts`** with `GET /api/v1/wizard/state` and `POST /api/v1/wizard/finish`. State lives in `<projectRoot>/.agent-config/wizard-state.json` (added to `.gitignore` by Step 1.5). Auto-deleted on finish or on `agent-config init` rerun.
-- [ ] State JSON shape: `{ step: number, totalSteps: number, partial: Record<string, unknown>, startedAt: string }`. Server validates against `wizardStateSchema` on every read.
+- [x] **Create `src/server/routes/wizard.ts`** with `GET /api/v1/wizard/state` and `POST /api/v1/wizard/finish`. State lives in `<projectRoot>/.agent-config/wizard-state.json` (added to `.gitignore` by Step 1.5). Auto-deleted on finish or on `agent-config init` rerun.
+- [x] State JSON shape: `{ step: number, totalSteps: number, partial: Record<string, unknown>, startedAt: string }`. Server validates against `wizardStateSchema` on every read.
 
 ### Step 1.5: Touch `.gitignore`
 
-- [ ] **Edit `templates/.gitignore`** (the consumer-side one) — add `/.agent-config/wizard-state.json`. The sync logic that updates consumer `.gitignore` (existing `sync-gitignore` skill) will roll this out automatically.
+- [x] **Edit `templates/.gitignore`** (the consumer-side one) — add `/.agent-config/wizard-state.json`. The sync logic that updates consumer `.gitignore` (existing `sync-gitignore` skill) will roll this out automatically.
 
 ### Step 1.6: Phase 1 acceptance
 
-- [ ] `tests/server/settings.read.test.ts` — GET returns the current file contents shape-matched against the schema
-- [ ] `tests/server/settings.diff.test.ts` — diff endpoint returns exactly the keys that change for a known-good fixture
-- [ ] `tests/server/settings.write.test.ts` — PUT writes the file; reading it back returns the same content; original file's user-added keys are preserved
-- [ ] `tests/server/settings.write-rejects.test.ts` — PUT with `cost_profile: "bogus"` returns 422 + field error; the on-disk file is unchanged (atomicity proof)
-- [ ] `tests/server/userMd.test.ts` — round-trip read/write
-- [ ] `tests/server/atomicWrite.crash.test.ts` — simulated crash between tmp-write and rename leaves target intact
-- [ ] `tests/server/wizard.state.test.ts` — partial state survives a server restart
-- [ ] No UI components exist yet — Phase 1 is pure backend
+- [x] `tests/server/settings.read.test.ts` — GET returns the current file contents shape-matched against the schema
+- [x] `tests/server/settings.diff.test.ts` — diff endpoint returns exactly the keys that change for a known-good fixture
+- [x] `tests/server/settings.write.test.ts` — PUT writes the file; reading it back returns the same content; original file's user-added keys are preserved
+- [x] `tests/server/settings.write-rejects.test.ts` — PUT with `cost_profile: "bogus"` returns 422 + field error; the on-disk file is unchanged (atomicity proof)
+- [x] `tests/server/userMd.test.ts` — round-trip read/write
+- [x] `tests/server/atomicWrite.crash.test.ts` — simulated crash between tmp-write and rename leaves target intact
+- [x] `tests/server/wizard.state.test.ts` — partial state survives a server restart
+- [x] No UI components exist yet — Phase 1 is pure backend
 
 ## Phase 2: Settings editor UI
 
@@ -202,32 +202,32 @@ settings editor; the editor has extra fields the wizard does not.
 
 ### Step 2.1: Form-render core
 
-- [ ] **Create `src/ui/forms/`** with one file per primitive: `Field.tsx`, `TextInput.tsx`, `NumberInput.tsx`, `Toggle.tsx`, `Radio.tsx`, `Textarea.tsx`, `Autocomplete.tsx`, `FieldError.tsx`, `FieldDescription.tsx`. Every primitive is < 60 lines, takes `{ name, label, description, value, onChange, error }` props, no surprises.
-- [ ] **Create `src/ui/forms/SchemaForm.tsx`** — given a JSON-schema slice + a values object, renders the corresponding primitives in declared order. Recurses one level into nested objects (`personal.*`, `cost.budgets.*`). No deeper recursion — schemas with depth > 2 fail render-time with an explicit error.
-- [ ] Accessibility: every field has a `<label for>`, errors are announced via `aria-live="polite"`, focus moves to the first errored field on submit-failure.
+- [x] **Create `src/ui/forms/`** with one file per primitive: `Field.tsx`, `TextInput.tsx`, `NumberInput.tsx`, `Toggle.tsx`, `Radio.tsx`, `Textarea.tsx`, `Autocomplete.tsx`, `FieldError.tsx`, `FieldDescription.tsx`. Every primitive is < 60 lines, takes `{ name, label, description, value, onChange, error }` props, no surprises.
+- [x] **Create `src/ui/forms/SchemaForm.tsx`** — given a JSON-schema slice + a values object, renders the corresponding primitives in declared order. Recurses one level into nested objects (`personal.*`, `cost.budgets.*`). No deeper recursion — schemas with depth > 2 fail render-time with an explicit error.
+- [x] Accessibility: every field has a `<label for>`, errors are announced via `aria-live="polite"`, focus moves to the first errored field on submit-failure.
 
 ### Step 2.2: Settings page
 
-- [ ] **Create `src/ui/pages/SettingsPage.tsx`** — fetches `/api/v1/settings` on mount, renders the schema form, has a sticky footer with **Preview changes** and **Cancel** buttons. **Preview changes** opens a modal that calls `/api/v1/settings/diff` and shows the key list with old → new values. **Confirm save** in the modal calls `PUT /api/v1/settings`.
-- [ ] On success: toast "Saved · 2 files written" (or 1) + the form's "dirty" indicator clears.
-- [ ] On failure (422 with field errors): the modal closes, each errored field gets its inline `FieldError` populated, focus moves to the first one.
+- [x] **Create `src/ui/pages/SettingsPage.tsx`** — fetches `/api/v1/settings` on mount, renders the schema form, has a sticky footer with **Preview changes** and **Cancel** buttons. **Preview changes** opens a modal that calls `/api/v1/settings/diff` and shows the key list with old → new values. **Confirm save** in the modal calls `PUT /api/v1/settings`.
+- [x] On success: toast "Saved · 2 files written" (or 1) + the form's "dirty" indicator clears.
+- [x] On failure (422 with field errors): the modal closes, each errored field gets its inline `FieldError` populated, focus moves to the first one.
 
 ### Step 2.3: `.agent-user.md` panel
 
-- [ ] **Create `src/ui/pages/UserMdPanel.tsx`** — a side panel reachable from the settings page sidebar. Textarea pre-filled from `GET /api/v1/user-md` (or the template if not yet created). Save button calls `PUT /api/v1/user-md`. Markdown preview tab is **out of scope** for this roadmap — plain textarea only.
+- [x] **Create `src/ui/pages/UserMdPanel.tsx`** — a side panel reachable from the settings page sidebar. Textarea pre-filled from `GET /api/v1/user-md` (or the template if not yet created). Save button calls `PUT /api/v1/user-md`. Markdown preview tab is **out of scope** for this roadmap — plain textarea only.
 
 ### Step 2.4: `agent-config settings` command
 
-- [ ] **Create `src/cli/commands/settings.ts`** — flags: `--port`, `--no-open`. Boots the same Fastify app the foundation roadmap's `ui:serve` boots, then opens the browser at `http://127.0.0.1:<port>/#/settings`. Re-uses the entire server stack; the only difference vs `ui:serve` is the initial URL hash.
-- [ ] Register the command in `src/cli/agent-config.ts`.
+- [x] **Create `src/cli/commands/settings.ts`** — flags: `--port`, `--no-open`. Boots the same Fastify app the foundation roadmap's `ui:serve` boots, then opens the browser at `http://127.0.0.1:<port>/#/settings`. Re-uses the entire server stack; the only difference vs `ui:serve` is the initial URL hash.
+- [x] Register the command in `src/cli/agent-config.ts`.
 
 ### Step 2.5: Phase 2 acceptance
 
-- [ ] `tests/ui/SettingsPage.test.tsx` — vitest + happy-dom, mocks the API, asserts that submitting a valid form calls `PUT /api/v1/settings` exactly once with the expected body
-- [ ] `tests/ui/SettingsPage.errors.test.tsx` — mocks a 422 response, asserts the inline errors render and focus lands on the first
-- [ ] `tests/ui/UserMdPanel.test.tsx` — round-trip read/write through the mock
-- [ ] `tests/cli/settings.e2e.test.ts` — spawns `node dist/cli/agent-config.js settings --no-open --port 41700`, fetches `/`, asserts the SettingsPage HTML mounts (`#app` contains "Settings")
-- [ ] Bundle measurement: `npm run build:ui` reports `dist/ui/assets/*.js` total gzip ≤ 35 KB. If exceeded, the failure is loud — investigate before merging.
+- [x] `tests/ui/SettingsPage.test.tsx` — vitest + happy-dom, mocks the API, asserts that submitting a valid form calls `PUT /api/v1/settings` exactly once with the expected body
+- [x] `tests/ui/SettingsPage.errors.test.tsx` — mocks a 422 response, asserts the inline errors render and focus lands on the first
+- [x] `tests/ui/UserMdPanel.test.tsx` — round-trip read/write through the mock
+- [x] `tests/cli/settings.e2e.test.ts` — spawns `node dist/cli/agent-config.js settings --no-open --port 41700`, fetches `/`, asserts the SettingsPage HTML mounts (`#app` contains "Settings")
+- [x] Bundle measurement: `npm run build:ui` reports `dist/ui/assets/*.js` total gzip ≤ 35 KB. If exceeded, the failure is loud — investigate before merging.
 
 
 
@@ -271,7 +271,7 @@ settings editor; the editor has extra fields the wizard does not.
 - [x] `tests/ui/WizardPage.resume.test.tsx` — mocks a partial state response, asserts the wizard mounts on the correct step; also covers clamp on out-of-range server step
 - [-] `tests/cli/install.wizard.test.ts` — carved out with Step 3.4
 - [-] `tests/cli/install.no-ui.test.ts` — carved out with Step 3.4
-- [ ] Manual gate (recorded in the PR checklist, not in CI): one developer runs `npx <local-pack> init` end-to-end, finishes the wizard, opens `.agent-settings.yml` and `.agent-user.md`, confirms both reflect the wizard answers
+- [-] Manual gate (recorded in the PR checklist, not in CI): one developer runs `npx <local-pack> init` end-to-end, finishes the wizard, opens `.agent-settings.yml` and `.agent-user.md`, confirms both reflect the wizard answers
 
 ## Phase 4: Polish, docs, accessibility audit
 
@@ -298,9 +298,9 @@ settings editor; the editor has extra fields the wizard does not.
 ### Step 4.4: Phase 4 acceptance
 
 - [-] `accessibility-auditor` report — deferred with the keyboard-only run (no live GUI in CI).
-- [ ] `python3 scripts/lint_md_language.py docs/wizard.md docs/customization.md` exits 0 (gate runs in commit-chunk verification below)
-- [ ] `python3 scripts/check_refs.py` exits 0 — gate runs in commit-chunk verification below
-- [ ] `node dist/cli/agent-config.js settings --no-open --port 41701 &` smoke gate — runs in commit-chunk verification below
+- [x] `python3 scripts/lint_md_language.py docs/wizard.md docs/customization.md` exits 0 (gate runs in commit-chunk verification below)
+- [x] `python3 scripts/check_refs.py` exits 0 — gate runs in commit-chunk verification below
+- [x] `node dist/cli/agent-config.js settings --no-open --port 41701 &` smoke gate — runs in commit-chunk verification below
 
 ## Phase 5: AI-Council pass
 
@@ -321,33 +321,33 @@ settings editor; the editor has extra fields the wizard does not.
 
 **`frontend-engineer` — shared-codebase claim is load-bearing and undefended**
 
-- [ ] "Setup-Wizard + Settings-GUI aus einer Codebase" is the central architectural promise. Add a Phase 1 deliverable: a one-page table in `docs/architecture/setup-vs-settings-shared-surface.md` listing every component (form field, validator, schema renderer, diff view, progress bar) and labelling it `shared` / `setup-only` / `settings-only`. The implementing agent audits at end of each phase against this table; drift fails review.
-- [ ] The `--agent` JSON mode is well-specified but no schema exists. Add `docs/contracts/settings-gui-agent-mode.schema.json` to Phase 2 deliverables; the GUI's machine-readable mode is an API and is treated as one.
+- [x] "Setup-Wizard + Settings-GUI aus einer Codebase" is the central architectural promise. Add a Phase 1 deliverable: a one-page table in `docs/architecture/setup-vs-settings-shared-surface.md` listing every component (form field, validator, schema renderer, diff view, progress bar) and labelling it `shared` / `setup-only` / `settings-only`. The implementing agent audits at end of each phase against this table; drift fails review.
+- [x] The `--agent` JSON mode is well-specified but no schema exists. Add `docs/contracts/settings-gui-agent-mode.schema.json` to Phase 2 deliverables; the GUI's machine-readable mode is an API and is treated as one.
 
 **`backend-architect` — race window and parser contract**
 
-- [ ] Phase 5's race between `GET /api/v1/settings` and `PUT /api/v1/settings` is correctly flagged as an open question but the roadmap does not pick a side. **Pick now:** require `If-Match: <sha256 of the on-disk file content at GET time>` on PUT; return 412 Precondition Failed otherwise. Cheap, matches the no-auth Fastify shape, and prevents silent overwrite of hand-edits between GET and PUT.
-- [ ] `.agent-user.md` integration crosses a parser boundary. The file is Markdown with optional YAML frontmatter in some legacy consumer projects. Add a Phase 2 step: pick one canonical parser (`python-frontmatter` server-side, `gray-matter` browser-side) and document the unsupported variants explicitly. Otherwise round-tripping a file with exotic frontmatter silently strips it.
+- [x] Phase 5's race between `GET /api/v1/settings` and `PUT /api/v1/settings` is correctly flagged as an open question but the roadmap does not pick a side. **Pick now:** require `If-Match: <sha256 of the on-disk file content at GET time>` on PUT; return 412 Precondition Failed otherwise. Cheap, matches the no-auth Fastify shape, and prevents silent overwrite of hand-edits between GET and PUT.
+- [x] `.agent-user.md` integration crosses a parser boundary. The file is Markdown with optional YAML frontmatter in some legacy consumer projects. Add a Phase 2 step: pick one canonical parser (`python-frontmatter` server-side, `gray-matter` browser-side) and document the unsupported variants explicitly. Otherwise round-tripping a file with exotic frontmatter silently strips it.
 
 **`security-engineer` — trust boundary at the form edge**
 
-- [ ] Browser → Fastify → `~/.event4u/agent-config/<provider>.key` writes cross a trust boundary. The wizard MUST re-validate every PUT server-side against the same JSON-Schema the GUI uses client-side; a drift between client and server schema fails `task lint-settings-gui` (a NEW lint introduced in Phase 3).
-- [ ] Add a Phase 5 exit-gate test: any file the wizard creates under `~/.event4u/agent-config/` lands with mode 0600. Test runs via `os.stat` server-side after PUT.
+- [x] Browser → Fastify → `~/.event4u/agent-config/<provider>.key` writes cross a trust boundary. The wizard MUST re-validate every PUT server-side against the same JSON-Schema the GUI uses client-side; a drift between client and server schema fails `task lint-settings-gui` (a NEW lint introduced in Phase 3).
+- [x] Add a Phase 5 exit-gate test: any file the wizard creates under `~/.event4u/agent-config/` lands with mode 0600. Test runs via `os.stat` server-side after PUT.
 
 **`critical-challenger` — undefined edges**
 
-- [ ] "Mit Validierung" covers form-level rules but not **cross-field consistency** (`council.enabled=true` + zero API keys installed, `memory.enabled=true` + missing memory MCP server, etc.). Add to Phase 3: a "cross-field consistency report" runs after every PUT and surfaces **warnings** (not errors) in the GUI. Otherwise the GUI happily saves an inconsistent settings file and the user discovers the break at next `council:run`.
-- [ ] "Skippable" wizard end is correctly listed as a feature, but the **default state** of `.agent-settings.yml` after a skipped wizard is unspecified. Spell it out: skip = copy `config/agent-settings.template.yml` verbatim, no auto-fill, no detection of installed keys. The user can always run `agent-config settings` later to revise.
+- [x] "Mit Validierung" covers form-level rules but not **cross-field consistency** (`council.enabled=true` + zero API keys installed, `memory.enabled=true` + missing memory MCP server, etc.). Add to Phase 3: a "cross-field consistency report" runs after every PUT and surfaces **warnings** (not errors) in the GUI. Otherwise the GUI happily saves an inconsistent settings file and the user discovers the break at next `council:run`.
+- [x] "Skippable" wizard end is correctly listed as a feature, but the **default state** of `.agent-settings.yml` after a skipped wizard is unspecified. Spell it out: skip = copy `config/agent-settings.template.yml` verbatim, no auto-fill, no detection of installed keys. The user can always run `agent-config settings` later to revise.
 
 **External AI-Council pass — 2026-05-18 (anthropic `claude-sonnet-4-5` + openai `gpt-4o`)**
 
 > Evidence: `agents/council-responses/2026-05-18T*-r2-unified-setup-settings-gui/`. Cost: $0.16. The external review surfaced **four data-integrity blockers** that are critical and additive to the in-session items above.
 
-- [ ] **CRITICAL — `.agent-user.md` length-check is not validation.** The current `userMdSchema = z.string().max(8000)` accepts any 8 000-char string, including malformed frontmatter the agent's identity parser then rejects. Phase 0 MUST add `src/server/schemas/userMd.ts` that imports the SAME parser the agent uses on `.agent-user.md` (gray-matter or equivalent per ADR-010); `PUT /api/v1/user-md` returns 422 with the parser's error message when validation fails. Without this, the wizard writes files the agent refuses to load.
-- [ ] **HIGH — Atomic multi-write needs a write-ahead log.** "Delete both `.tmp` files on partial failure" loses the user's wizard session. Replace with: (a) wizard assigns `txnId = uuid()`, (b) writes `settings.yml.tmp-{txnId}` + `user-md.tmp-{txnId}`, (c) writes empty `wizard.commit-intent-{txnId}` (2PC prepare marker), (d) performs both renames, (e) deletes the intent marker. On server boot, replay any orphaned intent markers idempotently. Test via a state-machine assertion, not a real `kill -9` (flaky on Windows).
-- [ ] **HIGH — Optimistic locking missing on settings edit.** The race is form-mount → submit (minutes), not GET → PUT (milliseconds). `GET /api/v1/settings` MUST return `{ values, schema, lastModified: <file mtime> }`; `PUT /api/v1/settings` MUST require `If-Unmodified-Since: <lastModified>`; on mtime drift, return 409 + new file contents so the GUI can render a 3-way merge UI ("Your changes | Disk changes | Merged result"). This is standard optimistic locking, not a council deferral.
-- [ ] **HARD-BLOCKER — `/onboard` skill convergence is unverified.** Parity tests on fixtures cannot prove convergence between a form-driven wizard and a chat-driven skill; they have different input modalities. Pick the wizard as the canonical surface and rewrite `/onboard` as a thin client that POSTs to the wizard's API routes. The current "two coequal write paths" design guarantees drift; this MUST be locked in Phase 0, not deferred to follow-up.
-- [ ] **MEDIUM — Wizard "Skip — use defaults" substitution is undefined.** `config/agent-settings.template.yml` contains placeholders like `__COST_PROFILE__` the installer substitutes at `npx … init` time. If the user skips, who substitutes? Phase 3.1 MUST add `src/server/io/substituteTemplate.ts` that extracts the installer's substitution logic; the Skip handler calls it. Otherwise the agent boots with a literally-broken config.
+- [x] **CRITICAL — `.agent-user.md` length-check is not validation.** The current `userMdSchema = z.string().max(8000)` accepts any 8 000-char string, including malformed frontmatter the agent's identity parser then rejects. Phase 0 MUST add `src/server/schemas/userMd.ts` that imports the SAME parser the agent uses on `.agent-user.md` (gray-matter or equivalent per ADR-010); `PUT /api/v1/user-md` returns 422 with the parser's error message when validation fails. Without this, the wizard writes files the agent refuses to load.
+- [x] **HIGH — Atomic multi-write needs a write-ahead log.** "Delete both `.tmp` files on partial failure" loses the user's wizard session. Replace with: (a) wizard assigns `txnId = uuid()`, (b) writes `settings.yml.tmp-{txnId}` + `user-md.tmp-{txnId}`, (c) writes empty `wizard.commit-intent-{txnId}` (2PC prepare marker), (d) performs both renames, (e) deletes the intent marker. On server boot, replay any orphaned intent markers idempotently. Test via a state-machine assertion, not a real `kill -9` (flaky on Windows).
+- [x] **HIGH — Optimistic locking missing on settings edit.** The race is form-mount → submit (minutes), not GET → PUT (milliseconds). `GET /api/v1/settings` MUST return `{ values, schema, lastModified: <file mtime> }`; `PUT /api/v1/settings` MUST require `If-Unmodified-Since: <lastModified>`; on mtime drift, return 409 + new file contents so the GUI can render a 3-way merge UI ("Your changes | Disk changes | Merged result"). This is standard optimistic locking, not a council deferral.
+- [x] **HARD-BLOCKER — `/onboard` skill convergence is unverified.** Parity tests on fixtures cannot prove convergence between a form-driven wizard and a chat-driven skill; they have different input modalities. Pick the wizard as the canonical surface and rewrite `/onboard` as a thin client that POSTs to the wizard's API routes. The current "two coequal write paths" design guarantees drift; this MUST be locked in Phase 0, not deferred to follow-up.
+- [x] **MEDIUM — Wizard "Skip — use defaults" substitution is undefined.** `config/agent-settings.template.yml` contains placeholders like `__COST_PROFILE__` the installer substitutes at `npx … init` time. If the user skips, who substitutes? Phase 3.1 MUST add `src/server/io/substituteTemplate.ts` that extracts the installer's substitution logic; the Skip handler calls it. Otherwise the agent boots with a literally-broken config.
 
 **Resolution gate**
 
@@ -363,8 +363,8 @@ settings editor; the editor has extra fields the wizard does not.
 - External council CRITICAL frontmatter validation, HIGH 2PC marker, HIGH `If-Unmodified-Since` optimistic lock, MEDIUM template substitution → all folded into Phase 0/1.
 - External council HARD-BLOCKER `/onboard` skill convergence → **carved out** to `agents/roadmaps/archive/onboard-skill-wizard-convergence.md` (sibling roadmap, now completed and archived). Rationale: Re-architecting the chat-driven `/onboard` skill as a native TS subcommand (`agent-config onboard:finish`) that shares the wizard's `commitMulti` 2PC path required a separate, isolated workstream — the GUI shipped first so `/onboard` had a target to converge against. The two write paths now share one canonical substrate.
 
-## Open questions
+## Open questions — resolved at implementation time
 
-- [ ] Should `agent-config settings` ever launch headlessly (no browser) for SSH users? Current draft requires a browser; alternative is a TUI fallback. Decide before Phase 2.
-- [ ] Is hash-routing acceptable, or do we need real history routes? Current draft picks hash because `127.0.0.1`-only GUIs don't benefit from history routing.
-- [ ] Should the wizard offer to commit `.agent-user.md` to git? Out-of-scope per non-goals, but worth re-checking with the council.
+- [x] Should `agent-config settings` ever launch headlessly (no browser) for SSH users? **Resolved: no.** A browser is required; SSH users tunnel `127.0.0.1:<port>` over `ssh -L`. TUI fallback was rejected as duplicate-surface risk against the wizard schema.
+- [x] Is hash-routing acceptable, or do we need real history routes? **Resolved: hash-routing kept.** `127.0.0.1`-only single-binary serve has no path-routing benefit; the SPA uses `#/`, `#/wizard`, `#/settings` uniformly.
+- [x] Should the wizard offer to commit `.agent-user.md` to git? **Resolved: no.** Stays out of scope per non-goals. `.agent-user.md` is local-only by default per `docs/contracts/agent-user-schema.md`; opt-in `--shared` flag is the canonical path if a user wants it tracked.

@@ -1,3 +1,8 @@
+---
+complexity: lightweight
+status: draft
+---
+
 # Wizard ↔ install.py wiring
 
 **Status**: draft
