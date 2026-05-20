@@ -1,6 +1,6 @@
 ---
 complexity: structural
-status: proposed
+status: in-progress
 ---
 
 # Roadmap: Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)
@@ -111,7 +111,7 @@ settings editor; the editor has extra fields the wizard does not.
 
 ### Step 0.1: Framework choice
 
-- [ ] **Create `docs/decisions/ADR-013-gui-framework-choice.md`** (NEW, status `Accepted`). Decision matrix with rows: Preact, Svelte, lit-html, vanilla + small reactive lib (uhtml / mfsv), React. Columns: bundle size (KB gzip for hello-world + 5 form fields + 1 multi-step wizard), learning curve, ecosystem of form libs, SSR-not-needed bonus, TS support.
+- [ ] **Create `docs/decisions/ADR-014-gui-framework-choice.md`** (NEW, status `Accepted`; ADR-013 is already taken by the discovery-frontmatter contract). Decision matrix with rows: Preact, Svelte, lit-html, vanilla + small reactive lib (uhtml / mfsv), React. Columns: bundle size (KB gzip for hello-world + 5 form fields + 1 multi-step wizard), learning curve, ecosystem of form libs, SSR-not-needed bonus, TS support.
 - [ ] **Default recommendation in this roadmap: Preact + signals** — gzip footprint ~5 KB, React-compatible mental model, zero build-time codegen, signals avoid pulling a state lib. The ADR records the chosen option with explicit rejection reasons for the others.
 - [ ] Forbidden adds: Next.js, Remix, Vue, Angular, anything with a router heavier than `wouter-preact` or `preact-router`. The UI has at most 8 screens; a 40 KB router is over-spec.
 - [ ] Forbidden adds: Tailwind, MUI, Chakra, Mantine, shadcn-ui. Reason: shipping a 50 KB CSS framework into an `npx`-installed binary is poor stewardship. We ship hand-written CSS using design tokens (see Step 0.2).
@@ -141,7 +141,7 @@ settings editor; the editor has extra fields the wizard does not.
 
 ### Step 0.5: Phase 0 acceptance
 
-- [ ] ADR-013 exists and is in the ADR index (`python3 scripts/lint_adr_index.py` passes)
+- [ ] ADR-014 exists and is in the ADR index (`python3 scripts/lint_adr_index.py` passes)
 - [ ] `docs/contracts/settings-api.md` exists and is linked from `docs/customization.md`
 - [ ] `src/server/schemas/settings.ts` and `src/server/schemas/userMd.ts` exist, compile, and the schema↔template parity test described in 0.3 passes
 - [ ] No UI components written yet — Phase 0 is contract only
@@ -360,7 +360,16 @@ settings editor; the editor has extra fields the wizard does not.
 **Resolution gate**
 
 - [x] In-session council items (eight above) and external council items (five above) are logged here with file:line citations.
-- [ ] Each unchecked blocking item is folded into its matching phase during Phase 0 of implementation, OR carved out to a named sibling roadmap with a one-line rationale appended to this section.
+- [x] Each unchecked blocking item is folded into its matching phase during Phase 0 of implementation, OR carved out to a named sibling roadmap with a one-line rationale appended to this section.
+
+**Fold-in summary (Phase 0 of implementation, 2026-05-20):**
+
+- `frontend-engineer` shared-codebase audit → folded into Phase 2 as `docs/architecture/setup-vs-settings-shared-surface.md`; agent-mode JSON-Schema → folded into Phase 2 as `docs/contracts/settings-gui-agent-mode.schema.json`.
+- `backend-architect` GET/PUT race → folded into Phase 1 as `If-Unmodified-Since` header + 409 response shape on settings routes; frontmatter parser convergence → folded into Phase 0 as `userMd.ts` importing `gray-matter` for the schema validator.
+- `security-engineer` schema-drift lint → folded into Phase 3 as `task lint-settings-gui` (schema-drift test in `tests/contracts/`); mode-0600 exit gate → folded into Phase 1 as `atomicWrite` chmod after rename.
+- `critical-challenger` cross-field consistency → folded into Phase 3 as warning surface in `PUT /api/v1/settings` response; skip-defaults state → folded into Phase 1 as the `substituteTemplate.ts` helper.
+- External council CRITICAL frontmatter validation, HIGH 2PC marker, HIGH `If-Unmodified-Since` optimistic lock, MEDIUM template substitution → all folded into Phase 0/1.
+- External council HARD-BLOCKER `/onboard` skill convergence → **carved out** to `agents/roadmaps/onboard-skill-wizard-convergence.md` (sibling roadmap). Rationale: Re-architecting the chat-driven `/onboard` Python skill as a thin HTTP client to the wizard API requires a separate, isolated workstream — the GUI must ship and stabilise first so `/onboard` has a target to converge against. Until then the two write paths remain coequal; drift is accepted as a known follow-up risk and tracked in the sibling roadmap.
 
 ## Open questions
 

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**4 / 104 steps done · 4%**
+**5 / 104 steps done · 5%**
 
 ```text
-██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [onboard-skill-wizard-convergence.md](roadmaps/onboard-skill-wizard-convergence.md) | 4 | 12 | 9 | 3 | 0 | 0 | ██░░░░░░░░ 25% |
-| 2 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 91 | 1 | 0 | 0 | ░░░░░░░░░░ 1% |
+| 2 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 90 | 2 | 0 | 0 | ░░░░░░░░░░ 2% |
 
 ---
 
@@ -36,7 +36,7 @@
 
 ### [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md)
 
-**Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)** — 1 / 92 done (1%)
+**Unified Setup Wizard & Settings GUI (with `.agent-user.md` onboarding)** — 2 / 92 done (2%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -45,5 +45,5 @@
 | 2 | Settings editor UI | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
 | 3 | Wizard UI (reuses settings components) | ⬜ not started | 16 | 0 | 0 | 0 | 0% |
 | 4 | Polish, docs, accessibility audit | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
-| 5 | AI-Council pass | 🟡 in progress | 17 | 1 | 0 | 0 | 6% |
+| 5 | AI-Council pass | 🟡 in progress | 16 | 2 | 0 | 0 | 11% |
 
