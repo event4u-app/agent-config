@@ -98,12 +98,12 @@ config. Use a subdirectory `.agent-settings.yml` to scope a single
 field (e.g. a `cost_profile` override for `services/heavy-ml/`) without
 duplicating the root file.
 
-The user-global file is created **only on explicit opt-in via
-`/onboard`**. The loader at
+The user-global file is created **only on explicit opt-in via the
+setup wizard** (`agent-config setup`). The loader at
 [`scripts/_lib/agent_settings.py`](../scripts/_lib/agent_settings.py)
-is **read-only** — no script can create or mutate it without an
-explicit `/onboard` confirmation. Edit the file by hand for mid-life
-changes; `/sync-agent-settings` stays project-scoped and never touches
+is **read-only** — no script can create or mutate it without explicit
+wizard confirmation. Edit the file by hand for mid-life changes;
+`/sync-agent-settings` stays project-scoped and never touches
 user-global state.
 
 ### Agent config version pin
@@ -136,46 +136,33 @@ Rules:
 
 ### Editing settings
 
-`.agent-settings.yml` has three write surfaces — all share one
+`.agent-settings.yml` has two write surfaces — both share one
 canonical commit path:
 
 #### Via the GUI (recommended)
 
-Run `agent-config settings` to launch the browser-based settings
-editor on `127.0.0.1`. The same Fastify server hosts the setup
-wizard at `/#/wizard`; both surfaces share the same form primitives,
-JSON schema, and `commitMulti` 2PC write path. First-run onboarding
-goes through the wizard (cost profile, identity, personality, memory,
-roadmap quality, optional `.agent-user.md`); subsequent edits go
-through the settings page. See [`docs/wizard.md`](wizard.md) for the
-step-by-step tour.
-
-#### Via `/onboard` (chat)
-
-If you prefer to stay in your AI agent, type `/onboard`. The skill
-collects answers turn by turn and pipes the assembled payload to
-`agent-config onboard:finish` on stdin — same atomic write path as
-the GUI.
+Run `agent-config setup` for first-run onboarding (cost profile,
+identity, personality, memory, roadmap quality, optional
+`.agent-user.md`) or `agent-config settings` for subsequent edits.
+Both launch the same Fastify server on `127.0.0.1`; the setup
+command lands on `/#/wizard`, the settings command on `/#/settings`.
+Form primitives, JSON schema, and the `commitMulti` 2PC write path
+are shared. See [`docs/wizard.md`](wizard.md) for the step-by-step
+tour.
 
 #### By hand-editing the YAML (advanced)
 
 Open `.agent-settings.yml` in an editor and save. Hand edits skip
 the 2PC marker dance (your editor's atomic save is trusted), but
 you lose the schema validation, optimistic locking, and template
-substitution the GUI and chat surfaces provide. Use this path for
-quick tweaks, comments, or bulk edits across multiple keys.
+substitution the GUI surfaces provide. Use this path for quick
+tweaks, comments, or bulk edits across multiple keys.
 
 #### Shared substrate
 
-The chat and wizard surfaces both call `commitMulti` (2PC + intent
-marker, comment-preserving merge via `mergeIntoTemplate`); a crash
-mid-write is recovered on the next server boot. The bridge contract
-is locked in
-[`docs/contracts/onboard-skill-wizard-bridge.md`](contracts/onboard-skill-wizard-bridge.md);
-the parity gate
-([`tests/server/onboardFinish_parity.test.ts`](../tests/server/onboardFinish_parity.test.ts))
-asserts byte-identical output across the chat and wizard paths so
-neither surface drifts.
+Both GUI surfaces call `commitMulti` (2PC + intent marker,
+comment-preserving merge via `mergeIntoTemplate`); a crash mid-write
+is recovered on the next server boot.
 
 ### Available settings
 
@@ -193,7 +180,7 @@ neither surface drifts.
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
 | `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
-| `onboarding.onboarded` | `false` | Whether `/onboard` has run. The `onboarding-gate` rule prompts for `/onboard` while this is `false`. |
+| `onboarding.onboarded` | `false` | Whether the setup wizard has run. The `onboarding-gate` rule prompts for `agent-config setup` while this is `false`. |
 | `ai_council.enabled` | `false` | Master switch for the `/council` command. Even when enabled, every consultation asks before spending tokens. |
 | `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.event4u/agent-config/<provider>.key` (mode 0600), never in this file. Legacy `~/.config/agent-config/<provider>.key` is read as a fallback. |
 | `ai_council.members.<provider>.model` | per provider | Which model the provider sends the query to (e.g. `claude-sonnet-4-5`, `gpt-4o`). |
