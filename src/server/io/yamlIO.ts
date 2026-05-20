@@ -74,6 +74,7 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
 
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i];
+        if (line === undefined) continue;
         const stripped = line.trim();
         if (stripped === '' || stripped.startsWith('#')) continue;
         const indentLen = line.length - line.trimStart().length;
@@ -84,6 +85,7 @@ export function replaceScalar(template: string, dottedPath: string[], value: unk
         const m = /^([A-Za-z_][A-Za-z0-9_]*)\s*:/.exec(stripped);
         if (!m) continue;
         const lineKey = m[1];
+        if (lineKey === undefined) continue;
         if (level < sections.length) {
             if (lineKey === sections[level]) {
                 currentPath[level] = lineKey;
