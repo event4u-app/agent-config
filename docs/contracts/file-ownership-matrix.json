@@ -1161,12 +1161,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/agent-docs.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/rules/analysis-skill-routing.md": {
       "kind": "rule",
       "rule_type": "manual",
@@ -1199,7 +1193,7 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/augment-portability.md": {
+    ".agent-src.uncompressed/rules/augment-edit-discipline.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1221,12 +1215,6 @@
         "contexts/execution/autonomy-mechanics.md",
         "contexts/execution/autonomy-examples.md"
       ],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/capture-learnings.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/caveman-speak.md": {
@@ -1293,97 +1281,31 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/docs-sync.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/rules/domain-adoption-policy.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md": {
+    ".agent-src.uncompressed/rules/domain-safety-disclaimer.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md": {
+    ".agent-src.uncompressed/rules/domain-safety-pii.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-export-redact.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-pii-finance.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-pii-support.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-retention-finance.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/domain-safety-retention-support.md": {
+    ".agent-src.uncompressed/rules/domain-safety-retention.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/downstream-changes.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/e2e-testing.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1402,6 +1324,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/git-history-discipline.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1499,12 +1427,6 @@
       "load_context": [],
       "load_context_eager": []
     },
-    ".agent-src.uncompressed/rules/no-unsolicited-rebase.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
     ".agent-src.uncompressed/rules/non-destructive-by-default.md": {
       "kind": "rule",
       "rule_type": "always",
@@ -1532,12 +1454,6 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/php-coding.md": {
-      "kind": "rule",
-      "rule_type": "auto",
-      "load_context": [],
-      "load_context_eager": []
-    },
-    ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -2750,6 +2666,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/skills/rule-refactor/SKILL.md": {
+      "kind": "skill",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/skills/rule-writing/SKILL.md": {
       "kind": "skill",
       "rule_type": null,
@@ -3659,6 +3581,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/compress.md",
+      "target": ".agent-src.uncompressed/rules/markdown-safe-codeblocks.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/compress.md",
+      "target": ".agent-src.uncompressed/rules/preservation-guard.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/compress.md",
+      "target": ".agent-src.uncompressed/skills/skill-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/context.md",
@@ -6468,13 +6411,6 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/rules/agent-docs.md",
-      "target": ".agent-src.uncompressed/rules/agent-docs.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
       "source": ".agent-src.uncompressed/rules/analysis-skill-routing.md",
       "target": ".agent-src.uncompressed/rules/analysis-skill-routing.md",
       "type": "WRITE",
@@ -6587,8 +6523,8 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/rules/augment-portability.md",
-      "target": ".agent-src.uncompressed/rules/augment-portability.md",
+      "source": ".agent-src.uncompressed/rules/augment-edit-discipline.md",
+      "target": ".agent-src.uncompressed/rules/augment-edit-discipline.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -6718,13 +6654,6 @@
       "type": "READ_ONLY",
       "via": "load_context",
       "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/capture-learnings.md",
-      "target": ".agent-src.uncompressed/rules/capture-learnings.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/rules/caveman-speak.md",
@@ -6909,22 +6838,8 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/rules/docs-sync.md",
-      "target": ".agent-src.uncompressed/rules/docs-sync.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
       "source": ".agent-src.uncompressed/rules/domain-adoption-policy.md",
-      "target": ".agent-src.uncompressed/rules/augment-portability.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-adoption-policy.md",
-      "target": ".agent-src.uncompressed/rules/docs-sync.md",
+      "target": ".agent-src.uncompressed/rules/augment-edit-discipline.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -6958,85 +6873,22 @@
       "depth": 1
     },
     {
-      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-consulting.md",
+      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-financial.md",
+      "source": ".agent-src.uncompressed/rules/domain-safety-pii.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-pii.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-legal.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-disclaimer-medical.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-export-redact.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-export-redact.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-logging-pii-floor.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-pii-finance.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-pii-finance.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-pii-marketing.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-pii-recruiting.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-pii-support.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-pii-support.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-retention-finance.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-retention-finance.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/domain-safety-retention-support.md",
-      "target": ".agent-src.uncompressed/rules/domain-safety-retention-support.md",
+      "source": ".agent-src.uncompressed/rules/domain-safety-retention.md",
+      "target": ".agent-src.uncompressed/rules/domain-safety-retention.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -7044,13 +6896,6 @@
     {
       "source": ".agent-src.uncompressed/rules/downstream-changes.md",
       "target": ".agent-src.uncompressed/rules/downstream-changes.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/e2e-testing.md",
-      "target": ".agent-src.uncompressed/rules/e2e-testing.md",
       "type": "WRITE",
       "via": "self",
       "depth": 0
@@ -7142,6 +6987,41 @@
     {
       "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
       "target": ".agent-src.uncompressed/skills/nextjs-patterns/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "target": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "target": ".agent-src.uncompressed/rules/token-efficiency.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "target": ".agent-src.uncompressed/skills/git-workflow/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7358,7 +7238,7 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
-      "target": ".agent-src.uncompressed/rules/agent-docs.md",
+      "target": ".agent-src.uncompressed/rules/augment-edit-discipline.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7366,13 +7246,6 @@
     {
       "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
       "target": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
-      "target": ".agent-src.uncompressed/rules/docs-sync.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7393,35 +7266,14 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "target": ".agent-src.uncompressed/skills/agent-docs-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
       "target": ".agent-src.uncompressed/skills/ai-council/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "target": ".agent-src.uncompressed/rules/commit-policy.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "target": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "target": ".agent-src.uncompressed/rules/scope-control.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "target": ".agent-src.uncompressed/rules/token-efficiency.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7518,34 +7370,6 @@
       "depth": 0
     },
     {
-      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
-      "target": ".agent-src.uncompressed/rules/commit-policy.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
-      "target": ".agent-src.uncompressed/rules/no-unsolicited-rebase.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
-      "target": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
-      "type": "WRITE",
-      "via": "self",
-      "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/post-push-rewrite-discipline.md",
-      "target": ".agent-src.uncompressed/skills/git-workflow/SKILL.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
       "source": ".agent-src.uncompressed/rules/preservation-guard.md",
       "target": ".agent-src.uncompressed/rules/preservation-guard.md",
       "type": "WRITE",
@@ -7604,6 +7428,13 @@
     {
       "source": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
       "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "target": ".agent-src.uncompressed/contexts/execution/roadmap-process-loop.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -7863,34 +7694,6 @@
     {
       "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
       "target": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
-      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
-      "target": ".agent-src.uncompressed/rules/autonomous-execution.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
-      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/user-interrupt-priority.md",
-      "target": ".agent-src.uncompressed/rules/scope-control.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
@@ -11662,6 +11465,20 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/skills/rule-refactor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rule-refactor/SKILL.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rule-refactor/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rule-writing/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/skills/rule-writing/SKILL.md",
       "target": ".agent-src.uncompressed/contexts/contracts/frugality-charter.md",
       "type": "READ_ONLY",
@@ -11692,6 +11509,13 @@
     {
       "source": ".agent-src.uncompressed/skills/rule-writing/SKILL.md",
       "target": ".agent-src.uncompressed/skills/description-assist/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/rule-writing/SKILL.md",
+      "target": ".agent-src.uncompressed/skills/rule-refactor/SKILL.md",
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1

@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **504**
-- Edges (incl. self-WRITE): **1417**
+- Files indexed: **491**
+- Edges (incl. self-WRITE): **1403**
 
 ## READ_ONLY edges
 
@@ -72,6 +72,9 @@
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/commit/in-chunks.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/compress.md` | `.agent-src.uncompressed/rules/markdown-safe-codeblocks.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/compress.md` | `.agent-src.uncompressed/rules/preservation-guard.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/compress.md` | `.agent-src.uncompressed/skills/skill-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/cost-report.md` | `.agent-src.uncompressed/commands/agent-status.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/cost-report.md` | `.agent-src.uncompressed/commands/set-cost-profile.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/cost-report.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
@@ -349,8 +352,7 @@
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `contexts/authority/commit-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/direct-answers.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/augment-portability.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/docs-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/augment-edit-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/rule-type-governance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/size-enforcement.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
@@ -364,6 +366,10 @@
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/skills/laravel-validation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/git-history-discipline.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/git-history-discipline.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/git-history-discipline.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/git-history-discipline.md` | `.agent-src.uncompressed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/guidelines.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/guidelines.md` | `contexts/communication/rules-auto/guidelines-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/improve-before-implement.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
@@ -380,14 +386,11 @@
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/agent-docs.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/augment-edit-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/docs-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/skills/ai-council/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-unsolicited-rebase.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-unsolicited-rebase.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-unsolicited-rebase.md` | `.agent-src.uncompressed/rules/token-efficiency.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
@@ -396,14 +399,12 @@
 | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `contexts/authority/destructive-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/persona-governance.md` | `.agent-src.uncompressed/skills/pixar-storyteller/SKILL.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/rules/no-unsolicited-rebase.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/post-push-rewrite-discipline.md` | `.agent-src.uncompressed/skills/git-workflow/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/provider-lifecycle-discipline.md` | `.agent-src.uncompressed/rules/media-governance-routing.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/commands/mode.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
@@ -423,10 +424,6 @@
 | `.agent-src.uncompressed/rules/user-interaction.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/user-interaction.md` | `contexts/communication/rules-auto/user-interaction-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `contexts/execution/interrupt-examples.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/verify-before-complete.md` | `contexts/execution/verification-mechanics.md` | `load_context` | 1 |
@@ -788,11 +785,13 @@
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/roadmap-writing/SKILL.md` | `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` | `.agent-src.uncompressed/commands/onboard.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rule-refactor/SKILL.md` | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/rules/artifact-drafting-protocol.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/rules/rule-type-governance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/rules/size-enforcement.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/skills/description-assist/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/rule-writing/SKILL.md` | `.agent-src.uncompressed/skills/rule-refactor/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `.agent-src.uncompressed/skills/forecasting/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `.agent-src.uncompressed/skills/fundraising-narrative/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `.agent-src.uncompressed/skills/org-design/SKILL.md` | `body_link` | 1 |
@@ -933,6 +932,6 @@
 | `command` | 129 |
 | `context` | 32 |
 | `persona` | 31 |
-| `rule` | 86 |
-| `skill` | 226 |
+| `rule` | 72 |
+| `skill` | 227 |
 
