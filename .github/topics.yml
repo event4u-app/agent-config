@@ -54,4 +54,5 @@ equivalents:
   ai-video: ["AI video", "Cinematic AI video"]
   agent-governance: ["governance rules", "audit-disciplined"]
   ai-agent: ["AI agent", "AI Agent"]
-  prompt-engineering: ["prompt engineering"]
+  prompt-engineering: ["prompt engineering", "prompt-engineering-patterns", "optimize-prompt", "refine-prompt"]
+  typescript: ["TypeScript"]

@@ -306,12 +306,18 @@ tasks:
     desc: Validate dist/mcp/registry-manifest.json against the schema; assert payload shapes — R5 Phase 2 exit gate
     cmd: python3 scripts/lint_mcp_registry_manifest.py {{.QUIET_FLAG}}
 
+  lint-positioning:
+    silent: true
+    desc: Assert README tagline ↔ package.json.description ↔ .github/about.yml agree and every topic appears in README — R5 Phase 3
+    cmd: python3 scripts/lint_positioning.py {{.QUIET_FLAG}}
+
   visibility-check:
     silent: true
-    desc: Run every visibility-as-code lint in sequence (topics + MCP registry + positioning once Phase 3 lands) — R5 Phase 3.3
+    desc: Run every visibility-as-code lint in sequence (topics + MCP registry + positioning) — R5 Phase 3.3
     cmds:
       - task: lint-topics-yaml
       - task: lint-mcp-registry-manifest
+      - task: lint-positioning
 
   lint-framework-leakage:
     silent: true

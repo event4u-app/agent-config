@@ -737,6 +737,8 @@ task test             # unit + integration tests
 
 → Full commands and project structure: [**docs/development.md**](docs/development.md)
 
+The CLI and setup UI ship as **TypeScript** (compiled to `dist/cli/` and `dist/ui/`); the build, sync, and lint scripts are **Python 3.10+**. The package adds **prompt engineering** primitives — `/optimize-prompt`, `/refine-prompt`, and the `prompt-engineering-patterns` skill — used by every host agent.
+
 ## Requirements
 
 - **Bash** — `scripts/install` orchestrates payload sync (`install.sh`) and bridges (`install.py`).

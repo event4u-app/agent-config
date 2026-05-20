@@ -1,7 +1,7 @@
 {
     "name": "@event4u/agent-config",
     "version": "2.26.0",
-    "description": "Shared agent configuration — skills, rules, commands, guidelines, and templates for AI coding tools",
+    "description": "Universal AI Agent OS — audited skills, governance rules, commands, and templates for AI coding tools (Claude Code, Cursor, Windsurf, Copilot).",
     "license": "MIT",
     "private": false,
     "type": "module",
