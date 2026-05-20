@@ -17,7 +17,9 @@
  */
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
+import type { Stats } from 'node:fs';
 import { join } from 'node:path';
+import type { ZodIssue } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
 import { parseYaml, mergeIntoTemplate, diffValues } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
@@ -41,7 +43,7 @@ interface ReadState {
 
 async function readSettings(root: string): Promise<ReadState | null> {
     const path = settingsPath(root);
-    let stat: import('node:fs').Stats;
+    let stat: Stats;
     let raw: string;
     try {
         [stat, raw] = await Promise.all([fs.stat(path), fs.readFile(path, 'utf8')]);
@@ -53,7 +55,7 @@ async function readSettings(root: string): Promise<ReadState | null> {
     return { raw, values, mtimeMs: Math.trunc(stat.mtimeMs) };
 }
 
-function zodIssuesToFields(issues: import('zod').ZodIssue[]): Array<{ path: string; message: string }> {
+function zodIssuesToFields(issues: ZodIssue[]): Array<{ path: string; message: string }> {
     return issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
 }
 

@@ -15,6 +15,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
+import type { ZodIssue } from 'zod';
 import { userMdSchema } from '../schemas/userMd.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
@@ -55,7 +56,7 @@ function readIfUnmodified(header: unknown): number | null {
     return Number.isFinite(n) ? n : null;
 }
 
-function zodIssuesToFields(issues: import('zod').ZodIssue[]): Array<{ path: string; message: string }> {
+function zodIssuesToFields(issues: ZodIssue[]): Array<{ path: string; message: string }> {
     return issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
 }
 
