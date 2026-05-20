@@ -76,16 +76,21 @@ opt-in measurement loop. Source-of-truth tree is
 # 1. Install (writes .agent-settings.yml, .augment/, .claude/, …)
 npx @event4u/agent-config init
 
-# 2. First-run setup (sets your name, IDE, cost profile)
-#    Open your AI agent (Claude Code, Cursor, …) and type:
+# 2. First-run setup — pick one:
+#    (a) Browser wizard (recommended) — opens at 127.0.0.1:
+agent-config ui:serve --open
+#    (b) Chat — open your AI agent (Claude Code, Cursor, …) and type:
 /onboard
 
 # 3. First real task — agent refines, plans, logs a decision_result
 /work "your first real task"
 ```
 
-A `decision_result` entry lands in `agents/state/` confirming the
-work-engine phases ran end-to-end. Stack-aware skills auto-load.
+Both setup paths share the same atomic-write substrate
+(`commitMulti` 2PC) and produce byte-identical `.agent-settings.yml`
+output — see [`docs/wizard.md`](docs/wizard.md). A `decision_result`
+entry lands in `agents/state/` confirming the work-engine phases ran
+end-to-end. Stack-aware skills auto-load.
 
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)

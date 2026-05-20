@@ -139,18 +139,38 @@ Rules:
 `.agent-settings.yml` has three write surfaces — all share one
 canonical commit path:
 
-- **`/onboard` (chat)** — collects answers turn by turn and pipes
-  the assembled payload to `agent-config onboard:finish` on stdin.
-- **Wizard (browser)** — `POST /api/v1/wizard/finish` from the
-  `agent-config ui:serve` UI.
-- **Hand edit** — open the file in an editor.
+#### Via the GUI (recommended)
+
+Run `agent-config settings` to launch the browser-based settings
+editor on `127.0.0.1`. The same Fastify server hosts the setup
+wizard at `/#/wizard`; both surfaces share the same form primitives,
+JSON schema, and `commitMulti` 2PC write path. First-run onboarding
+goes through the wizard (cost profile, identity, personality, memory,
+roadmap quality, optional `.agent-user.md`); subsequent edits go
+through the settings page. See [`docs/wizard.md`](wizard.md) for the
+step-by-step tour.
+
+#### Via `/onboard` (chat)
+
+If you prefer to stay in your AI agent, type `/onboard`. The skill
+collects answers turn by turn and pipes the assembled payload to
+`agent-config onboard:finish` on stdin — same atomic write path as
+the GUI.
+
+#### By hand-editing the YAML (advanced)
+
+Open `.agent-settings.yml` in an editor and save. Hand edits skip
+the 2PC marker dance (your editor's atomic save is trusted), but
+you lose the schema validation, optimistic locking, and template
+substitution the GUI and chat surfaces provide. Use this path for
+quick tweaks, comments, or bulk edits across multiple keys.
+
+#### Shared substrate
 
 The chat and wizard surfaces both call `commitMulti` (2PC + intent
 marker, comment-preserving merge via `mergeIntoTemplate`); a crash
-mid-write is recovered on the next server boot. Hand edits skip 2PC
-— save the file and trust your editor.
-
-The bridge contract is locked in
+mid-write is recovered on the next server boot. The bridge contract
+is locked in
 [`docs/contracts/onboard-skill-wizard-bridge.md`](contracts/onboard-skill-wizard-bridge.md);
 the parity gate
 ([`tests/server/onboardFinish_parity.test.ts`](../tests/server/onboardFinish_parity.test.ts))
