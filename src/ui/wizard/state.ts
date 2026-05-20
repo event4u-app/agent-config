@@ -23,9 +23,16 @@ export interface DiffChange {
     to: JsonValue;
 }
 
+export type BannerTone = 'info' | 'success' | 'error';
+
+export interface BannerState {
+    message: string;
+    tone: BannerTone;
+}
+
 export const loaded = signal(false);
 export const loadError = signal<string | null>(null);
-export const banner = signal<string | null>(null);
+export const banner = signal<BannerState | null>(null);
 export const saving = signal(false);
 export const diffLoading = signal(false);
 

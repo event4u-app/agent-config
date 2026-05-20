@@ -114,11 +114,25 @@ code {
     width: 100%;
 }
 .ac-input:focus, .ac-textarea:focus { outline: none; box-shadow: var(--shadow-focus); border-color: var(--color-focus-ring); }
+.ac-input[aria-invalid="true"], .ac-textarea[aria-invalid="true"] { border-color: var(--color-danger); }
+.ac-input[aria-invalid="true"]:focus, .ac-textarea[aria-invalid="true"]:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-soft, rgba(239, 68, 68, 0.18));
+}
 .ac-textarea { font-family: var(--font-mono); font-size: var(--font-size-sm); resize: vertical; }
 
 .ac-toggle { display: inline-flex; gap: var(--space-2); align-items: center; cursor: pointer; }
 .ac-radio-group { display: flex; flex-direction: column; gap: var(--space-2); }
 .ac-radio { display: inline-flex; gap: var(--space-2); align-items: center; cursor: pointer; }
+
+/* Toggle / Radio have no .ac-input host for the [aria-invalid] selector,
+   so target the native input via the Field-wrapper's data-invalid flag. */
+.ac-field[data-invalid="true"] .ac-toggle input[type="checkbox"],
+.ac-field[data-invalid="true"] .ac-radio input[type="radio"] {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
 
 .ac-button {
     font: inherit;
@@ -202,6 +216,7 @@ code {
     padding: var(--space-2) var(--space-3);
     background: transparent;
     border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-success);
     border-radius: var(--radius-md);
     color: var(--color-text);
     font-size: var(--font-size-sm);
@@ -210,7 +225,7 @@ code {
     transition: background var(--duration-fast) var(--easing-standard),
                 border-color var(--duration-fast) var(--easing-standard);
 }
-.ac-wizard__review-nav-button:hover { background: var(--color-surface); border-color: var(--color-accent); }
+.ac-wizard__review-nav-button:hover { background: var(--color-surface); border-color: var(--color-accent); border-left-color: var(--color-success); }
 .ac-wizard__review-nav-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .ac-wizard__review-nav-index {
     display: inline-flex;
@@ -225,3 +240,60 @@ code {
     font-weight: 600;
 }
 .ac-wizard__review-nav-text { flex: 1; }
+.ac-wizard__review-nav-status {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.ac-wizard__review-nav-status--changed {
+    background: var(--color-success-soft, rgba(34, 197, 94, 0.12));
+    color: var(--color-success);
+}
+.ac-wizard__review-nav-status--error {
+    background: var(--color-danger-soft, rgba(239, 68, 68, 0.12));
+    color: var(--color-danger);
+}
+.ac-wizard__review-nav-button--error {
+    border-left-color: var(--color-danger);
+}
+.ac-wizard__review-nav-button--error:hover { border-color: var(--color-accent); border-left-color: var(--color-danger); }
+
+
+.ac-user-md-form { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.ac-chip-list {
+    list-style: none;
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+.ac-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: var(--font-size-sm);
+}
+.ac-chip__remove {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 var(--space-1);
+}
+.ac-chip__remove:hover:not(:disabled) { color: var(--color-text); }
+.ac-chip__remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ac-role-add { display: flex; gap: var(--space-2); align-items: center; }
+.ac-role-add .ac-input { flex: 1; }
