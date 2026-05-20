@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "When writing or reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to the laravel skill"
+description: "Writing/reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to laravel skill"
 source: package
 triggers:
   - keyword: "laravel"

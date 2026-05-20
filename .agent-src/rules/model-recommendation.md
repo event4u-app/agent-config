@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Starting a new task, switching task type, or invoking a command — detect complexity and recommend optimal model (Opus/Sonnet/GPT) before work"
+description: "Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT)"
 source: package
 triggers:
   - phrase: "switch task"

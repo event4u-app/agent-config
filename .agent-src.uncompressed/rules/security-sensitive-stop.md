@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Security-sensitive paths — auth, billing, tenant boundaries, secrets, uploads, integrations, webhooks, public endpoints — threat-model BEFORE editing"
+description: "Security-sensitive paths — auth, billing, tenants, secrets, uploads, webhooks, public endpoints — threat-model BEFORE editing"
 source: package
 triggers:
   - keyword: "auth"

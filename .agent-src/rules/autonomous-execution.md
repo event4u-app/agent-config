@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor in non-destructive-by-default"
+description: "Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default"
 alwaysApply: false
 source: package
 load_context:

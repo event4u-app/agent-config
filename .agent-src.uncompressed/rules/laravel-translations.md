@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization, multilingual text"
+description: "Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization"
 source: package
 triggers:
   - path_prefix: "lang/"

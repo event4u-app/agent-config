@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Creating a new skill, rule, command, or guideline, or significantly rewriting one — runs mandatory Understand → Research → Draft before drafting"
+description: "Creating a new skill/rule/command/guideline or significantly rewriting one — runs mandatory Understand → Research → Draft first"
 source: package
 triggers:
   - intent: "create new skill"

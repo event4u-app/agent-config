@@ -1,13 +1,16 @@
 # Setup wizard
 
 > Browser-based first-run flow that writes `.agent-settings.yml` and
-> (optionally) `.agent-user.md`. Same write path as the `/onboard`
-> chat skill — both call `commitMulti` (2PC + intent marker). The
-> wizard is the canonical surface; `/onboard` is a thin chat client.
+> (optionally) `.agent-user.md`. Calls `commitMulti` (2PC + intent
+> marker) for atomic write. The wizard is the **only** first-run
+> surface — the legacy `/onboard` chat skill was retired in the
+> wizard takeover (see
+> [`agents/roadmaps/onboarding-wizard-takeover.md`](../agents/roadmaps/onboarding-wizard-takeover.md)).
 
 ## Launching
 
 ```bash
+agent-config setup        # alias of `ui:serve --open --initial-route /wizard`
 agent-config ui:serve --open
 ```
 
@@ -99,8 +102,7 @@ Tracked under
 ## Disabling the GUI
 
 Set `AGENT_CONFIG_NO_UI=1` in the environment to skip every
-GUI-launching code path. The chat-based `/onboard` skill remains
-available; settings can still be hand-edited.
+GUI-launching code path. Settings can still be hand-edited.
 
 ## Tests
 
@@ -108,14 +110,12 @@ available; settings can still be hand-edited.
   flow + `POST /finish` assertion
 - `tests/ui/WizardPage.resume.test.tsx` — server-state resume +
   clamp of out-of-range step
-- `tests/server/onboardFinish_parity.test.ts` — byte-identical
-  output across the chat and wizard surfaces
+- `tests/server/dryRun.test.ts` — verifies the `--dry-run` mode
+  suppresses every disk write
 
 ## Contracts
 
 - [`docs/contracts/settings-api.md`](contracts/settings-api.md) —
   HTTP shape for every wizard / settings route
-- [`docs/contracts/onboard-skill-wizard-bridge.md`](contracts/onboard-skill-wizard-bridge.md) —
-  how the chat skill calls the same write path
 - [`docs/contracts/settings-gui-agent-mode.schema.json`](contracts/settings-gui-agent-mode.schema.json) —
   JSON-Schema for the agent-mode JSON output

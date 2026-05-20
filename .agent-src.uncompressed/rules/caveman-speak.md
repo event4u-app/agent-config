@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "When caveman.speak_scope != off — compress reply prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers"
+description: "When caveman.speak_scope != off — compress prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers"
 source: package
 triggers:
   - intent: "any reply"

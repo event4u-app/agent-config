@@ -22,6 +22,8 @@ export interface SettingsCommandOptions {
     uiDist?: string;
     allowHeadless?: boolean;
     projectRoot?: string;
+    /** Boot in dry-run mode — no writes, preview only. */
+    dryRun?: boolean;
 }
 
 export async function runSettings(opts: SettingsCommandOptions): Promise<number> {
@@ -33,5 +35,6 @@ export async function runSettings(opts: SettingsCommandOptions): Promise<number>
     if (opts.uiDist !== undefined) forwarded.uiDist = opts.uiDist;
     if (opts.allowHeadless !== undefined) forwarded.allowHeadless = opts.allowHeadless;
     if (opts.projectRoot !== undefined) forwarded.projectRoot = opts.projectRoot;
+    if (opts.dryRun !== undefined) forwarded.dryRun = opts.dryRun;
     return runUiServe(forwarded);
 }

@@ -1,7 +1,7 @@
 # Six entry paths — by `profile.id`
 
 Each block below is the first-screen for one shipped profile. The
-`profile.id` written by `/onboard` selects the anchor; the block names
+`profile.id` written by `agent-config setup` selects the anchor; the block names
 the audience, the first three things the agent does for that role,
 and the exact commands and skills wired into the profile YAML at
 [`.agent-src.uncompressed/profiles/<id>.yml`](../.agent-src.uncompressed/profiles/).

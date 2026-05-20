@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Writing or editing UI — components, screens, partials, layouts, design tokens — require existing-ui-audit findings before non-trivial UI change"
+description: "Writing/editing UI — components, screens, layouts, design tokens — require existing-ui-audit findings first"
 source: package
 triggers:
   - path_prefix: "resources/views/"

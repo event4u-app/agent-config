@@ -36,7 +36,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'doctor-shell', disposition: 'native', synopsis: 'Native TS-shell environment probe.' },
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
     { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI.' },
-    { name: 'onboard:finish', disposition: 'native', synopsis: 'Commit /onboard payload (stdin JSON; atomic dual-write).' },
+    { name: 'setup', disposition: 'native', synopsis: 'Open the onboarding wizard (UI server, lands on #/wizard).' },
     { name: 'workspaces', disposition: 'native', synopsis: 'List workspaces from the discovery manifest (ls subcommand).' },
     { name: 'packs', disposition: 'native', synopsis: 'List packs from the discovery manifest (ls subcommand).' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Low-impact council fast-path dispatch — host agent MUST surface the transparency marker verbatim in the reply opening; never swallow or paraphrase it."
+description: "Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase"
 source: package
 triggers:
   - keyword: "low-impact council"

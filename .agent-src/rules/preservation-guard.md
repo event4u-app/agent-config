@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines — prevent quality loss"
+description: "Merging/refactoring/compressing skills, rules, commands, or guidelines — prevent quality loss"
 source: package
 triggers:
   - intent: "merge skill"

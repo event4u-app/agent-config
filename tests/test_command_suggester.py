@@ -422,11 +422,10 @@ def test_render_recommendation_omitted_on_tight_tie(specs_by_name) -> None:
 def test_load_commands_returns_specs_for_real_directory() -> None:
     specs = load_commands(COMMANDS_DIR)
     assert len(specs) > 50
-    by_name = {s.name: s for s in specs}
     eligible = [s for s in specs if s.eligible]
     assert eligible, "at least one command must be eligible"
-    onboard = by_name.get("onboard")
-    assert onboard is not None and onboard.eligible is False
+    ineligible = [s for s in specs if not s.eligible]
+    assert ineligible, "loader must surface ineligible commands too"
 
 
 def test_load_commands_eligible_have_triggers() -> None:

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline at execution"
+description: "Authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline"
 source: package
 triggers:
   - path_prefix: "agents/roadmaps/"

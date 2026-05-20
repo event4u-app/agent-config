@@ -46,6 +46,15 @@ export interface CreateAppOptions {
     packageRoot?: string;
     /** Skip the boot-time 2PC replay (tests only). */
     skipReplay?: boolean;
+    /**
+     * Dry-run mode — reads execute normally; every write (commitMulti,
+     * writeAtomic on .agent-settings.yml / .agent-user.md / wizard-state.json)
+     * is suppressed and the routes return a `preview` payload instead.
+     * Contract: `agents/roadmaps/onboarding-wizard-takeover.md` § Dry-run
+     * state contract. 2PC replay is also skipped (a crashed real run must
+     * not be auto-finished by a dry-run boot).
+     */
+    dryRun?: boolean;
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -112,20 +121,22 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     });
 
     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
+    const dryRun = opts.dryRun === true;
 
-    await app.register(pingRoute({ projectRoot: opts.projectRoot }));
+    await app.register(pingRoute({ projectRoot: opts.projectRoot, dryRun }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
-    await app.register(settingsRoute({ projectRoot: opts.projectRoot }));
-    await app.register(userMdRoute({ projectRoot: opts.projectRoot }));
-    await app.register(wizardRoute({ projectRoot: opts.projectRoot, packageRoot }));
+    await app.register(settingsRoute({ projectRoot: opts.projectRoot, dryRun }));
+    await app.register(userMdRoute({ projectRoot: opts.projectRoot, dryRun }));
+    await app.register(wizardRoute({ projectRoot: opts.projectRoot, packageRoot, dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so
-    // a corrupt marker never blocks server start.
-    if (opts.skipReplay !== true) {
+    // a corrupt marker never blocks server start. Skipped in dry-run: a
+    // crashed real run must not be auto-finished by a maintainer preview.
+    if (opts.skipReplay !== true && !dryRun) {
         try {
             const result = await replayPendingCommits(opts.projectRoot);
             if (result.completed.length > 0 || result.aborted.length > 0) {

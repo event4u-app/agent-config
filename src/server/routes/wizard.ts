@@ -31,6 +31,15 @@ export interface WizardRouteOptions {
     projectRoot: string;
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
+    /**
+     * Dry-run — POST /state writes to a per-server in-memory Map (initial
+     * read still hits disk so an in-progress real run can be previewed);
+     * POST /finish skips `commitMulti` and returns `{ ok, dryRun, preview }`
+     * with the rendered would-be settings body and the user-md it would
+     * have written. See `agents/roadmaps/onboarding-wizard-takeover.md`
+     * § Dry-run state contract.
+     */
+    dryRun?: boolean;
 }
 
 const STATE_REL = join('.agent-config', 'wizard-state.json');
@@ -80,10 +89,18 @@ function zodIssuesToFields(issues: z.ZodIssue[]): Array<{ path: string; message:
 
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const totalSteps = opts.totalSteps ?? DEFAULT_TOTAL_STEPS;
+    const dryRun = opts.dryRun === true;
+    // Per-process in-memory state for dry-run. One CLI invocation = one
+    // server = one Map; cross-session leakage is impossible because each
+    // `agent-config setup --dry-run` mints a fresh server. See § Dry-run
+    // state contract in the roadmap.
+    let memState: WizardState | null = null;
 
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/wizard/state', async () => {
-            const existing = await readState(opts.projectRoot);
+            // Dry-run: in-memory write wins; fall back to disk so an
+            // in-progress real run can be previewed.
+            const existing = dryRun ? (memState ?? await readState(opts.projectRoot)) : await readState(opts.projectRoot);
             if (existing === null) {
                 return { step: 0, totalSteps, partial: {}, startedAt: null };
             }
@@ -104,6 +121,10 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
+            if (dryRun) {
+                memState = parsed.data;
+                return { ok: true, dryRun: true };
+            }
             await writeState(opts.projectRoot, parsed.data);
             return { ok: true };
         });
@@ -117,9 +138,8 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
-            // Wire shape: `userMd` is a bare string (matches the chat
-            // subcommand payload in `cli/commands/onboardFinish.ts`). The
-            // schema wraps it as `{ body }` for length + gray-matter checks.
+            // Wire shape: `userMd` is a bare string. The schema wraps it
+            // as `{ body }` for length + gray-matter checks.
             const userMdParsed = body.userMd === undefined || body.userMd === null
                 ? null
                 : userMdSchema.safeParse({ body: body.userMd });
@@ -133,11 +153,21 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             try {
                 const template = await readTemplate(opts.packageRoot);
                 const settingsBody = mergeIntoTemplate(template, settingsParsed.data as Record<string, unknown>);
+                const userMdBody = userMdParsed && userMdParsed.success ? userMdParsed.data.body : null;
+                if (dryRun) {
+                    // No disk write; surface the rendered would-be bodies
+                    // so the maintainer sees the actual diff target.
+                    return {
+                        ok: true,
+                        dryRun: true,
+                        preview: { settingsYaml: settingsBody, userMd: userMdBody },
+                    };
+                }
                 const payloads: CommitPayload[] = [
                     { target: join(opts.projectRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
                 ];
-                if (userMdParsed && userMdParsed.success) {
-                    payloads.push({ target: join(opts.projectRoot, USER_MD_REL), contents: userMdParsed.data.body, mode: 0o600 });
+                if (userMdBody !== null) {
+                    payloads.push({ target: join(opts.projectRoot, USER_MD_REL), contents: userMdBody, mode: 0o600 });
                 }
                 const { txnId } = await commitMulti(payloads, { projectRoot: opts.projectRoot });
                 await fs.unlink(statePath(opts.projectRoot)).catch(() => undefined);

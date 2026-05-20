@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "mechanical-already"
-description: "User prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes"
+description: "Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes"
 source: package
 triggers:
   - phrase: "free-form prompt"

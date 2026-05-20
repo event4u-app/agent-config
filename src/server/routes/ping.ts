@@ -16,6 +16,7 @@ export const PingResponseSchema = z.object({
     ok: z.literal(true),
     version: z.string().min(1),
     projectRoot: z.string().min(1),
+    dryRun: z.boolean(),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -31,6 +32,8 @@ function readPackageVersion(): string {
 
 export interface PingRouteOptions {
     projectRoot: string;
+    /** Server-wide dry-run flag — surfaced to the UI for the banner. */
+    dryRun?: boolean;
 }
 
 export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
@@ -40,6 +43,7 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 ok: true,
                 version: readPackageVersion(),
                 projectRoot: opts.projectRoot,
+                dryRun: opts.dryRun === true,
             };
             return response;
         });

@@ -6,8 +6,8 @@
  * The two non-settings steps (`userMd`, `review`) carry no `paths` and
  * use bespoke renderers in `WizardPage.tsx`.
  *
- * Step layout mirrors `~/.claude/skills/onboard/SKILL.md` so the chat
- * and GUI onboarding flows collect identical data points.
+ * Step layout drives the GUI-only onboarding flow — the legacy
+ * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
 export type WizardStepKind = 'form' | 'userMd' | 'review';

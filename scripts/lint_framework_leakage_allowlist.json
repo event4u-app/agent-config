@@ -25,15 +25,6 @@
       "reason": "Project-detection enumeration listing all supported stacks"
     },
     {
-      "file": ".agent-src.uncompressed/commands/onboard.md",
-      "lines": [
-        220,
-        221,
-        224
-      ],
-      "reason": "Stack-detection enumeration in onboard flow"
-    },
-    {
       "file": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "lines": [
         62

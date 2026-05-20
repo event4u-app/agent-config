@@ -3,8 +3,7 @@
  *
  * Every UI request goes through `apiFetch` so the token is centralised
  * in one place and the call sites stay declarative. The contract with
- * the Fastify server lives in `docs/contracts/settings-api.md` +
- * `docs/contracts/onboard-skill-wizard-bridge.md`.
+ * the Fastify server lives in `docs/contracts/settings-api.md`.
  */
 
 let authToken: string | null = null;

@@ -295,9 +295,7 @@
           "path_prefix": ".agent-settings.yml"
         }
       ],
-      "routes_to": [
-        "command:onboard"
-      ]
+      "routes_to": []
     },
     {
       "id": "php-coding",

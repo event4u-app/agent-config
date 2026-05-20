@@ -35,6 +35,12 @@ const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
 export interface SettingsRouteOptions {
     /** Project root — `.agent-settings.yml` resolves under this. */
     projectRoot: string;
+    /**
+     * Dry-run — PUT validates, merges, and returns `{ preview, dryRun }`
+     * with the rendered would-be body; no `writeAtomic`, no `Last-Modified`
+     * bump. Subsequent real runs start from the same baseline.
+     */
+    dryRun?: boolean;
 }
 
 const SETTINGS_RELATIVE = '.agent-settings.yml';
@@ -149,6 +155,16 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
             }
             try {
                 const merged = mergeIntoTemplate(current.raw, parsed.data as Record<string, unknown>);
+                if (opts.dryRun === true) {
+                    // No disk write, no Last-Modified bump — surface the
+                    // rendered body so the maintainer sees what a real
+                    // PUT would have written.
+                    return {
+                        dryRun: true,
+                        lastModified: current.mtimeMs,
+                        preview: { path: SETTINGS_RELATIVE, body: merged },
+                    };
+                }
                 const path = settingsPath(opts.projectRoot);
                 await writeAtomic(path, merged, { mode: 0o600 });
                 const stat = await fs.stat(path);

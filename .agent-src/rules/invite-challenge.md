@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation, even when no ambiguity"
+description: "Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation"
 alwaysApply: false
 source: package
 council_depth: deep

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline"
+description: "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open"
 source: package
 triggers:
   - path_prefix: "agents/roadmaps/"

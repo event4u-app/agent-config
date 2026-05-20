@@ -2,7 +2,7 @@
 type: auto
 tier: "2a"
 source: package
-description: "When a CLI tool needed for the task is not installed — ask before working around it; do NOT install silently"
+description: "CLI tool needed for the task is not installed — ask before working around it; do NOT install silently"
 triggers:
   - keyword: "command not found"
   - keyword: "not installed"

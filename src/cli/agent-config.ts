@@ -23,7 +23,6 @@ import { runUiServe } from './commands/uiServe.js';
 import { runSettings } from './commands/settings.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
-import { runOnboardFinish } from './commands/onboardFinish.js';
 import { logger } from './log/logger.js';
 import { REGISTRY } from './registry.js';
 
@@ -90,15 +89,15 @@ async function main(argv: readonly string[]): Promise<number> {
         .option('--no-open', 'Do not launch the browser')
         .option('--ui-dist <path>', 'Override the dist/ui directory')
         .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
-        .option('--headless', 'Skill-bridge IPC mode: no browser, write .agent-config/skill-bridge.* discovery files, emit AGENT_CONFIG_READY sentinel on stdout')
-        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/ (skill-bridge mode)')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .option('--dry-run', 'Boot with all writes suppressed (preview-only — no .agent-settings.yml / .agent-user.md / wizard-state.json mutations)')
         .action(async (opts: {
             port?: number;
             open?: boolean;
             uiDist?: string;
             allowHeadless?: boolean;
-            headless?: boolean;
             projectRoot?: string;
+            dryRun?: boolean;
         }) => {
             const code = await runUiServe(opts);
             process.exit(code);
@@ -112,23 +111,46 @@ async function main(argv: readonly string[]): Promise<number> {
         .option('--ui-dist <path>', 'Override the dist/ui directory')
         .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
         .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
         .action(async (opts: {
             port?: number;
             open?: boolean;
             uiDist?: string;
             allowHeadless?: boolean;
             projectRoot?: string;
+            dryRun?: boolean;
         }) => {
             const code = await runSettings(opts);
             process.exit(code);
         });
 
+    // `setup` — onboarding-only alias for `ui:serve` that lands on the
+    // `#/wizard` route. Replaces the deprecated `/onboard` chat skill.
     program
-        .command('onboard:finish')
-        .description('Commit /onboard payload (stdin JSON; atomic dual-write of .agent-settings.yml + .agent-user.md)')
-        .option('--project-root <path>', 'Override the project root used to resolve .agent-settings.yml / .agent-user.md')
-        .action(async (opts: { projectRoot?: string }) => {
-            const code = await runOnboardFinish(opts);
+        .command('setup')
+        .description('Open the onboarding wizard (boots the UI server and lands on #/wizard)')
+        .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
+        .option('--no-open', 'Do not launch the browser')
+        .option('--ui-dist <path>', 'Override the dist/ui directory')
+        .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
+        .action(async (opts: {
+            port?: number;
+            open?: boolean;
+            uiDist?: string;
+            allowHeadless?: boolean;
+            projectRoot?: string;
+            dryRun?: boolean;
+        }) => {
+            const forwarded: Parameters<typeof runUiServe>[0] = { initialRoute: '/wizard' };
+            if (opts.port !== undefined) forwarded.port = opts.port;
+            if (opts.open !== undefined) forwarded.open = opts.open;
+            if (opts.uiDist !== undefined) forwarded.uiDist = opts.uiDist;
+            if (opts.allowHeadless !== undefined) forwarded.allowHeadless = opts.allowHeadless;
+            if (opts.projectRoot !== undefined) forwarded.projectRoot = opts.projectRoot;
+            if (opts.dryRun !== undefined) forwarded.dryRun = opts.dryRun;
+            const code = await runUiServe(forwarded);
             process.exit(code);
         });
 
@@ -188,7 +210,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'onboard:finish', 'workspaces', 'packs', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'setup', 'workspaces', 'packs', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;

@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) — gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest"
+description: "Adopting a new domain track (mobile, ML, blockchain, IoT) — gates import on demand, ownership, CI fit, Sunset compat BEFORE harvest"
 source: package
 triggers:
   - intent: "adopt new domain"

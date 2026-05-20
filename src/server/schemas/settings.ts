@@ -97,7 +97,7 @@ export const settingsSchema = z.object({
         mode: worktreeMode.default('ask').describe('Autonomous worktree-creation policy.'),
     }),
     onboarding: z.object({
-        onboarded: z.boolean().default(false).describe('Has the developer completed /onboard?'),
+        onboarded: z.boolean().default(false).describe('Has the developer completed the setup wizard?'),
     }),
     commands: z.object({
         suggestion: z.object({
