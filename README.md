@@ -735,9 +735,7 @@ task ci               # full pipeline — green before PR
 task test             # unit + integration tests
 ```
 
-→ Full commands and project structure: [**docs/development.md**](docs/development.md)
-
-The CLI and setup UI ship as **TypeScript** (compiled to `dist/cli/` and `dist/ui/`); the build, sync, and lint scripts are **Python 3.10+**. The package adds **prompt engineering** primitives — `/optimize-prompt`, `/refine-prompt`, and the `prompt-engineering-patterns` skill — used by every host agent.
+→ Full commands and project structure: [**docs/development.md**](docs/development.md). Stack: **TypeScript** CLI/UI (`dist/cli/`, `dist/ui/`) + **Python 3.10+** build/lint scripts. Prompt-engineering primitives — `/optimize-prompt`, `/refine-prompt`, the `prompt-engineering-patterns` skill — ship for every host agent. MCP registry payloads render under `dist/mcp/` (submissions tracked in [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md)).
 
 ## Requirements
 
@@ -745,13 +743,6 @@ The CLI and setup UI ship as **TypeScript** (compiled to `dist/cli/` and `dist/u
 - **Python 3.10+** — bridge stage only; missing → orchestrator skips bridges.
 - **Composer or npm** — to pull the package.
 - **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
-
-## Registry
-
-> MCP registry: submission pending (tracked in
-> [R5 — strategic-visibility roadmap](agents/roadmaps/strategic-visibility-mcp-topics-positioning.md)).
-> Rendered payloads live under `dist/mcp/`; see
-> [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md).
 
 ## License
 
