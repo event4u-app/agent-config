@@ -26,7 +26,9 @@ identity:
   name: "Mathias"          # required — full name or how the user wants to be addressed
   nickname: "Matze"        # optional — preferred shorthand (used by default in chat)
 language: "de"             # required — BCP-47-ish primary language ("de", "en", "fr", ...)
-role: "founder/engineer"   # required — short free-form role label
+role:                      # required — unordered list of role labels; ≥ 1 entry
+  - founder
+  - engineer
 style:
   formality: "informal"    # informal | formal
   pace: "pragmatic"        # pragmatic | thorough | rapid
@@ -35,6 +37,13 @@ voice_sample: |            # required — one paste of the user's typical writin
 last_updated: "2026-05-15" # YYYY-MM-DD — bumped on every accepted change
 ---
 ```
+
+`role` is an **unordered** YAML block-style list. Order carries no meaning
+(no "primary" role). The seeded enum mirrors `SEED_PROFILE_IDS` in
+[`scripts/config/profiles.py`](../../scripts/config/profiles.py):
+`founder`, `developer`, `content_creator`, `agency`, `finance`, `ops`.
+Free-form additions are accepted (forward-compatibility) — closed
+validation lives in the wizard / settings GUI, not in the loader.
 
 After the frontmatter, the body is a single freeform **`# Notes`**
 section. Hard cap: **100 lines** total file size (including
@@ -49,7 +58,7 @@ enforced by `/agents user accept` and `/agents user update`.
 | `identity.name` | yes | Default address form. |
 | `identity.nickname` | no | Preferred shorthand — agent uses this by default in chat replies when set. |
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
-| `role` | yes | Short free-form label — drives reviewer voice selection and persona pairing. |
+| `role` | yes | Unordered list of role labels (≥ 1). Drives reviewer-voice selection and persona pairing. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted. |
 | `style.formality` | yes | `informal` (Du / first-name) or `formal` (Sie / full name). |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
 | `voice_sample` | yes | One representative paste — anchors mirror-back and tone calibration. |

@@ -10,8 +10,9 @@
 import { useEffect } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { apiFetch, ApiCallError } from '../api.js';
-import { Textarea } from '../forms/Textarea.js';
-import { topLevelCopy } from '../copyErrors.js';
+import { UserMdForm } from '../forms/UserMdForm.js';
+import { bodyToForm, formToBody } from '@shared/userMd/formAdapter.js';
+import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 
 interface UserMdGetResponse {
     body: string;
@@ -30,6 +31,7 @@ const exists = signal(false);
 const lastModified = signal<number | null>(null);
 const banner = signal<string | null>(null);
 const saving = signal(false);
+const errors = signal<Record<string, string>>({});
 
 async function load(): Promise<void> {
     loadError.value = null;
@@ -56,6 +58,7 @@ async function load(): Promise<void> {
 async function save(): Promise<void> {
     saving.value = true;
     banner.value = null;
+    errors.value = {};
     try {
         const headers: Record<string, string> = {};
         if (exists.value && lastModified.value !== null) {
@@ -71,7 +74,17 @@ async function save(): Promise<void> {
         banner.value = `Saved (${res.writtenPaths.join(', ')}).`;
     } catch (err) {
         if (err instanceof ApiCallError) {
-            banner.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+            const errBody = err.body.error ?? { code: 'UNKNOWN', message: err.message };
+            // Field errors arrive keyed by `body.identity.name` etc. Strip
+            // the leading `body.` so the form (which keys on dotted paths
+            // relative to the frontmatter) picks them up.
+            const raw = fieldErrorMap(errBody);
+            const stripped: Record<string, string> = {};
+            for (const [k, v] of Object.entries(raw)) {
+                stripped[k.replace(/^body\./, '')] = v;
+            }
+            errors.value = stripped;
+            banner.value = topLevelCopy(errBody);
         } else {
             banner.value = err instanceof Error ? err.message : String(err);
         }
@@ -103,14 +116,10 @@ export function UserMdPanel(): preact.JSX.Element {
                 </nav>
             </header>
             {banner.value !== null ? <p class="ac-banner">{banner.value}</p> : null}
-            <Textarea
-                id="user-md-body"
-                name="body"
-                label="Body"
-                description="Long-form persona / preferences. Stored as-is at .agent-user.md."
-                rows={24}
-                value={body.value}
-                onChange={(next): void => { body.value = next; }}
+            <UserMdForm
+                value={bodyToForm(body.value)}
+                errors={errors.value}
+                onChange={(next): void => { body.value = formToBody(next); }}
             />
             <div class="ac-form__actions">
                 <button type="button" class="ac-button" onClick={(): void => { void load(); }}>

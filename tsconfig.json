@@ -17,9 +17,10 @@
         "baseUrl": "./src",
         "paths": {
             "@cli/*": ["cli/*"],
-            "@server/*": ["server/*"]
+            "@server/*": ["server/*"],
+            "@shared/*": ["shared/*"]
         }
     },
-    "include": ["src/cli/**/*", "src/server/**/*"],
+    "include": ["src/cli/**/*", "src/server/**/*", "src/shared/**/*"],
     "exclude": ["src/ui/**/*", "node_modules", "dist", "tests"]
 }

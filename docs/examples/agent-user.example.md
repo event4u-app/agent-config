@@ -4,7 +4,9 @@ identity:
   name: "Mathias"
   nickname: "Matze"
 language: "de"
-role: "founder/engineer"
+role:
+  - founder
+  - engineer
 style:
   formality: "informal"
   pace: "pragmatic"

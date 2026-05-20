@@ -7,6 +7,7 @@ export default defineConfig({
         alias: {
             '@cli': new URL('./src/cli', import.meta.url).pathname,
             '@server': new URL('./src/server', import.meta.url).pathname,
+            '@shared': new URL('./src/shared', import.meta.url).pathname,
             '@ui': new URL('./src/ui', import.meta.url).pathname,
         },
     },
