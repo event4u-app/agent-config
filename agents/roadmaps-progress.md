@@ -6,17 +6,17 @@
 
 ## Overall
 
-**2 / 104 steps done · 2%**
+**5 / 104 steps done · 5%**
 
 ```text
-█░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   2%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   5%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [onboard-skill-wizard-convergence.md](roadmaps/onboard-skill-wizard-convergence.md) | 4 | 12 | 12 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [onboard-skill-wizard-convergence.md](roadmaps/onboard-skill-wizard-convergence.md) | 4 | 12 | 9 | 3 | 0 | 0 | ██░░░░░░░░ 25% |
 | 2 | [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md) | 6 | 92 | 90 | 2 | 0 | 0 | ░░░░░░░░░░ 2% |
 
 ---
@@ -25,14 +25,14 @@
 
 ### [onboard-skill-wizard-convergence.md](roadmaps/onboard-skill-wizard-convergence.md)
 
-**`/onboard` skill — wizard convergence** — 0 / 12 done (0%)
+**`/onboard` skill — wizard convergence** — 3 / 12 done (25%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | contract handshake | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
+| 0 | contract handshake | ✅ done | 0 | 2 | 0 | 0 | 100% |
 | 1 | skill rewrite | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | 2 | parity tests | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 3 | acceptance + flip | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | acceptance + flip | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
 
 ### [unified-setup-and-settings-gui.md](roadmaps/unified-setup-and-settings-gui.md)
 

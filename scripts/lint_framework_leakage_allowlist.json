@@ -471,6 +471,16 @@
       "file": ".agent-src.uncompressed/commands/upstream-contribute.md",
       "lines": "*",
       "reason": "Upstream-contribute examples drawn from this package's own Laravel-tooling contributions"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/code-review/SKILL.md",
+      "lines": [235],
+      "reason": "Multi-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — comparative example, no project mandate"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/architecture.md",
+      "lines": [80],
+      "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) — comparative example, no project mandate"
     }
   ]
 }
