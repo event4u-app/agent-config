@@ -37,3 +37,27 @@ tasks:
       Usage:
       task dev:unlink
     cmd: npm unlink -g @event4u/agent-config
+
+  dev:setup:
+    desc: |
+      Run the onboarding wizard (`agent-config setup`) from this working
+      tree. Builds CLI + UI first so the local server has a fresh bundle
+      under dist/ui/. Lands the browser on `#/wizard`.
+      Usage:
+      task dev:setup
+    cmds:
+      - npm run build
+      - node dist/cli/agent-config.js setup
+
+  dev:setup:dry-run:
+    desc: |
+      Run the onboarding wizard with all writes suppressed
+      (`agent-config setup --dry-run`). The wizard renders end-to-end
+      but no .agent-settings.yml / .agent-user.md / wizard-state.json
+      is touched on disk. Useful for smoke-testing the flow inside
+      this package without leaving artefacts behind.
+      Usage:
+      task dev:setup:dry-run
+    cmds:
+      - npm run build
+      - node dist/cli/agent-config.js setup --dry-run

@@ -52,7 +52,7 @@ export function installSettingsFetchMock(putOverride?: PutOverride): SettingsFet
         }
         if (path === '/api/v1/settings/diff' && method === 'POST') {
             return new Response(JSON.stringify({
-                changes: [{ path: 'personal.user_name', before: 'Matze', after: 'Mathias' }],
+                changes: [{ path: 'personal.user_name', from: 'Matze', to: 'Mathias' }],
             }), { status: 200 });
         }
         if (path === '/api/v1/settings' && method === 'PUT') {

@@ -19,8 +19,8 @@ export interface WizardServerState {
 
 export interface DiffChange {
     path: string;
-    before: JsonValue;
-    after: JsonValue;
+    from: JsonValue;
+    to: JsonValue;
 }
 
 export const loaded = signal(false);

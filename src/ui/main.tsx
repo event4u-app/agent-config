@@ -29,6 +29,7 @@ function bootstrap(): void {
         return;
     }
     setAuthToken(token);
+    target.textContent = '';
     render(<App />, target);
 }
 
