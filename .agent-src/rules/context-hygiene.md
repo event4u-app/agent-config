@@ -2,7 +2,7 @@
 type: "auto"
 tier: "1"
 alwaysApply: false
-description: "When debugging, fixing errors, or running long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
+description: "Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
 source: package
 triggers:
   - intent: "long conversation"

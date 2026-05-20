@@ -2,7 +2,7 @@
 type: auto
 tier: "2b"
 source: package
-description: "When a skill uses external tools — enforce allowlist, deny-by-default, and no hidden credential patterns"
+description: "Skill uses external tools — enforce allowlist, deny-by-default, no hidden credential patterns"
 triggers:
   - keyword: "allowed_tools"
   - keyword: "tool registry"

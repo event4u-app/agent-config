@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise"
+description: "Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise"
 alwaysApply: false
 source: package
 load_context:

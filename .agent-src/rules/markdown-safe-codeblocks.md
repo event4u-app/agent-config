@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "Generating markdown output that contains code blocks — prevent broken nesting"
+description: "Generating markdown with code blocks — prevent broken nesting"
 alwaysApply: false
 source: package
 triggers:

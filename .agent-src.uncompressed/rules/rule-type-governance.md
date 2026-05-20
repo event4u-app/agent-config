@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Creating or editing rules, or auditing rule types — decides when a rule should be always vs auto"
+description: "Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto"
 source: package
 triggers:
   - path_prefix: ".agent-src.uncompressed/rules/"

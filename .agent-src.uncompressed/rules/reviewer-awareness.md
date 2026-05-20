@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "When suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary"
+description: "Suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary"
 source: package
 triggers:
   - keyword: "reviewer"

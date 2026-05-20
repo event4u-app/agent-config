@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests"
+description: "Git commit format, branch naming, conventional commits, committing, pushing, creating PRs"
 source: package
 triggers:
   - keyword: "commit"

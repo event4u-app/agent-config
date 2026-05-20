@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2b"
 alwaysApply: false
-description: "After EVERY code edit, find ALL downstream changes needed to existing files, including callers, tests, imports, types, and documentation"
+description: "After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation"
 source: package
 triggers:
   - intent: "after code edit"

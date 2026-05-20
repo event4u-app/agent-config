@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Data retention (finance, support/CRM) — name jurisdiction gap, default to longest applicable floor, honor DSR/audit holds, never delete under inquiry"
+description: "Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry"
 source: package
 triggers:
   - keyword: "retention policy"

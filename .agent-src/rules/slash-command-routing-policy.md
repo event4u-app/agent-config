@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "When user types a slash command like /create-pr, /commit, or pastes command file content"
+description: "User types a slash command like /create-pr, /commit, or pastes command file content"
 source: package
 triggers:
   - keyword: "/create-pr"

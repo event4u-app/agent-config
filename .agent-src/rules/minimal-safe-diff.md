@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "When writing or reviewing a diff — the smallest change that solves the stated problem; no drive-by edits, opportunistic refactors, or reformatting"
+description: "Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting"
 source: package
 triggers:
   - intent: "writing a diff"

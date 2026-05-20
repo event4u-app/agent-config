@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2b"
-description: "Before implementing features or architectural changes — validate the request against existing code, challenge weak requirements, suggest improvements"
+description: "Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements"
 alwaysApply: false
 source: package
 council_depth: deep

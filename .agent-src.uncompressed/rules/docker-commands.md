@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Running PHP commands inside Docker containers — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution"
+description: "Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool"
 source: package
 triggers:
   - keyword: "docker"

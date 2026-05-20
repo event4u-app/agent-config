@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "3"
-description: "Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions"
+description: "Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions"
 source: package
 triggers:
   - file_pattern: "*.php"

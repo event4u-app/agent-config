@@ -2,7 +2,7 @@
 type: "auto"
 tier: "2a"
 alwaysApply: false
-description: "Git history operations — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push in same turn"
+description: "Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn"
 source: package
 triggers:
   - intent: "rebase the branch"
