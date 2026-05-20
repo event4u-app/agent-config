@@ -1,6 +1,6 @@
 ---
-complexity: tactical
-status: proposed
+complexity: lightweight
+status: in-progress
 ---
 
 # Roadmap: `/onboard` skill — wizard convergence
@@ -50,12 +50,12 @@ rewrite begins.
 
 ## Phase 0: contract handshake
 
-- [ ] **Create `docs/contracts/onboard-skill-wizard-bridge.md`** documenting:
+- [x] **Create `docs/contracts/onboard-skill-wizard-bridge.md`** documenting:
   - How the skill spawns `agent-config ui:serve --headless` (NEW flag — bind, mint token, write port file, do **not** open browser).
   - How the skill reads `<projectRoot>/.agent-config/skill-bridge.port` + `skill-bridge.token`.
   - The skill's POST body shape (already covered by `settings-api.md` — this contract just references it).
   - Teardown: SIGTERM on skill exit, port file deleted.
-- [ ] Lint: `python3 scripts/check_refs.py` exits 0.
+- [x] Lint: `python3 scripts/check_references.py` exits 0.
 
 ## Phase 1: skill rewrite
 
@@ -76,5 +76,5 @@ rewrite begins.
 
 ## Open questions
 
-- [ ] Should `--headless` use a Unix domain socket on POSIX systems to avoid port contention entirely? Decide before Phase 1.
+- [x] ~~Should `--headless` use a Unix domain socket on POSIX systems to avoid port contention entirely?~~ Resolved in `docs/contracts/onboard-skill-wizard-bridge.md` § 1: TCP loopback only, no Unix socket (parity with browser path, Windows support, bounded by 1000-port scan range).
 - [ ] How does the fallback path interact with the wizard's 2PC intent marker — does a legacy write need to set an equivalent marker? Decide in Phase 1.
