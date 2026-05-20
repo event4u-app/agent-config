@@ -1,7 +1,12 @@
+---
+complexity: lightweight
+status: draft
+---
+
 # Wizard ↔ install.py wiring
 
 **Status**: draft
-**Parent**: `agents/roadmaps/unified-setup-and-settings-gui.md` (Step 3.4 carved out)
+**Parent**: `agents/roadmaps/archive/unified-setup-and-settings-gui.md` (Step 3.4 carved out)
 **Created**: 2026-05-20
 
 ## Goal

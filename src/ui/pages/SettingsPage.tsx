@@ -93,8 +93,19 @@ async function commit(): Promise<void> {
         banner.value = `Saved (${res.writtenPaths.join(', ')}).`;
     } catch (err) {
         if (err instanceof ApiCallError) {
-            errors.value = fieldErrorMap(err.body.error ?? { code: 'UNKNOWN', message: err.message });
-            banner.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+            const ctx = err.body.error ?? { code: 'UNKNOWN', message: err.message };
+            errors.value = fieldErrorMap(ctx);
+            banner.value = topLevelCopy(ctx);
+            // Close the modal so the user can act on the inline field errors;
+            // focus lands on the first errored field. Roadmap § 2.2.
+            pendingDiff.value = null;
+            const firstPath = Object.keys(errors.value)[0];
+            if (firstPath !== undefined) {
+                queueMicrotask(() => {
+                    const el = document.getElementById(firstPath);
+                    if (el !== null) (el as HTMLElement).focus();
+                });
+            }
         } else {
             banner.value = err instanceof Error ? err.message : String(err);
         }
