@@ -1,0 +1,78 @@
+name: Visibility Sync (manual)
+
+# MUTATING sync workflow. `workflow_dispatch` ONLY \u2014 never triggered
+# automatically. Holds the `administration: write` permission required
+# by `PUT /repos/{owner}/{repo}/topics`. Every run appends an audit
+# row to `agents/notes/visibility-sync-audit.md` and (when changes are
+# applied) commits the audit log back to the default branch.
+#
+# Split-by-design per the AI-Council security review: the read-only
+# detector lives in `check-visibility-drift.yml`. Trade-off documented
+# in CONTRIBUTING.md \u00a7 "Visibility surface".
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Dry-run (no mutation, just print diff)"
+        required: false
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+
+permissions:
+  contents: write       # commit the audit log
+  metadata: read
+  administration: write # required for PUT /repos/{owner}/{repo}/topics
+
+concurrency:
+  group: visibility-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    environment: production-visibility
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install runtime deps
+        run: pip install pyyaml
+
+      - name: Lint topics.yml
+        run: python3 scripts/lint_topics_yaml.py
+
+      - name: Dry-run preview
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/sync_github_metadata.py
+
+      - name: Apply (gated on dry_run=false)
+        if: ${{ inputs.dry_run == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 scripts/sync_github_metadata.py --apply
+
+      - name: Commit audit log
+        if: ${{ inputs.dry_run == 'false' }}
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain agents/notes/visibility-sync-audit.md)" ]; then
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add agents/notes/visibility-sync-audit.md
+            git commit -m "chore(visibility): append audit row from workflow_dispatch run"
+            git push
+          else
+            echo "no audit changes to commit"
+          fi

@@ -286,6 +286,22 @@ tasks:
     desc: Assert dist/discovery/discovery-manifest.json exists and is non-empty before `npm publish` (R3 Phase 5.3)
     cmd: python3 scripts/check_release_includes_discovery.py
 
+  lint-topics-yaml:
+    silent: true
+    desc: Validate `.github/topics.yml` shape (slug regex, length, duplicates, notes key, equivalents map) — R5 Phase 1.3
+    cmd: python3 scripts/lint_topics_yaml.py {{.QUIET_FLAG}}
+
+  sync-github-topics:
+    silent: true
+    desc: Dry-run diff of `.github/topics.yml` + `.github/about.yml` against the live GitHub repo. Pass `-- --apply` to mutate (requires GITHUB_TOKEN with admin:write) — R5 Phase 1.2
+    cmd: python3 scripts/sync_github_metadata.py {{.CLI_ARGS}}
+
+  visibility-check:
+    silent: true
+    desc: Run every visibility-as-code lint in sequence (topics + positioning once Phase 3 lands) — R5 Phase 3.3
+    cmds:
+      - task: lint-topics-yaml
+
   lint-framework-leakage:
     silent: true
     desc: "Block PHP/Laravel/etc. leakage in generic skills/rules/commands (framework-neutrality-in-generic-skills rule)"
