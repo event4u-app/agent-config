@@ -192,6 +192,16 @@ tasks:
     desc: Fail if council-* artefacts are placed outside the canonical agents/runtime/council/{questions,responses,sessions}/ dirs (ai-council § Output path convention)
     cmd: python3 scripts/check_council_layout.py {{.QUIET_FLAG}}
 
+  lint-agents-layout:
+    silent: true
+    desc: Fail on unknown flat files at agents/ root; warn on legacy entries scheduled for migration (see scripts/lint_agents_layout.py)
+    cmd: python3 scripts/lint_agents_layout.py {{.QUIET_FLAG}}
+
+  lint-agents-layout-strict:
+    silent: true
+    desc: Promote agents/ layout legacy warnings to errors (release-tag gate)
+    cmd: python3 scripts/lint_agents_layout.py --strict {{.QUIET_FLAG}}
+
   check-role-doc-links:
     silent: true
     desc: "Fail if any skill link in docs/getting-started-by-role.md or getting-started-laravel.md does not resolve (step-12 Phase 2 CI gate)"
