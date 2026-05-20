@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Drafting advisory-shaped content (legal, medical, financial, strategic-consulting) — require the matching 'not X advice' disclaimer; refuse diagnosis/dosage outright"
+description: "Advisory-shaped content (legal, medical, financial, consulting) — require matching 'not X advice' disclaimer; refuse diagnosis/dosage outright"
 source: package
 triggers:
   - keyword: "legal brief"

@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Editing inside .augment/ or .agent-src.uncompressed/ — files MUST stay project-agnostic AND any add/rename/delete syncs counts and cross-references in the same edit"
+description: "Editing inside .augment/ or .agent-src.uncompressed/ — keep files project-agnostic; sync counts and cross-refs on any add/rename/delete"
 source: package
 triggers:
   - path_prefix: ".augment/"
