@@ -25,6 +25,11 @@ export interface UserMdRouteOptions {
     projectRoot: string;
     /** Override the package-shipped template path (tests only). */
     templatePath?: string;
+    /**
+     * Dry-run — PUT validates and returns `{ preview, dryRun }` with the
+     * would-be body; no `writeAtomic`, no `Last-Modified` bump.
+     */
+    dryRun?: boolean;
 }
 
 const USER_MD_RELATIVE = '.agent-user.md';
@@ -114,6 +119,13 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
             }
 
             try {
+                if (opts.dryRun === true) {
+                    return {
+                        dryRun: true,
+                        lastModified: current?.mtimeMs ?? null,
+                        preview: { path: USER_MD_RELATIVE, body: parsed.data.body },
+                    };
+                }
                 const path = userMdPath(opts.projectRoot);
                 await writeAtomic(path, parsed.data.body, { mode: 0o600 });
                 const stat = await fs.stat(path);

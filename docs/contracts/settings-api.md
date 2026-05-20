@@ -1,12 +1,15 @@
+---
+stability: beta
+keep-beta-until: 2026-08-18
+---
+
 # Settings GUI — REST API Contract (v1)
 
 > Local-only HTTP API exposed by `agent-config ui:serve` and reused by
-> `agent-config settings`. Listens on `127.0.0.1` only; no auth, no
-> cross-origin. The browser SPA is the sole client today; `/onboard`
-> skill convergence is tracked in
-> [`onboard-skill-wizard-convergence.md`](../../agents/roadmaps/archive/onboard-skill-wizard-convergence.md).
+> `agent-config settings` / `agent-config setup`. Listens on `127.0.0.1`
+> only; no auth, no cross-origin. The browser SPA is the sole client —
+> the legacy `/onboard` chat skill has been retired.
 >
-> Implementing roadmap: [`unified-setup-and-settings-gui.md`](../../agents/roadmaps/unified-setup-and-settings-gui.md).
 > Server-side validators live in `src/server/schemas/`; the JSON-Schema
 > emitted at `GET /api/v1/schema` is derived from those Zod modules via
 > `zod-to-json-schema` so client and server cannot drift.

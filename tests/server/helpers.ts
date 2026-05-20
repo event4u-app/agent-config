@@ -37,6 +37,8 @@ export interface BootOptions {
     seedUserMd?: string;
     /** Replay pending 2PC commits at boot (default: false; the crash test flips this). */
     replay?: boolean;
+    /** Boot in dry-run mode (every write returns a `preview` payload). */
+    dryRun?: boolean;
 }
 
 const PACKAGE_ROOT = resolve(process.cwd());
@@ -69,6 +71,7 @@ export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
         expectedPort: opts.port,
         logLevel: 'fatal',
         skipReplay: opts.replay !== true,
+        dryRun: opts.dryRun === true,
     });
     await app.ready();
 

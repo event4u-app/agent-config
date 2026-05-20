@@ -7,9 +7,8 @@
  * renders only those fields. Final step calls `/api/v1/wizard/finish`
  * which dual-writes `.agent-settings.yml` + `.agent-user.md` via 2PC.
  *
- * Step layout lives in `wizard/steps.ts` and mirrors the chat-side
- * `~/.claude/skills/onboard/SKILL.md` so both surfaces collect the same
- * data points. Signal store is in `wizard/state.ts`.
+ * Step layout lives in `wizard/steps.ts`. Signal store is in
+ * `wizard/state.ts`.
  */
 
 import { useEffect } from 'preact/hooks';
