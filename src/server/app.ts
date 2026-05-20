@@ -24,6 +24,12 @@ import fastifyStatic from '@fastify/static';
 import { tokensMatch } from './token.js';
 import { pingRoute } from './routes/ping.js';
 import { discoveryRoute } from './routes/discovery.js';
+import { schemaRoute } from './routes/schema.js';
+import { settingsRoute } from './routes/settings.js';
+import { userMdRoute } from './routes/userMd.js';
+import { wizardRoute } from './routes/wizard.js';
+import { replayPendingCommits } from './io/atomicMultiWrite.js';
+import { PACKAGE_ROOT } from '../cli/paths.js';
 
 export interface CreateAppOptions {
     projectRoot: string;
@@ -36,6 +42,10 @@ export interface CreateAppOptions {
     logLevel?: 'fatal' | 'error' | 'warn' | 'info' | 'debug' | 'trace';
     /** Override the discovery-manifest path (tests only). */
     discoveryManifestPath?: string;
+    /** Override the package root (tests only — defaults to PACKAGE_ROOT). */
+    packageRoot?: string;
+    /** Skip the boot-time 2PC replay (tests only). */
+    skipReplay?: boolean;
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -101,10 +111,33 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         decorateReply: false,
     });
 
+    const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
+
     await app.register(pingRoute({ projectRoot: opts.projectRoot }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
+    await app.register(schemaRoute());
+    await app.register(settingsRoute({ projectRoot: opts.projectRoot }));
+    await app.register(userMdRoute({ projectRoot: opts.projectRoot }));
+    await app.register(wizardRoute({ projectRoot: opts.projectRoot, packageRoot }));
+
+    // Boot-time 2PC replay — finishes or aborts any wizard commit that
+    // crashed mid-rename. Idempotent; failures are logged and ignored so
+    // a corrupt marker never blocks server start.
+    if (opts.skipReplay !== true) {
+        try {
+            const result = await replayPendingCommits(opts.projectRoot);
+            if (result.completed.length > 0 || result.aborted.length > 0) {
+                app.log.warn(
+                    { completed: result.completed, aborted: result.aborted },
+                    '2PC replay: pending wizard commits resolved',
+                );
+            }
+        } catch (err) {
+            app.log.error({ err }, '2PC replay: unexpected error (ignored)');
+        }
+    }
 
     return app;
 }

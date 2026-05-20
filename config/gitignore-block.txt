@@ -66,3 +66,8 @@
 # onboarding-gate.json). Written by SessionStart / PostToolUse hooks
 # on Augment + Claude Code; regenerated on demand, never commit.
 /agents/state/
+
+# Agent config — unified-setup wizard partial state (Roadmap R2 Phase 1).
+# Written by POST /api/v1/wizard/state between step transitions, deleted
+# on POST /api/v1/wizard/finish. Local-only crash-recovery aid.
+/.agent-config/wizard-state.json
