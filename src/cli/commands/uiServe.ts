@@ -13,17 +13,38 @@
  *      SIGINT/SIGTERM handlers that close the server cleanly.
  *   6. Open the user's browser unless `--no-open` is set.
  *
+ * `--headless` mode (legacy skill-bridge IPC):
+ *   - implies `--no-open`, skips the SSH/DISPLAY headless refusal,
+ *   - probes for and reclaims stale `.agent-config/skill-bridge.*`
+ *     files on boot (or refuses to start if a live bridge owns them),
+ *   - writes `skill-bridge.port` / `skill-bridge.token` /
+ *     `skill-bridge.pid` post-bind at mode 0600,
+ *   - prints exactly one `AGENT_CONFIG_READY: ...` sentinel line to
+ *     stdout so a parent process can latch onto the running server,
+ *   - unlinks the discovery files on graceful shutdown.
+ *
+ * The `/onboard` chat skill no longer consumes this mode (2026-05-20
+ * pivot to in-process `agent-config onboard:finish`, per
+ * `docs/contracts/onboard-skill-wizard-bridge.md` § 0). The flag
+ * survives for potential future consumers; remove it in a separate
+ * PR if no consumer adopts it before GA.
+ *
  * Anti-regression: if `dist/ui/index.html` is missing we refuse to
  * start and point at `npm run build:ui` — same exit code as the rest
  * of the CLI's "missing prerequisite" failures.
  */
 
-import { existsSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pickFreePort, DEFAULT_PORT_RANGE } from '../../server/port.js';
 import { mintToken } from '../../server/token.js';
 import { createApp } from '../../server/app.js';
-import { PACKAGE_ROOT } from '../paths.js';
+import {
+    probeStaleBridge,
+    writeDiscoveryFiles,
+    unlinkDiscoveryFiles,
+} from '../../server/skillBridge.js';
+import { PACKAGE_JSON, PACKAGE_ROOT } from '../paths.js';
 import { logger } from '../log/logger.js';
 
 export interface UiServeOptions {
@@ -31,6 +52,19 @@ export interface UiServeOptions {
     open?: boolean;
     uiDist?: string;
     allowHeadless?: boolean;
+    /** Skill-bridge mode: no browser, write discovery files, print READY sentinel. */
+    headless?: boolean;
+    /** Override CWD as the root used to resolve `.agent-config/`. */
+    projectRoot?: string;
+}
+
+function readPackageVersion(): string {
+    try {
+        const pkg = JSON.parse(readFileSync(PACKAGE_JSON, 'utf8')) as { version?: unknown };
+        return typeof pkg.version === 'string' ? pkg.version : '0.0.0';
+    } catch {
+        return '0.0.0';
+    }
 }
 
 function isHeadless(): boolean {
@@ -57,18 +91,34 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         return 1;
     }
 
-    if (isHeadless() && opts.allowHeadless !== true) {
+    const headlessMode = opts.headless === true;
+    const projectRoot = resolve(opts.projectRoot ?? process.cwd());
+
+    // Skill-bridge mode is invoked by a parent process, never directly by a
+    // user. The SSH/DISPLAY guard would only obstruct that handshake.
+    if (!headlessMode && isHeadless() && opts.allowHeadless !== true) {
         logger.error('Headless environment detected (SSH or no DISPLAY).');
         logger.error("The local UI requires a desktop browser. Re-run with '--allow-headless' to start the server anyway");
         logger.error('and connect to it manually, or use the CLI subcommands instead.');
         return 2;
     }
 
+    if (headlessMode) {
+        const stale = await probeStaleBridge(projectRoot);
+        if (stale.status === 'live') {
+            logger.error(
+                `agent-config: another skill-bridge is already live on 127.0.0.1:${stale.livePort ?? '?'}` +
+                ` (pid=${stale.livePid ?? '?'}). Stop it before starting a new --headless server.`,
+            );
+            return 3;
+        }
+    }
+
     const port = opts.port ?? (await pickFreePort(DEFAULT_PORT_RANGE));
     const { token, path: tokenPath } = mintToken();
 
     const app = await createApp({
-        projectRoot: process.cwd(),
+        projectRoot,
         uiDistDir,
         token,
         expectedPort: port,
@@ -81,19 +131,38 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         return 1;
     }
 
-    const url = `http://127.0.0.1:${port}/?token=${token}`;
-    logger.info(`agent-config UI on ${url}  (Ctrl-C to stop)`);
-    logger.info(`token file: ${tokenPath}`);
+    if (headlessMode) {
+        try {
+            await writeDiscoveryFiles({ projectRoot, port, token, pid: process.pid });
+        } catch (err) {
+            logger.error(`failed to write skill-bridge discovery files: ${err instanceof Error ? err.message : String(err)}`);
+            await app.close().catch(() => undefined);
+            return 4;
+        }
+        // Exactly one prefix-marked sentinel line, then continue. Other
+        // logger.* output is routed through Fastify/pino to stderr per
+        // bridge contract § 2 so the skill can grep stdout cleanly.
+        process.stdout.write(
+            `AGENT_CONFIG_READY: port=${port} tokenFile=${tokenPath} pid=${process.pid} version=${readPackageVersion()}\n`,
+        );
+    } else {
+        const url = `http://127.0.0.1:${port}/?token=${token}`;
+        logger.info(`agent-config UI on ${url}  (Ctrl-C to stop)`);
+        logger.info(`token file: ${tokenPath}`);
 
-    if (opts.open !== false && !isHeadless()) {
-        await openBrowser(url);
+        if (opts.open !== false && !isHeadless()) {
+            await openBrowser(url);
+        }
     }
 
     const stop = async (signal: NodeJS.Signals): Promise<void> => {
-        logger.info(`received ${signal} — shutting down`);
+        if (!headlessMode) logger.info(`received ${signal} — shutting down`);
         try {
             await app.close();
         } finally {
+            if (headlessMode) {
+                await unlinkDiscoveryFiles(projectRoot).catch(() => undefined);
+            }
             process.exit(0);
         }
     };

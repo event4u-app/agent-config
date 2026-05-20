@@ -369,7 +369,7 @@ settings editor; the editor has extra fields the wizard does not.
 - `security-engineer` schema-drift lint → folded into Phase 3 as `task lint-settings-gui` (schema-drift test in `tests/contracts/`); mode-0600 exit gate → folded into Phase 1 as `atomicWrite` chmod after rename.
 - `critical-challenger` cross-field consistency → folded into Phase 3 as warning surface in `PUT /api/v1/settings` response; skip-defaults state → folded into Phase 1 as the `substituteTemplate.ts` helper.
 - External council CRITICAL frontmatter validation, HIGH 2PC marker, HIGH `If-Unmodified-Since` optimistic lock, MEDIUM template substitution → all folded into Phase 0/1.
-- External council HARD-BLOCKER `/onboard` skill convergence → **carved out** to `agents/roadmaps/onboard-skill-wizard-convergence.md` (sibling roadmap). Rationale: Re-architecting the chat-driven `/onboard` Python skill as a thin HTTP client to the wizard API requires a separate, isolated workstream — the GUI must ship and stabilise first so `/onboard` has a target to converge against. Until then the two write paths remain coequal; drift is accepted as a known follow-up risk and tracked in the sibling roadmap.
+- External council HARD-BLOCKER `/onboard` skill convergence → **carved out** to `agents/roadmaps/archive/onboard-skill-wizard-convergence.md` (sibling roadmap, now completed and archived). Rationale: Re-architecting the chat-driven `/onboard` skill as a native TS subcommand (`agent-config onboard:finish`) that shares the wizard's `commitMulti` 2PC path required a separate, isolated workstream — the GUI shipped first so `/onboard` had a target to converge against. The two write paths now share one canonical substrate.
 
 ## Open questions
 

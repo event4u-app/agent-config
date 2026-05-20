@@ -22,6 +22,7 @@ import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
+import { runOnboardFinish } from './commands/onboardFinish.js';
 import { logger } from './log/logger.js';
 import { REGISTRY } from './registry.js';
 
@@ -88,8 +89,26 @@ async function main(argv: readonly string[]): Promise<number> {
         .option('--no-open', 'Do not launch the browser')
         .option('--ui-dist <path>', 'Override the dist/ui directory')
         .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
-        .action(async (opts: { port?: number; open?: boolean; uiDist?: string; allowHeadless?: boolean }) => {
+        .option('--headless', 'Skill-bridge IPC mode: no browser, write .agent-config/skill-bridge.* discovery files, emit AGENT_CONFIG_READY sentinel on stdout')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/ (skill-bridge mode)')
+        .action(async (opts: {
+            port?: number;
+            open?: boolean;
+            uiDist?: string;
+            allowHeadless?: boolean;
+            headless?: boolean;
+            projectRoot?: string;
+        }) => {
             const code = await runUiServe(opts);
+            process.exit(code);
+        });
+
+    program
+        .command('onboard:finish')
+        .description('Commit /onboard payload (stdin JSON; atomic dual-write of .agent-settings.yml + .agent-user.md)')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-settings.yml / .agent-user.md')
+        .action(async (opts: { projectRoot?: string }) => {
+            const code = await runOnboardFinish(opts);
             process.exit(code);
         });
 
@@ -149,7 +168,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'workspaces', 'packs', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'onboard:finish', 'workspaces', 'packs', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;

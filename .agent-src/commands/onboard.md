@@ -48,6 +48,17 @@ command assumes the file and its template-derived defaults are in place.
 
 ## Steps
 
+> **Deferred-write model (Phase 1 of the wizard-convergence carve-out).**
+> Steps 3–7c capture answers in **working memory only** — never write
+> them to `.agent-settings.yml` mid-flow. Step 8 hands the assembled
+> payload to `agent-config onboard:finish`, which performs a single
+> atomic dual-write (settings + `.agent-user.md`) via the same 2PC
+> commit path the wizard's `POST /api/v1/wizard/finish` route uses.
+> Rationale: one canonical write surface, no drift between chat and
+> GUI. Contract: [`onboard-skill-wizard-bridge`](../docs/contracts/onboard-skill-wizard-bridge.md).
+> Language policy: TS-first per
+> [`engineering/typescript-first`](../../agents/policies/engineering/typescript-first.md).
+
 ### 1. Greet and set expectations
 
 Keep it short. One line explaining this is the one-time setup, up to
@@ -291,40 +302,67 @@ Map answer → write `preset.id: "fast" | "balanced" | "strict"` to
 `balanced`, mirroring the loader default at
 [`scripts/config/presets.py`](../../scripts/config/presets.py).
 
-### 8. Mark onboarded
+### 8. Atomic commit — `agent-config onboard:finish`
 
-Write `onboarding.onboarded: true` to `.agent-settings.yml` using the
-section-aware merge rules from
-[`layered-settings`](../docs/guidelines/agent-infra/layered-settings.md#section-aware-merge-rules)
-(preserve comments, key order, touch only the changed fields).
+Assemble every answer captured in working memory across steps 3–7c into
+one nested JSON payload, append `onboarding.onboarded: true`, and pipe
+it to `agent-config onboard:finish` on stdin. The CLI merges the values
+into the existing `.agent-settings.yml` (comments preserved via
+`mergeIntoTemplate`), validates `.agent-user.md` with `gray-matter`,
+and performs a 2PC dual-write — same `commitMulti` path the wizard's
+`POST /api/v1/wizard/finish` route uses.
 
-At this point the file holds the full wizard output:
+Payload shape (only include keys the user actually set; absent keys
+keep their current value):
 
-```yaml
-profile:
-  id: "developer"          # step 7a (omitted if user picked Self-configure)
-preset:
-  id: "balanced"           # step 7c
-personal:
-  user_type: "software"    # step 7a — stable audit field
-  user_name: "..."
-  ide: "..."
-  # ...other personal.* from earlier steps
-stack:
-  detected: ["php"]        # step 7b
-  source: "wizard"
-onboarding:
-  onboarded: true          # this step
+```json
+{
+  "settings": {
+    "personal": {
+      "user_name": "Matze",
+      "ide": "code",
+      "open_edited_files": true,
+      "pr_comment_bot_icon": false,
+      "rtk_installed": true,
+      "user_type": "software"
+    },
+    "profile": { "id": "developer" },
+    "preset":  { "id": "balanced" },
+    "stack":   { "detected": ["php"], "source": "wizard" },
+    "cost_profile": "balanced",
+    "pipelines": { "skill_improvement": true },
+    "onboarding": { "onboarded": true }
+  },
+  "userMd": null
+}
 ```
 
-Verify the chain resolves before flipping `onboarded: true`:
+Invocation:
+
+```bash
+agent-config onboard:finish <<'JSON'
+{ ...payload above... }
+JSON
+```
+
+Stdout is one JSON line. On `ok=true` the response carries `writtenPaths`
+and `txnId`. On `ok=false` the response carries `error.code`
+(`STDIN` / `PAYLOAD` / `SETTINGS_MISSING` / `VALIDATION` / `TXN_PARTIAL`)
+and `error.message`. Exit codes: 0 = committed, 1 = IO / commit failure,
+2 = bad invocation / validation.
+
+Verify the chain resolves **before** invoking the commit:
 
 ```bash
 ./agent-config explain config --json | python3 -c "import json,sys; d=json.load(sys.stdin); print(d['profile']['id'], d['preset']['id'])"
 ```
 
-Non-zero exit → surface the error, keep `onboarded: false`, ask the user
-to re-run `/onboard`. Zero exit → write `onboarded: true`.
+Non-zero exit → surface the error, do **not** call `onboard:finish`,
+ask the user to re-run `/onboard`. Zero exit → run the commit.
+
+If `onboard:finish` returns `ok=false`, surface `error.code` +
+`error.message` to the user, keep `onboarding.onboarded` at its previous
+value, and stop.
 
 ### 9. Write user-global file (only if opted in at step 2)
 

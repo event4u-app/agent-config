@@ -134,6 +134,29 @@ Rules:
   triggers a re-exec at the pinned version
   (`npx @event4u/agent-config@<pin> <cmd>`).
 
+### Editing settings
+
+`.agent-settings.yml` has three write surfaces — all share one
+canonical commit path:
+
+- **`/onboard` (chat)** — collects answers turn by turn and pipes
+  the assembled payload to `agent-config onboard:finish` on stdin.
+- **Wizard (browser)** — `POST /api/v1/wizard/finish` from the
+  `agent-config ui:serve` UI.
+- **Hand edit** — open the file in an editor.
+
+The chat and wizard surfaces both call `commitMulti` (2PC + intent
+marker, comment-preserving merge via `mergeIntoTemplate`); a crash
+mid-write is recovered on the next server boot. Hand edits skip 2PC
+— save the file and trust your editor.
+
+The bridge contract is locked in
+[`docs/contracts/onboard-skill-wizard-bridge.md`](contracts/onboard-skill-wizard-bridge.md);
+the parity gate
+([`tests/server/onboardFinish_parity.test.ts`](../tests/server/onboardFinish_parity.test.ts))
+asserts byte-identical output across the chat and wizard paths so
+neither surface drifts.
+
 ### Available settings
 
 | Setting | Default | Description |
