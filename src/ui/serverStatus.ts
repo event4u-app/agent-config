@@ -13,7 +13,10 @@ import { apiFetch } from './api.js';
 export interface ServerStatus {
     ok: true;
     version: string;
+    /** @deprecated mirrors `writeRoot` — kept for old bundle compatibility. */
     projectRoot: string;
+    writeRoot: string;
+    mode: 'package-sandbox' | 'global';
     dryRun: boolean;
 }
 

@@ -33,8 +33,16 @@ const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
 });
 
 export interface SettingsRouteOptions {
-    /** Project root — `.agent-settings.yml` resolves under this. */
-    projectRoot: string;
+    /** Write root — every PUT lands here as `.agent-settings.yml`. */
+    writeRoot: string;
+    /**
+     * Legacy-read fallback root. When GET / diff / PUT find no file under
+     * `writeRoot`, the read is retried under `legacyReadRoot`. A PUT that
+     * promoted from the legacy location silently migrates by writing the
+     * merged body to `writeRoot` (legacy file is left untouched — the
+     * next read prefers `writeRoot` once it exists).
+     */
+    legacyReadRoot?: string | null;
     /**
      * Dry-run — PUT validates, merges, and returns `{ preview, dryRun }`
      * with the rendered would-be body; no `writeAtomic`, no `Last-Modified`
@@ -55,7 +63,7 @@ interface ReadState {
     mtimeMs: number;
 }
 
-async function readSettings(root: string): Promise<ReadState | null> {
+async function readSettingsFrom(root: string): Promise<ReadState | null> {
     const path = settingsPath(root);
     let stat: Stats;
     let raw: string;
@@ -67,6 +75,24 @@ async function readSettings(root: string): Promise<ReadState | null> {
     }
     const values = parseYaml(raw);
     return { raw, values, mtimeMs: Math.trunc(stat.mtimeMs) };
+}
+
+/**
+ * Read `.agent-settings.yml` from `writeRoot`, falling back to
+ * `legacyReadRoot` on ENOENT. A hit on the fallback is what makes the
+ * silent-migration story work: the next PUT writes to `writeRoot` and
+ * the legacy file is no longer consulted.
+ */
+async function readSettings(
+    writeRoot: string,
+    legacyReadRoot: string | null | undefined,
+): Promise<ReadState | null> {
+    const primary = await readSettingsFrom(writeRoot);
+    if (primary !== null) return primary;
+    if (legacyReadRoot && legacyReadRoot !== writeRoot) {
+        return readSettingsFrom(legacyReadRoot);
+    }
+    return null;
 }
 
 function zodIssuesToFields(issues: ZodIssue[]): Array<{ path: string; message: string }> {
@@ -83,7 +109,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/settings', async (_request, reply) => {
             try {
-                const state = await readSettings(opts.projectRoot);
+                const state = await readSettings(opts.writeRoot, opts.legacyReadRoot);
                 if (state === null) {
                     await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                     return reply;
@@ -110,7 +136,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readSettings(opts.projectRoot);
+            const current = await readSettings(opts.writeRoot, opts.legacyReadRoot);
             if (current === null) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;
@@ -141,7 +167,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readSettings(opts.projectRoot);
+            const current = await readSettings(opts.writeRoot, opts.legacyReadRoot);
             if (current === null) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;
@@ -165,7 +191,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                         preview: { path: SETTINGS_RELATIVE, body: merged },
                     };
                 }
-                const path = settingsPath(opts.projectRoot);
+                const path = settingsPath(opts.writeRoot);
                 await writeAtomic(path, merged, { mode: 0o600 });
                 const stat = await fs.stat(path);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [SETTINGS_RELATIVE] };

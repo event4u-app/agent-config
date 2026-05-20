@@ -23,6 +23,7 @@ import { resolve } from 'node:path';
 import { pickFreePort, DEFAULT_PORT_RANGE } from '../../server/port.js';
 import { mintToken } from '../../server/token.js';
 import { createApp } from '../../server/app.js';
+import { resolveWriteRoot, ensureWriteRoot } from '../../server/writeRoot.js';
 import { PACKAGE_ROOT } from '../paths.js';
 import { logger } from '../log/logger.js';
 
@@ -70,7 +71,10 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         return 1;
     }
 
-    const projectRoot = resolve(opts.projectRoot ?? process.cwd());
+    const { writeRoot, legacyReadRoot, mode } = resolveWriteRoot(
+        opts.projectRoot !== undefined ? { override: opts.projectRoot } : {},
+    );
+    ensureWriteRoot(writeRoot);
 
     if (isHeadless() && opts.allowHeadless !== true) {
         logger.error('Headless environment detected (SSH or no DISPLAY).');
@@ -86,9 +90,15 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
     if (dryRun) {
         logger.info('dry-run mode: no files will be written');
     }
+    logger.info(`storage: ${mode} → ${writeRoot}`);
+    if (legacyReadRoot !== null) {
+        logger.info(`legacy-read fallback: ${legacyReadRoot}`);
+    }
 
     const app = await createApp({
-        projectRoot,
+        writeRoot,
+        legacyReadRoot,
+        mode,
         uiDistDir,
         token,
         expectedPort: port,

@@ -9,8 +9,8 @@
  *   - Marker present + any tmp missing  → abort (unlink tmps + marker).
  *
  * These tests exercise the replay machinery directly — no Fastify boot
- * needed — by seeding marker + tmp files into `agents/state/` and
- * driving `replayPendingCommits` against the fixture project.
+ * needed — by seeding marker + tmp files into `<writeRoot>/state/` and
+ * driving `replayPendingCommits` against the fixture root.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, readFileSync, existsSync, rmSync } from 'node:fs';
@@ -24,7 +24,7 @@ describe('2PC commit + crash recovery', () => {
 
     beforeEach(() => {
         projectRoot = mkdtempSync(join(tmpdir(), 'agent-config-2pc-'));
-        mkdirSync(join(projectRoot, 'agents', 'state'), { recursive: true });
+        mkdirSync(join(projectRoot, 'state'), { recursive: true });
     });
 
     afterEach(() => {
@@ -39,13 +39,13 @@ describe('2PC commit + crash recovery', () => {
                 { target: settingsPath, contents: 'cost_profile: balanced\n', mode: 0o600 },
                 { target: userMdPath, contents: '# user md\n', mode: 0o600 },
             ],
-            { projectRoot },
+            { writeRoot: projectRoot },
         );
         expect(txnId.length).toBeGreaterThan(0);
         expect(readFileSync(settingsPath, 'utf8')).toBe('cost_profile: balanced\n');
         expect(readFileSync(userMdPath, 'utf8')).toBe('# user md\n');
         // Marker must be gone after a clean commit.
-        expect(existsSync(join(projectRoot, 'agents', 'state', `wizard-intent-${txnId}.json`))).toBe(false);
+        expect(existsSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`))).toBe(false);
     });
 
     it('replay finishes a marker whose every tmp is present (crash AFTER marker, BEFORE rename)', async () => {
@@ -67,7 +67,7 @@ describe('2PC commit + crash recovery', () => {
                 { tmp: userMdTmp, target: userMdPath, mode: 0o600 },
             ],
         };
-        writeFileSync(join(projectRoot, 'agents', 'state', `wizard-intent-${txnId}.json`), JSON.stringify(marker));
+        writeFileSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`), JSON.stringify(marker));
 
         const result = await replayPendingCommits(projectRoot);
         expect(result.completed).toContain(txnId);
@@ -75,7 +75,7 @@ describe('2PC commit + crash recovery', () => {
         expect(readFileSync(settingsPath, 'utf8')).toBe('cost_profile: minimal\n');
         expect(readFileSync(userMdPath, 'utf8')).toBe('# replayed user md\n');
         // Marker must be cleaned up.
-        expect(existsSync(join(projectRoot, 'agents', 'state', `wizard-intent-${txnId}.json`))).toBe(false);
+        expect(existsSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`))).toBe(false);
     });
 
     it('replay aborts a marker whose tmps are missing (crash mid-prepare)', async () => {
@@ -97,7 +97,7 @@ describe('2PC commit + crash recovery', () => {
                 { tmp: userMdTmp, target: userMdPath, mode: 0o600 },
             ],
         };
-        writeFileSync(join(projectRoot, 'agents', 'state', `wizard-intent-${txnId}.json`), JSON.stringify(marker));
+        writeFileSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`), JSON.stringify(marker));
 
         const result = await replayPendingCommits(projectRoot);
         expect(result.aborted).toContain(txnId);
@@ -106,19 +106,19 @@ describe('2PC commit + crash recovery', () => {
         expect(existsSync(settingsPath)).toBe(false);
         expect(existsSync(userMdPath)).toBe(false);
         // Marker + leftover tmps cleaned up.
-        expect(existsSync(join(projectRoot, 'agents', 'state', `wizard-intent-${txnId}.json`))).toBe(false);
+        expect(existsSync(join(projectRoot, 'state', `wizard-intent-${txnId}.json`))).toBe(false);
         expect(existsSync(settingsTmp)).toBe(false);
     });
 
     it('replay tolerates a corrupt marker by aborting it', async () => {
         writeFileSync(
-            join(projectRoot, 'agents', 'state', 'wizard-intent-corrupt.json'),
+            join(projectRoot, 'state', 'wizard-intent-corrupt.json'),
             '{not valid json',
             { mode: 0o600 },
         );
         const result = await replayPendingCommits(projectRoot);
         expect(result.aborted).toContain('wizard-intent-corrupt.json');
-        expect(existsSync(join(projectRoot, 'agents', 'state', 'wizard-intent-corrupt.json'))).toBe(false);
+        expect(existsSync(join(projectRoot, 'state', 'wizard-intent-corrupt.json'))).toBe(false);
     });
 
     it('replay is a no-op when no markers are pending', async () => {

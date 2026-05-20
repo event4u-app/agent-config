@@ -58,6 +58,15 @@ function installFetchMock(serverStep: number, partial: Record<string, unknown>):
         if (path === '/api/v1/settings' && method === 'GET') {
             return new Response(JSON.stringify({ values: { 'personal.user_name': '' }, lastModified: 1, path: '.agent-settings.yml', schema: SETTINGS_SCHEMA }), { status: 200 });
         }
+        if (path === '/api/v1/user-md' && method === 'GET') {
+            return new Response(JSON.stringify({ body: '', exists: false, lastModified: null }), { status: 200 });
+        }
+        if (path === '/api/v1/user-md/template' && method === 'GET') {
+            return new Response(JSON.stringify({ body: '' }), { status: 200 });
+        }
+        if (path === '/api/v1/settings/diff' && method === 'POST') {
+            return new Response(JSON.stringify({ changes: [] }), { status: 200 });
+        }
         return new Response(JSON.stringify({}), { status: 200 });
     }) as unknown as typeof fetch;
     return (): void => { global.fetch = original; };
@@ -85,6 +94,36 @@ describe('WizardPage resume', () => {
             render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             expect(stepIndex.value).toBe(WIZARD_TOTAL_STEPS - 1);
+        } finally {
+            restore();
+        }
+    });
+
+    it('triggers loadUserMdOnce when resuming directly on the userMd step (no Loading hang)', async () => {
+        // Resume on step 5 (user-md). Without the post-loadAll dispatch the
+        // body fetch would never fire and the form would stay stuck on
+        // "Loading .agent-user.md…".
+        const restore = installFetchMock(5, {});
+        try {
+            render(<WizardPage path="/wizard" />);
+            await waitFor(() => expect(loaded.value).toBe(true));
+            await waitFor(() => expect(userMdLoaded.value).toBe(true));
+            expect(stepIndex.value).toBe(5);
+        } finally {
+            restore();
+        }
+    });
+
+    it('triggers refreshDiff and userMd load when resuming directly on the review step', async () => {
+        const restore = installFetchMock(WIZARD_TOTAL_STEPS - 1, {});
+        try {
+            render(<WizardPage path="/wizard" />);
+            await waitFor(() => expect(loaded.value).toBe(true));
+            await waitFor(() => expect(userMdLoaded.value).toBe(true));
+            // refreshDiff resolves with empty changes; toggling diffLoading
+            // back to false is the evidence it ran.
+            await waitFor(() => expect(diffLoading.value).toBe(false));
+            expect(reviewChanges.value).toEqual([]);
         } finally {
             restore();
         }

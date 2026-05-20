@@ -50,8 +50,7 @@ export function settingsTemplate(): string {
 
 export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
     const projectRoot = mkdtempSync(join(tmpdir(), 'agent-config-test-'));
-    mkdirSync(join(projectRoot, 'agents', 'state'), { recursive: true });
-    mkdirSync(join(projectRoot, '.agent-config'), { recursive: true });
+    mkdirSync(join(projectRoot, 'state'), { recursive: true });
 
     if (opts.seedSettings !== false) {
         writeFileSync(join(projectRoot, '.agent-settings.yml'), settingsTemplate(), { mode: 0o600 });
@@ -104,4 +103,47 @@ export function fixtureSettings(overlay: Record<string, unknown> = {}): Record<s
 
 export function authHeaders(token: string, host: string): Record<string, string> {
     return { host, authorization: `Bearer ${token}` };
+}
+
+/**
+ * Build a v1-valid `.agent-user.md` body. Mirrors the locked contract
+ * (`docs/contracts/agent-user-schema.md`) so any required-field tightening
+ * in `userMdSchema` is felt by every wizard / dry-run / user-md test.
+ *
+ * Pass `overlay` to flip individual frontmatter fields; everything else
+ * defaults to a sane Matze-shaped fixture.
+ */
+export function fixtureUserMd(
+    overlay: { name?: string; nickname?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+): string {
+    const name = overlay.name ?? 'Matze';
+    const nicknameLine = overlay.nickname ? `\n  nickname: "${overlay.nickname}"` : '';
+    const language = overlay.language ?? 'de';
+    const role = overlay.role ?? ['founder'];
+    const formality = overlay.formality ?? 'informal';
+    const pace = overlay.pace ?? 'pragmatic';
+    const voiceSample = overlay.voiceSample ?? 'Mach das einfach.';
+    const lastUpdated = overlay.lastUpdated ?? '2026-05-19';
+    const notes = overlay.notes ?? 'hi.';
+    const roleBlock = role.map((r) => `  - ${r}`).join('\n');
+    return [
+        '---',
+        'version: 1',
+        'identity:',
+        `  name: "${name}"${nicknameLine}`,
+        `language: "${language}"`,
+        'role:',
+        roleBlock,
+        'style:',
+        `  formality: "${formality}"`,
+        `  pace: "${pace}"`,
+        'voice_sample: |',
+        `  ${voiceSample}`,
+        `last_updated: "${lastUpdated}"`,
+        '---',
+        '',
+        '# Notes',
+        notes,
+        '',
+    ].join('\n');
 }
