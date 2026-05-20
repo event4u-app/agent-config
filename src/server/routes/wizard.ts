@@ -36,7 +36,9 @@ export interface WizardRouteOptions {
 const STATE_REL = join('.agent-config', 'wizard-state.json');
 const SETTINGS_REL = '.agent-settings.yml';
 const USER_MD_REL = '.agent-user.md';
-const DEFAULT_TOTAL_STEPS = 8;
+// Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
+// and the chat-side `~/.claude/skills/onboard/SKILL.md`. Bump in lockstep.
+const DEFAULT_TOTAL_STEPS = 7;
 
 const wizardStateSchema = z.object({
     step: z.number().int().min(0),
