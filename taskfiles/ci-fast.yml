@@ -296,11 +296,22 @@ tasks:
     desc: Dry-run diff of `.github/topics.yml` + `.github/about.yml` against the live GitHub repo. Pass `-- --apply` to mutate (requires GITHUB_TOKEN with admin:write) — R5 Phase 1.2
     cmd: python3 scripts/sync_github_metadata.py {{.CLI_ARGS}}
 
+  build-mcp-registry-manifest:
+    silent: true
+    desc: Render dist/mcp/registry-manifest.json + the two payloads (awesome-mcp-servers row, Cloudflare catalogue entry) — R5 Phase 2.2
+    cmd: python3 scripts/build_mcp_registry_manifest.py --write --strict {{.QUIET_FLAG}}
+
+  lint-mcp-registry-manifest:
+    silent: true
+    desc: Validate dist/mcp/registry-manifest.json against the schema; assert payload shapes — R5 Phase 2 exit gate
+    cmd: python3 scripts/lint_mcp_registry_manifest.py {{.QUIET_FLAG}}
+
   visibility-check:
     silent: true
-    desc: Run every visibility-as-code lint in sequence (topics + positioning once Phase 3 lands) — R5 Phase 3.3
+    desc: Run every visibility-as-code lint in sequence (topics + MCP registry + positioning once Phase 3 lands) — R5 Phase 3.3
     cmds:
       - task: lint-topics-yaml
+      - task: lint-mcp-registry-manifest
 
   lint-framework-leakage:
     silent: true
