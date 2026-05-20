@@ -746,6 +746,13 @@ The CLI and setup UI ship as **TypeScript** (compiled to `dist/cli/` and `dist/u
 - **Composer or npm** — to pull the package.
 - **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
 
+## Registry
+
+> MCP registry: submission pending (tracked in
+> [R5 — strategic-visibility roadmap](agents/roadmaps/strategic-visibility-mcp-topics-positioning.md)).
+> Rendered payloads live under `dist/mcp/`; see
+> [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md).
+
 ## License
 
 [MIT](LICENSE).
