@@ -91,6 +91,17 @@ User decides. Default: **3** when the current branch's name and scope match the 
 
 **Failure mode — diverging stacked PRs.** Skipping the inventory and committing to the wrong base creates two PRs that should have been one stack: merge conflicts when the parent lands, rebase / force-push churn, duplicate review effort. The 30-second inventory cost up front beats hours of rebase reconciliation later.
 
+**Failure mode — opening a PR on a stale long-lived branch.** A pre-existing feature branch (e.g. `feat/X` last touched days ago) is still "the current branch" but its base — `main` — has moved on. Auto-generated artifacts (`agents/roadmaps-progress.md`, ownership matrices, compressed mirrors, hash files) are the canonical collision surface: any merged PR on `main` touched them, and the stale branch's copy is now a content conflict by construction. Opening a PR without fetching `main` first surfaces conflicts only after `gh pr create` has already published the broken PR.
+
+**Pre-PR freshness check — MANDATORY** (mirrored in [`/create-pr` Step 1b](../../commands/create-pr.md)). Before `gh pr create`:
+
+1. `git fetch origin {target-base} --quiet`.
+2. `git rev-list --count HEAD..origin/{target-base}` — commits behind base.
+3. Count > 0 AND another open PR targets the same base → STOP and ask: stack on top / wait for parent to land / merge-main-into-branch / proceed-anyway-and-accept-conflicts / cancel.
+4. Count > 0 AND no overlap → ask: merge-main / rebase / proceed-anyway / cancel.
+
+User decides. Never silently `gh pr create` on a branch that is behind its base.
+
 ## Decline = silence — context
 
 The right moment to ask is **before** the work starts (writing the

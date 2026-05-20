@@ -56,6 +56,33 @@ Uses `/create-pr:description-only` to generate the PR content, then creates the 
 - Run `git log origin/{default}..HEAD --oneline` to verify there are commits to push.
 - If the branch has not been pushed yet, ask the user (in their language) whether to push.
 
+### 1b. Freshness gate — MANDATORY before opening any PR
+
+The branch may have diverged from its target base while you were
+working. A PR opened against a stale base creates merge conflicts the
+moment another PR lands first — the exact failure that motivates this
+gate.
+
+Run, in order:
+
+1. `git fetch origin {target-base} --quiet` (default: `main`).
+2. `git rev-list --count HEAD..origin/{target-base}` — number of
+   commits HEAD is **behind** the base.
+3. `gh pr list --state open --base {target-base} --limit 20 --json number,headRefName,files`
+   — open PRs targeting the same base.
+
+**Decision matrix:**
+
+| Behind | Overlapping open PR touches same files? | Action |
+|---|---|---|
+| `0` | — | Proceed to Step 2 |
+| `1–N` | No | Surface the count, ask: rebase / merge-main / proceed-anyway / cancel |
+| `1–N` | **Yes** | STOP — surface the overlapping PR number, ask: stack on top of it / wait for it to land / proceed-anyway-and-accept-conflicts / cancel |
+
+Never improvise the base or silently proceed when the branch is behind
+and overlap exists. The 10-second fetch beats hours of rebase
+reconciliation after the parent PR lands.
+
 ### 2. Generate PR content
 
 Run `/create-pr:description-only` Steps 1–4 to generate the PR title and body.
