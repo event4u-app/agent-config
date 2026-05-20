@@ -363,9 +363,9 @@ Three directories, three modes:
 
 | Mode | Path | Format |
 |---|---|---|
-| **Topic-anchored question** (paired with a roadmap or ADR) | `agents/council-questions/<topic-slug>.md` | Markdown |
-| **Topic-anchored response** (paired with the question above) | `agents/council-responses/<topic-slug>.json` | JSON from `council:run --output` |
-| **Ad-hoc session** (no durable artefact yet) | `agents/council-sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
+| **Topic-anchored question** (paired with a roadmap or ADR) | `agents/runtime/council/questions/<topic-slug>.md` | Markdown |
+| **Topic-anchored response** (paired with the question above) | `agents/runtime/council/responses/<topic-slug>.json` | JSON from `council:run --output` |
+| **Ad-hoc session** (no durable artefact yet) | `agents/runtime/council/sessions/<UTC-timestamp>.json` | JSON from `council:run --output` |
 
 `<topic-slug>` is kebab-case and **must match** the corresponding
 roadmap / ADR slug if one exists (e.g. `path-fixes` mirrors the
@@ -373,10 +373,11 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 
 ### Forbidden
 
-- Files at `agents/` root (e.g. `agents/council-question-foo.md`).
+- Files at `agents/` root (e.g. `agents/runtime/council/question-foo.md`).
 - Dot-prefix scratch (e.g. `agents/.council-question-foo.md`).
 - Any other directory below `agents/` (e.g. `agents/scratch/`,
-  `agents/tmp/`).
+  `agents/notes/`). Operator scratch belongs under
+  `agents/runtime/tmp/` (gitignored).
 - Cross-references from any artefact to specific council files —
   see [`no-roadmap-references`](../../rules/no-roadmap-references.md)
   (council clause). Inline the convergence summary instead, with
@@ -444,10 +445,10 @@ Input modes (`prompt` / `roadmap` / `diff` / `files`) inherit the
 
 **Source citations:**
 * Template shape — Round 2 council verdict
-  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-1.md`,
+  (`agents/runtime/council/sessions/2026-05-14-ai-council-redesign/round-1.md`,
   Opus's lens-adaptive synthesis proposal).
 * Decision/creative split — Round 4 Q4 verdict
-  (`agents/council-sessions/2026-05-14-ai-council-redesign/round-3-responses.json`).
+  (`agents/runtime/council/sessions/2026-05-14-ai-council-redesign/round-3-responses.json`).
   R4 reframed `optimize` as creative because perf trade-offs resist
   pre-templated shape — Performance-wins / Trade-offs /
   Implementation-order is too rigid for the variety of optimize-lens
@@ -552,7 +553,7 @@ per-invocation caps from `ai_council.cost_budget`:
   if the callback returns False or is absent, tags the member
   `daily_budget_exceeded` instead of `cost_budget_exceeded`.
 
-Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly).
+Prices come from `agents/runtime/.agent-prices.md` (gitignored, refreshed weekly).
 The pricing module bootstraps it from `_default_prices.py` on first
 use and flags it stale when older than the most recent Monday 00:00
 UTC.
@@ -623,7 +624,7 @@ member can refine, agree, or push back on the previous critique
 without seeing which provider produced which point.
 
 The default round count comes from `defaults.min_rounds` in
-`agents/.ai-council.yml` (default `2` so members critique each other
+`agents/settings/.ai-council.yml` (default `2` so members critique each other
 at least once before convergence). The host agent does **not** ask
 "how many rounds?" when the requested count is `<= min_rounds` —
 the settings owner already made that decision. Ask only when a
@@ -715,7 +716,7 @@ between every round so the user can stop the spend at any point.
 | Cost gate | After every round the CLI prints `Spent so far: $X · Next round: ~$Y · Cap: $Z`. `n` exits cleanly with partial results; `y` continues. |
 | Hard cap | If the projected next-round cost would breach `max_total_usd`, `run_debate()` raises `DebateCapExceeded` and the CLI exits with the partial transcript. No silent overrun. |
 | `--continue-as-debate` | Seeds round 1 from an existing `/council default` (or analysis lens) session. No round-1 API calls are billed; round 2+ run normally. Member list must match. |
-| Session files | One file per round under `agents/council-sessions/<slug>/debate-round-NN.md`. |
+| Session files | One file per round under `agents/runtime/council/sessions/<slug>/debate-round-NN.md`. |
 | Anonymisation | Identical to `rounds:N`. The continue-as-debate path also anonymises the seeded round-1 responses when building the round-2 prompt. |
 
 Use this when the artefact is genuinely contentious and the user
@@ -732,7 +733,7 @@ blind spots before synthesis. Inspired by Andrej Karpathy's "ask the
 strongest models to review each other anonymously" pattern; see his
 [talks / threads on inter-model critique](https://karpathy.ai/) and the
 internal verdict in
-`agents/council-sessions/2026-05-14-ai-council-redesign/round-2.md`
+`agents/runtime/council/sessions/2026-05-14-ai-council-redesign/round-2.md`
 (R2 split: one approve-as-flag, one reject-as-default → opt-in only).
 
 Pipeline order when every feature is active:
@@ -745,7 +746,7 @@ Activation — two equivalent paths:
 
 * CLI: `--peer-review` on `council:estimate` or `council:run`.
 * Config: `ai_council.peer_review.enabled: true` in
-  `agents/.ai-council.yml`. Default is `false`.
+  `agents/settings/.ai-council.yml`. Default is `false`.
 
 Mechanics:
 
@@ -789,7 +790,7 @@ swaps.
 | **Outsider** | `openai` | naive-but-sharp questions, beginner's-mind probes |
 | **Executor** | `anthropic` | what ships this quarter, what blocks delivery |
 
-Activation — edit `agents/.ai-council.yml` and flip the advisor's
+Activation — edit `agents/settings/.ai-council.yml` and flip the advisor's
 `enabled: true`. Optional `model: <name>` overrides the bound
 member's default model. An advisor referencing a disabled member
 fails closed at config load — never silently skipped.
@@ -873,7 +874,7 @@ for its own answer.
 ### Session artefact
 
 Every fast-path attempt appends one line to
-`agents/council-sessions/<date>-<slug>/low-impact-resolutions.md`:
+`agents/runtime/council/sessions/<date>-<slug>/low-impact-resolutions.md`:
 
 ```
 2025-05-14T10:00:00Z | resolved | members=2/2 | members(anthropic, openai) cost=$0.0034 | Q=Service vs Repository for this read path?
@@ -887,7 +888,7 @@ headers around canonical lines.
 Re-projection of session log → summary block:
 
 ```
-$ council replay agents/council-sessions/2025-05-14-foo/responses.json --low-impact-stats
+$ council replay agents/runtime/council/sessions/2025-05-14-foo/responses.json --low-impact-stats
 # Low-impact fast-path · session summary
 
 - attempts: 4

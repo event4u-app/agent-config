@@ -2,7 +2,7 @@
 """Block D · D1 — meta-linter for ``scripts/skill_tools/*.py``.
 
 Enforces the four pilot-tool invariants locked by the Block D council
-verdict (`agents/council-responses/block-d-python-tools-pilot-verdict.md`):
+verdict (`agents/runtime/council/responses/block-d-python-tools-pilot-verdict.md`):
 
   1. **stdlib-only** — no third-party imports. Internal package imports
      (``scripts.*``) are allowed.

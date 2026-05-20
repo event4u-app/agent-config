@@ -32,7 +32,7 @@ Every fixture MUST:
 1. Be valid JSON (`json.loads` round-trips).
 2. Be an object at the top level (the dispatcher only wraps dicts).
 3. Carry `session_id` (string, non-empty) so feedback writes land in a
-   deterministic slot under `agents/state/.dispatcher/<session_id>/`.
+   deterministic slot under `agents/runtime/state/.dispatcher/<session_id>/`.
 4. Carry enough event-specific fields that real concerns
    (`chat-history`, `roadmap-progress`, `context-hygiene`,
    `verify-before-complete`, `minimal-safe-diff`) can run without
@@ -76,7 +76,7 @@ AGENT_CONFIG_REPLAY=1 \
 ```
 
 `AGENT_CONFIG_REPLAY=1` signals concerns to skip writes under
-`agents/state/`. Concerns that don't honor the flag are listed by
+`agents/runtime/state/`. Concerns that don't honor the flag are listed by
 `./agent-config hooks:doctor` as not replay-safe.
 
 ## When to update

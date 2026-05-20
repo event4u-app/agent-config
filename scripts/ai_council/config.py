@@ -1,6 +1,6 @@
 """Council configuration loader — single source of truth.
 
-Reads ``agents/.ai-council.yml`` per the contract in
+Reads ``agents/settings/.ai-council.yml`` per the contract in
 ``docs/contracts/ai-council-config.md``. Replaces the fragmented
 ``.agent-settings.yml`` ``ai_council`` block (Phase 0 migration).
 
@@ -49,7 +49,7 @@ _RAW_KEY_PREFIXES = ("sk-", "sk-ant-", "ya29.", "AIza", "xai-", "pplx-", "gsk_")
 
 
 class CouncilConfigError(RuntimeError):
-    """Raised when ``agents/.ai-council.yml`` violates the schema."""
+    """Raised when ``agents/settings/.ai-council.yml`` violates the schema."""
 
 
 @dataclass(frozen=True)
@@ -380,7 +380,7 @@ class LowImpactConfig:
     for shadow-mode logging (Phase 10). At ``0.0`` shadow is off; at
     ``1.0`` every solo decision is also dispatched to the full
     council and the verdicts are compared in
-    ``agents/council-shadow-log.jsonl``. Must be in ``[0.0, 1.0]``.
+    ``agents/runtime/council/shadow-log.jsonl``. Must be in ``[0.0, 1.0]``.
 
     ``solo_confidence_floor`` is the auto-escalation threshold for
     solo-member responses (step-9 P13). When the dispatcher extracts

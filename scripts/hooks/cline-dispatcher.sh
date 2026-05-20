@@ -81,6 +81,6 @@ printf '%s' "$EVENT_DATA" \
 
 # Cline expects a JSON envelope on stdout; empty object = "no cancel,
 # no context modification, no error". Errors from concerns surface
-# through agents/state/.dispatcher/<session_id>/ per Phase 7.3.
+# through agents/runtime/state/.dispatcher/<session_id>/ per Phase 7.3.
 printf '%s\n' '{}'
 exit 0

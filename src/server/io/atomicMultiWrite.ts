@@ -20,7 +20,7 @@
  *
  * State dir lives under `<writeRoot>/state/` — in package-sandbox mode
  * `writeRoot` is `<repo>/agents/`, so the marker dir is the gitignored
- * `agents/state/` already shipped by the package gitignore template. In
+ * `agents/runtime/state/` already shipped by the package gitignore template. In
  * global mode `writeRoot` is `~/.event4u/agent-config/` and the marker
  * dir lives outside any project tree.
  */

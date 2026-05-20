@@ -2,7 +2,7 @@
 
 Asserts the contract from `docs/contracts/hook-architecture-v1.md` § Concurrency
 and roadmap step 7.4: parallel writers under
-`agents/state/.dispatcher.lock` may interleave but MUST NOT produce torn
+`agents/runtime/state/.dispatcher.lock` may interleave but MUST NOT produce torn
 files. The end state of the target file must always be a complete JSON
 document matching exactly one of the writers' payloads.
 
@@ -69,7 +69,7 @@ def _verify_complete(target: Path, expected_seeds: set[int]) -> None:
 )
 def test_atomic_write_no_torn_files_multithreaded(tmp_path: Path) -> None:
     """Multi-thread contention must never corrupt the destination file."""
-    target = tmp_path / "agents" / "state" / "concurrent.json"
+    target = tmp_path / "agents" / "runtime" / "state" / "concurrent.json"
     seeds = list(range(8))
     threads = [
         threading.Thread(target=_writer_loop, args=(target, seed, 10))
@@ -89,7 +89,7 @@ def test_atomic_write_no_torn_files_multithreaded(tmp_path: Path) -> None:
 def test_atomic_write_no_torn_files_multiprocess(tmp_path: Path) -> None:
     """Cross-process contention (the real hook scenario) is the harder
     case — two platforms can fire dispatchers in the same workspace."""
-    target = tmp_path / "agents" / "state" / "concurrent.json"
+    target = tmp_path / "agents" / "runtime" / "state" / "concurrent.json"
     seeds = list(range(6))
     ctx = multiprocessing.get_context("fork")
     procs = [
@@ -105,20 +105,20 @@ def test_atomic_write_no_torn_files_multiprocess(tmp_path: Path) -> None:
 
 
 def test_atomic_write_creates_state_dir(tmp_path: Path) -> None:
-    """The helper must auto-create `agents/state/` so concerns don't
+    """The helper must auto-create `agents/runtime/state/` so concerns don't
     have to repeat the mkdir dance."""
-    target = tmp_path / "deeper" / "agents" / "state" / "fresh.json"
+    target = tmp_path / "deeper" / "agents" / "runtime" / "state" / "fresh.json"
     assert not target.parent.exists()
     atomic_write_json(target, {"hello": "world"})
     assert target.is_file()
     assert json.loads(target.read_text())["hello"] == "world"
-    # Lock file appears alongside, also under gitignored agents/state/.
+    # Lock file appears alongside, also under gitignored agents/runtime/state/.
     assert (target.parent / ".dispatcher.lock").exists()
 
 
 def test_atomic_write_overwrites_cleanly(tmp_path: Path) -> None:
     """Repeated writes do not leak `.tmp.<pid>` siblings."""
-    target = tmp_path / "agents" / "state" / "overwrite.json"
+    target = tmp_path / "agents" / "runtime" / "state" / "overwrite.json"
     for i in range(5):
         atomic_write_json(target, {"i": i})
     assert json.loads(target.read_text())["i"] == 4

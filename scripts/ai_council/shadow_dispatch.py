@@ -3,7 +3,7 @@
 When ``low_impact.dispatch: single`` is active, a Bernoulli-sampled subset
 of decisions is shadowed through the full council so disagreement between
 the solo verdict and the council verdict can be measured. The shadow log
-lives at ``agents/council-shadow-log.jsonl`` and is subject to the same
+lives at ``agents/runtime/council/shadow-log.jsonl`` and is subject to the same
 privacy floor as the low-impact corpus: redactor-refused entries are
 dropped, not softened.
 
@@ -23,7 +23,7 @@ from typing import Iterable
 
 from scripts.ai_council.bundler import redact
 
-SHADOW_LOG_PATH = Path("agents/council-shadow-log.jsonl")
+SHADOW_LOG_PATH = Path("agents/runtime/council/shadow-log.jsonl")
 
 SLO_THRESHOLD_WARN = 0.05
 SLO_THRESHOLD_BREACH = 0.08

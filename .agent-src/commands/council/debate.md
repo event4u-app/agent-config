@@ -58,7 +58,7 @@ the agent's framing.
 ### 2. Decide round count + auto-continue
 
 Default: 2 rounds (initial position + one rebuttal). Cap: the value of
-`defaults.debate_max_rounds` in [`agents/.ai-council.yml`](../../../agents/.ai-council.yml)
+`defaults.debate_max_rounds` in [`agents/settings/.ai-council.yml`](../../../agents/settings/.ai-council.yml)
 (default 4). `--rounds N` overrides the default; values above the cap
 are rejected by the CLI.
 
@@ -94,7 +94,7 @@ to abort.
 
 ```bash
 python3 scripts/council_cli.py debate <topic-path> \
-  --output agents/council-sessions/<date>-<slug>/ \
+  --output agents/runtime/council/sessions/<date>-<slug>/ \
   --confirm \
   --rounds <N> \
   [--auto-continue] \
@@ -102,7 +102,7 @@ python3 scripts/council_cli.py debate <topic-path> \
   --original-ask "<verbatim topic>"
 ```
 
-Session directory shape: `agents/council-sessions/<YYYY-MM-DD>-debate-<slug>/`
+Session directory shape: `agents/runtime/council/sessions/<YYYY-MM-DD>-debate-<slug>/`
 with `debate-round-1.json`, `debate-round-2.json`, … written incrementally.
 An interrupted debate leaves every completed round on disk.
 
@@ -120,7 +120,7 @@ After all rounds complete, render the last round's JSON via
 `/council` render flow:
 
 ```bash
-python3 scripts/council_cli.py render agents/council-sessions/<dir>/debate-round-<N>.json
+python3 scripts/council_cli.py render agents/runtime/council/sessions/<dir>/debate-round-<N>.json
 ```
 
 The debate mode uses the structured decision-lens template (Karpathy
@@ -136,6 +136,6 @@ session directory is the canonical audit trail.
 
 If `DebateCapExceeded` fires, the CLI exits with code 3 and the partial
 debate is persisted. Surface the partial-debate path to the user and
-ask whether to (a) raise the cap in `agents/.ai-council.yml` and rerun,
+ask whether to (a) raise the cap in `agents/settings/.ai-council.yml` and rerun,
 (b) stop here and render the partial result, or (c) start a new debate
 with a smaller scope.

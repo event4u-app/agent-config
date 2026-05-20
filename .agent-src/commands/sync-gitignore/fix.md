@@ -26,17 +26,21 @@ install:
 # /sync-gitignore:fix
 
 Cleanup sibling of [`/sync-gitignore`](../sync-gitignore.md). Strips
-legacy root-level patterns (pre-`/agents/` runtime artefacts —
+legacy patterns (pre-`/agents/` runtime artefacts —
 `.agent-chat-history`, `.agent-chat-history.bak`,
-`.agent-chat-history.*.bak`, `.agent-prices.md`, `.council-tmp/`) from
-**anywhere** in the consumer's `.gitignore` — inside or outside the
-managed block — then re-runs the regular sync so the current canonical
-`/agents/`-prefixed entries land in the block.
+`.agent-chat-history.*.bak`, `.agent-prices.md`, `.council-tmp/` —
+plus the 2.x intermediate `agents/runtime/.agent-prices.md`) from **anywhere**
+in the consumer's `.gitignore` — inside or outside the managed block —
+then re-runs the regular sync so the current canonical entries
+(`/agents/.agent-chat-history`, `/agents/runtime/.agent-prices.md`,
+`/agents/runtime/council/`) land in the block.
 
 Use when:
 
 - An older installer (pre-May 2026) dropped root-level `.agent-chat-history`
   / `.agent-prices.md` lines that the current scripts no longer recognise.
+- A 2.x install left `/agents/.agent-prices.md` in the block before the
+  cache moved under `/agents/runtime/`.
 - A hand-edit added one of those legacy paths and it now conflicts with
   the managed `/agents/...` entry.
 - `/sync-gitignore` reports "already in sync" but git is still ignoring
@@ -114,15 +118,18 @@ Free-text replies (`"nö"`, `"leave it"`, unrecognized input) count as
 
 ### 4. Suggest the migration check (informational, do NOT auto-run)
 
-If the cleanup removed `.agent-chat-history` or `.agent-prices.md`,
-mention that the **file** at the root (if still present) may need to
-move to `agents/`. The installer does this automatically via
-[`migrate_legacy_root_infra`](../../../scripts/install.sh); the
-agent does not run it from this command. One line of guidance is
-enough:
+If the cleanup removed `.agent-chat-history` or any flavour of
+`.agent-prices.md`, mention that the **file** itself (if still present
+at its old location) may need to move. The installer does this
+automatically via
+[`migrate_legacy_root_infra`](../../../scripts/install.sh) (chat-history,
+root → `agents/`) and
+[`migrate_legacy_prices_file`](../../../scripts/install.sh) (prices,
+root or `agents/` → `agents/runtime/`); the agent does not run them
+from this command. One line of guidance is enough:
 
 ```
-> ℹ️  If `.agent-chat-history` still sits at the project root, re-run the installer (or move it to `agents/.agent-chat-history` by hand) so the runtime can find it again.
+> ℹ️  If `.agent-chat-history` still sits at the project root, or `.agent-prices.md` still sits at the project root or under `agents/`, re-run the installer so the runtime can find them again.
 ```
 
 ## Rules

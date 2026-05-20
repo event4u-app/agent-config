@@ -14,7 +14,7 @@ Outcomes:
   envelope returned.
 - ``latent_demand`` — caller asked for a tool not in the catalog.
 
-The sink writes JSONL to ``agents/.mcp-telemetry/calls.jsonl`` under the
+The sink writes JSONL to ``agents/runtime/mcp-telemetry/calls.jsonl`` under the
 consumer root. Failure to write must not break the wire surface: the
 ``record_call`` helper swallows OSError + ValueError and emits a single
 warning to stderr.
@@ -33,7 +33,7 @@ Outcome = Literal["implemented", "stub", "latent_demand"]
 
 # Stable file location relative to consumer_root. Phase 2 K1 routes
 # this into a queryable store; Phase 1 only needs the file to exist.
-TELEMETRY_REL_DIR = "agents/.mcp-telemetry"
+TELEMETRY_REL_DIR = "agents/runtime/mcp-telemetry"
 TELEMETRY_FILENAME = "calls.jsonl"
 
 # Truncation length for the client_id hash. 12 hex chars = 48 bits of

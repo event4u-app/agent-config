@@ -14,7 +14,7 @@ type: prospective
 ## Status
 
 **Accepted** · 2026-05-17 · one-round council pass complete
-(`agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json`, actual spend $0.0300). <!-- council-ref-allowed: ADR decision trace; convergence summary inline in §Council-debate-trace -->
+(`agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json`, actual spend $0.0300). <!-- council-ref-allowed: ADR decision trace; convergence summary inline in §Council-debate-trace -->
 Split verdict — Anthropic accepted *with* tightened trigger; OpenAI
 accepted as written. The host folded Anthropic's structural critique
 into the trigger and added the escape clause both members' reasoning
@@ -185,7 +185,7 @@ treats as a smell.
 ## Council-debate trace
 
 One round · 2 members · actual spend $0.0300 · raw responses at
-[`agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json`](../../agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
+[`agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json`](../../agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
 
 | Member | Pick | Core argument | Folded back? |
 |---|---|---|---|

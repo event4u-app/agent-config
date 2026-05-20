@@ -27,7 +27,7 @@ install:
 
 > **Enforced by:** [`scripts/context_hygiene_hook.py`](../../scripts/context_hygiene_hook.py)
 > on Augment + Claude Code (`PostToolUse`). The hook maintains
-> `agents/state/context-hygiene.json` (turn count, loop signal,
+> `agents/runtime/state/context-hygiene.json` (turn count, loop signal,
 > freshness milestones at 20/40/60); the prose below is the spec the
 > hook implements and the agent-side fallback.
 
@@ -117,7 +117,7 @@ If you need an ignored skill: read its SKILL.md directly, apply guidance, then a
 
 GitHub Copilot has no `PostToolUse` hook surface, so
 `scripts/context_hygiene_hook.py` cannot run structurally and
-`agents/state/context-hygiene.json` is not maintained automatically
+`agents/runtime/state/context-hygiene.json` is not maintained automatically
 (turn count, loop signal, freshness milestones at 20/40/60).
 
 The cooperative path: track turns and tool-loop signals from memory

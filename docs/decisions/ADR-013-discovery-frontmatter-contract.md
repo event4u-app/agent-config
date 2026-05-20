@@ -14,7 +14,7 @@ type: prospective
 ## Status
 
 **Accepted** · 2026-05-19 · in-session + external AI Council pass complete
-(`agents/council-responses/2026-05-18T*-r3-automated-discovery/`). Cost: $0.19.
+(`agents/runtime/council/responses/2026-05-18T*-r3-automated-discovery/`). Cost: $0.19.
 The 5 external CRITICAL/HIGH items have been folded into Phases 1, 2, 3, 5
 of `agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md`
 (archived 2026-05-19, status: completed).

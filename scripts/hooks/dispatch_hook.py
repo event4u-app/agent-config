@@ -226,7 +226,7 @@ def _run_concern(concern: dict, envelope: dict) -> tuple[int, str, str, int]:
     Returns (rc, stderr_text, stdout_text, duration_ms).
 
     Concerns run with CWD = consumer workspace (envelope.workspace_root),
-    NOT the agent-config package root — concerns resolve `agents/state/`
+    NOT the agent-config package root — concerns resolve `agents/runtime/state/`
     and other consumer-local paths relative to CWD. The script *itself*
     lives in the package (REPO_ROOT), so we resolve it absolutely.
     """
@@ -273,11 +273,11 @@ def _write_feedback(envelope: dict, session_id: str, entries: list[dict],
     matches the dispatcher's overall posture.
     """
     # Replay mode skips feedback emission entirely so fixture replays
-    # never create per-session dirs under agents/state/.dispatcher/.
+    # never create per-session dirs under agents/runtime/state/.dispatcher/.
     if is_replay_mode():
         return
     workspace = envelope.get("workspace_root") or str(Path.cwd())
-    state_root = Path(workspace) / "agents" / "state"
+    state_root = Path(workspace) / "agents" / "runtime" / "state"
     fb_dir = feedback_dir(state_root, session_id)
     try:
         fb_dir.mkdir(parents=True, exist_ok=True)

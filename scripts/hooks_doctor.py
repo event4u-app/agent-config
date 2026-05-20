@@ -11,8 +11,8 @@ and adds three diagnostics the bare status table does not surface:
     `scripts/hooks/<platform>-dispatcher.sh`; flags any platform that
     has manifest bindings but no trampoline on disk.
   * **Last feedback** — for each concern, the most-recent dispatcher
-    feedback file under `agents/state/.dispatcher/*/<concern>.json`,
-    plus the per-rule state file under `agents/state/<concern>.json`
+    feedback file under `agents/runtime/state/.dispatcher/*/<concern>.json`,
+    plus the per-rule state file under `agents/runtime/state/<concern>.json`
     when one exists.
 
 This is a **read-only** report. It never installs, modifies, or runs
@@ -36,7 +36,7 @@ import dispatch_hook  # noqa: E402
 import hooks_status  # noqa: E402
 
 TRAMPOLINE_DIR = REPO_ROOT / "scripts" / "hooks"
-STATE_DIR_DEFAULT = "agents/state"
+STATE_DIR_DEFAULT = "agents/runtime/state"
 
 # Platforms whose bridge file (settings.json) invokes the universal
 # dispatcher directly — no shell trampoline required. Excluded from the
@@ -55,7 +55,7 @@ def _concern_state_file(state_dir: Path, concern: str) -> Path | None:
 
 def _latest_feedback(state_dir: Path, concern: str) -> Path | None:
     """Return the most-recent dispatcher feedback file for the concern,
-    walking `agents/state/.dispatcher/<session>/<concern>.json`."""
+    walking `agents/runtime/state/.dispatcher/<session>/<concern>.json`."""
     dispatcher_dir = state_dir / ".dispatcher"
     if not dispatcher_dir.is_dir():
         return None

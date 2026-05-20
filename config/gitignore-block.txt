@@ -46,26 +46,33 @@
 .agent-engagement.jsonl
 .agent-engagement.jsonl.bak
 
+# Agent config — volatile runtime artefacts (machine-generated,
+# regenerated on demand, never committed). Covers price cache,
+# council artefacts, council events log, and hook runtime state.
+# Individual paths are listed explicitly below for documentation;
+# the `/agents/runtime/` prefix is the catch-all.
+/agents/runtime/
+
 # Agent config — AI Council price table (refreshed weekly, never commit)
-/agents/.agent-prices.md
+/agents/runtime/.agent-prices.md
 
 # Agent config — AI Council artefacts (questions, responses, sessions).
 # Dev-time scratch — informs decisions, never the durable contract.
 # See ai-council § Output path convention.
-/agents/council-questions/
-/agents/council-responses/
-/agents/council-sessions/
+/agents/runtime/council/questions/
+/agents/runtime/council/responses/
+/agents/runtime/council/sessions/
 
-# Agent config — AI Council persistent events log (step-8 D3).
+# Agent config — AI Council persistent events log.
 # Local JSONL audit trail for necessity / quota decisions. Hashes
 # original_ask before write but is still considered private. Set
 # AGENT_CONFIG_NO_EVENTS_LOG=1 to disable writes entirely.
-/agents/council-events.log
+/agents/runtime/council/events.log
 
 # Agent config — Tier 1 hook runtime state (context-hygiene.json,
 # onboarding-gate.json). Written by SessionStart / PostToolUse hooks
 # on Augment + Claude Code; regenerated on demand, never commit.
-/agents/state/
+/agents/runtime/state/
 
 # Agent config — unified-setup wizard partial state (Roadmap R2 Phase 1).
 # Written by POST /api/v1/wizard/state between step transitions, deleted

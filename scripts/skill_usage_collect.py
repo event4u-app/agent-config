@@ -19,7 +19,7 @@ Emits one JSONL record per (session, turn, slug, kind) to
 
 Privacy: `prompt_excerpt_hash` = SHA-256 of the first 200 chars of the
 user prompt that opened the turn. No raw user or assistant bodies are
-persisted. See `agents/audit-2026-05-14-north-star/skill-usage-sources.md`.
+persisted. See `agents/audits/2026-05-14-north-star/skill-usage-sources.md`.
 """
 from __future__ import annotations
 

@@ -78,7 +78,7 @@ Sub-command names match the locked contract in
 ## Advisor mode (replace-mode personas)
 
 Any sub-command above can run in **advisor mode** by enabling one or
-more advisors in `agents/.ai-council.yml` under `advisors:` (Contrarian,
+more advisors in `agents/settings/.ai-council.yml` under `advisors:` (Contrarian,
 First-Principles, Expansionist, Outsider, Executor). An enabled advisor
 swaps its bound member's plain call for the same provider running the
 advisor persona — **same call count, same budget**. `council:estimate`

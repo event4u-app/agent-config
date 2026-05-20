@@ -1234,7 +1234,8 @@ def _read_telemetry_jsonl(consumer_root: Path) -> list[dict[str, object]]:
     target = (
         consumer_root
         / "agents"
-        / ".mcp-telemetry"
+        / "runtime"
+        / "mcp-telemetry"
         / "calls.jsonl"
     )
     if not target.exists():
@@ -1247,7 +1248,7 @@ def _read_telemetry_jsonl(consumer_root: Path) -> list[dict[str, object]]:
 
 
 def test_record_call_writes_jsonl_under_consumer_root(tmp_path: Path) -> None:
-    """J4 — `record_call` appends one JSONL record under `<root>/agents/.mcp-telemetry/`."""
+    """J4 — `record_call` appends one JSONL record under `<root>/agents/runtime/mcp-telemetry/`."""
     import json as _json
 
     from scripts.mcp_server.telemetry import record_call
@@ -1260,7 +1261,7 @@ def test_record_call_writes_jsonl_under_consumer_root(tmp_path: Path) -> None:
         client_id_hash_value="abc123abc123",
     )
     assert record is not None
-    target = tmp_path / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    target = tmp_path / "agents" / "runtime" / "mcp-telemetry" / "calls.jsonl"
     assert target.exists()
     lines = target.read_text(encoding="utf-8").splitlines()
     assert len(lines) == 1
@@ -1596,7 +1597,7 @@ def test_worker_content_implemented_on_matches_catalog() -> None:
 
 def _write_telemetry_record(consumer_root: Path, ts: str, tool_name: str = "memory_lookup") -> None:
     """Materialise a single JSONL record at the canonical sink path."""
-    target = consumer_root / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    target = consumer_root / "agents" / "runtime" / "mcp-telemetry" / "calls.jsonl"
     target.parent.mkdir(parents=True, exist_ok=True)
     with target.open("a", encoding="utf-8") as fh:
         fh.write(
@@ -1663,7 +1664,7 @@ def test_health_evaluate_skips_malformed_lines(tmp_path: Path) -> None:
 
     from scripts.mcp_telemetry_health import evaluate
 
-    target = tmp_path / "agents" / ".mcp-telemetry" / "calls.jsonl"
+    target = tmp_path / "agents" / "runtime" / "mcp-telemetry" / "calls.jsonl"
     target.parent.mkdir(parents=True, exist_ok=True)
     fake_now = _time.time()
     fresh_iso = _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime(fake_now - 60))

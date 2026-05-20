@@ -189,7 +189,7 @@ tasks:
 
   check-council-layout:
     silent: true
-    desc: Fail if council-* artefacts are placed outside the canonical agents/council-{questions,responses,sessions}/ dirs (ai-council § Output path convention)
+    desc: Fail if council-* artefacts are placed outside the canonical agents/runtime/council/{questions,responses,sessions}/ dirs (ai-council § Output path convention)
     cmd: python3 scripts/check_council_layout.py {{.QUIET_FLAG}}
 
   check-role-doc-links:

@@ -5,8 +5,8 @@
 
 ## Inputs
 
-- **Question file:** `agents/council-questions/road-to-mcp-full-coverage-phase-3-cut.md`
-- **Council responses:** `agents/council-responses/road-to-mcp-full-coverage-phase-3-cut.json`
+- **Question file:** `agents/runtime/council/questions/road-to-mcp-full-coverage-phase-3-cut.md`
+- **Council responses:** `agents/runtime/council/responses/road-to-mcp-full-coverage-phase-3-cut.json`
 - **Members:** `anthropic/claude-sonnet-4-5`, `openai/gpt-4o` — 2 rounds, est. $0.058, actual **$0.018**.
 - **Anthropic round-2 was truncated** at the 2048-token output cap; verdict synthesised from GPT-4o full text + Anthropic's confirmed agreement on the shell-spawn exclusion and core risk identification.
 

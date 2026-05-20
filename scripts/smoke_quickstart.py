@@ -7,7 +7,7 @@ Verifies the 3-step Quickstart from a fresh-project perspective:
      `.agent-settings.yml` with the documented default `cost_profile`.
   2. The decision_engine block (P2.x of road-to-productization) parses
      cleanly through the same engine parser the runtime uses.
-  3. The work-engine state-file format (`agents/state/<id>.json`) is
+  3. The work-engine state-file format (`agents/runtime/state/<id>.json`) is
      emit-ready — schema for `decision_result` matches the contract.
 
 What it does NOT do:

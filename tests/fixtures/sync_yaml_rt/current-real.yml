@@ -200,7 +200,7 @@ ai_council:
   # the user to continue. `max_total_usd: 0` disables the USD ceiling
   # (token caps still apply).
   #
-  # Prices come from `agents/.agent-prices.md` (gitignored, refreshed weekly
+  # Prices come from `agents/runtime/.agent-prices.md` (gitignored, refreshed weekly
   # by `python3 scripts/update_prices.py`; bootstrapped from
   # scripts/ai_council/_default_prices.py on first run).
   cost_budget:

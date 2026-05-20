@@ -4,21 +4,23 @@
 Council artefacts (questions, responses, sessions) belong in three
 canonical directories under `agents/`:
 
-  - agents/council-questions/<topic-slug>.md       (paired with roadmap/ADR)
-  - agents/council-responses/<topic-slug>.json     (paired with question)
-  - agents/council-sessions/<UTC-timestamp>.json   (ad-hoc sessions)
+  - agents/runtime/council/questions/<topic-slug>.md       (paired with roadmap/ADR)
+  - agents/runtime/council/responses/<topic-slug>.json     (paired with question)
+  - agents/runtime/council/sessions/<UTC-timestamp>.json   (ad-hoc sessions)
 
 The three canonical dirs are gitignored — the linter therefore only
 catches **misplacement**, not naming-conventions inside the dirs:
 
   - Files at agents/ root with a council-* or .council-* prefix
-    (e.g. agents/council-question-foo.md, agents/.council-foo.md).
+    (e.g. agents/council-foo.md, agents/.council-foo.md).
   - council-* files under any other subdirectory of agents/.
 
-`agents/audit-*/` directories are exempt — historical audit bundles
-are cohesive, checked-in narratives (the canonical council dirs are
-gitignored) and may legitimately include council-* artefacts as part
-of the audit's evidence trail.
+`agents/audits/` is exempt — historical audit bundles are cohesive,
+checked-in narratives (the canonical council dirs are gitignored)
+and may legitimately include council-* artefacts as part of the
+audit's evidence trail. `agents/runtime/` is exempt too — the
+canonical council dirs live at `agents/runtime/council/{questions,
+responses,sessions}/` and the whole `runtime/` tree is gitignored.
 
 Failure modes are enforced by `.agent-src.uncompressed/skills/ai-council/SKILL.md`
 § "Output path convention".
@@ -40,15 +42,17 @@ from pathlib import Path
 QUIET = "--quiet" in sys.argv
 
 AGENTS_ROOT = Path("agents")
+# Canonical council dirs now live under agents/runtime/council/.
+# Stored as relative POSIX paths from AGENTS_ROOT.
 CANONICAL_DIRS = {
-    "council-questions": ".md",
-    "council-responses": ".json",
-    "council-sessions": ".json",
+    "runtime/council/questions": ".md",
+    "runtime/council/responses": ".json",
+    "runtime/council/sessions": ".json",
 }
-# Subdirectory prefixes whose contents are exempt from the layout check.
-# `audit-*/` covers historical audit bundles where council artefacts
-# form part of the documented evidence trail.
-EXEMPT_DIR_PREFIXES = ("audit-",)
+# Top-level subdirectories whose contents are exempt from the layout
+# check. `audits/` covers historical audit bundles. `runtime/` is the
+# gitignored volatile tree (canonical council dirs live there).
+EXEMPT_DIR_PREFIXES = ("audits", "runtime")
 # A council artefact is a file whose name starts with `council-` or
 # `.council-`. This intentionally excludes roadmaps like
 # `road-to-ai-council.md` whose stem only contains the word "council".
@@ -71,8 +75,8 @@ def find_violations(root: Path) -> list[str]:
         if is_council_artefact(path):
             findings.append(
                 f"{path}: council artefact at agents/ root — move to "
-                f"agents/council-questions/, agents/council-responses/, "
-                f"or agents/council-sessions/ per ai-council § Output path "
+                f"agents/runtime/council/questions/, agents/runtime/council/responses/, "
+                f"or agents/runtime/council/sessions/ per ai-council § Output path "
                 f"convention."
             )
 
@@ -86,14 +90,16 @@ def find_violations(root: Path) -> list[str]:
             continue
         if len(rel.parts) == 1:
             continue  # already handled above
-        if rel.parts[0] in CANONICAL_DIRS:
+        rel_posix = rel.as_posix()
+        if any(rel_posix.startswith(d + "/") for d in CANONICAL_DIRS):
             continue
         if rel.parts[0].startswith(EXEMPT_DIR_PREFIXES):
             continue
         findings.append(
             f"{path}: council artefact in non-canonical directory "
-            f"agents/{rel.parts[0]}/ — only council-questions/, "
-            f"council-responses/, council-sessions/ are allowed."
+            f"agents/{rel.parts[0]}/ — only "
+            f"agents/runtime/council/{{questions,responses,sessions}}/ "
+            f"are allowed."
         )
 
     return findings

@@ -3,7 +3,7 @@
 Enforces the privacy-floor clause: the visibility line and its
 underlying summary must never carry entry **bodies**, summaries,
 quoted snippets, secrets, tokens, env values, or paths outside the
-``agents/state/`` and ``tests/`` allowlist.
+``agents/runtime/state/`` and ``tests/`` allowlist.
 
 Three layers:
 

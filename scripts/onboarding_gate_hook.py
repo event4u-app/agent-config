@@ -5,7 +5,7 @@ Reads `.agent-settings.yml` from the consumer repo and writes a
 deterministic state file the rule body can cite as the source of
 truth for "do I need to prompt the user about /onboard?".
 
-Output is written to `agents/state/onboarding-gate.json` with:
+Output is written to `agents/runtime/state/onboarding-gate.json` with:
   {
     "required": <bool>,         // true → rule fires on first turn
     "reason":   "<string>",     // why this state was set
@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 # Re-use the shared atomic-write helper so concerns honour the single
-# `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md
+# `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
 # § Concurrency, Phase 7.4).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hooks.state_io import atomic_write_json  # noqa: E402
@@ -84,9 +84,9 @@ def _read_onboarded(settings_path: Path) -> tuple[bool, str]:
 
 def _write_state(consumer_root: Path, required: bool, reason: str,
                  settings_present: bool) -> None:
-    """Write `agents/state/onboarding-gate.json` atomically.
+    """Write `agents/runtime/state/onboarding-gate.json` atomically.
 
-    Uses the shared `agents/state/.dispatcher.lock` so concurrent
+    Uses the shared `agents/runtime/state/.dispatcher.lock` so concurrent
     dispatcher invocations across platforms cannot tear the file
     (hook-architecture-v1.md § Concurrency, Phase 7.4).
     """

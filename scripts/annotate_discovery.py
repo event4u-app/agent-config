@@ -12,7 +12,7 @@ Walks a list of artefacts in `.agent-src.uncompressed/` and:
 Idempotent: re-runs leave already-annotated files untouched.
 
 Mapping table (`PACK_MAP`) is the council-locked authority. See
-`agents/council-responses/r3-phase-4-7-execution.md`.
+`agents/runtime/council/responses/r3-phase-4-7-execution.md`.
 """
 from __future__ import annotations
 

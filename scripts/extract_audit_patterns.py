@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mine repeated phase patterns from ``agents/state/audit/*.jsonl``.
+"""Mine repeated phase patterns from ``agents/runtime/state/audit/*.jsonl``.
 
 Consumer side of `audit-log-v1` (see
 `docs/contracts/audit-log-v1.md`). Reads append-only JSONL audit
@@ -46,7 +46,7 @@ from pathlib import Path
 from typing import Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_AUDIT_DIR = ROOT / "agents" / "state" / "audit"
+DEFAULT_AUDIT_DIR = ROOT / "agents" / "runtime" / "state" / "audit"
 SCHEMA_VERSION = 1
 
 

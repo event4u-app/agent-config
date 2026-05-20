@@ -1,6 +1,6 @@
 """Thinking-style advisors — replace-mode call planning (Phase 6).
 
-When `agents/.ai-council.yml` enables an advisor (e.g. `contrarian`
+When `agents/settings/.ai-council.yml` enables an advisor (e.g. `contrarian`
 bound to `member: anthropic`), the orchestrator REPLACES the matching
 plain-member call with an advisor-persona call on the same provider.
 Same total call count as a plain run; bounded extra cost beyond the

@@ -12,7 +12,7 @@ grammar for tokens. The dialect is documented in
 the question this ADR records is **whether the dialect should default
 ON for all consumers**.
 
-The North-Star council ([`council-synthesis.md` § 7](../../../agents/council-sessions/audit-2026-05-14-north-star/council-synthesis.md))
+The North-Star council ([`council-synthesis.md` § 7](../../../agents/audits/2026-05-14-north-star/council-synthesis.md))
 landed split: two voices (token-efficiency, ops) argued default-ON
 saves 40 %+ tokens on long sessions; two voices (UX, governance)
 argued default-ON degrades novice readability and locks in a dialect
@@ -89,5 +89,5 @@ either ships default-on or gets deprecated. No middle state.
 - [`docs/contracts/compression-default-kill-criterion.md`](../../contracts/compression-default-kill-criterion.md) — kill-criterion contract.
 - [`.agent-src.uncompressed/rules/caveman-speak.md`](../../../.agent-src.uncompressed/rules/caveman-speak.md) — dialect definition.
 - [`agents/roadmaps/step-4-measurement-and-benchmark.md`](../../../agents/roadmaps/step-4-measurement-and-benchmark.md) — bench owner.
-- [`agents/audit-2026-05-14-north-star/council-synthesis.md`](../../../agents/council-sessions/audit-2026-05-14-north-star/council-synthesis.md) § 7 — council split.
+- [`agents/audits/2026-05-14-north-star/council-synthesis.md`](../../../agents/audits/2026-05-14-north-star/council-synthesis.md) § 7 — council split.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.

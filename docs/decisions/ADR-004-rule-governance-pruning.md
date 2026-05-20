@@ -196,7 +196,7 @@ documentation rewrite for marginal additional savings.
   with the same three-pass methodology.
 - A retained rule (`upstream-proposal`, `slash-command-routing-policy`,
   `analysis-skill-routing`'s sibling skill) shows a 30-day window
-  with zero documented activation in `agents/council-sessions/` →
+  with zero documented activation in `agents/runtime/council/sessions/` →
   open a follow-up ADR demoting it.
 
 ## Alternatives considered
@@ -228,9 +228,9 @@ documentation rewrite for marginal additional savings.
   council walk, host verdicts)
 - `agents/reports/auto-rules-overlap.json` (Phase 5.2 data)
 - `agents/reports/auto-rules-likelihood.json` (Phase 5.3 data)
-- `agents/council-questions/augment-limit-fit-rule-governance.md` <!-- council-ref-allowed: ADR decision trace -->
+- `agents/runtime/council/questions/augment-limit-fit-rule-governance.md` <!-- council-ref-allowed: ADR decision trace -->
   (Phase 5.4 prompt)
-- `agents/council-responses/augment-limit-fit-rule-governance.json` <!-- council-ref-allowed: ADR decision trace -->
+- `agents/runtime/council/responses/augment-limit-fit-rule-governance.json` <!-- council-ref-allowed: ADR decision trace -->
   (Phase 5.4 R3 raw debate)
 - `docs/decisions/ADR-rule-kernel-and-router.md` (kernel-membership
   contract — Phase 5 changes leave kernel untouched per Lever C lock)

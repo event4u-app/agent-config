@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # ADR — Architectural Consensus Mechanism (bus-factor / multi-author readiness)
 
 > **Status:** Decided · 2026-05-14
-> **Context:** v2 council finding C1 (file [01-bus-factor-and-consensus.md](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md)) flagged that a single-author skill suite cannot detect ontology drift (two skills with overlapping triggers, drift between description and body, generic best-practice patterns repeated across clusters). The package needs a **mechanical consensus signal** that does not depend on the original author's judgment. <!-- council-ref-allowed: ADR decision trace -->
+> **Context:** v2 council finding C1 (file [01-bus-factor-and-consensus.md](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md)) flagged that a single-author skill suite cannot detect ontology drift (two skills with overlapping triggers, drift between description and body, generic best-practice patterns repeated across clusters). The package needs a **mechanical consensus signal** that does not depend on the original author's judgment. <!-- council-ref-allowed: ADR decision trace -->
 > **Roadmap:** Closes Phase 5.2 of the v2 feedback follow-up roadmap
 > (see `agents/roadmaps/`).
 
@@ -61,7 +61,7 @@ The final acceptance gate (lint going from warn-only to fail-the-build) is defer
 
 ## Related
 
-- Origin: [`agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
+- Origin: [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
 - Mechanical scripts: [`scripts/skill_collision_clusters.py`](../../scripts/skill_collision_clusters.py), [`scripts/score_skill_selection.py`](../../scripts/score_skill_selection.py)
 - Sibling decision: [`docs/contracts/rule-router.md`](rule-router.md) — the routing layer the ADR feeds
 - Sibling decision: [`docs/contracts/multi-tool-projection-fidelity.md`](multi-tool-projection-fidelity.md) — Phase 4 of the same roadmap

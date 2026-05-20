@@ -379,7 +379,9 @@ test_cli_wrapper_errors_without_install() {
 
 test_legacy_infra_files_migrated_to_agents_dir() {
     setup
-    # Seed pre-2.x layout: chat history, backup, and prices file at project root.
+    # Seed pre-2.x layout: chat history + backup at project root, plus a
+    # root-level .agent-prices.md (skip the intermediate agents/ stop and
+    # land directly in agents/runtime/).
     printf 'legacy-history\n' > "$TMPDIR/.agent-chat-history"
     printf 'legacy-backup\n' > "$TMPDIR/.agent-chat-history.bak"
     printf 'legacy-prices\n' > "$TMPDIR/.agent-prices.md"
@@ -389,11 +391,71 @@ test_legacy_infra_files_migrated_to_agents_dir() {
     assert_false ".agent-prices.md removed from root" test -e "$TMPDIR/.agent-prices.md"
     assert_true ".agent-chat-history moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history"
     assert_true ".agent-chat-history.bak moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history.bak"
-    assert_true ".agent-prices.md moved into agents/" test -f "$TMPDIR/agents/.agent-prices.md"
+    assert_true ".agent-prices.md moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-prices.md"
     assert_contains "history content preserved" \
         "$TMPDIR/agents/.agent-chat-history" "legacy-history"
     assert_contains "prices content preserved" \
-        "$TMPDIR/agents/.agent-prices.md" "legacy-prices"
+        "$TMPDIR/agents/runtime/.agent-prices.md" "legacy-prices"
+    teardown
+}
+
+test_intermediate_prices_file_migrated_to_runtime() {
+    setup
+    # Seed 2.x intermediate layout: .agent-prices.md already under agents/.
+    mkdir -p "$TMPDIR/agents"
+    printf 'intermediate-prices\n' > "$TMPDIR/agents/.agent-prices.md"
+    run_install
+    assert_false "agents/.agent-prices.md removed" test -e "$TMPDIR/agents/.agent-prices.md"
+    assert_true ".agent-prices.md moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-prices.md"
+    assert_contains "prices content preserved" \
+        "$TMPDIR/agents/runtime/.agent-prices.md" "intermediate-prices"
+    teardown
+}
+
+test_prices_migration_skips_when_runtime_target_exists() {
+    setup
+    # Both legacy locations present, but the runtime target already exists.
+    # Sources must be left in place (warned, not destroyed).
+    printf 'old-root\n' > "$TMPDIR/.agent-prices.md"
+    mkdir -p "$TMPDIR/agents"
+    printf 'old-intermediate\n' > "$TMPDIR/agents/.agent-prices.md"
+    mkdir -p "$TMPDIR/agents/runtime"
+    printf 'current\n' > "$TMPDIR/agents/runtime/.agent-prices.md"
+    run_install
+    assert_contains "runtime target untouched" \
+        "$TMPDIR/agents/runtime/.agent-prices.md" "current"
+    assert_true "root source kept when runtime target exists" \
+        test -f "$TMPDIR/.agent-prices.md"
+    assert_true "agents/ source kept when runtime target exists" \
+        test -f "$TMPDIR/agents/.agent-prices.md"
+    teardown
+}
+
+test_legacy_council_yml_migrated_to_settings() {
+    setup
+    # Seed 2.x layout: .ai-council.yml at agents/ root.
+    mkdir -p "$TMPDIR/agents"
+    printf 'enabled: true\n' > "$TMPDIR/agents/.ai-council.yml"
+    run_install
+    assert_false "agents/.ai-council.yml removed" test -e "$TMPDIR/agents/.ai-council.yml"
+    assert_true ".ai-council.yml moved into agents/settings/" \
+        test -f "$TMPDIR/agents/settings/.ai-council.yml"
+    assert_contains "council config preserved" \
+        "$TMPDIR/agents/settings/.ai-council.yml" "enabled: true"
+    teardown
+}
+
+test_council_migration_skips_when_target_exists() {
+    setup
+    # Both source and target present — target wins, source kept (warned).
+    mkdir -p "$TMPDIR/agents/settings"
+    printf 'enabled: true\n# source\n' > "$TMPDIR/agents/.ai-council.yml"
+    printf 'enabled: true\n# target\n' > "$TMPDIR/agents/settings/.ai-council.yml"
+    run_install
+    assert_contains "settings target untouched" \
+        "$TMPDIR/agents/settings/.ai-council.yml" "# target"
+    assert_true "source kept when settings target exists" \
+        test -f "$TMPDIR/agents/.ai-council.yml"
     teardown
 }
 
@@ -466,6 +528,10 @@ TESTS=(
     test_legacy_infra_migration_skips_when_target_exists
     test_legacy_infra_migration_idempotent
     test_legacy_infra_migration_dry_run_no_move
+    test_intermediate_prices_file_migrated_to_runtime
+    test_prices_migration_skips_when_runtime_target_exists
+    test_legacy_council_yml_migrated_to_settings
+    test_council_migration_skips_when_target_exists
 )
 
 # --list: print test names (used by parallel runner). --single NAME: run one

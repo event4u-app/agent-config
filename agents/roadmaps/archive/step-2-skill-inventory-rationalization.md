@@ -21,9 +21,9 @@ All remaining `[ ]` checkboxes flip `[-]`. Acceptance row `Skill count ≤ 160` 
 ## Prerequisites
 
 - [-] Read `AGENTS.md` and `.augment/skills/skill-quality/SKILL.md`
-- [-] Read [`council-synthesis.md § 3`](../audit-2026-05-14-north-star/council-synthesis.md) (Opus #5 — the rationalization finding)
-- [-] Read [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) (P0 placement upstream of measurement)
-- [-] Confirm `agents/audit-2026-05-14-north-star/` is committed (referenced from this roadmap)
+- [-] Read [`council-synthesis.md § 3`](../../audits/2026-05-14-north-star/council-synthesis.md) (Opus #5 — the rationalization finding)
+- [-] Read [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md) (P0 placement upstream of measurement)
+- [-] Confirm `agents/audits/2026-05-14-north-star/` is committed (referenced from this roadmap)
 
 ## Context
 
@@ -31,7 +31,7 @@ Council Opus #5 (2026-05-14): "208 skills for a solo maintainer is unsustainable
 
 This roadmap is **upstream of measurement** ([`step-4-measurement-and-benchmark.md`](step-4-measurement-and-benchmark.md)). Benchmarking 208 skills, ~30 % of which are never selected, measures noise. Rationalization first, baseline second.
 
-- **Source:** [`council-synthesis.md § 3`](../audit-2026-05-14-north-star/council-synthesis.md), [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md)
+- **Source:** [`council-synthesis.md § 3`](../../audits/2026-05-14-north-star/council-synthesis.md), [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md)
 - **Pillar:** P0 (NEW, council-added)
 - **Target:** 208 → ≤ 160 active skills (≥ 23 % reduction)
 
@@ -39,7 +39,7 @@ This roadmap is **upstream of measurement** ([`step-4-measurement-and-benchmark.
 
 Build a passive collector that records which skill triggered on which prompt — no manual annotation, reads existing transcripts.
 
-- [x] **Step 1 — Source-of-truth audit:** drafted 2026-05-16 → [`skill-usage-sources.md`](../audit-2026-05-14-north-star/skill-usage-sources.md). Primary signal = Claude Code session jsonl `attachment.type=skill_listing` + assistant-text mention heuristic; cross-correlation = `agents/.mcp-telemetry/calls.jsonl` for MCP-backed skills. No PII surface.
+- [x] **Step 1 — Source-of-truth audit:** drafted 2026-05-16 → [`skill-usage-sources.md`](../../audits/2026-05-14-north-star/skill-usage-sources.md). Primary signal = Claude Code session jsonl `attachment.type=skill_listing` + assistant-text mention heuristic; cross-correlation = `agents/.mcp-telemetry/calls.jsonl` for MCP-backed skills. No PII surface.
 - [x] **Step 2 — Collector script:** authored 2026-05-16 → `scripts/skill_usage_collect.py`. Reads `~/.claude/projects/<repo-slug>/*.jsonl`; emits `agents/metrics/skill-usage.jsonl` with `{ session_id, turn_idx, slug, kind ∈ {exposure, mention}, ts, prompt_excerpt_hash }`. SHA-256 over first 200 chars; raw bodies never persisted. Append-only with dedup on `(session, turn, slug, kind)`.
 - [x] **Step 3 — Aggregator script:** authored 2026-05-16 → `scripts/skill_usage_report.py`. Groups by slug; emits `agents/metrics/skill-usage-report.md` with columns slug · status · exposures_30d · mentions_30d · exposures_total · mentions_total · last_seen. `status` ∈ { active, exposed-only, dead } per `mentions_30d ≥ 1` / `exposures_30d ≥ 1` / else.
 - [x] **Step 4 — Task wiring:** added `task skill-usage:collect` and `task skill-usage:report` to `taskfiles/ci-fast.yml`. Both `silent: true` and `{{.QUIET_FLAG}}`-routed per [`script-writing`](../../.agent-src.uncompressed/skills/script-writing/SKILL.md). Raw `.jsonl` is gitignored (carries hashes of maintainer prompts); `skill-usage-report.md` is committed as the baseline.
@@ -87,7 +87,7 @@ Every removed slug may be cited from rules, commands, contexts, docs. Sweep befo
 
 - [-] **Step 1 — `task check-refs` after rationalization:** Per [`check-refs`](../../.agent-src.uncompressed/skills/check-refs/SKILL.md). Any reference to a removed slug must point to its successor (from the archive note's `replacement` field) or be deleted.
 - [-] **Step 2 — Update `agents/roadmaps-progress.md`:** Regenerate via `task roadmap-progress`. The dashboard's skill-count delta is visible.
-- [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../audit-2026-05-14-north-star/external-findings.md) — the "governance" row stays `+`, but no axis regresses.
+- [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../../audits/2026-05-14-north-star/external-findings.md) — the "governance" row stays `+`, but no axis regresses.
 
 **Exit:** `task check-refs` green; roadmap dashboard refreshed. **Rollback:** the dashboard regen is idempotent — re-run after any subsequent change.
 
@@ -102,6 +102,6 @@ Every removed slug may be cited from rules, commands, contexts, docs. Sweep befo
 ## Notes
 
 - This roadmap **blocks** [`step-4-measurement-and-benchmark.md`](step-4-measurement-and-benchmark.md) on its Phase 1 baseline: benchmarking a rationalized inventory measures signal; pre-rationalization measures noise.
-- Council [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) gates the G0 acceptance ("≤ 160 skills, ≥ 30 days usage data, archive notes per removed skill") used by [`step-99-north-star-restructure.md`](step-99-north-star-restructure.md).
+- Council [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md) gates the G0 acceptance ("≤ 160 skills, ≥ 30 days usage data, archive notes per removed skill") used by [`step-99-north-star-restructure.md`](step-99-north-star-restructure.md).
 - The 30-day soak is a **floor**, not a ceiling. If usage data is sparse (low-activity maintainer windows), extend to 45 / 60 days before acting on long-tail removal calls.
 - Merges that combine two specialists into a generalist are **higher risk** than supersessions (a → b with a as thin redirect). Default to supersession when in doubt.

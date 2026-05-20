@@ -381,7 +381,7 @@ tasks:
 
   check-council-references:
     silent: true
-    desc: Stable artifacts must not link specific files in agents/council-{questions,responses,sessions}/ (no-transient-references rule, council clause)
+    desc: Stable artifacts must not link specific files in agents/runtime/council/{questions,responses,sessions}/ (no-transient-references rule, council clause)
     cmd: python3 scripts/check_council_references.py {{.QUIET_FLAG}}
 
   lint-one-off-age:

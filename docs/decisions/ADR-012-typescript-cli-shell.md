@@ -157,6 +157,6 @@ but not sufficient. Mandated controls:
 
 In-session (2026-05-18): `backend-architect`, `security-engineer`,
 `frontend-engineer`, `critical-challenger` — 8 items, all folded.
-External pass: `agents/council-responses/2026-05-18T*-r1-ts-cli-foundation/`
+External pass: `agents/runtime/council/responses/2026-05-18T*-r1-ts-cli-foundation/`
 — 5 items, all folded. Roadmap §"Council TODOs" lists every item
 with its target phase.

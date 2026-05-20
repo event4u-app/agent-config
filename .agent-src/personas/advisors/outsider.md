@@ -97,6 +97,6 @@ synthesis stage can use to see the proposal from outside.
 ---
 
 *This persona is consumed by the AI Council advisor system
-(replace-mode). When activated via `agents/.ai-council.yml`'s
+(replace-mode). When activated via `agents/settings/.ai-council.yml`'s
 `advisors:` block, the entire file body below the frontmatter becomes
 the system prompt for the targeted member.*

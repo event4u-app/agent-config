@@ -34,7 +34,7 @@ boundaries and emit one trace file per phase when set.
 ## File location
 
 ```
-agents/state/work/<work-id>/decision-trace-<phase>.json
+agents/runtime/state/work/<work-id>/decision-trace-<phase>.json
 ```
 
 `work-id` matches the `WorkState` directory; `phase` is one of
@@ -58,7 +58,7 @@ agents/state/work/<work-id>/decision-trace-<phase>.json
       "applied": true,
       "skipped": false,
       "conflicted_with": [],
-      "evidence_refs": ["agents/state/work/.../verify.log"]
+      "evidence_refs": ["agents/runtime/state/work/.../verify.log"]
     }
   ],
   "memory": {
@@ -89,7 +89,7 @@ compat extensions and MUST NOT raise on them.
 | `rules[].applied` | True if the rule's Iron Law fired and changed engine behaviour this phase. |
 | `rules[].skipped` | True if the rule was checked but produced no effect (no trigger match). |
 | `rules[].conflicted_with` | List of rule_ids that fired against this one. Reduction handled per `rule-interactions.md`. |
-| `rules[].evidence_refs` | Optional list of paths under `agents/state/` or `tests/` that back the `applied` claim. |
+| `rules[].evidence_refs` | Optional list of paths under `agents/runtime/state/` or `tests/` that back the `applied` claim. |
 | `memory.asks` | Count of `memory_retrieve` calls during the phase. |
 | `memory.hits` | Count of calls that returned ≥ 1 result. |
 | `memory.ids` | Stable memory entry ids returned. Bounded to ≤ 32 ids per phase; remainder dropped silently. |

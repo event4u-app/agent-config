@@ -1,7 +1,7 @@
 """MCP telemetry healthcheck — Phase 1 J6.
 
 Asserts that the per-consumer JSONL sink at
-``<consumer_root>/agents/.mcp-telemetry/calls.jsonl`` received at least
+``<consumer_root>/agents/runtime/mcp-telemetry/calls.jsonl`` received at least
 one record inside a configurable window (default 24 h). Exits non-zero
 on silence so the caller's alert sink — Sentry, email, GitHub Actions
 failure, cron mailer — fires.
@@ -166,7 +166,7 @@ def _build_parser() -> argparse.ArgumentParser:
         "--consumer-root",
         type=Path,
         default=None,
-        help="Root directory containing agents/.mcp-telemetry/ (default: cwd).",
+        help="Root directory containing agents/runtime/mcp-telemetry/ (default: cwd).",
     )
     parser.add_argument(
         "--window-hours",

@@ -119,7 +119,7 @@ When the pipeline reaches the end of `steps[]`:
 
 Per [`audit-log-v1`](../docs/contracts/audit-log-v1.md), append
 one JSONL entry per step boundary to the current month's audit file
-under `agents/state/audit/`. Counts + ids only — never the step's
+under `agents/runtime/state/audit/`. Counts + ids only — never the step's
 output body.
 
 ### 9. What this command does NOT do

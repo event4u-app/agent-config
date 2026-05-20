@@ -53,7 +53,7 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 ## Prove it
 
 Audit-disciplined by construction — every memory consult, decision
-key, and hook concern lands in `agents/state/` so you can replay it.
+key, and hook concern lands in `agents/runtime/state/` so you can replay it.
 [Core Principles](#core-principles) names the four invariants;
 [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
 draws the scope boundary. Beta contracts:
@@ -86,7 +86,7 @@ agent-config setup                # browser, lands on #/wizard
 The wizard uses the `commitMulti` 2PC substrate to write
 `.agent-settings.yml` (and optional `.agent-user.md`) atomically — see
 [`docs/wizard.md`](docs/wizard.md). A `decision_result` lands in
-`agents/state/`. Stack-aware skills auto-load.
+`agents/runtime/state/`. Stack-aware skills auto-load.
 
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)

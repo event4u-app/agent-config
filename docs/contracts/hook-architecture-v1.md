@@ -11,7 +11,7 @@ written, tested, and refactored against a stable surface.
 
 **Scope.** Defines the dispatcher's stdin/stdout shape, exit-code
 semantics, the `hook_manifest.yaml` schema, the concurrency contract
-for `agents/state/` writes, and the Copilot fallback pattern. Does
+for `agents/runtime/state/` writes, and the Copilot fallback pattern. Does
 **not** specify per-platform install paths — those live in
 [`chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
 
@@ -74,7 +74,7 @@ inferred from exit code only).
   "decision": "allow" | "block" | "warn",
   "reason": "human-readable, ≤ 200 chars",
   "additional_context": "optional — surfaces back to the model on platforms that support it",
-  "state_writes": ["agents/state/chat-history.json", "…"]
+  "state_writes": ["agents/runtime/state/chat-history.json", "…"]
 }
 ```
 
@@ -103,7 +103,7 @@ runs them **sequentially** in manifest order and reduces:
 in manifest order. Concerns are never run in parallel — concurrency
 guarantees rely on serial state writes.
 
-## Feedback channel — `agents/state/.dispatcher/<session_id>/`
+## Feedback channel — `agents/runtime/state/.dispatcher/<session_id>/`
 
 Exit-code reduction collapses the severity ladder to a single
 platform-native code, which can hide a `warn` behind a `block` or
@@ -112,7 +112,7 @@ without re-routing control flow, the dispatcher writes a feedback
 directory per invocation:
 
 ```
-agents/state/.dispatcher/<session_id>/
+agents/runtime/state/.dispatcher/<session_id>/
   <concern>.json     — one file per concern that ran
   summary.json       — rollup written after the last concern
 ```
@@ -176,9 +176,9 @@ platform, every event key must be in the agent-config event vocabulary.
 
 ## Concurrency — atomic state writes
 
-Concerns that write under `agents/state/` MUST use the pattern:
+Concerns that write under `agents/runtime/state/` MUST use the pattern:
 
-1. Acquire `fcntl.flock(LOCK_EX)` on `agents/state/.dispatcher.lock`.
+1. Acquire `fcntl.flock(LOCK_EX)` on `agents/runtime/state/.dispatcher.lock`.
 2. Write to a sibling `<dest>.tmp.<pid>` file in the same directory.
 3. `os.replace(tmp, dest)` — POSIX-atomic on the same filesystem.
 4. Release the lock.
@@ -195,7 +195,7 @@ writes (file ends with valid JSON, last-writer-wins).
 ## Copilot fallback pattern
 
 Copilot has no hook surface. Concerns whose source rule cites
-`agents/state/<concern>.json` MUST gain a "Copilot fallback" section
+`agents/runtime/state/<concern>.json` MUST gain a "Copilot fallback" section
 that:
 
 - Names the state file the concern would have written.
@@ -242,12 +242,12 @@ The corpus is platform-shape-representative, not platform-exhaustive
 
 ## Replay mode — `AGENT_CONFIG_REPLAY=1`
 
-Concerns that write under `agents/state/` MUST honor the
+Concerns that write under `agents/runtime/state/` MUST honor the
 `AGENT_CONFIG_REPLAY` env var: when set to `1`, skip all state
 mutations and run as read-only. The dispatcher passes the env var
 through to subprocess concerns unchanged. Concerns that do not honor
 the flag are listed by `./agent-config hooks:doctor` as not
-replay-safe; replay tests assert no `agents/state/` mutation
+replay-safe; replay tests assert no `agents/runtime/state/` mutation
 post-invocation.
 
 ## Stability

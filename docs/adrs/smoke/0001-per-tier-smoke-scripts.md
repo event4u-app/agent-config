@@ -7,7 +7,7 @@
 ## Context
 
 The North-Star audit
-([`external-findings.md § 5`](../../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md))
+([`external-findings.md § 5`](../../../agents/audits/2026-05-14-north-star/external-findings.md))
 flagged "smoke contracts" as an absorbed Ruflo pattern: every
 high-traffic tier needs a fast, deterministic, measurable check that
 runs in CI and surfaces regressions before they reach the rules /
@@ -95,5 +95,5 @@ baseline, CI-dispatched on path-trigger.
 - [`scripts/smoke/`](../../../scripts/smoke/) — four scripts.
 - [`.github/workflows/smoke.yml`](../../../.github/workflows/smoke.yml) — CI dispatch.
 - [`taskfiles/engine.yml`](../../../taskfiles/engine.yml) — local aggregator.
-- [`agents/audit-2026-05-14-north-star/external-findings.md`](../../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md) § 5 — origin pattern.
+- [`agents/audits/2026-05-14-north-star/external-findings.md`](../../../agents/audits/2026-05-14-north-star/external-findings.md) § 5 — origin pattern.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 3 (delivery) + Phase 4 Step 3 (this ADR).

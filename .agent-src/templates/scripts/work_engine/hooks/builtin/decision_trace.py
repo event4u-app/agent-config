@@ -13,7 +13,7 @@ Trace layout (matches the contract):
 
 * ``schema_version: 1``
 * ``work_id`` — derived from the state-file directory name when the
-  caller follows the ``agents/state/work/<id>/state.json`` convention,
+  caller follows the ``agents/runtime/state/work/<id>/state.json`` convention,
   else from the state-file stem.
 * ``phase`` — engine ``step_name`` (refine/memory/.../report).
 * ``started_at`` / ``ended_at`` — ISO-8601 UTC timestamps captured on
@@ -56,8 +56,8 @@ class DecisionTraceHook:
     output_dir:
         Optional override for the trace destination. When ``None`` the
         hook writes alongside the WorkState file: if the state file
-        sits under ``agents/state/work/<id>/state.json`` the trace
-        lands at ``agents/state/work/<id>/decision-trace-<phase>.json``;
+        sits under ``agents/runtime/state/work/<id>/state.json`` the trace
+        lands at ``agents/runtime/state/work/<id>/decision-trace-<phase>.json``;
         otherwise the trace lands next to the state file as
         ``<stem>.decision-trace-<phase>.json``.
     """

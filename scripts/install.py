@@ -1335,7 +1335,7 @@ def ensure_windsurf_bridge(project_root: Path, force: bool) -> list[dict[str, An
     scope. Idempotent via deep_merge — rerunning replaces hook arrays
     rather than appending duplicates. `show_output: false` keeps post
     hooks silent (per Windsurf docs); concerns stream their own output
-    via agents/state/.dispatcher/.
+    via agents/runtime/state/.dispatcher/.
     """
     hooks: dict[str, list] = {}
     for ac_event, native in WINDSURF_DISPATCHER_BINDINGS:

@@ -8,10 +8,10 @@
 
 ## Source
 
-- AI Council session: `agents/council-responses/step-2-phase-1-command-bucketing.json`
+- AI Council session: `agents/runtime/council/responses/step-2-phase-1-command-bucketing.json`
   - Members: `claude-sonnet-4-5` + `gpt-4o`, prompt-mode `analysis`, 2 rounds, peer-review on.
   - Cost: $0.14 actual ($0.23 estimated).
-  - Bundle: `agents/council-sessions/step-2-phase-1-command-bucketing/bundle.md`.
+  - Bundle: `agents/runtime/council/sessions/step-2-phase-1-command-bucketing/bundle.md`.
 - Discovery loop: per-candidate read of the actual command `.md` files where
   the council recommended a merge or retire. The cosine signal proposed; the
   file contents disposed.

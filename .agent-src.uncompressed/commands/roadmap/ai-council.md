@@ -60,7 +60,7 @@ Follow [`/council default`](../council/default.md) Steps 2–4
 - `--input-mode roadmap`
 - `--depth deep` (this command declares `council_depth: deep` in
   frontmatter; the host translates it into `--depth deep`)
-- `--output agents/council-responses/<roadmap-stem>-roadmap.json`
+- `--output agents/runtime/council/responses/<roadmap-stem>-roadmap.json`
   (overwrite if it exists; the previous run is the predecessor for
   this iteration)
 - `--original-ask "<captured-ask>"`
@@ -106,7 +106,7 @@ content):
 
 ### Predecessor council trace
 
-`agents/council-responses/<roadmap-stem>-roadmap.json` (this run).
+`agents/runtime/council/responses/<roadmap-stem>-roadmap.json` (this run).
 ```
 
 Run `./agent-config roadmap:progress` after the append. The block
@@ -158,7 +158,7 @@ The user picks one or more numbers (`1,3,5` is allowed). Apply each selected pat
 
 `/roadmap:ai-council` may:
 
-- write `agents/council-responses/<…>.json`
+- write `agents/runtime/council/responses/<…>.json`
 - append the Council review block to the named roadmap
 - apply user-picked patches to the same roadmap
 - regenerate `agents/roadmaps-progress.md`

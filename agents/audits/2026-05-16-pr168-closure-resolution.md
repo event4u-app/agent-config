@@ -24,7 +24,7 @@ no-shipped-claims: 0
 no-claims: 1
 ```
 
-JSON: [`agents/audit-2026-05-16-archive-phantom-scan-v2.json`](audit-2026-05-16-archive-phantom-scan-v2.json).
+JSON: [`agents/audits/2026-05-16-archive-phantom-scan-v2.json`](2026-05-16-archive-phantom-scan-v2.json).
 
 ## Per-roadmap resolution
 
@@ -79,10 +79,10 @@ Interpretation: Council's "B-student drafts" framing was an artefact of pattern-
 | File | Purpose |
 |---|---|
 | `scripts/verify_roadmap_closure.py` | Sentiment-aware closure verifier — re-runnable for future closure waves |
-| `agents/audit-2026-05-16-archive-phantom-scan-v2.json` | Machine-readable scan output (171 roadmaps) |
-| `agents/audit-2026-05-16-pr168-closure-resolution.md` | This report |
-| `agents/council-questions/pr168-closure-audit.md` | Original Council prompt |
-| `agents/council-responses/pr168-closure-audit.json` | Sonnet 3.5 + GPT-4o raw responses |
+| `agents/audits/2026-05-16-archive-phantom-scan-v2.json` | Machine-readable scan output (171 roadmaps) |
+| `agents/audits/2026-05-16-pr168-closure-resolution.md` | This report |
+| `agents/runtime/council/questions/pr168-closure-audit.md` | Original Council prompt |
+| `agents/runtime/council/responses/pr168-closure-audit.json` | Sonnet 3.5 + GPT-4o raw responses |
 
 ## Edits to closures
 

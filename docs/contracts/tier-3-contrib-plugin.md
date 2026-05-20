@@ -34,7 +34,7 @@ Tier-3 is the explicit overflow bucket.
 
 The following surfaces are Tier-3 candidates as of 2026-05-12. They
 were surfaced during the
-[`2026-05-12-installer-expansion`](../../agents/council-sessions/2026-05-12-installer-expansion/synthesis.md)
+[`2026-05-12-installer-expansion`](../../agents/runtime/council/sessions/2026-05-12-installer-expansion/synthesis.md)
 council round and have **no entries** in `_VALID_TOOLS`,
 `USER_SCOPE_PATHS`, `SCOPE_SUPPORT`, or the bash `VALID_TOOLS` set.
 

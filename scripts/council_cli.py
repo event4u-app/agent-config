@@ -24,15 +24,15 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
-AI_COUNCIL_FILE = REPO_ROOT / "agents" / ".ai-council.yml"
+AI_COUNCIL_FILE = REPO_ROOT / "agents" / "settings" / ".ai-council.yml"
 
 # Canonical output dirs per ai-council § "Output path convention".
 # Enforced at write-time by `_validate_council_output_path` so shell-side
 # `>` redirects and forgetful agents can't strand artefacts at agents/ root.
 COUNCIL_CANONICAL_DIRS: dict[str, str] = {
-    "responses": "agents/council-responses",
-    "sessions":  "agents/council-sessions",
-    "questions": "agents/council-questions",
+    "responses": "agents/runtime/council/responses",
+    "sessions":  "agents/runtime/council/sessions",
+    "questions": "agents/runtime/council/questions",
 }
 
 
@@ -139,7 +139,7 @@ def load_settings(
     ``load_agent_settings``. ``ai_council.*`` keys are not whitelisted,
     so the project file remains authoritative for council config.
 
-    Step-2 council-redesign overlay: when ``agents/.ai-council.yml``
+    Step-2 council-redesign overlay: when ``agents/settings/.ai-council.yml``
     exists it is the single source of truth — the validated config is
     synthesized back into ``settings['ai_council']`` and wins over any
     legacy block in ``.agent-settings.yml``. The pre-2 path stays alive
@@ -478,7 +478,7 @@ def _construct_api_member(
     """Build an api-mode client for a known provider name.
 
     ``api_key_ref`` carries the validated ``file:<path>`` / ``env:<VAR>``
-    reference from ``agents/.ai-council.yml`` and is resolved lazily here
+    reference from ``agents/settings/.ai-council.yml`` and is resolved lazily here
     so the council does not require keys for disabled providers. When
     ``api_key_ref`` is ``None`` (no new config yet, or legacy code path),
     fall back to the per-provider loaders so the pre-step-2
@@ -500,7 +500,7 @@ def _construct_api_member(
     if name == "gemini":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'gemini' requires api_key_ref in agents/.ai-council.yml "
+                "member 'gemini' requires api_key_ref in agents/settings/.ai-council.yml "
                 "(e.g. `env:GEMINI_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.gemini")
@@ -508,7 +508,7 @@ def _construct_api_member(
     if name == "xai":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'xai' requires api_key_ref in agents/.ai-council.yml "
+                "member 'xai' requires api_key_ref in agents/settings/.ai-council.yml "
                 "(e.g. `env:XAI_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.xai")
@@ -516,7 +516,7 @@ def _construct_api_member(
     if name == "perplexity":
         if not api_key_ref:
             raise CouncilDisabledError(
-                "member 'perplexity' requires api_key_ref in agents/.ai-council.yml "
+                "member 'perplexity' requires api_key_ref in agents/settings/.ai-council.yml "
                 "(e.g. `env:PERPLEXITY_API_KEY`) — no legacy fallback."
             )
         api_key = resolve_api_key(api_key_ref, scope="ai_council.members.perplexity")
@@ -794,7 +794,7 @@ def _peer_review_active(ai_cfg: dict[str, Any], args: argparse.Namespace) -> boo
     Resolution chain (highest priority first):
       1. ``--peer-review`` CLI flag — explicit opt-in.
       2. ``ai_council.peer_review.enabled: true`` in
-         ``agents/.ai-council.yml`` — opt-in via config.
+         ``agents/settings/.ai-council.yml`` — opt-in via config.
     Both default to false; peer-review is opt-in by R2 verdict.
     """
     if getattr(args, "peer_review", False):
@@ -1037,7 +1037,7 @@ def _emit_debate_estimate(
     if requested > max_rounds_cap:
         raise argparse.ArgumentTypeError(
             f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
-            f"raise the cap in agents/.ai-council.yml or lower --rounds."
+            f"raise the cap in agents/settings/.ai-council.yml or lower --rounds."
         )
     rounds = requested
     per_round_usd = sum(e.total_usd for e in estimates)
@@ -1424,7 +1424,7 @@ def _debate_refusal_cap(
 def _emit_shadow_slo_banner() -> None:
     """Pre-flight SLO banner for solo-dispatch invocations (step-9 P10).
 
-    Reads ``agents/council-shadow-log.jsonl`` and prints the 7-day rolling
+    Reads ``agents/runtime/council/shadow-log.jsonl`` and prints the 7-day rolling
     disagreement rate. ``OK``, ``WARN``, ``BREACH`` are all surfaced so the
     user can see when single-member quality is drifting. Never auto-flips
     back to full council \u2014 visibility-first, action-second (D10).
@@ -1444,7 +1444,7 @@ def _apply_solo_dispatch(
 ) -> tuple[list[ExternalAIClient], str | None]:
     """Filter ``members`` to a single solo-dispatch pick (step-9 P9).
 
-    Loads the routing chain from ``agents/.ai-council.yml`` and asks
+    Loads the routing chain from ``agents/settings/.ai-council.yml`` and asks
     :func:`select_solo_member` for the first chain entry whose member
     is runtime-present. The probe is conservative: a member counts as
     auth-valid iff ``build_members`` returned a runtime client for it
@@ -1596,7 +1596,7 @@ def cmd_run(
     # Phase 8 step 5 — opt-in cost disclosure for non-debate lenses.
     # Default mode is "off" for analysis / default (cheap enough that
     # the disclosure is friction); users opt in by setting
-    # `lenses.<name>.cost_disclosure.mode` in agents/.ai-council.yml.
+    # `lenses.<name>.cost_disclosure.mode` in agents/settings/.ai-council.yml.
     disc_mode, disc_threshold, disc_show = _resolve_cost_disclosure(
         ai_cfg, question.mode,
     )
@@ -1885,7 +1885,7 @@ def cmd_debate(
     if requested > max_rounds_cap:
         raise argparse.ArgumentTypeError(
             f"--rounds={requested} exceeds debate_max_rounds={max_rounds_cap}; "
-            f"raise the cap in agents/.ai-council.yml or lower --rounds."
+            f"raise the cap in agents/settings/.ai-council.yml or lower --rounds."
         )
     rounds = requested
 
@@ -1942,7 +1942,7 @@ def cmd_debate(
             f"❌  council:debate refused · high-end estimate "
             f"${debate_estimate.high_usd:.4f} exceeds "
             f"debate.max_cost_usd=${cap:.2f}. Lower --rounds, drop "
-            f"members, or raise the cap in agents/.ai-council.yml.\n"
+            f"members, or raise the cap in agents/settings/.ai-council.yml.\n"
         )
         return 4
 
@@ -2037,7 +2037,7 @@ def cmd_render(args: argparse.Namespace) -> int:
     Lens resolution order: explicit ``--prompt-mode`` > ``prompt_mode``
     in the payload > ``mode`` in the payload > ``None`` (default decision
     template). R4 Q4 escape hatch ``--prose-synthesis`` overrides the
-    table. ``--output`` writes to ``agents/council-sessions/`` (enforced);
+    table. ``--output`` writes to ``agents/runtime/council/sessions/`` (enforced);
     omit it for stdout.
     """
     payload = json.loads(Path(args.responses).read_text(encoding="utf-8"))
@@ -2258,7 +2258,7 @@ def _add_common_input_args(p: argparse.ArgumentParser) -> None:
                         "(anonymised) responses for blind spots before "
                         "synthesis. Adds N extra API calls. Opt-in per the "
                         "R2 verdict; also accepts ai_council.peer_review."
-                        "enabled: true in agents/.ai-council.yml.")
+                        "enabled: true in agents/settings/.ai-council.yml.")
 
 
 def cmd_shadow_report(args: argparse.Namespace) -> int:
@@ -2405,7 +2405,7 @@ def build_parser() -> argparse.ArgumentParser:
                        help="Required to actually start the debate.")
     p_deb.add_argument("--rounds", type=int, default=None,
                        help="Number of debate rounds (default 2). Capped by "
-                            "ai_council.debate_max_rounds in agents/.ai-council.yml.")
+                            "ai_council.debate_max_rounds in agents/settings/.ai-council.yml.")
     p_deb.add_argument("--auto-continue", action="store_true",
                        default=False, dest="auto_continue",
                        help="Skip the between-round y/N prompt. The hard cap "
@@ -2441,7 +2441,7 @@ def build_parser() -> argparse.ArgumentParser:
                             "to the `mode` recorded in the responses JSON.")
     p_ren.add_argument("--output", default=None,
                        help="Write the rendered markdown to a file under "
-                            "agents/council-sessions/ (enforced). Omit for "
+                            "agents/runtime/council/sessions/ (enforced). Omit for "
                             "stdout. Prefer this over shell redirects so "
                             "the canonical-path check fires at write-time.")
     _add_prose_synthesis_arg(p_ren)
@@ -2483,12 +2483,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     p_sha = sub.add_parser(
         "shadow-report",
-        help="Read agents/council-shadow-log.jsonl and print the 7-day "
+        help="Read agents/runtime/council/shadow-log.jsonl and print the 7-day "
              "rolling disagreement rate + SLO status (step-9 P10).",
     )
     p_sha.add_argument("--log", default=None,
                        help="Path to the shadow log (default: "
-                            "agents/council-shadow-log.jsonl).")
+                            "agents/runtime/council/shadow-log.jsonl).")
     p_sha.add_argument("--window-days", type=int, default=7,
                        help="Rolling window in days (default: 7).")
 

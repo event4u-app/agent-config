@@ -4,9 +4,9 @@
 Deletes council files older than `ai_council.session_retention_days`
 (default 7) across all four artefact directories:
 
-  - agents/council-sessions/   (timestamp subdirs + root files)
-  - agents/council-questions/  (mtime-based)
-  - agents/council-responses/  (mtime-based)
+  - agents/runtime/council/sessions/   (timestamp subdirs + root files)
+  - agents/runtime/council/questions/  (mtime-based)
+  - agents/runtime/council/responses/  (mtime-based)
 
 Same logic as the auto-prune that runs on every `council save()`,
 exposed as a Task target so the user can sweep on demand.

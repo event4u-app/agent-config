@@ -21,19 +21,19 @@ All Phase 1–6 checkboxes flip `[-]`. The Acceptance row stays explicitly unsat
 ## Prerequisites
 
 - [-] Read `AGENTS.md`, [`skill-quality`](../../.agent-src.uncompressed/rules/skill-quality.md), [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)
-- [-] Read [`external-findings.md § 3`](../audit-2026-05-14-north-star/external-findings.md) (Harmonist — all 10 patterns)
+- [-] Read [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md) (Harmonist — all 10 patterns)
 - [-] [`step-2-skill-inventory-rationalization.md`](step-2-skill-inventory-rationalization.md) Phase 4 complete (do **not** migrate 208 skills; migrate ≤ 160)
 - [-] [`step-4-measurement-and-benchmark.md`](step-4-measurement-and-benchmark.md) Phase 2 complete (so each schema phase can re-measure)
 
 ## Context
 
-Council split: Opus + o1 both recommended a **two-field minimum** (`model_tier` + `## Deep Reference`), deferring the rest until contributor demand emerges ([`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) Pillar P3).
+Council split: Opus + o1 both recommended a **two-field minimum** (`model_tier` + `## Deep Reference`), deferring the rest until contributor demand emerges ([`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md) Pillar P3).
 
 The Domination Mandate overrides that minimum: full parity with Harmonist's schema apparatus is the explicit G3 gate of [`step-99-north-star-restructure.md`](step-99-north-star-restructure.md). The cost — breaking-change cadence — is offset by the migration registry: forks roll forward with `_upgrade_vN_to_vN+1` instead of re-syncing.
 
 **Why structural:** this roadmap touches the contract layer (schema versioning), the kernel rules (correlation IDs in memory CLI), and the routing budget (`router.json` becomes generated, not hand-curated). Per `roadmap-complexity-standard` it earns the `structural` tier.
 
-- **Source:** [`external-findings.md § 3`](../audit-2026-05-14-north-star/external-findings.md), [`step-99` § Phase 2 step 3](step-99-north-star-restructure.md)
+- **Source:** [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md), [`step-99` § Phase 2 step 3](step-99-north-star-restructure.md)
 - **Pillar:** P3 (Schema Rigor — FULL per Domination Mandate)
 - **Block-on:** step-2 closure (stable inventory) + step-4 Phase 2 (re-measure each phase)
 
@@ -42,7 +42,7 @@ The Domination Mandate overrides that minimum: full parity with Harmonist's sche
 Mechanical, low-risk, foundational. Lets subagent orchestration pick the right cost class without hard-coding.
 
 - [x] **Sunset closure 2026-05-16** — Phase 1 + all downstream phases cancelled per closure block at top. Prerequisites (step-2 Phase 4, step-4 Phase 2) are sunset / archived; mechanism without a consumer.
-- [-] **Step 1 — Schema decision:** `model_tier ∈ { fast, inherit, reasoning }` per [`external-findings.md § 3`](../audit-2026-05-14-north-star/external-findings.md). Default `inherit`. Document the contract in `docs/contracts/skill-schema.md` (new).
+- [-] **Step 1 — Schema decision:** `model_tier ∈ { fast, inherit, reasoning }` per [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md). Default `inherit`. Document the contract in `docs/contracts/skill-schema.md` (new).
 - [-] **Step 2 — Linter rule:** `scripts/lint_skills.py` warns when `model_tier` is missing; errors after Phase 1 close. Wire to `task lint-skills`.
 - [-] **Step 3 — Backfill pass:** Every skill in `.agent-src.uncompressed/skills/` declares `model_tier`. Default heuristic: ≤ 80 LOC body → `fast`; declares `Iron Law` or `reasoning frame` → `reasoning`; otherwise `inherit`.
 - [-] **Step 4 — Subagent integration:** `subagent-orchestration` reads `model_tier` from invoked skill frontmatter — overrides `.agent-settings.yml` profile when present. Cited contract: `docs/contracts/skill-schema.md`.
@@ -81,7 +81,7 @@ Solves the "two skills match the same trigger" problem at the schema level. Filt
 - [-] **Step 2 — `disambiguation` field:** One-line tie-breaker shown to the agent when multiple matching skills exist. Required iff `distinguishes_from` is populated.
 - [-] **Step 3 — Overlap-driven backfill:** Use `agents/metrics/skill-overlap.md` (from [`step-2`](step-2-skill-inventory-rationalization.md) Phase 2) to seed `distinguishes_from`. Survivor of a merge cluster picks up the cluster's slugs in its `distinguishes_from`.
 - [-] **Step 4 — `domains:` controlled list:** Domain vocabulary file `docs/contracts/domain-vocabulary.yaml`. Per-skill `domains:` ⊆ vocabulary. Routing filter: project `.agent-settings.yml` declares `project_domains: [...]`; runtime sees only `skill.domains ⊆ (project_domains ∪ {all})`.
-- [-] **Step 5 — Generated triad audit:** The `project-analysis-*` / `universal-project-analysis` / `analysis-skill-router` triad cited as the anti-pattern in [`external-findings.md § 3`](../audit-2026-05-14-north-star/external-findings.md) — verify these now carry `distinguishes_from` + `disambiguation` after backfill.
+- [-] **Step 5 — Generated triad audit:** The `project-analysis-*` / `universal-project-analysis` / `analysis-skill-router` triad cited as the anti-pattern in [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md) — verify these now carry `distinguishes_from` + `disambiguation` after backfill.
 
 **Exit:** every skill collision flagged in `skill-overlap.md` has resolved-or-explained disambiguation; `domains:` populated; routing filter active. **Rollback:** demote the linter; `distinguishes_from` is opt-in metadata.
 
@@ -102,7 +102,7 @@ Hand-curated `router.json` retires. Memory writes go through a CLI even off-MCP.
 - [-] **Step 1 — Linter strict:** `task lint-skills` errors on every missing field (`model_tier`, `schema_version`, `domains`); `task lint-bench-corpus` re-runs against the rationalized inventory. (Pure mechanical enforcement; the **runtime hook** is out of scope here — owned by a future step.)
 - [-] **Step 2 — Re-bench:** `task bench` runs against the post-schema-rigor inventory. Compare selection-accuracy + projection-fidelity to the pre-schema baseline. **Selection-accuracy must not regress > 5 pp**; if it does, Phase 4 disambiguation needs another pass.
 - [-] **Step 3 — Cross-reference [`step-99-north-star-restructure.md`](step-99-north-star-restructure.md) § Acceptance G3:** "100 % skills declare `model_tier`; ≥ 80 % skills > 80 lines use `## Deep Reference`; `schema_version` + migration registry live; `distinguishes_from` + `disambiguation` populated where overlaps detected; `domains:` filter active" — every clause maps to a green check from Phases 1–5.
-- [-] **Step 4 — Migration report archived:** Append the final `agents/metrics/migration-report.md` to `agents/audit-2026-05-14-north-star/` for historical record.
+- [-] **Step 4 — Migration report archived:** Append the final `agents/metrics/migration-report.md` to `agents/audits/2026-05-14-north-star/` for historical record.
 
 **Exit:** G3 clauses all green; selection-accuracy delta ≤ 5 pp; migration report archived. **Rollback:** N/A — Phase 6 is verification, not change.
 
@@ -122,5 +122,5 @@ Hand-curated `router.json` retires. Memory writes go through a CLI even off-MCP.
 - The migration registry is the contract that lets this roadmap break frontmatter compatibility without breaking forks. **Old `_upgrade_v1_to_v2` is never deleted** — even after `_upgrade_v2_to_v3` lands. Removing it is the breaking change.
 - `domains:` filter has a re-rank fallback when `project_domains` is unset: the runtime sees all skills but ranks domain-matching ones higher. Hard filter only when the project commits to a domain set.
 - `## Deep Reference` cut-points are a kernel-budget play, not a stylistic one. The 80-line essentials cap derives from kernel-rule budget per [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md).
-- The memory CLI parity addresses [`external-findings.md § 3`](../audit-2026-05-14-north-star/external-findings.md) Row 10: "Memory CLI as only write path" — we keep MCP as the **preferred** path; CLI is the floor.
+- The memory CLI parity addresses [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md) Row 10: "Memory CLI as only write path" — we keep MCP as the **preferred** path; CLI is the floor.
 - Correlation IDs are a JOIN key, nothing more. They do not change retention semantics or trust-score calculation in the existing memory system.

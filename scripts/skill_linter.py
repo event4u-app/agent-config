@@ -403,7 +403,7 @@ def _fenced_content_ratio(text: str) -> float:
 # --- Structural-density model (docs/contracts/linter-structural-model.md) ---
 # Replaces the raw line/word/fenced-ratio gates with four primitives that
 # distinguish complexity from bloat. Calibrated 2026-05-08 against the full
-# 310-artefact corpus (agents/.density-snapshot.jsonl).
+# 310-artefact corpus (agents/runtime/density/snapshot.jsonl).
 
 PROCEDURE_HEADING_PATTERN = re.compile(
     r"^##\s+Procedure(\s*[:\u2014\-].*)?\s*$", re.MULTILINE

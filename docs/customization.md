@@ -189,7 +189,7 @@ is recovered on the next server boot.
 | `ai_council.cost_budget.max_calls` | `10` | Maximum council members per invocation. |
 | `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
 | `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.event4u/agent-config/council-spend.jsonl` (mode 0600). |
-| `ai_council.session_retention_days` | `14` | Auto-prune for `agents/council-sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
+| `ai_council.session_retention_days` | `14` | Auto-prune for `agents/runtime/council/sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
@@ -347,7 +347,7 @@ shadowed.
 | `agents/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
 | `agents/decisions/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped ADRs. | Decisions are repo-bound. |
 | `agents/roadmaps/` | ❌ No — project-rooted only. | ❌ No. | Active delivery plans. |
-| `agents/state/`, `agents/memory/`, `agents/work_engine/`, `agents/.agent-prices.md`, `agents/council-*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
+| `agents/runtime/state/`, `agents/memory/`, `agents/work_engine/`, `agents/runtime/.agent-prices.md`, `agents/runtime/council/*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
 
 **User-global asymmetry.** `~/.event4u/agent-config/agents/overrides/`
 is the only user-global overlay path consulted by the loader (the

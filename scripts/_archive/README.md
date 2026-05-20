@@ -13,7 +13,7 @@ codebase is undefined behaviour.
 
 Archived 2026-05-14 as part of [`agents/roadmaps/step-1-v2-feedback-followup.md`](../../agents/roadmaps/step-1-v2-feedback-followup.md)
 Phase 1 Step 3, addressing audit finding F3 / council finding C3 from
-[`agents/council-sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md).
+[`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/03-migration-scripts-archival.md).
 
 ## Inventory
 
@@ -25,7 +25,7 @@ Phase 1 Step 3, addressing audit finding F3 / council finding C3 from
 | [`_p43_compress.py`](_p43_compress.py) | Phase 4.3 — rule-body compression | Surgical compression of 22 `compress-and-keep` auto-rules; produced the manifest consumed by `_p43_bodies.py`. |
 | [`_p4_migrate.py`](_p4_migrate.py) | Phase 4.1 + 4.2 — rule reclassification | Migrated rules into the skill / guideline / command / contract-stub split that the package ships today. |
 | [`_phase2_shim_helper.py`](_phase2_shim_helper.py) | Phase 2 — deprecation shim | One-shot helper that injected `superseded_by:` + `deprecated_in:` + deprecation warning into rules retired during Phase 2. |
-| [`_pilot_council_question.py`](_pilot_council_question.py) | Phase 1 pilot — kernel-membership council prep | Built the Phase-1 council question file used for the kernel-membership R1/R2 cross-check. The resulting council artefacts live under `agents/council-sessions/20260506T*`. |
+| [`_pilot_council_question.py`](_pilot_council_question.py) | Phase 1 pilot — kernel-membership council prep | Built the Phase-1 council question file used for the kernel-membership R1/R2 cross-check. The resulting council artefacts live under `agents/runtime/council/sessions/20260506T*`. |
 
 ## Why these stayed live and were NOT archived
 

@@ -143,7 +143,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Wraps hooks:status. Read-only.
                              Flags: --format json|table, --strict (CI), --project-root <path>
   hooks:replay               Replay a fixture through the universal dispatcher with
-                             AGENT_CONFIG_REPLAY=1 (no writes under agents/state/).
+                             AGENT_CONFIG_REPLAY=1 (no writes under agents/runtime/state/).
                              Usage: hooks:replay --platform <name> --event <event>
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
@@ -218,8 +218,8 @@ Examples (Tier 1):
   ./agent-config keys:install-anthropic
   ./agent-config keys:install-openai
   ./agent-config council:estimate prompt.txt
-  ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
-  ./agent-config council:render agents/council-sessions/out.json
+  ./agent-config council:run prompt.txt --output agents/runtime/council/sessions/out.json --confirm
+  ./agent-config council:render agents/runtime/council/sessions/out.json
 EOF
   fi
 

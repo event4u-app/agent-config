@@ -8,9 +8,9 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [x] Read `AGENTS.md` and [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md) (Pillar P1)
-- [x] Read [`external-findings.md § 1`](../audit-2026-05-14-north-star/external-findings.md) (caveman benchmark — 10-prompt corpus, 22–87 % savings, avg 65 %)
-- [x] Read [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) (ruflo cost-tracker, session jsonl reader, 50/75/90/100 ladder)
+- [x] Read `AGENTS.md` and [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md) (Pillar P1)
+- [x] Read [`external-findings.md § 1`](../../audits/2026-05-14-north-star/external-findings.md) (caveman benchmark — 10-prompt corpus, 22–87 % savings, avg 65 %)
+- [x] Read [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) (ruflo cost-tracker, session jsonl reader, 50/75/90/100 ladder)
 - [x] [`step-2-skill-inventory-rationalization.md`](step-2-skill-inventory-rationalization.md) Phase 4 complete (do NOT benchmark a 208-skill noisy surface) — acknowledged: corpus locked at the current surface; rebench planned after step-2 Phase 4 closure
 - [x] Existing `scripts/` directory writable; `Taskfile.yml` accepts new entries
 
@@ -20,7 +20,7 @@ Council convergence (2026-05-14): "60 days minimum before enforcement" (Opus) / 
 
 This roadmap **blocks every P2 enforcement step**: linter strict gate, runtime hooks, compression default flip. Until `task bench` produces a number, none of them can decide.
 
-- **Source:** [`council-synthesis.md § 5`](../audit-2026-05-14-north-star/council-synthesis.md), [`external-findings.md § 1+2`](../audit-2026-05-14-north-star/external-findings.md)
+- **Source:** [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md), [`external-findings.md § 1+2`](../../audits/2026-05-14-north-star/external-findings.md)
 - **Pillar:** P1 (Measurement)
 - **Block-on:** every roadmap citing "≥ N % saving" or "drift gate" as acceptance
 
@@ -72,7 +72,7 @@ The package ships to Claude / Cursor / Augment / Windsurf via projection. Each p
 
 The benchmark already captures cost. Surface it for live sessions, not just benchmark runs.
 
-- [x] **Step 1 — Session ledger (Node fork):** [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) — ruflo fork. Reads the active Claude Code session jsonl under `~/.claude/projects/<encoded-cwd>/`, emits per-model + per-tier breakdown, appends to `agents/cost-tracking/sessions.jsonl`. Pricing constants kept in sync with [`bench/pricing.yaml`](../../bench/pricing.yaml) (duplication noted — single-source migration tracked separately, not a Phase-5 blocker). _Closed 2026-05-16 — Python `cost_track.py` superseded by the Node fork; selection documented in [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md)._
+- [x] **Step 1 — Session ledger (Node fork):** [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) — ruflo fork. Reads the active Claude Code session jsonl under `~/.claude/projects/<encoded-cwd>/`, emits per-model + per-tier breakdown, appends to `agents/cost-tracking/sessions.jsonl`. Pricing constants kept in sync with [`bench/pricing.yaml`](../../bench/pricing.yaml) (duplication noted — single-source migration tracked separately, not a Phase-5 blocker). _Closed 2026-05-16 — Python `cost_track.py` superseded by the Node fork; selection documented in [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md)._
 - [x] **Step 2 — Budget ladder:** [`scripts/cost/budget.mjs`](../../scripts/cost/budget.mjs) — `set` / `get` / `check`, period filter (`today` / `week` / `month` / `all`), 50 / 75 / 90 / 100 % alert ladder with emoji + exit code (HARD_STOP → exit 1). Advisory only per Phase-5 scope; enforcement still owned by [`step-11-ruflo-parity.md`](step-11-ruflo-parity.md). _Closed 2026-05-16._
 - [x] **Step 3 — `cost-report` skill alignment:** [`.claude/skills/cost-report/SKILL.md`](../../.claude/skills/cost-report/SKILL.md) verified against `track.mjs` + `budget.mjs` output (per-model breakdown, JSONL append, alert ladder table). No drift — skill steps 1–5 match the current invocations. _Closed 2026-05-16._
 - [x] **Step 4 — `task cost` entrypoint:** [`taskfiles/engine.yml`](../../taskfiles/engine.yml) — three sibling tasks: `task cost` (track + check), `task cost:track` (capture only), `task cost:budget -- {set N|get|check}`. All silent, `--quiet`-aware via `BUDGET_QUIET=1` / `TRACK_QUIET=1`. _Closed 2026-05-16 — `task cost:budget -- get` returns the "no budget configured" prompt cleanly (exit 0); ready for first-run wizard wire-up under [`step-11`](step-11-ruflo-parity.md)._
@@ -100,5 +100,5 @@ The benchmark already captures cost. Surface it for live sessions, not just benc
 
 - The 60-day baseline is a **clock-time gate**, not a checkbox flip. This roadmap closes when the infrastructure exists; the baseline matures on its own.
 - Quality scoring is deliberately mechanical (`quality_assertion` per prompt). Subjective grading is excluded — it is unreproducible and gameable.
-- Pricing in `bench/pricing.yaml` must carry a `sourced_on: YYYY-MM-DD` field per row. Stale prices = stale numbers = no trust per [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) ruflo "measured-vs-claimed" pattern.
+- Pricing in `bench/pricing.yaml` must carry a `sourced_on: YYYY-MM-DD` field per row. Stale prices = stale numbers = no trust per [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) ruflo "measured-vs-claimed" pattern.
 - Cost-tracker surface (Phase 5) deliberately overlaps with [`step-11-ruflo-parity.md`](step-11-ruflo-parity.md) Phase 1 — this roadmap delivers the measurement primitive; ruflo-parity delivers the enforcement + UX. Avoid double implementation by coordinating Phase 5 closeout with ruflo-parity Phase 1 start.

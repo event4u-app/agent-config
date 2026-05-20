@@ -7,7 +7,7 @@ guard fails CI if a new probe lands anywhere else in the tree.
 
 Rationale: one-off council probes / phase-specific measurements are
 inherently single-purpose; their durable artefact is the council
-session under ``agents/council-sessions/``. Keeping them in the
+session under ``agents/runtime/council/sessions/``. Keeping them in the
 archive prevents the ``scripts/`` root from accumulating noise and
 makes their lifecycle visible (folder == month archived).
 

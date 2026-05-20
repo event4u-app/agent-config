@@ -142,4 +142,4 @@ Format per § Output format. Do **not** execute the optimized prompt yourself un
 
 - [`refine-prompt`](../refine-prompt/SKILL.md) — engine-inbound sibling; same `prompt_optimization` setting controls its mode
 - [`docs/guidelines/prompt-templates.md`](../../../docs/guidelines/prompt-templates.md) — 12-template catalogue cited from Develop step
-- AI Council session: `agents/council-responses/prompt-master-mini.json` (2026-05-17) — analysis behind template adoption and the 5-safe-dogma rejection <!-- council-ref-allowed: ADR decision trace -->
+- AI Council session: `agents/runtime/council/responses/prompt-master-mini.json` (2026-05-17) — analysis behind template adoption and the 5-safe-dogma rejection <!-- council-ref-allowed: ADR decision trace -->

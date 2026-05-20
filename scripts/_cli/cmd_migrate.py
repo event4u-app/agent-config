@@ -49,8 +49,8 @@ GITIGNORE_BLOCK_END = "# <<< event4u/agent-config (managed) <<<"
 GITIGNORE_NEW_BODY = (
     ".agent-settings.yml\n"
     "agents/sessions/\n"
-    "agents/council-responses/\n"
-    "agents/council-sessions/\n"
+    "agents/runtime/council/responses/\n"
+    "agents/runtime/council/sessions/\n"
 )
 
 

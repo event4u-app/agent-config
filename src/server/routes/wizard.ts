@@ -10,7 +10,7 @@
  * State persistence path: `<projectRoot>/state/wizard-state.json`.
  * The directory is created lazily; in package-sandbox mode `projectRoot`
  * is `<repo>/agents/` so the marker dir is the gitignored
- * `agents/state/` already shipped by the package gitignore template.
+ * `agents/runtime/state/` already shipped by the package gitignore template.
  *
  * The finish handler delegates atomic dual-write to `commitMulti`, which
  * handles the 2PC marker dance described in the council HIGH 2026-05-18

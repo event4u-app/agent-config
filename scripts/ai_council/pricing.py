@@ -1,19 +1,19 @@
 """Runtime pricing layer for the AI Council.
 
-Reads `agents/.agent-prices.md` from the repo root, parses YAML
+Reads `agents/runtime/.agent-prices.md` from the repo root, parses YAML
 frontmatter and the Markdown table, and exposes:
 
-- `load_prices()`           — parse `agents/.agent-prices.md` (bootstraps if missing)
+- `load_prices()`           — parse `agents/runtime/.agent-prices.md` (bootstraps if missing)
 - `estimate_input_tokens()` — chars / 4 heuristic
 - `estimate_cost()`         — input + output USD for a single member
 - `is_stale()`              — True if `last_updated` is older than the
                               most recent UTC Monday 00:00
-- `bootstrap_from_defaults()` — write a fresh `agents/.agent-prices.md`
+- `bootstrap_from_defaults()` — write a fresh `agents/runtime/.agent-prices.md`
                               from `_default_prices.DEFAULT_PRICES`
 
 The orchestrator never reads `_default_prices` directly. It always
 goes through `load_prices()` so user edits to
-`agents/.agent-prices.md` win.
+`agents/runtime/.agent-prices.md` win.
 """
 
 from __future__ import annotations
@@ -25,7 +25,7 @@ from pathlib import Path
 from scripts.ai_council._default_prices import DEFAULT_PRICES, LAST_UPDATED, as_rows
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-PRICES_FILE = REPO_ROOT / "agents" / ".agent-prices.md"
+PRICES_FILE = REPO_ROOT / "agents" / "runtime" / ".agent-prices.md"
 
 # Heuristic: 1 token ≈ 4 characters of English text. OpenAI's tiktoken
 # is more accurate but pulls in a heavy dep we explicitly avoid.
@@ -116,14 +116,15 @@ def is_stale(table: PriceTable, now: _dt.datetime | None = None) -> bool:
 
 
 def load_prices(path: Path = PRICES_FILE) -> PriceTable:
-    """Parse `agents/.agent-prices.md`; bootstrap from defaults if missing."""
+    """Parse `agents/runtime/.agent-prices.md`; bootstrap from defaults if missing."""
     if not path.exists():
         bootstrap_from_defaults(path)
     return _parse(path.read_text(encoding="utf-8"))
 
 
 def bootstrap_from_defaults(path: Path = PRICES_FILE) -> None:
-    """Write a fresh `agents/.agent-prices.md` from `_default_prices.py`."""
+    """Write a fresh `agents/runtime/.agent-prices.md` from `_default_prices.py`."""
+    path.parent.mkdir(parents=True, exist_ok=True)
     rows = as_rows()
     body = _render_markdown(LAST_UPDATED, "shipped-default", rows)
     path.write_text(body, encoding="utf-8")

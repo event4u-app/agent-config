@@ -3,16 +3,16 @@ stability: beta
 keep-beta-until: 2026-08-12
 ---
 
-# AI-Council Config (`agents/.ai-council.yml`)
+# AI-Council Config (`agents/settings/.ai-council.yml`)
 
 **Purpose.** Lock the schema, validation, and precedence rules for the
 centralized council config file. Every phase of the AI-Council
 consolidation work reads from this file; the contract here is the
 boundary that prevents drift across the loader, the CLI, the
-orchestrator, and the `agents/.ai-council.yml` file itself.
+orchestrator, and the `agents/settings/.ai-council.yml` file itself.
 
 **Audience.** Authors of `scripts/ai_council/config.py`, `council_cli.py`,
-`scripts/ai_council/orchestrator.py`, and the `agents/.ai-council.yml`
+`scripts/ai_council/orchestrator.py`, and the `agents/settings/.ai-council.yml`
 starter. Also reviewers checking that new providers / advisors / debate
 features keep the schema intact.
 
@@ -21,7 +21,7 @@ a revision entry in the consuming roadmap.
 
 ## File location
 
-The single source of truth is **`agents/.ai-council.yml`** at the
+The single source of truth is **`agents/settings/.ai-council.yml`** at the
 project root. The legacy `ai_council.*` block under `.agent-settings.yml`
 is removed by Phase 0 Step 5 and replaced by a one-line breadcrumb
 pointing at this contract.
@@ -131,7 +131,7 @@ Implications:
 
 ### Persistent events log (step-8 D3)
 
-The orchestrator appends one JSON line to `agents/council-events.log`
+The orchestrator appends one JSON line to `agents/runtime/council/events.log`
 on every necessity-gate decision (`proceed` / `skip_necessity`) and on
 every `cli_call_budget` block (`block_quota`). The log is gitignored
 by default — it is a local-only audit trail, never part of the
@@ -599,13 +599,13 @@ as comments and the loader enforces them.
   `min_rounds` has no effect. Standard tasks keep `min_rounds`; cost
   rises only when an artefact opts in via `council_depth: deep` in
   frontmatter or `--depth deep` on the CLI.
-- **Session retention.** `agents/council-sessions/` audit folders older
+- **Session retention.** `agents/runtime/council/sessions/` audit folders older
   than `defaults.session_retention_days` are pruned automatically on the
   next `save()`. `0` disables pruning — disk grows unbounded.
 - **`cost_budget` semantics.** The orchestrator pauses before any member
   whose projected spend would breach a cap and asks the user to continue.
   Each `0` value disables that single cap; other caps still apply.
-  Prices come from [`agents/.agent-prices.md`](../../agents/.agent-prices.md)
+  Prices come from [`agents/runtime/.agent-prices.md`](../../agents/runtime/.agent-prices.md)
   (gitignored, refreshed weekly by `python3 scripts/update_prices.py`;
   bootstrapped from `scripts/ai_council/_default_prices.py` on first run).
 
@@ -652,7 +652,7 @@ error) when any of these hold:
   after a one-line breadcrumb comment is in place pointing at this
   contract.
 - `.agent-settings.template.yml` → same removal.
-- New file `agents/.ai-council.yml` checked in with two enabled
+- New file `agents/settings/.ai-council.yml` checked in with two enabled
   providers (anthropic + openai) and three disabled
   (gemini + xai + perplexity). Models pre-filled from the Phase 0
   default set; comments mirror this contract.

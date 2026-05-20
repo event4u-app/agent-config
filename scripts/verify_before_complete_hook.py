@@ -11,7 +11,7 @@ Wired to multiple events via the manifest:
   - post_tool_use → inspect tool + command, record verifications
   - stop                                → record stop fired (claim-done window)
 
-Output: `agents/state/verify-before-complete.json`
+Output: `agents/runtime/state/verify-before-complete.json`
   {
     "schema_version": 1,
     "session_id": "<str>",

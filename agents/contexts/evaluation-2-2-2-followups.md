@@ -77,7 +77,7 @@ The user explicitly authorised council token spend for two passes:
 
 1. **Composer fallback feasibility** — gates Phase 2 Step 5 of the
    roadmap. Question file at
-   `agents/council-questions/composer-fallback-feasibility.md`.
+   `agents/runtime/council/questions/composer-fallback-feasibility.md`.
 2. **Roadmap review** — gates Phase 1 start. Reviews the
    distribution-maturity roadmap itself (under `agents/roadmaps/archive/`).
 

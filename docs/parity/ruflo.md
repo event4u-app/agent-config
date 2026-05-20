@@ -2,7 +2,7 @@
 
 > Per-row verdict against the eight Ruflo measurement-governance patterns
 > catalogued in
-> [`external-findings.md § 2`](../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md).
+> [`external-findings.md § 2`](../../agents/audits/2026-05-14-north-star/external-findings.md).
 > Owner roadmap: [`step-11-ruflo-parity.md`](../../agents/roadmaps/step-11-ruflo-parity.md)
 > (Phase 6 Step 1). Cross-index lives at
 > [`step-99-north-star-restructure.md`](../../agents/roadmaps/step-99-north-star-restructure.md)
@@ -10,7 +10,7 @@
 >
 > **Verdict legend:** `[x] covered by <file:line>` · `[~] superseded by <approach>` · `[!] gap`.
 > **Acceptance:** zero `[!]` rows. Closure flips the corresponding cell in the
-> [composite scorecard](../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md#5-composite-scorecard--agent-config-vs-the-field)
+> [composite scorecard](../../agents/audits/2026-05-14-north-star/external-findings.md#5-composite-scorecard--agent-config-vs-the-field)
 > `vs Ruflo` column from `–` to `=` or `+`.
 
 **Measured-vs-claimed disclaimer:** Each row cites the **mechanism** that
@@ -41,6 +41,6 @@ mechanisms remain claimed until [`bench.json`](bench.json) soak completes
 
 ## Cross-references
 
-- Composite scorecard refresh: owned by [`step-99-north-star-restructure.md`](../../agents/roadmaps/step-99-north-star-restructure.md) Phase 5 Step 4 (replaces [`external-findings.md § 5`](../../agents/council-sessions/audit-2026-05-14-north-star/external-findings.md)).
+- Composite scorecard refresh: owned by [`step-99-north-star-restructure.md`](../../agents/roadmaps/step-99-north-star-restructure.md) Phase 5 Step 4 (replaces [`external-findings.md § 5`](../../agents/audits/2026-05-14-north-star/external-findings.md)).
 - Bench-ruflo redundancy verdict: [`bench-ruflo.json`](bench-ruflo.json) (step-11 Phase 6 Step 2).
 - G5 redundancy gate cite: step-99 Acceptance Criteria row "G5 — external redundancy (Domination Mandate)".

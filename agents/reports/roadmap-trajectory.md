@@ -55,6 +55,6 @@ The script counts `[x]` as done, `[ ]` as open, `[~]` as work-in-progress, `[-]`
 
 ## Related
 
-- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/08-roadmap-trajectory.md`](../council-sessions/2026-05-14-v2-analysis/feedback/08-roadmap-trajectory.md) — origin council finding
+- [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/08-roadmap-trajectory.md`](../council-sessions/2026-05-14-v2-analysis/feedback/08-roadmap-trajectory.md) — origin council finding
 - [`docs/contracts/roadmap-complexity-standard.md`](../../docs/contracts/roadmap-complexity-standard.md) — sibling standard
 - [`scripts/measure_roadmap_trajectory.py`](../../scripts/measure_roadmap_trajectory.py) — generator

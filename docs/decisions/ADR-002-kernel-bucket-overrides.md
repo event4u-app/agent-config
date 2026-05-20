@@ -6,7 +6,7 @@
   `docs/contracts/kernel-membership.md` § 5.1 (median r=0.712, per-rule cap 2.5k,
   kernel-bucket 25k).
 - **Related:** ADR-001 (kernel-swap deferred); Council R2 cross-check session
-  `agents/council-sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: ADR decision trace -->
+  `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: ADR decision trace -->
 
 ## Context
 

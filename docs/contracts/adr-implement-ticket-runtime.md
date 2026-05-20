@@ -108,7 +108,7 @@ Python is 3 files with shared types.
   handlers onto the dispatcher shape spiked here.
 - `implement-ticket-flow.md` will have its `Runtime: TBD` line replaced
   with `Runtime: Python 3.10+` when Phase 1 lands.
-- Metrics contract (Q38, JSON lines under `agents/logs/implement-ticket/`)
+- Metrics contract (Q38, JSON lines under `agents/runtime/logs/implement-ticket/`)
   is already demonstrated by both prototypes.
 
 ## Follow-ups (not part of this ADR)

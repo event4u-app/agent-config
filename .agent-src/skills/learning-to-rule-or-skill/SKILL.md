@@ -33,7 +33,7 @@ Use this skill when:
 * Reviewing post-task learnings or retrospectives
 * Deciding whether a learning belongs in a rule or a skill
 * After completing a task — reflecting on what worked or caused friction
-* Mining the audit log (`agents/state/audit/<YYYY-MM>.jsonl`,
+* Mining the audit log (`agents/runtime/state/audit/<YYYY-MM>.jsonl`,
   [`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)) surfaced
   a repeated phase pattern via
   [`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
@@ -318,7 +318,7 @@ the gap is documented in its skill body.
 
 When the input is a pattern surfaced by
 [`extract_audit_patterns.py`](../../../scripts/extract_audit_patterns.py)
-mining `agents/state/audit/<YYYY-MM>.jsonl`
+mining `agents/runtime/state/audit/<YYYY-MM>.jsonl`
 ([`audit-log-v1`](../../../docs/contracts/audit-log-v1.md)):
 
 1. Treat the script's pattern record as the **State the learning**
@@ -331,7 +331,7 @@ mining `agents/state/audit/<YYYY-MM>.jsonl`
    `run_id` count as **one** piece of evidence. The mining script
    already de-duplicates by `run_id`; the gate trusts that output.
 4. Audit-derived proposals MUST set
-   `source_learning: agents/state/audit/<YYYY-MM>.jsonl#<line_ids>`
+   `source_learning: agents/runtime/state/audit/<YYYY-MM>.jsonl#<line_ids>`
    and link the mining-script run id, so the human reviewer can
    reproduce the pattern from the raw audit log.
 

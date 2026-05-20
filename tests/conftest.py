@@ -1,9 +1,9 @@
 """Repo-wide pytest fixtures.
 
 The agent-config test suite must never touch the developer's real
-``agents/council-events.log`` (step-8 D3). The CLI gate, the quota
+``agents/runtime/council/events.log`` (step-8 D3). The CLI gate, the quota
 guard, and the necessity gate all call :func:`append_event` with the
-default log path — that default resolves to ``agents/council-events.log``
+default log path — that default resolves to ``agents/runtime/council/events.log``
 inside the repo, which would leak test prompts into the audit trail.
 
 Two safeguards are applied automatically:
@@ -52,7 +52,13 @@ def _restore_events_log_kill_switch(
 
 def pytest_sessionfinish(session, exitstatus) -> None:  # noqa: ARG001
     """Best-effort cleanup of a stray events log file."""
-    log = Path(__file__).resolve().parent.parent / "agents" / "council-events.log"
+    log = (
+        Path(__file__).resolve().parent.parent
+        / "agents"
+        / "runtime"
+        / "council"
+        / "events.log"
+    )
     if log.exists():
         try:
             log.unlink()
