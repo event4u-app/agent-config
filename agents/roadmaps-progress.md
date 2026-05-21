@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 60 steps done · 0%**
+**7 / 60 steps done · 12%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+█████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   12%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [monorepo-phase-4-physical-package-layout.md](roadmaps/monorepo-phase-4-physical-package-layout.md) | 6 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [monorepo-phase-4-physical-package-layout.md](roadmaps/monorepo-phase-4-physical-package-layout.md) | 6 | 22 | 15 | 7 | 0 | 0 | ███░░░░░░░ 32% |
 | 2 | [monorepo-phase-5-trust-safety-layer.md](roadmaps/monorepo-phase-5-trust-safety-layer.md) | 5 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md) | 5 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,12 +26,12 @@
 
 ### [monorepo-phase-4-physical-package-layout.md](roadmaps/monorepo-phase-4-physical-package-layout.md)
 
-**Monorepo Phase 4 — Physical Package Layout** — 0 / 22 done (0%)
+**Monorepo Phase 4 — Physical Package Layout** — 7 / 22 done (32%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Plan + ADR + snapshot | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Migration tooling | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Plan + ADR + snapshot | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Migration tooling | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 3 | Execute the move (single PR) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Per-package isolation | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Contributor ergonomics | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

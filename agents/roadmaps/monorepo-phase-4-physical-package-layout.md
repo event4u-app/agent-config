@@ -110,25 +110,25 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 
 ## Phase 1 — Plan + ADR + snapshot
 
-- [ ] Run `scripts/plan_physical_move.py --dry-run` against
+- [x] Run `scripts/plan_physical_move.py --dry-run` against
       the current tree; commit `dist/migration/move-plan.json`
-- [ ] Hand-review every entry; resolve all `conflicts: []` by
+- [x] Hand-review every entry; resolve all `conflicts: []` by
       tightening frontmatter `packs[]` order
-- [ ] Capture a pre-move sha256 snapshot of `.agent-src/`,
+- [x] Capture a pre-move sha256 snapshot of `.agent-src/`,
       `.augment/`, and the discovery manifest in
       `dist/migration/pre-move-snapshot.sha256`
-- [ ] Write the ADR with the chosen rules, the conflict resolutions,
+- [x] Write the ADR with the chosen rules, the conflict resolutions,
       and the rollback plan
 
 ## Phase 2 — Migration tooling
 
-- [ ] Extend the plan script to a `--apply` mode that performs
+- [x] Extend the plan script to a `--apply` mode that performs
       the moves via `git mv` (preserves history)
-- [ ] Add `scripts/verify_physical_move.py` that re-runs
+- [x] Add `scripts/verify_physical_move.py` that re-runs
       `task sync` + `task build-discovery`, then diffs the post-move
       outputs against the snapshot; the only allowed diff is in
       `artefacts[].path` values
-- [ ] CI workflow `.github/workflows/migration-dry-run.yml` runs
+- [x] CI workflow `.github/workflows/migration-dry-run.yml` runs
       the plan script weekly while the move is in flight and posts
       a comment if conflicts appear
 
