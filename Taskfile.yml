@@ -132,6 +132,8 @@ tasks:
       - task: lint-skill-tools
       - task: lint-agents-md
       - task: lint-projection-fidelity
+      - task: generate-pack-manifests-check
+      - task: lint-pack-boundaries
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
@@ -222,6 +224,8 @@ tasks:
       - task: lint-skill-tools
       - task: lint-agents-md
       - task: lint-projection-fidelity
+      - task: generate-pack-manifests-check
+      - task: lint-pack-boundaries
       - task: ci-cloud-bundle
       - task: ci-linear-digest
       - task: check-memory
