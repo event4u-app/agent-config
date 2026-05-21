@@ -3,7 +3,7 @@ name: install-via-agent
 tier: 2
 skills: []
 description: Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY.
-disable-model-invocation: false
+disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "install @event4u/agent-config in this project via agent mode, headless install, no TTY"
@@ -29,7 +29,7 @@ Drive the `@event4u/agent-config` installer through its **agent-mode**
 protocol — a JSON-over-stdio state machine that lets an LLM agent
 pick workspaces + packs turn-by-turn without a TTY.
 
-Contract: [`docs/contracts/installer-agent-mode.md`](../../docs/contracts/installer-agent-mode.md).
+Contract: [`docs/contracts/installer-agent-mode.md`](../docs/contracts/installer-agent-mode.md).
 Architecture: [ADR-016](../../docs/decisions/ADR-016-installer-architecture.md) § 4, § 6.
 
 ## When to use

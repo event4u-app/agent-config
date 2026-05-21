@@ -3,7 +3,7 @@ name: install-via-agent
 tier: 2
 skills: []
 description: Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY.
-disable-model-invocation: false
+disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "install @event4u/agent-config in this project via agent mode, headless install, no TTY"

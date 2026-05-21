@@ -41,7 +41,7 @@ tracked in `agents/agent-config.lock.yml`. <!-- ref-ignore -->
       CI), `--agent` (stdin/stdout JSON protocol)
 - [x] Every materialized file lands in the consumer's
       `.augment/` and `.agent-src/`, and its path + sha256 + source
-      pack are recorded in `agents/agent-config.lock.yml`
+      pack are recorded in `agents/agent-config.lock.yml` <!-- ref-ignore -->
 - [x] Re-running `init` after a release upgrades managed files,
       preserves user overrides (`install.managed: false`), and
       surfaces a diff before writing
@@ -167,7 +167,7 @@ The agent repeats the call with each answer until the CLI returns
 - [x] Resolve `requires` edges transitively; show user the auto-added
       packs before confirming
 - [x] Write files to consumer's `.augment/` and `.agent-src/`
-- [x] Write `agents/agent-config.lock.yml` with paths, sha256s,
+- [x] Write `agents/agent-config.lock.yml` with paths, sha256s, <!-- ref-ignore -->
       managed flags
 - [x] Show a summary table: workspaces, packs, file count
 
