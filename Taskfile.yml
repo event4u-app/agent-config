@@ -142,6 +142,8 @@ tasks:
       - task: typecheck-ts
       - task: test-ts
       - task: build-ts
+      - task: installer-typecheck
+      - task: installer-test
       - task: check-roadmap-trackable
       - task: check-council-layout
       - task: lint-agents-layout
