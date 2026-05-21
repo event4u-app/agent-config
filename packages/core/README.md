@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `3.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 356
+- **artefacts**: 357
 
 ## Commands (128)
 
@@ -185,7 +185,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (68)
+## Rules (69)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -211,6 +211,7 @@ Core framework-neutral artefacts.
 - **`domain-safety-pii`** — Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs
 - **`domain-safety-retention`** — Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry
 - **`downstream-changes`** — After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation
+- **`engineering-safety-floor`** — Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers
 - **`external-reference-deep-dive`** — User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata
 - **`fast-path-marker-visibility`** — Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase
 - **`framework-neutrality-in-generic-skills`** — Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers

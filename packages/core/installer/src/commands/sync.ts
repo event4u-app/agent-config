@@ -17,6 +17,7 @@ import { dirname, join } from 'node:path';
 import { LOCKFILE_NAME, OVERRIDES_NAME, readLockfile, readOverrides } from '../lockfile.js';
 import { loadManifest, ManifestNotFoundError } from '../manifest-loader.js';
 import { resolvePacks } from '../resolver.js';
+import { parseCsv } from '../selection.js';
 import {
     SyncConflictError,
     computeSyncPlan,
@@ -25,10 +26,12 @@ import {
     type SyncPlan,
 } from '../sync.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
+import { detectTrustEscalations, formatEscalation } from '../trust-escalation.js';
 import type { SharedFlags } from '../cli.js';
 
 export interface SyncOptions {
     readonly force?: boolean;
+    readonly acceptAdvisory?: string;
 }
 
 export async function runSync(shared: SharedFlags, raw: Record<string, unknown>): Promise<number> {
@@ -74,6 +77,23 @@ export async function runSync(shared: SharedFlags, raw: Record<string, unknown>)
         return 2;
     }
 
+    // Phase 5.1 (ADR-018): trust-escalation gate. If any pack's
+    // trust mix grew vs. the lockfile-recorded snapshot, require
+    // explicit re-acknowledgment before continuing.
+    const escalations = detectTrustEscalations(loaded.manifest, lock);
+    if (escalations.length > 0) {
+        const acceptedIds = new Set(parseCsv(typeof raw.acceptAdvisory === 'string' ? raw.acceptAdvisory : undefined));
+        const unaccepted = escalations.filter((e) => !acceptedIds.has(e.packId));
+        if (unaccepted.length > 0) {
+            const lines = unaccepted.map((e) => `  - ${formatEscalation(e)}`).join('\n');
+            process.stderr.write(
+                `sync: the following packs have a higher trust-tier count than ` +
+                `previously accepted; pass --accept-advisory=<pack-ids> to acknowledge:\n${lines}\n`,
+            );
+            return 2;
+        }
+    }
+
     const plan = computeSyncPlan({
         manifest: loaded.manifest,
         manifestSha256: loaded.sha256,
@@ -100,6 +120,7 @@ export async function runSync(shared: SharedFlags, raw: Record<string, unknown>)
             manifestSha256: loaded.sha256,
             agentConfigVersion: AGENT_CONFIG_VERSION,
             packVersion: PACK_VERSION,
+            manifest: loaded.manifest,
             ...(force ? { force: true } : {}),
         });
         process.stdout.write(

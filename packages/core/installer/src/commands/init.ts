@@ -25,7 +25,13 @@ import { computeInstallPlan, executeInstallPlan } from '../install-plan.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { findProfile, loadProfiles, ProfilesFileError, UnknownProfileError } from '../profiles.js';
 import { runAgentInit } from '../agent-mode/machine.js';
-import { buildPackChoices, buildWorkspaceChoices, defaultPicker } from '../tui.js';
+import {
+    buildPackChoices,
+    buildWorkspaceChoices,
+    collectAdvisoryPacks,
+    defaultPicker,
+    formatTrustSummary,
+} from '../tui.js';
 import type { TuiPicker } from '../tui.js';
 import type { SharedFlags } from '../cli.js';
 
@@ -34,6 +40,7 @@ export interface InitOptions {
     readonly packs?: string;
     readonly profile?: string;
     readonly exclude?: string;
+    readonly acceptAdvisory?: string;
     readonly answer?: readonly string[];
 }
 
@@ -51,6 +58,7 @@ export async function runInit(
         ...(typeof raw.packs === 'string' ? { packs: raw.packs } : {}),
         ...(typeof raw.profile === 'string' ? { profile: raw.profile } : {}),
         ...(typeof raw.exclude === 'string' ? { exclude: raw.exclude } : {}),
+        ...(typeof raw.acceptAdvisory === 'string' ? { acceptAdvisory: raw.acceptAdvisory } : {}),
         ...(Array.isArray(raw.answer) ? { answer: raw.answer as readonly string[] } : {}),
     };
 
@@ -158,6 +166,35 @@ export async function runInit(
         }
     }
 
+    // Phase 5.1 (ADR-018): trust gate — advisory/restricted/experimental
+    // artefacts require explicit acknowledgment.
+    const advisoryPacks = collectAdvisoryPacks(
+        loaded.manifest.packs,
+        resolved.packs.map((p) => p.id),
+    );
+    if (advisoryPacks.length > 0) {
+        if (shared.mode === 'interactive') {
+            const accepted = await picker.confirmAdvisoryAcceptance(advisoryPacks);
+            if (!accepted) {
+                process.stdout.write(`init: advisory acknowledgment declined, aborting.\n`);
+                return 0;
+            }
+        } else {
+            const acceptedIds = new Set(parseCsv(opts.acceptAdvisory));
+            const missingAck = advisoryPacks.filter((p) => !acceptedIds.has(p.id));
+            if (missingAck.length > 0) {
+                const lines = missingAck
+                    .map((p) => `  - ${p.id}: ${formatTrustSummary(p.trustSummary, p.humanReviewRequired)}`)
+                    .join('\n');
+                process.stderr.write(
+                    `init: the following packs include advisory/restricted/experimental artefacts ` +
+                    `and require --accept-advisory=<pack-ids> in non-interactive mode:\n${lines}\n`,
+                );
+                return 2;
+            }
+        }
+    }
+
     const plan = computeInstallPlan({
         manifest: loaded.manifest,
         workspaces: workspaceIds,
@@ -185,6 +222,7 @@ export async function runInit(
         manifestSha256: loaded.sha256,
         agentConfigVersion: AGENT_CONFIG_VERSION,
         packVersion: PACK_VERSION,
+        manifest: loaded.manifest,
     });
     process.stdout.write(
         `init: wrote ${result.filesWritten} files; lockfile at ${result.lockfileRelative}\n`,

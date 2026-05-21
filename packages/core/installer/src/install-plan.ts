@@ -12,7 +12,7 @@
  */
 
 import { readFileSync } from 'node:fs';
-import { artefactsForPacks } from './manifest-loader.js';
+import { artefactsForPacks, findPack } from './manifest-loader.js';
 import { resolveArtefactPaths } from './paths.js';
 import { sha256OfString } from './io/sha256.js';
 import { openStaging } from './io/atomic-write.js';
@@ -90,6 +90,12 @@ export interface ExecutePlanOptions {
     readonly now?: () => string;
     /** Skip the on-disk commit (dry run). */
     readonly dryRun?: boolean;
+    /**
+     * Manifest used to compute the plan — needed to record per-pack
+     * accepted trust levels (Phase 5.1 / ADR-018) in the lockfile so
+     * future `sync` runs can detect trust-tier escalation.
+     */
+    readonly manifest?: DiscoveryManifest;
 }
 
 export interface ExecuteResult {
@@ -121,12 +127,26 @@ export function executeInstallPlan(opts: ExecutePlanOptions): ExecuteResult {
                 managed: true,
             });
         }
-        const lockfilePacks: LockfilePack[] = opts.plan.packs.map((p) => ({
-            id: p.id,
-            version: opts.packVersion,
-            auto_selected: p.autoSelected,
-            required_by: p.requiredBy,
-        }));
+        const lockfilePacks: LockfilePack[] = opts.plan.packs.map((p) => {
+            const base: LockfilePack = {
+                id: p.id,
+                version: opts.packVersion,
+                auto_selected: p.autoSelected,
+                required_by: p.requiredBy,
+            };
+            // Phase 5.1 (ADR-018): record accepted trust mix per pack.
+            if (opts.manifest !== undefined) {
+                const mp = findPack(opts.manifest, p.id);
+                if (mp !== undefined) {
+                    return {
+                        ...base,
+                        accepted_trust: mp.trust_summary,
+                        accepted_human_review_required: mp.human_review_required,
+                    };
+                }
+            }
+            return base;
+        });
         const lockfile: Lockfile = {
             schema_version: 1,
             agent_config_version: opts.agentConfigVersion,

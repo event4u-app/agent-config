@@ -163,3 +163,93 @@ describe('runAgentInit — turn sequence', () => {
         expect(envelopes[0].reason).toBe('aborted_by_agent');
     });
 });
+
+describe('runAgentInit — advisory trust gate (Phase 5.1 / ADR-018)', () => {
+    let pkg: string;
+    let proj: string;
+
+    beforeEach(() => {
+        pkg = mkdtempSync(join(tmpdir(), 'installer-pkg-'));
+        proj = mkdtempSync(join(tmpdir(), 'installer-proj-'));
+    });
+
+    afterEach(() => {
+        rmSync(pkg, { recursive: true, force: true });
+        rmSync(proj, { recursive: true, force: true });
+    });
+
+    function advisoryManifest() {
+        return makeManifest({
+            workspaces: [makeWorkspace({ id: 'finance', default_packs: ['fin-base'] })],
+            packs: [
+                makePack({
+                    id: 'fin-base',
+                    workspaces: ['finance'],
+                    trust_summary: { core: 0, professional: 0, experimental: 0, advisory: 2, restricted: 0 },
+                    human_review_required: 1,
+                    artefact_count: 2,
+                }),
+            ],
+        });
+    }
+
+    function advisoryInputs(answers: readonly string[]) {
+        return {
+            manifest: advisoryManifest(),
+            manifestSha256: 'sha256:deadbeef',
+            packageRoot: pkg,
+            projectRoot: proj,
+            dryRun: true,
+            answers,
+            now: () => '2026-05-21T00:00:00Z',
+        };
+    }
+
+    it('advisory pack → asks q4.advisory after packs selected', async () => {
+        const { code, envelopes } = await captureStdout((s) =>
+            runAgentInit({
+                ...advisoryInputs(['q1.workspaces=finance', 'q2.packs=fin-base']),
+                stdout: s,
+            }),
+        );
+        expect(code).toBe(0);
+        const env = envelopes[0]!;
+        expect(env.status).toBe('question');
+        if (env.status !== 'question') return;
+        expect(env.id).toBe('q4.advisory');
+        expect(env.prompt).toContain('fin-base');
+        expect(env.prompt).toContain('advisory');
+    });
+
+    it('q4.advisory=yes → completes with done', async () => {
+        const { code, envelopes } = await captureStdout((s) =>
+            runAgentInit({
+                ...advisoryInputs([
+                    'q1.workspaces=finance',
+                    'q2.packs=fin-base',
+                    'q4.advisory=yes',
+                ]),
+                stdout: s,
+            }),
+        );
+        expect(code).toBe(0);
+        expect(envelopes[0]?.status).toBe('done');
+    });
+
+    it('q4.advisory=no → aborted_by_agent error, exit 2', async () => {
+        const { code, envelopes } = await captureStdout((s) =>
+            runAgentInit({
+                ...advisoryInputs([
+                    'q1.workspaces=finance',
+                    'q2.packs=fin-base',
+                    'q4.advisory=no',
+                ]),
+                stdout: s,
+            }),
+        );
+        expect(code).toBe(2);
+        expect(envelopes[0]?.status).toBe('error');
+        if (envelopes[0]?.status !== 'error') return;
+        expect(envelopes[0].reason).toBe('aborted_by_agent');
+    });
+});

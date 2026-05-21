@@ -277,6 +277,12 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-trust-coherence:
+    silent: true
+    desc: Enforce safety-floor / HRR-banner / kernel-trust coherence across the manifest (monorepo Phase 5.4, ADR-018)
+    deps: [build-discovery-manifest]
+    cmd: python3 scripts/lint_trust_coherence.py {{.QUIET_FLAG}}
+
   lint-explain-trace:
     silent: true
     desc: Validate an ExplainTrace v1 JSON file against docs/contracts/explain-trace.schema.json (explainability v2 Phase 1.2)

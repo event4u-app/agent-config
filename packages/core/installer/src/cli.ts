@@ -70,6 +70,10 @@ export function buildProgram(): Command {
         .option('--packs <ids>', 'Comma-separated pack ids (non-interactive)')
         .option('--profile <id>', 'Pre-defined workspace + pack bundle (non-interactive)')
         .option('--exclude <ids>', 'Comma-separated pack ids to exclude from auto-selection')
+        .option(
+            '--accept-advisory <ids>',
+            'Comma-separated pack ids whose advisory/restricted/experimental artefacts you accept (non-interactive)',
+        )
         .option('--answer <kv...>', 'Agent-mode answer (format: question_id=value)')
         .action(async (opts: Record<string, unknown>) => {
             const code = await runInit(resolveShared(opts), opts);
@@ -79,6 +83,10 @@ export function buildProgram(): Command {
     attachSharedFlags(program.command('sync'))
         .description('Pull upstream changes via the merge decision matrix (ADR-016 § 3)')
         .option('--force', 'Override drift-blocks (use with care)', false)
+        .option(
+            '--accept-advisory <ids>',
+            'Comma-separated pack ids whose trust-tier escalation you accept (Phase 5.1 / ADR-018)',
+        )
         .option('--json', 'Emit machine-readable plan', false)
         .action(async (opts: Record<string, unknown>) => {
             const code = await runSync(resolveShared(opts), opts);

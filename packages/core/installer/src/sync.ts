@@ -14,7 +14,7 @@
 
 import { existsSync, readFileSync, unlinkSync } from 'node:fs';
 import { join } from 'node:path';
-import { artefactsForPacks } from './manifest-loader.js';
+import { artefactsForPacks, findPack } from './manifest-loader.js';
 import { resolveArtefactPaths } from './paths.js';
 import { sha256OfFileSync, sha256OfString } from './io/sha256.js';
 import { openStaging } from './io/atomic-write.js';
@@ -176,6 +176,13 @@ export interface ExecuteSyncOptions {
     readonly force?: boolean;
     readonly now?: () => string;
     readonly dryRun?: boolean;
+    /**
+     * Manifest used to compute the plan — needed to refresh the
+     * per-pack accepted trust snapshot (Phase 5.1 / ADR-018) in the
+     * lockfile. Without it, the lockfile's `accepted_trust` cannot be
+     * updated and a future sync will re-flag the same escalation.
+     */
+    readonly manifest?: DiscoveryManifest;
 }
 
 export interface ExecuteSyncResult {
@@ -278,12 +285,28 @@ export function executeSyncPlan(opts: ExecuteSyncOptions): ExecuteSyncResult {
                 managed: true,
             });
         }
-        const lockfilePacks: LockfilePack[] = opts.plan.packs.map((p) => ({
-            id: p.id,
-            version: opts.packVersion,
-            auto_selected: p.autoSelected,
-            required_by: p.requiredBy,
-        }));
+        const lockfilePacks: LockfilePack[] = opts.plan.packs.map((p) => {
+            const base: LockfilePack = {
+                id: p.id,
+                version: opts.packVersion,
+                auto_selected: p.autoSelected,
+                required_by: p.requiredBy,
+            };
+            // Phase 5.1 (ADR-018): refresh accepted trust snapshot — the
+            // caller already cleared the escalation gate, so the manifest's
+            // current counts become the new "accepted" baseline.
+            if (opts.manifest !== undefined) {
+                const mp = findPack(opts.manifest, p.id);
+                if (mp !== undefined) {
+                    return {
+                        ...base,
+                        accepted_trust: mp.trust_summary,
+                        accepted_human_review_required: mp.human_review_required,
+                    };
+                }
+            }
+            return base;
+        });
         const lockfile: Lockfile = {
             schema_version: 1,
             agent_config_version: opts.agentConfigVersion,

@@ -189,5 +189,73 @@ class TestApplyPathRewriterWiring(unittest.TestCase):
         self.assertFalse(compress.apply_path_rewriter("rules/missing.md"))
 
 
+class TestHumanReviewBanner(unittest.TestCase):
+    """Phase 5.3 / ADR-018 — HUMAN_REVIEW banner injection."""
+
+    def test_injects_banner_when_hrr_true(self):
+        src = (
+            "---\n"
+            "type: \"auto\"\n"
+            "packs:\n"
+            "  - finance-basic\n"
+            "trust:\n"
+            "  level: advisory\n"
+            "  confidence: high\n"
+            "  human_review_required: true\n"
+            "---\n"
+            "# Finance Safety Floor\n"
+        )
+        out = compress._rewrite_paths(src, RULE_AT)
+        self.assertIn(compress._HRR_BANNER_MARKER, out)
+        self.assertIn("> HUMAN REVIEW REQUIRED · trust: advisory · owner: finance", out)
+
+    def test_no_banner_when_hrr_false(self):
+        src = (
+            "---\n"
+            "trust:\n"
+            "  level: core\n"
+            "  human_review_required: false\n"
+            "---\n"
+            "# Body\n"
+        )
+        out = compress._rewrite_paths(src, RULE_AT)
+        self.assertNotIn(compress._HRR_BANNER_MARKER, out)
+
+    def test_no_banner_when_no_trust_block(self):
+        src = "---\ntype: \"auto\"\n---\n# Body\n"
+        out = compress._rewrite_paths(src, RULE_AT)
+        self.assertNotIn(compress._HRR_BANNER_MARKER, out)
+
+    def test_banner_injection_is_idempotent(self):
+        src = (
+            "---\n"
+            "packs:\n"
+            "  - founder-strategy\n"
+            "trust:\n"
+            "  level: advisory\n"
+            "  human_review_required: true\n"
+            "---\n"
+            "# Strategy\n"
+        )
+        once = compress._rewrite_paths(src, RULE_AT)
+        twice = compress._rewrite_paths(once, RULE_AT)
+        self.assertEqual(once, twice)
+        self.assertEqual(once.count(compress._HRR_BANNER_MARKER), 1)
+
+    def test_owner_falls_back_to_workspace(self):
+        src = (
+            "---\n"
+            "workspaces:\n"
+            "  - finance\n"
+            "trust:\n"
+            "  level: restricted\n"
+            "  human_review_required: true\n"
+            "---\n"
+            "# Body\n"
+        )
+        out = compress._rewrite_paths(src, RULE_AT)
+        self.assertIn("owner: finance", out)
+
+
 if __name__ == "__main__":
     unittest.main()

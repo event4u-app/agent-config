@@ -1,0 +1,1 @@
+../../.agent-src/rules/strategy-safety-floor.md

@@ -554,11 +554,80 @@ def _rewrite_body_links(body: str, prefix: str) -> str:
     return _BODY_DOCS_RE.sub(prefix + r"\1", body)
 
 
+# ── Human-review banner injection (Phase 5.3 / ADR-018) ───────────────────
+# Source artefacts may set `trust.human_review_required: true` in their
+# frontmatter. The compressor injects a short, parser-stable banner block
+# at the top of the projected body so every downstream surface (agent
+# memory, .augment, .claude, etc.) surfaces the gate. Idempotent — the
+# marker comment prevents double-injection on re-compress.
+
+_HRR_BANNER_MARKER = "<!-- agent-config:human-review-banner -->"
+
+# Plain YAML list item — any scalar, used to read `packs:` / `workspaces:`
+# blocks where values are bare identifiers, not file paths.
+_FM_PLAIN_LIST_RE = re.compile(r'^\s*-\s*(["\']?)([^"\'\n]+?)\1\s*$')
+
+
+def _parse_trust_and_owner(fm_lines):
+    """Extract `trust.level`, `human_review_required`, and an owner hint
+    from a frontmatter line list. Owner falls back to the first pack
+    prefix (`finance-basic` → `finance`), then the first workspace,
+    then `unknown`.
+    """
+    level = None
+    hrr = False
+    packs: list[str] = []
+    workspaces: list[str] = []
+    in_trust = False
+    in_packs = False
+    in_workspaces = False
+    for line in fm_lines:
+        stripped = line.lstrip()
+        indent = len(line) - len(stripped)
+        if indent == 0 and stripped.endswith(":"):
+            key = stripped[:-1]
+            in_trust = key == "trust"
+            in_packs = key == "packs"
+            in_workspaces = key == "workspaces"
+            continue
+        if in_trust and stripped.startswith("level:"):
+            level = stripped.split(":", 1)[1].strip().strip('"').strip("'")
+        elif in_trust and stripped.startswith("human_review_required:"):
+            val = stripped.split(":", 1)[1].strip()
+            hrr = val.lower() == "true"
+        elif in_packs or in_workspaces:
+            m = _FM_PLAIN_LIST_RE.match(line)
+            if m:
+                value = m.group(2).strip()
+                (packs if in_packs else workspaces).append(value)
+    owner = "unknown"
+    if packs:
+        owner = packs[0].split("-")[0]
+    elif workspaces:
+        owner = workspaces[0]
+    return level, hrr, owner
+
+
+def _inject_hrr_banner(body: str, level: str, owner: str) -> str:
+    """Prepend the HUMAN_REVIEW banner block to `body`. Idempotent — a
+    body that already carries `_HRR_BANNER_MARKER` is returned unchanged.
+    """
+    if _HRR_BANNER_MARKER in body:
+        return body
+    banner = (
+        f"{_HRR_BANNER_MARKER}\n"
+        f"> HUMAN REVIEW REQUIRED · trust: {level} · owner: {owner}\n\n"
+    )
+    return banner + body.lstrip("\n")
+
+
 def _rewrite_paths(content: str, source_relative_path: str) -> str:
     """Rewrite logical / legacy paths in `content` for a file shipped at
     `.agent-src/{source_relative_path}`. Idempotent.
 
     See module-level comment above for the full pattern catalog.
+    Also injects the HUMAN_REVIEW banner when the source frontmatter
+    sets `trust.human_review_required: true` (Phase 5.3 / ADR-018).
     """
     prefix = _depth_prefix(source_relative_path)
     fm_lines, body = _split_frontmatter(content)
@@ -566,6 +635,9 @@ def _rewrite_paths(content: str, source_relative_path: str) -> str:
     if fm_lines is None:
         return body
     new_fm = _rewrite_frontmatter_lines(fm_lines, prefix)
+    level, hrr, owner = _parse_trust_and_owner(fm_lines)
+    if hrr and level:
+        body = _inject_hrr_banner(body, level, owner)
     return "---\n" + "\n".join(new_fm) + "\n---\n" + body
 
 
