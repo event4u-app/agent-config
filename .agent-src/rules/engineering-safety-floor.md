@@ -23,9 +23,6 @@ triggers:
   - phrase: "merge to main"
   - phrase: "release this"
 routes_to:
-  - "rule:non-destructive-by-default"
-  - "rule:scope-control"
-  - "rule:security-sensitive-stop"
   - "skill:launch-readiness"
   - "skill:threat-modeling"
 workspaces:
