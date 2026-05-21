@@ -1,0 +1,124 @@
+name: Migration Dry-Run (Phase 4 Physical Layout)
+
+# Monorepo Phase 4 (ADR-017) guard. Runs `scripts/plan_physical_move.py`
+# in dry-run mode against the current tree. While Phase 4 is in flight
+# (legacy `.agent-src.uncompressed/` still authoritative), this surfaces
+# any new artefact whose frontmatter `packs[]` / `primary_pack` cannot
+# be resolved deterministically — a conflict the operator must fix in
+# frontmatter, never by hand-editing the move plan.
+#
+# Triggers:
+#   - pull_request: changes touching frontmatter, the planner, or this
+#     workflow re-validate the plan and post a comment on conflicts.
+#   - schedule: weekly cron so a stale plan does not silently rot.
+#   - workflow_dispatch: manual re-run during the migration window.
+#
+# After Phase 4 lands the physical move PR, this workflow becomes a
+# no-op (the planner exits with "nothing to move") and can be removed
+# in the same PR that retires `plan_physical_move.py`.
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - ".agent-src.uncompressed/**/*.md"
+      - "packages/**/*.md"
+      - "scripts/plan_physical_move.py"
+      - "scripts/_lib/agent_src.py"
+      - "config/discovery/packs.yml"
+      - "config/discovery/unassigned-artefacts.yml"
+      - ".github/workflows/migration-dry-run.yml"
+  schedule:
+    # Mondays 04:23 UTC — well clear of the freeze-guard nightly slot.
+    - cron: "23 4 * * 1"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  plan:
+    name: Plan move (dry-run)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install minimal Python deps
+        run: python3 -m pip install --upgrade pip pyyaml
+
+      - name: Run plan_physical_move.py (dry-run)
+        id: plan
+        run: |
+          set -euo pipefail
+          mkdir -p dist/migration
+          python3 scripts/plan_physical_move.py 2>&1 | tee dist/migration/dry-run.log
+          # Emit a machine-readable summary for the comment step.
+          python3 - <<'PY'
+          import json, os, pathlib, sys
+          plan = json.loads(pathlib.Path("dist/migration/move-plan.json").read_text())
+          moves = len(plan.get("moves", []))
+          stays = len(plan.get("stays_in_core", []))
+          confs = len(plan.get("conflicts", []))
+          gh = os.environ.get("GITHUB_OUTPUT")
+          if gh:
+              with open(gh, "a") as f:
+                  f.write(f"moves={moves}\n")
+                  f.write(f"stays={stays}\n")
+                  f.write(f"conflicts={confs}\n")
+          print(f"summary: moves={moves} stays_in_core={stays} conflicts={confs}")
+          if confs:
+              sys.exit(1)
+          PY
+
+      - name: Upload move plan artefact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: move-plan
+          path: |
+            dist/migration/move-plan.json
+            dist/migration/dry-run.log
+          retention-days: 14
+
+      - name: Comment on PR when conflicts appear
+        if: failure() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let plan = {};
+            try {
+              plan = JSON.parse(fs.readFileSync('dist/migration/move-plan.json', 'utf8'));
+            } catch (e) {
+              core.warning('move-plan.json unreadable; skipping comment');
+              return;
+            }
+            const conflicts = plan.conflicts || [];
+            if (!conflicts.length) return;
+            const lines = conflicts.slice(0, 25).map(c =>
+              `- \`${c.path || c.file || '?'}\` — ${c.reason || 'no reason recorded'}`
+            );
+            const more = conflicts.length > 25
+              ? `\n\n…and ${conflicts.length - 25} more (see workflow artefact \`move-plan\`).`
+              : '';
+            const body = [
+              '### 🚧 Physical-move plan has conflicts',
+              '',
+              'The Phase 4 dry-run planner could not resolve a primary pack for the following artefacts. Tighten `packs[]` / `primary_pack` in their frontmatter and push again.',
+              '',
+              ...lines,
+              more,
+              '',
+              '_Posted by `.github/workflows/migration-dry-run.yml`._',
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body,
+            });

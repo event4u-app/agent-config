@@ -64,3 +64,5 @@
   reason: scaffold for archive-note generation
 - path: .agent-src.uncompressed/templates/skill.md
   reason: scaffold for new SKILL.md authoring
+- path: .agent-src.uncompressed/README.md
+  reason: package-root orientation; carries no artefact frontmatter — follows package core
