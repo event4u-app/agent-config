@@ -428,32 +428,51 @@ def _main() -> int:
     )
     parser.add_argument(
         "--root",
-        default=".agent-src.uncompressed",
-        help="Source root to scan (default: .agent-src.uncompressed).",
+        default=None,
+        help=(
+            "Source root to scan. Default: every artefact root discovered by "
+            "scripts/_lib/agent_src.artefact_roots() (legacy + packages/*)."
+        ),
     )
     args = parser.parse_args()
 
-    root = Path(args.root)
-    if not root.is_dir():
-        print(f"error: source root not found: {root}", file=sys.stderr)
-        return 2
+    if args.root is not None:
+        root = Path(args.root)
+        if not root.is_dir():
+            print(f"error: source root not found: {root}", file=sys.stderr)
+            return 2
+        roots = [root]
+    else:
+        # Late import keeps the validator usable as a library without the
+        # monorepo-helper dependency on the import path.
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        from _lib.agent_src import artefact_roots  # noqa: E402
+        roots = artefact_roots()
+        if not roots:
+            print(
+                "error: no artefact roots found "
+                "(checked .agent-src.uncompressed/ and packages/*/.agent-src.uncompressed/)",
+                file=sys.stderr,
+            )
+            return 2
 
     total = 0
     failing = 0
-    for artefact_type, path in _iter_artefacts(root):
-        total += 1
-        text = path.read_text(encoding="utf-8")
-        data, _offset = parse_frontmatter(text)
-        if data is None:
-            # Other tooling flags missing frontmatter; don't double-report.
-            continue
-        schema = load_schema(artefact_type)
-        errors = validate(data, schema)
-        if errors:
-            failing += 1
-            for error in errors:
-                print(f"[{artefact_type}] {path}: {error.rule} at "
-                      f"{error.path} – {error.message}")
+    for root in roots:
+        for artefact_type, path in _iter_artefacts(root):
+            total += 1
+            text = path.read_text(encoding="utf-8")
+            data, _offset = parse_frontmatter(text)
+            if data is None:
+                # Other tooling flags missing frontmatter; don't double-report.
+                continue
+            schema = load_schema(artefact_type)
+            errors = validate(data, schema)
+            if errors:
+                failing += 1
+                for error in errors:
+                    print(f"[{artefact_type}] {path}: {error.rule} at "
+                          f"{error.path} – {error.message}")
 
     print(f"\n== Frontmatter schema: {total} artefacts, "
           f"{failing} failing ==")
