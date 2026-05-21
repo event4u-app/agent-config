@@ -24,6 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent / "scripts"))
 
 from skill_linter import lint_file  # noqa: E402
+from _lib.agent_src import resolve_logical  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
@@ -154,9 +155,9 @@ def test_user_type_and_persona_compose_without_cross_contamination(tmp_path: Pat
 def test_refine_ticket_command_declares_user_type_flag() -> None:
     """The CLI surface contract: ``--user-type=<id>`` is documented in
     the refine-ticket command markdown alongside ``--personas=``."""
-    cmd = (REPO_ROOT / ".agent-src.uncompressed" / "commands" / "refine-ticket.md").read_text(
-        encoding="utf-8"
-    )
+    path = resolve_logical("commands/refine-ticket.md")
+    assert path is not None, "commands/refine-ticket.md not found in any pack"
+    cmd = path.read_text(encoding="utf-8")
     assert "--user-type=" in cmd
     assert "--personas=" in cmd
 
@@ -164,9 +165,9 @@ def test_refine_ticket_command_declares_user_type_flag() -> None:
 def test_refine_ticket_skill_documents_composition_contract() -> None:
     """The skill procedure spells out persona = methodology, user-type
     = end-user — the orthogonal-composition contract."""
-    skill = (
-        REPO_ROOT / ".agent-src.uncompressed" / "skills" / "refine-ticket" / "SKILL.md"
-    ).read_text(encoding="utf-8")
+    path = resolve_logical("skills/refine-ticket/SKILL.md")
+    assert path is not None, "skills/refine-ticket/SKILL.md not found in any pack"
+    skill = path.read_text(encoding="utf-8")
     assert "--user-type=" in skill
     assert "methodology" in skill.lower()
     assert "end-user" in skill.lower()

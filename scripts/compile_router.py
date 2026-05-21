@@ -15,6 +15,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+# ADR-017: rules now live across multiple source roots. Legacy
+# .agent-src.uncompressed/rules/ is kept as a fallback for the
+# pure-compressed consumer projection.
 RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
 OUT_PATH = ROOT / "router.json"
 SETTINGS_PATH = ROOT / ".agent-settings.yml"
@@ -116,11 +119,39 @@ def _load_settings() -> dict:
     return load_agent_settings(project_path=SETTINGS_PATH)
 
 
+def _iter_rule_files() -> list[Path]:
+    """Walk every source root for rule files. First root wins per id."""
+    try:
+        from scripts._lib.agent_src import artefact_roots  # type: ignore
+    except ImportError:
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_src import artefact_roots  # type: ignore[import-not-found]
+
+    seen: dict[str, Path] = {}
+    roots = artefact_roots()
+    if not roots:
+        # Pure-compressed fallback for consumer projections that vendor
+        # the flat .agent-src/ tree without sources.
+        if RULES_DIR.exists():
+            for path in sorted(RULES_DIR.glob("*.md")):
+                seen.setdefault(path.stem, path)
+    else:
+        for src_root in roots:
+            rd = src_root / "rules"
+            if not rd.exists():
+                continue
+            for path in sorted(rd.glob("*.md")):
+                seen.setdefault(path.stem, path)
+    return [seen[k] for k in sorted(seen)]
+
+
 def _collect(rules_dir: Path) -> dict:
     settings = _load_settings()
     kernel: list[str] = []
     tiered: dict[str, list[dict]] = {"tier-1": [], "tier-2": []}
-    for path in sorted(rules_dir.glob("*.md")):
+    for path in _iter_rule_files():
         fm = _parse_frontmatter(path.read_text(encoding="utf-8"))
         if not fm:
             continue

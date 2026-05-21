@@ -26,7 +26,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
 OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
 TREND_FILE = REPO_ROOT / "agents" / "runtime" / ".rule-budget-history.jsonl"
 
@@ -93,8 +95,24 @@ def measure_rule(path: Path) -> dict[str, object]:
 
 
 def collect() -> list[dict[str, object]]:
-    rules = [measure_rule(p) for p in sorted(RULES_DIR.glob("*.md"))]
-    return rules
+    """Collect rule measurements from every source root (multi-root aware).
+
+    Pre-move: reads .agent-src.uncompressed/rules/*.md.
+    Post-move (ADR-017): reads packages/*/.agent-src.uncompressed/rules/*.md.
+    Deduplicates on logical rule id (stem) — first root wins.
+    """
+    seen: set[str] = set()
+    rules: list[dict[str, object]] = []
+    for root in artefact_roots():
+        rules_dir = root / "rules"
+        if not rules_dir.is_dir():
+            continue
+        for p in sorted(rules_dir.glob("*.md")):
+            if p.stem in seen:
+                continue
+            seen.add(p.stem)
+            rules.append(measure_rule(p))
+    return sorted(rules, key=lambda r: r["id"])
 
 
 def load_overrides() -> set[str]:
@@ -138,7 +156,7 @@ def aggregate(rules: list[dict[str, object]]) -> dict[str, object]:
 
 def render_table(rules: list[dict[str, object]], agg: dict[str, object]) -> str:
     lines: list[str] = []
-    lines.append("Rule budget — source: .agent-src.uncompressed/rules/")
+    lines.append("Rule budget — source: rules/ under every artefact root (multi-root aware, ADR-017)")
     lines.append("")
     lines.append(f"{'id':<40} {'type':<7} {'tier':<5} {'chars':>7}")
     lines.append("-" * 62)

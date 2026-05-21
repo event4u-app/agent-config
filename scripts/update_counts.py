@@ -20,31 +20,59 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SRC = REPO_ROOT / ".agent-src.uncompressed"
 
 
 def count(kind: str) -> int:
-    if kind == "skills":
-        return sum(1 for _ in (SRC / "skills").rglob("SKILL.md"))
     if kind == "guidelines":
         # Guidelines live under docs/guidelines/{topic}/ — they are reference
         # material, not packaged artefacts. Recursive walk to count every .md.
         return sum(1 for _ in (REPO_ROOT / "docs" / "guidelines").rglob("*.md"))
-    if kind == "personas":
-        # personas live as flat .md files, README excluded
-        pdir = SRC / "personas"
-        if not pdir.exists():
-            return 0
-        return sum(1 for f in pdir.glob("*.md") if f.name != "README.md")
-    if kind == "commands":
-        # Commands may be flat (`commands/<name>.md`) or nested under a
-        # cluster directory (`commands/<cluster>/<sub>.md`). Walk the tree
-        # and skip the AGENTS.md reference orchestrator.
-        return sum(
-            1 for f in (SRC / kind).rglob("*.md") if f.name != "AGENTS.md"
-        )
-    return sum(1 for _ in (SRC / kind).glob("*.md"))
+    total = 0
+    seen: set[str] = set()
+    for root in artefact_roots():
+        subdir = root / kind
+        if not subdir.exists():
+            continue
+        if kind == "skills":
+            for f in subdir.rglob("SKILL.md"):
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+        elif kind == "personas":
+            # personas live as flat .md files, README excluded
+            for f in subdir.glob("*.md"):
+                if f.name == "README.md":
+                    continue
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+        elif kind == "commands":
+            # Commands may be flat or nested under a cluster directory.
+            # Skip the AGENTS.md reference orchestrator.
+            for f in subdir.rglob("*.md"):
+                if f.name == "AGENTS.md":
+                    continue
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+        else:
+            for f in subdir.glob("*.md"):
+                rel = f.relative_to(root).as_posix()
+                if rel in seen:
+                    continue
+                seen.add(rel)
+                total += 1
+    return total
 
 
 # file → list of (regex, kind)

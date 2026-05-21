@@ -26,13 +26,21 @@ result=$(python3 <<'PY'
 import os, sys, time, hashlib, pathlib, glob
 sys.path.insert(0, "scripts")
 from validate_frontmatter import parse_frontmatter, load_schema, validate
+from _lib.agent_src import artefact_roots
 
-root = ".agent-src.uncompressed/skills"
-skills = sorted(
-    d for d in os.listdir(root)
-    if os.path.isdir(os.path.join(root, d))
-    and os.path.exists(os.path.join(root, d, "SKILL.md"))
-)
+# ADR-017: walk every source root, collect skill dirs by logical name.
+# First root wins on collision (legacy > core > packs per agent_src).
+skills_by_name: dict[str, str] = {}
+for src_root in artefact_roots():
+    sd = src_root / "skills"
+    if not sd.exists():
+        continue
+    for d in sorted(sd.iterdir()):
+        if not d.is_dir():
+            continue
+        if (d / "SKILL.md").exists() and d.name not in skills_by_name:
+            skills_by_name[d.name] = str(d / "SKILL.md")
+skills = sorted(skills_by_name.keys())
 total = len(skills)
 print(f"TOTAL_SKILLS={total}")
 
@@ -46,7 +54,7 @@ schema = load_schema("skill")
 
 failures = []
 for name in sample:
-    path = os.path.join(root, name, "SKILL.md")
+    path = skills_by_name[name]
     text = open(path, encoding="utf-8").read()
     fm, _ = parse_frontmatter(text)
     if fm is None:

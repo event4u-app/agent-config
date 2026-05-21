@@ -21,8 +21,8 @@ sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from check_compression import extract_frontmatter  # noqa: E402
 from validate_frontmatter import parse_frontmatter  # noqa: E402
+from _lib.agent_src import resolve_logical  # noqa: E402
 
-SRC = REPO_ROOT / ".agent-src.uncompressed"
 DST = REPO_ROOT / ".agent-src"
 
 PHASE_1_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
@@ -30,15 +30,21 @@ PHASE_1_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 
 def _pairs():
     """Yield (label, src_path, dst_path) for one artefact per category."""
-    candidates = [
-        ("skill", SRC / "skills" / "dcf-modeling" / "SKILL.md",
-         DST / "skills" / "dcf-modeling" / "SKILL.md"),
-        ("rule", SRC / "rules" / "commit-policy.md",
-         DST / "rules" / "commit-policy.md"),
-        ("command", SRC / "commands" / "commit.md",
-         DST / "commands" / "commit.md"),
+    logical_candidates = [
+        ("skill", "skills/dcf-modeling/SKILL.md"),
+        ("rule", "rules/commit-policy.md"),
+        ("command", "commands/commit.md"),
     ]
-    return [(label, s, d) for label, s, d in candidates if s.exists() and d.exists()]
+    pairs = []
+    for label, logical in logical_candidates:
+        src = resolve_logical(logical)
+        if src is None:
+            continue
+        dst = DST / logical
+        if not dst.exists():
+            continue
+        pairs.append((label, src, dst))
+    return pairs
 
 
 @pytest.mark.parametrize("label,src,dst", _pairs(), ids=lambda x: x if isinstance(x, str) else "")

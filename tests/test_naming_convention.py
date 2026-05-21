@@ -17,11 +17,12 @@ Three checks:
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
-SKILLS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
 
 POLICY_VERB_SUFFIXES = ("-policy", "-gate", "-floor", "-authority")
 TOOL_NOUN_SUFFIXES = (
@@ -31,11 +32,24 @@ TOOL_NOUN_SUFFIXES = (
 
 
 def _rule_names() -> list[str]:
-    return sorted(p.stem for p in RULES_DIR.glob("*.md"))
+    seen: set[str] = set()
+    for root in artefact_roots():
+        rules_dir = root / "rules"
+        if rules_dir.is_dir():
+            for p in rules_dir.glob("*.md"):
+                seen.add(p.stem)
+    return sorted(seen)
 
 
 def _skill_names() -> list[str]:
-    return sorted(p.name for p in SKILLS_DIR.iterdir() if p.is_dir())
+    seen: set[str] = set()
+    for root in artefact_roots():
+        skills_dir = root / "skills"
+        if skills_dir.is_dir():
+            for p in skills_dir.iterdir():
+                if p.is_dir():
+                    seen.add(p.name)
+    return sorted(seen)
 
 
 def test_no_rule_uses_tool_noun_suffix() -> None:

@@ -32,8 +32,24 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = ROOT / ".agent-src.uncompressed/commands"
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
 CONTRACT = ROOT / "docs/contracts/command-clusters.md"
+
+
+def _resolve_command(cluster: str) -> Path:
+    """Return the physical path for ``commands/<cluster>.md``.
+
+    Walks every artefact root (legacy + packages/*) and returns the first
+    match. If none exist, returns the conventional legacy path so the
+    caller can surface a missing-file error.
+    """
+    rel = f"commands/{cluster}.md"
+    hit = resolve_logical(rel)
+    if hit is not None:
+        return hit
+    return ROOT / ".agent-src.uncompressed" / rel
 
 REQUIRED_SECTIONS = ["## Sub-commands", "## Dispatch", "## Rules"]
 TABLE_HEADER_RE = re.compile(
@@ -87,10 +103,10 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str], str]:
 
 
 def check_dispatcher(cluster: str) -> FileReport:
-    path = COMMANDS_DIR / f"{cluster}.md"
+    path = _resolve_command(cluster)
     rep = FileReport(path=path, cluster=cluster)
     if not path.exists():
-        rep.errors.append(f"dispatcher file missing: {path.relative_to(ROOT)}")
+        rep.errors.append(f"dispatcher file missing: commands/{cluster}.md")
         return rep
     text = path.read_text(encoding="utf-8")
     fm, body = parse_frontmatter(text)
@@ -136,7 +152,7 @@ def main() -> int:
 
     # Flag clusters: only assert the file exists; legacy shape is preserved.
     flag_missing = [n for n in flag_clusters
-                    if not (COMMANDS_DIR / f"{n}.md").exists()]
+                    if not _resolve_command(n).exists()]
     if flag_missing:
         print(f"❌  Flag-cluster file(s) missing: {flag_missing}")
         return 1

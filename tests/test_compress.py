@@ -17,6 +17,45 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 import compress
 
 
+class _IsolateMultiRootMixin:
+    """Scope `compress.{iter_all_sources,resolve_logical,artefact_roots}`
+    to ``self.source`` for the lifetime of the test.
+
+    Post-ADR-017 the compress functions discover sources via multi-root
+    helpers and ignore the legacy ``source_dir`` parameter. Tests that
+    build an isolated tmp source tree need the helpers redirected, or
+    they would pick up real package sources from the surrounding repo.
+    """
+
+    def _isolate_multi_root(self, source: Path) -> None:
+        self._mr_orig = (
+            compress.iter_all_sources,
+            compress.resolve_logical,
+            compress.artefact_roots,
+        )
+
+        def _iter():
+            for f in sorted(source.rglob("*")):
+                if f.is_file():
+                    yield f, f.relative_to(source).as_posix()
+
+        def _resolve(rel: str):
+            p = source / rel
+            return p if p.exists() else None
+
+        def _roots():
+            return (source,)
+
+        compress.iter_all_sources = _iter
+        compress.resolve_logical = _resolve
+        compress.artefact_roots = _roots
+
+    def _restore_multi_root(self) -> None:
+        (compress.iter_all_sources,
+         compress.resolve_logical,
+         compress.artefact_roots) = self._mr_orig
+
+
 class TestShouldCompress(unittest.TestCase):
     """Test the should_compress() function."""
 
@@ -36,7 +75,7 @@ class TestShouldCompress(unittest.TestCase):
         self.assertTrue(compress.should_compress(Path("skills/coder/SKILL.md")))
 
 
-class TestCleanupStale(unittest.TestCase):
+class TestCleanupStale(_IsolateMultiRootMixin, unittest.TestCase):
     """Test the cleanup_stale() function."""
 
     def setUp(self):
@@ -45,8 +84,10 @@ class TestCleanupStale(unittest.TestCase):
         self.target = Path(self.tmpdir) / "target"
         self.source.mkdir()
         self.target.mkdir()
+        self._isolate_multi_root(self.source)
 
     def tearDown(self):
+        self._restore_multi_root()
         shutil.rmtree(self.tmpdir)
 
     def test_deletes_stale_files(self):
@@ -131,7 +172,7 @@ class TestCopyFile(unittest.TestCase):
         self.assertTrue(target_file.exists())
 
 
-class TestSyncNonMd(unittest.TestCase):
+class TestSyncNonMd(_IsolateMultiRootMixin, unittest.TestCase):
     """Test sync_non_md() — copies only non-.md and COPY_AS_IS files."""
 
     def setUp(self):
@@ -140,8 +181,10 @@ class TestSyncNonMd(unittest.TestCase):
         self.target = Path(self.tmpdir) / "target"
         self.source.mkdir()
         self.target.mkdir()
+        self._isolate_multi_root(self.source)
 
     def tearDown(self):
+        self._restore_multi_root()
         shutil.rmtree(self.tmpdir)
 
     def test_copies_php_files(self):
@@ -172,15 +215,17 @@ class TestSyncNonMd(unittest.TestCase):
         self.assertEqual((self.target / "README.md").read_text(), "# Readme")
 
 
-class TestListMdFiles(unittest.TestCase):
+class TestListMdFiles(_IsolateMultiRootMixin, unittest.TestCase):
     """Test list_md_files() — lists .md files that need agent compression."""
 
     def setUp(self):
         self.tmpdir = tempfile.mkdtemp()
         self.source = Path(self.tmpdir) / "source"
         self.source.mkdir()
+        self._isolate_multi_root(self.source)
 
     def tearDown(self):
+        self._restore_multi_root()
         shutil.rmtree(self.tmpdir)
 
     def test_lists_md_files(self):
@@ -243,7 +288,7 @@ class TestFileHash(unittest.TestCase):
             path_b.unlink()
 
 
-class TestHashTracking(unittest.TestCase):
+class TestHashTracking(_IsolateMultiRootMixin, unittest.TestCase):
     """Test load_hashes, save_hashes, mark_done, mark_all_done, list_changed_md."""
 
     def setUp(self):
@@ -256,8 +301,10 @@ class TestHashTracking(unittest.TestCase):
         self._orig_source_dir = compress.SOURCE_DIR
         compress.HASH_FILE = self.hash_file
         compress.SOURCE_DIR = self.source
+        self._isolate_multi_root(self.source)
 
     def tearDown(self):
+        self._restore_multi_root()
         compress.HASH_FILE = self._orig_hash_file
         compress.SOURCE_DIR = self._orig_source_dir
         shutil.rmtree(self.tmpdir)
@@ -323,7 +370,7 @@ class TestHashTracking(unittest.TestCase):
         self.assertEqual(changed, [])
 
 
-class TestCheckSync(unittest.TestCase):
+class TestCheckSync(_IsolateMultiRootMixin, unittest.TestCase):
     """Test check_sync() — detects missing and stale files."""
 
     def setUp(self):
@@ -332,8 +379,10 @@ class TestCheckSync(unittest.TestCase):
         self.target = Path(self.tmpdir) / "target"
         self.source.mkdir()
         self.target.mkdir()
+        self._isolate_multi_root(self.source)
 
     def tearDown(self):
+        self._restore_multi_root()
         shutil.rmtree(self.tmpdir)
 
     def test_in_sync(self):

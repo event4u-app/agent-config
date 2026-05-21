@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **490 public artefacts** shipped by
+Consumer-facing catalog of all **491 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -306,58 +306,59 @@ are excluded.
 | rule | [`user-interrupt-priority`](../.agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (128)
+## Commands (129)
 
 | kind | name | cluster | description |
 |---|---|---|---|
 | command | [`agent-handoff`](../.agent-src/commands/agent-handoff.md) |  | Generate a context summary for continuing work in a fresh chat. Replaces the session system. |
 | command | [`agent-status`](../.agent-src/commands/agent-status.md) |  | Show current conversation stats — message count, token costs, task progress, next freshness check. |
+| command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`agents:audit`](../.agent-src/commands/agents/audit.md) | cluster: agents | Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply. |
 | command | [`agents:init`](../.agent-src/commands/agents/init.md) | cluster: agents | Initialize the agent layer for a consumer project — creates AGENTS.md and .github/copilot-instructions.md from package templates, auto-detects stack, never leaks other projects' identifiers. |
 | command | [`agents:optimize`](../.agent-src/commands/agents/optimize.md) | cluster: agents | Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply. |
+| command | [`agents:user`](../.agent-src/commands/agents/user.md) | cluster: agents | User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed. |
 | command | [`agents:user-accept`](../.agent-src/commands/agents/user/accept.md) | cluster: agents | Apply a buffered observation to .agent-user.md after explicit user confirmation; bumps last_updated and drops the applied observations from the buffer. |
 | command | [`agents:user-init`](../.agent-src/commands/agents/user/init.md) | cluster: agents | Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample). |
 | command | [`agents:user-review`](../.agent-src/commands/agents/user/review.md) | cluster: agents | List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually. |
 | command | [`agents:user-show`](../.agent-src/commands/agents/user/show.md) | cluster: agents | Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start. |
 | command | [`agents:user-update`](../.agent-src/commands/agents/user/update.md) | cluster: agents | Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save. |
-| command | [`agents:user`](../.agent-src/commands/agents/user.md) | cluster: agents | User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed. |
-| command | [`agents`](../.agent-src/commands/agents.md) | cluster: agents | Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules). |
 | command | [`analyze-reference-repo`](../.agent-src/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../.agent-src/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../.agent-src/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
+| command | [`challenge-me`](../.agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
 | command | [`challenge-me:vision`](../.agent-src/commands/challenge-me/vision.md) | cluster: challenge-me | Stress-test a plan or idea by one-question-at-a-time interview until 95% confidence — emits a copyable Markdown vision pitch for tickets, roadmaps, or fresh-chat handoff. |
 | command | [`challenge-me:with-docs`](../.agent-src/commands/challenge-me/with-docs.md) | cluster: challenge-me | Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch. |
-| command | [`challenge-me`](../.agent-src/commands/challenge-me.md) | cluster: challenge-me | Challenge-me orchestrator — routes to vision, with-docs |
+| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |
 | command | [`chat-history:import`](../.agent-src/commands/chat-history/import.md) | cluster: chat-history | Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import |
 | command | [`chat-history:learn`](../.agent-src/commands/chat-history/learn.md) | cluster: chat-history | Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/ |
 | command | [`chat-history:show`](../.agent-src/commands/chat-history/show.md) | cluster: chat-history | Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries |
-| command | [`chat-history`](../.agent-src/commands/chat-history.md) | cluster: chat-history | Chat-history orchestrator — routes to show, import, learn |
 | command | [`check-current-md`](../.agent-src/commands/check-current-md.md) |  | Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes. |
-| command | [`commit:in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`commit`](../.agent-src/commands/commit.md) | cluster: commit | Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits |
+| command | [`commit:in-chunks`](../.agent-src/commands/commit/in-chunks.md) | cluster: commit | Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows |
 | command | [`compress`](../.agent-src/commands/compress.md) |  | Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/ |
+| command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`context:create`](../.agent-src/commands/context/create.md) | cluster: context | Analyze a codebase area and create a structured context document |
 | command | [`context:refactor`](../.agent-src/commands/context/refactor.md) | cluster: context | Analyze, update, and extend an existing context document |
-| command | [`context`](../.agent-src/commands/context.md) | cluster: context | Context orchestrator — routes to create, refactor |
 | command | [`cost-report`](../.agent-src/commands/cost-report.md) |  | Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions. |
+| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
 | command | [`council:analysis`](../.agent-src/commands/council/analysis.md) | cluster: council | Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness. |
 | command | [`council:debate`](../.agent-src/commands/council/debate.md) | cluster: council | Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds. |
 | command | [`council:default`](../.agent-src/commands/council/default.md) | cluster: council | Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare. |
 | command | [`council:design`](../.agent-src/commands/council/design.md) | cluster: council | Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment. |
 | command | [`council:optimize`](../.agent-src/commands/council/optimize.md) | cluster: council | Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice. |
 | command | [`council:pr`](../.agent-src/commands/council/pr.md) | cluster: council | Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in. |
-| command | [`council`](../.agent-src/commands/council.md) | cluster: council | Council orchestrator — routes to default, pr, design, optimize, analysis, debate |
-| command | [`create-pr:description-only`](../.agent-src/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`create-pr`](../.agent-src/commands/create-pr.md) | cluster: create-pr | Create a GitHub PR with structured description from Jira ticket and code changes |
+| command | [`create-pr:description-only`](../.agent-src/commands/create-pr/description-only.md) | cluster: create-pr | Generate a PR description as a copyable markdown block — used standalone or by create-pr |
 | command | [`e2e-heal`](../.agent-src/commands/e2e-heal.md) |  | Find, debug, and fix failing Playwright E2E tests |
 | command | [`e2e-plan`](../.agent-src/commands/e2e-plan.md) |  | Explore the application and create a structured E2E test plan in Markdown |
 | command | [`estimate-ticket`](../.agent-src/commands/estimate-ticket.md) |  | Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt |
+| command | [`feature`](../.agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
 | command | [`feature:dev`](../.agent-src/commands/feature/dev.md) | cluster: feature | Full 7-phase feature development workflow for complex features. |
 | command | [`feature:explore`](../.agent-src/commands/feature/explore.md) | cluster: feature | Brainstorm and explore a feature idea before committing to a full plan |
 | command | [`feature:plan`](../.agent-src/commands/feature/plan.md) | cluster: feature | Interactively plan a feature — research, discuss, and create a structured feature document |
 | command | [`feature:refactor`](../.agent-src/commands/feature/refactor.md) | cluster: feature | Refine and update an existing feature plan through interactive discussion |
 | command | [`feature:roadmap`](../.agent-src/commands/feature/roadmap.md) | cluster: feature | Generate implementation roadmap(s) from a feature plan and link them |
-| command | [`feature`](../.agent-src/commands/feature.md) | cluster: feature | Feature orchestrator — routes to explore, plan, refactor, roadmap, dev |
+| command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
 | command | [`fix:ci`](../.agent-src/commands/fix/ci.md) | cluster: fix | Fetch CI errors from GitHub Actions and fix them |
 | command | [`fix:portability`](../.agent-src/commands/fix/portability.md) | cluster: fix | Find and fix project-specific references in shared .augment/ package files |
 | command | [`fix:pr-bot-comments`](../.agent-src/commands/fix/pr-bot-comments.md) | cluster: fix | Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR |
@@ -365,78 +366,78 @@ are excluded.
 | command | [`fix:pr-developer-comments`](../.agent-src/commands/fix/pr-developer-comments.md) | cluster: fix | Fix and reply to human reviewer comments on a GitHub PR |
 | command | [`fix:refs`](../.agent-src/commands/fix/refs.md) | cluster: fix | Find and fix broken cross-references in .augment/ and agents/ files |
 | command | [`fix:seeder`](../.agent-src/commands/fix/seeder.md) | cluster: fix | Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them |
-| command | [`fix`](../.agent-src/commands/fix.md) | cluster: fix | Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments |
+| command | [`ghostwriter`](../.agent-src/commands/ghostwriter.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
 | command | [`ghostwriter:delete`](../.agent-src/commands/ghostwriter/delete.md) | cluster: ghostwriter | Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance. |
 | command | [`ghostwriter:fetch`](../.agent-src/commands/ghostwriter/fetch.md) | cluster: ghostwriter | Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host. |
 | command | [`ghostwriter:list`](../.agent-src/commands/ghostwriter/list.md) | cluster: ghostwriter | List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only. |
 | command | [`ghostwriter:show`](../.agent-src/commands/ghostwriter/show.md) | cluster: ghostwriter | Render a single ghostwriter profile in full — identity, style fingerprint, voice samples, taboos, source URLs. Read-only. |
 | command | [`ghostwriter:write`](../.agent-src/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
-| command | [`ghostwriter`](../.agent-src/commands/ghostwriter.md) | cluster: ghostwriter | Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md). |
 | command | [`grill-me`](../.agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
+| command | [`install-via-agent`](../.agent-src/commands/install-via-agent.md) |  | Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
+| command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge:on-diff`](../.agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
 | command | [`judge:solo`](../.agent-src/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge:steps`](../.agent-src/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
-| command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
+| command | [`memory`](../.agent-src/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
 | command | [`memory:add`](../.agent-src/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
 | command | [`memory:learn-low-impact`](../.agent-src/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
 | command | [`memory:load`](../.agent-src/commands/memory/load.md) | cluster: memory | Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered |
 | command | [`memory:mine-session`](../.agent-src/commands/memory/mine-session.md) | cluster: memory | Mine the active session transcript for memory signals (corrections, preferences, decisions, recurring patterns) — preview-by-default, opt-in transcript access, host-agnostic via TranscriptAdapter. |
 | command | [`memory:promote`](../.agent-src/commands/memory/promote.md) | cluster: memory | Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate. |
 | command | [`memory:propose`](../.agent-src/commands/memory/propose.md) | cluster: memory | Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry. |
-| command | [`memory`](../.agent-src/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
 | command | [`mode`](../.agent-src/commands/mode.md) |  | Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts) |
+| command | [`module`](../.agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
 | command | [`module:create`](../.agent-src/commands/module/create.md) | cluster: module | Create a new module from .module-template with interactive setup |
 | command | [`module:explore`](../.agent-src/commands/module/explore.md) | cluster: module | Explore a module — load its structure, docs, and context into the current conversation |
-| command | [`module`](../.agent-src/commands/module.md) | cluster: module | Module orchestrator — routes to create, explore |
+| command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
+| command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
 | command | [`optimize:agents-dir`](../.agent-src/commands/optimize/agents-dir.md) | cluster: optimize | Manage the agents/ directory — scaffold, folder-audit, fix. Single command with three modes (--scaffold / --audit / --fix); default = interactive wizard. |
 | command | [`optimize:augmentignore`](../.agent-src/commands/optimize/augmentignore.md) | cluster: optimize | Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules. |
 | command | [`optimize:rtk`](../.agent-src/commands/optimize/rtk.md) | cluster: optimize | Create or optimize project-local rtk filters based on the actual toolchain |
 | command | [`optimize:skills`](../.agent-src/commands/optimize/skills.md) | cluster: optimize | Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply. |
-| command | [`optimize-prompt`](../.agent-src/commands/optimize-prompt.md) | cluster: optimize | Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt. |
-| command | [`optimize`](../.agent-src/commands/optimize.md) | cluster: optimize | Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters |
 | command | [`orchestrate`](../.agent-src/commands/orchestrate.md) | cluster: orchestrate | Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract |
+| command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`override:create`](../.agent-src/commands/override/create.md) | cluster: override | Creates a project-level override for a shared skill, rule, or command. |
 | command | [`override:manage`](../.agent-src/commands/override/manage.md) | cluster: override | Reviews, updates, and refactors existing project-level overrides. |
-| command | [`override`](../.agent-src/commands/override.md) | cluster: override | Override orchestrator — routes to create, manage |
 | command | [`package-reset`](../.agent-src/commands/package-reset.md) |  | /package-reset |
 | command | [`package-test`](../.agent-src/commands/package-test.md) |  | /package-test |
+| command | [`post-as`](../.agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`post-as:ghostwriter`](../.agent-src/commands/post-as/ghostwriter.md) | cluster: post-as | Thin alias for /ghostwriter:write — drafts a copyable markdown post in a captured public-figure voice with the mandatory non-removable disclosure footer. |
 | command | [`post-as:me`](../.agent-src/commands/post-as/me.md) | cluster: post-as | Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author. |
-| command | [`post-as`](../.agent-src/commands/post-as.md) | cluster: post-as | Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer). |
 | command | [`prepare-for-review`](../.agent-src/commands/prepare-for-review.md) |  | Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date |
 | command | [`project-analyze`](../.agent-src/commands/project-analyze.md) |  | Full project analysis — detect stack, inventory modules, audit docs, create missing contexts |
 | command | [`project-health`](../.agent-src/commands/project-health.md) |  | Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything |
 | command | [`quality-fix`](../.agent-src/commands/quality-fix.md) |  | Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files |
 | command | [`refine-ticket`](../.agent-src/commands/refine-ticket.md) |  | Refine a Jira/Linear ticket before planning — rewritten ticket + Top-5 risks + persona voices, orchestrates validate-feature-fit and threat-modeling, ends with a close-prompt |
+| command | [`research`](../.agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`research:deep`](../.agent-src/commands/research/deep.md) | cluster: research | Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths. |
 | command | [`research:report`](../.agent-src/commands/research/report.md) | cluster: research | Summarise per-item JSON results from `/research:deep` into `report.md`. Agent renders directly + emits an optional `jq` template for deterministic regeneration. No Python runtime. |
-| command | [`research`](../.agent-src/commands/research.md) | cluster: research | Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans. |
 | command | [`review-changes`](../.agent-src/commands/review-changes.md) |  | Self-review local changes before creating a PR — dispatches to five specialized judges (bug, security, tests, quality, architecture) and consolidates verdicts |
 | command | [`review-routing`](../.agent-src/commands/review-routing.md) |  | Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml |
+| command | [`roadmap`](../.agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`roadmap:ai-council`](../.agent-src/commands/roadmap/ai-council.md) | cluster: roadmap | Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options. |
 | command | [`roadmap:create`](../.agent-src/commands/roadmap/create.md) | cluster: roadmap | Interactively create a new roadmap file in agents/roadmaps/ |
 | command | [`roadmap:process-full`](../.agent-src/commands/roadmap/process-full.md) | cluster: roadmap | Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries. |
 | command | [`roadmap:process-phase`](../.agent-src/commands/roadmap/process-phase.md) | cluster: roadmap | Autonomously process every open step in the next or current phase of a roadmap, then stop. Default execution scope of the /roadmap cluster. |
 | command | [`roadmap:process-step`](../.agent-src/commands/roadmap/process-step.md) | cluster: roadmap | Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out. |
-| command | [`roadmap`](../.agent-src/commands/roadmap.md) | cluster: roadmap | Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution). |
 | command | [`rule-compliance-audit`](../.agent-src/commands/rule-compliance-audit.md) |  | Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules |
 | command | [`set-cost-profile`](../.agent-src/commands/set-cost-profile.md) |  | Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection |
 | command | [`sync-agent-settings`](../.agent-src/commands/sync-agent-settings.md) |  | Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing |
-| command | [`sync-gitignore:fix`](../.agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
 | command | [`sync-gitignore`](../.agent-src/commands/sync-gitignore.md) | cluster: sync-gitignore | Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing |
+| command | [`sync-gitignore:fix`](../.agent-src/commands/sync-gitignore/fix.md) | cluster: sync-gitignore | Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries |
+| command | [`tests`](../.agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
 | command | [`tests:create`](../.agent-src/commands/tests/create.md) | cluster: tests | Write meaningful tests for the changes in the current branch |
 | command | [`tests:execute`](../.agent-src/commands/tests/execute.md) | cluster: tests | Run PHP tests inside the Docker container |
-| command | [`tests`](../.agent-src/commands/tests.md) | cluster: tests | Tests orchestrator — routes to create, execute |
 | command | [`threat-model`](../.agent-src/commands/threat-model.md) |  | Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written |
 | command | [`update-form-request-messages`](../.agent-src/commands/update-form-request-messages.md) |  | Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones. |
 | command | [`upstream-contribute`](../.agent-src/commands/upstream-contribute.md) |  | Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package |
+| command | [`video`](../.agent-src/commands/video.md) | cluster: video | Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch. |
 | command | [`video:from-script`](../.agent-src/commands/video/from-script.md) | cluster: video | Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation. |
 | command | [`video:scene`](../.agent-src/commands/video/scene.md) | cluster: video | Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation. |
 | command | [`video:stitch`](../.agent-src/commands/video/stitch.md) | cluster: video | Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json. |
 | command | [`video:storyboard`](../.agent-src/commands/video/storyboard.md) | cluster: video | Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls. |
-| command | [`video`](../.agent-src/commands/video.md) | cluster: video | Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch. |
 | command | [`work`](../.agent-src/commands/work.md) |  | Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git. |
 
 ## Guidelines (73)

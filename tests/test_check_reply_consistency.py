@@ -138,10 +138,19 @@ def test_scan_dir_missing_path(tmp_path: Path):
 
 # --- repo invariant: shipped sources stay clean ----------------------------
 
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+
 @pytest.mark.parametrize("subdir", ["rules", "commands", "skills"])
 def test_agent_src_uncompressed_clean(subdir: str):
     """The shipped uncompressed sources must never reintroduce the legacy tag."""
-    target = ROOT / ".agent-src.uncompressed" / subdir
-    if not target.exists():
-        pytest.skip(f"{target} not present")
-    assert crc.cmd_scan_dir(target) == 0
+    scanned = 0
+    for pack_root in artefact_roots():
+        target = pack_root / subdir
+        if not target.exists():
+            continue
+        assert crc.cmd_scan_dir(target) == 0
+        scanned += 1
+    if scanned == 0:
+        pytest.skip(f"no pack contains {subdir}/")

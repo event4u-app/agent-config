@@ -8,15 +8,17 @@ convention from `tests/conformance/retrieval/validator.py`). Mirrors
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SCHEMA_PATH = (
-    REPO_ROOT
-    / ".agent-src.uncompressed/skills/subagent-orchestration"
-    / "schemas/subagent-status.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+SCHEMA_PATH = resolve_logical(
+    "skills/subagent-orchestration/schemas/subagent-status.json"
 )
 
 VALID_STATUSES = {"DONE", "DONE_WITH_CONCERNS", "NEEDS_CONTEXT", "BLOCKED"}

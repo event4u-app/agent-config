@@ -70,6 +70,43 @@ def iter_artefacts(suffix: str = ".md") -> Iterator[Path]:
                 yield p
 
 
+def iter_all_sources() -> Iterator[tuple[Path, str]]:
+    """Yield ``(physical_path, logical_relpath)`` for every file under every root.
+
+    Same deterministic order as :func:`iter_artefacts` but covers *all*
+    files (md and non-md) and pre-computes the logical relative path.
+    If a logical path appears in multiple roots (legacy + packages/ during
+    the move window) the first wins — caller is responsible for ensuring
+    that does not happen post-move.
+    """
+    seen: set[str] = set()
+    for root in artefact_roots():
+        for p in sorted(root.rglob("*")):
+            if not p.is_file():
+                continue
+            try:
+                rel = p.relative_to(root).as_posix()
+            except ValueError:
+                continue
+            if rel in seen:
+                continue
+            seen.add(rel)
+            yield p, rel
+
+
+def resolve_logical(logical_rel: str) -> Path | None:
+    """Return the physical path that backs ``logical_rel``, or ``None``.
+
+    Walks :func:`artefact_roots` in order and returns the first hit.
+    """
+    rel = logical_rel.replace("\\", "/").lstrip("/")
+    for root in artefact_roots():
+        p = root / rel
+        if p.exists():
+            return p
+    return None
+
+
 def logical_relpath(path: Path) -> str:
     """Return the artefact's logical identity path (POSIX, no prefix).
 

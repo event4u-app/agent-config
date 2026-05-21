@@ -19,15 +19,19 @@ from __future__ import annotations
 
 import json
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / ".agent-src.uncompressed/skills/subagent-orchestration"
-SKILL_MD = SKILL_DIR / "SKILL.md"
-PROMPT = SKILL_DIR / "prompts/do-and-judge-two-stage.md"
-SCHEMA = SKILL_DIR / "schemas/subagent-status.json"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+SKILL_MD = resolve_logical("skills/subagent-orchestration/SKILL.md")
+PROMPT = resolve_logical("skills/subagent-orchestration/prompts/do-and-judge-two-stage.md")
+SCHEMA = resolve_logical("skills/subagent-orchestration/schemas/subagent-status.json")
+SKILL_DIR = SKILL_MD.parent if SKILL_MD else None
 
 
 # --- Doc-level contract --------------------------------------------------

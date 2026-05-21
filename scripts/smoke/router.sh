@@ -24,6 +24,11 @@ log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 result=$(python3 <<'PY'
 import json, os, sys, pathlib
 
+# ADR-017: routes_to resolution walks artefact_roots() across the
+# monorepo. Skills/commands/guidelines may live under any source root.
+sys.path.insert(0, "scripts")
+from _lib.agent_src import resolve_logical
+
 d = json.load(open("router.json"))
 kernel = d.get("kernel", [])
 tier1 = d.get("tier_1", [])
@@ -34,20 +39,34 @@ total = len(ids)
 # Rule-file resolution
 missing_rules = [i for i in ids if not os.path.exists(f".agent-src/rules/{i}.md")]
 
-# routes_to resolution
+# routes_to resolution — multi-root aware via resolve_logical.
 def resolve(ref):
     if ":" not in ref:
-        return f".agent-src.uncompressed/skills/{ref}/SKILL.md", "skill"
-    kind, rest = ref.split(":", 1)
+        kind, rest = "skill", ref
+    else:
+        kind, rest = ref.split(":", 1)
     if kind == "skill":
-        return f".agent-src.uncompressed/skills/{rest}/SKILL.md", "skill"
+        # Legacy projected path first (fast path), then multi-root source.
+        for p in (
+            f".agent-src/skills/{rest}/SKILL.md",
+            f".agent-src.uncompressed/skills/{rest}/SKILL.md",
+        ):
+            if os.path.exists(p):
+                return p, "skill"
+        hit = resolve_logical(f"skills/{rest}/SKILL.md")
+        return (str(hit) if hit else f".agent-src.uncompressed/skills/{rest}/SKILL.md"), "skill"
     if kind == "command":
         for p in (
+            f".agent-src/commands/{rest}.md",
             f".agent-src.uncompressed/commands/{rest}.md",
             f".agent-src.uncompressed/commands/{rest}/INDEX.md",
         ):
             if os.path.exists(p):
                 return p, "command"
+        for logical in (f"commands/{rest}.md", f"commands/{rest}/INDEX.md"):
+            hit = resolve_logical(logical)
+            if hit:
+                return str(hit), "command"
         return f".agent-src.uncompressed/commands/{rest}.md", "command"
     if kind == "guideline":
         return f"docs/guidelines/{rest}.md", "guideline"

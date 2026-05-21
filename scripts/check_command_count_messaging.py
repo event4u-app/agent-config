@@ -38,10 +38,12 @@ import re
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
 QUIET = "--quiet" in sys.argv
 
 ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = ROOT / ".agent-src.uncompressed" / "commands"
 README = ROOT / "README.md"
 AGENTS = ROOT / "AGENTS.md"
 GETTING_STARTED = ROOT / "docs" / "getting-started.md"
@@ -50,14 +52,33 @@ FM_RE = re.compile(r"^---\s*\n(.*?)\n---", re.DOTALL)
 SUPERSEDED_RE = re.compile(r"^superseded_by:\s*\S", re.MULTILINE)
 
 
+def _command_files() -> list[Path]:
+    """Every command ``*.md`` file across all source roots (legacy + packages/*).
+
+    Multi-root aware per ADR-017: post-move the commands live under
+    ``packages/<pack>/.agent-src.uncompressed/commands/``, and the
+    canonical count is the union across packs (deduped by logical path).
+    """
+    seen: dict[str, Path] = {}
+    for root in artefact_roots():
+        cmd_dir = root / "commands"
+        if not cmd_dir.is_dir():
+            continue
+        for f in cmd_dir.rglob("*.md"):
+            if f.name == "AGENTS.md":
+                continue
+            rel = f.relative_to(cmd_dir).as_posix()
+            seen.setdefault(rel, f)
+    return sorted(seen.values())
+
+
 def canonical_counts() -> tuple[int, int, int]:
-    if not COMMANDS_DIR.is_dir():
-        print(f"❌  {COMMANDS_DIR.relative_to(ROOT)} not found", file=sys.stderr)
+    files = _command_files()
+    if not files:
+        print("❌  no commands/ directory found under any artefact root", file=sys.stderr)
         sys.exit(1)
     total = shims = 0
-    for f in COMMANDS_DIR.rglob("*.md"):
-        if f.name == "AGENTS.md":
-            continue
+    for f in files:
         total += 1
         m = FM_RE.match(f.read_text(encoding="utf-8"))
         fm = m.group(1) if m else ""

@@ -33,11 +33,30 @@ from pathlib import Path
 from typing import Iterable
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PATHS = (
-    ".agent-src.uncompressed/skills",
-    ".agent-src.uncompressed/rules",
-    ".agent-src.uncompressed/commands",
-)
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+# Post-ADR-017 source artefacts live under every packages/*/.agent-src.uncompressed/;
+# pre-move the flat .agent-src.uncompressed/ root still wins. The lint walks
+# the three artefact subtrees (skills/, rules/, commands/) under each active root.
+_SUBDIRS = ("skills", "rules", "commands")
+
+
+def _default_paths() -> tuple[str, ...]:
+    out: list[str] = []
+    for root in artefact_roots():
+        try:
+            rel = root.relative_to(REPO_ROOT)
+        except ValueError:
+            continue
+        for sub in _SUBDIRS:
+            target = root / sub
+            if target.is_dir():
+                out.append((rel / sub).as_posix())
+    return tuple(out)
+
+
+DEFAULT_PATHS = _default_paths()
 ALLOWLIST_FILE = REPO_ROOT / "scripts/lint_framework_leakage_allowlist.json"
 
 CARVE_OUT_PATTERNS = [
@@ -185,8 +204,16 @@ def _load_allowlist() -> dict:
 
 
 def _allowlisted(rel_path: str, line_no: int, allowlist: dict) -> bool:
+    # Allowlist entries cite paths under the legacy .agent-src.uncompressed/
+    # prefix; post-ADR-017 files live under packages/*/.agent-src.uncompressed/.
+    # Match either the literal repo-relative path or its logical id.
+    from _lib.agent_src import strip_source_prefix  # noqa: E402
+
+    logical = strip_source_prefix(rel_path)
     for entry in allowlist.get("entries", []):
-        if entry.get("file") != rel_path:
+        entry_file = entry.get("file")
+        entry_logical = strip_source_prefix(entry_file) if isinstance(entry_file, str) else None
+        if entry_file != rel_path and (logical is None or entry_logical != logical):
             continue
         lines = entry.get("lines")
         if lines == "*":

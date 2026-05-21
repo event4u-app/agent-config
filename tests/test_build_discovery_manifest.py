@@ -76,9 +76,20 @@ def _make_repo(tmp_path: Path) -> Path:
 @pytest.fixture
 def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = _make_repo(tmp_path)
+    src = root / ".agent-src.uncompressed"
     monkeypatch.setattr(mod, "ROOT", root)
-    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncompressed")
+    monkeypatch.setattr(mod, "SRC", src)
     monkeypatch.setattr(mod, "VOCAB_DIR", root / "config" / "discovery")
+    # Post-ADR-017 the manifest builder discovers sources via multi-root
+    # helpers from `_lib.agent_src`. Scope them to the fixture tree so the
+    # test doesn't walk real package roots.
+    monkeypatch.setattr(mod, "artefact_roots", lambda: [src])
+
+    def _resolve_logical(rel: str):
+        p = src / rel.replace("\\", "/").lstrip("/")
+        return p if p.exists() else None
+
+    monkeypatch.setattr(mod, "resolve_logical", _resolve_logical)
     return root
 
 

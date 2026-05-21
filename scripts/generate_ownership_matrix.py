@@ -35,7 +35,14 @@ from typing import Iterable
 import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC_ROOT = ROOT / ".agent-src.uncompressed"
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import artefact_roots, resolve_logical, strip_source_prefix  # noqa: E402
+
+# Canonical anchor used in the committed matrix. Paths are always
+# emitted as ".agent-src.uncompressed/<sub>/<...>" regardless of which
+# physical root (legacy or packages/*) contains the file, so the matrix
+# stays stable across the monorepo migration.
+CANONICAL_SRC_PREFIX = ".agent-src.uncompressed"
 
 SCAN_DIRS = ("rules", "skills", "commands", "contexts", "personas")
 
@@ -88,38 +95,48 @@ def _parse_frontmatter(p: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def _collect_files(src_root: Path) -> list[Path]:
-    out: list[Path] = []
-    for sub in SCAN_DIRS:
-        d = src_root / sub
-        if d.exists():
-            out.extend(sorted(d.rglob("*.md")))
+def _collect_files(root: Path | None = None) -> list[tuple[Path, str]]:
+    """Walk every artefact root and yield ``(physical_path, canonical_rel)``.
+
+    ``canonical_rel`` is always anchored at ``.agent-src.uncompressed/`` so
+    the matrix is byte-identical pre- and post-monorepo-move. Duplicates
+    across roots resolve to the first hit (legacy first, then packages
+    alphabetically) — matches the priority in ``artefact_roots()``.
+
+    When ``root`` is given, only that single directory is scanned — used by
+    tests against a ``tmp_path`` fixture so they stay isolated from the
+    real package layout.
+    """
+    roots = [root] if root is not None else list(artefact_roots())
+    out: list[tuple[Path, str]] = []
+    seen: set[str] = set()
+    for r in roots:
+        for sub in SCAN_DIRS:
+            d = r / sub
+            if not d.exists():
+                continue
+            for f in sorted(d.rglob("*.md")):
+                logical = f.relative_to(r).as_posix()
+                canonical = f"{CANONICAL_SRC_PREFIX}/{logical}"
+                if canonical in seen:
+                    continue
+                seen.add(canonical)
+                out.append((f, canonical))
+    out.sort(key=lambda pair: pair[1])
     return out
 
 
-def _resolve(target: str, src_root: Path) -> Path | None:
-    """Resolve a path string (repo-relative or short) into an absolute Path
-    under src_root or the repo root. Return None if not under a scanned root."""
-    cand = src_root.parent / target if "/" in target else src_root / target
-    try:
-        rel = cand.resolve().relative_to(src_root.parent)
-    except ValueError:
-        return None
-    parts = rel.parts
-    if len(parts) >= 3 and parts[0] == ".agent-src.uncompressed" and parts[1] in SCAN_DIRS:
-        return cand if cand.exists() else None
-    return None
-
-
-def build_matrix(src_root: Path) -> tuple[dict[str, FileEntry], list[Edge], list[str]]:
+def build_matrix(root: Path | None = None) -> tuple[dict[str, FileEntry], list[Edge], list[str]]:
     """Build the file map + edge list. Returns (files, edges, depth3_chains).
 
     depth3_chains is non-empty iff the depth invariant is violated; the
-    caller must abort with exit code 2.
+    caller must abort with exit code 2. When ``root`` is given, only that
+    single directory is scanned (test isolation).
     """
     files: dict[str, FileEntry] = {}
-    for f in _collect_files(src_root):
-        rel = f.relative_to(src_root.parent).as_posix()
+    physical_by_canonical: dict[str, Path] = {}
+    for f, rel in _collect_files(root):
+        physical_by_canonical[rel] = f
         fm = _parse_frontmatter(f)
         rtype = fm.get("type")
         if isinstance(rtype, str):
@@ -149,14 +166,15 @@ def build_matrix(src_root: Path) -> tuple[dict[str, FileEntry], list[Edge], list
 
     # Body markdown links — only count edges to files we know about
     for rel, entry in files.items():
-        body = (src_root.parent / rel).read_text(encoding="utf-8")
+        phys = physical_by_canonical[rel]
+        body = phys.read_text(encoding="utf-8")
         body = body.split("\n---\n", 1)[-1] if body.startswith("---\n") else body
         seen_targets: set[str] = set()
         for m in LINK_RE.finditer(body):
             href = m.group(1).strip()
             if href.startswith("http"):
                 continue
-            resolved = _resolve_link(rel, href, src_root)
+            resolved = _resolve_link(rel, phys, href)
             if resolved is None or resolved == rel or resolved in seen_targets:
                 continue
             if resolved in files:
@@ -191,21 +209,57 @@ def build_matrix(src_root: Path) -> tuple[dict[str, FileEntry], list[Edge], list
     return files, edges, depth3
 
 
-def _resolve_link(source_rel: str, href: str, src_root: Path) -> str | None:
-    """Resolve a markdown link href (relative to source file) to a repo-relative
-    path inside a scanned root, or None."""
-    if href.startswith(".agent-src.uncompressed/") or href.startswith("agents/"):
-        cand = (src_root.parent / href).resolve()
+def _resolve_link(source_rel: str, source_phys: Path, href: str) -> str | None:
+    """Resolve a markdown link href to a canonical scanned-root path, or None.
+
+    ``source_rel`` is the canonical (``.agent-src.uncompressed/...``)
+    identity of the source file. Relative hrefs are resolved against
+    the source's *logical* directory, then looked up across every
+    artefact root via :func:`resolve_logical`. This keeps the matrix
+    stable when source and target live in different physical packages.
+
+    Repo-rooted hrefs (``agents/...``, ``packages/...``, or those
+    starting with ``.agent-src.uncompressed/``) are resolved against
+    the repo root and normalised through :func:`strip_source_prefix`.
+    """
+    if href.startswith(".agent-src.uncompressed/") or href.startswith("agents/") \
+            or href.startswith("packages/"):
+        cand = (ROOT / href).resolve()
+        if not cand.exists():
+            return None
+        try:
+            rel = cand.relative_to(ROOT).as_posix()
+        except ValueError:
+            return None
+        logical = strip_source_prefix(rel)
+        if logical is None:
+            return None
     else:
-        base = (src_root.parent / source_rel).parent
-        cand = (base / href).resolve()
-    try:
-        rel = cand.relative_to(src_root.parent).as_posix()
-    except ValueError:
-        return None
-    parts = rel.split("/")
-    if len(parts) >= 3 and parts[0] == ".agent-src.uncompressed" and parts[1] in SCAN_DIRS:
-        return rel if cand.exists() else None
+        # Logical resolution: walk relative hops on the canonical path
+        # so a `../skills/laravel/SKILL.md` link from
+        # `rules/architecture.md` resolves to `skills/laravel/SKILL.md`
+        # regardless of which package physically hosts either file.
+        source_logical = strip_source_prefix(source_rel)
+        if source_logical is None:
+            return None
+        base_parts = source_logical.split("/")[:-1]  # drop file name
+        href_parts = href.split("/")
+        for part in href_parts:
+            if part == "" or part == ".":
+                continue
+            if part == "..":
+                if not base_parts:
+                    return None
+                base_parts.pop()
+            else:
+                base_parts.append(part)
+        logical = "/".join(base_parts)
+    # Existence is validated downstream by the caller against the scanned
+    # ``files`` dict — that handles both real ``artefact_roots()`` scans
+    # and ``tmp_path`` test fixtures uniformly.
+    parts = logical.split("/")
+    if len(parts) >= 2 and parts[0] in SCAN_DIRS:
+        return f"{CANONICAL_SRC_PREFIX}/{logical}"
     return None
 
 
@@ -287,11 +341,12 @@ def main(argv: Iterable[str] | None = None) -> int:
                     help="Regenerate to memory and diff against committed JSON.")
     args = ap.parse_args(list(argv) if argv is not None else None)
 
-    if not SRC_ROOT.is_dir():
-        print(f"❌  source dir missing: {SRC_ROOT}", file=sys.stderr)
+    if not artefact_roots():
+        print("❌  no artefact roots found (legacy or packages/*/.agent-src.uncompressed/)",
+              file=sys.stderr)
         return 3
 
-    files, edges, depth3 = build_matrix(SRC_ROOT)
+    files, edges, depth3 = build_matrix()
     if depth3:
         print("❌  load_context depth-3 chain detected (limit is 2):", file=sys.stderr)
         for chain in depth3:

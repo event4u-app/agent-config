@@ -27,7 +27,15 @@ except ImportError:  # pragma: no cover — bootstrap guard
     sys.exit(3)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-TEMPLATE_SCRIPTS = REPO_ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+# Post-ADR-017 the templates/ tree lives under packages/core/; fall back
+# to the legacy root for pre-move checkouts.
+_template_scripts = resolve_logical("templates/scripts")
+TEMPLATE_SCRIPTS = _template_scripts or (
+    REPO_ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+)
 if str(TEMPLATE_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(TEMPLATE_SCRIPTS))
 

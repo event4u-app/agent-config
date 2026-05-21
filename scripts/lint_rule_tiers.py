@@ -20,7 +20,12 @@ from pathlib import Path
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-RULES_DIR = REPO / ".agent-src.uncompressed" / "rules"
+
+# Rules live under every artefact root post-monorepo Phase 4.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+RULES_DIRS = [root / "rules" for root in artefact_roots() if (root / "rules").is_dir()]
 
 VALID_TIERS = frozenset({"1", "2a", "2b", "3", "safety-floor", "mechanical-already"})
 
@@ -41,9 +46,13 @@ def parse_tier(text: str) -> str | None:
 
 
 def main() -> int:
-    rules = sorted(RULES_DIR.glob("*.md"))
+    rules: list[Path] = []
+    for rules_dir in RULES_DIRS:
+        rules.extend(rules_dir.glob("*.md"))
+    rules.sort()
     if not rules:
-        print(f"lint_rule_tiers: no rules found under {RULES_DIR}", file=sys.stderr)
+        roots_label = ", ".join(str(d) for d in RULES_DIRS) or "<no rules root>"
+        print(f"lint_rule_tiers: no rules found under {roots_label}", file=sys.stderr)
         return 1
 
     missing: list[str] = []

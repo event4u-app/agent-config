@@ -387,6 +387,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/install-via-agent.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/jira-ticket.md": {
       "kind": "command",
       "rule_type": null,
@@ -4170,6 +4176,13 @@
       "type": "READ_ONLY",
       "via": "body_link",
       "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/install-via-agent.md",
+      "target": ".agent-src.uncompressed/commands/install-via-agent.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
     },
     {
       "source": ".agent-src.uncompressed/commands/jira-ticket.md",

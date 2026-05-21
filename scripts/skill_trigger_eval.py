@@ -149,16 +149,32 @@ class MockRouter:
         return loaded, len(query) // 4 + len(skills) * 20, 16
 
 
-def load_skill_metas(root: Path = SKILLS_SOURCE) -> list[SkillMeta]:
-    """Parse name + description from every SKILL.md frontmatter under root."""
+def load_skill_metas(root: Path | None = None) -> list[SkillMeta]:
+    """Parse name + description from every SKILL.md frontmatter under root.
+
+    If ``root`` is None, the package's ``artefact_roots()`` are scanned so
+    discovery works across the monorepo's per-pack ``.agent-src.uncompressed/``
+    trees. A single explicit ``root`` keeps tests that mock a sub-tree working
+    unchanged.
+    """
+    if root is not None:
+        roots = [root]
+    else:
+        from _lib.agent_src import artefact_roots
+        roots = [r / "skills" for r in artefact_roots()]
     metas: list[SkillMeta] = []
-    for skill_dir in sorted(p for p in root.iterdir() if p.is_dir()):
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
+    seen: set[str] = set()
+    for skills_dir in roots:
+        if not skills_dir.is_dir():
             continue
-        meta = _parse_frontmatter(skill_md)
-        if meta is not None:
-            metas.append(meta)
+        for skill_dir in sorted(p for p in skills_dir.iterdir() if p.is_dir()):
+            skill_md = skill_dir / "SKILL.md"
+            if not skill_md.exists():
+                continue
+            meta = _parse_frontmatter(skill_md)
+            if meta is not None and meta.name not in seen:
+                metas.append(meta)
+                seen.add(meta.name)
     return metas
 
 
@@ -587,6 +603,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
 
 
 def _default_triggers_path(skill: str) -> Path:
+    from _lib.agent_src import resolve_logical
+    resolved = resolve_logical(f"skills/{skill}/evals/triggers.json")
+    if resolved is not None:
+        return resolved
     return SKILLS_SOURCE / skill / "evals" / "triggers.json"
 
 

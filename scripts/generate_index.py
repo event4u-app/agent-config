@@ -19,6 +19,12 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+# Legacy single-root anchor — kept as fallback for pure-compressed
+# consumer projections. Multi-root discovery uses artefact_roots() so
+# generate_index works across packages/* per ADR-017.
 SRC = ROOT / ".agent-src.uncompressed"
 GUIDELINES = ROOT / "docs" / "guidelines"
 INDEX_PATH = ROOT / "agents" / "index.md"
@@ -62,59 +68,79 @@ def _truncate(text: str, limit: int = 200) -> str:
 
 
 def _collect_skills() -> list[Entry]:
-    out = []
-    for skill_dir in sorted((SRC / "skills").iterdir()):
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
+    """Walk every source root for skills; first root wins per logical id."""
+    seen: dict[str, Entry] = {}
+    for src_root in artefact_roots():
+        skills_root = src_root / "skills"
+        if not skills_root.is_dir():
             continue
-        fm = _parse_frontmatter(skill_md.read_text(encoding="utf-8"))
-        name = fm.get("name") or skill_dir.name
-        out.append(Entry(
-            kind="skill",
-            name=name,
-            description=_truncate(fm.get("description", "")),
-            extra="",
-            path=f".agent-src.uncompressed/skills/{skill_dir.name}/SKILL.md",
-        ))
-    return out
+        for skill_dir in sorted(skills_root.iterdir()):
+            if not skill_dir.is_dir() or skill_dir.name in seen:
+                continue
+            skill_md = skill_dir / "SKILL.md"
+            if not skill_md.exists():
+                continue
+            fm = _parse_frontmatter(skill_md.read_text(encoding="utf-8"))
+            name = fm.get("name") or skill_dir.name
+            seen[skill_dir.name] = Entry(
+                kind="skill",
+                name=name,
+                description=_truncate(fm.get("description", "")),
+                extra="",
+                path=skill_md.relative_to(ROOT).as_posix(),
+            )
+    return [seen[k] for k in sorted(seen)]
 
 
 def _collect_rules() -> list[Entry]:
-    out = []
-    for rule_md in sorted((SRC / "rules").glob("*.md")):
-        fm = _parse_frontmatter(rule_md.read_text(encoding="utf-8"))
-        out.append(Entry(
-            kind="rule",
-            name=rule_md.stem,
-            description=_truncate(fm.get("description", "")),
-            extra=fm.get("type", "?"),
-            path=f".agent-src.uncompressed/rules/{rule_md.name}",
-        ))
-    return out
+    """Walk every source root for rules; first root wins per logical id."""
+    seen: dict[str, Entry] = {}
+    for src_root in artefact_roots():
+        rules_root = src_root / "rules"
+        if not rules_root.is_dir():
+            continue
+        for rule_md in sorted(rules_root.glob("*.md")):
+            if rule_md.stem in seen:
+                continue
+            fm = _parse_frontmatter(rule_md.read_text(encoding="utf-8"))
+            seen[rule_md.stem] = Entry(
+                kind="rule",
+                name=rule_md.stem,
+                description=_truncate(fm.get("description", "")),
+                extra=fm.get("type", "?"),
+                path=rule_md.relative_to(ROOT).as_posix(),
+            )
+    return [seen[k] for k in sorted(seen)]
 
 
 def _collect_commands() -> list[Entry]:
-    out = []
-    cmd_dir = SRC / "commands"
-    for cmd_md in sorted(cmd_dir.rglob("*.md")):
-        if cmd_md.name == "AGENTS.md":
+    """Walk every source root for commands; first root wins per logical id."""
+    seen: dict[str, Entry] = {}
+    for src_root in artefact_roots():
+        cmd_dir = src_root / "commands"
+        if not cmd_dir.is_dir():
             continue
-        fm = _parse_frontmatter(cmd_md.read_text(encoding="utf-8"))
-        is_shim = bool(fm.get("superseded_by"))
-        extra = ""
-        if is_shim:
-            extra = f"shim → /{fm['superseded_by']}"
-        elif fm.get("cluster"):
-            extra = f"cluster: {fm['cluster']}"
-        rel = cmd_md.relative_to(cmd_dir)
-        out.append(Entry(
-            kind="shim" if is_shim else "command",
-            name=fm.get("name") or cmd_md.stem,
-            description=_truncate(fm.get("description", "")),
-            extra=extra,
-            path=f".agent-src.uncompressed/commands/{rel}",
-        ))
-    return out
+        for cmd_md in sorted(cmd_dir.rglob("*.md")):
+            if cmd_md.name == "AGENTS.md":
+                continue
+            rel = cmd_md.relative_to(cmd_dir).as_posix()
+            if rel in seen:
+                continue
+            fm = _parse_frontmatter(cmd_md.read_text(encoding="utf-8"))
+            is_shim = bool(fm.get("superseded_by"))
+            extra = ""
+            if is_shim:
+                extra = f"shim → /{fm['superseded_by']}"
+            elif fm.get("cluster"):
+                extra = f"cluster: {fm['cluster']}"
+            seen[rel] = Entry(
+                kind="shim" if is_shim else "command",
+                name=fm.get("name") or cmd_md.stem,
+                description=_truncate(fm.get("description", "")),
+                extra=extra,
+                path=cmd_md.relative_to(ROOT).as_posix(),
+            )
+    return [seen[k] for k in sorted(seen)]
 
 
 def _collect_guidelines() -> list[Entry]:
@@ -137,8 +163,14 @@ def _collect_guidelines() -> list[Entry]:
 # Path rewriter for the public catalog: link to the shipped surface
 # (`.agent-src/`) instead of the source-of-truth (`.agent-src.uncompressed/`),
 # which is excluded from `package.json#files` and `composer.json` archives.
+# Post-ADR-017 the source-of-truth lives at packages/*/.agent-src.uncompressed/,
+# so we strip whichever prefix matches and pin to the flat .agent-src/ output.
 def _to_shipped_path(path: str) -> str:
-    return path.replace(".agent-src.uncompressed/", ".agent-src/", 1)
+    from _lib.agent_src import strip_source_prefix
+    logical = strip_source_prefix(path)
+    if logical is not None:
+        return f".agent-src/{logical}"
+    return path
 
 
 def _render_table(

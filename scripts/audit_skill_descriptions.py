@@ -27,7 +27,10 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import List
 
-DEFAULT_ROOT = Path(".agent-src.uncompressed/skills")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+DEFAULT_ROOT: Path | None = None
 MIN_LENGTH = 150
 # Mirrors scripts/skill_linter.py `description_too_long` threshold.
 MAX_LENGTH = 200
@@ -149,14 +152,23 @@ def render_text(findings: List[Finding], worst_only: bool) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--root", type=Path, default=DEFAULT_ROOT)
+    parser.add_argument("--root", type=Path, default=None)
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--full", action="store_true", help="show all flagged, not just top 15")
     args = parser.parse_args()
-    if not args.root.exists():
-        print(f"error: {args.root} does not exist", file=sys.stderr)
-        return 2
-    findings = collect_findings(args.root)
+    if args.root is not None:
+        if not args.root.exists():
+            print(f"error: {args.root} does not exist", file=sys.stderr)
+            return 2
+        roots = [args.root]
+    else:
+        roots = [r / "skills" for r in artefact_roots() if (r / "skills").is_dir()]
+        if not roots:
+            print("error: no skills/ directories found across artefact roots", file=sys.stderr)
+            return 2
+    findings: List[Finding] = []
+    for r in roots:
+        findings.extend(collect_findings(r))
     if args.json:
         print(json.dumps([asdict(f) for f in findings], indent=2))
     else:

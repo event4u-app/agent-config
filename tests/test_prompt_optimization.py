@@ -23,34 +23,30 @@ Filesystem only — no LLM calls, no network. Covered:
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
 
-PROMPT_OPTIMIZER = (
-    REPO_ROOT / ".agent-src.uncompressed" / "skills" / "prompt-optimizer" / "SKILL.md"
-)
-REFINE_PROMPT = (
-    REPO_ROOT / ".agent-src.uncompressed" / "skills" / "refine-prompt" / "SKILL.md"
-)
-SETTINGS_TEMPLATE = (
-    REPO_ROOT
-    / ".agent-src.uncompressed"
-    / "templates"
-    / "agents"
-    / "agent-project-settings.example.yml"
-)
+
+def _resolve(logical: str) -> Path:
+    p = resolve_logical(logical)
+    assert p is not None, f"{logical} not found in any pack"
+    return p
+
+
+PROMPT_OPTIMIZER = _resolve("skills/prompt-optimizer/SKILL.md")
+REFINE_PROMPT = _resolve("skills/refine-prompt/SKILL.md")
+SETTINGS_TEMPLATE = _resolve("templates/agents/agent-project-settings.example.yml")
 PUBLIC_FIGURES_POLICY = (
     REPO_ROOT / "agents" / "settings" / "policies" / "media" / "public-figures.md"
 )
-MEDIA_ROUTING_RULE = (
-    REPO_ROOT / ".agent-src.uncompressed" / "rules" / "media-governance-routing.md"
-)
-ASK_WHEN_UNCERTAIN_RULE = (
-    REPO_ROOT / ".agent-src.uncompressed" / "rules" / "ask-when-uncertain.md"
-)
+MEDIA_ROUTING_RULE = _resolve("rules/media-governance-routing.md")
+ASK_WHEN_UNCERTAIN_RULE = _resolve("rules/ask-when-uncertain.md")
 
 
 # ---------------------------------------------------------------------------

@@ -40,10 +40,14 @@ README.md and `docs/architecture.md`.
 from __future__ import annotations
 
 import re
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC = REPO_ROOT / ".agent-src.uncompressed"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+ROOTS = artefact_roots()
 
 # Hero badges are shields.io URLs of the form
 # `https://img.shields.io/badge/<Label>-<N>-<hex>?style=flat-square`.
@@ -60,11 +64,19 @@ BADGE_RES = {
 
 
 def _count_skills() -> int:
-    return sum(1 for p in (SRC / "skills").iterdir() if p.is_dir())
+    total = 0
+    for root in ROOTS:
+        d = root / "skills"
+        if d.is_dir():
+            total += sum(1 for p in d.iterdir() if p.is_dir())
+    return total
 
 
 def _count_rules() -> int:
-    return sum(1 for p in (SRC / "rules").glob("*.md"))
+    return sum(
+        1 for root in ROOTS for _ in (root / "rules").glob("*.md")
+        if (root / "rules").is_dir()
+    )
 
 
 def _count_active_commands() -> int:
@@ -73,13 +85,17 @@ def _count_active_commands() -> int:
     # Commands may be flat (`commands/<name>.md`) or nested under a cluster
     # directory (`commands/<cluster>/<sub>.md`). Walk recursively and skip the
     # AGENTS.md reference orchestrator that lives under .agent-src/commands/.
-    for p in (SRC / "commands").rglob("*.md"):
-        if p.name == "AGENTS.md":
+    for root in ROOTS:
+        cmd_dir = root / "commands"
+        if not cmd_dir.is_dir():
             continue
-        total += 1
-        text = p.read_text(encoding="utf-8")
-        if re.search(r"^deprecated_in:\s*", text, re.MULTILINE):
-            deprecated += 1
+        for p in cmd_dir.rglob("*.md"):
+            if p.name == "AGENTS.md":
+                continue
+            total += 1
+            text = p.read_text(encoding="utf-8")
+            if re.search(r"^deprecated_in:\s*", text, re.MULTILINE):
+                deprecated += 1
     return total - deprecated
 
 
@@ -91,15 +107,26 @@ def _count_personas() -> int:
     # Top-level .md files in personas/, excluding README.md and any
     # _template-* scaffold files. The advisors/ subdirectory is counted
     # separately by _count_advisors() — distinct class.
-    return sum(
-        1
-        for p in (SRC / "personas").glob("*.md")
-        if p.name != "README.md" and not p.name.startswith("_")
-    )
+    total = 0
+    for root in ROOTS:
+        d = root / "personas"
+        if not d.is_dir():
+            continue
+        total += sum(
+            1
+            for p in d.glob("*.md")
+            if p.name != "README.md" and not p.name.startswith("_")
+        )
+    return total
 
 
 def _count_advisors() -> int:
-    return sum(1 for p in (SRC / "personas" / "advisors").glob("*.md"))
+    total = 0
+    for root in ROOTS:
+        d = root / "personas" / "advisors"
+        if d.is_dir():
+            total += sum(1 for _ in d.glob("*.md"))
+    return total
 
 
 def test_readme_hero_counts_match_disk() -> None:
@@ -188,8 +215,13 @@ def test_every_rule_declares_a_valid_tier() -> None:
     value) should fail this test the same way the CI Taskfile gate
     `lint-rule-tiers` does, even when the rest of the pipeline is skipped.
     """
-    rules = sorted((SRC / "rules").glob("*.md"))
-    assert rules, "no rules found under .agent-src.uncompressed/rules/"
+    rules: list[Path] = []
+    for root in ROOTS:
+        d = root / "rules"
+        if d.is_dir():
+            rules.extend(sorted(d.glob("*.md")))
+    rules.sort(key=lambda p: p.name)
+    assert rules, "no rules found in any pack's rules/ directory"
     missing: list[str] = []
     invalid: list[tuple[str, str]] = []
     for rule in rules:

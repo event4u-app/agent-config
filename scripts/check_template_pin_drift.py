@@ -24,12 +24,26 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
 
 PACKAGE_JSON = REPO_ROOT / "package.json"
-TEMPLATE_FILES = (
-    REPO_ROOT / ".agent-src.uncompressed" / "templates" / "agents" / "agent-project-settings.example.yml",
-    REPO_ROOT / ".agent-src" / "templates" / "agents" / "agent-project-settings.example.yml",
-)
+
+# Source-of-truth template lives under whichever artefact root owns it
+# (legacy .agent-src.uncompressed/ pre-move, packages/*/.agent-src.uncompressed/
+# post-ADR-017). Compressed twin always lands at the flat .agent-src/ surface.
+_TEMPLATE_LOGICAL = "templates/agents/agent-project-settings.example.yml"
+
+
+def _template_files() -> tuple[Path, ...]:
+    src = resolve_logical(_TEMPLATE_LOGICAL)
+    files: list[Path] = []
+    if src is not None:
+        files.append(src)
+    else:
+        files.append(REPO_ROOT / ".agent-src.uncompressed" / _TEMPLATE_LOGICAL)
+    files.append(REPO_ROOT / ".agent-src" / _TEMPLATE_LOGICAL)
+    return tuple(files)
 PIN_LINE_RE = re.compile(r"^\s*agent_config_version\s*:\s*\"?([^\"\s#]*)\"?")
 
 
@@ -70,12 +84,15 @@ def main(argv: list[str] | None = None) -> int:
         return 1
 
     failures: list[str] = []
-    for template in TEMPLATE_FILES:
+    for template in _template_files():
+        try:
+            rel = template.relative_to(REPO_ROOT)
+        except ValueError:
+            rel = template
         if not template.is_file():
-            failures.append(f"missing template file: {template.relative_to(REPO_ROOT)}")
+            failures.append(f"missing template file: {rel}")
             continue
         pin = _read_template_pin(template)
-        rel = template.relative_to(REPO_ROOT)
         if pin is None:
             failures.append(f"{rel}: no `agent_config_version:` line found")
             continue

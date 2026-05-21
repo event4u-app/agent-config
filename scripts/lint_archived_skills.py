@@ -29,8 +29,16 @@ from pathlib import Path
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-ARCHIVE_DIR = REPO / "agents" / "archived-skills"
-SKILLS_DIR = REPO / ".agent-src.uncompressed" / "skills"
+# Archive notes moved under agents/evidence/ in the privilege-first
+# taxonomy refactor (commit d2ce6748).
+ARCHIVE_DIR = REPO / "agents" / "evidence" / "archived-skills"
+
+# Live skill directories live under every artefact root post-monorepo
+# Phase 4 (legacy + packages/*/.agent-src.uncompressed/skills/).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+SKILLS_DIRS = [root / "skills" for root in artefact_roots() if (root / "skills").is_dir()]
 
 REQUIRED_FIELDS = ("slug", "archived_on", "last_seen_count", "reason", "replacement", "last_known_callers")
 VALID_REASONS = frozenset({"unused", "merged", "superseded", "deprecated"})
@@ -57,7 +65,13 @@ def archived_slugs() -> list[Path]:
 
 
 def live_skill_slugs() -> set[str]:
-    return {p.name for p in SKILLS_DIR.iterdir() if p.is_dir() and (p / "SKILL.md").exists()}
+    slugs: set[str] = set()
+    for skills_dir in SKILLS_DIRS:
+        slugs.update(
+            p.name for p in skills_dir.iterdir()
+            if p.is_dir() and (p / "SKILL.md").exists()
+        )
+    return slugs
 
 
 def main() -> int:
@@ -100,15 +114,16 @@ def main() -> int:
 
         replacement = fm["replacement"]
         reason = fm["reason"]
+        skills_label = ", ".join(str(d) for d in SKILLS_DIRS) or "<no skills root>"
         if reason in {"merged", "superseded"}:
             if replacement == "none" or not replacement:
                 errors.append(f"{note.name}: reason={reason} requires a replacement slug, got 'none'")
             elif replacement not in live:
-                errors.append(f"{note.name}: replacement '{replacement}' not found under {SKILLS_DIR}")
+                errors.append(f"{note.name}: replacement '{replacement}' not found under {skills_label}")
         elif reason in {"unused", "deprecated"}:
             if replacement not in {"none", ""}:
                 if replacement not in live:
-                    errors.append(f"{note.name}: replacement '{replacement}' not found under {SKILLS_DIR}")
+                    errors.append(f"{note.name}: replacement '{replacement}' not found under {skills_label}")
 
         if fm["slug"] in live:
             errors.append(f"{note.name}: slug '{fm['slug']}' still has a live SKILL.md (zombie)")
@@ -116,17 +131,18 @@ def main() -> int:
         archived_keys.add(fm["slug"])
 
     # Cross-check: live skills must not list an archived slug as replaced_by.
-    for skill_dir in sorted(SKILLS_DIR.iterdir()):
-        skill_md = skill_dir / "SKILL.md"
-        if not skill_md.exists():
-            continue
-        text = skill_md.read_text(encoding="utf-8")
-        fm = parse_frontmatter(text)
-        if fm is None:
-            continue
-        rb = fm.get("replaced_by", "").strip()
-        if rb and rb in archived_keys:
-            errors.append(f"{skill_dir.name}/SKILL.md: replaced_by '{rb}' points at an archived slug")
+    for skills_dir in SKILLS_DIRS:
+        for skill_dir in sorted(skills_dir.iterdir()):
+            skill_md = skill_dir / "SKILL.md"
+            if not skill_md.exists():
+                continue
+            text = skill_md.read_text(encoding="utf-8")
+            fm = parse_frontmatter(text)
+            if fm is None:
+                continue
+            rb = fm.get("replaced_by", "").strip()
+            if rb and rb in archived_keys:
+                errors.append(f"{skill_dir.name}/SKILL.md: replaced_by '{rb}' points at an archived slug")
 
     if errors:
         print(f"❌  lint_archived_skills: {len(errors)} violation(s) across {len(notes)} note(s)", file=sys.stderr)

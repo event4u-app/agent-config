@@ -25,7 +25,11 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_PATH = REPO_ROOT / ".agent-src.uncompressed" / "skills" / "markitdown" / "SKILL.md"
+import sys
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+SKILL_PATH = resolve_logical("skills/markitdown/SKILL.md")
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures" / "markitdown"
 
 REQUIRED_SECTIONS = (

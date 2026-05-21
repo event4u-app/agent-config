@@ -31,7 +31,7 @@ def _write(p: Path, content: str) -> None:
 # --- repo baseline ---------------------------------------------------------
 
 def test_repo_baseline_generates_and_check_passes():
-    files, edges, depth3 = gom.build_matrix(REPO_ROOT / ".agent-src.uncompressed")
+    files, edges, depth3 = gom.build_matrix()
     assert depth3 == [], "\n".join(depth3)
     # every file has a self-WRITE edge
     self_writes = {e.source for e in edges if e.type == "WRITE"}

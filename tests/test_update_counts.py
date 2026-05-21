@@ -83,8 +83,12 @@ class TestCount(unittest.TestCase):
 
     def test_personas_excludes_readme(self):
         # The personas/README.md index file must not be counted as a persona.
-        src = Path(update_counts.SRC) / "personas"
-        md_files = [f for f in src.glob("*.md")]
+        from _lib.agent_src import artefact_roots
+        md_files: list[Path] = []
+        for root in artefact_roots():
+            d = root / "personas"
+            if d.is_dir():
+                md_files.extend(d.glob("*.md"))
         readme_present = any(f.name == "README.md" for f in md_files)
         if readme_present:
             self.assertLess(

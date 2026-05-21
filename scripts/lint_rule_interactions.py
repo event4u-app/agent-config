@@ -25,8 +25,27 @@ import yaml
 QUIET = "--quiet" in sys.argv
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import resolve_logical, strip_source_prefix  # noqa: E402
+
 MATRIX = ROOT / "docs" / "contracts" / "rule-interactions.yml"
-RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
+
+
+def _rule_exists(slug: str) -> bool:
+    return resolve_logical(f"rules/{slug}.md") is not None
+
+
+def _evidence_exists(file_part: str) -> bool:
+    """Return True if the evidence path resolves under any source root.
+
+    Accepts legacy ``.agent-src.uncompressed/...`` citations and resolves
+    them through the multi-root layout; falls back to a literal repo
+    path check for non-source citations (docs/, agents/, ...).
+    """
+    logical = strip_source_prefix(file_part)
+    if logical is not None:
+        return resolve_logical(logical) is not None
+    return (ROOT / file_part).exists()
 
 ALLOWED_RELATIONS = {
     "overrides",
@@ -77,9 +96,8 @@ def main() -> int:
         if not isinstance(slug, str):
             errors.append(f"rule slug not a string: {slug!r}")
             continue
-        rule_path = RULES_DIR / f"{slug}.md"
-        if not rule_path.exists():
-            errors.append(f"rule slug `{slug}` has no file at {rule_path.relative_to(ROOT)}")
+        if not _rule_exists(slug):
+            errors.append(f"rule slug `{slug}` has no file under any source root (rules/{slug}.md)")
 
     pairs = data.get("pairs") or []
     if not isinstance(pairs, list) or not pairs:
@@ -124,7 +142,7 @@ def main() -> int:
                 errors.append(f"pair `{pid}` evidence item not a string: {citation!r}")
                 continue
             file_part = citation.split("#", 1)[0]
-            if not (ROOT / file_part).exists():
+            if not _evidence_exists(file_part):
                 errors.append(f"pair `{pid}` evidence path does not exist: {file_part}")
 
         # Anchor coverage check

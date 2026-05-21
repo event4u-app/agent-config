@@ -27,7 +27,7 @@ def _seed_root() -> Path:
 
 def test_seed_set_complete() -> None:
     for preset_id in presets.SEED_PRESET_IDS:
-        path = REPO_ROOT / presets.PRESETS_DIRNAME / f"{preset_id}.yml"
+        path = presets._preset_file(REPO_ROOT, preset_id)
         assert path.exists(), f"missing seed preset: {path}"
 
 

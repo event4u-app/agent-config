@@ -89,7 +89,22 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 
 def _profile_file(project_root: Path, profile_id: str) -> Path:
-    return project_root / PROFILES_DIRNAME / f"{profile_id}.yml"
+    legacy = project_root / PROFILES_DIRNAME / f"{profile_id}.yml"
+    if legacy.exists():
+        return legacy
+    try:
+        import sys as _sys
+        scripts_root = Path(__file__).resolve().parents[1]
+        if str(scripts_root) not in _sys.path:
+            _sys.path.insert(0, str(scripts_root))
+        from _lib.agent_src import artefact_roots  # type: ignore
+    except Exception:
+        return legacy
+    for root in artefact_roots():
+        candidate = root / "profiles" / f"{profile_id}.yml"
+        if candidate.exists():
+            return candidate
+    return legacy
 
 
 def _build_resolved(

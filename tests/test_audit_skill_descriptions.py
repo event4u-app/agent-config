@@ -148,13 +148,7 @@ def test_audit_exits_nonzero_on_missing_root(tmp_path: Path) -> None:
 def test_audit_against_real_repo_snapshot() -> None:
     """Smoke test: runs against the real skill tree and parses JSON."""
     result = subprocess.run(
-        [
-            sys.executable,
-            str(SCRIPT),
-            "--root",
-            str(REPO_ROOT / ".agent-src.uncompressed" / "skills"),
-            "--json",
-        ],
+        [sys.executable, str(SCRIPT), "--json"],
         capture_output=True,
         text=True,
         check=True,

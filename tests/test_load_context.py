@@ -110,10 +110,13 @@ def _line_count(text: str, pattern: str) -> int:
 def test_rule_preserves_obligation_baseline(
     rule: str, ctx_rel: str, iron_law_phrase: str, baseline: dict[str, tuple[str, int]]
 ) -> None:
-    rule_path = SRC_ROOT / "rules" / f"{rule}.md"
-    ctx_path = SRC_ROOT / "contexts" / ctx_rel
-    assert rule_path.exists(), f"rule not found: {rule_path}"
-    assert ctx_path.exists(), f"mechanics context not found: {ctx_path}"
+    import sys
+    sys.path.insert(0, str(REPO_ROOT / "scripts"))
+    from _lib.agent_src import resolve_logical  # noqa: E402
+    rule_path = resolve_logical(f"rules/{rule}.md")
+    ctx_path = resolve_logical(f"contexts/{ctx_rel}")
+    assert rule_path is not None and rule_path.exists(), f"rule not found: rules/{rule}.md"
+    assert ctx_path is not None and ctx_path.exists(), f"mechanics context not found: contexts/{ctx_rel}"
 
     fm = _frontmatter(rule_path)
     declared = [str(p) for p in (fm.get("load_context") or [])]

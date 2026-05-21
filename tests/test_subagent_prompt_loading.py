@@ -21,9 +21,18 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKILL_DIR = REPO_ROOT / ".agent-src.uncompressed/skills/subagent-orchestration"
+# Post-monorepo Phase 4 the skill lives under packages/<pack>/...; use
+# the shared discovery helper to find its physical location.
+import sys as _sys  # noqa: E402
+
+_sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+_skill_md = resolve_logical("skills/subagent-orchestration/SKILL.md")
+assert _skill_md is not None, "subagent-orchestration/SKILL.md not found in any artefact root"
+SKILL_DIR = _skill_md.parent
 PROMPTS_DIR = SKILL_DIR / "prompts"
-SKILL_MD = SKILL_DIR / "SKILL.md"
+SKILL_MD = _skill_md
 
 EXPECTED_MODES = (
     "do-and-judge",
