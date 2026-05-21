@@ -38,7 +38,13 @@ REQUIRE_FULL = "--require-full" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
 CORPUS_DIR = REPO / "tests" / "eval"
-SKILLS_DIR = REPO / ".agent-src.uncompressed" / "skills"
+
+# Live skill directories live under every artefact root post-monorepo
+# Phase 4 (legacy + packages/*/.agent-src.uncompressed/skills/).
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+SKILLS_DIRS = [root / "skills" for root in artefact_roots() if (root / "skills").is_dir()]
 
 VALID_CATEGORIES = frozenset({"canonical", "ambiguous", "destructive", "long-context"})
 # Non-dev corpus (pre-spec) uses legacy categories — accept them so the
@@ -51,7 +57,13 @@ FULL_COUNTS = {"canonical": 10, "ambiguous": 8, "destructive": 5, "long-context"
 
 
 def live_skills() -> set[str]:
-    return {p.name for p in SKILLS_DIR.iterdir() if p.is_dir() and (p / "SKILL.md").exists()}
+    slugs: set[str] = set()
+    for skills_dir in SKILLS_DIRS:
+        slugs.update(
+            p.name for p in skills_dir.iterdir()
+            if p.is_dir() and (p / "SKILL.md").exists()
+        )
+    return slugs
 
 
 def lint_corpus(path: Path, skills: set[str]) -> list[str]:
