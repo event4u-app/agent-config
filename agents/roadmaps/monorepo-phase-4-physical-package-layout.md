@@ -134,28 +134,28 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 
 ## Phase 3 — Execute the move (single PR)
 
-- [ ] Run `scripts/plan_physical_move.py --apply` on a dedicated
+- [x] Run `scripts/plan_physical_move.py --apply` on a dedicated
       `monorepo/physical-move` branch; no other change in the PR
-- [ ] Update path references in:
+- [x] Update path references in:
       `scripts/build_discovery_manifest.py`,
       `scripts/lint_artefact_frontmatter.py`,
       `Taskfile.yml`, `.github/workflows/*.yml`,
       `packages/core/installer/src/manifest-loader.ts`
 
-- [ ] Run `task sync && task build-discovery` locally; assert the
+- [x] Run `task sync && task build-discovery` locally; assert the
       post-move snapshot diff matches the expected path-only delta
       (remote CI is the full-pipeline gate)
-- [ ] Land the PR with the migration script's commit message
+- [x] Land the PR with the migration script's commit message
       explicitly documenting how to revert (single `git revert`)
 
 ## Phase 4 — Per-package isolation
 
-- [ ] Each `packages/pack-*/` gets its own `package.json`-like
+- [x] Each `packages/pack-*/` gets its own `package.json`-like
       manifest `pack.yaml` (id, label, owner, requires, version);
       generated from frontmatter, never hand-edited
-- [ ] Each pack carries its own minimal `README.md` (auto-generated
+- [x] Each pack carries its own minimal `README.md` (auto-generated
       from frontmatter `description` of every artefact in the pack)
-- [ ] `task lint-pack-boundaries` ensures no skill in `pack-laravel/`
+- [x] `task lint-pack-boundaries` ensures no skill in `pack-laravel/`
       references files outside its pack except via `requires` edges
       already declared in `pack.yaml`
 - [ ] Skill-linter runs per-package in parallel CI matrix; per-pack
@@ -163,15 +163,15 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 
 ## Phase 5 — Contributor ergonomics
 
-- [ ] Add `task new-skill` interactive scaffolder that asks for
+- [x] Add `task new-skill` interactive scaffolder that asks for
       pack, type, name, workspaces, then drops a templated file
       into the right `packages/pack-*/skills/<name>/SKILL.md`
-- [ ] Add `task move-artefact <id> <target-pack>` helper that
+- [x] Add `task move-artefact <id> <target-pack>` helper that
       re-runs the plan script for a single artefact and applies
       the `git mv`
-- [ ] Update `AGENTS.md` "Editing this repo" to point at
+- [x] Update `AGENTS.md` "Editing this repo" to point at
       `packages/` instead of the legacy root
-- [ ] Update onboarding skill `agents-md-thin-root` references
+- [x] Update onboarding skill `agents-md-thin-root` references
 
 ## Phase 6 — Optional split distribution
 
