@@ -26,6 +26,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import _FRONTMATTER_RE, parse_frontmatter  # noqa: E402
+from _lib.agent_src import artefact_roots, logical_relpath  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ".agent-src.uncompressed"
@@ -37,7 +38,7 @@ DEFAULT_TRUST_REPORT = ROOT / "dist" / "discovery" / "trust-report.md"
 DEFAULT_ORPHAN_REPORT = ROOT / "dist" / "discovery" / "orphan-report.md"
 DEFAULT_WORKSPACES_JSON = ROOT / "dist" / "discovery" / "workspaces.json"
 DEFAULT_PACKS_JSON = ROOT / "dist" / "discovery" / "packs.json"
-TRUST_ROOTS = (".agent-src.uncompressed", ".augment", ".claude", ".agent-src")
+TRUST_ROOTS = (".agent-src.uncompressed", ".augment", ".claude", ".agent-src", "packages")
 
 _FM_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 _TRUST_REQ = ("level", "confidence", "human_review_required")
@@ -86,16 +87,34 @@ def _artefact_checksum(path: Path, fm: dict[str, Any] | None) -> str:
 
 
 def _iter_artefacts() -> Iterable[tuple[Path, str]]:
-    """Deterministic order: skills → rules → commands → templates."""
-    for p in sorted((SRC / "skills").rglob("SKILL.md")):
+    """Deterministic order: skills → rules → commands → templates.
+
+    Walks every source root (legacy ``.agent-src.uncompressed/`` plus any
+    ``packages/*/.agent-src.uncompressed/``) so the manifest survives the
+    physical move (ADR-017). Within each category, paths are sorted by
+    their *logical* identity to keep ordering stable across moves.
+    """
+    def _collect(subdir: str, pattern: str) -> list[Path]:
+        seen: dict[str, Path] = {}
+        for root in artefact_roots():
+            base = root / subdir
+            if not base.exists():
+                continue
+            for p in base.rglob(pattern):
+                if not p.is_file():
+                    continue
+                rel = p.relative_to(root).as_posix()
+                seen.setdefault(rel, p)
+        return [seen[k] for k in sorted(seen)]
+
+    for p in _collect("skills", "SKILL.md"):
         yield p, "skill"
-    for p in sorted((SRC / "rules").rglob("*.md")):
+    for p in _collect("rules", "*.md"):
         yield p, "rule"
-    for p in sorted((SRC / "commands").rglob("*.md")):
+    for p in _collect("commands", "*.md"):
         yield p, "command"
-    if (SRC / "templates").exists():
-        for p in sorted((SRC / "templates").rglob("*.md")):
-            yield p, "template"
+    for p in _collect("templates", "*.md"):
+        yield p, "template"
 
 
 def _trusted(path: Path) -> bool:

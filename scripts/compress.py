@@ -32,13 +32,42 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.script_output import info, success, flush_summary, resolve_level  # noqa: E402
+from _lib.agent_src import (  # noqa: E402
+    artefact_roots,
+    iter_all_sources,
+    resolve_logical,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
+# Legacy single-root anchor — kept for backward compatibility with callers
+# that pass it explicitly. Multi-root iteration (post-ADR-017 physical
+# move) goes through `_lib.agent_src` helpers.
 SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
 HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
 SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
+
+
+def _iter_sources():
+    """Yield (physical_path, logical_relpath) for every source artefact.
+
+    Wraps `_lib.agent_src.iter_all_sources` so the compressor walks every
+    active source root (legacy `.agent-src.uncompressed/` plus any
+    `packages/*/.agent-src.uncompressed/`) and keys outputs by the
+    logical relative path that survives the physical move (ADR-017).
+    """
+    yield from iter_all_sources()
+
+
+def _resolve_source(relative: str) -> Path | None:
+    """Find the physical path that backs a logical relative path."""
+    return resolve_logical(relative)
+
+
+def _any_source_root_exists() -> bool:
+    """True if at least one artefact source root contains files."""
+    return bool(artefact_roots())
 
 # Self-projection tool toggle — see .agent-tools.yml. When the file is
 # absent (e.g. tests run in tmp dirs, consumer projects), `_active_tools`
@@ -148,8 +177,8 @@ def mark_done(relative_path: str) -> None:
     relative paths in the shipped layer (P1 of road-to-path-fixes.md).
     Idempotent — re-running is a no-op.
     """
-    source_file = SOURCE_DIR / relative_path
-    if not source_file.exists():
+    source_file = _resolve_source(relative_path)
+    if source_file is None or not source_file.exists():
         print(f"❌  Source file not found: {relative_path}")
         sys.exit(1)
     apply_path_rewriter(relative_path)
@@ -181,12 +210,9 @@ def mark_all_done() -> None:
     """Mark ALL .md files as compressed (e.g. after initial full compression)."""
     hashes = load_hashes()
     count = 0
-    for source_file in sorted(SOURCE_DIR.rglob("*")):
-        if source_file.is_dir():
-            continue
+    for source_file, relative in _iter_sources():
         if not should_compress(source_file):
             continue
-        relative = str(source_file.relative_to(SOURCE_DIR))
         hashes[relative] = file_hash(source_file)
         count += 1
     save_hashes(hashes)
@@ -194,15 +220,17 @@ def mark_all_done() -> None:
 
 
 def list_changed_md(source_dir: Path) -> list:
-    """List .md files whose source hash differs from stored hash (= need recompression)."""
+    """List .md files whose source hash differs from stored hash (= need recompression).
+
+    The ``source_dir`` parameter is retained for backward compatibility but
+    ignored — iteration walks every active source root (ADR-017).
+    """
+    del source_dir  # multi-root: ignored, kept for signature stability
     hashes = load_hashes()
     changed = []
-    for source_file in sorted(source_dir.rglob("*")):
-        if source_file.is_dir():
-            continue
+    for source_file, relative in _iter_sources():
         if not should_compress(source_file):
             continue
-        relative = str(source_file.relative_to(source_dir))
         current_hash = file_hash(source_file)
         stored_hash = hashes.get(relative)
         if stored_hash != current_hash:
@@ -211,12 +239,12 @@ def list_changed_md(source_dir: Path) -> list:
 
 
 def find_stale_hashes(source_dir: Path) -> list:
-    """Find hashes stored for source files that no longer exist."""
+    """Find hashes stored for source files that no longer exist in any root."""
+    del source_dir  # multi-root: ignored, kept for signature stability
     hashes = load_hashes()
     stale = []
     for relative in sorted(hashes.keys()):
-        source_file = source_dir / relative
-        if not source_file.exists():
+        if _resolve_source(relative) is None:
             stale.append(relative)
     return stale
 
@@ -240,10 +268,16 @@ def should_compress(filepath: Path) -> bool:
         return False
     if filepath.name in COPY_AS_IS:
         return False
-    try:
-        rel_parts = filepath.relative_to(SOURCE_DIR).parts
-    except ValueError:
-        rel_parts = filepath.parts
+    # Determine the logical relative path so the COPY_AS_IS_DIRS check
+    # works for both legacy (`.agent-src.uncompressed/`) and post-move
+    # (`packages/*/.agent-src.uncompressed/`) source roots.
+    rel_parts: tuple[str, ...] = filepath.parts
+    for root in artefact_roots():
+        try:
+            rel_parts = filepath.relative_to(root).parts
+            break
+        except ValueError:
+            continue
     if rel_parts and rel_parts[0] in COPY_AS_IS_DIRS:
         return False
     return True
@@ -256,7 +290,8 @@ def copy_file(source: Path, target: Path) -> None:
 
 
 def cleanup_stale(source_dir: Path, target_dir: Path) -> int:
-    """Delete files in target that don't exist in source. Returns count."""
+    """Delete files in target that don't exist in any source root. Returns count."""
+    del source_dir  # multi-root: ignored, kept for signature stability
     deleted = 0
     if not target_dir.exists():
         return 0
@@ -265,8 +300,7 @@ def cleanup_stale(source_dir: Path, target_dir: Path) -> int:
         if target_file.is_dir():
             continue
         relative = target_file.relative_to(target_dir)
-        source_file = source_dir / relative
-        if not source_file.exists():
+        if _resolve_source(str(relative)) is None:
             print(f"  Deleting stale: {relative}")
             target_file.unlink()
             deleted += 1
@@ -281,14 +315,17 @@ def cleanup_stale(source_dir: Path, target_dir: Path) -> int:
 
 
 def sync_non_md(source_dir: Path, target_dir: Path) -> int:
-    """Copy all non-.md files (and COPY_AS_IS .md files) from source to target. Returns count."""
+    """Copy all non-.md files (and COPY_AS_IS .md files) from every source
+    root to target. Returns count."""
+    del source_dir  # multi-root: ignored, kept for signature stability
     copied = 0
-    for source_file in sorted(source_dir.rglob("*")):
-        if source_file.is_dir():
-            continue
+    seen: set[str] = set()
+    for source_file, relative in _iter_sources():
         if should_compress(source_file):
             continue  # .md files are compressed by the agent, not copied here
-        relative = source_file.relative_to(source_dir)
+        if relative in seen:
+            continue
+        seen.add(relative)
         target_file = target_dir / relative
         copy_file(source_file, target_file)
         print(f"  Copied: {relative}")
@@ -298,36 +335,41 @@ def sync_non_md(source_dir: Path, target_dir: Path) -> int:
 
 def list_md_files(source_dir: Path) -> list:
     """List all .md files that need compression by the agent."""
-    files = []
-    for source_file in sorted(source_dir.rglob("*")):
-        if source_file.is_dir():
+    del source_dir  # multi-root: ignored, kept for signature stability
+    files: list[str] = []
+    seen: set[str] = set()
+    for source_file, relative in _iter_sources():
+        if not should_compress(source_file):
             continue
-        if should_compress(source_file):
-            files.append(str(source_file.relative_to(source_dir)))
-    return files
+        if relative in seen:
+            continue
+        seen.add(relative)
+        files.append(relative)
+    return sorted(files)
 
 
 def check_sync(source_dir: Path, target_dir: Path) -> tuple:
-    """Check if target is in sync with source. Returns (missing, stale) lists."""
+    """Check if target is in sync with source(s). Returns (missing, stale) lists."""
+    del source_dir  # multi-root: ignored, kept for signature stability
     missing = []
     stale = []
 
-    # Files in source but not in target
-    for source_file in sorted(source_dir.rglob("*")):
-        if source_file.is_dir():
+    # Files in any source root but not in target
+    seen: set[str] = set()
+    for _source_file, relative in _iter_sources():
+        if relative in seen:
             continue
-        relative = str(source_file.relative_to(source_dir))
+        seen.add(relative)
         if not (target_dir / relative).exists():
             missing.append(relative)
 
-    # Files in target but not in source (stale)
+    # Files in target but not in any source root (stale)
     if target_dir.exists():
         for target_file in sorted(target_dir.rglob("*")):
             if target_file.is_dir():
                 continue
             relative = str(target_file.relative_to(target_dir))
-
-            if not (source_dir / relative).exists():
+            if _resolve_source(relative) is None:
                 stale.append(relative)
 
     return missing, stale
@@ -1096,8 +1138,11 @@ def clean_tools() -> None:
 
 
 def main() -> None:
-    if not SOURCE_DIR.exists():
-        print(f"❌  Source directory not found: {SOURCE_DIR}")
+    # Multi-root awareness (ADR-017): tolerate a missing legacy
+    # `.agent-src.uncompressed/` as long as at least one package-scoped
+    # source root carries artefacts.
+    if not SOURCE_DIR.exists() and not _any_source_root_exists():
+        print(f"❌  No source directory found (looked at {SOURCE_DIR} and packages/*/.agent-src.uncompressed)")
         sys.exit(1)
 
     arg = sys.argv[1] if len(sys.argv) > 1 else "--sync"
