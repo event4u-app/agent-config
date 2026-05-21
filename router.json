@@ -224,7 +224,7 @@
       "id": "low-impact-corpus-privacy-floor",
       "triggers": [
         {
-          "path_prefix": "agents/low-impact-decisions"
+          "path_prefix": "agents/decisions/low-impact-decisions"
         },
         {
           "keyword": "low-impact-decisions"
@@ -263,13 +263,13 @@
           "path_prefix": "agents/roadmaps/"
         },
         {
-          "path_prefix": "agents/council-questions/"
+          "path_prefix": "agents/runtime/council/questions/"
         },
         {
-          "path_prefix": "agents/council-responses/"
+          "path_prefix": "agents/runtime/council/responses/"
         },
         {
-          "path_prefix": "agents/council-sessions/"
+          "path_prefix": "agents/runtime/council/sessions/"
         },
         {
           "intent": "link from stable artifact"

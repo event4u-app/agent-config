@@ -155,7 +155,7 @@ Schema v1:
 - `action` ∈ `proceed | skip_necessity | block_quota`.
 - `original_ask_hash` is `sha256(original_ask)[:12]`. The raw prompt
   is **never** written — privacy floor per
-  [`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md).
+  [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md).
 - Diagnostic fields outside the reserved set (`category`, `mode`,
   `cli_calls_used`, …) pass through verbatim. Consumers MUST treat
   unknown keys as forward-compatible.
@@ -514,20 +514,20 @@ when the gate flags the response.
 
 ### Low-impact corpus build pipeline (step-10)
 
-[`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md)
+[`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
 remains the **human-editable source of truth** — Validated, Probation,
 and Anti-Example phrases stay in Markdown so PR-reviewers diff prose,
 not YAML. A build step compiles it into a generated YAML lockfile
-[`agents/low-impact-decisions.lock.yaml`](../../agents/low-impact-decisions.lock.yaml)
+[`agents/decisions/low-impact-decisions.lock.yaml`](../../agents/decisions/low-impact-decisions.lock.yaml)
 that is the **runtime source of truth**: the necessity classifier and
 the solo-dispatch fuzzy matcher load phrases from the lockfile, with
 Markdown parsing reserved as fallback.
 
 | Component | File | Role |
 |---|---|---|
-| Source | `agents/low-impact-decisions.md` | Hand-edited Markdown. Strict parser (step-9 P4) catches drift. |
+| Source | `agents/decisions/low-impact-decisions.md` | Hand-edited Markdown. Strict parser (step-9 P4) catches drift. |
 | Build tool | `scripts/ai_council/compile_corpus.py` | `parse_corpus_strict()` → schema-v1 YAML. Deterministic output. |
-| Lockfile | `agents/low-impact-decisions.lock.yaml` | Generated, **committed**. Schema `{schema_version: 1, provenance: {…}, validated, probation, anti_examples}`. |
+| Lockfile | `agents/decisions/low-impact-decisions.lock.yaml` | Generated, **committed**. Schema `{schema_version: 1, provenance: {…}, validated, probation, anti_examples}`. |
 | Runtime loader | `low_impact_corpus.load_corpus_lock()` + lenient `load_*` shims | YAML preferred; Markdown fallback when the lockfile is missing or schema-mismatched. |
 | CI gate | `task check-corpus` (used by `task consistency`) | Fails on drift between source and lockfile. |
 

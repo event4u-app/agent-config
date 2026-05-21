@@ -68,7 +68,7 @@ hardcoded module-level tuple in
 | Tool | Mode | Source |
 |---|---|---|
 | `lint_skills` | read-only | wraps `scripts.skill_linter.lint_file` |
-| `chat_history_append` | path-scoped write | wraps `scripts.chat_history.append`; writes restricted to `agents/.agent-chat-history` or `.agent-chat-history` under the consumer root |
+| `chat_history_append` | path-scoped write | wraps `scripts.chat_history.append`; writes restricted to `agents/runtime/.agent-chat-history` (current default), `agents/.agent-chat-history`, or `.agent-chat-history` under the consumer root |
 
 No `push`, `merge`, `commit`, or prod-write surface is exposed. The
 unimplemented-tool envelope from

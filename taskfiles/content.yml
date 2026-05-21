@@ -98,12 +98,12 @@ tasks:
 
   compile-corpus:
     silent: true
-    desc: Compile agents/low-impact-decisions.md → .lock.yaml (runtime source-of-truth)
+    desc: Compile agents/decisions/low-impact-decisions.md → .lock.yaml (decisions source-of-truth)
     cmd: python3 -m scripts.ai_council.compile_corpus
 
   check-corpus:
     silent: true
-    desc: Verify agents/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
+    desc: Verify agents/decisions/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
     cmd: python3 -m scripts.ai_council.compile_corpus --check
 
   check-augmentignore:

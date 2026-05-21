@@ -33,8 +33,8 @@ legacy patterns (pre-`/agents/` runtime artefacts —
 plus the 2.x intermediate `agents/runtime/.agent-prices.md`) from **anywhere**
 in the consumer's `.gitignore` — inside or outside the managed block —
 then re-runs the regular sync so the current canonical entries
-(`/agents/.agent-chat-history`, `/agents/runtime/.agent-prices.md`,
-`/agents/runtime/council/`) land in the block.
+(`/agents/runtime/` catch-all, plus the legacy back-compat lines
+`/agents/.agent-chat-history*`) land in the block.
 
 Use when:
 
@@ -54,7 +54,7 @@ Use when:
   sub-command only touches the legacy pattern list — nothing else.
 - To delete the entire managed block → do it by hand.
 - To migrate runtime files themselves (move `.agent-chat-history` →
-  `agents/.agent-chat-history`) → the installer's
+  `agents/runtime/.agent-chat-history`) → the installer's
   `migrate_legacy_root_infra` step handles that. This sub-command only
   fixes `.gitignore`.
 

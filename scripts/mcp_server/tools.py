@@ -12,8 +12,11 @@ Names that are neither implemented nor catalog-listed raise
 
 Path-scoping is mandatory for any tool that writes: the resolved target
 path must stay under ``<consumer_root>`` and within the allowlist of
-filenames (`.agent-chat-history`, `agents/.agent-chat-history`). Escape
-attempts surface as ``ValueError`` before the underlying writer runs.
+filenames (`agents/runtime/.agent-chat-history` — current default;
+`agents/.agent-chat-history` and `.agent-chat-history` — kept for
+back-compat with older consumer installs that have not migrated yet).
+Escape attempts surface as ``ValueError`` before the underlying writer
+runs.
 
 This module deliberately does **not** import the ``subprocess`` module
 or ``os``-level shell-execution helpers directly. It imports project
@@ -48,6 +51,12 @@ STDIO_TRANSPORT = "stdio"
 # guard before the underlying writer touches the filesystem.
 _ALLOWED_WRITE_REL_PATHS: frozenset[str] = frozenset(
     {
+        # Current default (Volatile Runtime policy — agents/runtime/ is
+        # local-only and ignored by git).
+        "agents/runtime/.agent-chat-history",
+        # Back-compat: older consumer installs still write to the flat
+        # location. Additive — both paths stay accepted until the next
+        # major tool version bump.
         "agents/.agent-chat-history",
         ".agent-chat-history",
     }
@@ -93,7 +102,7 @@ def _validate_in_tree_path(raw: str | None, consumer_root: Path) -> Path:
     """
     root = consumer_root.resolve()
     if raw is None or raw == "":
-        target = root / "agents" / ".agent-chat-history"
+        target = root / "agents" / "runtime" / ".agent-chat-history"
     else:
         candidate = Path(raw)
         if candidate.is_absolute():
@@ -178,7 +187,8 @@ async def _chat_history_append_handler(
         text: free-form entry text. Stored under the ``text`` field.
         entry_type: short ``t`` tag (e.g. ``note``, ``decision``).
         path: optional override of the target file. Must resolve to one
-            of ``agents/.agent-chat-history`` / ``.agent-chat-history``
+            of ``agents/runtime/.agent-chat-history`` (current default),
+            ``agents/.agent-chat-history``, or ``.agent-chat-history``
             under ``consumer_root``.
         session: optional 16-char session tag. Falls back to the most
             recent body entry's ``s`` (see ``chat_history.append``).
@@ -277,7 +287,8 @@ async def _chat_history_read_handler(
         session: optional 16-char session id.
         entry_type: optional ``t`` field exact-match filter.
         path: optional override; must resolve under
-            ``agents/.agent-chat-history`` or ``.agent-chat-history``.
+            ``agents/runtime/.agent-chat-history`` (current default),
+            ``agents/.agent-chat-history``, or ``.agent-chat-history``.
     """
     from scripts.chat_history import read_entries  # noqa: PLC0415
 
@@ -536,9 +547,11 @@ ALLOWLIST: dict[str, BuiltinTool] = {
         name="chat_history_append",
         description=(
             "Append one entry to the consumer's chat-history JSONL "
-            "(`agents/.agent-chat-history`). Path-scoped — writes "
-            "outside the allowlist raise ValueError. Use `dry_run` to "
-            "preview the payload without touching the filesystem."
+            "(`agents/runtime/.agent-chat-history`; "
+            "`agents/.agent-chat-history` accepted for back-compat). "
+            "Path-scoped — writes outside the allowlist raise "
+            "ValueError. Use `dry_run` to preview the payload without "
+            "touching the filesystem."
         ),
         input_schema={
             "type": "object",
@@ -555,7 +568,9 @@ ALLOWLIST: dict[str, BuiltinTool] = {
                     "type": "string",
                     "description": (
                         "Optional path override. Must resolve to "
-                        "`agents/.agent-chat-history` or "
+                        "`agents/runtime/.agent-chat-history` "
+                        "(current default), "
+                        "`agents/.agent-chat-history`, or "
                         "`.agent-chat-history` under consumer_root."
                     ),
                 },
@@ -572,8 +587,9 @@ ALLOWLIST: dict[str, BuiltinTool] = {
         name="chat_history_read",
         description=(
             "Read recent chat-history entries from "
-            "`agents/.agent-chat-history`. Filter by session, "
-            "trailing-N, or entry-type. Read-only."
+            "`agents/runtime/.agent-chat-history` "
+            "(`agents/.agent-chat-history` accepted for back-compat). "
+            "Filter by session, trailing-N, or entry-type. Read-only."
         ),
         input_schema={
             "type": "object",

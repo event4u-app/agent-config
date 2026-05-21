@@ -61,12 +61,14 @@ for semantics.
 ## Volume mounts (`chat_history_append`)
 
 The `chat_history_append` tool writes to
-`agents/.agent-chat-history` **inside the container**. For writes to
-survive container lifecycle, mount the host directory:
+`agents/runtime/.agent-chat-history` **inside the container**
+(`agents/.agent-chat-history` and `.agent-chat-history` are accepted
+for back-compat). For writes to survive container lifecycle, mount
+the host directory:
 
 ```bash
 docker run --rm -i \
-  -v "$(pwd)/agents/.agent-chat-history:/app/agents/.agent-chat-history" \
+  -v "$(pwd)/agents/runtime/.agent-chat-history:/app/agents/runtime/.agent-chat-history" \
   agent-config-mcp:local
 ```
 

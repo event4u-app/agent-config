@@ -5,7 +5,7 @@ keep-beta-until: 2026-08-13
 
 # `low-impact-decisions.md` — corpus format contract (step-9 P4)
 
-Parser-visible invariants for `agents/low-impact-decisions.md` and any
+Parser-visible invariants for `agents/decisions/low-impact-decisions.md` and any
 upstream seed at the same path. The hardened parser lives in
 [`scripts/ai_council/low_impact_corpus.py`](../../scripts/ai_council/low_impact_corpus.py)
 and ships in two modes:

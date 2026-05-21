@@ -155,8 +155,8 @@ prose-only.
   any layer.
 - **Agent memory** — separate MCP server, different roadmap.
 - **Chat history persistence** — the local kernel writes to
-  `agents/.agent-chat-history`; the Worker has no equivalent. Listed
-  as a deprecated stub per above.
+  `agents/runtime/.agent-chat-history`; the Worker has no equivalent.
+  Listed as a deprecated stub per above.
 - **HMAC request signing.** Deferred to MVP-2 alongside tool
   restoration — see `## Auth surface` § `hmac-deferred`.
 - **Cloudflare Access integration.** Deferred to MVP-2 — see

@@ -1,4 +1,4 @@
-"""Privacy floor for `agents/low-impact-decisions.md` (Phase 12).
+"""Privacy floor for `agents/decisions/low-impact-decisions.md` (Phase 12).
 
 Non-bypassable redactor invoked on intake (write-side) AND on
 upstream (`/learn-low-impact`, leave-the-repo side). Both gates call

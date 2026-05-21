@@ -2,9 +2,10 @@
 
 Step-10 — see ``agents/roadmaps/step-10-corpus-yaml-lockfile.md``.
 
-Markdown (`agents/low-impact-decisions.md`) stays the human-authored
-source-of-truth for PR review. This script reads it through the
-hardened :func:`scripts.ai_council.low_impact_corpus.parse_corpus_strict`
+Markdown (`agents/decisions/low-impact-decisions.md`) stays the
+human-authored source-of-truth for PR review. This script reads it
+through the hardened
+:func:`scripts.ai_council.low_impact_corpus.parse_corpus_strict`
 parser and writes a YAML lockfile that becomes the **runtime**
 source-of-truth. The pattern mirrors `.agent-src/` vs
 `.agent-src.uncompressed/`: human edits Markdown, `task consistency`
@@ -14,7 +15,7 @@ YAML schema (`schema_version: 1`)::
 
     schema_version: 1
     provenance:
-      source_path: agents/low-impact-decisions.md
+      source_path: agents/decisions/low-impact-decisions.md
       source_sha256: <hex>             # SHA-256 of the parsed Markdown bytes
       last_upstreamed: <40-hex sha>     # mirrored from the Markdown footer
     validated:
@@ -61,8 +62,8 @@ SCHEMA_VERSION = 1
 
 _LAST_UPSTREAMED_RE = re.compile(r"^last-upstreamed:\s*([0-9a-f]{40})\s*$", re.MULTILINE)
 
-_DEFAULT_SOURCE = Path("agents/low-impact-decisions.md")
-_DEFAULT_OUT = Path("agents/low-impact-decisions.lock.yaml")
+_DEFAULT_SOURCE = Path("agents/decisions/low-impact-decisions.md")
+_DEFAULT_OUT = Path("agents/decisions/low-impact-decisions.lock.yaml")
 
 
 def _entry_to_dict(entry: CorpusEntry) -> dict[str, Any]:
@@ -84,8 +85,8 @@ def _normalise_source_path(path: Path) -> str:
 
     Absolute paths inside the current working directory are stripped to
     their relative form so the committed lockfile carries
-    ``agents/low-impact-decisions.md`` regardless of how the compiler
-    was invoked (CLI default, absolute path from a test, etc.).
+    ``agents/decisions/low-impact-decisions.md`` regardless of how the
+    compiler was invoked (CLI default, absolute path from a test, etc.).
     """
     try:
         rel = path.resolve().relative_to(Path.cwd().resolve())

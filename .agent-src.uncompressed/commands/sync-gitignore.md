@@ -48,7 +48,7 @@ from anywhere in the consumer's `.gitignore` before re-syncing.
 
 Ensures the consumer project's `.gitignore` contains every entry the
 package expects to be ignored (symlinked `.augment/` subdirectories,
-`/agent-config` CLI wrapper, `.agent-settings*`, `agents/.agent-chat-history*`).
+`/agent-config` CLI wrapper, `.agent-settings*`, `/agents/runtime/` catch-all).
 Canonical list lives in `config/gitignore-block.txt`; the same file
 drives the installer, so the two cannot drift.
 

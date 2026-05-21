@@ -9,7 +9,7 @@ Privacy floor:
     ``original_ask`` is never written verbatim — the caller passes the
     raw string, and :func:`append_event` writes ``sha256(value)[:12]``
     as ``original_ask_hash``. Mirrors the privacy floor in
-    ``agents/low-impact-decisions.md``.
+    ``agents/decisions/low-impact-decisions.md``.
 
 Kill-switch:
     ``AGENT_CONFIG_NO_EVENTS_LOG=1`` short-circuits :func:`append_event`

@@ -1,0 +1,127 @@
+{
+  "overall": {
+    "n": 11,
+    "median": 0.43,
+    "verdict": "acceptable"
+  },
+  "by_class": {
+    "doc": {
+      "n": 4,
+      "median": 0.33,
+      "min": 0.18,
+      "max": 0.5,
+      "verdict": "acceptable"
+    },
+    "empty": {
+      "n": 4,
+      "median": 1.0,
+      "min": 0.05,
+      "max": 1.11,
+      "verdict": "acceptable"
+    },
+    "mixed": {
+      "n": 2,
+      "median": 0.45,
+      "min": 0.19,
+      "max": 0.71,
+      "verdict": "acceptable"
+    },
+    "skill": {
+      "n": 1,
+      "median": 0.23,
+      "min": 0.23,
+      "max": 0.23,
+      "verdict": "acceptable"
+    }
+  },
+  "sample": [
+    {
+      "sha": "c7a6c4c239",
+      "class": "empty",
+      "local_s": 34,
+      "ci_s": 36,
+      "ratio": 1.06,
+      "subject": "Merge pull request #147 from event4u-app/release/2.12.0"
+    },
+    {
+      "sha": "ed244929b5",
+      "class": "mixed",
+      "local_s": 113,
+      "ci_s": 22,
+      "ratio": 0.19,
+      "subject": "release: 2.12.0"
+    },
+    {
+      "sha": "63193c6ac6",
+      "class": "empty",
+      "local_s": 152,
+      "ci_s": 145,
+      "ratio": 0.95,
+      "subject": "Merge pull request #146 from event4u-app/chore/prepare-next-steps"
+    },
+    {
+      "sha": "9fbfe6af83",
+      "class": "skill",
+      "local_s": 801,
+      "ci_s": 184,
+      "ratio": 0.23,
+      "subject": "fix(marketplace): register canvas-design + doc-coauthoring"
+    },
+    {
+      "sha": "9568510954",
+      "class": "doc",
+      "local_s": 1162,
+      "ci_s": 208,
+      "ratio": 0.18,
+      "subject": "feat(linter): evals.json schema validator + meta_skill exemption"
+    },
+    {
+      "sha": "c46cffd542",
+      "class": "doc",
+      "local_s": 582,
+      "ci_s": 134,
+      "ratio": 0.23,
+      "subject": "docs(roadmap): expand step-99 with Total Dominance mandate"
+    },
+    {
+      "sha": "055560864e",
+      "class": "empty",
+      "local_s": 44,
+      "ci_s": 49,
+      "ratio": 1.11,
+      "subject": "Merge pull request #145 from event4u-app/release/2.11.0"
+    },
+    {
+      "sha": "1986a5e884",
+      "class": "mixed",
+      "local_s": 38,
+      "ci_s": 27,
+      "ratio": 0.71,
+      "subject": "release: 2.11.0"
+    },
+    {
+      "sha": "361826f379",
+      "class": "empty",
+      "local_s": 3600,
+      "ci_s": 168,
+      "ratio": 0.05,
+      "subject": "Merge pull request #144 from event4u-app/feat/road-to-productization"
+    },
+    {
+      "sha": "7957274c65",
+      "class": "doc",
+      "local_s": 376,
+      "ci_s": 163,
+      "ratio": 0.43,
+      "subject": "fix(readme): rename 'For contributors' to 'Development' for linter"
+    },
+    {
+      "sha": "7ee50e8b16",
+      "class": "doc",
+      "local_s": 239,
+      "ci_s": 120,
+      "ratio": 0.5,
+      "subject": "docs(roadmap): close + archive road-to-productization (Level-6)"
+    }
+  ]
+}

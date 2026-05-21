@@ -9,7 +9,7 @@ disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "upstream low-impact decisions, share validated council questions, contribute the learning corpus"
-  trigger_context: "user has accumulated validated entries in agents/low-impact-decisions.md and wants to share with the package"
+  trigger_context: "user has accumulated validated entries in agents/decisions/low-impact-decisions.md and wants to share with the package"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -27,7 +27,7 @@ install:
 # /memory learn-low-impact
 
 Promote `## Validated` entries from
-[`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md)
+[`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
 into the upstream seed at
 `.agent-src.uncompressed/data/low-impact-decisions-seed.md` via a DRAFT
 PR against the agent-config package. **Validated entries only** — probation
@@ -64,7 +64,7 @@ the project-local corpus and the package seed:
 ```python
 from scripts.ai_council.learn_low_impact_preview import build_preview
 plan = build_preview(
-    corpus_path="agents/low-impact-decisions.md",
+    corpus_path="agents/decisions/low-impact-decisions.md",
     seed_path=".agent-src.uncompressed/data/low-impact-decisions-seed.md",
     repo_slug="<owner>/<repo>",  # from `git remote get-url origin`
     repo_root="<absolute repo root>",
@@ -123,8 +123,8 @@ the package branch):
 ```bash
 # update the local pointer so subsequent runs are deltas
 sed -i.bak -E "s|^last-upstreamed: .*|last-upstreamed: <new-sha>|" \
-    agents/low-impact-decisions.md
-rm agents/low-impact-decisions.md.bak
+    agents/decisions/low-impact-decisions.md
+rm agents/decisions/low-impact-decisions.md.bak
 ```
 
 ### 5. Surface result (`--apply` path only)
@@ -149,7 +149,7 @@ rm agents/low-impact-decisions.md.bak
 
 - [`upstream-contribute`](../skills/upstream-contribute/SKILL.md) — PR
   machinery (branch, commit, gates).
-- [`agents/low-impact-decisions.md`](../../agents/low-impact-decisions.md)
+- [`agents/decisions/low-impact-decisions.md`](../../agents/decisions/low-impact-decisions.md)
   — the project-local corpus.
 - [`low-impact-corpus-privacy-floor`](../rules/low-impact-corpus-privacy-floor.md)
   — Iron Law.

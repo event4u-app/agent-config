@@ -845,7 +845,7 @@ def test_chat_history_append_dry_run_does_not_write(tmp_path: Path) -> None:
     )
     assert result["dry_run"] is True
     target = Path(result["target_path"])
-    assert target == (tmp_path / "agents" / ".agent-chat-history").resolve()
+    assert target == (tmp_path / "agents" / "runtime" / ".agent-chat-history").resolve()
     assert not target.exists()
     assert result["entry"] == {"t": "note", "text": "hello"}
 
@@ -1406,7 +1406,7 @@ def test_dispatch_telemetry_records_have_full_envelope(tmp_path: Path) -> None:
 
 
 def _seed_chat_history(root: Path) -> Path:
-    target = root / "agents" / ".agent-chat-history"
+    target = root / "agents" / "runtime" / ".agent-chat-history"
     target.parent.mkdir(parents=True, exist_ok=True)
     header = {"v": 4, "started": "2026-05-12T00:00:00Z", "freq": "per_phase"}
     rows = [

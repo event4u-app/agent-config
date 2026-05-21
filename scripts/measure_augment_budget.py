@@ -21,7 +21,7 @@ Output:
 - Default: stdout summary (totals + per-component breakdown).
 - `--json`: deterministic JSON.
 - `--trend-append`: append a snapshot record to
-  `agents/.augment-budget-history.jsonl`.
+  `agents/runtime/.augment-budget-history.jsonl`.
 
 Exit codes: 0 = under fail threshold, 1 = at/above fail threshold,
 3 = internal error.
@@ -39,7 +39,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 AGENTS_MD = REPO_ROOT / "AGENTS.md"
 RULES_DIR = REPO_ROOT / ".augment" / "rules"
-TREND_FILE = REPO_ROOT / "agents" / ".augment-budget-history.jsonl"
+TREND_FILE = REPO_ROOT / "agents" / "runtime" / ".augment-budget-history.jsonl"
 
 # Augment workspace-guidelines ceiling — empirical 2026-05-08.
 # TOTAL_CAP is the hard ceiling Augment itself enforces. FAIL_THRESHOLD is the
@@ -170,7 +170,7 @@ def main() -> int:
     parser.add_argument(
         "--trend-append",
         action="store_true",
-        help="Append a snapshot record to agents/.augment-budget-history.jsonl",
+        help="Append a snapshot record to agents/runtime/.augment-budget-history.jsonl",
     )
     parser.add_argument(
         "--check",

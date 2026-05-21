@@ -176,7 +176,7 @@ is recovered on the next server boot.
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
-| `chat_history.enabled` | `true` | Persistent JSONL log at `agents/.agent-chat-history` for crash recovery. |
+| `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
 | `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |

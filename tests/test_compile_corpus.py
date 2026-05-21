@@ -1,4 +1,4 @@
-"""Compiler contract for ``agents/low-impact-decisions.md`` -> YAML lockfile.
+"""Compiler contract for ``agents/decisions/low-impact-decisions.md`` -> YAML lockfile.
 
 Step-10 Phase 1 — see ``agents/roadmaps/step-10-corpus-yaml-lockfile.md``.
 
@@ -37,8 +37,8 @@ from scripts.ai_council.low_impact_corpus import (  # noqa: E402
 )
 
 _FIXTURES = Path(__file__).parent / "fixtures" / "corpus-robust"
-_REPO_CORPUS = Path(__file__).resolve().parents[1] / "agents" / "low-impact-decisions.md"
-_REPO_LOCKFILE = Path(__file__).resolve().parents[1] / "agents" / "low-impact-decisions.lock.yaml"
+_REPO_CORPUS = Path(__file__).resolve().parents[1] / "agents" / "decisions" / "low-impact-decisions.md"
+_REPO_LOCKFILE = Path(__file__).resolve().parents[1] / "agents" / "decisions" / "low-impact-decisions.lock.yaml"
 
 
 def test_compile_canonical_fixture_produces_populated_lockfile(tmp_path: Path) -> None:
@@ -95,7 +95,7 @@ def test_repo_lockfile_is_in_sync() -> None:
     fresh = dump_lock_yaml(build_lock_document(_REPO_CORPUS, result, source_text))
     existing = _REPO_LOCKFILE.read_text(encoding="utf-8")
     assert fresh == existing, (
-        "agents/low-impact-decisions.lock.yaml is stale — "
+        "agents/decisions/low-impact-decisions.lock.yaml is stale — "
         "run: python3 -m scripts.ai_council.compile_corpus"
     )
 

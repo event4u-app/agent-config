@@ -1,0 +1,104 @@
+{
+  "pair_count": 6,
+  "pairs": [
+    {
+      "rule_a": "domain-adoption-policy",
+      "rule_b": "skill-quality",
+      "path_jaccard": 1.0,
+      "keyword_overlap": 0.0,
+      "shared_paths": [
+        ".agent-src.uncompressed/skills/"
+      ],
+      "shared_keywords": [],
+      "rule_a_desc": "Adopting a new domain track (mobile, ML, blockchain, IoT, gaming) \u2014 gates import on demand, ownership, CI fit, Sunset compatibility BEFORE harvest",
+      "rule_b_desc": "Creating, editing, or reviewing skills \u2014 minimum quality standard, every skill must be executable, validated, and self-contained"
+    },
+    {
+      "rule_a": "augment-edit-discipline",
+      "rule_b": "augment-source-of-truth",
+      "path_jaccard": 0.2,
+      "keyword_overlap": 0.429,
+      "shared_paths": [
+        ".augment/"
+      ],
+      "shared_keywords": [
+        "agent-src",
+        "augment",
+        "edit",
+        "editing",
+        "files",
+        "uncompressed"
+      ],
+      "rule_a_desc": "Editing inside .augment/ or .agent-src.uncompressed/ \u2014 files MUST stay project-agnostic AND any add/rename/delete syncs counts and cross-references in the same edit",
+      "rule_b_desc": "Creating, editing, or modifying files in .agent-src/ or .augment/ \u2014 source of truth is .agent-src.uncompressed/, never edit generated dirs directly"
+    },
+    {
+      "rule_a": "cli-output-handling",
+      "rule_b": "docker-commands",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.588,
+      "shared_paths": [],
+      "shared_keywords": [
+        "artisan",
+        "cli",
+        "commands",
+        "composer",
+        "docker",
+        "phpstan",
+        "phpunit",
+        "rector",
+        "running",
+        "tests"
+      ],
+      "rule_a_desc": "Running CLI commands that produce verbose output \u2014 git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback",
+      "rule_b_desc": "Running PHP commands inside Docker containers \u2014 artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, and any CLI tool execution"
+    },
+    {
+      "rule_a": "roadmap-ci-steps-policy",
+      "rule_b": "roadmap-progress-sync",
+      "path_jaccard": 0.5,
+      "keyword_overlap": 0.056,
+      "shared_paths": [
+        "agents/roadmaps/"
+      ],
+      "shared_keywords": [
+        "inline"
+      ],
+      "rule_a_desc": "When authoring or executing roadmaps \u2014 forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline at execution",
+      "rule_b_desc": "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open. Autonomous runs flip checkboxes inline"
+    },
+    {
+      "rule_a": "artifact-drafting-protocol",
+      "rule_b": "upstream-proposal",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.462,
+      "shared_paths": [],
+      "shared_keywords": [
+        "command",
+        "creating",
+        "guideline",
+        "rule",
+        "significantly",
+        "skill"
+      ],
+      "rule_a_desc": "Creating a new skill, rule, command, or guideline, or significantly rewriting one \u2014 runs mandatory Understand \u2192 Research \u2192 Draft before drafting",
+      "rule_b_desc": "After creating or significantly improving a skill, rule, guideline, or command \u2014 ask if it should be contributed upstream to the shared package"
+    },
+    {
+      "rule_a": "commit-conventions",
+      "rule_b": "git-history-discipline",
+      "path_jaccard": 0.0,
+      "keyword_overlap": 0.417,
+      "shared_paths": [],
+      "shared_keywords": [
+        "branch",
+        "commit",
+        "commits",
+        "git",
+        "pushing"
+      ],
+      "rule_a_desc": "Git commit message format, branch naming, conventional commits, committing, pushing, or creating pull requests",
+      "rule_b_desc": "Git history operations \u2014 never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push in same turn"
+    }
+  ]
+}

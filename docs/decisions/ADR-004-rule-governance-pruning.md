@@ -192,7 +192,7 @@ documentation rewrite for marginal additional savings.
   governance pass; the stub-cost / body-cost ratio changes
   drastically.
 - Auto-rule count grows by ≥ 5 (history check via
-  `agents/.augment-budget-history.jsonl`) → repeat the audit
+  `agents/runtime/.augment-budget-history.jsonl`) → repeat the audit
   with the same three-pass methodology.
 - A retained rule (`upstream-proposal`, `slash-command-routing-policy`,
   `analysis-skill-routing`'s sibling skill) shows a 30-day window

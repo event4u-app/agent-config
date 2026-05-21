@@ -112,7 +112,7 @@ canonical sequence) before pushing.
 
 ### 7. Record the delta
 
-Append a snapshot to `agents/.augment-budget-history.jsonl`:
+Append a snapshot to `agents/runtime/.augment-budget-history.jsonl`:
 
 ```bash
 python3 scripts/measure_augment_budget.py --trend-append

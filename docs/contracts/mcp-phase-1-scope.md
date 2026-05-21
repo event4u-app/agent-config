@@ -50,9 +50,10 @@ phase with its own design-call gate.
 - **`resources/*` beyond rules / guidelines / contexts** — no model
   outputs, no roadmaps, no chat history surfaced as resources.
 - **Filesystem writes outside the Phase 4 write allowlist** — the only
-  writable targets are `agents/.agent-chat-history` and
-  `.agent-chat-history` under `<consumer_root>`. No log files, no
-  telemetry writes, no `.work-state.json` mutation.
+  writable targets are `agents/runtime/.agent-chat-history` (current
+  default), `agents/.agent-chat-history`, and `.agent-chat-history`
+  under `<consumer_root>`. No log files, no telemetry writes, no
+  `.work-state.json` mutation.
 - **Direct shell execution from `mcp_server/*`** — modules under
   `scripts/mcp_server/` do not `import subprocess`, `os.system`, or
   `os.popen` directly. Project helpers that internally spawn shells
@@ -96,7 +97,7 @@ returns `isError=True`.
 | Tool name | Mode | Side effects |
 |---|---|---|
 | `lint_skills` | read-only | Wraps `scripts.skill_linter.lint_file`. Never spawns `git` (no `--changed`). Returns the same JSON shape as `scripts/skill_linter.py --format json`. |
-| `chat_history_append` | path-scoped write | Wraps `scripts.chat_history.append`. Writes are allowed only when the resolved target is `agents/.agent-chat-history` or `.agent-chat-history` under `<consumer_root>`. `dry_run=True` validates the payload without touching the filesystem. |
+| `chat_history_append` | path-scoped write | Wraps `scripts.chat_history.append`. Writes are allowed only when the resolved target is `agents/runtime/.agent-chat-history` (current default), `agents/.agent-chat-history`, or `.agent-chat-history` under `<consumer_root>`. `dry_run=True` validates the payload without touching the filesystem. |
 
 **Path-scoping invariant** — any tool that writes must resolve its
 target through `_validate_in_tree_path` before the underlying writer

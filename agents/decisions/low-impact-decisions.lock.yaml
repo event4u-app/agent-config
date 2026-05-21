@@ -1,0 +1,24 @@
+schema_version: 1
+provenance:
+  source_path: agents/decisions/low-impact-decisions.md
+  source_sha256: 18129984ba76df8079380c0ceab627346bdf171017cdbdadd03a639d587ea98d
+  last_upstreamed: '0000000000000000000000000000000000000000'
+validated: []
+probation: []
+anti_examples:
+- phrase: Should I put this in the controller?
+  normalised: should i put this in the controller
+  line_no: 42
+  trailing_metadata: — controller-vs-service
+- phrase: Quick migration to rename this column?
+  normalised: quick migration to rename this column
+  line_no: 45
+  trailing_metadata: — migrations touch
+- phrase: Can I store this token in plain text for now?
+  normalised: can i store this token in plain text for now
+  line_no: 48
+  trailing_metadata: — secrets storage
+- phrase: Should I add an index on this column?
+  normalised: should i add an index on this column
+  line_no: 50
+  trailing_metadata: — indexing touches the

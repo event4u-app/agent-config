@@ -1,4 +1,4 @@
-"""Probation promote-and-prune for ``agents/low-impact-decisions.md``.
+"""Probation promote-and-prune for ``agents/decisions/low-impact-decisions.md``.
 
 Phase 12 § Step 3. Runs at council startup AND after every intake
 append. Idempotent — a second run on an unchanged corpus is a no-op.

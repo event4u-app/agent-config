@@ -91,7 +91,7 @@ fail the build on any new violation.
 - Inline council convergence summary — e.g. *"Council
   (claude-sonnet-4-5 + gpt-4o, 2026-05-06) converged on …"* with
   date + members, no filepath
-- Council sessions, `agents/.agent-chat-history`, commit messages, PR
+- Council sessions, `agents/runtime/.agent-chat-history`, commit messages, PR
   descriptions — transient by construction, not part of the package
   surface
 
