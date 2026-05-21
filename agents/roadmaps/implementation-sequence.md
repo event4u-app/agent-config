@@ -1,7 +1,15 @@
 ---
 complexity: lightweight
-status: proposed
+status: draft
 ---
+
+<!--
+  status: draft hides this file from agents/roadmaps-progress.md per
+  roadmap-progress-sync § "Iron Law — every active roadmap is trackable".
+  This is an overview / sequencing index, not a phased roadmap; the
+  trackable phases live in the per-phase files (monorepo-phase-1..6).
+-->
+
 
 # Implementation Sequence — TS-Foundation · Discovery · GUI · Explain · Visibility
 
@@ -10,6 +18,63 @@ status: proposed
 > the **blocking edges** between them so the implementing agent (or
 > a council of agents) does not pick the cheapest-looking roadmap
 > first and dead-end on a missing dependency.
+
+## Supersession — Monorepo Phase Set (May 2026)
+
+The AI Council intake in `agents/tmp/refactor-package.txt` reframes
+the same work as a **six-phase monorepo migration** with a hard
+invariant: no manual workspace / pack list is ever maintained;
+everything is derived from artefact frontmatter at release time.
+
+The phase set below replaces the original five-roadmap framing.
+The dependency graph and merge windows further down are kept as
+historical context; the **new authoritative sequence** is:
+
+- [ ] **Monorepo Phase 1** — Frontmatter metadata on all artefacts
+      ([`monorepo-phase-1-frontmatter-metadata.md`](monorepo-phase-1-frontmatter-metadata.md))
+- [ ] **Monorepo Phase 2** — Auto-discovery manifest from frontmatter
+      ([`monorepo-phase-2-virtual-packs-discovery.md`](monorepo-phase-2-virtual-packs-discovery.md))
+- [ ] **Monorepo Phase 3** — TypeScript installer + lockfile + agent mode
+      ([`monorepo-phase-3-typescript-installer.md`](monorepo-phase-3-typescript-installer.md))
+- [ ] **Monorepo Phase 4** — Physical package layout move
+      ([`monorepo-phase-4-physical-package-layout.md`](monorepo-phase-4-physical-package-layout.md))
+- [ ] **Monorepo Phase 5** — Trust & safety layer
+      ([`monorepo-phase-5-trust-safety-layer.md`](monorepo-phase-5-trust-safety-layer.md))
+- [ ] **Monorepo Phase 6** — Optional browser wizard GUI
+      ([`monorepo-phase-6-browser-wizard-gui.md`](monorepo-phase-6-browser-wizard-gui.md))
+
+### New merge windows
+
+| Window | Phases | Parallel-safe | Rationale |
+|---|---|---|---|
+| MW-1 | Phase 1 (alone) | no | Frontmatter is the contract everything else reads. Must be green before any downstream work starts. |
+| MW-2 | Phase 2 (alone) | no | Manifest schema must be locked before the installer or GUI can consume it. |
+| MW-3 | Phase 3 (alone) | no | Installer's CLI surface is the contract Phase 6 wraps; lockfile shape is the contract `sync` / `validate` / `prune` build on. |
+| MW-4 | Phase 4 + Phase 5 (parallel) | yes | Phase 4 moves files; Phase 5 wires trust gates. Isolated write surfaces (`packages/*/` vs. `packages/core/installer/`). |
+| MW-5 | Phase 6 (alone, optional) | n/a | Lightweight, ships only after Phase 3 has stabilized for one release cycle. |
+
+### Iron invariants (carry across every phase)
+
+- [ ] No manual list of packs or workspaces is ever maintained;
+      every value originates in frontmatter and is discovered at
+      release time
+- [ ] Remote CI on the merge-window PR is green; no phase lands
+      with a regression (local full-pipeline runs are out of scope
+      per `quality.local_auto_run: false`)
+- [ ] Existing consumer install path (`bash install.sh`) keeps
+      working through Phases 1-5; deprecation only after Phase 3's
+      TS installer has shipped a stable release
+
+### Legacy framing (below)
+
+The original five-roadmap sequence remains documented below as a
+historical record. Its file references (`typescript-cli-and-local-
+gui-foundation.md`, `unified-setup-and-settings-gui.md`,
+`automated-pack-workspace-and-skill-discovery.md`,
+`explainability-v2-explain-last.md`,
+`strategic-visibility-mcp-topics-positioning.md`) are archived in
+`agents/roadmaps/archive/` and are no longer the authoritative plan.
+The work they describe is subsumed by Monorepo Phases 1-6 above.
 
 ## Prerequisites
 

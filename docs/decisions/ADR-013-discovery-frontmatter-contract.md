@@ -195,6 +195,30 @@ discovery-driven action.
 - **`requires_hint:` on packs is advisory only.** The runtime does
   not act on it. Acceptable for v1 per the council's "MEDIUM" note.
 
+## Amendments
+
+### 2026-05-21 — Monorepo Phase 1 closure (enforcement live)
+
+The five required keys (`workspaces`, `packs`, `lifecycle`, `trust`,
+`install`) are now **strictly enforced** across every artefact under
+`.agent-src.uncompressed/{skills,rules,commands,templates}` by
+[`scripts/lint_artefact_frontmatter.py`](../../scripts/lint_artefact_frontmatter.py),
+wired into `task lint-artefact-frontmatter`, `task ci`, and the opt-in
+combined pre-commit hook (`./agent-config hooks:install`). The migration
+rule's "Phase 4+" strict flip described above is therefore in effect.
+
+Worked examples per artefact type live in
+[`docs/contracts/frontmatter-contract.md`](../contracts/frontmatter-contract.md);
+roundtrip stability across the `task sync` pipeline is guarded by
+`tests/test_frontmatter_roundtrip.py`.
+
+The Phase-1 roadmap initially proposed splitting the contract into a
+separate `ADR-014-frontmatter-v2-contract.md`. That split was dropped —
+this ADR remains the single source of truth and absorbed the worked
+examples instead. No ADR-014 issued.
+
+Driven by [`agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md`](../../agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md).
+
 ## Cross-references
 
 - [ADR-007 — Agent Discovery Scopes](ADR-007-agent-discovery-scopes.md):

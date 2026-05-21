@@ -30,10 +30,14 @@ from scripts._lib.agents_overlay import (  # noqa: E402
 
 DOCS_PATH = REPO_ROOT / "docs" / "customization.md"
 
-# Match `agents/<kind>/` in the first column of the overlay table, plus
-# the ✅/❌ markers in columns 2 and 3.
+# Match `agents/<...>/<kind>/` in the first column of the overlay
+# table, plus the ✅/❌ markers in columns 2 and 3. Captures only the
+# **final** path segment as the kind, so both flat (`agents/overrides/`)
+# and nested (`agents/settings/contexts/`) rows resolve to the bare
+# kind name that ``CASCADE_ELIGIBLE_KINDS`` carries.
 ROW_RE = re.compile(
-    r"^\|\s*`agents/([a-z][a-z0-9_-]*)/`\s*\|\s*(✅|❌)[^|]*\|\s*(✅|❌)[^|]*\|",
+    r"^\|\s*`agents/(?:[a-z][a-z0-9_-]*/)*([a-z][a-z0-9_-]*)/`\s*\|"
+    r"\s*(✅|❌)[^|]*\|\s*(✅|❌)[^|]*\|",
 )
 
 

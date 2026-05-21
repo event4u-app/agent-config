@@ -134,7 +134,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   settings:check             Validate .agent-settings.yml against the YAML-subset contract
                              (docs/contracts/settings-sync-yaml-subset.md). Read-only.
                              Exit 0 clean, 1 finding(s), 2 file absent / unreadable.
-  hooks:install              Install the pre-commit roadmap-progress hook
+  hooks:install              Install the combined pre-commit hook (roadmap-progress
+                             + ADR-013 artefact frontmatter lint).
                              (use --print to dump it, --force to overwrite an existing hook)
   hooks:status               Print the runtime hook matrix (per-platform install + bindings)
                              Flags: --format json|table, --strict (CI), --project-root <path>
@@ -557,14 +558,16 @@ cmd_hooks_install() {
       --print)   print_only=true ;;
       -h|--help)
         cat <<'HELP'
-agent-config hooks:install — install the pre-commit roadmap-progress hook.
+agent-config hooks:install — install the combined pre-commit hook
+(roadmap-progress + ADR-013 artefact frontmatter lint).
 
 Usage:
   ./agent-config hooks:install [--force] [--print]
 
 Without flags: copies the hook to .git/hooks/pre-commit. Refuses to
 overwrite an existing pre-commit hook unless --force is given (the
-existing hook may already chain other tooling).
+existing hook may already chain other tooling). Each concern only
+runs when relevant files are staged — zero overhead otherwise.
 
   --print   dump the hook script to stdout (for manual chaining into an
             existing pre-commit script, husky, lefthook, etc.)

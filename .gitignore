@@ -37,6 +37,7 @@ __pycache__/
 # Temp
 /tmp/
 /.tmp/
+/agents/tmp/
 
 # Playwright
 /.playwright-mcp/*
