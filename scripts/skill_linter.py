@@ -975,6 +975,30 @@ def extract_frontmatter(text: str) -> Optional[str]:
     return match.group(1) if match else None
 
 
+def _parse_trust_level(frontmatter: str) -> Optional[str]:
+    """Parse `trust.level:` from the nested `trust:` mapping in frontmatter.
+
+    Returns the level string (e.g. ``"core"``, ``"advisory"``) or ``None``
+    if absent. Stdlib-only — mirrors the line-walking approach of
+    ``_parse_yaml_list`` so the linter stays pyyaml-free.
+    """
+    lines = frontmatter.splitlines()
+    in_block = False
+    for line in lines:
+        if not in_block:
+            if line.startswith("trust:"):
+                rhs = line[len("trust:"):].strip()
+                if rhs == "":
+                    in_block = True
+            continue
+        if line.startswith("  level:"):
+            return line[len("  level:"):].strip().strip('"').strip("'")
+        if line.startswith("  "):
+            continue
+        break
+    return None
+
+
 def _parse_yaml_list(frontmatter: str, key: str) -> Optional[list]:
     """Parse a simple top-level YAML list `key:` from frontmatter.
 
@@ -1029,6 +1053,10 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
     Lenient checks (info-level until Phase 4 migrations land): non-kernel
     rules without `triggers:` / `routes_to:` get an informational note,
     not an error — the existing description-matching path still works.
+
+    Trust-tier carve-out: rules with ``trust.level: core`` are exempt from
+    the ``router_routes_to_missing`` migration hint — they are authoritative
+    by design and their body legitimately lives inline.
     """
     issues: List[Issue] = []
     triggers = _parse_yaml_list(frontmatter, "triggers")
@@ -1069,9 +1097,15 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
                     f"triggers[{idx}] key '{k}' not in allowed set ({allowed})"))
 
     if routes_to is None:
-        issues.append(Issue("info", "router_routes_to_missing",
-            "Non-kernel rule has no routes_to: — body should migrate to skill / "
-            "guideline in Phase 4"))
+        # Trust-tier carve-out: rules pinned at trust.level: core are
+        # authoritative — their body IS the behavior and may legitimately
+        # live inline without a routes_to: delegation. The Phase 4
+        # migration hint applies only to lower-trust rules.
+        trust_level = _parse_trust_level(frontmatter)
+        if trust_level != "core":
+            issues.append(Issue("info", "router_routes_to_missing",
+                "Non-kernel rule has no routes_to: — body should migrate to skill / "
+                "guideline in Phase 4"))
     else:
         repo_root = Path(__file__).resolve().parent.parent
         for idx, item in enumerate(routes_to):

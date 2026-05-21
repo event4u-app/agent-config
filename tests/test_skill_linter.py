@@ -2612,3 +2612,67 @@ The pushed commit hash.
     )
     result = lint_file(path)
     assert any(i.code == "missing_inspect_step" for i in result.issues)
+
+
+def test_router_routes_to_missing_skipped_for_trust_core(tmp_path: Path) -> None:
+    """Rules pinned at `trust.level: core` skip the Phase 4 migration hint.
+
+    Trust-tier carve-out: a non-kernel rule that is nonetheless declared
+    authoritative (``trust.level: core``) may legitimately keep its body
+    inline without a ``routes_to:`` delegation. The linter must not emit
+    ``router_routes_to_missing`` for that shape.
+    """
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/rules/trust-core-rule.md",
+        """---
+type: auto
+description: "Use when something specific happens — core-trust authoritative rule"
+triggers:
+  - keyword: "foo"
+trust:
+  level: core
+  confidence: high
+  human_review_required: false
+---
+
+# trust-core-rule
+
+```
+IRON LAW
+DO THE THING. ALWAYS.
+```
+
+Body lives inline because trust.level=core makes the rule authoritative.
+""",
+    )
+    result = lint_file(path)
+    assert not any(i.code == "router_routes_to_missing" for i in result.issues), \
+        [i.code for i in result.issues]
+
+
+def test_router_routes_to_missing_still_fires_without_trust_core(tmp_path: Path) -> None:
+    """Non-core rules still get the Phase 4 migration hint when routes_to: is absent."""
+    path = write_file(
+        tmp_path,
+        ".agent-src.uncompressed/rules/regular-auto-rule.md",
+        """---
+type: auto
+description: "Use when something specific happens — regular auto rule"
+triggers:
+  - keyword: "foo"
+trust:
+  level: advisory
+  confidence: medium
+  human_review_required: false
+---
+
+# regular-auto-rule
+
+Body that should migrate to a skill in Phase 4.
+""",
+    )
+    result = lint_file(path)
+    assert any(i.code == "router_routes_to_missing" for i in result.issues), \
+        [i.code for i in result.issues]
+
