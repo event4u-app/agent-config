@@ -26,7 +26,7 @@ import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import _FRONTMATTER_RE, parse_frontmatter  # noqa: E402
-from _lib.agent_src import artefact_roots, logical_relpath  # noqa: E402
+from _lib.agent_src import artefact_roots, logical_relpath, resolve_logical, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ".agent-src.uncompressed"
@@ -53,10 +53,34 @@ def _load_yaml(path: Path) -> Any:
 
 
 def _vocab() -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
+    """Load discovery vocab. ``overrides`` keys are normalised to the
+    *current* physical repo-relative path, regardless of whether the YAML
+    lists the legacy ``.agent-src.uncompressed/...`` prefix or a
+    ``packages/*/.agent-src.uncompressed/...`` prefix. The lookup site
+    (``_build``) compares against physical paths emitted by
+    ``_iter_artefacts``.
+    """
     workspaces = _load_yaml(VOCAB_DIR / "workspaces.yml") or []
     packs = _load_yaml(VOCAB_DIR / "packs.yml") or []
     raw_un = _load_yaml(VOCAB_DIR / "unassigned-artefacts.yml") or []
-    overrides = {e["path"]: e["reason"] for e in raw_un} if raw_un else {}
+    overrides: dict[str, str] = {}
+    for entry in raw_un or []:
+        raw_path = entry["path"]
+        reason = entry["reason"]
+        logical = strip_source_prefix(raw_path)
+        if logical is None:
+            # Path isn't under any source root — keep as-is (e.g. docs/).
+            overrides[raw_path] = reason
+            continue
+        # Map logical → current physical, so the lookup matches whatever
+        # root the file actually lives in post-move.
+        physical = resolve_logical(logical)
+        if physical is not None:
+            overrides[physical.relative_to(ROOT).as_posix()] = reason
+        else:
+            # Not yet present — keep both the raw and the logical key so
+            # the manifest stays stable when the file later lands.
+            overrides[raw_path] = reason
     return workspaces, packs, overrides
 
 

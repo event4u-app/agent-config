@@ -1194,9 +1194,10 @@ def main() -> None:
         copied = sync_non_md(SOURCE_DIR, TARGET_DIR)
         print(f"\n--- Cleanup stale files ---")
         deleted = cleanup_stale(SOURCE_DIR, TARGET_DIR)
-        # Also cleanup stale hashes
+        # Also cleanup stale hashes (multi-root aware — resolve against
+        # every artefact root, not just the legacy SOURCE_DIR).
         hashes = load_hashes()
-        stale_keys = [k for k in hashes if not (SOURCE_DIR / k).exists()]
+        stale_keys = [k for k in hashes if _resolve_source(k) is None]
         for k in stale_keys:
             del hashes[k]
         if stale_keys:
