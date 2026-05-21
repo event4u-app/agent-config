@@ -8,7 +8,11 @@ Vision, fundraising narrative, competitive moat.
 - **version**: `3.0.0`
 - **owner**: founder
 - **requires**: —
-- **artefacts**: 7
+- **artefacts**: 8
+
+## Rules (1)
+
+- **`strategy-safety-floor`** — Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision
 
 ## Skills (7)
 

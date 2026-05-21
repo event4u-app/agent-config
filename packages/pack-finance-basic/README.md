@@ -8,7 +8,11 @@ Cashflow, runway, basic forecasting.
 - **version**: `3.0.0`
 - **owner**: finance, founder
 - **requires**: —
-- **artefacts**: 3
+- **artefacts**: 4
+
+## Rules (1)
+
+- **`finance-safety-floor`** — Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required
 
 ## Skills (3)
 
