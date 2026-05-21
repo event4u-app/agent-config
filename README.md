@@ -740,10 +740,10 @@ task test             # unit + integration tests
 
 ## Requirements
 
-- **Bash** — `scripts/install` orchestrates payload sync (`install.sh`) and bridges (`install.py`).
-- **Python 3.10+** — bridge stage only; missing → orchestrator skips bridges.
-- **Composer or npm** — to pull the package.
+- **Node ≥ 18** — `npx @event4u/agent-config init` is the canonical install path.
+- **Python 3.10+** — bridge stage only (`install.py`); missing → installer skips bridges.
 - **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+- **Legacy `bash install.sh` flow** — *deprecated, removed in 3.0*. The shell orchestrator (`scripts/install` + `install.sh`) still works for the 2.x line but receives no new features; switch to `npx @event4u/agent-config init`.
 
 ## License
 
