@@ -133,27 +133,78 @@ def _dest_for(src: Path, fm: dict[str, Any] | None, pack_ids: set[str]) -> tuple
     return dest_root / rel, f"primary pack: {primary}", None
 
 
+# Filesystem artefacts that must never be moved (runtime caches, scratch).
+_SKIP_DIR_NAMES = frozenset({".pytest_cache", "__pycache__", ".mypy_cache",
+                              ".ruff_cache", "node_modules", ".DS_Store"})
+
+
+def _should_skip(p: Path) -> bool:
+    return any(part in _SKIP_DIR_NAMES for part in p.parts)
+
+
+def _gitignored(paths: list[Path]) -> set[Path]:
+    """Return the subset of paths matched by .gitignore (runtime artefacts,
+    eval last-run.json, caches, …). These never participate in `git mv`."""
+    if not paths:
+        return set()
+    rel = [p.relative_to(ROOT).as_posix() for p in paths]
+    result = subprocess.run(
+        ["git", "check-ignore", "--stdin"],
+        cwd=ROOT,
+        input="\n".join(rel),
+        capture_output=True,
+        text=True,
+    )
+    # check-ignore exits 0 when at least one path matched, 1 when none, >1 on error.
+    if result.returncode > 1:
+        return set()
+    ignored = {line.strip() for line in result.stdout.splitlines() if line.strip()}
+    return {ROOT / r for r in rel if r in ignored}
+
+
 def _iter_artefacts() -> list[Path]:
+    """Every source file under SRC. Includes non-md so the plan covers
+    the full tree (templates/, scripts/, packs/, hooks, .gitattributes
+    fragments, …). Runtime caches and gitignored files are excluded.
+    """
     paths: list[Path] = []
-    for p in sorted(SRC.rglob("*.md")):
-        if p.is_file():
-            paths.append(p)
-    return paths
+    for p in sorted(SRC.rglob("*")):
+        if not p.is_file():
+            continue
+        if _should_skip(p):
+            continue
+        paths.append(p)
+    ignored = _gitignored(paths)
+    return [p for p in paths if p not in ignored]
 
 
 def _find_owning_skill_fm(src: Path) -> dict[str, Any] | None:
-    """For a non-SKILL.md file under skills/<name>/, return the sibling SKILL.md frontmatter."""
+    """For a non-SKILL.md file under skills/<name>/, return the sibling SKILL.md frontmatter.
+
+    Looks first at the source location (pre-move) and then under
+    ``packages/*/.agent-src.uncompressed/skills/<name>/SKILL.md`` so the
+    planner can resume mid-migration when the parent SKILL.md has already
+    been relocated.
+    """
     if "skills" not in src.parts:
         return None
     idx = src.parts.index("skills")
     if idx + 1 >= len(src.parts):
         return None
-    skill_dir = Path(*src.parts[: idx + 2])
-    skill_md = ROOT / skill_dir / "SKILL.md"
-    if not skill_md.exists():
-        return None
-    parsed, _ = parse_frontmatter(skill_md.read_text(encoding="utf-8", errors="replace"))
-    return parsed if isinstance(parsed, dict) else None
+    skill_name = src.parts[idx + 1]
+    candidates = [ROOT / Path(*src.parts[: idx + 2]) / "SKILL.md"]
+    pkgs_root = ROOT / "packages"
+    if pkgs_root.exists():
+        for pkg in pkgs_root.iterdir():
+            cand = pkg / ".agent-src.uncompressed" / "skills" / skill_name / "SKILL.md"
+            if cand.exists():
+                candidates.append(cand)
+    for cand in candidates:
+        if cand.exists():
+            parsed, _ = parse_frontmatter(cand.read_text(encoding="utf-8", errors="replace"))
+            if isinstance(parsed, dict):
+                return parsed
+    return None
 
 
 def _build_plan() -> dict[str, Any]:
@@ -166,14 +217,18 @@ def _build_plan() -> dict[str, Any]:
     for src in _iter_artefacts():
         rel_src = src.relative_to(ROOT).as_posix()
         fm: dict[str, Any] | None = None
-        try:
-            text = src.read_text(encoding="utf-8", errors="replace")
-            parsed, _ = parse_frontmatter(text)
-            if isinstance(parsed, dict):
-                fm = parsed
-        except Exception as exc:  # noqa: BLE001
-            conflicts.append({"path": rel_src, "reason": f"parse error: {exc}"})
-            continue
+        # Only .md files carry artefact frontmatter. Non-md files (yaml,
+        # python, php, hooks, .gitattributes fragments, …) inherit their
+        # placement from the parent directory or sibling SKILL.md.
+        if src.suffix == ".md":
+            try:
+                text = src.read_text(encoding="utf-8", errors="replace")
+                parsed, _ = parse_frontmatter(text)
+                if isinstance(parsed, dict):
+                    fm = parsed
+            except Exception as exc:  # noqa: BLE001
+                conflicts.append({"path": rel_src, "reason": f"parse error: {exc}"})
+                continue
 
         # Quarantined scaffolds → core, no conflict.
         if rel_src in unassigned and fm is None:
@@ -233,17 +288,27 @@ def _write_plan(plan: dict[str, Any]) -> None:
 
 
 def _apply(plan: dict[str, Any]) -> int:
-    """Execute every move + stay via `git mv` so history follows."""
+    """Execute every move + stay via `git mv` so history follows.
+
+    Idempotent: entries whose source is already absent and whose
+    destination already exists are silently skipped. This lets a
+    partial run be resumed without rewinding the worktree.
+    """
     if plan["conflicts"]:
         print(f"ERROR: {len(plan['conflicts'])} unresolved conflict(s); refusing --apply.", file=sys.stderr)
         return 2
 
     all_entries = plan["moves"] + plan["stays_in_core"]
+    moved = 0
+    skipped = 0
     for entry in all_entries:
         src = ROOT / entry["from"]
         dst = ROOT / entry["to"]
         if not src.exists():
-            print(f"ERROR: source missing: {entry['from']}", file=sys.stderr)
+            if dst.exists():
+                skipped += 1
+                continue
+            print(f"ERROR: source missing AND destination missing: {entry['from']}", file=sys.stderr)
             return 3
         dst.parent.mkdir(parents=True, exist_ok=True)
         result = subprocess.run(
@@ -255,7 +320,8 @@ def _apply(plan: dict[str, Any]) -> int:
         if result.returncode != 0:
             print(f"ERROR: git mv failed: {entry['from']} -> {entry['to']}\n{result.stderr}", file=sys.stderr)
             return 4
-    print(f"Applied {len(all_entries)} moves.")
+        moved += 1
+    print(f"Applied {moved} moves, skipped {skipped} already-moved entries.")
     return 0
 
 

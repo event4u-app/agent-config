@@ -25,7 +25,67 @@ from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from snapshot_agent_outputs import _build_snapshot  # noqa: E402
+from snapshot_agent_outputs import (  # noqa: E402
+    _build_snapshot,
+    _logical_path,
+    _SKIP_DIRS,
+    _SKIP_NAMES,
+)
+
+
+def _normalise_loaded_snapshot(snap: dict[str, Any]) -> None:
+    """Re-apply current snapshot filters to a previously-captured snapshot.
+
+    The pre-move snapshot file is immutable history; this lets verify
+    compare it against a freshly-captured post-move snapshot whose
+    filters have evolved (runtime-cache exclusion, logical-path stripping,
+    volatile-field drop) without regenerating the reference.
+    """
+    for key, tree in (snap.get("trees") or {}).items():
+        keep = {}
+        for path, sha in tree.items():
+            name = path.rsplit("/", 1)[-1]
+            if name in _SKIP_NAMES:
+                continue
+            if any(part in _SKIP_DIRS for part in path.split("/")):
+                continue
+            keep[path] = sha
+        snap["trees"][key] = keep
+    m = snap.get("manifest_path_stripped")
+    if isinstance(m, dict):
+        for k in ("unassigned", "documented_unassigned"):
+            entries = m.get(k) or []
+            normalised: list[dict[str, Any]] = []
+            for e in entries:
+                if not isinstance(e, dict):
+                    normalised.append(e)
+                    continue
+                if "path" in e:
+                    e["path"] = _logical_path(e["path"])
+                path = e.get("path", "")
+                name = path.rsplit("/", 1)[-1]
+                if name in _SKIP_NAMES:
+                    continue
+                if any(part in _SKIP_DIRS for part in path.split("/")):
+                    continue
+                normalised.append(e)
+            normalised.sort(key=lambda e: (e.get("path", ""), e.get("category", "")))
+            m[k] = normalised
+        # Recompute the two counts that ride on the filtered lists so the
+        # stats block stays consistent with the normalised entries.
+        stats = m.get("stats")
+        if isinstance(stats, dict):
+            stats["documented_unassigned_count"] = len(m.get("documented_unassigned") or [])
+            stats["unassigned_count"] = len(m.get("unassigned") or [])
+        # Re-sort artefacts by (category, checksum) — pre-move snapshot
+        # was sorted by path; that order shifts when files move roots.
+        arts = m.get("artefacts") or []
+        for a in arts:
+            a.pop("path", None)
+        arts.sort(key=lambda a: (a.get("category", ""), a.get("checksum", "")))
+        m["artefacts"] = arts
+        m.pop("checksum", None)
+        m.pop("scanner_version", None)
 
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_SNAPSHOT = ROOT / "dist" / "migration" / "pre-move-snapshot.json"
@@ -88,6 +148,11 @@ def main() -> int:
 
     before = json.loads(args.snapshot.read_text(encoding="utf-8"))
     after = _build_snapshot()
+
+    # The pre-move snapshot was captured before _hash_tree / manifest
+    # stripping learned to filter runtime artefacts. Re-apply the current
+    # filter to the loaded snapshot so the diff is apples-to-apples.
+    _normalise_loaded_snapshot(before)
 
     issues: list[str] = []
     for key in (".agent-src", ".augment"):
