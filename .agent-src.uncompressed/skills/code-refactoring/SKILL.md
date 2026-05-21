@@ -31,7 +31,7 @@ Do NOT use when:
 
 ## Before refactoring
 
-1. **Read the agent docs** — check `agents/docs/` and `agents/contexts/` for the area you're refactoring.
+1. **Read the agent docs** — check `agents/reference/docs/` and `agents/settings/contexts/` for the area you're refactoring.
    For modules, also read the project's module-docs directory (path varies by stack — Laravel: `app/Modules/{Module}/agents/`; Nx: `apps/{app}/docs/`; mono-repo: per-package `docs/`). See the `project-docs` skill for the mapping.
 2. **Understand the scope** — what exactly needs to change and why?
 3. **Find ALL references** — use `codebase-retrieval` and `view` with `search_query_regex` to find every
@@ -128,8 +128,8 @@ After the code changes are verified, update all affected documentation:
 
 | Documentation layer | When to update | Location |
 |---|---|---|
-| **Project docs** | When conventions, patterns, or key files change | `agents/docs/*.md` |
-| **Project contexts** | When architecture or high-level flow changes | `agents/contexts/*.md` |
+| **Project docs** | When conventions, patterns, or key files change | `agents/reference/docs/*.md` |
+| **Project contexts** | When architecture or high-level flow changes | `agents/settings/contexts/*.md` |
 | **Module agent docs** | When module-specific behavior changes | `app/Modules/*/agents/` |
 | **Module Docs/** | When module internals change | `app/Modules/*/Docs/` |
 | **AGENTS.md** | When project-wide conventions change | `AGENTS.md` |
@@ -158,7 +158,7 @@ After the code changes are verified, update all affected documentation:
 
 ### Change API endpoint
 1. Update controller + request + resource + OpenAPI schemas + route → present test changes →
-   update docs (`agents/docs/controller.md`, `agents/docs/api-resources.md`) → run PHPStan → run tests.
+   update docs (`agents/reference/docs/controller.md`, `agents/reference/docs/api-resources.md`) → run PHPStan → run tests.
 
 ### Replace implementation (e.g. switch service)
 1. Create new implementation → update binding → find all direct references → update → present test

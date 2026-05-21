@@ -114,6 +114,6 @@ isolation surface in both cases.
 
 ## See also
 
-- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — the hook-only contract
+- [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — the hook-only contract
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API (`status`, `read`, `sessions`, `prune-sessions`)

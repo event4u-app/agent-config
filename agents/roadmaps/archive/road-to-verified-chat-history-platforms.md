@@ -17,7 +17,7 @@ This roadmap tracks the remaining four platforms. They are independent (differen
 
 ## Authoritative artifacts
 
-- Platform matrix + payload schemas — [`agents/contexts/chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md)
+- Platform matrix + payload schemas — [`agents/settings/contexts/chat-history-platform-hooks.md`](../contexts/chat-history-platform-hooks.md)
 - Dispatcher + extractor — [`scripts/chat_history.py`](../../scripts/chat_history.py) (`_extract_hook_text`, `_extract_augment_conversation`, `_extract_claude_transcript_response`, `hook_dispatch`)
 - Capture tooling — [`scripts/hooks/dispatch_hook.py`](../../scripts/hooks/dispatch_hook.py) (`_maybe_capture_payload`, env-gated by `AGENT_HOOK_CAPTURE_DIR`) + [`scripts/redact_hook_capture.py`](../../scripts/redact_hook_capture.py) (sanitises captures before they land in this roadmap)
 - Council ruling — [`agents/council-sessions/20260505T050924Z-chat-history-unified.json`](../council-sessions/20260505T050924Z-chat-history-unified.json)
@@ -41,7 +41,7 @@ python3 scripts/redact_hook_capture.py "$AGENT_HOOK_CAPTURE_DIR" --strict
 # 4. Inspect <platform>__<event>__*.redacted.json — paste the smallest
 #    representative one into the relevant phase below as a fenced JSON block.
 
-# 5. Lock the schema in agents/contexts/chat-history-platform-hooks.md
+# 5. Lock the schema in agents/settings/contexts/chat-history-platform-hooks.md
 #    (flip the platform's `Verification` column to `payload-verified`).
 
 # 6. Add an _extract_<platform>_* branch in scripts/chat_history.py
@@ -64,7 +64,7 @@ Capture-only on all four discovery phases until the user decides which platform 
 - [x] Add `_extract_claude_transcript_response` helper that walks the JSONL transcript
 - [x] Dual-emit `user_prompt` + `stop` from a single Augment `Stop` event in `hook_dispatch`
 - [x] 10 new tests in `tests/test_chat_history.py` — all 2342 package tests green
-- [x] Update `agents/contexts/chat-history-platform-hooks.md` with `Verification` column + Augment/Claude payload schemas
+- [x] Update `agents/settings/contexts/chat-history-platform-hooks.md` with `Verification` column + Augment/Claude payload schemas
 - [x] Patch user's `~/.augment/settings.json` so the `Stop` hook ships `metadata.includeConversationData: true` (docs: only `Stop` supports the flag)
 
 ## Phase 2 — Cursor (docs-verified 2026-05-05)

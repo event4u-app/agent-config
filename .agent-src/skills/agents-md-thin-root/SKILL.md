@@ -36,7 +36,7 @@ Use when:
 
 - Edit `.github/copilot-instructions.md` with this skill (use `copilot-agents-optimization` instead).
 - Edit other `.md` files under `.augment/`, `.agent-src.uncompressed/`, or `agents/` with this skill.
-- Add a section to AGENTS.md without first checking whether an outboard target already exists in `agents/contexts/` or `docs/contracts/`.
+- Add a section to AGENTS.md without first checking whether an outboard target already exists in `agents/settings/contexts/` or `docs/contracts/`.
 - Replace prose with a bare link `[label](path)` — every pointer needs a *why*-clause ≥ 60 chars or it does not count toward the 40 % ratio.
 - Reuse the package-root anatomy in the consumer template — caps and target paths differ.
 
@@ -114,7 +114,7 @@ Each answer must fit on one line. The block exists so the root never silently de
 
 ## Procedure — apply Thin-Root to consumer template
 
-Same procedure, applied to `.agent-src.uncompressed/templates/AGENTS.md`. Hard cap shifts to 2,000 / 1,700. The consumer template intentionally lacks the package-self-references — its pointers target files that exist in the **consumer's** repo (`.augment/skills/`, `agents/contexts/`, ...), not this package's authoring tree.
+Same procedure, applied to `.agent-src.uncompressed/templates/AGENTS.md`. Hard cap shifts to 2,000 / 1,700. The consumer template intentionally lacks the package-self-references — its pointers target files that exist in the **consumer's** repo (`.augment/skills/`, `agents/settings/contexts/`, ...), not this package's authoring tree.
 
 ## Gotchas
 

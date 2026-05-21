@@ -870,7 +870,7 @@ def test_chat_history_append_unlisted_filename_raises(tmp_path: Path) -> None:
         asyncio.run(
             cache.dispatch(
                 "chat_history_append",
-                {"text": "x", "path": "agents/notes.md", "dry_run": True},
+                {"text": "x", "path": "agents/evidence/notes.md", "dry_run": True},
                 consumer_root=tmp_path,
             )
         )

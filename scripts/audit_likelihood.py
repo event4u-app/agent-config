@@ -2,19 +2,19 @@
 """Activation-likelihood heuristic for the Rule-Governance pass
 (Phase 5.3 of road-to-augment-limit-fit).
 
-For every auto-rule from `agents/reports/auto-rules-audit.json`:
+For every auto-rule from `agents/runtime/reports/auto-rules-audit.json`:
 
 1. Build a token set from `description`, `triggers[].keyword`,
    `triggers[].intent`, and the rule name itself.
 2. Index a corpus of skills (`SKILL.md`), contexts
-   (`agents/contexts/**/*.md`), guidelines, and command files.
+   (`agents/settings/contexts/**/*.md`), guidelines, and command files.
 3. Score `corpus_hits = sum(1 for token in tokens if token in corpus)`.
 4. Flag rules with `< 2` corpus hits as "low-likelihood" (their trigger
    surface is so generic that the host LLM is unlikely to find a
    project-local file the rule was written to bridge to).
 
 Result is a JSON dump + Markdown section appended to
-`agents/reports/auto-rules-audit.md`.
+`agents/runtime/reports/auto-rules-audit.md`.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ LIKELIHOOD_JSON = REPORT_DIR / "auto-rules-likelihood.json"
 CORPUS_GLOBS = [
     ".agent-src.uncompressed/skills/**/SKILL.md",
     ".agent-src.uncompressed/commands/**/*.md",
-    "agents/contexts/**/*.md",
+    "agents/settings/contexts/**/*.md",
     "docs/guidelines/**/*.md",
 ]
 

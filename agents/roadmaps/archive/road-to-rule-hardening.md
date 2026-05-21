@@ -71,7 +71,7 @@ before this roadmap's Phase 1 begins. Four tightly scoped items.
       added (82 LOC, stdlib only) and wired as `task check-one-off-location`
       inside `task ci`.
 - [x] **0a.3 Promote 2A revert finding to a Locked Decision.** Created
-      `agents/contexts/adr-always-rule-context-split-not-viable.md`
+      `agents/settings/contexts/adr-always-rule-context-split-not-viable.md`
       summarising the Model (b) net-character-increase finding
       (`language-and-tone` split = +186 chars net). Cross-linked from
       `.agent-src.uncompressed/contexts/budget/load-context-budget-model.md`.
@@ -84,17 +84,17 @@ before this roadmap's Phase 1 begins. Four tightly scoped items.
 ### Phase 1 — Self-Check Rule Audit (≤ 1 day)
 
 Inventory every rule in `.agent-src.uncompressed/rules/` and classify
-trigger type. Output: a single matrix in `agents/contexts/` with one
+trigger type. Output: a single matrix in `agents/settings/contexts/` with one
 row per rule.
 
 - [x] Enumerate all rules. Baseline: 58 rules total (9 always, 49 auto)
       under `.agent-src.uncompressed/rules/`. Inventory in
-      `agents/contexts/rule-trigger-matrix.md`, regenerated via
+      `agents/settings/contexts/rule-trigger-matrix.md`, regenerated via
       `scripts/build_rule_trigger_matrix.py`.
 - [x] For each rule, record: trigger event, observability,
       enforcement surface, hook-cost estimate. All 58 rows populated
       in the matrix.
-- [x] Write `agents/contexts/rule-trigger-matrix.md` with the full
+- [x] Write `agents/settings/contexts/rule-trigger-matrix.md` with the full
       table plus a short executive summary (tier counts).
 - [x] Mark rules that are already mechanical (`mechanical-already`
       tier in matrix — 9 rules including `chat-history-cadence`,
@@ -136,7 +136,7 @@ strategies have different verifiability profiles.
       mandatory failure-tracking annotation in the rule body), convert
       to `/`-command, or deprecate. No new soft rules are introduced.
       → All 13 dispositions resolved in Phase 6, recorded in
-      [`agents/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md).
+      [`agents/settings/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md).
 
 ### Phase 3 — Pilot Hardening (1–2 days)
 
@@ -165,7 +165,7 @@ gradient alternative; tracked as risk, not adopted.
       `scripts/hooks/augment-roadmap-progress.sh` trampoline.
 - [x] Verify: trigger fires deterministically, agent cannot suppress
       it, output is human-readable, < 100 ms overhead per file write.
-- [x] Document the pattern in `agents/contexts/hardening-pattern.md`
+- [x] Document the pattern in `agents/settings/contexts/hardening-pattern.md`
       so Phase 4 has a template.
 
 ### Phase 4 — Tier 1 Rollout (2–3 days, gated by Phase 3)
@@ -200,7 +200,7 @@ documented capability-gap reason. Silent deferral is forbidden.
 - [~] File `hardening-platform-parity` issue per deferred platform
       with the specific capability gap (e.g. "Cursor lacks
       PostToolUse"). → Tracking artefact landed at
-      `agents/contexts/hardening-platform-parity.md` with five
+      `agents/settings/contexts/hardening-platform-parity.md` with five
       ready-to-file issue payloads (Cursor IDE, Cursor CLI, Cline
       non-Win, Cline Win, Windsurf). Filing the GitHub issues themselves
       remains a maintainer step, deferred not silenced.
@@ -221,7 +221,7 @@ escalate to Tier 2b structured injection or accept as Tier 3.
 
 - [x] Decide nudge surface per sub-tier: Tier 2a uses PostToolUse
       marker; Tier 2b uses settings-state injection or tool-call gate.
-      → Locked in `agents/contexts/tier-2-nudge-surface.md` (marker
+      → Locked in `agents/settings/contexts/tier-2-nudge-surface.md` (marker
       payload format, compliance threshold, escalation path).
 - [-] **Prototype on `model-recommendation`** first (Tier 2a, low-stakes
       — wrong recommendation costs nothing). Use as the validation
@@ -244,7 +244,7 @@ Final pass on the soft-by-construction rules. No new mechanism — only
 explicit disposition plus a re-audit clock.
 
 - [x] For each Tier 3 rule, write the disposition. → Centralised in
-      [`agents/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md)
+      [`agents/settings/contexts/tier-3-dispositions.md`](../contexts/tier-3-dispositions.md)
       (all 13 rules, uniform `accept-as-soft` disposition, 2026-11-04
       re-audit clock). Per-rule body annotation deferred — rationale
       in the disposition file's "closure deviation" section.
@@ -290,7 +290,7 @@ out of closure scope.
 
 ## Acceptance
 
-- `agents/contexts/rule-trigger-matrix.md` exists and covers every
+- `agents/settings/contexts/rule-trigger-matrix.md` exists and covers every
   rule in `.augment/rules/`, with hook-cost column populated.
 - Every soft rule has a Tier assignment (1 / 2a / 2b / 3).
 - At least three Tier 1 rules have working hooks in production

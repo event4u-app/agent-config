@@ -1,6 +1,6 @@
 ---
 name: project-analyzer
-description: "ONLY when user asks for single-pass tech-stack detection or `agents/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
+description: "ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
 source: package
 domain: discovery
 workspaces:
@@ -41,20 +41,20 @@ A **project analysis** is a systematic walkthrough of the entire codebase that:
 1. **Detects** — framework, language, tech stack, patterns, legacy vs. modern
 2. **Inventories** — modules, services, models, endpoints, tests
 3. **Analyzes** — business domains, data flows, API contracts, dependencies
-4. **Documents** — writes structured analysis files to `agents/analysis/`
+4. **Documents** — writes structured analysis files to `agents/evidence/analysis/`
 5. **Assesses** — identifies gaps, technical debt, missing docs
 
 It orchestrates other skills and commands to produce a comprehensive picture.
 
 ## Analysis output
 
-All analysis results are written to `agents/analysis/` in a structured directory layout.
+All analysis results are written to `agents/evidence/analysis/` in a structured directory layout.
 The goal: **someone could rebuild the project from these documents alone.**
 
 ### Directory structure
 
 ```
-agents/analysis/
+agents/evidence/analysis/
 ├── overview.md                  ← Project profile, tech stack, architecture summary
 ├── architecture/
 │   ├── database.md              ← Schema, connections, multi-tenancy, migrations
@@ -82,7 +82,7 @@ agents/analysis/
 
 ### Domain analysis files
 
-Each business domain gets its own file in `agents/analysis/domains/`. A domain groups
+Each business domain gets its own file in `agents/evidence/analysis/domains/`. A domain groups
 related models, services, controllers, jobs, and events around a business concept:
 
 | Domain             | What it covers                                           |
@@ -151,7 +151,7 @@ Each domain file should contain:
 
 ### Module analysis files
 
-Each module gets its own file in `agents/analysis/modules/`. Format:
+Each module gets its own file in `agents/evidence/analysis/modules/`. Format:
 
 ```markdown
 # Module: {Name}
@@ -259,7 +259,7 @@ After detecting **any** match, record the stack in the analysis output and selec
 - Detect framework, version, tech stack
 - Identify build tools and quality tooling
 - Classify: legacy vs. modern, monolith vs. modular
-- **Output:** `agents/analysis/overview.md`
+- **Output:** `agents/evidence/analysis/overview.md`
 
 ### Phase 2: Architecture
 
@@ -267,14 +267,14 @@ After detecting **any** match, record the stack in the analysis output and selec
 - Identify architectural patterns (MVC, modules, services, repositories)
 - Detect multi-tenancy, queue system, caching
 - Count: models, controllers, services, jobs, commands
-- **Output:** `agents/analysis/architecture/*.md`
+- **Output:** `agents/evidence/analysis/architecture/*.md`
 
 ### Phase 3: Data layer
 
 - List all models with their connections, tables, and key relationships
 - Map database schema: tables, foreign keys, indexes
 - Document multi-tenant split (which tables in which DB)
-- **Output:** `agents/analysis/models/api-database.md`, `customer-database.md`
+- **Output:** `agents/evidence/analysis/models/api-database.md`, `customer-database.md`
 
 ### Phase 4: Business domains
 
@@ -282,38 +282,38 @@ After detecting **any** match, record the stack in the analysis output and selec
 - For each domain: map models → services → controllers → jobs → events
 - Document business rules and data flows
 - Document inter-domain dependencies
-- **Output:** `agents/analysis/domains/{domain}.md` (one per domain)
+- **Output:** `agents/evidence/analysis/domains/{domain}.md` (one per domain)
 
 ### Phase 5: API surface
 
 - List all endpoints with controller, request, resource, OpenAPI attributes
 - Document request/response contracts (field names, types, validation rules)
 - Map version differences (v1 vs v2)
-- **Output:** `agents/analysis/api/endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`
+- **Output:** `agents/evidence/analysis/api/endpoints-v1.md`, `endpoints-v2.md`, `contracts.md`
 
 ### Phase 6: Service map
 
 - List all services with purpose, key methods, and dependencies
 - Map service → repository → model relationships
 - Identify God services (too many responsibilities)
-- **Output:** `agents/analysis/services/service-map.md`
+- **Output:** `agents/evidence/analysis/services/service-map.md`
 
 ### Phase 7: Module inventory (if modules exist)
 
 - List all modules with purpose
 - For each module: structure, public API, internal components, tests
 - Check for module-level agent docs
-- **Output:** `agents/analysis/modules/{module}.md` (one per module)
+- **Output:** `agents/evidence/analysis/modules/{module}.md` (one per module)
 
 ### Phase 8: Infrastructure & testing
 
 - Docker setup, CI/CD pipelines, deployment
 - Test suites, coverage areas, test data strategy
-- **Output:** `agents/analysis/architecture/infrastructure.md`, `agents/analysis/testing/test-map.md`
+- **Output:** `agents/evidence/analysis/architecture/infrastructure.md`, `agents/evidence/analysis/testing/test-map.md`
 
 ### Phase 9: Agent docs audit
 
-- List all existing docs in `agents/docs/`, `agents/contexts/`, module `agents/`
+- List all existing docs in `agents/reference/docs/`, `agents/settings/contexts/`, module `agents/`
 - Check for outdated docs (reference deleted files/classes)
 - Identify undocumented areas
 - Check for stale roadmaps
@@ -353,7 +353,7 @@ After detecting **any** match, record the stack in the analysis output and selec
 
 ## Output format
 
-1. Structured analysis document in agents/analysis/
+1. Structured analysis document in agents/evidence/analysis/
 2. Tech stack inventory with versions and dependencies
 3. Architecture diagram or module map
 
@@ -367,7 +367,7 @@ After detecting **any** match, record the stack in the analysis output and selec
 
 - Full project analysis can take several minutes — warn the user about the time investment.
 - Don't analyze parts of the codebase that the user hasn't asked about — respect scope.
-- Analysis documents go in `agents/analysis/`, not in `.augment/`.
+- Analysis documents go in `agents/evidence/analysis/`, not in `.augment/`.
 
 ## Do NOT
 
@@ -376,5 +376,5 @@ After detecting **any** match, record the stack in the analysis output and selec
 - Do NOT commit or push.
 - Do NOT overwhelm the user — present findings incrementally, one phase at a time.
 - Do NOT analyze third-party code in `vendor/` or `node_modules/`.
-- Do NOT duplicate content that already exists in `agents/docs/` or `agents/contexts/` —
+- Do NOT duplicate content that already exists in `agents/reference/docs/` or `agents/settings/contexts/` —
   reference it instead. Analysis files complement existing docs, they don't replace them.

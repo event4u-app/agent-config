@@ -4,12 +4,12 @@ tier: 2
 cluster: ghostwriter
 sub: delete
 skills: [ghostwriter]
-description: Hard-delete a ghostwriter profile at agents/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
+description: Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
 disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "delete ghostwriter profile, remove public-figure voice, drop ghostwriter, retire captured profile"
-  trigger_context: "user wants to permanently remove a captured ghostwriter profile from agents/ghostwriter/"
+  trigger_context: "user wants to permanently remove a captured ghostwriter profile from agents/reference/ghostwriter/"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -26,7 +26,7 @@ install:
 
 # /ghostwriter:delete
 
-Hard-delete a single `agents/ghostwriter/<slug>.md` profile after a
+Hard-delete a single `agents/reference/ghostwriter/<slug>.md` profile after a
 **two-step confirmation**. The file is gone after acceptance — no
 backup, no soft delete, no trash directory. Mirrors the destructive
 posture of `/agents:user:delete`.
@@ -44,7 +44,7 @@ Argument shapes:
 
 | State | Action |
 |---|---|
-| File missing | Abort. Print: *"No profile at `agents/ghostwriter/<slug>.md`. Run `/ghostwriter:list` to see what exists."* |
+| File missing | Abort. Print: *"No profile at `agents/reference/ghostwriter/<slug>.md`. Run `/ghostwriter:list` to see what exists."* |
 | File present, `fictional: true` | Abort. Print: *"`<slug>.md` is a package-side fixture. Delete it via the source tree, not this command."* |
 | File present, real | Proceed to Step 2 |
 
@@ -54,7 +54,7 @@ Show the user **exactly** what is about to disappear, sourced from
 the file's frontmatter (do not render the full profile body):
 
 ```
-About to delete agents/ghostwriter/<slug>.md
+About to delete agents/reference/ghostwriter/<slug>.md
   identity.name:       <name>
   role:                <role_or_title>
   category:            <public_figure_category>
@@ -93,11 +93,11 @@ other input → abort with the same cancel line as Step 3.
 Remove the file. Then print:
 
 ```
-✅  agents/ghostwriter/<slug>.md deleted.
+✅  agents/reference/ghostwriter/<slug>.md deleted.
     /ghostwriter:list now shows N profiles.
 ```
 
-`N` reflects the post-delete count under `agents/ghostwriter/`
+`N` reflects the post-delete count under `agents/reference/ghostwriter/`
 (excluding `README.md`).
 
 ### 6. Stale-warning surface (optional)
@@ -117,7 +117,7 @@ post-write surface in `/ghostwriter:fetch` Step 7. Non-blocking.
   consumer ghostwriter files are gitignored by default.
 - **Do NOT delete package-side fixtures.** `fictional: true` files
   belong to the source tree and are out of scope for this command.
-- **Do NOT delete `agents/ghostwriter/README.md`.** The directory
+- **Do NOT delete `agents/reference/ghostwriter/README.md`.** The directory
   anchor is not a profile.
 - **Do NOT bulk-delete.** One slug per invocation, even when the user
   passes a glob.

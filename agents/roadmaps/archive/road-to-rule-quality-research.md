@@ -1,7 +1,7 @@
 # Roadmap: Rule & Guideline Quality Research
 
 > **Archived 2026-04-20** — research complete. Deliverable:
-> [`agents/analysis/rule-quality-eval-feasibility.md`](../../analysis/rule-quality-eval-feasibility.md).
+> [`agents/evidence/analysis/rule-quality-eval-feasibility.md`](../../analysis/rule-quality-eval-feasibility.md).
 >
 > **Verdicts:** Problem 1 (auto-rule triggering) — *conditional go*, grafts onto
 > `road-to-trigger-evals.md` Phase 1. Problem 2 (always-rule compliance) —
@@ -48,7 +48,7 @@ need to know which are tractable and which are not.
 
 ## What this research produces
 
-A single document `agents/analysis/rule-quality-eval-feasibility.md`
+A single document `agents/evidence/analysis/rule-quality-eval-feasibility.md`
 (~200-300 lines) with:
 
 1. **Problem 1 — auto-rule triggering.** Verdict on whether the existing

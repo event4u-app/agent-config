@@ -173,7 +173,7 @@ instruction.
 
 - [`/chat-history learn`](learn.md) — pick a prior session and turn it into a project-improving proposal via `learning-to-rule-or-skill`
 - [`/chat-history show`](show.md) — current-session inspector
-- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
+- [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — `sessions` and `read --session` CLI surface
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options Iron Law
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law

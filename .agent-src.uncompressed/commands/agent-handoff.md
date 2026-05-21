@@ -87,7 +87,7 @@ Show the handoff prompt in a fenced code block and say:
 - `agents/.agent-chat-history` is **pull-based** and **multi-session**: every
   session writes its own entries tagged with a 16-char session
   fingerprint derived from the platform `session_id` (schema v4, see
-  [`chat-history-platform-hooks`](../../agents/contexts/chat-history-platform-hooks.md)).
+  [`chat-history-platform-hooks`](../../agents/settings/contexts/chat-history-platform-hooks.md)).
   Works only on the same machine and same repo, but captures every
   phase / decision any session logged. Inspect with `/chat-history show`;
   pull prior-session context into the current chat verbatim with

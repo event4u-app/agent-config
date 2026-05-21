@@ -20,9 +20,9 @@ after Phase 1 evidence (lint clean, integration confirmed, no skill
 Port the highest-leverage skills from Microck's 415-skill mirror into
 `event4u/agent-config` without inheriting Microck's curation problems
 (non-curated, broken paths, no linter — see
-`agents/analysis/compare-microck-ordinary-claude-skills.md`). The
+`agents/evidence/analysis/compare-microck-ordinary-claude-skills.md`). The
 content-level harvest, ICE-scoring, and DROP list live in
-`agents/analysis/compare-microck-deepscan-harvest.md`.
+`agents/evidence/analysis/compare-microck-deepscan-harvest.md`.
 
 **Out of scope for this roadmap:**
 
@@ -102,7 +102,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 `error-handling-patterns`. All ≤ 200 lines (errorhandling reduced
 from 636 → ~150 via Sunset Policy externalization). Microck commit
 SHA `8f5c83174f7aa683b4ddc7433150471983b93131` recorded in
-`agents/contexts/skills-provenance.yml`. Skill count: 145 → 150.
+`agents/settings/contexts/skills-provenance.yml`. Skill count: 145 → 150.
 Local `task ci` green after consistency commit. Phase 2 + 3 stay
 out-of-horizon per six-week stability gate.
 
@@ -136,7 +136,7 @@ out-of-horizon per six-week stability gate.
   `8f5c83174f7aa683b4ddc7433150471983b93131` consistent with Phase 1
   capture; no net-new high-leverage candidates beyond DROP list.
 - [x] **P3.3 — Cross-suite signal capture.** Cross-links recorded in
-  `agents/analysis/compare-microck-deepscan-harvest.md` for all P2/P3
+  `agents/evidence/analysis/compare-microck-deepscan-harvest.md` for all P2/P3
   verdicts; no duplication detected against active roadmaps.
 
 ### Closure note (Phase 2 + 3)
@@ -163,6 +163,6 @@ clean; provenance + marketplace + counts in sync.
 
 ## Provenance
 
-- Analysis: `agents/analysis/compare-microck-deepscan-harvest.md`
-- Original Microck verdict: `agents/analysis/compare-microck-ordinary-claude-skills.md`
+- Analysis: `agents/evidence/analysis/compare-microck-deepscan-harvest.md`
+- Original Microck verdict: `agents/evidence/analysis/compare-microck-ordinary-claude-skills.md`
 - Sibling roadmap (markitdown adoption): `agents/roadmaps/archive/road-to-markitdown-adoption.md`

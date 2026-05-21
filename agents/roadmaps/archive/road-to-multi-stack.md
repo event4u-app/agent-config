@@ -71,7 +71,7 @@ Coverage target per stack, in priority order:
 | Tooling | Shared | `composer-packages`, `github-ci`, `git-workflow`, `quality-tools`, `docker` |
 | Framework-specific | Stack-namespaced | `laravel-validation`, `symfony-messenger`, `nextjs-server-actions`, `zend-service-manager` |
 | Cross-stack pattern | Shared with stack notes | `api-design`, `api-testing`, `logging-monitoring`, `websocket` |
-| Project-specific | Never shipped | belongs in consumer `agents/contexts/` |
+| Project-specific | Never shipped | belongs in consumer `agents/settings/contexts/` |
 
 A skill is stack-namespaced only when its guidance is false or
 misleading on other stacks. Default bias: shared.
@@ -171,7 +171,7 @@ the README is the acceptance test for each wave.
   Symfony / Next.js / React / Zend equivalent (or "no equivalent,
   shared skill covers it").
   *(2026-04-22: shipped at
-  [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md)
+  [`agents/settings/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md)
   — full capability matrix, stack-agnostic list, plain-PHP leakage
   pass scope, coverage snapshot.)*
 - [-] `check_portability.py` updated with any new stack-keyword
@@ -239,7 +239,7 @@ backlog. Per-wave acceptance:
 
 | Item set | Status |
 |---|---|
-| Phase 0 — inventory + namespace convention | ✅ done (inventory at `agents/contexts/multi-stack-inventory.md`; convention frozen) |
+| Phase 0 — inventory + namespace convention | ✅ done (inventory at `agents/settings/contexts/multi-stack-inventory.md`; convention frozen) |
 | Phase 0 — `check_portability.py` blocklist update | ⏸ deferred (no-op until Wave B.1 ships first stack skill) |
 | Sequencing (Q30 resolved 2026-04-22) | ✅ Track B first · Wave B.1 pilot · one-wave-per-PR · community PRs after B.1 proves the pattern |
 | **Wave B.1 — React core (pilot)** | 🟡 unblocked — awaiting session allocation |
@@ -261,7 +261,7 @@ open.
 ## See also
 
 - [`open-questions-2.md`](open-questions-2.md) — Q30, Q31, Q32
-- [`agents/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md) — capability matrix
+- [`agents/settings/contexts/multi-stack-inventory.md`](../contexts/multi-stack-inventory.md) — capability matrix
 - [`open-questions.md`](open-questions.md) — Q18, Q19 (source)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance baseline new skills inherit
 - [`archive/road-to-personas.md`](archive/road-to-personas.md) — personas cited by stack-specific review skills (shipped 2026-04-22)

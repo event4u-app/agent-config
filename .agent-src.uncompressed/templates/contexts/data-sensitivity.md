@@ -2,7 +2,7 @@
 
 <!--
   Template shipped by event4u/agent-config.
-  Copy to `agents/contexts/data-sensitivity.md` in the consumer project
+  Copy to `agents/settings/contexts/data-sensitivity.md` in the consumer project
   and fill in. This is the canonical reference for what data leaves the
   system (logs, error reports, analytics, third-party APIs) and what
   MUST be masked.
@@ -56,5 +56,5 @@
 
 ## See also
 
-- `agents/contexts/auth-model.md` — who can see what
-- `agents/contexts/observability.md` — how logs are routed
+- `agents/settings/contexts/auth-model.md` — who can see what
+- `agents/settings/contexts/observability.md` — how logs are routed

@@ -110,7 +110,7 @@ because annotations bury cross-cutting work; a stub surfaces in
 > recruit slice; flipping these boxes here without that evidence would
 > fabricate completion. Re-opened automatically when step-13 P1 closes
 > with at least one recruit finding committed under
-> `agents/eval-findings/`.
+> `agents/evidence/eval-findings/`.
 
 - [-] **Cold-install validation:** A non-developer recruit (coordinated
   with `step-13-non-dev-community-validation.md` Phase 1) reaches a useful
@@ -118,7 +118,7 @@ because annotations bury cross-cutting work; a stub surfaces in
   _Cancelled 2026-05-16 — cascading sunset from step-13 P1._
 - [-] **Parent flip:** `step-12-universal-os-reframe.md` L72 flipped
   `[x]` with a pointer at this roadmap and a citation of the recruit
-  finding in `agents/eval-findings/`. _Cancelled 2026-05-16 — cascading
+  finding in `agents/evidence/eval-findings/`. _Cancelled 2026-05-16 — cascading
   sunset; step-12 L72 stays explicitly unsatisfied per the sunset contract._
 
 ## Acceptance criteria

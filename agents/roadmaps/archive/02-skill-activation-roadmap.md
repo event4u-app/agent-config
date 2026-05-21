@@ -28,7 +28,7 @@
 Define the formal rules for classifying skills **before** tagging any of them.
 
 **Deliverables:**
-- New: `agents/docs/execution-classification-standard.md`
+- New: `agents/reference/docs/execution-classification-standard.md`
 
 **Contents:**
 
@@ -94,7 +94,7 @@ Classify as `assisted` despite being CLI-based.
 Apply the standard to all ~80 skills and tag the automated ones first.
 
 **Deliverables:**
-- New: `agents/docs/skill-classification.md` — table with columns:
+- New: `agents/reference/docs/skill-classification.md` — table with columns:
   skill name | execution type | handler | allowed_tools | rationale
 - Modified: ~8-12 SKILL.md files classified as `automated`
 - Each gets: `execution: { type: automated, handler: shell|internal, safety_mode: strict, allowed_tools: [] }`

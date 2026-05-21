@@ -222,7 +222,7 @@ anchors + outbound links.
       this repo (665), Contributing (420), License (28), opener (680).
 - [x] **2.2** Move Tech-stack deep-detail (markitdown internals,
       structural-malice floor, recommended ingestion path) to
-      `agents/contexts/agents-md-tech-stack.md` (or merge into existing
+      `agents/settings/contexts/agents-md-tech-stack.md` (or merge into existing
       `docs/architecture.md` if already covered). Keep a 3-sentence
       summary + link in AGENTS.md.
 - [x] **2.3** Move Maintainer-telemetry detail to
@@ -257,7 +257,7 @@ domains, eliminating redundant registry stubs. Targeted, not bulk.
       (both "don't link to gitignored / transient artefacts"). Verify
       each pair has overlapping trigger domain by reading both rules.
 - [x] **3.2** For each confirmed pair, write an ADR under
-      `agents/contexts/` documenting the merge rationale, the merged
+      `agents/settings/contexts/` documenting the merge rationale, the merged
       rule's name, and the preserved trigger keywords. ADR-required
       per the "no silent feature loss" constraint.
 - [x] **3.3** Execute the merge in `.agent-src.uncompressed/rules/`.
@@ -329,8 +329,8 @@ target without any AGENTS.md restructuring).
       under `.agent-src.uncompressed/rules/`, emit: file, frontmatter
       `description`, `triggers[].path_prefix`, `routes_to[]`, body
       char-count, full registry-stub char-count (description + path
-      template). Output JSON to `agents/reports/auto-rules-audit.json`
-      and a Markdown summary to `agents/reports/auto-rules-audit.md`.
+      template). Output JSON to `agents/runtime/reports/auto-rules-audit.json`
+      and a Markdown summary to `agents/runtime/reports/auto-rules-audit.md`.
       **Baseline (49 rules):** stub-cost 11,513 chars (23.3 % of cap),
       desc-cost 6,211 chars, body-cost 70,700 chars (off-budget).
       38/49 lack path-prefix triggers, 23/49 lack a `routes_to` target.
@@ -340,13 +340,13 @@ target without any AGENTS.md restructuring).
       `cli-output-handling`↔`docker-commands` (kw 0.59),
       `artifact-drafting-protocol`↔`upstream-proposal` (kw 0.46),
       `rule-type-governance`↔`size-enforcement` (kw 0.40). Output:
-      `agents/reports/auto-rules-overlap.json`.
+      `agents/runtime/reports/auto-rules-overlap.json`.
 - [x] **5.3** Activation-likelihood heuristic
       (`scripts/audit_likelihood.py`). All 49 auto-rules score
       hit_count ≥ 1 against the 11,723-doc corpus. Zero
       low-likelihood candidates — Opus' "30–40 % never-trigger"
       hypothesis **falsified** in static analysis. Output:
-      `agents/reports/auto-rules-likelihood.json`.
+      `agents/runtime/reports/auto-rules-likelihood.json`.
 - [-] **5.4** *(Mandate carve-out: per "stelle keine Fragen, ask AIs"
       directive 2026-05-08, the manual review walk was substituted
       by an AI-Council recommendation captured in
@@ -425,7 +425,7 @@ content step (6.4–6.5) is skipped when Phase 5 already cleared the
       triage, outboard pointer target). Pointer-following confirmed
       for Q5 (`docs/contracts/package-self-orientation.md`);
       emergency-triage block answered Q4 unambiguously. Report
-      committed at `agents/reports/thin-root-platform-spotcheck.md`.
+      committed at `agents/runtime/reports/thin-root-platform-spotcheck.md`.
       *Note:* this is a Sonnet/gpt-4o proxy — full multi-IDE pass
       (Claude Code / Cursor / Cline / Windsurf / Gemini CLI)
       remains a follow-up if regressions surface in the field.

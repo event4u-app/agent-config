@@ -4,7 +4,7 @@
 Sends the refactored package-root AGENTS.md and the consumer template
 to Sonnet 4.5 + gpt-4o, asks each member to answer five questions
 that simulate a fresh agent landing on the file. Records qualitative
-verdicts in agents/reports/thin-root-platform-spotcheck.md.
+verdicts in agents/runtime/reports/thin-root-platform-spotcheck.md.
 """
 from __future__ import annotations
 

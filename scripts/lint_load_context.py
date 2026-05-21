@@ -3,7 +3,7 @@
 
 Validates per docs/contracts/load-context-schema.md:
   - Paths exist and are .md
-  - Allowed roots only (.agent-src*/contexts/, agents/contexts/)
+  - Allowed roots only (.agent-src*/contexts/, agents/settings/contexts/)
   - No public→project-local leak (warn)
   - No circular refs across lazy + eager edges
   - Combined char-budget for eager edges (rule + eager targets ≤ cap)
@@ -32,7 +32,7 @@ SCAN_DIRS = [
 ALLOWED_PREFIXES = (
     "contexts/",                               # logical name (canonical — P1.1 / P5.3)
     ".agent-src/contexts/",                    # projected (defensive — only seen in compressed inputs)
-    "agents/contexts/",                        # project-local
+    "agents/settings/contexts/",                        # project-local
 )
 
 # `.agent-src.uncompressed/contexts/` was the legacy fully-qualified form
@@ -48,7 +48,7 @@ LEGACY_PREFIX = ".agent-src.uncompressed/contexts/"
 SOURCE_ROOT = ROOT / ".agent-src.uncompressed"
 
 PUBLIC_RULE_PREFIX = ".agent-src.uncompressed/rules/"
-PROJECT_LOCAL_PREFIX = "agents/contexts/"
+PROJECT_LOCAL_PREFIX = "agents/settings/contexts/"
 
 
 def resolve_entry(entry: str) -> Path:

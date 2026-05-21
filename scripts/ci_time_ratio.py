@@ -17,7 +17,7 @@ Threshold rule (Round-3 Sonnet protocol):
 - Median ratio < 3× across all classes      → structural overhead acceptable
 
 Output: human-readable table on stdout + JSON to
-`agents/reports/ci-time-ratio.json`.
+`agents/runtime/reports/ci-time-ratio.json`.
 
 Usage:
     python3 scripts/ci_time_ratio.py --limit 30

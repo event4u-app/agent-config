@@ -130,7 +130,7 @@ Suggestion-block rules (linter-enforced):
   override the global settings per command.
 
 Eligibility decisions are tracked in
-[`agents/contexts/command-suggestion-eligibility.md`](../../../agents/contexts/command-suggestion-eligibility.md).
+[`agents/settings/contexts/command-suggestion-eligibility.md`](../../../agents/settings/contexts/command-suggestion-eligibility.md).
 Add or revise entries there before changing a command's `suggestion` block.
 
 When iterating on the description, delegate to the
@@ -209,7 +209,7 @@ the pre-existing violations on `main` in a Markdown table:
 Forward-only: the new check applies to **the file under review** and to
 **future** edits. The baseline table is informational so reviewers can
 spot intent (fix-now vs. backlog) without diffing the full lint output.
-See `agents/analysis/lint-warning-triage.md` for the 3-bucket reference.
+See `agents/evidence/analysis/lint-warning-triage.md` for the 3-bucket reference.
 
 ## Output format
 

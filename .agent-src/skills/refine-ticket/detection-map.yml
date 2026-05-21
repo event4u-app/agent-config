@@ -110,12 +110,12 @@ sub_skills:
 repo_aware:
   description: >
     When invoked inside a repo clone, /refine-ticket loads
-    agents/contexts/ for domain vocabulary and scans recent branches /
+    agents/settings/contexts/ for domain vocabulary and scans recent branches /
     commits for naming conventions. Outside a repo, skip silently.
   signals:
     - path: .git
       type: dir
-    - path: agents/contexts
+    - path: agents/settings/contexts
       type: dir
     - path: composer.json
       type: file

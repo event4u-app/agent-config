@@ -49,7 +49,7 @@ Read Claude Code session jsonl. Real model pricing. Per-1M Haiku / Sonnet / Opus
 |---|---|---|
 | `docs/contracts/model-pricing.yaml` | `bench/pricing.yaml` | `bench/` is the active pricing surface (also consumed by `task bench`); single source beats two locations. |
 | `scripts/cost/session_reader.py` | `scripts/cost/track.mjs` | Verbatim port of upstream ruflo plugin; Python rewrite would diverge from the parity source. |
-| `scripts/cost/attribute.py` + `agents/metrics/cost/<sid>.json` + `aggregate.json` | One append-only `agents/cost-tracking/sessions.jsonl` | jsonl form is simpler; budget evaluator derives aggregates by scanning, no separate file to keep in sync. |
+| `scripts/cost/attribute.py` + `agents/runtime/metrics/cost/<sid>.json` + `aggregate.json` | One append-only `agents/cost-tracking/sessions.jsonl` | jsonl form is simpler; budget evaluator derives aggregates by scanning, no separate file to keep in sync. |
 | `task cost-track` | `task cost:track` (alias of `task cost`) | Colon namespace matches the rest of the Taskfile. |
 | `agent-status` skill | `agent-status` command (Tier 0) | The surface exists as `.agent-src.uncompressed/commands/agent-status.md`, not `skills/`; structurally a command per the cluster contract. |
 

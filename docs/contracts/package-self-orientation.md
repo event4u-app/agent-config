@@ -25,7 +25,7 @@ runtime. Installed via `scripts/install.sh` (Bash) and
 ## The four wings
 
 Four wings compose via [`cross-wing-handoff.md`](cross-wing-handoff.md)
-(beta). Per-wing plates live under `agents/roadmaps/` and `agents/contexts/`.
+(beta). Per-wing plates live under `agents/roadmaps/` and `agents/settings/contexts/`.
 
 | Wing | Cognition cluster |
 |---|---|

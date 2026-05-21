@@ -53,8 +53,8 @@ PATTERN = re.compile(
 SCAN_ROOTS = (
     ".agent-src.uncompressed",
     "agents/roadmaps",
-    "agents/contexts",
-    "agents/docs",
+    "agents/settings/contexts",
+    "agents/reference/docs",
     "docs/contracts",
     "docs/decisions",
     "docs/guidelines",
@@ -68,7 +68,7 @@ ALLOWLIST_PREFIXES: tuple[str, ...] = (
     "agents/roadmaps/archive/",
     # Working comparison docs — forward-refs to planned artefacts (mirrors
     # the SKIP_DIRS contract in scripts/check_references.py).
-    "agents/analysis/",
+    "agents/evidence/analysis/",
     # The rule itself documents forbidden vs. allowed forms.
     ".agent-src.uncompressed/rules/no-roadmap-references.md",
     # ai-council skill documents the output-path schema.
@@ -97,7 +97,7 @@ STRUCTURAL_CARVEOUTS: tuple[tuple[re.Pattern[str], re.Pattern[str]], ...] = (
     # the question file is a frozen function-parameter / spend-gate
     # input, not a documentation link.
     (
-        re.compile(r"^agents/contexts/evaluation-[^/]+\.md$"),
+        re.compile(r"^agents/settings/contexts/evaluation-[^/]+\.md$"),
         re.compile(r"^agents/runtime/council/questions/[^/]+\.md$"),
     ),
     # (b) contract → council-session-synthesis:

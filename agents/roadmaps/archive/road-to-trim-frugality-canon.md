@@ -46,7 +46,7 @@ against conversation logs." No trim ships until baseline exists.
       `agents/.frugality-baseline.jsonl` (gitignored).
 - [x] **0.4** Lock the **expected savings floor** (e.g. ≥ 200 output
       tokens / turn averaged) in
-      `agents/contexts/adr-frugality-savings-baseline.md`. Trims that
+      `agents/settings/contexts/adr-frugality-savings-baseline.md`. Trims that
       drop below this floor are reverted.
 
 ### Phase 1 — Low-Risk Trims (≤ 0.5 day each, parallel-safe)
@@ -139,7 +139,7 @@ writer skill — bloats writer flows.
   canon is on probation; re-open `frugality-charter.md` charter
   question with a fresh council round before any trim.
 - **A trim breaks an Iron Law's bite in user testing** → revert,
-  log in `agents/contexts/adr-frugality-savings-baseline.md` as a
+  log in `agents/settings/contexts/adr-frugality-savings-baseline.md` as a
   do-not-touch entry.
 
 ## Out of scope

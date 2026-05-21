@@ -111,4 +111,4 @@ governance-layer charter.
 - [`scripts/cost/budget.mjs`](../../../scripts/cost/budget.mjs) — evaluator.
 - [`scripts/cost/preflight.mjs`](../../../scripts/cost/preflight.mjs) — this hook.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 2 Step 3 — origin.
-- [`agents/audits/2026-05-14-north-star/external-findings.md`](../../../agents/audits/2026-05-14-north-star/external-findings.md) § 2 row "hard stop" — upstream Ruflo pattern this absorbs.
+- [`agents/evidence/audits/2026-05-14-north-star/external-findings.md`](../../../agents/evidence/audits/2026-05-14-north-star/external-findings.md) § 2 row "hard stop" — upstream Ruflo pattern this absorbs.

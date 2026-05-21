@@ -219,7 +219,7 @@ def verify_concept(name: str) -> bool:
     try:
         r = subprocess.run(
             ["git", "grep", "-l", "-w", name, "--",
-             ".agent-src.uncompressed/", "docs/", "scripts/", "agents/contexts/"],
+             ".agent-src.uncompressed/", "docs/", "scripts/", "agents/settings/contexts/"],
             cwd=REPO, capture_output=True, text=True, timeout=15,
         )
         return bool(r.stdout.strip())

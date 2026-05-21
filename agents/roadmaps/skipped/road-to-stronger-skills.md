@@ -274,7 +274,7 @@ this roadmap's progress.
 - [-] README + AGENTS.md counts reflect the actual skill total at roadmap *(Q35)*
       completion (baseline 124 as of 2026-04-22; roadmap must not itself
       add or remove skills — backport only)
-- [-] A short `agents/analysis/backport-outcomes.md` captures what **did** and *(Q35)*
+- [-] A short `agents/evidence/analysis/backport-outcomes.md` captures what **did** and *(Q35)*
       **did not** improve — feeds Phase 3.2 acceptance of the parent roadmap
 
 ## Risks & mitigations

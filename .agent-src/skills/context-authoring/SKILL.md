@@ -23,13 +23,13 @@ install:
 
 Use this skill when:
 
-- A new project has been scaffolded and the `agents/contexts/` files are still
+- A new project has been scaffolded and the `agents/settings/contexts/` files are still
   template stubs from `event4u/agent-config`.
 - The user asks "help me fill in the auth model context", "set up tenant
   boundaries", or similar knowledge-layer work.
 - A reviewer skill (`authz-review`, `data-flow-mapper`, `migration-safety`,
   `multi-tenant-boundary-review`, `secrets-and-config-review`) reports *"I
-  cannot proceed — `agents/contexts/<file>.md` is still a template"*.
+  cannot proceed — `agents/settings/contexts/<file>.md` is still a template"*.
 - After a significant architecture change that invalidates one of the five
   context files.
 
@@ -52,13 +52,13 @@ Do NOT use when:
 | `observability.md` | Error tracking, log channels, metrics, known alerts | deploy reviewers, `bug-analyzer`, incident mode |
 
 The templates ship in `.agent-src.uncompressed/templates/contexts/` and are
-copied into `agents/contexts/` by the installer.
+copied into `agents/settings/contexts/` by the installer.
 
 ## Procedure: context-authoring
 
 ### Step 0: Inspect
 
-1. List `agents/contexts/` — which of the five files exist? Which still contain
+1. List `agents/settings/contexts/` — which of the five files exist? Which still contain
    the `<!-- Template shipped by event4u/agent-config. -->` HTML comment?
 2. Ask the user which file to work on. Use numbered options:
 
@@ -135,7 +135,7 @@ has to confirm or correct, not invent from scratch.
 
 ## Output format
 
-1. `agents/contexts/<file>.md` updated with project-specific content; every
+1. `agents/settings/contexts/<file>.md` updated with project-specific content; every
    section either authored or explicitly marked `<!-- TBD: ... -->`.
 2. A short summary comment back to the user: which sections are complete,
    which are `TBD`, and which downstream reviewer skills are now unblocked.
@@ -162,7 +162,7 @@ has to confirm or correct, not invent from scratch.
 
 If the context file declares its own `load_context:` (chain reasoning),
 use logical names rooted at the source — `contexts/<area>/<file>.md`
-for package material or `agents/contexts/<file>.md` for project-local
+for package material or `agents/settings/contexts/<file>.md` for project-local
 material. The `.agent-src.uncompressed/` prefix is rejected by the
 schema regex and by `scripts/lint_load_context.py`. Body links to
 `docs/guidelines/...` use the verbatim `../../docs/...` relative form.

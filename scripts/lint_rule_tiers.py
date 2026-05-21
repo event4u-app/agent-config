@@ -3,8 +3,8 @@
 
 Hard-fails CI if any rule under .agent-src.uncompressed/rules/ lacks a
 `tier:` declaration or uses an unknown tier value. The valid tier set is
-locked by agents/contexts/hardening-pattern.md and the matrix in
-agents/contexts/rule-trigger-matrix.md.
+locked by agents/settings/contexts/hardening-pattern.md and the matrix in
+agents/settings/contexts/rule-trigger-matrix.md.
 
 Hooked into `task ci` after `task lint-skills`.
 

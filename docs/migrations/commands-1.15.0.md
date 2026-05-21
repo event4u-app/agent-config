@@ -58,7 +58,7 @@ rg -n '/(fix|optimize|feature)-[a-z-]+' \
 Common spots:
 
 - `agents/roadmaps/*.md` — roadmap steps that name commands
-- `agents/contexts/*.md` — context docs cross-linking commands
+- `agents/settings/contexts/*.md` — context docs cross-linking commands
 - Custom skills/rules under `.augment/` overrides
 - Internal team docs / runbooks / onboarding pages
 
@@ -88,7 +88,7 @@ the deprecation cycle for Phase 1 closes. Tracked in
 ## Related rule split — `chat-history` (post-1.15.0, superseded)
 
 > **Superseded · 2026-05-04** by
-> [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
+> [`agents/settings/contexts/chat-history-platform-hooks.md`](../../agents/settings/contexts/chat-history-platform-hooks.md).
 > The three sibling rules (`chat-history-ownership`,
 > `chat-history-cadence`, `chat-history-visibility`) and the heartbeat
 > marker no longer exist. Persistence is now a pure platform-hook

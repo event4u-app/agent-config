@@ -96,7 +96,7 @@ Rules:
 
 > Inventory every command, decide which are *eligible* for suggestion, draft trigger patterns. Eligibility ≠ tier — it only governs whether the suggestion layer may surface the command. Picking it always runs the normal flow.
 
-- [x] **Step 1:** Build `agents/contexts/command-suggestion-eligibility.md` — table of all 75 commands: eligible (yes/no), proposed triggers, rationale.
+- [x] **Step 1:** Build `agents/settings/contexts/command-suggestion-eligibility.md` — table of all 75 commands: eligible (yes/no), proposed triggers, rationale.
 - [x] **Step 2:** Default eligibility is **`true`**. Opt-out cases:
   - Commands the user invokes only intentionally (e.g., `/onboard`, `/package-reset`, `/mode`, `/agent-handoff`, `/chat-history-clear`).
   - Commands whose trigger patterns would overlap heavily with normal conversation and create noise.
@@ -171,10 +171,10 @@ Rules:
   - **GT-CS8 — clarification wins:** turn requires `ask-when-uncertain` clarification AND matches a command → only the clarification question is shown; suggestion suppressed for that turn.
   - **GT-CS9 — adversarial echo:** prompt contains `/commit` as quoted text in user-pasted code → suggestion does not surface `/commit` based on that string.
 - [x] **Step 2:** Wire goldens into `task ci` as a required check.
-- [x] **Step 3:** Document the suggestion contract in `agents/contexts/command-suggestion-flow.md` — how matching scores, what suppresses, how to opt out per command / per conversation / globally.
+- [x] **Step 3:** Document the suggestion contract in `agents/settings/contexts/command-suggestion-flow.md` — how matching scores, what suppresses, how to opt out per command / per conversation / globally.
 - [x] **Step 4:** `task sync && task generate-tools && task ci` — sync + generate-tools verified green; final `task ci` deferred to a follow-up CI run (no code-level work remains; compression drift fixed in commit 4a495c9).
 - [x] **Step 5:** Update `README.md` and `AGENTS.md` — explain the suggestion layer, the always-present as-is option, and the three opt-out paths (settings, per-command, per-conversation).
-- [x] **Step 6:** ADR `agents/contexts/adr-command-suggestion.md` — rationale, "never auto-execute" anchor, eligibility rubric, anti-noise heuristics, hardening list.
+- [x] **Step 6:** ADR `agents/settings/contexts/adr-command-suggestion.md` — rationale, "never auto-execute" anchor, eligibility rubric, anti-noise heuristics, hardening list.
 - [x] **Step 7:** Changelog entry under "Unreleased" — suggestion layer, settings keys, opt-out paths, no behavioral change to slash invocation.
 
 ## Acceptance criteria

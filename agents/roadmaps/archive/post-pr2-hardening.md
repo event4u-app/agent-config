@@ -186,7 +186,7 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 ## Phase 8: Complexity Reduction (✅ done)
 
 ### 8.1 Onboarding Path
-- [x] Created `agents/docs/onboarding.md` — 3-step setup, key concepts, top 5 rules, CI commands
+- [x] Created `agents/reference/docs/onboarding.md` — 3-step setup, key concepts, top 5 rules, CI commands
 - [x] Documents: most important rules, most useful skills, editing workflow, CI pipeline
 
 ### 8.2 Simplification Opportunities

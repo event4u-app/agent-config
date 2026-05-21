@@ -2,7 +2,7 @@
 """One-shot migration: inject the `suggestion:` frontmatter block into every
 command under `.agent-src.uncompressed/commands/`.
 
-Source-of-truth table: `agents/contexts/command-suggestion-eligibility.md`
+Source-of-truth table: `agents/settings/contexts/command-suggestion-eligibility.md`
 (locked at end of road-to-context-aware-command-suggestion Phase 1).
 
 Idempotent: if `suggestion:` is already present for a command, the file is
@@ -55,8 +55,8 @@ ELIGIBLE: dict[str, tuple[str, str]] = {
     "bug-investigate": ("why is this broken, investigate this error, trace the root cause", "Sentry URL, Jira bug ticket key, or stack trace pasted in the prompt"),
     "commit": ("commit my changes, save this to git, create commits for these changes", "git status shows uncommitted changes"),
     "commit-in-chunks": ("commit everything autonomously, split and commit without confirmation", "autonomous mode active and uncommitted changes present"),
-    "context-create": ("document this part of the codebase, create a context doc for X", "working in a module without an agents/contexts/ doc"),
-    "context-refactor": ("update the context doc, refresh this context document", "existing agents/contexts/*.md referenced in the prompt"),
+    "context-create": ("document this part of the codebase, create a context doc for X", "working in a module without an agents/settings/contexts/ doc"),
+    "context-refactor": ("update the context doc, refresh this context document", "existing agents/settings/contexts/*.md referenced in the prompt"),
     "create-pr": ("open a PR, create a pull request, make a PR for this branch", "branch is ahead of base and not yet on a PR"),
     "create-pr-description": ("write a PR description, draft the PR text", "PR exists or branch ready for review without description"),
     "e2e-heal": ("fix the failing E2E tests, playwright tests are red", "failing test output from tests/e2e/"),

@@ -126,7 +126,7 @@ ADOPT/ADAPT rows must cite the reference source (file/line/URL).
 
 ### 6. Write the analysis document
 
-Target: `agents/analysis/compare-<slug>.md`.
+Target: `agents/evidence/analysis/compare-<slug>.md`.
 Slug rule: `<owner>-<repo>` lowercased, non-alphanumeric → `-`, collapse runs.
 
 Document structure (copy into the file):
@@ -171,7 +171,7 @@ Document structure (copy into the file):
 
 After writing the file, present:
 
-> Analysis written to `agents/analysis/compare-{slug}.md`.
+> Analysis written to `agents/evidence/analysis/compare-{slug}.md`.
 >
 > 1. Draft roadmap from ADOPT/ADAPT — `agents/roadmaps/adopt-{slug}.md`
 > 2. Merge findings into an existing roadmap — say which
@@ -182,7 +182,7 @@ Never create the roadmap without explicit confirmation.
 
 ## Output location
 
-`agents/analysis/` (create if missing, with `.gitkeep`). Same convention as
+`agents/evidence/analysis/` (create if missing, with `.gitkeep`). Same convention as
 `project-analyzer`.
 
 ## Safety

@@ -111,4 +111,4 @@ Personas are one of three voice primitives. Same shape (Markdown +
 frontmatter), distinct purpose — **no folding, no shared schema**:
 
 - [`../../docs/contracts/agent-user-schema.md`](../../docs/contracts/agent-user-schema.md) — `.agent-user.md`, the maintainer's own voice (`/post-as:me`, no disclosure footer).
-- [`../../docs/contracts/ghostwriter-schema.md`](../../docs/contracts/ghostwriter-schema.md) — `agents/ghostwriter/<slug>.md`, captured public-figure voice (`/ghostwriter:write` / `/post-as:ghostwriter`, mandatory disclosure footer).
+- [`../../docs/contracts/ghostwriter-schema.md`](../../docs/contracts/ghostwriter-schema.md) — `agents/reference/ghostwriter/<slug>.md`, captured public-figure voice (`/ghostwriter:write` / `/post-as:ghostwriter`, mandatory disclosure footer).

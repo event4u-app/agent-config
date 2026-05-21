@@ -1,6 +1,6 @@
 # Context Template
 
-Templates for context documents stored in `agents/contexts/` or `app/Modules/{Module}/agents/contexts/`.
+Templates for context documents stored in `agents/settings/contexts/` or `app/Modules/{Module}/agents/settings/contexts/`.
 
 A **context document** captures the architectural understanding of a codebase area — its structure,
 key classes, patterns, dependencies, and conventions. It's a snapshot of knowledge that helps

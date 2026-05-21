@@ -5,7 +5,7 @@
 ## Prerequisites
 
 - [ ] Read `AGENTS.md` and `.augment/rules/chat-history.md`
-- [ ] Read `agents/contexts/chat-history-platform-hooks.md` (CHECKPOINT vs HOOK definitions)
+- [ ] Read `agents/settings/contexts/chat-history-platform-hooks.md` (CHECKPOINT vs HOOK definitions)
 - [ ] Confirm current PR scope tolerates additive engine work (no branch switch — see Notes)
 - [ ] Local: `task ci` green on the current branch baseline
 - [ ] Familiarity with `DeliveryState` (legacy) vs `WorkState` (v1 envelope) split — both shapes are touched by hooks
@@ -20,7 +20,7 @@ The `chat-history.md` rule already documents the cure: append at every cadence b
 
 **Underlying principle.** Agent hooks are *emulated* by moving lifecycle ownership from the agent into the work engine. The agent executes directives; the engine owns boundaries. This roadmap implements that principle for `work_engine` via two of the four practical patterns (commands + state machine); the other two (mandatory checkpoints, tool-gates) live in agent rules. The principle generalises to other Python pipelines (`compress.py`, `install.py`, linters) — see the Follow-ups note.
 
-- **Feature:** `agents/contexts/chat-history-platform-hooks.md` (strategy doc, already exists)
+- **Feature:** `agents/settings/contexts/chat-history-platform-hooks.md` (strategy doc, already exists)
 - **Jira:** none — internal hardening
 - **Related roadmap:** `agents/roadmaps/road-to-product-ui-track.md` (Phase 6 in flight; this roadmap **extends the same PR**, does not switch branches)
 
@@ -30,7 +30,7 @@ Findings from the chat-history audit that motivated this roadmap. Recorded so fu
 
 | Finding | Evidence |
 |---|---|
-| CHECKPOINT path → cooperative-only logging | `agents/contexts/chat-history-platform-hooks.md` line 30 + `.agent-settings.yml` `chat_history.path: checkpoint` |
+| CHECKPOINT path → cooperative-only logging | `agents/settings/contexts/chat-history-platform-hooks.md` line 30 + `.agent-settings.yml` `chat_history.path: checkpoint` |
 | `per_phase` cadence collapses under multi-step turns | 5 appends across ~30 phase-step closures (R3 P3 + P4 + P5) |
 | `heartbeat: hybrid` hides drift | Heartbeat silent on `ok` → agent loses the visual stolperdraht |
 | `turn-check` not run as first tool call in recent sessions | Multiple `former_fps` entries in the log header |
@@ -159,8 +159,8 @@ The reason this roadmap exists. Engine-driven turns get **structural** chat-hist
 ## Phase 7: Tests, goldens, docs
 
 - [x] **Step 1:** Run full `task ci` — every existing golden must pass byte-for-byte. The hook layer is non-breaking by construction (default-off / no-op runner) but verification is mandatory. **Golden-replay test runs must force `hooks.enabled: false`** (set explicitly in any golden fixture or test harness that drives `cli.main`) so a future settings change cannot silently invalidate captured outputs. Test harness now passes `--no-hooks` at runtime (not in `_relative_cmd`) so transcripts stay byte-stable while hook registry is provably empty. 11/11 goldens pass; full pytest suite 1619/1620 (1 baseline failure on `fe-design` unrelated to hooks). `task ci` post-`consistency` checks (`counts-check`, `check-compression`, `check-refs`, `check-portability`, `check-reply-consistency`) all green.
-- [x] **Step 2:** New context doc `agents/contexts/work-engine-hooks.md` — event lifecycle, context shapes, registration, examples. Mirror the structure of `chat-history-platform-hooks.md`.
-- [x] **Step 3:** Update `agents/contexts/implement-ticket-flow.md` and the equivalent `/work` flow doc to mention the hook lifecycle as a side-channel concern (not a step in the linear flow).
+- [x] **Step 2:** New context doc `agents/settings/contexts/work-engine-hooks.md` — event lifecycle, context shapes, registration, examples. Mirror the structure of `chat-history-platform-hooks.md`.
+- [x] **Step 3:** Update `agents/settings/contexts/implement-ticket-flow.md` and the equivalent `/work` flow doc to mention the hook lifecycle as a side-channel concern (not a step in the linear flow).
 - [x] **Step 4:** Lint pass — `task check-portability` ✅, `task check-refs` ✅. `task lint-skills` baseline `fe-design` fail predates this roadmap and is out of scope. New `.md` content (`work-engine-hooks.md`, hook configuration block, updated `chat-history.md`) stays project-agnostic per `augment-portability` rule.
 - [x] **Step 5:** Sync compressed sources — `task sync` regenerates `.agent-src/` and `.augment/`. Manual recompression applied to `rules/chat-history.md` and `templates/agent-settings.md`; hashes refreshed via `compress.sh --mark-done`. `task sync-check-hashes` clean. No manual edits leaked into the generated layers beyond the intended recompression delta.
 
@@ -199,7 +199,7 @@ The reason this roadmap exists. Engine-driven turns get **structural** chat-hist
 
 **Follow-ups (do not extend this roadmap).** After P1 primitives land and have one real consumer (the engine), two follow-up artefacts are owed — both deferred so the current roadmap stays focused on the chat-history driver:
 
-- `agents/contexts/hook-pattern.md` — generic pattern doc. Captures the underlying principle ("engine owns boundaries"), the four emulation patterns (commands, mandatory checkpoints, state machine, tool-gates), and a *when-not-to-hook* heuristic. One-shot scripts with no extensibility need (e.g. `update_roadmap_progress.py`) stay hook-free; this doc says so explicitly.
+- `agents/settings/contexts/hook-pattern.md` — generic pattern doc. Captures the underlying principle ("engine owns boundaries"), the four emulation patterns (commands, mandatory checkpoints, state machine, tool-gates), and a *when-not-to-hook* heuristic. One-shot scripts with no extensibility need (e.g. `update_roadmap_progress.py`) stay hook-free; this doc says so explicitly.
 - A separate **hookable-scripts roadmap** (filename TBD when the work is scheduled) migrating the three highest-ROI subsystems onto the P1 primitives: `scripts/compress.py` (pre/post-audit, diff-gate, size-check), `scripts/install.py` (consumer-project post-install customisation), `scripts/skill_linter.py` and the cross-ref / portability checkers (CI custom reporters, IDE live-validation). `command_suggester` and the memory pipeline are in scope only if a concrete need surfaces — do not pre-build.
 
 These follow-ups are explicitly **not** in this roadmap's acceptance criteria. They land after the primitives have been hardened by one real consumer.

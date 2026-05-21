@@ -2972,7 +2972,7 @@ def lint_frontmatter_schema(path: Path, text: str, artifact_type: str) -> List[I
     """Validate the frontmatter of an artefact against its JSON-Schema.
 
     Schemas live in ``scripts/schemas/``. One schema per artefact type;
-    see ``agents/docs/frontmatter-contract.md`` for the human-readable
+    see ``agents/reference/docs/frontmatter-contract.md`` for the human-readable
     contract the schemas encode. Guidelines have no frontmatter and are
     skipped.
     """

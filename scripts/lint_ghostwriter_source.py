@@ -7,7 +7,7 @@ Two storage tiers exist (see docs/contracts/ghostwriter-schema.md):
     fictional fixtures ONLY (`fictional: true`). Every file stem must
     be on scripts/ghostwriter_fixture_allowlist.txt. `aliases:` is
     forbidden here (consumer-only feature).
-  * agents/ghostwriter/                    — consumer real-person
+  * agents/reference/ghostwriter/                    — consumer real-person
     profiles. Gitignored. Must NOT carry `fictional: true`. Optional
     `aliases:` list validated per § Aliases storage rules.
 

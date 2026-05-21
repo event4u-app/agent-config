@@ -169,7 +169,7 @@ the log size, last entries, and current fingerprint. For the rare case
 where auto-adopt misfires (corrupted file, hook misconfiguration), run
 `./agent-config chat-history:adopt` as the manual recovery lever.
 
-See [`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md)
+See [`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
 and [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---

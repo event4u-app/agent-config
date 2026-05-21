@@ -3,7 +3,7 @@ name: ghostwriter:list
 tier: 2
 cluster: ghostwriter
 sub: list
-description: List captured ghostwriter profiles under agents/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
+description: List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
 disable-model-invocation: true
 suggestion:
   eligible: true
@@ -26,7 +26,7 @@ install:
 # /ghostwriter:list
 
 Read-only listing of every consumer-side ghostwriter profile under
-`agents/ghostwriter/`. Numbered, with the fields needed to pick one
+`agents/reference/ghostwriter/`. Numbered, with the fields needed to pick one
 for `/ghostwriter:write` or to spot stale profiles that need a
 re-fetch.
 
@@ -34,12 +34,12 @@ re-fetch.
 
 ### 1. Scan
 
-Enumerate `agents/ghostwriter/*.md`, excluding:
+Enumerate `agents/reference/ghostwriter/*.md`, excluding:
 
 - `README.md` (directory anchor, not a profile).
 - Any file whose frontmatter carries `fictional: true` (package-side
   fixtures are not consumer profiles; they should never appear in
-  `agents/ghostwriter/` — surface a warning if one is found).
+  `agents/reference/ghostwriter/` — surface a warning if one is found).
 
 For each remaining file, read the frontmatter and extract:
 
@@ -60,7 +60,7 @@ For each remaining file, read the frontmatter and extract:
 Empty result → print and exit:
 
 ```
-No ghostwriter profiles found under agents/ghostwriter/.
+No ghostwriter profiles found under agents/reference/ghostwriter/.
 Run /ghostwriter:fetch <url-or-name> to capture one.
 ```
 
@@ -83,10 +83,10 @@ Column widths are illustrative — pick the widest entry per column.
 ### 3. Fixture leak warning (defensive)
 
 If Step 1 encountered a `fictional: true` file under
-`agents/ghostwriter/`, print **after** the table:
+`agents/reference/ghostwriter/`, print **after** the table:
 
 ```
-⚠️  agents/ghostwriter/<file>.md carries `fictional: true` — fixtures
+⚠️  agents/reference/ghostwriter/<file>.md carries `fictional: true` — fixtures
     belong in the package source, not in consumer ghostwriter/. Move
     or delete this file.
 ```

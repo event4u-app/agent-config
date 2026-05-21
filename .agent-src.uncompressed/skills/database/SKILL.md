@@ -33,7 +33,7 @@ Do NOT use when:
 
 ### Step 0: Inspect
 
-1. Read project docs in `agents/docs/` for database architecture.
+1. Read project docs in `agents/reference/docs/` for database architecture.
 2. Check `config/database.php` for connection definitions.
 3. Detect engine: check `.env` driver and `docker-compose.yml`.
 
@@ -70,7 +70,7 @@ Re-run `EXPLAIN` and confirm improved plan.
    - Rails: `bin/rails runner "p ActiveRecord::Base.connection.columns('table').map(&:name)"`
    - Prisma: `npx prisma db pull --print | grep -A20 "model Table"`
    - Generic SQL: `psql -d mydb -c "\d table"` / `mysql -e "DESCRIBE table"`
-4. **Check project docs** — `agents/docs/` for conventions
+4. **Check project docs** — `agents/reference/docs/` for conventions
 
 | Trap | Reality |
 |---|---|

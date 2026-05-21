@@ -218,7 +218,7 @@ Per `verbosity.routine_confirmations` (default `false`):
   > 2. Skip — continue with next phase
   ```
 
-For each confirmed domain, create `agents/analysis/domains/{domain}.md` using the template
+For each confirmed domain, create `agents/evidence/analysis/domains/{domain}.md` using the template
 from the `project-analyzer` skill.
 
 ### 6. API surface & service map
@@ -255,24 +255,24 @@ Per `verbosity.routine_confirmations` (default `false`):
   ```
 
 Create:
-- `agents/analysis/api/endpoints-v1.md`
-- `agents/analysis/api/endpoints-v2.md`
-- `agents/analysis/api/contracts.md`
-- `agents/analysis/services/service-map.md`
+- `agents/evidence/analysis/api/endpoints-v1.md`
+- `agents/evidence/analysis/api/endpoints-v2.md`
+- `agents/evidence/analysis/api/contracts.md`
+- `agents/evidence/analysis/services/service-map.md`
 
 ### 7. Write analysis files
 
 Write all remaining analysis files that haven't been created yet:
 
-- `agents/analysis/overview.md` — project profile, tech stack summary
-- `agents/analysis/architecture/database.md` — schema, connections, multi-tenancy
-- `agents/analysis/architecture/api.md` — versioning, routes, middleware, auth
-- `agents/analysis/architecture/infrastructure.md` — Docker, CI/CD, deployment
-- `agents/analysis/architecture/patterns.md` — design patterns used
-- `agents/analysis/models/api-database.md` — all api_database models
-- `agents/analysis/models/customer-database.md` — all customer_database models
-- `agents/analysis/modules/{module}.md` — one per module
-- `agents/analysis/testing/test-map.md` — test suites, coverage, strategy
+- `agents/evidence/analysis/overview.md` — project profile, tech stack summary
+- `agents/evidence/analysis/architecture/database.md` — schema, connections, multi-tenancy
+- `agents/evidence/analysis/architecture/api.md` — versioning, routes, middleware, auth
+- `agents/evidence/analysis/architecture/infrastructure.md` — Docker, CI/CD, deployment
+- `agents/evidence/analysis/architecture/patterns.md` — design patterns used
+- `agents/evidence/analysis/models/api-database.md` — all api_database models
+- `agents/evidence/analysis/models/customer-database.md` — all customer_database models
+- `agents/evidence/analysis/modules/{module}.md` — one per module
+- `agents/evidence/analysis/testing/test-map.md` — test suites, coverage, strategy
 
 Per `verbosity.routine_confirmations` (default `false`):
 
@@ -322,7 +322,7 @@ Ask the user (in their language) what they want to do next:
 - **Present findings incrementally** — don't dump everything at once.
 - **Be honest about gaps** — flag missing docs and outdated references.
 - **Respect existing docs** — don't overwrite, offer to update.
-- **Reference existing `agents/docs/` and `agents/contexts/`** — don't duplicate their content
+- **Reference existing `agents/reference/docs/` and `agents/settings/contexts/`** — don't duplicate their content
   in analysis files. Link to them instead.
 - **Analysis files should be self-contained enough to rebuild** — include actual table names,
   column names, class names, method signatures. Not just "see the code".

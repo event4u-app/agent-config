@@ -58,7 +58,7 @@ In-place compression of long-form memory / instruction files with `.original.md`
 - [-] **Step 1 — In-place rewrite mode:** `scripts/caveman_compress.py --in-place <file>` writes `<file>.original.md` (atomic copy) before rewriting `<file>`. Refuses if `.original.md` already exists (no double-compression).
 - [-] **Step 2 — `task caveman-compress` entrypoint:** Wraps the script. Accepts `--intensity` (default `full`). `--quiet` mode emits only the byte / token delta. Standard `rtk` wrapping per [`cli-output-handling`](../../.agent-src.uncompressed/rules/cli-output-handling.md).
 - [-] **Step 3 — Restore command:** `task caveman-compress:restore <file>` swaps `<file>` ↔ `<file>.original.md`. Symmetric.
-- [-] **Step 4 — Token-delta capture:** Each `--in-place` run appends a row to `agents/metrics/caveman-compress-log.jsonl`: `{ file, before_tokens, after_tokens, intensity, ts }`.
+- [-] **Step 4 — Token-delta capture:** Each `--in-place` run appends a row to `agents/runtime/metrics/caveman-compress-log.jsonl`: `{ file, before_tokens, after_tokens, intensity, ts }`.
 
 **Exit:** in-place compression of a sample file (`AGENTS.md` of a test consumer) produces `.original.md` backup, restorable; delta logged. **Rollback:** `task caveman-compress:restore` exists; script removal leaves backups intact.
 
@@ -77,7 +77,7 @@ Compression that knows when to stop. Disabled on security / destructive / multi-
 
 Observable feedback. Lifetime savings visible; per-prompt delta in `task bench`.
 
-- [-] **Step 1 — Lifetime tally:** `scripts/caveman_tally.py` aggregates `agents/metrics/caveman-compress-log.jsonl` into `agents/metrics/caveman-lifetime.json` (`{ total_tokens_saved, files_compressed, first_run, last_run }`).
+- [-] **Step 1 — Lifetime tally:** `scripts/caveman_tally.py` aggregates `agents/runtime/metrics/caveman-compress-log.jsonl` into `agents/runtime/metrics/caveman-lifetime.json` (`{ total_tokens_saved, files_compressed, first_run, last_run }`).
 - [-] **Step 2 — Statusline hook:** `scripts/caveman_statusline.py` emits a single-line summary suitable for IDE statusline integration (`caveman: −123,456 tokens / 18 files`). Docs in `docs/contracts/statusline-integration.md` describe per-IDE wiring (Augment / Claude Code / Cursor).
 - [-] **Step 3 — `task bench` per-prompt delta:** Extend `bench/reports/<ts>.md` from [`step-4`](step-4-measurement-and-benchmark.md) to include `caveman_delta` per prompt: tokens saved when compression is on vs off (run the corpus twice, diff).
 - [-] **Step 4 — Drift comparison:** `task bench` report cross-references the lifetime tally — flags when bench-measured savings drop below claimed lifetime average by > 15 pp.

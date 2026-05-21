@@ -9,7 +9,7 @@ complexity: lightweight
 Phase 3 cancelled (premise dissolved by kernel-router refactor;
 budget at 54.4 % / 22,328 chars headroom — 11× over acceptance).
 Strategy locked in
-[`agents/contexts/adr-always-budget-relief-strategy.md`](../contexts/adr-always-budget-relief-strategy.md).
+[`agents/settings/contexts/adr-always-budget-relief-strategy.md`](../contexts/adr-always-budget-relief-strategy.md).
 **Started:** 2026-05-03 (parked for next PR).
 **Trigger:** External review of PR #36 (rating 8.8 / 10) called out
 that the Always-rule extended budget remains at 47,448 / 49,000 chars
@@ -61,7 +61,7 @@ expected char delta, breakage risk, and reviewability cost.
       coupling). S3 = 10, S5 = 11, S1 = 15, S2 = 19, S4 = 20 (lower wins).
 - [x] **2.2** Primary = S3 (Hard-compress, Tier-1 + Tier-2 only).
       Fallback = S5 (N-rule sharing on `asking-and-brevity-examples`).
-      Locked in [`agents/contexts/adr-always-budget-relief-strategy.md`](../contexts/adr-always-budget-relief-strategy.md)
+      Locked in [`agents/settings/contexts/adr-always-budget-relief-strategy.md`](../contexts/adr-always-budget-relief-strategy.md)
       with 6-month expiry (2026-11-08).
 - [x] **2.3** One synchronous council round (Sonnet-4.5 + GPT-4o,
       `agents/council-responses/always-budget-relief.json`,
@@ -119,7 +119,7 @@ a second instance triggers `learning-to-rule-or-skill`:
 ## Acceptance
 
 - One primary strategy locked in
-  `agents/contexts/adr-always-budget-relief-strategy.md`.
+  `agents/settings/contexts/adr-always-budget-relief-strategy.md`.
 - ≥ 2,000 chars net headroom delta after Phase 3 (50 % target if the
   strategy is reversible cheaply).
 - Slow-rollout note merged in `scope-control` (or sibling).
@@ -139,7 +139,7 @@ a second instance triggers `learning-to-rule-or-skill`:
 - Prior attempt: `agents/roadmaps/archive/road-to-structural-optimization.md`
   Phase 2A (reverted, +186 chars net on `language-and-tone`).
 - Empirical lesson:
-  `agents/contexts/adr-always-rule-context-split-not-viable.md` (created
+  `agents/settings/contexts/adr-always-rule-context-split-not-viable.md` (created
   by `road-to-rule-hardening.md` Phase 0a.3).
 - Sibling: `road-to-rule-hardening.md` (obligation surface),
   `road-to-context-layer-maturity.md` (context layer).

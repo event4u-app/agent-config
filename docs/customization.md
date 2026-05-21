@@ -344,7 +344,7 @@ shadowed.
 | Subdir | Cascade? | User-global allowed? | Why |
 |---|---|---|---|
 | `agents/overrides/` | ✅ Yes — deepest wins by basename. | ✅ Yes — weakest layer. | Personal developer overrides. |
-| `agents/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
+| `agents/settings/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
 | `agents/decisions/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped ADRs. | Decisions are repo-bound. |
 | `agents/roadmaps/` | ❌ No — project-rooted only. | ❌ No. | Active delivery plans. |
 | `agents/runtime/state/`, `agents/memory/`, `agents/work_engine/`, `agents/runtime/.agent-prices.md`, `agents/runtime/council/*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
@@ -352,7 +352,7 @@ shadowed.
 **User-global asymmetry.** `~/.event4u/agent-config/agents/overrides/`
 is the only user-global overlay path consulted by the loader (the
 legacy `~/.config/agent-config/agents/overrides/` tree is read as a
-fallback). Files under `~/.event4u/agent-config/agents/contexts/` or
+fallback). Files under `~/.event4u/agent-config/agents/settings/contexts/` or
 `.../agents/decisions/` are silently skipped — these kinds are
 project-shaped and must not leak across projects.
 

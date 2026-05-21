@@ -152,7 +152,7 @@ Each guideline has a consistent header with **Related Skills**, **Related Rules*
 |---|---|
 | `features.md` | `agents/features/` or module `agents/features/` |
 | `roadmaps.md` | `agents/roadmaps/` or module `agents/roadmaps/` |
-| `contexts.md` | `agents/contexts/` or module `agents/contexts/` |
+| `contexts.md` | `agents/settings/contexts/` or module `agents/settings/contexts/` |
 | `overrides/rule.md` | `agents/overrides/rules/` |
 | `overrides/skill.md` | `agents/overrides/skills/` |
 | `overrides/command.md` | `agents/overrides/commands/` |
@@ -164,7 +164,7 @@ Each guideline has a consistent header with **Related Skills**, **Related Rules*
 **Shared context documents** about the `.augment/` system itself.
 These help agents understand the infrastructure they operate in.
 
-Unlike project contexts (`agents/contexts/`), these are part of the shared package
+Unlike project contexts (`agents/settings/contexts/`), these are part of the shared package
 and describe the agent system, not the project's business domain.
 
 ## Key Principles

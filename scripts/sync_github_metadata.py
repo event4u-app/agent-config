@@ -8,7 +8,7 @@ Reads two on-disk manifests and pushes them via the REST API:
 Default mode is `--dry-run`: fetches remote state, prints a unified
 diff (remote \u2192 desired), exits 0 (or 2 if drift exists when
 `--strict` is passed). `--apply` is required to mutate; it also
-appends an audit row to `agents/notes/visibility-sync-audit.md`.
+appends an audit row to `agents/evidence/notes/visibility-sync-audit.md`.
 
 Auth: `GITHUB_TOKEN` env var. The repo slug is taken from
 `package.json` `repository.url` (parsed) or `--repo owner/name`.

@@ -105,7 +105,7 @@ Writing the global Claude Desktop config from the npx dispatcher without
 an operator pasting JSON is **not** part of this contract — Claude Desktop
 restarts and config-merge semantics make silent rewrites a footgun. The
 copy-paste path stays the canonical install shape until non-dev recruit
-evidence under `agents/eval-findings/` demonstrates the manual step is the
+evidence under `agents/evidence/eval-findings/` demonstrates the manual step is the
 actual adoption blocker.
 
 ## Consequences

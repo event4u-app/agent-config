@@ -114,7 +114,7 @@ def test_role_mode_stats_counts_known_modes(tmp_path):
         "Some text.\n\n<!-- role-mode: developer | contract: goal/plan -->\n",
     )
     _write_scan_file(
-        tmp_path, "agents/reports/r1.md",
+        tmp_path, "agents/runtime/reports/r1.md",
         "<!-- role-mode: reviewer | contract: summary/risks -->\n"
         "<!-- role-mode: reviewer | contract: summary/risks -->\n",
     )

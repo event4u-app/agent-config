@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate agents/notes/discovery-baseline.md for Phase 0.1."""
+"""Generate agents/evidence/notes/discovery-baseline.md for Phase 0.1."""
 from __future__ import annotations
 
 import datetime as _dt

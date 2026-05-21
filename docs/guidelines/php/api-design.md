@@ -43,7 +43,7 @@ $projects = Project::query()
 
 ## Filtering and Sorting
 
-- Use the project's **filter pipeline** pattern (see `agents/docs/query-filter.md`).
+- Use the project's **filter pipeline** pattern (see `agents/reference/docs/query-filter.md`).
 - Filter classes are dedicated, testable units — not inline query logic.
 - Sorting via `sort` query parameter.
 

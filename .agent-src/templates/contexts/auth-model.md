@@ -2,7 +2,7 @@
 
 <!--
   Template shipped by event4u/agent-config.
-  Copy to `agents/contexts/auth-model.md` in the consumer project and
+  Copy to `agents/settings/contexts/auth-model.md` in the consumer project and
   fill in. This file is consumed by the Waves 2-3 security skills (see
   `road-to-defensive-agent.md`) — an agent asked to review auth logic
   starts by reading this.
@@ -53,7 +53,7 @@
 
 ## See also
 
-- `agents/contexts/tenant-boundaries.md` — tenancy scope, multi-tenant
+- `agents/settings/contexts/tenant-boundaries.md` — tenancy scope, multi-tenant
   rules that sit on top of the role model
 - `../../../docs/guidelines/agent-infra/*` — reviewer skills that read this
   file

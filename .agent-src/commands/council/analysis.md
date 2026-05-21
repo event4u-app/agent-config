@@ -9,7 +9,7 @@ disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council on this analysis, critique the project-analyze output, second opinion on the audit findings, turn analysis into roadmap"
-  trigger_context: "user has a local analysis artefact (agents/analysis/*.md|json) and wants an external critique of the analysis quality + roadmap-ready follow-ups"
+  trigger_context: "user has a local analysis artefact (agents/evidence/analysis/*.md|json) and wants an external critique of the analysis quality + roadmap-ready follow-ups"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -29,7 +29,7 @@ install:
 ## Instructions
 
 Specialised council mode for **local analysis artefacts** — `/project-analyze`
-output, audit reports, codebase scans under `agents/analysis/`. Wraps
+output, audit reports, codebase scans under `agents/evidence/analysis/`. Wraps
 `/council default files:<path>` with the `analysis` neutrality preamble that
 focuses members on **critiquing the analysis itself** (dedup, evidence
 quality, roadmap-readiness) rather than re-reviewing the underlying code.
@@ -46,7 +46,7 @@ no path was supplied, ask (one question per turn, per
 
 > Which analysis artefact should the council review?
 >
-> 1. A file path under `agents/analysis/` (`.md` or `.json`)
+> 1. A file path under `agents/evidence/analysis/` (`.md` or `.json`)
 > 2. Multiple files (one analysis split across sections)
 > 3. Free-form analysis text in the chat — paste it now
 

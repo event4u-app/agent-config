@@ -14,7 +14,7 @@ Rules:
   - target stability=experimental  → ERROR. Public surface MUST NOT link
                                      to experimental contracts.
   - target outside docs/contracts/ but referenced for contract-shaped
-    intent (links into agents/contexts/*.md from public files) → ERROR.
+    intent (links into agents/settings/contexts/*.md from public files) → ERROR.
   - target file missing            → ERROR.
   - target file under docs/contracts/ without `stability:` frontmatter
     (except STABILITY.md itself) → ERROR.
@@ -100,7 +100,7 @@ def scan_file(public_file: Path, contracts: dict[Path, str | None]) -> list[Viol
                 continue
             if target.parts[:2] == ("agents", "contexts") and target.suffix == ".md":
                 violations.append(Violation(str(public_file), lineno, href,
-                    "public surface MUST NOT link into agents/contexts/ — move target to docs/contracts/",
+                    "public surface MUST NOT link into agents/settings/contexts/ — move target to docs/contracts/",
                     "error"))
                 continue
             if target.parts[:2] != ("docs", "contracts") or target.suffix != ".md":

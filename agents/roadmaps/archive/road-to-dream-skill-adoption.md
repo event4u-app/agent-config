@@ -49,7 +49,7 @@ A date-discipline linter rejects relative dates in curated YAML.
 
 Full background, lens-by-lens analysis, comparison matrix, council
 convergence, and the rationale for what we **do not** ship lives at
-[`agents/analysis/compare-dream-skill.md`](../analysis/compare-dream-skill.md).
+[`agents/evidence/analysis/compare-dream-skill.md`](../analysis/compare-dream-skill.md).
 
 ## Scope ordering
 
@@ -328,7 +328,7 @@ and the `TranscriptAdapter` contract documented in the
 
 ## Pinned references
 
-- Compare doc: `agents/analysis/compare-dream-skill.md`
+- Compare doc: `agents/evidence/analysis/compare-dream-skill.md`
 - Council brief: `agents/council-questions/dream-skill-adoption.md` <!-- council-ref-allowed: traceability for roadmap's adoption decisions -->
 - Council responses: `agents/council-responses/dream-skill-adoption.json` <!-- council-ref-allowed: traceability for roadmap's adoption decisions -->
 - Council convergence summary (inline): three external AIs reviewed

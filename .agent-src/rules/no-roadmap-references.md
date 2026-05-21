@@ -54,7 +54,7 @@ the consumer.
 NEVER LINK TO A SPECIFIC FILE IN agents/roadmaps/
 OR IN agents/runtime/council/{questions,responses,sessions}/
 FROM A STABLE ARTIFACT.
-PROMOTE DURABLE CONCLUSIONS TO agents/contexts/ AND CITE THAT INSTEAD.
+PROMOTE DURABLE CONCLUSIONS TO agents/settings/contexts/ AND CITE THAT INSTEAD.
 INLINE COUNCIL CONVERGENCE WITH DATE + MEMBERS, NEVER THE PATH.
 ```
 
@@ -72,7 +72,7 @@ These paths must not appear inside a stable artifact:
   `agents/runtime/council/sessions/<file>.json` or `<timestamp>/...`
 
 Stable artifact = any file under `.agent-src.uncompressed/{rules,
-skills,commands,contexts,templates,personas}/`, `agents/contexts/`,
+skills,commands,contexts,templates,personas}/`, `agents/settings/contexts/`,
 `docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
 `docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
 `AGENTS.md`, `README.md`, `copilot-instructions.md`.
@@ -106,7 +106,7 @@ pragma.
 
 | Source                                         | Target                                           | Why                                                                                  |
 | ---------------------------------------------- | ------------------------------------------------ | ------------------------------------------------------------------------------------ |
-| `agents/contexts/evaluation-*.md`              | `agents/runtime/council/questions/*.md`                  | Question file is a frozen function-parameter / spend-gate input, not documentation. |
+| `agents/settings/contexts/evaluation-*.md`              | `agents/runtime/council/questions/*.md`                  | Question file is a frozen function-parameter / spend-gate input, not documentation. |
 | `docs/contracts/*.md`                          | `agents/runtime/council/sessions/*/synthesis.md`         | Synthesis is the audit-trail receipt; contract inlines the decision body itself.    |
 
 Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5 +
@@ -120,7 +120,7 @@ When a stable artifact needs to cite a transient finding:
 
 1. Identify the durable conclusion — decision, contract, lesson,
    mechanic.
-2. Promote it to a context file under `agents/contexts/` (ADR,
+2. Promote it to a context file under `agents/settings/contexts/` (ADR,
    mechanics doc, locked decision). The roadmap or council session
    can then point at the context, not the other way around.
 3. Reference the context from the stable artifact.

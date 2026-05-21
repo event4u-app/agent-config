@@ -691,7 +691,7 @@ CADENCE_EVENTS = {
 # internal VALID_HOOK_EVENTS. Used by hook_dispatch() to translate
 # stdin JSON payloads coming from Claude Code, Augment Code, Cursor,
 # Cline, Windsurf, and Gemini CLI into a unified entry-point. Sourced
-# from agents/contexts/chat-history-platform-hooks.md.
+# from agents/settings/contexts/chat-history-platform-hooks.md.
 PLATFORM_EVENT_MAP: dict[str, dict[str, str]] = {
     "claude": {
         "SessionStart": "session_start",
@@ -716,7 +716,7 @@ PLATFORM_EVENT_MAP: dict[str, dict[str, str]] = {
     # with `--setting-sources user`. Until those are resolved, the
     # mapping below is dispatcher-ready but the lifecycle events do
     # not actually fire from Cowork. See
-    # `agents/contexts/chat-history-platform-hooks.md` § Cowork.
+    # `agents/settings/contexts/chat-history-platform-hooks.md` § Cowork.
     "cowork": {
         "SessionStart": "session_start",
         "UserPromptSubmit": "user_prompt",

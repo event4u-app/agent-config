@@ -860,7 +860,7 @@ broken first impression is worse than no README rewrite at all.
        pure citation-only version is just a checklist.
     5. **Repo-aware mode** — ✅ **Auto-detect, graceful
        degrade.** If the skill runs inside a repo clone, it
-       reads `agents/contexts/`, nearby tickets, and naming /
+       reads `agents/settings/contexts/`, nearby tickets, and naming /
        module conventions without a flag. Outside a repo
        (standalone ticket URL, nothing on disk), it runs the
        generic lens set. No `--repo-aware` flag.

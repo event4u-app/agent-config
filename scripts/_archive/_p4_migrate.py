@@ -53,7 +53,7 @@ SKILL_MIGRATIONS = [
      [("phrase", "task ci"), ("phrase", "before push"), ("phrase", "before pr")],
      "Run `task ci` locally and confirm green before pushing or opening a PR in this package."),
     # review-routing-awareness was merged into reviewer-awareness on 2026-05-08
-    # (see agents/contexts/adr-auto-rule-consolidation.md) as part of the
+    # (see agents/settings/contexts/adr-auto-rule-consolidation.md) as part of the
     # Augment literal-budget relief work — Lever D consolidation.
     ("reviewer-awareness", "skill:review-routing",
      [("keyword", "reviewer"), ("phrase", "suggest reviewers"), ("phrase", "risk hotspot"), ("phrase", "ownership map")],

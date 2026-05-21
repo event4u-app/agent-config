@@ -12,7 +12,7 @@ complexity: lightweight
 
 This roadmap is **closed via partial-completion + sunset of Phase 4 + 5**:
 
-- **Phases 1–3 shipped** (telemetry collector, structural overlap pass, archive-notes contract). The infrastructure for rationalization exists: `task skill-usage:collect`, `task skill-overlap`, `task lint-archived-skills`, `.agent-src.uncompressed/templates/skill-archive-note.md`, and `agents/archived-skills/` directory all live.
+- **Phases 1–3 shipped** (telemetry collector, structural overlap pass, archive-notes contract). The infrastructure for rationalization exists: `task skill-usage:collect`, `task skill-overlap`, `task lint-archived-skills`, `.agent-src.uncompressed/templates/skill-archive-note.md`, and `agents/evidence/archived-skills/` directory all live.
 - **Phase 4–5 sunset.** The 30-day soak from Phase 2 Step 1 (gate 2026-06-15) never produced enough activation signal to drive merge/supersede decisions — the structural overlap pass yielded 0 merge candidates (all 16 flagged pairs map to router-dispatched families). The 208 → ≤ 160 target is dropped; current inventory stays as-is.
 - The mechanism survives. If future activation data ever justifies rationalization, the candidate table + linter + archive-notes contract are ready. This is sunset of the **target**, not of the **tooling**.
 
@@ -23,7 +23,7 @@ All remaining `[ ]` checkboxes flip `[-]`. Acceptance row `Skill count ≤ 160` 
 - [-] Read `AGENTS.md` and `.augment/skills/skill-quality/SKILL.md`
 - [-] Read [`council-synthesis.md § 3`](../../audits/2026-05-14-north-star/council-synthesis.md) (Opus #5 — the rationalization finding)
 - [-] Read [`council-synthesis.md § 5`](../../audits/2026-05-14-north-star/council-synthesis.md) (P0 placement upstream of measurement)
-- [-] Confirm `agents/audits/2026-05-14-north-star/` is committed (referenced from this roadmap)
+- [-] Confirm `agents/evidence/audits/2026-05-14-north-star/` is committed (referenced from this roadmap)
 
 ## Context
 
@@ -40,8 +40,8 @@ This roadmap is **upstream of measurement** ([`step-4-measurement-and-benchmark.
 Build a passive collector that records which skill triggered on which prompt — no manual annotation, reads existing transcripts.
 
 - [x] **Step 1 — Source-of-truth audit:** drafted 2026-05-16 → [`skill-usage-sources.md`](../../audits/2026-05-14-north-star/skill-usage-sources.md). Primary signal = Claude Code session jsonl `attachment.type=skill_listing` + assistant-text mention heuristic; cross-correlation = `agents/.mcp-telemetry/calls.jsonl` for MCP-backed skills. No PII surface.
-- [x] **Step 2 — Collector script:** authored 2026-05-16 → `scripts/skill_usage_collect.py`. Reads `~/.claude/projects/<repo-slug>/*.jsonl`; emits `agents/metrics/skill-usage.jsonl` with `{ session_id, turn_idx, slug, kind ∈ {exposure, mention}, ts, prompt_excerpt_hash }`. SHA-256 over first 200 chars; raw bodies never persisted. Append-only with dedup on `(session, turn, slug, kind)`.
-- [x] **Step 3 — Aggregator script:** authored 2026-05-16 → `scripts/skill_usage_report.py`. Groups by slug; emits `agents/metrics/skill-usage-report.md` with columns slug · status · exposures_30d · mentions_30d · exposures_total · mentions_total · last_seen. `status` ∈ { active, exposed-only, dead } per `mentions_30d ≥ 1` / `exposures_30d ≥ 1` / else.
+- [x] **Step 2 — Collector script:** authored 2026-05-16 → `scripts/skill_usage_collect.py`. Reads `~/.claude/projects/<repo-slug>/*.jsonl`; emits `agents/runtime/metrics/skill-usage.jsonl` with `{ session_id, turn_idx, slug, kind ∈ {exposure, mention}, ts, prompt_excerpt_hash }`. SHA-256 over first 200 chars; raw bodies never persisted. Append-only with dedup on `(session, turn, slug, kind)`.
+- [x] **Step 3 — Aggregator script:** authored 2026-05-16 → `scripts/skill_usage_report.py`. Groups by slug; emits `agents/runtime/metrics/skill-usage-report.md` with columns slug · status · exposures_30d · mentions_30d · exposures_total · mentions_total · last_seen. `status` ∈ { active, exposed-only, dead } per `mentions_30d ≥ 1` / `exposures_30d ≥ 1` / else.
 - [x] **Step 4 — Task wiring:** added `task skill-usage:collect` and `task skill-usage:report` to `taskfiles/ci-fast.yml`. Both `silent: true` and `{{.QUIET_FLAG}}`-routed per [`script-writing`](../../.agent-src.uncompressed/skills/script-writing/SKILL.md). Raw `.jsonl` is gitignored (carries hashes of maintainer prompts); `skill-usage-report.md` is committed as the baseline.
 - [x] **Step 5 — First baseline run:** executed 2026-05-16 against the single available session (1 turn, 181 exposures, 0 mentions). Baseline report committed as the 0-day snapshot; status spread = 156 dead / 181 exposed-only / 0 active. Active counts will grow as more sessions accumulate; Phase 2 starts after the 30-day soak per Step 1 of that phase.
 
@@ -51,9 +51,9 @@ Build a passive collector that records which skill triggered on which prompt —
 
 Use the Phase 1 report + structural overlap detection to identify merge / supersede candidates. Decisions documented; execution deferred to Phase 4.
 
-- [~] **Step 1 — 30-day soak:** baseline start recorded 2026-05-16 in `agents/metrics/skill-usage-baseline-start.txt`; activation-driven decisions gated until 2026-06-15. Structural overlap pass (Step 2) runs in parallel per the `cost_profile=fast` carve-out.
-- [x] **Step 2 — Structural overlap pass:** authored 2026-05-16 → `scripts/skill_overlap.py` (tiered thresholds: strong ≥ 0.6, candidate ≥ 0.30 token / ≥ 0.50 symbol; `SYMBOL_MIN_SET=4` floor suppresses noise from shared generic refs). Wired as `task skill-overlap`. Initial run: 210 skills scanned, 1 strong + 15 candidate pairs flagged → `agents/metrics/skill-overlap.md`.
-- [x] **Step 3 — Merge candidates table:** authored 2026-05-16 → `agents/metrics/skill-rationalization-candidates.md`. Interim status: **0 merge candidates from structural overlap** — all 16 flagged pairs map to router-dispatched families (UI stacks, framework analyzers, review judges, meta-authoring siblings). Activation-driven rows blocked on Step 1 soak; Path-A vs Path-B decision deferred to 2026-06-15 re-run.
+- [~] **Step 1 — 30-day soak:** baseline start recorded 2026-05-16 in `agents/runtime/metrics/skill-usage-baseline-start.txt`; activation-driven decisions gated until 2026-06-15. Structural overlap pass (Step 2) runs in parallel per the `cost_profile=fast` carve-out.
+- [x] **Step 2 — Structural overlap pass:** authored 2026-05-16 → `scripts/skill_overlap.py` (tiered thresholds: strong ≥ 0.6, candidate ≥ 0.30 token / ≥ 0.50 symbol; `SYMBOL_MIN_SET=4` floor suppresses noise from shared generic refs). Wired as `task skill-overlap`. Initial run: 210 skills scanned, 1 strong + 15 candidate pairs flagged → `agents/runtime/metrics/skill-overlap.md`.
+- [x] **Step 3 — Merge candidates table:** authored 2026-05-16 → `agents/runtime/metrics/skill-rationalization-candidates.md`. Interim status: **0 merge candidates from structural overlap** — all 16 flagged pairs map to router-dispatched families (UI stacks, framework analyzers, review judges, meta-authoring siblings). Activation-driven rows blocked on Step 1 soak; Path-A vs Path-B decision deferred to 2026-06-15 re-run.
 - [~] **Step 4 — Council pass (optional, structural only):** deferred — gate is ≥ 20 archive recommendations; current count = 0 (no structural merges, soak not complete). Re-evaluate after 2026-06-15 soak rerun.
 
 **Exit:** `skill-rationalization-candidates.md` lists ≥ 48 skills (208 - 160) tagged for merge / supersede / archive with a one-line rationale per row. **Rollback:** drop the candidates table; the usage report stays.
@@ -63,11 +63,11 @@ Use the Phase 1 report + structural overlap detection to identify merge / supers
 Before any deletion, every removed skill needs an archive note explaining *why* and *what replaces it*. Council Opus #5 made this an explicit floor.
 
 - [x] **Step 1 — Archive-notes template:** authored 2026-05-16 → `.agent-src.uncompressed/templates/skill-archive-note.md`. Six required frontmatter fields (`slug`, `archived_on`, `last_seen_count`, `reason`, `replacement`, `last_known_callers`); three body sections (*Why archived*, *What replaces it*, *Last-known callers*); five lint contract clauses.
-- [x] **Step 2 — Archive-notes directory:** created 2026-05-16 → `agents/archived-skills/` with `README.md` documenting the contract: one `<slug>.md` per removed skill, paired with the SKILL.md removal in the same commit, no stray files allowed.
+- [x] **Step 2 — Archive-notes directory:** created 2026-05-16 → `agents/evidence/archived-skills/` with `README.md` documenting the contract: one `<slug>.md` per removed skill, paired with the SKILL.md removal in the same commit, no stray files allowed.
 - [x] **Step 3 — Linter gate:** authored 2026-05-16 → `scripts/lint_archived_skills.py`. Validates frontmatter completeness, `reason` enum, replacement-slug existence for `{merged, superseded}`, zombie detection, and live-skill `replaced_by` cross-checks. Verified green against the empty archive directory (only README present).
 - [x] **Step 4 — Task wiring:** added `task lint-archived-skills` to `taskfiles/ci-fast.yml`; included in `task ci` and `task ci-strict` immediately after `lint-skills` / `lint-skills-strict`. `silent: true` and `{{.QUIET_FLAG}}`-routed.
 
-**Exit:** `task lint-archived-skills` passes against an empty `agents/archived-skills/` (no skills archived yet). **Rollback:** revert the linter changes; the template + directory survive — they cost nothing.
+**Exit:** `task lint-archived-skills` passes against an empty `agents/evidence/archived-skills/` (no skills archived yet). **Rollback:** revert the linter changes; the template + directory survive — they cost nothing.
 
 ## Phase 4: Execute the rationalization
 
@@ -94,8 +94,8 @@ Every removed slug may be cited from rules, commands, contexts, docs. Sweep befo
 ## Acceptance Criteria
 
 - [-] Skill count ≤ 160 (verified via `ls .agent-src.uncompressed/skills/ | wc -l`)
-- [-] Every archived / merged / superseded slug has a matching `agents/archived-skills/<slug>.md`
-- [-] `agents/metrics/skill-usage-report.md` reflects ≥ 30 days of activation data (or documented fallback to structural overlap if data unavailable)
+- [-] Every archived / merged / superseded slug has a matching `agents/evidence/archived-skills/<slug>.md`
+- [-] `agents/runtime/metrics/skill-usage-report.md` reflects ≥ 30 days of activation data (or documented fallback to structural overlap if data unavailable)
 - [-] `task ci` green (includes `lint-skills`, `lint-archived-skills`, `check-refs`)
 - [-] `agents/roadmaps-progress.md` regenerated
 

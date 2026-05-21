@@ -88,7 +88,7 @@ no path changes, no symlink relocation, no namespace prefix:
   recorded in `persona-governance`)
 - `.agent-src.uncompressed/commands/video/{from-script,scene,storyboard,stitch}.md`
 - `scripts/ai-video/` (the 5 adapter scripts + `lib/`)
-- `agents/policies/media/` (Phase 2 output — already structured as
+- `agents/settings/policies/media/` (Phase 2 output — already structured as
   a project-local policy directory, *not* a pack)
 
 ### (ii) The trigger that flips this decision
@@ -148,7 +148,7 @@ for ambiguity:
   `higgsfield`, `sora`) — stay in `scripts/ai-video/`.
 - The two remaining video personas — stay in `.agent-src.uncompressed/personas/`.
 - The `/video:*` command cluster — stays in `.agent-src.uncompressed/commands/video/`.
-- The `media-governance-routing` rule + `agents/policies/media/`
+- The `media-governance-routing` rule + `agents/settings/policies/media/`
   policy files — stay where Phase 2 placed them.
 - The provider-lifecycle contract + the `provider-lifecycle-discipline`
   rule — stay where Phase 3 placed them.

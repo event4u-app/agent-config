@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/skill.schema.json",
   "title": "Skill frontmatter",
-  "$comment": "Source: agents/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
+  "$comment": "Source: agents/reference/docs/frontmatter-contract.md#skills. Keep in sync with inventory_frontmatter.py and the linter's lint_skill().",
   "type": "object",
   "additionalProperties": false,
   "required": ["name", "description", "source", "domain"],

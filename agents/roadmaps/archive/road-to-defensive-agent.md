@@ -44,7 +44,7 @@ This roadmap does **not**:
 - Replace `security` / `security-audit` / `bug-analyzer` — it **complements** them
 - Rewrite existing skills (that is [`road-to-stronger-skills.md`](road-to-stronger-skills.md))
 - Add project-specific knowledge into `.agent-src.uncompressed/` — knowledge
-  belongs in consumer `agents/contexts/` (templates ship from the package)
+  belongs in consumer `agents/settings/contexts/` (templates ship from the package)
 
 ## Offensive-capability guardrail
 
@@ -92,7 +92,7 @@ stack-specific examples in parentheses.
 Knowledge-layer content stays **out** of `.agent-src.uncompressed/`. It ships
 as **templates** under the future `templates/contexts/` directory (files such
 as *auth-model*, *tenant-boundaries*, *data-sensitivity*) that consumers fill
-in their own `agents/contexts/` — created in Wave 3, not yet on disk.
+in their own `agents/settings/contexts/` — created in Wave 3, not yet on disk.
 
 ## Overlap resolutions (pre-flight)
 

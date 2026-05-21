@@ -35,7 +35,7 @@ Do NOT use when:
 
 ## Procedure: Work with multi-tenancy
 
-1. **Gather context** — read `agents/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, and search for the tenant switching service.
+1. **Gather context** — read `agents/reference/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, and search for the tenant switching service.
 2. **Identify connection** — determine whether the code touches central, tenant, or both databases. Set `$connection` explicitly on any new model.
 3. **Implement** — write the feature using the correct connection. Use the tenant switching service for cross-tenant operations. Never mix connections in a single query.
 4. **Verify isolation** — inspect the code for tenant leaks: global scopes, missing `$connection`, shared caches, or job serialization without tenant context.
@@ -108,7 +108,7 @@ Check the project for the actual connection names and namespace conventions.
 
 ## Testing with tenants
 
-- Tests use dedicated tenant seeders (check `agents/docs/` for seeder conventions).
+- Tests use dedicated tenant seeders (check `agents/reference/docs/` for seeder conventions).
 - The testing database may consolidate multiple connections into a single DB for simplicity.
 - Use `RefreshDatabase` or manual seeding — never assume a specific tenant state from previous tests.
 

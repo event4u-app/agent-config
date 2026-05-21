@@ -56,7 +56,7 @@ Do NOT use when:
    (live-action with VFX) → `hollywood-director`; record VFX intent
    in ENVIRONMENT.
 3. Check for an existing `character.json` lock under
-   `agents/ai-video/<project>/characters/`.
+   `agents/reference/ai-video/<project>/characters/`.
 
 ### Step 1: Emit the 12 blocks
 
@@ -139,11 +139,11 @@ Any "no" → revise that block.
 
 The 12-block Cinematic Scene Blueprint is the policy choke point — every downstream skill (`motion-choreographer`, `video-director`) inherits whatever the blueprint encodes. Before emitting:
 
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — when the SUBJECT block names or visually identifies a real person.
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — when the SUBJECT block is a recognised public figure.
-- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — when STYLE / ENVIRONMENT references a recognised brand's visual identity.
-- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — when STYLE anchors to a named living artist or studio as the primary signature.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed blueprint output carries the AI-generation disclosure downstream.
+- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when the SUBJECT block names or visually identifies a real person.
+- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the SUBJECT block is a recognised public figure.
+- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when STYLE / ENVIRONMENT references a recognised brand's visual identity.
+- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — when STYLE anchors to a named living artist or studio as the primary signature.
+- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed blueprint output carries the AI-generation disclosure downstream.
 
 Refuse-and-surface at the blueprint layer; do not push policy questions down to the adapter.
 

@@ -105,7 +105,7 @@ Pay the naming cost once, upfront.
 
 The **shape** lives here. The **frontmatter keys** that carry the
 name (`name:` in skills, `id:` in rules) live in
-[`frontmatter-contract.md`](../../agents/docs/frontmatter-contract.md).
+[`frontmatter-contract.md`](../../agents/reference/docs/frontmatter-contract.md).
 Both contracts share the regex; this file is the source of truth for
 the regex string.
 

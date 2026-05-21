@@ -26,7 +26,7 @@ install:
 # /ghostwriter:write
 
 Generate a copyable markdown draft in the voice of a captured
-ghostwriter profile under `agents/ghostwriter/<slug>.md`. Implements
+ghostwriter profile under `agents/reference/ghostwriter/<slug>.md`. Implements
 the [`write-engine`](../../../docs/contracts/write-engine.md) contract
 with **mandatory disclosure footer** appended by this command's output
 template (not by the model, no opt-out).
@@ -49,7 +49,7 @@ Argument shapes:
 on) the `aliases:` list of every consumer profile. See
 [`ghostwriter-schema § Aliases`](../../../docs/contracts/ghostwriter-schema.md#aliases).
 
-Scan `agents/ghostwriter/*.md`, excluding `README.md` and any file
+Scan `agents/reference/ghostwriter/*.md`, excluding `README.md` and any file
 with `fictional: true` (fixtures are not consumable from this
 command — they live in the package source as schema examples).
 
@@ -140,7 +140,7 @@ If the selected profile's `source_provenance.last_fetched_at` is
 > 90 days old, print one line **after** the fenced block:
 
 ```
-⚠️  agents/ghostwriter/<slug>.md last fetched YYYY-MM-DD (>90 days). Run /ghostwriter:fetch <slug> --force-refresh.
+⚠️  agents/reference/ghostwriter/<slug>.md last fetched YYYY-MM-DD (>90 days). Run /ghostwriter:fetch <slug> --force-refresh.
 ```
 
 Non-blocking.

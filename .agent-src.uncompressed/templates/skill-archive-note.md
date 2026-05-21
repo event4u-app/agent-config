@@ -1,6 +1,6 @@
 # Skill Archive Note Template
 
-> Template for `agents/archived-skills/<slug>.md`. Created during
+> Template for `agents/evidence/archived-skills/<slug>.md`. Created during
 > `step-2-skill-inventory-rationalization.md`
 > Phase 4 execution. Every skill removed from
 > `.agent-src.uncompressed/skills/` MUST have a matching archive note
@@ -8,7 +8,7 @@
 
 ## Instructions
 
-1. Create the file: `agents/archived-skills/{slug}.md`.
+1. Create the file: `agents/evidence/archived-skills/{slug}.md`.
 2. Copy the template body below and fill every required field.
 3. Commit alongside the SKILL.md removal in the same PR (the linter
    refuses to pass if the pair drifts).
@@ -88,12 +88,12 @@ references the removed slug without pointing at this note.}
 
 `scripts/lint_archived_skills.py` enforces:
 
-1. Every file under `agents/archived-skills/*.md` (except the README)
+1. Every file under `agents/evidence/archived-skills/*.md` (except the README)
    has a frontmatter block with the six required fields.
 2. `reason` is one of the four allowed values.
 3. When `reason ∈ {merged, superseded}`, the `replacement` slug exists
    under `.agent-src.uncompressed/skills/`.
-4. Every slug under `agents/archived-skills/` is *absent* from
+4. Every slug under `agents/evidence/archived-skills/` is *absent* from
    `.agent-src.uncompressed/skills/` (no zombies).
 5. No SKILL.md present under `.agent-src.uncompressed/skills/`
    references an archived slug as a router target.

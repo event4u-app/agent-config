@@ -1,7 +1,7 @@
 """One-off council run for road-to-structural-optimization.md.
 
 Invokes the council in `design` mode with Anthropic + OpenAI members.
-Saves the session under agents/contexts/ai-council-sessions/.
+Saves the session under agents/settings/contexts/ai-council-sessions/.
 
 Invocation:
     .venv/bin/python -m scripts.ai_council._one_off_structural_optimization

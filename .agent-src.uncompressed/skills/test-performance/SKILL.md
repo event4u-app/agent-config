@@ -162,7 +162,7 @@ Replace dynamic `getPdo()` probing with explicit config:
 
 ## Related project docs
 
-- `agents/docs/seeders.md` — seeder conventions (if exists)
+- `agents/reference/docs/seeders.md` — seeder conventions (if exists)
 
 ## Output format
 

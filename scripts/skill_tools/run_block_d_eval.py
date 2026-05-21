@@ -3,7 +3,7 @@
 
 Runs D2 (`score_skill_relevance`), D3 (`audit_persona_coverage`), and
 D4 (`suggest_skill_for_task`) against the corpora in
-`agents/eval-corpora/block-d/` and emits a pass/fail summary per the
+`agents/evidence/eval-corpora/block-d/` and emits a pass/fail summary per the
 council verdict targets:
 
   - **D2**: ≥ 85 % of corpus tasks have an `expected_top3` skill in

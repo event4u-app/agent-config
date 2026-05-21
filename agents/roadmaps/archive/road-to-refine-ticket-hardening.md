@@ -2,7 +2,7 @@
 
 > Tracks the seven findings surfaced by the first real-world runs of
 > `/refine-ticket` on `2026-04-22` (cases DEV-6182 + DEV-6155).
-> Evidence: [`agents/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md).
+> Evidence: [`agents/reference/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md).
 >
 > v1 of the skill is shipped + archived in
 > [`archive/road-to-ticket-refinement.md`](archive/road-to-ticket-refinement.md).
@@ -37,7 +37,7 @@ without checking whether it matches the ticket's project.
       *(2026-04-23: `_TICKET_KEY_RE` + `_extract_ticket_project_key()` picks the most frequent `[A-Z]{2,10}-\d+` prefix.)*
 - [x] Add a light repo-match heuristic — compare against
       `composer.json` / `package.json` `name`, branch prefixes, and
-      `agents/contexts/` filenames.
+      `agents/settings/contexts/` filenames.
       *(2026-04-23: `_gather_repo_identifiers()` reads composer/package `name` plus historical branch prefixes; `_match_project()` does case-insensitive substring-either-way.)*
 - [x] Surface the result in `Orchestration notes` as a single line:
       either *"Repo-aware context from X matches ticket project Y"*
@@ -217,7 +217,7 @@ Links: [F7 finding](../docs/refine-ticket-in-practice.md#f7--cross-repo-invocati
 
 ## See also
 
-- [`agents/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md) — findings source
+- [`agents/reference/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md) — findings source
 - [`archive/road-to-ticket-refinement.md`](archive/road-to-ticket-refinement.md) — v1 shipped
 - [`open-questions-2.md`](open-questions-2.md) — Q27 resolution
 - [`archive/road-to-agent-outcomes.md`](archive/road-to-agent-outcomes.md) — master frame (archived 2026-04-23)

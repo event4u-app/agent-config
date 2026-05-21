@@ -229,16 +229,16 @@ dispatcher.
       tests deleted, 6 Taskfile targets removed (`runtime-execute`,
       `lifecycle-report`, `lifecycle-health`, `report`, `report-stdout`,
       plus purged entries in `test-runtime-all`). Stale docs deleted:
-      `docs/observability.md`, `agents/docs/observability-scoping.md`,
-      `agents/docs/feedback-consumption.md`,
-      `agents/docs/runtime-visibility.md`. Removals recorded in
+      `docs/observability.md`, `agents/reference/docs/observability-scoping.md`,
+      `agents/reference/docs/feedback-consumption.md`,
+      `agents/reference/docs/runtime-visibility.md`. Removals recorded in
       `CHANGELOG.md` under `[Unreleased]`.
 - [x] **4.4 (rescued consumer)** `scripts/runtime_dispatcher.py run` gained
       `--output FILE` (persists `ExecutionResult` as JSON).
       `scripts/ci_summary.py` was rewritten as a consumer of those files
       and renders a GitHub Step Summary (Markdown table + failure details
       with stderr tail). `tests.yml` writes runs to
-      `agents/reports/runs/` and the summary step runs with `if: always()`,
+      `agents/runtime/reports/runs/` and the summary step runs with `if: always()`,
       so failing pilot skills surface in the PR UI even when the job
       itself fails.
 - [x] **4.5** `docs/architecture.md` and `README.md` / `docs/installation.md`
@@ -356,7 +356,7 @@ that nothing reads.
 - [x] **6.4** Downstream cross-references: grep sweep across
       `.agent-src.uncompressed/rules/docs-sync.md`,
       `.agent-src.uncompressed/contexts/augment-infrastructure.md`,
-      `agents/docs/skill-classification.md`, and the rest of live
+      `agents/reference/docs/skill-classification.md`, and the rest of live
       authoring / docs / scripts found zero stale references. Only
       archived roadmaps (`agents/roadmaps/archive/*`) and the
       `ci_summary.py` script (live, real consumer) still mention related

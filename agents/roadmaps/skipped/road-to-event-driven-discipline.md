@@ -50,7 +50,7 @@ implementing the snapshot above verbatim.
 
 - [-] Read `docs/contracts/hook-architecture-v1.md` (dispatcher contract)
 - [-] Read `scripts/hook_manifest.yaml` (current concern wiring)
-- [-] Read `agents/contexts/chat-history-platform-hooks.md` (per-platform surface)
+- [-] Read `agents/settings/contexts/chat-history-platform-hooks.md` (per-platform surface)
 - [-] Confirm `task hooks-status` runs cleanly on a clean working tree
 
 ## Context

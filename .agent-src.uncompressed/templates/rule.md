@@ -31,7 +31,7 @@ both reject the legacy prefix.
 |---|---|
 | `contexts/execution/verification-mechanics.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` |
 | `contexts/authority/commit-mechanics.md` | `.agent-src.uncompressed/contexts/authority/commit-mechanics.md` |
-| `agents/contexts/local.md` (project-local) | `.agent-src.uncompressed/contexts/...` for project-only material |
+| `agents/settings/contexts/local.md` (project-local) | `.agent-src.uncompressed/contexts/...` for project-only material |
 
 ### `triggers[].path_prefix:` — literal match pattern, not a file path
 

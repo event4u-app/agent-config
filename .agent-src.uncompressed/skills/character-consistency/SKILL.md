@@ -22,7 +22,7 @@ install:
 # character-consistency
 
 > Lock a character's visual identity into
-> `agents/ai-video/<project>/characters/<id>.json` so every scene
+> `agents/reference/ai-video/<project>/characters/<id>.json` so every scene
 > reuses the **exact same tokens** verbatim. Downstream skills
 > ([`video-director`](../video-director/SKILL.md),
 > [`pixar-storyteller`](../pixar-storyteller/SKILL.md),
@@ -49,7 +49,7 @@ Do NOT use when:
 
 ### Step 0: Inspect
 
-1. Check `agents/ai-video/<project>/characters/` — if a lock already
+1. Check `agents/reference/ai-video/<project>/characters/` — if a lock already
    exists for this id, **read it, do not redraft**. Edits require an
    explicit revision note (Phase 6 visual regression must rerun).
 2. Confirm the character will appear in ≥ 2 scenes; one-shot → skip.
@@ -57,7 +57,7 @@ Do NOT use when:
 ### Step 1: Draft identity tokens
 
 Emit a JSON file at
-`agents/ai-video/<project>/characters/<character-id>.json` with the
+`agents/reference/ai-video/<project>/characters/<character-id>.json` with the
 following fields. Every field is mandatory; missing field → fail
 the lock.
 
@@ -82,7 +82,7 @@ the lock.
 
 1. After the first scene renders, copy the highest-quality frame
    showing the character full-face and full-body to
-   `agents/ai-video/<project>/characters/<id>.ref.png`.
+   `agents/reference/ai-video/<project>/characters/<id>.ref.png`.
 2. Update `reference_frame` in the JSON to point at it.
 3. Phase 6 visual regression compares every subsequent scene's
    character frame against this reference (ImageMagick `compare`
@@ -98,11 +98,11 @@ the lock.
 
 ## Output format
 
-1. **`agents/ai-video/<project>/characters/<id>.json`** — locked
+1. **`agents/reference/ai-video/<project>/characters/<id>.json`** — locked
    identity tokens, schema above.
-2. **`agents/ai-video/<project>/characters/<id>.ref.png`** —
+2. **`agents/reference/ai-video/<project>/characters/<id>.ref.png`** —
    reference frame (added after first render).
-3. **`agents/ai-video/<project>/characters/CHANGELOG.md`** — one
+3. **`agents/reference/ai-video/<project>/characters/CHANGELOG.md`** — one
    line per revision: `v<n> · YYYY-MM-DD · reason · scenes-to-rerun`.
 
 ## Gotcha
@@ -134,10 +134,10 @@ the lock.
 
 When a character lock would identify or render a real person, consult before emitting the JSON:
 
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — real-person identity tokens require a cited likeness release.
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — recognised public figures carry the harder gate (publicity rights + transformative-intent).
-- [`agents/policies/media/voice-cloning.md`](../../../agents/policies/media/voice-cloning.md) — when `voice_note` references a real person's voice.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — outputs carrying a real-person lock require the non-removable AI-generation disclosure downstream.
+- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — real-person identity tokens require a cited likeness release.
+- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — recognised public figures carry the harder gate (publicity rights + transformative-intent).
+- [`agents/settings/policies/media/voice-cloning.md`](../../../agents/settings/policies/media/voice-cloning.md) — when `voice_note` references a real person's voice.
+- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — outputs carrying a real-person lock require the non-removable AI-generation disclosure downstream.
 
 Refuse-and-surface the file path; do not silently sanitise the prompt.
 

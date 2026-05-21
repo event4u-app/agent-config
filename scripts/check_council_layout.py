@@ -15,7 +15,7 @@ catches **misplacement**, not naming-conventions inside the dirs:
     (e.g. agents/council-foo.md, agents/.council-foo.md).
   - council-* files under any other subdirectory of agents/.
 
-`agents/audits/` is exempt — historical audit bundles are cohesive,
+`agents/evidence/audits/` is exempt — historical audit bundles are cohesive,
 checked-in narratives (the canonical council dirs are gitignored)
 and may legitimately include council-* artefacts as part of the
 audit's evidence trail. `agents/runtime/` is exempt too — the

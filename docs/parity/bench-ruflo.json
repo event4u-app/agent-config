@@ -5,7 +5,7 @@
   "parity_doc": "docs/parity/ruflo.md",
   "parent_bench": "docs/parity/bench.json",
   "claim_under_test": {
-    "source": "agents/audits/2026-05-14-north-star/external-findings.md § 2",
+    "source": "agents/evidence/audits/2026-05-14-north-star/external-findings.md § 2",
     "headline": "Average dollar cost per 25-prompt corpus run, separated by model tier (Haiku / Sonnet / Opus) and by token class (input / output / cache-read / cache-write).",
     "comparison_target": "ruflo cost-tracker README (claimed upstream, not yet pulled into this repo)",
     "type": "claimed_upstream_not_verified_in_repo"

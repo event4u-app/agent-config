@@ -37,7 +37,7 @@ SKIP_DIRS = [
     "agents/runtime/council/sessions",   # per-user audit trail (gitignored), captured provider output
     "agents/runtime/council/responses",  # paired council output (gitignored), captured provider output
     "agents/runtime/council/questions",  # design Q&A trail — forward-refs to planned artifacts
-    "agents/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
+    "agents/evidence/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
     "agents/runtime",            # volatile / machine-generated artefacts (gitignored)
 ]
 
@@ -91,14 +91,14 @@ _SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "eac
 
 # Paths that are clearly example/template placeholders (not real references)
 EXAMPLE_PATH_PATTERNS = [
-    re.compile(r"agents/analysis/"),           # project-analyze output template
+    re.compile(r"agents/evidence/analysis/"),           # project-analyze output template
     re.compile(r"agents/roadmaps/template"),   # template reference
     re.compile(r"agents/overrides/"),           # override examples
     re.compile(r"commands/old-cmd"),            # example placeholder
     re.compile(r"agents/README"),               # README reference (may not exist in package)
     re.compile(r"agents/index[\w.-]*\.md"),     # planned auto-generated artefact index (F5)
-    re.compile(r"agents/docs/"),               # project-specific docs (not in package)
-    re.compile(r"agents/contexts/"),           # project-specific contexts (not in package)
+    re.compile(r"agents/reference/docs/"),               # project-specific docs (not in package)
+    re.compile(r"agents/settings/contexts/"),           # project-specific contexts (not in package)
     re.compile(r"agents/gates"),               # project-specific policy docs
     re.compile(r"agents/features/"),           # project-specific feature docs
     re.compile(r"agents/authentication"),       # project-specific auth docs

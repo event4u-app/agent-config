@@ -85,7 +85,7 @@ to load.
 
 Do not use this fixture as a template for adding a real person to
 `.agent-src.uncompressed/ghostwriter/`. Real-person profiles never
-ship with the package — they belong in `agents/ghostwriter/` on the
+ship with the package — they belong in `agents/reference/ghostwriter/` on the
 consumer side, where they are gitignored by default.
 
 If you need a second fictional fixture (for a different

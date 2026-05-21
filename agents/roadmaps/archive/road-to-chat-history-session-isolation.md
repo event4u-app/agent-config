@@ -7,7 +7,7 @@
 
 ## Prerequisites
 
-- [x] Read `agents/contexts/chat-history-platform-hooks.md`
+- [x] Read `agents/settings/contexts/chat-history-platform-hooks.md`
 - [x] Read `scripts/chat_history.py` (header schema, `append`, `hook_dispatch`, sidecar)
 - [x] Confirm `pytest tests/test_chat_history*` green before any change
 - [x] Confirm prior roadmap `road-to-chat-history-hook-only.md` is closed and archived (archived 2026-05-05 to `agents/roadmaps/archive/`).
@@ -154,7 +154,7 @@ Now that writes are tagged, reads can filter safely. Gated by
 - [x] **Step 2:** Update `.agent-src.uncompressed/commands/chat-history.md` orchestrator to route `show` (default) vs `learn` (new).
 - [x] **Step 3:** Selection is always user-driven — no autonomous import. One session per `learn` invocation in v1 (multi-pick is v2). Document the constraint in the command file.
 - [x] **Step 4:** v1 scope explicit (Council R6): no fuzzy search, no full-text grep, no automatic summary heuristics, no rewriting of the user's context. The agent reads the picked session's entries verbatim; any subsequent extraction or summarisation happens in dialogue, user-directed.
-- [x] **Step 5:** Update `agents/contexts/chat-history-platform-hooks.md` § Read contract with the new isolation default + the `learn` opt-in path.
+- [x] **Step 5:** Update `agents/settings/contexts/chat-history-platform-hooks.md` § Read contract with the new isolation default + the `learn` opt-in path.
 
 ## Phase 6 — Final AI Council pass + docs sweep
 
@@ -164,7 +164,7 @@ revisions and reviews the final implementation.
 
 - [x] **Step 1:** Ran `/council roadmap:agents/roadmaps/road-to-chat-history-session-isolation.md` (post-implementation pass — see § Council notes — Round 3). Findings appended below.
 - [x] **Step 2:** Adjusted scope based on Round 3 notes, with explicit reasons for non-adoption per point.
-- [x] **Step 3:** Final docs pass — `agents/contexts/chat-history-platform-hooks.md` § Read contract added; `AGENTS.md` unchanged (no user-facing surface in the package's own docs needs an update — the surface is shipped via the consumer-installed `commands/chat-history.md`).
+- [x] **Step 3:** Final docs pass — `agents/settings/contexts/chat-history-platform-hooks.md` § Read contract added; `AGENTS.md` unchanged (no user-facing surface in the package's own docs needs an update — the surface is shipped via the consumer-installed `commands/chat-history.md`).
 - [x] **Step 4:** `task lint-skills`, `task check-refs`, `task check-compression`, `task check-portability` green; `task test` green (2313 passed); `pytest tests/test_chat_history*` green (127 passed). `task ci` consistency-task fails on dirty working tree as expected mid-roadmap; clean run will follow Phase 7 commit.
 
 ## Acceptance criteria

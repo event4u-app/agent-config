@@ -160,8 +160,8 @@ def test_agents_md_is_thin_root_navigation_surface() -> None:
 # this in the CI Taskfile pipeline; this test mirrors the assertion at
 # the pytest layer so a stand-alone `pytest` run also fails on drift.
 #
-# Locked tier vocabulary lives in agents/contexts/hardening-pattern.md
-# and agents/contexts/rule-trigger-matrix.md.
+# Locked tier vocabulary lives in agents/settings/contexts/hardening-pattern.md
+# and agents/settings/contexts/rule-trigger-matrix.md.
 VALID_TIERS = frozenset({"1", "2a", "2b", "3", "safety-floor", "mechanical-already"})
 
 

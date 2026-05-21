@@ -23,7 +23,7 @@ applies_to_user_types:
 validator_ignore:
   - type: "substring"
     pattern: "../../agents/"
-    reason: "Routing rule whose subject matter is the project-local agents/policies/media/ tree; every body link points there by design."
+    reason: "Routing rule whose subject matter is the project-local agents/settings/policies/media/ tree; every body link points there by design."
   - type: "substring"
     pattern: ".agent-src.uncompressed/"
     reason: "Rule contrasts project-local placement with the .agent-src.uncompressed/rules/ alternative — mentioning the path is the argument."
@@ -47,29 +47,29 @@ install:
 
 ```
 WHEN AI VIDEO, IMAGE, OR VOICE GENERATION FIRES, CONSULT THE PROJECT-LOCAL
-MEDIA POLICIES IN agents/policies/media/ BEFORE EMITTING THE PROMPT TO
+MEDIA POLICIES IN agents/settings/policies/media/ BEFORE EMITTING THE PROMPT TO
 THE PROVIDER. REFUSE-AND-SURFACE OVER GUESS-AND-RENDER.
 ```
 
-Routes agent to project-local media governance policy layer at [`agents/policies/media/`](../../agents/policies/media/) when video / image / voice surface fires. Policies are LLM-readable decision frameworks consulted in-session, not Python-enforced gates — see [`agents/policies/media/README.md § Enforcement model`](../../agents/policies/media/README.md) for full agent-in-the-loop contract.
+Routes agent to project-local media governance policy layer at [`agents/settings/policies/media/`](../../agents/settings/policies/media/) when video / image / voice surface fires. Policies are LLM-readable decision frameworks consulted in-session, not Python-enforced gates — see [`agents/settings/policies/media/README.md § Enforcement model`](../../agents/settings/policies/media/README.md) for full agent-in-the-loop contract.
 
 ## What this rule surfaces
 
 Any trigger match → agent loads into context:
 
-- [`agents/policies/media/likeness.md`](../../agents/policies/media/likeness.md) — real person's visual likeness.
-- [`agents/policies/media/style.md`](../../agents/policies/media/style.md) — named living artist's distinctive style.
-- [`agents/policies/media/public-figures.md`](../../agents/policies/media/public-figures.md) — recognised public figures.
-- [`agents/policies/media/voice-cloning.md`](../../agents/policies/media/voice-cloning.md) — vocal likeness.
-- [`agents/policies/media/disclosure.md`](../../agents/policies/media/disclosure.md) — mandatory non-removable AI-generation disclosure.
-- [`agents/policies/media/brand-impersonation.md`](../../agents/policies/media/brand-impersonation.md) — brand / broadcaster identity imitation.
-- [`agents/policies/media/transparency.md`](../../agents/policies/media/transparency.md) — provenance metadata (C2PA, SynthID).
+- [`agents/settings/policies/media/likeness.md`](../../agents/settings/policies/media/likeness.md) — real person's visual likeness.
+- [`agents/settings/policies/media/style.md`](../../agents/settings/policies/media/style.md) — named living artist's distinctive style.
+- [`agents/settings/policies/media/public-figures.md`](../../agents/settings/policies/media/public-figures.md) — recognised public figures.
+- [`agents/settings/policies/media/voice-cloning.md`](../../agents/settings/policies/media/voice-cloning.md) — vocal likeness.
+- [`agents/settings/policies/media/disclosure.md`](../../agents/settings/policies/media/disclosure.md) — mandatory non-removable AI-generation disclosure.
+- [`agents/settings/policies/media/brand-impersonation.md`](../../agents/settings/policies/media/brand-impersonation.md) — brand / broadcaster identity imitation.
+- [`agents/settings/policies/media/transparency.md`](../../agents/settings/policies/media/transparency.md) — provenance metadata (C2PA, SynthID).
 
 Each policy carries own trigger block → within active context agent narrows from superset to policies whose specific patterns actually fired (e.g. prompt naming public figure → `public-figures.md` + `disclosure.md`; `--no-disclosure` → `disclosure.md` standalone).
 
 ## Why project-local, not `.agent-src.uncompressed/rules/`
 
-Seven media policies live under [`agents/policies/media/`](../../agents/policies/media/), not as `.agent-src.uncompressed/rules/domain-safety-media-*.md`, for three reasons:
+Seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncompressed/rules/domain-safety-media-*.md`, for three reasons:
 
 1. **Consumed by skills + adapters**, not surfaced as standalone always-loaded prose. Cost non-trivial (7 × ~80 lines = ~560 lines always-context if hoisted to rules), and most sessions never touch video / image / voice surface.
 2. **Enforcement model project-local** — working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) + audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncompressed/` are tool-portable governance; these policies are domain-specific bindings.
@@ -79,7 +79,7 @@ This routing rule is the bridge: sits in always-loaded rule set so trigger keywo
 
 ## CI reachability guarantee
 
-[`scripts/lint_media_policy_linkage.py`](../../scripts/lint_media_policy_linkage.py) fails build if any policy file under `agents/policies/media/` not linked from:
+[`scripts/lint_media_policy_linkage.py`](../../scripts/lint_media_policy_linkage.py) fails build if any policy file under `agents/settings/policies/media/` not linked from:
 
 - this routing rule, **or**
 - a skill's `## Policies` see-also block, **or**
@@ -89,6 +89,6 @@ Policy that no skill, rule, or sibling policy references → silent policy. CI c
 
 ## See also
 
-- [`agents/policies/media/README.md`](../../agents/policies/media/README.md) — full enforcement-model contract.
+- [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — full enforcement-model contract.
 - [`.augment/rules/ask-when-uncertain.md`](../../.augment/rules/ask-when-uncertain.md) — single-question refusal-path discipline every policy depends on.
-- [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) — prose-disclosure precedent extended to media by [`disclosure.md`](../../agents/policies/media/disclosure.md).
+- [`docs/contracts/write-engine.md`](../docs/contracts/write-engine.md) — prose-disclosure precedent extended to media by [`disclosure.md`](../../agents/settings/policies/media/disclosure.md).

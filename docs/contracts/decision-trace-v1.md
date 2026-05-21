@@ -10,7 +10,7 @@ runs emit when the user opts into trace surfacing. The trace is the
 audit substrate for the rule-interaction matrix
 ([`rule-interactions.md`](rule-interactions.md)) and feeds the
 showcase-session capture pipeline
-([`outcome-baseline.md`](../../agents/contexts/outcome-baseline.md)).
+([`outcome-baseline.md`](../../agents/settings/contexts/outcome-baseline.md)).
 
 **Scope.** Defines the JSON envelope written next to a `WorkState`
 file when `decision_engine.surface_traces: true`. Does **not**
@@ -174,4 +174,4 @@ majors.
   `work_engine/scoring/decision_trace.py` and exercised by
   `tests/work_engine/scoring/test_decision_trace_scoring.py`.
 - Outcome metrics consume `verify.first_try_passes`:
-  [`outcome-baseline.md`](../../agents/contexts/outcome-baseline.md).
+  [`outcome-baseline.md`](../../agents/settings/contexts/outcome-baseline.md).

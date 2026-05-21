@@ -9,7 +9,7 @@
 # Contract: scripts/ai-video/lib/adapter-contract.md
 # Provider: top-level <provider id="higgsfield" kind="video"> in
 # agents/.ai-video.xml. Preset → motion-choreographer profile mapping
-# is documented in agents/ai-video/prompts/motion-choreography.md
+# is documented in agents/reference/ai-video/prompts/motion-choreography.md
 # (Phase 6).
 #
 # Lifecycle: experimental — capability-discovery path conformant; no

@@ -117,7 +117,7 @@ works end-to-end on one real ticket.
       *([`agents/logs/implement-ticket/metrics.jsonl`](../logs/implement-ticket/metrics.jsonl)
       — 18 KB of structured run data across both prototypes.)*
 - [x] Decide runtime + location of orchestrator code. Record in a
-      short ADR under `agents/contexts/` (not a roadmap).
+      short ADR under `agents/settings/contexts/` (not a roadmap).
       *(Decision: **Python 3.10+**, orchestrator under
       `.agent-src.uncompressed/templates/scripts/implement_ticket/`
       per architectural constraint #1. See

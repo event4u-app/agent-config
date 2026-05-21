@@ -37,9 +37,9 @@ embedded `_SAMPLE`, blind-labelled eval corpora, and a kill-switch if
 
 ## Eval Outcome (D5)
 
-Corpora at `agents/eval-corpora/block-d/`. Runner:
+Corpora at `agents/evidence/eval-corpora/block-d/`. Runner:
 `scripts/skill_tools/run_block_d_eval.py`. Report:
-[`agents/eval-corpora/block-d/report.json`](../../agents/eval-corpora/block-d/report.json).
+[`agents/evidence/eval-corpora/block-d/report.json`](../../agents/evidence/eval-corpora/block-d/report.json).
 
 | Tool | Target | Result | Verdict |
 |---|---|---|---|
@@ -110,5 +110,5 @@ dir, and the `lint-skill-tools` task entry. Mark this ADR
 
 - Tools: [`scripts/skill_tools/`](../../scripts/skill_tools/).
 - Linter: [`scripts/lint_skill_tools.py`](../../scripts/lint_skill_tools.py).
-- Corpora + report: [`agents/eval-corpora/block-d/`](../../agents/eval-corpora/block-d/).
+- Corpora + report: [`agents/evidence/eval-corpora/block-d/`](../../agents/evidence/eval-corpora/block-d/).
 - Tests: `tests/test_lint_skill_tools.py`, `tests/test_score_skill_relevance.py`, `tests/test_audit_persona_coverage.py`, `tests/test_suggest_skill_for_task.py`.

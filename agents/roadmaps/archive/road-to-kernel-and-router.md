@@ -195,7 +195,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
      `docs/guidelines/<rule-id>-examples.md`; rule body keeps a one-line
      `Examples: [link]` pointer (per `direct-answers` § Examples-out).
   3. **Rationale → context.** Move "why" prose to
-     `agents/contexts/authority/<rule-id>-mechanics.md` (pattern from
+     `agents/settings/contexts/authority/<rule-id>-mechanics.md` (pattern from
      `commit-mechanics.md`); rule body keeps Iron Law + trigger only.
   4. **Family deduplication.** Rules that share an Iron Law (e.g.
      `commit-policy` + `non-destructive-by-default` both forbid

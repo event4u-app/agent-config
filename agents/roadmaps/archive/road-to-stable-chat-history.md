@@ -48,7 +48,7 @@ Phase 2 of the Product UI Track: significant work and many commits between
 > Output of this phase is one context document that locks in what each
 > platform actually offers. Phase 2 cannot start until this is committed.
 
-- [x] **Step 1:** Create `agents/contexts/chat-history-platform-hooks.md` with
+- [x] **Step 1:** Create `agents/settings/contexts/chat-history-platform-hooks.md` with
       one section per platform: Augment Code, Claude Code, Cursor, Cline,
       Windsurf, Gemini CLI. Skeleton only — to be filled in by the next steps.
 - [x] **Step 2:** Augment Code — document the hook surface visible from this
@@ -155,7 +155,7 @@ Phase 2 of the Product UI Track: significant work and many commits between
       `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`
       that comes from the compressed projection of the rewritten rule.
       → **Resolved:** rule slimmed under the 200-line limit by
-      extracting handshake mechanics to `agents/contexts/chat-history-handshake.md`.
+      extracting handshake mechanics to `agents/settings/contexts/chat-history-handshake.md`.
       Schema fix on `/chat-history-checkpoint` frontmatter
       (`triggers` → `trigger_description` + `trigger_context`).
       Marketplace.json updated to register the new skill (and three
@@ -205,7 +205,7 @@ Phase 2 of the Product UI Track: significant work and many commits between
 
 ## Acceptance Criteria
 
-- [x] `agents/contexts/chat-history-platform-hooks.md` exists, cites current
+- [x] `agents/settings/contexts/chat-history-platform-hooks.md` exists, cites current
       docs, and assigns each of the six platforms to HOOK / CHECKPOINT / MANUAL.
 - [x] At least one platform (Augment Code OR Claude Code) is HOOK-classified
       AND end-to-end hook integration is shipped and dogfooded.

@@ -130,7 +130,7 @@ runs in parallel with Phase 1 + 2.
 ## Phase 3 — Governance cross-cut (out-of-horizon, council-recommended)
 
 - [x] **P3.1 — Codify "Defer-with-trigger" ICE tier.** Landed at
-  `agents/contexts/harvest-policy.md` (≤150). Three-bucket model
+  `agents/settings/contexts/harvest-policy.md` (≤150). Three-bucket model
   (adopt-now / defer-with-trigger / drop), four required fields per
   deferred entry (trigger / shape / sunset path / owner+cadence),
   Ruflo HTTP-bridge example, anti-patterns. Cited from future harvest
@@ -169,7 +169,7 @@ runs in parallel with Phase 1 + 2.
 
 ## Provenance
 
-- Analysis: `agents/analysis/compare-ruflo-harvest.md`
+- Analysis: `agents/evidence/analysis/compare-ruflo-harvest.md`
 - Upstream source: `ruvnet/ruflo` (SHA captured during harvest in
   `/tmp/ruflo-harvest/ruflo.sha`; not committed — re-captured per audit)
 - Specific Ruflo files referenced:

@@ -14,12 +14,12 @@ parses each turn for two signals:
     `.agent-src/skills/<slug>/`.
 
 Emits one JSONL record per (session, turn, slug, kind) to
-`agents/metrics/skill-usage.jsonl` (append-only, deduped on the
+`agents/runtime/metrics/skill-usage.jsonl` (append-only, deduped on the
 (session_id, turn_idx, slug, kind) tuple).
 
 Privacy: `prompt_excerpt_hash` = SHA-256 of the first 200 chars of the
 user prompt that opened the turn. No raw user or assistant bodies are
-persisted. See `agents/audits/2026-05-14-north-star/skill-usage-sources.md`.
+persisted. See `agents/evidence/audits/2026-05-14-north-star/skill-usage-sources.md`.
 """
 from __future__ import annotations
 
@@ -153,7 +153,7 @@ def dedup_key(rec: dict) -> tuple:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--project-slug", help="Override the ~/.claude/projects slug (defaults to current repo)")
-    ap.add_argument("--out", type=Path, default=OUT, help="Output jsonl (default: agents/metrics/skill-usage.jsonl)")
+    ap.add_argument("--out", type=Path, default=OUT, help="Output jsonl (default: agents/runtime/metrics/skill-usage.jsonl)")
     ap.add_argument("--quiet", action="store_true", help="Suppress non-error output")
     args = ap.parse_args()
 

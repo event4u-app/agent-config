@@ -57,12 +57,12 @@ python3 scripts/measure_rule_budget.py --json > /tmp/rule-budget-before.json
 The audit infrastructure already exists — compose it:
 
 ```bash
-python3 scripts/audit_auto_rules.py      # → agents/reports/auto-rules-audit.{json,md}
+python3 scripts/audit_auto_rules.py      # → agents/runtime/reports/auto-rules-audit.{json,md}
 python3 scripts/audit_overlap.py         # → appends overlap pairs to the MD
-python3 scripts/audit_likelihood.py      # → agents/reports/auto-rules-likelihood.json
+python3 scripts/audit_likelihood.py      # → agents/runtime/reports/auto-rules-likelihood.json
 ```
 
-Then read `agents/reports/auto-rules-audit.md` end-to-end.
+Then read `agents/runtime/reports/auto-rules-audit.md` end-to-end.
 
 ### 3. Categorise every flagged rule
 

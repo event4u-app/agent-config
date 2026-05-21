@@ -376,7 +376,7 @@ matching `road-to-<topic-slug>` roadmap under `agents/roadmaps/`).
 - Files at `agents/` root (e.g. `agents/runtime/council/question-foo.md`).
 - Dot-prefix scratch (e.g. `agents/.council-question-foo.md`).
 - Any other directory below `agents/` (e.g. `agents/scratch/`,
-  `agents/notes/`). Operator scratch belongs under
+  `agents/evidence/notes/`). Operator scratch belongs under
   `agents/runtime/tmp/` (gitignored).
 - Cross-references from any artefact to specific council files —
   see [`no-roadmap-references`](../../rules/no-roadmap-references.md)

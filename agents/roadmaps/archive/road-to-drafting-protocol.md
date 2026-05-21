@@ -12,7 +12,7 @@
 > everything. Zero autopilot, maximum collaboration.
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — the front-end (Understand/Research/Draft), stripped of the autopilot back-end (`run_loop.py`, `.skill` packaging, blind comparison)
-- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
+- **Source analysis:** [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — revised scope after 2026-04-20 discussion
 - **Status:** Phase 1 + 2 + 3 + 4 shipped, 2026-04-21 (branch `feat/improve-agent-setup-8`)
 - **Author:** Split out of the anthropic alignment track after narrow-rejection was revised
 
@@ -288,4 +288,4 @@ Still proposal-gated. Still no autopilot.
 - [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — integrated in Phase 4
 - [`road-to-9.md`](road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)
+- [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — origin finding (Finding §2 pushy description + §3 trigger evals + revised §7 interactive drafting)

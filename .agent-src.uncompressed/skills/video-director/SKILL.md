@@ -49,7 +49,7 @@ Do NOT use when:
 ### Step 0: Inspect
 
 1. Confirm the input is a live-action / photoreal beat (not animation).
-2. If a `character.json` exists under `agents/ai-video/<project>/characters/`,
+2. If a `character.json` exists under `agents/reference/ai-video/<project>/characters/`,
    read the identity tokens — they are reused verbatim.
 3. Read the scene's intent in one sentence — what is the camera
    witnessing, and why now?
@@ -128,11 +128,11 @@ Any "no" → revise that block before handing off.
 
 The 11-block cinematic prompt is live-action shape — real-person and brand-impersonation risks are the highest in the cluster. Before emitting:
 
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — when the prompt names or visually identifies a real person on camera.
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — when the subject is a recognised public figure.
-- [`agents/policies/media/brand-impersonation.md`](../../../agents/policies/media/brand-impersonation.md) — when the prompt copies a journalism / broadcaster / regulated-industry visual identity.
-- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — when LIGHT / LENS choices are anchored to a named living cinematographer's signature.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every distributed live-action AI clip carries the non-removable AI-generation disclosure.
+- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when the prompt names or visually identifies a real person on camera.
+- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the subject is a recognised public figure.
+- [`agents/settings/policies/media/brand-impersonation.md`](../../../agents/settings/policies/media/brand-impersonation.md) — when the prompt copies a journalism / broadcaster / regulated-industry visual identity.
+- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — when LIGHT / LENS choices are anchored to a named living cinematographer's signature.
+- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every distributed live-action AI clip carries the non-removable AI-generation disclosure.
 
 Refuse-and-surface at the directorial layer; live-action realism amplifies every policy gap downstream.
 

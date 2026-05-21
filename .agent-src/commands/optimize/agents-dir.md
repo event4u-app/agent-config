@@ -40,7 +40,7 @@ one entry-point and three explicit modes.
 
 | Flag | Mode | Was | What it does |
 |---|---|---|---|
-| `--scaffold` | scaffold | `/agents prepare` | Create `agents/`, `agents/features/`, `agents/contexts/`, `agents/roadmaps/`, module mirrors, `.gitkeep` files |
+| `--scaffold` | scaffold | `/agents prepare` | Create `agents/`, `agents/features/`, `agents/settings/contexts/`, `agents/roadmaps/`, module mirrors, `.gitkeep` files |
 | `--audit` | folder-audit | `/agents audit` | Read-only inventory of `agents/`, module agents, overrides; flag duplicates, orphans, structural drift |
 | `--fix` | fix | `/agents cleanup` | Execute actions from a prior `--audit` (or roadmap) — move, merge, delete, update; per-action confirmation |
 
@@ -71,7 +71,7 @@ surface changes.
 
 ### `--audit` (was the folder side of `/agents audit`)
 
-1. **Inventory all agent docs** — `find agents/ -maxdepth 1`, `agents/features/`, `agents/contexts/`, `agents/overrides/`, `.augment/guidelines/`, `app/Modules/*/agents/`. For each: filename, first heading, size, last `git log` date.
+1. **Inventory all agent docs** — `find agents/ -maxdepth 1`, `agents/features/`, `agents/settings/contexts/`, `agents/overrides/`, `.augment/guidelines/`, `app/Modules/*/agents/`. For each: filename, first heading, size, last `git log` date.
 2. **Module coverage** — for every `app/Modules/*/`: docs count, presence of description file, features dir, contexts dir; flag inactive modules with no docs as `🔵 Info` only.
 3. **Scan overrides** — for every `agents/overrides/*.md`: extract `Mode:` (`extend`/`replace`) and `Original:` headers; check the original file exists; flag orphans.
 4. **Classify documents** — `Architecture / Convention / Pattern / Feature / Context / Module Doc / Override / Unclear`.

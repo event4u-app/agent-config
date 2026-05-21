@@ -23,7 +23,7 @@
 - **Consent record:** `<link-to-dm-or-email-thread-or-signed-form>`
 
 > Consent gate per step-13 Phase 1 row 3 — a recruit without an explicit
-> consent record cannot anchor `agents/eval-findings/`. Anonymised
+> consent record cannot anchor `agents/evidence/eval-findings/`. Anonymised
 > finding is acceptable; missing consent record is not.
 
 ## Pre-session readiness
@@ -61,11 +61,11 @@ Empty list = the session wasn't real.
 - **MCP setup time:** `__ minutes __ seconds` (gate: `< 10 min`)
 - **First useful invocation reached without terminal?:** (yes | no | partial)
 - **Recruit would recommend to a peer?:** (yes | maybe | no | declined-to-answer)
-- **Eligible to anchor `agents/eval-findings/`?:** (yes | no — reason)
+- **Eligible to anchor `agents/evidence/eval-findings/`?:** (yes | no — reason)
 
 ## Cross-links
 
-- **Eval-finding file (if logged):** `agents/eval-findings/YYYY-MM-DD-<slug>.md`
+- **Eval-finding file (if logged):** `agents/evidence/eval-findings/YYYY-MM-DD-<slug>.md`
 - **Case-study file (if subject opted in):** `docs/case-studies/YYYY-MM-DD-<type>-<slug>.md`
 - **Roadmap rows closed by this session:**
   - step-13 P1 row 1 (recruit) — yes / no

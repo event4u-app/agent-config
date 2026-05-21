@@ -92,8 +92,8 @@ Cluster locked in
 
 | Location | Holds | Tracked in git? |
 |---|---|---|
-| `agents/ghostwriter/<slug>.md` (consumer) | Real-person public-figure profiles | **No** — gitignored by default. `--shared` opt-in deferred to v2. |
-| `agents/ghostwriter/README.md` (consumer) | Directory anchor + how-to | Yes |
+| `agents/reference/ghostwriter/<slug>.md` (consumer) | Real-person public-figure profiles | **No** — gitignored by default. `--shared` opt-in deferred to v2. |
+| `agents/reference/ghostwriter/README.md` (consumer) | Directory anchor + how-to | Yes |
 | `.agent-src.uncompressed/ghostwriter/*.md` (package) | `fictional: true` fixtures only | Yes — CI-enforced by `scripts/lint_ghostwriter_source.py` |
 
 Slug = full-name kebab-case with optional `-<discriminator>` suffix

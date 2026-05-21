@@ -86,7 +86,7 @@ Cursor, Windsurf, Cline, Gemini, Copilot have **no native skill surface**. Skill
 | `skill:laravel` | skill | Augment + Claude only; rationale for absence on others |
 | `command:commit` | command | per-tool command surface divergence |
 
-Run: `python3 scripts/probe_projection_fidelity.py` — exits non-zero on any divergence. Report at `agents/reports/projection-fidelity.json`.
+Run: `python3 scripts/probe_projection_fidelity.py` — exits non-zero on any divergence. Report at `agents/runtime/reports/projection-fidelity.json`.
 
 ## Known divergences (do not file as bugs)
 
@@ -102,7 +102,7 @@ These are **architectural facts**, not regressions. They are documented so insta
 
 - [x] Fixture under `tests/fixtures/projection_fidelity/`
 - [x] Probe script under `scripts/probe_projection_fidelity.py`
-- [x] Report under `agents/reports/projection-fidelity.json`
+- [x] Report under `agents/runtime/reports/projection-fidelity.json`
 - [x] Per-tool guarantee table above
 - [x] Known-divergence list above
 

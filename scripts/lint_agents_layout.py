@@ -48,7 +48,7 @@ ALLOWED_FLAT_FILES: frozenset[str] = frozenset(
         "low-impact-decisions.md",
         "low-impact-decisions.lock.yaml",
         # Worked example for the ai-video pipeline. Stays adjacent to
-        # the agents/ai-video/ dir as a reference template.
+        # the agents/reference/ai-video/ dir as a reference template.
         ".ai-video.xml.example",
         # Empty-tree sentinel so agents/ survives a fresh checkout
         # before any runtime artefact lands.

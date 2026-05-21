@@ -24,7 +24,7 @@ consumer command; the **only** axis of variation is:
 
 | Consumer command | Style source | Footer |
 |---|---|---|
-| `/ghostwriter:write` | `agents/ghostwriter/<slug>.md` (selected) | **Mandatory** |
+| `/ghostwriter:write` | `agents/reference/ghostwriter/<slug>.md` (selected) | **Mandatory** |
 | `/post-as:ghostwriter` | Same as above (thin alias) | **Mandatory** |
 | `/post-as:me` | `.agent-user.md` (project root) | **Omitted** — user is the author |
 

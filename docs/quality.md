@@ -27,7 +27,7 @@ This runs, in order:
 The linter (`scripts/skill_linter.py`) validates:
 
 - **Required structure** — YAML frontmatter, description, triggers
-- **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../agents/docs/frontmatter-contract.md))
+- **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../agents/reference/docs/frontmatter-contract.md))
 - **Anti-patterns** — Procedural rules in behavior rules, overlong skills, scope creep
 - **Compression quality** — Key sections preserved after compression
 
@@ -86,7 +86,7 @@ task consistency-fix     # Regenerate ALL derived outputs
 Skills dispatched via `scripts/runtime_dispatcher.py run --skill NAME --output FILE`
 write a typed `ExecutionResult` JSON (exit code, stdout, stderr, duration,
 artifacts) to the given path. In CI, the two pilot skills `lint-skills`
-and `check-refs` write to `agents/reports/runs/` and
+and `check-refs` write to `agents/runtime/reports/runs/` and
 `scripts/ci_summary.py` renders them into the GitHub Step Summary so
 failures are visible on the PR page.
 

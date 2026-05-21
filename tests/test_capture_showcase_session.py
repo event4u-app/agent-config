@@ -1,7 +1,7 @@
 """Tests for scripts/capture_showcase_session.py — Phase 1.2 deliverable.
 
 Smoke-coverage for the four outcome metrics defined in
-agents/contexts/outcome-baseline.md, the frontmatter emitter, and the
+agents/settings/contexts/outcome-baseline.md, the frontmatter emitter, and the
 CLI subcommands. Exercises stdin capture and metrics reading.
 """
 

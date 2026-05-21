@@ -83,7 +83,7 @@ __pycache__/
 /GEMINI.md
 
 # Dispatcher run results (produced by `dispatcher run --output …`, consumed by ci_summary)
-/agents/reports/runs/
+/agents/runtime/reports/runs/
 
 # Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
 # triggers.json is tracked, last-run.json is per-run output)
@@ -102,16 +102,23 @@ evals/results/
 /.agent-memory/
 
 # Volatile runtime artefacts — machine-generated, regenerated on demand,
-# never committed. Anything under `agents/runtime/` is gitignored by
-# construction; per-bucket purpose:
+# never committed. Volatile buckets are ignored explicitly; sibling
+# buckets `council/`, `metrics/`, `reports/` carry tracked content and
+# are governed by their own carve-out rules further down.
 #   density/    — scripts/measure_density.py + skill_linter.py JSONL/JSON
 #                 (canonical numbers locked in docs/contracts/linter-structural-model.md)
 #   frugality/  — scripts/measure_frugality_savings.py JSONL
-#                 (canonical numbers locked in agents/contexts/adr-frugality-savings-baseline.md)
+#                 (canonical numbers locked in agents/settings/contexts/adr-frugality-savings-baseline.md)
 #   logs/       — /implement-ticket Q38 metrics JSONL per run
 #   mcp-telemetry/ — scripts/mcp_server/telemetry.py call log + sqlite store
+#   state/      — per-rule runtime cache (context-hygiene, onboarding-gate, verify-before-complete)
 #   tmp/        — operator scratch
-/agents/runtime/
+/agents/runtime/density/
+/agents/runtime/frugality/
+/agents/runtime/logs/
+/agents/runtime/mcp-telemetry/
+/agents/runtime/state/
+/agents/runtime/tmp/
 
 # Phase 5.3 always-rule budget trend log (per-run JSONL, local-only).
 /.github/budget-trend.jsonl
@@ -132,7 +139,7 @@ evals/results/
 # Raw per-turn JSONL is local-only because it carries SHA-256 prompt
 # hashes derived from the maintainer's own sessions. The aggregated
 # report (skill-usage-report.md) IS committed as the 0-day baseline.
-/agents/metrics/skill-usage.jsonl
+/agents/runtime/metrics/skill-usage.jsonl
 
 # AI Council runtime price cache (refreshed weekly by
 # `python3 scripts/update_prices.py`; bootstrapped on first /council
@@ -145,15 +152,16 @@ evals/results/
 # contract. The roadmap / ADR / skill body cites convergence inline.
 # Linking to council files would break for any reviewer who clones
 # without the ignored content. See ai-council § Output path convention.
-agents/runtime/council/questions/
+agents/runtime/council/questions/*
 agents/runtime/council/responses/*
 agents/runtime/council/sessions/
 
-# Carve-out: the 2026-05-18 roadmap-design pass is durable evidence
-# cited by five proposed roadmaps' resolution gates. Tracked as a
-# one-time exception; future council runs stay scratch by default.
-# Pattern needs `/*` (not `/`) on the parent rule above so re-includes work.
+# Carve-outs: durable council artefacts that document decisions cited
+# from roadmaps / ADRs. Future council runs stay scratch by default.
+# Pattern needs `/*` (not `/`) on the parent rules above so re-includes work.
 !agents/runtime/council/responses/2026-05-18T*
+!agents/runtime/council/questions/agent-doc-cluster-restructure.md
+!agents/runtime/council/responses/agent-doc-cluster-restructure.json
 
 # AI Council persistent events log (step-8 D3). JSONL audit trail of
 # necessity / quota decisions. Local-only — hashes original_ask but is
@@ -166,13 +174,13 @@ agents/runtime/council/events.log
 
 # AI Video pipeline (Phase 1 of agents/roadmaps/ai-video-pipeline.md).
 # The real provider-secrets file MUST NEVER be committed.
-# Operator scratch under agents/ai-video/ is gitignored except the
+# Operator scratch under agents/reference/ai-video/ is gitignored except the
 # README, prompts library, examples, and committed fixtures used by
 # the offline smoke test.
 agents/.ai-video.xml
-agents/ai-video/*
-!agents/ai-video/README.md
-!agents/ai-video/prompts/
-!agents/ai-video/prompts/**
-!agents/ai-video/examples/
-!agents/ai-video/examples/**
+agents/reference/ai-video/*
+!agents/reference/ai-video/README.md
+!agents/reference/ai-video/prompts/
+!agents/reference/ai-video/prompts/**
+!agents/reference/ai-video/examples/
+!agents/reference/ai-video/examples/**

@@ -4,7 +4,7 @@
 Produces:
 
   * docs/contracts/file-ownership-matrix.json (machine, internal-locked)
-  * agents/contexts/structural/file-ownership-matrix.md (human-readable)
+  * agents/settings/contexts/structural/file-ownership-matrix.md (human-readable)
 
 Walks `.agent-src.uncompressed/{rules,skills,commands,contexts,personas}/`,
 parses frontmatter for `load_context:` / `load_context_eager:`, scans

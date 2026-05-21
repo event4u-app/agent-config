@@ -152,7 +152,7 @@ chat_history:
 # (scripts/work_engine/). Hooks observe, validate, or persist around the
 # six CLI events (before_load, after_load, before_dispatch,
 # after_dispatch, before_save, after_save) and the dispatcher events
-# (before_step, after_step, on_halt). See agents/contexts/
+# (before_step, after_step, on_halt). See agents/settings/contexts/
 # work-engine-hooks.md for the full lifecycle and registration contract.
 #
 # Default-off by construction: when the `hooks:` block is absent the
@@ -455,7 +455,7 @@ the canonical narrative lives in
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
 | `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.py`. |
-| `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/contexts/work-engine-hooks.md`](../../../agents/contexts/work-engine-hooks.md). |
+| `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/settings/contexts/work-engine-hooks.md`](../../../agents/settings/contexts/work-engine-hooks.md). |
 | `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
 | `hooks.halt_surface_audit` | `true`, `false` | `true` | Defense-in-depth check that every halt surfaced by the dispatcher carries the expected shape. Cheap. |
 | `hooks.state_shape_validation` | `true`, `false` | `true` | Re-run the state schema validator on `AFTER_LOAD` and `BEFORE_SAVE`. Cheap, catches drift. |

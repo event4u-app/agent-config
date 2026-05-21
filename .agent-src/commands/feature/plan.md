@@ -146,8 +146,8 @@ I analyzed the code. Here's what I found:
 ### 5a. Check for existing context
 
 Check if a context document exists for the affected area:
-- `agents/contexts/` for project-wide contexts
-- `app/Modules/{Module}/agents/contexts/` if a module is involved
+- `agents/settings/contexts/` for project-wide contexts
+- `app/Modules/{Module}/agents/settings/contexts/` if a module is involved
 
 If a context exists:
 ```

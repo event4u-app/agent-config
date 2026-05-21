@@ -13,7 +13,7 @@ written, tested, and refactored against a stable surface.
 semantics, the `hook_manifest.yaml` schema, the concurrency contract
 for `agents/runtime/state/` writes, and the Copilot fallback pattern. Does
 **not** specify per-platform install paths — those live in
-[`chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
+[`chat-history-platform-hooks.md`](../../agents/settings/contexts/chat-history-platform-hooks.md).
 
 Last refreshed: 2026-05-04.
 

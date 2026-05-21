@@ -57,10 +57,10 @@ Every event emitted by the pipeline **must** follow this shape:
 
 | Artifact | Schema | Written by | Consumed by |
 |---|---|---|---|
-| `agents/reports/metrics.json` | Counters + timers per skill | Pipeline | Report generator |
-| `agents/reports/feedback.json` | Outcomes + suggestions | Feedback collector | Governance + reports |
-| `agents/reports/tool-audit.json` | Tool call log | Tool adapters | Audit report |
-| `agents/reports/health-dashboard.md` | Markdown summary | Report generator | User (CLI/CI) |
+| `agents/runtime/reports/metrics.json` | Counters + timers per skill | Pipeline | Report generator |
+| `agents/runtime/reports/feedback.json` | Outcomes + suggestions | Feedback collector | Governance + reports |
+| `agents/runtime/reports/tool-audit.json` | Tool call log | Tool adapters | Audit report |
+| `agents/runtime/reports/health-dashboard.md` | Markdown summary | Report generator | User (CLI/CI) |
 
 ## Token cost awareness
 
@@ -84,9 +84,9 @@ All outputs in this roadmap are gated by `.agent-settings`:
 Add file-based persistence with the mandatory event schema.
 
 **Files:**
-- New: `scripts/persistence.py` (read/write JSON to `agents/reports/`)
+- New: `scripts/persistence.py` (read/write JSON to `agents/runtime/reports/`)
 - New: `scripts/event_schema.py` (validate events against mandatory shape)
-- New: `agents/reports/.gitkeep`
+- New: `agents/runtime/reports/.gitkeep`
 - Modified: `scripts/runtime_metrics.py` (add save/load)
 - Modified: `scripts/feedback_collector.py` (add save/load)
 - New: `tests/test_persistence.py`
@@ -96,7 +96,7 @@ Add file-based persistence with the mandatory event schema.
 - All events conform to the mandatory schema (validated at write time)
 - Metrics, feedback, and tool audit data persist to JSON files
 - Data loads correctly on next run (append, not overwrite)
-- `.gitignore` excludes `agents/reports/*.json` (local data, not committed)
+- `.gitignore` excludes `agents/runtime/reports/*.json` (local data, not committed)
 
 ---
 
@@ -110,9 +110,9 @@ Generate reports that directly answer the 6 key questions defined above.
 - New: `tests/test_report_generator.py`
 
 **Reports generated:**
-- `agents/reports/health-dashboard.md` — answers: which skills fail, which are stable, trend direction
-- `agents/reports/tool-audit.md` — answers: which adapters cause errors, call frequency
-- `agents/reports/feedback-summary.md` — answers: top errors, improvement suggestions, deprecation candidates
+- `agents/runtime/reports/health-dashboard.md` — answers: which skills fail, which are stable, trend direction
+- `agents/runtime/reports/tool-audit.md` — answers: which adapters cause errors, call frequency
+- `agents/runtime/reports/feedback-summary.md` — answers: top errors, improvement suggestions, deprecation candidates
 
 **Acceptance:**
 - `task report` generates all three reports

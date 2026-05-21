@@ -5,7 +5,7 @@ Reads tests/fixtures/projection_fidelity/fixtures.yml, walks the
 projected trees (.augment/, .claude/, .cursor/, .clinerules/,
 .windsurfrules, .windsurf/), and records pass/fail/partial per check.
 
-Output: agents/reports/projection-fidelity.json + stdout summary.
+Output: agents/runtime/reports/projection-fidelity.json + stdout summary.
 
 Pure stdlib (PyYAML reuse from scripts/_lib if installed; otherwise
 inline minimal YAML loader for the fixture's restricted shape).
@@ -172,7 +172,7 @@ def check_entry(entry: dict) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fixture", default="tests/fixtures/projection_fidelity/fixtures.yml")
-    ap.add_argument("--report", default="agents/reports/projection-fidelity.json")
+    ap.add_argument("--report", default="agents/runtime/reports/projection-fidelity.json")
     args = ap.parse_args()
 
     fixture = yaml.safe_load((ROOT / args.fixture).read_text(encoding="utf-8"))

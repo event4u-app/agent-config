@@ -35,7 +35,7 @@ suggestion:
   - suggestion: REQUIRED — drives the in-host command suggester
     - eligible: true  → set trigger_description + trigger_context
     - eligible: false → set rationale (why never auto-suggested)
-    See agents/contexts/command-suggestion-eligibility.md for guidance.
+    See agents/settings/contexts/command-suggestion-eligibility.md for guidance.
   - council_depth: optional — only `deep` is accepted. **Omit the key
     for default depth** (`standard` is the implicit default and is
     rejected by the schema — every frontmatter byte counts). Set `deep`

@@ -54,7 +54,7 @@
 - **Q27** ✅ `resolved` (2026-04-22) — **Q19 README demo adoption
   gate.** Gate met: two real tickets refined (DEV-6182, DEV-6155)
   with stable output and seven concrete findings captured in
-  [`agents/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md).
+  [`agents/reference/docs/refine-ticket-in-practice.md`](../docs/refine-ticket-in-practice.md).
   README demo can use a real before/after — recommended template
   source is DEV-6155 (smallest scope, no customer names or
   security specifics). Live-run findings tracked in
@@ -242,7 +242,7 @@
   - **Present path** (package installed): wired but unexecutable
     until the package ships.
   - **Integrity check shipped 2026-04-22:**
-    [`agents/contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md)
+    [`agents/settings/contexts/agent-memory-contract.md`](../contexts/agent-memory-contract.md)
     pins the expected interface + flags known drift (`source` /
     `score` naming vs. spec envelope) so we see the diff in one
     place when the package lands.

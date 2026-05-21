@@ -150,7 +150,7 @@ displayed, not enforced. Enforcement is a separate roadmap
   - `inputs.py` — reads `.agent-settings.yml`, `config/profiles/*.yml`, `config/presets/*.yml`; reuses `scripts.config.profiles.resolve_profile()` and `presets.resolve_preset()` from v1; records the source per knob (one of: `pack | profile | preset | user | env | runtime | default`)
   - `route.py` — reads `<root>/router.json`; cross-references the `state.directive_set` to surface matched tier-1 rules and the active persona
   - `council.py` — globs `<root>/agents/council-sessions/*/council-responses.json` plus `<root>/tmp/council-*.json`; picks the file with the most recent `mtime` that lies inside the run window (`state.created_at` ± 1h); returns `null` if none match  <!-- council-ref-allowed: implementation spec for the council loader; the glob path is the contract it implements -->
-  - `memory.py` — opens `<root>/agents/metrics/skill-usage.jsonl` (already exists) and any `<root>/.agent-memory/hits.jsonl` (optional, may be absent); returns the entries marked with the active `run_id`; `null` if no hits
+  - `memory.py` — opens `<root>/agents/runtime/metrics/skill-usage.jsonl` (already exists) and any `<root>/.agent-memory/hits.jsonl` (optional, may be absent); returns the entries marked with the active `run_id`; `null` if no hits
   - `assumptions.py` — reads `state.input.data.assumptions[]` if present; the work-engine writes those out at the end of `refine` and on every `halt`
 
 ### Step 2.3: Markdown renderer

@@ -27,7 +27,7 @@ AREAS: dict[str, dict[str, str]] = {
                 "scope":    "Budget ladder, hard-stop hook, cost reporting and dashboards."},
     "caveman": {"contract": "compression-default-kill-criterion.md",
                 "scope":    "Caveman-speak compression, decompression, reversibility guards."},
-    "schema":  {"contract": "agents/docs/frontmatter-contract.md",
+    "schema":  {"contract": "agents/reference/docs/frontmatter-contract.md",
                 "scope":    "Frontmatter schemas, v2 rigor, lint behaviour for skills / rules / commands."},
     "router":  {"contract": "rule-router.md",
                 "scope":    "router.json shape, tier semantics, dispatch precedence."},

@@ -1,7 +1,7 @@
 # Selection-accuracy fixture set — council file 05, Phase 2.2.
 #
 # Each entry maps a natural-language prompt to (a) the intended skill and
-# (b) its collision cluster (from `agents/reports/skill-collision-clusters.json`).
+# (b) its collision cluster (from `agents/runtime/reports/skill-collision-clusters.json`).
 # `kind` is `clear-A` (clearly targets `intended`), `clear-B` (clearly
 # targets a different member of the same cluster), or `ambiguous`
 # (intentionally underspecified — pass if the host picks any cluster

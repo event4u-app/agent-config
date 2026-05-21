@@ -38,7 +38,7 @@ verifies end-to-end in a consumer.
 - [x] **P0.1 — Pin audit numbers in this roadmap.** 16 frontmatter sites
   (12 `load_context:` entries across 11 rules + 4 `path_prefix:`
   declarations), 18 `docs/guidelines/` body-links in 11 rules, 2
-  `docs/contracts/` body-links, 0 `agents/contexts/` body-links.
+  `docs/contracts/` body-links, 0 `agents/settings/contexts/` body-links.
   Re-audit greps run 2026-05-06; numbers locked. Drift from earlier
   draft: `scope-control` was missing from the `load_context:` list
   (now in P2.1); `guidelines.md` was double-counted in B1 (the
@@ -220,7 +220,7 @@ block (P3.3).
   frontmatter going forward.** Two-layer enforcement:
   - **Schema regex** in `scripts/schemas/rule.schema.json`:
     `load_context` and `load_context_eager` items match
-    `^(contexts/|agents/contexts/|\.agent-src/contexts/)[^\s]+\.md$`,
+    `^(contexts/|agents/settings/contexts/|\.agent-src/contexts/)[^\s]+\.md$`,
     so any `.agent-src.uncompressed/contexts/...` entry fails
     `task validate-schema` with a per-item pattern violation.
   - **Linter** in `scripts/lint_load_context.py`: removed the legacy
@@ -288,7 +288,7 @@ mechanical + author-facing controls that prevent that.
 - [x] **P8.1 — Schema regex (mechanical, hard fail).**
   `scripts/schemas/rule.schema.json` rejects any
   `load_context` / `load_context_eager` item that does not match
-  `^(contexts/|agents/contexts/|\.agent-src/contexts/)[^\s]+\.md$` —
+  `^(contexts/|agents/settings/contexts/|\.agent-src/contexts/)[^\s]+\.md$` —
   fails `task validate-schema` at the per-item level.
 - [x] **P8.2 — Linter remediation hint (mechanical, hard fail).**
   `scripts/lint_load_context.py` removed the legacy prefix from
@@ -332,7 +332,7 @@ mechanical + author-facing controls that prevent that.
 ## Out of scope
 
 - Refactoring of the Augment-host's path resolver itself (we don't own it).
-- Migration of `agents/contexts/` body-links (Category B3): zero clickable
+- Migration of `agents/settings/contexts/` body-links (Category B3): zero clickable
   links exist; nothing to fix.
 - Wholesale restructuring of `docs/contracts/` — only the two contracts
   the rules consume (`command-suggestion-flow`, `artifact-engagement-flow`)

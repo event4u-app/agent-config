@@ -65,7 +65,7 @@ path is the part that keeps failing.
   fingerprint scheme. Crash-recovery capability stays.
 - **No** removal of the Augment user-level hook wrapper.
 - **No** removal of `/chat-history show` (manual inspection stays useful).
-- **No** changes to `agents/contexts/chat-history-platform-hooks.md` other
+- **No** changes to `agents/settings/contexts/chat-history-platform-hooks.md` other
   than dropping references to the cooperative handshake.
 - **No** new product surface, no README "use it" branch, no marketing.
 
@@ -193,9 +193,9 @@ path is the part that keeps failing.
       cooperative-only. **Keep** `_cmd_adopt` as the documented manual
       recovery lever; mark its `--help` text accordingly. The underlying
       `adopt()` function is also called internally by hooks via Phase 1.
-- [x] **Step 2:** Delete `agents/contexts/chat-history-handshake.md`
+- [x] **Step 2:** Delete `agents/settings/contexts/chat-history-handshake.md`
       (handshake doesn't exist anymore).
-- [x] **Step 3:** Trim `agents/contexts/chat-history-platform-hooks.md`
+- [x] **Step 3:** Trim `agents/settings/contexts/chat-history-platform-hooks.md`
       to the hook-only contract — remove all "agent renders Foreign-Prompt"
       passages. Add a short *"Manual recovery"* section pointing at
       `./agent-config chat-history:adopt`.
@@ -210,7 +210,7 @@ path is the part that keeps failing.
 - [x] **Step 3:** Sweep `README.md`, `AGENTS.md`, `copilot-instructions.md`,
       and `docs/architecture.md` for cooperative-handshake / Iron-Law
       references; replace with a one-liner: *"chat-history is hook-only;
-      see `agents/contexts/chat-history-platform-hooks.md`."* Also drop
+      see `agents/settings/contexts/chat-history-platform-hooks.md`."* Also drop
       the dead Phase-6→2B coupling guard
       (`scripts/check_phase_coupling.py` + tests + Taskfile entry) and
       remove `chat-history-*` rule rows from

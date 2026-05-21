@@ -48,7 +48,7 @@ The `description` field IS the trigger. It must describe **when** the rule appli
 
 Every new rule, and every edited rule whose body changes the trigger
 or the obligation, MUST classify itself against the hardening tiers
-documented in [`rule-trigger-matrix.md`](../../agents/contexts/rule-trigger-matrix.md):
+documented in [`rule-trigger-matrix.md`](../../agents/settings/contexts/rule-trigger-matrix.md):
 
 | Tier | Meaning |
 |---|---|
@@ -64,7 +64,7 @@ Classification surface: the optional `tier:` frontmatter field
 rules; bulk-retrofit of existing rules is tracked separately.
 
 Tier 3 dispositions are recorded centrally in
-[`agents/contexts/tier-3-dispositions.md`](../../agents/contexts/tier-3-dispositions.md)
+[`agents/settings/contexts/tier-3-dispositions.md`](../../agents/settings/contexts/tier-3-dispositions.md)
 with a 6-month re-audit clock. New Tier 3 rules append to that list
 on landing.
 

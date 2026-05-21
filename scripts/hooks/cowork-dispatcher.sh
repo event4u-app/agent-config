@@ -16,7 +16,7 @@
 # because Cowork spawns the CLI with `--setting-sources user`. The
 # trampoline is structurally ready; install plumbing is deferred
 # until upstream resolves the bugs and a stable settings location is
-# documented. See `agents/contexts/chat-history-platform-hooks.md`
+# documented. See `agents/settings/contexts/chat-history-platform-hooks.md`
 # § Cowork.
 #
 # Behaviour mirrors cursor-dispatcher.sh:

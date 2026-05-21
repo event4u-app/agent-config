@@ -612,7 +612,7 @@ Rules:
 - [ ] Create skill assignment list: which skills go into which package
 - [ ] Create command assignment list: which commands go into which package
 - [ ] Identify cross-package dependencies in scripts
-- [ ] Document the split decision in agents/docs/
+- [ ] Document the split decision in agents/reference/docs/
 
 **Output:** Documentation and plan. No code moves yet.
 **Risk:** None — pure planning.

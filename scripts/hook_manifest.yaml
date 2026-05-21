@@ -5,7 +5,7 @@
 #   - scripts/install.py               (per-platform config writer)
 #
 # Schema and event vocabulary: docs/contracts/hook-architecture-v1.md.
-# Per-platform event-name mapping: agents/contexts/chat-history-platform-hooks.md.
+# Per-platform event-name mapping: agents/settings/contexts/chat-history-platform-hooks.md.
 #
 # When you add or remove a concern, also update:
 #   - scripts/agent-config         (CLI subcommand wiring, if exposed)
@@ -73,7 +73,7 @@ platforms:
   # plugin-scope hooks. Until those land, the dispatcher binding
   # below is structurally ready but lifecycle events do not fire.
   # Decision matrix + upstream blockers tracked in
-  # agents/contexts/chat-history-platform-hooks.md § Cowork.
+  # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
     session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
@@ -87,7 +87,7 @@ platforms:
   # to route into the active workspace. UserPromptSubmit maps to
   # `beforeSubmitPrompt` (Cursor third-party-hooks table). Stop is
   # IDE-only — CLI-only users fall back to /checkpoint per
-  # agents/contexts/chat-history-platform-hooks.md.
+  # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
     session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]

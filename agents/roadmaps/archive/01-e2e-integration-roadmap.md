@@ -91,7 +91,7 @@ outcomes are captured, classified, and affect health scores.
 
 **Acceptance:**
 - Every pipeline execution records an outcome (success/failure/timeout/blocked)
-- Outcomes persist to `agents/reports/feedback.json`
+- Outcomes persist to `agents/runtime/reports/feedback.json`
 - Health score formula includes: status weight + linter issues + execution success rate
 - Full E2E test: dispatch → execute → event → feedback → lifecycle score change
 
@@ -134,7 +134,7 @@ Make tool calls observable and wire selected skills to use adapters.
 **Stage 5A — Tool observability:**
 - Every tool call emits an audit event (following mandatory event schema from Roadmap 3)
 - Tool results use a stable response shape (`ToolResult` with status, data, error)
-- Audit events persist to `agents/reports/tool-audit.json`
+- Audit events persist to `agents/runtime/reports/tool-audit.json`
 
 **Stage 5B — Skill integration (1-2 reference skills):**
 - `create-pr` skill uses GitHub adapter through runtime contracts

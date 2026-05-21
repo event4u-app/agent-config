@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Lint archive notes under agents/archived-skills/.
+"""Lint archive notes under agents/evidence/archived-skills/.
 
 Enforces the contract from
 .agent-src.uncompressed/templates/skill-archive-note.md:
 
-  1. Every <slug>.md under agents/archived-skills/ has the six required
+  1. Every <slug>.md under agents/evidence/archived-skills/ has the six required
      frontmatter fields with valid values.
   2. `reason` is one of {unused, merged, superseded, deprecated}.
   3. When `reason ∈ {merged, superseded}` the `replacement` slug exists
@@ -14,7 +14,7 @@ Enforces the contract from
      its frontmatter `replaced_by:` field.
 
 Hooked into `task ci` via `task lint-archived-skills`. Passes cleanly
-against an empty agents/archived-skills/ (only README.md present).
+against an empty agents/evidence/archived-skills/ (only README.md present).
 
 Exit codes:
   0  contract holds

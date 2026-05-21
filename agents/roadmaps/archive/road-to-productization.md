@@ -68,7 +68,7 @@ with their own Hard Cap accounting.
   perception lever.
 - **Cleanup is non-destructive.** Auto-rules over budget become
   context-backed (rule body shrinks, decision logic moves to
-  `agents/contexts/<name>.md`). No deletion. Linter-exemption is a
+  `agents/settings/contexts/<name>.md`). No deletion. Linter-exemption is a
   type-tag (`type: orchestrator`) added to frontmatter, not a
   hard-coded path list.
 - **Release-trunk sync is a one-shot + a protocol.** P1 ships the
@@ -201,7 +201,7 @@ siblings carry their own scope). Phase 8 = final validation.
   `non-destructive-by-default.md` (>6k chars) and
   `scope-control-policy.md`: shrink rule body to trigger + Iron Law +
   pointer; move decision logic and failure-mode catalogues into
-  `agents/contexts/authority/<name>-mechanics.md` (pattern already
+  `agents/settings/contexts/authority/<name>-mechanics.md` (pattern already
   used by `commit-mechanics.md`). Acceptance: each refactored rule
   ≤ 1.5k chars; linter green; behaviour unchanged. **Done 2026-05-14:**
   both rules already refactored to trigger + Iron Law + pointer shape
@@ -235,7 +235,7 @@ siblings carry their own scope). Phase 8 = final validation.
   `context`, `council`, `feature`, `fix`, `grill-me`, `judge`,
   `memory`, `module`, `optimize`, `override`, `roadmap`, `tests`)
   carry the tag. `task lint-skills` green (316 pass / 81 warn / 0 fail).
-  Contract documented in `agents/docs/frontmatter-contract.md` §
+  Contract documented in `agents/reference/docs/frontmatter-contract.md` §
   commands § Optional.
 - [x] **P5.4 — Beta-contract review.** Walk every contract in
   `docs/contracts/` carrying a `(beta)` marker; for each, apply the

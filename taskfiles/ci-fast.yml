@@ -53,15 +53,15 @@ tasks:
     silent: true
     desc: |
       Append exposure/mention records from Claude Code session jsonl into
-      agents/metrics/skill-usage.jsonl. Feeds step-2-skill-inventory-rationalization
+      agents/runtime/metrics/skill-usage.jsonl. Feeds step-2-skill-inventory-rationalization
       Phase 1. Privacy-safe (SHA-256 prompt-prefix hashes, no bodies).
     cmd: python3 scripts/skill_usage_collect.py {{.QUIET_FLAG}}
 
   skill-usage:report:
     silent: true
     desc: |
-      Aggregate agents/metrics/skill-usage.jsonl into
-      agents/metrics/skill-usage-report.md (per-skill 30-day rolling window
+      Aggregate agents/runtime/metrics/skill-usage.jsonl into
+      agents/runtime/metrics/skill-usage-report.md (per-skill 30-day rolling window
       with active / exposed-only / dead status). Baseline only — Phase 2 does
       the rationalization decisions.
     cmd: python3 scripts/skill_usage_report.py {{.QUIET_FLAG}}
@@ -70,7 +70,7 @@ tasks:
     silent: true
     desc: |
       Scan .agent-src.uncompressed/skills/*/SKILL.md frontmatter and body
-      symbol references; emit agents/metrics/skill-overlap.md with
+      symbol references; emit agents/runtime/metrics/skill-overlap.md with
       strong (≥ 0.6) and candidate (≥ 0.30 token / ≥ 0.50 symbol) tiers.
       Feeds step-2-skill-inventory-rationalization Phase 2 Step 3.
     cmd: python3 scripts/skill_overlap.py {{.QUIET_FLAG}}
@@ -78,7 +78,7 @@ tasks:
   lint-archived-skills:
     silent: true
     desc: |
-      Validate agents/archived-skills/ archive notes against the
+      Validate agents/evidence/archived-skills/ archive notes against the
       contract in .agent-src.uncompressed/templates/skill-archive-note.md.
       Fails if a note is missing required fields, a replacement slug
       doesn't exist, an archived slug still has a live SKILL.md, or a
@@ -118,7 +118,7 @@ tasks:
 
   lint-media-policy-linkage:
     silent: true
-    desc: "Enforce structural reachability of media governance policies — every agents/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/policies/media/README.md § Enforcement model)"
+    desc: "Enforce structural reachability of media governance policies — every agents/settings/policies/media/*.md (except README) must be linked from a skill, rule, or sibling policy (see agents/settings/policies/media/README.md § Enforcement model)"
     cmd: python3 scripts/lint_media_policy_linkage.py {{.QUIET_FLAG}}
 
   lint-persona-governance:

@@ -8,8 +8,8 @@ signal from git history (commands not touched in 90+ days are
 candidates for retirement).
 
 Output:
-  - ``agents/reports/command-surface.json`` (machine-readable)
-  - ``agents/reports/command-surface.md`` (human-readable)
+  - ``agents/runtime/reports/command-surface.json`` (machine-readable)
+  - ``agents/runtime/reports/command-surface.md`` (human-readable)
 
 Context: ``agents/roadmaps/step-2-feedback-followup.md`` Phase 1 —
 GPT's PR-#148 "108 commands" cognitive-load warning needs empirical

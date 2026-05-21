@@ -21,7 +21,7 @@ explicit `accept` step on `/ghostwriter:fetch` re-runs.
 
 ## Storage model (dual)
 
-- **Consumer projects** — `agents/ghostwriter/<slug>.md`. Real-person
+- **Consumer projects** — `agents/reference/ghostwriter/<slug>.md`. Real-person
   profiles live here. **Gitignored by default** via the package-managed
   `.gitignore` block. A `--shared` opt-in to commit profiles is
   deferred to v2; only the doc note lands in v1.
@@ -298,7 +298,7 @@ The lint runs in `task ci` and fails on:
 2. Any allowlisted file missing `fictional: true` in frontmatter.
 3. Any package-source file (`fictional: true`) carrying an `aliases:`
    field (aliases are a consumer-only feature; see [§ Aliases](#aliases)).
-4. Any consumer-side file under `agents/ghostwriter/` with `fictional: true`
+4. Any consumer-side file under `agents/reference/ghostwriter/` with `fictional: true`
    (fictional profiles belong in the package source, not consumer trees).
 5. Any consumer-side `aliases:` entry that violates the storage rules:
    shorter than 2 characters, non-Latin scripts (homoglyph protection),
@@ -325,7 +325,7 @@ cluster registration.
 
 ## Gitignore
 
-`agents/ghostwriter/*.md` (except `README.md`) is added to the
+`agents/reference/ghostwriter/*.md` (except `README.md`) is added to the
 package-managed `.gitignore` block ([`config/gitignore-block.txt`](../../config/gitignore-block.txt))
 and ignored by default. A `--shared` opt-in to commit profiles is
 deferred to v2.

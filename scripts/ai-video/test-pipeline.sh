@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # test-pipeline.sh — offline smoke test for /video:* against
-# agents/ai-video/examples/banana-arc/. Dry-run only; no network.
+# agents/reference/ai-video/examples/banana-arc/. Dry-run only; no network.
 #
 # Asserts (per agents/roadmaps/ai-video-pipeline.md Phase 6 Step 3):
 #   1. parse-blueprint.sh output matches the committed expected.json
@@ -27,7 +27,7 @@ set -uo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-PROJECT="$ROOT/agents/ai-video/examples/banana-arc"
+PROJECT="$ROOT/agents/reference/ai-video/examples/banana-arc"
 
 PASS=0
 FAIL=0

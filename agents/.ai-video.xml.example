@@ -11,7 +11,7 @@
 
   Loader: scripts/ai-video/lib/load-config.sh
   Redaction: scripts/ai-video/lib/redact.sh
-  Docs: agents/ai-video/README.md
+  Docs: agents/reference/ai-video/README.md
 -->
 <ai-video version="1">
 

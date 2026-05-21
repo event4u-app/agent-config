@@ -5,7 +5,7 @@
 > skill's description is proven with data instead of hoped into existence.
 
 - **Source inspiration:** [`skills/skill-creator` in `anthropics/skills`](https://github.com/anthropics/skills/blob/main/skills/skill-creator/SKILL.md) — description-optimization loop
-- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
+- **Source analysis:** [`agents/evidence/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) (Finding §3 ADAPT)
 - **Status:** Archived 2026-04-23 — all agent-automatable work done (Phase 1 runner + Phase 3.5 output-schema enforcement). Phase 2 live execution is a manual user action tracked via `task test-triggers-live`, not a checkbox on this roadmap.
 - **Author:** Split out of `archive/road-to-anthropic-alignment.md` on 2026-04-20 for focus (parent archived 2026-04-21)
 - **Last updated:** 2026-04-23 — Phase 3.5 (Q26 output-template enforcement) shipped: `scripts/skill_linter.py` now validates per-skill `evals/output-schema.yml`; schemas seeded for `refine-ticket` and `estimate-ticket`; 9 new linter tests.
@@ -242,7 +242,7 @@ Proceed to rollout **only if all** of these are true:
 - The problem found could be fixed by a description rewrite alone (not by
   architecture change)
 
-If any fails: **write findings into `agents/docs/trigger-evals-poc-findings.md`**
+If any fails: **write findings into `agents/reference/docs/trigger-evals-poc-findings.md`**
 and stop. Do not expand scope.
 
 ## Phase 3 — Rollout (conditional, bounded)
@@ -345,7 +345,7 @@ interactive `yes` on stdin + a `0600` key file at
 `~/.config/agent-config/anthropic.key`, so the agent cannot
 run it. Recommended first run: `task test-triggers-live -- eloquent`
 (narrow domain, clearest signal). Findings land in
-[`agents/docs/trigger-evals-poc-findings.md`](../docs/trigger-evals-poc-findings.md)
+[`agents/reference/docs/trigger-evals-poc-findings.md`](../docs/trigger-evals-poc-findings.md)
 — that file's creation is the trigger for Phase 3 rollout, tracked
 separately rather than reopening this archived roadmap.
 
@@ -355,4 +355,4 @@ separately rather than reopening this archived roadmap.
 - [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) — parent roadmap (Phases 1-2: marketplace + pushy descriptions; archived 2026-04-21)
 - [`archive/road-to-9.md`](archive/road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`archive/road-to-mcp.md`](archive/road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)
-- [`agents/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding
+- [`agents/evidence/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — origin finding

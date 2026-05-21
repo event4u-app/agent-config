@@ -163,7 +163,7 @@ in this skill folder) and returns:
 - `threat-modeling` — fires on any auth / webhook / upload / queue /
   secret / tenant / admin / PII / payment keyword, or a `CVE-YYYY-N`
   regex match.
-- `repo_aware` — on when `.git/`, `agents/contexts/`, `composer.json`,
+- `repo_aware` — on when `.git/`, `agents/settings/contexts/`, `composer.json`,
   or `package.json` is present in the cwd; off otherwise.
 - When `repo_aware=True`, `decision.repo_context` is populated by
   `gather_repo_context()`:
@@ -171,7 +171,7 @@ in this skill folder) and returns:
     convention signal).
   - `recent_commits` — up to 30 most recent commit subjects (active
     modules + verb conventions).
-  - `context_docs` — every `agents/contexts/*.md` filename (domain
+  - `context_docs` — every `agents/settings/contexts/*.md` filename (domain
     vocabulary).
 - Outside a repo the context is empty — the skill produces the same
   output shape, minus repo-specific citations (graceful degrade).
