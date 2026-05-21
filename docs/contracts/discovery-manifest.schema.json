@@ -98,7 +98,24 @@
         "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
         "requires_hint": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
         "trust_level_default": { "$ref": "#/$defs/trust_level" },
-        "artefact_count": { "type": "integer", "minimum": 0 }
+        "artefact_count": { "type": "integer", "minimum": 0 },
+        "human_review_required": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Phase 5 (ADR-018) — count of artefacts in this pack with trust.human_review_required=true. Zero for core-only packs."
+        },
+        "trust_summary": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Phase 5 (ADR-018) — per-pack artefact counts broken down by trust level. Sum equals artefact_count.",
+          "properties": {
+            "core":         { "type": "integer", "minimum": 0 },
+            "professional": { "type": "integer", "minimum": 0 },
+            "advisory":     { "type": "integer", "minimum": 0 },
+            "restricted":   { "type": "integer", "minimum": 0 },
+            "experimental": { "type": "integer", "minimum": 0 }
+          }
+        }
       }
     },
     "artefact": {
