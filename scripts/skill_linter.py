@@ -37,6 +37,7 @@ from validate_frontmatter import (  # noqa: E402
     load_schema,
     validate as validate_against_schema,
 )
+from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
 
 Severity = Literal["error", "warning", "info"]
 ArtifactType = Literal["skill", "rule", "command", "guideline", "persona", "user-type", "unknown"]
@@ -1079,29 +1080,34 @@ def lint_router_frontmatter(rule_id: str, frontmatter: str,
                     f"routes_to[{idx}] must be 'kind:id'"))
                 continue
             kind, _, target_id = item.partition(":")
+            # Multi-root aware (ADR-017): resolve logical paths via every
+            # source root so kernel rules keep routing to skills/commands
+            # that moved into packages/*/.
+            target: Optional[Path] = None
             if kind == "skill":
-                target = repo_root / ".agent-src.uncompressed" / "skills" / target_id / "SKILL.md"
+                target = resolve_logical(f"skills/{target_id}/SKILL.md")
             elif kind == "guideline":
-                target = repo_root / "docs" / "guidelines" / f"{target_id}.md"
+                gpath = repo_root / "docs" / "guidelines" / f"{target_id}.md"
+                target = gpath if gpath.exists() else None
             elif kind == "command":
-                target = repo_root / ".agent-src.uncompressed" / "commands" / f"{target_id}.md"
+                target = resolve_logical(f"commands/{target_id}.md")
             elif kind == "contract":
                 # Contracts live in two places: stable host docs in
-                # docs/contracts/ and load-bearing flows in
-                # .agent-src.uncompressed/contexts/contracts/ (road-to-path-fixes
+                # docs/contracts/ and load-bearing flows under
+                # contexts/contracts/ inside any source root (road-to-path-fixes
                 # P4 / Council R2). Try both before failing.
-                target = repo_root / "docs" / "contracts" / f"{target_id}.md"
-                if not target.exists():
-                    alt = repo_root / ".agent-src.uncompressed" / "contexts" / "contracts" / f"{target_id}.md"
-                    if alt.exists():
-                        target = alt
+                cpath = repo_root / "docs" / "contracts" / f"{target_id}.md"
+                if cpath.exists():
+                    target = cpath
+                else:
+                    target = resolve_logical(f"contexts/contracts/{target_id}.md")
             else:
                 issues.append(Issue("error", "route_kind_unknown",
                     f"routes_to[{idx}] kind '{kind}' must be 'skill', 'guideline', 'command', or 'contract'"))
                 continue
-            if not target.exists():
+            if target is None or not target.exists():
                 issues.append(Issue("error", "route_target_missing",
-                    f"routes_to[{idx}] target '{item}' not found at {target}"))
+                    f"routes_to[{idx}] target '{item}' not found under any artefact root"))
     return issues
 
 
@@ -2019,82 +2025,77 @@ def lint_usertype(path: Path, text: str) -> LintResult:
 
 
 def gather_all_candidate_files(root: Path) -> list[Path]:
-    """Gather all lintable files. Prefers .agent-src.uncompressed/ (source of truth).
-    Falls back to .agent-src/ only if uncompressed doesn't exist.
-    Skips symlinks to avoid double-counting."""
+    """Gather all lintable files across every source root (ADR-017 multi-root).
+
+    Walks ``artefact_roots()`` (legacy ``.agent-src.uncompressed/`` plus every
+    ``packages/*/.agent-src.uncompressed/``). Falls back to ``.agent-src/``
+    only when no source root exists. Skips symlinks to avoid double-counting.
+    Deduplicates on logical relpath \u2014 first root wins per the agent_src
+    contract.
+    """
     candidates: list[Path] = []
+    seen_logical: set[str] = set()
 
-    # Source of truth directories
-    uncompressed_skills = root / ".agent-src.uncompressed" / "skills"
-    uncompressed_rules = root / ".agent-src.uncompressed" / "rules"
-    uncompressed_commands = root / ".agent-src.uncompressed" / "commands"
-    uncompressed_guidelines = root / ".agent-src.uncompressed" / "guidelines"
+    def _add(file: Path, source_root: Path) -> None:
+        if file.is_symlink() or not file.is_file():
+            return
+        try:
+            logical = file.relative_to(source_root).as_posix()
+        except ValueError:
+            logical = file.name
+        # Namespace by artefact-kind subdir so the same skill name across
+        # packs would still dedupe (but the agent_src layout guarantees
+        # each logical path lives in exactly one root post-move).
+        if logical in seen_logical:
+            return
+        seen_logical.add(logical)
+        candidates.append(file)
 
-    # Fallback directories (only if uncompressed doesn't exist)
-    augment_skills = root / ".agent-src" / "skills"
-    augment_rules = root / ".agent-src" / "rules"
-    augment_commands = root / ".agent-src" / "commands"
-    augment_guidelines = root / ".agent-src" / "guidelines"
-
-    # Skills
-    skills_base = uncompressed_skills if uncompressed_skills.exists() else augment_skills
-    if skills_base.exists():
-        for f in skills_base.rglob("SKILL.md"):
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # Rules
-    rules_base = uncompressed_rules if uncompressed_rules.exists() else augment_rules
-    if rules_base.exists():
-        for f in rules_base.rglob("*.md"):
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # Commands
-    commands_base = uncompressed_commands if uncompressed_commands.exists() else augment_commands
-    if commands_base.exists():
-        for f in commands_base.rglob("*.md"):
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # Guidelines
-    guidelines_base = uncompressed_guidelines if uncompressed_guidelines.exists() else augment_guidelines
-    if guidelines_base.exists():
-        for f in guidelines_base.rglob("*.md"):
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # Personas
-    uncompressed_personas = root / ".agent-src.uncompressed" / "personas"
-    augment_personas = root / ".agent-src" / "personas"
-    personas_base = uncompressed_personas if uncompressed_personas.exists() else augment_personas
-    if personas_base.exists():
-        for f in personas_base.glob("*.md"):
-            if f.name.lower() == "readme.md":
-                continue
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # User-types (sister axis to personas — methodology vs end-user).
-    # Top-level .md only; README and _template/ subtree excluded.
-    uncompressed_usertypes = root / ".agent-src.uncompressed" / "user-types"
-    augment_usertypes = root / ".agent-src" / "user-types"
-    usertypes_base = uncompressed_usertypes if uncompressed_usertypes.exists() else augment_usertypes
-    if usertypes_base.exists():
-        for f in usertypes_base.glob("*.md"):
-            if f.name.lower() == "readme.md":
-                continue
-            if not f.is_symlink():
-                candidates.append(f)
-
-    # Frugality charter (Phase 0.4 Layer 2). Lives in contexts/, not
-    # walked by the artifact-type loops above, but still needs the
-    # index-integrity check.
-    for base in (root / ".agent-src.uncompressed", root / ".agent-src"):
-        charter = base / FRUGALITY_CHARTER_RELPATH
-        if charter.exists() and not charter.is_symlink():
-            candidates.append(charter)
-            break
+    sources = artefact_roots()
+    if sources:
+        for src_root in sources:
+            for f in (src_root / "skills").rglob("SKILL.md") if (src_root / "skills").exists() else []:
+                _add(f, src_root)
+            for sub in ("rules", "commands", "guidelines"):
+                base = src_root / sub
+                if base.exists():
+                    for f in base.rglob("*.md"):
+                        _add(f, src_root)
+            for sub in ("personas", "user-types"):
+                base = src_root / sub
+                if base.exists():
+                    for f in base.glob("*.md"):
+                        if f.name.lower() == "readme.md":
+                            continue
+                        _add(f, src_root)
+            charter = src_root / FRUGALITY_CHARTER_RELPATH
+            if charter.exists() and not charter.is_symlink():
+                _add(charter, src_root)
+    else:
+        # Pure-compressed fallback (.agent-src/ only). Used by consumer
+        # projects that vendor the compressed tree without sources.
+        augment_root = root / ".agent-src"
+        if augment_root.exists():
+            for sub_pattern in (
+                ("skills", "SKILL.md"),
+                ("rules", "*.md"),
+                ("commands", "*.md"),
+                ("guidelines", "*.md"),
+            ):
+                base = augment_root / sub_pattern[0]
+                if base.exists():
+                    for f in base.rglob(sub_pattern[1]):
+                        _add(f, augment_root)
+            for sub in ("personas", "user-types"):
+                base = augment_root / sub
+                if base.exists():
+                    for f in base.glob("*.md"):
+                        if f.name.lower() == "readme.md":
+                            continue
+                        _add(f, augment_root)
+            charter = augment_root / FRUGALITY_CHARTER_RELPATH
+            if charter.exists() and not charter.is_symlink():
+                _add(charter, augment_root)
 
     return sorted(set(candidates))
 
@@ -2138,10 +2139,15 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             # dirs (.windsurf/, .cursor/, .clinerules/, .claude/) use
             # tool-native frontmatter (e.g. Windsurf's trigger/globs) that
             # the linter does not validate — they regenerate from source.
-            if not (
+            # ADR-017: accept legacy flat layout AND
+            # packages/*/.agent-src.uncompressed/ paths.
+            in_source = (
                 norm.startswith(".agent-src.uncompressed/")
                 or norm.startswith(".agent-src/")
-            ):
+                or "/.agent-src.uncompressed/" in norm
+                or "/.agent-src/" in norm
+            )
+            if not in_source:
                 continue
             if path.name == "SKILL.md" or "/rules/" in norm or "/commands/" in norm:
                 files.append(path)
@@ -2770,20 +2776,37 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
         return issues
 
     # --- Check: compressed/uncompressed pair exists ---
+    # ADR-017: sources live under packages/*/.agent-src.uncompressed/ but
+    # all packs project into the single repo-root .agent-src/ tree. The
+    # pair-check now resolves via logical relpath, not a path-swap.
+    from _lib.agent_src import strip_source_prefix as _strip
+    norm = path_str.replace("\\", "/")
     if is_uncompressed:
-        # Find expected compressed path
-        compressed_path = Path(path_str.replace("/.agent-src.uncompressed/", "/.agent-src/"))
-        if not compressed_path.exists():
-            issues.append(Issue("warning", "compressed_variant_missing",
-                                f"Uncompressed file exists but compressed variant missing: "
-                                f"{compressed_path.name}"))
+        # Compute logical path then map to .agent-src/ at repo root.
+        # Try direct strip first; fall back to substring split for absolute paths.
+        logical = _strip(norm)
+        if logical is None:
+            marker = "/.agent-src.uncompressed/"
+            idx = norm.rfind(marker)
+            logical = norm[idx + len(marker):] if idx != -1 else None
+        if logical:
+            compressed_path = repo_root / ".agent-src" / logical
+            if not compressed_path.exists():
+                issues.append(Issue("warning", "compressed_variant_missing",
+                                    f"Uncompressed file exists but compressed variant missing: "
+                                    f"{compressed_path.name}"))
     elif is_compressed:
-        # Find expected uncompressed path
-        uncompressed_path = Path(path_str.replace("/.agent-src/", "/.agent-src.uncompressed/"))
-        if not uncompressed_path.exists():
-            issues.append(Issue("warning", "uncompressed_variant_missing",
-                                f"Compressed file exists but uncompressed source missing: "
-                                f"{uncompressed_path.name}"))
+        # Compressed lives at repo-root .agent-src/<logical>. Source could
+        # be at any source root \u2014 resolve via artefact_roots.
+        marker = "/.agent-src/"
+        idx = norm.rfind(marker)
+        logical = norm[idx + len(marker):] if idx != -1 else None
+        if logical:
+            uncompressed_path = resolve_logical(logical)
+            if uncompressed_path is None or not uncompressed_path.exists():
+                issues.append(Issue("warning", "uncompressed_variant_missing",
+                                    f"Compressed file exists but uncompressed source missing: "
+                                    f"{Path(logical).name}"))
 
     # --- Check: file in correct location for type ---
     location_map = {
@@ -3186,17 +3209,22 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
     ]
 
     for subdir, pattern, is_nested in pairs:
-        uncompressed_dir = root / ".agent-src.uncompressed" / subdir
+        # ADR-017: union across every source root.
         compressed_dir = root / ".agent-src" / subdir
+        uncompressed_names: set[str] = set()
+        any_source = False
+        for src_root in artefact_roots():
+            uncompressed_dir = src_root / subdir
+            if not uncompressed_dir.exists():
+                continue
+            any_source = True
+            if is_nested:
+                uncompressed_names |= {d.name for d in uncompressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+            else:
+                uncompressed_names |= {f.name for f in uncompressed_dir.glob(pattern) if f.is_file()}
 
-        if not uncompressed_dir.exists():
+        if not any_source:
             continue
-
-        # Collect names from uncompressed
-        if is_nested:
-            uncompressed_names = {d.name for d in uncompressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
-        else:
-            uncompressed_names = {f.name for f in uncompressed_dir.glob(pattern) if f.is_file()}
 
         # Collect names from compressed
         if compressed_dir.exists():
@@ -3235,16 +3263,23 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
 def check_compression_quality(root: Path) -> list[LintResult]:
     """Check that compressed skills preserve key content from their uncompressed source."""
     results: list[LintResult] = []
-    uncompressed_dir = root / ".agent-src.uncompressed" / "skills"
     compressed_dir = root / ".agent-src" / "skills"
+    if not compressed_dir.exists():
+        return results
 
-    if not uncompressed_dir.exists() or not compressed_dir.exists():
+    # ADR-017: collect skill dirs from every source root.
+    skill_sources: list[Path] = []
+    for src_root in artefact_roots():
+        uncompressed_dir = src_root / "skills"
+        if uncompressed_dir.exists():
+            skill_sources.extend(sorted(uncompressed_dir.iterdir()))
+    if not skill_sources:
         return results
 
     # Sections that MUST exist in compressed if they exist in uncompressed
     preserved_sections = ["When to use", "Procedure", "Gotcha", "Gotchas", "Do NOT", "Output format", "Output"]
 
-    for skill_dir in sorted(uncompressed_dir.iterdir()):
+    for skill_dir in skill_sources:
         src = skill_dir / "SKILL.md"
         dst = compressed_dir / skill_dir.name / "SKILL.md"
         if not src.exists() or not dst.exists():
@@ -3306,13 +3341,23 @@ def check_compression_quality(root: Path) -> list[LintResult]:
 def check_duplication(root: Path) -> list[LintResult]:
     """Detect skills with highly similar names or descriptions."""
     results: list[LintResult] = []
-    skills_dir = root / ".agent-src.uncompressed" / "skills"
-    if not skills_dir.exists():
+    # ADR-017: collect skill dirs across every source root, dedup by name.
+    skill_dirs: list[Path] = []
+    seen: set[str] = set()
+    for src_root in artefact_roots():
+        sd = src_root / "skills"
+        if not sd.exists():
+            continue
+        for d in sorted(sd.iterdir()):
+            if d.is_dir() and d.name not in seen:
+                seen.add(d.name)
+                skill_dirs.append(d)
+    if not skill_dirs:
         return results
 
     # Collect all skill names and descriptions
     skill_data: list[tuple[str, str, Path]] = []
-    for skill_dir in sorted(skills_dir.iterdir()):
+    for skill_dir in skill_dirs:
         skill_file = skill_dir / "SKILL.md"
         if not skill_file.exists():
             continue
