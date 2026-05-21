@@ -218,3 +218,18 @@ tasks:
   council-prune:
     desc: Prune council artefacts older than ai_council.session_retention_days (default 7) across questions, responses, and sessions dirs
     cmd: python3 scripts/council_prune.py
+
+  migration-plan:
+    silent: true
+    desc: "Phase 4 (ADR-017) — emit dist/migration/move-plan.json from frontmatter packs[]; non-zero on conflicts"
+    cmd: python3 scripts/plan_physical_move.py
+
+  migration-snapshot:
+    silent: true
+    desc: "Phase 4 (ADR-017) — capture pre-move sha256 snapshot of .agent-src/, .augment/, and the discovery manifest"
+    cmd: python3 scripts/snapshot_agent_outputs.py
+
+  migration-verify:
+    silent: true
+    desc: "Phase 4 (ADR-017) — diff current outputs against the snapshot; only artefacts[].path may differ"
+    cmd: python3 scripts/verify_physical_move.py
