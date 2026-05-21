@@ -31,6 +31,14 @@ export interface ManifestArtefact {
     readonly checksum: string;
 }
 
+export interface ManifestTrustSummary {
+    readonly core: number;
+    readonly professional: number;
+    readonly experimental: number;
+    readonly advisory: number;
+    readonly restricted: number;
+}
+
 export interface ManifestPack {
     readonly id: string;
     readonly label: string;
@@ -39,6 +47,8 @@ export interface ManifestPack {
     readonly requires_hint?: readonly string[];
     readonly trust_level_default: string;
     readonly artefact_count: number;
+    readonly trust_summary: ManifestTrustSummary;
+    readonly human_review_required: number;
 }
 
 export interface ManifestWorkspace {
@@ -67,6 +77,11 @@ export interface LockfilePack {
     readonly version: string;
     readonly auto_selected: boolean;
     readonly required_by: readonly string[];
+    // Phase 5.1 (ADR-018): accepted trust levels at install/sync time.
+    // Sync re-prompts if any count in the manifest's trust_summary
+    // increases vs. these recorded values.
+    readonly accepted_trust?: ManifestTrustSummary;
+    readonly accepted_human_review_required?: number;
 }
 
 export interface LockfileFile {

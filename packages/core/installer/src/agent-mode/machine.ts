@@ -20,6 +20,7 @@ import {
 } from '../selection.js';
 import { sha256OfString } from '../io/sha256.js';
 import { lockfileToYaml } from '../lockfile.js';
+import { collectAdvisoryPacks, formatTrustSummary } from '../tui.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { done, emit, error, question } from './protocol.js';
 import type { AgentResponse } from '../types.js';
@@ -39,6 +40,7 @@ export interface AgentRunInputs {
 const Q_WORKSPACES = 'q1.workspaces';
 const Q_PACKS = 'q2.packs';
 const Q_CONFIRM = 'q3.confirm';
+const Q_ADVISORY = 'q4.advisory';
 
 interface ParsedAnswers {
     readonly map: ReadonlyMap<string, string>;
@@ -157,7 +159,34 @@ async function finishAgentInit(
         }
     }
 
-    // Step 4 — execute and emit done.
+    // Step 4 — trust gate (Phase 5.1 / ADR-018): advisory/restricted/
+    // experimental artefacts require explicit acknowledgment.
+    const advisoryPacks = collectAdvisoryPacks(
+        input.manifest.packs,
+        resolved.packs.map((p) => p.id),
+    );
+    if (advisoryPacks.length > 0 && !a.has(Q_ADVISORY)) {
+        const summary = advisoryPacks
+            .map((p) => `${p.id}: ${formatTrustSummary(p.trustSummary, p.humanReviewRequired)}`)
+            .join(' | ');
+        emit(question({
+            id: Q_ADVISORY,
+            prompt: `These packs include advisory/restricted/experimental artefacts and require explicit acknowledgment: ${summary}. Accept? (yes/no)`,
+            multi: false,
+            choices: [{ value: 'yes', label: 'Accept advisory artefacts' }, { value: 'no', label: 'Abort' }],
+            nextCall: buildNextCall(a, Q_ADVISORY),
+        }), stdout);
+        return 0;
+    }
+    if (advisoryPacks.length > 0) {
+        const advisory = a.get(Q_ADVISORY);
+        if (advisory !== 'yes') {
+            emit(error('aborted_by_agent', { expected: Q_ADVISORY, received: advisory ?? '' }), stdout);
+            return 2;
+        }
+    }
+
+    // Step 5 — execute and emit done.
     const plan = computeInstallPlan({
         manifest: input.manifest,
         workspaces: workspaceIds,
@@ -171,6 +200,7 @@ async function finishAgentInit(
         manifestSha256: input.manifestSha256,
         agentConfigVersion: AGENT_CONFIG_VERSION,
         packVersion: PACK_VERSION,
+        manifest: input.manifest,
         ...(input.now !== undefined ? { now: input.now } : {}),
         ...(input.dryRun ? { dryRun: true } : {}),
     });

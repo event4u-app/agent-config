@@ -130,6 +130,45 @@ describe('executeInstallPlan', () => {
         expect(result.lockfile.files[0]?.sha256).toMatch(/^[a-f0-9]{64}$/);
     });
 
+    it('records accepted_trust + accepted_human_review_required in the lockfile (Phase 5.1)', () => {
+        writeSource('.agent-src.uncompressed/rules/foo.md', 'foo body\n');
+        const manifest = makeManifest({
+            packs: [
+                makePack({
+                    id: 'a',
+                    trust_summary: { core: 3, professional: 1, experimental: 0, advisory: 2, restricted: 0 },
+                    human_review_required: 1,
+                }),
+            ],
+            artefacts: [makeArtefact({ path: '.agent-src.uncompressed/rules/foo.md', packs: ['a'] })],
+        });
+        const resolved = resolvePacks(manifest, ['a']);
+        const plan = computeInstallPlan({
+            manifest,
+            workspaces: ['engineering'],
+            packs: resolved.packs,
+            packageRoot: pkg,
+            projectRoot: proj,
+        });
+        const result = executeInstallPlan({
+            plan,
+            projectRoot: proj,
+            manifestSha256: 'sha256:deadbeef',
+            agentConfigVersion: '0.1.0',
+            packVersion: '0.1.0',
+            now: () => '2026-05-21T00:00:00Z',
+            manifest,
+        });
+        expect(result.lockfile.packs[0]?.accepted_trust).toEqual({
+            core: 3,
+            professional: 1,
+            experimental: 0,
+            advisory: 2,
+            restricted: 0,
+        });
+        expect(result.lockfile.packs[0]?.accepted_human_review_required).toBe(1);
+    });
+
     it('dry-run leaves the project untouched', () => {
         writeSource('.agent-src.uncompressed/rules/foo.md', 'foo body\n');
         const manifest = makeManifest({

@@ -28,6 +28,8 @@ export function makePack(overrides: Partial<ManifestPack> = {}): ManifestPack {
         workspaces: ['engineering'],
         trust_level_default: 'core',
         artefact_count: 0,
+        trust_summary: { core: 0, professional: 0, experimental: 0, advisory: 0, restricted: 0 },
+        human_review_required: 0,
         ...overrides,
     };
 }
