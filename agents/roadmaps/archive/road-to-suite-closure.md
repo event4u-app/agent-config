@@ -94,7 +94,7 @@ out-of-scope while three other wings ship those exact lanes.
 - [x] **1.2** — `AGENTS.md` new "## The four wings" section between "What this repo is" and "Source of truth": four 2-sentence descriptors (Wing 1 Engineering, Wing 2 Product + Foundation, Wing 3 GTM + Growth, Wing 4 Money + Strategy + Ops), each with link to its sibling roadmap and a one-line cognition-cluster anchor. Order: 1, 2, 3, 4 (matches roadmap numbering, not alphabetical).
 - [x] **1.3** — `AGENTS.md` § "Tech stack" addendum: single sentence at the end clarifying that W2-4 enforce a cognition-only floor (no SaaS-auth, no vendor SDKs, no stage-prescription) per `road-to-gtm-and-growth.md` G2 and `road-to-money-strategy-ops.md` J2 linters. Matches IO2 verdict — preserves engineering-anchor framing while surfacing W2-4 boundary as architecture, not afterthought.
 - [x] **1.4** — `road-to-better-skills-and-profiles.md` § Decisions table: replace "No C-level / marketing / compliance" row with "Wing 1 scope = engineering craft + tooling; cross-department cognition lives in W2-4 (own roadmaps, own personas, own plates)." Wing-1 Philosophy prose: drop the two echoes; replace with one-line pointer to `senior-personas-and-skills-map.md`. **Single coherent change** per IO3 — landed atomically with 1.1–1.3, not before.
-- [x] **1.5** — `agents/contexts/senior-personas-and-skills-map.md` § "Why this map exists": confirm wording aligns with IO1 ("cross-department cognition under shared Iron-Law floor"). No structural change to map v3; minor copy alignment only. Verify "Wing 5" prose deleted (already absorbed into Wing 4 per joint-iter2 Q2). Update v3 → v3.1 with delta line.
+- [x] **1.5** — `agents/settings/contexts/senior-personas-and-skills-map.md` § "Why this map exists": confirm wording aligns with IO1 ("cross-department cognition under shared Iron-Law floor"). No structural change to map v3; minor copy alignment only. Verify "Wing 5" prose deleted (already absorbed into Wing 4 per joint-iter2 Q2). Update v3 → v3.1 with delta line.
 
 ## Phase 2 — Skill authoring standard (3–5 days, gate for W2-4 Block A)
 
@@ -187,7 +187,7 @@ The roadmap closes when **all** of the following hold:
 
 - All six phase markers flip to `[x]`.
 - `task ci` green on a tree containing the four sibling-roadmap retrofits (1.4, 2.6, 3.4) plus the new contract files (3.1, 6.3) plus the linter extensions (2.4, 3.2, 5.1).
-- `agents/contexts/senior-personas-and-skills-map.md` v3.1 published with the IO1 wording alignment + Wing-5 prose deletion.
+- `agents/settings/contexts/senior-personas-and-skills-map.md` v3.1 published with the IO1 wording alignment + Wing-5 prose deletion.
 - Wing 3 plate-1 Block G and Wing 4 plate-1 Block J have started — proves the gate at Phase 1 actually unblocked downstream work.
 - One end-to-end cross-wing chain shipped (proposed: W3 H1→H2→H3 launch chain) using mode 6 + handoff contract — proves the seam works in practice, not just in lint.
 

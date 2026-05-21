@@ -89,8 +89,8 @@ Locked `2026-05-01` from the leans declared in the original stub. The package it
 
 ## Phase 5: Documentation + R3 contract amendments
 
-- [x] **Update `agents/contexts/ui-track-flow.md`** — review/polish sections gain the a11y gate and preview envelope shapes; ambiguity catalog adds `review_a11y_pending`, `polish_a11y_blocking`, `preview_render_failed`.
-- [x] **Update `agents/contexts/adr-product-ui-track.md`** — append an R4 amendment block citing the polish-termination rewrite (verbatim from this roadmap's Acceptance Criteria).
+- [x] **Update `agents/settings/contexts/ui-track-flow.md`** — review/polish sections gain the a11y gate and preview envelope shapes; ambiguity catalog adds `review_a11y_pending`, `polish_a11y_blocking`, `preview_render_failed`.
+- [x] **Update `agents/settings/contexts/adr-product-ui-track.md`** — append an R4 amendment block citing the polish-termination rewrite (verbatim from this roadmap's Acceptance Criteria).
 - [x] **Skill scaffolding hint** — `existing-ui-audit` SKILL.md gains an "a11y baseline" section pointing at `state.ui_audit.a11y_baseline`. Stack review skills (`react-shadcn-ui`, `blade-ui`, `flux`, `livewire`) gain an "a11y findings" output-shape section.
 - [x] **No package-level Playwright dependency** — this package stays Python + Bash; Playwright is a consumer-project requirement when they wire the review skills.
 

@@ -143,7 +143,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Wraps hooks:status. Read-only.
                              Flags: --format json|table, --strict (CI), --project-root <path>
   hooks:replay               Replay a fixture through the universal dispatcher with
-                             AGENT_CONFIG_REPLAY=1 (no writes under agents/state/).
+                             AGENT_CONFIG_REPLAY=1 (no writes under agents/runtime/state/).
                              Usage: hooks:replay --platform <name> --event <event>
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
@@ -158,7 +158,7 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
   refine-ticket:detect       Run the deterministic refine-ticket detection helper
   chat-history:hook          Platform hook entry point (read JSON from stdin)
                              Usage: chat-history:hook --platform <claude|augment|cursor|cline|windsurf|gemini>
-  chat-history:checkpoint    Append a phase-boundary entry to agents/.agent-chat-history
+  chat-history:checkpoint    Append a phase-boundary entry to agents/runtime/.agent-chat-history
                              (CHECKPOINT fallback for platforms without native hooks)
   roadmap-progress:hook      PostToolUse hook entry point (read JSON from stdin)
                              Regenerates roadmaps-progress.md when a tool wrote under agents/roadmaps/
@@ -218,8 +218,8 @@ Examples (Tier 1):
   ./agent-config keys:install-anthropic
   ./agent-config keys:install-openai
   ./agent-config council:estimate prompt.txt
-  ./agent-config council:run prompt.txt --output agents/council-sessions/out.json --confirm
-  ./agent-config council:render agents/council-sessions/out.json
+  ./agent-config council:run prompt.txt --output agents/runtime/council/sessions/out.json --confirm
+  ./agent-config council:render agents/runtime/council/sessions/out.json
 EOF
   fi
 

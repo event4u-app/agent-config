@@ -1,7 +1,7 @@
 """Session persistence for council consultations (D2).
 
 Every `/council` call that completes (success or partial) writes an
-audit artefact under `agents/council-sessions/<UTC-timestamp>/`:
+audit artefact under `agents/runtime/council/sessions/<UTC-timestamp>/`:
 
 - `manifest.json` — input mode, members, token + USD totals, original
   ask, neutrality preamble fingerprint.
@@ -15,7 +15,7 @@ Hard rules:
   swallowed; the council is text-only and the report is the contract.
 - Never writes secrets. The bundle has already been redacted by
   `bundler.py` before the orchestrator receives it.
-- Never writes outside `agents/council-sessions/`. Path traversal in
+- Never writes outside `agents/runtime/council/sessions/`. Path traversal in
   the timestamp is impossible (we generate it from `datetime.utcnow`).
 """
 
@@ -34,9 +34,9 @@ from scripts.ai_council.clients import CouncilResponse
 from scripts.ai_council.orchestrator import render
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SESSIONS_DIR = REPO_ROOT / "agents" / "council-sessions"
-QUESTIONS_DIR = REPO_ROOT / "agents" / "council-questions"
-RESPONSES_DIR = REPO_ROOT / "agents" / "council-responses"
+SESSIONS_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "sessions"
+QUESTIONS_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "questions"
+RESPONSES_DIR = REPO_ROOT / "agents" / "runtime" / "council" / "responses"
 SETTINGS_FILE = REPO_ROOT / ".agent-settings.yml"
 
 # Default retention for all council artefacts (questions, responses,
@@ -190,9 +190,9 @@ def prune_old_artifacts(
 ) -> list[Path]:
     """Delete files and timestamp-less directories older than `retention_days`.
 
-    mtime-based — used for `agents/council-questions/`,
-    `agents/council-responses/`, and root-level files in
-    `agents/council-sessions/` that don't match the
+    mtime-based — used for `agents/runtime/council/questions/`,
+    `agents/runtime/council/responses/`, and root-level files in
+    `agents/runtime/council/sessions/` that don't match the
     timestamp-subdir convention handled by `prune_old_sessions`.
 
     Walks the directory non-recursively. For files: deletes when
@@ -255,9 +255,9 @@ def prune_all_council_artifacts(
     """
     root = repo_root or REPO_ROOT
     days = _load_retention_days() if retention_days is None else retention_days
-    sessions = root / "agents" / "council-sessions"
-    questions = root / "agents" / "council-questions"
-    responses = root / "agents" / "council-responses"
+    sessions = root / "agents" / "runtime" / "council" / "sessions"
+    questions = root / "agents" / "runtime" / "council" / "questions"
+    responses = root / "agents" / "runtime" / "council" / "responses"
     return {
         "sessions": (
             prune_old_sessions(sessions, days, now=now)
@@ -285,8 +285,8 @@ def save(
 
     `retention_days` controls auto-pruning of older council artefacts
     after the new one is written — sibling sessions plus, when
-    `sessions_dir` is not overridden, files in `council-questions/`
-    and `council-responses/`. `None` reads the value
+    `sessions_dir` is not overridden, files in `runtime/council/questions/`
+    and `runtime/council/responses/`. `None` reads the value
     from `.agent-settings.yml` (`ai_council.session_retention_days`,
     default `7`); `0` disables pruning.
 

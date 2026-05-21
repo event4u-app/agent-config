@@ -63,7 +63,7 @@ AGENT DOCS:          {total count}
   📄 Guidelines:       {count} in .augment/guidelines/
   📋 Features:         {count} in agents/features/
   🗺️  Roadmaps:        {count} in agents/roadmaps/
-  📄 Contexts:         {count} in agents/contexts/
+  📄 Contexts:         {count} in agents/settings/contexts/
 
 ───────────────────────────────────────────────
 MODULE:              {total count}

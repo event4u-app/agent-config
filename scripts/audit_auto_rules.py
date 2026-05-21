@@ -6,8 +6,8 @@ Walk `.agent-src.uncompressed/rules/*.md`, collect per-rule frontmatter
 (`description`, `triggers`, `routes_to`, `tier`), measure body and
 registry-stub costs, and emit:
 
-- `agents/reports/auto-rules-audit.json` — deterministic, machine-readable.
-- `agents/reports/auto-rules-audit.md`   — ranked summary for review.
+- `agents/runtime/reports/auto-rules-audit.json` — deterministic, machine-readable.
+- `agents/runtime/reports/auto-rules-audit.md`   — ranked summary for review.
 
 The registry-stub cost mirrors `scripts/measure_augment_budget.py`'s
 accounting model: only the stub line is injected into the Augment

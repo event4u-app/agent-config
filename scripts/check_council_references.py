@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """CI guard for the council clause of the `no-roadmap-references` rule.
 
-Council artefacts under `agents/council-{questions,responses,sessions}/`
+Council artefacts under `agents/runtime/council/{questions,responses,sessions}/`
 are gitignored, local-only, and auto-pruned. A link to a specific
 council file rots three ways: gitignored (not in cloned repo),
 pruned after the retention window (gone even locally), and the
@@ -19,7 +19,7 @@ are exempt structurally — see STRUCTURAL_CARVEOUTS below — because
 they encode immutable decision provenance, not transient drafting
 state. Anything else needs an inline pragma at the end of the line:
 
-    `agents/council-sessions/...json` <!-- council-ref-allowed: <reason> -->
+    `agents/runtime/council/sessions/...json` <!-- council-ref-allowed: <reason> -->
 
 Exit codes:
   0 — no forbidden references.
@@ -44,7 +44,7 @@ ROOT = Path(".")
 # must NOT contain `<` or `>` (placeholders), must NOT contain backticks
 # or quotes (those are line delimiters, not path content).
 PATTERN = re.compile(
-    r"agents/council-(?:questions|responses|sessions)/"
+    r"agents/runtime/council/(?:questions|responses|sessions)/"
     r"([^\s\"'<>)\]`]+\.(?:md|json))"
 )
 
@@ -53,8 +53,8 @@ PATTERN = re.compile(
 SCAN_ROOTS = (
     ".agent-src.uncompressed",
     "agents/roadmaps",
-    "agents/contexts",
-    "agents/docs",
+    "agents/settings/contexts",
+    "agents/reference/docs",
     "docs/contracts",
     "docs/decisions",
     "docs/guidelines",
@@ -68,7 +68,7 @@ ALLOWLIST_PREFIXES: tuple[str, ...] = (
     "agents/roadmaps/archive/",
     # Working comparison docs — forward-refs to planned artefacts (mirrors
     # the SKIP_DIRS contract in scripts/check_references.py).
-    "agents/analysis/",
+    "agents/evidence/analysis/",
     # The rule itself documents forbidden vs. allowed forms.
     ".agent-src.uncompressed/rules/no-roadmap-references.md",
     # ai-council skill documents the output-path schema.
@@ -87,7 +87,7 @@ INLINE_PRAGMA = re.compile(r"<!--\s*council-ref-allowed:[^>]*-->")
 # Structural carve-outs — (source_pattern, target_pattern) pairs where
 # the reference is immutable decision provenance rather than transient
 # drafting state. Driven by the 2026-05-14 P3.4 council round
-# (agents/council-sessions/2026-05-14-p3-4-references/synthesis.md).
+# (agents/runtime/council/sessions/2026-05-14-p3-4-references/synthesis.md).
 #
 # Each entry: source file matches `source` regex AND the captured
 # reference path matches `target` regex → reference is allowed without
@@ -97,15 +97,15 @@ STRUCTURAL_CARVEOUTS: tuple[tuple[re.Pattern[str], re.Pattern[str]], ...] = (
     # the question file is a frozen function-parameter / spend-gate
     # input, not a documentation link.
     (
-        re.compile(r"^agents/contexts/evaluation-[^/]+\.md$"),
-        re.compile(r"^agents/council-questions/[^/]+\.md$"),
+        re.compile(r"^agents/settings/contexts/evaluation-[^/]+\.md$"),
+        re.compile(r"^agents/runtime/council/questions/[^/]+\.md$"),
     ),
     # (b) contract → council-session-synthesis:
     # the synthesis file is the audit-trail receipt the contract cites
     # as decision provenance; the contract inlines the decision body.
     (
         re.compile(r"^docs/contracts/[^/]+\.md$"),
-        re.compile(r"^agents/council-sessions/[^/]+/synthesis\.md$"),
+        re.compile(r"^agents/runtime/council/sessions/[^/]+/synthesis\.md$"),
     ),
 )
 

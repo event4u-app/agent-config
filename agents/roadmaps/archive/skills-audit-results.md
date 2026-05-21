@@ -87,7 +87,7 @@
 | 78 | `playwright-testing` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear test patterns with locator strategies, Page Objects, flaky test prevention; complements e2e rule |
 | 79 | `post-task-learning-capture` | fail | 1 | 1 | **MERGE** | Heavy overlap with `learning-to-rule-or-skill`; merge unique "post-task reflection" trigger into that skill |
 | 80 | `project-analysis-laravel` | fail | 2 | 6 | **MERGE** | Heavy overlap with `universal-project-analysis`; merge Laravel-specific sections (boot analysis, Eloquent, queues) into universal skill as a "Laravel mode" |
-| 81 | `project-analyzer` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear phased workflow for generating `agents/analysis/` docs; distinct from investigation skills |
+| 81 | `project-analyzer` | fail | 3 | 5 | **KEEP** | Upgrade to template — clear phased workflow for generating `agents/evidence/analysis/` docs; distinct from investigation skills |
 | 82 | `project-docs` | fail | 3 | 6 | **KEEP** | Upgrade to template — essential doc discovery workflow; maps work areas to docs; distinct from `agent-docs-writing` |
 | 83 | `quality-tools` | fail | 3 | 5 | **KEEP** | Upgrade to template — critical reference for all quality tool commands, flags, detection logic; complements `quality-workflow` rule |
 | 84 | `react` | fail | 3 | 5 | **REMOVE** | Generic React knowledge (hooks, components, state) — model already knows; no project-specific patterns |

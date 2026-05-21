@@ -4,7 +4,7 @@
 # Capability: audio=native. Sora-class models produce muxed MP4 with
 # dialogue + ambient sound; we pass the audio block straight through.
 # Structural-prompt path informed by upstream `awesome-sora-prompts`
-# (attribution in agents/ai-video/prompts/cinematic-blueprint.md).
+# (attribution in agents/reference/ai-video/prompts/cinematic-blueprint.md).
 #
 # Contract: scripts/ai-video/lib/adapter-contract.md
 # Provider: top-level <provider id="sora" kind="video"> in

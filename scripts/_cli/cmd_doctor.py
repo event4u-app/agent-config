@@ -846,7 +846,7 @@ _CLI_PROVIDER_META: dict[str, tuple[str, bool]] = {
 def _check_council_cli(project_root: Path) -> dict[str, Any]:
     """Health-probe each enabled ``mode: cli`` council member.
 
-    For every CLI member in ``agents/.ai-council.yml`` reports binary
+    For every CLI member in ``agents/settings/.ai-council.yml`` reports binary
     presence (via ``shutil.which``), billable flag, daily-quota state
     (used/cap or used/—), and rolls up to a single status icon.
 
@@ -862,14 +862,14 @@ def _check_council_cli(project_root: Path) -> dict[str, Any]:
     - ``warn`` — at least one binary is missing OR usage crosses
       ``warn_at`` for at least one capped member.
     - returns ``ok`` with "no council config" if
-      ``agents/.ai-council.yml`` is absent (consumer project that
+      ``agents/settings/.ai-council.yml`` is absent (consumer project that
       hasn't enabled the council yet).
     """
-    council_path = project_root / "agents" / ".ai-council.yml"
+    council_path = project_root / "agents" / "settings" / ".ai-council.yml"
     if not council_path.exists():
         return {
             "id": "council-cli", "status": "ok",
-            "message": "no council config (agents/.ai-council.yml not present)",
+            "message": "no council config (agents/settings/.ai-council.yml not present)",
             "remedy": "",
         }
     try:
@@ -887,7 +887,7 @@ def _check_council_cli(project_root: Path) -> dict[str, Any]:
         return {
             "id": "council-cli", "status": "warn",
             "message": f"council config invalid: {exc}",
-            "remedy": "fix agents/.ai-council.yml and re-run doctor",
+            "remedy": "fix agents/settings/.ai-council.yml and re-run doctor",
         }
     cli_members: list[tuple[str, Any]] = [
         (name, m) for name, m in cfg.members.items()

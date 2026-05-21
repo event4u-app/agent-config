@@ -18,9 +18,11 @@
  *   - Marker present + any `tmp` missing → assume aborted mid-prepare:
  *     unlink the leftover tmps and the marker (target untouched).
  *
- * State dir lives under `agents/state/` so it travels with the project
- * and is gitignored via the `agents/` ignore block already in the
- * package gitignore template.
+ * State dir lives under `<writeRoot>/state/` — in package-sandbox mode
+ * `writeRoot` is `<repo>/agents/`, so the marker dir is the gitignored
+ * `agents/runtime/state/` already shipped by the package gitignore template. In
+ * global mode `writeRoot` is `~/.event4u/agent-config/` and the marker
+ * dir lives outside any project tree.
  */
 
 import { promises as fs } from 'node:fs';
@@ -38,8 +40,8 @@ export interface CommitPayload {
 }
 
 export interface CommitOptions {
-    /** Project root — the state/marker dir resolves under `agents/state/`. */
-    projectRoot: string;
+    /** Write root — the state/marker dir resolves under `<writeRoot>/state/`. */
+    writeRoot: string;
     /** Override the generated UUID (tests only). */
     txnId?: string;
 }
@@ -58,10 +60,10 @@ interface Marker {
 }
 
 const DEFAULT_MODE = 0o600;
-const STATE_SUBDIR = join('agents', 'state');
+const STATE_SUBDIR = 'state';
 
-function markerPath(projectRoot: string, txnId: string): string {
-    return join(projectRoot, STATE_SUBDIR, `wizard-intent-${txnId}.json`);
+function markerPath(writeRoot: string, txnId: string): string {
+    return join(writeRoot, STATE_SUBDIR, `wizard-intent-${txnId}.json`);
 }
 
 async function fsyncFile(path: string): Promise<void> {
@@ -126,7 +128,7 @@ export async function commitMulti(
         createdAt: new Date().toISOString(),
         entries,
     };
-    const mPath = markerPath(opts.projectRoot, txnId);
+    const mPath = markerPath(opts.writeRoot, txnId);
     await writeJsonFsync(mPath, marker);
 
     // Phase 3: rename every tmp → target. A crash here is recoverable
@@ -171,8 +173,8 @@ export interface ReplayResult {
  * single corrupted marker — that marker is skipped and reported via
  * the returned arrays so the caller can log and continue.
  */
-export async function replayPendingCommits(projectRoot: string): Promise<ReplayResult> {
-    const stateDir = join(projectRoot, STATE_SUBDIR);
+export async function replayPendingCommits(writeRoot: string): Promise<ReplayResult> {
+    const stateDir = join(writeRoot, STATE_SUBDIR);
     let names: string[];
     try {
         names = await fs.readdir(stateDir);

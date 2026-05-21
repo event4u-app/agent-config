@@ -104,7 +104,7 @@ Pilot the layered split with the rules where the win is largest and the risk is 
 
 Make `load_context:` a first-class, CI-enforced convention.
 
-- [x] 2.1: Frontmatter schema defined in [`docs/contracts/load-context-schema.md`](../../docs/contracts/load-context-schema.md). Two keys: `load_context: list[str]` (lazy, default) and `load_context_eager: list[str]` (eager, opt-in only). Allowed roots: `.agent-src*/contexts/` and `agents/contexts/`. Stability `beta`.
+- [x] 2.1: Frontmatter schema defined in [`docs/contracts/load-context-schema.md`](../../docs/contracts/load-context-schema.md). Two keys: `load_context: list[str]` (lazy, default) and `load_context_eager: list[str]` (eager, opt-in only). Allowed roots: `.agent-src*/contexts/` and `agents/settings/contexts/`. Stability `beta`.
 - [x] 2.2: Linter shipped at [`scripts/lint_load_context.py`](../../scripts/lint_load_context.py). Checks: paths exist, paths end in `.md`, allowed-root only, public→project-local leak (warn), circular refs (across lazy + eager edges), combined char-budget for eager (rule + targets ≤ 2,500 / 4,000 / 5,000 by class). Self-tested against missing-target, disallowed-root, not-md, and happy-path inputs (4/4 pass).
 - [x] 2.3: Wired into Taskfile (`task lint-load-context`) and `task ci` between `lint-rule-interactions` and `check-reply-consistency`. Currently passes as a no-op (zero declarers); the wiring exists so the first consumer ships under green CI.
 

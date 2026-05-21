@@ -6,7 +6,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootTestApp, authHeaders, fixtureSettings, settingsTemplate, type TestApp } from './helpers.js';
+import { bootTestApp, authHeaders, fixtureSettings, fixtureUserMd, settingsTemplate, type TestApp } from './helpers.js';
 
 const PORT = 41610;
 
@@ -65,7 +65,7 @@ describe('dry-run mode', () => {
         const userMdFile = join(ctx.projectRoot, '.agent-user.md');
         expect(existsSync(userMdFile)).toBe(false);
 
-        const userMdBody = `---\nversion: 1\nidentity:\n  name: "Matze"\n---\n\n# Notes\nhi.\n`;
+        const userMdBody = fixtureUserMd();
         const res = await ctx.app.inject({
             method: 'PUT', url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
@@ -81,7 +81,7 @@ describe('dry-run mode', () => {
     });
 
     it('POST /api/v1/wizard/state stores in memory only and GET resumes from it', async () => {
-        const stateFile = join(ctx.projectRoot, '.agent-config', 'wizard-state.json');
+        const stateFile = join(ctx.projectRoot, 'state', 'wizard-state.json');
         expect(existsSync(stateFile)).toBe(false);
 
         const post = await ctx.app.inject({
@@ -108,7 +108,7 @@ describe('dry-run mode', () => {
         const settingsBefore = readFileSync(settingsFile, 'utf8');
         expect(existsSync(userMdFile)).toBe(false);
 
-        const userMdBody = `---\nversion: 1\nidentity:\n  name: "Matze"\n---\n\n# Notes\nbody.\n`;
+        const userMdBody = fixtureUserMd({ notes: 'body.' });
         const res = await ctx.app.inject({
             method: 'POST', url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
@@ -127,7 +127,7 @@ describe('dry-run mode', () => {
         expect(readFileSync(settingsFile, 'utf8')).toBe(settingsBefore);
         expect(existsSync(userMdFile)).toBe(false);
         // 2PC marker dir should not contain any wizard-intent files.
-        const intentDir = join(ctx.projectRoot, 'agents', 'state');
+        const intentDir = join(ctx.projectRoot, 'state');
         const fs = await import('node:fs');
         const entries = fs.existsSync(intentDir) ? fs.readdirSync(intentDir) : [];
         expect(entries.filter((e) => e.startsWith('wizard-intent-'))).toHaveLength(0);

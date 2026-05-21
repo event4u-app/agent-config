@@ -11,7 +11,7 @@ Two subcommands:
             task_class, metrics).
 
   metrics   Compute one or all of the four outcome metrics defined in
-            `agents/contexts/outcome-baseline.md` from a captured session
+            `agents/settings/contexts/outcome-baseline.md` from a captured session
             file. Output as text table or JSON.
 
 The four metrics:

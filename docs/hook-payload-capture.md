@@ -2,7 +2,7 @@
 
 **Purpose:** walk through the live-session payload capture for one platform
 in roughly 5 minutes, so the corresponding entry in
-[`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md)
+[`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
 can move from `docs-verified` to `payload-verified`.
 
 **Scope:** Cursor · Cline · Windsurf · Gemini CLI. Augment Code and Claude
@@ -158,7 +158,7 @@ then flip the `[ ] Optional upgrade — payload-verified` checkbox to
 `[x]`.
 
 Then update the matching row in
-[`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md):
+[`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md):
 the `Verification` column moves from `docs-verified` to
 `payload-verified`.
 
@@ -216,6 +216,6 @@ before paste because the redacted output goes into a tracked file
 - Capture engine: [`scripts/hooks/dispatch_hook.py`](../scripts/hooks/dispatch_hook.py) — `_maybe_capture_payload`
 - Redactor: [`scripts/redact_hook_capture.py`](../scripts/redact_hook_capture.py)
 - Per-platform install logic: [`scripts/install.py`](../scripts/install.py) — search `ensure_<platform>_bridge` / `ensure_<platform>_user_hooks`
-- Platform matrix + payload schemas: [`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md)
+- Platform matrix + payload schemas: [`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
 - Hook architecture: [`docs/contracts/hook-architecture-v1.md`](contracts/hook-architecture-v1.md)
 - Archived roadmap with per-phase paste sections: [`agents/roadmaps/archive/road-to-verified-chat-history-platforms.md`](../agents/roadmaps/archive/road-to-verified-chat-history-platforms.md)

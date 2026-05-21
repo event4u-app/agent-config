@@ -11,7 +11,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootTestApp, authHeaders, fixtureSettings, type TestApp } from './helpers.js';
+import { bootTestApp, authHeaders, fixtureSettings, fixtureUserMd, type TestApp } from './helpers.js';
 
 const PORT = 41605;
 
@@ -47,7 +47,7 @@ describe('wizard state + finish', () => {
         expect(post.statusCode).toBe(200);
         expect((post.json() as { ok: boolean }).ok).toBe(true);
         // State file lives at the documented path.
-        expect(existsSync(join(ctx.projectRoot, '.agent-config', 'wizard-state.json'))).toBe(true);
+        expect(existsSync(join(ctx.projectRoot, 'state', 'wizard-state.json'))).toBe(true);
 
         const get = await ctx.app.inject({
             method: 'GET', url: '/api/v1/wizard/state', headers: authHeaders(ctx.token, ctx.host),
@@ -77,9 +77,9 @@ describe('wizard state + finish', () => {
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: { step: 6, partial: {} },
         });
-        expect(existsSync(join(ctx.projectRoot, '.agent-config', 'wizard-state.json'))).toBe(true);
+        expect(existsSync(join(ctx.projectRoot, 'state', 'wizard-state.json'))).toBe(true);
 
-        const userMdBody = `---\nversion: 1\nidentity:\n  name: "Matze"\n---\n\n# Notes\nhi.\n`;
+        const userMdBody = fixtureUserMd();
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/wizard/finish',
@@ -97,9 +97,9 @@ describe('wizard state + finish', () => {
         expect(readFileSync(join(ctx.projectRoot, '.agent-settings.yml'), 'utf8')).toMatch(/^cost_profile:\s*minimal\b/m);
         expect(readFileSync(join(ctx.projectRoot, '.agent-user.md'), 'utf8')).toBe(userMdBody);
         // Marker cleaned up.
-        expect(existsSync(join(ctx.projectRoot, 'agents', 'state', `wizard-intent-${body.txnId}.json`))).toBe(false);
+        expect(existsSync(join(ctx.projectRoot, 'state', `wizard-intent-${body.txnId}.json`))).toBe(false);
         // Wizard state file dropped on success.
-        expect(existsSync(join(ctx.projectRoot, '.agent-config', 'wizard-state.json'))).toBe(false);
+        expect(existsSync(join(ctx.projectRoot, 'state', 'wizard-state.json'))).toBe(false);
     });
 
     it('POST /finish accepts a settings-only payload (userMd omitted)', async () => {

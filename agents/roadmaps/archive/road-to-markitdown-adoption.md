@@ -160,7 +160,7 @@ evidence exists.
   its Related-Skills block; the same for any analysis skill that
   today reads PDFs raw.
 - [x] **C2 — Skill-provenance index (optional).** At
-  `agents/contexts/skills-provenance.yml` with `author`, `source`,
+  `agents/settings/contexts/skills-provenance.yml` with `author`, `source`,
   `license`, `last_verified` per externally-derived skill — pulls
   the ADAPT #2 idea from `compare-microck-ordinary-claude-skills.md`
   forward without polluting individual SKILL.md files.
@@ -208,8 +208,8 @@ evidence exists.
 
 ## Pinned references
 
-- Compare doc — Microck: `agents/analysis/compare-microck-ordinary-claude-skills.md`
-- Compare doc — markitdown upstream: `agents/analysis/compare-microsoft-markitdown.md`
+- Compare doc — Microck: `agents/evidence/analysis/compare-microck-ordinary-claude-skills.md`
+- Compare doc — markitdown upstream: `agents/evidence/analysis/compare-microsoft-markitdown.md`
 - Upstream tool: https://github.com/microsoft/markitdown (MIT,
   120k stars at fetch time 2026-05-05)
 - Upstream MCP server: `packages/markitdown-mcp/README.md` in

@@ -32,7 +32,7 @@ Do NOT use this skill when:
 
 * The content is a one-off / archival under `scripts/ai_council/one_off_archive/` — those carry an `_one_off_` prefix and are exempt from the verbosity convention
 * The content is a shell entrypoint with secret prompts (install-keys, release confirms) → see § 3 Iron-Law carve-outs
-* The content is a `.mjs` / Node script under `scripts/cost/` — different runtime; convention covered in `agents/contexts/cost-tracking.md`
+* The content is a `.mjs` / Node script under `scripts/cost/` — different runtime; convention covered in `agents/settings/contexts/cost-tracking.md`
 
 ## Script vs other writers — critical test
 

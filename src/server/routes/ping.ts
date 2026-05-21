@@ -15,7 +15,13 @@ import { PACKAGE_JSON } from '../../cli/paths.js';
 export const PingResponseSchema = z.object({
     ok: z.literal(true),
     version: z.string().min(1),
+    /**
+     * @deprecated mirrors `writeRoot` — retained so existing UI bundles
+     * and integration tests keep parsing. Remove after one release cycle.
+     */
     projectRoot: z.string().min(1),
+    writeRoot: z.string().min(1),
+    mode: z.enum(['package-sandbox', 'global']),
     dryRun: z.boolean(),
 });
 
@@ -31,7 +37,8 @@ function readPackageVersion(): string {
 }
 
 export interface PingRouteOptions {
-    projectRoot: string;
+    writeRoot: string;
+    mode: 'package-sandbox' | 'global';
     /** Server-wide dry-run flag — surfaced to the UI for the banner. */
     dryRun?: boolean;
 }
@@ -42,7 +49,9 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
             const response: PingResponse = {
                 ok: true,
                 version: readPackageVersion(),
-                projectRoot: opts.projectRoot,
+                projectRoot: opts.writeRoot,
+                writeRoot: opts.writeRoot,
+                mode: opts.mode,
                 dryRun: opts.dryRun === true,
             };
             return response;

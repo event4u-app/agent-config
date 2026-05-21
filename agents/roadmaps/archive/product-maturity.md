@@ -160,11 +160,11 @@ Define **who** consumes feedback and **how**:
 
 ### Tasks
 
-- [x] Define feedback consumption rules per profile (see `agents/docs/feedback-consumption.md`)
+- [x] Define feedback consumption rules per profile (see `agents/reference/docs/feedback-consumption.md`)
 - [x] `minimal` + `balanced`: feedback stored, never auto-injected (matrix + design doc)
 - [x] `full`: feedback available on request ("show me recent failures") and suggestions in chat (design doc)
 - [x] Pattern auto-injection: explicit opt-in via override, not a separate profile tier (design doc)
-- [x] Document: "feedback.json exists for CI and reports, not for the agent by default" (`agents/docs/feedback-consumption.md`)
+- [x] Document: "feedback.json exists for CI and reports, not for the agent by default" (`agents/reference/docs/feedback-consumption.md`)
 - [x] Consider: should feedback influence skill selection? — **No** (see design doc "Open questions")
 
 ### Anti-pattern to avoid
@@ -182,11 +182,11 @@ or what difference it makes. Runtime exists but has no "surface area".
 
 ### Tasks
 
-- [x] Define what "runtime is active" looks like to the user (3 levels: silent/subtle/verbose in `agents/docs/runtime-visibility.md`)
+- [x] Define what "runtime is active" looks like to the user (3 levels: silent/subtle/verbose in `agents/reference/docs/runtime-visibility.md`)
 - [x] Output format for runtime executions: `▸ runtime: skill-name (assisted)` prefix (design doc)
 - [x] Do NOT make runtime noisy — subtle indicators, not debug spam (non-negotiables in design doc)
-- [x] Document: "What does runtime do? Why should I enable it?" (`agents/docs/runtime-visibility.md`)
-- [x] Before/After comparison: agent behavior with runtime off vs on (`agents/docs/vanilla-vs-governed.md` covers the rule side; runtime section to be added when runtime package exists)
+- [x] Document: "What does runtime do? Why should I enable it?" (`agents/reference/docs/runtime-visibility.md`)
+- [x] Before/After comparison: agent behavior with runtime off vs on (`agents/reference/docs/vanilla-vs-governed.md` covers the rule side; runtime section to be added when runtime package exists)
 
 ### Key principle
 Runtime should feel like **"the agent got smarter"**, not **"the agent got more verbose"**.
@@ -215,11 +215,11 @@ Cool for maintainers. Invisible and irrelevant to most users.
 
 ### Tasks
 
-- [x] Classify every observability feature: user-facing vs developer-facing (audience table in `agents/docs/observability-scoping.md`)
+- [x] Classify every observability feature: user-facing vs developer-facing (audience table in `agents/reference/docs/observability-scoping.md`)
 - [x] User-facing: CI summary, linter warnings — always available (Taskfile targets)
 - [x] Developer-facing: metrics, feedback, audit — opt-in only (file creation matrix in design doc)
 - [x] No observability files created by default in `minimal` profile (enforced by installer + design doc; runtime enforcement pending runtime package)
-- [x] Document: "Observability features are for package maintainers, not end users" (`agents/docs/observability-scoping.md`)
+- [x] Document: "Observability features are for package maintainers, not end users" (`agents/reference/docs/observability-scoping.md`)
 
 ---
 
@@ -486,13 +486,13 @@ The gap is not in rule content but in skill-level guidance for specific scenario
 
 ### Tasks
 
-- [x] Audit every rule in core: does it improve the first experience? (see `agents/docs/vanilla-vs-governed.md` — "Rule audit" section)
+- [x] Audit every rule in core: does it improve the first experience? (see `agents/reference/docs/vanilla-vs-governed.md` — "Rule audit" section)
 - [x] Strengthen `ask-when-uncertain`: add explicit vague-request pattern triggers (8 patterns + escape hatch in `.agent-src.uncompressed/rules/ask-when-uncertain.md`)
-- [x] Evaluate: create "structured-refactoring" skill — **Deferred** (see `agents/docs/vanilla-vs-governed.md` — "Skill evaluation")
+- [x] Evaluate: create "structured-refactoring" skill — **Deferred** (see `agents/reference/docs/vanilla-vs-governed.md` — "Skill evaluation")
 - [x] Evaluate: create "handle-vague-request" skill — **Not needed** (covered by vague-request triggers in `ask-when-uncertain`)
 - [x] Remove/disable rules that add friction without visible value in minimal (audit complete; no removals recommended — see rule audit)
 - [ ] Test: minimal-mode agent vs vanilla agent on same task — is difference obvious? (manual validation, requires external project)
-- [x] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks (`agents/docs/vanilla-vs-governed.md`)
+- [x] Create comparison document: "vanilla agent output" vs "governed agent output" for 3 tasks (`agents/reference/docs/vanilla-vs-governed.md`)
 - [x] Ensure install output includes a concrete "try this" prompt (3 aha-moment prompts + getting-started link in scripts/install.py)
 
 ---

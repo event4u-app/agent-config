@@ -26,7 +26,7 @@ status: completed
 - [x] Read [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md) — the four-axes model (profile / preset / pack / cost_profile). This roadmap touches **the pack axis only**; it MUST NOT add a knob to any other axis
 - [x] Read [`docs/decisions/ADR-011-domain-pack-readiness.md`](../../docs/decisions/ADR-011-domain-pack-readiness.md) — the **non-extraction stance** is binding. Packs are **labels on in-repo artefacts**, not separately-installable npm packages, until ADR-011's design + confirmation gates flip
 - [x] Read [`AGENTS.md`](../../AGENTS.md) and the existing skill/rule frontmatter shape under `.agent-src.uncompressed/skills/`
-- [x] Confirm the current artefact inventory: `find .agent-src.uncompressed -name SKILL.md | wc -l`, `find .agent-src.uncompressed/rules -name '*.md' | wc -l`, `find .agent-src.uncompressed/commands -name '*.md' | wc -l`. Recorded in `agents/notes/discovery-baseline.md` (Phase 0.1): skills 218 · rules 72 · commands 129 · templates 141
+- [x] Confirm the current artefact inventory: `find .agent-src.uncompressed -name SKILL.md | wc -l`, `find .agent-src.uncompressed/rules -name '*.md' | wc -l`, `find .agent-src.uncompressed/commands -name '*.md' | wc -l`. Recorded in `agents/evidence/notes/discovery-baseline.md` (Phase 0.1): skills 218 · rules 72 · commands 129 · templates 141
 
 ## Context
 
@@ -96,7 +96,7 @@ The fix is a single source of truth:
 
 ## Acceptance criteria (whole roadmap)
 
-- [x] Every artefact under `.agent-src.uncompressed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set *(443 artefacts annotated in Phase 4; `unassigned[]` audited in `agents/notes/discovery-manifest-diff-phase4.md`)*
+- [x] Every artefact under `.agent-src.uncompressed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set *(443 artefacts annotated in Phase 4; `unassigned[]` audited in `agents/evidence/notes/discovery-manifest-diff-phase4.md`)*
 - [x] `python3 scripts/build_discovery_manifest.py --write` produces `dist/discovery/discovery-manifest.json` and `dist/discovery/discovery-manifest.summary.md` from the trees above; running it twice in a row is a no-op (byte-identical output) *(`task check-discovery-determinism` enforces this in CI; sidecar `discovery-manifest.json.sha256` added Phase 7)*
 - [x] The manifest validates against `docs/contracts/discovery-manifest.schema.json` (JSON Schema 2020-12); `python3 scripts/lint_discovery_manifest.py --quiet` exits 0 *(`task lint-discovery-manifest` green in CI)*
 - [x] `agent-config workspaces ls` and `agent-config packs ls` (both new TS subcommands) print the workspace / pack lists straight from the manifest; no other source of truth exists in the TS code *(`src/cli/commands/{workspaces,packs}.ts` shipped in R1 `2.26.0`; both call `loadManifest()` from `src/cli/discovery/loadManifest.ts`)*
@@ -143,9 +143,9 @@ The fix is a single source of truth:
 
 ### Step 0.1: Inventory the current state
 
-- [x] Run and record in `agents/notes/discovery-baseline.md` (NEW file): counts for skills, rules, commands, templates; the set of distinct `domain:` values currently in use; the set of distinct `recommended_for_user_types:` values; how many artefacts have **no** `domain:` at all
+- [x] Run and record in `agents/evidence/notes/discovery-baseline.md` (NEW file): counts for skills, rules, commands, templates; the set of distinct `domain:` values currently in use; the set of distinct `recommended_for_user_types:` values; how many artefacts have **no** `domain:` at all
 - [x] Sample 10 artefacts per category and tabulate the existing keys: `name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`. The new keys MUST coexist with these, not replace them
-- [x] Phase 0.1 gate: `wc -l agents/notes/discovery-baseline.md` returns ≥ 40 lines (one row per sampled artefact + header)
+- [x] Phase 0.1 gate: `wc -l agents/evidence/notes/discovery-baseline.md` returns ≥ 40 lines (one row per sampled artefact + header)
 
 ### Step 0.2: Author ADR-013 — discovery frontmatter contract
 
@@ -207,7 +207,7 @@ The fix is a single source of truth:
 
 - [x] `docs/decisions/ADR-013-discovery-frontmatter-contract.md` exists, lists every vocabulary value, and the ADR index regenerated via `.venv/bin/python scripts/adr/regenerate_index.py --dir docs/decisions` (13 numbered + 1 legacy ADRs; `--check` exits 0)
 - [x] `docs/contracts/discovery-manifest.schema.json` validates against itself with a JSON Schema validator: `.venv/bin/python -c "import json,jsonschema;s=json.load(open('docs/contracts/discovery-manifest.schema.json'));jsonschema.Draft202012Validator.check_schema(s)"` exits 0
-- [x] `agents/notes/discovery-baseline.md` exists and has the inventory numbers (80 lines)
+- [x] `agents/evidence/notes/discovery-baseline.md` exists and has the inventory numbers (80 lines)
 - [x] **No artefact bodies are modified in Phase 0.** A `git diff --stat .agent-src.uncompressed/` reports 0 lines changed
 
 ## Phase 1: Workspace & pack vocabulary as YAML, schema-checked
@@ -528,7 +528,7 @@ The fix is a single source of truth:
 - [x] **CROSS-ROADMAP BLOCKER — Phase 5 ships the manifest in the npm tarball, but the TS consumers (Phase 3 commands `agent-config workspaces ls`, `packs ls`, Fastify route) live in Roadmap 1 (`typescript-cli-and-local-gui-foundation`).** Tighten the prerequisite at the top of this file from "R1 is `status: completed` and merged" to "R1 is `status: completed`, merged, **and shipped in a published npm version**" — verify via `npm info @event4u/agent-config` listing `dist/cli/agent-config.js` in the tarball file list. R3 cannot release ahead of R1. *Folded: prerequisite tightened, `2.26.0` confirmed shipping `dist/cli/agent-config.js`.*
 - [x] **HIGH — Bidirectional vocabulary referential integrity.** Phase 1.2's linter currently checks `workspaces.yml.default_packs[]` → valid pack IDs. It MUST also check the inverse: for every `workspaces.yml` entry `w` with `default_packs: [p1, p2]`, assert each `p` in `packs.yml` has `w.id` in its `workspaces:` array. Without bidirectional enforcement, a typo on one side passes lint while wiring the wrong skills into the wrong preset. *Folded: `scripts/lint_discovery_vocab.py` enforces bidirectional cross-refs.*
 - [x] **HIGH — Manifest lifecycle: no client-side cache.** Phase 3.1's `loadManifest()` MUST read **only** from `node_modules/@event4u/agent-config/dist/discovery/discovery-manifest.json`. No `~/.agent-config/manifest-cache/` layer; a corrupted manifest causes the CLI to refuse to start (not log-and-continue). Document the lifecycle in `docs/architecture/discovery-manifest-lifecycle.md` as a Phase 3 deliverable. *Folded: `src/cli/discovery/loadManifest.ts` reads only the tarball location; ManifestNotFoundError on miss.*
-- [x] **MEDIUM — Phase 4 mass-annotation should split per PACK, not per WORKSPACE.** Workspaces cross-cut packs (e.g., `git` belongs to multiple workspaces), so per-workspace PRs would conflict on shared packs. Revise the Phase 4 acceptance gate to "one PR per pack (`engineering-base`, `php`, `laravel`, …) touching only that pack's directory; the final PR (`meta` pack) updates `unassigned-artefacts.yml`." Also commit a `agents/notes/discovery-manifest-diff-phase4.md` listing every artefact whose `packs:` / `workspaces:` assignment changed from the Phase 3 baseline (audit trail). *Folded: per-pack commits landed (`php`, `engineering-base`, `language-framework`, `vertical`, `meta`).*
+- [x] **MEDIUM — Phase 4 mass-annotation should split per PACK, not per WORKSPACE.** Workspaces cross-cut packs (e.g., `git` belongs to multiple workspaces), so per-workspace PRs would conflict on shared packs. Revise the Phase 4 acceptance gate to "one PR per pack (`engineering-base`, `php`, `laravel`, …) touching only that pack's directory; the final PR (`meta` pack) updates `unassigned-artefacts.yml`." Also commit a `agents/evidence/notes/discovery-manifest-diff-phase4.md` listing every artefact whose `packs:` / `workspaces:` assignment changed from the Phase 3 baseline (audit trail). *Folded: per-pack commits landed (`php`, `engineering-base`, `language-framework`, `vertical`, `meta`).*
 
 **Resolution gate**
 

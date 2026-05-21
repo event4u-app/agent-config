@@ -160,11 +160,11 @@ def test_gather_repo_context_inside_this_repo():
     # recent_branches is best-effort — GitHub Actions' default `actions/checkout`
     # uses a detached HEAD with no local refs under refs/heads/, so this list
     # is legitimately empty in CI. The commit log is the load-bearing signal.
-    # context_docs is optional — only populated when agents/contexts/ exists.
+    # context_docs is optional — only populated when agents/settings/contexts/ exists.
 
 
 def test_gather_repo_context_finds_context_docs(tmp_path):
-    """When agents/contexts/ exists and has .md files, they get listed."""
+    """When agents/settings/contexts/ exists and has .md files, they get listed."""
     subprocess = __import__("subprocess")
     subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
     subprocess.run(

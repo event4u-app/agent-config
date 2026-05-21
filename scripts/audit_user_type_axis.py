@@ -11,7 +11,7 @@ Two checks across `.agent-src.uncompressed/skills/`:
    at least one skill. Unused configs are WARN-only (exit 0): seeding
    future identities ahead of consumption is allowed.
 
-Writes a markdown report to `agents/reports/user-type-axis-audit.md` and
+Writes a markdown report to `agents/runtime/reports/user-type-axis-audit.md` and
 emits a one-line summary to stdout. Stdlib-only — no PyYAML dependency.
 
 Usage:

@@ -641,38 +641,137 @@ copy_if_missing() {
     cp "$source" "$target"
 }
 
-# Migrate legacy infra files from project root to agents/.
-# Pre-2.x layout: .agent-chat-history (+ .bak), .agent-prices.md lived at
-# the project root. They now live under agents/. Move them in place before
-# any other content sync so the updated gitignore block (which lists
-# /agents/.agent-chat-history*) and the chat-history hooks operate on the
-# already-migrated layout. Idempotent: skips silently if the target already
-# exists; never overwrites.
+# Migrate legacy infra files to their current home under agents/runtime/.
+# Three source layouts are handled per file:
+#   - pre-2.x:           <name> at project root
+#   - 2.x intermediate:  agents/<name>
+#   - current:           agents/runtime/<name>
+# Covered files: .agent-chat-history (+ .bak) and the append-only budget
+# history JSONLs. Idempotent: skips silently if the target already exists;
+# never overwrites.
+#
+# .agent-prices.md is handled separately by migrate_legacy_prices_file.
 migrate_legacy_root_infra() {
     local project_root="$1"
-    local agents_dir="$project_root/agents"
-    local items=(".agent-chat-history" ".agent-chat-history.bak" ".agent-prices.md")
+    local runtime_dir="$project_root/agents/runtime"
+    local items=(
+        ".agent-chat-history"
+        ".agent-chat-history.bak"
+        ".augment-budget-history.jsonl"
+        ".rule-budget-history.jsonl"
+    )
 
     for name in "${items[@]}"; do
-        local old="$project_root/$name"
-        local new="$agents_dir/$name"
+        local target="$runtime_dir/$name"
+        local sources=("$project_root/$name" "$project_root/agents/$name")
+
+        for old in "${sources[@]}"; do
+            [[ -e "$old" ]] || continue
+
+            if [[ -e "$target" ]]; then
+                log_warn "Legacy ${old#"$project_root/"} found, but agents/runtime/$name already exists — leaving source in place"
+                continue
+            fi
+
+            if $DRY_RUN; then
+                log_verbose "would migrate ${old#"$project_root/"} → agents/runtime/$name"
+                continue
+            fi
+
+            mkdir -p "$runtime_dir"
+            mv "$old" "$target"
+            log_info "Migrated ${old#"$project_root/"} → agents/runtime/$name"
+        done
+    done
+}
+
+# Migrate the low-impact decision corpus from agents/ to agents/decisions/.
+# Pre-refactor: the .md and its .lock.yaml lived at agents/ root. They
+# now live under agents/decisions/ to separate tracked decisions from
+# volatile runtime data. Idempotent: skips silently if the target
+# already exists; never overwrites.
+migrate_legacy_low_impact_decisions() {
+    local project_root="$1"
+    local decisions_dir="$project_root/agents/decisions"
+    local items=("low-impact-decisions.md" "low-impact-decisions.lock.yaml")
+
+    for name in "${items[@]}"; do
+        local old="$project_root/agents/$name"
+        local target="$decisions_dir/$name"
 
         [[ -e "$old" ]] || continue
 
-        if [[ -e "$new" ]]; then
-            log_warn "Legacy $name found at project root, but agents/$name already exists — leaving root copy in place"
+        if [[ -e "$target" ]]; then
+            log_warn "Legacy agents/$name found, but agents/decisions/$name already exists — leaving source in place"
             continue
         fi
 
         if $DRY_RUN; then
-            log_verbose "would migrate $name → agents/$name"
+            log_verbose "would migrate agents/$name → agents/decisions/$name"
             continue
         fi
 
-        mkdir -p "$agents_dir"
-        mv "$old" "$new"
-        log_info "Migrated $name → agents/$name"
+        mkdir -p "$decisions_dir"
+        mv "$old" "$target"
+        log_info "Migrated agents/$name → agents/decisions/$name"
     done
+}
+
+# Migrate the AI Council price cache to its current home under agents/runtime/.
+# Two source locations are handled:
+#   - pre-2.x:           .agent-prices.md at project root
+#   - 2.x intermediate:  agents/.agent-prices.md
+# Both move to agents/runtime/.agent-prices.md. Idempotent: skips silently
+# if the target already exists; never overwrites.
+migrate_legacy_prices_file() {
+    local project_root="$1"
+    local runtime_dir="$project_root/agents/runtime"
+    local target="$runtime_dir/.agent-prices.md"
+    local sources=("$project_root/.agent-prices.md" "$project_root/agents/.agent-prices.md")
+
+    for old in "${sources[@]}"; do
+        [[ -e "$old" ]] || continue
+
+        if [[ -e "$target" ]]; then
+            log_warn "Legacy ${old#"$project_root/"} found, but agents/runtime/.agent-prices.md already exists — leaving source in place"
+            continue
+        fi
+
+        if $DRY_RUN; then
+            log_verbose "would migrate ${old#"$project_root/"} → agents/runtime/.agent-prices.md"
+            continue
+        fi
+
+        mkdir -p "$runtime_dir"
+        mv "$old" "$target"
+        log_info "Migrated ${old#"$project_root/"} → agents/runtime/.agent-prices.md"
+    done
+}
+
+# Migrate the AI Council config from agents/.ai-council.yml to
+# agents/settings/.ai-council.yml. Idempotent: skips silently if the
+# target already exists; never overwrites.
+migrate_legacy_council_yml() {
+    local project_root="$1"
+    local settings_dir="$project_root/agents/settings"
+    local target="$settings_dir/.ai-council.yml"
+    local source="$project_root/agents/.ai-council.yml"
+
+    [[ -e "$source" ]] || return 0
+
+    if [[ -e "$target" ]]; then
+        log_warn "Legacy agents/.ai-council.yml found, but agents/settings/.ai-council.yml already exists — leaving source in place"
+        return 0
+    fi
+
+    if $DRY_RUN; then
+        log_verbose "would migrate agents/.ai-council.yml → agents/settings/.ai-council.yml"
+        return 0
+    fi
+
+    mkdir -p "$settings_dir"
+    mv "$source" "$target"
+    log_info "Migrated agents/.ai-council.yml → agents/settings/.ai-council.yml"
 }
 
 # Ensure .gitignore contains the managed agent-config block.
@@ -768,6 +867,9 @@ main() {
 
     # 0. Migrate legacy infra files (root → agents/) before any content sync.
     migrate_legacy_root_infra "$TARGET_DIR"
+    migrate_legacy_low_impact_decisions "$TARGET_DIR"
+    migrate_legacy_prices_file "$TARGET_DIR"
+    migrate_legacy_council_yml "$TARGET_DIR"
 
     # 0b. Resolve settings (e.g. augment.rules_use_symlinks). On first
     #     install the file does not exist yet → defaults preserved.
@@ -823,7 +925,7 @@ main() {
             if [[ "$airgap_mode" == "api" ]]; then
                 echo ""
                 echo "⚠️  airgapped environment detected — defaulting to mode: api"
-                echo "    Set defaults.member_mode: api in agents/.ai-council.yml when configuring the council."
+                echo "    Set defaults.member_mode: api in agents/settings/.ai-council.yml when configuring the council."
             fi
         fi
     elif ! $QUIET; then

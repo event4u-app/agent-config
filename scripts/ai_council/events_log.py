@@ -1,7 +1,7 @@
 """Persistent council events log (step-8 phase 3).
 
 Single-function module that appends one JSON line per council event to
-``<project_root>/agents/council-events.log``. Schema v1 carries the
+``<project_root>/agents/runtime/council/events.log``. Schema v1 carries the
 minimum needed to answer the "why did the council skip / block this?"
 question at retro time without leaking prompt content.
 
@@ -9,7 +9,7 @@ Privacy floor:
     ``original_ask`` is never written verbatim — the caller passes the
     raw string, and :func:`append_event` writes ``sha256(value)[:12]``
     as ``original_ask_hash``. Mirrors the privacy floor in
-    ``agents/low-impact-decisions.md``.
+    ``agents/decisions/low-impact-decisions.md``.
 
 Kill-switch:
     ``AGENT_CONFIG_NO_EVENTS_LOG=1`` short-circuits :func:`append_event`
@@ -47,7 +47,11 @@ _KILL_SWITCH_ENV = "AGENT_CONFIG_NO_EVENTS_LOG"
 #: above ``scripts/ai_council/``). Callers can override via
 #: ``log_path=`` for tests.
 _DEFAULT_LOG_PATH = (
-    Path(__file__).resolve().parents[2] / "agents" / "council-events.log"
+    Path(__file__).resolve().parents[2]
+    / "agents"
+    / "runtime"
+    / "council"
+    / "events.log"
 )
 
 
@@ -83,7 +87,7 @@ def append_event(
             pass through verbatim — callers should not abuse this for
             free-form payloads (privacy floor).
         log_path: Override for tests. Defaults to
-            ``<project_root>/agents/council-events.log``.
+            ``<project_root>/agents/runtime/council/events.log``.
 
     Returns:
         ``True`` when a line was written; ``False`` when the kill-switch

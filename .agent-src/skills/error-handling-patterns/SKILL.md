@@ -143,5 +143,5 @@ Exactly **one** layer translates internal errors to the egress format (HTTP stat
   - Rust: https://doc.rust-lang.org/book/ch09-00-error-handling.html
   - Resilience patterns: https://martinfowler.com/bliki/CircuitBreaker.html · https://aws.amazon.com/builders-library/timeouts-retries-and-backoff-with-jitter/
 - Cross-linked: [`defense-in-depth`](../defense-in-depth/SKILL.md), [`laravel-validation`](../laravel-validation/SKILL.md), [`bug-analyzer`](../bug-analyzer/SKILL.md), [`api-design`](../api-design/SKILL.md).
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `error-handling-patterns`).
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `error-handling-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

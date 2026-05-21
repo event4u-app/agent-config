@@ -139,7 +139,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
 | P1.2 (B) | LANDED | `tests/test_subagent_prompt_loading.py` green; 7 prompts under `subagent-orchestration/prompts/` (six original modes + new two-stage). |
 | P1.2 (C) | LANDED | `tests/test_subagent_two_stage.py` green; `do-and-judge-two-stage` mode wired into the matrix. |
 | P1.3 | LANDED | 3-scan self-review (Spec Coverage / Placeholder / Type-Consistency) added to `feature-planning`, `refine-prompt`, `refine-ticket`. |
-| P1.4a | LANDED (audit-only) | `agents/investigations/confidence-band-audit-2026-05-09.md` — signal lives inside `work_engine/scoring/`, NOT exposed to rules. |
+| P1.4a | LANDED (audit-only) | `agents/evidence/investigations/confidence-band-audit-2026-05-09.md` — signal lives inside `work_engine/scoring/`, NOT exposed to rules. |
 | P1.4b | DEFERRED to Phase 2 | Kill-switch fired (P1.4a found `confidence_band` not exposed as queryable rule signal). Per § Kill-switch row 3, P1.4b lands audit-only; HARD-GATE wording postponed. |
 | P1.5 | LANDED | `tests/test_bite_sized_granularity.py` 13/13 green; `scripts/check_bite_sized_granularity.py` ships complexity-gated validator. |
 | P1.6 | LANDED | `task ci` clean post-commit; sync-check + sync-check-hashes green; 2560/2560 pytest passing. |
@@ -217,7 +217,7 @@ Phase 2 unlocks **only** when **all** of these hold (objective, not "feels stabl
 
 ## Provenance
 
-- Analysis: `agents/analysis/compare-obra-superpowers.md`
+- Analysis: `agents/evidence/analysis/compare-obra-superpowers.md`
 - Council Round 1 (analysis): anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-05-07, $0.0465
 - Council Round 2 (this roadmap): anthropic/claude-sonnet-4-5 + openai/gpt-4o, 2026-05-07, $0.0446
 - Upstream pin: `obra/superpowers@main` v5.1.0 (2026-05-04 release)

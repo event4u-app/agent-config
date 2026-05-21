@@ -10,12 +10,12 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import matter from 'gray-matter';
-import { bootTestApp, authHeaders, type TestApp } from './helpers.js';
+import { parseUserMd } from '../../src/shared/userMd/utils.js';
+import { bootTestApp, authHeaders, fixtureUserMd, type TestApp } from './helpers.js';
 
 const PORT = 41604;
 
-const VALID_BODY = `---\nversion: 1\nidentity:\n  name: "Matze"\n---\n\n# Notes\nThis is fine.\n`;
+const VALID_BODY = fixtureUserMd({ notes: 'This is fine.' });
 
 interface GetUserMd { body: string; exists: boolean; lastModified: number | null }
 interface PutUserMd { lastModified: number; writtenPaths: string[] }
@@ -44,9 +44,9 @@ describe('.agent-user.md routes', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = (res.json() as { body: string }).body;
-        // Template MUST be parseable by gray-matter — the same parser the
-        // agent uses to consume the file at runtime.
-        expect(() => matter(body)).not.toThrow();
+        // Template MUST round-trip through the shared parser — the same
+        // one the agent uses to consume the file at runtime.
+        expect(() => parseUserMd(body)).not.toThrow();
         expect(body.length).toBeGreaterThan(0);
     });
 

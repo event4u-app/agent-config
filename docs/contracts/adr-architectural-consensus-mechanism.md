@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # ADR — Architectural Consensus Mechanism (bus-factor / multi-author readiness)
 
 > **Status:** Decided · 2026-05-14
-> **Context:** v2 council finding C1 (file [01-bus-factor-and-consensus.md](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md)) flagged that a single-author skill suite cannot detect ontology drift (two skills with overlapping triggers, drift between description and body, generic best-practice patterns repeated across clusters). The package needs a **mechanical consensus signal** that does not depend on the original author's judgment. <!-- council-ref-allowed: ADR decision trace -->
+> **Context:** v2 council finding C1 (file [01-bus-factor-and-consensus.md](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md)) flagged that a single-author skill suite cannot detect ontology drift (two skills with overlapping triggers, drift between description and body, generic best-practice patterns repeated across clusters). The package needs a **mechanical consensus signal** that does not depend on the original author's judgment. <!-- council-ref-allowed: ADR decision trace -->
 > **Roadmap:** Closes Phase 5.2 of the v2 feedback follow-up roadmap
 > (see `agents/roadmaps/`).
 
@@ -14,7 +14,7 @@ keep-beta-until: 2026-08-12
 
 A **two-tier consensus mechanism**, layered by cost:
 
-1. **Tier A — Automated ontology lint (every PR).** `scripts/skill_collision_clusters.py` produces `agents/reports/skill-collision-clusters.json`. New skills that fall into an existing collision cluster (description-vector similarity ≥ threshold or trigger-keyword overlap ≥ threshold) **break the build** unless paired with one of:
+1. **Tier A — Automated ontology lint (every PR).** `scripts/skill_collision_clusters.py` produces `agents/runtime/reports/skill-collision-clusters.json`. New skills that fall into an existing collision cluster (description-vector similarity ≥ threshold or trigger-keyword overlap ≥ threshold) **break the build** unless paired with one of:
    - A routing rule (tier-2a path-prefix or tier-3 keyword) that declares ownership, OR
    - An ADR under `docs/contracts/adr-*.md` that names the trade-off.
 2. **Tier B — ADR on first collision (per cluster, not per skill).** When Tier A flags a new collision and the author chooses to keep both skills, they write a one-page ADR naming what each skill owns and where the boundary lives. The ADR is **per cluster**, not per skill — adding a fourth `php-*` skill to an established `php-*` cluster does not require a new ADR; only the cluster's first ADR matters.
@@ -52,8 +52,8 @@ The two-tier choice is the convener-skeptic synthesis: **(b) is the always-on ga
 
 ## Acceptance test
 
-- [x] `scripts/skill_collision_clusters.py` exists and emits `agents/reports/skill-collision-clusters.json`
-- [x] `scripts/score_skill_selection.py` exists and emits `agents/reports/skill-selection-accuracy.json`
+- [x] `scripts/skill_collision_clusters.py` exists and emits `agents/runtime/reports/skill-collision-clusters.json`
+- [x] `scripts/score_skill_selection.py` exists and emits `agents/runtime/reports/skill-selection-accuracy.json`
 - [x] Phase 3 routing rules (`laravel-routing`, `symfony-routing`, `copilot-routing`, `devcontainer-routing`) demonstrate the tier-B response to a flagged cluster
 - [ ] Lint promoted to `fail-the-build` once thresholds are confirmed stable across one full release cycle (currently `warn-only`)
 
@@ -61,7 +61,7 @@ The final acceptance gate (lint going from warn-only to fail-the-build) is defer
 
 ## Related
 
-- Origin: [`agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
+- Origin: [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/01-bus-factor-and-consensus.md) <!-- council-ref-allowed: ADR decision trace -->
 - Mechanical scripts: [`scripts/skill_collision_clusters.py`](../../scripts/skill_collision_clusters.py), [`scripts/score_skill_selection.py`](../../scripts/score_skill_selection.py)
 - Sibling decision: [`docs/contracts/rule-router.md`](rule-router.md) — the routing layer the ADR feeds
 - Sibling decision: [`docs/contracts/multi-tool-projection-fidelity.md`](multi-tool-projection-fidelity.md) — Phase 4 of the same roadmap

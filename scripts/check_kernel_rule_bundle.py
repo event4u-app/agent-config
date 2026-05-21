@@ -20,7 +20,7 @@ Inputs:
 Exit codes: 0 = pass · 1 = fail (> 1 kernel rule, no override) ·
 3 = internal error.
 
-Source: `agents/contexts/adr-always-budget-relief-strategy.md`.
+Source: `agents/settings/contexts/adr-always-budget-relief-strategy.md`.
 """
 from __future__ import annotations
 
@@ -140,7 +140,7 @@ def main(argv: list[str] | None = None) -> int:
         file=sys.stderr,
     )
     print(
-        "   Source: agents/contexts/adr-always-budget-relief-strategy.md "
+        "   Source: agents/settings/contexts/adr-always-budget-relief-strategy.md "
         "(Phase 4.2).",
         file=sys.stderr,
     )

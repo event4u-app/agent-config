@@ -31,8 +31,36 @@ import { wizardRoute } from './routes/wizard.js';
 import { replayPendingCommits } from './io/atomicMultiWrite.js';
 import { PACKAGE_ROOT } from '../cli/paths.js';
 
+export type StorageMode = 'package-sandbox' | 'global';
+
 export interface CreateAppOptions {
-    projectRoot: string;
+    /**
+     * Absolute path where every new write lands (`.agent-settings.yml`,
+     * `.agent-user.md`, `state/wizard-*`).
+     *
+     * Resolved by `src/server/writeRoot.ts`:
+     *   - `<repo>/agents/` inside the package (sandbox mode)
+     *   - `~/.event4u/agent-config/` everywhere else (global mode)
+     */
+    writeRoot?: string;
+    /**
+     * Optional legacy-read fallback. When set, GETs that miss `writeRoot`
+     * try `legacyReadRoot` so a project with an existing local
+     * `.agent-settings.yml` from a previous release keeps working until
+     * the next save silently migrates it. `null` or omitted disables
+     * the fallback (package-sandbox or explicit override).
+     */
+    legacyReadRoot?: string | null;
+    /** Storage mode — surfaced on `/api/v1/ping` for the UI banner. */
+    mode?: StorageMode;
+    /**
+     * @deprecated since the writeRoot refactor — pass `writeRoot` instead.
+     * Retained so the older `createApp({ projectRoot })` call shape in
+     * tests / consumers still works during the transition: when set
+     * without `writeRoot`, it is used verbatim as `writeRoot` with no
+     * legacy fallback and `mode='global'`.
+     */
+    projectRoot?: string;
     uiDistDir: string;
     /** Per-process token required on /api/* routes. */
     token: string;
@@ -122,15 +150,21 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
 
     const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
     const dryRun = opts.dryRun === true;
+    const writeRoot = opts.writeRoot ?? opts.projectRoot;
+    if (writeRoot === undefined) {
+        throw new Error('createApp: writeRoot (or projectRoot) is required');
+    }
+    const legacyReadRoot = opts.legacyReadRoot ?? null;
+    const mode: StorageMode = opts.mode ?? 'global';
 
-    await app.register(pingRoute({ projectRoot: opts.projectRoot, dryRun }));
+    await app.register(pingRoute({ writeRoot, mode, dryRun }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
-    await app.register(settingsRoute({ projectRoot: opts.projectRoot, dryRun }));
-    await app.register(userMdRoute({ projectRoot: opts.projectRoot, dryRun }));
-    await app.register(wizardRoute({ projectRoot: opts.projectRoot, packageRoot, dryRun }));
+    await app.register(settingsRoute({ writeRoot, legacyReadRoot, dryRun }));
+    await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
+    await app.register(wizardRoute({ writeRoot, packageRoot, dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so
@@ -138,7 +172,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     // crashed real run must not be auto-finished by a maintainer preview.
     if (opts.skipReplay !== true && !dryRun) {
         try {
-            const result = await replayPendingCommits(opts.projectRoot);
+            const result = await replayPendingCommits(writeRoot);
             if (result.completed.length > 0 || result.aborted.length > 0) {
                 app.log.warn(
                     { completed: result.completed, aborted: result.aborted },

@@ -4,7 +4,7 @@
 Implements step-2-skill-inventory-rationalization.md Phase 2 Step 2.
 Mirrors `scripts/audit_overlap.py` (the rule-side analog) but reads
 `.agent-src.uncompressed/skills/<slug>/SKILL.md` frontmatter directly
-and emits `agents/metrics/skill-overlap.md` listing pairs scoring
+and emits `agents/runtime/metrics/skill-overlap.md` listing pairs scoring
 ≥ 0.6 on either:
 
   - description-trigger Jaccard (tokenized union of `description` +

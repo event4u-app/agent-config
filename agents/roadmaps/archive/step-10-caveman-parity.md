@@ -6,7 +6,7 @@ complexity: lightweight
 
 > Match every measurable pattern in caveman's token-economy playbook — 6-level intensity ladder, in-place memory-file compression with backup, auto-clarity carve-outs, statusline integration, per-prompt token delta, output-only disclaimer — and surface zero `[!]` rows in `docs/parity/caveman.md`.
 
-**Measured-vs-claimed disclaimer:** Every saving percentage in this roadmap is **claimed by caveman's published table** (avg 65 %, range 22–87 % per [`external-findings.md § 1`](../audit-2026-05-14-north-star/external-findings.md)). Validation against our 25-prompt corpus happens in Phase 5 — until then, our numbers are absent, not equivalent.
+**Measured-vs-claimed disclaimer:** Every saving percentage in this roadmap is **claimed by caveman's published table** (avg 65 %, range 22–87 % per [`external-findings.md § 1`](../../audits/2026-05-14-north-star/external-findings.md)). Validation against our 25-prompt corpus happens in Phase 5 — until then, our numbers are absent, not equivalent.
 
 ## Closure decision (2026-05-16, maintainer override)
 
@@ -25,7 +25,7 @@ All Phase 1–6 checkboxes flip `[-]` cancelled. If a future maintainer revives 
 
 ## Prerequisites
 
-- [-] Read `AGENTS.md` and [`external-findings.md § 1`](../audit-2026-05-14-north-star/external-findings.md) — every row is a checkbox in this roadmap
+- [-] Read `AGENTS.md` and [`external-findings.md § 1`](../../audits/2026-05-14-north-star/external-findings.md) — every row is a checkbox in this roadmap
 - [-] [`step-4-measurement-and-benchmark.md`](step-4-measurement-and-benchmark.md) Phase 2 complete (`task bench` exists; per-prompt token delta is captured)
 - [-] [`step-99-north-star-restructure.md`](step-99-north-star-restructure.md) Phase 4 kill-criterion doc parked in `docs/contracts/`
 - [-] Confirm [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md) rule exists and ships `caveman.speak_scope` default `off`
@@ -36,7 +36,7 @@ Caveman is one trick done exceptionally well: measured token reduction with a re
 
 This roadmap closes the parity table row by row, and lands the **mechanism** (intensity ladder, carve-outs, statusline) regardless of whether the kill-criterion in [`step-99`](step-99-north-star-restructure.md) Phase 4 flips the default on. Mechanism without proof is fine; mechanism *gated* on proof is the point.
 
-- **Source:** [`external-findings.md § 1`](../audit-2026-05-14-north-star/external-findings.md) (6 rows, all in scope)
+- **Source:** [`external-findings.md § 1`](../../audits/2026-05-14-north-star/external-findings.md) (6 rows, all in scope)
 - **Pillar:** P5 (Domination Mandate)
 - **Block-on:** step-4 Phase 2; default-flip is **separately** blocked on step-4 Phase 3 (60-day baseline)
 
@@ -58,7 +58,7 @@ In-place compression of long-form memory / instruction files with `.original.md`
 - [-] **Step 1 — In-place rewrite mode:** `scripts/caveman_compress.py --in-place <file>` writes `<file>.original.md` (atomic copy) before rewriting `<file>`. Refuses if `.original.md` already exists (no double-compression).
 - [-] **Step 2 — `task caveman-compress` entrypoint:** Wraps the script. Accepts `--intensity` (default `full`). `--quiet` mode emits only the byte / token delta. Standard `rtk` wrapping per [`cli-output-handling`](../../.agent-src.uncompressed/rules/cli-output-handling.md).
 - [-] **Step 3 — Restore command:** `task caveman-compress:restore <file>` swaps `<file>` ↔ `<file>.original.md`. Symmetric.
-- [-] **Step 4 — Token-delta capture:** Each `--in-place` run appends a row to `agents/metrics/caveman-compress-log.jsonl`: `{ file, before_tokens, after_tokens, intensity, ts }`.
+- [-] **Step 4 — Token-delta capture:** Each `--in-place` run appends a row to `agents/runtime/metrics/caveman-compress-log.jsonl`: `{ file, before_tokens, after_tokens, intensity, ts }`.
 
 **Exit:** in-place compression of a sample file (`AGENTS.md` of a test consumer) produces `.original.md` backup, restorable; delta logged. **Rollback:** `task caveman-compress:restore` exists; script removal leaves backups intact.
 
@@ -77,7 +77,7 @@ Compression that knows when to stop. Disabled on security / destructive / multi-
 
 Observable feedback. Lifetime savings visible; per-prompt delta in `task bench`.
 
-- [-] **Step 1 — Lifetime tally:** `scripts/caveman_tally.py` aggregates `agents/metrics/caveman-compress-log.jsonl` into `agents/metrics/caveman-lifetime.json` (`{ total_tokens_saved, files_compressed, first_run, last_run }`).
+- [-] **Step 1 — Lifetime tally:** `scripts/caveman_tally.py` aggregates `agents/runtime/metrics/caveman-compress-log.jsonl` into `agents/runtime/metrics/caveman-lifetime.json` (`{ total_tokens_saved, files_compressed, first_run, last_run }`).
 - [-] **Step 2 — Statusline hook:** `scripts/caveman_statusline.py` emits a single-line summary suitable for IDE statusline integration (`caveman: −123,456 tokens / 18 files`). Docs in `docs/contracts/statusline-integration.md` describe per-IDE wiring (Augment / Claude Code / Cursor).
 - [-] **Step 3 — `task bench` per-prompt delta:** Extend `bench/reports/<ts>.md` from [`step-4`](step-4-measurement-and-benchmark.md) to include `caveman_delta` per prompt: tokens saved when compression is on vs off (run the corpus twice, diff).
 - [-] **Step 4 — Drift comparison:** `task bench` report cross-references the lifetime tally — flags when bench-measured savings drop below claimed lifetime average by > 15 pp.
@@ -90,7 +90,7 @@ Caveman is honest: it only affects output tokens. We will be at least as honest.
 
 - [-] **Step 1 — Disclaimer text:** Update [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md) rule body to declare explicitly: "caveman compression affects **output tokens only** — thinking / reasoning tokens are upstream of the rule and untouched." Same line in `docs/contracts/caveman-intensity-ladder.md`.
 - [-] **Step 2 — README integration:** README surface that mentions caveman links to the disclaimer. Per [`token-efficiency`](../../.agent-src.uncompressed/rules/token-efficiency.md), the disclaimer is **once**, cited from elsewhere — not restated.
-- [-] **Step 3 — Parity doc:** `docs/parity/caveman.md` — one row per [`external-findings.md § 1`](../audit-2026-05-14-north-star/external-findings.md) line, each marked `[x] covered by <file:line>` / `[~] superseded by <approach>` / `[!] gap`. **Acceptance: zero `[!]` rows.**
+- [-] **Step 3 — Parity doc:** `docs/parity/caveman.md` — one row per [`external-findings.md § 1`](../../audits/2026-05-14-north-star/external-findings.md) line, each marked `[x] covered by <file:line>` / `[~] superseded by <approach>` / `[!] gap`. **Acceptance: zero `[!]` rows.**
 - [-] **Step 4 — Bench redundancy check:** Run `task bench` over the 25-prompt corpus with `caveman.intensity: full` and compare aggregate savings to caveman's published 65 % average. Numbers committed to `docs/parity/bench-caveman.json`.
 
 **Exit:** parity doc zero `[!]` rows; bench-caveman.json present with numbers. **Rollback:** parity doc + JSON are reports; deletion is a doc revert.
@@ -99,7 +99,7 @@ Caveman is honest: it only affects output tokens. We will be at least as honest.
 
 - [-] **Step 1 — Cross-reference [`step-99`](step-99-north-star-restructure.md) § Phase 5 Step 1:** `docs/parity/caveman.md` cited as evidence; G5 gate references it.
 - [-] **Step 2 — Update [`step-99`](step-99-north-star-restructure.md) § Phase 4 Step 2:** Compression default-flip decision reads `bench-caveman.json` + `caveman-lifetime.json`. Decision criteria (≥ 30 % saving, < 5 % quality regression) are owned there, not here.
-- [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../audit-2026-05-14-north-star/external-findings.md) "Compression / token economy — measurement" row flips from `–` to `=` (or `+` if bench beats caveman's avg).
+- [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../../audits/2026-05-14-north-star/external-findings.md) "Compression / token economy — measurement" row flips from `–` to `=` (or `+` if bench beats caveman's avg).
 
 **Exit:** scorecard updated; step-99 cross-references intact. **Rollback:** N/A — documentation closeout.
 

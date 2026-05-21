@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
 """Lint structural reachability of media governance policies.
 
-Every policy file under `agents/policies/media/` (except README) must
+Every policy file under `agents/settings/policies/media/` (except README) must
 be linked from at least one of:
 
   * a skill SKILL.md (any .agent-src.uncompressed/skills/*/SKILL.md
     or .claude/skills/*/SKILL.md),
   * a routing rule under .agent-src.uncompressed/rules/, or
-  * a sibling policy file under agents/policies/media/.
+  * a sibling policy file under agents/settings/policies/media/.
 
 A policy that no surface references is a silent policy and a silent
 policy is a failed policy. This is the CI-side reachability guarantee
 the agent-in-the-loop enforcement model rests on (see
-agents/policies/media/README.md § Enforcement model).
+agents/settings/policies/media/README.md § Enforcement model).
 
 Exit codes:
   0  all policies linked
@@ -66,7 +66,7 @@ def collect_scan_files() -> list[Path]:
 def referrers_for(policy: Path, scan_files: list[Path]) -> list[Path]:
     """Return files that reference `policy` by its repo-relative name
     or basename. We accept both the full path token
-    (`agents/policies/media/likeness.md`) and the bare basename
+    (`agents/settings/policies/media/likeness.md`) and the bare basename
     (`likeness.md`) inside a markdown link, because sibling policies
     link via relative `[likeness.md](likeness.md)` form.
     """
@@ -91,7 +91,7 @@ def referrers_for(policy: Path, scan_files: list[Path]) -> list[Path]:
 def main() -> int:
     if not POLICY_DIR.exists():
         emit(
-            "media-policy-linkage: agents/policies/media/ missing — "
+            "media-policy-linkage: agents/settings/policies/media/ missing — "
             "nothing to lint."
         )
         return 0
@@ -99,7 +99,7 @@ def main() -> int:
     policies = collect_policies()
     if not policies:
         emit(
-            "media-policy-linkage: agents/policies/media/ has no policy "
+            "media-policy-linkage: agents/settings/policies/media/ has no policy "
             "files — nothing to lint."
         )
         return 0

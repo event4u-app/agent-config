@@ -194,7 +194,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 
 - Council artefacts: `agents/council-questions/token-optimizer-design.md`,
   `agents/council-responses/token-optimizer-design.json`
-- Analysis: `agents/analysis/compare-token-optimizer-design.md`
+- Analysis: `agents/evidence/analysis/compare-token-optimizer-design.md`
 - Existing assets cross-checked: `direct-answers`, `token-efficiency`,
   `cli-output-handling`, `rtk-output-filtering`, `markitdown`,
   `agent-handoff`, `compress.{sh,py}`, `check_compression.py`

@@ -30,7 +30,7 @@ expiry rule — so the memory layer grows without rotting.
   retires.
 - **No** LLM-generated memory without human sign-off. Incident-learnings
   are drafted from evidence; a human promotes them to the file.
-- **No** replacement of existing contexts (`agents/contexts/*.md`).
+- **No** replacement of existing contexts (`agents/settings/contexts/*.md`).
   Memory is structured data; contexts stay prose.
 
 ## Existing memory (baseline)
@@ -185,7 +185,7 @@ consumer creates already pays off on the next PR.
 
 ## Open questions
 
-- **Overlap with `agents/contexts/`?** Contexts stay prose for onboarding;
+- **Overlap with `agents/settings/contexts/`?** Contexts stay prose for onboarding;
   memory is structured for agent consumption. A context may *cite* a memory entry.
 - **Single source vs. many?** Four files is a ceiling. If a fifth candidate
   appears, it consolidates into `domain-invariants` first.

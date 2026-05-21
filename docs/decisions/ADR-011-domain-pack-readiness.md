@@ -14,7 +14,7 @@ type: prospective
 ## Status
 
 **Accepted** · 2026-05-17 · one-round council pass complete
-(`agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json`, actual spend $0.0300). <!-- council-ref-allowed: ADR decision trace; convergence summary inline in §Council-debate-trace -->
+(`agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json`, actual spend $0.0300). <!-- council-ref-allowed: ADR decision trace; convergence summary inline in §Council-debate-trace -->
 Split verdict — Anthropic accepted *with* tightened trigger; OpenAI
 accepted as written. The host folded Anthropic's structural critique
 into the trigger and added the escape clause both members' reasoning
@@ -88,7 +88,7 @@ no path changes, no symlink relocation, no namespace prefix:
   recorded in `persona-governance`)
 - `.agent-src.uncompressed/commands/video/{from-script,scene,storyboard,stitch}.md`
 - `scripts/ai-video/` (the 5 adapter scripts + `lib/`)
-- `agents/policies/media/` (Phase 2 output — already structured as
+- `agents/settings/policies/media/` (Phase 2 output — already structured as
   a project-local policy directory, *not* a pack)
 
 ### (ii) The trigger that flips this decision
@@ -148,7 +148,7 @@ for ambiguity:
   `higgsfield`, `sora`) — stay in `scripts/ai-video/`.
 - The two remaining video personas — stay in `.agent-src.uncompressed/personas/`.
 - The `/video:*` command cluster — stays in `.agent-src.uncompressed/commands/video/`.
-- The `media-governance-routing` rule + `agents/policies/media/`
+- The `media-governance-routing` rule + `agents/settings/policies/media/`
   policy files — stay where Phase 2 placed them.
 - The provider-lifecycle contract + the `provider-lifecycle-discipline`
   rule — stay where Phase 3 placed them.
@@ -185,7 +185,7 @@ treats as a smell.
 ## Council-debate trace
 
 One round · 2 members · actual spend $0.0300 · raw responses at
-[`agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json`](../../agents/council-responses/adr-011-domain-pack-readiness.json/debate-round-1.json). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
+[`agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json`](../../agents/runtime/council/responses/adr-011-domain-pack-readiness.json/debate-round-1.json). <!-- council-ref-allowed: ADR decision-trace to originating council response -->
 
 | Member | Pick | Core argument | Folded back? |
 |---|---|---|---|

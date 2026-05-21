@@ -7,10 +7,10 @@
  *   POST /api/v1/wizard/state   → persist between step transitions
  *   POST /api/v1/wizard/finish  → 2PC commit of settings + user-md
  *
- * State persistence path: `<projectRoot>/.agent-config/wizard-state.json`.
- * The directory is created lazily; both file and dir live behind the
- * `/agent-config/wizard-state.json` gitignore entry shipped by the package
- * `.gitignore` block.
+ * State persistence path: `<projectRoot>/state/wizard-state.json`.
+ * The directory is created lazily; in package-sandbox mode `projectRoot`
+ * is `<repo>/agents/` so the marker dir is the gitignored
+ * `agents/runtime/state/` already shipped by the package gitignore template.
  *
  * The finish handler delegates atomic dual-write to `commitMulti`, which
  * handles the 2PC marker dance described in the council HIGH 2026-05-18
@@ -21,14 +21,14 @@ import { promises as fs } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
-import { userMdSchema } from '../schemas/userMd.js';
+import { userMdSchema } from '../../shared/userMd/schema.js';
 import { mergeIntoTemplate } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 
 export interface WizardRouteOptions {
-    /** Project root — every on-disk artefact resolves under this. */
-    projectRoot: string;
+    /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
+    writeRoot: string;
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
     /**
@@ -42,7 +42,7 @@ export interface WizardRouteOptions {
     dryRun?: boolean;
 }
 
-const STATE_REL = join('.agent-config', 'wizard-state.json');
+const STATE_REL = join('state', 'wizard-state.json');
 const SETTINGS_REL = '.agent-settings.yml';
 const USER_MD_REL = '.agent-user.md';
 // Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
@@ -100,7 +100,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         app.get('/api/v1/wizard/state', async () => {
             // Dry-run: in-memory write wins; fall back to disk so an
             // in-progress real run can be previewed.
-            const existing = dryRun ? (memState ?? await readState(opts.projectRoot)) : await readState(opts.projectRoot);
+            const existing = dryRun ? (memState ?? await readState(opts.writeRoot)) : await readState(opts.writeRoot);
             if (existing === null) {
                 return { step: 0, totalSteps, partial: {}, startedAt: null };
             }
@@ -125,7 +125,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 memState = parsed.data;
                 return { ok: true, dryRun: true };
             }
-            await writeState(opts.projectRoot, parsed.data);
+            await writeState(opts.writeRoot, parsed.data);
             return { ok: true };
         });
 
@@ -139,7 +139,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 return reply;
             }
             // Wire shape: `userMd` is a bare string. The schema wraps it
-            // as `{ body }` for length + gray-matter checks.
+            // as `{ body }` for length + frontmatter checks.
             const userMdParsed = body.userMd === undefined || body.userMd === null
                 ? null
                 : userMdSchema.safeParse({ body: body.userMd });
@@ -164,13 +164,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                     };
                 }
                 const payloads: CommitPayload[] = [
-                    { target: join(opts.projectRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
+                    { target: join(opts.writeRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
                 ];
                 if (userMdBody !== null) {
-                    payloads.push({ target: join(opts.projectRoot, USER_MD_REL), contents: userMdBody, mode: 0o600 });
+                    payloads.push({ target: join(opts.writeRoot, USER_MD_REL), contents: userMdBody, mode: 0o600 });
                 }
-                const { txnId } = await commitMulti(payloads, { projectRoot: opts.projectRoot });
-                await fs.unlink(statePath(opts.projectRoot)).catch(() => undefined);
+                const { txnId } = await commitMulti(payloads, { writeRoot: opts.writeRoot });
+                await fs.unlink(statePath(opts.writeRoot)).catch(() => undefined);
                 return { writtenPaths: payloads.map((p) => p.target), txnId };
             } catch (err) {
                 const message = err instanceof Error ? err.message : '2PC commit failed';

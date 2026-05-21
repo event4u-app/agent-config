@@ -44,9 +44,9 @@ logger = logging.getLogger(__name__)
 
 #: Subdirs of ``agents/`` that participate in the cascade. Every entry
 #: is **additive** (single-file artefacts; deepest wins). Stateful or
-#: session-scoped subdirs (``state/``, ``memory/``, ``roadmaps/``,
-#: ``work_engine/``, ``.agent-prices.md``, ``council-*/``) are
-#: deliberately excluded — they are project-rooted only.
+#: session-scoped subdirs (``memory/``, ``roadmaps/``, ``work_engine/``,
+#: ``runtime/`` — which holds ``state/``, ``council/``, ``.agent-prices.md``)
+#: are deliberately excluded — they are project-rooted only.
 CASCADE_ELIGIBLE_KINDS: frozenset[str] = frozenset({
     "overrides",
     "contexts",

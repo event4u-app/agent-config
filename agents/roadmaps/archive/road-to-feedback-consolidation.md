@@ -107,12 +107,12 @@ critique can no longer be raised in good faith on the next review.
 has no recorded sessions"* (Slots 1, 3, 4, 6, 8).
 **Resolved when:** `docs/showcase.md` carries 3 recorded sessions
 backed by SHA-pinned transcripts under `docs/showcase/sessions/` plus
-a metrics table; `agents/contexts/outcome-baseline.md` defines the
+a metrics table; `agents/settings/contexts/outcome-baseline.md` defines the
 metrics + baselines; CI gate `lint_showcase_sessions.py` fails if a
 session loses its transcript or metric.
 
 - [x] **1.1 Define outcome metrics.** Author
-      `agents/contexts/outcome-baseline.md` with the 4 metrics the
+      `agents/settings/contexts/outcome-baseline.md` with the 4 metrics the
       package commits to: (a) average tool-call count per
       `/implement-ticket` run, (b) average chars in agent reply per
       task class, (c) hit/miss ratio of memory in `/work` runs,
@@ -178,7 +178,7 @@ status flips `draft → ready`.
 
 - [x] **2.1 Tier-classification spreadsheet.** Generated
       `tmp/tier-classification.md` (58 rules) from the matrix in
-      `agents/contexts/rule-trigger-matrix.md` via
+      `agents/settings/contexts/rule-trigger-matrix.md` via
       `scripts/_one_off/2026-05/_one_off_tier-retrofit.py`.
 - [x] **2.2 Apply frontmatter (mechanical).** All 58 rule files
       under `.agent-src.uncompressed/rules/` carry `tier: "<value>"`
@@ -315,7 +315,7 @@ Phase 5 does not author per-platform trampolines — it adds two
 - [x] **5.3 Manifest registration.** Add both concerns to
       `scripts/hook_manifest.yaml` against every platform whose
       event surface supports the matching slot (per
-      `agents/contexts/chat-history-platform-hooks.md`). Copilot
+      `agents/settings/contexts/chat-history-platform-hooks.md`). Copilot
       gets the rule-only fallback path.
 - [x] **5.4 Parity tests under `tests/hooks/`.** Run both concerns
       against fixture transcripts for every platform listed in the
@@ -431,7 +431,7 @@ platform) trampolines will sprawl as new concerns land; nothing
 proves an installed hook actually fires on the target platform"*
 (new — surfaced by Council Round 1, anthropic + openai, 2026-05-04).
 **Resolved when:** every supported platform listed in
-`agents/contexts/chat-history-platform-hooks.md` runs every concern
+`agents/settings/contexts/chat-history-platform-hooks.md` runs every concern
 in `scripts/hook_manifest.yaml` via a single per-platform
 dispatcher; `task hooks-status` prints a runtime ✓/✗ matrix; install
 output is snapshot-tested; event-shape contract tests pin each
@@ -520,7 +520,7 @@ concern.
       `user_prompt_submit`, `stop` (Cascade has no generic
       post-tool-use surface — concerns gated to that slot don't fire
       on Windsurf, documented in
-      `agents/contexts/chat-history-platform-hooks.md`).
+      `agents/settings/contexts/chat-history-platform-hooks.md`).
       `scripts/hooks/windsurf-dispatcher.sh` resolves the workspace
       from `$PWD` → `.agent-settings.yml` walk → `tool_info.cwd` /
       `tool_info.file_path` → `$ROOT_WORKSPACE_PATH` (Windsurf
@@ -763,8 +763,8 @@ These do not block Phase 1 start, but the answers shape Phases 3 / 4 / 7.
   (deleted on roadmap archival).
 - Council Round 2 prompt: `tmp/council_hook_round2_question.md`
   (deleted on roadmap archival).
-- Platform hook surface inventory: `agents/contexts/chat-history-platform-hooks.md`.
-- Hardening rubric: `agents/contexts/hardening-pattern.md`.
+- Platform hook surface inventory: `agents/settings/contexts/chat-history-platform-hooks.md`.
+- Hardening rubric: `agents/settings/contexts/hardening-pattern.md`.
 - One-off location policy: `scripts/check_one_off_location.py`
   (existing).
 - Roadmap complexity contract: `docs/contracts/roadmap-complexity-standard.md`.
@@ -782,6 +782,6 @@ before Phase 7.5. Concrete next step: implement
 `agents/state/.dispatcher/<session_id>/` per-concern feedback
 files in `dispatch_hook.py`, then add `agent_error` to
 `EVENT_VOCABULARY`. Both gate the four platform extensions
-(7.5–7.8). Phase 1.1 (`agents/contexts/outcome-baseline.md`)
+(7.5–7.8). Phase 1.1 (`agents/settings/contexts/outcome-baseline.md`)
 remains the parallel non-Phase-7 next step. No commits and no
 pushes without explicit user permission per `commit-policy`.

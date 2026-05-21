@@ -24,7 +24,7 @@ install:
 <!-- cloud_safe: noop -->
 
 # /chat-history show
-Inspect `agents/.agent-chat-history` — the JSONL log appended by the
+Inspect `agents/runtime/.agent-chat-history` — the JSONL log appended by the
 structural chat-history hooks (`ChatHistoryAppendHook`,
 `ChatHistoryHaltAppendHook`) for crash recovery.
 
@@ -40,7 +40,7 @@ Read-only — this command never writes to the file.
 
 ## When NOT to use
 
-- Wipe the file → delete `agents/.agent-chat-history` manually; it is
+- Wipe the file → delete `agents/runtime/.agent-chat-history` manually; it is
   git-ignored and will be recreated on the next hook fire.
 - Configure logging behavior → edit `.agent-settings.yml` directly
   (`chat_history.*`); see
@@ -79,7 +79,7 @@ Render a concise report:
 ```
 > 📒 chat-history status
 >
-> File:       agents/.agent-chat-history  ({size_kb} KB / {max_size_kb} KB)
+> File:       agents/runtime/.agent-chat-history  ({size_kb} KB / {max_size_kb} KB)
 > Entries:    {entries}
 > Schema:     v{header.v}  (started {header.started})
 > Frequency:  {header.freq}
@@ -106,7 +106,7 @@ isolation surface in both cases.
 
 ## Gotchas
 
-- `agents/.agent-chat-history` is git-ignored. This command never commits.
+- `agents/runtime/.agent-chat-history` is git-ignored. This command never commits.
 - The helper is the only way to read the file — do not cat or parse
   the JSONL directly; entry shape is owned by `scripts/chat_history.py`.
 - If `exists: false` but the rule says logging is enabled, the file is
@@ -114,6 +114,6 @@ isolation surface in both cases.
 
 ## See also
 
-- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — the hook-only contract
+- [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — the hook-only contract
 - [`agent-settings` template](../templates/agent-settings.md) — `chat_history.*` reference
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — helper API (`status`, `read`, `sessions`, `prune-sessions`)

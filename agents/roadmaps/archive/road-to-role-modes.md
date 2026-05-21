@@ -77,7 +77,7 @@ Ship first because it requires no mode-switching mechanism.
 ### Phase 4 — measurement hook (closes Q2 of master frame)
 
 - [x] Each contract output emits a structured header the consumer can grep *(2026-04-22: [`role-contracts.md` "Structured mode markers" section](../../docs/guidelines/agent-infra/role-contracts.md#structured-mode-markers) — HTML-comment marker `<!-- role-mode: <mode> | contract: <kebab-case-fields> -->` — invisible in render, greppable in session captures; six reserved mode values)*
-- [x] Session capture counts contract-conformant outputs per mode *(2026-04-22: [`memory_report._role_mode_stats`](../../scripts/memory_report.py) scans `agents/sessions/`, `agents/reports/`, `agents/handoffs/`, `agents/learnings/` for the structured mode marker, counts per mode, flags unknown slugs; 4 tests in `tests/test_memory_report.py`)*
+- [x] Session capture counts contract-conformant outputs per mode *(2026-04-22: [`memory_report._role_mode_stats`](../../scripts/memory_report.py) scans `agents/sessions/`, `agents/runtime/reports/`, `agents/handoffs/`, `agents/learnings/` for the structured mode marker, counts per mode, flags unknown slugs; 4 tests in `tests/test_memory_report.py`)*
 - [x] Feeds [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) success signal *(2026-04-22: `memory_report`'s role-mode block is printed alongside the quarterly block in the text output — consumed by the weekly [`proposal-drift.yml`](../../.agent-src.uncompressed/templates/github-workflows/proposal-drift.yml) job that already pipes `memory_report.py --quarterly`)*
 
 ## Integration with existing artefacts

@@ -35,7 +35,7 @@ def _envelope(platform: str, event: str, payload: dict, *,
 
 @pytest.fixture
 def root(tmp_path: Path) -> Path:
-    (tmp_path / "agents" / "state").mkdir(parents=True)
+    (tmp_path / "agents" / "runtime" / "state").mkdir(parents=True)
     return tmp_path
 
 

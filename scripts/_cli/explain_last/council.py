@@ -24,7 +24,7 @@ def _candidate_files(project_root: Path) -> list[Path]:
     contract it implements.
     """
     # council-ref-allowed: council loader implementation per roadmap.
-    sessions_root = project_root / "agents" / "council-sessions"
+    sessions_root = project_root / "agents" / "runtime" / "council" / "sessions"
     tmp_root = project_root / "tmp"
     candidates: list[Path] = []
     if sessions_root.exists():

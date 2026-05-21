@@ -20,8 +20,8 @@ interface SettingsGetResponse {
 
 interface DiffChange {
     path: string;
-    before: JsonValue;
-    after: JsonValue;
+    from: JsonValue;
+    to: JsonValue;
 }
 
 const loaded = signal(false);
@@ -123,9 +123,9 @@ function DiffModal({ changes }: { changes: DiffChange[] }): preact.JSX.Element {
                     {changes.map((c) => (
                         <li key={c.path}>
                             <code>{c.path}</code>
-                            <span class="ac-diff__before">{JSON.stringify(c.before)}</span>
+                            <span class="ac-diff__before">{JSON.stringify(c.from)}</span>
                             <span class="ac-diff__arrow">→</span>
-                            <span class="ac-diff__after">{JSON.stringify(c.after)}</span>
+                            <span class="ac-diff__after">{JSON.stringify(c.to)}</span>
                         </li>
                     ))}
                 </ul>

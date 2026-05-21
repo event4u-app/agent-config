@@ -10,7 +10,7 @@ YAML frontmatter of every file, and prints per-type:
 - sample values (up to 3) per key
 
 Output is Markdown on stdout, intended to be captured into
-`agents/docs/frontmatter-contract.md` as raw material for Phase 1 of the
+`agents/reference/docs/frontmatter-contract.md` as raw material for Phase 1 of the
 frontmatter-schema roadmap.
 
 Stdlib-only. No PyYAML — we do a simple line-based parse sufficient for

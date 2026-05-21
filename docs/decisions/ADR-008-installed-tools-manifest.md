@@ -20,7 +20,7 @@ Projektebene festhalten, welche Agents wir initialisiert haben, damit
 bei jedem Sync das Verzeichnis aktualisiert werden kann?" Validated
 through AI Council Round 1 (claude-sonnet-4-5 + gpt-4o, $0.0298 actual,
 both converged on "yes, separate file"). Council session:
-[`agents/council-sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/council-sessions/2026-05-12-project-settings-and-v1-v2/). <!-- council-ref-allowed: ADR decision trace -->
+[`agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/). <!-- council-ref-allowed: ADR decision trace -->
 
 ## Context
 
@@ -156,5 +156,5 @@ for this ADR.
 
 - [`ADR-007`](ADR-007-agent-discovery-scopes.md) — global-first install (this ADR depends on it).
 - [`agents/roadmaps/road-to-global-first-install.md`](../../agents/roadmaps/road-to-global-first-install.md) Phase 3.
-- [`agents/council-sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/council-sessions/2026-05-12-project-settings-and-v1-v2/) — full council transcripts. <!-- council-ref-allowed: ADR decision trace -->
+- [`agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/`](../../agents/runtime/council/sessions/2026-05-12-project-settings-and-v1-v2/) — full council transcripts. <!-- council-ref-allowed: ADR decision trace -->
 - [`docs/guidelines/agent-infra/layered-settings.md`](../guidelines/agent-infra/layered-settings.md) — the existing 4-layer settings precedence; this ADR adds a parallel file outside that hierarchy.

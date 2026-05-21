@@ -7,10 +7,10 @@
 
 ## Prerequisites
 
-- [x] Read [`agents/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md) — analysis exists and decisions 1.a-5.a are derived from it
+- [x] Read [`agents/evidence/analysis/compare-composiohq-awesome-claude-skills.md`](../analysis/compare-composiohq-awesome-claude-skills.md) — analysis exists and decisions 1.a-5.a are derived from it
 - [x] Maintainer decisions recorded (1.a, 2.c, 3.d, 4.c, 5.a) — in the analysis file above
 - [x] Phase 1 of [`archive/road-to-anthropic-alignment.md`](archive/road-to-anthropic-alignment.md) shipped (commit ec79750 — marketplace manifest canonical; roadmap archived 2026-04-21)
-- [x] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
+- [x] [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md) archived 2026-04-20; feasibility verdicts in [`agents/evidence/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md)
 - [x] [`road-to-trigger-evals.md`](road-to-trigger-evals.md) Phase 1 PoC available (Phase 1 runner + fixtures shipped; Phase 2 live run unblocked 2026-04-22 — Q28 resolved)
 
 ## Context
@@ -62,7 +62,7 @@ maintainer and passes a judge-agent review on first attempt.
   - [-] Replace a backtick-skill-reference pattern across 20+ analysis/roadmap docs
   - [-] Prepend a `## References` section to 5 target skills
 - [-] Measure token cost: session-only path vs spike-runtime path *(Q34)*
-- [-] Record findings in `agents/analysis/spike-exec-runtime.md` (new file, ≤80 lines) *(Q34)*
+- [-] Record findings in `agents/evidence/analysis/spike-exec-runtime.md` (new file, ≤80 lines) *(Q34)*
 - [-] **Gate:** Go if ≥70% token savings on 2+ of 3 benchmarks AND ≤150 LOC to maintain. Drop otherwise. *(Q34)*
 
 *(2026-04-22: Phase 0 deferred — 1 developer-day spike requires a
@@ -79,7 +79,7 @@ Do not inline the runtime build into this roadmap.
 > others), but written from scratch in event4u's voice, structure, and
 > style. Concepts (TDD phases, root-cause debugging, verification gates)
 > are industry standard — no attribution required. See explicit decision
-> in `agents/analysis/compare-composiohq-awesome-claude-skills.md`.
+> in `agents/evidence/analysis/compare-composiohq-awesome-claude-skills.md`.
 
 ### 1.1 `test-driven-development`
 
@@ -177,7 +177,7 @@ Do not inline the runtime build into this roadmap.
 - [x] Cross-roadmap tie confirmed: judges are the natural evaluator for
       Problem 2 (always-rule compliance) in
       [`archive/road-to-rule-quality-research.md`](archive/road-to-rule-quality-research.md)
-      and [`agents/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md);
+      and [`agents/evidence/analysis/rule-quality-eval-feasibility.md`](../analysis/rule-quality-eval-feasibility.md);
       Phase 3 judge-sub-skills provide the graders that `road-to-compliance-evals.md`
       (future, conditional on trigger-evals Phase 2 green light) would reuse
 
@@ -314,7 +314,7 @@ real-task usage to validate. Tracked as Q34.)*
 
 - [x] Skill linter passes (warnings only: minimal compression reduction —
       source already tight)
-- [-] One real multi-worktree scenario documented in `agents/contexts/`
+- [-] One real multi-worktree scenario documented in `agents/settings/contexts/`
       as case study — deferred; captured on first real parallel-agent
       session *(Q34)*
 

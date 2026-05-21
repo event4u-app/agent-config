@@ -1,8 +1,10 @@
 /**
- * Wizard step header — title, subtitle, progress strip.
+ * Wizard step header — step counter, title, subtitle, progress strip.
  *
- * Title is always an h1 (only one per wizard page). Subtitle uses a
- * normal paragraph so the muted-text token can apply.
+ * Non-interactive by design: jumping back to earlier steps is exposed on
+ * the final Review page as a clickable list, not as a chip rail in the
+ * header. Keeps the header read-only while the user fills the current
+ * step.
  */
 
 import { ProgressBar } from './ProgressBar.js';
@@ -17,8 +19,8 @@ export interface StepHeaderProps {
 export function StepHeader({ step, index, total }: StepHeaderProps): preact.JSX.Element {
     return (
         <header class="ac-page__header ac-wizard__header">
+            <p class="ac-wizard__step-count">Step {index + 1} of {total}</p>
             <div class="ac-wizard__header-text">
-                <p class="ac-wizard__step-count">Step {index + 1} of {total}</p>
                 <h1>{step.title}</h1>
                 <p class="ac-wizard__subtitle">{step.subtitle}</p>
             </div>

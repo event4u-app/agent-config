@@ -278,6 +278,6 @@ Patterns the competitor ships that we deliberately reject:
 - [`.agent-src.uncompressed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncompressed/skills/upstream-contribute/SKILL.md).
 - [`scripts/install.py`](../../scripts/install.py).
 - Source of competitive analysis:
-  [`agents/analysis/compare-dongitran-ai-agent-config.md`](../analysis/compare-dongitran-ai-agent-config.md)
+  [`agents/evidence/analysis/compare-dongitran-ai-agent-config.md`](../analysis/compare-dongitran-ai-agent-config.md)
   *(created by `/analyze-reference-repo` — see
   [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md))*.

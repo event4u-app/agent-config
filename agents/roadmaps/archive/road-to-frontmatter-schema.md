@@ -66,7 +66,7 @@ Produce the actual contract as data before writing any schema.
       *optional*.
 - [x] For each required key, capture the value shape: string, list,
       enum, regex constraint. Cite three real examples per type.
-- [x] Document findings in `agents/docs/frontmatter-contract.md`
+- [x] Document findings in `agents/reference/docs/frontmatter-contract.md`
       as a human-readable reference (no schemas yet).
 - [x] Acceptance: a new contributor can read the doc and write a
       valid skill / rule / command / persona without opening the linter.

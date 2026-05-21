@@ -23,6 +23,9 @@ TEMPLATE_CONTENT = """\
 # Agent config — chat history
 /agents/.agent-chat-history
 /agents/.agent-chat-history.bak
+
+# Agent config — runtime cache
+/agents/runtime/.agent-prices.md
 """
 
 
@@ -49,6 +52,7 @@ def test_template_entries_extracts_paths_only(template: Path):
         ".augment/skills/", ".augment/commands/",
         "/agent-config",
         "/agents/.agent-chat-history", "/agents/.agent-chat-history.bak",
+        "/agents/runtime/.agent-prices.md",
     ]
 
 
@@ -291,15 +295,51 @@ def test_cleanup_legacy_removes_entries_with_leading_slash():
 
 
 def test_cleanup_legacy_preserves_current_managed_paths():
-    """Current canonical /agents/ paths are NOT legacy."""
+    """Current canonical paths are NOT legacy.
+
+    Chat-history stays under `/agents/`; the prices cache moved to
+    `/agents/runtime/` in May 2026.
+    """
     lines = [
         "/agents/.agent-chat-history",
         "/agents/.agent-chat-history.bak",
-        "/agents/.agent-prices.md",
+        "/agents/runtime/.agent-prices.md",
     ]
     new_lines, removed = sg.cleanup_legacy(lines)
     assert new_lines == lines
     assert removed == []
+
+
+def test_cleanup_legacy_strips_intermediate_prices_path():
+    """2.x intermediate `/agents/.agent-prices.md` is legacy now."""
+    lines = [
+        "/vendor/",
+        "/agents/.agent-prices.md",
+        "user-stuff/",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == ["/vendor/", "user-stuff/"]
+    assert removed == ["/agents/.agent-prices.md"]
+
+
+def test_cleanup_legacy_strips_budget_history_paths():
+    """Budget-history JSONLs are now covered by /agents/runtime/."""
+    lines = [
+        "/vendor/",
+        ".augment-budget-history.jsonl",
+        ".rule-budget-history.jsonl",
+        "/agents/.augment-budget-history.jsonl",
+        "/agents/.rule-budget-history.jsonl",
+        "user-stuff/",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == ["/vendor/", "user-stuff/"]
+    assert set(removed) == {
+        ".augment-budget-history.jsonl",
+        ".rule-budget-history.jsonl",
+        "/agents/.augment-budget-history.jsonl",
+        "/agents/.rule-budget-history.jsonl",
+    }
 
 
 def test_cleanup_legacy_preserves_comments_and_blanks():
@@ -351,8 +391,9 @@ def test_main_cleanup_legacy_strips_outside_block_and_syncs(
     assert "\n.agent-chat-history\n" not in text
     assert "\n.agent-chat-history.bak\n" not in text
     assert "\n.agent-prices.md\n" not in text
-    # Managed block present with new /agents/ paths
+    # Managed block present with current canonical paths
     assert "/agents/.agent-chat-history" in text
+    assert "/agents/runtime/.agent-prices.md" in text
     assert sg.SECTION_HEADER in text
     assert sg.SECTION_FOOTER in text
     # User content survives

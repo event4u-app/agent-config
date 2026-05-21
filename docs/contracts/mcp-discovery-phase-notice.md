@@ -7,7 +7,7 @@ stability: experimental
 **Audience:** MCP consumers integrating with `event4u/agent-config` — host
 applications, CLIs, agents calling our stdio server or the Cloudflare Worker.
 **Status:** active under the Discovery-First MCP coverage strategy
-([`mcp-coverage-strategy.md`](../../agents/contexts/mcp-coverage-strategy.md)).
+([`mcp-coverage-strategy.md`](../../agents/settings/contexts/mcp-coverage-strategy.md)).
 
 ## What you will see
 

@@ -803,7 +803,7 @@ the package's user-facing docs reflect the new defaults.
       `/commit`, `/create-pr`, and `/feature-plan` flow on a small
       fixture branch, log the chat-character count, compare against
       the same flow with all flags flipped to verbose. Document
-      the delta in `agents/contexts/communication/token-frugality-baseline.md`
+      the delta in `agents/settings/contexts/communication/token-frugality-baseline.md`
       (new file, evidence anchor for future regressions). File is
       append-only with tagged H2 sections so Phase 10.6 can append
       its own measurements without touching this section. Section
@@ -920,7 +920,7 @@ under `minimal`, restored at `verbose`**.
       (extend the section added in Phase 1.5): new keys, env-var
       overrides, kill-switch usage.
 - [x] **10.7** Append script-output baseline measurement to
-      `agents/contexts/communication/token-frugality-baseline.md`
+      `agents/settings/contexts/communication/token-frugality-baseline.md`
       under `## Script output (Phase 10.7)`. Run `task ci` on a
       green branch with each verbosity level, log line count +
       character count. Target: ≥40% line-count reduction on a

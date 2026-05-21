@@ -39,7 +39,7 @@ size budgets.
   tier-1 (default) · `full` = kernel + tier-1 + tier-2.
 - **Budget gates:** `task lint-rule-budget` enforces kernel ≤ 26k chars
   and per-rule ≤ 2.5k (Iron-Law overrides up to 4.0k via ADR-002).
-  Daily snapshots in `agents/.rule-budget-history.jsonl`.
+  Daily snapshots in `agents/runtime/.rule-budget-history.jsonl`.
 - **Compression discipline:** P4.3 brought the auto-bucket from
   ~75k → 59 220 chars (under the 60k target) without behaviour drift.
 
@@ -105,7 +105,7 @@ point.
 
 Kernel-bucket-check: PASS. Per-rule cap: 16 rules over 2.5k target,
 all within 4.0k Iron-Law override per ADR-002. Trend snapshot
-appended to `agents/.rule-budget-history.jsonl`.
+appended to `agents/runtime/.rule-budget-history.jsonl`.
 
 ## Consequences
 

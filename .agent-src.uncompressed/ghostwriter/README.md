@@ -10,7 +10,7 @@
 - `fictional-fixture-v1.md` — single allowlisted fictional fixture
   demonstrating the schema. **No real-person profiles ever ship here.**
 
-That's it. Real-person profiles live in **`agents/ghostwriter/`** in the
+That's it. Real-person profiles live in **`agents/reference/ghostwriter/`** in the
 consumer project and are gitignored by default
 (see [`config/gitignore-block.txt`](../../config/gitignore-block.txt)).
 
@@ -42,7 +42,7 @@ Two-step process — **both required**:
 
 - Any file in this directory whose stem is not on the allowlist.
 - Any allowlisted file missing `fictional: true`.
-- Any consumer-side file under `agents/ghostwriter/` with `fictional: true`
+- Any consumer-side file under `agents/reference/ghostwriter/` with `fictional: true`
   (fictional profiles belong here, not in consumer trees).
 
 New fixtures require reviewer sign-off on the allowlist change.

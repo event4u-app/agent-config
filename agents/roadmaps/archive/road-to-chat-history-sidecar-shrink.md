@@ -114,7 +114,7 @@ This is the load-bearing change.
 
 ## Phase 4 — Cleanup + docs
 
-- [x] **Step 1:** Update `agents/contexts/chat-history-platform-hooks.md` — describe the post-shrink sidecar shape and why `fp` (not `first_user_msg`) is the cross-hook identity.
+- [x] **Step 1:** Update `agents/settings/contexts/chat-history-platform-hooks.md` — describe the post-shrink sidecar shape and why `fp` (not `first_user_msg`) is the cross-hook identity.
 - [x] **Step 2:** Audit `scripts/chat_history.py` docstrings (module header, `write_sidecar`, `hook_append`) for stale references to "first_user_msg in sidecar". Replace.
 - [x] **Step 3:** No README or AGENTS.md change — sidecar is implementation detail, not user-facing surface.
 - [x] **Step 4:** `task ci` green; `pytest tests/test_chat_history*` green; `pytest tests/test_auto_adopt_fresh_session.py` green; skill linter clean.

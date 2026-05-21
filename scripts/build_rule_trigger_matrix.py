@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build agents/contexts/rule-trigger-matrix.md.
+"""Build agents/settings/contexts/rule-trigger-matrix.md.
 
 Emits a single matrix mapping every rule in `.agent-src.uncompressed/rules/`
 to its trigger event, observability, enforcement surface, hook-cost
@@ -113,7 +113,7 @@ add("commit-conventions.md", "commit message draft", "hook", "output",
 add("docs-sync.md", "file-edit on .augment/{skills,rules,commands}/**", "hook",
     "tool-call", "medium", "2a",
     notes="Detect add/rename/delete; remind to update count + cross-refs")
-add("agent-docs.md", "file-edit on agents/docs/, AGENTS.md", "hook",
+add("agent-docs.md", "file-edit on agents/reference/docs/, AGENTS.md", "hook",
     "tool-call", "medium", "2a", notes="Path-pattern based marker")
 add("upstream-proposal.md", "skill/rule create event", "hook", "output",
     "medium", "2a", notes="Marker after new artifact lands")

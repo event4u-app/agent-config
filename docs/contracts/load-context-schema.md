@@ -27,7 +27,7 @@ type: "always"
 description: "..."
 load_context:                # lazy — on-demand reference list
   - contexts/<area>/<file>.md         # logical name (canonical)
-  - agents/contexts/<file>.md         # project-local
+  - agents/settings/contexts/<file>.md         # project-local
 load_context_eager:          # opt-in eager — auto-loaded on rule fire
   - contexts/<area>/<file>.md
 ---
@@ -58,7 +58,7 @@ opt-in and budget-gated.
 - Allowed roots:
   - `contexts/<area>/<file>.md` — canonical logical name (resolves
     against `.agent-src.uncompressed/`).
-  - `agents/contexts/<file>.md` — project-local material (consumer
+  - `agents/settings/contexts/<file>.md` — project-local material (consumer
     repo only).
   - `.agent-src/contexts/<file>.md` — compressed mirror; tolerated
     defensively, not authored.
@@ -66,7 +66,7 @@ opt-in and budget-gated.
   regex and by `lint_load_context.py` with a remediation hint pointing
   at the canonical logical name.
 - A rule MAY reference contexts under either tree, but a package-shipped
-  rule SHOULD NOT eager-load an `agents/contexts/` file (project-local
+  rule SHOULD NOT eager-load an `agents/settings/contexts/` file (project-local
   leak into shared package). Linter warns on this combination.
 - A context file may itself declare `load_context:` (chain reasoning).
   The linter rejects cycles.
@@ -148,7 +148,7 @@ A rule shipped to consumers (`.agent-src.uncompressed/rules/`) may
 declare `load_context:` entries pointing at:
 
 - `.agent-src.uncompressed/contexts/` — public, OK.
-- `agents/contexts/` — package-internal, **lint warning** (the entry
+- `agents/settings/contexts/` — package-internal, **lint warning** (the entry
   will not exist in consumer projects).
 
 Project-local rules may reference either. The linter classifies by
@@ -194,7 +194,7 @@ Pattern proven by this consumer:
 - **Cite, don't duplicate** — the slim rule contains zero
   algorithm/mechanics/example prose; everything moved was physically
   removed (verified by Phase 2.5 obligation diff:
-  [`agents/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md`](../../agents/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md)).
+  [`agents/runtime/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md`](../../agents/runtime/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md)).
 - **Lazy by default** — no eager-load is declared; the budget guard
   is therefore a no-op for this rule.
 

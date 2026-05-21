@@ -175,7 +175,7 @@ If the user picks **1**:
   verbatim, see `scripts/ai_council/prompts.py`).
 - Append the council findings as a `## Council review (<UTC date>)`
   section at the bottom of the roadmap. Include the trace path to
-  `agents/council-sessions/<timestamp>/raw-text.md` so future readers
+  `agents/runtime/council/sessions/<timestamp>/raw-text.md` so future readers
   can audit.
 - Do **not** rewrite the roadmap based on the findings — surface them,
   let the user decide what to act on.

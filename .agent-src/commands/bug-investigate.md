@@ -105,7 +105,7 @@ Based on gathered context:
 1. **Read the stacktrace** (if available) — trace from top frame down.
 2. **Use `codebase-retrieval`** to find related code.
 3. **Read each file** in the call chain.
-4. **Check for context docs** — `agents/contexts/` or module `agents/contexts/`.
+4. **Check for context docs** — `agents/settings/contexts/` or module `agents/settings/contexts/`.
 5. **Read `agents/memory/incident-learnings.yml`** (if it exists) for
    entries whose `scope:` overlaps with the touched files or the error
    signature. A prior incident may already describe the root cause,

@@ -52,7 +52,7 @@ declared; no skill stack to resolve.)
 ### 2. Locate the project
 
 Resolve `<project-slug>` against the working directory. If neither
-`<slug>/manifest.json` nor `agents/ai-video/projects/<slug>/manifest.json`
+`<slug>/manifest.json` nor `agents/reference/ai-video/projects/<slug>/manifest.json`
 exists, fail with the searched paths.
 
 ### 3. Honor operator overrides

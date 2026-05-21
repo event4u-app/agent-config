@@ -57,7 +57,7 @@ Highest-ROI phase: zero code, immediate landing-page-level visibility for non-de
 - [x] `docs/getting-started-laravel.md` created; Laravel-specific entry-point lives under its own doc (root README keeps the stack-aware skills mention; Laravel deep dive is the role-doc target)
 - [x] MCP elevated in README — non-dev signpost ships in the Quickstart section pointing at MCP + role doc; full Cloudflare MCP setup at [`#self-hosted-mcp-on-cloudflare`](../../README.md#self-hosted-mcp-on-cloudflare--zero-local-install)
 - [x] `task ci` adds a check that every skill linked in role docs resolves to a real file (`scripts/check_role_doc_links.py`) — wired via `Taskfile.yml:127` (lint group) and `:194` (ci group)
-- [~] **Deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md) Phase 1.** Verified: one non-developer tester (recruited via Indie Hackers or ContentWritingJobs) completes MCP setup in < 10 minutes; result logged in `agents/eval-findings/`. External-recruit step — owned by step-13, closes there. AI-Council 2026-05-15-step12-closure-run2 D2 ACCEPT.
+- [~] **Deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md) Phase 1.** Verified: one non-developer tester (recruited via Indie Hackers or ContentWritingJobs) completes MCP setup in < 10 minutes; result logged in `agents/evidence/eval-findings/`. External-recruit step — owned by step-13, closes there. AI-Council 2026-05-15-step12-closure-run2 D2 ACCEPT.
 
 **Exit:** Role doc + Laravel doc merged, `task ci` includes link-resolution check, MCP signpost live. Tester walkthrough is the only open item, tracked under Phase 7 external recruits.
 **Rollback:** Revert the four `docs/` files and the README install-section edit. No skill or rule files touched, so revert is `git restore` only.
@@ -114,7 +114,7 @@ Only after Phases 1–5 prove non-dev workflows succeed: rewrite messaging to ma
 - [~] A/B validation: 3 non-dev recruits read the new README and confirm "understood purpose and relevance to my work"; 10 existing dev users polled, ≥8/10 approve — **deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md) Phase 2** (AI-Council 2026-05-15-step12-closure-run2 D2 ACCEPT)
 - [~] If < 8/10 dev users approve, iterate messaging once and re-poll; second failure → halt and reopen with the AI Council — **deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md) Phase 2** (conditional on row above)
 
-**Exit:** README diff merged, tagline updated, 3 non-dev + 8/10 dev approvals logged in `agents/eval-findings/`.
+**Exit:** README diff merged, tagline updated, 3 non-dev + 8/10 dev approvals logged in `agents/evidence/eval-findings/`.
 **Rollback:** `git revert` the README commit. Phases 1–5 remain in place and continue to deliver value independently.
 
 ## Phase 7 — Community validation (proof of concept)
@@ -128,7 +128,7 @@ Final gate: all prior phases are hypothesis until non-developers actually adopt.
 - [~] Collect 5 case studies covering ≥3 distinct user-types (≥2 content, ≥1 consulting, ≥1 founder / ops); each documents specific workflow enabled with before/after metrics — **deferred to [`step-13-non-dev-community-validation.md`](step-13-non-dev-community-validation.md) Phase 3** (AI-Council 2026-05-15-step12-closure-run2 D2 ACCEPT)
 - [~] Case studies published in `docs/case-studies/` with anonymized metrics (e.g., "brief drafting: 90 min → 25 min, 73% time reduction") — **deferred to [`step-13`](step-13-non-dev-community-validation.md) Phase 3**
 - [~] Verified: ≥3 of 5 case studies show top-10 skill invocations contain zero `test`, `deploy`, `ci` (proof of non-dev workflow, not disguised dev work) — **deferred to [`step-13`](step-13-non-dev-community-validation.md) Phase 3**
-- [~] If < 5 case studies after 90 days from Phase 6 merge, run 10 user interviews with non-dev visitors who did not install; decision gate logged in `agents/eval-findings/` — pivot messaging vs. sunset non-dev expansion — **deferred to [`step-13`](step-13-non-dev-community-validation.md) Phase 4**
+- [~] If < 5 case studies after 90 days from Phase 6 merge, run 10 user interviews with non-dev visitors who did not install; decision gate logged in `agents/evidence/eval-findings/` — pivot messaging vs. sunset non-dev expansion — **deferred to [`step-13`](step-13-non-dev-community-validation.md) Phase 4**
 
 **Exit:** 5 case studies merged, ≥3 user-types represented, telemetry contract published, success criteria verified.
 **Rollback:** Phases 1–6 stay merged regardless of Phase 7 outcome. A "sunset" decision archives this roadmap and parks the non-dev work in `agents/roadmaps/skipped/` with a one-paragraph post-mortem citing the user-interview findings.

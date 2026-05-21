@@ -15,7 +15,7 @@ This roadmap **does not** change agent behaviour for consumers who keep the defa
 ## Prerequisites
 
 - [x] Read `.agent-src.uncompressed/templates/agent-settings.md` (telemetry namespace confirmed clear — sits between `onboarding:` and Settings Reference)
-- [x] Read `agents/contexts/implement-ticket-flow.md` (task-boundary semantics — engagement records align to the eight-step linear flow)
+- [x] Read `agents/settings/contexts/implement-ticket-flow.md` (task-boundary semantics — engagement records align to the eight-step linear flow)
 - [x] Confirm `.gitignore` entries for `.agent-engagement.jsonl` (added to root + `config/gitignore-block.txt` so the consumer installer ships the entry)
 
 ## Paths (canonical)
@@ -89,9 +89,9 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 ## Phase 3: Agent-side hooks
 
 - [x] **Step 1:** Shipped `.agent-src.uncompressed/rules/artifact-engagement-recording.md` — `type: auto`, `cloud_safe: noop`, fires on /implement-ticket and /work boundary completion. Rule body: read settings once per task, cache, then emit one `./agent-config telemetry:record` per boundary with consulted+applied lists. `enabled: false` → no-op.
-- [x] **Step 2:** Wired into `/implement-ticket` and `/work` command rules — single bullet under `### Rules` in each, pointing at the rule for the full contract. Boundary cadence governed by `telemetry.artifact_engagement.granularity` (`task` | `phase-step`); both flows share the same eight-step contract from `agents/contexts/implement-ticket-flow.md`.
+- [x] **Step 2:** Wired into `/implement-ticket` and `/work` command rules — single bullet under `### Rules` in each, pointing at the rule for the full contract. Boundary cadence governed by `telemetry.artifact_engagement.granularity` (`task` | `phase-step`); both flows share the same eight-step contract from `agents/settings/contexts/implement-ticket-flow.md`.
 - [x] **Step 3:** Cost-floor verified by `tests/telemetry/test_cost_floor.py` (6 cases) — fresh-subprocess imports of `work_engine.dispatcher` and `work_engine.cli` confirm zero `telemetry.*` modules load; disabled `telemetry:record` creates no files, doesn't even create parent dirs; rule frontmatter type/cloud-safe markers locked.
-- [x] **Step 4:** Recording contract documented in `agents/contexts/artifact-engagement-flow.md` — boundary semantics, consulted-vs-applied taxonomy, forbidden fields (paths, content, secrets, oversized strings), failure modes (telemetry never blocks the user's task), cost-floor invariants, hand-audit recipes.
+- [x] **Step 4:** Recording contract documented in `agents/settings/contexts/artifact-engagement-flow.md` — boundary semantics, consulted-vs-applied taxonomy, forbidden fields (paths, content, secrets, oversized strings), failure modes (telemetry never blocks the user's task), cost-floor invariants, hand-audit recipes.
 
 ## Phase 4: Aggregator and report
 
@@ -105,7 +105,7 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 - [x] **Step 1:** Audit every event field — confirm zero path, content, prompt, ticket-id, or secret can leak. Repository-internal `task_id`s are allow-listed; consumer-supplied free-text is forbidden. Audited fields: `task_id`, `boundary_kind`, `consulted.<kind>[]`, `applied.<kind>[]`. Strings restricted to bounded id namespaces; control chars, paths, and extensions rejected.
 - [x] **Step 2:** Add a redaction validator — `check_id_redaction` in `telemetry/engagement.py` rejects `/`, `\`, control chars, leading/trailing whitespace, file extensions, empty strings, and strings longer than 200 chars. Wired into `EngagementEvent.validate()` (write gate) and `parse_event` (read gate).
 - [x] **Step 3:** Maintainer-export check — `report_renderer.py` re-runs `check_id_redaction` in `_stat_to_dict` and the markdown row builder. `telemetry_report.main` catches `EngagementSchemaError` and exits `2` with a `redaction validator refused report` message.
-- [x] **Step 4:** Privacy contract documented in `agents/contexts/artifact-engagement-flow.md` — four enforcement layers (schema, aggregator, renderer, CLI), the forbidden-shape table, and two hand-audit recipes (validator-driven and standalone).
+- [x] **Step 4:** Privacy contract documented in `agents/settings/contexts/artifact-engagement-flow.md` — four enforcement layers (schema, aggregator, renderer, CLI), the forbidden-shape table, and two hand-audit recipes (validator-driven and standalone).
 
 ## Phase 6: Dogfooding against R1–R5
 
@@ -123,7 +123,7 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 - [x] **Step 1:** Update `README.md` and `AGENTS.md` — short note that telemetry exists, default-off, see context doc. No marketing prose.
 - [x] **Step 2:** Add a one-screen onboarding hint to `/onboard` — *"telemetry.artifact_engagement is off by default; maintainers enable it via `./agent-config set-cost-profile` or by editing settings"*. Consumers see no prompt. *(Implemented as Step 9 in `/onboard` — informational hint only, no question.)*
-- [x] **Step 3:** Write ADR `agents/contexts/adr-artifact-engagement.md` — rationale, default-off doctrine, privacy contract, deprecation horizon for the schema.
+- [x] **Step 3:** Write ADR `agents/settings/contexts/adr-artifact-engagement.md` — rationale, default-off doctrine, privacy contract, deprecation horizon for the schema.
 - [x] **Step 4:** Draft `CHANGELOG` entry under "Unreleased" — opt-in feature, default-off, maintainer-targeted.
 
 ## Acceptance criteria

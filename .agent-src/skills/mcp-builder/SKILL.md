@@ -85,7 +85,7 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 
 1. The server source plus the 10-question evaluation XML.
 2. A README with: install, env vars, transport mode (stdio / sse / http), example tool call.
-3. A line in `agents/contexts/skills-provenance.yml` if the server was forked from an upstream, or a note that it was authored from scratch.
+3. A line in `agents/settings/contexts/skills-provenance.yml` if the server was forked from an upstream, or a note that it was authored from scratch.
 
 ## Gotcha
 
@@ -117,5 +117,5 @@ Process: enumerate the tools, explore READ-ONLY data, draft 10 questions, **solv
 - Upstream SDKs: https://github.com/modelcontextprotocol/python-sdk · https://github.com/modelcontextprotocol/typescript-sdk
 - Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/mcp-builder/SKILL.md` (MIT, © 2025 Microck) — external `./reference/*.md` file links replaced with inline guidance + upstream URLs.
 - Cross-linked: [`mcp`](../mcp/SKILL.md), [`testing-anti-patterns`](../testing-anti-patterns/SKILL.md), [`api-design`](../api-design/SKILL.md).
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `mcp-builder`).
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `mcp-builder`).
 - Iron-Law floor: `verify-before-complete`, `tool-safety`, `skill-quality`.

@@ -8,7 +8,7 @@ Verifies:
   * Trampoline detection flags platforms with bindings but no
     `<platform>-dispatcher.sh` on disk.
   * `last_feedback` resolves to the most-recent dispatcher feedback file
-    under `agents/state/.dispatcher/<session>/<concern>.json`.
+    under `agents/runtime/state/.dispatcher/<session>/<concern>.json`.
   * `--strict` returns non-zero when bridges, trampolines, or concern
     scripts are missing.
   * JSON output is well-formed and round-trips through `json.loads`.
@@ -76,7 +76,7 @@ def test_missing_trampoline_flagged(tmp_path: Path, manifest: dict, monkeypatch)
 
 
 def test_last_feedback_picks_latest(tmp_path: Path, manifest: dict) -> None:
-    state_dir = tmp_path / "agents" / "state" / ".dispatcher"
+    state_dir = tmp_path / "agents" / "runtime" / "state" / ".dispatcher"
     older = state_dir / "session-a"
     newer = state_dir / "session-b"
     older.mkdir(parents=True)
@@ -93,12 +93,12 @@ def test_last_feedback_picks_latest(tmp_path: Path, manifest: dict) -> None:
 
 
 def test_concern_state_file_surfaced(tmp_path: Path, manifest: dict) -> None:
-    state_dir = tmp_path / "agents" / "state"
+    state_dir = tmp_path / "agents" / "runtime" / "state"
     state_dir.mkdir(parents=True)
     (state_dir / "context-hygiene.json").write_text("{}", encoding="utf-8")
     payload = hooks_doctor.collect(tmp_path, manifest)
     ch = next(c for c in payload["concerns"] if c["concern"] == "context-hygiene")
-    assert ch["state_file"] == "agents/state/context-hygiene.json"
+    assert ch["state_file"] == "agents/runtime/state/context-hygiene.json"
 
 
 def test_json_format_is_well_formed(tmp_path: Path, manifest: dict, capsys) -> None:

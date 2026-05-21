@@ -142,6 +142,7 @@ tasks:
       - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: lint-agents-layout
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
@@ -227,6 +228,7 @@ tasks:
       - task: build-ts
       - task: check-roadmap-trackable
       - task: check-council-layout
+      - task: lint-agents-layout-strict
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme-strict

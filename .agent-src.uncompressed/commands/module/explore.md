@@ -82,7 +82,7 @@ For the selected module, gather in parallel:
 - Highlight the next open step
 
 **Context:**
-- Check `agents/contexts/` for existing context docs (project-root and module-level)
+- Check `agents/settings/contexts/` for existing context docs (project-root and module-level)
 - Check `agents/features/` for related feature plans
 
 ### 4. Display module overview

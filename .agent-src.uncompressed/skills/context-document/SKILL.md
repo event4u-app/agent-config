@@ -56,10 +56,10 @@ Unlike feature plans (future-focused) or roadmaps (task-focused), contexts are
 ├── skills-and-commands.md
 └── documentation-hierarchy.md
 
-agents/contexts/                         # Project-wide contexts
+agents/settings/contexts/                         # Project-wide contexts
 ├── {context-name}.md
 
-app/Modules/{Module}/agents/contexts/    # Module-scoped contexts
+app/Modules/{Module}/agents/settings/contexts/    # Module-scoped contexts
 ├── {context-name}.md
 
 .augment/templates/
@@ -81,8 +81,8 @@ app/Modules/{Module}/agents/contexts/    # Module-scoped contexts
 | Content | Location |
 |---|---|
 | About the `.augment/` system itself | `.augment/contexts/` (shared package) |
-| Project-wide or cross-module | `agents/contexts/` |
-| Module-specific | `app/Modules/{Module}/agents/contexts/` |
+| Project-wide or cross-module | `agents/settings/contexts/` |
+| Module-specific | `app/Modules/{Module}/agents/settings/contexts/` |
 | If unsure | Ask the user |
 
 ### Shared vs. project-specific contexts
@@ -91,7 +91,7 @@ app/Modules/{Module}/agents/contexts/    # Module-scoped contexts
 how overrides work, what skills/commands exist, the documentation hierarchy.
 These are read-only at project level (like all `.augment/` content).
 
-**`agents/contexts/`** — Project-specific. Describes the project's business domain:
+**`agents/settings/contexts/`** — Project-specific. Describes the project's business domain:
 modules, services, integrations, database architecture.
 These are created and maintained per project.
 

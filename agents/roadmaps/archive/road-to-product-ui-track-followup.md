@@ -38,7 +38,7 @@ R3.1 is the place to verify each primitive, then capture the goldens. Trying to 
 ## Non-goals
 
 - **No** new UI directive sets — R3.1 only verifies and pins what R3 declared
-- **No** stack additions (Vue, Svelte, etc.) beyond what R3 ships — that lives in `agents/contexts/ui-stack-extension.md` (R3 Phase 7)
+- **No** stack additions (Vue, Svelte, etc.) beyond what R3 ships — that lives in `agents/settings/contexts/ui-stack-extension.md` (R3 Phase 7)
 - **No** rewrite of trivial-path semantics — only verification + golden capture
 
 ## Open decisions resolved
@@ -99,7 +99,7 @@ Engine archaeology pass `2026-05-01` confirmed every primitive these goldens dep
 - [x] **CHECKSUMS** — `tests/golden/capture.py:_write_checksums` regenerated; manifest committed
 - [x] **Replay green** — `pytest tests/golden/test_replay.py` exits 0 with 22 baselines passing
 - [x] **`task ci` green** — full pipeline passes including consistency, replay, lint-skills, check-refs, check-portability
-- [x] **Drop the "deferred" note from `agents/contexts/ui-track-flow.md`** — replaced with the GT-U5..U8 pinned list
+- [x] **Drop the "deferred" note from `agents/settings/contexts/ui-track-flow.md`** — replaced with the GT-U5..U8 pinned list
 
 ## Acceptance criteria
 

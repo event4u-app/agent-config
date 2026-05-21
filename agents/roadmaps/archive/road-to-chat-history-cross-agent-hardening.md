@@ -85,12 +85,12 @@ references remain in the test surface.
 Standardize the safe pattern so any agent (Cowork, Augment, Claude
 Code) can smoke-test the dispatcher without rotating the live session.
 
-- [x] Document in `agents/contexts/chat-history-platform-hooks.md` that smoke tests MUST use `AGENT_CHAT_HISTORY_FILE=/tmp/<unique>.jsonl` and never the project default
+- [x] Document in `agents/settings/contexts/chat-history-platform-hooks.md` that smoke tests MUST use `AGENT_CHAT_HISTORY_FILE=/tmp/<unique>.jsonl` and never the project default
 - [x] Add a `--dry-run` flag to `scripts/hooks/dispatch_hook.py` (extends the existing flag from concern-resolution to also short-circuit before any concern is invoked) — must print the resolved chain and exit 0 without any side effect
 - [x] Add a `--dry-run` mirror in `./agent-config dispatch:hook` and `./agent-config chat-history:hook`
 - [x] Add a session-start guardrail: when `hook_append` would write a v4 header to an existing non-empty file, log a one-line warning to stderr if the *most recent* body entry's `s` tag differs from the new session's `s` tag — agents see the rotation intent before it lands
 - [x] Add a test under `tests/hooks/` that asserts the dry-run path leaves the chat-history file untouched
-- [-] Update [`PAYLOAD-CAPTURE-GUIDE.md`](../PAYLOAD-CAPTURE-GUIDE.md) § "Pre-flight" to mention `--dry-run` as the recommended first invocation — *cancelled: file retired with the verified-platforms roadmap (2026-05-05); the dry-run pre-flight is documented in `agents/contexts/chat-history-platform-hooks.md` instead*
+- [-] Update [`PAYLOAD-CAPTURE-GUIDE.md`](../PAYLOAD-CAPTURE-GUIDE.md) § "Pre-flight" to mention `--dry-run` as the recommended first invocation — *cancelled: file retired with the verified-platforms roadmap (2026-05-05); the dry-run pre-flight is documented in `agents/settings/contexts/chat-history-platform-hooks.md` instead*
 
 ## Phase 4 — Multi-agent attribution surface
 

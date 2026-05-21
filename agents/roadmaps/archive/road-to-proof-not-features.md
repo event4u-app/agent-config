@@ -280,7 +280,7 @@ Without both, Phase 3 does not start.
       top-level README sections owned by P2.2.
 - [x] **P3.5** — `no-roadmap-references` rule: add structural
       carve-outs for legitimate maintainer drafting references —
-      (a) evaluation-context files under `agents/contexts/` linking
+      (a) evaluation-context files under `agents/settings/contexts/` linking
       frozen council questions, and (b) contract files under
       `docs/contracts/` linking archived council session syntheses.
       Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5

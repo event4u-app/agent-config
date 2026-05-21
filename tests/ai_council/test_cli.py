@@ -508,7 +508,7 @@ def test_build_members_cli_binary_missing_skips_member_with_reason(
         raise CliClientError(
             f"{factory_attr}: binary {binary_name!r} not found on PATH. "
             f"Install the provider CLI or set "
-            f"`members.{provider}.binary:` in agents/.ai-council.yml."
+            f"`members.{provider}.binary:` in agents/settings/.ai-council.yml."
         )
 
     monkeypatch.setattr(council_cli, factory_attr, _raise)
@@ -626,7 +626,7 @@ def test_cmd_run_without_confirm_is_estimate_only(tmp_path, capsys) -> None:
 def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys, monkeypatch) -> None:
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hello", encoding="utf-8")
-    out_path = tmp_path / "agents" / "council-responses" / "session" / "out.json"
+    out_path = tmp_path / "agents" / "runtime" / "council" / "responses" / "session" / "out.json"
     response = CouncilResponse(
         provider="openai", model="gpt-x", text="reply text",
         input_tokens=42, output_tokens=7, latency_ms=10,
@@ -651,7 +651,7 @@ def test_cmd_run_with_confirm_writes_responses_json(tmp_path, capsys, monkeypatc
 def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hello", encoding="utf-8")
-    out_path = tmp_path / "agents" / "council-responses" / "out.json"
+    out_path = tmp_path / "agents" / "runtime" / "council" / "responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -671,7 +671,7 @@ def test_cmd_run_resolves_rounds_from_min_rounds_setting(tmp_path, monkeypatch) 
 def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "agents" / "council-responses" / "out.json"
+    out_path = tmp_path / "agents" / "runtime" / "council" / "responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -691,7 +691,7 @@ def test_cmd_run_defaults_to_two_rounds_when_min_rounds_unset(tmp_path, monkeypa
 def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "agents" / "council-responses" / "out.json"
+    out_path = tmp_path / "agents" / "runtime" / "council" / "responses" / "out.json"
     response = CouncilResponse(provider="openai", model="gpt-x", text="r",
                                input_tokens=4, output_tokens=2, latency_ms=1)
     members = [_StubMember("openai", "gpt-x", response)]
@@ -711,7 +711,7 @@ def test_cmd_run_explicit_rounds_overrides_min_rounds_setting(tmp_path, monkeypa
 def test_cmd_run_with_confirm_returns_1_when_all_members_error(tmp_path, monkeypatch) -> None:
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     q = tmp_path / "ask.txt"; q.write_text("hi", encoding="utf-8")
-    out_path = tmp_path / "agents" / "council-responses" / "out.json"
+    out_path = tmp_path / "agents" / "runtime" / "council" / "responses" / "out.json"
     err = CouncilResponse(provider="openai", model="gpt-x", text="",
                           error="boom")
     members = [_StubMember("openai", "gpt-x", err)]
@@ -1329,7 +1329,7 @@ def test_cmd_replay_writes_to_output_file_when_provided(tmp_path, capsys, monkey
     monkeypatch.setattr(council_cli, "REPO_ROOT", tmp_path)
     src = tmp_path / "saved.json"
     src.write_text(json.dumps(_consensus_payload()), encoding="utf-8")
-    out = tmp_path / "agents" / "council-sessions" / "subdir" / "decision-replay.md"
+    out = tmp_path / "agents" / "runtime" / "council" / "sessions" / "subdir" / "decision-replay.md"
     args = _ns(responses=str(src), output=str(out),
                include_member_arguments=None)
     rc = council_cli.cmd_replay(args)

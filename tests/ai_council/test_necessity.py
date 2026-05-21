@@ -27,7 +27,7 @@ from scripts.ai_council.necessity import (  # noqa: E402
     route_decision,
 )
 
-# Reference ladders matching the seeded ones in agents/.ai-council.yml.
+# Reference ladders matching the seeded ones in agents/settings/.ai-council.yml.
 ANTHROPIC_LADDER = ("claude-haiku-4-5", "claude-sonnet-4-5", "claude-opus-4-5")
 OPENAI_LADDER = ("gpt-4o-mini", "gpt-4o", "gpt-4.1")
 

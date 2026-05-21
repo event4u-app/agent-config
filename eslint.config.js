@@ -59,6 +59,44 @@ export default [
         rules: { 'no-console': 'off' },
     },
     {
+        // Council 2026-05-19 (user-md-utils-placement): `src/shared/**` is
+        // consumed by both the server (`tsc` → Node) and the UI (Vite →
+        // browser). Node-only built-ins would silently break the UI bundle
+        // at runtime; this guard fails the build instead.
+        files: ['src/shared/**/*.ts'],
+        rules: {
+            'no-restricted-imports': [
+                'error',
+                {
+                    patterns: [
+                        {
+                            group: [
+                                'fs',
+                                'fs/*',
+                                'node:fs',
+                                'node:fs/*',
+                                'path',
+                                'node:path',
+                                'os',
+                                'node:os',
+                                'crypto',
+                                'node:crypto',
+                                'child_process',
+                                'node:child_process',
+                                'process',
+                                'node:process',
+                                '@cli/*',
+                                '@server/*',
+                            ],
+                            message:
+                                'src/shared/** must stay pure (no Node built-ins, no @cli/@server imports). Move Node-specific code to src/server/.',
+                        },
+                    ],
+                },
+            ],
+        },
+    },
+    {
         // Vitest specs may use console for diagnostic output.
         files: ['tests/**/*.ts', 'src/**/*.test.ts'],
         rules: { 'no-console': 'off' },

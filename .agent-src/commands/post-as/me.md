@@ -115,7 +115,7 @@ commit, no save. The user copies the output manually.
 - **Do NOT commit, push, or open a PR.** The user owns the git surface.
 - **Do NOT append a disclosure footer.** This command is the self-author
   path; appending the ghostwriter footer here is wrong by design.
-- **Do NOT consume `personas/*.md` or `agents/ghostwriter/*.md`** —
+- **Do NOT consume `personas/*.md` or `agents/reference/ghostwriter/*.md`** —
   those are separate primitives.
 - **Do NOT write the draft to disk.** This command prints only.
 - **Do NOT proceed when `.agent-user.md` is missing or

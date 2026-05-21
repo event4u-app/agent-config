@@ -25,7 +25,7 @@ Models, Inversion) and the `/research` command surface into
 (blocked sources, vendor-locked personas, Python validator with
 Claude-Desktop path assumptions). The full ICE-scoring, council
 synthesis, and DROP list live in
-`agents/analysis/compare-deep-research-harvest.md`.
+`agents/evidence/analysis/compare-deep-research-harvest.md`.
 
 **Out of scope for this roadmap:**
 
@@ -228,5 +228,5 @@ tracking moves to ad-hoc reminders / future ICE rescans.
 
 ## Provenance
 
-- Analysis: `agents/analysis/compare-deep-research-harvest.md`
+- Analysis: `agents/evidence/analysis/compare-deep-research-harvest.md`
 - Sibling roadmaps: `agents/roadmaps/archive/road-to-microck-harvest.md`, `agents/roadmaps/archive/road-to-markitdown-adoption.md`

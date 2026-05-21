@@ -38,7 +38,7 @@ def _enable_writes(monkeypatch: pytest.MonkeyPatch) -> None:
     """Override the session-wide kill-switch for this file.
 
     ``tests/conftest.py`` keeps ``AGENT_CONFIG_NO_EVENTS_LOG=1`` so the
-    test suite never writes to the real ``agents/council-events.log``.
+    test suite never writes to the real ``agents/runtime/council/events.log``.
     This file is the schema contract — it must exercise the writer.
     """
     monkeypatch.delenv("AGENT_CONFIG_NO_EVENTS_LOG", raising=False)
@@ -55,8 +55,10 @@ def test_schema_version_is_one() -> None:
 def test_default_log_path_anchored_to_repo(tmp_path: Path) -> None:
     """Sanity-check the canonical location callers will land on."""
     p = default_log_path()
-    assert p.name == "council-events.log"
-    assert p.parent.name == "agents"
+    assert p.name == "events.log"
+    assert p.parent.name == "council"
+    assert p.parent.parent.name == "runtime"
+    assert p.parent.parent.parent.name == "agents"
 
 
 def test_append_event_writes_one_line_with_required_fields(

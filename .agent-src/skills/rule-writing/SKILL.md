@@ -186,7 +186,7 @@ Forward-only: the new check applies to **the rule under review** and
 to **future** edits. The baseline table is informational so reviewers
 can distinguish genuine debt from acceptable carry-overs without
 diffing the full lint output. See
-`agents/analysis/lint-warning-triage.md` for the 3-bucket reference.
+`agents/evidence/analysis/lint-warning-triage.md` for the 3-bucket reference.
 
 ## Frontmatter shape
 

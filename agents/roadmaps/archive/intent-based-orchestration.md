@@ -129,7 +129,7 @@ The skeleton — router rule, three track entry points, settings, extension patt
 
 Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, commands, project context.
 
-- [ ] **Step 1:** Flesh out the body of `product-ui-orchestrator` — concrete prompts and outputs for each pipeline stage; project-context auto-load when `agents/contexts/{product,design-system,ui-patterns,app-shell,copywriting,frontend-stack}.md` are present; auto-invocation of `design-review` at the end.
+- [ ] **Step 1:** Flesh out the body of `product-ui-orchestrator` — concrete prompts and outputs for each pipeline stage; project-context auto-load when `agents/settings/contexts/{product,design-system,ui-patterns,app-shell,copywriting,frontend-stack}.md` are present; auto-invocation of `design-review` at the end.
 - [ ] **Step 2:** Create UI-quality rules:
   - `layout-before-code.md` — never implement UI directly; goal → layout → components → states → code, always.
   - `every-screen-needs-states.md` — loading / empty / error / success required before completion.
@@ -148,7 +148,7 @@ Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, comm
   - `/add-ui-states` — loading / empty / error / success / disabled / validation.
 
 - [ ] **Step 4 (wave B):** Create the four specialised UI commands. Same frontmatter contract as wave A:
-  - `/match-design-system` — align with `agents/contexts/design-system.md` when present.
+  - `/match-design-system` — align with `agents/settings/contexts/design-system.md` when present.
   - `/build-dashboard` — app-shell + KPI grid + activity feed + quick-actions, with realistic states.
   - `/build-form-flow` — multi-step or single-page form with validation, a11y, confirmation.
   - `/ship-ui-feature` — full product-first loop in one command. Resolves overlap with `/implement-ticket` per Open decision 7 before shipping.

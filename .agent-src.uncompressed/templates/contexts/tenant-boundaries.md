@@ -2,7 +2,7 @@
 
 <!--
   Template shipped by event4u/agent-config.
-  Copy to `agents/contexts/tenant-boundaries.md` in the consumer project
+  Copy to `agents/settings/contexts/tenant-boundaries.md` in the consumer project
   and fill in. Required reading for any review that touches data access,
   queries, or public endpoints in a multi-tenant system.
 
@@ -64,5 +64,5 @@
 
 ## See also
 
-- `agents/contexts/auth-model.md` — roles that sit on top of tenants
-- `agents/contexts/data-sensitivity.md` — tenant-scoped vs. shared data
+- `agents/settings/contexts/auth-model.md` — roles that sit on top of tenants
+- `agents/settings/contexts/data-sensitivity.md` — tenant-scoped vs. shared data

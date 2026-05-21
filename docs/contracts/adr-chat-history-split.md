@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # ADR — Chat-history rule split
 
 > **Status:** Superseded · 2026-05-04 · by
-> [`agents/contexts/chat-history-platform-hooks.md`](../../agents/contexts/chat-history-platform-hooks.md).
+> [`agents/settings/contexts/chat-history-platform-hooks.md`](../../agents/settings/contexts/chat-history-platform-hooks.md).
 > The cooperative three-rule split this ADR locked in
 > (`chat-history-ownership` / `-cadence` / `-visibility`) has been
 > reduced to a hook-only structural artifact. The three always-rules,

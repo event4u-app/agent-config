@@ -9,7 +9,7 @@ complexity: structural
 ## Prerequisites
 
 - [ ] Read `AGENTS.md`, [`rules/architecture.md`](../../.agent-src.uncompressed/rules/architecture.md), [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md)
-- [ ] Read evidence file: `agents/analysis/framework-leakage-scan-2026-05-17.txt` (1008 lines, 584 hits)
+- [ ] Read evidence file: `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt` (1008 lines, 584 hits)
 - [ ] Confirm scanner is on disk: `scripts/_tmp_scan_framework_leakage.py` (temporary, replaced by permanent linter in Phase 0)
 - [ ] Confirm `quality.local_auto_run: false` is still set in `.agent-settings.yml` (governs CI-step policy referenced throughout)
 
@@ -17,7 +17,7 @@ complexity: structural
 
 The `api-endpoint` skill triggered this audit (user feedback: "API endpoints don't have to be Laravel, don't have to be PHP"). A repository-wide scan with `scripts/_tmp_scan_framework_leakage.py` (regex on Laravel / PHP / Symfony / JS / Python tokens, scoped to non-carve-out artifacts) returned **584 hits across 50 skills, 7 rules, 25 commands**.
 
-- **Scan output** — `agents/analysis/framework-leakage-scan-2026-05-17.txt`
+- **Scan output** — `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt`
 - **Trigger** — `api-endpoint/SKILL.md` mandates Laravel FormRequest, Eloquent Resource, `php artisan` route in a skill named generically
 - **Existing carve-outs** — `laravel-*`, `symfony-*`, `nextjs-*`, `react-*`, `php-debugging`, `php-service`, `php-coder`, `pest-testing`, `quality-tools`, `eloquent`, `blade-ui`, `flux`, `livewire`, `jobs-events`, `artisan-commands`, `multi-tenancy`, `composer-packages`, `project-analysis-laravel`, `project-analysis-symfony`, `project-analysis-nextjs`, `project-analysis-react`, `project-analysis-node-express`, `project-analysis-zend-laminas`. These are **out of scope** — they are correctly framework-specific.
 
@@ -2343,7 +2343,7 @@ The audit succeeds when **a new contributor cannot reintroduce framework leakage
 1. **Prevention** — Phase 0's Tier-2 rule + `task lint-framework-leakage` reject any new generic skill that mentions PHPStan / Eloquent / FormRequest without parallel multi-stack examples.
 2. **Cure** — Phases 1–5 fix the existing 584 hits so the linter starts from a green baseline.
 3. **Discovery** — Phase 5's `laravel-*` prefix + `framework: laravel` frontmatter let the rule-router serve the right artifact per project automatically (no manual selection).
-4. **Auditability** — every change in this roadmap cites the source file, line number, and exact replacement string. A future LLM (or human) can re-run the audit by diffing `agents/analysis/framework-leakage-scan-2026-05-17.txt` against a fresh scan output.
+4. **Auditability** — every change in this roadmap cites the source file, line number, and exact replacement string. A future LLM (or human) can re-run the audit by diffing `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt` against a fresh scan output.
 
 ## Rollback
 
@@ -2371,6 +2371,6 @@ The 11-commit final shape is the authoritative rollout record; the 3-commit plan
 - [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md) — Tier-1 / Tier-2 routing, per-rule char budget
 - [`rules/roadmap-ci-steps-policy.md`](../../.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md) — CI-step gate (this roadmap declares a carve-out in Phase 6)
 - [`contexts/execution/roadmap-process-loop.md`](../../.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md) — how `/roadmap:process-step` walks this file
-- `agents/analysis/framework-leakage-scan-2026-05-17.txt` — raw evidence (1008 lines, 584 hits)
+- `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt` — raw evidence (1008 lines, 584 hits)
 - `scripts/_tmp_scan_framework_leakage.py` — throwaway scanner (replaced by Phase 0's permanent linter)
 

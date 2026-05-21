@@ -18,7 +18,7 @@ keep-beta-until: 2026-08-12
 This contract defines the **schema** of the file-ownership matrix: the
 machine-readable JSON at `docs/contracts/file-ownership-matrix.json` and
 the human-readable mirror at
-`agents/contexts/structural/file-ownership-matrix.md`. Both are
+`agents/settings/contexts/structural/file-ownership-matrix.md`. Both are
 regenerated from `.agent-src.uncompressed/` by the generator and locked
 by CI.
 

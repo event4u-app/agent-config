@@ -2,7 +2,7 @@
 
 Phase 4 of road-to-context-layer-maturity selected two 4d-trim paths
 (`direct-answers`, `no-cheap-questions`) from a fixed option set
-documented in agents/contexts/budget-v2-matrix.md and shipped them.
+documented in agents/settings/contexts/budget-v2-matrix.md and shipped them.
 Exit-gate actuals (run 2026-05-04): total 44,928 / 49,000 chars
 (91.7 %, 4,072 chars headroom) — ≥ 4,000 headroom goal hit. Top-3
 sum unchanged. Safety-floor rules untouched.
@@ -39,7 +39,7 @@ from scripts.ai_council.session import SessionManifest, save as save_session
 REPO_ROOT = Path(__file__).resolve().parents[4]
 ARTEFACTS = [
     REPO_ROOT / "docs/contracts/load-context-budget-model.md",
-    REPO_ROOT / "agents/contexts/budget-v2-matrix.md",
+    REPO_ROOT / "agents/settings/contexts/budget-v2-matrix.md",
     REPO_ROOT / ".agent-src.uncompressed/rules/direct-answers.md",
     REPO_ROOT / ".agent-src.uncompressed/rules/no-cheap-questions.md",
 ]

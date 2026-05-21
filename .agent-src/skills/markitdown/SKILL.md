@@ -247,6 +247,6 @@ Converted Markdown is **adversarial input**. A PDF with the literal string "igno
 
 - Upstream tool: https://github.com/microsoft/markitdown (MIT, AutoGen Team)
 - Upstream MCP package: https://pypi.org/project/markitdown-mcp/0.0.1a4/ (released 2025-05-23, Beta)
-- Compare doc: `agents/analysis/compare-microsoft-markitdown.md`
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `markitdown`)
+- Compare doc: `agents/evidence/analysis/compare-microsoft-markitdown.md`
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `markitdown`)
 - Iron-Law floor: `non-destructive-by-default`, `skill-quality` § Structural Malice Floor, `verify-before-complete`

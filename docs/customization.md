@@ -176,7 +176,7 @@ is recovered on the next server boot.
 | `personal.open_edited_files` | `false` | Open edited files in IDE |
 | `personal.ide` | *(empty)* | IDE for file opening (`cursor`, `code`, `phpstorm`) |
 | `pipelines.skill_improvement` | `true` | Post-task learning capture. Included in every profile except `custom`. |
-| `chat_history.enabled` | `true` | Persistent JSONL log at `agents/.agent-chat-history` for crash recovery. |
+| `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
 | `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
@@ -189,7 +189,7 @@ is recovered on the next server boot.
 | `ai_council.cost_budget.max_calls` | `10` | Maximum council members per invocation. |
 | `ai_council.cost_budget.max_total_usd` | `0.0` | Per-invocation USD ceiling. `0` disables (token caps still apply). |
 | `ai_council.cost_budget.daily_limit_usd` | `0.0` | Rolling 24h USD ceiling across all `/council` calls. `0` disables. Ledger lives at `~/.event4u/agent-config/council-spend.jsonl` (mode 0600). |
-| `ai_council.session_retention_days` | `14` | Auto-prune for `agents/council-sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
+| `ai_council.session_retention_days` | `14` | Auto-prune for `agents/runtime/council/sessions/` audit folders. Older session directories are removed on the next `save()`. `0` disables (keep forever). |
 
 > **Experimental.** AI Council is not yet validated by external users. API costs apply per consultation.
 
@@ -344,15 +344,15 @@ shadowed.
 | Subdir | Cascade? | User-global allowed? | Why |
 |---|---|---|---|
 | `agents/overrides/` | ✅ Yes — deepest wins by basename. | ✅ Yes — weakest layer. | Personal developer overrides. |
-| `agents/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
+| `agents/settings/contexts/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped. | Shared knowledge; would leak across projects. |
 | `agents/decisions/` | ✅ Yes — deepest wins by basename. | ❌ No — project-shaped ADRs. | Decisions are repo-bound. |
 | `agents/roadmaps/` | ❌ No — project-rooted only. | ❌ No. | Active delivery plans. |
-| `agents/state/`, `agents/memory/`, `agents/work_engine/`, `agents/.agent-prices.md`, `agents/council-*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
+| `agents/runtime/state/`, `agents/memory/`, `agents/work_engine/`, `agents/runtime/.agent-prices.md`, `agents/runtime/council/*/` | ❌ No — stateful / session-scoped. | ❌ No. | Per-session state, not shareable. |
 
 **User-global asymmetry.** `~/.event4u/agent-config/agents/overrides/`
 is the only user-global overlay path consulted by the loader (the
 legacy `~/.config/agent-config/agents/overrides/` tree is read as a
-fallback). Files under `~/.event4u/agent-config/agents/contexts/` or
+fallback). Files under `~/.event4u/agent-config/agents/settings/contexts/` or
 `.../agents/decisions/` are silently skipped — these kinds are
 project-shaped and must not leak across projects.
 

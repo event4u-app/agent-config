@@ -1,69 +1,118 @@
 /**
- * WizardReview — diff list shown on the final step.
+ * WizardReview — final step. Lists each prior step as a clickable box
+ * with a right-aligned status indicator. The verbose diff list was
+ * removed in favour of per-step change counts; details live one click
+ * away on each section.
  *
- * Reuses the visual language from `SettingsPage` (paths + before/after
- * arrow rows). When `userMdChanged` is true we add a single synthetic
- * row pointing at `.agent-user.md` so the user sees both files in one
- * place.
+ * Path ownership: exact match against `step.paths` for form steps,
+ * plus the cost step owns the `caveman.*` / `verbosity.*` bundles
+ * because `cost_profile` selection mutates those keys server-side.
+ * The `userMd` step uses `userMdChanged` directly.
  */
 
 import type { JsonValue } from '../forms/schemaTypes.js';
+import type { WizardStep } from './steps.js';
 
 export interface DiffRow {
     path: string;
-    before: JsonValue;
-    after: JsonValue;
+    from: JsonValue;
+    to: JsonValue;
 }
 
 export interface WizardReviewProps {
+    steps: readonly WizardStep[];
+    currentIndex: number;
     changes: DiffRow[];
+    errors: Record<string, string>;
     userMdChanged: boolean;
     userMdAction: 'create' | 'replace' | null;
     loading: boolean;
+    onJump: (index: number) => void;
 }
 
-function format(value: JsonValue): string {
-    if (value === null || value === undefined) return '∅';
-    if (typeof value === 'string') return value === '' ? '""' : value;
-    return JSON.stringify(value);
+function stepOwnsPath(step: WizardStep, path: string): boolean {
+    if (step.kind !== 'form' || step.paths === undefined) return false;
+    if (step.paths.includes(path)) return true;
+    if (step.id === 'cost' && (path.startsWith('caveman.') || path.startsWith('verbosity.'))) {
+        return true;
+    }
+    return false;
+}
+
+function stepOwnsErrorPath(step: WizardStep, path: string): boolean {
+    // userMd step owns errors whose path is `body` or nested under it —
+    // server validates `{ body: <text> }` so Zod issues come back as
+    // `body` / `body.<...>`.
+    if (step.kind === 'userMd') {
+        return path === 'body' || path.startsWith('body.');
+    }
+    return stepOwnsPath(step, path);
+}
+
+function stepHasError(step: WizardStep, props: WizardReviewProps): boolean {
+    for (const p of Object.keys(props.errors)) {
+        if (stepOwnsErrorPath(step, p)) return true;
+    }
+    return false;
+}
+
+function stepStatus(
+    step: WizardStep,
+    props: WizardReviewProps,
+): { label: string; tone: 'changed' | 'error' | 'idle' } {
+    // Errors trump change counts — a step that won't validate is the
+    // first thing the user has to fix before finish() can succeed.
+    if (stepHasError(step, props)) {
+        return { label: 'needs attention', tone: 'error' };
+    }
+    if (step.kind === 'userMd') {
+        if (!props.userMdChanged) return { label: '', tone: 'idle' };
+        return {
+            label: props.userMdAction === 'create' ? 'will create' : 'will replace',
+            tone: 'changed',
+        };
+    }
+    if (step.kind === 'form') {
+        const count = props.changes.filter((c) => stepOwnsPath(step, c.path)).length;
+        if (count === 0) return { label: '', tone: 'idle' };
+        return { label: `${count} change${count === 1 ? '' : 's'}`, tone: 'changed' };
+    }
+    return { label: '', tone: 'idle' };
 }
 
 export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
-    if (props.loading) {
-        return <p>Computing diff…</p>;
-    }
-    const hasChanges = props.changes.length > 0 || props.userMdChanged;
-    if (!hasChanges) {
-        return (
-            <p class="ac-banner">
-                Nothing to write — current values already match `.agent-settings.yml`.
-            </p>
-        );
-    }
+    const jumpSteps = props.steps.filter((_, i) => i !== props.currentIndex);
     return (
-        <div class="ac-wizard__review">
-            <ul class="ac-diff">
-                {props.changes.map((c) => (
-                    <li key={c.path}>
-                        <code>{c.path}</code>
-                        <span class="ac-diff__before">{format(c.before)}</span>
-                        <span class="ac-diff__arrow">→</span>
-                        <span class="ac-diff__after">{format(c.after)}</span>
-                    </li>
-                ))}
-                {props.userMdChanged ? (
-                    <li key="__user_md">
-                        <code>.agent-user.md</code>
-                        <span class="ac-diff__before">
-                            {props.userMdAction === 'create' ? '(not present)' : '(existing body)'}
-                        </span>
-                        <span class="ac-diff__arrow">→</span>
-                        <span class="ac-diff__after">
-                            {props.userMdAction === 'create' ? 'created' : 'replaced'}
-                        </span>
-                    </li>
-                ) : null}
+        <nav class="ac-wizard__review-nav" aria-label="Jump back to a step">
+            <p class="ac-wizard__review-nav-label">Jump back to a step:</p>
+            <ul class="ac-wizard__review-nav-list">
+                {jumpSteps.map((s) => {
+                    const i = props.steps.indexOf(s);
+                    const status = stepStatus(s, props);
+                    const buttonClass = status.tone === 'error'
+                        ? 'ac-wizard__review-nav-button ac-wizard__review-nav-button--error'
+                        : 'ac-wizard__review-nav-button';
+                    return (
+                        <li key={s.id}>
+                            <button
+                                type="button"
+                                class={buttonClass}
+                                onClick={(): void => { props.onJump(i); }}
+                            >
+                                <span class="ac-wizard__review-nav-index">{i + 1}</span>
+                                <span class="ac-wizard__review-nav-text">{s.navLabel}</span>
+                                {status.label !== '' ? (
+                                    <span
+                                        class={`ac-wizard__review-nav-status ac-wizard__review-nav-status--${status.tone}`}
+                                    >
+                                        {status.label}
+                                    </span>
+                                ) : null}
+                            </button>
+                        </li>
+                    );
+                })}
             </ul>
-        </div>
+        </nav>
     );
 }

@@ -2,7 +2,7 @@
 """Trigger-overlap analysis for the Rule-Governance pass (Phase 5.2 of
 road-to-augment-limit-fit).
 
-Reads `agents/reports/auto-rules-audit.json` (produced by
+Reads `agents/runtime/reports/auto-rules-audit.json` (produced by
 `audit_auto_rules.py`) and computes:
 
 - path-prefix Jaccard similarity (per pair of rules);
@@ -10,8 +10,8 @@ Reads `agents/reports/auto-rules-audit.json` (produced by
 
 Pairs scoring `path_jaccard >= 0.5` OR `keyword_overlap >= 0.4` are
 flagged as merge candidates. Output is appended to
-`agents/reports/auto-rules-audit.md` and a structured JSON list is
-written to `agents/reports/auto-rules-overlap.json` for downstream
+`agents/runtime/reports/auto-rules-audit.md` and a structured JSON list is
+written to `agents/runtime/reports/auto-rules-overlap.json` for downstream
 consumers (Phase 5.3 likelihood, 5.4 council walk).
 """
 

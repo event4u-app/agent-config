@@ -9,11 +9,11 @@ complexity: structural
 **Status:** ready
 **Started:** 2026-05-09
 **Trigger:** User ask — "Wir haben zu viele commands für agents init, copilot agents optimize, etc. und auch agents.md - Versuche das leichter zu machen, gerne mit subcommands."
-**Council:** `agents/council/output/agent-doc-cluster-restructure.json` — Sonnet (frequency-weighted inversion) vs. gpt-4o (symmetric suffixes); host agent picked Sonnet's design after synthesis.
+**Council:** `agents/runtime/council/responses/agent-doc-cluster-restructure.json` — Sonnet (frequency-weighted inversion) vs. gpt-4o (symmetric suffixes); host agent picked Sonnet's design after synthesis.
 
 ## Prerequisites
 
-- [x] P0.1 — Council verdict captured in `agents/council/output/agent-doc-cluster-restructure.json`
+- [x] P0.1 — Council verdict captured in `agents/runtime/council/responses/agent-doc-cluster-restructure.json`
 - [x] P0.2 — Final design synthesized: `/agents` = file family, `/optimize agents-dir` = folder family
 
 ## Context
@@ -38,7 +38,7 @@ complexity: structural
 
 ## Phase 1: Inventory + freeze
 
-- [x] **P1.1** — Inventoried every reference. Output: `agents/analysis/agent-cmd-refs-2026-05-09.txt` (142 lines, 17 distinct files affected: 6 leaf commands, 2 parent commands, 2 skills, AGENTS.md template, 4 docs/contracts files, marketplace.json, 1 routing-policy mechanics).
+- [x] **P1.1** — Inventoried every reference. Output: `agents/evidence/analysis/agent-cmd-refs-2026-05-09.txt` (142 lines, 17 distinct files affected: 6 leaf commands, 2 parent commands, 2 skills, AGENTS.md template, 4 docs/contracts files, marketplace.json, 1 routing-policy mechanics).
 - [x] **P1.2** — Froze the new surface in `docs/contracts/command-clusters.md`: `/agents` row repurposed to `init · optimize · audit` (file-family); `/optimize` row updated to include `agents-dir` and drop `agents` + `agents-md`; `/copilot-agents` cluster row deleted; new "Agent-doc consolidation (2026-05-09)" section with 7-entry migration table. Linter (`lint_no_new_atomic_commands.py --all`) parses the updated allowed-cluster list correctly (`copilot-agents` no longer present); references clean.
 
 ## Phase 2: New `/agents` file-cluster

@@ -94,7 +94,7 @@ class RepoContext:
 
     Feeds the skill's Top-5 risks with project-specific vocabulary —
     recent branch names (naming-convention signal), recent commit
-    subjects (active modules signal), and on-disk `agents/contexts/`
+    subjects (active modules signal), and on-disk `agents/settings/contexts/`
     documents (domain-vocabulary signal).
 
     Empty when `repo_aware=False` — the skill still produces the same

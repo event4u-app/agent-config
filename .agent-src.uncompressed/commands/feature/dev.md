@@ -60,7 +60,7 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
    - Key files, services, models, routes involved
 2. Read identified files to build deep understanding.
 3. Check module docs (`app/Modules/*/agents/`) if applicable.
-4. Check existing contexts (`agents/contexts/`) for the affected area.
+4. Check existing contexts (`agents/settings/contexts/`) for the affected area.
 5. Present findings with file references.
 
 ### Phase 3: Clarifying Questions

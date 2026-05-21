@@ -64,7 +64,7 @@ The visibility line and the JSON it derives from MUST NOT contain:
 
 - Entry **bodies**, summaries, or quoted snippets.
 - Secrets, tokens, environment values, or paths outside the
-  package's `agents/state/` and `tests/` allowlist.
+  package's `agents/runtime/state/` and `tests/` allowlist.
 - User identifiers beyond what is already public in the working
   directory's `.agent-settings.yml` (e.g. developer name).
 
@@ -130,7 +130,7 @@ adoption work). Concretely:
 
 - The engine emits the line + the underlying counts to the
   decision-trace JSON.
-- A consumer hook reads `agents/state/work/<work-id>/decision-trace-*.json`,
+- A consumer hook reads `agents/runtime/state/work/<work-id>/decision-trace-*.json`,
   rolls counts up to the session level, and feeds the result back
   into the agent-memory store as an audit entry.
 

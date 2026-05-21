@@ -42,12 +42,12 @@ Do NOT use when:
 
 ## What to generate
 
-1. **Controller** — Single Action (invokable). Read `agents/docs/controller.md` and `../../../docs/guidelines/php/controllers.md`.
+1. **Controller** — Single Action (invokable). Read `agents/reference/docs/controller.md` and `../../../docs/guidelines/php/controllers.md`.
 2. **FormRequest** — Validation rules, `authorize()` via policies. Read `../../../docs/guidelines/php/validations.md`.
-3. **Resource** — JSON response transformation. Read `agents/docs/api-resources.md`.
+3. **Resource** — JSON response transformation. Read `agents/reference/docs/api-resources.md`.
 4. **Route** — Add to the correct versioned route file.
 5. **Policy** — If authorization is needed.
-6. **Filter classes** — If it's a list endpoint with filtering. Read `agents/docs/query-filter.md` (if it exists).
+6. **Filter classes** — If it's a list endpoint with filtering. Read `agents/reference/docs/query-filter.md` (if it exists).
 
 ## Conventions
 

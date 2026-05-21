@@ -18,7 +18,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { userMdSchema } from '../schemas/userMd.js';
+import { userMdSchema } from '../../shared/userMd/schema.js';
 
 interface SchemaResponse {
     settings: ReturnType<typeof zodToJsonSchema>;

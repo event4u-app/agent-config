@@ -98,7 +98,7 @@ echo "✅  Pre-commit hook installed."
 # lifecycle hooks) cannot fire SessionStart/Stop/PostToolUse. Git hooks
 # are the platform-agnostic lifecycle surface that fires regardless of
 # IDE — every commit, merge, checkout, and rewrite turns into a phase
-# boundary in agents/.agent-chat-history when an agent session is active.
+# boundary in agents/runtime/.agent-chat-history when an agent session is active.
 #
 # The hooks are silent no-ops when no agent session is active (the
 # chat_history.py hook-append script returns "skipped_no_sidecar" with
@@ -110,7 +110,7 @@ write_chat_history_hook() {
     local phase_tag="$2"
     cat > "$HOOKS_DIR/$name" << EOF
 #!/usr/bin/env bash
-# $name: append a phase boundary to agents/.agent-chat-history when an agent
+# $name: append a phase boundary to agents/runtime/.agent-chat-history when an agent
 # session is active. Silent no-op otherwise. Never blocks git.
 
 if [ -x ./agent-config ]; then

@@ -4,7 +4,8 @@ identity:
     name: ""
     nickname: ""
 language: "en"
-role: ""
+role:
+    - ""
 style:
     formality: "informal"
     pace: "pragmatic"

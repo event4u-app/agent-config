@@ -1,4 +1,4 @@
-"""Schema-validation contract for `agents/.ai-council.yml`.
+"""Schema-validation contract for `agents/settings/.ai-council.yml`.
 
 Mirrors the seven validation rules in
 `scripts/ai_council/config.py:_build_config` and the `_validate_api_key_ref`

@@ -40,9 +40,9 @@ code {
     top: 0;
     z-index: 10;
     padding: var(--space-2) var(--space-4);
-    background: var(--color-warn-bg, #4a3a1a);
-    color: var(--color-warn-text, #ffe9b3);
-    border-bottom: 1px solid var(--color-warn-border, #806020);
+    background: var(--color-warning);
+    color: #ffffff;
+    border-bottom: 1px solid #b45309;
     font-size: var(--font-size-sm);
     text-align: center;
 }
@@ -96,7 +96,13 @@ code {
 .ac-field { display: flex; flex-direction: column; gap: var(--space-1); }
 .ac-field__label { font-weight: var(--font-weight-medium); font-size: var(--font-size-sm); }
 .ac-field__description { color: var(--color-text-muted); font-size: var(--font-size-xs); margin: 0; }
-.ac-field__error { color: var(--color-danger); font-size: var(--font-size-xs); margin: 0; }
+.ac-field__error {
+    color: var(--color-danger);
+    font-size: var(--font-size-xs);
+    margin: 0;
+    border-left: 3px solid var(--color-danger);
+    padding-left: var(--space-2);
+}
 
 .ac-input, .ac-textarea {
     font: inherit;
@@ -108,11 +114,25 @@ code {
     width: 100%;
 }
 .ac-input:focus, .ac-textarea:focus { outline: none; box-shadow: var(--shadow-focus); border-color: var(--color-focus-ring); }
+.ac-input[aria-invalid="true"], .ac-textarea[aria-invalid="true"] { border-color: var(--color-danger); }
+.ac-input[aria-invalid="true"]:focus, .ac-textarea[aria-invalid="true"]:focus {
+    border-color: var(--color-danger);
+    box-shadow: 0 0 0 3px var(--color-danger-soft, rgba(239, 68, 68, 0.18));
+}
 .ac-textarea { font-family: var(--font-mono); font-size: var(--font-size-sm); resize: vertical; }
 
 .ac-toggle { display: inline-flex; gap: var(--space-2); align-items: center; cursor: pointer; }
 .ac-radio-group { display: flex; flex-direction: column; gap: var(--space-2); }
 .ac-radio { display: inline-flex; gap: var(--space-2); align-items: center; cursor: pointer; }
+
+/* Toggle / Radio have no .ac-input host for the [aria-invalid] selector,
+   so target the native input via the Field-wrapper's data-invalid flag. */
+.ac-field[data-invalid="true"] .ac-toggle input[type="checkbox"],
+.ac-field[data-invalid="true"] .ac-radio input[type="radio"] {
+    outline: 2px solid var(--color-danger);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
 
 .ac-button {
     font: inherit;
@@ -166,8 +186,8 @@ code {
 
 .ac-wizard__header { display: flex; flex-direction: column; gap: var(--space-3); align-items: stretch; }
 .ac-wizard__header-text { display: flex; flex-direction: column; gap: var(--space-1); }
-.ac-wizard__step-count { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .ac-wizard__subtitle { color: var(--color-text-muted); margin: 0; }
+.ac-wizard__step-count { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; }
 
 .ac-wizard__progress { display: flex; gap: var(--space-1); }
 .ac-wizard__progress-segment {
@@ -183,4 +203,97 @@ code {
 .ac-wizard__nav { justify-content: space-between; }
 .ac-wizard__nav .ac-button:first-child { margin-right: auto; }
 .ac-wizard__skip { color: var(--color-text-muted); }
-.ac-wizard__review { display: flex; flex-direction: column; gap: var(--space-3); }
+.ac-wizard__review { display: flex; flex-direction: column; gap: var(--space-4); }
+
+.ac-wizard__review-nav { display: flex; flex-direction: column; gap: var(--space-2); }
+.ac-wizard__review-nav-label { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; }
+.ac-wizard__review-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.ac-wizard__review-nav-button {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: transparent;
+    border: 1px solid var(--color-border);
+    border-left: 3px solid var(--color-success);
+    border-radius: var(--radius-md);
+    color: var(--color-text);
+    font-size: var(--font-size-sm);
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--duration-fast) var(--easing-standard),
+                border-color var(--duration-fast) var(--easing-standard);
+}
+.ac-wizard__review-nav-button:hover { background: var(--color-surface); border-color: var(--color-accent); border-left-color: var(--color-success); }
+.ac-wizard__review-nav-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.ac-wizard__review-nav-index {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.5rem;
+    height: 1.5rem;
+    padding: 0 0.375rem;
+    background: var(--color-border);
+    border-radius: 999px;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+}
+.ac-wizard__review-nav-text { flex: 1; }
+.ac-wizard__review-nav-status {
+    margin-left: auto;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-medium);
+    padding: 0.125rem 0.5rem;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.ac-wizard__review-nav-status--changed {
+    background: var(--color-success-soft, rgba(34, 197, 94, 0.12));
+    color: var(--color-success);
+}
+.ac-wizard__review-nav-status--error {
+    background: var(--color-danger-soft, rgba(239, 68, 68, 0.12));
+    color: var(--color-danger);
+}
+.ac-wizard__review-nav-button--error {
+    border-left-color: var(--color-danger);
+}
+.ac-wizard__review-nav-button--error:hover { border-color: var(--color-accent); border-left-color: var(--color-danger); }
+
+
+.ac-user-md-form { display: flex; flex-direction: column; gap: var(--space-5); }
+
+.ac-chip-list {
+    list-style: none;
+    margin: 0 0 var(--space-2);
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+}
+.ac-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    background: var(--color-surface-alt);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    font-size: var(--font-size-sm);
+}
+.ac-chip__remove {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    font-size: 1rem;
+    line-height: 1;
+    padding: 0 var(--space-1);
+}
+.ac-chip__remove:hover:not(:disabled) { color: var(--color-text); }
+.ac-chip__remove:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.ac-role-add { display: flex; gap: var(--space-2); align-items: center; }
+.ac-role-add .ac-input { flex: 1; }

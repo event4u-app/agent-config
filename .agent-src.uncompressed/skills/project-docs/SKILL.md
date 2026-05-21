@@ -1,6 +1,6 @@
 ---
 name: project-docs
-description: "Use when looking for project-specific documentation. Knows which docs exist in agents/docs/ and agents/contexts/ and maps work areas to relevant docs."
+description: "Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs."
 source: package
 domain: process
 workspaces:
@@ -67,7 +67,7 @@ agents/
 
 ## Domain Contexts
 
-If `agents/contexts/domain/` exists, it contains **business domain knowledge** — industry terms,
+If `agents/settings/contexts/domain/` exists, it contains **business domain knowledge** — industry terms,
 regulations, workflows, and edge cases that the agent needs to understand the problem space.
 
 **When to read domain contexts:**
@@ -76,28 +76,28 @@ regulations, workflows, and edge cases that the agent needs to understand the pr
 - When writing validations, business rules, or data models for a specific domain
 
 **How to find the right file:**
-- List `agents/contexts/domain/` and read files whose name matches the work area
+- List `agents/settings/contexts/domain/` and read files whose name matches the work area
 - Files prefixed with `job-` describe industry/profession knowledge
 - When in doubt, read all domain context files — they are short orientation docs
 
 ## How to Find Relevant Docs
 
-1. **List `agents/contexts/`** — read any context file whose name matches the work area.
-2. **List `agents/contexts/domain/`** — read domain knowledge files relevant to the business logic.
-3. **List `agents/docs/`** — read detail docs for the specific topic you're working on.
+1. **List `agents/settings/contexts/`** — read any context file whose name matches the work area.
+2. **List `agents/settings/contexts/domain/`** — read domain knowledge files relevant to the business logic.
+3. **List `agents/reference/docs/`** — read detail docs for the specific topic you're working on.
 4. **Check module docs** — if working in a module, also check:
    - `app/Modules/{Module}/agents/` — module-specific docs
-   - `app/Modules/{Module}/agents/contexts/` — module-specific contexts (if exists)
-   - `app/Modules/{Module}/agents/contexts/domain/` — module-specific domain knowledge (if exists)
+   - `app/Modules/{Module}/agents/settings/contexts/` — module-specific contexts (if exists)
+   - `app/Modules/{Module}/agents/settings/contexts/domain/` — module-specific domain knowledge (if exists)
 
 ### Reading order
 
 | Step | What | Why |
 |---|---|---|
-| 1 | `agents/contexts/*.md` | Quick orientation — big picture in ~100 lines |
-| 2 | `agents/contexts/domain/job-*.md` | Domain knowledge — business terms, rules, edge cases |
-| 3 | Module `agents/contexts/` | Module-specific contexts (if working in a module) |
-| 4 | `agents/docs/*.md` | Deep dive — code examples, conventions, patterns |
+| 1 | `agents/settings/contexts/*.md` | Quick orientation — big picture in ~100 lines |
+| 2 | `agents/settings/contexts/domain/job-*.md` | Domain knowledge — business terms, rules, edge cases |
+| 3 | Module `agents/settings/contexts/` | Module-specific contexts (if working in a module) |
+| 4 | `agents/reference/docs/*.md` | Deep dive — code examples, conventions, patterns |
 
 ### Matching work areas to docs
 
@@ -116,7 +116,7 @@ Do NOT hardcode a mapping — always **list the directory** and pick by relevanc
 - **Don't skip docs because you "know" the pattern** — project-specific conventions often differ
   from standard framework patterns.
 - **Update docs when you change conventions** — if your change introduces a new pattern or
-  deprecates an old one, update the relevant doc in `agents/docs/`.
+  deprecates an old one, update the relevant doc in `agents/reference/docs/`.
 
 ## Cross-References
 

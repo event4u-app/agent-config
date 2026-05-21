@@ -325,9 +325,9 @@ def test_prune_old_artifacts_handles_missing_directory(tmp_path: Path) -> None:
 
 def test_prune_all_council_artifacts_covers_three_dirs(tmp_path: Path) -> None:
     now = _dt.datetime(2026, 5, 10, 12, 0, 0, tzinfo=_dt.timezone.utc)
-    sessions = tmp_path / "agents" / "council-sessions"
-    questions = tmp_path / "agents" / "council-questions"
-    responses = tmp_path / "agents" / "council-responses"
+    sessions = tmp_path / "agents" / "runtime" / "council" / "sessions"
+    questions = tmp_path / "agents" / "runtime" / "council" / "questions"
+    responses = tmp_path / "agents" / "runtime" / "council" / "responses"
     for d in (sessions, questions, responses):
         d.mkdir(parents=True)
         old = d / "old-file"

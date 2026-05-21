@@ -5,7 +5,7 @@ stability: experimental
 # MCP Tool Stub Envelope — Phase 1 Discovery Contract
 
 > **Status:** Active · governs the Discovery-First MCP coverage strategy
-> ([`mcp-coverage-strategy.md`](../../agents/contexts/mcp-coverage-strategy.md)).
+> ([`mcp-coverage-strategy.md`](../../agents/settings/contexts/mcp-coverage-strategy.md)).
 > **Stability:** experimental — internal index reference only per
 > `STABILITY.md`.
 

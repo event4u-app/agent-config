@@ -98,12 +98,12 @@ tasks:
 
   compile-corpus:
     silent: true
-    desc: Compile agents/low-impact-decisions.md → .lock.yaml (runtime source-of-truth)
+    desc: Compile agents/decisions/low-impact-decisions.md → .lock.yaml (decisions source-of-truth)
     cmd: python3 -m scripts.ai_council.compile_corpus
 
   check-corpus:
     silent: true
-    desc: Verify agents/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
+    desc: Verify agents/decisions/low-impact-decisions.lock.yaml matches a fresh compile (fails on drift)
     cmd: python3 -m scripts.ai_council.compile_corpus --check
 
   check-augmentignore:
@@ -189,8 +189,18 @@ tasks:
 
   check-council-layout:
     silent: true
-    desc: Fail if council-* artefacts are placed outside the canonical agents/council-{questions,responses,sessions}/ dirs (ai-council § Output path convention)
+    desc: Fail if council-* artefacts are placed outside the canonical agents/runtime/council/{questions,responses,sessions}/ dirs (ai-council § Output path convention)
     cmd: python3 scripts/check_council_layout.py {{.QUIET_FLAG}}
+
+  lint-agents-layout:
+    silent: true
+    desc: Fail on unknown flat files at agents/ root; warn on legacy entries scheduled for migration (see scripts/lint_agents_layout.py)
+    cmd: python3 scripts/lint_agents_layout.py {{.QUIET_FLAG}}
+
+  lint-agents-layout-strict:
+    silent: true
+    desc: Promote agents/ layout legacy warnings to errors (release-tag gate)
+    cmd: python3 scripts/lint_agents_layout.py --strict {{.QUIET_FLAG}}
 
   check-role-doc-links:
     silent: true

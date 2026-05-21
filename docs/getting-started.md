@@ -150,11 +150,12 @@ Your agent now understands slash commands:
 
 ---
 
-## Crash recovery — `agents/.agent-chat-history`
+## Crash recovery — `agents/runtime/.agent-chat-history`
 
 When `chat_history.enabled: true` in `.agent-settings.yml` (on by default
 for every profile), the agent keeps a JSONL log of your conversation in
-`agents/.agent-chat-history`. The file is git-ignored and rotates at the
+`agents/runtime/.agent-chat-history`. The file is git-ignored (covered
+by the `/agents/runtime/` catch-all) and rotates at the
 size configured in the profile (`128 KB` on `minimal`, `256 KB` on
 `balanced`, `512 KB` on `full`).
 
@@ -169,7 +170,7 @@ the log size, last entries, and current fingerprint. For the rare case
 where auto-adopt misfires (corrupted file, hook misconfiguration), run
 `./agent-config chat-history:adopt` as the manual recovery lever.
 
-See [`agents/contexts/chat-history-platform-hooks.md`](../agents/contexts/chat-history-platform-hooks.md)
+See [`agents/settings/contexts/chat-history-platform-hooks.md`](../agents/settings/contexts/chat-history-platform-hooks.md)
 and [`scripts/chat_history.py`](../scripts/chat_history.py) for the mechanics.
 
 ---

@@ -3,12 +3,12 @@ name: ghostwriter:fetch
 tier: 2
 cluster: ghostwriter
 sub: fetch
-description: Build or refresh a public-figure voice profile at agents/ghostwriter/<slug>.md from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch / web-search to the host agent.
+description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
 disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fetch public figure writing voice, capture LinkedIn / blog / Substack style, build ghostwriter profile from name, refresh stale profile"
-  trigger_context: "user wants to capture a documented public figure's writing voice from a URL or by name into agents/ghostwriter/<slug>.md"
+  trigger_context: "user wants to capture a documented public figure's writing voice from a URL or by name into agents/reference/ghostwriter/<slug>.md"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -26,7 +26,7 @@ install:
 # /ghostwriter:fetch
 
 Build (or refresh) a ghostwriter profile at
-`agents/ghostwriter/<slug>.md` from one of two inputs:
+`agents/reference/ghostwriter/<slug>.md` from one of two inputs:
 
 | Input | Mode | Host-agent capability used |
 |---|---|---|
@@ -49,7 +49,7 @@ Argument shape: `/ghostwriter:fetch <input> [--force-refresh]`.
   (`alice-walker`). If a slug already exists with a different role,
   ask the user for a discriminator suffix (`alice-walker-novelist`).
 
-Existing `agents/ghostwriter/<slug>.md`?
+Existing `agents/reference/ghostwriter/<slug>.md`?
 
 | State | Action |
 |---|---|
@@ -146,7 +146,7 @@ Body: a single `# Notes` section, empty for fresh fetches.
 
 Print the proposed file content as a fenced markdown block. Ask:
 
-> 1. write — save to `agents/ghostwriter/<slug>.md`
+> 1. write — save to `agents/reference/ghostwriter/<slug>.md`
 > 2. edit — open in IDE first (per `file-editor` skill), save after
 > 3. cancel — discard
 
@@ -154,7 +154,7 @@ Only on choice 1 or 2 (after save) write the file. Print the
 post-write summary:
 
 ```
-✅  agents/ghostwriter/<slug>.md written.
+✅  agents/reference/ghostwriter/<slug>.md written.
     confidence: <low|med|high>  ·  sources: <n>  ·  verification: <fetched|user-asserted>
 ```
 
@@ -169,7 +169,7 @@ per-field changes (numbered options). Bump `last_updated` and
 ### 7. Stale-warning surface (always)
 
 After any write (or no-op accept), if any other profile under
-`agents/ghostwriter/*.md` has `source_provenance.last_fetched_at` >
+`agents/reference/ghostwriter/*.md` has `source_provenance.last_fetched_at` >
 90 days old, print one line per stale profile:
 
 ```

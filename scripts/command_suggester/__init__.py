@@ -7,7 +7,7 @@ ranking, suppresses cooled-down suggestions, and renders a numbered
 options block. It never executes a command — the user pick is what
 triggers the standard slash flow.
 
-See `agents/contexts/command-suggestion-eligibility.md` for the
+See `agents/settings/contexts/command-suggestion-eligibility.md` for the
 locked eligibility table and `road-to-context-aware-command-suggestion`
 for the full design.
 """

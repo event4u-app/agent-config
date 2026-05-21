@@ -298,7 +298,7 @@ Sonnet's Round-4 output hit the 3000-token cap mid-C2-fix-recommendation. The C2
 
 ## Council review R5 (2026-05-07, switchable-caveman / insurance-fallback question)
 
-Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: prompt, deep, 3 rounds, total $0.0593 actual, est. $0.0608). Trace: `agents/council-sessions/caveman-insurance-r1.json`. <!-- council-ref-allowed: skipped roadmap historical decision trace --> Original ask: "Should caveman integration be switchable with insurance fallback to in-house logic, allowing caveman removal in 2 years without rebuilding compress / speak / shrink from scratch?" — the **portability / vendor-independence** framing R4 did not evaluate (R4 only weighed install-failure / graceful-degradation fallback, both rejected).
+Deep-tier review by `anthropic/claude-sonnet-4-5` + `openai/gpt-4o` (mode: prompt, deep, 3 rounds, total $0.0593 actual, est. $0.0608). Trace: `agents/runtime/council/sessions/caveman-insurance-r1.json`. <!-- council-ref-allowed: skipped roadmap historical decision trace --> Original ask: "Should caveman integration be switchable with insurance fallback to in-house logic, allowing caveman removal in 2 years without rebuilding compress / speak / shrink from scratch?" — the **portability / vendor-independence** framing R4 did not evaluate (R4 only weighed install-failure / graceful-degradation fallback, both rejected).
 
 ### Verdict (both members convergent across all 3 subsystems)
 

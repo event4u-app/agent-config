@@ -3,7 +3,7 @@
 
 Measures the *current state* of the frugality canon along four
 deterministic axes. Output: JSONL baseline appended to
-agents/.frugality-baseline.jsonl (gitignored).
+agents/runtime/frugality/baseline.jsonl (gitignored).
 
 Metrics:
   A. footprint    — per-rule char/token count, kernel/tier breakdown
@@ -140,7 +140,7 @@ def metric_d_redundancy(root: Path) -> dict:
 
 def main() -> int:
     root = Path(__file__).resolve().parent.parent
-    corpus = root / "agents" / ".agent-chat-history"
+    corpus = root / "agents" / "runtime" / ".agent-chat-history"
 
     record = {
         "schema_version": 1,
@@ -152,7 +152,7 @@ def main() -> int:
         "metric_d_redundancy": metric_d_redundancy(root),
     }
 
-    out = root / "agents" / ".frugality-baseline.jsonl"
+    out = root / "agents" / "runtime" / "frugality" / "baseline.jsonl"
     with out.open("a") as fh:
         fh.write(json.dumps(record, ensure_ascii=False) + "\n")
     print(json.dumps(record, indent=2, ensure_ascii=False))

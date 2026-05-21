@@ -49,7 +49,7 @@ Do NOT use when:
 ### Step 0: Inspect
 
 1. Confirm the input is an animated / stylized beat.
-2. If `character.json` exists under `agents/ai-video/<project>/characters/`,
+2. If `character.json` exists under `agents/reference/ai-video/<project>/characters/`,
    read identity tokens — reused verbatim in CHARACTER SHEET.
 3. Read the beat once. Name the *want* and the *obstacle* in one
    sentence each before drafting.
@@ -123,10 +123,10 @@ Any "no" → revise that block.
 
 The Pixar-storyteller skill anchors prompts to named films and studios by design — the policy surface is the largest in the video cluster:
 
-- [`agents/policies/media/style.md`](../../../agents/policies/media/style.md) — naming a film + year as the *primary* anchor crosses the "in the style of [STUDIO]" trigger; surface and refuse without a transformative-intent rationale.
-- [`agents/policies/media/likeness.md`](../../../agents/policies/media/likeness.md) — when a beat references a named animator's signature character (real-person extension of style).
-- [`agents/policies/media/public-figures.md`](../../../agents/policies/media/public-figures.md) — when the storyteller's character is a recognised public figure rendered in Pixar shape.
-- [`agents/policies/media/disclosure.md`](../../../agents/policies/media/disclosure.md) — every Pixar-style output ships with the AI-generation disclosure; parody / commentary cases are flagged for human review.
+- [`agents/settings/policies/media/style.md`](../../../agents/settings/policies/media/style.md) — naming a film + year as the *primary* anchor crosses the "in the style of [STUDIO]" trigger; surface and refuse without a transformative-intent rationale.
+- [`agents/settings/policies/media/likeness.md`](../../../agents/settings/policies/media/likeness.md) — when a beat references a named animator's signature character (real-person extension of style).
+- [`agents/settings/policies/media/public-figures.md`](../../../agents/settings/policies/media/public-figures.md) — when the storyteller's character is a recognised public figure rendered in Pixar shape.
+- [`agents/settings/policies/media/disclosure.md`](../../../agents/settings/policies/media/disclosure.md) — every Pixar-style output ships with the AI-generation disclosure; parody / commentary cases are flagged for human review.
 
 Refuse-and-surface when style ⇒ primary signature, not one influence among several.
 

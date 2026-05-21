@@ -112,7 +112,7 @@ When the agent autonomously creates a roadmap, it owns the placement
 in the **same response**:
 
 - **Phase plan** (checkboxes, multi-turn execution) → `agents/roadmaps/<name>.md`, `status: ready` (default), regen dashboard.
-- **Decision matrix / ADR / pattern / lookup** (no `Phase N`, durable rationale) → `agents/contexts/<name>.md`.
+- **Decision matrix / ADR / pattern / lookup** (no `Phase N`, durable rationale) → `agents/settings/contexts/<name>.md`.
 - **Completed work snapshot** → `agents/roadmaps/archive/<name>.md`.
 
 A non-trackable file in `agents/roadmaps/` is a rule violation — the

@@ -96,7 +96,7 @@ Gather all available evidence before forming any hypothesis:
 - **Stacktrace** → start from top frame (crash site), trace down to entry point.
 - Use `codebase-retrieval` to find the relevant code.
 - Read each file in the call chain to understand the data flow.
-- Check existing context docs (`agents/contexts/`) for the affected area.
+- Check existing context docs (`agents/settings/contexts/`) for the affected area.
 - **Consult engineering memory.** Via
   [`memory-access`](../../../docs/guidelines/agent-infra/memory-access.md) call
   `retrieve(types=["historical-patterns", "incident-learnings"],
@@ -213,7 +213,7 @@ For each bug found: **Bug** → **Location** → **Severity** → **Root Cause**
 
 Read `AGENTS.md` and `./agents/` for project-specific architecture, business rules, and domain docs.
 Detect the project from the repo name (see `rules/architecture.md`).
-Check for existing contexts in `agents/contexts/` or module `agents/contexts/`.
+Check for existing contexts in `agents/settings/contexts/` or module `agents/settings/contexts/`.
 
 
 ## Adversarial review

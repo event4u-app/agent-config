@@ -15,7 +15,8 @@ import { useEffect } from 'preact/hooks';
 import { apiFetch, ApiCallError } from '../api.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
-import { Textarea } from '../forms/Textarea.js';
+import { UserMdForm } from '../forms/UserMdForm.js';
+import { bodyToForm, formToBody } from '@shared/userMd/formAdapter.js';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import { WIZARD_STEPS, WIZARD_TOTAL_STEPS, stepAt } from '../wizard/steps.js';
 import { sliceSchema } from '../wizard/sliceSchema.js';
@@ -84,6 +85,19 @@ async function loadAll(): Promise<void> {
             : settingsRes.values;
         stepIndex.value = clampStep(serverState.step);
         loaded.value = true;
+        // Step-specific side-effects on initial load / resume. `goTo` fires
+        // these on navigation, but a browser reload (or resume from server
+        // partial) lands directly on the step without going through `goTo`,
+        // so the userMd fetch / settings diff would otherwise never run and
+        // the step body would hang on "Loading .agent-user.md…" or render
+        // an empty review list.
+        const resumed = stepAt(stepIndex.value);
+        if (resumed.kind === 'userMd' || resumed.kind === 'review') {
+            void loadUserMdOnce();
+        }
+        if (resumed.kind === 'review') {
+            void refreshDiff();
+        }
     } catch (err) {
         if (err instanceof ApiCallError) {
             loadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -109,7 +123,7 @@ async function loadUserMdOnce(): Promise<void> {
             }
         }
     } catch (err) {
-        banner.value = err instanceof Error ? err.message : String(err);
+        banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
     } finally {
         userMdLoaded.value = true;
     }
@@ -127,7 +141,7 @@ async function persistStep(nextIndex: number, partial: Record<string, JsonValue>
             },
         });
     } catch (err) {
-        banner.value = err instanceof Error ? err.message : String(err);
+        banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
     }
 }
 
@@ -135,7 +149,7 @@ async function persistStep(nextIndex: number, partial: Record<string, JsonValue>
 async function refreshDiff(): Promise<void> {
     diffLoading.value = true;
     try {
-        const res = await apiFetch<{ changes: { path: string; before: JsonValue; after: JsonValue }[] }>(
+        const res = await apiFetch<{ changes: { path: string; from: JsonValue; to: JsonValue }[] }>(
             '/api/v1/settings/diff',
             {
                 method: 'POST',
@@ -147,9 +161,9 @@ async function refreshDiff(): Promise<void> {
     } catch (err) {
         if (err instanceof ApiCallError) {
             errors.value = fieldErrorMap(err.body.error ?? { code: 'UNKNOWN', message: err.message });
-            banner.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+            banner.value = { message: topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message }), tone: 'error' };
         } else {
-            banner.value = err instanceof Error ? err.message : String(err);
+            banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
         }
     } finally {
         diffLoading.value = false;
@@ -159,6 +173,21 @@ async function refreshDiff(): Promise<void> {
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
     return userMdBody.value !== userMdInitial.value;
+}
+
+function stripBodyPrefix(map: Record<string, string>): Record<string, string> {
+    // Server validates `{ body: <text> }` so Zod paths come back as
+    // `body.identity.name`. The form keys fields by the dotted
+    // frontmatter path without the wire wrapper. Bare `body` covers
+    // whole-document failures (size cap, raw YAML parse) — those have
+    // no specific field target, so leave them to the top-level banner.
+    const out: Record<string, string> = {};
+    for (const [key, msg] of Object.entries(map)) {
+        if (key.startsWith('body.')) {
+            out[key.slice('body.'.length)] = msg;
+        }
+    }
+    return out;
 }
 
 async function goTo(nextIndex: number): Promise<void> {
@@ -175,6 +204,14 @@ async function goTo(nextIndex: number): Promise<void> {
     }
 }
 
+interface FinishResponse {
+    writtenPaths?: string[];
+    txnId?: string;
+    ok?: boolean;
+    dryRun?: boolean;
+    preview?: { settingsYaml: string; userMd: string | null };
+}
+
 async function finish(): Promise<void> {
     saving.value = true;
     banner.value = null;
@@ -185,11 +222,20 @@ async function finish(): Promise<void> {
         if (userMdChanged()) {
             body.userMd = userMdBody.value;
         }
-        const res = await apiFetch<{ writtenPaths: string[]; txnId: string }>(
+        const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
             { method: 'POST', body },
         );
-        banner.value = `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`;
+        // Server returns either { writtenPaths, txnId } on a real commit
+        // or { ok, dryRun, preview } when started with --dry-run. The
+        // dry-run shape carries no writtenPaths, so guard the join.
+        if (res.dryRun === true) {
+            banner.value = { message: 'Dry-run complete — no files written. Settings would be saved.', tone: 'success' };
+        } else if (Array.isArray(res.writtenPaths)) {
+            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`, tone: 'success' };
+        } else {
+            banner.value = { message: 'Wizard complete.', tone: 'success' };
+        }
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(WIZARD_TOTAL_STEPS - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -200,9 +246,9 @@ async function finish(): Promise<void> {
     } catch (err) {
         if (err instanceof ApiCallError) {
             errors.value = fieldErrorMap(err.body.error ?? { code: 'UNKNOWN', message: err.message });
-            banner.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+            banner.value = { message: topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message }), tone: 'error' };
         } else {
-            banner.value = err instanceof Error ? err.message : String(err);
+            banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
         }
     } finally {
         saving.value = false;
@@ -224,25 +270,32 @@ function StepBody(): preact.JSX.Element | null {
     }
     if (step.kind === 'userMd') {
         if (!userMdLoaded.value) return <p>Loading .agent-user.md…</p>;
+        // Server validates `{ body: <text> }`, so Zod paths come back as
+        // `body.identity.name` etc. The form keys fields by the dotted
+        // frontmatter path without the wire-level wrapper — strip it
+        // here so navigating back surfaces field-level errors.
         return (
-            <Textarea
-                id="user-md-body"
-                name="body"
-                label="Body"
-                description="Long-form persona / preferences. Saved verbatim at .agent-user.md. Use Skip to leave the file unchanged."
-                rows={20}
-                value={userMdBody.value}
-                onChange={(next): void => { userMdBody.value = next; userMdSkipped.value = false; }}
+            <UserMdForm
+                value={bodyToForm(userMdBody.value)}
+                errors={stripBodyPrefix(errors.value)}
+                onChange={(next): void => {
+                    userMdBody.value = formToBody(next);
+                    userMdSkipped.value = false;
+                }}
             />
         );
     }
     // review
     return (
         <WizardReview
+            steps={WIZARD_STEPS}
+            currentIndex={stepIndex.value}
             changes={reviewChanges.value}
+            errors={errors.value}
             userMdChanged={userMdChanged()}
             userMdAction={userMdExists.value ? 'replace' : 'create'}
             loading={diffLoading.value}
+            onJump={(i): void => { void goTo(i); }}
         />
     );
 }
@@ -267,8 +320,18 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
 
     return (
         <div class="ac-page">
-            <StepHeader step={step} index={idx} total={WIZARD_TOTAL_STEPS} />
-            {banner.value !== null ? <p class="ac-banner">{banner.value}</p> : null}
+            <StepHeader
+                step={step}
+                index={idx}
+                total={WIZARD_TOTAL_STEPS}
+            />
+            {banner.value !== null
+                ? (
+                    <p class={`ac-banner${banner.value.tone === 'error' ? ' ac-banner--error' : ''}`}>
+                        {banner.value.message}
+                    </p>
+                )
+                : null}
             <div class="ac-wizard__step">
                 <StepBody />
             </div>

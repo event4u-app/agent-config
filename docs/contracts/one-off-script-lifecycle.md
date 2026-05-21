@@ -100,7 +100,7 @@ rule.
   archived as a one-off): the council CLI section of the package's
   command catalog.
 - The cleanup-mechanics context for housekeeping passes:
-  `agents/contexts/cleanup-mechanics.md`.
+  `agents/settings/contexts/cleanup-mechanics.md`.
 - Linter implementation: `scripts/lint_one_off_age.py`.
 
 ## Stability

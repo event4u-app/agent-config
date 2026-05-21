@@ -3,7 +3,7 @@
 Asserts the contract in `docs/contracts/hook-architecture-v1.md`
 § "Feedback channel": the dispatcher writes one
 `<concern>.json` per concern that ran, plus a `summary.json` rollup,
-under `agents/state/.dispatcher/<session_id>/`. This is the surface
+under `agents/runtime/state/.dispatcher/<session_id>/`. This is the surface
 that prevents the Council Round 2 "silent success" failure mode where
 exit-code reduction hides a `warn` behind a `block`.
 
@@ -66,7 +66,7 @@ def _invoke(tmp_path: Path, manifest: Path, session_id: str | None) -> int:
 
 
 def _feedback_dir(workspace: Path, session_id: str) -> Path:
-    return workspace / "agents" / "state" / ".dispatcher" / session_id
+    return workspace / "agents" / "runtime" / "state" / ".dispatcher" / session_id
 
 
 def test_feedback_dir_created_with_per_concern_files(tmp_path: Path) -> None:
@@ -149,7 +149,7 @@ def test_session_id_fallback_on_empty_envelope(tmp_path: Path) -> None:
     rc = _invoke(tmp_path, manifest, session_id=None)
     assert rc == dispatch_hook.EXIT_ALLOW
 
-    dispatcher_dir = tmp_path / "agents" / "state" / ".dispatcher"
+    dispatcher_dir = tmp_path / "agents" / "runtime" / "state" / ".dispatcher"
     assert dispatcher_dir.is_dir()
     children = [p.name for p in dispatcher_dir.iterdir() if p.is_dir()]
     assert len(children) == 1, f"expected one fallback session dir, got {children}"
@@ -158,18 +158,18 @@ def test_session_id_fallback_on_empty_envelope(tmp_path: Path) -> None:
 
 def test_session_id_path_traversal_is_neutralised(tmp_path: Path) -> None:
     """`/`, `\\`, and `..` in session_id MUST collapse to `_` so the
-    feedback dir cannot escape `agents/state/.dispatcher/`."""
+    feedback dir cannot escape `agents/runtime/state/.dispatcher/`."""
     manifest = tmp_path / "manifest.yaml"
     _write_manifest(manifest, {
         "allow_one": str(FIXTURE_DIR / "concern_allow.py"),
     })
     rc = _invoke(tmp_path, manifest, session_id="../etc/passwd")
     assert rc == dispatch_hook.EXIT_ALLOW
-    dispatcher_dir = tmp_path / "agents" / "state" / ".dispatcher"
+    dispatcher_dir = tmp_path / "agents" / "runtime" / "state" / ".dispatcher"
     children = sorted(p.name for p in dispatcher_dir.iterdir() if p.is_dir())
     assert children == ["__/etc/passwd".replace("/", "_")] or all(
         ".." not in c and "/" not in c for c in children
     )
     # Hard assertion: no parent-escape escapees on disk.
-    assert not (tmp_path / "agents" / "state" / "etc").exists()
+    assert not (tmp_path / "agents" / "runtime" / "state" / "etc").exists()
     assert not (tmp_path / "etc").exists()

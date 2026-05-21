@@ -68,7 +68,7 @@ hardcoded module-level tuple in
 | Tool | Mode | Source |
 |---|---|---|
 | `lint_skills` | read-only | wraps `scripts.skill_linter.lint_file` |
-| `chat_history_append` | path-scoped write | wraps `scripts.chat_history.append`; writes restricted to `agents/.agent-chat-history` or `.agent-chat-history` under the consumer root |
+| `chat_history_append` | path-scoped write | wraps `scripts.chat_history.append`; writes restricted to `agents/runtime/.agent-chat-history` (current default), `agents/.agent-chat-history`, or `.agent-chat-history` under the consumer root |
 
 No `push`, `merge`, `commit`, or prod-write surface is exposed. The
 unimplemented-tool envelope from
@@ -105,7 +105,7 @@ Writing the global Claude Desktop config from the npx dispatcher without
 an operator pasting JSON is **not** part of this contract — Claude Desktop
 restarts and config-merge semantics make silent rewrites a footgun. The
 copy-paste path stays the canonical install shape until non-dev recruit
-evidence under `agents/eval-findings/` demonstrates the manual step is the
+evidence under `agents/evidence/eval-findings/` demonstrates the manual step is the
 actual adoption blocker.
 
 ## Consequences

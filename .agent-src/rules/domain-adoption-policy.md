@@ -59,16 +59,16 @@ decision but cannot replace the gate evidence.
 At least one of the following must be **true and citeable** in the roadmap:
 
 - **≥ 2 consumer projects** in the domain. Cite repository names or
-  `agents/contexts/` notes — not "I think there might be".
+  `agents/settings/contexts/` notes — not "I think there might be".
 - **Named user direction with target.** A specific user ask plus a target
   project / use case — e.g. "harvest the mobile skills for project X, due
   next quarter". Vague *"this might be useful"* does not count.
 - **Public-incident pull.** A reproducible incident on a consumer project
-  the domain would have prevented, captured in `agents/contexts/` with
+  the domain would have prevented, captured in `agents/settings/contexts/` with
   the missing surface area named.
 
 If none of the three is citeable, **defer**. Open a watch-only context note
-under `agents/contexts/domain-watch/<domain>.md` listing the missing signal
+under `agents/settings/contexts/domain-watch/<domain>.md` listing the missing signal
 so the next harvest can re-evaluate without re-relitigating the case.
 
 ## Gate 2 — Named maintenance owner
@@ -143,7 +143,7 @@ core artefact.
 
 1. Mark the domain plate `[-] gated — <gate name> not met` in the relevant
    roadmap. Do **not** silently shrink scope to dodge the gate.
-2. Open a watch-only context note under `agents/contexts/domain-watch/`
+2. Open a watch-only context note under `agents/settings/contexts/domain-watch/`
    capturing what's missing — citations, owner candidates, CI feasibility.
 3. Re-evaluate at the next harvest cycle. The note is the evidence trail
    so the same questions are not relitigated.

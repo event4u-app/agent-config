@@ -156,5 +156,5 @@ A single blocking call (sync I/O, time.sleep, CPU-heavy parse, large JSON load) 
   - Async HTTP: https://www.python-httpx.org/async/ · https://docs.aiohttp.org/en/stable/
   - Async DB: https://magicstack.github.io/asyncpg/ · https://aiosqlite.omnilib.dev/
 - Cross-linked: [`error-handling-patterns`](../error-handling-patterns/SKILL.md), [`mcp-builder`](../mcp-builder/SKILL.md), [`api-design`](../api-design/SKILL.md), [`performance`](../performance/SKILL.md).
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `async-python-patterns`).
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `async-python-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

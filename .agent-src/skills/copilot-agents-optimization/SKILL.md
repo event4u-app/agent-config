@@ -141,7 +141,7 @@ both. Instead, reference with a table:
 ### Reduction strategies (when over budget)
 
 1. **Extract to `agents/`** — Move project-specific details to dedicated files in `agents/`
-   and link from AGENTS.md (e.g., `agents/docs/database-setup.md`, `agents/docs/testing.md`)
+   and link from AGENTS.md (e.g., `agents/reference/docs/database-setup.md`, `agents/reference/docs/testing.md`)
 2. **Remove duplicates** — If content exists in `.augment/`, remove from AGENTS.md
 3. **Compress** — Turn verbose explanations into concise tables or bullet points
 4. **Remove ECS/Rector-enforced rules** — From copilot-instructions.md (auto-fixed anyway)

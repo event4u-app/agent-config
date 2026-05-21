@@ -377,36 +377,142 @@ test_cli_wrapper_errors_without_install() {
     teardown
 }
 
-test_legacy_infra_files_migrated_to_agents_dir() {
+test_legacy_infra_files_migrated_to_runtime_dir() {
     setup
-    # Seed pre-2.x layout: chat history, backup, and prices file at project root.
+    # Seed pre-2.x layout: chat history + backup + budget history at project
+    # root, plus a root-level .agent-prices.md. All land under agents/runtime/.
     printf 'legacy-history\n' > "$TMPDIR/.agent-chat-history"
     printf 'legacy-backup\n' > "$TMPDIR/.agent-chat-history.bak"
+    printf 'legacy-augment-budget\n' > "$TMPDIR/.augment-budget-history.jsonl"
+    printf 'legacy-rule-budget\n' > "$TMPDIR/.rule-budget-history.jsonl"
     printf 'legacy-prices\n' > "$TMPDIR/.agent-prices.md"
     run_install
     assert_false ".agent-chat-history removed from root" test -e "$TMPDIR/.agent-chat-history"
     assert_false ".agent-chat-history.bak removed from root" test -e "$TMPDIR/.agent-chat-history.bak"
+    assert_false ".augment-budget-history.jsonl removed from root" test -e "$TMPDIR/.augment-budget-history.jsonl"
+    assert_false ".rule-budget-history.jsonl removed from root" test -e "$TMPDIR/.rule-budget-history.jsonl"
     assert_false ".agent-prices.md removed from root" test -e "$TMPDIR/.agent-prices.md"
-    assert_true ".agent-chat-history moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history"
-    assert_true ".agent-chat-history.bak moved into agents/" test -f "$TMPDIR/agents/.agent-chat-history.bak"
-    assert_true ".agent-prices.md moved into agents/" test -f "$TMPDIR/agents/.agent-prices.md"
+    assert_true ".agent-chat-history moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-chat-history"
+    assert_true ".agent-chat-history.bak moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-chat-history.bak"
+    assert_true ".augment-budget-history.jsonl moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.augment-budget-history.jsonl"
+    assert_true ".rule-budget-history.jsonl moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.rule-budget-history.jsonl"
+    assert_true ".agent-prices.md moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-prices.md"
     assert_contains "history content preserved" \
-        "$TMPDIR/agents/.agent-chat-history" "legacy-history"
+        "$TMPDIR/agents/runtime/.agent-chat-history" "legacy-history"
+    assert_contains "augment-budget content preserved" \
+        "$TMPDIR/agents/runtime/.augment-budget-history.jsonl" "legacy-augment-budget"
     assert_contains "prices content preserved" \
-        "$TMPDIR/agents/.agent-prices.md" "legacy-prices"
+        "$TMPDIR/agents/runtime/.agent-prices.md" "legacy-prices"
+    teardown
+}
+
+test_intermediate_chat_history_migrated_to_runtime() {
+    setup
+    # Seed 2.x intermediate layout: chat-history under agents/ but not yet
+    # under agents/runtime/. Installer must lift it the rest of the way.
+    mkdir -p "$TMPDIR/agents"
+    printf 'intermediate-history\n' > "$TMPDIR/agents/.agent-chat-history"
+    printf 'intermediate-augment-budget\n' > "$TMPDIR/agents/.augment-budget-history.jsonl"
+    run_install
+    assert_false "agents/.agent-chat-history removed" test -e "$TMPDIR/agents/.agent-chat-history"
+    assert_false "agents/.augment-budget-history.jsonl removed" test -e "$TMPDIR/agents/.augment-budget-history.jsonl"
+    assert_true ".agent-chat-history moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-chat-history"
+    assert_true ".augment-budget-history.jsonl moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.augment-budget-history.jsonl"
+    assert_contains "intermediate history preserved" \
+        "$TMPDIR/agents/runtime/.agent-chat-history" "intermediate-history"
+    teardown
+}
+
+test_legacy_low_impact_decisions_migrated_to_decisions_dir() {
+    setup
+    # Pre-refactor layout: low-impact corpus + lockfile under agents/ root.
+    mkdir -p "$TMPDIR/agents"
+    printf '# decisions\n' > "$TMPDIR/agents/low-impact-decisions.md"
+    printf 'lock: yes\n' > "$TMPDIR/agents/low-impact-decisions.lock.yaml"
+    run_install
+    assert_false "agents/low-impact-decisions.md removed" test -e "$TMPDIR/agents/low-impact-decisions.md"
+    assert_false "agents/low-impact-decisions.lock.yaml removed" test -e "$TMPDIR/agents/low-impact-decisions.lock.yaml"
+    assert_true "low-impact-decisions.md moved into agents/decisions/" test -f "$TMPDIR/agents/decisions/low-impact-decisions.md"
+    assert_true "low-impact-decisions.lock.yaml moved into agents/decisions/" test -f "$TMPDIR/agents/decisions/low-impact-decisions.lock.yaml"
+    assert_contains "corpus content preserved" \
+        "$TMPDIR/agents/decisions/low-impact-decisions.md" "# decisions"
+    teardown
+}
+
+test_intermediate_prices_file_migrated_to_runtime() {
+    setup
+    # Seed 2.x intermediate layout: .agent-prices.md already under agents/.
+    mkdir -p "$TMPDIR/agents"
+    printf 'intermediate-prices\n' > "$TMPDIR/agents/.agent-prices.md"
+    run_install
+    assert_false "agents/.agent-prices.md removed" test -e "$TMPDIR/agents/.agent-prices.md"
+    assert_true ".agent-prices.md moved into agents/runtime/" test -f "$TMPDIR/agents/runtime/.agent-prices.md"
+    assert_contains "prices content preserved" \
+        "$TMPDIR/agents/runtime/.agent-prices.md" "intermediate-prices"
+    teardown
+}
+
+test_prices_migration_skips_when_runtime_target_exists() {
+    setup
+    # Both legacy locations present, but the runtime target already exists.
+    # Sources must be left in place (warned, not destroyed).
+    printf 'old-root\n' > "$TMPDIR/.agent-prices.md"
+    mkdir -p "$TMPDIR/agents"
+    printf 'old-intermediate\n' > "$TMPDIR/agents/.agent-prices.md"
+    mkdir -p "$TMPDIR/agents/runtime"
+    printf 'current\n' > "$TMPDIR/agents/runtime/.agent-prices.md"
+    run_install
+    assert_contains "runtime target untouched" \
+        "$TMPDIR/agents/runtime/.agent-prices.md" "current"
+    assert_true "root source kept when runtime target exists" \
+        test -f "$TMPDIR/.agent-prices.md"
+    assert_true "agents/ source kept when runtime target exists" \
+        test -f "$TMPDIR/agents/.agent-prices.md"
+    teardown
+}
+
+test_legacy_council_yml_migrated_to_settings() {
+    setup
+    # Seed 2.x layout: .ai-council.yml at agents/ root.
+    mkdir -p "$TMPDIR/agents"
+    printf 'enabled: true\n' > "$TMPDIR/agents/.ai-council.yml"
+    run_install
+    assert_false "agents/.ai-council.yml removed" test -e "$TMPDIR/agents/.ai-council.yml"
+    assert_true ".ai-council.yml moved into agents/settings/" \
+        test -f "$TMPDIR/agents/settings/.ai-council.yml"
+    assert_contains "council config preserved" \
+        "$TMPDIR/agents/settings/.ai-council.yml" "enabled: true"
+    teardown
+}
+
+test_council_migration_skips_when_target_exists() {
+    setup
+    # Both source and target present — target wins, source kept (warned).
+    mkdir -p "$TMPDIR/agents/settings"
+    printf 'enabled: true\n# source\n' > "$TMPDIR/agents/.ai-council.yml"
+    printf 'enabled: true\n# target\n' > "$TMPDIR/agents/settings/.ai-council.yml"
+    run_install
+    assert_contains "settings target untouched" \
+        "$TMPDIR/agents/settings/.ai-council.yml" "# target"
+    assert_true "source kept when settings target exists" \
+        test -f "$TMPDIR/agents/.ai-council.yml"
     teardown
 }
 
 test_legacy_infra_migration_skips_when_target_exists() {
     setup
-    printf 'old\n' > "$TMPDIR/.agent-chat-history"
+    # Both legacy locations present, but the runtime target already exists.
+    # Sources must be left in place (warned, not destroyed).
+    printf 'old-root\n' > "$TMPDIR/.agent-chat-history"
     mkdir -p "$TMPDIR/agents"
-    printf 'new\n' > "$TMPDIR/agents/.agent-chat-history"
+    printf 'old-intermediate\n' > "$TMPDIR/agents/.agent-chat-history"
+    mkdir -p "$TMPDIR/agents/runtime"
+    printf 'current\n' > "$TMPDIR/agents/runtime/.agent-chat-history"
     run_install
-    # Target untouched, source kept (warned, not destroyed).
-    assert_contains "existing target preserved" \
-        "$TMPDIR/agents/.agent-chat-history" "new"
-    assert_true "root file kept when target exists" test -f "$TMPDIR/.agent-chat-history"
+    assert_contains "runtime target untouched" \
+        "$TMPDIR/agents/runtime/.agent-chat-history" "current"
+    assert_true "root source kept when runtime target exists" test -f "$TMPDIR/.agent-chat-history"
+    assert_true "agents/ source kept when runtime target exists" test -f "$TMPDIR/agents/.agent-chat-history"
     teardown
 }
 
@@ -415,8 +521,9 @@ test_legacy_infra_migration_idempotent() {
     printf 'history\n' > "$TMPDIR/.agent-chat-history"
     run_install
     run_install  # Second install must be a no-op for the migration step.
-    assert_true "agents/.agent-chat-history present" test -f "$TMPDIR/agents/.agent-chat-history"
+    assert_true "agents/runtime/.agent-chat-history present" test -f "$TMPDIR/agents/runtime/.agent-chat-history"
     assert_false "no orphan file at root" test -e "$TMPDIR/.agent-chat-history"
+    assert_false "no orphan file under agents/" test -e "$TMPDIR/agents/.agent-chat-history"
     teardown
 }
 
@@ -425,7 +532,7 @@ test_legacy_infra_migration_dry_run_no_move() {
     printf 'x\n' > "$TMPDIR/.agent-chat-history"
     bash "$INSTALL_SH" --target "$TMPDIR" --quiet --dry-run 2>&1 >/dev/null
     assert_true "dry-run: file stays at root" test -f "$TMPDIR/.agent-chat-history"
-    assert_false "dry-run: agents/ not created with the file" test -f "$TMPDIR/agents/.agent-chat-history"
+    assert_false "dry-run: agents/runtime/ not seeded with the file" test -f "$TMPDIR/agents/runtime/.agent-chat-history"
     teardown
 }
 
@@ -462,10 +569,16 @@ TESTS=(
     test_cli_wrapper_overwrites_on_reinstall
     test_cli_wrapper_delegates_to_master
     test_cli_wrapper_errors_without_install
-    test_legacy_infra_files_migrated_to_agents_dir
+    test_legacy_infra_files_migrated_to_runtime_dir
+    test_intermediate_chat_history_migrated_to_runtime
+    test_legacy_low_impact_decisions_migrated_to_decisions_dir
     test_legacy_infra_migration_skips_when_target_exists
     test_legacy_infra_migration_idempotent
     test_legacy_infra_migration_dry_run_no_move
+    test_intermediate_prices_file_migrated_to_runtime
+    test_prices_migration_skips_when_runtime_target_exists
+    test_legacy_council_yml_migrated_to_settings
+    test_council_migration_skips_when_target_exists
 )
 
 # --list: print test names (used by parallel runner). --single NAME: run one

@@ -69,7 +69,7 @@ they harden the shift instead.
 > below, not into a future revision.
 
 - [x] **Step 1:** Capture the evaluation's five priority items at
-      `agents/contexts/evaluation-2-2-2-followups.md` (verbatim user
+      `agents/settings/contexts/evaluation-2-2-2-followups.md` (verbatim user
       brief, no editorialising). Phase 1+ cite this file instead of
       re-paraphrasing.
 - [x] **Step 2:** Run `/council default` on

@@ -202,7 +202,7 @@ whitelist: only `overrides/` may live there. `contexts/` and
 | Subdir | Cascade behaviour | User-global allowed? |
 |---|---|---|
 | `agents/overrides/` | Cascade — deepest file wins by basename. | ✅ Yes — weakest layer. |
-| `agents/contexts/` | Cascade — deepest file wins by basename. | ❌ No — project-shaped. |
+| `agents/settings/contexts/` | Cascade — deepest file wins by basename. | ❌ No — project-shaped. |
 | `agents/decisions/` | Cascade — deepest file wins by basename. | ❌ No — project-shaped ADRs. |
 | `agents/roadmaps/` | **No cascade** — project-rooted only. | ❌ No. |
 | `agents/state/`, `agents/memory/`, `agents/work_engine/`, `agents/.agent-prices.md`, `agents/council-*/` | **No cascade** — stateful or session-scoped. | ❌ No. |

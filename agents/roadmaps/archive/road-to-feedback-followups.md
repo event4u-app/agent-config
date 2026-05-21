@@ -39,7 +39,7 @@ Council flagged that Phase 2's warning audit is non-reproducible if
 Phase 1 modifies skills first. Snapshot taken once, anchors every
 later AC.
 
-- [x] P0.1 — Run `task lint-skills > agents/analysis/lint-baseline-2026-05-09.txt`,
+- [x] P0.1 — Run `task lint-skills > agents/evidence/analysis/lint-baseline-2026-05-09.txt`,
   commit the file. Records the `216 pass, 108 warn, 0 fail` baseline
   before any Phase-1 / Phase-2 changes.
 
@@ -86,7 +86,7 @@ cheaper to fix once than re-decide on every adoption.
   warning, (b) leaf without steps still warns, (c) `### Step N`
   pattern recognized. Net effect: 105 → 95 warnings (10 commands
   cleared, including `/research`).
-- [x] P2.2 — Triage doc shipped: `agents/analysis/lint-warning-triage.md`
+- [x] P2.2 — Triage doc shipped: `agents/evidence/analysis/lint-warning-triage.md`
   buckets every baseline warning code into (a) genuine fix
   (~82%), (b) `linter_accept_reason` justified (~11%), (c) check
   too aggressive (~7%). Bucket (a) is forward-only enforced;
@@ -158,7 +158,7 @@ not a missed target.
   zero council touchpoints by design — Council is invoked at the
   command layer, not the engine layer. Nothing to wire there.
 - [x] P5.2 — Advisory delivered 2026-05-09 in
-  `agents/analysis/roadmap-priority-2026Q2.md`. Ranks all 13 open
+  `agents/evidence/analysis/roadmap-priority-2026Q2.md`. Ranks all 13 open
   roadmaps (one more than the original "12" because this roadmap
   itself was created in flight) across the three axes (a) external-
   adoption pull, (b) blocking-other-work, (c) effort-to-close.
@@ -166,12 +166,12 @@ not a missed target.
   proof-not-features + chat-history-cross-agent-hardening Phase 1.
   Three decision points council-synthesised 2026-05-09; verdicts
   + measurable re-entry triggers folded back into the advisory
-  (`agents/analysis/roadmap-priority-2026Q2.md` § Verdicts).
+  (`agents/evidence/analysis/roadmap-priority-2026Q2.md` § Verdicts).
 
 ## Acceptance criteria
 
 All AC anchored to the Phase-0 baseline snapshot
-(`agents/analysis/lint-baseline-2026-05-09.txt`).
+(`agents/evidence/analysis/lint-baseline-2026-05-09.txt`).
 
 - **Phase 1:** Every new warning introduced by PR #64 is either fixed
   or carries `linter_accept_reason` frontmatter. Net new warnings vs.
@@ -194,4 +194,4 @@ All AC anchored to the Phase-0 baseline snapshot
 Validated 2026-05-09 by AI Council (anthropic/claude-sonnet-4-5 +
 openai/gpt-4o, 2 rounds, $0.0641 actual). Synthesis with applied
 fixes and divergences lives in
-`agents/analysis/feedback-followups-council.md`.
+`agents/evidence/analysis/feedback-followups-council.md`.

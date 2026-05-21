@@ -27,7 +27,7 @@ install:
 # /chat-history import
 
 Read-only, **user-driven** cross-session import. Surfaces prior
-sessions logged in `agents/.agent-chat-history` as a numbered table,
+sessions logged in `agents/runtime/.agent-chat-history` as a numbered table,
 the user picks **one**, the agent reads that session **silently**
 and emits a 2–5 sentence summary, then offers to resume the last
 task from that session. The agent does **not** render entries
@@ -79,7 +79,7 @@ body entry are surfaced.
 If the array is empty, stop:
 
 ```
-> 📒 No prior sessions found in agents/.agent-chat-history.
+> 📒 No prior sessions found in agents/runtime/.agent-chat-history.
 ```
 
 ### 3. Surface as a numbered table
@@ -162,7 +162,7 @@ instruction.
   contract.
 - **One pick per invocation.** Multi-pick is v2. If the user wants
   a second session, run `/chat-history import` again.
-- **Read-only.** This command never writes to `agents/.agent-chat-history`
+- **Read-only.** This command never writes to `agents/runtime/.agent-chat-history`
   and never rotates.
 - **`<legacy>` and `<unknown>` buckets** show up like any other
   session id when they have body entries — the user can pick them
@@ -173,7 +173,7 @@ instruction.
 
 - [`/chat-history learn`](learn.md) — pick a prior session and turn it into a project-improving proposal via `learning-to-rule-or-skill`
 - [`/chat-history show`](show.md) — current-session inspector
-- [`chat-history-platform-hooks`](../../../agents/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
+- [`chat-history-platform-hooks`](../../../agents/settings/contexts/chat-history-platform-hooks.md) — read contract, isolation default, opt-in cross-session path
 - [`scripts/chat_history.py`](../../../scripts/chat_history.py) — `sessions` and `read --session` CLI surface
 - [`user-interaction`](../../rules/user-interaction.md) — numbered-options Iron Law
 - [`ask-when-uncertain`](../../rules/ask-when-uncertain.md) — one-question-per-turn Iron Law

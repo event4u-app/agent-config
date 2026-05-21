@@ -76,7 +76,7 @@ Adding a skill to this allowlist:
 1. Open a PR that edits this file + the relevant skill's `recommended_for_user_types:` (omitted = universal).
 2. Cite ≥ 4 user-type prompts from `tests/eval/corpus-non-dev.yaml` that select the skill.
 3. Require approval from one Tier-1 reviewer (architecture-review-lens or skill-writing).
-4. Document the inclusion in `agents/eval-findings/` with the supporting eval prompts.
+4. Document the inclusion in `agents/evidence/eval-findings/` with the supporting eval prompts.
 
 Removing a skill is breaking. It must be announced in `STABILITY.md` with a deprecation window ≥ one minor release.
 

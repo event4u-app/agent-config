@@ -152,5 +152,5 @@ Telemetry / APM     → strip from request/response captures; allowlist headers.
   - External Secrets Operator: https://external-secrets.io/
   - GitHub secret scanning: https://docs.github.com/en/code-security/secret-scanning · gitleaks: https://github.com/gitleaks/gitleaks · TruffleHog: https://github.com/trufflesecurity/trufflehog
 - Cross-linked: [`aws-infrastructure`](../aws-infrastructure/SKILL.md), [`security-audit`](../security-audit/SKILL.md), [`threat-modeling`](../threat-modeling/SKILL.md), [`security`](../security/SKILL.md).
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `secrets-management`).
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `secrets-management`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

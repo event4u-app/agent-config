@@ -17,6 +17,11 @@ export default defineConfig({
     root: 'src/ui',
     publicDir: false,
     plugins: [preact()],
+    resolve: {
+        alias: {
+            '@shared': new URL('./src/shared', import.meta.url).pathname,
+        },
+    },
     build: {
         outDir: '../../dist/ui',
         emptyOutDir: true,

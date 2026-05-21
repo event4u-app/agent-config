@@ -714,7 +714,7 @@ writes two local-only files outside the repo contract:
   `mode: cli` members. Daily UTC reset. Inspect with
   `agent-config council quota`; clear today's counter for one provider
   with `agent-config council quota --reset <provider> --confirm`.
-- `agents/council-events.log` — JSONL audit trail. One line per
+- `agents/runtime/council/events.log` — JSONL audit trail. One line per
   necessity-gate decision and per quota block. Gitignored by the
   installer (managed `.gitignore` block); never committed.
   `original_ask` is hashed `sha256[:12]` before write — the raw prompt
@@ -730,7 +730,7 @@ Per-feature environment overrides for ephemeral worktrees, CI runners,
 or sandbox testing:
 
 - `AGENT_CONFIG_NO_EVENTS_LOG=1` — disables every write to
-  `agents/council-events.log` in-process. Quota counter and council
+  `agents/runtime/council/events.log` in-process. Quota counter and council
   output stay untouched.
 - `AGENT_CONFIG_LEGACY_ANCHOR=1` — reverts project-root discovery to
   the pre-step-7 `.git`-only walk. See [Migration — Step 7 anchor
@@ -758,13 +758,13 @@ anchor** wins:
 
 1. `.git` (file or directory).
 2. `agents/` directory containing **any** of `roadmaps/`,
-   `.ai-council.yml`, or `roadmaps-progress.md` — bare `agents/`
+   `settings/.ai-council.yml`, or `roadmaps-progress.md` — bare `agents/`
    does **not** anchor (D1).
 
 If no boundary anchor exists in any ancestor, the **outermost**
 (closest-to-fs-root) `.agent-settings.yml` becomes the root. This
 preserves the layered-settings cascade — see
-[`agents/council-sessions/step-7-d3-cascade-conflict-decision.md`](../agents/council-sessions/step-7-d3-cascade-conflict-decision.md)
+[`agents/runtime/council/sessions/step-7-d3-cascade-conflict-decision.md`](../agents/runtime/council/sessions/step-7-d3-cascade-conflict-decision.md)
 for the rationale.
 
 When a single ancestor carries multiple anchors, the **diagnostic

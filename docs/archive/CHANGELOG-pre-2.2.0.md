@@ -80,7 +80,7 @@ Tests: 3173 (+0 since 1.41.1)
 
 ### Documentation
 
-* **mcp:** promote durable strategy to agents/contexts; unhook contracts from roadmap ([f9e7278](https://github.com/event4u-app/agent-config/commit/f9e727895e75aa74c712ce628811527a5b982f98))
+* **mcp:** promote durable strategy to agents/settings/contexts; unhook contracts from roadmap ([f9e7278](https://github.com/event4u-app/agent-config/commit/f9e727895e75aa74c712ce628811527a5b982f98))
 * **mcp:** add stability frontmatter to discovery-phase-notice contract ([0aacd0b](https://github.com/event4u-app/agent-config/commit/0aacd0b69849029db19985aa08591d52bb5a677b))
 * **mcp:** re-anchor roadmap links to archive path ([cbbd77c](https://github.com/event4u-app/agent-config/commit/cbbd77c29a2847db8e69e7e56457dcc1b794b307))
 
@@ -638,7 +638,7 @@ Tests: 2471
 * **roadmap:** repoint sibling-roadmap reference to archived path ([f7ee632](https://github.com/event4u-app/agent-config/commit/f7ee632800290d3cd90f2dd1274e47e8127f1f63))
 * **tests:** align update_counts + linter + hero-counts tests with Thin-Root ([5556c8c](https://github.com/event4u-app/agent-config/commit/5556c8ce1a8cf4df7a7b4a957030d5b5d2d0fd7e))
 * **skills:** mark agents-md-thin-root cloud_safe noop ([17a3824](https://github.com/event4u-app/agent-config/commit/17a3824ddd1ea567fca8b699113b2c62050c5507))
-* **docs:** move agents-md-tech-stack from agents/contexts/ to docs/contracts/ ([77eef8c](https://github.com/event4u-app/agent-config/commit/77eef8c61d2561ef5a563518f2bdb1dff80541c7))
+* **docs:** move agents-md-tech-stack from agents/settings/contexts/ to docs/contracts/ ([77eef8c](https://github.com/event4u-app/agent-config/commit/77eef8c61d2561ef5a563518f2bdb1dff80541c7))
 * **rules:** drop forbidden agents/ link from reviewer-awareness body ([8a573a4](https://github.com/event4u-app/agent-config/commit/8a573a48bc959f0c16ea8b56fc0e6bd0d3139238))
 * **refs:** point to archived roadmap, inline council convergence ([bf56b70](https://github.com/event4u-app/agent-config/commit/bf56b7084dae68fe2a21e52d7cb644ed6b3bb670))
 
@@ -857,14 +857,14 @@ Tests: 2471
 ### Bug Fixes
 
 * **no-roadmap-refs:** drop roadmap file links from stable artifacts ([b4a56f4](https://github.com/event4u-app/agent-config/commit/b4a56f499d1c070ad658fb9a87b6d272f1d05b79))
-* **public-links:** tag cross-wing-handoff as beta, drop link into agents/contexts/ ([89ac1ac](https://github.com/event4u-app/agent-config/commit/89ac1ac13ce52d26914abe14de2336f68f4e252f))
+* **public-links:** tag cross-wing-handoff as beta, drop link into agents/settings/contexts/ ([89ac1ac](https://github.com/event4u-app/agent-config/commit/89ac1ac13ce52d26914abe14de2336f68f4e252f))
 * **check-refs:** allow runtime-bootstrapped agents/.agent-prices.md ([5b45a17](https://github.com/event4u-app/agent-config/commit/5b45a176cc42a04a771a01aa9384a0ad8da0b222))
 * **roadmap:** demote Kill-switch headings so check-roadmap-trackable stops parsing them as phases ([3029195](https://github.com/event4u-app/agent-config/commit/3029195c75eb16b95f57dd2c04401f8ead63f5e9))
 * **roadmap:** repair remaining check-refs errors in event-driven-discipline ([bd8f908](https://github.com/event4u-app/agent-config/commit/bd8f908f9d5955cb8aa8a6b8c841076f0ee4dc91))
 * **roadmap:** repair broken refs in event-driven-discipline ([6584a52](https://github.com/event4u-app/agent-config/commit/6584a5221a0fdb05b2f69d7a6b5c9c4c7b8ee163))
 * **chat-history:** migrate stale v3 header in-place on first hook write ([d239a39](https://github.com/event4u-app/agent-config/commit/d239a3903a81a569ee2cd372dd3c6c709153bbb8))
 * **lint:** add skills frontmatter to /chat-history learn ([01e8db3](https://github.com/event4u-app/agent-config/commit/01e8db31a1822c275dff6410fed2622ba9683fad))
-* **readme:** drop agents/contexts/ deep-link, mark hook-architecture-v1 as beta ([eeacbeb](https://github.com/event4u-app/agent-config/commit/eeacbeb1e748e98613102f0008756a5db155159b))
+* **readme:** drop agents/settings/contexts/ deep-link, mark hook-architecture-v1 as beta ([eeacbeb](https://github.com/event4u-app/agent-config/commit/eeacbeb1e748e98613102f0008756a5db155159b))
 
 ### Documentation
 
@@ -1913,9 +1913,9 @@ Tests: 2471
   frontmatter field on individual skills is kept — it is still a lint
   signal.
 - Stale design docs describing the removed layers:
-  `docs/observability.md`, `agents/docs/observability-scoping.md`,
-  `agents/docs/feedback-consumption.md`,
-  `agents/docs/runtime-visibility.md`.
+  `docs/observability.md`, `agents/reference/docs/observability-scoping.md`,
+  `agents/reference/docs/feedback-consumption.md`,
+  `agents/reference/docs/runtime-visibility.md`.
 
 ### Added (CI)
 - `scripts/runtime_dispatcher.py run` learned `--output FILE`,

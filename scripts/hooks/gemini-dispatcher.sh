@@ -27,7 +27,7 @@
 #
 # Output — none on stdout. Gemini consumes JSON on stdout for
 # context injection / decision; we don't inject anything from this
-# layer (concerns stream their own state via agents/state/.dispatcher/).
+# layer (concerns stream their own state via agents/runtime/state/.dispatcher/).
 # SessionStart / SessionEnd are advisory in Gemini (continue/decision
 # ignored), so we always exit 0.
 

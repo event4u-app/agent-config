@@ -7,7 +7,7 @@ high-overlap skill pairs into clusters. The output drives the
 selection-accuracy fixture set defined by council file 05 (Round-3
 protocol — ≥ 3 shared significant terms → collision cluster).
 
-Output: `agents/reports/skill-collision-clusters.json`
+Output: `agents/runtime/reports/skill-collision-clusters.json`
 
 Schema:
     {

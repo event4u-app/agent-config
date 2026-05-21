@@ -1,4 +1,4 @@
-"""Intake trigger + dedup for `agents/low-impact-decisions.md` (Phase 12).
+"""Intake trigger + dedup for `agents/decisions/low-impact-decisions.md` (Phase 12).
 
 User signals "leichte Frage" / "low-impact question" / equivalents
 (see :data:`TRIGGER_PHRASES`); the host agent collects the

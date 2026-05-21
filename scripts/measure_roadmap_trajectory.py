@@ -3,7 +3,7 @@
 
 Walks `agents/roadmaps/archive/` and computes per-roadmap checkbox
 completion ratio at archival time. Output: one-line trajectory metric
-per roadmap, plus an aggregate `agents/reports/roadmap-trajectory.json`.
+per roadmap, plus an aggregate `agents/runtime/reports/roadmap-trajectory.json`.
 
 Checkbox grammar (mirrors `scripts/roadmap_progress_check.py`):
 - `[ ]` — open

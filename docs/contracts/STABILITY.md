@@ -60,7 +60,7 @@ frontmatter and:
 
 - **fails CI** when README / AGENTS.md / `docs/architecture.md` links to
   a contract marked `experimental`, to a missing target, or into
-  `agents/contexts/` (internal surface).
+  `agents/settings/contexts/` (internal surface).
 - **warns** (non-fatal in default mode; fatal under `--strict`) when a
   public-surface link to a `beta` contract has no `(beta)` marker in
   the surrounding text.

@@ -101,7 +101,7 @@ package edit touches the same hot file.
    inside backticks with no *why*-clause; collapse runs of three or
    more into a single capability pointer.
 4. **Outboard.** Move each `outboard-candidate` into
-   `agents/contexts/`, `docs/contracts/`, an existing rule body, or
+   `agents/settings/contexts/`, `docs/contracts/`, an existing rule body, or
    an existing skill body. Replace in-file with a substantive
    pointer. Never invent a new top-level dir.
 5. **Verify.** Run `python3 scripts/lint_agents_md.py` until green;

@@ -22,7 +22,7 @@ Step 7 the anchor set is (closest-leaf wins; tiebreaker
 ``.agent-settings.yml`` > ``agents/`` > ``.git``):
 
 * ``.agent-settings.yml`` file,
-* ``agents/`` directory containing ``roadmaps/``, ``.ai-council.yml``,
+* ``agents/`` directory containing ``roadmaps/``, ``settings/.ai-council.yml``,
   or ``roadmaps-progress.md`` (bare ``agents/`` does **not** anchor),
 * ``.git`` file or directory (submodule support).
 
@@ -102,7 +102,7 @@ ANCHOR_GIT = "git"
 #: is **not** an anchor.
 _AGENTS_DIR_MARKERS: tuple[str, ...] = (
     "roadmaps",
-    ".ai-council.yml",
+    "settings/.ai-council.yml",
     "roadmaps-progress.md",
 )
 
@@ -148,7 +148,7 @@ def find_project_root_with_anchor(start: Path) -> tuple[Path, str] | None:
        a boundary anchor wins:
 
        * ``agents/`` containing **any** of ``roadmaps/``,
-         ``.ai-council.yml``, or ``roadmaps-progress.md`` (D1) →
+         ``settings/.ai-council.yml``, or ``roadmaps-progress.md`` (D1) →
          ``"agents-dir"``
        * ``.git`` (file or directory; submodule support) → ``"git"``
 

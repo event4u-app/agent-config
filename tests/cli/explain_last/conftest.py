@@ -73,12 +73,12 @@ def copy_state(project_root: Path):
 def attach_council(project_root: Path):
     """Drop a council-responses.json next to the seeded state file.
 
-    Places the sidecar under ``agents/council-sessions/<sess>/`` and
+    Places the sidecar under ``agents/runtime/council/sessions/<sess>/`` and
     aligns its mtime with the state file so the 1h windowing in
     :mod:`scripts._cli.explain_last.council` accepts it.
     """
     def _attach(state_file: Path, session_id: str = "sess-test") -> Path:
-        sess_dir = project_root / "agents" / "council-sessions" / session_id
+        sess_dir = project_root / "agents" / "runtime" / "council" / "sessions" / session_id
         sess_dir.mkdir(parents=True, exist_ok=True)
         src = FIXTURES_DIR / "council-responses.json"
         dst = sess_dir / "council-responses.json"

@@ -6,7 +6,7 @@ freshness threshold, the 3-failure stop, and tool-loop detection. The
 agent's job shrinks from "remember three counters" to "read this file
 before responding".
 
-Output: `agents/state/context-hygiene.json`
+Output: `agents/runtime/state/context-hygiene.json`
   {
     "tool_calls": <int>,                 // running PostToolUse count
     "consecutive_same_tool": <int>,      // includes the latest call
@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 # Re-use the shared atomic-write helper so concerns honour the single
-# `agents/state/.dispatcher.lock` discipline (hook-architecture-v1.md
+# `agents/runtime/state/.dispatcher.lock` discipline (hook-architecture-v1.md
 # § Concurrency, Phase 7.4).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from hooks.state_io import atomic_write_json  # noqa: E402

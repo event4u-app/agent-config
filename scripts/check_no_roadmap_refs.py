@@ -34,7 +34,7 @@ STABLE_TREES = (
     ".agent-src.uncompressed/contexts",
     ".agent-src.uncompressed/templates",
     ".agent-src.uncompressed/personas",
-    "agents/contexts",
+    "agents/settings/contexts",
     "docs/guidelines",
     "docs/contracts",
 )
@@ -128,7 +128,7 @@ def format_text(violations: list[Violation]) -> str:
     for v in violations:
         lines.append(f"  🔴 {v.file}:{v.line}  →  {v.match}")
     lines.append(
-        "\nPromote the durable conclusion to agents/contexts/ and cite that "
+        "\nPromote the durable conclusion to agents/settings/contexts/ and cite that "
         "instead. See .agent-src.uncompressed/rules/no-roadmap-references.md."
     )
     return "\n".join(lines)

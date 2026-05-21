@@ -35,7 +35,7 @@ analytic passes ran:
 
 **5.4** AI Council R3 (claude-sonnet-4-5 + gpt-4o, 2 rounds, prompt
 mode) walked the candidate list. Council convergence and host
-verdicts are recorded in `agents/reports/auto-rules-audit.md`
+verdicts are recorded in `agents/runtime/reports/auto-rules-audit.md`
 § Phase 5.4. The dominant council insight:
 
 > *"Rarity ≠ redundancy. Low corpus hits often indicate a
@@ -192,11 +192,11 @@ documentation rewrite for marginal additional savings.
   governance pass; the stub-cost / body-cost ratio changes
   drastically.
 - Auto-rule count grows by ≥ 5 (history check via
-  `agents/.augment-budget-history.jsonl`) → repeat the audit
+  `agents/runtime/.augment-budget-history.jsonl`) → repeat the audit
   with the same three-pass methodology.
 - A retained rule (`upstream-proposal`, `slash-command-routing-policy`,
   `analysis-skill-routing`'s sibling skill) shows a 30-day window
-  with zero documented activation in `agents/council-sessions/` →
+  with zero documented activation in `agents/runtime/council/sessions/` →
   open a follow-up ADR demoting it.
 
 ## Alternatives considered
@@ -224,13 +224,13 @@ documentation rewrite for marginal additional savings.
 ## References
 
 - `agents/roadmaps/archive/road-to-augment-limit-fit.md` § Phase 5
-- `agents/reports/auto-rules-audit.md` (full audit findings,
+- `agents/runtime/reports/auto-rules-audit.md` (full audit findings,
   council walk, host verdicts)
-- `agents/reports/auto-rules-overlap.json` (Phase 5.2 data)
-- `agents/reports/auto-rules-likelihood.json` (Phase 5.3 data)
-- `agents/council-questions/augment-limit-fit-rule-governance.md` <!-- council-ref-allowed: ADR decision trace -->
+- `agents/runtime/reports/auto-rules-overlap.json` (Phase 5.2 data)
+- `agents/runtime/reports/auto-rules-likelihood.json` (Phase 5.3 data)
+- `agents/runtime/council/questions/augment-limit-fit-rule-governance.md` <!-- council-ref-allowed: ADR decision trace -->
   (Phase 5.4 prompt)
-- `agents/council-responses/augment-limit-fit-rule-governance.json` <!-- council-ref-allowed: ADR decision trace -->
+- `agents/runtime/council/responses/augment-limit-fit-rule-governance.json` <!-- council-ref-allowed: ADR decision trace -->
   (Phase 5.4 R3 raw debate)
 - `docs/decisions/ADR-rule-kernel-and-router.md` (kernel-membership
   contract — Phase 5 changes leave kernel untouched per Lever C lock)

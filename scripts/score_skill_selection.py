@@ -18,7 +18,7 @@ Predictions source:
   pure description-matching would do and provides a numeric floor.
 
 Output: human-readable summary on stdout + machine JSON to
-`agents/reports/skill-selection-accuracy.json` (or `--out`).
+`agents/runtime/reports/skill-selection-accuracy.json` (or `--out`).
 """
 
 from __future__ import annotations

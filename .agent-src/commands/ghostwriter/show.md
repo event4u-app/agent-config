@@ -25,7 +25,7 @@ install:
 
 # /ghostwriter:show
 
-Read-only render of a single `agents/ghostwriter/<slug>.md` profile.
+Read-only render of a single `agents/reference/ghostwriter/<slug>.md` profile.
 Surfaces every field needed to decide whether to consume the voice
 (`/ghostwriter:write`), refresh it (`/ghostwriter:fetch <slug>
 --force-refresh`), or delete it (`/ghostwriter:delete`).
@@ -48,7 +48,7 @@ Resolution table:
 
 | State | Action |
 |---|---|
-| File missing | Abort. Print: *"No profile at `agents/ghostwriter/<slug>.md`. Run `/ghostwriter:list` to see what exists."* |
+| File missing | Abort. Print: *"No profile at `agents/reference/ghostwriter/<slug>.md`. Run `/ghostwriter:list` to see what exists."* |
 | File present, `fictional: true` | Print a one-line warning before rendering: *"⚠️ This is a package-side fixture, not a real-person profile."* Then render normally. |
 | File present, real | Render (Step 2) |
 

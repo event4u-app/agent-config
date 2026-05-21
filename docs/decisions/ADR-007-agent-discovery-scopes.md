@@ -31,7 +31,7 @@ phase: post-v2.1.0 · simplicity-and-everywhere
 Originates from user ask: "Es macht keinen Sinn, das paket nicht
 global zu installieren." Validated through AI Council (2 + 1 rounds,
 2026-05-12 · members claude-sonnet-4-5 + gpt-4o). Council session:
-[`agents/council-sessions/2026-05-12-global-first-strategy/`](../../agents/council-sessions/2026-05-12-global-first-strategy/). <!-- council-ref-allowed: ADR decision trace -->
+[`agents/runtime/council/sessions/2026-05-12-global-first-strategy/`](../../agents/runtime/council/sessions/2026-05-12-global-first-strategy/). <!-- council-ref-allowed: ADR decision trace -->
 
 ## Context
 
@@ -110,8 +110,8 @@ differ.
 | 3 (targeted resolution) | same | $0.0252 | **3/4 convergence** |
 
 Full responses:
-[`responses.json`](../../agents/council-sessions/2026-05-12-global-first-strategy/responses.json), <!-- council-ref-allowed: ADR decision trace -->
-[`responses-round3.json`](../../agents/council-sessions/2026-05-12-global-first-strategy/responses-round3.json). <!-- council-ref-allowed: ADR decision trace -->
+[`responses.json`](../../agents/runtime/council/sessions/2026-05-12-global-first-strategy/responses.json), <!-- council-ref-allowed: ADR decision trace -->
+[`responses-round3.json`](../../agents/runtime/council/sessions/2026-05-12-global-first-strategy/responses-round3.json). <!-- council-ref-allowed: ADR decision trace -->
 
 ## Decision
 
@@ -350,7 +350,7 @@ Out of scope for this ADR. Sequencing target for a separate roadmap:
 ## References
 
 - Council session:
-  [`agents/council-sessions/2026-05-12-global-first-strategy/`](../../agents/council-sessions/2026-05-12-global-first-strategy/) <!-- council-ref-allowed: ADR decision trace -->
+  [`agents/runtime/council/sessions/2026-05-12-global-first-strategy/`](../../agents/runtime/council/sessions/2026-05-12-global-first-strategy/) <!-- council-ref-allowed: ADR decision trace -->
 - User-scope discovery matrix sources: agent vendor official docs
   (Claude, Cursor, Windsurf, Cline, Augment, Copilot, Gemini, Aider,
   Codex) accessed 2026-05-12.

@@ -15,7 +15,7 @@ with required and optional keys. Validation needs to be:
    Windsurf, and Augment, all of which parse the same YAML.
 
 The contract is documented for humans in
-[`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md);
+[`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md);
 the question this ADR records is **how that contract is enforced**.
 
 ## Decision
@@ -24,7 +24,7 @@ the question this ADR records is **how that contract is enforced**.
 [`scripts/schemas/`](../../../scripts/schemas/) are the
 machine-readable source of truth.** The human contract document
 defers to the schema (`$comment` in each schema file pins
-`agents/docs/frontmatter-contract.md` as the source).
+`agents/reference/docs/frontmatter-contract.md` as the source).
 
 ### Schema files
 
@@ -40,7 +40,7 @@ defers to the schema (`$comment` in each schema file pins
 A key is **required** (in the schema's `required:` array) if ≥ 95 %
 of files in the type declare it. Everything else is optional. The
 threshold is documented inline in
-[`frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md)
+[`frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md)
 § "Definition of required". Re-derive counts with
 `python3 scripts/inventory_frontmatter.py`.
 
@@ -97,6 +97,6 @@ JetBrains / any JSON-Schema-aware tool tomorrow.
 - [`scripts/schemas/rule.schema.json`](../../../scripts/schemas/rule.schema.json) — rule contract.
 - [`scripts/schemas/command.schema.json`](../../../scripts/schemas/command.schema.json) — command contract.
 - [`scripts/schemas/persona.schema.json`](../../../scripts/schemas/persona.schema.json) — persona contract.
-- [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md) — human-readable contract.
+- [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md) — human-readable contract.
 - [`scripts/skill_linter.py`](../../../scripts/skill_linter.py) — primary validator.
 - [`agents/roadmaps/step-11-ruflo-parity.md`](../../../agents/roadmaps/step-11-ruflo-parity.md) Phase 4 Step 3 — origin.

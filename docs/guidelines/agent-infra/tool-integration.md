@@ -54,7 +54,7 @@ tool_permissions:
 New tools require:
 1. An adapter implementation in `scripts/tools/`
 2. Registration in the tool registry
-3. Documentation in `agents/docs/tools/`
+3. Documentation in `agents/reference/docs/tools/`
 
 ## Validation rules (linter)
 

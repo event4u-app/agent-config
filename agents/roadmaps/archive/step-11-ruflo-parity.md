@@ -16,7 +16,7 @@ complexity: structural
 
 ## Prerequisites
 
-- [x] Read `AGENTS.md` and [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) — every row is a checkbox in this roadmap
+- [x] Read `AGENTS.md` and [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) — every row is a checkbox in this roadmap
 - [x] [`step-4-measurement-and-benchmark.md`](archive/step-4-measurement-and-benchmark.md) Phase 2 complete (session-jsonl reader exists) — closed 2026-05-16
 - [x] `scripts/cost/budget.mjs` exists — verified 2026-05-16 (5-tier ladder OK/INFO/WARNING/CRITICAL/HARD_STOP)
 - [x] `scripts/agent-config` dispatcher and `./agent-config explain` subcommand exist — verified 2026-05-16
@@ -27,7 +27,7 @@ Ruflo measures everything and tags every claim with provenance. We measure struc
 
 This roadmap closes the parity table row by row, and lands the **mechanism** (cost tracker + budget ladder + smoke contracts + ADR directories + namespace enforcement + topology hints) without relitigating whether each row is wanted — the Domination Mandate already settled that.
 
-- **Source:** [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) (8 rows, all in scope)
+- **Source:** [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) (8 rows, all in scope)
 - **Pillar:** P5 (Domination Mandate)
 - **Block-on:** step-4 Phase 2 (session-jsonl reader is the cost-tracker substrate)
 
@@ -49,7 +49,7 @@ Read Claude Code session jsonl. Real model pricing. Per-1M Haiku / Sonnet / Opus
 |---|---|---|
 | `docs/contracts/model-pricing.yaml` | `bench/pricing.yaml` | `bench/` is the active pricing surface (also consumed by `task bench`); single source beats two locations. |
 | `scripts/cost/session_reader.py` | `scripts/cost/track.mjs` | Verbatim port of upstream ruflo plugin; Python rewrite would diverge from the parity source. |
-| `scripts/cost/attribute.py` + `agents/metrics/cost/<sid>.json` + `aggregate.json` | One append-only `agents/cost-tracking/sessions.jsonl` | jsonl form is simpler; budget evaluator derives aggregates by scanning, no separate file to keep in sync. |
+| `scripts/cost/attribute.py` + `agents/runtime/metrics/cost/<sid>.json` + `aggregate.json` | One append-only `agents/cost-tracking/sessions.jsonl` | jsonl form is simpler; budget evaluator derives aggregates by scanning, no separate file to keep in sync. |
 | `task cost-track` | `task cost:track` (alias of `task cost`) | Colon namespace matches the rest of the Taskfile. |
 | `agent-status` skill | `agent-status` command (Tier 0) | The surface exists as `.agent-src.uncompressed/commands/agent-status.md`, not `skills/`; structurally a command per the cluster contract. |
 
@@ -95,7 +95,7 @@ Every plugin / sub-area gets `docs/adrs/<area>/0001-*.md`, `0002-*.md`. Architec
 Three smaller rows from the parity table, batched.
 
 - [x] **Step 1 — Namespace contract:** [`docs/contracts/namespace.md`](../../docs/contracts/namespace.md) — `<stem>-<intent>` kebab-case; reserved-names list (`pattern`, `claude-memories`, `default`, `index`, `router`). [`scripts/lint_namespace.py`](../../scripts/lint_namespace.py) enforces: regex shape, length floor (skills 3+ · others 2+ for intentional acronyms `pr` / `ci` / `qa` / `me`), reserved-name check (top-level only — sub-verbs like `council/default` exempt), skill-dir-matches-frontmatter-name. Wired as `task lint-namespace` in `taskfiles/ci-fast.yml`; called from `Taskfile.yml` `ci` + `ci-strict`. Baseline: 430 names · 0 issues. _Closed 2026-05-16._
-- [x] **Step 2 — Topology hints in `subagent-orchestration`:** [`.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md`](../../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md) gained a `Topology hints — per-mode communication shape` subsection: 7-row table mapping each mode to one of `hierarchical` / `mesh` / `hierarchical-mesh` / `ring` / `star` / `adaptive` with the Ruflo anti-drift default (`hierarchical, 6–8 agents, raft consensus`) + glossary. Cites [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) row 7. Descriptive, not enforced. _Closed 2026-05-16._
+- [x] **Step 2 — Topology hints in `subagent-orchestration`:** [`.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md`](../../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md) gained a `Topology hints — per-mode communication shape` subsection: 7-row table mapping each mode to one of `hierarchical` / `mesh` / `hierarchical-mesh` / `ring` / `star` / `adaptive` with the Ruflo anti-drift default (`hierarchical, 6–8 agents, raft consensus`) + glossary. Cites [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) row 7. Descriptive, not enforced. _Closed 2026-05-16._
 - [x] **Step 3 — MCP-tool count audit:** [`scripts/audit_mcp_tools.py`](../../scripts/audit_mcp_tools.py) reads the source-of-truth catalog [`consumer_tool_catalog.json`](../../scripts/mcp_server/consumer_tool_catalog.json) + handler registry [`tools.py`](../../scripts/mcp_server/tools.py) and emits [`docs/contracts/mcp-tool-inventory.md`](../../docs/contracts/mcp-tool-inventory.md) — 20 tools, each with `<file>:<line>` citation for both catalog entry and handler (or `_stub-only_`). Drift gate `lint-mcp-inventory` (`--check`) wired into `Taskfile.yml` `ci` + `ci-strict` via `taskfiles/ci-fast.yml`. Baseline: 9 stdio-implemented · 11 discovery-only stubs. _Closed 2026-05-16._
 - [x] **Step 4 — Measured-vs-claimed pass:** All 9 active roadmaps in `agents/roadmaps/` now carry a `**Measured-vs-claimed disclaimer:**` one-liner in their header. Verified existing on step-10 / step-11 / step-5-schema-rigor (Phase 2 of step-99 drafts); backfilled on step-2 / step-5-test-cleanup / step-13 / step-14 / step-15 / step-99. Each disclaimer cites where validation happens (child roadmap, downstream phase, or `[!]` until human-confirmed for non-dev validation). _Closed 2026-05-16._
 
@@ -103,10 +103,10 @@ Three smaller rows from the parity table, batched.
 
 ## Phase 6: Verification + parity sign-off
 
-- [x] **Step 1 — Parity doc:** [`docs/parity/ruflo.md`](../../docs/parity/ruflo.md) — 9 rows mapping each [`external-findings.md § 2`](../audit-2026-05-14-north-star/external-findings.md) pattern to its covering mechanism (`scripts/cost/*.mjs`, `scripts/smoke/*.sh`, `docs/adrs/*/`, `scripts/lint_namespace.py`, `subagent-orchestration` Topology subsection, `docs/contracts/mcp-tool-inventory.md`, disclaimer pass). **Zero `[!]` rows.** _Closed 2026-05-16._
+- [x] **Step 1 — Parity doc:** [`docs/parity/ruflo.md`](../../docs/parity/ruflo.md) — 9 rows mapping each [`external-findings.md § 2`](../../audits/2026-05-14-north-star/external-findings.md) pattern to its covering mechanism (`scripts/cost/*.mjs`, `scripts/smoke/*.sh`, `docs/adrs/*/`, `scripts/lint_namespace.py`, `subagent-orchestration` Topology subsection, `docs/contracts/mcp-tool-inventory.md`, disclaimer pass). **Zero `[!]` rows.** _Closed 2026-05-16._
 - [x] **Step 2 — Bench redundancy check:** [`docs/parity/bench-ruflo.json`](../../docs/parity/bench-ruflo.json) committed as `parity-bench-ruflo-v1` methodology contract — references `scripts/cost/track.mjs` + `bench/pricing.yaml`, lists the 8 dollar-cost fields populated by the first 25-prompt corpus run, inherits the [`bench.json`](../../docs/parity/bench.json) soak window (≥ 30 reports · ≥ 60 days · earliest flip 2026-07-15). Numbers stay claimed until the soak arbiter (`task bench:baseline-ready`) flips. _Closed 2026-05-16 (infrastructure-ready; numeric verdict deferred to soak completion)._
 - [x] **Step 3 — Cross-reference [`step-99`](step-99-north-star-restructure.md) Phase 5 Step 2:** step-99 Phase 5 Step 2 already targets `docs/parity/ruflo.md`; G5 acceptance row already cites it. No edit needed — verified 2026-05-16. _Closed._
-- [x] **Step 4 — Composite scorecard refresh:** [`external-findings.md § 5`](../audit-2026-05-14-north-star/external-findings.md) updated 2026-05-16 — Cost attribution / Per-tier smoke contract / ADR co-location flipped `–` → `=` vs Ruflo; four new rows added (Namespace contract · Topology hints · MCP-tool inventory · Measured-vs-claimed disclaimer) all `=` across the field. Hot-read paragraph rewritten to reflect the post-step-11 surface. _Closed 2026-05-16._
+- [x] **Step 4 — Composite scorecard refresh:** [`external-findings.md § 5`](../../audits/2026-05-14-north-star/external-findings.md) updated 2026-05-16 — Cost attribution / Per-tier smoke contract / ADR co-location flipped `–` → `=` vs Ruflo; four new rows added (Namespace contract · Topology hints · MCP-tool inventory · Measured-vs-claimed disclaimer) all `=` across the field. Hot-read paragraph rewritten to reflect the post-step-11 surface. _Closed 2026-05-16._
 
 **Exit:** parity doc zero `[!]` rows; bench-ruflo.json present; scorecard updated. **Rollback:** N/A — verification phase.
 

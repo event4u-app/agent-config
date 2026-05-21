@@ -7,8 +7,8 @@ keep-beta-until: 2026-08-14
 
 > **Status:** v1-measured · criterion not met · default stays `off` · **Owner:** `step-16-caveman-substance.md`
 > Phase 1 closeout · **Sources:** [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) ·
-> [`council-synthesis.md` § 7](../../agents/council-sessions/audit-2026-05-14-north-star/council-synthesis.md) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict --> ·
-> [`caveman-v1-kc-verdict.json`](../../agents/council-responses/caveman-v1-kc-verdict.json) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict -->
+> [`council-synthesis.md` § 7](../../agents/evidence/audits/2026-05-14-north-star/council-synthesis.md) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict --> ·
+> [`caveman-v1-kc-verdict.json`](../../agents/runtime/council/responses/caveman-v1-kc-verdict.json) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict -->
 
 ## Rule
 
@@ -67,7 +67,7 @@ negative (caveman-04 path-list −108 %, caveman-06 mode-marker −123 %).
 
 ### Council split (recorded, not decisive)
 
-Council run [`caveman-v1-kc-verdict.json`](../../agents/council-responses/caveman-v1-kc-verdict.json) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict -->
+Council run [`caveman-v1-kc-verdict.json`](../../agents/runtime/council/responses/caveman-v1-kc-verdict.json) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict -->
 (2 members · 1 round · $0.0514 actual) split:
 
 - **`claude-sonnet-4-5`** → Decision A.1 (deprecate now) + Decision B.3

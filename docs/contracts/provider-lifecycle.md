@@ -33,7 +33,7 @@ the human noticing.
 1. **Real-API smoke run** — at least one live `submit / poll / fetch`
    cycle (or `run` for sync adapters) against the documented
    `default-model`, captured under
-   `agents/ai-video/smoke-traces/<provider>.md` with timestamp,
+   `agents/reference/ai-video/smoke-traces/<provider>.md` with timestamp,
    model id, and **redacted** response shape.
 2. **Secret-redaction confirmation** — the captured trace, re-read
    through `scripts/ai-video/lib/redact.sh`, shows zero residual
@@ -119,4 +119,4 @@ snapshot — older snapshots live in git history, not in this file.
 - [`provider-lifecycle-discipline`](../../.agent-src/rules/provider-lifecycle-discipline.md) — the tier-2 routing rule that surfaces this contract when a provider is touched.
 - [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md) — the four-method shell contract every adapter implements.
 - [`agents/.ai-video.xml.example`](../../agents/.ai-video.xml.example) — operator-facing provider configuration template (carries the tier tag inline).
-- [`agents/policies/media/README.md`](../../agents/policies/media/README.md) — the agent-in-the-loop enforcement model this contract participates in.
+- [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — the agent-in-the-loop enforcement model this contract participates in.

@@ -5,7 +5,7 @@ Reads a stdin payload fixture from `tests/fixtures/hooks/` (one file per
 event in `EVENT_VOCABULARY`), sets `AGENT_CONFIG_REPLAY=1`, and invokes
 the universal dispatcher with the platform / event / payload tuple. The
 replay flag tells `state_io` (and concerns that honour it) to skip every
-write under `agents/state/` so the replay never mutates real session
+write under `agents/runtime/state/` so the replay never mutates real session
 state.
 
 Invocation:

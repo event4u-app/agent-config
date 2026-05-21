@@ -48,7 +48,7 @@ _MODE_MARKER_PATTERN = re.compile(
 )
 _MODE_SCAN_DIRS = (
     Path("agents/sessions"),
-    Path("agents/reports"),
+    Path("agents/runtime/reports"),
     Path("agents/handoffs"),
     Path("agents/learnings"),
 )

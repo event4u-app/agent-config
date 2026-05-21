@@ -5,7 +5,7 @@
 #   - scripts/install.py               (per-platform config writer)
 #
 # Schema and event vocabulary: docs/contracts/hook-architecture-v1.md.
-# Per-platform event-name mapping: agents/contexts/chat-history-platform-hooks.md.
+# Per-platform event-name mapping: agents/settings/contexts/chat-history-platform-hooks.md.
 #
 # When you add or remove a concern, also update:
 #   - scripts/agent-config         (CLI subcommand wiring, if exposed)
@@ -32,14 +32,14 @@ concerns:
     fail_closed: false
   # Phase 5 — Tier-1 hook for the verify-before-complete rule. Records
   # observable evidence of verification commands (tests, quality tools,
-  # builds) into agents/state/verify-before-complete.json. The rule body
+  # builds) into agents/runtime/state/verify-before-complete.json. The rule body
   # cites that file as the source of truth for "verified this turn?".
   verify-before-complete:
     script: scripts/verify_before_complete_hook.py
     args: []
     fail_closed: false
   # Phase 5 — Tier-1 hook for the minimal-safe-diff rule. Counts unique
-  # files touched per turn into agents/state/minimal-safe-diff.json and
+  # files touched per turn into agents/runtime/state/minimal-safe-diff.json and
   # flips warning=true past hooks.minimal_safe_diff.threshold.
   minimal-safe-diff:
     script: scripts/minimal_safe_diff_hook.py
@@ -73,7 +73,7 @@ platforms:
   # plugin-scope hooks. Until those land, the dispatcher binding
   # below is structurally ready but lifecycle events do not fire.
   # Decision matrix + upstream blockers tracked in
-  # agents/contexts/chat-history-platform-hooks.md § Cowork.
+  # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
     session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
@@ -87,7 +87,7 @@ platforms:
   # to route into the active workspace. UserPromptSubmit maps to
   # `beforeSubmitPrompt` (Cursor third-party-hooks table). Stop is
   # IDE-only — CLI-only users fall back to /checkpoint per
-  # agents/contexts/chat-history-platform-hooks.md.
+  # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
     session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]

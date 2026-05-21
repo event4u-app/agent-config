@@ -154,5 +154,5 @@ Production prompts handle their own failure cases:
 
 - Adopted from: `Microck/ordinary-claude-skills@8f5c83174f7aa683b4ddc7433150471983b93131:skills_all/prompt-engineering-patterns/SKILL.md` (MIT, © 2025 Microck) — restructured into a decision-framework shape; vendor `prompt_optimizer` Python snippets dropped (project-specific to Microck).
 - Cross-linked: [`prompt-optimizer`](../prompt-optimizer/SKILL.md), [`refine-prompt`](../refine-prompt/SKILL.md), [`mcp-builder`](../mcp-builder/SKILL.md), [`async-python-patterns`](../async-python-patterns/SKILL.md).
-- Provenance registry: `agents/contexts/skills-provenance.yml` (entry: `prompt-engineering-patterns`).
+- Provenance registry: `agents/settings/contexts/skills-provenance.yml` (entry: `prompt-engineering-patterns`).
 - Iron-Law floor: `verify-before-complete`, `skill-quality`, `non-destructive-by-default`.

@@ -210,7 +210,7 @@ def _src_to_comp(entry: str) -> Path:
     3. Legacy fully-qualified ``.agent-src.uncompressed/...`` (rejected
        by the schema; kept as a defensive branch so a stray entry
        fails loudly via the size assertion, not via a KeyError here).
-    4. Anything else (e.g. ``agents/contexts/...``) is repo-root-relative.
+    4. Anything else (e.g. ``agents/settings/contexts/...``) is repo-root-relative.
 
     See `docs/contracts/load-context-schema.md` § Logical names.
     """

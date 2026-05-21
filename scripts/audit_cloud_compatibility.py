@@ -208,7 +208,7 @@ def scan() -> list[dict]:
 
 
 # step-9 P11 · U3 — Iron-Law bypass scan. Any Python module that loads
-# `agents/.ai-council.yml` directly (yaml.safe_load / open + parse) instead
+# `agents/settings/.ai-council.yml` directly (yaml.safe_load / open + parse) instead
 # of going through `scripts.ai_council.config.load_council_config` skips the
 # `_reject_top_level_locked_dispatch` gate and is a potential Iron-Law
 # bypass. The scan is intentionally over-broad — false positives are

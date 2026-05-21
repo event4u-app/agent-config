@@ -1,4 +1,4 @@
-"""Hardened parser for ``agents/low-impact-decisions.md`` (step-9 P4).
+"""Hardened parser for ``agents/decisions/low-impact-decisions.md`` (step-9 P4).
 
 Replaces the silent-skip behaviour of the inline regex in
 ``necessity.load_validated_phrases`` with a typed-error contract.

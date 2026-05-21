@@ -2,14 +2,14 @@
 
 Asserts the contract in `docs/contracts/hook-architecture-v1.md`
 § "Replay mode": fixture-driven dispatch under `AGENT_CONFIG_REPLAY=1`
-must never mutate `agents/state/` or `agents/.agent-chat-history`,
+must never mutate `agents/runtime/state/` or `agents/.agent-chat-history`,
 and must succeed (exit 0) for every fixture × platform combination
 shipped under `tests/fixtures/hooks/`.
 
 Each test invokes `scripts/hooks/replay_hook.py` as a subprocess from
 a *clean tmp workspace* (chdir-ed via `cwd=`). That isolates the
 filesystem so a regression that re-introduces a write surfaces as a
-file appearing under `<tmp>/agents/state/` — the assertion this suite
+file appearing under `<tmp>/agents/runtime/state/` — the assertion this suite
 is built to make. Roadmap step: P2.4c of
 `agents/roadmaps/road-to-proof-not-features.md`.
 """

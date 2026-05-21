@@ -28,7 +28,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent
 RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
 OVERRIDES_FILE = REPO_ROOT / "docs" / "contracts" / "iron-law-overrides.txt"
-TREND_FILE = REPO_ROOT / "agents" / ".rule-budget-history.jsonl"
+TREND_FILE = REPO_ROOT / "agents" / "runtime" / ".rule-budget-history.jsonl"
 
 # Council R2 amendments (2026-05-06) — see docs/contracts/kernel-membership.md § 5.1.
 # Per-rule cap raised 1.5k → 2.5k; warning band raised 1.2k → 2.0k.
@@ -241,7 +241,7 @@ def kernel_budget_check(
 
 
 def trend_append(agg: dict[str, object]) -> tuple[int, str]:
-    """Append a daily snapshot to agents/.rule-budget-history.jsonl.
+    """Append a daily snapshot to agents/runtime/.rule-budget-history.jsonl.
 
     Idempotent per UTC day: if today's date already has a row, the file
     is not modified. Snapshot fields: date, kernel_chars, auto_chars,
@@ -284,7 +284,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--trend-append",
         action="store_true",
-        help="append today's snapshot to agents/.rule-budget-history.jsonl (idempotent per UTC day)",
+        help="append today's snapshot to agents/runtime/.rule-budget-history.jsonl (idempotent per UTC day)",
     )
     args = parser.parse_args(argv)
 

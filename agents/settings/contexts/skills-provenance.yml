@@ -1,0 +1,156 @@
+# skills-provenance — externally-derived skill index
+#
+# Lists skills in this package whose body wraps, dispatches into, or is
+# materially derived from a third-party tool, repository, or methodology.
+# Pulled forward as the ADAPT #2 idea from
+# `agents/evidence/analysis/compare-microck-ordinary-claude-skills.md` so that
+# attribution and last-verified-with metadata stay in one auditable
+# place instead of polluting individual SKILL.md frontmatter.
+#
+# Schema:
+#   <skill-name>:
+#     author:        <upstream maintainer / org>
+#     source:        <canonical repo or product URL>
+#     license:       <SPDX identifier>
+#     license_clean: <true|false>     # true = MIT/BSD/Apache-2.0/etc.
+#     kind:          <wrapper|methodology|fork|inspired_by>
+#     last_verified: <YYYY-MM-DD>
+#     pinned_to:     <upstream tag or sha at last verification>
+#     notes:         <one-line context if needed>
+#
+# Add an entry whenever a new skill ships that materially leans on an
+# external project. Re-verify entries when the upstream releases a
+# breaking minor; bump `last_verified` and `pinned_to` together. Drop
+# the entry when the skill is removed or when it has been rewritten
+# from scratch with no upstream lineage.
+
+markitdown:
+  author: Microsoft (microsoft/markitdown maintainers)
+  source: https://github.com/microsoft/markitdown
+  license: MIT
+  license_clean: true
+  kind: wrapper
+  last_verified: 2026-05-08
+  pinned_to: markitdown-mcp@0.0.1a4
+  notes: |
+    Peer-side MCP server install. Zero Python in this package.
+    Calibrated token claim grounded by `scripts/measure_markitdown_lift.py`
+    against `tests/fixtures/markitdown-corpus/`.
+
+defense-in-depth:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Four-layer validation pattern (entry / business-logic / environment / instrumentation)
+    plus gate function. Examples generalized from Microck-specific code paths to
+    Laravel-flavored PHP patterns. Adopted under road-to-microck-harvest § P1.1.
+
+testing-anti-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Five Iron Laws + per-anti-pattern gate functions. Cross-linked to pest-testing,
+    test-driven-development, judge-test-coverage. Adopted under road-to-microck-harvest § P1.2.
+
+repomix-packer:
+  author: yamadashy (yamadashy/repomix maintainers)
+  source: https://github.com/yamadashy/repomix
+  license: MIT
+  license_clean: true
+  kind: wrapper
+  last_verified: 2026-05-09
+  pinned_to: repomix CLI (peer-side)
+  notes: |
+    Peer-side CLI wrapper. Skill never installs the binary silently — surfaces npm/brew
+    recipes and stops. Wrapper structure adopted from Microck@8f5c831. Adopted under
+    road-to-microck-harvest § P1.3. Renamed from `repomix` to `repomix-packer`
+    on 2026-05-09 (road-to-feedback-followups § P1.1) to remove `bare_noun_name`
+    linter warning; the underlying CLI tool is still called `repomix`.
+
+mcp-builder:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    MCP server authoring guide (FastMCP / TS SDK), four-phase plan-implement-review-eval,
+    10-question evaluation harness. Microck's external ./reference/*.md file refs
+    replaced with inline guidance plus upstream SDK URLs. Adopted under
+    road-to-microck-harvest § P1.4.
+
+error-handling-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-08
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Sunset Policy applied: 636-line source compressed to a ~150-line decision framework;
+    language catalogues externalized to Python, PHP, JS/TS, Go, Rust upstream docs plus
+    Fowler/AWS resilience pattern references. refresh_trigger and sunset_criterion
+    set in skill frontmatter. Adopted under road-to-microck-harvest § P1.5.
+
+async-python-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-09
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Sunset Policy applied: 694-line cookbook source compressed to a ~140-line decision
+    framework; gather/TaskGroup/wait_for/timeout/Semaphore primitives, sync↔async bridging,
+    cancellation discipline, event-loop blocking audit. Pattern catalogues externalized
+    to docs.python.org asyncio + anyio/trio + httpx/aiohttp + asyncpg/aiosqlite docs.
+    refresh_trigger and sunset_criterion set in skill frontmatter. Adopted under
+    road-to-microck-harvest § P2.2.
+
+secrets-management:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-09
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Sunset Policy applied: 346-line provider cookbook compressed to a ~140-line decision
+    framework covering store selection (Vault / AWS Secrets Manager / Azure Key Vault /
+    GCP Secret Manager / GitHub-GitLab CI / External Secrets Operator), access patterns,
+    rotation contract, scanning gates (gitleaks / TruffleHog / SCM push-protection), and
+    egress controls. Per-provider deep-dives externalized to upstream docs.
+    refresh_trigger and sunset_criterion set in skill frontmatter. Adopted under
+    road-to-microck-harvest § P2.3.
+
+prompt-engineering-patterns:
+  author: Microck (Microck/ordinary-claude-skills maintainers)
+  source: https://github.com/Microck/ordinary-claude-skills
+  license: MIT
+  license_clean: true
+  kind: inspired_by
+  last_verified: 2026-05-09
+  pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
+  notes: |
+    Production LLM prompt patterns (few-shot, chain-of-thought, system-prompt design,
+    template systems, self-verification). Restructured into a decision-framework shape;
+    Microck-specific `prompt_optimizer` Python snippets dropped (project-specific).
+    Distinct surface from local prompt-optimizer (end-user prompt polish) and
+    refine-prompt (engine-inbound ticket refinement). Adopted under
+    road-to-microck-harvest § P2.5.
+

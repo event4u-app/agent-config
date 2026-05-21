@@ -86,7 +86,7 @@ Cursor, Windsurf, Cline, Gemini, Copilot have **no native skill surface**. Skill
 | `skill:laravel` | skill | Augment + Claude only; rationale for absence on others |
 | `command:commit` | command | per-tool command surface divergence |
 
-Run: `python3 scripts/probe_projection_fidelity.py` — exits non-zero on any divergence. Report at `agents/reports/projection-fidelity.json`.
+Run: `python3 scripts/probe_projection_fidelity.py` — exits non-zero on any divergence. Report at `agents/runtime/reports/projection-fidelity.json`.
 
 ## Known divergences (do not file as bugs)
 
@@ -102,7 +102,7 @@ These are **architectural facts**, not regressions. They are documented so insta
 
 - [x] Fixture under `tests/fixtures/projection_fidelity/`
 - [x] Probe script under `scripts/probe_projection_fidelity.py`
-- [x] Report under `agents/reports/projection-fidelity.json`
+- [x] Report under `agents/runtime/reports/projection-fidelity.json`
 - [x] Per-tool guarantee table above
 - [x] Known-divergence list above
 
@@ -112,4 +112,4 @@ These are **architectural facts**, not regressions. They are documented so insta
 - [`augment-projection`](../architecture/augment-projection.md) — pipeline B (Augment-specific)
 - [`multi-tool-projection`](../architecture/multi-tool-projection.md) — pipeline C (the per-tool emitters)
 - [`rule-router`](rule-router.md) — the `triggers:` / `routes_to:` grammar this contract pins
-- [`agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/council-sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback <!-- council-ref-allowed: contract origin trace -->
+- [`agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md`](../../agents/runtime/council/sessions/2026-05-14-v2-analysis/feedback/09-cross-tool-projection-fidelity.md) — origin council feedback <!-- council-ref-allowed: contract origin trace -->

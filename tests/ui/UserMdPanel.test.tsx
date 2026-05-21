@@ -1,14 +1,15 @@
 /**
- * UserMdPanel round-trip unit test — roadmap Phase 2.5.
+ * UserMdPanel round-trip unit test — roadmap Phase 2.5 / A5.
  *
- * Verifies the read/edit/save loop against a mocked /api/v1/user-md:
- *   - GET on mount populates the textarea with the existing body + mtime
- *   - editing the textarea updates the signal
- *   - Save PUTs the new body with If-Unmodified-Since carrying the GET mtime
- *   - the banner reflects the writtenPaths returned by the server
+ * Verifies the read/edit/save loop against a mocked /api/v1/user-md, now
+ * driven by the structured UserMdForm (no raw textarea). The form parses
+ * the loaded body via @shared/userMd/formAdapter, the user edits a
+ * specific field, and Save PUTs the recomposed markdown with
+ * If-Unmodified-Since carrying the GET mtime.
  *
  * Also covers the "file does not exist" branch — GET returns exists=false,
- * the template route fills the body, and Save omits the lock header.
+ * the template route fills the body, Save sends the template body verbatim
+ * (no user edits) and omits the lock header.
  *
  * Module-level signals are reset via vi.resetModules() in beforeEach.
  */
@@ -24,11 +25,49 @@ interface MockOpts {
     template?: string;
 }
 
+const FIXTURE_BODY = [
+    '---',
+    'version: 1',
+    'identity:',
+    '    name: "Original"',
+    'language: "en"',
+    'role:',
+    '    - "engineer"',
+    'style:',
+    '    formality: "informal"',
+    '    pace: "pragmatic"',
+    'voice_sample: "Keep it crisp."',
+    'last_updated: "2026-05-19"',
+    '---',
+    '',
+    '# hello',
+    '',
+].join('\n');
+
+const TEMPLATE_BODY = [
+    '---',
+    'version: 1',
+    'identity:',
+    '    name: ""',
+    'language: "en"',
+    'role:',
+    '    - ""',
+    'style:',
+    '    formality: "informal"',
+    '    pace: "pragmatic"',
+    'voice_sample: ""',
+    'last_updated: "1970-01-01"',
+    '---',
+    '',
+    '# starter',
+    '',
+].join('\n');
+
 function installFetchMock(opts: MockOpts = {}): { calls: Call[]; restore: () => void } {
     const exists = opts.exists ?? true;
-    const body = opts.body ?? '# hello\n';
+    const body = opts.body ?? FIXTURE_BODY;
     const lastModified = opts.lastModified ?? (exists ? 1700000000000 : null);
-    const template = opts.template ?? '# template\n';
+    const template = opts.template ?? TEMPLATE_BODY;
     const calls: Call[] = [];
     const original = global.fetch;
     global.fetch = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
@@ -59,18 +98,18 @@ beforeEach(() => { vi.resetModules(); });
 afterEach(() => { cleanup(); });
 
 describe('UserMdPanel', () => {
-    it('round-trips: GET → edit → PUT with If-Unmodified-Since and writtenPaths banner', async () => {
-        const mock = installFetchMock({ exists: true, body: '# hello\n', lastModified: 1700000000000 });
+    it('round-trips: GET → edit Name field → PUT with If-Unmodified-Since and writtenPaths banner', async () => {
+        const mock = installFetchMock({ exists: true, lastModified: 1700000000000 });
         try {
             const { UserMdPanel } = await import('../../src/ui/pages/UserMdPanel.js');
             const { findByText, getByRole } = render(<UserMdPanel />);
 
-            await findByText('Body');
-            const textarea = document.getElementById('user-md-body') as HTMLTextAreaElement | null;
-            expect(textarea).not.toBeNull();
-            expect(textarea!.value).toBe('# hello\n');
+            await findByText('Name');
+            const nameInput = document.getElementById('umd-name') as HTMLInputElement | null;
+            expect(nameInput).not.toBeNull();
+            expect(nameInput!.value).toBe('Original');
 
-            fireEvent.input(textarea!, { target: { value: '# updated\n' } });
+            fireEvent.input(nameInput!, { target: { value: 'Matze' } });
             fireEvent.click(getByRole('button', { name: /^Save$/ }));
 
             await waitFor(() => {
@@ -79,7 +118,9 @@ describe('UserMdPanel', () => {
             });
             const put = mock.calls.find((c) => c.path === '/api/v1/user-md' && c.method === 'PUT');
             expect(put?.headers['If-Unmodified-Since']).toBe('1700000000000');
-            expect(put?.body).toEqual({ body: '# updated\n' });
+            const putBody = (put?.body as { body: string }).body;
+            expect(putBody).toContain('name: Matze');
+            expect(putBody).toContain('# hello');
 
             await findByText('Saved (.agent-user.md).');
         } finally {
@@ -87,16 +128,13 @@ describe('UserMdPanel', () => {
         }
     });
 
-    it('first-write branch: GET exists=false → template loaded, PUT without If-Unmodified-Since', async () => {
-        const mock = installFetchMock({ exists: false, body: '', lastModified: null, template: '# starter\n' });
+    it('first-write branch: GET exists=false → template loaded, Save sends template verbatim without If-Unmodified-Since', async () => {
+        const mock = installFetchMock({ exists: false, body: '', lastModified: null });
         try {
             const { UserMdPanel } = await import('../../src/ui/pages/UserMdPanel.js');
             const { findByText, getByRole } = render(<UserMdPanel />);
 
-            await findByText('Body');
-            const textarea = document.getElementById('user-md-body') as HTMLTextAreaElement | null;
-            expect(textarea?.value).toBe('# starter\n');
-
+            await findByText('Name');
             fireEvent.click(getByRole('button', { name: /^Save$/ }));
             await waitFor(() => {
                 const puts = mock.calls.filter((c) => c.path === '/api/v1/user-md' && c.method === 'PUT');
@@ -104,7 +142,7 @@ describe('UserMdPanel', () => {
             });
             const put = mock.calls.find((c) => c.path === '/api/v1/user-md' && c.method === 'PUT');
             expect(put?.headers['If-Unmodified-Since']).toBeUndefined();
-            expect(put?.body).toEqual({ body: '# starter\n' });
+            expect((put?.body as { body: string }).body).toBe(TEMPLATE_BODY);
         } finally {
             mock.restore();
         }

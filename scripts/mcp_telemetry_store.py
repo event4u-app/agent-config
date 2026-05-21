@@ -32,7 +32,7 @@ from mcp_server.telemetry import (  # noqa: E402
     TELEMETRY_REL_DIR,
 )
 
-DEFAULT_DB_REL = "agents/.mcp-telemetry/calls.sqlite3"
+DEFAULT_DB_REL = "agents/runtime/mcp-telemetry/calls.sqlite3"
 SCHEMA_VERSION = 1
 
 

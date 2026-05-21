@@ -47,5 +47,5 @@ cycles, revisit and promote to a runtime check.
 ## Tracking
 
 Maintainers log each refresh in
-[`agents/notes/visibility-sync-audit.md`](../../agents/notes/visibility-sync-audit.md)
+[`agents/evidence/notes/visibility-sync-audit.md`](../../agents/evidence/notes/visibility-sync-audit.md)
 with a one-line entry: date, PR, keys touched.

@@ -149,7 +149,10 @@ def test_lenient_loaders_recover_from_schema_mismatched_lockfile(tmp_path: Path)
 
 def test_repo_lockfile_is_consumed_by_lenient_loader() -> None:
     """The committed lockfile drives the repo's routing classifier."""
-    repo_corpus = Path(__file__).resolve().parents[1] / "agents" / "low-impact-decisions.md"
+    repo_corpus = (
+        Path(__file__).resolve().parents[1]
+        / "agents" / "decisions" / "low-impact-decisions.md"
+    )
     repo_lock = repo_corpus.with_suffix("").with_suffix(".lock.yaml")
     # Repo-relative anchor: just confirm the file exists and is consumed
     # without raising. Phrase-content tests use isolated fixtures above.

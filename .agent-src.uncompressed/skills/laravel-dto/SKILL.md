@@ -26,7 +26,7 @@ Use this skill when creating a new DTO for data transfer between layers (DB ↔ 
 
 ## Procedure: Create a DTO
 
-1. **Read the project's DTO docs** — check `agents/docs/dto.md` (if it exists) for project-specific conventions.
+1. **Read the project's DTO docs** — check `agents/reference/docs/dto.md` (if it exists) for project-specific conventions.
 2. **Check the base class** — search for the DTO base class in the project (e.g., `SimpleDto`, `LiteDto`, or a custom base).
    Check `composer.json` for DTO-related packages.
 3. **Check existing DTOs** — look at neighboring DTOs in the same directory to match the style.
@@ -92,7 +92,7 @@ class MyModelDto extends SimpleDto
 The DTO pattern varies by project:
 
 - **Projects with a DTO package**: Use the package's base class with attribute mapping.
-  Read `agents/docs/dto.md` for full details (if it exists).
+  Read `agents/reference/docs/dto.md` for full details (if it exists).
 - **Projects without a DTO package**: Check existing DTOs for the local pattern.
   Some projects use plain `readonly` classes, others have custom base classes.
 

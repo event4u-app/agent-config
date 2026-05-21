@@ -1009,7 +1009,7 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> list[dict[str,
 # scripts/hook_manifest.yaml to resolve which concerns fire on each
 # (platform, event) tuple. Mirrors AUGMENT_DISPATCHER_BINDINGS so each
 # concern fires on the same logical surface across platforms — the
-# contract from agents/contexts/hardening-pattern.md § Cross-platform
+# contract from agents/settings/contexts/hardening-pattern.md § Cross-platform
 # parity.
 CLAUDE_DISPATCHER_BINDINGS = (
     ("session_start",      "SessionStart"),
@@ -1074,7 +1074,7 @@ def ensure_claude_bridge(project_root: Path, force: bool) -> list[dict[str, Any]
 # Native event names per https://cursor.com/docs/reference/third-party-hooks
 # (camelCase). UserPromptSubmit lives at `beforeSubmitPrompt`. Stop is
 # IDE-only — CLI-only Cursor users get the rule-only checkpoint
-# fallback per agents/contexts/chat-history-platform-hooks.md.
+# fallback per agents/settings/contexts/chat-history-platform-hooks.md.
 CURSOR_DISPATCHER_BINDINGS = (
     ("session_start",       "sessionStart"),
     ("session_end",         "sessionEnd"),
@@ -1335,7 +1335,7 @@ def ensure_windsurf_bridge(project_root: Path, force: bool) -> list[dict[str, An
     scope. Idempotent via deep_merge — rerunning replaces hook arrays
     rather than appending duplicates. `show_output: false` keeps post
     hooks silent (per Windsurf docs); concerns stream their own output
-    via agents/state/.dispatcher/.
+    via agents/runtime/state/.dispatcher/.
     """
     hooks: dict[str, list] = {}
     for ac_event, native in WINDSURF_DISPATCHER_BINDINGS:

@@ -83,7 +83,7 @@ Three options were considered:
   [`scripts/audit_user_type_axis.py`](../../scripts/audit_user_type_axis.py)).
   Initial sweep at Phase 4 close: 7 declared / 7 used / 0 orphans / 0
   unused — coverage is clean, no rename or backfill needed. Report:
-  [`agents/reports/user-type-axis-audit.md`](../../agents/reports/user-type-axis-audit.md).
+  [`agents/runtime/reports/user-type-axis-audit.md`](../../agents/runtime/reports/user-type-axis-audit.md).
 - Adding an 8th value is non-trivial by design — it requires a YAML, a
   schema-compatible frontmatter rollout, and a roadmap entry. The
   friction is the feature: a sprawling axis defeats the purpose of

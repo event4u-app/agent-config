@@ -15,7 +15,7 @@ complexity: structural
 > (CFO-cognition, Strategist, People-Strategist, EM) gets the same
 > senior surface inside the package.
 
-**Source map:** `agents/contexts/senior-personas-and-skills-map.md` v2
+**Source map:** `agents/settings/contexts/senior-personas-and-skills-map.md` v2
 (post-iter1). Wing 4 owner. 4 personas, 18 skills (largest wing,
 folds former Wing 5 per council Q2). Map is the universe; this
 roadmap sequences delivery by dependency.

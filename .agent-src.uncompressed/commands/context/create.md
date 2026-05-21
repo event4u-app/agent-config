@@ -9,7 +9,7 @@ disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "document this part of the codebase, create a context doc for X"
-  trigger_context: "working in a module without an agents/contexts/ doc"
+  trigger_context: "working in a module without an agents/settings/contexts/ doc"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -49,17 +49,17 @@ Check if `app/Modules/` exists. If yes, ask:
 ```
 Should the context be created in a module or in the project root?
 
-1. 📦 In a module → app/Modules/{Module}/agents/contexts/
-2. 🌐 Project root → agents/contexts/
+1. 📦 In a module → app/Modules/{Module}/agents/settings/contexts/
+2. 🌐 Project root → agents/settings/contexts/
 ```
 
 If module:
 - List available modules and ask which one.
-- Target: `app/Modules/{Module}/agents/contexts/`
+- Target: `app/Modules/{Module}/agents/settings/contexts/`
 - Create directory if it doesn't exist.
 
 If project-wide:
-- Target: `agents/contexts/`
+- Target: `agents/settings/contexts/`
 
 ### 3. Determine context type
 

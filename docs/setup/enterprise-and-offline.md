@@ -10,7 +10,7 @@
 
 Re-introducing a Composer-published distribution was evaluated in the
 Phase 0 council session
-(`agents/council-questions/composer-fallback-feasibility.md`) and
+(`agents/runtime/council/questions/composer-fallback-feasibility.md`) and
 **rejected** on three grounds:
 
 1. **Lock-shape mismatch.** `installed.lock` is npm-shaped (flat dep
@@ -193,9 +193,9 @@ A developer arrives on Monday with no network and finds a broken
 
 - `agents/roadmaps/road-to-distribution-maturity.md` § Phase 2 — the
   roadmap entry that produced this document.
-- `agents/council-questions/composer-fallback-feasibility.md` — the
+- `agents/runtime/council/questions/composer-fallback-feasibility.md` — the
   question that rejected the Composer path.
-- `agents/council-questions/hermetic-install-scaffolding.md` — the
+- `agents/runtime/council/questions/hermetic-install-scaffolding.md` — the
   question that shaped Path D.
 - `docs/decisions/ADR-007-agent-discovery-scopes.md` — the lock
   manifest contract that Phase 2 extends additively.

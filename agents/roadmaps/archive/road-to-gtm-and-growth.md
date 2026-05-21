@@ -13,7 +13,7 @@ complexity: structural
 > funnel reasoning. Goal: every GTM seat (CMO, RevOps, Customer
 > Success, Growth PM) gets the same senior surface inside the package.
 
-**Source map:** `agents/contexts/senior-personas-and-skills-map.md` v2
+**Source map:** `agents/settings/contexts/senior-personas-and-skills-map.md` v2
 (post-iter1). Wing 3 owner. 4 personas, 16 skills. Map is the
 universe; this roadmap sequences delivery by dependency.
 

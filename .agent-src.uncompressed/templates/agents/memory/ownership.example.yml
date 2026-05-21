@@ -61,7 +61,7 @@ entries:
     rotation_policy: >
       Infra changes require two platform-team reviews in business
       hours. After-hours hotfixes follow the break-glass policy in
-      `agents/contexts/deployment-order.md`.
+      `agents/settings/contexts/deployment-order.md`.
 
 # --- How to add an entry ---
 #

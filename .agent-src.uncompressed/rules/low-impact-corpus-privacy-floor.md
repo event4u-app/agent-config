@@ -1,10 +1,10 @@
 ---
 type: "auto"
 tier: "1"
-description: "Writing/editing/upstreaming entries in agents/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus"
+description: "Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus"
 source: package
 triggers:
-  - path_prefix: "agents/low-impact-decisions"
+  - path_prefix: "agents/decisions/low-impact-decisions"
   - keyword: "low-impact-decisions"
   - keyword: "low-impact corpus"
   - keyword: "learn-low-impact"
@@ -36,7 +36,7 @@ The redactor lives in `scripts/ai_council/redact_low_impact_entry.py`
 and runs at **both** gates:
 
 1. **Write gate** — every intake append to
-   `agents/low-impact-decisions.md` (Phase 12 § Step 2).
+   `agents/decisions/low-impact-decisions.md` (Phase 12 § Step 2).
 2. **Upstream gate** — every `/memory learn-low-impact` PR draft,
    before the diff leaves the repo (Phase 12 § Step 5).
 
@@ -59,7 +59,7 @@ auto-rewrites — silent rewriting is a soft gate, this is hard.
 
 ## Locked target types
 
-- `agents/low-impact-decisions.md` — project-local corpus.
+- `agents/decisions/low-impact-decisions.md` — project-local corpus.
 - `data/low-impact-decisions-seed.md` (agent-config package) —
   upstream seed shipped with the package.
 
@@ -85,4 +85,4 @@ auto-rewrite.
 
 - `scripts/ai_council/redact_low_impact_entry.py` — the redactor.
 - `scripts/ai_council/low_impact_intake.py` — write-gate caller.
-- `agents/low-impact-decisions.md` — corpus + Anti-Examples list.
+- `agents/decisions/low-impact-decisions.md` — corpus + Anti-Examples list.

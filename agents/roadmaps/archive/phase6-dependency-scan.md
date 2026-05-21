@@ -63,8 +63,8 @@ done
 
 | Consumer | Cites | Class |
 |---|---|---|
-| `agents/contexts/chat-history-handshake.md` | ownership | **context — gate-1 prompts** |
-| `agents/contexts/structural/file-ownership-matrix.md` | all three | **Phase 0.1 matrix** |
+| `agents/settings/contexts/chat-history-handshake.md` | ownership | **context — gate-1 prompts** |
+| `agents/settings/contexts/structural/file-ownership-matrix.md` | all three | **Phase 0.1 matrix** |
 | `agents/index.md` | all three | **index** |
 | `agents/roadmaps/archive/road-to-structural-optimization.md` | all three | **this roadmap** |
 | `agents/roadmaps/phase6-2b-coupling.md` | all three | **Phase 0.3 proof** |

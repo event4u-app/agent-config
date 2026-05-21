@@ -22,7 +22,7 @@ Companion signals collected per artifact (consumed by Phases 1.2-1.4):
 Output:
 - Default stdout: per-type distribution buckets + tail (lowest density).
 - ``--json`` deterministic JSON of every artifact.
-- ``--snapshot`` writes JSONL to ``agents/.density-snapshot.jsonl``.
+- ``--snapshot`` writes JSONL to ``agents/runtime/density/snapshot.jsonl``.
 
 Stdlib only; no network. Re-runnable.
 """
@@ -44,7 +44,7 @@ from skill_linter import (  # noqa: E402
     gather_all_candidate_files,
 )
 
-SNAPSHOT_FILE = REPO_ROOT / "agents" / ".density-snapshot.jsonl"
+SNAPSHOT_FILE = REPO_ROOT / "agents" / "runtime" / "density" / "snapshot.jsonl"
 
 _TABLE_ROW = re.compile(r"^\s*\|.*\|\s*$")
 _BULLET = re.compile(r"^\s*[-*]\s+\S")

@@ -56,7 +56,7 @@ def _marker(consumer_root: Path) -> Path:
     ("agents/roadmaps/skipped/abandoned.md", False),
     ("agents/roadmaps-progress.md", False),
     ("agents/roadmaps/README.md", True),  # README inside dir still triggers
-    ("agents/contexts/some-doc.md", False),
+    ("agents/settings/contexts/some-doc.md", False),
     ("src/foo.php", False),
     ("agents/roadmaps/notes.txt", False),  # non-md skipped
 ])

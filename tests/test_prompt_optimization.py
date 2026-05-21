@@ -42,7 +42,9 @@ SETTINGS_TEMPLATE = (
     / "agents"
     / "agent-project-settings.example.yml"
 )
-PUBLIC_FIGURES_POLICY = REPO_ROOT / "agents" / "policies" / "media" / "public-figures.md"
+PUBLIC_FIGURES_POLICY = (
+    REPO_ROOT / "agents" / "settings" / "policies" / "media" / "public-figures.md"
+)
 MEDIA_ROUTING_RULE = (
     REPO_ROOT / ".agent-src.uncompressed" / "rules" / "media-governance-routing.md"
 )
@@ -174,7 +176,7 @@ def test_public_figure_refusal_path_is_reachable_from_routing_rule() -> None:
     )
 
     routing = MEDIA_ROUTING_RULE.read_text(encoding="utf-8")
-    assert "agents/policies/media/public-figures.md" in routing, (
+    assert "agents/settings/policies/media/public-figures.md" in routing, (
         "media-governance-routing rule no longer cites public-figures.md "
         "— agent cannot reach the refusal path from a video trigger"
     )

@@ -22,7 +22,7 @@
     },
     {
       "name": "chat_history_append",
-      "description": "Append one entry to the consumer's chat-history JSONL (`agents/.agent-chat-history`). Path-scoped — writes outside the allowlist raise ValueError. Use `dry_run` to preview the payload without touching the filesystem.",
+      "description": "Append one entry to the consumer's chat-history JSONL (`agents/runtime/.agent-chat-history`; `agents/.agent-chat-history` and `.agent-chat-history` accepted for back-compat). Path-scoped — writes outside the allowlist raise ValueError. Use `dry_run` to preview the payload without touching the filesystem.",
       "side_effect": "fs-write",
       "implemented_on": ["stdio"],
       "input_schema": {
@@ -30,7 +30,7 @@
         "properties": {
           "text": {"type": "string"},
           "entry_type": {"type": "string", "description": "Short `t` tag (e.g. note, decision). Defaults to `note`."},
-          "path": {"type": "string", "description": "Optional path override. Must resolve to `agents/.agent-chat-history` or `.agent-chat-history` under consumer_root."},
+          "path": {"type": "string", "description": "Optional path override. Must resolve to `agents/runtime/.agent-chat-history` (current default), `agents/.agent-chat-history`, or `.agent-chat-history` under consumer_root."},
           "session": {"type": "string"},
           "dry_run": {"type": "boolean", "default": false},
           "min_schema_version": {"type": "integer"}
@@ -41,7 +41,7 @@
     },
     {
       "name": "chat_history_read",
-      "description": "Read recent chat-history entries from `agents/.agent-chat-history`. Filter by session, limit, or entry-type. Read-only.",
+      "description": "Read recent chat-history entries from `agents/runtime/.agent-chat-history` (`agents/.agent-chat-history` accepted for back-compat). Filter by session, limit, or entry-type. Read-only.",
       "side_effect": "ro",
       "implemented_on": ["stdio"],
       "input_schema": {

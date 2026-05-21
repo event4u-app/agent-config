@@ -2,7 +2,7 @@
 
 <!--
   Template shipped by event4u/agent-config.
-  Copy to `agents/contexts/observability.md` in the consumer project and
+  Copy to `agents/settings/contexts/observability.md` in the consumer project and
   fill in. A reviewer reads this before approving changes to loggers,
   error handlers, metrics, or alert rules.
 
@@ -59,6 +59,6 @@
 
 ## See also
 
-- `agents/contexts/data-sensitivity.md` — what must NOT appear in logs
+- `agents/settings/contexts/data-sensitivity.md` — what must NOT appear in logs
   or error reports
-- `agents/contexts/deployment-order.md` — what to watch during a deploy
+- `agents/settings/contexts/deployment-order.md` — what to watch during a deploy

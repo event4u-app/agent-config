@@ -106,7 +106,7 @@ Read `.agent-settings.yml` → `ai_council`:
   to env vars. Ever.
 
 Load the price table via `scripts.ai_council.pricing.load_prices()`
-(auto-bootstraps `agents/.agent-prices.md` from defaults if missing). Run
+(auto-bootstraps `agents/runtime/.agent-prices.md` from defaults if missing). Run
 `pricing.is_stale(table)` and, if stale, surface the staleness gate
 from the `ai-council` skill (§ Stale price-table gate) before
 continuing.
@@ -165,11 +165,11 @@ Wait for the user's pick. `1` proceeds; anything else aborts.
 ### 4. Run the CLI
 
 Once the user picks `1`, invoke the same arguments with `run` plus
-`--confirm` and an output path under `agents/council-sessions/`:
+`--confirm` and an output path under `agents/runtime/council/sessions/`:
 
 ```bash
 ./agent-config council:run <question-file> \
-    --output agents/council-sessions/<UTC-timestamp>.json \
+    --output agents/runtime/council/sessions/<UTC-timestamp>.json \
     --confirm \
     [--rounds 1|2|3] \
     [--depth standard|deep] \
@@ -252,7 +252,7 @@ include "discard council input" as an option.
 - Open, comment on, or merge any PR.
 - Run `git` commands beyond `git diff` (read-only).
 
-The CLI persists the responses JSON under `agents/council-sessions/`
+The CLI persists the responses JSON under `agents/runtime/council/sessions/`
 for traceability, but the agent never edits other project files on
 the user's behalf. The neutrality framing loses meaning if the
 council can act on the project directly.
@@ -280,7 +280,7 @@ council can act on the project directly.
 - **Stale price table, refresher fails (offline)** → state the
   failure, re-offer "continue with stale table / cancel", do not
   proceed silently.
-- **`agents/.agent-prices.md` corrupt (missing frontmatter or columns)** →
+- **`agents/runtime/.agent-prices.md` corrupt (missing frontmatter or columns)** →
   surface the parse error, suggest deleting the file to bootstrap
   fresh from defaults; never silently fall back.
 - **All members error (CLI exit 1)** → render the errors via

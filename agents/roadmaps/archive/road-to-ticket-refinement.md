@@ -55,7 +55,7 @@ them — but never re-implements their logic.
 | Command + skill | **Both.** `/refine-ticket <jira-key-or-url>` visible entry, skill in the background |
 | Output shape | **Collapsed.** Refined ticket + Top-5 risks + persona summaries. Not 10-section long form |
 | Delegation | Orchestrates `validate-feature-fit` + `threat-modeling` automatically when triggers match |
-| Repo-aware mode | **Auto-detect, graceful degrade.** Reads `agents/contexts/`, nearby tickets, naming conventions when inside a repo; generic lens set when outside |
+| Repo-aware mode | **Auto-detect, graceful degrade.** Reads `agents/settings/contexts/`, nearby tickets, naming conventions when inside a repo; generic lens set when outside |
 | Input contract | Jira/Linear URL, ticket key, pasted text, branch-name detection; reuses `jira-ticket` loader |
 | Roadmap home | **This roadmap.** Covers refine + estimate as a family |
 
@@ -65,7 +65,7 @@ them — but never re-implements their logic.
 |---|---|
 | Ticket body mentions two or more existing feature names | Run `validate-feature-fit`, fold findings into Top-5 risks |
 | Ticket body matches security keywords (auth, payment, PII, webhook, upload, tenancy, admin, secrets) | Run `threat-modeling`, fold trust boundaries + abuse cases into output |
-| Inside a repo clone | Load `agents/contexts/`, scan nearby tickets and recent commits for naming / module conventions |
+| Inside a repo clone | Load `agents/settings/contexts/`, scan nearby tickets and recent commits for naming / module conventions |
 | Outside a repo | Generic lens set; no repo-aware enrichment |
 
 All orchestration is **citing, not copying** — the output points
@@ -130,10 +130,10 @@ Depends on: personas Phase 2 (Core-6 authored).
 
 - [x] Inside-repo detection — looks for `.git/`, `agents/`,
   `composer.json` / `package.json`, then loads
-  `agents/contexts/*.md` for domain vocabulary.
+  `agents/settings/contexts/*.md` for domain vocabulary.
   *(2026-04-22: `_detect_repo_aware()` + `gather_repo_context()` in
   `scripts/refine_ticket_detect.py`; context docs listed when
-  `agents/contexts/` exists.)*
+  `agents/settings/contexts/` exists.)*
 - [x] Nearby-ticket scan — recent branch names, recent commits,
   open PRs mined for naming conventions.
   *(2026-04-22: `gather_repo_context()` returns up to 20 recent
@@ -189,7 +189,7 @@ chained after refine (`/refine-ticket --then-estimate`, TBD).
   *(2026-04-22: adoption gate met — two real tickets refined
   (DEV-6182, DEV-6155), output template stable, seven concrete
   findings captured in
-  [`agents/docs/refine-ticket-in-practice.md`](../../docs/refine-ticket-in-practice.md).
+  [`agents/reference/docs/refine-ticket-in-practice.md`](../../docs/refine-ticket-in-practice.md).
   README demo can now use a real before/after — recommended
   template source is DEV-6155 (smallest scope, no customer names
   or security specifics). Q27 resolved; follow-up hardening work
@@ -240,7 +240,7 @@ to full transcript if feedback shows the summary is too thin.
 - **Jira write-back permissions** — `--apply` writes a comment,
   never edits the description. Revisit if editing is requested.
 - **Caching** — cache repo-aware scan within a session so
-  back-to-back runs don't re-read `agents/contexts/`. Simple
+  back-to-back runs don't re-read `agents/settings/contexts/`. Simple
   in-process memo suffices.
 - **Chaining** — `/refine-ticket --then-estimate` vs two separate
   invocations. Default: separate, because orchestrator chains can

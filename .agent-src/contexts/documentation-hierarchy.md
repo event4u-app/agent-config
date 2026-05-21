@@ -124,8 +124,8 @@ agents/overrides/skills/eloquent.md        ← Override (Layer 4)
 | Context location | Scope | Example |
 |---|---|---|
 | `.augment/contexts/` | Shared (about the agent system) | `augment-infrastructure.md` |
-| `agents/contexts/` | Project-wide | `import-pipeline.md` |
-| `app/Modules/*/agents/contexts/` | Module-specific | `client-api.md` |
+| `agents/settings/contexts/` | Project-wide | `import-pipeline.md` |
+| `app/Modules/*/agents/settings/contexts/` | Module-specific | `client-api.md` |
 
 ### Template Usage (Layer 1 → Layer 5/6)
 

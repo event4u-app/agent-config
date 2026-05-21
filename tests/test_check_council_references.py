@@ -30,8 +30,8 @@ def _write(path: Path, content: str) -> None:
 
 def test_forbidden_session_reference_in_context(tmp_path: Path) -> None:
     _write(
-        tmp_path / "agents/contexts/foo.md",
-        "See `agents/council-sessions/2026-05-06.json` for the trace.",
+        tmp_path / "agents/settings/contexts/foo.md",
+        "See `agents/runtime/council/sessions/2026-05-06.json` for the trace.",
     )
     assert ccr.main() == 1
 
@@ -39,7 +39,7 @@ def test_forbidden_session_reference_in_context(tmp_path: Path) -> None:
 def test_forbidden_question_reference_in_roadmap(tmp_path: Path) -> None:
     _write(
         tmp_path / "agents/roadmaps/road-to-x.md",
-        "Question: agents/council-questions/topic.md",
+        "Question: agents/runtime/council/questions/topic.md",
     )
     assert ccr.main() == 1
 
@@ -47,7 +47,7 @@ def test_forbidden_question_reference_in_roadmap(tmp_path: Path) -> None:
 def test_forbidden_response_reference_in_contract(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs/contracts/foo.md",
-        "Source: agents/council-responses/topic.json",
+        "Source: agents/runtime/council/responses/topic.json",
     )
     assert ccr.main() == 1
 
@@ -55,7 +55,7 @@ def test_forbidden_response_reference_in_contract(tmp_path: Path) -> None:
 def test_forbidden_response_reference_in_adr(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs/decisions/ADR-x.md",
-        "See agents/council-responses/x.json",
+        "See agents/runtime/council/responses/x.json",
     )
     assert ccr.main() == 1
 
@@ -66,16 +66,16 @@ def test_forbidden_response_reference_in_adr(tmp_path: Path) -> None:
 
 def test_allowed_directory_mention(tmp_path: Path) -> None:
     _write(
-        tmp_path / "agents/contexts/foo.md",
-        "Sessions live under agents/council-sessions/ and rotate after 7 days.",
+        tmp_path / "agents/settings/contexts/foo.md",
+        "Sessions live under agents/runtime/council/sessions/ and rotate after 7 days.",
     )
     assert ccr.main() == 0
 
 
 def test_allowed_placeholder_path(tmp_path: Path) -> None:
     _write(
-        tmp_path / "agents/contexts/foo.md",
-        "Schema: `agents/council-sessions/<UTC-timestamp>/raw-text.md`",
+        tmp_path / "agents/settings/contexts/foo.md",
+        "Schema: `agents/runtime/council/sessions/<UTC-timestamp>/raw-text.md`",
     )
     assert ccr.main() == 0
 
@@ -83,15 +83,15 @@ def test_allowed_placeholder_path(tmp_path: Path) -> None:
 def test_allowed_in_archive(tmp_path: Path) -> None:
     _write(
         tmp_path / "agents/roadmaps/archive/old.md",
-        "Round 1 — `agents/council-sessions/2026-05-03.json` — historical.",
+        "Round 1 — `agents/runtime/council/sessions/2026-05-03.json` — historical.",
     )
     assert ccr.main() == 0
 
 
 def test_allowed_in_analysis(tmp_path: Path) -> None:
     _write(
-        tmp_path / "agents/analysis/compare-foo.md",
-        "Source: `agents/council-responses/foo.json`",
+        tmp_path / "agents/evidence/analysis/compare-foo.md",
+        "Source: `agents/runtime/council/responses/foo.json`",
     )
     assert ccr.main() == 0
 
@@ -99,7 +99,7 @@ def test_allowed_in_analysis(tmp_path: Path) -> None:
 def test_allowed_in_rule_itself(tmp_path: Path) -> None:
     _write(
         tmp_path / ".agent-src.uncompressed/rules/no-roadmap-references.md",
-        "Forbidden: `agents/council-sessions/<file>.json`",
+        "Forbidden: `agents/runtime/council/sessions/<file>.json`",
     )
     assert ccr.main() == 0
 
@@ -107,7 +107,7 @@ def test_allowed_in_rule_itself(tmp_path: Path) -> None:
 def test_allowed_in_ai_council_skill(tmp_path: Path) -> None:
     _write(
         tmp_path / ".agent-src.uncompressed/skills/ai-council/SKILL.md",
-        "Output: agents/council-sessions/2026-05-06.json",
+        "Output: agents/runtime/council/sessions/2026-05-06.json",
     )
     assert ccr.main() == 0
 
@@ -115,7 +115,7 @@ def test_allowed_in_ai_council_skill(tmp_path: Path) -> None:
 def test_inline_pragma_suppresses(tmp_path: Path) -> None:
     _write(
         tmp_path / "docs/decisions/ADR-x.md",
-        "Trace: agents/council-sessions/x.json "
+        "Trace: agents/runtime/council/sessions/x.json "
         "<!-- council-ref-allowed: ADR decision trace -->",
     )
     assert ccr.main() == 0
@@ -127,9 +127,9 @@ def test_inline_pragma_suppresses(tmp_path: Path) -> None:
 
 def test_carveout_evaluation_context_to_council_question(tmp_path: Path) -> None:
     _write(
-        tmp_path / "agents/contexts/evaluation-2-2-2-followups.md",
+        tmp_path / "agents/settings/contexts/evaluation-2-2-2-followups.md",
         "Question file at "
-        "`agents/council-questions/composer-fallback-feasibility.md`.",
+        "`agents/runtime/council/questions/composer-fallback-feasibility.md`.",
     )
     assert ccr.main() == 0
 
@@ -139,7 +139,7 @@ def test_carveout_contract_to_session_synthesis(tmp_path: Path) -> None:
         tmp_path / "docs/contracts/tier-3-contrib-plugin.md",
         "Surfaced during the "
         "[`2026-05-12-installer-expansion`]"
-        "(../../agents/council-sessions/2026-05-12-installer-expansion/synthesis.md)"
+        "(../../agents/runtime/council/sessions/2026-05-12-installer-expansion/synthesis.md)"
         " council round.",
     )
     assert ccr.main() == 0
@@ -148,8 +148,8 @@ def test_carveout_contract_to_session_synthesis(tmp_path: Path) -> None:
 def test_carveout_does_not_widen_evaluation_to_session(tmp_path: Path) -> None:
     """evaluation-* → session.json is NOT in the carve-out — must still fail."""
     _write(
-        tmp_path / "agents/contexts/evaluation-foo.md",
-        "See `agents/council-sessions/2026-05-06/raw.json` for the trace.",
+        tmp_path / "agents/settings/contexts/evaluation-foo.md",
+        "See `agents/runtime/council/sessions/2026-05-06/raw.json` for the trace.",
     )
     assert ccr.main() == 1
 
@@ -158,7 +158,7 @@ def test_carveout_does_not_widen_contract_to_question(tmp_path: Path) -> None:
     """contract → council-question is NOT in the carve-out — must still fail."""
     _write(
         tmp_path / "docs/contracts/foo.md",
-        "See `agents/council-questions/topic.md`.",
+        "See `agents/runtime/council/questions/topic.md`.",
     )
     assert ccr.main() == 1
 
@@ -166,8 +166,8 @@ def test_carveout_does_not_widen_contract_to_question(tmp_path: Path) -> None:
 def test_carveout_does_not_widen_non_evaluation_context(tmp_path: Path) -> None:
     """Non-evaluation context → council-question must still fail."""
     _write(
-        tmp_path / "agents/contexts/auth-model.md",
-        "Reference: `agents/council-questions/topic.md`.",
+        tmp_path / "agents/settings/contexts/auth-model.md",
+        "Reference: `agents/runtime/council/questions/topic.md`.",
     )
     assert ccr.main() == 1
 
@@ -176,7 +176,7 @@ def test_carveout_does_not_widen_contract_to_non_synthesis(tmp_path: Path) -> No
     """contract → session non-synthesis file (e.g. raw responses) must still fail."""
     _write(
         tmp_path / "docs/contracts/foo.md",
-        "See `agents/council-sessions/2026-05-06/responses.json`.",
+        "See `agents/runtime/council/sessions/2026-05-06/responses.json`.",
     )
     assert ccr.main() == 1
 
@@ -188,11 +188,11 @@ def test_carveout_does_not_widen_contract_to_non_synthesis(tmp_path: Path) -> No
 def test_unscanned_directory_ignored(tmp_path: Path) -> None:
     _write(
         tmp_path / "scripts/something.py",
-        '_PATH = "agents/council-sessions/x.json"',
+        '_PATH = "agents/runtime/council/sessions/x.json"',
     )
     assert ccr.main() == 0
 
 
 def test_clean_repo_passes(tmp_path: Path) -> None:
-    _write(tmp_path / "agents/contexts/foo.md", "All good.")
+    _write(tmp_path / "agents/settings/contexts/foo.md", "All good.")
     assert ccr.main() == 0

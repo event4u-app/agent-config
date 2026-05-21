@@ -16,13 +16,20 @@ import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
 import { join } from 'node:path';
 import type { ZodIssue } from 'zod';
-import { userMdSchema } from '../schemas/userMd.js';
+import { userMdSchema } from '../../shared/userMd/schema.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 
 export interface UserMdRouteOptions {
-    /** Project root — `.agent-user.md` resolves under this. */
-    projectRoot: string;
+    /** Write root — every PUT lands here as `.agent-user.md`. */
+    writeRoot: string;
+    /**
+     * Legacy-read fallback root. When GET / PUT find no file under
+     * `writeRoot`, the read is retried under `legacyReadRoot`. The next
+     * PUT silently migrates by writing the body to `writeRoot` (legacy
+     * file is left untouched).
+     */
+    legacyReadRoot?: string | null;
     /** Override the package-shipped template path (tests only). */
     templatePath?: string;
     /**
@@ -44,7 +51,7 @@ interface ReadState {
     mtimeMs: number;
 }
 
-async function readUserMd(root: string): Promise<ReadState | null> {
+async function readUserMdFrom(root: string): Promise<ReadState | null> {
     const path = userMdPath(root);
     try {
         const [stat, body] = await Promise.all([fs.stat(path), fs.readFile(path, 'utf8')]);
@@ -53,6 +60,23 @@ async function readUserMd(root: string): Promise<ReadState | null> {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
         throw err;
     }
+}
+
+/**
+ * Read `.agent-user.md` from `writeRoot`, falling back to `legacyReadRoot`
+ * on ENOENT. Mirrors the settings route — see `readSettings` for the
+ * silent-migration rationale.
+ */
+async function readUserMd(
+    writeRoot: string,
+    legacyReadRoot: string | null | undefined,
+): Promise<ReadState | null> {
+    const primary = await readUserMdFrom(writeRoot);
+    if (primary !== null) return primary;
+    if (legacyReadRoot && legacyReadRoot !== writeRoot) {
+        return readUserMdFrom(legacyReadRoot);
+    }
+    return null;
 }
 
 function readIfUnmodified(header: unknown): number | null {
@@ -70,7 +94,7 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
 
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/user-md', async (_request, _reply) => {
-            const state = await readUserMd(opts.projectRoot);
+            const state = await readUserMd(opts.writeRoot, opts.legacyReadRoot);
             if (state === null) {
                 return { body: '', exists: false, lastModified: null };
             }
@@ -101,7 +125,7 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
             }
 
             const ius = readIfUnmodified(request.headers['if-unmodified-since']);
-            const current = await readUserMd(opts.projectRoot);
+            const current = await readUserMd(opts.writeRoot, opts.legacyReadRoot);
             if (current !== null) {
                 if (ius === null) {
                     await reply.code(412).send({
@@ -126,7 +150,7 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
                         preview: { path: USER_MD_RELATIVE, body: parsed.data.body },
                     };
                 }
-                const path = userMdPath(opts.projectRoot);
+                const path = userMdPath(opts.writeRoot);
                 await writeAtomic(path, parsed.data.body, { mode: 0o600 });
                 const stat = await fs.stat(path);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [USER_MD_RELATIVE] };

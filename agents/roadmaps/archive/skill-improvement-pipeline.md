@@ -101,9 +101,9 @@
 
 ## Phase 5: Documentation
 
-- [x] **Step 1:** Document pipeline in `agents/docs/skill-improvement-pipeline.md`
+- [x] **Step 1:** Document pipeline in `agents/reference/docs/skill-improvement-pipeline.md`
 - [x] **Step 2:** Example flows embedded in pipeline skill (Procedure section)
-- [x] **Step 3:** AGENTS.md not updated — pipeline is opt-in, documented in agents/docs/
+- [x] **Step 3:** AGENTS.md not updated — pipeline is opt-in, documented in agents/reference/docs/
 
 ## Acceptance Criteria
 

@@ -53,7 +53,7 @@ lists the end-to-end workflows (`/implement-ticket`, `/work`,
 ## Prove it
 
 Audit-disciplined by construction — every memory consult, decision
-key, and hook concern lands in `agents/state/` so you can replay it.
+key, and hook concern lands in `agents/runtime/state/` so you can replay it.
 [Core Principles](#core-principles) names the four invariants;
 [What this package is — and what it isn't](#what-this-package-is--and-what-it-isnt)
 draws the scope boundary. Beta contracts:
@@ -86,7 +86,7 @@ agent-config setup                # browser, lands on #/wizard
 The wizard uses the `commitMulti` 2PC substrate to write
 `.agent-settings.yml` (and optional `.agent-user.md`) atomically — see
 [`docs/wizard.md`](docs/wizard.md). A `decision_result` lands in
-`agents/state/`. Stack-aware skills auto-load.
+`agents/runtime/state/`. Stack-aware skills auto-load.
 
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
@@ -481,7 +481,7 @@ how to behave, not how to execute.
 
 Example of what *is* in scope: every artefact's frontmatter validates
 against a JSON-Schema under [`scripts/schemas/`](scripts/schemas/)
-([contract](agents/docs/frontmatter-contract.md)), enforced by
+([contract](agents/reference/docs/frontmatter-contract.md)), enforced by
 `task validate-schema` in CI. Runtime validation inside a live agent
 session is explicitly not.
 
@@ -646,14 +646,14 @@ Create it interactively with `/agents user init`. Inspect with
 legacy `personal.user_name` key in `.agent-settings.yml` stays as a
 fallback when `.agent-user.md` is absent.
 
-## Ghostwriter (`agents/ghostwriter/<slug>.md`)
+## Ghostwriter (`agents/reference/ghostwriter/<slug>.md`)
 
 Third voice primitive — captures **public-facing writing voice of
 documented public figures** (authors, executives, academics,
 journalists, public speakers, deceased historical figures).
 `/ghostwriter:fetch <url-or-name>` runs an attestation gate, delegates
 to the host agent's `web-fetch` / `web-search` (zero network code in
-the package), and writes `agents/ghostwriter/<slug>.md` — **gitignored
+the package), and writes `agents/reference/ghostwriter/<slug>.md` — **gitignored
 by default**, never shipped in the OSS package. `/ghostwriter:write
 --as=<slug>` drafts in that voice and appends the **mandatory
 non-removable disclosure footer** (`*Written in the style of <name>,
@@ -666,7 +666,7 @@ Schema: [`docs/contracts/ghostwriter-schema.md`](docs/contracts/ghostwriter-sche
 |---|---|---|
 | `personas/*.md` | review-lens (internal critique) | n/a |
 | `.agent-user.md` | maintainer's own voice (`/post-as:me`) | none — you are the author |
-| `agents/ghostwriter/<slug>.md` | external public-figure (`/post-as:ghostwriter`) | mandatory, non-removable |
+| `agents/reference/ghostwriter/<slug>.md` | external public-figure (`/post-as:ghostwriter`) | mandatory, non-removable |
 
 ## Core Principles
 

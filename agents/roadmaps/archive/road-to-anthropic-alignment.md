@@ -10,7 +10,7 @@
 > triggering pattern. Empirical trigger evaluation was split into its own
 > roadmap — see [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md).
 
-- **Source analysis:** [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md)
+- **Source analysis:** [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md)
 - **Status:** Phase 1 shipped (v1.4.0, `.claude-plugin/marketplace.json`).
   Phase 2 shipped on `feat/pushy-descriptions` (2026-04-21) — rule, audit tool,
   skill guidance, baseline report. Follow-up work: incrementally rewrite the
@@ -134,7 +134,7 @@ claude marketplace add event4u-app/agent-config
       — flags `too-short` (< 150 chars), `very-short` (< 80), `no-trigger-prefix`,
       and known hedge phrases. Stdlib only, ~140 LoC.
 - [x] Baseline snapshot:
-      [`agents/analysis/skill-description-audit-baseline.md`](../../analysis/skill-description-audit-baseline.md)
+      [`agents/evidence/analysis/skill-description-audit-baseline.md`](../../analysis/skill-description-audit-baseline.md)
       — **60 of 100 skills flagged** (all for `too-short`; zero
       `no-trigger-prefix`, zero hedges). Top 15 candidates listed.
 - [x] **Follow-up batches landed:** incremental rewrites on the top
@@ -182,7 +182,7 @@ pattern before we measure trigger rates.
 
 ## Related
 
-- [`agents/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — findings
+- [`agents/evidence/analysis/compare-anthropics-skills.md`](../../analysis/compare-anthropics-skills.md) — findings
 - [`../road-to-trigger-evals.md`](../road-to-trigger-evals.md) — split-out child roadmap (trigger evaluation)
 - [`road-to-9.md`](road-to-9.md) — archived sibling (runtime depth, closed 2026-04-21)
 - [`road-to-mcp.md`](road-to-mcp.md) — archived sibling (MCP config generation, closed 2026-04-21)

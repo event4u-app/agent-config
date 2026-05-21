@@ -2,7 +2,7 @@
 
 > Frontmatter schemas, v2 rigor, lint behaviour for skills / rules / commands.
 
-Contract: [`agents/docs/frontmatter-contract.md`](../../../agents/docs/frontmatter-contract.md).
+Contract: [`agents/reference/docs/frontmatter-contract.md`](../../../agents/reference/docs/frontmatter-contract.md).
 
 | # | Title | Status | Date | Supersedes |
 |---|---|---|---|---|

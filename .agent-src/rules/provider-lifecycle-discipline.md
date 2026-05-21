@@ -67,7 +67,7 @@ This rule routes the agent to [`docs/contracts/provider-lifecycle.md`](../docs/c
 - Running `/video:scene` against the `<default-video-provider>` without reading the lifecycle tag first → violation.
 - Picking a `community` provider because it was named in the prompt, without surfacing the tier → violation.
 - Editing an adapter and leaving its header `Lifecycle:` comment out of sync with `agents/.ai-video.xml.example` → violation (CI does not catch this; the agent must).
-- Auto-promoting an adapter from `experimental` to `stable` because "dry-run worked" → violation. Promotion requires a maintainer-captured real-API smoke trace under `agents/ai-video/smoke-traces/`.
+- Auto-promoting an adapter from `experimental` to `stable` because "dry-run worked" → violation. Promotion requires a maintainer-captured real-API smoke trace under `agents/reference/ai-video/smoke-traces/`.
 
 ## Day-one state
 

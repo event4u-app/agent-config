@@ -9,7 +9,7 @@ disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "update the context doc, refresh this context document"
-  trigger_context: "existing agents/contexts/*.md referenced in the prompt"
+  trigger_context: "existing agents/settings/contexts/*.md referenced in the prompt"
 workspaces:
   - agent-config-maintainer
 packs:
@@ -29,8 +29,8 @@ install:
 
 ### 1. Find the context
 
-- List all context documents in `agents/contexts/`.
-- Also check module-level `app/Modules/*/agents/contexts/`.
+- List all context documents in `agents/settings/contexts/`.
+- Also check module-level `app/Modules/*/agents/settings/contexts/`.
 
 If only one context exists, ask if that's the one to refactor.
 If the user has a context file open in their editor, use that one.

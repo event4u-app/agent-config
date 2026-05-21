@@ -41,17 +41,27 @@ DEFAULT_GITIGNORE = ".gitignore"
 DEFAULT_TEMPLATE = Path(__file__).resolve().parent.parent / "config" / "gitignore-block.txt"
 
 # Legacy patterns that lived in older versions of config/gitignore-block.txt
-# before runtime artefacts moved under /agents/ (May 2026). They get stripped
-# wherever they appear in the consumer's .gitignore — inside the managed block
-# or outside (older installers / hand-edits). Current canonical equivalents
-# (e.g. /agents/.agent-chat-history) come from the template and are NOT
-# affected. Leading-slash variants are matched defensively.
+# before runtime artefacts moved under /agents/runtime/ (May 2026). They get
+# stripped wherever they appear in the consumer's .gitignore — inside the
+# managed block or outside (older installers / hand-edits). Current canonical
+# equivalents (e.g. /agents/runtime/.agent-prices.md) come from the template
+# and are NOT affected. Leading-slash variants are matched defensively.
 LEGACY_PATTERNS: tuple[str, ...] = (
     ".agent-chat-history",
     ".agent-chat-history.bak",
     ".agent-chat-history.*.bak",
     ".agent-prices.md",
     ".council-tmp/",
+    # 2.x intermediate: prices cache lived directly under agents/ before
+    # consolidating under agents/runtime/.
+    "agents/.agent-prices.md",
+    # Budget history JSONLs — previously listed explicitly at project
+    # root or under agents/; now covered by the /agents/runtime/
+    # catch-all in the managed block.
+    ".augment-budget-history.jsonl",
+    ".rule-budget-history.jsonl",
+    "agents/.augment-budget-history.jsonl",
+    "agents/.rule-budget-history.jsonl",
 )
 
 

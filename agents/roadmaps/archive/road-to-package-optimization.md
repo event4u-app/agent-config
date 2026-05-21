@@ -68,7 +68,7 @@ unified design is premature and ships nothing.
   *Shipped 2026-05-06. Ran in 0.034 s, scanned 317 artefacts, flagged
   0 contradictions. Null result documented above; closes roadmap.*
   ≤200 LOC Python. Reads `.agent-src.uncompressed/{rules,skills,commands}/`
-  + `agents/contexts/`. For each artifact, extracts `description`
+  + `agents/settings/contexts/`. For each artifact, extracts `description`
   frontmatter + section headings (`## When to use`, `## Procedure`,
   `## Steps`, `## Iron Law`). Builds an artifact-pair index keyed by
   shared trigger keywords. Flags pairs where one artifact prescribes
@@ -146,7 +146,7 @@ unified design is premature and ships nothing.
 
 - [-] **P3.2 — Stale-context detector** (GPT-4o's Q4 net-new). Reopen
   on its own trigger (independent of P1/P2 outcomes): when
-  `agents/contexts/` has > 20 files AND ≥3 are last-touched > 90 d AND
+  `agents/settings/contexts/` has > 20 files AND ≥3 are last-touched > 90 d AND
   zero inbound refs. Adoption shape: `scripts/audit_stale_contexts.py`
   ≤80 LOC, JSON output, no deletions, no AI. Lightweight bolt-on,
   re-uses P1.3's reference-counting logic.

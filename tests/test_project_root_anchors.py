@@ -1,11 +1,11 @@
 """Anchor-walk tests for ``find_project_root_with_anchor``.
 
 Covers Step-7 D1 + D3 + the boundary-vs-layer decision recorded in
-``agents/council-sessions/step-7-d3-cascade-conflict-decision.md``:
+``agents/runtime/council/sessions/step-7-d3-cascade-conflict-decision.md``:
 
 * ``.git`` anchors as a boundary.
 * ``agents/`` anchors as a boundary **only** when it contains one of
-  the D1 markers (``roadmaps/``, ``.ai-council.yml``,
+  the D1 markers (``roadmaps/``, ``settings/.ai-council.yml``,
   ``roadmaps-progress.md``).
 * Bare ``agents/`` (no markers) is **not** an anchor.
 * ``.agent-settings.yml`` is a layer marker — it anchors only when no
@@ -54,7 +54,7 @@ def test_git_file_anchors_submodule(tmp_path: Path) -> None:
 
 @pytest.mark.parametrize(
     "marker",
-    ["roadmaps", ".ai-council.yml", "roadmaps-progress.md"],
+    ["roadmaps", "settings/.ai-council.yml", "roadmaps-progress.md"],
 )
 def test_agents_dir_with_marker_anchors(tmp_path: Path, marker: str) -> None:
     agents = tmp_path / "agents"
@@ -63,6 +63,7 @@ def test_agents_dir_with_marker_anchors(tmp_path: Path, marker: str) -> None:
     if marker == "roadmaps":
         target.mkdir()
     else:
+        target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("# marker\n")
     nested = tmp_path / "src" / "deep"
     nested.mkdir(parents=True)

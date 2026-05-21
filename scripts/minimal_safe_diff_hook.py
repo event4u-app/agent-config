@@ -11,7 +11,7 @@ Wired to multiple events via the manifest:
   - session_start / user_prompt_submit → reset turn-scoped counters
   - pre_tool_use → record the planned edit's path before execution
 
-Output: `agents/state/minimal-safe-diff.json`
+Output: `agents/runtime/state/minimal-safe-diff.json`
   {
     "schema_version": 1,
     "session_id": "<str>",

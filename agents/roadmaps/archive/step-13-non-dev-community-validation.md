@@ -36,7 +36,7 @@ This roadmap closes via the **Phase 4 OR-gate sunset path** explicitly defined i
 - [x] Case-study template shipped at `docs/case-studies/_template.md` *(prerequisite)*
 - [x] Recruit intake template shipped at [`docs/recruits/_template.md`](../../docs/recruits/_template.md)
   *(Phase 1 readiness — consent, session log, friction inventory, outcome verdict)*
-- [x] Eval-finding schema shipped at [`agents/eval-findings/_template.md`](../eval-findings/_template.md)
+- [x] Eval-finding schema shipped at [`agents/evidence/eval-findings/_template.md`](../eval-findings/_template.md)
   *(Phase 1 / 2 / 4 readiness — anchors which roadmap row each finding closes)*
 
 ## Phase 1 — Non-dev MCP setup validation
@@ -44,7 +44,7 @@ This roadmap closes via the **Phase 4 OR-gate sunset path** explicitly defined i
 - [-] **Recruit 1 non-developer tester** via Indie Hackers / ContentWritingJobs
   *(step-12 L60 deferred here)*. _Cancelled 2026-05-16 (sunset override)._
 - [-] **Validate MCP setup time < 10 minutes** — recruit completes install
-  + first useful invocation; result logged in `agents/eval-findings/`.
+  + first useful invocation; result logged in `agents/evidence/eval-findings/`.
   _Cancelled 2026-05-16 (sunset override)._
 - [-] **Pass gate:** result published, recruit consents to public attribution
   (full name, role, screenshot OK) OR remains anonymized with consent record.
@@ -82,7 +82,7 @@ This roadmap closes via the **Phase 4 OR-gate sunset path** explicitly defined i
 
 - [-] **At 90 days from step-12 merge:** if < 5 case studies, run 10
   user interviews with non-dev visitors who did not install. Decision gate
-  logged in `agents/eval-findings/` — pivot messaging vs. sunset non-dev
+  logged in `agents/evidence/eval-findings/` — pivot messaging vs. sunset non-dev
   expansion *(step-12 L131)*. _Cancelled 2026-05-16 — sunset chosen directly,
   90-day window collapsed via maintainer override._
 - [x] **Decision artifact:** Either pivot-messaging-iteration plan logged
@@ -92,7 +92,7 @@ This roadmap closes via the **Phase 4 OR-gate sunset path** explicitly defined i
 
 ## Acceptance criteria
 
-- [-] Phase 1 finding logged in `agents/eval-findings/` _(sunset; not applicable)_
+- [-] Phase 1 finding logged in `agents/evidence/eval-findings/` _(sunset; not applicable)_
 - [-] Phase 2 poll results published; dev-user approval ≥ 8 / 10 _(sunset; not applicable)_
 - [-] Phase 3: 5 case studies in `docs/case-studies/`, ≥ 3 user-types covered _(sunset; not applicable)_
 - [x] Phase 4 gate hit (pivot OR sunset decision logged) — sunset path chosen

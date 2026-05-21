@@ -2,7 +2,7 @@
 
 Covers the ``_check_council_cli`` runner in ``scripts/_cli/cmd_doctor.py``:
 
-- No ``agents/.ai-council.yml`` → ``ok`` with "no council config".
+- No ``agents/settings/.ai-council.yml`` → ``ok`` with "no council config".
 - File present but no enabled CLI members → ``ok`` with "no enabled".
 - Enabled CLI member with binary present and uncapped → ``ok``.
 - Enabled CLI member with binary missing → ``warn`` listing the
@@ -65,9 +65,9 @@ def _patch_council(
 
 
 def _make_project(tmp_path: Path) -> Path:
-    """Materialise an empty ``agents/.ai-council.yml`` so the file exists."""
-    (tmp_path / "agents").mkdir()
-    (tmp_path / "agents" / ".ai-council.yml").write_text("enabled: true\n")
+    """Materialise an empty ``agents/settings/.ai-council.yml`` so the file exists."""
+    (tmp_path / "agents" / "settings").mkdir(parents=True)
+    (tmp_path / "agents" / "settings" / ".ai-council.yml").write_text("enabled: true\n")
     return tmp_path
 
 

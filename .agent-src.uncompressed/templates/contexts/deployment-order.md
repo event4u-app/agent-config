@@ -2,7 +2,7 @@
 
 <!--
   Template shipped by event4u/agent-config.
-  Copy to `agents/contexts/deployment-order.md` in the consumer project
+  Copy to `agents/settings/contexts/deployment-order.md` in the consumer project
   and fill in. Required reading for any change involving schema
   migrations, feature flags, or multi-service deploys. Without this,
   "breaking change" reviews are guesswork.
@@ -68,5 +68,5 @@
 
 ## See also
 
-- `agents/contexts/observability.md` — what to watch during a deploy
+- `agents/settings/contexts/observability.md` — what to watch during a deploy
 - `.augment/skills/migration-safety/SKILL.md` <!-- if installed --> — reviewer

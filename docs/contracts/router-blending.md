@@ -24,7 +24,7 @@ loaded_skills(user_type) =
   ∪ context_pool(user_type)        (content / writing / safety, ≈10%)
 ```
 
-Percentages are **soft caps** measured against the post-filter skill count, not hard quotas. Drift > ±10% on any pool triggers a re-tag pass and a finding in `agents/eval-findings/`.
+Percentages are **soft caps** measured against the post-filter skill count, not hard quotas. Drift > ±10% on any pool triggers a re-tag pass and a finding in `agents/evidence/eval-findings/`.
 
 ## Per user-type blends
 

@@ -65,9 +65,9 @@ imperatives (`NEVER COMMIT.`).
 
 Sweep covered all 310 lintable artifacts via
 [`scripts/measure_density.py`](../../scripts/measure_density.py); raw
-data lives at `agents/.density-snapshot.jsonl` (local-only — re-run
+data lives at `agents/runtime/density/snapshot.jsonl` (local-only — re-run
 `python3 scripts/measure_density.py --root .agent-src --jsonl
-agents/.density-snapshot.jsonl` to regenerate).
+agents/runtime/density/snapshot.jsonl` to regenerate).
 
 | Type | Count | Avg density | Median | Bucket [0.4-0.6] | Bucket [0.6-1.0] |
 |---|---|---|---|---|---|
@@ -172,7 +172,7 @@ keys** — the structural primitives are the contract.
 ## References
 
 - `scripts/measure_density.py` — Phase 1.1 measurement tool.
-- `agents/.density-snapshot.jsonl` — full per-artifact metrics
+- `agents/runtime/density/snapshot.jsonl` — full per-artifact metrics
   (gitignored, re-run the measurement script to regenerate).
 - `scripts/skill_linter.py` — structural-model implementation
   (`_density_score`, `_count_procedure_sections`,

@@ -1,9 +1,9 @@
 """Concurrency-safe state writes for hook concerns.
 
 Per `docs/contracts/hook-architecture-v1.md` § Concurrency, every concern
-that writes under `agents/state/` MUST:
+that writes under `agents/runtime/state/` MUST:
 
-1. Acquire `fcntl.flock(LOCK_EX)` on `agents/state/.dispatcher.lock`.
+1. Acquire `fcntl.flock(LOCK_EX)` on `agents/runtime/state/.dispatcher.lock`.
 2. Write to a sibling `<dest>.tmp.<pid>` file in the same directory.
 3. `os.replace(tmp, dest)` — POSIX-atomic on the same filesystem.
 4. Release the lock.
@@ -21,7 +21,7 @@ Cross-platform notes
   holds, and torn-write risk is accepted (Windows is not a primary
   agent-config platform — Cline tracks the upstream Windows-path issue
   separately).
-- The lock file lives under `agents/state/` which is gitignored.
+- The lock file lives under `agents/runtime/state/` which is gitignored.
 - The lock is process-scoped, not session-scoped: each call opens,
   locks, writes, releases, closes. No long-lived file handles.
 """
@@ -47,7 +47,7 @@ def is_replay_mode() -> bool:
     """True when the caller signalled read-only fixture replay.
 
     Concerns and the dispatcher honour the flag by skipping side
-    effects under `agents/state/` (and any other concern-owned state
+    effects under `agents/runtime/state/` (and any other concern-owned state
     surface). See `docs/contracts/hook-architecture-v1.md` § Replay mode.
     """
     return os.environ.get(REPLAY_ENV_VAR, "").strip() == "1"
@@ -60,7 +60,7 @@ def _lock_path(state_dir: Path) -> Path:
 def atomic_write_json(target: Path, payload: Any, *, indent: int = 2) -> None:
     """Write `payload` as JSON to `target` atomically and concurrency-safely.
 
-    `target` MUST sit under an `agents/state/` directory (or any other
+    `target` MUST sit under an `agents/runtime/state/` directory (or any other
     directory the caller treats as the lock scope). The lock file is
     `<target.parent>/.dispatcher.lock`. Caller does not need to create
     the directory in advance — this function ensures it.

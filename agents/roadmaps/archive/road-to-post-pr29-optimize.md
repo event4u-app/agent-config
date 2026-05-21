@@ -36,9 +36,9 @@ Both reviewers agreed: ship a **1.15.0 housekeeping release first**, then resume
 feature tracks. Phase 1 contents (in order):
 
 1. **Packaging fix (P0)** — adopt option **(b) `docs/contracts/`**. Move public
-   contracts out of `agents/contexts/` (which is excluded from npm + Composer
+   contracts out of `agents/settings/contexts/` (which is excluded from npm + Composer
    archives) into `docs/contracts/`. Redirect README links. `agents/` stays
-   internal-only. Smallest persistent fix; option (a) "ship `agents/contexts`"
+   internal-only. Smallest persistent fix; option (a) "ship `agents/settings/contexts`"
    bleeds internal notes into the public surface.
    - **Stability policy (added 2026-05-01 after AI #5 review).** Each file
      under `docs/contracts/` declares in frontmatter:
@@ -131,7 +131,7 @@ This section is the trackable execution surface — each P0 maps 1:1
 to a numbered decision; sub-bullets capture the named gates inside a
 single P0 so progress reflects the actual deliverables.
 
-- [x] P0.1 — Adopt `docs/contracts/` packaging fix (option **(b)**); move public contracts out of `agents/contexts/`; redirect README links
+- [x] P0.1 — Adopt `docs/contracts/` packaging fix (option **(b)**); move public contracts out of `agents/settings/contexts/`; redirect README links
 - [x] P0.1a — `docs/contracts/STABILITY.md` defining `stable | beta | experimental` frontmatter
 - [x] P0.1b — `scripts/check_public_links.py` link-checker wired into `task ci`
 - [x] P0.2 — Apply positioning sentence verbatim to README headline + AGENTS.md + `docs/architecture.md`
@@ -501,7 +501,7 @@ Aggregate verdicts:
    `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`,
    `…/command-suggestion-flow.md`. **Installed npm / Composer packages
    have broken README links.** *Real release-quality bug.* Three
-   options: (a) ship `agents/contexts` in the package; (b) move public
+   options: (a) ship `agents/settings/contexts` in the package; (b) move public
    contracts to `docs/contracts/`; (c) only link to files actually
    shipped. **AI #4 recommendation: `docs/contracts/` for public,
    `agents/` internal-only.**
@@ -538,7 +538,7 @@ Aggregate verdicts:
 
 **P0 — immediately:**
 
-1. Fix the packaging-link bug (ship `agents/contexts` or move public
+1. Fix the packaging-link bug (ship `agents/settings/contexts` or move public
    contracts to `docs/contracts/`).
 2. Synchronise `docs/architecture.md` (counts + layer model) to 1.14.0.
 3. Clarify terms: runtime dispatcher (old) · Work Engine (shipped
@@ -575,7 +575,7 @@ Aggregate verdicts:
 - **Product simplification.** README is now very long; needs a
   30-second story plus deep dives. (Cross-references AI #3 README-
   rewrite refactor.)
-- **Public Contract API in `docs/contracts/`.** If `agents/contexts/`
+- **Public Contract API in `docs/contracts/`.** If `agents/settings/contexts/`
   stays internal, the public-facing contracts need a stable home.
 - **Stability statement on the Work Engine.** Is it stable / beta /
   experimental? Must be made explicit.
@@ -628,12 +628,12 @@ Aggregate verdicts:
 | External feedback system missing — package cannot learn without external signal | AI #3 | low (single source) | Need: issue template "which skill did not trigger?", discussions category "skill suggestions", "did this help?" minimal UX. Telemetry-as-internal-mirror is the symptom, missing-feedback-loop is the cause. |
 | Golden Transcripts CI cost not measured / parallelised | AI #3 | low (single source) | 24 capture packs (GT-1..5 + GT-P1..4 + GT-U1..15) replayed by freeze-guard. Zero commits in 1.14.0 address CI duration or parallelisation. AI #3: "the technical debt that grows quietest". Becomes blocking when R5+ lands. |
 | Four install paths for 0 external users | AI #3 | low (single source) | `docs/installation.md`: local (Composer/npm) · plugin · cloud · Linear. AI #3: pruning / staging recommended; cloud + Linear not battle-tested. Tension with the "stop adding architecture" iron rule from AI #1. |
-| **Packaging bug — README links to `agents/contexts/` but `agents/` is excluded from npm + Composer artefacts** | AI #4 | low (single source, verifiable, **release-quality bug**) | `package.json` does not include `agents/` in `files`; `composer.json` explicitly excludes `/agents` from the archive. README links into `docs/contracts/agent-memory-contract.md`, `…/implement-ticket-flow.md`, `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`, `…/command-suggestion-flow.md`. Installed packages have **broken README links**. Three options: (a) ship `agents/contexts` in package; (b) move public contracts to `docs/contracts/`; (c) only link to files that actually ship. AI #4 recommendation: **(b)** — `docs/contracts/` for public, `agents/` internal-only. |
+| **Packaging bug — README links to `agents/settings/contexts/` but `agents/` is excluded from npm + Composer artefacts** | AI #4 | low (single source, verifiable, **release-quality bug**) | `package.json` does not include `agents/` in `files`; `composer.json` explicitly excludes `/agents` from the archive. README links into `docs/contracts/agent-memory-contract.md`, `…/implement-ticket-flow.md`, `…/ui-track-flow.md`, `…/artifact-engagement-flow.md`, `…/command-suggestion-flow.md`. Installed packages have **broken README links**. Three options: (a) ship `agents/settings/contexts` in package; (b) move public contracts to `docs/contracts/`; (c) only link to files that actually ship. AI #4 recommendation: **(b)** — `docs/contracts/` for public, `agents/` internal-only. |
 | `work_engine/cli.py` is at the complexity limit — modularise | AI #4 | low (single source, concrete refactor named) | One file currently owns: ticket · prompt · diff · file · personas · hooks · v0/v1 state · migration · directive-set routing · UI routing · chat-history hooks · resolvers · state sync · format-preserving save. Split into `cli_args.py` · `state_io.py` · `input_builders.py` · `hook_bootstrap.py` · `runner.py` · `emitters.py`; keep `cli.py` as orchestration glue. P1, not P0. |
 | UI-track onboarding density — missing 1-page mental model | AI #4 | low (single source) | UI contract is "fachlich gut, aber schwer für neue Contributor und Agenten". Audit · design · apply · review · a11y · preview · polish · token extraction · mixed contract · stitching · trivial reclassification all in one contract. Needed: 1-page "UI Track Quick Mental Model" — when UI? when ui-trivial? when mixed? what must the agent never do? where does it stop? P1. |
 | "Experimental modules" framing is stale; term separation needed | AI #4 | low (single source) | README still describes runtime as experimental (two pilot skills in CI), while same README presents Work Engine + `/implement-ticket` + `/work` + UI track as product core. AI #4: separate `runtime_dispatcher.py` (experimental shell-skill runner) from `work_engine` (shipped orchestration protocol) from tool adapters (experimental) from host execution (external). P0 (part of "clarify terms" alongside packaging fix and architecture.md sync). |
 | Stability statement on Work Engine missing | AI #4 | low (single source) | Is the Work Engine stable, beta, or experimental? Must be made explicit. Affects how consumers read upgrade guarantees and breaking-change risk. Pairs with the term-separation theme above. |
-| Public Contract API needs a stable home (`docs/contracts/`) | AI #4 | low (single source, but flows from packaging bug) | If `agents/contexts/` stays internal-only (AI #4's preferred packaging fix), the public-facing contracts (memory, implement-ticket flow, UI-track flow, artifact-engagement, command-suggestion) need a stable shipped location. Implies: redirect README links + freeze public contract files. |
+| Public Contract API needs a stable home (`docs/contracts/`) | AI #4 | low (single source, but flows from packaging bug) | If `agents/settings/contexts/` stays internal-only (AI #4's preferred packaging fix), the public-facing contracts (memory, implement-ticket flow, UI-track flow, artifact-engagement, command-suggestion) need a stable shipped location. Implies: redirect README links + freeze public contract files. |
 
 ## Open questions for the user
 
@@ -686,7 +686,7 @@ Aggregate verdicts:
   freeze-guard / replay-harness now (before R5 lands), or reactively
   when it hurts? AI #3 calls this "the debt that grows quietest".
 - **Packaging fix path (AI #4 P0):** of the three options — (a) ship
-  `agents/contexts` in npm + Composer; (b) move public contracts to
+  `agents/settings/contexts` in npm + Composer; (b) move public contracts to
   `docs/contracts/` and keep `agents/` internal; (c) only link to files
   actually shipped — which is the chosen direction? AI #4 recommends (b),
   but (a) is the smallest diff. Decision determines the shape of the

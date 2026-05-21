@@ -6,7 +6,7 @@ Consumes JSON files produced by `scripts/runtime_dispatcher.py run
 --output FILE`. Each file is an ExecutionResult dump (see runtime_handler).
 
 Usage:
-    python3 scripts/ci_summary.py --runs agents/reports/runs [--title TITLE]
+    python3 scripts/ci_summary.py --runs agents/runtime/reports/runs [--title TITLE]
 
 Writes to $GITHUB_STEP_SUMMARY if the environment variable is set,
 otherwise prints the markdown to stdout. Missing or empty run
@@ -110,7 +110,7 @@ def write_output(summary: str) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(description="Render CI summary from dispatcher runs")
     parser.add_argument(
-        "--runs", type=Path, default=Path("agents/reports/runs"),
+        "--runs", type=Path, default=Path("agents/runtime/reports/runs"),
         help="Directory containing ExecutionResult JSON files",
     )
     parser.add_argument(

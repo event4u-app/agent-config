@@ -28,7 +28,7 @@ Last refreshed: 2026-05-11.
 ## File location
 
 ```
-agents/state/audit/<YYYY-MM>.jsonl
+agents/runtime/state/audit/<YYYY-MM>.jsonl
 ```
 
 One file per UTC month. Files are append-only — `merge=union` via
@@ -95,7 +95,7 @@ Lines MUST NOT contain:
 - Memory entry bodies, ids, or content. Only **counts** travel here —
   ids stay in `decision-trace-*.json` per [`memory-visibility-v1.md`](memory-visibility-v1.md).
 - Secrets, tokens, environment values, file contents.
-- Paths outside the package's `agents/state/` and `tests/` allowlist.
+- Paths outside the package's `agents/runtime/state/` and `tests/` allowlist.
 
 The floor is enforced by
 `tests/contracts/test_audit_log_redaction.py` — any new producer-side

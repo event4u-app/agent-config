@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://github.com/event4u-app/agent-config/scripts/schemas/persona.schema.json",
   "title": "Persona frontmatter",
-  "$comment": "Source: agents/docs/frontmatter-contract.md#personas. `mode` enum mirrors the values declared in personas/*.md plus the additional `incident` value from templates/persona.md.",
+  "$comment": "Source: agents/reference/docs/frontmatter-contract.md#personas. `mode` enum mirrors the values declared in personas/*.md plus the additional `incident` value from templates/persona.md.",
   "type": "object",
   "additionalProperties": false,
   "required": ["id", "role", "description", "tier", "mode", "version", "source"],
