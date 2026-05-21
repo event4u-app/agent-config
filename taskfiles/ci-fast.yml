@@ -251,6 +251,21 @@ tasks:
     desc: Run the release-time discovery scanner — writes dist/discovery/discovery-manifest.{json,summary.md} (R3 Phase 2.1)
     cmd: python3 scripts/build_discovery_manifest.py --write {{.QUIET_FLAG}}
 
+  build-discovery:
+    silent: true
+    desc: Alias for build-discovery-manifest — roadmap-stable name (monorepo Phase 2, ADR-015)
+    deps: [build-discovery-manifest]
+
+  validate-discovery-manifest:
+    silent: true
+    desc: Re-build the discovery manifest in memory and diff against the committed dist/discovery/discovery-manifest.json (monorepo Phase 2, ADR-015)
+    cmd: python3 scripts/validate_discovery_manifest.py {{.QUIET_FLAG}}
+
+  discovery-stats:
+    silent: true
+    desc: Pretty-print the stats block from the committed discovery manifest (monorepo Phase 2, ADR-015)
+    cmd: python3 scripts/discovery_stats.py
+
   lint-discovery-manifest:
     silent: true
     desc: Validate dist/discovery/discovery-manifest.json against schema, checksum, and vocabulary cross-refs (R3 Phase 2.2)
@@ -271,6 +286,11 @@ tasks:
     silent: true
     desc: Run the discovery scanner twice and assert byte-identical output apart from generated_at (R3 Phase 2.3)
     cmd: python3 scripts/check_discovery_determinism.py
+
+  check-artefact-checksums:
+    silent: true
+    desc: Re-hash every artefact in dist/discovery/discovery-manifest.json and assert the per-artefact checksum still matches the source bytes (monorepo Phase 2, ADR-015 §Phase 6)
+    cmd: python3 scripts/check_artefact_checksums.py {{.QUIET_FLAG}}
 
   assert-discovery-in-tarball:
     silent: true

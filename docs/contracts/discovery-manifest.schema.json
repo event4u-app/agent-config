@@ -4,7 +4,7 @@
   "title": "Discovery Manifest",
   "description": "Release-time scan output for @event4u/agent-config. See ADR-013 and agents/roadmaps/archive/automated-pack-workspace-and-skill-discovery.md (archived, status: completed).",
   "type": "object",
-  "required": ["version", "generated_at", "scanner_version", "checksum", "workspaces", "packs", "artefacts", "unassigned"],
+  "required": ["version", "generated_at", "scanner_version", "checksum", "workspaces", "packs", "artefacts", "unassigned", "stats"],
   "additionalProperties": false,
   "properties": {
     "version": {
@@ -49,7 +49,8 @@
       "type": "array",
       "items": { "$ref": "#/$defs/unassigned" },
       "description": "Artefacts explicitly skipped via config/discovery/unassigned-artefacts.yml. Each entry MUST carry a reason."
-    }
+    },
+    "stats": { "$ref": "#/$defs/stats" }
   },
   "$defs": {
     "workspace_id": {
@@ -102,7 +103,7 @@
     },
     "artefact": {
       "type": "object",
-      "required": ["path", "category", "workspaces", "packs", "lifecycle", "trust", "install"],
+      "required": ["path", "category", "workspaces", "packs", "lifecycle", "trust", "install", "checksum"],
       "additionalProperties": false,
       "properties": {
         "path": { "type": "string", "minLength": 1, "description": "POSIX path relative to repo root." },
@@ -110,6 +111,16 @@
         "name": { "type": "string" },
         "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
         "packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" }, "minItems": 1 },
+        "requires": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/pack_id" },
+          "description": "Optional dependency edges — pack IDs the artefact transitively needs at install time. Closed vocabulary."
+        },
+        "checksum": {
+          "type": "string",
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "description": "sha256 of the artefact file content with frontmatter normalized (sorted keys, no trailing whitespace, trailing newline). Drift-detection for the Phase-3 installer."
+        },
         "lifecycle": { "$ref": "#/$defs/lifecycle" },
         "trust": {
           "type": "object",
@@ -140,6 +151,51 @@
         "path": { "type": "string", "minLength": 1 },
         "category": { "type": "string", "enum": ["skill", "rule", "command", "template", "unknown"] },
         "reason": { "type": "string", "minLength": 1 }
+      }
+    },
+    "stats": {
+      "type": "object",
+      "required": ["total_artefacts", "by_category", "by_lifecycle", "by_trust_level"],
+      "additionalProperties": false,
+      "description": "Aggregate counts over the manifest. Cheap sanity surface for `task discovery-stats` and downstream dashboards.",
+      "properties": {
+        "total_artefacts": { "type": "integer", "minimum": 0 },
+        "by_category": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "skill":    { "type": "integer", "minimum": 0 },
+            "rule":     { "type": "integer", "minimum": 0 },
+            "command":  { "type": "integer", "minimum": 0 },
+            "template": { "type": "integer", "minimum": 0 }
+          },
+          "required": ["skill", "rule", "command", "template"]
+        },
+        "by_lifecycle": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "active":       { "type": "integer", "minimum": 0 },
+            "experimental": { "type": "integer", "minimum": 0 },
+            "deprecated":   { "type": "integer", "minimum": 0 },
+            "archived":     { "type": "integer", "minimum": 0 }
+          },
+          "required": ["active", "experimental", "deprecated", "archived"]
+        },
+        "by_trust_level": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "core":         { "type": "integer", "minimum": 0 },
+            "professional": { "type": "integer", "minimum": 0 },
+            "experimental": { "type": "integer", "minimum": 0 },
+            "advisory":     { "type": "integer", "minimum": 0 },
+            "restricted":   { "type": "integer", "minimum": 0 }
+          },
+          "required": ["core", "professional", "experimental", "advisory", "restricted"]
+        },
+        "unassigned_count": { "type": "integer", "minimum": 0 },
+        "documented_unassigned_count": { "type": "integer", "minimum": 0 }
       }
     }
   }

@@ -7,7 +7,7 @@ workspaces:
   - engineering
 packs:
   - typescript
-lifecycle: active
+lifecycle: experimental
 trust:
   level: professional
   confidence: high

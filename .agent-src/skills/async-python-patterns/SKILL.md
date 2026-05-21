@@ -10,7 +10,7 @@ workspaces:
   - engineering
 packs:
   - python
-lifecycle: active
+lifecycle: experimental
 trust:
   level: professional
   confidence: high

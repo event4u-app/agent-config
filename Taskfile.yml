@@ -86,7 +86,9 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: validate-discovery-manifest
       - task: check-discovery-determinism
+      - task: check-artefact-checksums
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links
@@ -172,7 +174,9 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: validate-discovery-manifest
       - task: check-discovery-determinism
+      - task: check-artefact-checksums
       - task: lint-framework-leakage
       - task: lint-context-spine-usage
       - task: check-public-links

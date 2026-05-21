@@ -25,18 +25,26 @@ from typing import Any, Iterable
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_frontmatter import parse_frontmatter  # noqa: E402
+from validate_frontmatter import _FRONTMATTER_RE, parse_frontmatter  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ".agent-src.uncompressed"
 VOCAB_DIR = ROOT / "config" / "discovery"
 DEFAULT_OUT = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 DEFAULT_SUMMARY = ROOT / "dist" / "discovery" / "discovery-manifest.summary.md"
+DEFAULT_DEPRECATION_REPORT = ROOT / "dist" / "discovery" / "deprecation-report.md"
+DEFAULT_TRUST_REPORT = ROOT / "dist" / "discovery" / "trust-report.md"
+DEFAULT_ORPHAN_REPORT = ROOT / "dist" / "discovery" / "orphan-report.md"
+DEFAULT_WORKSPACES_JSON = ROOT / "dist" / "discovery" / "workspaces.json"
+DEFAULT_PACKS_JSON = ROOT / "dist" / "discovery" / "packs.json"
 TRUST_ROOTS = (".agent-src.uncompressed", ".augment", ".claude", ".agent-src")
 
 _FM_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 _TRUST_REQ = ("level", "confidence", "human_review_required")
 _INSTALL_REQ = ("default", "removable")
+_LIFECYCLE_VALUES = ("active", "experimental", "deprecated", "archived")
+_TRUST_VALUES = ("core", "professional", "experimental", "advisory", "restricted")
+_CATEGORY_VALUES = ("skill", "rule", "command", "template")
 
 
 def _load_yaml(path: Path) -> Any:
@@ -54,6 +62,27 @@ def _vocab() -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, str]
 def _scanner_version() -> str:
     h = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
     return h[:12]
+
+
+def _artefact_checksum(path: Path, fm: dict[str, Any] | None) -> str:
+    """sha256 over normalized artefact content (ADR-015).
+
+    Normalization: frontmatter re-serialized as compact JSON with sorted
+    keys, body stripped of trailing whitespace per line + single trailing
+    newline. Drops cosmetic-only diffs (key reorder, blank-line trim)
+    so the installer's drift check survives reformatting.
+    """
+    text = path.read_text(encoding="utf-8", errors="replace")
+    match = _FRONTMATTER_RE.search(text)
+    if fm is None or match is None:
+        body = "\n".join(line.rstrip() for line in text.splitlines()).rstrip() + "\n"
+        raw = body.encode("utf-8")
+    else:
+        fm_json = json.dumps(fm, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
+        body_text = text[match.end():]
+        body = "\n".join(line.rstrip() for line in body_text.splitlines()).rstrip() + "\n"
+        raw = (fm_json + "\n" + body).encode("utf-8")
+    return "sha256:" + hashlib.sha256(raw).hexdigest()
 
 
 def _iter_artefacts() -> Iterable[tuple[Path, str]]:
@@ -109,13 +138,13 @@ def _classify(
         return None, f"unknown pack(s): {', '.join(bad)} (not in vocabulary)"
 
     lc = fm["lifecycle"]
-    if lc not in ("active", "deprecated", "experimental", "archived"):
+    if lc not in _LIFECYCLE_VALUES:
         return None, f"lifecycle: invalid value '{lc}'"
 
     trust = fm["trust"]
     if not isinstance(trust, dict) or any(k not in trust for k in _TRUST_REQ):
         return None, f"trust: missing required key(s) {_TRUST_REQ}"
-    if trust["level"] not in ("core", "professional", "experimental", "advisory", "restricted"):
+    if trust["level"] not in _TRUST_VALUES:
         return None, f"trust.level: invalid '{trust['level']}'"
     if trust["confidence"] not in ("high", "medium", "low"):
         return None, f"trust.confidence: invalid '{trust['confidence']}'"
@@ -128,7 +157,18 @@ def _classify(
     if not isinstance(install["default"], bool) or not isinstance(install["removable"], bool):
         return None, "install.default and install.removable must be boolean"
 
-    return {
+    # Optional `requires` — ADR-015 dependency edges. Closed vocabulary.
+    requires_raw = fm.get("requires")
+    requires: list[str] = []
+    if requires_raw is not None:
+        if not isinstance(requires_raw, list):
+            return None, "requires: must be a list of pack ids"
+        bad = [r for r in requires_raw if r not in pack_ids]
+        if bad:
+            return None, f"requires: unknown pack(s) {', '.join(bad)}"
+        requires = list(requires_raw)
+
+    payload: dict[str, Any] = {
         "workspaces": list(ws),
         "packs": list(pk),
         "lifecycle": lc,
@@ -138,7 +178,10 @@ def _classify(
             "human_review_required": trust["human_review_required"],
         },
         "install": {"default": install["default"], "removable": install["removable"]},
-    }, None
+    }
+    if requires:
+        payload["requires"] = requires
+    return payload, None
 
 
 
@@ -171,6 +214,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         if isinstance(name, str) and name:
             entry["name"] = name
         entry.update(payload or {})
+        entry["checksum"] = _artefact_checksum(path, fm)
         artefacts.append(entry)
         for pid in payload["packs"] if payload else []:
             pack_counts[pid] = pack_counts.get(pid, 0) + 1
@@ -209,6 +253,8 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
             f"first: {unassigned[0]['path']} — {unassigned[0]['reason']}"
         )
 
+    stats = _compute_stats(artefacts, unassigned, documented_unassigned)
+
     manifest = {
         "version": 1,
         "generated_at": _dt.datetime.now(_dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -219,8 +265,38 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         "artefacts": artefacts,
         "unassigned": unassigned,
         "documented_unassigned": documented_unassigned,
+        "stats": stats,
     }
     return manifest, unassigned
+
+
+def _compute_stats(
+    artefacts: list[dict[str, Any]],
+    unassigned: list[dict[str, Any]],
+    documented_unassigned: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """Aggregate counts derived from the artefact list (ADR-015)."""
+    by_category = {k: 0 for k in _CATEGORY_VALUES}
+    by_lifecycle = {k: 0 for k in _LIFECYCLE_VALUES}
+    by_trust_level = {k: 0 for k in _TRUST_VALUES}
+    for a in artefacts:
+        cat = a.get("category")
+        if cat in by_category:
+            by_category[cat] += 1
+        lc = a.get("lifecycle")
+        if lc in by_lifecycle:
+            by_lifecycle[lc] += 1
+        lvl = a.get("trust", {}).get("level")
+        if lvl in by_trust_level:
+            by_trust_level[lvl] += 1
+    return {
+        "total_artefacts": len(artefacts),
+        "by_category": by_category,
+        "by_lifecycle": by_lifecycle,
+        "by_trust_level": by_trust_level,
+        "unassigned_count": len(unassigned),
+        "documented_unassigned_count": len(documented_unassigned),
+    }
 
 
 def _serialize(manifest: dict[str, Any]) -> str:
@@ -238,6 +314,194 @@ def _finalise_checksum(manifest: dict[str, Any]) -> None:
     digest = hashlib.sha256(raw).hexdigest()
     manifest["generated_at"] = generated_at
     manifest["checksum"] = f"sha256:{digest}"
+
+
+def _deprecation_report(manifest: dict[str, Any]) -> str:
+    """List every ``lifecycle: deprecated`` artefact (ADR-015, Phase 4)."""
+    items = [a for a in manifest["artefacts"] if a.get("lifecycle") == "deprecated"]
+    items.sort(key=lambda a: a["path"])
+    lines = ["# Discovery — Deprecation Report", ""]
+    lines.append(f"- Generated: `{manifest['generated_at']}`")
+    lines.append(f"- Deprecated artefacts: **{len(items)}**")
+    lines.append("")
+    if not items:
+        lines.append("_None. Tree is clean._")
+        lines.append("")
+        return "\n".join(lines) + "\n"
+    lines.append("| Path | Category | Trust |")
+    lines.append("|---|---|---|")
+    for a in items:
+        lines.append(f"| `{a['path']}` | {a['category']} | {a['trust']['level']} |")
+    lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def _trust_report(manifest: dict[str, Any]) -> str:
+    """Trust-level breakdown by workspace + human-review sanity flag."""
+    by_ws: dict[str, dict[str, int]] = {}
+    review_flags: list[dict[str, Any]] = []
+    for a in manifest["artefacts"]:
+        level = a["trust"]["level"]
+        for ws in a["workspaces"]:
+            by_ws.setdefault(ws, {k: 0 for k in _TRUST_VALUES})[level] += 1
+        if a["trust"].get("human_review_required"):
+            review_flags.append(a)
+    review_flags.sort(key=lambda a: a["path"])
+    lines = ["# Discovery — Trust Report", ""]
+    lines.append(f"- Generated: `{manifest['generated_at']}`")
+    lines.append(f"- Workspaces tracked: **{len(by_ws)}**")
+    lines.append(f"- Human-review-required artefacts: **{len(review_flags)}**")
+    lines.append("")
+    lines.append("## Trust levels by workspace")
+    lines.append("")
+    header = "| Workspace | " + " | ".join(_TRUST_VALUES) + " |"
+    sep = "|---|" + "|".join(["---"] * len(_TRUST_VALUES)) + "|"
+    lines.extend([header, sep])
+    for ws in sorted(by_ws):
+        counts = by_ws[ws]
+        row = f"| `{ws}` | " + " | ".join(str(counts[k]) for k in _TRUST_VALUES) + " |"
+        lines.append(row)
+    lines.append("")
+    if review_flags:
+        lines.append("## Human-review-required artefacts")
+        lines.append("")
+        lines.append("| Path | Workspaces | Trust |")
+        lines.append("|---|---|---|")
+        for a in review_flags:
+            lines.append(
+                f"| `{a['path']}` | {', '.join(a['workspaces'])} | {a['trust']['level']} |"
+            )
+        lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def _orphan_artefacts(manifest: dict[str, Any]) -> list[dict[str, Any]]:
+    """Artefacts whose declared pack has no other members (likely typo).
+
+    ``experimental`` lifecycle is a sanctioned carve-out (ADR-015).
+    """
+    pack_members: dict[str, list[dict[str, Any]]] = {}
+    for a in manifest["artefacts"]:
+        for pid in a["packs"]:
+            pack_members.setdefault(pid, []).append(a)
+    orphans: list[dict[str, Any]] = []
+    for a in manifest["artefacts"]:
+        if a.get("lifecycle") == "experimental":
+            continue
+        for pid in a["packs"]:
+            if len(pack_members.get(pid, [])) == 1:
+                orphans.append({"path": a["path"], "pack": pid, "category": a["category"]})
+                break
+    orphans.sort(key=lambda o: o["path"])
+    return orphans
+
+
+def _orphan_report(manifest: dict[str, Any]) -> str:
+    orphans = _orphan_artefacts(manifest)
+    lines = ["# Discovery — Orphan Report", ""]
+    lines.append(f"- Generated: `{manifest['generated_at']}`")
+    lines.append(f"- Orphan artefacts: **{len(orphans)}**")
+    lines.append("")
+    lines.append(
+        "> An orphan is an artefact whose declared pack has no other members."
+    )
+    lines.append("> `lifecycle: experimental` is a sanctioned carve-out (ADR-015).")
+    lines.append("")
+    if not orphans:
+        lines.append("_No orphans. Pack assignments look healthy._")
+        lines.append("")
+        return "\n".join(lines) + "\n"
+    lines.append("| Path | Pack | Category |")
+    lines.append("|---|---|---|")
+    for o in orphans:
+        lines.append(f"| `{o['path']}` | `{o['pack']}` | {o['category']} |")
+    lines.append("")
+    return "\n".join(lines) + "\n"
+
+
+def _workspaces_view(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Flattened workspace sub-view (ADR-015 Phase 5).
+
+    For each workspace: artefact count + per-pack artefact ids. Cheap
+    surface for the browser wizard and marketing site so they don't need
+    to walk the full manifest.
+    """
+    pack_to_artefacts: dict[str, list[str]] = {}
+    for a in manifest["artefacts"]:
+        for pid in a["packs"]:
+            pack_to_artefacts.setdefault(pid, []).append(a["path"])
+    for pid in pack_to_artefacts:
+        pack_to_artefacts[pid].sort()
+    workspaces: list[dict[str, Any]] = []
+    for w in manifest["workspaces"]:
+        packs_block: list[dict[str, Any]] = []
+        for pid in list(w.get("default_packs", [])) + list(w.get("optional_packs", [])):
+            ids = pack_to_artefacts.get(pid, [])
+            packs_block.append({"id": pid, "artefact_count": len(ids), "artefacts": ids})
+        # Artefacts visible in this workspace (union across its packs)
+        visible: set[str] = set()
+        for entry in packs_block:
+            visible.update(entry["artefacts"])
+        workspaces.append(
+            {
+                "id": w["id"],
+                "label": w["label"],
+                "description": w["description"],
+                "default_packs": list(w.get("default_packs", [])),
+                "optional_packs": list(w.get("optional_packs", [])),
+                "artefact_count": len(visible),
+                "packs": packs_block,
+            }
+        )
+    return {
+        "generated_at": manifest["generated_at"],
+        "scanner_version": manifest["scanner_version"],
+        "checksum": manifest["checksum"],
+        "workspaces": workspaces,
+    }
+
+
+def _packs_view(manifest: dict[str, Any]) -> dict[str, Any]:
+    """Flattened pack sub-view (ADR-015 Phase 5).
+
+    Per-pack: artefact ids, lifecycle counts, trust counts. Lightweight
+    payload for a pack-picker UI.
+    """
+    pack_to_artefacts: dict[str, list[dict[str, Any]]] = {}
+    for a in manifest["artefacts"]:
+        for pid in a["packs"]:
+            pack_to_artefacts.setdefault(pid, []).append(a)
+    packs: list[dict[str, Any]] = []
+    for p in manifest["packs"]:
+        members = pack_to_artefacts.get(p["id"], [])
+        lifecycle_counts = {k: 0 for k in _LIFECYCLE_VALUES}
+        trust_counts = {k: 0 for k in _TRUST_VALUES}
+        ids: list[str] = []
+        for a in members:
+            ids.append(a["path"])
+            lifecycle_counts[a["lifecycle"]] += 1
+            trust_counts[a["trust"]["level"]] += 1
+        ids.sort()
+        packs.append(
+            {
+                "id": p["id"],
+                "label": p["label"],
+                "description": p["description"],
+                "workspaces": list(p.get("workspaces", [])),
+                "requires_hint": list(p.get("requires_hint", [])),
+                "trust_level_default": p.get("trust_level_default"),
+                "artefact_count": len(ids),
+                "artefacts": ids,
+                "by_lifecycle": lifecycle_counts,
+                "by_trust_level": trust_counts,
+            }
+        )
+    return {
+        "generated_at": manifest["generated_at"],
+        "scanner_version": manifest["scanner_version"],
+        "checksum": manifest["checksum"],
+        "packs": packs,
+    }
 
 
 def _summary(manifest: dict[str, Any]) -> str:
@@ -268,6 +532,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--write", action="store_true")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--summary", type=Path, default=DEFAULT_SUMMARY)
+    parser.add_argument("--deprecation-report", type=Path, default=DEFAULT_DEPRECATION_REPORT)
+    parser.add_argument("--trust-report", type=Path, default=DEFAULT_TRUST_REPORT)
+    parser.add_argument("--orphan-report", type=Path, default=DEFAULT_ORPHAN_REPORT)
+    parser.add_argument("--workspaces-json", type=Path, default=DEFAULT_WORKSPACES_JSON)
+    parser.add_argument("--packs-json", type=Path, default=DEFAULT_PACKS_JSON)
     parser.add_argument("--strict", action="store_true")
     parser.add_argument("--quiet", action="store_true")
     args = parser.parse_args(argv)
@@ -279,10 +548,39 @@ def main(argv: list[str] | None = None) -> int:
     _finalise_checksum(manifest)
     body = _serialize(manifest)
 
+    # ADR-015 Phase 4: orphan gate. Non-experimental artefacts whose declared
+    # pack has no other members are a typo signal. Strict (CI) mode fails;
+    # local runs only warn.
+    orphans = _orphan_artefacts(manifest)
+    if orphans and strict:
+        print(
+            f"error: {len(orphans)} orphan artefact(s) found "
+            "(non-experimental, pack has no other members). "
+            "See dist/discovery/orphan-report.md.",
+            file=sys.stderr,
+        )
+        for o in orphans[:10]:
+            print(f"  - {o['path']} (pack '{o['pack']}')", file=sys.stderr)
+        return 1
+
     if args.write:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(body, encoding="utf-8")
         args.summary.write_text(_summary(manifest), encoding="utf-8")
+        args.deprecation_report.write_text(_deprecation_report(manifest), encoding="utf-8")
+        args.trust_report.write_text(_trust_report(manifest), encoding="utf-8")
+        args.orphan_report.write_text(_orphan_report(manifest), encoding="utf-8")
+        # Phase 5 sub-views — flattened workspace/pack JSON for lightweight
+        # consumers (browser wizard, marketing site) so they don't need to
+        # walk the full manifest.
+        args.workspaces_json.write_text(
+            json.dumps(_workspaces_view(manifest), indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        args.packs_json.write_text(
+            json.dumps(_packs_view(manifest), indent=2, sort_keys=True, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
         # Sidecar SHA-256 of the on-disk manifest bytes for tamper detection
         # by downstream consumers (security-engineer council fold-in, R3 Phase 7).
         sidecar = args.out.with_suffix(args.out.suffix + ".sha256")
@@ -291,7 +589,8 @@ def main(argv: list[str] | None = None) -> int:
         if not args.quiet:
             print(
                 f"wrote {args.out.relative_to(ROOT)} "
-                f"({len(manifest['artefacts'])} artefacts, {len(unassigned)} unassigned)"
+                f"({len(manifest['artefacts'])} artefacts, {len(unassigned)} unassigned, "
+                f"{len(orphans)} orphans)"
             )
     else:
         sys.stdout.write(body)
