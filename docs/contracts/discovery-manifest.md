@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-21
+keep-beta-until: 2026-08-19
 ---
 
 # Discovery manifest — worked-example reference
