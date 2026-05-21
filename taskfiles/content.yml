@@ -66,6 +66,14 @@ tasks:
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
     cmd: python3 scripts/compress.py --generate-tools
 
+  release-prepare:
+    silent: true
+    desc: Release pipeline — sync, regenerate discovery manifest, regenerate tool projections (monorepo Phase 2, ADR-015)
+    cmds:
+      - task: sync
+      - task: build-discovery
+      - task: generate-tools
+
   clean-tools:
     silent: true
     desc: Remove all generated tool directories and files
