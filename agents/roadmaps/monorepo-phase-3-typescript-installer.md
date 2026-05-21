@@ -19,8 +19,8 @@ PHP/Composer package) renders an interactive TUI for human users, a
 non-interactive flag-driven mode for CI, and a structured JSON
 question/answer protocol for agents. Selected workspaces and packs
 are materialized into the consumer project; every managed file is
-tracked in `agents/agent-config.lock.yml`. `sync`, `validate`, and
-`prune` keep the install honest.
+tracked in `agents/agent-config.lock.yml`. <!-- ref-ignore -->
+`sync`, `validate`, and `prune` keep the install honest.
 
 ## Prerequisites
 
@@ -82,7 +82,7 @@ npx @event4u/agent-config prune      # remove orphans
 npx @event4u/agent-config info       # show installed packs, versions
 ```
 
-## Lockfile shape (`agents/agent-config.lock.yml`)
+## Lockfile shape (`agents/agent-config.lock.yml`) <!-- ref-ignore -->
 
 ```yaml
 schema_version: 1
