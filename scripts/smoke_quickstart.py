@@ -82,7 +82,13 @@ def _check_default_profile(settings: Path) -> int:
 
 def _check_decision_engine_block(settings: Path) -> int:
     """Step 3 — decision_engine block parses through the engine parser."""
-    sys.path.insert(0, str(ROOT / ".agent-src.uncompressed" / "templates" / "scripts"))
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from _lib.agent_src import resolve_logical  # noqa: E402
+
+    template_scripts = resolve_logical("templates/scripts") or (
+        ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+    )
+    sys.path.insert(0, str(template_scripts))
     try:
         from work_engine.scoring.decision_engine import (  # type: ignore[import-not-found]
             DecisionEngineSettings,
