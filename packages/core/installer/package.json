@@ -1,0 +1,38 @@
+{
+  "name": "@event4u/installer",
+  "version": "0.1.0",
+  "description": "TypeScript Core Installer for @event4u/agent-config — init, sync, validate, prune, info with TUI/CI/agent modes.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "agent-config-installer": "dist/cli.js"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./cli": "./dist/cli.js",
+    "./manifest-loader": "./dist/manifest-loader.js",
+    "./lockfile": "./dist/lockfile.js"
+  },
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^7.2.1",
+    "commander": "^12.1.0",
+    "js-yaml": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.19.41",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.9"
+  }
+}
