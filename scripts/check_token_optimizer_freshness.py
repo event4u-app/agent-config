@@ -21,7 +21,16 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILL = REPO_ROOT / ".agent-src.uncompressed" / "skills" / "token-optimizer" / "SKILL.md"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+# Post-ADR-017 the source-of-truth lives under whichever package owns
+# the skill; resolve_logical() walks every artefact root.
+SKILL = resolve_logical("skills/token-optimizer/SKILL.md") or (
+    REPO_ROOT / ".agent-src.uncompressed" / "skills" / "token-optimizer" / "SKILL.md"
+)
+
+from _lib.agent_src import strip_source_prefix  # noqa: E402
 
 # Catalog row pattern: | name | path | keywords | description |
 ROW_RE = re.compile(
@@ -74,8 +83,14 @@ def resolve(path: str) -> Path | None:
         return None
     cleaned = path.strip().lstrip("`").rstrip("`")
     cleaned = cleaned.split(")")[0].lstrip("[(")
-    candidate = (REPO_ROOT / cleaned).resolve()
-    return candidate
+    # Catalog rows still cite the legacy .agent-src.uncompressed/ prefix
+    # for compactness; resolve those across every packages/* root.
+    logical = strip_source_prefix(cleaned)
+    if logical is not None:
+        hit = resolve_logical(logical)
+        if hit is not None:
+            return hit
+    return (REPO_ROOT / cleaned).resolve()
 
 
 def check_row(row: dict[str, str]) -> list[str]:
