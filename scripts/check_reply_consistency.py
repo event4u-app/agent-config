@@ -21,6 +21,10 @@ import re
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
 QUIET = "--quiet" in sys.argv
 
 OPTION_LINE_RE = re.compile(r"^\s*>?\s*(\d+)\.\s+\S")
@@ -95,23 +99,37 @@ def validate(text: str, strict: bool = False) -> tuple[int, str]:
 
 
 def cmd_scan_dir(root: Path) -> int:
+    # If the requested root is the legacy ".agent-src.uncompressed" and it
+    # no longer exists (post-monorepo-move), fall back to artefact_roots()
+    # so every packages/*/.agent-src.uncompressed/ is scanned.
     if not root.is_dir():
-        print(f"error: not a directory: {root}", file=sys.stderr)
-        return 9
+        legacy = ROOT / ".agent-src.uncompressed"
+        if root.resolve() == legacy.resolve():
+            roots = artefact_roots()
+            if not roots:
+                print("error: no artefact roots found (legacy or packages/*)", file=sys.stderr)
+                return 9
+        else:
+            print(f"error: not a directory: {root}", file=sys.stderr)
+            return 9
+    else:
+        roots = [root]
     violations: list[tuple[Path, int, str]] = []
-    for md in sorted(root.rglob("*.md")):
-        text = md.read_text(encoding="utf-8")
-        for idx, raw in enumerate(text.splitlines(), start=1):
-            stripped = _strip_codespans(raw)
-            if OPTION_LINE_RE.match(stripped) and TAG_RE.search(stripped):
-                violations.append((md, idx, raw.strip()))
+    for r in roots:
+        for md in sorted(r.rglob("*.md")):
+            text = md.read_text(encoding="utf-8")
+            for idx, raw in enumerate(text.splitlines(), start=1):
+                stripped = _strip_codespans(raw)
+                if OPTION_LINE_RE.match(stripped) and TAG_RE.search(stripped):
+                    violations.append((md, idx, raw.strip()))
     if violations:
         for path, line, snippet in violations:
             print(f"  🔴 {path}:{line} — inline-tag — {snippet}", file=sys.stderr)
         print(f"\n❌  {len(violations)} legacy-pattern violation(s)", file=sys.stderr)
         return 6
     if not QUIET:
-        print(f"✅  No legacy (recommended) tags found under {root}")
+        scanned = ", ".join(r.relative_to(ROOT).as_posix() for r in roots)
+        print(f"✅  No legacy (recommended) tags found under {scanned}")
     return 0
 
 
