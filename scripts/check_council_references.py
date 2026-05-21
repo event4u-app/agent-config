@@ -39,6 +39,8 @@ from typing import Iterable
 QUIET = "--quiet" in sys.argv
 
 ROOT = Path(".")
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots, strip_source_prefix  # noqa: E402
 
 # A specific file inside a council dir: must end with .md or .json,
 # must NOT contain `<` or `>` (placeholders), must NOT contain backticks
@@ -50,8 +52,11 @@ PATTERN = re.compile(
 
 # Only these durable surfaces are scanned. Archive, analysis, and the
 # council dirs themselves are excluded by design.
-SCAN_ROOTS = (
-    ".agent-src.uncompressed",
+#
+# Source roots (legacy `.agent-src.uncompressed/` and every
+# `packages/*/.agent-src.uncompressed/`) are discovered at runtime via
+# `artefact_roots()` so the linter follows the monorepo physical layout.
+FIXED_SCAN_ROOTS = (
     "agents/roadmaps",
     "agents/settings/contexts",
     "agents/reference/docs",
@@ -59,6 +64,16 @@ SCAN_ROOTS = (
     "docs/decisions",
     "docs/guidelines",
 )
+
+
+def _scan_roots() -> tuple[str, ...]:
+    roots: list[str] = [r.relative_to(Path(".").resolve()).as_posix()
+                        if r.is_absolute() else r.as_posix()
+                        for r in artefact_roots()]
+    roots.extend(FIXED_SCAN_ROOTS)
+    return tuple(roots)
+
+
 SCAN_EXTS = (".md", ".yml", ".yaml", ".json", ".py")
 
 # Files (or directory prefixes) that legitimately document the output
@@ -111,9 +126,26 @@ STRUCTURAL_CARVEOUTS: tuple[tuple[re.Pattern[str], re.Pattern[str]], ...] = (
 
 
 def _is_allowlisted(rel: str) -> bool:
+    """Match a repo-relative POSIX path against the allowlist.
+
+    Allowlist prefixes are written against the legacy
+    ``.agent-src.uncompressed/`` layout. A physical hit under
+    ``packages/*/.agent-src.uncompressed/`` is normalised to the same
+    logical path before matching so entries keep covering relocated files.
+    """
     if rel in ALLOWLIST_FILES:
         return True
-    return any(rel.startswith(prefix) for prefix in ALLOWLIST_PREFIXES)
+    if any(rel.startswith(prefix) for prefix in ALLOWLIST_PREFIXES):
+        return True
+    logical = strip_source_prefix(rel)
+    if logical is not None:
+        canon = f"{_LEGACY_PREFIX_STR}{logical}"
+        if any(canon.startswith(prefix) for prefix in ALLOWLIST_PREFIXES):
+            return True
+    return False
+
+
+_LEGACY_PREFIX_STR = ".agent-src.uncompressed/"
 
 
 def _is_structurally_allowed(source_rel: str, target_capture: str) -> bool:
@@ -156,7 +188,7 @@ def _iter_files(roots: Iterable[str]) -> Iterable[Path]:
 
 def main() -> int:
     violations: list[tuple[Path, int, str]] = []
-    for path in _iter_files(SCAN_ROOTS):
+    for path in _iter_files(_scan_roots()):
         rel = path.as_posix()
         if _is_allowlisted(rel):
             continue

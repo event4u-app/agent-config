@@ -19,7 +19,7 @@ type: prospective
 Council issued **conditional approval** with five blockers; this ADR
 folds each blocker into the design before Phase 3.1 starts.
 
-Session: [`agents/runtime/council/responses/phase-3-installer-design.json`](../../agents/runtime/council/responses/phase-3-installer-design.json)
+Session: [`agents/runtime/council/responses/phase-3-installer-design.json`](../../agents/runtime/council/responses/phase-3-installer-design.json) <!-- council-ref-allowed: ADR decision-trace -->
 
 ## Context
 
@@ -186,4 +186,4 @@ banners without breaking existing agents.
 - Roadmap: [`agents/roadmaps/monorepo-phase-3-typescript-installer.md`](../../agents/roadmaps/monorepo-phase-3-typescript-installer.md)
 - Discovery manifest: [ADR-015](ADR-015-discovery-manifest-contract.md)
 - CLI shell precedent: [ADR-012](ADR-012-typescript-cli-shell.md)
-- Council session: [`agents/runtime/council/responses/phase-3-installer-design.json`](../../agents/runtime/council/responses/phase-3-installer-design.json)
+- Council session: [`agents/runtime/council/responses/phase-3-installer-design.json`](../../agents/runtime/council/responses/phase-3-installer-design.json) <!-- council-ref-allowed: ADR decision-trace -->

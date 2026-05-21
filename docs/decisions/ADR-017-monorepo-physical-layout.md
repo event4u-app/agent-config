@@ -19,7 +19,7 @@ roadmap. Council issued **conditional approval** with four blockers and
 two refinements; this revision folds each into the design before the
 `--apply` step runs.
 
-Session: [`agents/runtime/council/responses/phase-4-physical-layout.json`](../../agents/runtime/council/responses/phase-4-physical-layout.json)
+Session: [`agents/runtime/council/responses/phase-4-physical-layout.json`](../../agents/runtime/council/responses/phase-4-physical-layout.json) <!-- council-ref-allowed: ADR decision-trace -->
 
 Companion artefacts:
 - [`agents/roadmaps/monorepo-phase-4-physical-package-layout.md`](../../agents/roadmaps/monorepo-phase-4-physical-package-layout.md)
