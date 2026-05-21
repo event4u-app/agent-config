@@ -49,6 +49,17 @@ tasks:
     desc: Check compression quality between uncompressed and compressed pairs
     cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
 
+  lint-pack:
+    silent: true
+    desc: |
+      Phase 4.4 (ADR-017) — lint a single package's uncompressed source
+      tree. Used by the per-pack CI matrix (.github/workflows/skill-lint.yml).
+      Pass the pack id via `-- PACK=<name>` (e.g. `task lint-pack -- PACK=pack-laravel`)
+      or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncompressed/`.
+    cmd: python3 scripts/skill_linter.py "packages/{{.PACK}}/.agent-src.uncompressed/" {{.QUIET_FLAG}}
+    requires:
+      vars: [PACK]
+
   skill-usage:collect:
     silent: true
     desc: |
