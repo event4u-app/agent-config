@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 89 steps done · 0%**
+**26 / 89 steps done · 29%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [monorepo-phase-3-typescript-installer.md](roadmaps/monorepo-phase-3-typescript-installer.md) | 6 | 29 | 29 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [monorepo-phase-3-typescript-installer.md](roadmaps/monorepo-phase-3-typescript-installer.md) | 6 | 29 | 3 | 26 | 0 | 0 | █████████░ 90% |
 | 2 | [monorepo-phase-4-physical-package-layout.md](roadmaps/monorepo-phase-4-physical-package-layout.md) | 6 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [monorepo-phase-5-trust-safety-layer.md](roadmaps/monorepo-phase-5-trust-safety-layer.md) | 5 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md) | 5 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -27,15 +27,15 @@
 
 ### [monorepo-phase-3-typescript-installer.md](roadmaps/monorepo-phase-3-typescript-installer.md)
 
-**Monorepo Phase 3 — TypeScript Installer (CLI + Lockfile + Agent Mode)** — 0 / 29 done (0%)
+**Monorepo Phase 3 — TypeScript Installer (CLI + Lockfile + Agent Mode)** — 26 / 29 done (90%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Skeleton + manifest loader | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Interactive `init` | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 3 | Non-interactive `init --yes` | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Agent mode | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | `sync`, `validate`, `prune` | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 1 | Skeleton + manifest loader | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Interactive `init` | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 3 | Non-interactive `init --yes` | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 4 | Agent mode | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 5 | `sync`, `validate`, `prune` | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 6 | Distribution | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [monorepo-phase-4-physical-package-layout.md](roadmaps/monorepo-phase-4-physical-package-layout.md)
