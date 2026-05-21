@@ -23,27 +23,27 @@ auto-loaded guardrail rules.
 
 ## Prerequisites
 
-- [ ] Phases 1–3 shipped and green
-- [ ] Read `agents/tmp/refactor-package.txt` sections "Trust- und
+- [x] Phases 1–3 shipped and green
+- [x] Read `agents/tmp/refactor-package.txt` sections "Trust- und
       Safety-Metadaten" and "Safety-Regeln nach Domäne"
-- [ ] Existing rules referenced as the model:
+- [x] Existing rules referenced as the model:
       [`domain-safety-disclaimer`](../../.augment/rules/domain-safety-disclaimer.md),
       [`domain-safety-pii`](../../.augment/rules/domain-safety-pii.md),
       [`domain-safety-retention`](../../.augment/rules/domain-safety-retention.md)
 
 ## Acceptance criteria
 
-- [ ] Installer prints a one-line summary per pack with trust mix
+- [x] Installer prints a one-line summary per pack with trust mix
       (`Finance: 18 core · 4 advisory · human-review on 6`)
-- [ ] Installer requires `--accept-advisory` (or interactive confirm)
+- [x] Installer requires `--accept-advisory` (or interactive confirm)
       when selecting a pack containing any `advisory` or `restricted`
       artefact
-- [ ] Every artefact with `human_review_required: true` carries a
+- [x] Every artefact with `human_review_required: true` carries a
       visible HUMAN_REVIEW banner at the top of its compiled output,
       auto-injected by the compressor
-- [ ] Per-domain guardrail rules ship with each domain pack and
+- [x] Per-domain guardrail rules ship with each domain pack and
       auto-activate when the pack is installed
-- [ ] `task lint-trust-coherence` catches drift between declared
+- [x] `task lint-trust-coherence` catches drift between declared
       `trust.level` and the absence of required guardrail references
 
 ## Non-goals
@@ -56,57 +56,60 @@ auto-loaded guardrail rules.
 
 ## Phase 1 — Trust surfaces in the installer
 
-- [ ] Installer's pack picker shows trust mix per pack from the
+- [x] Installer's pack picker shows trust mix per pack from the
       `trust_summary` field in the manifest (Phase 2 produced it)
-- [ ] Selecting a pack with any `advisory`/`restricted` artefact
+- [x] Selecting a pack with any `advisory`/`restricted` artefact
       triggers a confirm prompt; non-interactive mode requires
       `--accept-advisory=pack.finance,pack.legal` explicitly
-- [ ] Agent-mode emits a `confirm` question type with the trust
+- [x] Agent-mode emits a `confirm` question type with the trust
       details inline; the agent must relay it verbatim to the user
-- [ ] Lockfile records the accepted trust levels per pack so future
+- [x] Lockfile records the accepted trust levels per pack so future
       `sync` operations re-confirm if levels escalate
 
 ## Phase 2 — Runtime guardrails per domain
 
-- [ ] `packages/pack-finance/rules/finance-safety-floor.md` —
+- [x] `packages/pack-finance-basic/.agent-src.uncompressed/rules/finance-safety-floor.md` —
       no final investment recommendation, sensitivity required,
       assumptions explicit, human review on high-impact decisions
-- [ ] `packages/pack-governance/rules/legal-tax-safety-floor.md` —
-      preparatory analysis only, no binding advice, jurisdiction
-      mandatory, human review always
-- [ ] `packages/pack-strategy/rules/strategy-safety-floor.md` —
+- [~] `packages/pack-governance/rules/legal-tax-safety-floor.md` —
+      deferred: `pack-governance` does not yet exist; will ship with
+      that pack via a follow-on ADR (anticipated `regulated` trust
+      level)
+- [x] `packages/pack-founder-strategy/.agent-src.uncompressed/rules/strategy-safety-floor.md` —
       alternatives presented, assumptions visible, risks listed,
       confidence level named
-- [ ] `packages/pack-engineering-base/rules/engineering-safety-floor.md`
+- [x] `packages/core/.agent-src.uncompressed/rules/engineering-safety-floor.md`
       — references existing minimal-safe-diff, scope-control,
       verify-before-complete; no new mandates, just the routing rule
 
 ## Phase 3 — Compressor banner injection
 
-- [ ] Extend the caveman compressor to scan frontmatter and inject
+- [x] Extend the caveman compressor to scan frontmatter and inject
       a HUMAN_REVIEW banner block at the top of any artefact where
       `human_review_required: true`
-- [ ] Banner format is short and parser-stable (Iron-Law style):
+- [x] Banner format is short and parser-stable (Iron-Law style):
       `> HUMAN REVIEW REQUIRED · trust: advisory · owner: finance`
-- [ ] Roundtrip test: compress → decompress → re-compress yields
+- [x] Roundtrip test: compress → decompress → re-compress yields
       identical banner placement
 
 ## Phase 4 — Coherence lint
 
-- [ ] `scripts/lint_trust_coherence.py` walks the manifest and
+- [x] `scripts/lint_trust_coherence.py` walks the manifest and
       flags: pack with mixed trust levels and no domain-safety rule,
       artefact with `human_review_required: true` but no banner in
       compiled output, kernel-level rule incorrectly marked as
       `restricted`
-- [ ] `task lint-trust-coherence` wired into `task ci` <!-- carve-out: new-gate-verification -->
-- [ ] Unit tests in `tests/scripts/test_lint_trust_coherence.py`
+- [x] `task lint-trust-coherence` wired into `task ci` <!-- carve-out: new-gate-verification -->
+- [x] Unit tests in `tests/test_lint_trust_coherence.py`
 
 ## Phase 5 — Documentation
 
-- [ ] `docs/contracts/trust-and-safety.md` documents the contract,
+- [x] `docs/contracts/trust-and-safety.md` documents the contract,
       the four domain floors, and the installer's confirm flow
-- [ ] ADR `docs/decisions/ADR-017-trust-and-safety-layer.md`
-- [ ] Update `AGENTS.md` pointer table to include the trust contract
+- [x] ADR `docs/decisions/ADR-018-trust-and-safety-layer.md`
+      (renumbered from 017 — that slot was taken by the Phase 4
+      physical-layout ADR)
+- [x] Update `AGENTS.md` pointer table to include the trust contract
 
 ## Quality gates
 
