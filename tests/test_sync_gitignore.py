@@ -322,6 +322,26 @@ def test_cleanup_legacy_strips_intermediate_prices_path():
     assert removed == ["/agents/.agent-prices.md"]
 
 
+def test_cleanup_legacy_strips_budget_history_paths():
+    """Budget-history JSONLs are now covered by /agents/runtime/."""
+    lines = [
+        "/vendor/",
+        ".augment-budget-history.jsonl",
+        ".rule-budget-history.jsonl",
+        "/agents/.augment-budget-history.jsonl",
+        "/agents/.rule-budget-history.jsonl",
+        "user-stuff/",
+    ]
+    new_lines, removed = sg.cleanup_legacy(lines)
+    assert new_lines == ["/vendor/", "user-stuff/"]
+    assert set(removed) == {
+        ".augment-budget-history.jsonl",
+        ".rule-budget-history.jsonl",
+        "/agents/.augment-budget-history.jsonl",
+        "/agents/.rule-budget-history.jsonl",
+    }
+
+
 def test_cleanup_legacy_preserves_comments_and_blanks():
     lines = [
         "# event4u/agent-config",

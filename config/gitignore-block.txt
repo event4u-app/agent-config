@@ -37,7 +37,10 @@
 !/agents/ghostwriter/README.md
 /agents/ghostwriter/*.md.bak
 
-# Agent config — persistent chat history (crash recovery, never commit)
+# Agent config — legacy chat-history flat path. Current installs put
+# the file at agents/runtime/.agent-chat-history (covered by the
+# /agents/runtime/ catch-all below). Kept for back-compat with older
+# installs that have not migrated yet.
 /agents/.agent-chat-history
 /agents/.agent-chat-history.bak
 /agents/.agent-chat-history.*.bak
@@ -47,32 +50,14 @@
 .agent-engagement.jsonl.bak
 
 # Agent config — volatile runtime artefacts (machine-generated,
-# regenerated on demand, never committed). Covers price cache,
-# council artefacts, council events log, and hook runtime state.
-# Individual paths are listed explicitly below for documentation;
-# the `/agents/runtime/` prefix is the catch-all.
+# regenerated on demand, never committed). Single catch-all per the
+# Volatile Runtime policy: everything under agents/runtime/ is
+# local-only — price cache, council questions/responses/sessions,
+# council events log, Tier 1 hook runtime state, chat-history, budget
+# history, density / frugality / logs / mcp-telemetry / tmp scratch.
+# Durable evidence cited from docs / ADRs lives in agents/evidence/;
+# decision records in agents/decisions/.
 /agents/runtime/
-
-# Agent config — AI Council price table (refreshed weekly, never commit)
-/agents/runtime/.agent-prices.md
-
-# Agent config — AI Council artefacts (questions, responses, sessions).
-# Dev-time scratch — informs decisions, never the durable contract.
-# See ai-council § Output path convention.
-/agents/runtime/council/questions/
-/agents/runtime/council/responses/
-/agents/runtime/council/sessions/
-
-# Agent config — AI Council persistent events log.
-# Local JSONL audit trail for necessity / quota decisions. Hashes
-# original_ask before write but is still considered private. Set
-# AGENT_CONFIG_NO_EVENTS_LOG=1 to disable writes entirely.
-/agents/runtime/council/events.log
-
-# Agent config — Tier 1 hook runtime state (context-hygiene.json,
-# onboarding-gate.json). Written by SessionStart / PostToolUse hooks
-# on Augment + Claude Code; regenerated on demand, never commit.
-/agents/runtime/state/
 
 # Agent config — unified-setup wizard partial state (Roadmap R2 Phase 1).
 # Written by POST /api/v1/wizard/state between step transitions, deleted

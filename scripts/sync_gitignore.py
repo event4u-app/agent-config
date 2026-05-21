@@ -55,6 +55,13 @@ LEGACY_PATTERNS: tuple[str, ...] = (
     # 2.x intermediate: prices cache lived directly under agents/ before
     # consolidating under agents/runtime/.
     "agents/.agent-prices.md",
+    # Budget history JSONLs — previously listed explicitly at project
+    # root or under agents/; now covered by the /agents/runtime/
+    # catch-all in the managed block.
+    ".augment-budget-history.jsonl",
+    ".rule-budget-history.jsonl",
+    "agents/.augment-budget-history.jsonl",
+    "agents/.rule-budget-history.jsonl",
 )
 
 

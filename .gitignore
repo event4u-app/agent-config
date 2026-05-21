@@ -52,8 +52,10 @@ __pycache__/
 !templates/minimal/.agent-settings.yml
 
 # Persistent chat-history log (crash recovery; written by
-# scripts/chat_history.py, governed by the chat-history rule). Never
-# commit — contains conversation content and session fingerprints.
+# scripts/chat_history.py, governed by the chat-history rule).
+# Lives at agents/runtime/.agent-chat-history — covered by the
+# /agents/runtime/ catch-all further down. Legacy flat-path variants
+# stay listed for back-compat with older installs.
 /agents/.agent-chat-history
 /agents/.agent-chat-history.bak
 /agents/.agent-chat-history.*.bak
@@ -82,9 +84,6 @@ __pycache__/
 /.ai/
 /GEMINI.md
 
-# Dispatcher run results (produced by `dispatcher run --output …`, consumed by ci_summary)
-/agents/runtime/reports/runs/
-
 # Trigger-eval run outputs (produced by `scripts/skill_trigger_eval.py`;
 # triggers.json is tracked, last-run.json is per-run output)
 .agent-src.uncompressed/skills/*/evals/last-run.json
@@ -102,23 +101,14 @@ evals/results/
 /.agent-memory/
 
 # Volatile runtime artefacts — machine-generated, regenerated on demand,
-# never committed. Volatile buckets are ignored explicitly; sibling
-# buckets `council/`, `metrics/`, `reports/` carry tracked content and
-# are governed by their own carve-out rules further down.
-#   density/    — scripts/measure_density.py + skill_linter.py JSONL/JSON
-#                 (canonical numbers locked in docs/contracts/linter-structural-model.md)
-#   frugality/  — scripts/measure_frugality_savings.py JSONL
-#                 (canonical numbers locked in agents/settings/contexts/adr-frugality-savings-baseline.md)
-#   logs/       — /implement-ticket Q38 metrics JSONL per run
-#   mcp-telemetry/ — scripts/mcp_server/telemetry.py call log + sqlite store
-#   state/      — per-rule runtime cache (context-hygiene, onboarding-gate, verify-before-complete)
-#   tmp/        — operator scratch
-/agents/runtime/density/
-/agents/runtime/frugality/
-/agents/runtime/logs/
-/agents/runtime/mcp-telemetry/
-/agents/runtime/state/
-/agents/runtime/tmp/
+# never committed. Single catch-all per the Volatile Runtime policy:
+# everything under agents/runtime/ is local-only (council sessions,
+# metrics JSONL, dispatcher run results, density/frugality measurements,
+# logs, mcp-telemetry, state caches, tmp scratch, budget-history,
+# .agent-chat-history, .agent-prices.md). Durable evidence cited from
+# docs / ADRs lives in agents/evidence/; decision records in
+# agents/decisions/. See AGENTS.md + the privilege-first taxonomy.
+/agents/runtime/
 
 # Phase 5.3 always-rule budget trend log (per-run JSONL, local-only).
 /.github/budget-trend.jsonl
@@ -134,39 +124,6 @@ evals/results/
 
 # Cloud bundle output
 /dist/
-
-# Skill-usage telemetry (step-2-skill-inventory-rationalization Phase 1).
-# Raw per-turn JSONL is local-only because it carries SHA-256 prompt
-# hashes derived from the maintainer's own sessions. The aggregated
-# report (skill-usage-report.md) IS committed as the 0-day baseline.
-/agents/runtime/metrics/skill-usage.jsonl
-
-# AI Council runtime price cache (refreshed weekly by
-# `python3 scripts/update_prices.py`; bootstrapped on first /council
-# call from scripts/ai_council/_default_prices.py). User-editable —
-# never commit, prices drift constantly.
-/agents/runtime/.agent-prices.md
-
-# AI Council artefacts (questions, responses, sessions). Council
-# output is dev-time scratch — informs decisions, never the durable
-# contract. The roadmap / ADR / skill body cites convergence inline.
-# Linking to council files would break for any reviewer who clones
-# without the ignored content. See ai-council § Output path convention.
-agents/runtime/council/questions/*
-agents/runtime/council/responses/*
-agents/runtime/council/sessions/
-
-# Carve-outs: durable council artefacts that document decisions cited
-# from roadmaps / ADRs. Future council runs stay scratch by default.
-# Pattern needs `/*` (not `/`) on the parent rules above so re-includes work.
-!agents/runtime/council/responses/2026-05-18T*
-!agents/runtime/council/questions/agent-doc-cluster-restructure.md
-!agents/runtime/council/responses/agent-doc-cluster-restructure.json
-
-# AI Council persistent events log (step-8 D3). JSONL audit trail of
-# necessity / quota decisions. Local-only — hashes original_ask but is
-# still considered private. See docs/contracts/ai-council-config.md.
-agents/runtime/council/events.log
 
 # AI Council per-run cache (raw provider responses keyed by run id).
 # Regenerated on demand from the council session JSON; never commit.
