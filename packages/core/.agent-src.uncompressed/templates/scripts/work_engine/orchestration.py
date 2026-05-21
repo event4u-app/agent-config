@@ -57,21 +57,35 @@ class PipelineState:
 def _load_pipeline(path: Path) -> dict[str, Any]:
     """Reuse the linter's loader so the runtime accepts the same shape.
 
-    Walks parents to find a directory containing ``scripts/hooks/``
-    so the loader is reachable both when this module runs from the
-    consumer projection (``.agent-src/templates/scripts/work_engine/``)
-    and from the source-of-truth tree
-    (``.agent-src.uncompressed/templates/scripts/work_engine/``).
+    Walks parents to find ``scripts/hooks/dispatch_hook.py`` so the
+    loader is reachable both when this module runs from the consumer
+    projection (``.agent-src/templates/scripts/work_engine/``) and
+    from the source-of-truth tree
+    (``packages/<pack>/.agent-src.uncompressed/templates/scripts/work_engine/``).
+    Loaded via ``importlib.util`` by file path to avoid namespace
+    collisions with test packages named ``hooks``.
     """
-    import sys
+    import importlib.util
     here = Path(__file__).resolve()
+    candidate: Path | None = None
     for parent in here.parents:
-        candidate = parent / "scripts" / "hooks" / "dispatch_hook.py"
-        if candidate.is_file():
-            sys.path.insert(0, str(parent / "scripts"))
+        probe = parent / "scripts" / "hooks" / "dispatch_hook.py"
+        if probe.is_file():
+            candidate = probe
             break
-    from hooks.dispatch_hook import _load_yaml  # noqa: E402
-    doc = _load_yaml(path)
+    if candidate is None:
+        raise RuntimeError(
+            "could not locate scripts/hooks/dispatch_hook.py from "
+            f"{here}"
+        )
+    spec = importlib.util.spec_from_file_location(
+        "_work_engine_dispatch_hook", candidate
+    )
+    if spec is None or spec.loader is None:
+        raise RuntimeError(f"cannot load spec for {candidate}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    doc = module._load_yaml(path)
     if not isinstance(doc, dict):
         raise ValueError(f"{path}: top-level must be a mapping")
     return doc

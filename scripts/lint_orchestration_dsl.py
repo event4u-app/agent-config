@@ -33,6 +33,9 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
 DEFAULT_DIR = REPO_ROOT / ".agent-config" / "orchestrations"
 
 NAME_RE = re.compile(r"^[a-z][a-z0-9-]*$")
@@ -62,11 +65,11 @@ def _load_yaml(path: Path) -> object:
 
 def _ref_exists(kind: str, ref: str) -> bool:
     if kind == "skill":
-        return (REPO_ROOT / ".agent-src.uncompressed" / "skills" / ref / "SKILL.md").is_file()
+        return resolve_logical(f"skills/{ref}/SKILL.md") is not None
     if kind == "command":
-        return (REPO_ROOT / ".agent-src.uncompressed" / "commands" / f"{ref}.md").is_file()
+        return resolve_logical(f"commands/{ref}.md") is not None
     if kind == "persona":
-        return (REPO_ROOT / ".agent-src.uncompressed" / "personas" / f"{ref}.md").is_file()
+        return resolve_logical(f"personas/{ref}.md") is not None
     if kind == "subagent":
         return ref in SUBAGENT_MODES
     return False

@@ -67,9 +67,16 @@ FIXED_SCAN_ROOTS = (
 
 
 def _scan_roots() -> tuple[str, ...]:
-    roots: list[str] = [r.relative_to(Path(".").resolve()).as_posix()
-                        if r.is_absolute() else r.as_posix()
-                        for r in artefact_roots()]
+    cwd = Path(".").resolve()
+    roots: list[str] = []
+    for r in artefact_roots():
+        try:
+            roots.append(r.relative_to(cwd).as_posix() if r.is_absolute() else r.as_posix())
+        except ValueError:
+            # Root lives outside the current working directory (e.g. tests
+            # chdir into a tmp tree). Skip — the test isolates its own
+            # source tree.
+            continue
     roots.extend(FIXED_SCAN_ROOTS)
     return tuple(roots)
 

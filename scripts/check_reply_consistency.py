@@ -128,7 +128,12 @@ def cmd_scan_dir(root: Path) -> int:
         print(f"\n❌  {len(violations)} legacy-pattern violation(s)", file=sys.stderr)
         return 6
     if not QUIET:
-        scanned = ", ".join(r.relative_to(ROOT).as_posix() for r in roots)
+        def _rel(p: Path) -> str:
+            try:
+                return p.relative_to(ROOT).as_posix()
+            except ValueError:
+                return p.as_posix()
+        scanned = ", ".join(_rel(r) for r in roots)
         print(f"✅  No legacy (recommended) tags found under {scanned}")
     return 0
 

@@ -95,23 +95,28 @@ def _parse_frontmatter(p: Path) -> dict:
     return data if isinstance(data, dict) else {}
 
 
-def _collect_files() -> list[tuple[Path, str]]:
+def _collect_files(root: Path | None = None) -> list[tuple[Path, str]]:
     """Walk every artefact root and yield ``(physical_path, canonical_rel)``.
 
     ``canonical_rel`` is always anchored at ``.agent-src.uncompressed/`` so
     the matrix is byte-identical pre- and post-monorepo-move. Duplicates
     across roots resolve to the first hit (legacy first, then packages
     alphabetically) — matches the priority in ``artefact_roots()``.
+
+    When ``root`` is given, only that single directory is scanned — used by
+    tests against a ``tmp_path`` fixture so they stay isolated from the
+    real package layout.
     """
+    roots = [root] if root is not None else list(artefact_roots())
     out: list[tuple[Path, str]] = []
     seen: set[str] = set()
-    for root in artefact_roots():
+    for r in roots:
         for sub in SCAN_DIRS:
-            d = root / sub
+            d = r / sub
             if not d.exists():
                 continue
             for f in sorted(d.rglob("*.md")):
-                logical = f.relative_to(root).as_posix()
+                logical = f.relative_to(r).as_posix()
                 canonical = f"{CANONICAL_SRC_PREFIX}/{logical}"
                 if canonical in seen:
                     continue
@@ -121,15 +126,16 @@ def _collect_files() -> list[tuple[Path, str]]:
     return out
 
 
-def build_matrix() -> tuple[dict[str, FileEntry], list[Edge], list[str]]:
+def build_matrix(root: Path | None = None) -> tuple[dict[str, FileEntry], list[Edge], list[str]]:
     """Build the file map + edge list. Returns (files, edges, depth3_chains).
 
     depth3_chains is non-empty iff the depth invariant is violated; the
-    caller must abort with exit code 2.
+    caller must abort with exit code 2. When ``root`` is given, only that
+    single directory is scanned (test isolation).
     """
     files: dict[str, FileEntry] = {}
     physical_by_canonical: dict[str, Path] = {}
-    for f, rel in _collect_files():
+    for f, rel in _collect_files(root):
         physical_by_canonical[rel] = f
         fm = _parse_frontmatter(f)
         rtype = fm.get("type")
@@ -248,9 +254,9 @@ def _resolve_link(source_rel: str, source_phys: Path, href: str) -> str | None:
             else:
                 base_parts.append(part)
         logical = "/".join(base_parts)
-        # Strip optional anchor / query already handled by LINK_RE.
-        if resolve_logical(logical) is None:
-            return None
+    # Existence is validated downstream by the caller against the scanned
+    # ``files`` dict — that handles both real ``artefact_roots()`` scans
+    # and ``tmp_path`` test fixtures uniformly.
     parts = logical.split("/")
     if len(parts) >= 2 and parts[0] in SCAN_DIRS:
         return f"{CANONICAL_SRC_PREFIX}/{logical}"

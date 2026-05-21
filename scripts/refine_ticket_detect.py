@@ -32,13 +32,36 @@ except ImportError as exc:
     ) from exc
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_MAP = (
-    REPO_ROOT
-    / ".agent-src.uncompressed"
-    / "skills"
-    / "refine-ticket"
-    / "detection-map.yml"
-)
+
+# Post-monorepo Phase 4 the detection map lives under any package's
+# .agent-src.uncompressed/. Discover it via the shared helper; fall
+# back to the legacy flat path so consumers and older sub-trees still
+# work.
+import sys as _sys  # noqa: E402
+
+_sys.path.insert(0, str(REPO_ROOT / "scripts"))
+try:
+    from _lib.agent_src import artefact_roots as _artefact_roots
+except ImportError:
+    _artefact_roots = None
+
+
+def _discover_default_map() -> Path:
+    if _artefact_roots is not None:
+        for root in _artefact_roots():
+            candidate = root / "skills" / "refine-ticket" / "detection-map.yml"
+            if candidate.is_file():
+                return candidate
+    return (
+        REPO_ROOT
+        / ".agent-src.uncompressed"
+        / "skills"
+        / "refine-ticket"
+        / "detection-map.yml"
+    )
+
+
+DEFAULT_MAP = _discover_default_map()
 
 # Composite tokens that contain a sub-skill keyword as a substring but
 # are not themselves triggers (Phase F2). Matched with word boundaries

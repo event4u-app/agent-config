@@ -93,7 +93,25 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 
 def _preset_file(project_root: Path, preset_id: str) -> Path:
-    return project_root / PRESETS_DIRNAME / f"{preset_id}.yml"
+    # Legacy single-root layout — honor when present so tests that mock a
+    # ``.agent-src.uncompressed/`` sub-tree under ``project_root`` keep working.
+    legacy = project_root / PRESETS_DIRNAME / f"{preset_id}.yml"
+    if legacy.exists():
+        return legacy
+    # Monorepo layout — scan every package root via the agent_src helper.
+    try:
+        import sys as _sys
+        scripts_root = Path(__file__).resolve().parents[1]
+        if str(scripts_root) not in _sys.path:
+            _sys.path.insert(0, str(scripts_root))
+        from _lib.agent_src import artefact_roots  # type: ignore
+    except Exception:
+        return legacy
+    for root in artefact_roots():
+        candidate = root / "presets" / f"{preset_id}.yml"
+        if candidate.exists():
+            return candidate
+    return legacy
 
 
 def _coerce_scalar(raw: str) -> Any:
