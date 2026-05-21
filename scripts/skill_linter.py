@@ -2100,6 +2100,51 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
     return sorted(set(candidates))
 
 
+def gather_candidate_files_under(src_root: Path) -> list[Path]:
+    """Gather lintable files under an arbitrary source root.
+
+    Mirrors the per-root walk used by ``gather_all_candidate_files`` but
+    scoped to a single directory \u2014 e.g. ``packages/pack-laravel/.agent-src.uncompressed/``
+    so CI can lint a single pack in parallel (ADR-017 Phase 4.4).
+    Skips symlinks and ``README.md`` siblings under ``personas/`` /
+    ``user-types/``.
+    """
+    out: list[Path] = []
+    if not src_root.is_dir():
+        return out
+    seen: set[Path] = set()
+
+    def _push(file: Path) -> None:
+        if file.is_symlink() or not file.is_file():
+            return
+        resolved = file.resolve()
+        if resolved in seen:
+            return
+        seen.add(resolved)
+        out.append(file)
+
+    skills_dir = src_root / "skills"
+    if skills_dir.exists():
+        for f in skills_dir.rglob("SKILL.md"):
+            _push(f)
+    for sub in ("rules", "commands", "guidelines"):
+        base = src_root / sub
+        if base.exists():
+            for f in base.rglob("*.md"):
+                _push(f)
+    for sub in ("personas", "user-types"):
+        base = src_root / sub
+        if base.exists():
+            for f in base.glob("*.md"):
+                if f.name.lower() == "readme.md":
+                    continue
+                _push(f)
+    charter = src_root / FRUGALITY_CHARTER_RELPATH
+    if charter.exists() and not charter.is_symlink():
+        _push(charter)
+    return sorted(set(out))
+
+
 def gather_changed_candidate_files(root: Path) -> list[Path]:
     """Find changed skill/rule files using git diff.
 
@@ -3542,7 +3587,13 @@ def main() -> int:
             paths.extend(gather_changed_candidate_files(root))
         for raw in args.paths:
             path = (root / raw).resolve() if not Path(raw).is_absolute() else Path(raw)
-            if path.exists():
+            if not path.exists():
+                continue
+            if path.is_dir():
+                # Walk the directory like a source root so callers can pass
+                # `packages/pack-laravel/.agent-src.uncompressed/` (ADR-017 Phase 4.4).
+                paths.extend(gather_candidate_files_under(path))
+            else:
                 paths.append(path)
 
         paths = sorted(set(paths))

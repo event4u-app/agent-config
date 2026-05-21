@@ -29,6 +29,47 @@ permissions:
   pull-requests: write
 
 jobs:
+  # Phase 4.4 (ADR-017): per-pack matrix gate. Each pack lints its own
+  # `.agent-src.uncompressed/` tree in parallel; merge requires every
+  # matrix shard green.
+  skill-lint-per-pack:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        pack:
+          - core
+          - pack-ai-video
+          - pack-finance-advanced
+          - pack-finance-basic
+          - pack-founder-strategy
+          - pack-gtm-marketing
+          - pack-gtm-sales
+          - pack-laravel
+          - pack-nextjs
+          - pack-ops-people
+          - pack-php
+          - pack-product-basic
+          - pack-product-discovery
+          - pack-python
+          - pack-react
+          - pack-symfony
+          - pack-typescript
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Set up Task
+        uses: arduino/setup-task@v2
+
+      - name: Lint pack ${{ matrix.pack }}
+        run: task lint-pack PACK=${{ matrix.pack }}
+
   skill-lint:
     runs-on: ubuntu-latest
 
