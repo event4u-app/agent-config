@@ -21,7 +21,15 @@ import pytest
 
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-SCRIPTS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+_SCRIPTS_RESOLVED = resolve_logical("templates/scripts")
+assert _SCRIPTS_RESOLVED is not None, "templates/scripts not found in any pack"
+SCRIPTS_DIR = _SCRIPTS_RESOLVED
+
+_ENGAGEMENT_RULE = resolve_logical("rules/artifact-engagement-recording.md")
+assert _ENGAGEMENT_RULE is not None, "artifact-engagement-recording.md missing"
 
 
 def _run_subprocess(snippet: str, env: dict[str, str] | None = None) -> tuple[int, str, str]:
@@ -147,7 +155,7 @@ def test_engagement_rule_is_auto_not_always(rule_path: str) -> None:
 
     rule-type-governance: never as ``always`` for opt-in observation paths.
     """
-    body = (REPO_ROOT / rule_path).read_text()
+    body = _ENGAGEMENT_RULE.read_text()
     head, _, _ = body.partition("\n---\n")
     # head holds the YAML between the opening '---' and the closing one.
     assert 'type: "auto"' in head, f"{rule_path} must declare type: auto"
@@ -156,10 +164,7 @@ def test_engagement_rule_is_auto_not_always(rule_path: str) -> None:
 
 def test_engagement_rule_declares_cloud_safe_noop() -> None:
     """The cloud-bundle pipeline must skip this rule on Claude.ai Web."""
-    body = (
-        REPO_ROOT
-        / ".agent-src.uncompressed/rules/artifact-engagement-recording.md"
-    ).read_text()
+    body = _ENGAGEMENT_RULE.read_text()
     assert "<!-- cloud_safe: noop -->" in body, (
         "rule must declare cloud_safe: noop so cloud-bundle pipeline skips it"
     )

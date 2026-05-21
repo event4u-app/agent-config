@@ -12,22 +12,23 @@ content gate.
 """
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULE_PATH = (
-    REPO_ROOT
-    / ".agent-src.uncompressed"
-    / "rules"
-    / "ui-audit-gate.md"
-)
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+RULE_PATH = resolve_logical("rules/ui-audit-gate.md")
 
 
 @pytest.fixture(scope="module")
 def rule_text() -> str:
-    assert RULE_PATH.exists(), f"missing rule file: {RULE_PATH}"
+    assert RULE_PATH is not None and RULE_PATH.exists(), (
+        f"missing rule file: rules/ui-audit-gate.md"
+    )
     return RULE_PATH.read_text(encoding="utf-8")
 
 

@@ -29,7 +29,28 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent.parent
 MATRIX_PATH = ROOT / "docs" / "contracts" / "rule-interactions.yml"
-RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
+
+import sys as _sys
+_sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
+
+def _rule_path(slug: str) -> Path | None:
+    return resolve_logical(f"rules/{slug}.md")
+
+
+def _evidence_path(citation: str) -> Path | None:
+    """Resolve a citation like ``.agent-src.uncompressed/rules/X.md#anchor``.
+
+    Strips the legacy ``.agent-src.uncompressed/`` prefix and routes to the
+    multi-root resolver. Non-artefact citations (docs/, agents/) fall back
+    to ``ROOT / citation``.
+    """
+    legacy_prefix = ".agent-src.uncompressed/"
+    if citation.startswith(legacy_prefix):
+        logical = citation[len(legacy_prefix):]
+        return resolve_logical(logical)
+    return ROOT / citation
 
 ALLOWED_RELATIONS = {
     "overrides",
@@ -118,7 +139,8 @@ def test_every_pair_well_formed(matrix: dict[str, Any]) -> None:
         )
         for slug in rules_pair:
             assert slug in declared, f"{pair['id']!r} cites undeclared rule {slug!r}"
-            assert (RULES_DIR / f"{slug}.md").exists(), (
+            rule_path = _rule_path(slug)
+            assert rule_path is not None and rule_path.exists(), (
                 f"{pair['id']!r} cites rule {slug!r} with no on-disk file"
             )
         assert pair["relation"] in ALLOWED_RELATIONS, (
@@ -129,7 +151,8 @@ def test_every_pair_well_formed(matrix: dict[str, Any]) -> None:
         assert evidence, f"{pair['id']!r} evidence must be non-empty"
         for citation in evidence:
             file_part = citation.split("#", 1)[0]
-            assert (ROOT / file_part).exists(), (
+            resolved = _evidence_path(file_part)
+            assert resolved is not None and resolved.exists(), (
                 f"{pair['id']!r} evidence path missing: {file_part}"
             )
 

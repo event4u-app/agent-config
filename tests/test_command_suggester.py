@@ -37,7 +37,16 @@ from command_suggester import (  # noqa: E402
 from command_suggester.cooldown import parse_cooldown  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "commands"
+
+from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
+
+# Pick the first package root that has a ``commands/`` subtree. Test
+# fixtures only need *a* command catalogue to load specs against, not
+# every package's catalogue, so the first hit is fine.
+COMMANDS_DIR = next(
+    (r / "commands" for r in artefact_roots() if (r / "commands").is_dir()),
+    REPO_ROOT / ".agent-src.uncompressed" / "commands",
+)
 
 
 # ---------------------------------------------------------------------------
@@ -787,7 +796,9 @@ def test_match_sanitize_off_exposes_raw_path(specs: list[CommandSpec]) -> None:
 # Rule-contract self-check (Phase 6 Steps 1, 5)
 # ---------------------------------------------------------------------------
 
-RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
+RULE_PATH = resolve_logical("rules/command-suggestion-policy.md") or (
+    REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
+)
 
 
 def test_rule_contains_iron_law_no_auto_execute() -> None:

@@ -4,11 +4,18 @@ from __future__ import annotations
 
 import json
 import subprocess
+import sys
 import textwrap
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from _lib.agent_src import resolve_logical  # noqa: E402
+
 SCRIPT = Path("scripts/check_proposal.py")
-TEMPLATE = Path(".agent-src.uncompressed/templates/agents/proposal.example.md")
+_TEMPLATE_RESOLVED = resolve_logical("templates/agents/proposal.example.md")
+assert _TEMPLATE_RESOLVED is not None, "proposal.example.md must exist in some package"
+TEMPLATE = _TEMPLATE_RESOLVED.relative_to(ROOT)
 
 
 def _run(path: Path, fmt: str = "text") -> subprocess.CompletedProcess:

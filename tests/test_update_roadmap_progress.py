@@ -14,8 +14,16 @@ from pathlib import Path
 import pytest
 
 # Import the source-of-truth copy; .agent-src/ is a regenerated mirror.
-SRC = Path(__file__).resolve().parent.parent / ".agent-src.uncompressed" / "scripts"
-sys.path.insert(0, str(SRC))
+# Post-monorepo Phase 4 the script lives under packages/<pack>/...; use
+# the shared discovery helper instead of a hardcoded path.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+for _root in artefact_roots():
+    _scripts = _root / "scripts"
+    if _scripts.is_dir() and str(_scripts) not in sys.path:
+        sys.path.insert(0, str(_scripts))
 import update_roadmap_progress as urp  # noqa: E402
 
 

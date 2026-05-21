@@ -19,10 +19,17 @@ from pathlib import Path
 import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-TEMPLATE_SCRIPTS = REPO_ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
 
-if str(TEMPLATE_SCRIPTS) not in sys.path:
-    sys.path.insert(0, str(TEMPLATE_SCRIPTS))
+# Post-monorepo Phase 4 the templates tree moved under
+# packages/<pack>/.agent-src.uncompressed/templates/. Discover every
+# active source root and add its templates/scripts/ child to sys.path.
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+for _root in artefact_roots():
+    _ts = _root / "templates" / "scripts"
+    if _ts.is_dir() and str(_ts) not in sys.path:
+        sys.path.insert(0, str(_ts))
 
 
 @pytest.fixture(autouse=True)

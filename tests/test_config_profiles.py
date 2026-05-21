@@ -29,7 +29,7 @@ def _seed_root() -> Path:
 
 def test_seed_set_complete() -> None:
     for profile_id in profiles.SEED_PROFILE_IDS:
-        path = REPO_ROOT / profiles.PROFILES_DIRNAME / f"{profile_id}.yml"
+        path = profiles._profile_file(REPO_ROOT, profile_id)
         assert path.exists(), f"missing seed profile: {path}"
 
 

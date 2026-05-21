@@ -32,13 +32,22 @@ from command_suggester import (  # noqa: E402
 )
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "commands"
-RULE_PATH = REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
+
+from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
+
+_RULE_RESOLVED = resolve_logical("rules/command-suggestion-policy.md")
+assert _RULE_RESOLVED is not None, "command-suggestion-policy.md missing"
+RULE_PATH = _RULE_RESOLVED
 
 
 @pytest.fixture(scope="module")
 def specs():
-    return load_commands(COMMANDS_DIR)
+    out = []
+    for pack_root in artefact_roots():
+        cmd_dir = pack_root / "commands"
+        if cmd_dir.is_dir():
+            out.extend(load_commands(cmd_dir))
+    return out
 
 
 @pytest.fixture(scope="module")

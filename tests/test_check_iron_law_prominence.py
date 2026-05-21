@@ -124,11 +124,15 @@ def test_h4_iron_law_also_fails(tmp_path):
 
 def test_shipped_rules_clean():
     """All currently shipped rules must pass — guards regressions."""
-    rules_dir = ROOT / ".agent-src.uncompressed" / "rules"
-    assert rules_dir.is_dir()
+    sys.path.insert(0, str(ROOT / "scripts"))
+    from _lib.agent_src import artefact_roots  # noqa: E402
+
+    rules_dirs = [r / "rules" for r in artefact_roots() if (r / "rules").is_dir()]
+    assert rules_dirs, "expected at least one rules/ directory across package roots"
     all_violations: list = []
-    for md in sorted(rules_dir.rglob("*.md")):
-        all_violations.extend(mod.scan_file(md))
+    for rules_dir in rules_dirs:
+        for md in sorted(rules_dir.rglob("*.md")):
+            all_violations.extend(mod.scan_file(md))
     assert all_violations == [], (
         "Shipped rules must keep Iron Laws at the top:\n  "
         + "\n  ".join(f"{v.file}:{v.line} — {v.detail}" for v in all_violations)

@@ -57,7 +57,9 @@ def test_extract_field_missing():
 
 
 def test_parse_frontmatter_reads_real_skill():
-    path = PROJECT_ROOT / ".agent-src.uncompressed" / "skills" / "eloquent" / "SKILL.md"
+    from _lib.agent_src import resolve_logical
+    path = resolve_logical("skills/eloquent/SKILL.md")
+    assert path is not None
     meta = _parse_frontmatter(path)
     assert meta is not None
     assert meta.name == "eloquent"
