@@ -49,7 +49,12 @@ jobs:
           python-version: '3.12'
 
       - name: Install Python scanner deps
-        run: pip install pyyaml
+        # jsonschema is required by scripts/lint_discovery_manifest.py to
+        # validate dist/discovery/discovery-manifest.json against
+        # docs/contracts/discovery-manifest.schema.json. Mirrors
+        # consistency.yml; missing here caused the 3.0.0 tag publish to
+        # fail on the discovery-manifest step.
+        run: pip install pyyaml jsonschema
 
       - name: Upgrade npm (Trusted Publishing requires >= 11.5.1)
         run: npm install -g npm@latest
