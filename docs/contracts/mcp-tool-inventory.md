@@ -23,12 +23,12 @@ keep-beta-until: 2026-08-14
 
 | Tool | Side-effect | Transports | Catalog | Handler |
 |---|---|---|---|---|
-| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:7`](../../scripts/mcp_server/consumer_tool_catalog.json#L7) | [`tools.py:510`](../../scripts/mcp_server/tools.py#L510) |
-| `chat_history_append` | `fs-write` | stdio | [`consumer_tool_catalog.json:24`](../../scripts/mcp_server/consumer_tool_catalog.json#L24) | [`tools.py:535`](../../scripts/mcp_server/tools.py#L535) |
-| `chat_history_read` | `ro` | stdio | [`consumer_tool_catalog.json:43`](../../scripts/mcp_server/consumer_tool_catalog.json#L43) | [`tools.py:571`](../../scripts/mcp_server/tools.py#L571) |
-| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:59`](../../scripts/mcp_server/consumer_tool_catalog.json#L59) | [`tools.py:590`](../../scripts/mcp_server/tools.py#L590) |
+| `lint_skills` | `ro` | stdio | [`consumer_tool_catalog.json:7`](../../scripts/mcp_server/consumer_tool_catalog.json#L7) | [`tools.py:521`](../../scripts/mcp_server/tools.py#L521) |
+| `chat_history_append` | `fs-write` | stdio | [`consumer_tool_catalog.json:24`](../../scripts/mcp_server/consumer_tool_catalog.json#L24) | [`tools.py:546`](../../scripts/mcp_server/tools.py#L546) |
+| `chat_history_read` | `ro` | stdio | [`consumer_tool_catalog.json:43`](../../scripts/mcp_server/consumer_tool_catalog.json#L43) | [`tools.py:586`](../../scripts/mcp_server/tools.py#L586) |
+| `memory_lookup` | `ro` | stdio | [`consumer_tool_catalog.json:59`](../../scripts/mcp_server/consumer_tool_catalog.json#L59) | [`tools.py:606`](../../scripts/mcp_server/tools.py#L606) |
 | `memory_signal` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:75`](../../scripts/mcp_server/consumer_tool_catalog.json#L75) | _stub-only_ |
-| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:91`](../../scripts/mcp_server/consumer_tool_catalog.json#L91) | [`tools.py:617`](../../scripts/mcp_server/tools.py#L617) |
+| `memory_status` | `ro` | stdio | [`consumer_tool_catalog.json:91`](../../scripts/mcp_server/consumer_tool_catalog.json#L91) | [`tools.py:633`](../../scripts/mcp_server/tools.py#L633) |
 | `skill_trigger_eval` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:98`](../../scripts/mcp_server/consumer_tool_catalog.json#L98) | _stub-only_ |
 | `suggest_command` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:114`](../../scripts/mcp_server/consumer_tool_catalog.json#L114) | _stub-only_ |
 | `suggest_skill_for_task` | `ro` | _(stub)_ | [`consumer_tool_catalog.json:129`](../../scripts/mcp_server/consumer_tool_catalog.json#L129) | _stub-only_ |
@@ -38,11 +38,11 @@ keep-beta-until: 2026-08-14
 | `sync_agent_settings` | `fs-write` | _(stub)_ | [`consumer_tool_catalog.json:186`](../../scripts/mcp_server/consumer_tool_catalog.json#L186) | _stub-only_ |
 | `run_tests` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:200`](../../scripts/mcp_server/consumer_tool_catalog.json#L200) | _stub-only_ |
 | `run_quality_checks` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:214`](../../scripts/mcp_server/consumer_tool_catalog.json#L214) | _stub-only_ |
-| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:227`](../../scripts/mcp_server/consumer_tool_catalog.json#L227) | [`tools.py:631`](../../scripts/mcp_server/tools.py#L631) |
-| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:234`](../../scripts/mcp_server/consumer_tool_catalog.json#L234) | [`tools.py:644`](../../scripts/mcp_server/tools.py#L644) |
-| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:241`](../../scripts/mcp_server/consumer_tool_catalog.json#L241) | [`tools.py:657`](../../scripts/mcp_server/tools.py#L657) |
+| `list_skills` | `ro` | stdio | [`consumer_tool_catalog.json:227`](../../scripts/mcp_server/consumer_tool_catalog.json#L227) | [`tools.py:647`](../../scripts/mcp_server/tools.py#L647) |
+| `list_commands` | `ro` | stdio | [`consumer_tool_catalog.json:234`](../../scripts/mcp_server/consumer_tool_catalog.json#L234) | [`tools.py:660`](../../scripts/mcp_server/tools.py#L660) |
+| `list_rules` | `ro` | stdio | [`consumer_tool_catalog.json:241`](../../scripts/mcp_server/consumer_tool_catalog.json#L241) | [`tools.py:673`](../../scripts/mcp_server/tools.py#L673) |
 | `compile_router` | `shell` | _(stub)_ | [`consumer_tool_catalog.json:248`](../../scripts/mcp_server/consumer_tool_catalog.json#L248) | _stub-only_ |
-| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:261`](../../scripts/mcp_server/consumer_tool_catalog.json#L261) | [`tools.py:670`](../../scripts/mcp_server/tools.py#L670) |
+| `read_resource_body` | `ro` | stdio | [`consumer_tool_catalog.json:261`](../../scripts/mcp_server/consumer_tool_catalog.json#L261) | [`tools.py:686`](../../scripts/mcp_server/tools.py#L686) |
 
 ## Glossary
 
