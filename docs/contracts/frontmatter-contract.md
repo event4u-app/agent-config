@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-19
+---
+
 # Per-artefact frontmatter contract
 
 > Companion to [`ADR-013`](../decisions/ADR-013-discovery-frontmatter-contract.md)
