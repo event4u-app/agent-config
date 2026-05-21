@@ -65,7 +65,7 @@ class Target:
 TARGETS = [
     Target(ROOT / "AGENTS.md", "package-root", 3000, 2800, template=False),
     Target(
-        ROOT / ".agent-src.uncompressed" / "templates" / "AGENTS.md",
+        ROOT / "packages" / "core" / ".agent-src.uncompressed" / "templates" / "AGENTS.md",
         "consumer-template", 2500, 2300, template=True,
     ),
 ]

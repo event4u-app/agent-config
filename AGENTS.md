@@ -4,7 +4,7 @@
 
 ## Source of truth
 
-Edit `.agent-src.uncompressed/` only. Generated trees (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) regenerate from `task sync` + `task generate-tools`; never hand-edit.
+Edit `packages/<pack>/.agent-src.uncompressed/` only (per-pack source; ADR-017). Generated trees (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) regenerate from `task sync` + `task generate-tools`; never hand-edit.
 
 ## Working on this repo
 
@@ -28,7 +28,7 @@ task ci                # full pipeline — green before PR
 
 1. **What is this repo?** — `event4u/agent-config`, a governed skill / rule / command suite for AI coding tools (no application runtime).
 2. **What language?** — All `.md` content is English; agents mirror the user's language at runtime.
-3. **Where do I edit?** — `.agent-src.uncompressed/` only. Never the generated trees.
+3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).
 
