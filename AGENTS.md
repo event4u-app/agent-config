@@ -18,6 +18,7 @@ task ci                # full pipeline — green before PR
 
 - **Package self-orientation** (beta) — identity, four-wing cognition map, repo layout, tech stack, key-rules table, telemetry, command-suggester: [`docs/contracts/package-self-orientation.md`](docs/contracts/package-self-orientation.md).
 - **Kernel + Router** (beta) — 9 always-loaded Iron-Law rules, tier-1 / tier-2 routing, cost profiles, per-rule char caps: [`kernel-membership`](docs/contracts/kernel-membership.md) + [`rule-router`](docs/contracts/rule-router.md).
+- **Trust & Safety** (beta) — closed trust-level enum, HRR banner, per-pack safety floors, installer confirm + lockfile escalation, coherence lint: [`trust-and-safety`](docs/contracts/trust-and-safety.md) ([`ADR-018`](docs/decisions/ADR-018-trust-and-safety-layer.md)).
 - **Content pipelines** — A→D source / Augment / multi-tool / Claude.ai-bundle projections, indexed at [`docs/architecture.md`](docs/architecture.md); sub-pipelines under [`docs/architecture/`](docs/architecture/).
 - **Editing this repo** — Iron-Law rules (edit-discipline, source-of-truth, skill-quality) + Thin-Root contract govern every change here: [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md) + [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
 - **Consumer story** — `npx` + `scripts/install.sh` opt-in flags, sandbox / offline install paths, verified-offline manifest: [`README.md`](README.md).
