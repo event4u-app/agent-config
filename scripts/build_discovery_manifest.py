@@ -236,6 +236,11 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     artefacts: list[dict[str, Any]] = []
     unassigned: list[dict[str, Any]] = []
     pack_counts: dict[str, int] = {pid: 0 for pid in pack_ids}
+    # Phase 5.1 (ADR-018): per-pack trust mix + HRR count for installer.
+    pack_trust_counts: dict[str, dict[str, int]] = {
+        pid: {lvl: 0 for lvl in _TRUST_VALUES} for pid in pack_ids
+    }
+    pack_hrr_counts: dict[str, int] = {pid: 0 for pid in pack_ids}
 
     documented_unassigned: list[dict[str, Any]] = []
 
@@ -259,8 +264,14 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         entry.update(payload or {})
         entry["checksum"] = _artefact_checksum(path, fm)
         artefacts.append(entry)
+        trust_level = (payload.get("trust") or {}).get("level") if payload else None
+        hrr = bool((payload.get("trust") or {}).get("human_review_required")) if payload else False
         for pid in payload["packs"] if payload else []:
             pack_counts[pid] = pack_counts.get(pid, 0) + 1
+            if trust_level in pack_trust_counts.get(pid, {}):
+                pack_trust_counts[pid][trust_level] += 1
+            if hrr:
+                pack_hrr_counts[pid] = pack_hrr_counts.get(pid, 0) + 1
 
     artefacts.sort(key=lambda e: e["path"])
     unassigned.sort(key=lambda e: e["path"])
@@ -278,13 +289,16 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     ]
     pk_out = []
     for p in packs:
+        pid = p["id"]
         item = {
-            "id": p["id"],
+            "id": pid,
             "label": p["label"],
             "description": p["description"],
             "workspaces": list(p.get("workspaces") or []),
             "trust_level_default": p["trust_level_default"],
-            "artefact_count": pack_counts.get(p["id"], 0),
+            "artefact_count": pack_counts.get(pid, 0),
+            "trust_summary": dict(pack_trust_counts.get(pid, {lvl: 0 for lvl in _TRUST_VALUES})),
+            "human_review_required": pack_hrr_counts.get(pid, 0),
         }
         if p.get("requires_hint"):
             item["requires_hint"] = list(p["requires_hint"])
