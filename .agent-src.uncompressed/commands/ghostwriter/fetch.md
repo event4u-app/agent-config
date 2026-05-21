@@ -3,7 +3,7 @@ name: ghostwriter:fetch
 tier: 2
 cluster: ghostwriter
 sub: fetch
-description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch / web-search to the host agent.
+description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
 disable-model-invocation: true
 suggestion:
   eligible: true
