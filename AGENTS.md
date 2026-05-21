@@ -22,7 +22,7 @@ task ci                # full pipeline — green before PR
 - **Editing this repo** — Iron-Law rules (edit-discipline, source-of-truth, skill-quality) + Thin-Root contract govern every change here: [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md) + [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
 - **Consumer story** — `npx` + `scripts/install.sh` opt-in flags, sandbox / offline install paths, verified-offline manifest: [`README.md`](README.md).
 - **Personas** — 11 review-lens cast (6 core · 5 specialist), `personas:` vs `/mode` axes, override pattern: [`docs/personas.md`](docs/personas.md) (beta).
-- **Discovery** (workspaces / packs / `dist/discovery/discovery-manifest.json`) — contract [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md), how-to [`customization § Workspaces & packs`](docs/customization.md#workspaces--packs-discovery).
+- **Discovery** (workspaces / packs / `dist/discovery/discovery-manifest.json`) — contract [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md), per-artefact worked examples [`frontmatter-contract`](docs/contracts/frontmatter-contract.md), how-to [`customization § Workspaces & packs`](docs/customization.md#workspaces--packs-discovery). Linted by `task lint-artefact-frontmatter`; opt-in via `./agent-config hooks:install`.
 
 ## Emergency triage — read this when nothing else is reachable
 
