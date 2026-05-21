@@ -63,6 +63,7 @@
   "commands/ghostwriter/write.md": "a3f5ec53421e22487f008c029bde9567691b4c49e1b61c1e14007a52931d4d43",
   "commands/grill-me.md": "00f47e21f17bd6e1c8514cfd54dcab9c3e09a0091d9d0bc02f4b195f07264163",
   "commands/implement-ticket.md": "9c57b6f2ed2fb89bf4ce9a9be67d6f35dd9d9afdfef5641ad3c5fe4d8426d3ae",
+  "commands/install-via-agent.md": "55da9290c1006f6518b79a466f01061eb22fc0b61d09886aaf3d0be82d9915a8",
   "commands/jira-ticket.md": "b07ab69eaacb23a18778a81dd99895db87eb3731fdbc703e65c30c416e954093",
   "commands/judge.md": "213d3f71ab9ec92d72a975f7bc15fc7b1868eec6d806238aa10322858f347800",
   "commands/judge/on-diff.md": "cd3cdd5f8916749580933956b353f669b85ac943354af97542032026f49f2979",

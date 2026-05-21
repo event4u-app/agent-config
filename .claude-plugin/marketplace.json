@@ -186,6 +186,7 @@
         "./.claude/skills/hiring-loop-design",
         "./.claude/skills/implement-ticket",
         "./.claude/skills/incident-commander",
+        "./.claude/skills/install-via-agent",
         "./.claude/skills/jira-integration",
         "./.claude/skills/jira-ticket",
         "./.claude/skills/jobs-events",

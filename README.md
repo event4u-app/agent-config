@@ -2,7 +2,7 @@
 
 # Agent Config — Universal AI Agent OS
 
-[![Skills](https://img.shields.io/badge/Skills-218-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-72-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-128-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Skills](https://img.shields.io/badge/Skills-218-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-72-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-129-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
 > **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
 
@@ -548,7 +548,7 @@ Deep version of the profile table above (audience · first commands ·
 first skills · preset default per profile):
 [`docs/profiles.md`](docs/profiles.md). Curated featured-commands
 subset: [`docs/featured-commands.md`](docs/featured-commands.md).
-[Browse all 128 active commands](.agent-src/commands/) · full catalog:
+[Browse all 129 active commands](.agent-src/commands/) · full catalog:
 [`docs/catalog.md`](docs/catalog.md) ·
 [skills only](docs/skills-catalog.md) · [`llms.txt`](llms.txt).
 
@@ -582,7 +582,7 @@ slash-commands) &nbsp; 📌 = informational marker only (no auto-discovery
 or manual wiring required)
 
 > **What this means in practice:** Claude Code gets the full project-scoped
-> package (rules + 218 skills + 128 native commands); Augment Code gets the
+> package (rules + 218 skills + 129 native commands); Augment Code gets the
 > same content but only from a single global install at `~/.augment/`.
 > Cursor, Cline, Windsurf, Gemini CLI, GitHub Copilot, Roo Code, Codex CLI,
 > and Continue.dev only get the **rules** natively; skills and commands are
@@ -740,10 +740,10 @@ task test             # unit + integration tests
 
 ## Requirements
 
-- **Bash** — `scripts/install` orchestrates payload sync (`install.sh`) and bridges (`install.py`).
-- **Python 3.10+** — bridge stage only; missing → orchestrator skips bridges.
-- **Composer or npm** — to pull the package.
+- **Node ≥ 18** — `npx @event4u/agent-config init` is the canonical install path.
+- **Python 3.10+** — bridge stage only (`install.py`); missing → installer skips bridges.
 - **Platform:** macOS 12.3+, Linux, WSL2. Git Bash needs Developer Mode for symlinks; native PowerShell / cmd unsupported. Contributors rebuilding `.augment/` also need [Task](https://taskfile.dev/).
+- **Legacy `bash install.sh` flow** — *deprecated, removed in 3.0*. The shell orchestrator (`scripts/install` + `install.sh`) still works for the 2.x line but receives no new features; switch to `npx @event4u/agent-config init`.
 
 ## License
 

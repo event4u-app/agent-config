@@ -24,31 +24,31 @@ tracked in `agents/agent-config.lock.yml`. <!-- ref-ignore -->
 
 ## Prerequisites
 
-- [ ] Phase 1 + Phase 2 shipped and green
-- [ ] `dist/discovery/discovery-manifest.json` published in the
+- [x] Phase 1 + Phase 2 shipped and green
+- [x] `dist/discovery/discovery-manifest.json` published in the
       release artefact
-- [ ] Read [`docs/contracts/local-server-api.md`](../../docs/contracts/local-server-api.md)
+- [x] Read [`docs/contracts/local-server-api.md`](../../docs/contracts/local-server-api.md)
       for the structural model behind the agent-mode protocol
-- [ ] Read [`skipped/multi-package-architecture.md`](skipped/multi-package-architecture.md)
+- [x] Read [`skipped/multi-package-architecture.md`](skipped/multi-package-architecture.md)
       sections "Package Design" and "Installer flow"
 
 ## Acceptance criteria
 
-- [ ] `packages/core/installer/` (TypeScript, ESM, Node ≥ 20) ships
+- [x] `packages/core/installer/` (TypeScript, ESM, Node ≥ 20) ships
       `init`, `sync`, `validate`, `prune`, `info` commands
-- [ ] All commands work in three modes:
+- [x] All commands work in three modes:
       `--interactive` (default, TTY), `--non-interactive` (flags only,
       CI), `--agent` (stdin/stdout JSON protocol)
-- [ ] Every materialized file lands in the consumer's
+- [x] Every materialized file lands in the consumer's
       `.augment/` and `.agent-src/`, and its path + sha256 + source
-      pack are recorded in `agents/agent-config.lock.yml`
-- [ ] Re-running `init` after a release upgrades managed files,
+      pack are recorded in `agents/agent-config.lock.yml` <!-- ref-ignore -->
+- [x] Re-running `init` after a release upgrades managed files,
       preserves user overrides (`install.managed: false`), and
       surfaces a diff before writing
-- [ ] `agent-config validate` is green on a fresh install
-- [ ] `agent-config prune` removes orphaned files (artefacts deleted
+- [x] `agent-config validate` is green on a fresh install
+- [x] `agent-config prune` removes orphaned files (artefacts deleted
       upstream or de-selected workspaces)
-- [ ] Existing shell `install.sh` still works during the migration
+- [x] Existing shell `install.sh` still works during the migration
       window but logs a deprecation notice pointing to `npx`
 
 ## Non-goals
@@ -143,79 +143,88 @@ The agent repeats the call with each answer until the CLI returns
 
 ## Phase 1 — Skeleton + manifest loader
 
-- [ ] Create `packages/core/installer/` with `package.json`
+- [x] Create `packages/core/installer/` with `package.json`
       (private to the monorepo, published as `@event4u/agent-config`),
       `tsconfig.json` (strict, Node 20+, ESM), `src/` layout
-- [ ] `src/manifest-loader.ts` reads `dist/discovery/discovery-manifest.json`
+- [x] `src/manifest-loader.ts` reads `dist/discovery/discovery-manifest.json`
       (bundled into the npm tarball at build time)
-- [ ] `src/types.ts` mirrors the manifest schema as TypeScript types
+- [x] `src/types.ts` mirrors the manifest schema as TypeScript types
       generated from the JSON Schema via `json-schema-to-typescript`
-- [ ] `src/cli.ts` wires `commander` and the five sub-commands
+- [x] `src/cli.ts` wires `commander` and the five sub-commands
       (stubs only)
-- [ ] Add `task installer-test` running `vitest`
-- [ ] CI builds the package and runs vitest
+- [x] Add `task installer-test` running `vitest`
+- [x] CI builds the package and runs vitest
 
 ## Phase 2 — Interactive `init`
 
-- [ ] `src/commands/init.ts` renders the workspace picker via
+- [x] `src/commands/init.ts` renders the workspace picker via
       `@inquirer/prompts` (checkbox multi-select)
-- [ ] After workspace selection, renders the pack picker filtered to
+- [x] After workspace selection, renders the pack picker filtered to
       the chosen workspaces; pre-selects `default: true` packs
-- [ ] Auto-detect helpers: detect `composer.json` → suggest `pack.php`
+- [x] Auto-detect helpers: detect `composer.json` → suggest `pack.php`
       and `pack.laravel`; `package.json` with Next.js → `pack.nextjs`;
       `pyproject.toml` → `pack.python` (when added)
-- [ ] Resolve `requires` edges transitively; show user the auto-added
+- [x] Resolve `requires` edges transitively; show user the auto-added
       packs before confirming
-- [ ] Write files to consumer's `.augment/` and `.agent-src/`
-- [ ] Write `agents/agent-config.lock.yml` with paths, sha256s,
+- [x] Write files to consumer's `.augment/` and `.agent-src/`
+- [x] Write `agents/agent-config.lock.yml` with paths, sha256s, <!-- ref-ignore -->
       managed flags
-- [ ] Show a summary table: workspaces, packs, file count
+- [x] Show a summary table: workspaces, packs, file count
 
 ## Phase 3 — Non-interactive `init --yes`
 
-- [ ] `--workspaces=a,b` and `--packs=x,y` accept comma-separated ids
-- [ ] `--profile=<id>` accepts a pre-defined bundle from
+- [x] `--workspaces=a,b` and `--packs=x,y` accept comma-separated ids
+- [x] `--profile=<id>` accepts a pre-defined bundle from
       `dist/discovery/profiles.json` (Phase 5 of Phase 2 manifest)
-- [ ] `--dry-run` prints what would be written, exits 0 without
+- [x] `--dry-run` prints what would be written, exits 0 without
       touching disk
-- [ ] CI test that flag-driven init produces a deterministic lockfile
+- [x] CI test that flag-driven init produces a deterministic lockfile
       for a known input
 
 ## Phase 4 — Agent mode
 
-- [ ] `src/agent-mode.ts` implements the question/result protocol
-- [ ] State machine: `select-workspaces` → `select-packs` →
+- [x] `src/agent-mode.ts` implements the question/result protocol
+- [x] State machine: `select-workspaces` → `select-packs` →
       `confirm-auto-suggested` → `write-files` → `summary`
-- [ ] State is encoded in `--answer key=value` flags; no server-side
+- [x] State is encoded in `--answer key=value` flags; no server-side
       session storage required (agents may invoke fresh each turn)
-- [ ] Validate every answer against the manifest before advancing;
+- [x] Validate every answer against the manifest before advancing;
       return `status: error` with explanation on bad input
-- [ ] Document the protocol in `docs/contracts/installer-agent-mode.md`
-- [ ] Add an example consumed by a Claude / Cursor command file under
+- [x] Document the protocol in `docs/contracts/installer-agent-mode.md`
+- [x] Add an example consumed by a Claude / Cursor command file under
       `.agent-src.uncompressed/commands/install-via-agent.md`
 
 ## Phase 5 — `sync`, `validate`, `prune`
 
-- [ ] `sync`: download new release tarball (or read local if monorepo
+- [x] `sync`: download new release tarball (or read local if monorepo
       dev), diff per-file sha256 against lockfile, three-way merge
       managed files, leave overrides untouched, show diff to user
       before applying
-- [ ] `validate`: assert every file in the lockfile exists on disk
+- [x] `validate`: assert every file in the lockfile exists on disk
       with the recorded sha256 (drift detection); exit non-zero on
       mismatch with a per-file report
-- [ ] `prune`: enumerate files in `.augment/` and `.agent-src/` that
+- [x] `prune`: enumerate files in `.augment/` and `.agent-src/` that
       are not in the lockfile; offer to delete; preserve overrides
 
 ## Phase 6 — Distribution
 
-- [ ] npm publish workflow under `.github/workflows/release-installer.yml`
-      releases `@event4u/agent-config` on tag push
-- [ ] Composer package adds a post-install script that calls
+- [x] npm publish workflow releases `@event4u/agent-config` on tag push
+      — landed at `.github/workflows/publish-npm.yml` (kept the
+      existing filename; OIDC Trusted Publishing on bare-numeric tags
+      matches the intent of the proposed `release-installer.yml`)
+- [-] Composer package adds a post-install script that calls
       `npx @event4u/agent-config sync --non-interactive` if Node is
       available; logs a hint if not
-- [ ] Update consumer-facing README and AGENTS.md with the new
+      — **deferred to the downstream Composer wrapper repo**. This
+      repository contains no `composer.json`; the PHP-side post-install
+      hook belongs in the `event4u/agent-config-bridge` package and
+      tracks separately
+- [x] Update consumer-facing README and AGENTS.md with the new
       install flow; keep the legacy `bash install.sh` section with
-      a "deprecated, removed in 3.0" notice
+      a "deprecated, removed in 3.0" notice — README Requirements
+      section now points at `npx` first and tags the legacy
+      orchestrator as *deprecated, removed in 3.0*; AGENTS.md
+      already cites `README.md` as the consumer story anchor
 
 ## Quality gates
 

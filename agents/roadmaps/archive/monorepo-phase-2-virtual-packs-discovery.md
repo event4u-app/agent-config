@@ -28,27 +28,27 @@ documentation site, and any third-party consumer read.
 
 ## Prerequisites
 
-- [ ] Phase 1 (`monorepo-phase-1-frontmatter-metadata.md`) shipped and
+- [x] Phase 1 (`monorepo-phase-1-frontmatter-metadata.md`) shipped and
       green — every artefact has the v2 contract
-- [ ] `docs/contracts/discovery-vocabulary.yml` exists and is locked
-- [ ] Read [`docs/contracts/discovery-manifest.schema.json`](../../docs/contracts/discovery-manifest.schema.json)
+- [x] `docs/contracts/discovery-vocabulary.yml` exists and is locked
+- [x] Read [`docs/contracts/discovery-manifest.schema.json`](../../docs/contracts/discovery-manifest.schema.json)
       stub (extended in Phase 1 from the prior draft)
 
 ## Acceptance criteria
 
-- [ ] `scripts/build_discovery_manifest.py` walks every artefact and
+- [x] `scripts/build_discovery_manifest.py` walks every artefact and
       emits `dist/discovery/discovery-manifest.json`
-- [ ] Manifest matches `docs/contracts/discovery-manifest.schema.json`
+- [x] Manifest matches `docs/contracts/discovery-manifest.schema.json`
       (validated by the build script and a separate
       `task validate-discovery-manifest` step)
-- [ ] Output is **deterministic**: identical input tree → byte-identical
+- [x] Output is **deterministic**: identical input tree → byte-identical
       JSON; sort keys alphabetically, stable array ordering
-- [ ] Each artefact entry carries a `checksum` (sha256 of the file
+- [x] Each artefact entry carries a `checksum` (sha256 of the file
       content with frontmatter normalized) for the installer's drift
       detection in Phase 3
-- [ ] `task build-discovery` runs as part of `task ci`; the build fails
+- [x] `task build-discovery` runs as part of `task ci`; the build fails
       if the manifest on disk diverges from a fresh re-build
-- [ ] `task release-prepare` regenerates the manifest as the first step
+- [x] `task release-prepare` regenerates the manifest as the first step
 
 ## Non-goals
 
@@ -108,76 +108,76 @@ documentation site, and any third-party consumer read.
 
 ## Phase 1 — Schema lock
 
-- [ ] Finalize `docs/contracts/discovery-manifest.schema.json` to match
+- [x] Finalize `docs/contracts/discovery-manifest.schema.json` to match
       the shape above (Draft 2020-12); the schema is the contract
-- [ ] ADR `docs/decisions/ADR-015-discovery-manifest-contract.md`
+- [x] ADR `docs/decisions/ADR-015-discovery-manifest-contract.md`
       with the no-manual-list invariant explicitly named
-- [ ] Add `docs/contracts/discovery-manifest.md` with worked examples
+- [x] Add `docs/contracts/discovery-manifest.md` with worked examples
 
 ## Phase 2 — Build the generator
 
-- [ ] Create `scripts/build_discovery_manifest.py` (stdlib + PyYAML,
+- [x] Create `scripts/build_discovery_manifest.py` (stdlib + PyYAML,
       ≤ 400 LOC, `--quiet`, `--out <path>`, `--validate`)
-- [ ] Walk `.agent-src/` (the compressed canonical tree); for each
+- [x] Walk `.agent-src/` (the compressed canonical tree); for each
       `.md` file, parse frontmatter via Phase 1 parser
-- [ ] Build the workspace graph by aggregating artefacts grouped on
+- [x] Build the workspace graph by aggregating artefacts grouped on
       `workspaces[]`; build the pack graph the same way on `packs[]`
-- [ ] Resolve `requires` edges; emit a dependency error if a pack
+- [x] Resolve `requires` edges; emit a dependency error if a pack
       requires another pack that has zero artefacts
-- [ ] Compute per-artefact checksum: sha256 over the file content
+- [x] Compute per-artefact checksum: sha256 over the file content
       after normalizing the frontmatter (sorted keys, no trailing ws)
-- [ ] Sort everything: workspaces, packs, artefacts, requires arrays
-- [ ] Validate output against the schema before writing
-- [ ] Emit `dist/discovery/discovery-manifest.json` and a sibling
+- [x] Sort everything: workspaces, packs, artefacts, requires arrays
+- [x] Validate output against the schema before writing
+- [x] Emit `dist/discovery/discovery-manifest.json` and a sibling
       `dist/discovery/discovery-manifest.sha256`
-- [ ] Unit tests `tests/scripts/test_build_discovery_manifest.py`:
+- [x] Unit tests `tests/scripts/test_build_discovery_manifest.py`:
       empty tree, single skill, dependency cycle, missing required
       pack, determinism (run twice → byte-identical)
 
 ## Phase 3 — Wire it into the pipeline
 
-- [ ] Add `task build-discovery` to `Taskfile.yml`; depends on
+- [x] Add `task build-discovery` to `Taskfile.yml`; depends on
       `task sync` (Phase 1 produces the compressed tree first)
-- [ ] Add `task validate-discovery-manifest` that re-runs the build
+- [x] Add `task validate-discovery-manifest` that re-runs the build
       to a temp file and `diff`s against the committed manifest;
       non-zero diff = CI fail (catches "forgot to regenerate")
-- [ ] Wire both into `task ci` after `task lint-artefact-frontmatter` <!-- carve-out: new-gate-verification -->
-- [ ] Add `task release-prepare` that calls `task sync`,
+- [x] Wire both into `task ci` after `task lint-artefact-frontmatter` <!-- carve-out: new-gate-verification -->
+- [x] Add `task release-prepare` that calls `task sync`,
       `task build-discovery`, `task generate-tools` in that order;
       this is the single command a release runs
 
 ## Phase 4 — Stats, deprecations, and lifecycle reports
 
-- [ ] Generator emits `dist/discovery/deprecation-report.md` listing
+- [x] Generator emits `dist/discovery/deprecation-report.md` listing
       every `lifecycle: deprecated` artefact and the date it was
       marked (from frontmatter `last_reviewed` + lifecycle change)
-- [ ] Generator emits `dist/discovery/trust-report.md` summarizing
+- [x] Generator emits `dist/discovery/trust-report.md` summarizing
       trust levels per workspace and flagging any
       `human_review_required: true` artefact in a non-advisory
       workspace (sanity check)
-- [ ] Generator emits `dist/discovery/orphan-report.md`: artefacts
+- [x] Generator emits `dist/discovery/orphan-report.md`: artefacts
       whose declared pack has no other members (likely a typo); CI
       fails on orphans unless `lifecycle: experimental`
 
 ## Phase 5 — Consumer-facing convenience
 
-- [ ] Publish `dist/discovery/workspaces.json` and
+- [x] Publish `dist/discovery/workspaces.json` and
       `dist/discovery/packs.json` as flattened sub-views for
       lightweight consumers (browser wizard preview, marketing site)
-- [ ] Add a small `task discovery-stats` that pretty-prints the
+- [x] Add a small `task discovery-stats` that pretty-prints the
       `stats` section so developers can sanity-check counts locally
-- [ ] Document the published artefacts in
+- [x] Document the published artefacts in
       `docs/contracts/discovery-manifest.md` under "Published files"
 
 ## Phase 6 — CI invariants
 
-- [ ] CI step: `task build-discovery && git diff --exit-code
+- [x] CI step: `task build-discovery && git diff --exit-code
       dist/discovery/` — fails if the committed manifest is stale
-- [ ] CI step: schema validation runs against the committed manifest
+- [x] CI step: schema validation runs against the committed manifest
       from a fresh clone (no implicit regeneration trust)
-- [ ] CI step: assert determinism — run twice in CI, byte-diff must
+- [x] CI step: assert determinism — run twice in CI, byte-diff must
       be empty
-- [ ] CI step: assert checksum stability — every artefact's checksum
+- [x] CI step: assert checksum stability — every artefact's checksum
       in the manifest must match a freshly computed sha256
 
 ## Quality gates

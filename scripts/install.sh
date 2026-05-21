@@ -834,8 +834,26 @@ install_cli_wrapper() {
 }
 
 # --- Main ---
+# Phase 6 of monorepo-phase-3-typescript-installer (ADR-016 § Distribution):
+# direct `bash install.sh` invocations are deprecated in favor of the
+# TypeScript installer (`npx @event4u/agent-config init`). The banner only
+# fires when this script is invoked directly — the orchestrator
+# (scripts/install) and the consumer `./agent-config` wrapper set
+# AGENT_CONFIG_FROM_ORCHESTRATOR=1 to suppress the noise. Removal target:
+# the cutover release that flips the npx entry point to the TS installer.
+emit_deprecation_banner() {
+    $QUIET && return 0
+    [[ "${AGENT_CONFIG_FROM_ORCHESTRATOR:-0}" == "1" ]] && return 0
+    [[ "${AGENT_CONFIG_SUPPRESS_DEPRECATION:-0}" == "1" ]] && return 0
+    echo "  ⚠️  Direct \`bash install.sh\` is deprecated (ADR-016 § Distribution)." >&2
+    echo "      Prefer:  npx @event4u/agent-config init" >&2
+    echo "      Or:      bash scripts/install   (orchestrator, suppresses this banner)" >&2
+    echo "" >&2
+}
+
 main() {
     parse_args "$@"
+    emit_deprecation_banner
 
     # Minimal-init short-circuit (Step 7 Phase 2): skip every payload-sync
     # stage and only install the project-local `./agent-config` wrapper.

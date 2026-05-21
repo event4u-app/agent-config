@@ -7,6 +7,7 @@ on:
       - "scripts/**"
       - "tests/**"
       - "src/**"
+      - "packages/core/installer/**"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
@@ -26,6 +27,7 @@ on:
       - "scripts/**"
       - "tests/**"
       - "src/**"
+      - "packages/core/installer/**"
       - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
@@ -235,6 +237,42 @@ jobs:
 
       - name: prepack-check (compiled bin shape gate)
         run: node scripts/prepack-check.mjs
+
+  installer-tests:
+    # Phase 3.1 / Phase 6 of monorepo-phase-3-typescript-installer
+    # (ADR-016). Gates the TypeScript installer package
+    # `packages/core/installer/` — typecheck + vitest. The package shares
+    # the root node_modules via npm-hoisting for @inquirer/prompts,
+    # commander, js-yaml, vitest, typescript; no separate `npm ci` is
+    # required inside the package directory.
+    name: Installer Tests (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install root dependencies (hoists installer toolchain)
+        run: npm ci
+
+      - name: Typecheck installer (tsc --noEmit)
+        working-directory: packages/core/installer
+        run: npx tsc -p tsconfig.json --noEmit
+
+      - name: Build installer (dist/)
+        working-directory: packages/core/installer
+        run: npx tsc -p tsconfig.json
+
+      - name: Vitest (packages/core/installer/tests/**/*.ts)
+        working-directory: packages/core/installer
+        run: npx vitest run --reporter=default
 
   windows-lockfile-export:
     # Phase 1.7 of road-to-global-first-install — guards the global-
