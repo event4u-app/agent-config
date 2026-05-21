@@ -127,7 +127,7 @@ eloquent:
 
 # --- Chat history (crash recovery) ---
 #
-# Persistent JSONL log at agents/runtime/.agent-chat-history (project root, git-ignored).
+# Persistent JSONL log at agents/runtime/.agent-chat-history (git-ignored under /agents/runtime/).
 # Keeps a durable record of the conversation so a crashed or switched
 # agent session can be resumed. See scripts/chat_history.py for the API.
 #

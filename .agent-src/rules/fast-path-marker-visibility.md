@@ -45,6 +45,14 @@ Markers (from `scripts/ai_council/low_impact.py`):
 
 Verbatim = first non-whitespace line, English (no translation), no emoji prefix, no merged numbered-options. Marker is the only audit signal that distinguishes fast-path from local deliberation. See `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` for full failure modes.
 
+## Failure modes
+
+- Opening with `Found it` / `Looks like` / `Here's the verdict` — drops the marker. **Violation.**
+- Translating the marker to non-English. **Violation.**
+- Adding emoji prefix (`✅ Resolved via …`) — alters the literal. **Violation.**
+- Indenting beyond the leading `> ` — breaks pattern match. **Violation.**
+- Merging marker into a numbered-options block. **Violation.**
+
 Scope: `low_impact` class only. `high_impact` and `user_required` never reach fast-path.
 
 See: [`ai-council-config § Low-impact council opt-in`](../docs/contracts/ai-council-config.md#low-impact-council-opt-in), [`direct-answers`](direct-answers.md) (invented-facts Iron Law kin).
