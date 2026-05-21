@@ -254,4 +254,103 @@ file contents, so cross-pack references survive the move byte-identical.
 - Phase 4.5 — contributor scaffolders (`task new-skill`,
   `task move-artefact`).
 - Phase 6 (optional) — split distribution per pack as separate npm
-  packages.
+  packages (see addendum below).
+
+## Addendum — Optional split distribution (Phase 4.6, documented-only)
+
+**Status:** documented, **not implemented**. Revisit only when a real
+consumer demands a single-pack install path that the bundled release
+cannot satisfy.
+
+### Why this is a separate gate
+
+The current model ships one tarball, `@event4u/agent-config`, covering
+core + every pack. Splitting raises three real costs (release matrix,
+version-skew between packs and core, lockfile complexity in consumer
+projects) for benefits that today are speculative: no consumer has
+asked for `@event4u/agent-config-laravel` alone.
+
+### Proposed shape (if/when we ship it)
+
+Each pack publishes as its own npm package; core stays the anchor:
+
+```text
+@event4u/agent-config             # core (kernel rules + installer + contracts)
+@event4u/agent-config-laravel     # pack-laravel only
+@event4u/agent-config-symfony     # pack-symfony only
+… one package per packages/pack-*/
+```
+
+Consumer projects pick:
+
+```json
+{
+  "dependencies": {
+    "@event4u/agent-config": "^3.0.0",
+    "@event4u/agent-config-laravel": "^3.0.0"
+  }
+}
+```
+
+The installer reads the union of installed `@event4u/agent-config*`
+packages and treats them as if they were in one tarball — discovery
+manifest, lockfile, and trust gates stay identical.
+
+### Version coupling rules
+
+- **Core pins the major.** Every split pack `peerDependencies` core
+  at the matching major (`"@event4u/agent-config": "^3.x"`). A pack
+  may not load against a core it was not designed for.
+- **Packs may bump minor independently.** A new skill in `pack-laravel`
+  can ship as `3.4.0` while core stays at `3.2.0`; the installer
+  accepts any minor `>= the pack's declared core-minimum`.
+- **Patches are local.** A pack bugfix releases as a pack patch; no
+  core re-release required.
+- **Breaking changes are coupled.** Any major bump in core forces a
+  major bump in every published pack within the next release train —
+  consumers see one synchronised major boundary, not seventeen.
+
+### Lockfile shape under split distribution
+
+`agent-config.lock.json` gains an `installed_packages[]` array; each
+entry pins one published package + its version + integrity hash. The
+existing `packs[]` array continues to enumerate logical packs (the
+unit the installer reasons about); `installed_packages[]` is the
+physical tarball-level pin.
+
+```json
+{
+  "core_version": "3.4.1",
+  "installed_packages": [
+    { "name": "@event4u/agent-config",          "version": "3.4.1", "integrity": "sha512-…" },
+    { "name": "@event4u/agent-config-laravel",  "version": "3.4.0", "integrity": "sha512-…" }
+  ],
+  "packs": [ "core", "pack-laravel" ]
+}
+```
+
+### Non-goals of this addendum
+
+- **Not** authorising the split. The Phase 4 roadmap parks the work
+  explicitly; this addendum documents the design so the option is
+  understood, not opened.
+- **Not** committing to per-pack release cadence. Independent bumps
+  are *allowed* by the version rules, not *required*; today's
+  monolithic release stays the default until a consumer asks.
+- **Not** changing the discovery manifest. Whether one tarball or
+  seventeen ship the bytes, `dist/discovery/discovery-manifest.json`
+  is byte-identical for the same source SHA.
+
+### Revisit triggers
+
+Open this design and convert to an implementation roadmap **only** if:
+
+1. A named consumer needs one pack without the rest (e.g. a Laravel-only
+   shop refusing the Symfony or React payload), **and**
+2. The bundled release size becomes a real install-time pain (>5 MB
+   tarball or >30 s install on cold cache), **and**
+3. We have at least one volunteer maintainer per split pack willing
+   to own its release cadence.
+
+All three. Any single trigger alone is insufficient — the cost of the
+split outweighs a partial benefit.

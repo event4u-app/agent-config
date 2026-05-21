@@ -45,27 +45,30 @@ keep working at every commit — no flag day.
 
 ## Prerequisites
 
-- [ ] Phase 1, 2, 3 shipped, green, and consumed by at least one
+- [x] Phase 1, 2, 3 shipped, green, and consumed by at least one
       real consumer project for a full release cycle
-- [ ] Every artefact has a unique primary pack declared in its
+- [x] Every artefact has a unique primary pack declared in its
       frontmatter (Phase 1 contract)
-- [ ] An ADR `docs/decisions/ADR-016-monorepo-physical-layout.md`
-      captures the chosen mapping and the migration mechanic
+- [x] An ADR captures the chosen mapping and the migration mechanic
+      (`docs/decisions/ADR-017-monorepo-physical-layout.md` — the
+      original ADR-016 slot was reassigned during numbering review)
 
 ## Acceptance criteria
 
-- [ ] Source tree matches the layout above; no `.md` file remains
+- [x] Source tree matches the layout above; no `.md` file remains
       under the legacy `.agent-src.uncompressed/` root
-- [ ] `task sync` produces the same `.agent-src/` and `.augment/`
+- [x] `task sync` produces the same `.agent-src/` and `.augment/`
       trees byte-for-byte before vs. after the move (verified by
       sha256 snapshot taken on the last pre-move commit)
-- [ ] `dist/discovery/discovery-manifest.json` is byte-identical
+- [x] `dist/discovery/discovery-manifest.json` is byte-identical
       before vs. after the move except for `artefacts[].path`
       values (which now point to the new locations)
-- [ ] TS installer continues to work from a fresh consumer project
+- [x] TS installer continues to work from a fresh consumer project
       pulling either the pre-move or post-move release
-- [ ] CI runs across all packages in parallel; per-package lint and
+- [x] CI runs across all packages in parallel; per-package lint and
       test isolation is enforced
+      (`.github/workflows/skill-lint.yml` `skill-lint-per-pack`
+      matrix — 17 shards, fail-fast: false, all green)
 
 ## Non-goals
 
@@ -158,8 +161,11 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 - [x] `task lint-pack-boundaries` ensures no skill in `pack-laravel/`
       references files outside its pack except via `requires` edges
       already declared in `pack.yaml`
-- [ ] Skill-linter runs per-package in parallel CI matrix; per-pack
+- [x] Skill-linter runs per-package in parallel CI matrix; per-pack
       green is a hard merge gate
+      (`task lint-pack PACK=<id>` + `.github/workflows/skill-lint.yml`
+      `skill-lint-per-pack` matrix; linter accepts directory args via
+      `gather_candidate_files_under`)
 
 ## Phase 5 — Contributor ergonomics
 
@@ -175,14 +181,17 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 
 ## Phase 6 — Optional split distribution
 
-- [ ] Document (in ADR, not implement) how each pack could later
+- [x] Document (in ADR, not implement) how each pack could later
       ship as its own npm package consumable a la carte
-- [ ] Define the version coupling rules (core pins major; packs
+      (ADR-017 addendum "Optional split distribution", §"Proposed shape")
+- [x] Define the version coupling rules (core pins major; packs
       may bump minor independently) and the lockfile shape under
       split distribution
-- [ ] Park the implementation; revisit only when a real consumer
+      (ADR-017 addendum §"Version coupling rules" + §"Lockfile shape")
+- [x] Park the implementation; revisit only when a real consumer
       demands a single-pack install path that the current bundled
       release cannot satisfy
+      (ADR-017 addendum §"Revisit triggers" — three-condition AND-gate)
 
 ## Quality gates
 
