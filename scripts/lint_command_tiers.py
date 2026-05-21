@@ -19,7 +19,12 @@ from pathlib import Path
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-COMMANDS_DIR = REPO / ".agent-src.uncompressed" / "commands"
+
+# Commands live under every artefact root post-monorepo Phase 4.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+COMMANDS_DIRS = [root / "commands" for root in artefact_roots() if (root / "commands").is_dir()]
 # Consumer-facing projection — must also carry tier so .augment/commands/
 # (which symlinks to .agent-src/commands/) renders the tier filter.
 COMMANDS_DIR_COMPRESSED = REPO / ".agent-src" / "commands"
@@ -102,7 +107,15 @@ def lint(commands_dir: Path, *, quiet: bool = False) -> int:
 
 
 def main() -> int:
-    rc = lint(COMMANDS_DIR, quiet=QUIET)
+    if not COMMANDS_DIRS:
+        print(
+            "lint_command_tiers: no commands dir found under any artefact root",
+            file=sys.stderr,
+        )
+        return 1
+    rc = 0
+    for commands_dir in COMMANDS_DIRS:
+        rc |= lint(commands_dir, quiet=QUIET)
     # The compressed projection is the consumer-facing tree (via the
     # .augment/commands → .agent-src/commands symlink). It must also
     # carry tier so the surface stays uniform.
