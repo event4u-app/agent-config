@@ -298,7 +298,10 @@ run_sync() {
     $QUIET   && args+=(--quiet)
     $MINIMAL && args+=(--minimal)
     args+=(--tools="$TOOLS")
-    bash "$INSTALL_SH" "${args[@]}"
+    # Suppress the install.sh deprecation banner when called through the
+    # orchestrator (this script). Direct `bash install.sh` invocations
+    # still see it. See ADR-016 § Distribution / Phase 6.
+    AGENT_CONFIG_FROM_ORCHESTRATOR=1 bash "$INSTALL_SH" "${args[@]}"
 }
 
 run_bridges() {
