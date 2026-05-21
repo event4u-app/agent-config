@@ -86,6 +86,7 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: lint-trust-coherence
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
@@ -178,6 +179,7 @@ tasks:
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
+      - task: lint-trust-coherence
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
       - task: check-artefact-checksums
