@@ -1,7 +1,7 @@
 /**
  * UserMdForm roles-list unit test.
  *
- * `defaultFrontmatter()` seeds `role: ['']` so the YAML stays well-shaped
+ * `defaultIdentity()` seeds `role: ['']` so the YAML stays well-shaped
  * before the user types anything. The form must not render that empty
  * placeholder as a chip — earlier versions surfaced an empty pill with a
  * disabled `×` button. The chip list is filtered at render time so the
@@ -9,16 +9,14 @@
  */
 import { afterEach, describe, expect, it } from 'vitest';
 import { render, fireEvent, cleanup } from '@testing-library/preact';
-import { UserMdForm, type UserMdFormValue } from '../../src/ui/forms/UserMdForm.js';
-import { defaultFrontmatter } from '../../src/shared/userMd/formAdapter.js';
+import { UserMdForm } from '../../src/ui/forms/UserMdForm.js';
+import { defaultIdentity } from '../../src/shared/userMd/formAdapter.js';
+import type { UserIdentity } from '../../src/shared/userMd/schema.js';
 
 afterEach(() => { cleanup(); });
 
-function makeValue(roles: string[]): UserMdFormValue {
-    return {
-        frontmatter: { ...defaultFrontmatter(), role: roles },
-        content: '',
-    };
+function makeValue(roles: string[]): UserIdentity {
+    return { ...defaultIdentity(), role: roles };
 }
 
 describe('UserMdForm role chips', () => {
@@ -56,7 +54,7 @@ describe('UserMdForm role chips', () => {
     });
 
     it('addRole drops the empty placeholder when the first real role is added', () => {
-        let captured: UserMdFormValue | null = null;
+        let captured: UserIdentity | null = null;
         const { getByPlaceholderText, getByRole } = render(
             <UserMdForm
                 value={makeValue([''])}
@@ -67,6 +65,6 @@ describe('UserMdForm role chips', () => {
         fireEvent.input(input, { target: { value: 'engineer' } });
         fireEvent.click(getByRole('button', { name: /^Add role$/ }));
         expect(captured).not.toBeNull();
-        expect(captured!.frontmatter.role).toEqual(['engineer']);
+        expect(captured!.role).toEqual(['engineer']);
     });
 });

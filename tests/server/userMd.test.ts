@@ -1,27 +1,29 @@
 /**
- * Phase 1.6 acceptance: `.agent-user.md` route suite.
+ * Phase 1.6 acceptance: `.agent-user.yml` route suite.
  *
  *   GET  /api/v1/user-md            → exists=false for fresh project,
- *                                     exists=true with body + mtime once written
- *   GET  /api/v1/user-md/template   → template body from `templates/agent-user.md`
+ *                                     exists=true with identity + mtime once written
+ *   GET  /api/v1/user-md/template   → template body from `templates/agent-user.yml`
  *   PUT  /api/v1/user-md            → create (no IUS header), update (IUS required),
- *                                     stale IUS → 409, malformed frontmatter → 422
+ *                                     stale IUS → 409, invalid identity → 422
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readFileSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { parseUserMd } from '../../src/shared/userMd/utils.js';
-import { bootTestApp, authHeaders, fixtureUserMd, type TestApp } from './helpers.js';
+import { parseUserIdentity, composeUserIdentity } from '../../src/shared/userMd/utils.js';
+import { userIdentitySchema } from '../../src/shared/userMd/schema.js';
+import { bootTestApp, authHeaders, fixtureUserIdentity, type TestApp } from './helpers.js';
 
 const PORT = 41604;
 
-const VALID_BODY = fixtureUserMd({ notes: 'This is fine.' });
+const VALID_IDENTITY = fixtureUserIdentity({ notes: 'This is fine.' });
+const USER_YML_REL = join('settings', '.agent-user.yml');
 
-interface GetUserMd { body: string; exists: boolean; lastModified: number | null }
+interface GetUserMd { identity: Record<string, unknown> | null; exists: boolean; lastModified: number | null }
 interface PutUserMd { lastModified: number; writtenPaths: string[] }
 interface ErrorBody { error: { code: string; fields?: Array<{ path: string }> } }
 
-describe('.agent-user.md routes', () => {
+describe('.agent-user.yml routes', () => {
     let ctx: TestApp;
 
     beforeEach(async () => { ctx = await bootTestApp({ port: PORT }); });
@@ -34,7 +36,7 @@ describe('.agent-user.md routes', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as GetUserMd;
         expect(body.exists).toBe(false);
-        expect(body.body).toBe('');
+        expect(body.identity).toBeNull();
         expect(body.lastModified).toBeNull();
     });
 
@@ -46,7 +48,7 @@ describe('.agent-user.md routes', () => {
         const body = (res.json() as { body: string }).body;
         // Template MUST round-trip through the shared parser — the same
         // one the agent uses to consume the file at runtime.
-        expect(() => parseUserMd(body)).not.toThrow();
+        expect(() => parseUserIdentity(body)).not.toThrow();
         expect(body.length).toBeGreaterThan(0);
     });
 
@@ -55,34 +57,39 @@ describe('.agent-user.md routes', () => {
             method: 'PUT',
             url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { body: VALID_BODY },
+            payload: { identity: VALID_IDENTITY },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as PutUserMd;
-        expect(body.writtenPaths).toEqual(['.agent-user.md']);
+        expect(body.writtenPaths).toEqual([USER_YML_REL]);
         expect(Number.isInteger(body.lastModified)).toBe(true);
 
-        const onDisk = readFileSync(join(ctx.projectRoot, '.agent-user.md'), 'utf8');
-        expect(onDisk).toBe(VALID_BODY);
+        const onDisk = readFileSync(join(ctx.projectRoot, USER_YML_REL), 'utf8');
+        const parsed = userIdentitySchema.parse(parseUserIdentity(onDisk));
+        expect(parsed).toEqual(VALID_IDENTITY);
         if (process.platform !== 'win32') {
-            expect(statSync(join(ctx.projectRoot, '.agent-user.md')).mode & 0o777).toBe(0o600);
+            expect(statSync(join(ctx.projectRoot, USER_YML_REL)).mode & 0o777).toBe(0o600);
         }
     });
 
     it('PUT requires If-Unmodified-Since when the file exists (412 otherwise)', async () => {
-        writeFileSync(join(ctx.projectRoot, '.agent-user.md'), VALID_BODY, { mode: 0o600 });
+        mkdirSync(join(ctx.projectRoot, 'settings'), { recursive: true, mode: 0o700 });
+        writeFileSync(join(ctx.projectRoot, USER_YML_REL), composeUserIdentity(VALID_IDENTITY), { mode: 0o600 });
+        const updated = fixtureUserIdentity({ name: 'Mathias', notes: 'This is fine.' });
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { body: VALID_BODY.replace('Matze', 'Mathias') },
+            payload: { identity: updated },
         });
         expect(res.statusCode).toBe(412);
         expect((res.json() as ErrorBody).error.code).toBe('PRECONDITION_REQUIRED');
     });
 
-    it('PUT returns 409 CONFLICT with the current body when If-Unmodified-Since is stale', async () => {
-        writeFileSync(join(ctx.projectRoot, '.agent-user.md'), VALID_BODY, { mode: 0o600 });
+    it('PUT returns 409 CONFLICT with the current identity when If-Unmodified-Since is stale', async () => {
+        mkdirSync(join(ctx.projectRoot, 'settings'), { recursive: true, mode: 0o700 });
+        writeFileSync(join(ctx.projectRoot, USER_YML_REL), composeUserIdentity(VALID_IDENTITY), { mode: 0o600 });
+        const updated = fixtureUserIdentity({ name: 'Mathias', notes: 'This is fine.' });
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/user-md',
@@ -91,38 +98,37 @@ describe('.agent-user.md routes', () => {
                 'content-type': 'application/json',
                 'if-unmodified-since': '1',
             },
-            payload: { body: VALID_BODY.replace('Matze', 'Mathias') },
+            payload: { identity: updated },
         });
         expect(res.statusCode).toBe(409);
-        const body = res.json() as ErrorBody & { current: { body: string; lastModified: number } };
+        const body = res.json() as ErrorBody & { current: { identity: Record<string, unknown>; lastModified: number } };
         expect(body.error.code).toBe('CONFLICT');
-        expect(body.current.body).toBe(VALID_BODY);
+        expect(body.current.identity).toEqual(VALID_IDENTITY);
         expect(body.current.lastModified).toBeGreaterThan(1);
     });
 
-    it('PUT rejects malformed frontmatter with 422 VALIDATION', async () => {
-        const BAD = `---\nversion: 1\nidentity:\n  name: "unclosed\n---\n\n# Notes\n`;
+    it('PUT rejects invalid identity with 422 VALIDATION', async () => {
+        // identity.name is required by userIdentitySchema → missing it trips refine.
+        const bad = { ...VALID_IDENTITY, identity: { name: '' } };
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { body: BAD },
+            payload: { identity: bad },
         });
         expect(res.statusCode).toBe(422);
         const body = res.json() as ErrorBody;
         expect(body.error.code).toBe('VALIDATION');
-        // superRefine path is relative to the field — final joined path is
-        // either `body` (length cap) or `body.body` (frontmatter refine).
-        expect(body.error.fields?.some((f) => f.path.startsWith('body'))).toBe(true);
+        expect(body.error.fields?.some((f) => f.path.startsWith('identity'))).toBe(true);
     });
 
-    it('PUT rejects bodies over the 8000-char cap with 422 VALIDATION', async () => {
-        const huge = `---\nversion: 1\n---\n` + 'x'.repeat(8001);
+    it('PUT rejects notes over the 8000-char cap with 422 VALIDATION', async () => {
+        const huge = fixtureUserIdentity({ notes: 'x'.repeat(8001) });
         const res = await ctx.app.inject({
             method: 'PUT',
             url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { body: huge },
+            payload: { identity: huge },
         });
         expect(res.statusCode).toBe(422);
         expect((res.json() as ErrorBody).error.code).toBe('VALIDATION');

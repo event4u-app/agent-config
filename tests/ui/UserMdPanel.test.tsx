@@ -2,14 +2,14 @@
  * UserMdPanel round-trip unit test — roadmap Phase 2.5 / A5.
  *
  * Verifies the read/edit/save loop against a mocked /api/v1/user-md, now
- * driven by the structured UserMdForm (no raw textarea). The form parses
- * the loaded body via @shared/userMd/formAdapter, the user edits a
- * specific field, and Save PUTs the recomposed markdown with
- * If-Unmodified-Since carrying the GET mtime.
+ * driven by the structured UserMdForm (no raw textarea). The panel
+ * consumes the parsed identity object directly, the user edits a
+ * specific field, and Save PUTs `{ identity }` with If-Unmodified-Since
+ * carrying the GET mtime.
  *
  * Also covers the "file does not exist" branch — GET returns exists=false,
- * the template route fills the body, Save sends the template body verbatim
- * (no user edits) and omits the lock header.
+ * the template route fills the form via parseUserIdentity, Save sends
+ * the parsed-template identity (no user edits) and omits the lock header.
  *
  * Module-level signals are reset via vi.resetModules() in beforeEach.
  */
@@ -20,32 +20,22 @@ interface Call { method: string; path: string; body: unknown; headers: Record<st
 
 interface MockOpts {
     exists?: boolean;
-    body?: string;
+    identity?: Record<string, unknown> | null;
     lastModified?: number | null;
     template?: string;
 }
 
-const FIXTURE_BODY = [
-    '---',
-    'version: 1',
-    'identity:',
-    '    name: "Original"',
-    'language: "en"',
-    'role:',
-    '    - "engineer"',
-    'style:',
-    '    formality: "informal"',
-    '    pace: "pragmatic"',
-    'voice_sample: "Keep it crisp."',
-    'last_updated: "2026-05-19"',
-    '---',
-    '',
-    '# hello',
-    '',
-].join('\n');
+const FIXTURE_IDENTITY: Record<string, unknown> = {
+    version: 1,
+    identity: { name: 'Original' },
+    language: 'en',
+    role: ['engineer'],
+    style: { formality: 'informal', pace: 'pragmatic' },
+    voice_sample: 'Keep it crisp.',
+    last_updated: '2026-05-19',
+};
 
 const TEMPLATE_BODY = [
-    '---',
     'version: 1',
     'identity:',
     '    name: ""',
@@ -57,15 +47,12 @@ const TEMPLATE_BODY = [
     '    pace: "pragmatic"',
     'voice_sample: ""',
     'last_updated: "1970-01-01"',
-    '---',
-    '',
-    '# starter',
     '',
 ].join('\n');
 
 function installFetchMock(opts: MockOpts = {}): { calls: Call[]; restore: () => void } {
     const exists = opts.exists ?? true;
-    const body = opts.body ?? FIXTURE_BODY;
+    const identity = opts.identity !== undefined ? opts.identity : (exists ? FIXTURE_IDENTITY : null);
     const lastModified = opts.lastModified ?? (exists ? 1700000000000 : null);
     const template = opts.template ?? TEMPLATE_BODY;
     const calls: Call[] = [];
@@ -78,7 +65,7 @@ function installFetchMock(opts: MockOpts = {}): { calls: Call[]; restore: () => 
         calls.push({ method, path, body: reqBody, headers });
 
         if (path === '/api/v1/user-md' && method === 'GET') {
-            return new Response(JSON.stringify({ body, exists, lastModified }), { status: 200 });
+            return new Response(JSON.stringify({ identity, exists, lastModified }), { status: 200 });
         }
         if (path === '/api/v1/user-md/template' && method === 'GET') {
             return new Response(JSON.stringify({ body: template }), { status: 200 });
@@ -86,7 +73,7 @@ function installFetchMock(opts: MockOpts = {}): { calls: Call[]; restore: () => 
         if (path === '/api/v1/user-md' && method === 'PUT') {
             return new Response(JSON.stringify({
                 lastModified: 1700000000999,
-                writtenPaths: ['.agent-user.md'],
+                writtenPaths: ['settings/.agent-user.yml'],
             }), { status: 200 });
         }
         return new Response(JSON.stringify({ error: { code: 'NOT_FOUND', message: path } }), { status: 404 });
@@ -118,18 +105,19 @@ describe('UserMdPanel', () => {
             });
             const put = mock.calls.find((c) => c.path === '/api/v1/user-md' && c.method === 'PUT');
             expect(put?.headers['If-Unmodified-Since']).toBe('1700000000000');
-            const putBody = (put?.body as { body: string }).body;
-            expect(putBody).toContain('name: Matze');
-            expect(putBody).toContain('# hello');
+            const putIdentity = (put?.body as { identity: Record<string, unknown> }).identity;
+            expect((putIdentity.identity as { name: string }).name).toBe('Matze');
+            expect(putIdentity.role).toEqual(['engineer']);
+            expect(putIdentity.voice_sample).toBe('Keep it crisp.');
 
-            await findByText('Saved (.agent-user.md).');
+            await findByText('Saved (settings/.agent-user.yml).');
         } finally {
             mock.restore();
         }
     });
 
-    it('first-write branch: GET exists=false → template loaded, Save sends template verbatim without If-Unmodified-Since', async () => {
-        const mock = installFetchMock({ exists: false, body: '', lastModified: null });
+    it('first-write branch: GET exists=false → template loaded, Save sends parsed-template identity without If-Unmodified-Since', async () => {
+        const mock = installFetchMock({ exists: false, lastModified: null });
         try {
             const { UserMdPanel } = await import('../../src/ui/pages/UserMdPanel.js');
             const { findByText, getByRole } = render(<UserMdPanel />);
@@ -142,7 +130,12 @@ describe('UserMdPanel', () => {
             });
             const put = mock.calls.find((c) => c.path === '/api/v1/user-md' && c.method === 'PUT');
             expect(put?.headers['If-Unmodified-Since']).toBeUndefined();
-            expect((put?.body as { body: string }).body).toBe(TEMPLATE_BODY);
+            const putIdentity = (put?.body as { identity: Record<string, unknown> }).identity;
+            expect(putIdentity.version).toBe(1);
+            expect((putIdentity.identity as { name: string }).name).toBe('');
+            expect(putIdentity.language).toBe('en');
+            expect(putIdentity.role).toEqual(['']);
+            expect(putIdentity.last_updated).toBe('1970-01-01');
         } finally {
             mock.restore();
         }

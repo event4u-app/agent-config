@@ -17,7 +17,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import type { FastifyInstance } from 'fastify';
 import { createApp } from '../../src/server/app.js';
-import { authHeaders, fixtureSettings, fixtureUserMd, settingsTemplate } from './helpers.js';
+import { authHeaders, fixtureSettings, fixtureUserIdentity, settingsTemplate } from './helpers.js';
 
 interface MigrationCtx {
     app: FastifyInstance;
@@ -86,14 +86,14 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), userMd: fixtureUserMd() },
+            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
         expect(body.writtenPaths).toHaveLength(2);
-        // New files live under writeRoot.
-        expect(readFileSync(join(ctx.writeRoot, '.agent-settings.yml'), 'utf8')).toMatch(/cost_profile:\s*balanced/m);
-        expect(readFileSync(join(ctx.writeRoot, '.agent-user.md'), 'utf8')).toMatch(/^---$/m);
+        // New files live under writeRoot/settings/.
+        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/cost_profile:\s*balanced/m);
+        expect(readFileSync(join(ctx.writeRoot, 'settings', '.agent-user.yml'), 'utf8')).toMatch(/name:\s*Matze/);
         // Legacy files removed; migratedFrom lists both.
         expect(existsSync(join(ctx.legacyReadRoot, '.agent-settings.yml'))).toBe(false);
         expect(existsSync(join(ctx.legacyReadRoot, '.agent-user.md'))).toBe(false);
@@ -136,7 +136,7 @@ describe('wizard auto-migration', () => {
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), userMd: fixtureUserMd() },
+            payload: { settings: fixtureSettings({ cost_profile: 'balanced' }), identity: fixtureUserIdentity() },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as { ok: boolean; dryRun: boolean; preview: unknown; migratedFrom?: string[] };
