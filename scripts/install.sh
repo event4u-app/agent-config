@@ -248,7 +248,7 @@ create_symlink() {
     local link_dir
     link_dir="$(dirname "$link_abs")"
 
-    mkdir -p "$link_dir"
+    $DRY_RUN || mkdir -p "$link_dir"
 
     # Remove existing file/symlink
     if [[ -L "$link_abs" ]] || [[ -f "$link_abs" ]]; then
@@ -336,7 +336,7 @@ sync_hybrid() {
         local target_dir
         target_dir="$(dirname "$target_file")"
 
-        mkdir -p "$target_dir"
+        $DRY_RUN || mkdir -p "$target_dir"
 
         if should_copy "$rel_path"; then
             # Remove existing symlink before copying
@@ -446,7 +446,7 @@ create_tool_symlinks() {
     local project_root="$1"
     local rules_dir="$project_root/.augment/rules"
 
-    [[ -d "$rules_dir" ]] || return
+    [[ -d "$rules_dir" ]] || return 0
 
     local -a tool_ids=()
     local -a tool_dirs=()
@@ -466,7 +466,7 @@ create_tool_symlinks() {
         local rel_prefix="${rel_prefixes[$i]}"
         local target_dir="$project_root/$dir"
 
-        mkdir -p "$target_dir"
+        $DRY_RUN || mkdir -p "$target_dir"
 
         for rule_file in "$rules_dir"/*.md; do
             [[ -f "$rule_file" ]] || continue
@@ -516,11 +516,11 @@ create_skill_symlinks() {
     local project_root="$1"
     local skills_dir="$project_root/.augment/skills"
 
-    [[ -d "$skills_dir" ]] || return
+    [[ -d "$skills_dir" ]] || return 0
     is_tool_enabled "claude-code" || { log_verbose "skip .claude/skills/ (claude-code not selected)"; return 0; }
 
     local target_dir="$project_root/.claude/skills"
-    mkdir -p "$target_dir"
+    $DRY_RUN || mkdir -p "$target_dir"
 
     local count=0
     for skill_dir in "$skills_dir"/*/; do
@@ -569,7 +569,7 @@ generate_windsurfrules() {
     local project_root="$1"
     local rules_dir="$project_root/.augment/rules"
 
-    [[ -d "$rules_dir" ]] || return
+    [[ -d "$rules_dir" ]] || return 0
     is_tool_enabled "windsurf" || { log_verbose "skip .windsurfrules (windsurf not selected)"; return 0; }
 
     local output="$project_root/.windsurfrules"
@@ -629,8 +629,8 @@ copy_if_missing() {
     local source="$1"
     local target="$2"
 
-    [[ -f "$source" ]] || return
-    [[ -f "$target" ]] && return
+    [[ -f "$source" ]] || return 0
+    [[ -f "$target" ]] && return 0
 
     if $DRY_RUN; then
         log_verbose "copy $(basename "$target") (missing)"

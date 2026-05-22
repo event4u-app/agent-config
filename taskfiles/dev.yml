@@ -61,3 +61,5 @@ tasks:
     cmds:
       - npm run build
       - node dist/cli/agent-config.js setup --dry-run
+
+
