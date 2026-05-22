@@ -23,7 +23,7 @@ Flip the consumer install path from **global-default** to **global-only**. The c
 | Dimension | ADR-007 (today) | This roadmap (target) |
 |---|---|---|
 | Consumer scope | `global` is default; `--project` accepted | `global` is the only valid scope for consumers; `--project` is **maintainer-only** behind `AGENT_CONFIG_DEV_MODE=1` |
-| Consumer project surface | `.agent-settings.yml`, `agents/`, optional `.claude/` etc. | **only** `agents/overrides/` (plus a one-line `agents/.event4u-bridge.yml` pointer) |
+| Consumer project surface | `.agent-settings.yml`, `agents/`, optional `.claude/` etc. | **only** `agents/overrides/` (plus a one-line `agents/.event4u-bridge.yml` pointer) | <!-- ref-ignore -->
 | User settings (`.agent-user.yml`, `.agent-settings.yml`) | Project-local merge with global fallback | **Global is the source of truth**; project copy = override-only, optional |
 | Setup wizard scope | 7 steps (behavior · cost · memory · user) | 9 steps — **AI-tool select** + **Pack select** prepended |
 | `SCOPE_SUPPORT` matrix | Most tools at `both` | Most tools at `global`; `both` survives only behind `AGENT_CONFIG_DEV_MODE=1` |
@@ -33,7 +33,7 @@ ADR-007 D2–D6 stay valid. A follow-up ADR (`ADR-019` candidate) ratifies the g
 ## Decisions (this roadmap)
 
 - **D7 — Global is the only consumer scope.** `--project[=<dir>]` is gated behind `AGENT_CONFIG_DEV_MODE=1`. Without the env flag, the flag is rejected with a single-line message + link to the maintainer docs.
-- **D8 — Consumer project surface = `agents/overrides/` + bridge marker.** A one-line `agents/.event4u-bridge.yml` points at the global install. Everything else is read from `~/.event4u/agent-config/`.
+- **D8 — Consumer project surface = `agents/overrides/` + bridge marker.** A one-line `agents/.event4u-bridge.yml` points at the global install. Everything else is read from `~/.event4u/agent-config/`. <!-- ref-ignore -->
 - **D9 — Unified Setup-Wizard.** Steps 1 (AI-tool select) and 2 (Pack select) of the Installer-GUI are merged into the Setup-Wizard as Steps 1–2; existing 7 Settings-Steps become Steps 3–9. Single boot, single HTTP server, single transaction log.
 - **D10 — Dev escape hatch.** `task dev:install` and `task dev:install:dry-run` survive as **maintainer-only** with `AGENT_CONFIG_DEV_MODE=1` baked in. Consumer-facing tasks (`task dev:setup`, `task dev:setup:dry-run`) call the global path with no escape.
 - **D11 — Migration is automated.** First `npx @event4u/agent-config init` on a v2.x consumer with project-local content **copies** the project files into `~/.event4u/agent-config/`, writes the bridge marker, and leaves the originals as `.legacy-pre-global-only/` for one release cycle.
@@ -47,7 +47,7 @@ The host agent walked the decision through four lenses (Architect / Consumer DX 
 | Architect | OK | `SCOPE_SUPPORT` already exists — flip is a one-table edit + a guard. Risk: `workspace > global` tools (Windsurf · Cline · Gemini) still need a per-project bridge file for the user-scope content to apply inside repos. Mitigated by D8's bridge marker + the existing `agent-config export` subcommand. |
 | Consumer DX | STRONG OK | One npx invocation, zero project pollution. `agents/overrides/` survives commits cleanly. Settings stop drifting between projects. |
 | Maintainer DX | OK with guard | Local link-based dev loop must keep working. D10 (`AGENT_CONFIG_DEV_MODE=1`) gates it. Test: `task dev:install:dry-run` still produces a non-empty preview inside this repo with the env flag set. |
-| Security | OK | No new write paths. `~/.event4u/agent-config/` perms unchanged. `agents/.event4u-bridge.yml` is read-only data, no executable content. The legacy `.legacy-pre-global-only/` backup is local-only, never pushed via the installer. |
+| Security | OK | No new write paths. `~/.event4u/agent-config/` perms unchanged. `agents/.event4u-bridge.yml` is read-only data, no executable content. The legacy `.legacy-pre-global-only/` backup is local-only, never pushed via the installer. | <!-- ref-ignore -->
 
 Convergence: 4/4 green; no blockers; one residual question — *"Should `--project` be gated behind an env flag or removed outright in v3?"*. Phase 1 picks env-gate (additive, backwards-compat); v3 cut can remove the gate.
 
@@ -166,7 +166,7 @@ Idempotent one-shot migration for projects upgrading from v2.x global-default to
 
 ## Acceptance criteria
 
-- Fresh consumer project: `npx @event4u/agent-config init` produces **only** `agents/overrides/` + `agents/.event4u-bridge.yml`. No other top-level artefacts in the repo.
+- Fresh consumer project: `npx @event4u/agent-config init` produces **only** `agents/overrides/` + `agents/.event4u-bridge.yml`. No other top-level artefacts in the repo. <!-- ref-ignore -->
 - `task dev:setup:dry-run` in this maintainer repo still works end-to-end with no env flag and produces a non-empty preview.
 - `task dev:install:dry-run` requires `AGENT_CONFIG_DEV_MODE=1`; without it, fails fast with a one-line error.
 - All settings live under `~/.event4u/agent-config/`. Project-local copies are tolerated but never required.
