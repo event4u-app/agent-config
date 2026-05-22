@@ -1,58 +1,138 @@
 /**
- * Tests for `parseUserMd` / `composeUserMd` in `@shared/userMd/utils`.
+ * Tests for `parseUserIdentity`, `composeUserIdentity`, and
+ * `parseLegacyUserMd` in `@shared/userMd/utils`.
  *
  * Contract gates (`docs/contracts/agent-user-schema.md`):
- *   - parse returns `{ data, content }` with empty defaults
- *   - compose emits YAML in BLOCK style for list-valued fields like
- *     `identity.role` so git diffs stay line-oriented
- *   - compose ↔ parse is a stable round-trip
- *   - empty frontmatter omits the leading `---\n---\n` fence
+ *   - `parseUserIdentity` returns a plain object; empty body → `{}`.
+ *   - `composeUserIdentity` emits YAML in BLOCK style for list-valued
+ *     fields so git diffs stay line-oriented.
+ *   - compose ↔ parse is a stable round-trip.
+ *   - `parseLegacyUserMd` accepts the old fenced-frontmatter
+ *     `.agent-user.md` body, mapping any trailing markdown into `notes`.
  */
 import { describe, expect, it } from 'vitest';
-import { composeUserMd, parseUserMd } from '@shared/userMd/utils.js';
+import {
+    composeUserIdentity,
+    parseLegacyUserMd,
+    parseUserIdentity,
+} from '@shared/userMd/utils.js';
 
-describe('parseUserMd', () => {
-    it('returns empty data + content when no frontmatter is present', () => {
-        const result = parseUserMd('# Hello\n\nplain body.');
-        expect(result.data).toEqual({});
-        expect(result.content).toBe('# Hello\n\nplain body.');
+describe('parseUserIdentity', () => {
+    it('returns an empty object for an empty body', () => {
+        expect(parseUserIdentity('')).toEqual({});
     });
 
-    it('parses valid YAML frontmatter into a typed object', () => {
-        const body = '---\nidentity:\n  name: Matze\n  role:\n    - founder\n    - engineer\n---\n\n# About\n';
-        const result = parseUserMd(body);
-        expect(result.data).toEqual({
-            identity: { name: 'Matze', role: ['founder', 'engineer'] },
+    it('returns an empty object for whitespace-only input', () => {
+        expect(parseUserIdentity('   \n\n')).toEqual({});
+    });
+
+    it('parses a valid YAML identity object', () => {
+        const body = 'identity:\n  name: Matze\nrole:\n  - founder\n  - engineer\n';
+        const result = parseUserIdentity(body);
+        expect(result).toEqual({
+            identity: { name: 'Matze' },
+            role: ['founder', 'engineer'],
         });
-        expect(result.content).toBe('\n# About\n');
+    });
+
+    it('throws on non-object YAML (top-level array)', () => {
+        expect(() => parseUserIdentity('- a\n- b\n')).toThrow(/object/);
+    });
+
+    it('throws on malformed YAML', () => {
+        expect(() => parseUserIdentity('name: : :\n')).toThrow();
     });
 });
 
-describe('composeUserMd', () => {
+describe('composeUserIdentity', () => {
     it('emits list-valued fields in block style (one entry per line)', () => {
-        const composed = composeUserMd({
-            data: { identity: { name: 'Matze', role: ['founder', 'engineer'] } },
-            content: '\n# About\n',
+        const composed = composeUserIdentity({
+            identity: { name: 'Matze' },
+            role: ['founder', 'engineer'],
         });
-        // Block style — each role on its own line behind a leading `- `.
-        // Flow style (`role: [founder, engineer]`) is the regression we
-        // guard against; this assertion catches it.
-        expect(composed).toContain('  role:\n    - founder\n    - engineer');
+        expect(composed).toContain('role:\n  - founder\n  - engineer');
         expect(composed).not.toContain('role: [');
     });
 
-    it('omits the fence when data is empty', () => {
-        const composed = composeUserMd({ data: {}, content: '# Hello\n' });
-        expect(composed).toBe('# Hello\n');
-        expect(composed.startsWith('---')).toBe(false);
+    it('terminates with a single trailing newline', () => {
+        const composed = composeUserIdentity({ identity: { name: 'Matze' } });
+        expect(composed.endsWith('\n')).toBe(true);
     });
 
     it('round-trips parse → compose → parse without drift', () => {
-        const original = '---\nidentity:\n  name: Matze\n  role:\n    - founder\n    - engineer\n---\n\n# About\n';
-        const reparsed = parseUserMd(composeUserMd(parseUserMd(original)));
-        expect(reparsed.data).toEqual({
-            identity: { name: 'Matze', role: ['founder', 'engineer'] },
+        const original = {
+            version: 1,
+            identity: { name: 'Matze' },
+            language: 'de',
+            role: ['founder', 'engineer'],
+            style: { formality: 'informal', pace: 'pragmatic' },
+            voice_sample: 'Mach das einfach.',
+            last_updated: '2026-05-19',
+        };
+        const reparsed = parseUserIdentity(composeUserIdentity(original));
+        expect(reparsed).toEqual(original);
+    });
+});
+
+describe('parseLegacyUserMd', () => {
+    it('returns an empty object for an empty body', () => {
+        expect(parseLegacyUserMd('')).toEqual({});
+    });
+
+    it('captures a fenced frontmatter block as the identity object', () => {
+        const body = [
+            '---',
+            'version: 1',
+            'identity:',
+            '  name: Matze',
+            'role:',
+            '  - founder',
+            '---',
+            '',
+        ].join('\n');
+        const result = parseLegacyUserMd(body);
+        expect(result).toEqual({
+            version: 1,
+            identity: { name: 'Matze' },
+            role: ['founder'],
         });
-        expect(reparsed.content).toBe('\n# About\n');
+    });
+
+    it('captures trailing markdown body as `notes` when frontmatter omits it', () => {
+        const body = [
+            '---',
+            'identity:',
+            '  name: Matze',
+            '---',
+            '',
+            '# Notes',
+            '',
+            'extra context.',
+            '',
+        ].join('\n');
+        const result = parseLegacyUserMd(body);
+        expect(result.identity).toEqual({ name: 'Matze' });
+        expect(typeof result.notes).toBe('string');
+        expect(result.notes as string).toContain('extra context.');
+    });
+
+    it('does not overwrite an existing `notes` field from the frontmatter', () => {
+        const body = [
+            '---',
+            'identity:',
+            '  name: Matze',
+            'notes: "from frontmatter"',
+            '---',
+            '',
+            'trailing prose.',
+            '',
+        ].join('\n');
+        const result = parseLegacyUserMd(body);
+        expect(result.notes).toBe('from frontmatter');
+    });
+
+    it('treats a body without a frontmatter fence as notes-only', () => {
+        const result = parseLegacyUserMd('# Hello\n\nplain markdown body.');
+        expect(result).toEqual({ notes: '# Hello\n\nplain markdown body.' });
     });
 });
