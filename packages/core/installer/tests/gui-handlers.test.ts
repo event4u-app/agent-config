@@ -10,7 +10,7 @@
 
 import { createServer, type Server } from 'node:http';
 import type { AddressInfo } from 'node:net';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -238,6 +238,111 @@ describe('POST /api/open-lockfile', () => {
             if (prevWayland !== undefined) process.env['WAYLAND_DISPLAY'] = prevWayland;
             Object.defineProperty(process, 'platform', { value: prevPlatform, configurable: true });
         }
+    });
+});
+
+describe('recovery endpoints', () => {
+    /**
+     * Spin a dedicated server with an injected RecoveryState so the
+     * GET /POST endpoints see an "open log". The default beforeEach
+     * server has no recovery and is closed first to free the port slot.
+     */
+    let recoveryServer: Server;
+    let recoveryUrl: string;
+    let logPath: string;
+    let cleared: boolean;
+
+    beforeEach(async () => {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        mkdirSync(join(proj, 'agents', 'runtime', 'gui'), { recursive: true });
+        logPath = join(proj, 'agents', 'runtime', 'gui', 'install-test.log');
+        writeFileSync(logPath,
+            `${JSON.stringify({ kind: 'start', ts: 't1', workspaces: ['default'], packs: ['a'] })}\n` +
+            `${JSON.stringify({ kind: 'plan', ts: 't1', path: '.augment/rules/foo.md' })}\n`,
+            'utf8',
+        );
+        mkdirSync(join(proj, '.augment', 'rules'), { recursive: true });
+        writeFileSync(join(proj, '.augment', 'rules', 'foo.md'), 'body\n');
+        cleared = false;
+        const ctx: ApiContext = {
+            ...buildContext(),
+            recovery: { logPath, plannedPaths: ['.augment/rules/foo.md'] },
+            clearRecovery: () => { cleared = true; },
+        };
+        recoveryServer = createServer((req, res) => void handleApi(req, res, ctx));
+        await new Promise<void>((resolve) => recoveryServer.listen(0, '127.0.0.1', resolve));
+        const p = (recoveryServer.address() as AddressInfo).port;
+        recoveryUrl = `http://127.0.0.1:${p}`;
+    });
+
+    afterEach(async () => {
+        await new Promise<void>((resolve) => recoveryServer.close(() => resolve()));
+    });
+
+    it('GET /api/recovery returns open=true with planned paths', async () => {
+        const res = await fetch(`${recoveryUrl}/api/recovery`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.open).toBe(true);
+        expect(body.logPath).toBe(logPath);
+        expect(body.plannedPaths).toEqual(['.augment/rules/foo.md']);
+    });
+
+    it('POST /api/recovery/rollback rejects bad csrf', async () => {
+        const res = await fetch(`${recoveryUrl}/api/recovery/rollback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: 'bad' }),
+        });
+        expect(res.status).toBe(403);
+    });
+
+    it('POST /api/recovery/rollback removes planned file + clears state', async () => {
+        const target = join(proj, '.augment', 'rules', 'foo.md');
+        expect(existsSync(target)).toBe(true);
+        const res = await fetch(`${recoveryUrl}/api/recovery/rollback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: CSRF }),
+        });
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.ok).toBe(true);
+        expect(body.removed).toEqual(['.augment/rules/foo.md']);
+        expect(existsSync(target)).toBe(false);
+        expect(cleared).toBe(true);
+    });
+
+    it('POST /api/recovery/discard truncates log without removing files', async () => {
+        const target = join(proj, '.augment', 'rules', 'foo.md');
+        const res = await fetch(`${recoveryUrl}/api/recovery/discard`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: CSRF }),
+        });
+        expect(res.status).toBe(200);
+        expect((await res.json()).ok).toBe(true);
+        expect(existsSync(target)).toBe(true);
+        expect(readFileSync(logPath, 'utf8')).toBe('');
+        expect(cleared).toBe(true);
+    });
+});
+
+describe('recovery endpoints without open log', () => {
+    it('GET /api/recovery returns open=false', async () => {
+        const res = await fetch(`${baseUrl}/api/recovery`);
+        expect(res.status).toBe(200);
+        expect((await res.json())).toEqual({ open: false });
+    });
+
+    it('POST /api/recovery/rollback returns 404 when no log present', async () => {
+        const res = await fetch(`${baseUrl}/api/recovery/rollback`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: CSRF }),
+        });
+        expect(res.status).toBe(404);
+        expect((await res.json()).error).toBe('no_open_log');
     });
 });
 

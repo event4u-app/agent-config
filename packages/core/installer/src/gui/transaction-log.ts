@@ -11,9 +11,9 @@
  * Roundtrip-stable: `appendEntry` -> `readLog` returns the same list.
  */
 
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { appendFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { isAbsolute, join, resolve } from 'node:path';
 import type { TransactionLogEntry } from './types.js';
 
 /** Resolve the GUI runtime directory. Tests inject `subdir`. */
@@ -88,4 +88,41 @@ export function closeLog(logPath: string, reason: string, now: () => string = ()
 /** Truncate (overwrite-empty) a log — used when the user declines rollback. */
 export function discardLog(logPath: string): void {
     writeFileSync(logPath, '', 'utf8');
+}
+
+/** Outcome of `rollback`: how many planned files existed + got removed. */
+export interface RollbackResult {
+    readonly removed: readonly string[];
+    readonly missing: readonly string[];
+}
+
+/**
+ * Remove every `plan` path recorded in the log, then append a terminal
+ * `cancel` entry so subsequent boots no longer see the log as "open".
+ * Paths outside `projectRoot` are skipped defensively — the writer only
+ * records repo-relative paths, so an absolute or `..`-escaping entry is
+ * a tampered log and must not delete arbitrary files.
+ */
+export function rollback(
+    projectRoot: string,
+    logPath: string,
+    now: () => string = () => new Date().toISOString(),
+): RollbackResult {
+    const entries = readLog(logPath);
+    const removed: string[] = [];
+    const missing: string[] = [];
+    const rootAbs = resolve(projectRoot);
+    for (const rel of plannedPaths(entries)) {
+        if (isAbsolute(rel) || rel.includes('..')) continue;
+        const abs = resolve(rootAbs, rel);
+        if (!abs.startsWith(`${rootAbs}/`) && abs !== rootAbs) continue;
+        if (existsSync(abs)) {
+            rmSync(abs, { force: true });
+            removed.push(rel);
+        } else {
+            missing.push(rel);
+        }
+    }
+    appendEntry(logPath, { kind: 'cancel', ts: now(), reason: 'rollback' });
+    return { removed, missing };
 }

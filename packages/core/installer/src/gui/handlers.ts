@@ -6,12 +6,15 @@
  * install-plan, atomic writes, and lockfile all come from the same
  * modules the CLI and agent-mode use (ADR-016 § 4).
  *
- *   GET  /api/manifest      — return DiscoveryManifest (no secrets)
- *   GET  /api/auto-detect   — run detectPacks() against project root
- *   POST /api/preview       — compute plan; no writes
- *   POST /api/apply         — execute plan; stream SSE progress
- *   POST /api/cancel        — append cancel entry to active log
- *   POST /api/open-lockfile — launch the OS handler for the lockfile
+ *   GET  /api/manifest           — return DiscoveryManifest (no secrets)
+ *   GET  /api/auto-detect        — run detectPacks() against project root
+ *   POST /api/preview            — compute plan; no writes
+ *   POST /api/apply              — execute plan; stream SSE progress
+ *   POST /api/cancel             — append cancel entry to active log
+ *   POST /api/open-lockfile      — launch the OS handler for the lockfile
+ *   GET  /api/recovery           — report any open transaction log from prior boot
+ *   POST /api/recovery/rollback  — delete planned paths + close log
+ *   POST /api/recovery/discard   — close log without removing files
  */
 
 import { spawn } from 'node:child_process';
@@ -29,13 +32,26 @@ import { packsForWorkspaces, validatePackIds, validateWorkspaces } from '../sele
 import { collectAdvisoryPacks } from '../tui.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { csrfEquals } from './security.js';
-import { appendEntry, newLogPath } from './transaction-log.js';
+import { appendEntry, discardLog, newLogPath, rollback } from './transaction-log.js';
 import type { ApplyEvent, TransactionLogEntry } from './types.js';
+
+/**
+ * Open transaction log carried over from a prior boot. `server.ts`
+ * detects it via `findOpenLog` and passes it in once; the recovery
+ * endpoints clear the slot via the caller-provided `clearRecovery`
+ * hook after a successful rollback or discard.
+ */
+export interface RecoveryState {
+    readonly logPath: string;
+    readonly plannedPaths: readonly string[];
+}
 
 export interface ApiContext {
     readonly csrfToken: string;
     readonly loaded: LoadedManifest;
     readonly projectRoot: string;
+    readonly recovery?: RecoveryState | undefined;
+    readonly clearRecovery?: () => void;
 }
 
 export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
@@ -47,6 +63,9 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'POST' && url === '/api/apply') return postApply(req, res, ctx);
     if (method === 'POST' && url === '/api/cancel') return postCancel(req, res, ctx);
     if (method === 'POST' && url === '/api/open-lockfile') return postOpenLockfile(req, res, ctx);
+    if (method === 'GET' && url === '/api/recovery') return getRecovery(res, ctx);
+    if (method === 'POST' && url === '/api/recovery/rollback') return postRecoveryRollback(req, res, ctx);
+    if (method === 'POST' && url === '/api/recovery/discard') return postRecoveryDiscard(req, res, ctx);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: 'not_found' }));
@@ -253,5 +272,42 @@ function openInOs(absPath: string): { ok: true } | { ok: false; reason: string }
         return { ok: true };
     } catch {
         return { ok: false, reason: 'spawn_failed' };
+    }
+}
+
+function getRecovery(res: ServerResponse, ctx: ApiContext): void {
+    if (ctx.recovery === undefined) return endJson(res, 200, { open: false });
+    return endJson(res, 200, {
+        open: true,
+        logPath: ctx.recovery.logPath,
+        plannedPaths: ctx.recovery.plannedPaths,
+    });
+}
+
+async function postRecoveryRollback(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const body = parseCsrfOnly(await readJsonBody(req).catch(() => null));
+    if ('error' in body) return endJson(res, 400, { error: body.error });
+    if (!csrfEquals(body.csrf, ctx.csrfToken)) return endJson(res, 403, { error: 'csrf_invalid' });
+    if (ctx.recovery === undefined) return endJson(res, 404, { error: 'no_open_log' });
+    try {
+        const result = rollback(ctx.projectRoot, ctx.recovery.logPath);
+        ctx.clearRecovery?.();
+        return endJson(res, 200, { ok: true, removed: result.removed, missing: result.missing });
+    } catch (err) {
+        return endJson(res, 500, { error: 'rollback_failed', message: (err as Error).message });
+    }
+}
+
+async function postRecoveryDiscard(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const body = parseCsrfOnly(await readJsonBody(req).catch(() => null));
+    if ('error' in body) return endJson(res, 400, { error: body.error });
+    if (!csrfEquals(body.csrf, ctx.csrfToken)) return endJson(res, 403, { error: 'csrf_invalid' });
+    if (ctx.recovery === undefined) return endJson(res, 404, { error: 'no_open_log' });
+    try {
+        discardLog(ctx.recovery.logPath);
+        ctx.clearRecovery?.();
+        return endJson(res, 200, { ok: true });
+    } catch (err) {
+        return endJson(res, 500, { error: 'discard_failed', message: (err as Error).message });
     }
 }

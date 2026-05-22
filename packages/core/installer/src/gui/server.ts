@@ -19,10 +19,11 @@ import type { AddressInfo } from 'node:net';
 import { platform } from 'node:os';
 import { loadManifest } from '../manifest-loader.js';
 import type { LoadedManifest } from '../manifest-loader.js';
-import { handleApi, type ApiContext } from './handlers.js';
+import { handleApi, type ApiContext, type RecoveryState } from './handlers.js';
 import { clearPidFile, inspectPidFile, writePidFile } from './pid-file.js';
 import { CSP_HEADER, buildAllowedHosts, buildAllowedOrigins, generateCsrfToken, isHostAllowed, isOriginAllowed } from './security.js';
 import { serveStatic } from './static-assets.js';
+import { findOpenLog, plannedPaths, readLog } from './transaction-log.js';
 import type { GuiServerHandle, GuiServerOptions } from './types.js';
 
 const DEFAULT_IDLE_SECONDS = 600;
@@ -49,9 +50,15 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
     let idleTimer: NodeJS.Timeout | undefined;
     let closed = false;
 
+    let recovery: RecoveryState | undefined = detectRecovery(opts.projectRoot);
+    if (recovery !== undefined) {
+        stdout.write(`Recovery: open transaction log detected at ${recovery.logPath} (${recovery.plannedPaths.length} planned paths).\n`);
+    }
+    const clearRecovery = (): void => { recovery = undefined; };
+
     const server: Server = createServer((req, res) => {
         resetIdle();
-        handleRequest(req, res, csrfToken, loaded, opts);
+        handleRequest(req, res, csrfToken, loaded, opts, () => recovery, clearRecovery);
     });
 
     await listen(server, opts.port ?? 0);
@@ -112,6 +119,8 @@ function handleRequest(
     csrfToken: string,
     loaded: LoadedManifest,
     opts: GuiServerOptions,
+    getRecovery: () => RecoveryState | undefined,
+    clearRecovery: () => void,
 ): void {
     const port = (req.socket.localPort as number | null) ?? 0;
     const allowedHosts = buildAllowedHosts(port);
@@ -132,7 +141,13 @@ function handleRequest(
             res.end('forbidden: origin header not allowed');
             return;
         }
-        const ctx: ApiContext = { csrfToken, loaded, projectRoot: opts.projectRoot };
+        const ctx: ApiContext = {
+            csrfToken,
+            loaded,
+            projectRoot: opts.projectRoot,
+            recovery: getRecovery(),
+            clearRecovery,
+        };
         void handleApi(req, res, ctx);
         return;
     }
@@ -141,6 +156,17 @@ function handleRequest(
         res.setHeader('Content-Type', 'text/plain; charset=utf-8');
         res.end('not found');
     }
+}
+
+/**
+ * Look for an unfinished install log under `agents/runtime/gui/`. If
+ * found, capture its path and the recorded planned paths so the SPA can
+ * render the recovery banner on next page load.
+ */
+function detectRecovery(projectRoot: string): RecoveryState | undefined {
+    const logPath = findOpenLog(projectRoot);
+    if (logPath === undefined) return undefined;
+    return { logPath, plannedPaths: plannedPaths(readLog(logPath)) };
 }
 
 function defaultOpenBrowser(url: string): void {

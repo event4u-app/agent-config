@@ -104,17 +104,14 @@ flags. No cloud calls, no telemetry by default, no auth.
 - [x] **Ephemeral port** (`listen(0)`) by default; PID file at
       `<projectRoot>/agents/runtime/gui/server.pid` for stale-process
       cleanup
-- [ ] **Transaction log + cancel.** Every planned write appended to
+- [x] **Transaction log + cancel.** Every planned write appended to
       `<projectRoot>/agents/runtime/gui/install-<ts>.log`;
       `POST /api/cancel` flushes the log and closes the SSE stream;
       next `--gui` boot offers to roll back from the most recent log
-      _Open: log + cancel shipped; boot-time rollback prompt pending._
-- [ ] Idle-timeout key is **last HTTP request timestamp**, not
+- [x] Idle-timeout key is **last HTTP request timestamp**, not
       last-SSE-event; 10 min default, configurable via `--gui-idle=<n>`
-      _Open: idle timer ships, last-request keyed; `--gui-idle` CLI flag pending._
-- [ ] Headless graceful degradation: if `open` fails / no DISPLAY,
+- [x] Headless graceful degradation: if `open` fails / no DISPLAY,
       print the URL and keep the server alive
-      _Open: `--no-open` flag ships; auto-fallback on missing DISPLAY pending._
 
 ## Phase 5 — Distribution & docs
 

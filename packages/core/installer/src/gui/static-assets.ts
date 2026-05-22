@@ -34,6 +34,16 @@ const INDEX_HTML = `<!doctype html>
   <p class="sub">Browser Wizard</p>
 </header>
 <main>
+  <div id="recovery-banner" class="recovery" role="alert" hidden>
+    <div class="recovery-text">
+      <strong>Unfinished install detected.</strong>
+      <span id="recovery-summary"></span>
+    </div>
+    <div class="actions">
+      <button type="button" id="btn-recovery-rollback" class="primary">Roll back</button>
+      <button type="button" id="btn-recovery-discard" class="ghost">Discard log</button>
+    </div>
+  </div>
   <nav class="steps" aria-label="Steps">
     <ol>
       <li data-step="workspaces" class="active">1. Workspaces</li>
@@ -140,7 +150,11 @@ progress{width:100%;height:8px}
 .error button{flex-shrink:0}
 .success{margin-top:16px;padding:16px;background:#0f2c19;border:1px solid #238636;border-radius:8px;color:#aff5b4}
 .success h3{margin:0 0 8px;font-size:14px;color:#3fb950;text-transform:uppercase;letter-spacing:.05em}
-.success code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;background:#0d1117;padding:2px 6px;border-radius:4px;color:#e6edf3}`;
+.success code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;background:#0d1117;padding:2px 6px;border-radius:4px;color:#e6edf3}
+.recovery{margin-bottom:16px;padding:12px 16px;background:#3d2c0d;border:1px solid #9e6a03;border-radius:8px;color:#f0c674;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.recovery .recovery-text{flex:1;min-width:240px}
+.recovery .recovery-text strong{display:block;margin-bottom:4px;color:#fff}
+.recovery .actions{margin-top:0;gap:8px}`;
 
 
 const APP_JS = `(function(){
@@ -214,6 +228,7 @@ function setScreen(name){
 
 async function bootstrap(){
   try {
+    await checkRecovery();
     var mRes = await fetch("/api/manifest", { headers: { "Accept": "application/json" } });
     if (!mRes.ok) throw new Error("manifest_http_" + mRes.status);
     var mJson = await mRes.json();
@@ -226,6 +241,38 @@ async function bootstrap(){
     renderWorkspaces();
   } catch (e) {
     setError("Failed to load: " + e.message);
+  }
+}
+
+async function checkRecovery(){
+  try {
+    var res = await fetch("/api/recovery", { headers: { "Accept": "application/json" } });
+    if (!res.ok) return;
+    var body = await res.json();
+    if (!body.open) return;
+    var n = (body.plannedPaths || []).length;
+    $("recovery-summary").textContent = " " + n + " planned path(s) recorded in " + (body.logPath || "the log") + ".";
+    $("recovery-banner").hidden = false;
+  } catch (e) { /* recovery is best-effort */ }
+}
+
+async function recoveryAction(endpoint){
+  var btnA = $("btn-recovery-rollback");
+  var btnB = $("btn-recovery-discard");
+  btnA.disabled = true; btnB.disabled = true;
+  try {
+    var res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csrf: csrf }),
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if (!res.ok) { setError("Recovery failed: " + (body.error || res.status)); return; }
+    $("recovery-banner").hidden = true;
+  } catch (e) {
+    setError("Recovery failed: " + e.message);
+  } finally {
+    btnA.disabled = false; btnB.disabled = false;
   }
 }
 
@@ -525,6 +572,8 @@ function wireEvents(){
   $("btn-apply").addEventListener("click", function(){ applyChanges(); });
   $("btn-open-lockfile").addEventListener("click", function(){ openLockfile(); });
   $("btn-retry").addEventListener("click", function(){ applyChanges(); });
+  $("btn-recovery-rollback").addEventListener("click", function(){ recoveryAction("/api/recovery/rollback"); });
+  $("btn-recovery-discard").addEventListener("click", function(){ recoveryAction("/api/recovery/discard"); });
 }
 
 document.addEventListener("DOMContentLoaded", function(){
