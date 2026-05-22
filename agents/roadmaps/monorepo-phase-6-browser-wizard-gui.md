@@ -91,18 +91,34 @@ flags. No cloud calls, no telemetry by default, no auth.
 
 - [ ] Server binds 127.0.0.1 only; rejects requests with a
       non-loopback `Origin` header
+- [ ] **Host header allowlist** (`127.0.0.1:<port>`, `localhost:<port>`)
+      to mitigate DNS-rebinding via form POST that omits `Origin`
 - [ ] CSRF token issued on `GET /` and required on every POST
 - [ ] No external network calls; CSP `default-src 'self'`
 - [ ] `--gui-port=<n>` flag for users who need a fixed port
 - [ ] `--no-open` flag for headless servers / SSH tunnel users
+- [ ] **Ephemeral port** (`listen(0)`) by default; PID file at
+      `<projectRoot>/agents/runtime/gui/server.pid` for stale-process
+      cleanup
+- [ ] **Transaction log + cancel.** Every planned write appended to
+      `<projectRoot>/agents/runtime/gui/install-<ts>.log`;
+      `POST /api/cancel` flushes the log and closes the SSE stream;
+      next `--gui` boot offers to roll back from the most recent log
+- [ ] Idle-timeout key is **last HTTP request timestamp**, not
+      last-SSE-event; 10 min default, configurable via `--gui-idle=<n>`
+- [ ] Headless graceful degradation: if `open` fails / no DISPLAY,
+      print the URL and keep the server alive
 
 ## Phase 5 — Distribution & docs
 
 - [ ] GUI assets shipped inside the npm tarball; no separate
       download
-- [ ] Tarball size budget: GUI adds ≤ 200 KB to the package
-- [ ] `docs/contracts/gui-wizard.md` documents the architecture
-      and the local-only invariant
+- [ ] Tarball size budget: GUI assets under
+      `packages/core/installer/src/gui/` (compiled + inlined) add
+      ≤ 200 KB; discovery-manifest is out of scope
+- [ ] `docs/contracts/gui-wizard.md` documents the architecture, the
+      bridge contract, the host+origin allowlist, the rollback log
+      shape, and the local-only invariant
 - [ ] README quick-start: "non-developers — run
       `npx @event4u/agent-config init --gui`"
 
@@ -118,13 +134,22 @@ task lint-installer-protocol         # GUI uses the same JSON contract
 ## Failure modes guarded against
 
 - **Remote exploitation.** Server bound to 127.0.0.1, origin check,
-  CSRF token, CSP.
+  **Host header allowlist**, CSRF token, CSP.
+- **DNS rebinding.** Origin allowlist alone is insufficient — form POST
+  without `Origin` is rejected by the Host header check.
+- **Mid-install crash.** Transaction log + `POST /api/cancel` + boot-time
+  rollback offer leave no half-written installs behind.
+- **Zombie processes.** Ephemeral `listen(0)` port + PID file +
+  last-request-timestamp idle timeout. Stale PID files are detected and
+  cleaned at next boot.
 - **Hidden state.** GUI is stateless past the install; closing the
   tab shuts down the server.
 - **Hosted-SaaS scope creep.** Documented non-goal; no auth, no
   account model, no telemetry, no remote endpoints.
 - **Browser dependency for CI.** GUI is opt-in; every operation is
   still scriptable via Phase 3's CLI flags.
+- **Headless / no-DISPLAY env.** `open` failure prints the URL and keeps
+  the server alive; CLI parity is the documented fallback.
 
 ## Downstream
 
