@@ -170,6 +170,40 @@ If you have tried **three** fixes and the bug is still present:
   design that keeps producing this class of bug?
 * Surface the question to the user. Do not attempt fix #4 silently.
 
+## Debug micro-loop — one test, one fix, one re-run
+
+Tactical complement to the 6-phase loop, for failing test suites,
+broken builds, and regressions. Each lap completes in **one turn**.
+Pairs with [`context-hygiene § Read-Loop Detection`](../../rules/context-hygiene.md#read-loop-detection--the-15--25-rule)
+— if you catch yourself reading-without-acting, run this loop.
+
+1. **Pick ONE failing test.** Run it isolated:
+   `npx vitest run path/to/single.test.ts`,
+   `pytest tests/x.py::test_y`, `phpunit --filter test_y`. Full suite
+   between laps is forbidden — it drowns the signal.
+2. **Read the assertion, not the file.** `expected X to be Y` names
+   the gap. Hypothesis comes from the error, not a hunch.
+3. **Source first, test second.** Shape mismatch → read the producer
+   (route, function, component) **once**, then align the test (or fix
+   the producer if it's the regression — Phase 2 decides which).
+4. **Use git as a diagnostic.** Regression in code that worked →
+   `git log --oneline -- <file>` → `git show <sha> -- <file>`. The
+   before/after diff names the dropped logic faster than re-reading.
+5. **One edit, then re-run the same single test.** Green → next
+   failing test. Red → step 2 with the new assertion. **Never** edit
+   two unrelated things before re-running.
+6. **Full suite at the end, not between laps.** It is the gate, not
+   the feedback loop.
+
+**Anti-patterns this loop prevents:**
+
+* Editing source to make tests pass when the test was wrong (or
+  vice versa) — step 3 forces "read producer first".
+* Drowning in full-suite output every lap — step 1 pins one file.
+* Three reads in a row without a fix — step 5 forces an edit per lap.
+* Guessing at mock / payload shape — step 3 forces reading the route
+  handler or component the mock substitutes for.
+
 ## Gathering evidence — cheap tools first
 
 | What you need | Tool |
@@ -252,6 +286,13 @@ When reporting debug findings to the user:
 * A green test run after changes, without having first seen it red
 * "This looks similar to bug X, so it's the same fix"
 * Suppressing a log, warning, or exception instead of tracing its source
+* **Three consecutive read-only turns** (only `view` / `grep` /
+  `git log` / `codebase-retrieval`, no edits, no test runs) — trips the
+  Read-Loop Detection 15-minute warning. See
+  [`context-hygiene § Read-Loop Detection`](../../rules/context-hygiene.md#read-loop-detection--the-15--25-rule)
+  and run the Debug micro-loop instead: one failing test → read the
+  assertion → read the producer once → one edit → re-run that single
+  test.
 
 ## Do NOT
 

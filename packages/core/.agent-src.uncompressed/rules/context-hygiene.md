@@ -90,6 +90,42 @@ Calling the **same tool** more than **2 times in a row** with similar parameters
 `sequentialthinking` is especially prone to loops. Use at most **once** per task,
 NEVER for simple file operations, command execution, or straightforward edits.
 
+## Read-Loop Detection — the 15 / 25 rule
+
+```
+READING WITHOUT ACTING IS A LOOP.
+EVERY TURN MUST EDIT, RUN, OR ASK.
+```
+
+**Read-only turn:** only `view` / `codebase-retrieval` / `grep` /
+`git log` / `git show`. No `str-replace-editor`, `save-file`, no
+test/build/quality run, no `git commit`.
+
+**15-min warning (3 read-only turns in a row) — change approach.**
+Next turn MUST contain at least one of: an edit, a test/build/quality
+command, or an explicit user question. Self-check:
+
+1. Source expectation known? If no → read **once**, then act.
+2. Can a single failing test name the error? If yes → run it now.
+3. Regression in working code? → `git log` + `git show <sha> -- <file>`.
+4. Guessing at mock / payload shape? → read the producer **once**.
+
+**25-min abort (5 read-only turns) — STOP and ask:**
+
+```
+> ⛔ Loop: N read-only turns, ~M min. Read: <files>. Hypothesis: <X>.
+> 1. Different approach (suggestion: <Y>)
+> 2. Point me at the right spot
+> 3. Fresh chat with state dump
+```
+
+Non-bypassable. Autonomous mandate (`/work`, `/roadmap:process-*`,
+"entscheide selbst") does **not** lift the abort — it is the safety
+net that protects autonomy from becoming a token sink.
+
+Debug procedure for "I'm in a read loop fixing tests" →
+[`systematic-debugging § Debug micro-loop`](../skills/systematic-debugging/SKILL.md#debug-micro-loop--one-test-one-fix-one-re-run).
+
 ## State dump format
 
 ```
