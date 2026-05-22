@@ -27,7 +27,7 @@ install:
 
 Top-level orchestrator for the `/video:*` family — multi-provider AI
 video creation. Reads provider keys + defaults from
-[`agents/.ai-video.xml`](../../agents/.ai-video.xml.example) (gitignored
+[`agents/.ai-video.xml`](../../agents/templates/.ai-video.xml.example) (gitignored
 real file; example shipped). Every subcommand is **dry-run by default**;
 network calls require explicit per-turn confirmation per the adapter
 contract under [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md).

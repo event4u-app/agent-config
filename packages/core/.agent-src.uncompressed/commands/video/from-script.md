@@ -31,7 +31,7 @@ install:
 
 Drives a Markdown script through the full pipeline. Provider flags
 override the `<default-image-provider>` / `<default-video-provider>`
-from [`agents/.ai-video.xml`](../../../agents/.ai-video.xml.example);
+from [`agents/.ai-video.xml`](../../../agents/templates/.ai-video.xml.example);
 absent flags fall back to the XML defaults.
 
 **Block-on-ambiguity:** a missing scene heading, an unparseable

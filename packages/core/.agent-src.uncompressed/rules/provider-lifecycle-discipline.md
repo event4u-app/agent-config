@@ -45,12 +45,12 @@ NEVER DEFAULT TO A NON-STABLE PROVIDER SILENTLY.
 SURFACE THE LIFECYCLE TIER. ASK BEFORE RUNNING.
 ```
 
-This rule routes the agent to [`docs/contracts/provider-lifecycle.md`](../../docs/contracts/provider-lifecycle.md) whenever a `/video:* / /image:* / /audio:*` surface fires, an adapter under `scripts/ai-video/adapters/` is read or edited, or `agents/.ai-video.xml.example` (or the operator's `agents/.ai-video.xml`) is in play. The contract defines four tiers — `experimental | stable | deprecated | community` — and the agent's obligations per tier.
+This rule routes the agent to [`docs/contracts/provider-lifecycle.md`](../../docs/contracts/provider-lifecycle.md) whenever a `/video:* / /image:* / /audio:*` surface fires, an adapter under `scripts/ai-video/adapters/` is read or edited, or `agents/templates/.ai-video.xml.example` (or the operator's `agents/.ai-video.xml`) is in play. The contract defines four tiers — `experimental | stable | deprecated | community` — and the agent's obligations per tier.
 
 ## What this rule enforces
 
 1. **Read the tier before picking.** When the agent resolves a provider (from `--provider <id>`, from `<default-video-provider>` / `<default-image-provider>`, or from a skill's default), it MUST read both:
-   - the `<lifecycle>` element under `<provider id="…">` in `agents/.ai-video.xml.example` (or the operator's `.ai-video.xml`), and
+   - the `<lifecycle>` element under `<provider id="…">` in `agents/templates/.ai-video.xml.example` (or the operator's `.ai-video.xml`), and
    - the `Lifecycle:` header comment in `scripts/ai-video/adapters/<id>.sh`.
    Mismatch between the two is a contract violation and MUST be surfaced before running.
 
@@ -66,7 +66,7 @@ This rule routes the agent to [`docs/contracts/provider-lifecycle.md`](../../doc
 
 - Running `/video:scene` against the `<default-video-provider>` without reading the lifecycle tag first → violation.
 - Picking a `community` provider because it was named in the prompt, without surfacing the tier → violation.
-- Editing an adapter and leaving its header `Lifecycle:` comment out of sync with `agents/.ai-video.xml.example` → violation (CI does not catch this; the agent must).
+- Editing an adapter and leaving its header `Lifecycle:` comment out of sync with `agents/templates/.ai-video.xml.example` → violation (CI does not catch this; the agent must).
 - Auto-promoting an adapter from `experimental` to `stable` because "dry-run worked" → violation. Promotion requires a maintainer-captured real-API smoke trace under `agents/reference/ai-video/smoke-traces/`.
 
 ## Day-one state
@@ -77,7 +77,7 @@ All five shipped adapters (`openai-images`, `gemini-veo`, `kling`, `higgsfield`,
 
 A Python pre-run gate enumerating tier-by-command rules would either be too coarse (`experimental → block`, breaking day-to-day dev iteration) or too detailed (per-command tier matrix, drifting from reality on every new provider). The agent reading the tag at run time, surfacing the tier, and asking is the correct enforcement surface: the model that picked the provider is the model that surfaces the obligation, and the human is the policy decision point.
 
-The CI guarantee is structural reachability — the linter would fail if a provider was declared in `agents/.ai-video.xml.example` without a lifecycle tag (extension planned). It does not enforce the runtime obligation; the agent does.
+The CI guarantee is structural reachability — the linter would fail if a provider was declared in `agents/templates/.ai-video.xml.example` without a lifecycle tag (extension planned). It does not enforce the runtime obligation; the agent does.
 
 ## See also
 

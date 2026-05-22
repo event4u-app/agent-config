@@ -9,9 +9,10 @@
 
 ```
 agents/
-├── .ai-video.xml          # operator-only — gitignored, NEVER committed
-├── .ai-video.xml.example  # committed schema template
-└── ai-video/
+├── .ai-video.xml                       # operator-only — gitignored, NEVER committed
+├── templates/
+│   └── .ai-video.xml.example           # committed schema template
+└── reference/ai-video/
     ├── README.md          # this file
     ├── prompts/           # vetted prompt library (committed)
     ├── examples/          # golden reference projects (committed)
@@ -30,7 +31,7 @@ operator picks live on disk only.
 1. Copy the template:
 
    ```bash
-   cp agents/.ai-video.xml.example agents/.ai-video.xml
+   cp agents/templates/.ai-video.xml.example agents/.ai-video.xml
    ```
 
 2. Open `agents/.ai-video.xml` and fill in the API keys for the
