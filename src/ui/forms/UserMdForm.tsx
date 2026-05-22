@@ -70,24 +70,30 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
         });
     }
 
+    // `defaultFrontmatter()` seeds `role: ['']` so the YAML stays well-shaped
+    // before the user types anything. Render-time filters drop those empty
+    // placeholders so an empty pill with a disabled `×` never appears, and
+    // the last-entry guard counts only non-empty entries.
+    const filledRoles = fm.role.filter((r) => r.trim() !== '');
+
     function addRole(raw: string): void {
         const trimmed = raw.trim();
-        if (trimmed === '' || fm.role.includes(trimmed)) {
+        if (trimmed === '' || filledRoles.includes(trimmed)) {
             setPendingRole('');
             return;
         }
-        patch({ role: [...fm.role, trimmed] });
+        patch({ role: [...filledRoles, trimmed] });
         setPendingRole('');
     }
 
     function removeRole(target: string): void {
-        // Schema requires ≥1 — refuse to drop the last entry; the form
-        // surfaces the constraint through the field's disabled state.
-        if (fm.role.length <= 1) return;
-        patch({ role: fm.role.filter((r) => r !== target) });
+        // Schema requires ≥1 — refuse to drop the last non-empty entry; the
+        // form surfaces the constraint through the field's disabled state.
+        if (filledRoles.length <= 1) return;
+        patch({ role: filledRoles.filter((r) => r !== target) });
     }
 
-    const remainingSeeds = SEED_ROLE_IDS.filter((s) => !fm.role.includes(s));
+    const remainingSeeds = SEED_ROLE_IDS.filter((s) => !filledRoles.includes(s));
 
     return (
         <div class="ac-user-md-form">
@@ -113,14 +119,14 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
                 error={err(errors, 'role')}
             >
                 <ul class="ac-chip-list" data-testid="umd-role-list">
-                    {fm.role.map((r) => (
+                    {filledRoles.map((r) => (
                         <li key={r} class="ac-chip">
                             <span>{r}</span>
                             <button
                                 type="button"
                                 class="ac-chip__remove"
                                 aria-label={`Remove ${r}`}
-                                disabled={fm.role.length <= 1}
+                                disabled={filledRoles.length <= 1}
                                 onClick={(): void => removeRole(r)}
                             >
                                 ×
