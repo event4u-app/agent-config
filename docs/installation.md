@@ -311,6 +311,15 @@ Under the hood:
 
 - `scripts/install.sh` — payload sync (callable directly for sync-only runs).
 - `scripts/install.py` — bridge files (callable directly for bridge-only runs).
+  Two install.py-specific flags worth knowing:
+  - `--dry-run` prints a plan summary (profile · scope · tools · target ·
+    wizard auto-launch decision) and exits 0 without writing files or
+    spawning subprocesses. Distinct from the bash wrapper's `--dry-run`,
+    which only skips bridges.
+  - `--no-ui` suppresses the post-install browser-wizard auto-launch.
+    Also honored via `AGENT_CONFIG_NO_UI=1`. CI runners (`CI=1`) and
+    non-TTY stdouts auto-suppress regardless. See
+    [`docs/wizard.md § Auto-launch`](wizard.md#auto-launch-from-npx--init).
 
 A full run creates:
 

@@ -83,10 +83,30 @@ for the full failure-mode matrix.
 
 ## Auto-launch from `npx … init`
 
-Tracked under
-[`agents/roadmaps/wizard-install-py-wiring.md`](../agents/roadmaps/wizard-install-py-wiring.md)
-(carved out from the parent roadmap). Until that ships, run
-`agent-config ui:serve --open` manually after `npx … init`.
+`scripts/install.py` acts as a supervisor at the tail of a successful
+install: it evaluates a gate (TTY, `CI`, `--no-ui`,
+`AGENT_CONFIG_NO_UI`), then spawns `node <pkg>/.../cli.js gui
+--project-root <root>` and waits for the child's
+`WIZARD_READY url=<http://127.0.0.1:PORT/>` handshake on stdout
+(strict regex
+`^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$`).
+On match, the parent prints a banner and blocks on the child until
+the user closes the tab or sends Ctrl-C.
+
+Progressive readiness backoff: `10s → 20s → 40s → 80s` (cumulative
+budget 150s) — generous enough for cold-start `node_modules`
+extraction on slow disks. On timeout the parent kills the child,
+prints the last 20 stderr lines, and exits 0 — the install itself
+is unaffected.
+
+Suppress the auto-launch with `--no-ui`, `AGENT_CONFIG_NO_UI=1`, or
+by running in CI (`CI=1`). Preview the gate verdict without
+installing anything via `python3 scripts/install.py --dry-run`,
+which prints a plan summary and exits 0 with zero filesystem
+writes.
+
+Skill: [`agents/roadmaps/archive/wizard-install-py-wiring.md`](../agents/roadmaps/archive/wizard-install-py-wiring.md)
+(archived after ship).
 
 ## Accessibility
 
