@@ -18,7 +18,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
 import type { Stats } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
@@ -234,6 +234,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     };
                 }
                 const path = settingsPath(opts.writeRoot);
+                await fs.mkdir(dirname(path), { recursive: true, mode: 0o700 });
                 await writeAtomic(path, merged, { mode: 0o600 });
                 const stat = await fs.stat(path);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [SETTINGS_RELATIVE] };
