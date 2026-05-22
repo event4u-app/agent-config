@@ -8,7 +8,7 @@
  *   - Fresh token per process; previous file overwritten.
  */
 import { describe, expect, it } from 'vitest';
-import { statSync, readFileSync } from 'node:fs';
+import { existsSync, statSync, readFileSync, rmSync } from 'node:fs';
 import {
     defaultTokenDir,
     defaultTokenPath,
@@ -25,16 +25,19 @@ describe('mintToken', () => {
     it('persists the token under ~/.event4u/agent-config/local-server.token', () => {
         const { path } = mintToken();
         expect(path).toBe(defaultTokenPath());
-        expect(path).toContain('.event4u');
-        expect(path).toContain('agent-config');
-        const onDisk = readFileSync(path, 'utf8').trim();
+        expect(path).not.toBeNull();
+        const persistedPath = path as string;
+        expect(persistedPath).toContain('.event4u');
+        expect(persistedPath).toContain('agent-config');
+        const onDisk = readFileSync(persistedPath, 'utf8').trim();
         expect(onDisk).toMatch(/^[0-9a-f]{64}$/);
     });
 
     it('writes the token file with mode 0600 on POSIX', () => {
         if (process.platform === 'win32') return;
         const { path } = mintToken();
-        const mode = statSync(path).mode & 0o777;
+        expect(path).not.toBeNull();
+        const mode = statSync(path as string).mode & 0o777;
         expect(mode).toBe(0o600);
     });
 
@@ -43,13 +46,39 @@ describe('mintToken', () => {
         const b = mintToken();
         expect(a.token).not.toBe(b.token);
         expect(a.path).toBe(b.path);
-        const onDisk = readFileSync(b.path, 'utf8').trim();
+        expect(b.path).not.toBeNull();
+        const onDisk = readFileSync(b.path as string, 'utf8').trim();
         expect(onDisk).toBe(b.token);
     });
 
     it('exposes a stable default token directory', () => {
         expect(defaultTokenDir()).toContain('.event4u');
         expect(defaultTokenDir()).toContain('agent-config');
+    });
+
+    describe('with { persist: false } (dry-run)', () => {
+        it('returns 64 hex chars and a null path', () => {
+            const { token, path } = mintToken({ persist: false });
+            expect(token).toMatch(/^[0-9a-f]{64}$/);
+            expect(path).toBeNull();
+        });
+
+        it('does not create or touch the on-disk token file', () => {
+            // Remove any token left by earlier tests so this assertion
+            // measures only the dry-run mint, not pre-existing state.
+            const existing = defaultTokenPath();
+            if (existsSync(existing)) rmSync(existing, { force: true });
+
+            const { path } = mintToken({ persist: false });
+            expect(path).toBeNull();
+            expect(existsSync(existing)).toBe(false);
+        });
+
+        it('persist: true (default) still writes the file', () => {
+            const { path } = mintToken({ persist: true });
+            expect(path).toBe(defaultTokenPath());
+            expect(existsSync(path as string)).toBe(true);
+        });
     });
 });
 
