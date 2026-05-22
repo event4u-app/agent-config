@@ -29,6 +29,16 @@ import { writeAtomic } from '../io/atomicWrite.js';
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
     writeRoot: string;
+    /**
+     * Legacy-read fallback root. When set and distinct from `writeRoot`,
+     * the finish handler deletes `<legacyReadRoot>/.agent-settings.yml`
+     * and `<legacyReadRoot>/.agent-user.md` after a successful 2PC
+     * commit — auto-migration so the maintainer's old in-repo files do
+     * not shadow the new sandbox writes. Dry-run skips deletion. ENOENT
+     * is silent (idempotent on re-run). The list of removed paths is
+     * surfaced in the response as `migratedFrom`.
+     */
+    legacyReadRoot?: string | null;
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
     /**
@@ -87,9 +97,37 @@ function zodIssuesToFields(issues: z.ZodIssue[]): Array<{ path: string; message:
     return issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
 }
 
+/**
+ * Delete `.agent-settings.yml` + `.agent-user.md` from `legacyReadRoot`
+ * once the new files are safely committed under `writeRoot`. Idempotent:
+ * ENOENT is ignored so a re-run of `setup` after a successful migration
+ * is a no-op. Returns the list of paths that were actually removed.
+ */
+async function deleteLegacyArtefacts(
+    legacyReadRoot: string,
+    writeRoot: string,
+): Promise<string[]> {
+    if (legacyReadRoot === writeRoot) return [];
+    const candidates = [
+        join(legacyReadRoot, SETTINGS_REL),
+        join(legacyReadRoot, USER_MD_REL),
+    ];
+    const removed: string[] = [];
+    for (const target of candidates) {
+        try {
+            await fs.unlink(target);
+            removed.push(target);
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+        }
+    }
+    return removed;
+}
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const totalSteps = opts.totalSteps ?? DEFAULT_TOTAL_STEPS;
     const dryRun = opts.dryRun === true;
+    const legacyReadRoot = opts.legacyReadRoot ?? null;
     // Per-process in-memory state for dry-run. One CLI invocation = one
     // server = one Map; cross-session leakage is impossible because each
     // `agent-config setup --dry-run` mints a fresh server. See § Dry-run
@@ -171,7 +209,18 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 }
                 const { txnId } = await commitMulti(payloads, { writeRoot: opts.writeRoot });
                 await fs.unlink(statePath(opts.writeRoot)).catch(() => undefined);
-                return { writtenPaths: payloads.map((p) => p.target), txnId };
+                // Auto-migrate: remove the legacy in-CWD copies once the
+                // new files are committed. Best-effort — a stat/unlink
+                // race that leaves an orphan legacy file is harmless
+                // (next re-run is a no-op).
+                const migratedFrom = legacyReadRoot !== null
+                    ? await deleteLegacyArtefacts(legacyReadRoot, opts.writeRoot).catch(() => [])
+                    : [];
+                return {
+                    writtenPaths: payloads.map((p) => p.target),
+                    txnId,
+                    ...(migratedFrom.length > 0 ? { migratedFrom } : {}),
+                };
             } catch (err) {
                 const message = err instanceof Error ? err.message : '2PC commit failed';
                 await reply.code(500).send({ error: { code: 'TXN_PARTIAL', message } });

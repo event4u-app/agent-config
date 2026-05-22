@@ -2,10 +2,13 @@
  * Unit tests for `resolveWriteRoot`.
  *
  *   - Inside the package (`package.json#name === '@event4u/agent-config'`)
- *     resolves to `<cwd>/agents/`, no legacy fallback.
+ *     resolves to `<cwd>/agents/` and surfaces CWD as `legacyReadRoot`
+ *     so the wizard pre-populates from the maintainer's in-repo
+ *     `.agent-settings.yml` and auto-migrates on finish.
  *   - Outside the package resolves to `<home>/.event4u/agent-config/`
  *     and surfaces CWD as `legacyReadRoot`.
- *   - Explicit `override` short-circuits both branches.
+ *   - Explicit `override` short-circuits both branches and suppresses
+ *     `legacyReadRoot`.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
@@ -23,7 +26,7 @@ describe('resolveWriteRoot', () => {
         rmSync(scratch, { recursive: true, force: true });
     });
 
-    it('returns package-sandbox mode when CWD is the agent-config package', () => {
+    it('returns package-sandbox mode and surfaces repo root as legacy fallback', () => {
         const repo = join(scratch, 'repo');
         mkdirSync(repo, { recursive: true });
         writeFileSync(join(repo, 'package.json'), JSON.stringify({ name: '@event4u/agent-config' }));
@@ -32,7 +35,9 @@ describe('resolveWriteRoot', () => {
 
         expect(res.mode).toBe('package-sandbox');
         expect(res.writeRoot).toBe(join(repo, 'agents'));
-        expect(res.legacyReadRoot).toBeNull();
+        // Maintainer's in-repo `.agent-settings.yml` must be readable
+        // as legacy fallback so the wizard pre-populates from it.
+        expect(res.legacyReadRoot).toBe(repo);
     });
 
     it('returns global mode with legacy fallback when CWD is a consumer project', () => {

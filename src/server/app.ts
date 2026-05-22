@@ -164,7 +164,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     await app.register(schemaRoute());
     await app.register(settingsRoute({ writeRoot, legacyReadRoot, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
-    await app.register(wizardRoute({ writeRoot, packageRoot, dryRun }));
+    await app.register(wizardRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so
