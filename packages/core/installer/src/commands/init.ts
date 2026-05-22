@@ -42,6 +42,9 @@ export interface InitOptions {
     readonly exclude?: string;
     readonly acceptAdvisory?: string;
     readonly answer?: readonly string[];
+    readonly gui?: boolean;
+    readonly guiPort?: number;
+    readonly noOpen?: boolean;
 }
 
 export interface RunInitDeps {
@@ -60,7 +63,31 @@ export async function runInit(
         ...(typeof raw.exclude === 'string' ? { exclude: raw.exclude } : {}),
         ...(typeof raw.acceptAdvisory === 'string' ? { acceptAdvisory: raw.acceptAdvisory } : {}),
         ...(Array.isArray(raw.answer) ? { answer: raw.answer as readonly string[] } : {}),
+        ...(raw.gui === true ? { gui: true } : {}),
+        ...(typeof raw.guiPort === 'string' ? { guiPort: Number.parseInt(raw.guiPort, 10) } : {}),
+        ...(raw.open === false ? { noOpen: true } : {}),
     };
+
+    if (opts.gui === true) {
+        const { startGuiServer } = await import('../gui/server.js');
+        const handle = await startGuiServer({
+            projectRoot: shared.projectRoot,
+            ...(shared.manifestPath !== undefined ? { manifestPath: shared.manifestPath } : {}),
+            ...(opts.guiPort !== undefined && Number.isFinite(opts.guiPort) ? { port: opts.guiPort } : {}),
+            ...(opts.noOpen === true ? { noOpen: true } : {}),
+        });
+        process.stdout.write(`init: GUI ready at ${handle.url}\n`);
+        // The server self-terminates on idle (10 min default); keep the
+        // process alive in the meantime by awaiting close.
+        await new Promise<void>((resolve) => {
+            const onSig = (): void => {
+                void handle.close().then(resolve);
+            };
+            process.once('SIGINT', onSig);
+            process.once('SIGTERM', onSig);
+        });
+        return 0;
+    }
 
     let loaded;
     try {

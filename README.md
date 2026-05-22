@@ -184,7 +184,7 @@ npx @event4u/agent-config init --tools=claude-desktop   # Claude Desktop
 npx @event4u/agent-config init --tools=continue         # Continue
 ```
 
-Multiple AIs in one shot: `--tools=claude-code,cursor,augment`.
+Multiple AIs in one shot: `--tools=claude-code,cursor,augment`. Prefer a visual picker? Add `--gui` to open a local-only browser wizard on `127.0.0.1` (loopback-bound, CSRF-gated, CSP-strict — contract: [`docs/contracts/gui-wizard.md`](docs/contracts/gui-wizard.md)).
 
 #### Global install (user-scope, available across projects)
 
