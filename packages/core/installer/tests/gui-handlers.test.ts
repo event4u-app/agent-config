@@ -190,6 +190,57 @@ describe('POST /api/apply', () => {
 });
 
 
+describe('POST /api/open-lockfile', () => {
+    it('rejects bad csrf', async () => {
+        const res = await fetch(`${baseUrl}/api/open-lockfile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: 'bad' }),
+        });
+        expect(res.status).toBe(403);
+        expect((await res.json()).error).toBe('csrf_invalid');
+    });
+
+    it('returns 404 when lockfile is missing', async () => {
+        const res = await fetch(`${baseUrl}/api/open-lockfile`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: CSRF }),
+        });
+        expect(res.status).toBe(404);
+        const body = await res.json();
+        expect(body.error).toBe('lockfile_not_found');
+        expect(body.path).toContain('agent-config.lock.yml');
+    });
+
+    it('reports headless when lockfile exists but no display', async () => {
+        mkdirSync(join(proj, 'agents'), { recursive: true });
+        writeFileSync(join(proj, 'agents', 'agent-config.lock.yml'), 'version: 1\n');
+        const prevDisplay = process.env['DISPLAY'];
+        const prevWayland = process.env['WAYLAND_DISPLAY'];
+        const prevPlatform = process.platform;
+        delete process.env['DISPLAY'];
+        delete process.env['WAYLAND_DISPLAY'];
+        Object.defineProperty(process, 'platform', { value: 'linux', configurable: true });
+        try {
+            const res = await fetch(`${baseUrl}/api/open-lockfile`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ csrf: CSRF }),
+            });
+            expect(res.status).toBe(200);
+            const body = await res.json();
+            expect(body.ok).toBe(false);
+            expect(body.reason).toBe('headless');
+            expect(body.path).toContain('agent-config.lock.yml');
+        } finally {
+            if (prevDisplay !== undefined) process.env['DISPLAY'] = prevDisplay;
+            if (prevWayland !== undefined) process.env['WAYLAND_DISPLAY'] = prevWayland;
+            Object.defineProperty(process, 'platform', { value: prevPlatform, configurable: true });
+        }
+    });
+});
+
 describe('unknown route', () => {
     it('returns 404', async () => {
         const res = await fetch(`${baseUrl}/api/nope`);

@@ -87,11 +87,9 @@ flags. No cloud calls, no telemetry by default, no auth.
       with the chosen workspaces + packs + accepted advisories
 - [x] Frontend streams server-sent events for progress;
       shows per-file write log inline
-- [ ] On success: summary screen with "Open lockfile" button (opens
+- [x] On success: summary screen with "Open lockfile" button (opens
       `agents/agent-config.lock.yml` in the OS default editor)
-      _Open: SHA shown; explicit button + `POST /api/open-lockfile` pending._
-- [ ] On failure: structured error display with retry option
-      _Open: error banner renders; "Retry" button pending._
+- [x] On failure: structured error display with retry option
 
 ## Phase 4 — Security & ergonomics
 
