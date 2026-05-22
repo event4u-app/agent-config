@@ -147,6 +147,12 @@ function defaultOpenBrowser(url: string): void {
     // Stdlib-only: pick the OS opener and detach. Failure is non-fatal —
     // the caller already printed the URL so the user can copy it.
     const p = platform();
+    // Headless Linux (CI, SSH, container, devcontainer-without-display):
+    // `xdg-open` blocks or errors out without a display. Bail early so the
+    // caller's catch prints the URL fallback instead.
+    if (p !== 'darwin' && p !== 'win32' && !process.env['DISPLAY'] && !process.env['WAYLAND_DISPLAY']) {
+        throw new Error('headless environment: DISPLAY and WAYLAND_DISPLAY are unset');
+    }
     const cmd = p === 'darwin' ? 'open' : p === 'win32' ? 'cmd' : 'xdg-open';
     const args = p === 'win32' ? ['/c', 'start', '""', url] : [url];
     const child = spawn(cmd, args, { stdio: 'ignore', detached: true });

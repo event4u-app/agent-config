@@ -44,6 +44,7 @@ export interface InitOptions {
     readonly answer?: readonly string[];
     readonly gui?: boolean;
     readonly guiPort?: number;
+    readonly guiIdle?: number;
     readonly noOpen?: boolean;
 }
 
@@ -65,6 +66,7 @@ export async function runInit(
         ...(Array.isArray(raw.answer) ? { answer: raw.answer as readonly string[] } : {}),
         ...(raw.gui === true ? { gui: true } : {}),
         ...(typeof raw.guiPort === 'string' ? { guiPort: Number.parseInt(raw.guiPort, 10) } : {}),
+        ...(typeof raw.guiIdle === 'string' ? { guiIdle: Number.parseInt(raw.guiIdle, 10) } : {}),
         ...(raw.open === false ? { noOpen: true } : {}),
     };
 
@@ -74,6 +76,7 @@ export async function runInit(
             projectRoot: shared.projectRoot,
             ...(shared.manifestPath !== undefined ? { manifestPath: shared.manifestPath } : {}),
             ...(opts.guiPort !== undefined && Number.isFinite(opts.guiPort) ? { port: opts.guiPort } : {}),
+            ...(opts.guiIdle !== undefined && Number.isFinite(opts.guiIdle) && opts.guiIdle > 0 ? { idleSeconds: opts.guiIdle } : {}),
             ...(opts.noOpen === true ? { noOpen: true } : {}),
         });
         process.stdout.write(`init: GUI ready at ${handle.url}\n`);
