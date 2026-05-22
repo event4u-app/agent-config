@@ -49,6 +49,18 @@ export const userMdExists = signal(false);
 export const userMdLoaded = signal(false);
 export const userMdSkipped = signal(false);
 
+/**
+ * Sidecar hints from `GET /api/v1/settings` — carries values that moved
+ * out of `settingsSchema` but still live in a pre-v2 file on disk. The
+ * wizard consumes these once, when `.agent-user.md` does not yet exist,
+ * to pre-fill merged fields (e.g. legacy `personal.user_name` &rarr;
+ * `identity.name`). See `docs/contracts/settings-api.md`.
+ */
+export interface SettingsLegacyHints {
+    user_name?: string;
+}
+export const legacyHints = signal<SettingsLegacyHints>({});
+
 export const reviewChanges = signal<DiffChange[]>([]);
 
 export function startedAtNow(existing: string | null): string {

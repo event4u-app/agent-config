@@ -76,8 +76,6 @@ export function mergeFrontmatter(parsed: Record<string, unknown>): UserMdFrontma
     const identity: UserMdFrontmatter['identity'] = {
         name: pickString(identityRaw.name, def.identity.name),
     };
-    const nickname = identityRaw.nickname;
-    if (typeof nickname === 'string' && nickname !== '') identity.nickname = nickname;
     return {
         version: 1,
         identity,

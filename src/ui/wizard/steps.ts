@@ -30,12 +30,11 @@ export interface WizardStep {
 export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'identity',
-        title: 'Who is using the agent?',
-        navLabel: 'Identity',
-        subtitle: 'Name and IDE go into .agent-settings.yml so the agent addresses you and opens files in the right tool.',
+        title: 'Editor and tooling',
+        navLabel: 'Editor',
+        subtitle: 'IDE and rtk go into .agent-settings.yml so the agent opens files in the right tool. Your name lives in .agent-user.md (later step).',
         kind: 'form',
         paths: [
-            'personal.user_name',
             'personal.ide',
             'personal.open_edited_files',
             'personal.rtk_installed',

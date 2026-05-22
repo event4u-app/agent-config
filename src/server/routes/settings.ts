@@ -63,6 +63,30 @@ interface ReadState {
     mtimeMs: number;
 }
 
+/**
+ * Hints carried out-of-band on GET responses so the wizard can pre-fill
+ * fields that have since moved out of the settings schema. The `user_name`
+ * key was retired from `personal.*` (now lives in `.agent-user.md` →
+ * `identity.name`); legacy files still carry it, and we surface the value
+ * here so a returning user does not have to retype their name when
+ * onboarding picks up a pre-v2 `.agent-settings.yml`.
+ */
+export interface SettingsLegacyHints {
+    user_name?: string;
+}
+
+function extractLegacyHints(values: Record<string, unknown>): SettingsLegacyHints {
+    const hints: SettingsLegacyHints = {};
+    const personal = values.personal;
+    if (personal !== null && typeof personal === 'object' && !Array.isArray(personal)) {
+        const userName = (personal as Record<string, unknown>).user_name;
+        if (typeof userName === 'string' && userName.trim() !== '') {
+            hints.user_name = userName;
+        }
+    }
+    return hints;
+}
+
 async function readSettingsFrom(root: string): Promise<ReadState | null> {
     const path = settingsPath(root);
     let stat: Stats;
@@ -114,11 +138,13 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                     return reply;
                 }
+                const legacyHints = extractLegacyHints(state.values);
                 return {
                     values: state.values,
                     lastModified: state.mtimeMs,
                     path: SETTINGS_RELATIVE,
                     schema: SETTINGS_JSON_SCHEMA,
+                    legacyHints,
                 };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'YAML parse failed';

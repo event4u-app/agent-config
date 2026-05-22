@@ -29,6 +29,7 @@ import {
     diffLoading,
     errors,
     initialSettings,
+    legacyHints,
     loaded,
     loadError,
     reviewChanges,
@@ -43,6 +44,7 @@ import {
     userMdLoaded,
     userMdSkipped,
     values,
+    type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
 
@@ -51,6 +53,7 @@ interface SettingsGetResponse {
     lastModified: number;
     path: string;
     schema: JsonSchemaLeaf | { definitions?: Record<string, JsonSchemaLeaf>; $ref?: string };
+    legacyHints?: SettingsLegacyHints;
 }
 
 interface UserMdGetResponse {
@@ -68,16 +71,45 @@ function unwrapSchema(raw: SettingsGetResponse['schema']): JsonSchemaLeaf {
     return raw as JsonSchemaLeaf;
 }
 
+/**
+ * Fetch `/api/v1/settings`, falling back to `/api/v1/schema` + empty values
+ * on the first-run NOT_FOUND. The wizard is the tool for creating
+ * `.agent-settings.yml`, so a missing file is the expected empty state, not
+ * an error — surfacing it as `loadError` would render the contradictory
+ * "Use the wizard to create it" banner inside the wizard itself.
+ */
+async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
+    try {
+        return await apiFetch<SettingsGetResponse>('/api/v1/settings');
+    } catch (err) {
+        if (
+            err instanceof ApiCallError
+            && err.status === 404
+            && err.body.error?.code === 'NOT_FOUND'
+        ) {
+            const schemaRes = await apiFetch<{ settings: JsonSchemaLeaf }>('/api/v1/schema');
+            return {
+                values: {},
+                lastModified: 0,
+                path: '.agent-settings.yml',
+                schema: schemaRes.settings,
+            };
+        }
+        throw err;
+    }
+}
+
 async function loadAll(): Promise<void> {
     loadError.value = null;
     try {
         const [serverState, settingsRes] = await Promise.all([
             apiFetch<WizardServerState>('/api/v1/wizard/state'),
-            apiFetch<SettingsGetResponse>('/api/v1/settings'),
+            fetchSettingsWithFallback(),
         ]);
         schema.value = unwrapSchema(settingsRes.schema);
         settingsLastModified.value = settingsRes.lastModified;
         initialSettings.value = settingsRes.values;
+        legacyHints.value = settingsRes.legacyHints ?? {};
         // Resume from server partial when present; otherwise seed from disk values.
         const partialKeys = Object.keys(serverState.partial ?? {});
         values.value = partialKeys.length > 0
@@ -107,6 +139,21 @@ async function loadAll(): Promise<void> {
     }
 }
 
+/**
+ * Seed `identity.name` from a legacy settings hint when the on-disk
+ * `.agent-user.md` does not yet exist. The hint is consumed once — the
+ * server strips `personal.user_name` on the next PUT, so subsequent
+ * reads return no hint. `formToBody` round-trips through the structured
+ * form value so the resulting markdown still validates against
+ * `userMdSchema`.
+ */
+function seedIdentityFromHint(body: string, hint: string): string {
+    const form = bodyToForm(body);
+    if (form.frontmatter.identity.name.trim() !== '') return body;
+    form.frontmatter.identity.name = hint;
+    return formToBody(form);
+}
+
 async function loadUserMdOnce(): Promise<void> {
     if (userMdLoaded.value) return;
     try {
@@ -120,6 +167,10 @@ async function loadUserMdOnce(): Promise<void> {
                 userMdBody.value = tpl.body;
             } catch {
                 /* leave empty */
+            }
+            const hint = legacyHints.value.user_name;
+            if (typeof hint === 'string' && hint.trim() !== '') {
+                userMdBody.value = seedIdentityFromHint(userMdBody.value, hint);
             }
         }
     } catch (err) {

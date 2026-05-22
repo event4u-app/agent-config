@@ -8,7 +8,7 @@
  * `onChange` to persist the result.
  *
  * Fields mirror the v1 contract (`docs/contracts/agent-user-schema.md`):
- *   - identity.name (required), identity.nickname (optional)
+ *   - identity.name (required)
  *   - language (BCP-47, autocomplete)
  *   - role[] (≥1, free-form per contract; seeded suggestions via SEED_ROLE_IDS)
  *   - style.formality, style.pace (enums)
@@ -93,22 +93,10 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
         <div class="ac-user-md-form">
             <TextInput
                 id="umd-name" name="identity.name" label="Name"
-                description="How the agent addresses you. Required."
+                description="How the agent addresses you in chat (e.g. &quot;Matze&quot;, &quot;Sarah&quot;). Required."
                 value={fm.identity.name}
                 error={err(errors, 'identity.name')}
                 onChange={(v): void => patch({ identity: { ...fm.identity, name: v } })}
-            />
-            <TextInput
-                id="umd-nickname" name="identity.nickname" label="Nickname"
-                description="Optional short form used in casual replies."
-                value={fm.identity.nickname ?? ''}
-                error={err(errors, 'identity.nickname')}
-                onChange={(v): void => {
-                    const next = { ...fm.identity };
-                    if (v === '') delete next.nickname;
-                    else next.nickname = v;
-                    patch({ identity: next });
-                }}
             />
             <Autocomplete
                 id="umd-language" name="language" label="Language"

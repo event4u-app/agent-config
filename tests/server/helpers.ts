@@ -114,10 +114,9 @@ export function authHeaders(token: string, host: string): Record<string, string>
  * defaults to a sane Matze-shaped fixture.
  */
 export function fixtureUserMd(
-    overlay: { name?: string; nickname?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+    overlay: { name?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
 ): string {
     const name = overlay.name ?? 'Matze';
-    const nicknameLine = overlay.nickname ? `\n  nickname: "${overlay.nickname}"` : '';
     const language = overlay.language ?? 'de';
     const role = overlay.role ?? ['founder'];
     const formality = overlay.formality ?? 'informal';
@@ -130,7 +129,7 @@ export function fixtureUserMd(
         '---',
         'version: 1',
         'identity:',
-        `  name: "${name}"${nicknameLine}`,
+        `  name: "${name}"`,
         `language: "${language}"`,
         'role:',
         roleBlock,

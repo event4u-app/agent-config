@@ -58,9 +58,6 @@ export const settingsSchema = z.object({
         open_edited_files: z.boolean().default(false).describe(
             'After the agent edits a file, run `<ide> <path>` to surface it in your editor immediately. Off by default to avoid window-stealing during long agent runs.',
         ),
-        user_name: z.string().default('').describe(
-            'How the agent addresses you in chat ("Matze", "Sarah"). Legacy fallback only — the source of truth is the YAML frontmatter in .agent-user.md, which also carries pronouns, working hours, and tone preferences.',
-        ),
         rtk_installed: z.boolean().default(false).describe(
             'Does this machine have rtk (Rust Token Killer, https://github.com/event4u-app/rtk) on PATH? When true the agent wraps verbose CLI output (git, tests, linters, docker, npm, composer) with rtk for ~60-90% token savings. Leave false if rtk is missing — the agent falls back to tail / grep.',
         ),

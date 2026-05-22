@@ -57,9 +57,23 @@ Response (200):
 {
     "values":       { "cost_profile": "balanced", "...": "..." },
     "lastModified": 1747749791842,
-    "path":         ".agent-settings.yml"
+    "path":         ".agent-settings.yml",
+    "legacyHints":  { "user_name": "Matze" }
 }
 ```
+
+`legacyHints` is an out-of-band sidecar carrying values that have moved
+out of `settingsSchema` but still live in a pre-v2 file on disk. Keys
+are omitted when empty, never `null`. Current hints:
+
+| Key         | Source (legacy)        | New home                                |
+| ----------- | ---------------------- | --------------------------------------- |
+| `user_name` | `personal.user_name`   | `.agent-user.md` &rarr; `identity.name` |
+
+The wizard consumes hints on first run only — when `.agent-user.md`
+does not yet exist — to pre-fill the merged identity field. Subsequent
+PUTs strip the legacy keys (Zod-unknown), so the next read returns no
+hints.
 
 Errors: **404** when the file is missing (the SPA should redirect to
 `/#/wizard/Welcome`); **500** with `code=YAML_PARSE` when YAML parsing

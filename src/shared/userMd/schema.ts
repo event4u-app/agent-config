@@ -19,6 +19,9 @@
  * markdown without frontmatter is rejected; the wizard cannot finish on a
  * partial body.
  *
+ * Identity (2026-05-22): `identity.nickname` removed — name carries the
+ * preferred address form (full name or shorthand, user's choice).
+ *
  * Hard length cap kept at 8 000 chars (form input cap, not security).
  */
 
@@ -59,7 +62,6 @@ export const frontmatterSchema = z.object({
     version: z.literal(1, { errorMap: () => ({ message: 'version must be 1' }) }),
     identity: z.object({
         name: z.string().min(1, 'identity.name is required'),
-        nickname: z.string().min(1).optional(),
     }),
     language: z
         .string()
