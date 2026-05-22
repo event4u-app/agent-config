@@ -412,6 +412,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
                 canFinish={reviewChanges.value.length > 0 || userMdChanged()}
+                completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => { void goTo(idx + 1); }}
                 onSkip={(): void => { userMdSkipped.value = true; void goTo(idx + 1); }}

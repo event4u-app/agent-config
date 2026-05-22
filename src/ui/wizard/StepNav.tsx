@@ -19,6 +19,11 @@ export interface StepNavProps {
      * behavior.
      */
     canFinish?: boolean;
+    /**
+     * Set after a successful `/wizard/finish` round-trip — suppresses the
+     * Finish button entirely so the page reads as terminal.
+     */
+    completed?: boolean;
     onPrev: () => void;
     onNext: () => void;
     onSkip?: () => void;
@@ -28,6 +33,7 @@ export interface StepNavProps {
 
 export function StepNav(props: StepNavProps): preact.JSX.Element {
     const canFinish = props.canFinish ?? true;
+    const completed = props.completed ?? false;
     return (
         <div class="ac-form__actions ac-wizard__nav">
             <button
@@ -49,14 +55,16 @@ export function StepNav(props: StepNavProps): preact.JSX.Element {
                 </button>
             ) : null}
             {props.isLast ? (
-                <button
-                    type="button"
-                    class="ac-button ac-button--primary"
-                    disabled={props.busy || !canFinish}
-                    onClick={props.onFinish}
-                >
-                    {props.busy ? 'Saving…' : 'Finish & save'}
-                </button>
+                completed ? null : (
+                    <button
+                        type="button"
+                        class="ac-button ac-button--primary"
+                        disabled={props.busy || !canFinish}
+                        onClick={props.onFinish}
+                    >
+                        {props.busy ? 'Saving…' : 'Finish & save'}
+                    </button>
+                )
             ) : (
                 <button
                     type="button"
