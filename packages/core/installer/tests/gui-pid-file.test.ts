@@ -12,9 +12,11 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
     PID_FILE_NAME,
+    PidLockConflictError,
     clearPidFile,
     inspectPidFile,
     isProcessAlive,
+    lockPidFile,
     pidFilePath,
     writePidFile,
 } from '../src/gui/pid-file.js';
@@ -97,5 +99,38 @@ describe('writePidFile / clearPidFile', () => {
         expect(existsSync(p)).toBe(false);
         // second call must not throw
         expect(() => clearPidFile(projectRoot)).not.toThrow();
+    });
+});
+
+describe('lockPidFile (atomic O_EXCL create)', () => {
+    it('creates the file and writes the pid on first acquire', () => {
+        const p = lockPidFile(projectRoot, 54321);
+        expect(existsSync(p)).toBe(true);
+        expect(readFileSync(p, 'utf8').trim()).toBe('54321');
+    });
+
+    it('throws PidLockConflictError when a live pid already holds the lock', () => {
+        lockPidFile(projectRoot, process.pid);
+        expect(() => lockPidFile(projectRoot, process.pid))
+            .toThrow(PidLockConflictError);
+    });
+
+    it('reaps a stale lock (dead pid) and re-acquires', () => {
+        writePidFile(projectRoot, 2_147_483_640);
+        const p = lockPidFile(projectRoot, process.pid);
+        expect(readFileSync(p, 'utf8').trim()).toBe(String(process.pid));
+    });
+
+    it('reaps a non-numeric lock file and re-acquires', () => {
+        writePidFile(projectRoot);
+        writeFileSync(pidFilePath(projectRoot), 'corrupt\n', 'utf8');
+        const p = lockPidFile(projectRoot, 99999);
+        expect(readFileSync(p, 'utf8').trim()).toBe('99999');
+    });
+
+    it('clearPidFile after lock releases for re-acquire', () => {
+        lockPidFile(projectRoot, process.pid);
+        clearPidFile(projectRoot);
+        expect(() => lockPidFile(projectRoot, process.pid)).not.toThrow();
     });
 });

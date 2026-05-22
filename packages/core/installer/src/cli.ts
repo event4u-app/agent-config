@@ -11,6 +11,7 @@
  */
 
 import { Command, Option } from 'commander';
+import { runGui } from './commands/gui.js';
 import { runInfo } from './commands/info.js';
 import { runInit } from './commands/init.js';
 import { runPrune } from './commands/prune.js';
@@ -118,6 +119,16 @@ export function buildProgram(): Command {
         .option('--json', 'Emit machine-readable report', false)
         .action(async (opts: Record<string, unknown>) => {
             const code = await runInfo(resolveShared(opts), opts);
+            process.exit(code);
+        });
+
+    attachSharedFlags(program.command('gui'))
+        .description('Boot the browser-wizard server (post-install spawn target for scripts/install.py)')
+        .option('--port <port>', 'Bind to a fixed port (default: ephemeral)')
+        .option('--idle <seconds>', 'Idle timeout in seconds (default: 600)')
+        .option('--no-open', 'Do not auto-open the browser', false)
+        .action(async (opts: Record<string, unknown>) => {
+            const code = await runGui(resolveShared(opts), opts);
             process.exit(code);
         });
 

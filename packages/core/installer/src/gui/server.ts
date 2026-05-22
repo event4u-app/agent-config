@@ -20,7 +20,7 @@ import { platform } from 'node:os';
 import { loadManifest } from '../manifest-loader.js';
 import type { LoadedManifest } from '../manifest-loader.js';
 import { handleApi, type ApiContext, type RecoveryState } from './handlers.js';
-import { clearPidFile, inspectPidFile, writePidFile } from './pid-file.js';
+import { clearPidFile, lockPidFile } from './pid-file.js';
 import { CSP_HEADER, buildAllowedHosts, buildAllowedOrigins, generateCsrfToken, isHostAllowed, isOriginAllowed } from './security.js';
 import { serveStatic } from './static-assets.js';
 import { findOpenLog, plannedPaths, readLog } from './transaction-log.js';
@@ -31,14 +31,6 @@ const DEFAULT_IDLE_SECONDS = 600;
 /** Boot a localhost HTTP server. Resolves once `listen()` succeeds. */
 export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerHandle> {
     const stdout = opts.stdout ?? process.stdout;
-
-    const pid = inspectPidFile(opts.projectRoot);
-    if (pid.conflict) {
-        throw new Error(
-            `GUI server already running (pid ${pid.conflictingPid ?? '?'}); ` +
-            `stop it or delete ${pid.path} before retrying.`,
-        );
-    }
 
     const loaded = loadManifest({
         searchFrom: opts.projectRoot,
@@ -64,8 +56,22 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
     await listen(server, opts.port ?? 0);
     const port = (server.address() as AddressInfo).port;
     const url = `http://127.0.0.1:${port}/`;
-    const pidFile = writePidFile(opts.projectRoot);
+    // Atomic lock — throws PidLockConflictError if another live server
+    // already owns this project root. Council Tier 2 § 6.
+    let pidFile: string;
+    try {
+        pidFile = lockPidFile(opts.projectRoot);
+    } catch (err) {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        throw err;
+    }
 
+    // Readiness contract — Python supervisor parses this line with
+    // `^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$`.
+    // Use explicit write + UTF-8 newline so PowerShell sees the same
+    // bytes as POSIX. Flush before the human-readable line so a slow
+    // pipe doesn't reorder them. Council Tier 1 § 1.
+    process.stdout.write(`WIZARD_READY url=${url}\n`);
     stdout.write(`GUI server listening on ${url} (csrf token issued, pid ${process.pid})\n`);
 
     function resetIdle(): void {
@@ -86,7 +92,13 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
         clearPidFile(opts.projectRoot);
     }
 
-    if (opts.noOpen !== true) {
+    // `AGENT_CONFIG_GUI_NO_OPEN=1` env overrides the flag — the Python
+    // installer supervisor sets this so the wizard parent owns the
+    // user-facing "open browser" decision (and the install.py prompt
+    // doesn't race the Node child for the URL).
+    const noOpenEnv = process.env['AGENT_CONFIG_GUI_NO_OPEN'];
+    const suppressOpen = opts.noOpen === true || (noOpenEnv !== undefined && noOpenEnv !== '' && noOpenEnv !== '0');
+    if (!suppressOpen) {
         try {
             (opts.openBrowser ?? defaultOpenBrowser)(url);
         } catch (err) {
