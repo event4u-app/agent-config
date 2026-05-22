@@ -1,90 +1,91 @@
 /**
- * Pure parse / compose helpers for `.agent-user.md` bodies.
+ * Pure parse / compose helpers for `.agent-user.yml`.
  *
  * Shared between the Fastify server (route validation, wizard finish) and
- * the Vite-bundled UI (round-trip between structured form and markdown).
- * Per the council verdict (2026-05-19), this module lives under
- * `src/shared/` and MUST stay free of Node-only APIs (`fs`, `path`,
- * `crypto`, `process`, …) — ESLint enforces it.
+ * the Vite-bundled UI (round-trip between structured form and YAML text).
+ * Lives under `src/shared/` and MUST stay free of Node-only APIs
+ * (`fs`, `path`, `crypto`, `process`, …) — ESLint enforces it.
  *
- * Parser choice: a small fenced-frontmatter splitter plus `js-yaml`.
- * `js-yaml` is pure JS, has no `Buffer` / `process` dependency, and
- * bundles cleanly into the Vite UI output. (The previous `gray-matter`
- * implementation crashed in the browser with `ReferenceError: Buffer
- * is not defined`, which silently broke the wizard's userMd step.)
+ * Parser choice: `js-yaml`. Pure JS, no `Buffer` / `process` dependency,
+ * bundles cleanly into the Vite UI output. (An earlier `gray-matter`
+ * attempt crashed in the browser with `ReferenceError: Buffer is not
+ * defined`, which silently broke the wizard's userMd step.)
  *
  * Compose choice: `yaml.dump` with `flowLevel: -1` emits **block style**
  * at every depth. Block-style is required by the schema contract
- * (`docs/contracts/agent-user-schema.md`): `identity.role` and other
- * list-valued fields produce clean, line-oriented git diffs that way;
- * flow style (`role: [a, b]`) is allowed by the parser but rejected
- * by the contract.
+ * (`docs/contracts/agent-user-schema.md`): `role` and other list-valued
+ * fields produce clean, line-oriented git diffs that way; flow style
+ * (`role: [a, b]`) is allowed by the parser but rejected by the contract.
+ *
+ * Legacy bridge: `parseLegacyUserMd` accepts the old fenced-frontmatter
+ * `.agent-user.md` body and returns the same shape as `parseUserIdentity`
+ * so the server can read pre-migration files during the wizard finish.
+ * Drop once no consumer ships the legacy file.
  */
 
 import yaml from 'js-yaml';
 
-/**
- * Structured view of `.agent-user.md`.
- *
- * `data` is the parsed YAML frontmatter (empty object when no
- * frontmatter is present). `content` is the markdown body following the
- * frontmatter fence (or the entire input when no fence exists).
- */
-export interface ParsedUserMd {
-    data: Record<string, unknown>;
-    content: string;
-}
-
-/**
- * Frontmatter fence: leading `---` on its own line, YAML body, trailing
- * `---` on its own line. Matches `gray-matter`'s default delimiter
- * behaviour so existing files round-trip identically.
- */
+/** Frontmatter fence used by the legacy `.agent-user.md` format. */
 const FRONTMATTER_FENCE = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;
 
 /**
- * Parse an `.agent-user.md` body into its frontmatter object and the
- * markdown content that follows.
- *
- * Throws on malformed YAML — callers that need a soft failure
- * (HTTP 422 in routes, form-level error in the UI) should pre-validate
- * via the Zod schema in `./schema.ts`. A body without a frontmatter
- * fence parses to `{ data: {}, content: body }`.
+ * Parse a `.agent-user.yml` body into a plain object. Throws on
+ * malformed YAML — callers that need a soft failure (HTTP 422 in
+ * routes, form-level error in the UI) should pre-validate via
+ * `userIdentitySchema` in `./schema.ts`. An empty / whitespace-only
+ * body parses to `{}` so callers can layer defaults on top.
  */
-export function parseUserMd(body: string): ParsedUserMd {
-    const match = FRONTMATTER_FENCE.exec(body);
-    if (match === null) {
-        return { data: {}, content: body };
+export function parseUserIdentity(body: string): Record<string, unknown> {
+    const trimmed = body.trim();
+    if (trimmed === '') return {};
+    const loaded = yaml.load(body);
+    if (loaded === null || loaded === undefined) return {};
+    if (typeof loaded !== 'object' || Array.isArray(loaded)) {
+        throw new Error('.agent-user.yml must parse to an object');
     }
-    const yamlText = match[1] ?? '';
-    const content = body.slice(match[0].length);
-    const loaded = yaml.load(yamlText);
-    const data: Record<string, unknown> =
-        loaded !== null && typeof loaded === 'object' && !Array.isArray(loaded)
-            ? (loaded as Record<string, unknown>)
-            : {};
-    return { data, content };
+    return loaded as Record<string, unknown>;
 }
 
 /**
- * Compose a structured `ParsedUserMd` back into an `.agent-user.md`
- * body, emitting YAML frontmatter in block style (no flow `[a, b]`,
- * no inline maps) so list-valued fields like `identity.role` produce
- * one entry per line and diff cleanly in git.
+ * Compose a plain object back into a `.agent-user.yml` body, emitting
+ * YAML in block style (no flow `[a, b]`, no inline maps) so list-valued
+ * fields like `role` produce one entry per line and diff cleanly in git.
  *
- * When `data` is empty, the leading `---\n---\n` fence is omitted.
+ * `yaml.dump` always terminates with `\n`; the result is returned as-is
+ * so atomicWrite preserves the trailing newline (POSIX-friendly).
  */
-export function composeUserMd(parsed: ParsedUserMd): string {
-    if (Object.keys(parsed.data).length === 0) {
-        return parsed.content;
-    }
-    const dumped = yaml.dump(parsed.data, {
+export function composeUserIdentity(data: Record<string, unknown>): string {
+    return yaml.dump(data, {
         flowLevel: -1,
         lineWidth: -1,
         noRefs: true,
     });
-    // `yaml.dump` always terminates with `\n`; strip and re-add inside
-    // the fence so the body shape stays `---\n<yaml>\n---\n<content>`.
-    const trimmed = dumped.endsWith('\n') ? dumped.slice(0, -1) : dumped;
-    return `---\n${trimmed}\n---\n${parsed.content}`;
+}
+
+/**
+ * Parse a legacy `.agent-user.md` body (fenced YAML frontmatter +
+ * optional markdown body). The frontmatter becomes the identity object;
+ * any non-empty markdown body is captured under `notes` so prose is
+ * preserved across the migration. Returns `{}` when neither fence nor
+ * usable body is present.
+ *
+ * Drop once `.agent-user.md` files are no longer in circulation.
+ */
+export function parseLegacyUserMd(body: string): Record<string, unknown> {
+    const match = FRONTMATTER_FENCE.exec(body);
+    if (match === null) {
+        const trimmed = body.trim();
+        return trimmed === '' ? {} : { notes: trimmed };
+    }
+    const yamlText = match[1] ?? '';
+    const tail = body.slice(match[0].length).trim();
+    const loaded = yaml.load(yamlText);
+    const data: Record<string, unknown> =
+        loaded !== null && typeof loaded === 'object' && !Array.isArray(loaded)
+            ? { ...(loaded as Record<string, unknown>) }
+            : {};
+    if (tail !== '' && data.notes === undefined) {
+        data.notes = tail;
+    }
+    return data;
 }

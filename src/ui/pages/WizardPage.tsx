@@ -5,7 +5,8 @@
  * shares the SchemaForm primitive with SettingsPage so step bodies
  * stay declarative: each step picks a subset of schema paths and
  * renders only those fields. Final step calls `/api/v1/wizard/finish`
- * which dual-writes `.agent-settings.yml` + `.agent-user.md` via 2PC.
+ * which dual-writes `.agent-settings.yml` + `settings/.agent-user.yml`
+ * via 2PC.
  *
  * Step layout lives in `wizard/steps.ts`. Signal store is in
  * `wizard/state.ts`.
@@ -16,7 +17,9 @@ import { apiFetch, ApiCallError } from '../api.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
 import { UserMdForm } from '../forms/UserMdForm.js';
-import { bodyToForm, formToBody } from '@shared/userMd/formAdapter.js';
+import { defaultIdentity, mergeIdentity } from '@shared/userMd/formAdapter.js';
+import { parseUserIdentity } from '@shared/userMd/utils.js';
+import type { UserIdentity } from '@shared/userMd/schema.js';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import { WIZARD_STEPS, WIZARD_TOTAL_STEPS, stepAt } from '../wizard/steps.js';
 import { sliceSchema } from '../wizard/sliceSchema.js';
@@ -58,7 +61,7 @@ interface SettingsGetResponse {
 }
 
 interface UserMdGetResponse {
-    body: string;
+    identity: Record<string, unknown> | null;
     exists: boolean;
     lastModified: number | null;
 }
@@ -125,7 +128,7 @@ async function loadAll(): Promise<void> {
         // these on navigation, but a browser reload (or resume from server
         // partial) lands directly on the step without going through `goTo`,
         // so the userMd fetch / settings diff would otherwise never run and
-        // the step body would hang on "Loading .agent-user.md…" or render
+        // the step body would hang on "Loading .agent-user.yml…" or render
         // an empty review list.
         const resumed = stepAt(stepIndex.value);
         if (resumed.kind === 'userMd' || resumed.kind === 'review') {
@@ -145,37 +148,41 @@ async function loadAll(): Promise<void> {
 
 /**
  * Seed `identity.name` from a legacy settings hint when the on-disk
- * `.agent-user.md` does not yet exist. The hint is consumed once — the
+ * `.agent-user.yml` does not yet exist. The hint is consumed once — the
  * server strips `personal.user_name` on the next PUT, so subsequent
- * reads return no hint. `formToBody` round-trips through the structured
- * form value so the resulting markdown still validates against
- * `userMdSchema`.
+ * reads return no hint.
  */
-function seedIdentityFromHint(body: string, hint: string): string {
-    const form = bodyToForm(body);
-    if (form.frontmatter.identity.name.trim() !== '') return body;
-    form.frontmatter.identity.name = hint;
-    return formToBody(form);
+function seedIdentityFromHint(current: UserIdentity, hint: string): UserIdentity {
+    if (current.identity.name.trim() !== '') return current;
+    return { ...current, identity: { ...current.identity, name: hint } };
 }
 
 async function loadUserMdOnce(): Promise<void> {
     if (userMdLoaded.value) return;
     try {
         const res = await apiFetch<UserMdGetResponse>('/api/v1/user-md');
-        userMdInitial.value = res.body;
-        userMdBody.value = res.body;
         userMdExists.value = res.exists;
-        if (!res.exists) {
+        if (res.exists && res.identity !== null) {
+            const merged = mergeIdentity(res.identity);
+            userMdInitial.value = merged;
+            userMdBody.value = merged;
+        } else {
+            let seed: UserIdentity;
             try {
                 const tpl = await apiFetch<{ body: string }>('/api/v1/user-md/template');
-                userMdBody.value = tpl.body;
+                seed = mergeIdentity(parseUserIdentity(tpl.body));
             } catch {
-                /* leave empty */
+                seed = defaultIdentity();
             }
             const hint = legacyHints.value.user_name;
             if (typeof hint === 'string' && hint.trim() !== '') {
-                userMdBody.value = seedIdentityFromHint(userMdBody.value, hint);
+                seed = seedIdentityFromHint(seed, hint);
             }
+            // Snapshot for change-detection — diff is against the
+            // pre-edit baseline (template + hint), so just landing on the
+            // step does not flag the file as "changed".
+            userMdInitial.value = seed;
+            userMdBody.value = seed;
         }
     } catch (err) {
         banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
@@ -227,22 +234,13 @@ async function refreshDiff(): Promise<void> {
 
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
-    return userMdBody.value !== userMdInitial.value;
-}
-
-function stripBodyPrefix(map: Record<string, string>): Record<string, string> {
-    // Server validates `{ body: <text> }` so Zod paths come back as
-    // `body.identity.name`. The form keys fields by the dotted
-    // frontmatter path without the wire wrapper. Bare `body` covers
-    // whole-document failures (size cap, raw YAML parse) — those have
-    // no specific field target, so leave them to the top-level banner.
-    const out: Record<string, string> = {};
-    for (const [key, msg] of Object.entries(map)) {
-        if (key.startsWith('body.')) {
-            out[key.slice('body.'.length)] = msg;
-        }
+    if (userMdBody.value === null || userMdInitial.value === null) {
+        return userMdBody.value !== userMdInitial.value;
     }
-    return out;
+    // Structural diff via stringify — keys land in insertion order from
+    // `mergeIdentity` so the comparison is stable. Cheap enough for a
+    // ~10-field object and avoids pulling a deep-equal helper.
+    return JSON.stringify(userMdBody.value) !== JSON.stringify(userMdInitial.value);
 }
 
 async function goTo(nextIndex: number): Promise<void> {
@@ -262,20 +260,28 @@ async function goTo(nextIndex: number): Promise<void> {
 interface FinishResponse {
     writtenPaths?: string[];
     txnId?: string;
+    migratedFrom?: string[];
     ok?: boolean;
     dryRun?: boolean;
-    preview?: { settingsYaml: string; userMd: string | null };
+    preview?: {
+        settingsYaml: string;
+        identity: UserIdentity | null;
+        userIdentityYaml: string | null;
+    };
 }
 
 async function finish(): Promise<void> {
     saving.value = true;
     banner.value = null;
     try {
-        const body: { settings: Record<string, JsonValue>; userMd?: string } = {
+        const body: { settings: Record<string, JsonValue>; identity?: UserIdentity } = {
             settings: values.value,
         };
-        if (userMdChanged()) {
-            body.userMd = userMdBody.value;
+        // Send the identity object only when the user actually edited or
+        // created it. Skipped / untouched → omit so the server leaves any
+        // existing `.agent-user.yml` alone.
+        if (userMdChanged() && userMdBody.value !== null) {
+            body.identity = userMdBody.value;
         }
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
@@ -285,8 +291,10 @@ async function finish(): Promise<void> {
         // or { ok, dryRun, preview } when started with --dry-run. The
         // dry-run shape carries no writtenPaths, so guard the join.
         // Append a close-window hint on every success branch so the user
-        // knows the wizard has nothing left to do — the Finish button is
-        // also suppressed via `wizardComplete` below.
+        // knows the wizard has nothing left to do. The Finish button stays
+        // visible but is disabled (canFinish=false because reviewChanges
+        // is cleared and userMdInitial is realigned below) and re-enables
+        // automatically once a new edit makes canFinish true again.
         const closeHint = 'You can close this browser window now.';
         if (res.dryRun === true) {
             banner.value = { message: `Dry-run complete — no files written. Settings would be saved. ${closeHint}`, tone: 'success' };
@@ -329,17 +337,19 @@ function StepBody(): preact.JSX.Element | null {
         );
     }
     if (step.kind === 'userMd') {
-        if (!userMdLoaded.value) return <p>Loading .agent-user.md…</p>;
-        // Server validates `{ body: <text> }`, so Zod paths come back as
-        // `body.identity.name` etc. The form keys fields by the dotted
-        // frontmatter path without the wire-level wrapper — strip it
-        // here so navigating back surfaces field-level errors.
+        if (!userMdLoaded.value || userMdBody.value === null) {
+            return <p>Loading .agent-user.yml…</p>;
+        }
+        // Server validates `body.identity` against `userIdentitySchema`,
+        // so Zod paths come back as `identity.name`, `style.formality`,
+        // … with no wire-level wrapper to strip — they bind 1:1 to the
+        // form's field keys.
         return (
             <UserMdForm
-                value={bodyToForm(userMdBody.value)}
-                errors={stripBodyPrefix(errors.value)}
+                value={userMdBody.value}
+                errors={errors.value}
                 onChange={(next): void => {
-                    userMdBody.value = formToBody(next);
+                    userMdBody.value = next;
                     userMdSkipped.value = false;
                 }}
             />
@@ -402,7 +412,6 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
                 canFinish={reviewChanges.value.length > 0 || userMdChanged()}
-                completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => { void goTo(idx + 1); }}
                 onSkip={(): void => { userMdSkipped.value = true; void goTo(idx + 1); }}

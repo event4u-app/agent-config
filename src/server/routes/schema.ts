@@ -18,11 +18,12 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { userMdSchema } from '../../shared/userMd/schema.js';
+import { userIdentitySchema } from '../../shared/userMd/schema.js';
 
 interface SchemaResponse {
     settings: ReturnType<typeof zodToJsonSchema>;
-    userMd: ReturnType<typeof zodToJsonSchema>;
+    /** JSON-Schema for the `.agent-user.yml` identity object. */
+    userIdentity: ReturnType<typeof zodToJsonSchema>;
     generatedAt: string;
 }
 
@@ -32,7 +33,7 @@ function build(): SchemaResponse {
     if (cached !== null) return cached;
     cached = {
         settings: zodToJsonSchema(settingsSchema, { name: 'Settings', target: 'jsonSchema7' }),
-        userMd: zodToJsonSchema(userMdSchema, { name: 'UserMd', target: 'jsonSchema7' }),
+        userIdentity: zodToJsonSchema(userIdentitySchema, { name: 'UserIdentity', target: 'jsonSchema7' }),
         generatedAt: new Date().toISOString(),
     };
     return cached;

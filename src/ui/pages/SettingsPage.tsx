@@ -161,7 +161,7 @@ export function SettingsPage(): preact.JSX.Element {
             <header class="ac-page__header">
                 <h1>Settings</h1>
                 <nav class="ac-page__nav">
-                    <a href="#/settings/user">Edit .agent-user.md →</a>
+                    <a href="#/settings/user">Edit .agent-user.yml →</a>
                 </nav>
             </header>
             {banner.value !== null ? <p class="ac-banner">{banner.value}</p> : null}

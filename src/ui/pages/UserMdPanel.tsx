@@ -1,21 +1,30 @@
 /**
- * UserMdPanel — read / edit / save `.agent-user.md`.
+ * UserMdPanel — read / edit / save `.agent-user.yml`.
  *
- * Loaded by hash route `/settings/user`. Pulls the current body + mtime
- * via the user-md route; if the file does not exist yet, falls back to
- * the shipped template. Saves with `If-Unmodified-Since` only when the
- * file already exists (server treats missing header as "create new").
+ * Loaded by hash route `/settings/user`. Pulls the current identity
+ * object + mtime via the user-md route; if the file does not exist
+ * yet, falls back to the shipped template parsed through
+ * `mergeIdentity` so every field has a default. Saves with
+ * `If-Unmodified-Since` only when the file already exists (server
+ * treats missing header as "create new").
+ *
+ * Wire format is `{ identity }` — the server owns YAML serialization,
+ * the UI never touches `js-yaml.dump`. Server-side Zod errors arrive
+ * keyed by the dotted field path (`identity.name`, `style.formality`,
+ * …) which binds 1:1 to UserMdForm field keys; no transformation.
  */
 
 import { useEffect } from 'preact/hooks';
 import { signal } from '@preact/signals';
 import { apiFetch, ApiCallError } from '../api.js';
 import { UserMdForm } from '../forms/UserMdForm.js';
-import { bodyToForm, formToBody } from '@shared/userMd/formAdapter.js';
+import { defaultIdentity, mergeIdentity } from '@shared/userMd/formAdapter.js';
+import { parseUserIdentity } from '@shared/userMd/utils.js';
+import type { UserIdentity } from '@shared/userMd/schema.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 
 interface UserMdGetResponse {
-    body: string;
+    identity: Record<string, unknown> | null;
     exists: boolean;
     lastModified: number | null;
 }
@@ -26,7 +35,7 @@ interface TemplateResponse {
 
 const loaded = signal(false);
 const loadError = signal<string | null>(null);
-const body = signal<string>('');
+const identity = signal<UserIdentity>(defaultIdentity());
 const exists = signal(false);
 const lastModified = signal<number | null>(null);
 const banner = signal<string | null>(null);
@@ -37,16 +46,19 @@ async function load(): Promise<void> {
     loadError.value = null;
     try {
         const res = await apiFetch<UserMdGetResponse>('/api/v1/user-md');
-        body.value = res.body;
         exists.value = res.exists;
         lastModified.value = res.lastModified;
-        if (!res.exists) {
+        if (res.exists && res.identity !== null) {
+            identity.value = mergeIdentity(res.identity);
+            banner.value = null;
+        } else {
             try {
                 const tpl = await apiFetch<TemplateResponse>('/api/v1/user-md/template');
-                body.value = tpl.body;
+                identity.value = mergeIdentity(parseUserIdentity(tpl.body));
                 banner.value = 'File does not exist yet — loaded shipped template. Save to create it.';
             } catch {
-                banner.value = 'File does not exist yet — write freely and save.';
+                identity.value = defaultIdentity();
+                banner.value = 'File does not exist yet — fill the form and save.';
             }
         }
         loaded.value = true;
@@ -67,7 +79,7 @@ async function save(): Promise<void> {
         const res = await apiFetch<{ lastModified: number; writtenPaths: string[] }>('/api/v1/user-md', {
             method: 'PUT',
             headers,
-            body: { body: body.value },
+            body: { identity: identity.value },
         });
         lastModified.value = res.lastModified;
         exists.value = true;
@@ -75,15 +87,11 @@ async function save(): Promise<void> {
     } catch (err) {
         if (err instanceof ApiCallError) {
             const errBody = err.body.error ?? { code: 'UNKNOWN', message: err.message };
-            // Field errors arrive keyed by `body.identity.name` etc. Strip
-            // the leading `body.` so the form (which keys on dotted paths
-            // relative to the frontmatter) picks them up.
-            const raw = fieldErrorMap(errBody);
-            const stripped: Record<string, string> = {};
-            for (const [k, v] of Object.entries(raw)) {
-                stripped[k.replace(/^body\./, '')] = v;
-            }
-            errors.value = stripped;
+            // Zod paths bind directly to UserMdForm field keys — the
+            // server validates `body.identity` against
+            // `userIdentitySchema`, so paths come back as `identity.name`,
+            // `style.formality`, … with no wire-level wrapper to strip.
+            errors.value = fieldErrorMap(errBody);
             banner.value = topLevelCopy(errBody);
         } else {
             banner.value = err instanceof Error ? err.message : String(err);
@@ -99,7 +107,7 @@ export function UserMdPanel(): preact.JSX.Element {
     if (!loaded.value) {
         return (
             <div class="ac-page">
-                <h1>.agent-user.md</h1>
+                <h1>.agent-user.yml</h1>
                 {loadError.value !== null
                     ? <p class="ac-banner ac-banner--error">{loadError.value}</p>
                     : <p>Loading…</p>}
@@ -110,16 +118,16 @@ export function UserMdPanel(): preact.JSX.Element {
     return (
         <div class="ac-page">
             <header class="ac-page__header">
-                <h1>.agent-user.md</h1>
+                <h1>.agent-user.yml</h1>
                 <nav class="ac-page__nav">
                     <a href="#/settings">← Back to Settings</a>
                 </nav>
             </header>
             {banner.value !== null ? <p class="ac-banner">{banner.value}</p> : null}
             <UserMdForm
-                value={bodyToForm(body.value)}
+                value={identity.value}
                 errors={errors.value}
-                onChange={(next): void => { body.value = formToBody(next); }}
+                onChange={(next): void => { identity.value = next; }}
             />
             <div class="ac-form__actions">
                 <button type="button" class="ac-button" onClick={(): void => { void load(); }}>

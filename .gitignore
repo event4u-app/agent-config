@@ -52,6 +52,14 @@ __pycache__/
 # real package asset, not a user-local settings file (Step 7 Phase 2).
 !templates/minimal/.agent-settings.yml
 
+# Personal user-identity file. Lives at agents/settings/.agent-user.yml
+# post-migration; legacy .agent-user.md at agents/ or CWD is read for
+# auto-migration and deleted on successful wizard finish.
+/agents/settings/.agent-user.yml
+/agents/.agent-user.md
+.agent-user.md
+.agent-user.yml
+
 # Persistent chat-history log (crash recovery; written by
 # scripts/chat_history.py, governed by the chat-history rule).
 # Lives at agents/runtime/.agent-chat-history — covered by the

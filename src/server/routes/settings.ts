@@ -51,10 +51,16 @@ export interface SettingsRouteOptions {
     dryRun?: boolean;
 }
 
-const SETTINGS_RELATIVE = '.agent-settings.yml';
+const SETTINGS_RELATIVE = join('settings', '.agent-settings.yml');
+/** Pre-typed-subdir flat-root location. Read as fallback for migration. */
+const LEGACY_FLAT_RELATIVE = '.agent-settings.yml';
 
 function settingsPath(root: string): string {
     return join(root, SETTINGS_RELATIVE);
+}
+
+function legacyFlatPath(root: string): string {
+    return join(root, LEGACY_FLAT_RELATIVE);
 }
 
 interface ReadState {
@@ -87,8 +93,7 @@ function extractLegacyHints(values: Record<string, unknown>): SettingsLegacyHint
     return hints;
 }
 
-async function readSettingsFrom(root: string): Promise<ReadState | null> {
-    const path = settingsPath(root);
+async function readYamlFile(path: string): Promise<ReadState | null> {
     let stat: Stats;
     let raw: string;
     try {
@@ -101,11 +106,18 @@ async function readSettingsFrom(root: string): Promise<ReadState | null> {
     return { raw, values, mtimeMs: Math.trunc(stat.mtimeMs) };
 }
 
+async function readSettingsFrom(root: string): Promise<ReadState | null> {
+    return readYamlFile(settingsPath(root));
+}
+
 /**
- * Read `.agent-settings.yml` from `writeRoot`, falling back to
- * `legacyReadRoot` on ENOENT. A hit on the fallback is what makes the
- * silent-migration story work: the next PUT writes to `writeRoot` and
- * the legacy file is no longer consulted.
+ * Read `.agent-settings.yml` from `writeRoot/settings/`, falling back to:
+ *   1. `writeRoot/.agent-settings.yml` (pre-typed-subdir flat-root).
+ *   2. `legacyReadRoot/settings/.agent-settings.yml`.
+ *   3. `legacyReadRoot/.agent-settings.yml`.
+ * A hit on any fallback is what makes the silent-migration story work:
+ * the next PUT writes to `writeRoot/settings/` and the legacy file is
+ * no longer consulted (and is deleted by the wizard 2PC finish).
  */
 async function readSettings(
     writeRoot: string,
@@ -113,8 +125,12 @@ async function readSettings(
 ): Promise<ReadState | null> {
     const primary = await readSettingsFrom(writeRoot);
     if (primary !== null) return primary;
+    const flatInSandbox = await readYamlFile(legacyFlatPath(writeRoot));
+    if (flatInSandbox !== null) return flatInSandbox;
     if (legacyReadRoot && legacyReadRoot !== writeRoot) {
-        return readSettingsFrom(legacyReadRoot);
+        const legacyTyped = await readSettingsFrom(legacyReadRoot);
+        if (legacyTyped !== null) return legacyTyped;
+        return readYamlFile(legacyFlatPath(legacyReadRoot));
     }
     return null;
 }
