@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 26 steps done · 0%**
+**21 / 26 steps done · 81%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+████████████████████████████████░░░░░░░░   81%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md) | 5 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md) | 5 | 26 | 5 | 21 | 0 | 0 | ████████░░ 81% |
 
 ---
 
@@ -24,13 +24,13 @@
 
 ### [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md)
 
-**Monorepo Phase 6 — Browser Wizard GUI (Optional)** — 0 / 26 done (0%)
+**Monorepo Phase 6 — Browser Wizard GUI (Optional)** — 21 / 26 done (81%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Server skeleton | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Frontend (vanilla, no framework lock-in) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Apply flow | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Security & ergonomics | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-| 5 | Distribution & docs | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Server skeleton | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 2 | Frontend (vanilla, no framework lock-in) | ✅ done | 0 | 4 | 0 | 0 | 100% |
+| 3 | Apply flow | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
+| 4 | Security & ergonomics | 🟡 in progress | 3 | 7 | 0 | 0 | 70% |
+| 5 | Distribution & docs | ✅ done | 0 | 4 | 0 | 0 | 100% |
 
