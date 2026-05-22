@@ -75,6 +75,9 @@ export function buildProgram(): Command {
             'Comma-separated pack ids whose advisory/restricted/experimental artefacts you accept (non-interactive)',
         )
         .option('--answer <kv...>', 'Agent-mode answer (format: question_id=value)')
+        .option('--gui', 'Launch the local browser wizard (Phase 6) instead of the TUI', false)
+        .option('--gui-port <port>', 'Bind the GUI server to a fixed port (default: ephemeral)')
+        .option('--no-open', 'Do not auto-open the browser when --gui is set', false)
         .action(async (opts: Record<string, unknown>) => {
             const code = await runInit(resolveShared(opts), opts);
             process.exit(code);
