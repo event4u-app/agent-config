@@ -150,3 +150,7 @@ agents/reference/ai-video/*
 !agents/reference/ai-video/prompts/**
 !agents/reference/ai-video/examples/
 !agents/reference/ai-video/examples/**
+
+# Wizard runtime state — local-only resume snapshot (current step + partial form),
+# written 0600 by the GUI wizard. Never committed.
+agents/state/
