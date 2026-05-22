@@ -63,6 +63,13 @@ export const legacyHints = signal<SettingsLegacyHints>({});
 
 export const reviewChanges = signal<DiffChange[]>([]);
 
+/**
+ * Flipped to `true` once `/api/v1/wizard/finish` returns successfully (real
+ * commit or dry-run). The page chrome uses it to suppress the Finish button
+ * — there is nothing left to save — and the banner adds a close-window hint.
+ */
+export const wizardComplete = signal(false);
+
 export function startedAtNow(existing: string | null): string {
     return existing ?? new Date().toISOString();
 }

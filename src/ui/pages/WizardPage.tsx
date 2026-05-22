@@ -44,6 +44,7 @@ import {
     userMdLoaded,
     userMdSkipped,
     values,
+    wizardComplete,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -116,6 +117,9 @@ async function loadAll(): Promise<void> {
             ? { ...settingsRes.values, ...serverState.partial }
             : settingsRes.values;
         stepIndex.value = clampStep(serverState.step);
+        // Reset on every (re-)load so a stale signal from a previous finish
+        // in the same module instance cannot suppress the Finish button.
+        wizardComplete.value = false;
         loaded.value = true;
         // Step-specific side-effects on initial load / resume. `goTo` fires
         // these on navigation, but a browser reload (or resume from server
@@ -280,12 +284,16 @@ async function finish(): Promise<void> {
         // Server returns either { writtenPaths, txnId } on a real commit
         // or { ok, dryRun, preview } when started with --dry-run. The
         // dry-run shape carries no writtenPaths, so guard the join.
+        // Append a close-window hint on every success branch so the user
+        // knows the wizard has nothing left to do — the Finish button is
+        // also suppressed via `wizardComplete` below.
+        const closeHint = 'You can close this browser window now.';
         if (res.dryRun === true) {
-            banner.value = { message: 'Dry-run complete — no files written. Settings would be saved.', tone: 'success' };
+            banner.value = { message: `Dry-run complete — no files written. Settings would be saved. ${closeHint}`, tone: 'success' };
         } else if (Array.isArray(res.writtenPaths)) {
-            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`, tone: 'success' };
+            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete. ${closeHint}`, tone: 'success' };
         } else {
-            banner.value = { message: 'Wizard complete.', tone: 'success' };
+            banner.value = { message: `Wizard complete. ${closeHint}`, tone: 'success' };
         }
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(WIZARD_TOTAL_STEPS - 1);
@@ -294,6 +302,7 @@ async function finish(): Promise<void> {
         initialSettings.value = values.value;
         userMdInitial.value = userMdChanged() ? userMdBody.value : userMdInitial.value;
         reviewChanges.value = [];
+        wizardComplete.value = true;
     } catch (err) {
         if (err instanceof ApiCallError) {
             errors.value = fieldErrorMap(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -392,6 +401,8 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 canSkip={step.kind === 'userMd'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
+                canFinish={reviewChanges.value.length > 0 || userMdChanged()}
+                completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => { void goTo(idx + 1); }}
                 onSkip={(): void => { userMdSkipped.value = true; void goTo(idx + 1); }}

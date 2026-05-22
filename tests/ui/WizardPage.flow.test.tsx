@@ -14,7 +14,7 @@ import { WizardPage } from '../../src/ui/pages/WizardPage.js';
 import {
     banner, diffLoading, errors, initialSettings, loaded, loadError, reviewChanges,
     saving, schema, settingsLastModified, stepIndex, userMdBody, userMdExists,
-    userMdInitial, userMdLoaded, userMdSkipped, values,
+    userMdInitial, userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 import { WIZARD_TOTAL_STEPS } from '../../src/ui/wizard/steps.js';
 
@@ -36,6 +36,7 @@ function resetSignals(): void {
     userMdLoaded.value = false;
     userMdSkipped.value = false;
     reviewChanges.value = [];
+    wizardComplete.value = false;
 }
 
 const SETTINGS_SCHEMA = {
@@ -115,6 +116,12 @@ describe('WizardPage flow', () => {
             const finishes = mock.calls.filter((c) => c.path === '/api/v1/wizard/finish' && c.method === 'POST');
             expect(finishes.length).toBe(1);
             expect(finishes[0]!.body).toMatchObject({ settings: expect.any(Object) });
+
+            // Post-finish UI contract: banner carries the close-window hint
+            // and the Finish button is gone (completed=true suppresses it).
+            expect(wizardComplete.value).toBe(true);
+            expect(banner.value?.message ?? '').toContain('You can close this browser window');
+            expect(() => getByRole('button', { name: /Finish/ })).toThrow();
         } finally {
             mock.restore();
         }
