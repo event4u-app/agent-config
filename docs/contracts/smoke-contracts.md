@@ -34,8 +34,8 @@ the paths touched in the PR:
 
 | Tier | Globs that trigger | Script |
 |---|---|---|
-| kernel | `.agent-src.uncompressed/rules/**`, `.agent-src/rules/**`, `router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
-| router | `router.json`, `.agent-src.uncompressed/rules/**`, `.agent-src.uncompressed/skills/**`, `docs/contracts/**`, `docs/guidelines/**` | `scripts/smoke/router.sh` |
+| kernel | `.agent-src.uncompressed/rules/**`, `.agent-src/rules/**`, `dist/router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
+| router | `dist/router.json`, `.agent-src.uncompressed/rules/**`, `.agent-src.uncompressed/skills/**`, `docs/contracts/**`, `docs/guidelines/**` | `scripts/smoke/router.sh` |
 | schema | `.agent-src.uncompressed/skills/**`, `.agent-src.uncompressed/rules/**`, `scripts/schemas/**`, `scripts/skill_linter.py`, `scripts/validate_frontmatter.py` | `scripts/smoke/schema.sh` |
 | skills | `.agent-src.uncompressed/skills/**` | `scripts/smoke/skills.sh` |
 
@@ -131,7 +131,7 @@ the final baseline line) for CI summary parsing.
 | Symptom | Likely cause | Fix |
 |---|---|---|
 | `kernel.sh` reports > 9 missing fences | Kernel rule lost its Iron Law block during edit | Restore the fence; update `EXEMPT_FROM_FENCE` only for new dispatch indexes |
-| `router.sh` reports > 0 broken pointers | `router.json` references an id without a rule file | Add the rule or remove the route — never edit the smoke baseline up |
+| `router.sh` reports > 0 broken pointers | `dist/router.json` references an id without a rule file | Add the rule or remove the route — never edit the smoke baseline up |
 | `schema.sh` reports FAILs | A skill / rule lost a required field | Restore via [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json) |
 | `skills.sh` 5/5 random sample fails | Hand-edit broke frontmatter or renamed directory without updating `name:` | Restore filename ↔ slug coupling |
 

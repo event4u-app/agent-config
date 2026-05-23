@@ -8,6 +8,7 @@
 
 import { signal } from '@preact/signals';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
+import type { UserIdentity } from '@shared/userMd/schema.js';
 import { WIZARD_TOTAL_STEPS } from './steps.js';
 
 export interface WizardServerState {
@@ -43,13 +44,39 @@ export const initialSettings = signal<Record<string, JsonValue>>({});
 export const settingsLastModified = signal<number>(0);
 export const errors = signal<Record<string, string>>({});
 
-export const userMdBody = signal<string>('');
-export const userMdInitial = signal<string>('');
+/**
+ * Parsed identity object — `null` until the wizard userMd step has loaded
+ * (or skipped) so the form-render branch knows the difference between
+ * "still fetching" and "empty file". Post-migration the wire/disk format
+ * is pure YAML; the signal carries the structured object, never the
+ * serialized text. See `docs/contracts/agent-user-schema.md`.
+ */
+export const userMdBody = signal<UserIdentity | null>(null);
+export const userMdInitial = signal<UserIdentity | null>(null);
 export const userMdExists = signal(false);
 export const userMdLoaded = signal(false);
 export const userMdSkipped = signal(false);
 
+/**
+ * Sidecar hints from `GET /api/v1/settings` — carries values that moved
+ * out of `settingsSchema` but still live in a pre-v2 file on disk. The
+ * wizard consumes these once, when `.agent-user.yml` does not yet exist,
+ * to pre-fill merged fields (e.g. legacy `personal.user_name` &rarr;
+ * `identity.name`). See `docs/contracts/settings-api.md`.
+ */
+export interface SettingsLegacyHints {
+    user_name?: string;
+}
+export const legacyHints = signal<SettingsLegacyHints>({});
+
 export const reviewChanges = signal<DiffChange[]>([]);
+
+/**
+ * Flipped to `true` once `/api/v1/wizard/finish` returns successfully (real
+ * commit or dry-run). The page chrome uses it to suppress the Finish button
+ * — there is nothing left to save — and the banner adds a close-window hint.
+ */
+export const wizardComplete = signal(false);
 
 export function startedAtNow(existing: string | null): string {
     return existing ?? new Date().toISOString();

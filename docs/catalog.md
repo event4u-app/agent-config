@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **491 public artefacts** shipped by
+Consumer-facing catalog of all **494 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -230,7 +230,7 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (71)
+## Rules (74)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -257,8 +257,10 @@ are excluded.
 | rule | [`domain-safety-pii`](../.agent-src/rules/domain-safety-pii.md) | auto | Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs |
 | rule | [`domain-safety-retention`](../.agent-src/rules/domain-safety-retention.md) | auto | Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry |
 | rule | [`downstream-changes`](../.agent-src/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
+| rule | [`engineering-safety-floor`](../.agent-src/rules/engineering-safety-floor.md) | auto | Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers |
 | rule | [`external-reference-deep-dive`](../.agent-src/rules/external-reference-deep-dive.md) | auto | User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
 | rule | [`fast-path-marker-visibility`](../.agent-src/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase |
+| rule | [`finance-safety-floor`](../.agent-src/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required |
 | rule | [`framework-neutrality-in-generic-skills`](../.agent-src/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers |
 | rule | [`git-history-discipline`](../.agent-src/rules/git-history-discipline.md) | auto | Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn |
 | rule | [`guidelines`](../.agent-src/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
@@ -295,6 +297,7 @@ are excluded.
 | rule | [`skill-improvement-trigger`](../.agent-src/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../.agent-src/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../.agent-src/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`strategy-safety-floor`](../.agent-src/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision |
 | rule | [`symfony-routing`](../.agent-src/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |
 | rule | [`think-before-action`](../.agent-src/rules/think-before-action.md) | auto | Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../.agent-src/rules/token-efficiency.md) | auto | Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |

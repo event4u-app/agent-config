@@ -30,12 +30,11 @@ export interface WizardStep {
 export const WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'identity',
-        title: 'Who is using the agent?',
-        navLabel: 'Identity',
-        subtitle: 'Name and IDE go into .agent-settings.yml so the agent addresses you and opens files in the right tool.',
+        title: 'Editor and tooling',
+        navLabel: 'Editor',
+        subtitle: 'IDE and rtk go into .agent-settings.yml so the agent opens files in the right tool. Your name lives in .agent-user.yml (later step).',
         kind: 'form',
         paths: [
-            'personal.user_name',
             'personal.ide',
             'personal.open_edited_files',
             'personal.rtk_installed',
@@ -94,16 +93,16 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     },
     {
         id: 'user-md',
-        title: 'Your .agent-user.md',
+        title: 'Your .agent-user.yml',
         navLabel: 'User profile',
-        subtitle: 'Long-form persona/preferences. Stored at the project root as-is. Skip to leave empty.',
+        subtitle: 'Identity, voice, preferences. Stored at agents/settings/.agent-user.yml. Skip to leave empty.',
         kind: 'userMd',
     },
     {
         id: 'review',
         title: 'Review & finish',
         navLabel: 'Review',
-        subtitle: 'These keys will change. Confirm to write .agent-settings.yml and .agent-user.md atomically.',
+        subtitle: 'These keys will change. Confirm to write .agent-settings.yml and .agent-user.yml atomically.',
         kind: 'review',
     },
 ] as const;

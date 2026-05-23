@@ -29,7 +29,7 @@ log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 # 1. kernel ids from router.json
 kernel_ids=$(python3 -c '
 import json
-d = json.load(open("router.json"))
+d = json.load(open("dist/router.json"))
 print("\n".join(d.get("kernel", [])))
 ')
 kernel_count=$(printf '%s\n' "$kernel_ids" | grep -c .)

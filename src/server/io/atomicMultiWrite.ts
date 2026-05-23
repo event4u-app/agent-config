@@ -105,12 +105,14 @@ export async function commitMulti(
         mode: p.mode ?? DEFAULT_MODE,
     }));
 
-    // Phase 1: write every tmp with fsync.
+    // Phase 1: write every tmp with fsync. Ensure parent dirs exist
+    // (payloads may target nested subdirs like `settings/.agent-user.yml`).
     for (let i = 0; i < payloads.length; i++) {
         const payload = payloads[i]!;
         const entry = entries[i]!;
         const { contents } = payload;
         const { tmp, mode } = entry;
+        await fs.mkdir(dirname(entry.target), { recursive: true });
         const handle = await fs.open(tmp, 'w', mode);
         try {
             const buf = typeof contents === 'string' ? Buffer.from(contents, 'utf8') : contents;

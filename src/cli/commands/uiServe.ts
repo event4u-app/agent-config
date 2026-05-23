@@ -84,13 +84,15 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
     }
 
     const port = opts.port ?? (await pickFreePort(DEFAULT_PORT_RANGE));
-    const { token, path: tokenPath } = mintToken();
-
     const dryRun = opts.dryRun === true;
+    const { token, path: tokenPath } = mintToken({ persist: !dryRun });
+
     if (dryRun) {
         logger.info('dry-run mode: no files will be written');
+        logger.info(`storage (suppressed in dry-run): ${mode} → ${writeRoot}`);
+    } else {
+        logger.info(`storage: ${mode} → ${writeRoot}`);
     }
-    logger.info(`storage: ${mode} → ${writeRoot}`);
     if (legacyReadRoot !== null) {
         logger.info(`legacy-read fallback: ${legacyReadRoot}`);
     }
@@ -117,7 +119,11 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         : '';
     const url = `http://127.0.0.1:${port}/?token=${token}${hash}`;
     logger.info(`agent-config UI on ${url}  (Ctrl-C to stop)`);
-    logger.info(`token file: ${tokenPath}`);
+    if (tokenPath !== null) {
+        logger.info(`token file: ${tokenPath}`);
+    } else {
+        logger.info('token file (suppressed in dry-run): in-memory only');
+    }
 
     if (opts.open !== false && !isHeadless()) {
         await openBrowser(url);

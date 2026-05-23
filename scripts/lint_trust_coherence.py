@@ -27,7 +27,7 @@ from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "dist" / "discovery" / "discovery-manifest.json"
-ROUTER = ROOT / "router.json"
+ROUTER = ROOT / "dist" / "router.json"
 COMPILED_SRC = ROOT / ".agent-src"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))

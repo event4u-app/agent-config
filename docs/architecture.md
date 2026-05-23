@@ -9,7 +9,7 @@ Six layers, ordered from "how the package reaches a consumer" down to "what a co
 ```
 Distribution         → npx-only runtime · install.sh · lockfile pin        ← stable
 Governance           → Kernel rules · tier-1/2 routing · command clusters  ← stable
-Router-Kernel        → router.json · always-loaded Iron Laws · char caps   ← stable
+Router-Kernel        → dist/router.json · always-loaded Iron Laws · char caps   ← stable
 Projection           → Source · augment / multi-tool / cloud bundles       ← stable
 Execution Contracts  → Skills · commands · work-engine · roadmap engine    ← stable / beta
 MCP Lite/Full        → Hosted read-only (Lite) · local stdio (Full)        ← experimental

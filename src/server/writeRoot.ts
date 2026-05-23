@@ -6,16 +6,21 @@
  * the current server invocation.
  *
  *   - Inside the `@event4u/agent-config` package (CWD's `package.json#name`
- *     matches): `<cwd>/agents/` — package-sandbox mode. Protects the
- *     maintainer's global config while iterating on the wizard itself.
+ *     matches): `<cwd>/agents/` — package-sandbox mode. The maintainer's
+ *     in-repo `.agent-settings.yml` (and `.agent-user.md`) at `<cwd>/` is
+ *     surfaced as `legacyReadRoot` so the wizard pre-populates from the
+ *     existing file; the next finish writes under `agents/` and the
+ *     wizard route deletes the legacy file (auto-migration, opt-in via
+ *     `setup` without `--dry-run`).
  *   - Anywhere else: `~/.event4u/agent-config/` — global mode. The wizard
- *     produces user-scope state, not project-scope.
+ *     produces user-scope state, not project-scope. CWD is also surfaced
+ *     as `legacyReadRoot` for consumer projects that already shipped a
+ *     local `.agent-settings.yml` from an earlier release.
  *
- * Legacy-read-fallback: in global mode the CWD is also returned as
- * `legacyReadRoot`. Read paths check `writeRoot` first; on ENOENT they
- * fall back to `legacyReadRoot` so a project that already has a local
- * `.agent-settings.yml` from a previous release keeps working. The next
- * write lands in `writeRoot`, silently migrating the file.
+ * Legacy-read-fallback semantics: reads check `writeRoot` first; on
+ * ENOENT they fall back to `legacyReadRoot`. Auto-delete of the legacy
+ * file happens only in the wizard finish handler after a successful
+ * 2PC commit (see `src/server/routes/wizard.ts`).
  */
 
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
@@ -29,8 +34,8 @@ export interface WriteRootResolution {
     writeRoot: string;
     /**
      * Absolute path that reads fall back to when `writeRoot` is missing
-     * a file. `null` when no fallback applies (package-sandbox mode, or
-     * the CWD coincides with `writeRoot`).
+     * a file. `null` when no fallback applies (CWD coincides with
+     * `writeRoot`, or explicit `override`).
      */
     legacyReadRoot: string | null;
     /** Which branch was taken — surfaced in the ping response for the UI. */
@@ -80,9 +85,14 @@ export function resolveWriteRoot(opts: ResolveOptions = {}): WriteRootResolution
         };
     }
     if (isInsidePackage(cwd)) {
+        const writeRoot = join(cwd, PACKAGE_SANDBOX_SUBDIR);
+        // Surface the repo root as legacy fallback so the wizard reads
+        // the maintainer's existing `<cwd>/.agent-settings.yml` and
+        // migrates it under `agents/` on finish. Auto-delete is gated
+        // by the finish handler — never the resolver.
         return {
-            writeRoot: join(cwd, PACKAGE_SANDBOX_SUBDIR),
-            legacyReadRoot: null,
+            writeRoot,
+            legacyReadRoot: cwd,
             mode: 'package-sandbox',
         };
     }

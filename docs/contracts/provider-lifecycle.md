@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-15
 
 > **Status:** active · **Stability:** beta · **Owner:** universal-platform-refinement Phase 3
 > · **Linter:** none (declarative contract; enforced agent-in-the-loop via [`provider-lifecycle-discipline`](../../.agent-src/rules/provider-lifecycle-discipline.md))
-> · **Source-of-truth template:** [`agents/.ai-video.xml.example`](../../agents/.ai-video.xml.example)
+> · **Source-of-truth template:** [`agents/templates/.ai-video.xml.example`](../../agents/templates/.ai-video.xml.example)
 
 Locks the lifecycle tagging used on every adapter under
 `scripts/ai-video/adapters/` (and future `scripts/ai-image/`,
@@ -42,7 +42,7 @@ the human noticing.
    surface (`submit / poll / fetch / dry-run` *or* `run / dry-run`)
    matches `scripts/ai-video/lib/adapter-contract.md` verbatim.
 
-A maintainer flipping the tier in `agents/.ai-video.xml.example`
+A maintainer flipping the tier in `agents/templates/.ai-video.xml.example`
 **and** the adapter header comment is the promotion event. There is
 no separate registry — the example file is the registry.
 
@@ -67,7 +67,7 @@ When the agent picks a provider for a `/video:*` / `/image:*` /
 
 1. **Read** the `provider_lifecycle` tag from the adapter's header
    comment **and** the matching `<provider id="…">` block in
-   `agents/.ai-video.xml.example` (or the operator's
+   `agents/templates/.ai-video.xml.example` (or the operator's
    `agents/.ai-video.xml`).
 2. **Refuse-and-surface** if the operator's resolved default is a
    non-`stable` tier — name the tier and the path to this contract
@@ -103,7 +103,7 @@ so the agent surfaces the tier and asks before proceeding — the
 human is the policy decision point.
 
 The `<default-image-provider>` and `<default-video-provider>`
-entries in `agents/.ai-video.xml.example` remain unchanged
+entries in `agents/templates/.ai-video.xml.example` remain unchanged
 (`openai-images` and `gemini-veo`). The tier tag does not change
 defaults; it changes whether the agent silently honours them.
 
@@ -118,5 +118,5 @@ snapshot — older snapshots live in git history, not in this file.
 
 - [`provider-lifecycle-discipline`](../../.agent-src/rules/provider-lifecycle-discipline.md) — the tier-2 routing rule that surfaces this contract when a provider is touched.
 - [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md) — the four-method shell contract every adapter implements.
-- [`agents/.ai-video.xml.example`](../../agents/.ai-video.xml.example) — operator-facing provider configuration template (carries the tier tag inline).
+- [`agents/templates/.ai-video.xml.example`](../../agents/templates/.ai-video.xml.example) — operator-facing provider configuration template (carries the tier tag inline).
 - [`agents/settings/policies/media/README.md`](../../agents/settings/policies/media/README.md) — the agent-in-the-loop enforcement model this contract participates in.

@@ -5,7 +5,8 @@
  * shares the SchemaForm primitive with SettingsPage so step bodies
  * stay declarative: each step picks a subset of schema paths and
  * renders only those fields. Final step calls `/api/v1/wizard/finish`
- * which dual-writes `.agent-settings.yml` + `.agent-user.md` via 2PC.
+ * which dual-writes `.agent-settings.yml` + `settings/.agent-user.yml`
+ * via 2PC.
  *
  * Step layout lives in `wizard/steps.ts`. Signal store is in
  * `wizard/state.ts`.
@@ -16,7 +17,9 @@ import { apiFetch, ApiCallError } from '../api.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
 import { UserMdForm } from '../forms/UserMdForm.js';
-import { bodyToForm, formToBody } from '@shared/userMd/formAdapter.js';
+import { defaultIdentity, mergeIdentity } from '@shared/userMd/formAdapter.js';
+import { parseUserIdentity } from '@shared/userMd/utils.js';
+import type { UserIdentity } from '@shared/userMd/schema.js';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import { WIZARD_STEPS, WIZARD_TOTAL_STEPS, stepAt } from '../wizard/steps.js';
 import { sliceSchema } from '../wizard/sliceSchema.js';
@@ -29,6 +32,7 @@ import {
     diffLoading,
     errors,
     initialSettings,
+    legacyHints,
     loaded,
     loadError,
     reviewChanges,
@@ -43,6 +47,8 @@ import {
     userMdLoaded,
     userMdSkipped,
     values,
+    wizardComplete,
+    type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
 
@@ -51,10 +57,11 @@ interface SettingsGetResponse {
     lastModified: number;
     path: string;
     schema: JsonSchemaLeaf | { definitions?: Record<string, JsonSchemaLeaf>; $ref?: string };
+    legacyHints?: SettingsLegacyHints;
 }
 
 interface UserMdGetResponse {
-    body: string;
+    identity: Record<string, unknown> | null;
     exists: boolean;
     lastModified: number | null;
 }
@@ -68,28 +75,60 @@ function unwrapSchema(raw: SettingsGetResponse['schema']): JsonSchemaLeaf {
     return raw as JsonSchemaLeaf;
 }
 
+/**
+ * Fetch `/api/v1/settings`, falling back to `/api/v1/schema` + empty values
+ * on the first-run NOT_FOUND. The wizard is the tool for creating
+ * `.agent-settings.yml`, so a missing file is the expected empty state, not
+ * an error — surfacing it as `loadError` would render the contradictory
+ * "Use the wizard to create it" banner inside the wizard itself.
+ */
+async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
+    try {
+        return await apiFetch<SettingsGetResponse>('/api/v1/settings');
+    } catch (err) {
+        if (
+            err instanceof ApiCallError
+            && err.status === 404
+            && err.body.error?.code === 'NOT_FOUND'
+        ) {
+            const schemaRes = await apiFetch<{ settings: JsonSchemaLeaf }>('/api/v1/schema');
+            return {
+                values: {},
+                lastModified: 0,
+                path: '.agent-settings.yml',
+                schema: schemaRes.settings,
+            };
+        }
+        throw err;
+    }
+}
+
 async function loadAll(): Promise<void> {
     loadError.value = null;
     try {
         const [serverState, settingsRes] = await Promise.all([
             apiFetch<WizardServerState>('/api/v1/wizard/state'),
-            apiFetch<SettingsGetResponse>('/api/v1/settings'),
+            fetchSettingsWithFallback(),
         ]);
         schema.value = unwrapSchema(settingsRes.schema);
         settingsLastModified.value = settingsRes.lastModified;
         initialSettings.value = settingsRes.values;
+        legacyHints.value = settingsRes.legacyHints ?? {};
         // Resume from server partial when present; otherwise seed from disk values.
         const partialKeys = Object.keys(serverState.partial ?? {});
         values.value = partialKeys.length > 0
             ? { ...settingsRes.values, ...serverState.partial }
             : settingsRes.values;
         stepIndex.value = clampStep(serverState.step);
+        // Reset on every (re-)load so a stale signal from a previous finish
+        // in the same module instance cannot suppress the Finish button.
+        wizardComplete.value = false;
         loaded.value = true;
         // Step-specific side-effects on initial load / resume. `goTo` fires
         // these on navigation, but a browser reload (or resume from server
         // partial) lands directly on the step without going through `goTo`,
         // so the userMd fetch / settings diff would otherwise never run and
-        // the step body would hang on "Loading .agent-user.md…" or render
+        // the step body would hang on "Loading .agent-user.yml…" or render
         // an empty review list.
         const resumed = stepAt(stepIndex.value);
         if (resumed.kind === 'userMd' || resumed.kind === 'review') {
@@ -107,20 +146,43 @@ async function loadAll(): Promise<void> {
     }
 }
 
+/**
+ * Seed `identity.name` from a legacy settings hint when the on-disk
+ * `.agent-user.yml` does not yet exist. The hint is consumed once — the
+ * server strips `personal.user_name` on the next PUT, so subsequent
+ * reads return no hint.
+ */
+function seedIdentityFromHint(current: UserIdentity, hint: string): UserIdentity {
+    if (current.identity.name.trim() !== '') return current;
+    return { ...current, identity: { ...current.identity, name: hint } };
+}
+
 async function loadUserMdOnce(): Promise<void> {
     if (userMdLoaded.value) return;
     try {
         const res = await apiFetch<UserMdGetResponse>('/api/v1/user-md');
-        userMdInitial.value = res.body;
-        userMdBody.value = res.body;
         userMdExists.value = res.exists;
-        if (!res.exists) {
+        if (res.exists && res.identity !== null) {
+            const merged = mergeIdentity(res.identity);
+            userMdInitial.value = merged;
+            userMdBody.value = merged;
+        } else {
+            let seed: UserIdentity;
             try {
                 const tpl = await apiFetch<{ body: string }>('/api/v1/user-md/template');
-                userMdBody.value = tpl.body;
+                seed = mergeIdentity(parseUserIdentity(tpl.body));
             } catch {
-                /* leave empty */
+                seed = defaultIdentity();
             }
+            const hint = legacyHints.value.user_name;
+            if (typeof hint === 'string' && hint.trim() !== '') {
+                seed = seedIdentityFromHint(seed, hint);
+            }
+            // Snapshot for change-detection — diff is against the
+            // pre-edit baseline (template + hint), so just landing on the
+            // step does not flag the file as "changed".
+            userMdInitial.value = seed;
+            userMdBody.value = seed;
         }
     } catch (err) {
         banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
@@ -172,22 +234,13 @@ async function refreshDiff(): Promise<void> {
 
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
-    return userMdBody.value !== userMdInitial.value;
-}
-
-function stripBodyPrefix(map: Record<string, string>): Record<string, string> {
-    // Server validates `{ body: <text> }` so Zod paths come back as
-    // `body.identity.name`. The form keys fields by the dotted
-    // frontmatter path without the wire wrapper. Bare `body` covers
-    // whole-document failures (size cap, raw YAML parse) — those have
-    // no specific field target, so leave them to the top-level banner.
-    const out: Record<string, string> = {};
-    for (const [key, msg] of Object.entries(map)) {
-        if (key.startsWith('body.')) {
-            out[key.slice('body.'.length)] = msg;
-        }
+    if (userMdBody.value === null || userMdInitial.value === null) {
+        return userMdBody.value !== userMdInitial.value;
     }
-    return out;
+    // Structural diff via stringify — keys land in insertion order from
+    // `mergeIdentity` so the comparison is stable. Cheap enough for a
+    // ~10-field object and avoids pulling a deep-equal helper.
+    return JSON.stringify(userMdBody.value) !== JSON.stringify(userMdInitial.value);
 }
 
 async function goTo(nextIndex: number): Promise<void> {
@@ -207,20 +260,28 @@ async function goTo(nextIndex: number): Promise<void> {
 interface FinishResponse {
     writtenPaths?: string[];
     txnId?: string;
+    migratedFrom?: string[];
     ok?: boolean;
     dryRun?: boolean;
-    preview?: { settingsYaml: string; userMd: string | null };
+    preview?: {
+        settingsYaml: string;
+        identity: UserIdentity | null;
+        userIdentityYaml: string | null;
+    };
 }
 
 async function finish(): Promise<void> {
     saving.value = true;
     banner.value = null;
     try {
-        const body: { settings: Record<string, JsonValue>; userMd?: string } = {
+        const body: { settings: Record<string, JsonValue>; identity?: UserIdentity } = {
             settings: values.value,
         };
-        if (userMdChanged()) {
-            body.userMd = userMdBody.value;
+        // Send the identity object only when the user actually edited or
+        // created it. Skipped / untouched → omit so the server leaves any
+        // existing `.agent-user.yml` alone.
+        if (userMdChanged() && userMdBody.value !== null) {
+            body.identity = userMdBody.value;
         }
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
@@ -229,12 +290,18 @@ async function finish(): Promise<void> {
         // Server returns either { writtenPaths, txnId } on a real commit
         // or { ok, dryRun, preview } when started with --dry-run. The
         // dry-run shape carries no writtenPaths, so guard the join.
+        // Append a close-window hint on every success branch so the user
+        // knows the wizard has nothing left to do. The Finish button stays
+        // visible but is disabled (canFinish=false because reviewChanges
+        // is cleared and userMdInitial is realigned below) and re-enables
+        // automatically once a new edit makes canFinish true again.
+        const closeHint = 'You can close this browser window now.';
         if (res.dryRun === true) {
-            banner.value = { message: 'Dry-run complete — no files written. Settings would be saved.', tone: 'success' };
+            banner.value = { message: `Dry-run complete — no files written. Settings would be saved. ${closeHint}`, tone: 'success' };
         } else if (Array.isArray(res.writtenPaths)) {
-            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`, tone: 'success' };
+            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete. ${closeHint}`, tone: 'success' };
         } else {
-            banner.value = { message: 'Wizard complete.', tone: 'success' };
+            banner.value = { message: `Wizard complete. ${closeHint}`, tone: 'success' };
         }
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(WIZARD_TOTAL_STEPS - 1);
@@ -243,6 +310,7 @@ async function finish(): Promise<void> {
         initialSettings.value = values.value;
         userMdInitial.value = userMdChanged() ? userMdBody.value : userMdInitial.value;
         reviewChanges.value = [];
+        wizardComplete.value = true;
     } catch (err) {
         if (err instanceof ApiCallError) {
             errors.value = fieldErrorMap(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -269,17 +337,19 @@ function StepBody(): preact.JSX.Element | null {
         );
     }
     if (step.kind === 'userMd') {
-        if (!userMdLoaded.value) return <p>Loading .agent-user.md…</p>;
-        // Server validates `{ body: <text> }`, so Zod paths come back as
-        // `body.identity.name` etc. The form keys fields by the dotted
-        // frontmatter path without the wire-level wrapper — strip it
-        // here so navigating back surfaces field-level errors.
+        if (!userMdLoaded.value || userMdBody.value === null) {
+            return <p>Loading .agent-user.yml…</p>;
+        }
+        // Server validates `body.identity` against `userIdentitySchema`,
+        // so Zod paths come back as `identity.name`, `style.formality`,
+        // … with no wire-level wrapper to strip — they bind 1:1 to the
+        // form's field keys.
         return (
             <UserMdForm
-                value={bodyToForm(userMdBody.value)}
-                errors={stripBodyPrefix(errors.value)}
+                value={userMdBody.value}
+                errors={errors.value}
                 onChange={(next): void => {
-                    userMdBody.value = formToBody(next);
+                    userMdBody.value = next;
                     userMdSkipped.value = false;
                 }}
             />
@@ -341,6 +411,8 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 canSkip={step.kind === 'userMd'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
+                canFinish={reviewChanges.value.length > 0 || userMdChanged()}
+                completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => { void goTo(idx + 1); }}
                 onSkip={(): void => { userMdSkipped.value = true; void goTo(idx + 1); }}

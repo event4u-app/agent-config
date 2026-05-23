@@ -18,7 +18,7 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
 import type { Stats } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
@@ -51,10 +51,16 @@ export interface SettingsRouteOptions {
     dryRun?: boolean;
 }
 
-const SETTINGS_RELATIVE = '.agent-settings.yml';
+const SETTINGS_RELATIVE = join('settings', '.agent-settings.yml');
+/** Pre-typed-subdir flat-root location. Read as fallback for migration. */
+const LEGACY_FLAT_RELATIVE = '.agent-settings.yml';
 
 function settingsPath(root: string): string {
     return join(root, SETTINGS_RELATIVE);
+}
+
+function legacyFlatPath(root: string): string {
+    return join(root, LEGACY_FLAT_RELATIVE);
 }
 
 interface ReadState {
@@ -63,8 +69,31 @@ interface ReadState {
     mtimeMs: number;
 }
 
-async function readSettingsFrom(root: string): Promise<ReadState | null> {
-    const path = settingsPath(root);
+/**
+ * Hints carried out-of-band on GET responses so the wizard can pre-fill
+ * fields that have since moved out of the settings schema. The `user_name`
+ * key was retired from `personal.*` (now lives in `.agent-user.md` →
+ * `identity.name`); legacy files still carry it, and we surface the value
+ * here so a returning user does not have to retype their name when
+ * onboarding picks up a pre-v2 `.agent-settings.yml`.
+ */
+export interface SettingsLegacyHints {
+    user_name?: string;
+}
+
+function extractLegacyHints(values: Record<string, unknown>): SettingsLegacyHints {
+    const hints: SettingsLegacyHints = {};
+    const personal = values.personal;
+    if (personal !== null && typeof personal === 'object' && !Array.isArray(personal)) {
+        const userName = (personal as Record<string, unknown>).user_name;
+        if (typeof userName === 'string' && userName.trim() !== '') {
+            hints.user_name = userName;
+        }
+    }
+    return hints;
+}
+
+async function readYamlFile(path: string): Promise<ReadState | null> {
     let stat: Stats;
     let raw: string;
     try {
@@ -77,11 +106,18 @@ async function readSettingsFrom(root: string): Promise<ReadState | null> {
     return { raw, values, mtimeMs: Math.trunc(stat.mtimeMs) };
 }
 
+async function readSettingsFrom(root: string): Promise<ReadState | null> {
+    return readYamlFile(settingsPath(root));
+}
+
 /**
- * Read `.agent-settings.yml` from `writeRoot`, falling back to
- * `legacyReadRoot` on ENOENT. A hit on the fallback is what makes the
- * silent-migration story work: the next PUT writes to `writeRoot` and
- * the legacy file is no longer consulted.
+ * Read `.agent-settings.yml` from `writeRoot/settings/`, falling back to:
+ *   1. `writeRoot/.agent-settings.yml` (pre-typed-subdir flat-root).
+ *   2. `legacyReadRoot/settings/.agent-settings.yml`.
+ *   3. `legacyReadRoot/.agent-settings.yml`.
+ * A hit on any fallback is what makes the silent-migration story work:
+ * the next PUT writes to `writeRoot/settings/` and the legacy file is
+ * no longer consulted (and is deleted by the wizard 2PC finish).
  */
 async function readSettings(
     writeRoot: string,
@@ -89,8 +125,12 @@ async function readSettings(
 ): Promise<ReadState | null> {
     const primary = await readSettingsFrom(writeRoot);
     if (primary !== null) return primary;
+    const flatInSandbox = await readYamlFile(legacyFlatPath(writeRoot));
+    if (flatInSandbox !== null) return flatInSandbox;
     if (legacyReadRoot && legacyReadRoot !== writeRoot) {
-        return readSettingsFrom(legacyReadRoot);
+        const legacyTyped = await readSettingsFrom(legacyReadRoot);
+        if (legacyTyped !== null) return legacyTyped;
+        return readYamlFile(legacyFlatPath(legacyReadRoot));
     }
     return null;
 }
@@ -114,11 +154,13 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                     return reply;
                 }
+                const legacyHints = extractLegacyHints(state.values);
                 return {
                     values: state.values,
                     lastModified: state.mtimeMs,
                     path: SETTINGS_RELATIVE,
                     schema: SETTINGS_JSON_SCHEMA,
+                    legacyHints,
                 };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'YAML parse failed';
@@ -192,6 +234,7 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                     };
                 }
                 const path = settingsPath(opts.writeRoot);
+                await fs.mkdir(dirname(path), { recursive: true, mode: 0o700 });
                 await writeAtomic(path, merged, { mode: 0o600 });
                 const stat = await fs.stat(path);
                 return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [SETTINGS_RELATIVE] };

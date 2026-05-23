@@ -1,98 +1,96 @@
 /**
- * Tests for `userMdSchema` and `frontmatterSchema`.
+ * Tests for `userIdentitySchema` in `@shared/userMd/schema`.
  *
- * Council CRITICAL (2026-05-18): the schema must use the SAME parser the
- * agent uses on `.agent-user.md` so the wizard cannot write a file the
- * agent then refuses to load.
+ * The schema is the single source of truth shared by the Fastify server
+ * (request validation, wizard finish) and the Vite-bundled UI (form
+ * validation). It validates a pure YAML object — there is no fenced
+ * frontmatter wrapper, no string body, no markdown round-trip.
  *
- * A4 (2026-05-19): tightened to the v1 contract
- * (`docs/contracts/agent-user-schema.md`). Plain markdown without
- * frontmatter is rejected; every required field must be present.
+ * Contract reference: `docs/contracts/agent-user-schema.md`.
  */
 import { describe, expect, it } from 'vitest';
 import {
-    SEED_ROLE_IDS,
-    USER_MD_MAX_CHARS,
-    frontmatterSchema,
-    userMdSchema,
+    USER_IDENTITY_NOTES_MAX_CHARS,
+    USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS,
+    userIdentitySchema,
 } from '@shared/userMd/schema.js';
 
-/** v1-valid frontmatter — every required field present per contract. */
-function validBody(over: Partial<{ identity: string; role: string; style: string; voice: string; lastUpdated: string }> = {}): string {
-    const identity = over.identity ?? '  name: "Matze"';
-    const role = over.role ?? '  - founder';
-    const style = over.style ?? '  formality: "informal"\n  pace: "pragmatic"';
-    const voice = over.voice ?? 'Mach das einfach.';
-    const lastUpdated = over.lastUpdated ?? '2026-05-19';
-    return [
-        '---',
-        'version: 1',
-        'identity:',
-        identity,
-        'language: "de"',
-        'role:',
-        role,
-        'style:',
-        style,
-        'voice_sample: |',
-        `  ${voice}`,
-        `last_updated: "${lastUpdated}"`,
-        '---',
-        '',
-        '# Notes',
-        'body.',
-        '',
-    ].join('\n');
+/** Fully-populated identity object — every required field present. */
+function validIdentity(over: Partial<{
+    version: 1;
+    identity: { name: string };
+    language: string;
+    role: string[];
+    style: { formality: 'informal' | 'formal'; pace: 'rapid' | 'pragmatic' | 'thorough' };
+    voice_sample: string;
+    last_updated: string;
+    notes: string;
+}> = {}): Record<string, unknown> {
+    return {
+        version: 1,
+        identity: { name: 'Matze' },
+        language: 'de',
+        role: ['founder'],
+        style: { formality: 'informal', pace: 'pragmatic' },
+        voice_sample: 'Mach das einfach.',
+        last_updated: '2026-05-19',
+        ...over,
+    };
 }
 
-describe('userMdSchema — strict v1 contract', () => {
-    it('accepts a fully-populated v1 frontmatter', () => {
-        const result = userMdSchema.safeParse({ body: validBody() });
+describe('userIdentitySchema — strict v1 contract', () => {
+    it('accepts a fully-populated identity object', () => {
+        const result = userIdentitySchema.safeParse(validIdentity());
         expect(result.success).toBe(true);
     });
 
-    it('rejects plain markdown without frontmatter', () => {
-        const result = userMdSchema.safeParse({ body: '# Hello\n\nplain markdown body.' });
-        expect(result.success).toBe(false);
-        if (!result.success) {
-            const messages = result.error.issues.map((i) => i.message).join(' | ');
-            expect(messages).toMatch(/version|identity\.name|role|voice_sample/);
-        }
-    });
-
-    it('accepts a body exactly at the 8 000-char cap', () => {
-        // Pad the Notes section so the body lands on the cap while still
-        // carrying valid frontmatter.
-        const base = validBody();
-        const padded = base + 'x'.repeat(USER_MD_MAX_CHARS - base.length);
-        const result = userMdSchema.safeParse({ body: padded });
+    it('accepts an identity with optional notes block', () => {
+        const result = userIdentitySchema.safeParse(validIdentity({ notes: 'extra context.' }));
         expect(result.success).toBe(true);
     });
 
-    it('rejects a body over the 8 000-char cap', () => {
-        const body = 'a'.repeat(USER_MD_MAX_CHARS + 1);
-        const result = userMdSchema.safeParse({ body });
-        expect(result.success).toBe(false);
-        if (!result.success) {
-            const messages = result.error.issues.map((i) => i.message);
-            expect(messages.some((m) => m.includes('8000'))).toBe(true);
-        }
+    it('accepts notes exactly at the hard cap', () => {
+        const notes = 'x'.repeat(USER_IDENTITY_NOTES_MAX_CHARS);
+        const result = userIdentitySchema.safeParse(validIdentity({ notes }));
+        expect(result.success).toBe(true);
     });
 
-    it('rejects malformed YAML frontmatter with a parser-derived message', () => {
-        const body = '---\nname: Matze\nrole: : :\n---\n\nbody.';
-        const result = userMdSchema.safeParse({ body });
+    it('rejects notes over the hard cap', () => {
+        const notes = 'x'.repeat(USER_IDENTITY_NOTES_MAX_CHARS + 1);
+        const result = userIdentitySchema.safeParse(validIdentity({ notes }));
         expect(result.success).toBe(false);
         if (!result.success) {
             const messages = result.error.issues.map((i) => i.message).join(' | ');
-            expect(messages).toMatch(/frontmatter invalid/);
+            expect(messages).toMatch(/notes/);
+        }
+    });
+
+    it('rejects voice_sample over the hard cap', () => {
+        const voiceSample = 'x'.repeat(USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS + 1);
+        const result = userIdentitySchema.safeParse(validIdentity({ voice_sample: voiceSample }));
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            const messages = result.error.issues.map((i) => i.message).join(' | ');
+            expect(messages).toMatch(/voice_sample/);
         }
     });
 });
 
-describe('frontmatterSchema — required fields', () => {
+describe('userIdentitySchema — required-field enforcement', () => {
+    it('rejects missing version', () => {
+        const obj = validIdentity();
+        delete (obj as Record<string, unknown>).version;
+        const result = userIdentitySchema.safeParse(obj);
+        expect(result.success).toBe(false);
+    });
+
+    it('rejects non-literal version (must be 1)', () => {
+        const result = userIdentitySchema.safeParse(validIdentity({ version: 2 as unknown as 1 }));
+        expect(result.success).toBe(false);
+    });
+
     it('rejects missing identity.name', () => {
-        const result = userMdSchema.safeParse({ body: validBody({ identity: '  nickname: "Matze"' }) });
+        const result = userIdentitySchema.safeParse(validIdentity({ identity: { name: '' } }));
         expect(result.success).toBe(false);
         if (!result.success) {
             const paths = result.error.issues.map((i) => i.path.join('.'));
@@ -101,66 +99,53 @@ describe('frontmatterSchema — required fields', () => {
     });
 
     it('rejects empty role list', () => {
-        const result = userMdSchema.safeParse({ body: validBody({ role: '  []' }).replace(/role:\n  \[\]/, 'role: []') });
-        expect(result.success).toBe(false);
-    });
-
-    it('rejects invalid style.formality enum', () => {
-        const result = userMdSchema.safeParse({
-            body: validBody({ style: '  formality: "casual"\n  pace: "pragmatic"' }),
-        });
+        const result = userIdentitySchema.safeParse(validIdentity({ role: [] }));
         expect(result.success).toBe(false);
         if (!result.success) {
             const messages = result.error.issues.map((i) => i.message).join(' | ');
-            expect(messages).toMatch(/formality/);
+            expect(messages).toMatch(/role/);
+        }
+    });
+
+    it('accepts free-form role entries (forward-compat per contract)', () => {
+        const result = userIdentitySchema.safeParse(
+            validIdentity({ role: ['inventor', 'archivist'] }),
+        );
+        expect(result.success).toBe(true);
+    });
+
+    it('rejects invalid style.formality enum', () => {
+        const result = userIdentitySchema.safeParse(
+            validIdentity({
+                style: { formality: 'casual' as 'informal', pace: 'pragmatic' },
+            }),
+        );
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            const paths = result.error.issues.map((i) => i.path.join('.'));
+            expect(paths.some((p) => p.includes('style.formality'))).toBe(true);
         }
     });
 
     it('rejects invalid style.pace enum', () => {
-        const result = userMdSchema.safeParse({
-            body: validBody({ style: '  formality: "informal"\n  pace: "zen"' }),
-        });
+        const result = userIdentitySchema.safeParse(
+            validIdentity({
+                style: { formality: 'informal', pace: 'zen' as 'pragmatic' },
+            }),
+        );
         expect(result.success).toBe(false);
         if (!result.success) {
-            const messages = result.error.issues.map((i) => i.message).join(' | ');
-            expect(messages).toMatch(/pace/);
+            const paths = result.error.issues.map((i) => i.path.join('.'));
+            expect(paths.some((p) => p.includes('style.pace'))).toBe(true);
         }
     });
 
     it('rejects malformed last_updated (non-ISO)', () => {
-        const result = userMdSchema.safeParse({ body: validBody({ lastUpdated: '19.05.2026' }) });
+        const result = userIdentitySchema.safeParse(validIdentity({ last_updated: '19.05.2026' }));
         expect(result.success).toBe(false);
         if (!result.success) {
             const messages = result.error.issues.map((i) => i.message).join(' | ');
             expect(messages).toMatch(/last_updated/);
         }
-    });
-
-    it('accepts seeded role enum values directly via frontmatterSchema', () => {
-        for (const role of SEED_ROLE_IDS) {
-            const result = frontmatterSchema.safeParse({
-                version: 1,
-                identity: { name: 'Matze' },
-                language: 'de',
-                role: [role],
-                style: { formality: 'informal', pace: 'pragmatic' },
-                voice_sample: 'sample',
-                last_updated: '2026-05-19',
-            });
-            expect(result.success).toBe(true);
-        }
-    });
-
-    it('accepts free-form role entries (forward-compat per contract)', () => {
-        const result = frontmatterSchema.safeParse({
-            version: 1,
-            identity: { name: 'Matze' },
-            language: 'de',
-            role: ['inventor', 'archivist'],
-            style: { formality: 'informal', pace: 'pragmatic' },
-            voice_sample: 'sample',
-            last_updated: '2026-05-19',
-        });
-        expect(result.success).toBe(true);
     });
 });

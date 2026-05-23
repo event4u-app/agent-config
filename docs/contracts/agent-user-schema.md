@@ -23,8 +23,7 @@ explicit `accept` step.
 ---
 version: 1
 identity:
-  name: "Mathias"          # required — full name or how the user wants to be addressed
-  nickname: "Matze"        # optional — preferred shorthand (used by default in chat)
+  name: "Matze"            # required — how the user wants to be addressed (full name or shorthand)
 language: "de"             # required — BCP-47-ish primary language ("de", "en", "fr", ...)
 role:                      # required — unordered list of role labels; ≥ 1 entry
   - founder
@@ -55,8 +54,7 @@ enforced by `/agents user accept` and `/agents user update`.
 | Field | Required | Purpose |
 |---|---|---|
 | `version` | yes | Schema version. v1 is the only valid value today. |
-| `identity.name` | yes | Default address form. |
-| `identity.nickname` | no | Preferred shorthand — agent uses this by default in chat replies when set. |
+| `identity.name` | yes | How the agent addresses the user (full name or shorthand — user's choice). |
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
 | `role` | yes | Unordered list of role labels (≥ 1). Drives reviewer-voice selection and persona pairing. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted. |
 | `style.formality` | yes | `informal` (Du / first-name) or `formal` (Sie / full name). |
@@ -86,11 +84,10 @@ Host agents read `.agent-user.md` at session start, in this priority
 order:
 
 1. `.agent-user.md` at project root (this contract).
-2. `personal.user_name` in `.agent-settings.yml` (legacy fallback).
-3. Nothing — agent uses generic address forms.
+2. Nothing — agent uses generic address forms.
 
-The host agent surfaces the user's `identity.nickname` (or `name` if
-unset) on first reply when the file is present.
+The host agent surfaces the user's `identity.name` on first reply
+when the file is present.
 
 ## Determinism floor
 
@@ -143,7 +140,7 @@ Each line is a single JSON object:
 {"ts":"2026-05-15T10:23:00Z","field":"style.pace","suggest":"rapid","source":"chat","evidence":"user said 'mach kürzer' 3× this session"}
 ```
 
-Allowed `field` values mirror the schema (`identity.nickname`,
+Allowed `field` values mirror the schema (`identity.name`,
 `language`, `role`, `style.formality`, `style.pace`, `voice_sample`,
 `notes`). Anything outside that set is dropped on read.
 

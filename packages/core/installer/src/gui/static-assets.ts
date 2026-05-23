@@ -34,6 +34,16 @@ const INDEX_HTML = `<!doctype html>
   <p class="sub">Browser Wizard</p>
 </header>
 <main>
+  <div id="recovery-banner" class="recovery" role="alert" hidden>
+    <div class="recovery-text">
+      <strong>Unfinished install detected.</strong>
+      <span id="recovery-summary"></span>
+    </div>
+    <div class="actions">
+      <button type="button" id="btn-recovery-rollback" class="primary">Roll back</button>
+      <button type="button" id="btn-recovery-discard" class="ghost">Discard log</button>
+    </div>
+  </div>
   <nav class="steps" aria-label="Steps">
     <ol>
       <li data-step="workspaces" class="active">1. Workspaces</li>
@@ -69,8 +79,19 @@ const INDEX_HTML = `<!doctype html>
       <progress id="progress-bar" value="0" max="100"></progress>
       <pre id="progress-log" class="log" aria-live="polite"></pre>
     </div>
+    <div id="apply-success" class="success" hidden>
+      <h3>Install complete</h3>
+      <p class="hint"><span id="success-files"></span> files written · lockfile <code id="success-sha"></code></p>
+      <p class="hint" id="success-path-hint" hidden>Lockfile: <code id="success-path"></code></p>
+      <div class="actions">
+        <button type="button" id="btn-open-lockfile" class="ghost">Open lockfile</button>
+      </div>
+    </div>
   </section>
-  <div id="error-banner" class="error" role="alert" hidden></div>
+  <div id="error-banner" class="error" role="alert" hidden>
+    <span id="error-message"></span>
+    <button type="button" id="btn-retry" class="ghost" hidden>Retry</button>
+  </div>
 </main>
 <footer>
   <p>Local-only · 127.0.0.1 · No telemetry</p>
@@ -125,7 +146,15 @@ progress{width:100%;height:8px}
 .log{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:8px;max-height:240px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;color:#7d8590;white-space:pre-wrap}
 .log .ok{color:#3fb950}
 .log .err{color:#f85149}
-.error{margin-top:16px;padding:12px 16px;background:#3c1414;border:1px solid #f85149;border-radius:6px;color:#ffa198}`;
+.error{margin-top:16px;padding:12px 16px;background:#3c1414;border:1px solid #f85149;border-radius:6px;color:#ffa198;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.error button{flex-shrink:0}
+.success{margin-top:16px;padding:16px;background:#0f2c19;border:1px solid #238636;border-radius:8px;color:#aff5b4}
+.success h3{margin:0 0 8px;font-size:14px;color:#3fb950;text-transform:uppercase;letter-spacing:.05em}
+.success code{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;background:#0d1117;padding:2px 6px;border-radius:4px;color:#e6edf3}
+.recovery{margin-bottom:16px;padding:12px 16px;background:#3d2c0d;border:1px solid #9e6a03;border-radius:8px;color:#f0c674;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.recovery .recovery-text{flex:1;min-width:240px}
+.recovery .recovery-text strong{display:block;margin-bottom:4px;color:#fff}
+.recovery .actions{margin-top:0;gap:8px}`;
 
 
 const APP_JS = `(function(){
@@ -144,11 +173,40 @@ function escapeHtml(s){
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 }
-function setError(msg){
+function setError(msg, opts){
   var b = $("error-banner");
-  if (!msg) { b.hidden = true; b.textContent = ""; return; }
+  var m = $("error-message");
+  var r = $("btn-retry");
+  if (!msg) { b.hidden = true; m.textContent = ""; r.hidden = true; return; }
   b.hidden = false;
-  b.textContent = msg;
+  m.textContent = msg;
+  r.hidden = !(opts && opts.retry);
+}
+function showSuccess(filesWritten, sha){
+  var s = $("apply-success");
+  $("success-files").textContent = String(filesWritten);
+  $("success-sha").textContent = (sha || "").slice(0, 12) + "…";
+  s.hidden = false;
+}
+async function openLockfile(){
+  setError("");
+  try {
+    var res = await fetch("/api/open-lockfile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csrf: csrf }),
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if (!res.ok) { setError("Open failed: " + (body.error || res.status)); return; }
+    if (body.ok === false) {
+      var hint = $("success-path-hint");
+      $("success-path").textContent = body.path || "";
+      hint.hidden = false;
+      setError("Could not launch editor (" + (body.reason || "unknown") + "). Path shown above.");
+    }
+  } catch (e) {
+    setError("Open failed: " + e.message);
+  }
 }
 function setScreen(name){
   activeScreen = name;
@@ -170,6 +228,7 @@ function setScreen(name){
 
 async function bootstrap(){
   try {
+    await checkRecovery();
     var mRes = await fetch("/api/manifest", { headers: { "Accept": "application/json" } });
     if (!mRes.ok) throw new Error("manifest_http_" + mRes.status);
     var mJson = await mRes.json();
@@ -182,6 +241,38 @@ async function bootstrap(){
     renderWorkspaces();
   } catch (e) {
     setError("Failed to load: " + e.message);
+  }
+}
+
+async function checkRecovery(){
+  try {
+    var res = await fetch("/api/recovery", { headers: { "Accept": "application/json" } });
+    if (!res.ok) return;
+    var body = await res.json();
+    if (!body.open) return;
+    var n = (body.plannedPaths || []).length;
+    $("recovery-summary").textContent = " " + n + " planned path(s) recorded in " + (body.logPath || "the log") + ".";
+    $("recovery-banner").hidden = false;
+  } catch (e) { /* recovery is best-effort */ }
+}
+
+async function recoveryAction(endpoint){
+  var btnA = $("btn-recovery-rollback");
+  var btnB = $("btn-recovery-discard");
+  btnA.disabled = true; btnB.disabled = true;
+  try {
+    var res = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ csrf: csrf }),
+    });
+    var body = await res.json().catch(function(){ return {}; });
+    if (!res.ok) { setError("Recovery failed: " + (body.error || res.status)); return; }
+    $("recovery-banner").hidden = true;
+  } catch (e) {
+    setError("Recovery failed: " + e.message);
+  } finally {
+    btnA.disabled = false; btnB.disabled = false;
   }
 }
 
@@ -398,6 +489,8 @@ async function applyChanges(){
   $("btn-apply").disabled = true;
   $("btn-back-packs").disabled = true;
   $("apply-progress").hidden = false;
+  $("apply-success").hidden = true;
+  setError("");
   var logEl = $("progress-log");
   var bar = $("progress-bar");
   logEl.textContent = "";
@@ -410,13 +503,13 @@ async function applyChanges(){
     });
     if (!res.ok || !res.body) {
       var text = await res.text().catch(function(){ return String(res.status); });
-      setError("Apply failed: " + text);
+      setError("Apply failed: " + text, { retry: true });
       $("btn-back-packs").disabled = false;
       return;
     }
     await consumeSse(res.body, function(event){ handleApplyEvent(event, logEl, bar); });
   } catch (e) {
-    setError("Apply failed: " + e.message);
+    setError("Apply failed: " + e.message, { retry: true });
     $("btn-back-packs").disabled = false;
   }
 }
@@ -450,9 +543,10 @@ function handleApplyEvent(event, logEl, bar){
   } else if (event.type === "done"){
     bar.value = 100;
     appendLog(logEl, "done — " + event.filesWritten + " files (" + (event.lockfileSha256 || "").slice(0, 12) + "…)", "ok");
+    showSuccess(event.filesWritten, event.lockfileSha256);
   } else if (event.type === "error"){
     appendLog(logEl, "error " + event.message, "err");
-    setError(event.message);
+    setError(event.message, { retry: true });
     $("btn-back-packs").disabled = false;
   }
 }
@@ -474,8 +568,12 @@ function wireEvents(){
   });
   $("btn-back-workspaces").addEventListener("click", function(){ setScreen("workspaces"); });
   $("btn-to-apply").addEventListener("click", function(){ showApplySummary(); });
-  $("btn-back-packs").addEventListener("click", function(){ setScreen("packs"); $("apply-progress").hidden = true; $("btn-apply").disabled = false; });
+  $("btn-back-packs").addEventListener("click", function(){ setScreen("packs"); $("apply-progress").hidden = true; $("apply-success").hidden = true; $("btn-apply").disabled = false; });
   $("btn-apply").addEventListener("click", function(){ applyChanges(); });
+  $("btn-open-lockfile").addEventListener("click", function(){ openLockfile(); });
+  $("btn-retry").addEventListener("click", function(){ applyChanges(); });
+  $("btn-recovery-rollback").addEventListener("click", function(){ recoveryAction("/api/recovery/rollback"); });
+  $("btn-recovery-discard").addEventListener("click", function(){ recoveryAction("/api/recovery/discard"); });
 }
 
 document.addEventListener("DOMContentLoaded", function(){

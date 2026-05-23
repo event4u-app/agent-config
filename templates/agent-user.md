@@ -2,7 +2,6 @@
 version: 1
 identity:
     name: ""
-    nickname: ""
 language: "en"
 role:
     - ""

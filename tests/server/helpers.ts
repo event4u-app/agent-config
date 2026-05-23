@@ -31,10 +31,10 @@ export interface TestApp {
 export interface BootOptions {
     /** Per-test port (only used to compose the Host header — Fastify inject does not bind). */
     port: number;
-    /** Seed `.agent-settings.yml` with the package template (default: true). */
+    /** Seed `settings/.agent-settings.yml` with the package template (default: true). */
     seedSettings?: boolean;
-    /** Seed an existing `.agent-user.md` body (default: omitted). */
-    seedUserMd?: string;
+    /** Seed an existing `settings/.agent-user.yml` body (default: omitted). */
+    seedUserIdentity?: string;
     /** Replay pending 2PC commits at boot (default: false; the crash test flips this). */
     replay?: boolean;
     /** Boot in dry-run mode (every write returns a `preview` payload). */
@@ -51,12 +51,13 @@ export function settingsTemplate(): string {
 export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
     const projectRoot = mkdtempSync(join(tmpdir(), 'agent-config-test-'));
     mkdirSync(join(projectRoot, 'state'), { recursive: true });
+    mkdirSync(join(projectRoot, 'settings'), { recursive: true, mode: 0o700 });
 
     if (opts.seedSettings !== false) {
-        writeFileSync(join(projectRoot, '.agent-settings.yml'), settingsTemplate(), { mode: 0o600 });
+        writeFileSync(join(projectRoot, 'settings', '.agent-settings.yml'), settingsTemplate(), { mode: 0o600 });
     }
-    if (opts.seedUserMd !== undefined) {
-        writeFileSync(join(projectRoot, '.agent-user.md'), opts.seedUserMd, { mode: 0o600 });
+    if (opts.seedUserIdentity !== undefined) {
+        writeFileSync(join(projectRoot, 'settings', '.agent-user.yml'), opts.seedUserIdentity, { mode: 0o600 });
     }
 
     const uiDir = mkdtempSync(join(tmpdir(), 'agent-config-ui-'));
@@ -106,18 +107,42 @@ export function authHeaders(token: string, host: string): Record<string, string>
 }
 
 /**
- * Build a v1-valid `.agent-user.md` body. Mirrors the locked contract
+ * Build a v1-valid identity object matching `userIdentitySchema`. Mirrors
+ * the locked contract (`docs/contracts/agent-user-schema.md`) so any
+ * required-field tightening is felt by every wizard / dry-run / user-md
+ * test. Pass `overlay` to flip individual fields.
+ */
+export function fixtureUserIdentity(
+    overlay: { name?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+): Record<string, unknown> {
+    const obj: Record<string, unknown> = {
+        version: 1,
+        identity: { name: overlay.name ?? 'Matze' },
+        language: overlay.language ?? 'de',
+        role: overlay.role ?? ['founder'],
+        style: {
+            formality: overlay.formality ?? 'informal',
+            pace: overlay.pace ?? 'pragmatic',
+        },
+        voice_sample: overlay.voiceSample ?? 'Mach das einfach.',
+        last_updated: overlay.lastUpdated ?? '2026-05-19',
+    };
+    if (overlay.notes !== undefined) obj.notes = overlay.notes;
+    return obj;
+}
+
+/**
+ * Build a v1-valid legacy `.agent-user.md` body. Mirrors the locked contract
  * (`docs/contracts/agent-user-schema.md`) so any required-field tightening
- * in `userMdSchema` is felt by every wizard / dry-run / user-md test.
+ * in the legacy parser is felt by every wizard / migration test.
  *
  * Pass `overlay` to flip individual frontmatter fields; everything else
  * defaults to a sane Matze-shaped fixture.
  */
 export function fixtureUserMd(
-    overlay: { name?: string; nickname?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+    overlay: { name?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
 ): string {
     const name = overlay.name ?? 'Matze';
-    const nicknameLine = overlay.nickname ? `\n  nickname: "${overlay.nickname}"` : '';
     const language = overlay.language ?? 'de';
     const role = overlay.role ?? ['founder'];
     const formality = overlay.formality ?? 'informal';
@@ -130,7 +155,7 @@ export function fixtureUserMd(
         '---',
         'version: 1',
         'identity:',
-        `  name: "${name}"${nicknameLine}`,
+        `  name: "${name}"`,
         `language: "${language}"`,
         'role:',
         roleBlock,

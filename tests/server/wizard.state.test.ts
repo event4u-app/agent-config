@@ -11,7 +11,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootTestApp, authHeaders, fixtureSettings, fixtureUserMd, type TestApp } from './helpers.js';
+import { bootTestApp, authHeaders, fixtureSettings, fixtureUserIdentity, type TestApp } from './helpers.js';
 
 const PORT = 41605;
 
@@ -79,14 +79,14 @@ describe('wizard state + finish', () => {
         });
         expect(existsSync(join(ctx.projectRoot, 'state', 'wizard-state.json'))).toBe(true);
 
-        const userMdBody = fixtureUserMd();
+        const identity = fixtureUserIdentity();
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
                 settings: fixtureSettings({ cost_profile: 'minimal' }),
-                userMd: userMdBody,
+                identity,
             },
         });
         expect(res.statusCode).toBe(200);
@@ -94,15 +94,15 @@ describe('wizard state + finish', () => {
         expect(body.writtenPaths).toHaveLength(2);
         expect(body.txnId.length).toBeGreaterThan(0);
         // Both files exist and hold the expected scalars.
-        expect(readFileSync(join(ctx.projectRoot, '.agent-settings.yml'), 'utf8')).toMatch(/^cost_profile:\s*minimal\b/m);
-        expect(readFileSync(join(ctx.projectRoot, '.agent-user.md'), 'utf8')).toBe(userMdBody);
+        expect(readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8')).toMatch(/^cost_profile:\s*minimal\b/m);
+        expect(readFileSync(join(ctx.projectRoot, 'settings', '.agent-user.yml'), 'utf8')).toMatch(/name:\s*Matze/);
         // Marker cleaned up.
         expect(existsSync(join(ctx.projectRoot, 'state', `wizard-intent-${body.txnId}.json`))).toBe(false);
         // Wizard state file dropped on success.
         expect(existsSync(join(ctx.projectRoot, 'state', 'wizard-state.json'))).toBe(false);
     });
 
-    it('POST /finish accepts a settings-only payload (userMd omitted)', async () => {
+    it('POST /finish accepts a settings-only payload (identity omitted)', async () => {
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/wizard/finish',
@@ -112,7 +112,7 @@ describe('wizard state + finish', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as FinishBody;
         expect(body.writtenPaths).toHaveLength(1);
-        expect(existsSync(join(ctx.projectRoot, '.agent-user.md'))).toBe(false);
+        expect(existsSync(join(ctx.projectRoot, 'settings', '.agent-user.yml'))).toBe(false);
     });
 
     it('POST /finish returns 422 when settings fail schema validation', async () => {
@@ -128,14 +128,14 @@ describe('wizard state + finish', () => {
         expect(body.error.fields?.some((f) => f.path === 'cost_profile')).toBe(true);
     });
 
-    it('POST /finish returns 422 when userMd has malformed frontmatter', async () => {
+    it('POST /finish returns 422 when identity fails schema validation', async () => {
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
                 settings: fixtureSettings({ cost_profile: 'balanced' }),
-                userMd: `---\nversion: 1\nidentity:\n  name: "unclosed\n---\n\n# nope\n`,
+                identity: { ...fixtureUserIdentity(), identity: { name: '' } },
             },
         });
         expect(res.statusCode).toBe(422);

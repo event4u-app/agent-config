@@ -40,9 +40,6 @@ ALLOWED_FLAT_FILES: frozenset[str] = frozenset(
         # D1 anchor / progress dashboard — kept at root by the
         # roadmap-progress-sync rule so consumers see it first.
         "roadmaps-progress.md",
-        # Worked example for the ai-video pipeline. Stays adjacent to
-        # the agents/reference/ai-video/ dir as a reference template.
-        ".ai-video.xml.example",
         # Empty-tree sentinel so agents/ survives a fresh checkout
         # before any runtime artefact lands.
         ".gitkeep",

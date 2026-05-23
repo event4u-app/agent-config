@@ -83,8 +83,8 @@ whose body is fully covered by an existing architectural contract.
 ## Compiled output — `router.json`
 
 `scripts/compile_router.py` reads every rule frontmatter and emits
-`router.json` at the repo root, used by host agents at session start.
-Deterministic key order, sorted lists, stable across runs.
+`dist/router.json` (tracked in git), used by host agents at session
+start. Deterministic key order, sorted lists, stable across runs.
 
 ```json
 {
@@ -110,7 +110,7 @@ Generated alongside `marketplace.json` during `task generate-tools`.
 
 ## Activation semantics
 
-The host agent reads `router.json` once per session. Per turn:
+The host agent reads `dist/router.json` once per session. Per turn:
 
 1. Always evaluate kernel rules.
 2. If `profile = minimal` → stop after kernel.
@@ -151,4 +151,4 @@ start, the router lookup is keyword/phrase/path/intent matching only.
 - This file: schema specification.
 - `kernel-membership.md` § 4: kernel locked count + SHAs.
 - `rule-classification.md`: per-rule tier + disposition pre-Phase-4.
-- `router.json` (generated): runtime artifact, never hand-edited.
+- `dist/router.json` (generated): runtime artifact, never hand-edited.

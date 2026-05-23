@@ -23,7 +23,7 @@ describe('POST /api/v1/settings/diff', () => {
     afterEach(async () => { await ctx.cleanup(); });
 
     it('returns an empty change list when the candidate matches the current file', async () => {
-        const current = parseYaml(readFileSync(join(ctx.projectRoot, '.agent-settings.yml'), 'utf8'));
+        const current = parseYaml(readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8'));
         const res = await ctx.app.inject({
             method: 'POST',
             url: '/api/v1/settings/diff',

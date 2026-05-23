@@ -6,7 +6,7 @@
 
 ## Overall
 
-**0 / 26 steps done · 0%**
+**0 / 41 steps done · 0%**
 
 ```text
 ░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
@@ -16,21 +16,23 @@
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md) | 5 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md) | 7 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
 ## Per-roadmap phase breakdown
 
-### [monorepo-phase-6-browser-wizard-gui.md](roadmaps/monorepo-phase-6-browser-wizard-gui.md)
+### [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md)
 
-**Monorepo Phase 6 — Browser Wizard GUI (Optional)** — 0 / 26 done (0%)
+**Road to Global-Only Install** — 0 / 41 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Server skeleton | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 2 | Frontend (vanilla, no framework lock-in) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 3 | Apply flow | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 4 | Security & ergonomics | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
-| 5 | Distribution & docs | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Test harness + contract definition | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Unified Setup-Wizard (KI + Packs prepended) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
+| 2 | Settings live globally | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | `SCOPE_SUPPORT` flip + `--project` gating | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Consumer surface = `agents/overrides/` + bridge | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Migration tooling (legacy → global) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 6 | Docs, ADR, dev-mode survival | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 

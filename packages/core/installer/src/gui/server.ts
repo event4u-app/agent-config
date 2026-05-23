@@ -19,10 +19,11 @@ import type { AddressInfo } from 'node:net';
 import { platform } from 'node:os';
 import { loadManifest } from '../manifest-loader.js';
 import type { LoadedManifest } from '../manifest-loader.js';
-import { handleApi, type ApiContext } from './handlers.js';
-import { clearPidFile, inspectPidFile, writePidFile } from './pid-file.js';
+import { handleApi, type ApiContext, type RecoveryState } from './handlers.js';
+import { clearPidFile, lockPidFile } from './pid-file.js';
 import { CSP_HEADER, buildAllowedHosts, buildAllowedOrigins, generateCsrfToken, isHostAllowed, isOriginAllowed } from './security.js';
 import { serveStatic } from './static-assets.js';
+import { findOpenLog, plannedPaths, readLog } from './transaction-log.js';
 import type { GuiServerHandle, GuiServerOptions } from './types.js';
 
 const DEFAULT_IDLE_SECONDS = 600;
@@ -30,14 +31,6 @@ const DEFAULT_IDLE_SECONDS = 600;
 /** Boot a localhost HTTP server. Resolves once `listen()` succeeds. */
 export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerHandle> {
     const stdout = opts.stdout ?? process.stdout;
-
-    const pid = inspectPidFile(opts.projectRoot);
-    if (pid.conflict) {
-        throw new Error(
-            `GUI server already running (pid ${pid.conflictingPid ?? '?'}); ` +
-            `stop it or delete ${pid.path} before retrying.`,
-        );
-    }
 
     const loaded = loadManifest({
         searchFrom: opts.projectRoot,
@@ -49,16 +42,36 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
     let idleTimer: NodeJS.Timeout | undefined;
     let closed = false;
 
+    let recovery: RecoveryState | undefined = detectRecovery(opts.projectRoot);
+    if (recovery !== undefined) {
+        stdout.write(`Recovery: open transaction log detected at ${recovery.logPath} (${recovery.plannedPaths.length} planned paths).\n`);
+    }
+    const clearRecovery = (): void => { recovery = undefined; };
+
     const server: Server = createServer((req, res) => {
         resetIdle();
-        handleRequest(req, res, csrfToken, loaded, opts);
+        handleRequest(req, res, csrfToken, loaded, opts, () => recovery, clearRecovery);
     });
 
     await listen(server, opts.port ?? 0);
     const port = (server.address() as AddressInfo).port;
     const url = `http://127.0.0.1:${port}/`;
-    const pidFile = writePidFile(opts.projectRoot);
+    // Atomic lock — throws PidLockConflictError if another live server
+    // already owns this project root. Council Tier 2 § 6.
+    let pidFile: string;
+    try {
+        pidFile = lockPidFile(opts.projectRoot);
+    } catch (err) {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        throw err;
+    }
 
+    // Readiness contract — Python supervisor parses this line with
+    // `^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$`.
+    // Use explicit write + UTF-8 newline so PowerShell sees the same
+    // bytes as POSIX. Flush before the human-readable line so a slow
+    // pipe doesn't reorder them. Council Tier 1 § 1.
+    process.stdout.write(`WIZARD_READY url=${url}\n`);
     stdout.write(`GUI server listening on ${url} (csrf token issued, pid ${process.pid})\n`);
 
     function resetIdle(): void {
@@ -79,7 +92,13 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
         clearPidFile(opts.projectRoot);
     }
 
-    if (opts.noOpen !== true) {
+    // `AGENT_CONFIG_GUI_NO_OPEN=1` env overrides the flag — the Python
+    // installer supervisor sets this so the wizard parent owns the
+    // user-facing "open browser" decision (and the install.py prompt
+    // doesn't race the Node child for the URL).
+    const noOpenEnv = process.env['AGENT_CONFIG_GUI_NO_OPEN'];
+    const suppressOpen = opts.noOpen === true || (noOpenEnv !== undefined && noOpenEnv !== '' && noOpenEnv !== '0');
+    if (!suppressOpen) {
         try {
             (opts.openBrowser ?? defaultOpenBrowser)(url);
         } catch (err) {
@@ -112,6 +131,8 @@ function handleRequest(
     csrfToken: string,
     loaded: LoadedManifest,
     opts: GuiServerOptions,
+    getRecovery: () => RecoveryState | undefined,
+    clearRecovery: () => void,
 ): void {
     const port = (req.socket.localPort as number | null) ?? 0;
     const allowedHosts = buildAllowedHosts(port);
@@ -132,7 +153,13 @@ function handleRequest(
             res.end('forbidden: origin header not allowed');
             return;
         }
-        const ctx: ApiContext = { csrfToken, loaded, projectRoot: opts.projectRoot };
+        const ctx: ApiContext = {
+            csrfToken,
+            loaded,
+            projectRoot: opts.projectRoot,
+            recovery: getRecovery(),
+            clearRecovery,
+        };
         void handleApi(req, res, ctx);
         return;
     }
@@ -143,10 +170,27 @@ function handleRequest(
     }
 }
 
+/**
+ * Look for an unfinished install log under `agents/runtime/gui/`. If
+ * found, capture its path and the recorded planned paths so the SPA can
+ * render the recovery banner on next page load.
+ */
+function detectRecovery(projectRoot: string): RecoveryState | undefined {
+    const logPath = findOpenLog(projectRoot);
+    if (logPath === undefined) return undefined;
+    return { logPath, plannedPaths: plannedPaths(readLog(logPath)) };
+}
+
 function defaultOpenBrowser(url: string): void {
     // Stdlib-only: pick the OS opener and detach. Failure is non-fatal —
     // the caller already printed the URL so the user can copy it.
     const p = platform();
+    // Headless Linux (CI, SSH, container, devcontainer-without-display):
+    // `xdg-open` blocks or errors out without a display. Bail early so the
+    // caller's catch prints the URL fallback instead.
+    if (p !== 'darwin' && p !== 'win32' && !process.env['DISPLAY'] && !process.env['WAYLAND_DISPLAY']) {
+        throw new Error('headless environment: DISPLAY and WAYLAND_DISPLAY are unset');
+    }
     const cmd = p === 'darwin' ? 'open' : p === 'win32' ? 'cmd' : 'xdg-open';
     const args = p === 'win32' ? ['/c', 'start', '""', url] : [url];
     const child = spawn(cmd, args, { stdio: 'ignore', detached: true });

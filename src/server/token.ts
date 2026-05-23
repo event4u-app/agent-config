@@ -23,8 +23,24 @@ import { dirname, resolve } from 'node:path';
 export interface TokenFile {
     /** Token bytes, hex-encoded (64 chars / 32 bytes of entropy). */
     token: string;
-    /** Absolute path of the on-disk token file. */
-    path: string;
+    /**
+     * Absolute path of the on-disk token file, or `null` when minted
+     * with `{ persist: false }` (dry-run mode keeps the token in
+     * memory only — no `~/.event4u/agent-config/local-server.token`
+     * is created).
+     */
+    path: string | null;
+}
+
+export interface MintTokenOptions {
+    /**
+     * Persist the token to `~/.event4u/agent-config/local-server.token`
+     * with mode 0600. Defaults to `true`. Set to `false` for dry-run
+     * boots so the CLI's "no files will be written" promise holds
+     * end-to-end (see `agents/roadmaps/onboarding-wizard-takeover.md`
+     * § Dry-run state contract).
+     */
+    persist?: boolean;
 }
 
 function tokenDir(): string {
@@ -36,11 +52,18 @@ function tokenPath(): string {
 }
 
 /**
- * Generate a fresh token, persist it with mode 0600, return the
- * token string + on-disk path.
+ * Generate a fresh token. When `persist` is `true` (the default), the
+ * token is written to `~/.event4u/agent-config/local-server.token`
+ * with mode 0600 and `path` is the absolute on-disk location. When
+ * `persist` is `false`, the token is kept in memory only and `path`
+ * is `null`.
  */
-export function mintToken(): TokenFile {
+export function mintToken(opts: MintTokenOptions = {}): TokenFile {
     const token = randomBytes(32).toString('hex');
+    const persist = opts.persist !== false;
+    if (!persist) {
+        return { token, path: null };
+    }
     const dir = tokenDir();
     const path = tokenPath();
     mkdirSync(dir, { recursive: true, mode: 0o700 });

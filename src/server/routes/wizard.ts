@@ -21,7 +21,8 @@ import { promises as fs } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
-import { userMdSchema } from '../../shared/userMd/schema.js';
+import { userIdentitySchema } from '../../shared/userMd/schema.js';
+import { composeUserIdentity } from '../../shared/userMd/utils.js';
 import { mergeIntoTemplate } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
@@ -29,6 +30,20 @@ import { writeAtomic } from '../io/atomicWrite.js';
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
     writeRoot: string;
+    /**
+     * Legacy-read fallback root. When set and distinct from `writeRoot`,
+     * the finish handler deletes `<legacyReadRoot>/.agent-settings.yml`
+     * and `<legacyReadRoot>/.agent-user.md` after a successful 2PC
+     * commit — auto-migration so the maintainer's old in-repo files do
+     * not shadow the new sandbox writes. The finish handler also
+     * deletes legacy in-package-sandbox files at the flat
+     * `<writeRoot>/` root — `.agent-user.md` (superseded by
+     * `settings/.agent-user.yml`) and `.agent-settings.yml` (superseded
+     * by `settings/.agent-settings.yml`). Dry-run skips deletion.
+     * ENOENT is silent (idempotent on re-run). The list of removed
+     * paths is surfaced in the response as `migratedFrom`.
+     */
+    legacyReadRoot?: string | null;
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
     /**
@@ -43,8 +58,11 @@ export interface WizardRouteOptions {
 }
 
 const STATE_REL = join('state', 'wizard-state.json');
-const SETTINGS_REL = '.agent-settings.yml';
-const USER_MD_REL = '.agent-user.md';
+const SETTINGS_REL = join('settings', '.agent-settings.yml');
+const USER_IDENTITY_REL = join('settings', '.agent-user.yml');
+/** Legacy flat-root files — read for migration, deleted on successful finish. */
+const LEGACY_USER_MD_REL = '.agent-user.md';
+const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
 // and the chat-side `~/.claude/skills/onboard/SKILL.md`. Bump in lockstep.
 const DEFAULT_TOTAL_STEPS = 7;
@@ -87,9 +105,46 @@ function zodIssuesToFields(issues: z.ZodIssue[]): Array<{ path: string; message:
     return issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
 }
 
+/**
+ * Delete legacy artefacts once the new files are safely committed under
+ * `writeRoot`. Covers two legacy locations:
+ *   - `<legacyReadRoot>/.agent-settings.yml` + `.agent-user.md` (CWD)
+ *   - `<writeRoot>/.agent-user.md` + `<writeRoot>/.agent-settings.yml`
+ *     (in-sandbox flat-root; superseded by `settings/.agent-user.yml`
+ *     and `settings/.agent-settings.yml`).
+ * Idempotent: ENOENT is ignored so a re-run after a successful migration
+ * is a no-op. Returns the list of paths that were actually removed.
+ */
+async function deleteLegacyArtefacts(
+    legacyReadRoot: string | null,
+    writeRoot: string,
+): Promise<string[]> {
+    const candidates: string[] = [];
+    if (legacyReadRoot !== null && legacyReadRoot !== writeRoot) {
+        candidates.push(
+            join(legacyReadRoot, LEGACY_SETTINGS_REL),
+            join(legacyReadRoot, LEGACY_USER_MD_REL),
+        );
+    }
+    // In-sandbox legacy: pre-typed-subdir flat-root files.
+    candidates.push(join(writeRoot, LEGACY_USER_MD_REL));
+    candidates.push(join(writeRoot, LEGACY_SETTINGS_REL));
+    const removed: string[] = [];
+    for (const target of candidates) {
+        try {
+            await fs.unlink(target);
+            removed.push(target);
+        } catch (err) {
+            if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+        }
+    }
+    return removed;
+}
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const totalSteps = opts.totalSteps ?? DEFAULT_TOTAL_STEPS;
     const dryRun = opts.dryRun === true;
+    const legacyReadRoot = opts.legacyReadRoot ?? null;
     // Per-process in-memory state for dry-run. One CLI invocation = one
     // server = one Map; cross-session leakage is impossible because each
     // `agent-config setup --dry-run` mints a fresh server. See § Dry-run
@@ -130,7 +185,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
-            const body = (request.body ?? {}) as { settings?: unknown; userMd?: unknown };
+            const body = (request.body ?? {}) as { settings?: unknown; identity?: unknown };
             const settingsParsed = settingsSchema.safeParse(body.settings);
             if (!settingsParsed.success) {
                 await reply.code(422).send({
@@ -138,14 +193,15 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
-            // Wire shape: `userMd` is a bare string. The schema wraps it
-            // as `{ body }` for length + frontmatter checks.
-            const userMdParsed = body.userMd === undefined || body.userMd === null
+            // Wire shape: `identity` is the parsed YAML object (or omitted
+            // when the user skipped the userMd step). The server owns the
+            // YAML serialization via `composeUserIdentity`.
+            const identityParsed = body.identity === undefined || body.identity === null
                 ? null
-                : userMdSchema.safeParse({ body: body.userMd });
-            if (userMdParsed && !userMdParsed.success) {
+                : userIdentitySchema.safeParse(body.identity);
+            if (identityParsed && !identityParsed.success) {
                 await reply.code(422).send({
-                    error: { code: 'VALIDATION', message: 'invalid user-md', fields: zodIssuesToFields(userMdParsed.error.issues) },
+                    error: { code: 'VALIDATION', message: 'invalid user identity', fields: zodIssuesToFields(identityParsed.error.issues) },
                 });
                 return reply;
             }
@@ -153,25 +209,41 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             try {
                 const template = await readTemplate(opts.packageRoot);
                 const settingsBody = mergeIntoTemplate(template, settingsParsed.data as Record<string, unknown>);
-                const userMdBody = userMdParsed && userMdParsed.success ? userMdParsed.data.body : null;
+                const identityBody = identityParsed && identityParsed.success
+                    ? composeUserIdentity(identityParsed.data as Record<string, unknown>)
+                    : null;
                 if (dryRun) {
                     // No disk write; surface the rendered would-be bodies
                     // so the maintainer sees the actual diff target.
                     return {
                         ok: true,
                         dryRun: true,
-                        preview: { settingsYaml: settingsBody, userMd: userMdBody },
+                        preview: {
+                            settingsYaml: settingsBody,
+                            identity: identityParsed && identityParsed.success ? identityParsed.data : null,
+                            userIdentityYaml: identityBody,
+                        },
                     };
                 }
                 const payloads: CommitPayload[] = [
                     { target: join(opts.writeRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
                 ];
-                if (userMdBody !== null) {
-                    payloads.push({ target: join(opts.writeRoot, USER_MD_REL), contents: userMdBody, mode: 0o600 });
+                if (identityBody !== null) {
+                    payloads.push({ target: join(opts.writeRoot, USER_IDENTITY_REL), contents: identityBody, mode: 0o600 });
                 }
                 const { txnId } = await commitMulti(payloads, { writeRoot: opts.writeRoot });
                 await fs.unlink(statePath(opts.writeRoot)).catch(() => undefined);
-                return { writtenPaths: payloads.map((p) => p.target), txnId };
+                // Auto-migrate: remove legacy `.agent-user.md` (both the
+                // in-CWD copy and the in-sandbox copy) and the in-CWD
+                // `.agent-settings.yml` once the new files are committed.
+                // Best-effort — an orphan legacy file is harmless (next
+                // re-run is a no-op).
+                const migratedFrom = await deleteLegacyArtefacts(legacyReadRoot, opts.writeRoot).catch(() => []);
+                return {
+                    writtenPaths: payloads.map((p) => p.target),
+                    txnId,
+                    ...(migratedFrom.length > 0 ? { migratedFrom } : {}),
+                };
             } catch (err) {
                 const message = err instanceof Error ? err.message : '2PC commit failed';
                 await reply.code(500).send({ error: { code: 'TXN_PARTIAL', message } });

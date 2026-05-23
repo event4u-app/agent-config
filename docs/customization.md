@@ -205,7 +205,7 @@ if the key file's permissions drift.
 `cost_profile` is the master switch for rule-tier loading. The kernel
 (always-loaded Iron-Law floor, ≤ 26k chars across 9 rules) ships in every
 profile. Tier-1 and tier-2 rules are gated by profile and resolved at
-session start from `router.json` (compiled by `scripts/compile_router.py`).
+session start from `dist/router.json` (compiled by `scripts/compile_router.py`).
 
 | Profile | Rule tiers loaded | Token footprint | Best for |
 |---|---|---|---|
@@ -218,7 +218,7 @@ The kernel-and-router architecture is documented in
 [`docs/contracts/rule-router.md`](contracts/rule-router.md) and
 [`docs/contracts/kernel-membership.md`](contracts/kernel-membership.md).
 Tier flags live in each rule's frontmatter (`tier: kernel | tier-1 | tier-2`);
-the router compiles them into `router.json` deterministically.
+the router compiles them into `dist/router.json` deterministically.
 
 All profiles except `custom` ship with `pipelines.skill_improvement: true`,
 so the agent captures learnings after meaningful tasks by default. Set it

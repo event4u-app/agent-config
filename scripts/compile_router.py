@@ -19,7 +19,7 @@ ROOT = Path(__file__).resolve().parent.parent
 # .agent-src.uncompressed/rules/ is kept as a fallback for the
 # pure-compressed consumer projection.
 RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
-OUT_PATH = ROOT / "router.json"
+OUT_PATH = ROOT / "dist" / "router.json"
 SETTINGS_PATH = ROOT / ".agent-settings.yml"
 SCHEMA_VERSION = 1
 
@@ -203,6 +203,7 @@ def main(argv: list[str]) -> int:
             return 1
         print("✅  router.json is up to date")
         return 0
+    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUT_PATH.write_text(text, encoding="utf-8")
     counts = (len(out["kernel"]), len(out["tier_1"]), len(out["tier_2"]))
     print(f"✅  router.json — kernel={counts[0]}  tier-1={counts[1]}  tier-2={counts[2]}")

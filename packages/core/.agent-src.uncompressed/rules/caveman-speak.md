@@ -33,7 +33,7 @@ Read `caveman.speak_scope` from `.agent-settings.yml`:
 - `aggressive` — caveman everywhere except Iron-Law literals.
 
 Compile-time toggle `caveman.speak`: `false` → rule omitted from
-`router.json` (zero runtime cost). `caveman.enabled: false` forces all
+`dist/router.json` (zero runtime cost). `caveman.enabled: false` forces all
 sub-switches off regardless.
 
 ## Carve-outs — byte-for-byte preserved
@@ -86,7 +86,7 @@ Example: *"I will now check the file and see if it exists"* →
 | Key | Default | Effect |
 |---|---|---|
 | `caveman.enabled` | `true` | Master — `false` forces all sub-switches off. |
-| `caveman.speak` | `true` | Compile-time include in `router.json`. |
+| `caveman.speak` | `true` | Compile-time include in `dist/router.json`. |
 | `caveman.speak_scope` | `prose_only` | Runtime scope of caveman grammar. |
 
 - Input-side memory compression (shrinking always-loaded memory files like `AGENTS.md` / `CLAUDE.md` / `.cursorrules` rather than the reply stream) runs independently of `speak_scope` — see [`compress-memory`](../skills/compress-memory/SKILL.md) for the script wrapper, sensitive-path refusal contract, and `.original.md` round-trip.

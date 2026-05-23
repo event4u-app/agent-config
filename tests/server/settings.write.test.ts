@@ -46,11 +46,11 @@ describe('PUT /api/v1/settings — happy paths', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as PutResponse;
-        expect(body.writtenPaths).toEqual(['.agent-settings.yml']);
+        expect(body.writtenPaths).toEqual([join('settings', '.agent-settings.yml')]);
         expect(Number.isInteger(body.lastModified)).toBe(true);
         expect(body.lastModified).toBeGreaterThanOrEqual(ius);
 
-        const onDisk = readFileSync(join(ctx.projectRoot, '.agent-settings.yml'), 'utf8');
+        const onDisk = readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8');
         // Scalar made it onto the line.
         expect(onDisk).toMatch(/^cost_profile:\s*minimal\b/m);
     });
@@ -73,7 +73,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
             payload: { values: payload },
         });
         expect(res.statusCode).toBe(200);
-        const onDisk = readFileSync(join(ctx.projectRoot, '.agent-settings.yml'), 'utf8');
+        const onDisk = readFileSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'), 'utf8');
         const afterComments = onDisk.split('\n').filter((l) => l.trimStart().startsWith('#')).length;
         // Merge must not strip comments — equality is the strong contract;
         // the merge can only ever append new keys (Wizard-added block), not
@@ -93,7 +93,7 @@ describe('PUT /api/v1/settings — happy paths', () => {
             },
             payload: { values: fixtureSettings({ cost_profile: 'balanced' }) },
         });
-        const stat = statSync(join(ctx.projectRoot, '.agent-settings.yml'));
+        const stat = statSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'));
         // Mask off the file-type bits — we only care about the low 9 bits.
         const perms = stat.mode & 0o777;
         // Windows surfaces 0o666; on POSIX we expect 0o600 exactly.

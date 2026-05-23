@@ -34,6 +34,8 @@ import shlex
 import shutil
 import subprocess
 import sys
+import threading
+import time
 from pathlib import Path
 from typing import Any, Optional
 
@@ -3304,6 +3306,29 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "docs/contracts/universal-skills.md for the always-loaded set."
         ),
     )
+    parser.add_argument(
+        "--no-ui",
+        dest="no_ui",
+        action="store_true",
+        help=(
+            "suppress the post-install browser-wizard auto-launch. Also "
+            "honored via AGENT_CONFIG_NO_UI=1 env. CI runners (CI=1) and "
+            "non-TTY stdouts auto-suppress regardless of this flag. See "
+            "agents/roadmaps/wizard-install-py-wiring.md."
+        ),
+    )
+    parser.add_argument(
+        "--dry-run",
+        dest="dry_run",
+        action="store_true",
+        help=(
+            "print a plan summary of what would be installed (profile, "
+            "scope, tools, wizard auto-launch decision) and exit 0 "
+            "without writing any files or spawning subprocesses. "
+            "Distinct from the internal alias-resolution --dry-run "
+            "passed to bridge sub-invocations."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -3627,6 +3652,220 @@ def run_interactive_init(project_root: Path, force: bool) -> int:
     return 0
 
 
+# --- Wizard auto-launch (Phase 6 follow-up) ---
+#
+# Auto-launches the browser configuration wizard at the tail of a
+# successful install. The TS side ships a `gui` subcommand on the
+# installer CLI; this Python parent acts as a supervisor that:
+#
+#   1. evaluates gate conditions (TTY, CI, --no-ui, env override),
+#   2. validates the dist exists,
+#   3. spawns `node <cli> gui --project-root <root>` via subprocess.Popen,
+#   4. captures stderr on a background thread (for failure surfacing),
+#   5. reads stdout line-by-line with a progressive timeout
+#      (10s → 20s → 40s → 80s) and matches the strict readiness regex
+#      `^WIZARD_READY url=(http://(?:127.0.0.1|localhost):\d+/)\r?$`,
+#   6. on success: prints the URL banner and waits for the child to
+#      exit (Ctrl-C in the parent terminal propagates to the child),
+#   7. on timeout: kills the child, prints captured stderr tail, falls
+#      through to a fallback message; install itself is unaffected.
+#
+# Council synthesis: agents/runtime/council/responses/wizard-wiring-2026-05-22.synthesis.md
+# Roadmap: agents/roadmaps/wizard-install-py-wiring.md Step 3.
+
+_WIZARD_READY_RE = re.compile(
+    r"^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$"
+)
+_WIZARD_TIMEOUTS = (10.0, 20.0, 40.0, 80.0)  # cumulative budget 150s.
+
+
+def _wizard_should_launch(opts: argparse.Namespace) -> tuple[bool, str]:
+    """Evaluate gate conditions for the post-install wizard auto-launch.
+
+    Returns (decision, reason). When decision is False the reason
+    string explains why (CI / no-tty / --no-ui / env override) and is
+    suitable for the pre-install banner Council Tier 2 § 8.
+    """
+    if getattr(opts, "no_ui", False):
+        return (False, "--no-ui flag set")
+    env_no_ui = os.environ.get("AGENT_CONFIG_NO_UI", "").strip()
+    if env_no_ui and env_no_ui != "0":
+        return (False, "AGENT_CONFIG_NO_UI env set")
+    if os.environ.get("CI", "").strip():
+        return (False, "CI environment detected")
+    if not sys.stdout.isatty():
+        return (False, "stdout is not a TTY")
+    return (True, "")
+
+
+def _wizard_cli_dist(project_root: Path) -> Path | None:
+    """Resolve the installer dist path. Returns None if not built.
+
+    Walks up from this file (scripts/install.py is at <pkg>/scripts/)
+    to <pkg>/packages/core/installer/dist/cli.js. That's the layout
+    the monorepo ships; consumer installs run `node <pkg>/.../cli.js`.
+    """
+    package_root = Path(__file__).resolve().parent.parent
+    cli = package_root / "packages" / "core" / "installer" / "dist" / "cli.js"
+    return cli if cli.exists() else None
+
+
+def _wizard_spawn(project_root: Path) -> int:
+    """Spawn the wizard, await readiness, hand off to the child.
+
+    Returns the child's exit code on clean shutdown, 0 on
+    readiness-timeout (install itself succeeded; wizard is best-effort).
+    Never raises into the parent — every error surfaces as a printed
+    fallback line and a 0 return.
+    """
+    cli = _wizard_cli_dist(project_root)
+    if cli is None:
+        print(
+            "(Wizard not available — installer package not built. "
+            "Run 'npm run build' inside packages/core/installer/.)"
+        )
+        return 0
+
+    cmd = ["node", str(cli), "gui", "--project-root", str(project_root)]
+    env = os.environ.copy()
+    # The Node child writes its own readiness banner; suppress the
+    # browser-open inside the child so the Python parent stays in
+    # charge of the user-facing URL print (Tier 2 § 8 ordering).
+    env.setdefault("AGENT_CONFIG_GUI_NO_OPEN", "1")
+
+    try:
+        child = subprocess.Popen(  # noqa: S603 - cmd is locally-built, not user input
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            env=env,
+            bufsize=1,  # line-buffered
+        )
+    except OSError as exc:
+        print(f"(Wizard failed to start: {exc}; run 'node {cli} gui' manually.)")
+        return 0
+
+    # Drain stderr on a background thread so a chatty child can't
+    # block the readline loop below. Cap at 80 lines to bound memory.
+    stderr_tail: list[str] = []
+
+    def _drain_stderr() -> None:
+        if child.stderr is None:
+            return
+        for line in child.stderr:
+            stderr_tail.append(line.rstrip("\r\n"))
+            if len(stderr_tail) > 80:
+                del stderr_tail[: len(stderr_tail) - 80]
+
+    stderr_thread = threading.Thread(target=_drain_stderr, daemon=True)
+    stderr_thread.start()
+
+    return _wizard_await_ready(child, stderr_tail, cli)
+
+
+def _wizard_await_ready(
+    child: subprocess.Popen[str],
+    stderr_tail: list[str],
+    cli: Path,
+) -> int:
+    """Read child stdout until the WIZARD_READY regex matches.
+
+    Progressive backoff per Council Tier 1 § 2. On match, prints the
+    URL banner and blocks on child.wait() (parent Ctrl-C is forwarded
+    to the child by the OS via the shared process group).
+    """
+    assert child.stdout is not None
+    elapsed_total = 0.0
+    matched_url: str | None = None
+
+    for interim in _WIZARD_TIMEOUTS:
+        deadline = time.monotonic() + interim
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                break
+            # readline blocks until \n or EOF; we cap total wait per
+            # phase via deadline. Use poll() to detect child exit.
+            if child.poll() is not None:
+                break
+            line = child.stdout.readline()
+            if not line:
+                # EOF — child closed stdout without WIZARD_READY.
+                break
+            m = _WIZARD_READY_RE.match(line)
+            if m is not None:
+                matched_url = m.group(1)
+                break
+        if matched_url is not None or child.poll() is not None:
+            break
+        elapsed_total += interim
+        if elapsed_total < sum(_WIZARD_TIMEOUTS):
+            print(f"(Wizard still booting after {int(elapsed_total)}s — waiting…)")
+
+    if matched_url is None:
+        try:
+            child.terminate()
+            child.wait(timeout=2)
+        except (subprocess.TimeoutExpired, OSError):
+            try:
+                child.kill()
+            except OSError:
+                pass
+        tail = "\n  ".join(stderr_tail[-20:]) if stderr_tail else "(no stderr captured)"
+        print(
+            f"(Wizard server boot timed out after {int(sum(_WIZARD_TIMEOUTS))}s; "
+            f"run 'node {cli} gui' manually.)\n"
+            f"  Last stderr:\n  {tail}"
+        )
+        return 0
+
+    print()
+    print(f"Setup wizard ready: {matched_url}")
+    print("(Wizard runs in the background; close the tab or press Ctrl-C to stop.)")
+    try:
+        return child.wait()
+    except KeyboardInterrupt:
+        try:
+            child.terminate()
+            return child.wait(timeout=5)
+        except (subprocess.TimeoutExpired, OSError):
+            try:
+                child.kill()
+            except OSError:
+                pass
+            return 130
+
+
+def _dry_run_summary(opts: argparse.Namespace) -> int:
+    """Print a one-block plan summary for --dry-run and exit 0.
+
+    Lists profile, scope, tools, target root, and the wizard
+    auto-launch decision. Writes nothing, spawns nothing. The wizard
+    line is shown per Council Tier 3 § 10 user-requirement carve-out.
+    """
+    target = Path(
+        opts.custom_path or opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
+    ).resolve()
+    will_launch, why_not = _wizard_should_launch(opts)
+    print()
+    print("[dry-run] Plan summary — no files written, no subprocesses spawned:")
+    print(f"  profile:     {opts.profile}")
+    print(f"  user-type:   {opts.user_type or '(none)'}")
+    print(f"  scope:       {opts.scope or ('global' if opts.global_install else 'auto')}")
+    print(f"  tools:       {opts.tools or 'all'}")
+    print(f"  target:      {target}")
+    print(f"  minimal:     {opts.minimal}")
+    print(f"  force:       {opts.force}")
+    print(f"  offline:     {opts.offline}")
+    if will_launch:
+        print("  wizard:      Would auto-launch (pass --no-ui to suppress).")
+    else:
+        print(f"  wizard:      Suppressed ({why_not}).")
+    print()
+    return 0
+
+
 # --- Main ---
 
 def main(argv: list[str]) -> int:
@@ -3646,6 +3885,24 @@ def main(argv: list[str]) -> int:
 
     if opts.profile not in SUPPORTED_PROFILES:
         fail(f"Unsupported profile: {opts.profile}. Supported: {', '.join(SUPPORTED_PROFILES)}")
+
+    # Dry-run short-circuit (Council Tier 2 § 9): print a plan summary
+    # and exit 0 before any filesystem write or subprocess spawn.
+    # Distinct from the internal `--dry-run` strings passed to
+    # alias-resolution sub-invocations elsewhere in this file.
+    if getattr(opts, "dry_run", False):
+        return _dry_run_summary(opts)
+
+    # Wizard auto-launch decision banner (Council Tier 2 § 8): print
+    # the gate verdict BEFORE the install runs so the user knows what
+    # will happen at the tail without having to wait through every
+    # bridge write to find out.
+    will_launch, why_not = _wizard_should_launch(opts)
+    if will_launch:
+        if not QUIET:
+            info("Setup wizard will launch automatically after install.")
+    elif not QUIET:
+        info(f"Setup wizard auto-launch disabled ({why_not}).")
 
     # Minimal-init short-circuit (Step 7 Phase 2): bypass scope
     # detection, conflict policy, and the full bridge install. Writes
@@ -3861,6 +4118,15 @@ def _main_project_install(
         else:
             print("  Re-run complete. Walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
             print()
+
+    # Wizard auto-launch (Phase 6 follow-up). Runs after the success
+    # banner so the user sees install completion even if the wizard
+    # boot times out. Gate was already evaluated at the top of main()
+    # for the pre-install banner; re-check here so the supervisor
+    # logic stays the single source of truth.
+    will_launch, _ = _wizard_should_launch(opts)
+    if will_launch:
+        return _wizard_spawn(project_root)
     return 0
 
 

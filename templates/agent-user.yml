@@ -1,0 +1,21 @@
+version: 1
+identity:
+    name: ""
+language: "en"
+role:
+    - ""
+style:
+    formality: "informal"
+    pace: "pragmatic"
+voice_sample: |
+    Replace this block with one to three sentences in your own
+    writing style. The agent uses it as a tone anchor — paste the
+    way you would actually message a colleague, not a polished pitch.
+last_updated: "1970-01-01"
+# notes: |
+#     Optional free-form prose. Anything you want the agent to remember
+#     across sessions — preferred terminology, recurring projects,
+#     conventions you want enforced. Keep it short; everything here
+#     loads into every reply. Hard cap: 8 000 chars.
+#
+# Schema reference: docs/contracts/agent-user-schema.md

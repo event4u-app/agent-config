@@ -1,22 +1,22 @@
 /**
- * UserMdForm — structured editor for `.agent-user.md` frontmatter + notes.
+ * UserMdForm — structured editor for `.agent-user.yml`.
  *
- * Replaces the raw textarea in the wizard's user-md step (and, optionally,
- * the standalone UserMdPanel) with a typed form that round-trips through
- * `frontmatterSchema` from `@shared/userMd/schema`. Consumers parse the
- * file body via `parseUserMd` before mount and call `composeUserMd` after
- * `onChange` to persist the result.
+ * Renders a `UserIdentity` object (the post-migration shape — see
+ * `docs/contracts/agent-user-schema.md`) as a typed form. The form value
+ * IS the identity object; there is no separate frontmatter / content
+ * wrapper anymore. Server validates against `userIdentitySchema`.
  *
- * Fields mirror the v1 contract (`docs/contracts/agent-user-schema.md`):
- *   - identity.name (required), identity.nickname (optional)
+ * Fields mirror the v1 contract:
+ *   - identity.name (required)
  *   - language (BCP-47, autocomplete)
- *   - role[] (≥1, free-form per contract; seeded suggestions via SEED_ROLE_IDS)
+ *   - role[] (≥1, free-form; non-binding seed suggestions via SEED_ROLE_IDS)
  *   - style.formality, style.pace (enums)
  *   - voice_sample (required, multiline)
- *   - last_updated (auto-set to today on every edit; not exposed)
+ *   - notes (optional, multiline)
+ *   - last_updated (auto-bumped to today on every edit; not exposed)
  *
- * Errors are keyed by dotted Zod path; the route bubbles up validation
- * issues via `body.identity.name`, `body.style.formality`, etc.
+ * Errors are keyed by dotted Zod path (`identity.name`, `style.formality`,
+ * …) so server-side issues bind to fields with no transformation.
  */
 
 import { useState } from 'preact/hooks';
@@ -25,23 +25,26 @@ import { TextInput } from './TextInput.js';
 import { Textarea } from './Textarea.js';
 import { Radio } from './Radio.js';
 import { Autocomplete } from './Autocomplete.js';
-import {
-    SEED_ROLE_IDS,
-    type UserMdFrontmatter,
-} from '@shared/userMd/schema.js';
+import type { UserIdentity } from '@shared/userMd/schema.js';
 
-export interface UserMdFormValue {
-    frontmatter: UserMdFrontmatter;
-    content: string;
-}
-
-export interface UserMdFormProps {
-    value: UserMdFormValue;
-    onChange: (next: UserMdFormValue) => void;
-    errors?: Record<string, string> | undefined;
-}
+/** Non-binding seed suggestions for the role chip-list. UI-only. */
+const SEED_ROLE_IDS = [
+    'developer',
+    'reviewer',
+    'designer',
+    'product-manager',
+    'ops',
+    'qa',
+    'maintainer',
+];
 
 const LANGUAGE_SUGGESTIONS = ['de', 'en', 'en-US', 'en-GB', 'fr', 'es', 'it', 'nl', 'pt', 'pt-BR'];
+
+export interface UserMdFormProps {
+    value: UserIdentity;
+    onChange: (next: UserIdentity) => void;
+    errors?: Record<string, string> | undefined;
+}
 
 function todayIso(): string {
     return new Date().toISOString().slice(0, 10);
@@ -52,68 +55,63 @@ function err(errors: Record<string, string> | undefined, path: string): string |
 }
 
 export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact.JSX.Element {
-    const fm = value.frontmatter;
     const [pendingRole, setPendingRole] = useState('');
     const roleListId = 'umd-role-suggestions';
 
-    function patch(next: Partial<UserMdFrontmatter>): void {
-        onChange({
-            frontmatter: { ...fm, ...next, last_updated: todayIso() },
-            content: value.content,
-        });
+    function patch(next: Partial<UserIdentity>): void {
+        onChange({ ...value, ...next, last_updated: todayIso() });
     }
 
-    function setContent(content: string): void {
-        onChange({
-            frontmatter: { ...fm, last_updated: todayIso() },
-            content,
-        });
-    }
+    // `defaultIdentity()` seeds `role: ['']` so the YAML stays well-shaped
+    // before the user types anything. Render-time filters drop those empty
+    // placeholders so an empty pill with a disabled `×` never appears, and
+    // the last-entry guard counts only non-empty entries.
+    const filledRoles = value.role.filter((r) => r.trim() !== '');
 
     function addRole(raw: string): void {
         const trimmed = raw.trim();
-        if (trimmed === '' || fm.role.includes(trimmed)) {
+        if (trimmed === '' || filledRoles.includes(trimmed)) {
             setPendingRole('');
             return;
         }
-        patch({ role: [...fm.role, trimmed] });
+        patch({ role: [...filledRoles, trimmed] });
         setPendingRole('');
     }
 
     function removeRole(target: string): void {
-        // Schema requires ≥1 — refuse to drop the last entry; the form
-        // surfaces the constraint through the field's disabled state.
-        if (fm.role.length <= 1) return;
-        patch({ role: fm.role.filter((r) => r !== target) });
+        // Schema requires ≥1 — refuse to drop the last non-empty entry; the
+        // form surfaces the constraint through the field's disabled state.
+        if (filledRoles.length <= 1) return;
+        patch({ role: filledRoles.filter((r) => r !== target) });
     }
 
-    const remainingSeeds = SEED_ROLE_IDS.filter((s) => !fm.role.includes(s));
+    function setNotes(raw: string): void {
+        // Empty string collapses to undefined so the composed YAML omits
+        // the key — keeps the file tidy when there is nothing to remember.
+        const next: UserIdentity = { ...value, last_updated: todayIso() };
+        if (raw === '') {
+            delete next.notes;
+        } else {
+            next.notes = raw;
+        }
+        onChange(next);
+    }
+
+    const remainingSeeds = SEED_ROLE_IDS.filter((s) => !filledRoles.includes(s));
 
     return (
         <div class="ac-user-md-form">
             <TextInput
                 id="umd-name" name="identity.name" label="Name"
-                description="How the agent addresses you. Required."
-                value={fm.identity.name}
+                description="How the agent addresses you in chat (e.g. &quot;Matze&quot;, &quot;Sarah&quot;). Required."
+                value={value.identity.name}
                 error={err(errors, 'identity.name')}
-                onChange={(v): void => patch({ identity: { ...fm.identity, name: v } })}
-            />
-            <TextInput
-                id="umd-nickname" name="identity.nickname" label="Nickname"
-                description="Optional short form used in casual replies."
-                value={fm.identity.nickname ?? ''}
-                error={err(errors, 'identity.nickname')}
-                onChange={(v): void => {
-                    const next = { ...fm.identity };
-                    if (v === '') delete next.nickname;
-                    else next.nickname = v;
-                    patch({ identity: next });
-                }}
+                onChange={(v): void => patch({ identity: { ...value.identity, name: v } })}
             />
             <Autocomplete
                 id="umd-language" name="language" label="Language"
                 description="BCP-47 tag the agent mirrors in replies (e.g. 'de', 'en', 'en-US')."
-                value={fm.language}
+                value={value.language}
                 suggestions={LANGUAGE_SUGGESTIONS}
                 error={err(errors, 'language')}
                 onChange={(v): void => patch({ language: v })}
@@ -125,14 +123,14 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
                 error={err(errors, 'role')}
             >
                 <ul class="ac-chip-list" data-testid="umd-role-list">
-                    {fm.role.map((r) => (
+                    {filledRoles.map((r) => (
                         <li key={r} class="ac-chip">
                             <span>{r}</span>
                             <button
                                 type="button"
                                 class="ac-chip__remove"
                                 aria-label={`Remove ${r}`}
-                                disabled={fm.role.length <= 1}
+                                disabled={filledRoles.length <= 1}
                                 onClick={(): void => removeRole(r)}
                             >
                                 ×
@@ -171,39 +169,40 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
             </Field>
             <Radio
                 id="umd-formality" name="style.formality" label="Formality"
-                value={fm.style.formality}
+                value={value.style.formality}
                 error={err(errors, 'style.formality')}
                 options={[
                     { value: 'informal', label: 'Informal (Du / first-name)' },
                     { value: 'formal', label: 'Formal (Sie / surname)' },
                 ]}
-                onChange={(v): void => patch({ style: { ...fm.style, formality: v as 'informal' | 'formal' } })}
+                onChange={(v): void => patch({ style: { ...value.style, formality: v as 'informal' | 'formal' } })}
             />
             <Radio
                 id="umd-pace" name="style.pace" label="Pace"
-                value={fm.style.pace}
+                value={value.style.pace}
                 error={err(errors, 'style.pace')}
                 options={[
                     { value: 'pragmatic', label: 'Pragmatic' },
                     { value: 'thorough', label: 'Thorough' },
                     { value: 'rapid', label: 'Rapid' },
                 ]}
-                onChange={(v): void => patch({ style: { ...fm.style, pace: v as 'pragmatic' | 'thorough' | 'rapid' } })}
+                onChange={(v): void => patch({ style: { ...value.style, pace: v as 'pragmatic' | 'thorough' | 'rapid' } })}
             />
             <Textarea
                 id="umd-voice" name="voice_sample" label="Voice sample"
                 description="One to three sentences in your own style. The agent uses it as a tone anchor."
                 rows={4}
-                value={fm.voice_sample}
+                value={value.voice_sample}
                 error={err(errors, 'voice_sample')}
                 onChange={(v): void => patch({ voice_sample: v })}
             />
             <Textarea
-                id="umd-content" name="content" label="Notes"
-                description="Free-form notes appended below the frontmatter."
+                id="umd-notes" name="notes" label="Notes"
+                description="Optional free-form prose the agent remembers across sessions."
                 rows={6}
-                value={value.content}
-                onChange={setContent}
+                value={value.notes ?? ''}
+                error={err(errors, 'notes')}
+                onChange={setNotes}
             />
         </div>
     );

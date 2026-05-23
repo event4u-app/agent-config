@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **492 artefacts** in this package.
+Maintainer-facing index of all **495 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -230,7 +230,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../packages/pack-product-discovery/.agent-src.uncompressed/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../packages/pack-gtm-marketing/.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (72)
+## Rules (75)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -258,8 +258,10 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`domain-safety-pii`](../packages/core/.agent-src.uncompressed/rules/domain-safety-pii.md) | auto | Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs |
 | rule | [`domain-safety-retention`](../packages/core/.agent-src.uncompressed/rules/domain-safety-retention.md) | auto | Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry |
 | rule | [`downstream-changes`](../packages/core/.agent-src.uncompressed/rules/downstream-changes.md) | auto | After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation |
+| rule | [`engineering-safety-floor`](../packages/core/.agent-src.uncompressed/rules/engineering-safety-floor.md) | auto | Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers |
 | rule | [`external-reference-deep-dive`](../packages/core/.agent-src.uncompressed/rules/external-reference-deep-dive.md) | auto | User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata |
 | rule | [`fast-path-marker-visibility`](../packages/core/.agent-src.uncompressed/rules/fast-path-marker-visibility.md) | auto | Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase |
+| rule | [`finance-safety-floor`](../packages/pack-finance-basic/.agent-src.uncompressed/rules/finance-safety-floor.md) | auto | Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required |
 | rule | [`framework-neutrality-in-generic-skills`](../packages/core/.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md) | auto | Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers |
 | rule | [`git-history-discipline`](../packages/core/.agent-src.uncompressed/rules/git-history-discipline.md) | auto | Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn |
 | rule | [`guidelines`](../packages/core/.agent-src.uncompressed/rules/guidelines.md) | manual | Writing or reviewing code — check relevant guideline before writing or reviewing code |
@@ -296,6 +298,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`skill-improvement-trigger`](../packages/core/.agent-src.uncompressed/rules/skill-improvement-trigger.md) | auto | After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled |
 | rule | [`skill-quality`](../packages/core/.agent-src.uncompressed/rules/skill-quality.md) | auto | Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained |
 | rule | [`slash-command-routing-policy`](../packages/core/.agent-src.uncompressed/rules/slash-command-routing-policy.md) | auto | User types a slash command like /create-pr, /commit, or pastes command file content |
+| rule | [`strategy-safety-floor`](../packages/pack-founder-strategy/.agent-src.uncompressed/rules/strategy-safety-floor.md) | auto | Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision |
 | rule | [`symfony-routing`](../packages/pack-symfony/.agent-src.uncompressed/rules/symfony-routing.md) | auto | Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow |
 | rule | [`think-before-action`](../packages/core/.agent-src.uncompressed/rules/think-before-action.md) | auto | Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error |
 | rule | [`token-efficiency`](../packages/core/.agent-src.uncompressed/rules/token-efficiency.md) | auto | Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise |

@@ -1,61 +1,72 @@
 /**
- * `.agent-user.md` read / template / write routes.
+ * `.agent-user.yml` read / template / write routes.
  *
  * Contract: `docs/contracts/settings-api.md`.
  *
- *   GET /api/v1/user-md           → `{ body, exists, lastModified }`
+ *   GET /api/v1/user-md           → `{ identity, exists, lastModified }`
  *   GET /api/v1/user-md/template  → 200 with template body, or 204
- *   PUT /api/v1/user-md           → atomic write (mode 0600)
+ *   PUT /api/v1/user-md           → body `{ identity }`, atomic write
  *
- * Same optimistic-locking shape as the settings route: writes require
- * `If-Unmodified-Since` when the file already exists. When the prior GET
- * returned `exists=false` the header may be omitted — the server treats
- * absence as "create new".
+ * Wire format is pure JSON: the server owns the YAML serialization so
+ * the UI never depends on `js-yaml.dump`. Legacy `.agent-user.md` files
+ * (fenced frontmatter + optional markdown body) are read transparently
+ * via `parseLegacyUserMd`; the next PUT writes the new yml path and the
+ * wizard finish handler deletes the legacy file (auto-migration).
+ *
+ * Optimistic locking mirrors the settings route: writes require
+ * `If-Unmodified-Since` when the file already exists.
  */
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs } from 'node:fs';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
-import { userMdSchema } from '../../shared/userMd/schema.js';
+import { userIdentitySchema } from '../../shared/userMd/schema.js';
+import {
+    composeUserIdentity,
+    parseLegacyUserMd,
+    parseUserIdentity,
+} from '../../shared/userMd/utils.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 
 export interface UserMdRouteOptions {
-    /** Write root — every PUT lands here as `.agent-user.md`. */
+    /** Write root — every PUT lands here as `settings/.agent-user.yml`. */
     writeRoot: string;
     /**
-     * Legacy-read fallback root. When GET / PUT find no file under
-     * `writeRoot`, the read is retried under `legacyReadRoot`. The next
-     * PUT silently migrates by writing the body to `writeRoot` (legacy
-     * file is left untouched).
+     * Legacy-read fallback root. When GET / PUT find no file at the new
+     * path, the read also checks the legacy `.agent-user.md` location
+     * under `writeRoot` (in-repo migration) and under `legacyReadRoot`
+     * (CWD migration). Auto-delete of the legacy files happens in the
+     * wizard finish handler, never here.
      */
     legacyReadRoot?: string | null;
     /** Override the package-shipped template path (tests only). */
     templatePath?: string;
     /**
      * Dry-run — PUT validates and returns `{ preview, dryRun }` with the
-     * would-be body; no `writeAtomic`, no `Last-Modified` bump.
+     * would-be identity object and rendered YAML; no `writeAtomic`,
+     * no `Last-Modified` bump.
      */
     dryRun?: boolean;
 }
 
-const USER_MD_RELATIVE = '.agent-user.md';
-const DEFAULT_TEMPLATE = join(PACKAGE_ROOT, 'templates', 'agent-user.md');
-
-function userMdPath(root: string): string {
-    return join(root, USER_MD_RELATIVE);
-}
+/** New canonical on-disk path, relative to writeRoot. */
+export const USER_IDENTITY_RELATIVE = join('settings', '.agent-user.yml');
+/** Legacy markdown path, relative to writeRoot or legacyReadRoot. */
+const LEGACY_USER_MD_RELATIVE = '.agent-user.md';
+const DEFAULT_TEMPLATE = join(PACKAGE_ROOT, 'templates', 'agent-user.yml');
 
 interface ReadState {
-    body: string;
+    /** Parsed identity object — never the raw file body. */
+    identity: Record<string, unknown>;
     mtimeMs: number;
 }
 
-async function readUserMdFrom(root: string): Promise<ReadState | null> {
-    const path = userMdPath(root);
+async function readFromPath(path: string, legacy: boolean): Promise<ReadState | null> {
     try {
         const [stat, body] = await Promise.all([fs.stat(path), fs.readFile(path, 'utf8')]);
-        return { body, mtimeMs: Math.trunc(stat.mtimeMs) };
+        const identity = legacy ? parseLegacyUserMd(body) : parseUserIdentity(body);
+        return { identity, mtimeMs: Math.trunc(stat.mtimeMs) };
     } catch (err) {
         if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
         throw err;
@@ -63,18 +74,25 @@ async function readUserMdFrom(root: string): Promise<ReadState | null> {
 }
 
 /**
- * Read `.agent-user.md` from `writeRoot`, falling back to `legacyReadRoot`
- * on ENOENT. Mirrors the settings route — see `readSettings` for the
- * silent-migration rationale.
+ * Try the new path, then the legacy paths in priority order:
+ *   1. `<writeRoot>/settings/.agent-user.yml`     (canonical)
+ *   2. `<writeRoot>/.agent-user.md`               (in-repo legacy)
+ *   3. `<legacyReadRoot>/.agent-user.md`          (CWD legacy)
  */
 async function readUserMd(
     writeRoot: string,
     legacyReadRoot: string | null | undefined,
 ): Promise<ReadState | null> {
-    const primary = await readUserMdFrom(writeRoot);
-    if (primary !== null) return primary;
+    const candidates: Array<{ path: string; legacy: boolean }> = [
+        { path: join(writeRoot, USER_IDENTITY_RELATIVE), legacy: false },
+        { path: join(writeRoot, LEGACY_USER_MD_RELATIVE), legacy: true },
+    ];
     if (legacyReadRoot && legacyReadRoot !== writeRoot) {
-        return readUserMdFrom(legacyReadRoot);
+        candidates.push({ path: join(legacyReadRoot, LEGACY_USER_MD_RELATIVE), legacy: true });
+    }
+    for (const c of candidates) {
+        const state = await readFromPath(c.path, c.legacy);
+        if (state !== null) return state;
     }
     return null;
 }
@@ -93,12 +111,12 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
     const templatePath = opts.templatePath ?? DEFAULT_TEMPLATE;
 
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
-        app.get('/api/v1/user-md', async (_request, _reply) => {
+        app.get('/api/v1/user-md', async () => {
             const state = await readUserMd(opts.writeRoot, opts.legacyReadRoot);
             if (state === null) {
-                return { body: '', exists: false, lastModified: null };
+                return { identity: null, exists: false, lastModified: null };
             }
-            return { body: state.body, exists: true, lastModified: state.mtimeMs };
+            return { identity: state.identity, exists: true, lastModified: state.mtimeMs };
         });
 
         app.get('/api/v1/user-md/template', async (_request, reply) => {
@@ -115,11 +133,11 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
         });
 
         app.put('/api/v1/user-md', async (request, reply) => {
-            const body = (request.body ?? {}) as { body?: unknown };
-            const parsed = userMdSchema.safeParse(body);
+            const body = (request.body ?? {}) as { identity?: unknown };
+            const parsed = userIdentitySchema.safeParse(body.identity);
             if (!parsed.success) {
                 await reply.code(422).send({
-                    error: { code: 'VALIDATION', message: 'invalid user-md body', fields: zodIssuesToFields(parsed.error.issues) },
+                    error: { code: 'VALIDATION', message: 'invalid user identity', fields: zodIssuesToFields(parsed.error.issues) },
                 });
                 return reply;
             }
@@ -136,24 +154,26 @@ export function userMdRoute(opts: UserMdRouteOptions): FastifyPluginAsync {
                 if (ius < current.mtimeMs) {
                     await reply.code(409).send({
                         error: { code: 'CONFLICT', message: 'on-disk file has been modified' },
-                        current: { body: current.body, lastModified: current.mtimeMs },
+                        current: { identity: current.identity, lastModified: current.mtimeMs },
                     });
                     return reply;
                 }
             }
 
             try {
+                const yamlBody = composeUserIdentity(parsed.data as Record<string, unknown>);
                 if (opts.dryRun === true) {
                     return {
                         dryRun: true,
                         lastModified: current?.mtimeMs ?? null,
-                        preview: { path: USER_MD_RELATIVE, body: parsed.data.body },
+                        preview: { path: USER_IDENTITY_RELATIVE, identity: parsed.data, body: yamlBody },
                     };
                 }
-                const path = userMdPath(opts.writeRoot);
-                await writeAtomic(path, parsed.data.body, { mode: 0o600 });
+                const path = join(opts.writeRoot, USER_IDENTITY_RELATIVE);
+                await fs.mkdir(dirname(path), { recursive: true, mode: 0o700 });
+                await writeAtomic(path, yamlBody, { mode: 0o600 });
                 const stat = await fs.stat(path);
-                return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [USER_MD_RELATIVE] };
+                return { lastModified: Math.trunc(stat.mtimeMs), writtenPaths: [USER_IDENTITY_RELATIVE] };
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'atomic write failed';
                 await reply.code(500).send({ error: { code: 'ATOMIC_WRITE', message } });

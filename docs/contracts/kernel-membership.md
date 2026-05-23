@@ -231,7 +231,7 @@ that fires on every action decision. Swap proposal: `agent-authority`
 the 9-rule set through P2.2. Re-evaluation trigger fires at P3.2
 once the router schema and compiler ship; at that point
 `agent-authority`'s routing role becomes redundant (each kernel rule
-carries its own band as frontmatter, compiled into `router.json`),
+carries its own band as frontmatter, compiled into `dist/router.json`),
 clearing the way for the swap under a fresh ADR.
 
 ## § 6 — Abort criteria for P2.2

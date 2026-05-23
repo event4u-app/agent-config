@@ -5,9 +5,9 @@
  * `agents/runtime/gui/` of this repo.
  */
 
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
@@ -21,6 +21,7 @@ import {
     newLogPath,
     plannedPaths,
     readLog,
+    rollback,
 } from '../src/gui/transaction-log.js';
 import type { TransactionLogEntry } from '../src/gui/types.js';
 
@@ -133,5 +134,54 @@ describe('closeLog / discardLog', () => {
         appendEntry(p, start('t1'));
         discardLog(p);
         expect(readFileSync(p, 'utf8')).toBe('');
+    });
+});
+
+function writeUnder(root: string, rel: string, body = 'x'): string {
+    const abs = join(root, rel);
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, body);
+    return abs;
+}
+
+describe('rollback', () => {
+    it('removes existing planned paths and appends a terminal cancel entry', () => {
+        const p = newLogPath(projectRoot, () => '2026-02-01T00-00-00-000Z');
+        appendEntry(p, start('t1'));
+        const a = writeUnder(projectRoot, '.augment/rules/a.md');
+        const b = writeUnder(projectRoot, '.augment/rules/b.md');
+        appendEntry(p, plan('t1', '.augment/rules/a.md'));
+        appendEntry(p, plan('t1', '.augment/rules/b.md'));
+        const result = rollback(projectRoot, p, () => 't2');
+        expect(result.removed.sort()).toEqual(['.augment/rules/a.md', '.augment/rules/b.md']);
+        expect(result.missing).toEqual([]);
+        expect(existsSync(a)).toBe(false);
+        expect(existsSync(b)).toBe(false);
+        const entries = readLog(p);
+        expect(entries.at(-1)).toEqual({ kind: 'cancel', ts: 't2', reason: 'rollback' });
+        expect(isOpenLog(entries)).toBe(false);
+    });
+
+    it('reports missing planned paths without throwing', () => {
+        const p = newLogPath(projectRoot, () => '2026-02-02T00-00-00-000Z');
+        appendEntry(p, start('t1'));
+        appendEntry(p, plan('t1', '.augment/rules/never-written.md'));
+        const result = rollback(projectRoot, p, () => 't2');
+        expect(result.removed).toEqual([]);
+        expect(result.missing).toEqual(['.augment/rules/never-written.md']);
+    });
+
+    it('skips absolute paths and traversal attempts (path-guard)', () => {
+        const p = newLogPath(projectRoot, () => '2026-02-03T00-00-00-000Z');
+        const outside = mkdtempSync(join(tmpdir(), 'gui-tx-outside-'));
+        const outsideFile = writeUnder(outside, 'secret.txt', 'keep');
+        appendEntry(p, start('t1'));
+        appendEntry(p, plan('t1', outsideFile));
+        appendEntry(p, plan('t1', '../escape.txt'));
+        const result = rollback(projectRoot, p, () => 't2');
+        expect(result.removed).toEqual([]);
+        expect(result.missing).toEqual([]);
+        expect(existsSync(outsideFile)).toBe(true);
+        rmSync(outside, { recursive: true, force: true });
     });
 });

@@ -6,15 +6,18 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { bootTestApp, authHeaders, fixtureSettings, fixtureUserMd, settingsTemplate, type TestApp } from './helpers.js';
+import { bootTestApp, authHeaders, fixtureSettings, fixtureUserIdentity, settingsTemplate, type TestApp } from './helpers.js';
 
 const PORT = 41610;
 
+const SETTINGS_REL = join('settings', '.agent-settings.yml');
+const USER_YML_REL = join('settings', '.agent-user.yml');
+
 interface PingBody { ok: true; version: string; projectRoot: string; dryRun: boolean }
 interface SettingsPutBody { dryRun: true; lastModified: number; preview: { path: string; body: string } }
-interface UserMdPutBody { dryRun: true; lastModified: number | null; preview: { path: string; body: string } }
+interface UserMdPutBody { dryRun: true; lastModified: number | null; preview: { path: string; identity: Record<string, unknown>; body: string } }
 interface WizardStateBody { step: number; totalSteps: number; partial: Record<string, unknown>; startedAt: string | null }
-interface WizardFinishBody { ok: true; dryRun: true; preview: { settingsYaml: string; userMd: string | null } }
+interface WizardFinishBody { ok: true; dryRun: true; preview: { settingsYaml: string; identity: Record<string, unknown> | null; userIdentityYaml: string | null } }
 
 describe('dry-run mode', () => {
     let ctx: TestApp;
@@ -32,7 +35,7 @@ describe('dry-run mode', () => {
     });
 
     it('PUT /api/v1/settings returns preview and leaves the file byte-identical', async () => {
-        const settingsFile = join(ctx.projectRoot, '.agent-settings.yml');
+        const settingsFile = join(ctx.projectRoot, SETTINGS_REL);
         const before = readFileSync(settingsFile, 'utf8');
         const beforeMtime = statSync(settingsFile).mtimeMs;
 
@@ -53,7 +56,7 @@ describe('dry-run mode', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as SettingsPutBody;
         expect(body.dryRun).toBe(true);
-        expect(body.preview.path).toBe('.agent-settings.yml');
+        expect(body.preview.path).toBe(SETTINGS_REL);
         expect(body.preview.body).toMatch(/^cost_profile:\s*minimal\b/m);
 
         // Disk untouched — byte content + mtime preserved.
@@ -62,22 +65,23 @@ describe('dry-run mode', () => {
     });
 
     it('PUT /api/v1/user-md returns preview and does not create the file', async () => {
-        const userMdFile = join(ctx.projectRoot, '.agent-user.md');
-        expect(existsSync(userMdFile)).toBe(false);
+        const userYmlFile = join(ctx.projectRoot, USER_YML_REL);
+        expect(existsSync(userYmlFile)).toBe(false);
 
-        const userMdBody = fixtureUserMd();
+        const identity = fixtureUserIdentity();
         const res = await ctx.app.inject({
             method: 'PUT', url: '/api/v1/user-md',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
-            payload: { body: userMdBody },
+            payload: { identity },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as UserMdPutBody;
         expect(body.dryRun).toBe(true);
-        expect(body.preview.path).toBe('.agent-user.md');
-        expect(body.preview.body).toBe(userMdBody);
+        expect(body.preview.path).toBe(USER_YML_REL);
+        expect(body.preview.identity).toEqual(identity);
+        expect(body.preview.body).toMatch(/name:\s*Matze/);
 
-        expect(existsSync(userMdFile)).toBe(false);
+        expect(existsSync(userYmlFile)).toBe(false);
     });
 
     it('POST /api/v1/wizard/state stores in memory only and GET resumes from it', async () => {
@@ -103,29 +107,30 @@ describe('dry-run mode', () => {
     });
 
     it('POST /api/v1/wizard/finish returns preview of both files and writes nothing', async () => {
-        const settingsFile = join(ctx.projectRoot, '.agent-settings.yml');
-        const userMdFile = join(ctx.projectRoot, '.agent-user.md');
+        const settingsFile = join(ctx.projectRoot, SETTINGS_REL);
+        const userYmlFile = join(ctx.projectRoot, USER_YML_REL);
         const settingsBefore = readFileSync(settingsFile, 'utf8');
-        expect(existsSync(userMdFile)).toBe(false);
+        expect(existsSync(userYmlFile)).toBe(false);
 
-        const userMdBody = fixtureUserMd({ notes: 'body.' });
+        const identity = fixtureUserIdentity({ notes: 'body.' });
         const res = await ctx.app.inject({
             method: 'POST', url: '/api/v1/wizard/finish',
             headers: { ...authHeaders(ctx.token, ctx.host), 'content-type': 'application/json' },
             payload: {
                 settings: fixtureSettings({ cost_profile: 'minimal' }),
-                userMd: userMdBody,
+                identity,
             },
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as WizardFinishBody;
         expect(body.dryRun).toBe(true);
         expect(body.preview.settingsYaml).toMatch(/^cost_profile:\s*minimal\b/m);
-        expect(body.preview.userMd).toBe(userMdBody);
+        expect(body.preview.identity).toEqual(identity);
+        expect(body.preview.userIdentityYaml).toMatch(/name:\s*Matze/);
 
         // Disk untouched on both files.
         expect(readFileSync(settingsFile, 'utf8')).toBe(settingsBefore);
-        expect(existsSync(userMdFile)).toBe(false);
+        expect(existsSync(userYmlFile)).toBe(false);
         // 2PC marker dir should not contain any wizard-intent files.
         const intentDir = join(ctx.projectRoot, 'state');
         const fs = await import('node:fs');

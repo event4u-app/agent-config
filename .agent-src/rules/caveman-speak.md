@@ -33,7 +33,7 @@ Read `caveman.speak_scope` from `.agent-settings.yml`:
 - `aggressive` — caveman everywhere except Iron-Law literals.
 
 Compile-time toggle `caveman.speak`: `false` → rule omitted from
-`router.json` (zero runtime cost). `caveman.enabled: false` forces all
+`dist/router.json` (zero runtime cost). `caveman.enabled: false` forces all
 sub-switches off regardless.
 
 ## Carve-outs — byte-for-byte preserved
@@ -86,7 +86,7 @@ Example: *"I will now check the file and see if it exists"* →
 | Key | Default | Effect |
 |---|---|---|
 | `caveman.enabled` | `true` | Master — `false` forces all sub-switches off. |
-| `caveman.speak` | `true` | Compile-time include in `router.json`. |
+| `caveman.speak` | `true` | Compile-time include in `dist/router.json`. |
 | `caveman.speak_scope` | `prose_only` | Runtime scope of caveman grammar. |
 
 Cross-rule index: [`frugality-charter § cross-references`](../contexts/contracts/frugality-charter.md#cross-references--frugality-canon-rules).

@@ -14,10 +14,11 @@ from typing import Any
 from scripts._cli.explain_last.scrubber import scrub_string
 
 ROUTER_FILENAME = "router.json"
+ROUTER_RELATIVE = Path("dist") / ROUTER_FILENAME
 
 
 def _load_router(project_root: Path) -> dict[str, Any] | None:
-    path = project_root / ROUTER_FILENAME
+    path = project_root / ROUTER_RELATIVE
     if not path.exists():
         return None
     try:
