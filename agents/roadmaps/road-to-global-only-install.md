@@ -53,8 +53,8 @@ Convergence: 4/4 green; no blockers; one residual question — *"Should `--proje
 
 ## External council convergence (R1 + R2, 2026-05-22, $0.11)
 
-Two-round external council pass against anthropic/claude-sonnet-4-5 + openai/gpt-4o validated the structural shape and surfaced three blocking gaps that this roadmap now incorporates. Raw responses: <!-- council-ref-allowed: roadmap trace -->
-[`agents/runtime/council/responses/road-to-global-only-install-r1.json`](../runtime/council/responses/road-to-global-only-install-r1.json) and
+Two-round external council pass against anthropic/claude-sonnet-4-5 + openai/gpt-4o validated the structural shape and surfaced three blocking gaps that this roadmap now incorporates. Raw responses:
+[`agents/runtime/council/responses/road-to-global-only-install-r1.json`](../runtime/council/responses/road-to-global-only-install-r1.json) <!-- council-ref-allowed: roadmap trace --> and
 [`agents/runtime/council/responses/global-only-amendments-r2.json`](../runtime/council/responses/global-only-amendments-r2.json). <!-- council-ref-allowed: roadmap trace -->
 
 Locked amendments (8):
