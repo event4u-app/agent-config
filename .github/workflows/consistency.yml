@@ -41,6 +41,11 @@ on:
       - "taskfiles/**"
       - ".github/workflows/consistency.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   consistency:
     name: Sync + Generate Tools Consistency
@@ -54,6 +59,7 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: 'pip'
 
       - name: Set up Task
         uses: arduino/setup-task@v2
