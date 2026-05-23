@@ -15,7 +15,7 @@ complexity: lightweight
 
 ## Context
 
-The Phase 6 browser wizard (`road-to-global-only-install.md` ships its post-install auto-launch via `agents/tmp/council-question-wizard-wiring.md`) is currently a **setup shell**. Feedback6 §P1 lists four product surfaces missing for daily use: task execution, explain visualizer, provider onboarding, council / memory inspection. Feedback7 reframes this as "the browser UI is the product, the terminal is the power-user path".
+The Phase 6 browser wizard (`road-to-global-only-install.md` ships its post-install auto-launch via the in-flight council question on wizard wiring) is currently a **setup shell**. Feedback6 §P1 lists four product surfaces missing for daily use: task execution, explain visualizer, provider onboarding, council / memory inspection. Feedback7 reframes this as "the browser UI is the product, the terminal is the power-user path".
 
 This roadmap turns the same Fastify server into a five-surface product UI. It does **not** re-architect — additive endpoints, additive routes, all gated by the existing PID lock + idle timer + CSRF token.
 
@@ -94,4 +94,4 @@ Five surfaces is enough; tie them together as one product.
 - **Allowlist defaults.** A `gui_runnable: true` flag must be opt-in per command, not opt-out. Anything that writes to git, runs migrations, or touches secrets stays `false` by default — terminal only.
 - **Localstorage scope.** Only non-secret UI state. No credentials, no chat history, no council answers.
 - **No commit / push / merge implied.** Roadmap describes work; release shape is decided per turn.
-- **Dependency.** Phase 1 (task execution) requires `road-to-global-only-install.md` to have moved the wizard out of `init`-only mode (i.e. the `gui` subcommand from `agents/tmp/council-question-wizard-wiring.md`).
+- **Dependency.** Phase 1 (task execution) requires `road-to-global-only-install.md` to have moved the wizard out of `init`-only mode (i.e. the `gui` subcommand carved out by the in-flight wizard-wiring council question).
