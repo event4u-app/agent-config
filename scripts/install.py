@@ -1604,7 +1604,8 @@ def ensure_roocode_bridge(project_root: Path, force: bool) -> None:
 # `~/Library/Application Support/Claude/` on macOS — no project-local
 # discovery. The project bridge is informational only: a marker file that
 # documents the link and tells humans where the canonical rules live.
-# Phase 2.3 will formalize this as scope=global-only via SCOPE_SUPPORT.
+# Formalized as scope=global-only via SCOPE_SUPPORT (Phase 3.1 of
+# road-to-global-only-install — consumer installs are global-only).
 CLAUDE_DESKTOP_MARKER = """# Agent Config bridge — Claude Desktop
 
 This file marks the project as an `event4u/agent-config` consumer.
@@ -2054,26 +2055,36 @@ USER_SCOPE_PATHS = {
 }
 
 
-# Per-tool scope support per ADR-007 matrix + Tier-1/2 verification.
-# Values: "both" · "project" · "global". Used by _validate_scope() to
-# reject explicit `--tools=X` selections that conflict with the chosen
-# scope (project default or `--global`). `--tools=all` silently filters
-# incompatible IDs so the default install path stays backward-compatible.
+# Per-tool scope support per ADR-007 matrix + ADR-020 consumer global-only
+# amendment. Values: "both" · "project" · "global". Used by _validate_scope()
+# to reject explicit `--tools=X` selections that conflict with the chosen
+# scope. `--tools=all` silently filters incompatible IDs so the default
+# install path stays backward-compatible.
 #
-# Rationale:
-#   - claude-desktop has no project discovery (informational marker only
-#     in project trees); --project rejects it explicitly.
-#   - jetbrains avoids mutating team-shared .idea/; --project marker is
-#     informational only; canonical scope is global.
-#   - roocode / kilocode auto-discover `.roo/rules/` and `.kilocode/rules/`
-#     per project; no user-scope discovery convention; --global rejects.
+# road-to-global-only-install § Phase 3.1 — consumer installs are
+# global-only. Every AI ID with a user-scope convention is pinned to
+# "global". Maintainers can still drive project-scope installs by
+# setting AGENT_CONFIG_DEV_MODE=1 — `_enforce_consumer_global_only`
+# gates the scope before validation, so the SCOPE_SUPPORT matrix is the
+# canonical declaration of "where this tool is allowed to write."
+#
+# Exception:
+#   - copilot is "both" because GitHub Copilot has no user-scope
+#     convention for instructions — `copilot-instructions.md` lives
+#     in-repo by design. Project scope still requires
+#     AGENT_CONFIG_DEV_MODE=1 (consumer-floor gate); the "both" value
+#     keeps the gate at the env-flag layer rather than the matrix layer.
 SCOPE_SUPPORT = {
-    "claude-code":    "both",
+    "claude-code":    "global",
     "claude-desktop": "global",
-    "cursor":         "both",
-    "windsurf":       "both",
-    "cline":          "both",
-    "gemini-cli":     "both",
+    "cursor":         "global",
+    "windsurf":       "global",
+    "cline":          "global",
+    "gemini-cli":     "global",
+    # GitHub Copilot ships `copilot-instructions.md` in-repo by design
+    # — no user-scope convention exists. Project scope stays available
+    # but is gated by AGENT_CONFIG_DEV_MODE=1 via the consumer-floor
+    # check, not by the matrix.
     "copilot":        "both",
     # `augment` is global-only by design: a single user-scope deploy to
     # `~/.augment/` is the canonical surface. The package owner accepts
@@ -2083,17 +2094,14 @@ SCOPE_SUPPORT = {
     # installs are rejected so the per-repo `.augment/` surface stays
     # out of the install matrix entirely.
     "augment":        "global",
-    "aider":          "both",
-    "codex":          "both",
-    # Phase 2.4: roocode / kilocode lifted to "both" — global deploys
-    # write to `~/.roo/skills/` and `~/.kilocode/skills/` matching the
-    # nextlevelbuilder/ui-ux-pro-max-skill anchors.
-    "roocode":        "both",
-    "continue":       "both",
-    "kilocode":       "both",
-    "zed":            "both",
+    "aider":          "global",
+    "codex":          "global",
+    "roocode":        "global",
+    "continue":       "global",
+    "kilocode":       "global",
+    "zed":            "global",
     "jetbrains":      "global",
-    "kiro":           "both",
+    "kiro":           "global",
     # Phase 2.4 expansion — global-only for new anchors; project bridges
     # are not yet implemented for these IDs.
     "qoder":          "global",
@@ -2280,9 +2288,22 @@ def _validate_scope(tools: set[str], scope: str, was_all: bool) -> set[str]:
     `--tools=all` or omitted the flag), incompatible tools are silently
     filtered so the default install stays backward-compatible. Explicit
     tool lists hard-reject with a directive error per Phase 2.3.
+
+    Maintainer dev mode (``AGENT_CONFIG_DEV_MODE=1``) bypasses the matrix
+    filter entirely. Per ``docs/maintainers/dev-mode.md`` the flag
+    "allows project-scope writes back into the repo tree" — that
+    contract requires the full bridge surface (cursor / cline / windsurf
+    / gemini-cli / …) to remain reachable under ``--project`` so
+    ``task dev:install-global`` can dogfood every projection. The
+    consumer-facing gate already runs upstream via
+    ``_enforce_consumer_global_only``; reaching this function with
+    ``scope == "project"`` means the dev gate already approved the
+    write, so the matrix filter would be double-gating maintainer flows.
     """
     if scope not in ("project", "global"):
         fail(f"_validate_scope: unknown scope '{scope}'")
+    if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return tools
     incompatible = sorted(
         t for t in tools
         if SCOPE_SUPPORT.get(t, "both") not in ("both", scope)

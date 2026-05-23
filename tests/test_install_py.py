@@ -176,18 +176,28 @@ class TestParseTools(SilentTest):
         self.assertFalse(install._is_tool_enabled(tools, "windsurf"))
 
 
-# --- _validate_scope / _tools_was_all (Phase 2.3) ---
+# --- _validate_scope / _tools_was_all ---
+#
+# Phase 3.1 of road-to-global-only-install flipped SCOPE_SUPPORT so every
+# consumer-facing AI ID is "global". The only remaining "both" entry is
+# `copilot` (no user-scope convention by design). Project-scope installs
+# require AGENT_CONFIG_DEV_MODE=1 via `_enforce_consumer_global_only` —
+# orthogonal to the matrix check tested here.
 
 class TestValidateScope(SilentTest):
-    def test_compatible_tools_pass_through(self) -> None:
+    def test_global_scope_passes_global_only_tools(self) -> None:
         result = install._validate_scope(
-            {"claude-code", "cursor"}, "project", was_all=False,
+            {"claude-code", "cursor"}, "global", was_all=False,
         )
         self.assertEqual(result, {"claude-code", "cursor"})
 
+    def test_copilot_accepts_project(self) -> None:
+        # Phase 3.1: copilot keeps scope="both" because
+        # `copilot-instructions.md` lives in-repo by design.
+        result = install._validate_scope({"copilot"}, "project", was_all=False)
+        self.assertIn("copilot", result)
+
     def test_roocode_accepts_global(self) -> None:
-        # Phase 2.4: roocode lifted to scope="both" — global deploys
-        # the universal skill bundle to ~/.roo/skills/.
         result = install._validate_scope({"roocode"}, "global", was_all=False)
         self.assertIn("roocode", result)
 
@@ -199,8 +209,6 @@ class TestValidateScope(SilentTest):
                 )
 
     def test_kilocode_accepts_global(self) -> None:
-        # Phase 2.4: kilocode lifted to scope="both" — global deploys
-        # the universal skill bundle to ~/.kilocode/skills/.
         result = install._validate_scope({"kilocode"}, "global", was_all=False)
         self.assertIn("kilocode", result)
 
@@ -209,6 +217,22 @@ class TestValidateScope(SilentTest):
             with self.assertRaises(SystemExit):
                 install._validate_scope(
                     {"jetbrains"}, "project", was_all=False,
+                )
+
+    def test_claude_code_rejects_project(self) -> None:
+        # Phase 3.1: claude-code is now global-only at the matrix layer.
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope(
+                    {"claude-code"}, "project", was_all=False,
+                )
+
+    def test_cursor_rejects_project(self) -> None:
+        # Phase 3.1: cursor is now global-only at the matrix layer.
+        with redirect_stderr(io.StringIO()):
+            with self.assertRaises(SystemExit):
+                install._validate_scope(
+                    {"cursor"}, "project", was_all=False,
                 )
 
     def test_qoder_rejects_project(self) -> None:
@@ -226,41 +250,40 @@ class TestValidateScope(SilentTest):
                 install._validate_scope({"augment"}, "project", was_all=False)
 
     def test_all_silent_filters_global_only_under_project(self) -> None:
+        # Phase 3.1: every AI ID except copilot is global-only — under
+        # `--tools=all --project`, only copilot survives the silent filter.
         result = install._validate_scope(
-            {"claude-desktop", "jetbrains", "claude-code", "cursor"},
+            {"claude-desktop", "jetbrains", "claude-code", "cursor", "copilot"},
             "project",
             was_all=True,
         )
-        self.assertNotIn("claude-desktop", result)
-        self.assertNotIn("jetbrains", result)
-        self.assertIn("claude-code", result)
-        self.assertIn("cursor", result)
+        self.assertEqual(result, {"copilot"})
 
     def test_all_silent_filters_augment_under_project(self) -> None:
-        # `--tools=all` (default scope=project) must drop `augment` silently
-        # — it is global-only per ADR-007 Amendment 2026-05-13.
+        # `--tools=all` (default scope=project) must drop `augment` silently.
         result = install._validate_scope(
-            {"augment", "claude-code", "cursor"},
+            {"augment", "copilot"},
             "project",
             was_all=True,
         )
         self.assertNotIn("augment", result)
-        self.assertIn("claude-code", result)
-        self.assertIn("cursor", result)
+        self.assertIn("copilot", result)
 
     def test_all_silent_filters_phase24_tools_under_project(self) -> None:
         # Phase 2.4 expansion tools (qoder, opencode, ...) are global-only
-        # and must be filtered out of `--tools=all --project`.
+        # and must be filtered out of `--tools=all --project`. Phase 3.1
+        # flipped claude-code/cursor to global-only too; only copilot survives.
         result = install._validate_scope(
-            {"qoder", "opencode", "warp", "claude-code", "cursor"},
+            {"qoder", "opencode", "warp", "claude-code", "cursor", "copilot"},
             "project",
             was_all=True,
         )
         self.assertNotIn("qoder", result)
         self.assertNotIn("opencode", result)
         self.assertNotIn("warp", result)
-        self.assertIn("claude-code", result)
-        self.assertIn("cursor", result)
+        self.assertNotIn("claude-code", result)
+        self.assertNotIn("cursor", result)
+        self.assertIn("copilot", result)
 
 
 class TestToolsWasAll(unittest.TestCase):
