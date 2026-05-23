@@ -9,13 +9,22 @@
 import { signal } from '@preact/signals';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import type { UserIdentity } from '@shared/userMd/schema.js';
-import { WIZARD_TOTAL_STEPS } from './steps.js';
+import { getWizardSteps } from './steps.js';
 
 export interface WizardServerState {
     step: number;
     totalSteps: number;
     partial: Record<string, JsonValue>;
     startedAt: string | null;
+    /**
+     * Server-side feature flag for the 9-step unified flow
+     * (ai-tools + packs prepended ahead of the canonical 7 settings
+     * steps). Defaults to `false` so older server bundles that omit
+     * the field stay on the 7-step contract. See
+     * road-to-global-only-install § Phase 1.6 and
+     * `src/server/routes/wizard.ts` (`extendedSteps: extended`).
+     */
+    extendedSteps?: boolean;
 }
 
 export interface DiffChange {
@@ -89,10 +98,28 @@ export const wizardScope = signal<'global' | 'project'>('global');
  */
 export const wizardComplete = signal(false);
 
+/**
+ * Mirrors the server's `extendedSteps` flag from
+ * `GET /api/v1/wizard/state`. Flips the active step list between the
+ * canonical 7-step (false) and the 9-step ai-tools + packs flow
+ * (true). Page chrome reads `getActiveSteps()` / `activeTotalSteps()`
+ * instead of the static `WIZARD_TOTAL_STEPS` constant so a server
+ * toggle takes effect on the next load without a code change.
+ */
+export const extendedSteps = signal(false);
+
+export function getActiveSteps(): readonly import('./steps.js').WizardStep[] {
+    return getWizardSteps({ extended: extendedSteps.value });
+}
+
+export function activeTotalSteps(): number {
+    return getActiveSteps().length;
+}
+
 export function startedAtNow(existing: string | null): string {
     return existing ?? new Date().toISOString();
 }
 
 export function clampStep(idx: number): number {
-    return Math.max(0, Math.min(WIZARD_TOTAL_STEPS - 1, idx));
+    return Math.max(0, Math.min(activeTotalSteps() - 1, idx));
 }
