@@ -6,10 +6,10 @@
 
 ## Overall
 
-**13 / 159 steps done · 8%**
+**15 / 159 steps done · 9%**
 
 ```text
-███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   8%
+████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   9%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md) | 7 | 41 | 28 | 13 | 0 | 0 | ███░░░░░░░ 32% |
+| 2 | [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md) | 7 | 41 | 26 | 15 | 0 | 0 | ████░░░░░░ 37% |
 | 3 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -39,13 +39,13 @@
 
 ### [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md)
 
-**Road to Global-Only Install** — 13 / 41 done (32%)
+**Road to Global-Only Install** — 15 / 41 done (37%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Test harness + contract definition | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 1 | Unified Setup-Wizard (KI + Packs prepended) | 🟡 in progress | 6 | 4 | 0 | 0 | 40% |
-| 2 | Settings live globally | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
+| 2 | Settings live globally | 🟡 in progress | 1 | 4 | 0 | 0 | 80% |
 | 3 | `SCOPE_SUPPORT` flip + `--project` gating | 🟡 in progress | 4 | 1 | 0 | 0 | 20% |
 | 4 | Consumer surface = `agents/overrides/` + bridge | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
 | 5 | Migration tooling (legacy → global) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
