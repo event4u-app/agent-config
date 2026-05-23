@@ -17,7 +17,7 @@
  * finding. A crash mid-commit is replayed at the next server boot.
  */
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
-import { promises as fs } from 'node:fs';
+import { promises as fs, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
@@ -47,6 +47,16 @@ export interface WizardRouteOptions {
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
     /**
+     * Extended-step mode — surfaces `ai-tools` + `packs` ahead of the
+     * canonical 7 settings steps (road-to-global-only-install § D9).
+     * Defaults to `false` so v2.x consumers keep the 7-step flow until
+     * the merged path ships end-to-end (§ Phase 1.9 — version is the
+     * kill-switch, no dual code paths). Setting this to `true` also
+     * unlocks the `/api/v1/wizard/auto-detect` + `/api/v1/wizard/manifest`
+     * endpoints.
+     */
+    extendedSteps?: boolean;
+    /**
      * Dry-run — POST /state writes to a per-server in-memory Map (initial
      * read still hits disk so an in-progress real run can be previewed);
      * POST /finish skips `commitMulti` and returns `{ ok, dryRun, preview }`
@@ -65,7 +75,17 @@ const LEGACY_USER_MD_REL = '.agent-user.md';
 const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
 // and the chat-side `~/.claude/skills/onboard/SKILL.md`. Bump in lockstep.
+// Extended mode (road-to-global-only-install § Phase 1) prepends two
+// steps (ai-tools + packs) to ship the unified 9-step flow.
 const DEFAULT_TOTAL_STEPS = 7;
+const EXTENDED_TOTAL_STEPS = 9;
+
+/**
+ * Discovery-manifest path. Resolved from the package root the server
+ * was booted with — same artefact the installer reads (ADR-015 locks
+ * the location at `dist/discovery/discovery-manifest.json`).
+ */
+const MANIFEST_REL = join('dist', 'discovery', 'discovery-manifest.json');
 
 const wizardStateSchema = z.object({
     step: z.number().int().min(0),
@@ -99,6 +119,30 @@ async function writeState(root: string, state: WizardState): Promise<void> {
 
 async function readTemplate(packageRoot: string): Promise<string> {
     return fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
+}
+
+/**
+ * Lightweight pack/AI auto-detection — minimal port of
+ * `packages/core/installer/src/detect.ts` to avoid a cross-package
+ * import (the wizard server lives in `src/`, the installer ships
+ * separately). Same signal shape, same evidence-paths.
+ * road-to-global-only-install § Phase 1.2.
+ */
+interface DetectionSignal {
+    readonly id: string;
+    readonly reason: string;
+    readonly evidence: string;
+}
+
+function detectProjectSignals(root: string): readonly DetectionSignal[] {
+    const out: DetectionSignal[] = [];
+    const exists = (rel: string): boolean => existsSync(join(root, rel));
+    if (exists('composer.json')) out.push({ id: 'pack-php', reason: 'composer.json found', evidence: 'composer.json' });
+    if (exists('package.json')) out.push({ id: 'pack-js', reason: 'package.json found', evidence: 'package.json' });
+    if (exists('pyproject.toml') || exists('requirements.txt')) out.push({ id: 'pack-python', reason: 'python project file found', evidence: 'pyproject.toml/requirements.txt' });
+    if (exists('artisan')) out.push({ id: 'pack-laravel', reason: 'artisan found', evidence: 'artisan' });
+    if (exists('next.config.js') || exists('next.config.mjs') || exists('next.config.ts')) out.push({ id: 'pack-nextjs', reason: 'next.config found', evidence: 'next.config.*' });
+    return out;
 }
 
 function zodIssuesToFields(issues: z.ZodIssue[]): Array<{ path: string; message: string }> {
@@ -142,7 +186,8 @@ async function deleteLegacyArtefacts(
 }
 
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
-    const totalSteps = opts.totalSteps ?? DEFAULT_TOTAL_STEPS;
+    const extended = opts.extendedSteps === true;
+    const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
     const dryRun = opts.dryRun === true;
     const legacyReadRoot = opts.legacyReadRoot ?? null;
     // Per-process in-memory state for dry-run. One CLI invocation = one
@@ -157,9 +202,42 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             // in-progress real run can be previewed.
             const existing = dryRun ? (memState ?? await readState(opts.writeRoot)) : await readState(opts.writeRoot);
             if (existing === null) {
-                return { step: 0, totalSteps, partial: {}, startedAt: null };
+                return { step: 0, totalSteps, partial: {}, startedAt: null, extendedSteps: extended };
             }
-            return { ...existing, totalSteps: existing.totalSteps ?? totalSteps };
+            return { ...existing, totalSteps: existing.totalSteps ?? totalSteps, extendedSteps: extended };
+        });
+
+        // road-to-global-only-install § Phase 1.2 — Auto-detect endpoint.
+        // Reads package signals from the maintainer's CWD (the consumer
+        // repo the wizard is running against). 404 when extended-mode is
+        // off so the canonical 7-step contract stays unchanged.
+        app.get('/api/v1/wizard/auto-detect', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const root = legacyReadRoot ?? process.cwd();
+            const signals = detectProjectSignals(root);
+            return { root, signals };
+        });
+
+        // road-to-global-only-install § Phase 1.3 — Manifest endpoint.
+        // Surfaces the locked discovery-manifest (ADR-015) so the UI can
+        // render the supported AI IDs + every pack the manifest exposes.
+        app.get('/api/v1/wizard/manifest', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            try {
+                const manifestPath = join(opts.packageRoot, MANIFEST_REL);
+                const raw = await fs.readFile(manifestPath, 'utf8');
+                return JSON.parse(raw) as unknown;
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'manifest read failed';
+                await reply.code(500).send({ error: { code: 'MANIFEST_UNAVAILABLE', message } });
+                return reply;
+            }
         });
 
         app.post('/api/v1/wizard/state', async (request, reply) => {

@@ -355,6 +355,36 @@ function StepBody(): preact.JSX.Element | null {
             />
         );
     }
+    // road-to-global-only-install § Phase 1.4 — placeholder renderers for
+    // the extended-mode lead steps. The full picker UI ships in the
+    // follow-up phase that wires discovery state into the wizard store;
+    // these stubs keep the step navigation walkable today so the 9-step
+    // flow is testable end-to-end while the deeper UX is in flight.
+    if (step.kind === 'aiTools') {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p>
+                    Auto-detected AI tools will appear here. The wizard reads
+                    <code> /api/v1/wizard/auto-detect</code> and lets you toggle each
+                    discovered tool on or off. Pick-list UI lands in the follow-up
+                    extended-mode phase; the endpoint is already live so you can
+                    inspect raw output via <code>curl</code> in the meantime.
+                </p>
+            </div>
+        );
+    }
+    if (step.kind === 'packs') {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p>
+                    Capability packs (founder-strategy, finance-basic, gtm-sales,
+                    ops-people, ai-video) will appear here. The wizard reads
+                    <code> /api/v1/wizard/manifest</code> and lets you toggle each
+                    pack on or off. Selection UI lands in the follow-up phase.
+                </p>
+            </div>
+        );
+    }
     // review
     return (
         <WizardReview
