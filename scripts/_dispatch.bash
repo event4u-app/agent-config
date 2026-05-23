@@ -138,6 +138,10 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
                              file, --dry-run lists intended copies with zero writes.
+  migrate-to-global          One-shot legacy → global-only migration (Phase 5,
+                             road-to-global-only-install.md). Copy → verify → move →
+                             bridge. Runs lint_global_paths.py first. Flags:
+                             --dry-run, --force, --rollback, --skip-perms-gate.
   hooks:install              Install the combined pre-commit hook (roadmap-progress
                              + ADR-013 artefact frontmatter lint).
                              (use --print to dump it, --force to overwrite an existing hook)
@@ -734,6 +738,16 @@ cmd_settings_migrate() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_settings_migrate "$@"
 }
 
+# `agent-config migrate-to-global` — Phase 5.1 + 5.3 + 5.5 of
+# road-to-global-only-install.md. Order: copy → verify → move → bridge.
+# Runs the lint_global_paths.py permissions gate first (Phase 5.0 / A7).
+# Flags: --dry-run (zero writes), --force (overwrite non-empty global),
+# --rollback (reverse the latest .legacy-pre-global-only/<stamp>/ snapshot).
+cmd_migrate_to_global() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_migrate_to_global "$@"
+}
+
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
 # entries (global). Idempotent. Pass `--purge` to also delete deployed
 # content directories under user-scope anchors (destructive). See
@@ -827,6 +841,7 @@ main() {
     validate)                cmd_validate "$@" ;;
     settings:check)          cmd_settings_check "$@" ;;
     settings:migrate)        cmd_settings_migrate "$@" ;;
+    migrate-to-global)       cmd_migrate_to_global "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
