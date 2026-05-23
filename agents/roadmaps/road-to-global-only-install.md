@@ -93,11 +93,11 @@ Lifts the Installer-GUI's AI-tool and Pack selection into the Setup-Wizard so a 
 
 Moves `.agent-user.yml` and `.agent-settings.yml` from project-local to user-scope as the source of truth. Project copy survives only as an explicit override.
 
-- [ ] **2.1** Define the canonical global paths in `scripts/install.py`:
+- [x] **2.1** Define the canonical global paths in `scripts/install.py`:
   - `~/.event4u/agent-config/.agent-user.yml`
   - `~/.event4u/agent-config/.agent-settings.yml`
-  Surface as constants `GLOBAL_USER_SETTINGS_PATH` / `GLOBAL_AGENT_SETTINGS_PATH`. Single source of truth; no further hard-coded paths.
-- [ ] **2.2** Settings reader (Python + TypeScript) merge order becomes: `defaults < global < project-overrides`. Project copy is no longer required to exist. Affected modules: `scripts/install.py` settings helpers, `packages/core/installer/src/settings/`, `src/server/routes/wizard.ts` apply handler. Add unit tests covering the three-layer merge with missing project layer.
+  Surface as constants `GLOBAL_USER_SETTINGS_PATH` / `GLOBAL_AGENT_SETTINGS_PATH`. Single source of truth; no further hard-coded paths. Shipped in `scripts/install.py` lines 2259-2260 alongside the layered reader.
+- [x] **2.2** Settings reader (Python + TypeScript) merge order becomes: `defaults < global < project-overrides`. Project copy is no longer required to exist. Affected modules: `scripts/install.py` settings helpers, `packages/core/installer/src/settings/`, `src/server/routes/wizard.ts` apply handler. Add unit tests covering the three-layer merge with missing project layer. Python `read_layered_settings` + Python suite `tests/test_install_scope_global_only.py` shipped; TypeScript `readLayeredSettings` in `src/server/routes/settings.ts` + parallel suite `tests/server/settings.layered.test.ts` (4 tests green) match the Python merge semantics 1:1.
 - [ ] **2.3** Setup-Wizard "Apply" writes the global file by default. The project copy is written **only** if the user ticks a new "scope to this project only" checkbox in Step 9 (Review). Default off.
 - [ ] **2.4** Add `agent-config settings migrate` subcommand to lift an existing project-local `.agent-user.yml` / `.agent-settings.yml` into the global location. Idempotent; refuses to overwrite a non-empty global file without `--force`.
 - [ ] **2.5** Update `docs/contracts/settings-api.md` to document the new merge order and the migrate subcommand.
@@ -107,7 +107,7 @@ Moves `.agent-user.yml` and `.agent-settings.yml` from project-local to user-sco
 Removes the consumer-visible `--project` path. Maintainer dev loop survives behind `AGENT_CONFIG_DEV_MODE=1`.
 
 - [ ] **3.1** Flip `SCOPE_SUPPORT` entries in `scripts/install.py` from `both` to `global` for every consumer-facing AI ID. Tools that have no user-scope convention (`copilot` for repo-committed instructions) keep `both` but require `AGENT_CONFIG_DEV_MODE=1` for `project`. Document the new matrix inline.
-- [ ] **3.2** Add the env-flag gate in `_validate_scope()`: when `scope == "project"` and `AGENT_CONFIG_DEV_MODE` is unset, fail with a one-line error pointing at the maintainer docs.
+- [x] **3.2** Add the env-flag gate in `_validate_scope()`: when `scope == "project"` and `AGENT_CONFIG_DEV_MODE` is unset, fail with a one-line error pointing at the maintainer docs. Implemented as `_enforce_consumer_global_only` in `scripts/install.py:2305` (separate from `_resolve_scope` to keep the resolver a pure function).
 - [ ] **3.3** Update `scripts/install.sh` argument parser: reject `--project[=…]` without the env flag. `--dry-run` must continue to be strictly read-only (already hardened in the prior turn — add a regression test).
 - [ ] **3.4** Update `packages/core/installer/src/cli.ts` flag handling to mirror the same gate.
 - [ ] **3.5** Add `tests/test_install_scope_global_only.py` + `tests/e2e/cli-project-flag-rejected.spec.ts` covering the rejection path with and without the env flag.

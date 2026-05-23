@@ -162,7 +162,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
-    await app.register(settingsRoute({ writeRoot, legacyReadRoot, dryRun }));
+    await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
     await app.register(wizardRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
 
