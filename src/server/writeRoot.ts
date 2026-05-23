@@ -38,6 +38,20 @@ export interface WriteRootResolution {
      * `writeRoot`, or explicit `override`).
      */
     legacyReadRoot: string | null;
+    /**
+     * Absolute path of the consumer-project root the wizard may opt to
+     * scope the write to (road-to-global-only-install § Phase 2.3). The
+     * wizard surfaces a "scope to this project only" checkbox in Review
+     * when this is non-null; ticking it routes the finish-handler commit
+     * to `<projectScopeRoot>/settings/` instead of the global write root.
+     *
+     *   - global mode with a real CWD → CWD (the consumer project).
+     *   - package-sandbox mode → `null` (maintainer is editing the
+     *     package itself; the writeRoot already lives inside the repo so
+     *     a project-scope opt-in would be a no-op).
+     *   - explicit `override` → `null` (the operator pinned the root).
+     */
+    projectScopeRoot: string | null;
     /** Which branch was taken — surfaced in the ping response for the UI. */
     mode: WriteRootMode;
 }
@@ -81,6 +95,7 @@ export function resolveWriteRoot(opts: ResolveOptions = {}): WriteRootResolution
         return {
             writeRoot: resolve(opts.override),
             legacyReadRoot: null,
+            projectScopeRoot: null,
             mode: 'global',
         };
     }
@@ -93,12 +108,18 @@ export function resolveWriteRoot(opts: ResolveOptions = {}): WriteRootResolution
         return {
             writeRoot,
             legacyReadRoot: cwd,
+            projectScopeRoot: null,
             mode: 'package-sandbox',
         };
     }
     const writeRoot = globalWriteRoot(opts.home);
     const legacyReadRoot = cwd !== writeRoot ? cwd : null;
-    return { writeRoot, legacyReadRoot, mode: 'global' };
+    // CWD doubles as the project-scope target when the user opts into
+    // local-only persistence. Suppressed when CWD coincides with the
+    // global writeRoot (the rare case where the user runs the wizard
+    // from inside `~/.event4u/agent-config/`).
+    const projectScopeRoot = cwd !== writeRoot ? cwd : null;
+    return { writeRoot, legacyReadRoot, projectScopeRoot, mode: 'global' };
 }
 
 /** Create the write-root directory tree if missing. Mode 0700 for global. */

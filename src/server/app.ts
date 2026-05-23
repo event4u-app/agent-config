@@ -51,6 +51,17 @@ export interface CreateAppOptions {
      * the fallback (package-sandbox or explicit override).
      */
     legacyReadRoot?: string | null;
+    /**
+     * Optional project-scope root — the consumer-project CWD the wizard
+     * may route writes to when the user opts into project-only scoping
+     * via the Review-step checkbox. `null` when no opt-in is available
+     * (package-sandbox mode, explicit override, or CWD coincides with
+     * `writeRoot`). Surfaced on `/api/v1/ping` as `projectScopeAvailable`
+     * (boolean) so the UI can show/hide the checkbox.
+     *
+     * road-to-global-only-install § Phase 2.3.
+     */
+    projectScopeRoot?: string | null;
     /** Storage mode — surfaced on `/api/v1/ping` for the UI banner. */
     mode?: StorageMode;
     /**
@@ -155,16 +166,17 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         throw new Error('createApp: writeRoot (or projectRoot) is required');
     }
     const legacyReadRoot = opts.legacyReadRoot ?? null;
+    const projectScopeRoot = opts.projectScopeRoot ?? null;
     const mode: StorageMode = opts.mode ?? 'global';
 
-    await app.register(pingRoute({ writeRoot, mode, dryRun }));
+    await app.register(pingRoute({ writeRoot, projectScopeRoot, mode, dryRun }));
     await app.register(
         discoveryRoute(opts.discoveryManifestPath ? { manifestPath: opts.discoveryManifestPath } : {}),
     );
     await app.register(schemaRoute());
     await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
-    await app.register(wizardRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
+    await app.register(wizardRoute({ writeRoot, legacyReadRoot, projectScopeRoot, packageRoot, dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so

@@ -28,6 +28,16 @@ export interface WizardReviewProps {
     userMdAction: 'create' | 'replace' | null;
     loading: boolean;
     onJump: (index: number) => void;
+    /**
+     * Wizard write scope (road-to-global-only-install § Phase 2.3). The
+     * checkbox is rendered only when `scopeAvailable` is `true` — that
+     * flag mirrors the server's `projectScopeAvailable`, which is `false`
+     * in package-sandbox mode and when the operator pinned the write
+     * root via `--project`. The default scope is `'global'`.
+     */
+    scope: 'global' | 'project';
+    scopeAvailable: boolean;
+    onScopeChange: (next: 'global' | 'project') => void;
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -83,36 +93,67 @@ function stepStatus(
 export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
     const jumpSteps = props.steps.filter((_, i) => i !== props.currentIndex);
     return (
-        <nav class="ac-wizard__review-nav" aria-label="Jump back to a step">
-            <p class="ac-wizard__review-nav-label">Jump back to a step:</p>
-            <ul class="ac-wizard__review-nav-list">
-                {jumpSteps.map((s) => {
-                    const i = props.steps.indexOf(s);
-                    const status = stepStatus(s, props);
-                    const buttonClass = status.tone === 'error'
-                        ? 'ac-wizard__review-nav-button ac-wizard__review-nav-button--error'
-                        : 'ac-wizard__review-nav-button';
-                    return (
-                        <li key={s.id}>
-                            <button
-                                type="button"
-                                class={buttonClass}
-                                onClick={(): void => { props.onJump(i); }}
-                            >
-                                <span class="ac-wizard__review-nav-index">{i + 1}</span>
-                                <span class="ac-wizard__review-nav-text">{s.navLabel}</span>
-                                {status.label !== '' ? (
-                                    <span
-                                        class={`ac-wizard__review-nav-status ac-wizard__review-nav-status--${status.tone}`}
-                                    >
-                                        {status.label}
-                                    </span>
-                                ) : null}
-                            </button>
-                        </li>
-                    );
-                })}
-            </ul>
-        </nav>
+        <>
+            <nav class="ac-wizard__review-nav" aria-label="Jump back to a step">
+                <p class="ac-wizard__review-nav-label">Jump back to a step:</p>
+                <ul class="ac-wizard__review-nav-list">
+                    {jumpSteps.map((s) => {
+                        const i = props.steps.indexOf(s);
+                        const status = stepStatus(s, props);
+                        const buttonClass = status.tone === 'error'
+                            ? 'ac-wizard__review-nav-button ac-wizard__review-nav-button--error'
+                            : 'ac-wizard__review-nav-button';
+                        return (
+                            <li key={s.id}>
+                                <button
+                                    type="button"
+                                    class={buttonClass}
+                                    onClick={(): void => { props.onJump(i); }}
+                                >
+                                    <span class="ac-wizard__review-nav-index">{i + 1}</span>
+                                    <span class="ac-wizard__review-nav-text">{s.navLabel}</span>
+                                    {status.label !== '' ? (
+                                        <span
+                                            class={`ac-wizard__review-nav-status ac-wizard__review-nav-status--${status.tone}`}
+                                        >
+                                            {status.label}
+                                        </span>
+                                    ) : null}
+                                </button>
+                            </li>
+                        );
+                    })}
+                </ul>
+            </nav>
+            {props.scopeAvailable ? (
+                <fieldset class="ac-wizard__scope">
+                    <legend class="ac-wizard__scope-legend">Where should these settings be written?</legend>
+                    <label class="ac-wizard__scope-option">
+                        <input
+                            type="radio"
+                            name="ac-wizard-scope"
+                            value="global"
+                            checked={props.scope === 'global'}
+                            onChange={(): void => { props.onScopeChange('global'); }}
+                        />
+                        <span class="ac-wizard__scope-option-text">
+                            <strong>Global</strong> — write to <code>~/.event4u/agent-config/</code> so every project picks them up.
+                        </span>
+                    </label>
+                    <label class="ac-wizard__scope-option">
+                        <input
+                            type="radio"
+                            name="ac-wizard-scope"
+                            value="project"
+                            checked={props.scope === 'project'}
+                            onChange={(): void => { props.onScopeChange('project'); }}
+                        />
+                        <span class="ac-wizard__scope-option-text">
+                            <strong>This project only</strong> — write to <code>settings/</code> under the current repo (overrides the global layer).
+                        </span>
+                    </label>
+                </fieldset>
+            ) : null}
+        </>
     );
 }

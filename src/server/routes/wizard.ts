@@ -44,6 +44,15 @@ export interface WizardRouteOptions {
      * paths is surfaced in the response as `migratedFrom`.
      */
     legacyReadRoot?: string | null;
+    /**
+     * Consumer-project root the finish handler routes writes to when the
+     * caller sends `scope: 'project'` (road-to-global-only-install
+     * § Phase 2.3). `null` disables the opt-in: any `scope: 'project'`
+     * body is then rejected with HTTP 422 because the request would have
+     * nowhere meaningful to write. Default scope stays `'global'`, so
+     * existing bundles that don't pass `scope` keep working unchanged.
+     */
+    projectScopeRoot?: string | null;
     /** Total number of wizard steps (for resume continuity). */
     totalSteps?: number;
     /**
@@ -190,6 +199,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
     const dryRun = opts.dryRun === true;
     const legacyReadRoot = opts.legacyReadRoot ?? null;
+    const projectScopeRoot = opts.projectScopeRoot ?? null;
     // Per-process in-memory state for dry-run. One CLI invocation = one
     // server = one Map; cross-session leakage is impossible because each
     // `agent-config setup --dry-run` mints a fresh server. See § Dry-run
@@ -263,7 +273,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
-            const body = (request.body ?? {}) as { settings?: unknown; identity?: unknown };
+            const body = (request.body ?? {}) as { settings?: unknown; identity?: unknown; scope?: unknown };
             const settingsParsed = settingsSchema.safeParse(body.settings);
             if (!settingsParsed.success) {
                 await reply.code(422).send({
@@ -283,6 +293,28 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
+            // road-to-global-only-install § Phase 2.3 — explicit scope opt-in.
+            // `'global'` (default) lands writes under the resolved writeRoot
+            // (typically `~/.event4u/agent-config/`). `'project'` routes
+            // writes to `<projectScopeRoot>/settings/` so a consumer can
+            // pin settings to a single repo. Any other value rejected.
+            const rawScope = body.scope;
+            const scope: 'global' | 'project' = rawScope === 'project' ? 'project' : 'global';
+            if (rawScope !== undefined && rawScope !== 'global' && rawScope !== 'project') {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: "invalid scope (expected 'global' or 'project')", fields: [{ path: 'scope', message: 'must be \'global\' or \'project\'' }] },
+                });
+                return reply;
+            }
+            if (scope === 'project' && projectScopeRoot === null) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'project scope is unavailable in this server mode', fields: [{ path: 'scope', message: 'projectScopeRoot is null' }] },
+                });
+                return reply;
+            }
+            const effectiveWriteRoot = scope === 'project' && projectScopeRoot !== null
+                ? projectScopeRoot
+                : opts.writeRoot;
 
             try {
                 const template = await readTemplate(opts.packageRoot);
@@ -296,6 +328,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                     return {
                         ok: true,
                         dryRun: true,
+                        scope,
                         preview: {
                             settingsYaml: settingsBody,
                             identity: identityParsed && identityParsed.success ? identityParsed.data : null,
@@ -304,22 +337,29 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                     };
                 }
                 const payloads: CommitPayload[] = [
-                    { target: join(opts.writeRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
+                    { target: join(effectiveWriteRoot, SETTINGS_REL), contents: settingsBody, mode: 0o600 },
                 ];
                 if (identityBody !== null) {
-                    payloads.push({ target: join(opts.writeRoot, USER_IDENTITY_REL), contents: identityBody, mode: 0o600 });
+                    payloads.push({ target: join(effectiveWriteRoot, USER_IDENTITY_REL), contents: identityBody, mode: 0o600 });
                 }
-                const { txnId } = await commitMulti(payloads, { writeRoot: opts.writeRoot });
+                const { txnId } = await commitMulti(payloads, { writeRoot: effectiveWriteRoot });
+                // Wizard state lives under the original writeRoot (server
+                // boot resolves it once and the resume path reads from
+                // there). Clear it regardless of scope so the wizard
+                // restarts clean on next launch.
                 await fs.unlink(statePath(opts.writeRoot)).catch(() => undefined);
                 // Auto-migrate: remove legacy `.agent-user.md` (both the
                 // in-CWD copy and the in-sandbox copy) and the in-CWD
                 // `.agent-settings.yml` once the new files are committed.
-                // Best-effort — an orphan legacy file is harmless (next
-                // re-run is a no-op).
-                const migratedFrom = await deleteLegacyArtefacts(legacyReadRoot, opts.writeRoot).catch(() => []);
+                // Skipped for scope='project' when the legacy root IS the
+                // effective write root — we just wrote `settings/*` there
+                // and the flat-root files are independent legacy artefacts
+                // that should still be cleaned. The helper handles that.
+                const migratedFrom = await deleteLegacyArtefacts(legacyReadRoot, effectiveWriteRoot).catch(() => []);
                 return {
                     writtenPaths: payloads.map((p) => p.target),
                     txnId,
+                    scope,
                     ...(migratedFrom.length > 0 ? { migratedFrom } : {}),
                 };
             } catch (err) {

@@ -14,6 +14,7 @@
 
 import { useEffect } from 'preact/hooks';
 import { apiFetch, ApiCallError } from '../api.js';
+import { serverStatus } from '../serverStatus.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
 import { UserMdForm } from '../forms/UserMdForm.js';
@@ -48,6 +49,7 @@ import {
     userMdSkipped,
     values,
     wizardComplete,
+    wizardScope,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -274,7 +276,11 @@ async function finish(): Promise<void> {
     saving.value = true;
     banner.value = null;
     try {
-        const body: { settings: Record<string, JsonValue>; identity?: UserIdentity } = {
+        const body: {
+            settings: Record<string, JsonValue>;
+            identity?: UserIdentity;
+            scope?: 'global' | 'project';
+        } = {
             settings: values.value,
         };
         // Send the identity object only when the user actually edited or
@@ -282,6 +288,13 @@ async function finish(): Promise<void> {
         // existing `.agent-user.yml` alone.
         if (userMdChanged() && userMdBody.value !== null) {
             body.identity = userMdBody.value;
+        }
+        // road-to-global-only-install § Phase 2.3 — include the scope
+        // selection only when the server advertised the opt-in. Older
+        // server bundles ignore unknown fields, but omitting it on
+        // unavailable surfaces keeps the wire shape minimal.
+        if (serverStatus.value?.projectScopeAvailable === true) {
+            body.scope = wizardScope.value;
         }
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
@@ -396,6 +409,9 @@ function StepBody(): preact.JSX.Element | null {
             userMdAction={userMdExists.value ? 'replace' : 'create'}
             loading={diffLoading.value}
             onJump={(i): void => { void goTo(i); }}
+            scope={wizardScope.value}
+            scopeAvailable={serverStatus.value?.projectScopeAvailable === true}
+            onScopeChange={(next): void => { wizardScope.value = next; }}
         />
     );
 }
