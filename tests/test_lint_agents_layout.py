@@ -23,7 +23,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 from lint_agents_layout import (  # noqa: E402
     ALLOWED_FLAT_FILES,
+    CONSUMER_EXPECTED_ENTRIES,
+    find_consumer_warnings,
     find_violations,
+    is_source_repo,
 )
 
 REPO = Path(__file__).resolve().parent.parent
@@ -116,10 +119,11 @@ def test_cli_fails_on_unknown(tmp_path: Path) -> None:
     assert "mystery.txt" in res.stdout
 
 
-def test_cli_strict_flag_accepted_for_backcompat(tmp_path: Path) -> None:
-    """--strict is a no-op now; the linter still accepts it without error."""
+def test_cli_strict_flag_accepted_on_clean_consumer(tmp_path: Path) -> None:
+    """--strict on a clean consumer shape (overrides/ + bridge marker) exits 0."""
     agents = tmp_path / "agents"
-    _seed(agents, sorted(ALLOWED_FLAT_FILES))
+    (agents / "overrides").mkdir(parents=True)
+    (agents / ".event4u-bridge.yml").write_text("schema: event4u-bridge/v1\n", encoding="utf-8")
     res = _run_cli(tmp_path, "--strict", "--quiet")
     assert res.returncode == 0, res.stdout + res.stderr
 
@@ -128,3 +132,100 @@ def test_real_repo_has_no_unknown_flat_files() -> None:
     """The production tree must have zero UNKNOWN flat files at agents/ root."""
     unknown = find_violations(REPO / "agents")
     assert unknown == [], "Unknown flat files at agents/ root:\n" + "\n".join(unknown)
+
+
+# --- Phase 4.4 — consumer-shape warnings & source-repo detection -----
+
+def test_bridge_marker_is_allowed_flat_file() -> None:
+    """``.event4u-bridge.yml`` is whitelisted at agents/ root (Phase 4.2)."""
+    assert ".event4u-bridge.yml" in ALLOWED_FLAT_FILES
+
+
+def test_consumer_expected_entries_minimal_set() -> None:
+    """Consumer-target shape: overrides/ + bridge marker + .gitkeep only."""
+    assert CONSUMER_EXPECTED_ENTRIES == frozenset(
+        {"overrides", ".event4u-bridge.yml", ".gitkeep"},
+    )
+
+
+def test_is_source_repo_detects_root_uncompressed(tmp_path: Path) -> None:
+    (tmp_path / ".agent-src.uncompressed").mkdir()
+    assert is_source_repo(tmp_path) is True
+
+
+def test_is_source_repo_detects_root_compressed(tmp_path: Path) -> None:
+    (tmp_path / ".agent-src").mkdir()
+    assert is_source_repo(tmp_path) is True
+
+
+def test_is_source_repo_detects_pack_uncompressed(tmp_path: Path) -> None:
+    (tmp_path / "packages" / "core" / ".agent-src.uncompressed").mkdir(parents=True)
+    assert is_source_repo(tmp_path) is True
+
+
+def test_is_source_repo_false_in_clean_consumer(tmp_path: Path) -> None:
+    (tmp_path / "agents" / "overrides").mkdir(parents=True)
+    assert is_source_repo(tmp_path) is False
+
+
+def test_consumer_warnings_silent_on_target_shape(tmp_path: Path) -> None:
+    """Consumer target shape (overrides/ + bridge marker) — zero warnings."""
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / ".event4u-bridge.yml").write_text("schema: event4u-bridge/v1\n", encoding="utf-8")
+    assert find_consumer_warnings(agents) == []
+
+
+def test_consumer_warnings_flag_legacy_dirs(tmp_path: Path) -> None:
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / "runtime").mkdir()
+    (agents / "evidence").mkdir()
+    warnings = find_consumer_warnings(agents)
+    joined = "\n".join(warnings)
+    assert "runtime" in joined
+    assert "evidence" in joined
+    # overrides/ is expected — not in warnings.
+    assert "overrides" not in joined.replace("agents/overrides/", "")
+
+
+def test_consumer_warnings_skip_unknown_flat_files(tmp_path: Path) -> None:
+    """UNKNOWN flat files are already errors — don't double-count as warnings."""
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / "rogue.txt").write_text("x\n", encoding="utf-8")
+    # No warning for rogue.txt (it's an UNKNOWN error elsewhere).
+    warnings = find_consumer_warnings(agents)
+    assert not any("rogue.txt" in w for w in warnings)
+
+
+def test_cli_consumer_warnings_exit_zero(tmp_path: Path) -> None:
+    """Consumer-mode warnings are soft — default exit code stays 0."""
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / "runtime").mkdir()
+    res = _run_cli(tmp_path)
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "consumer-shape warnings" in res.stdout
+    assert "agent-config settings migrate" in res.stdout
+
+
+def test_cli_strict_flips_warnings_to_errors(tmp_path: Path) -> None:
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / "runtime").mkdir()
+    res = _run_cli(tmp_path, "--strict")
+    assert res.returncode == 1
+    assert "consumer-shape warnings" in res.stdout
+
+
+def test_cli_no_warnings_in_source_repo(tmp_path: Path) -> None:
+    """Maintainer source repo — full agents/ tree allowed, no warnings."""
+    (tmp_path / ".agent-src").mkdir()
+    agents = tmp_path / "agents"
+    (agents / "overrides").mkdir(parents=True)
+    (agents / "runtime").mkdir()
+    (agents / "evidence").mkdir()
+    res = _run_cli(tmp_path)
+    assert res.returncode == 0, res.stdout + res.stderr
+    assert "consumer-shape warnings" not in res.stdout
