@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # Integration tests for scripts/install — the orchestrator that chains
 # scripts/install.sh (payload sync) and scripts/install.py (bridges).
+#
+# ADR-020 makes `--scope=project` maintainer-only; these tests exercise
+# the project-scoped flow on purpose (temp-dir payload + bridges), so
+# the dev-mode gate is opted in once at the script level. Mirrors the
+# precedent set by smoke-quickstart in .github/workflows/tests.yml.
 set -uo pipefail
+export AGENT_CONFIG_DEV_MODE=1
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 INSTALL="$SCRIPT_DIR/scripts/install"
