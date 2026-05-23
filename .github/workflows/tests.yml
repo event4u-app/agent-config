@@ -192,13 +192,20 @@ jobs:
         if: always()
         run: python3 scripts/ci_summary.py --runs agents/reports/runs
 
-  typescript-tests:
-    # Phase 5.2 of typescript-cli-and-local-gui-foundation — guards the
-    # TS CLI shell + local UI bundle. Narrow harnesses match the
-    # roadmap-ci-steps-policy contract: lint, typecheck, build, vitest.
-    # The build step also exercises the `chmod +x` hook that
-    # prepack-check.mjs asserts on `npm pack`.
-    name: TypeScript Tests (${{ matrix.os }})
+  node-tests:
+    # Consolidates TypeScript CLI/UI tests (Phase 5.2 of
+    # typescript-cli-and-local-gui-foundation) and the installer-package
+    # tests (Phase 3.1/6 of monorepo-phase-3-typescript-installer, ADR-016)
+    # into one runner. Both share the same OS matrix, Node version, and
+    # root `npm ci` — merging halves checkout + setup-node + npm ci cost
+    # per OS without losing diagnostic clarity (step names remain
+    # distinct). The installer package shares the root node_modules via
+    # npm-hoisting for @inquirer/prompts, commander, js-yaml, vitest,
+    # typescript; no separate `npm ci` is required inside the package
+    # directory. `build` script = `build:cli && build:ui`, so the
+    # previous explicit build:cli + build:ui + build pair was a no-op
+    # duplicate; collapsed to a single build invocation.
+    name: Node Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -212,57 +219,29 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install dependencies (hoists installer toolchain)
         run: npm ci
 
+      # ── Root TS CLI + UI ───────────────────────────────────────────
       - name: ESLint (src/**/*.ts)
         run: npm run lint:ts --silent
 
       - name: Typecheck (tsc --noEmit)
         run: npm run typecheck --silent
 
-      - name: Build CLI (dist/cli/agent-config.js)
-        run: npm run build:cli --silent
-
-      - name: Build UI (dist/ui/)
-        run: npm run build:ui --silent
+      - name: Build (dist/cli + UI bundle)
+        # `build` = `build:cli && build:ui`; the `build:cli` step also
+        # exercises the `chmod +x` hook that prepack-check.mjs asserts
+        # on `npm pack`.
+        run: npm run build --silent
 
       - name: Vitest (tests/{cli,server,ui}/**/*.ts)
         run: npm run test:ts --silent
 
-      - name: Prepack guard (dist sanity-check)
-        run: node scripts/prepack-check.mjs
-
-      - name: Build (dist/cli + UI bundle)
-        run: npm run build --silent
-
       - name: prepack-check (compiled bin shape gate)
         run: node scripts/prepack-check.mjs
 
-  installer-tests:
-    # Phase 3.1 / Phase 6 of monorepo-phase-3-typescript-installer
-    # (ADR-016). Gates the TypeScript installer package
-    # `packages/core/installer/` — typecheck + vitest. The package shares
-    # the root node_modules via npm-hoisting for @inquirer/prompts,
-    # commander, js-yaml, vitest, typescript; no separate `npm ci` is
-    # required inside the package directory.
-    name: Installer Tests (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install root dependencies (hoists installer toolchain)
-        run: npm ci
-
+      # ── Installer package (packages/core/installer) ────────────────
       - name: Typecheck installer (tsc --noEmit)
         working-directory: packages/core/installer
         run: npx tsc -p tsconfig.json --noEmit
