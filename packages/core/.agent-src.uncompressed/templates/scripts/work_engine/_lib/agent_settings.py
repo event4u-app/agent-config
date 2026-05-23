@@ -99,11 +99,14 @@ ANCHOR_GIT = "git"
 
 #: Marker subpaths that qualify a bare ``agents/`` directory as a project
 #: anchor (D1). Any one is sufficient. Bare ``agents/`` without a marker
-#: is **not** an anchor.
+#: is **not** an anchor. ``.event4u-bridge.yml`` is the global-only
+#: consumer anchor (ADR-020 § Phase 4.2) — a clean consumer repo only
+#: ever ships ``agents/overrides/`` plus this marker.
 _AGENTS_DIR_MARKERS: tuple[str, ...] = (
     "roadmaps",
     "settings/.ai-council.yml",
     "roadmaps-progress.md",
+    ".event4u-bridge.yml",
 )
 
 #: Kill-switch (D5). When set to ``"1"``, :func:`find_project_root` and
