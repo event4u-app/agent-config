@@ -3,6 +3,10 @@ artefact_count: 8
 description: Hiring loops, onboarding programs, comp banding.
 id: ops-people
 label: Operations — People
+onboarding:
+  example_workflow: one-on-one-cadence
+  first_win_doc: FIRST_WIN.md
+  time_to_first_value_minutes: 6
 owner:
 - ops
 requires: []

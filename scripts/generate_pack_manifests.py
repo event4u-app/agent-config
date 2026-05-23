@@ -103,7 +103,7 @@ def _build_pack_yaml(pkg_dir: Path, vocab: dict[str, dict[str, Any]],
     pid = _pack_id_from_dir(pkg_dir)
     meta = vocab.get(pid) or {}
     label = meta.get("label") or (pid.title() if pid == "core" else pid)
-    return {
+    out: dict[str, Any] = {
         "id": pid,
         "label": label,
         "description": meta.get("description") or ("Core framework-neutral artefacts." if pid == "core" else ""),
@@ -113,6 +113,9 @@ def _build_pack_yaml(pkg_dir: Path, vocab: dict[str, dict[str, Any]],
         "version": version,
         "artefact_count": len(artefacts),
     }
+    if isinstance(meta.get("onboarding"), dict):
+        out["onboarding"] = meta["onboarding"]
+    return out
 
 
 def _render_readme(pack_meta: dict[str, Any], artefacts: list[dict[str, Any]]) -> str:
