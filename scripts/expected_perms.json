@@ -1,0 +1,47 @@
+{
+  "$schema_version": "expected-perms/v1",
+  "$comment": "Expected POSIX modes for the global install tree. Consumed by scripts/lint_global_paths.py as an entry-gate for the migrate-to-global subcommand (road-to-global-only-install Phase 5.0 / A7). Octal modes are strings so JSON tooling never widens 0700 → 700.",
+  "global_root": {
+    "path": "~/.event4u/agent-config",
+    "expected_mode": "0700",
+    "kind": "directory"
+  },
+  "files": [
+    {
+      "glob": "~/.event4u/agent-config/.agent-settings.yml",
+      "expected_mode": "0600",
+      "required": false
+    },
+    {
+      "glob": "~/.event4u/agent-config/.agent-user.yml",
+      "expected_mode": "0600",
+      "required": false
+    },
+    {
+      "glob": "~/.event4u/agent-config/.wizard-state.json",
+      "expected_mode": "0600",
+      "required": false
+    },
+    {
+      "glob": "~/.event4u/agent-config/**/*.key",
+      "expected_mode": "0600",
+      "required": false
+    }
+  ],
+  "directories": [
+    {
+      "glob": "~/.event4u/agent-config/state",
+      "expected_mode": "0700",
+      "required": false
+    },
+    {
+      "glob": "~/.event4u/agent-config/settings",
+      "expected_mode": "0700",
+      "required": false
+    }
+  ],
+  "forbid_symlink_escape": {
+    "root": "~/.event4u/agent-config",
+    "$comment": "All symlinks under the global root MUST resolve to paths still under the global root. Cross-root escapes are a security finding (allows external writes via a writable symlink target)."
+  }
+}

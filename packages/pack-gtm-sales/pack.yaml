@@ -3,6 +3,10 @@ artefact_count: 4
 description: Pipeline, MEDDIC, forecast accuracy.
 id: gtm-sales
 label: GTM — Sales
+onboarding:
+  example_workflow: deal-qualification-meddic
+  first_win_doc: FIRST_WIN.md
+  time_to_first_value_minutes: 7
 owner:
 - gtm
 requires: []

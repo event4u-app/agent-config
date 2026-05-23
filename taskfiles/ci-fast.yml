@@ -187,6 +187,39 @@ tasks:
     desc: Lint README.md with warnings as errors
     cmd: python3 scripts/readme_linter.py README.md --root . --strict
 
+  lint-featured-skills:
+    silent: true
+    desc: |
+      Validate every artefact + pack hint in docs/featured-skills.md
+      resolves against dist/discovery/discovery-manifest.json
+      (road-to-role-first-onboarding Phase 1 Step 3).
+    cmd: python3 scripts/lint_featured_skills.py {{.QUIET_FLAG}}
+
+  lint-readme-size:
+    silent: true
+    desc: |
+      Freeze README.md at 750 lines — replace, do not grow
+      (road-to-role-first-onboarding Phase 2 Step 6).
+    cmd: python3 scripts/lint_readme_size.py {{.QUIET_FLAG}}
+
+  lint-readme-jargon:
+    silent: true
+    desc: |
+      Cap above-fold (lines 1..120) jargon density at <= 3 hits
+      from the kernel/contract/iron-law/projection/manifest/lint/
+      ADR/soak/drift/gate/harness watchlist
+      (road-to-role-first-onboarding Phase 2 Step 3).
+    cmd: python3 scripts/lint_readme_jargon.py {{.QUIET_FLAG}}
+
+  lint-pack-first-win:
+    silent: true
+    desc: |
+      Verify every featured pack ships FIRST_WIN.md + an onboarding
+      block in pack.yaml (first_win_doc, example_workflow,
+      time_to_first_value_minutes)
+      (road-to-role-first-onboarding Phase 4 Step 4).
+    cmd: python3 scripts/lint_pack_first_win.py {{.QUIET_FLAG}}
+
   lint-marketplace:
     silent: true
     desc: Lint .claude-plugin/marketplace.json against the Claude Code Plugin schema

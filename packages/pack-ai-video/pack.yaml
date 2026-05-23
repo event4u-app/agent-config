@@ -3,6 +3,10 @@ artefact_count: 6
 description: AI video pipeline (per ADR-011, the only heavyweight domain).
 id: ai-video
 label: AI Video
+onboarding:
+  example_workflow: scene-expander
+  first_win_doc: FIRST_WIN.md
+  time_to_first_value_minutes: 12
 owner:
 - small-business
 requires: []

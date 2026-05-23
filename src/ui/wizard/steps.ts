@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -27,7 +27,33 @@ export interface WizardStep {
     paths?: string[];
 }
 
-export const WIZARD_STEPS: readonly WizardStep[] = [
+/**
+ * Feature-flagged extended step set — prepends `ai-tools` + `packs` ahead
+ * of the canonical 7 settings steps so a single `agent-config setup` run
+ * covers KI → Packs → Settings end-to-end (road-to-global-only-install §
+ * Phase 1, D9). Enabled when `AGENT_CONFIG_DEV_MODE=1` or when the server
+ * advertises `extendedSteps: true` via /api/v1/wizard/state — keeps the
+ * canonical 7-step contract for v2.x users until the merged flow ships
+ * end-to-end (Phase 1.9 — npm-version kill-switch, no dual code paths).
+ */
+const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
+    {
+        id: 'ai-tools',
+        title: 'Which AI tools do you use?',
+        navLabel: 'AI tools',
+        subtitle: 'Pick the editors and CLIs that should pick up this config. Auto-detect runs first; you can override.',
+        kind: 'aiTools',
+    },
+    {
+        id: 'packs',
+        title: 'Which capability packs do you want?',
+        navLabel: 'Packs',
+        subtitle: 'Founder-strategy, finance-basic, gtm-sales, ops-people, ai-video — pick zero or more. You can change this later.',
+        kind: 'packs',
+    },
+];
+
+const CORE_WIZARD_STEPS: readonly WizardStep[] = [
     {
         id: 'identity',
         title: 'Editor and tooling',
@@ -107,9 +133,30 @@ export const WIZARD_STEPS: readonly WizardStep[] = [
     },
 ] as const;
 
+/**
+ * Canonical 7-step wizard — preserved verbatim for v2.x users. The
+ * 9-step flow (ai-tools + packs prepended) is exposed via
+ * `getWizardSteps({ extended: true })`. See road-to-global-only-install
+ * Phase 1.9 — no dual code paths, the npm version is the kill-switch.
+ */
+export const WIZARD_STEPS = CORE_WIZARD_STEPS;
+
 export const WIZARD_TOTAL_STEPS = WIZARD_STEPS.length;
 
-export function stepAt(index: number): WizardStep {
-    const clamped = Math.max(0, Math.min(WIZARD_STEPS.length - 1, index));
-    return WIZARD_STEPS[clamped] as WizardStep;
+export interface GetWizardStepsOptions {
+    /** Prepend ai-tools + packs to ship the 9-step flow (D9). */
+    extended?: boolean;
+}
+
+export function getWizardSteps(opts: GetWizardStepsOptions = {}): readonly WizardStep[] {
+    if (opts.extended === true) {
+        return [...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
+    }
+    return CORE_WIZARD_STEPS;
+}
+
+export function stepAt(index: number, opts: GetWizardStepsOptions = {}): WizardStep {
+    const steps = getWizardSteps(opts);
+    const clamped = Math.max(0, Math.min(steps.length - 1, index));
+    return steps[clamped] as WizardStep;
 }

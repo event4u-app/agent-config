@@ -32,13 +32,27 @@ class _Silent(unittest.TestCase):
 
 
 class TestInstallMinimalPayload(_Silent):
-    def test_writes_exactly_three_artifacts_on_clean_target(self) -> None:
+    def test_writes_overrides_scaffold_on_clean_target(self) -> None:
+        """Default `--minimal` run writes the global-only consumer scaffold
+        (ADR-020 § Phase 4.5): overrides subdirs + README + bridge marker.
+        No project-local `.agent-settings.yml` unless `user_type` is given.
+        """
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             rc = install.install_minimal(target, force=False)
             self.assertEqual(rc, 0)
-            self.assertTrue((target / ".agent-settings.yml").is_file())
-            self.assertTrue((target / "agents" / ".gitkeep").is_file())
+            # Overrides scaffold — committable per Phase 4.5.
+            overrides = target / "agents" / "overrides"
+            self.assertTrue((overrides / "rules" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "skills" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "commands" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "README.md").is_file())
+            # Bridge marker — Phase 4.2 anchor to the user-global install.
+            self.assertTrue((target / "agents" / ".event4u-bridge.yml").is_file())
+            # No project-local settings file in the default minimal payload.
+            self.assertFalse((target / ".agent-settings.yml").exists())
+            # Legacy artifacts must not appear in the new scaffold.
+            self.assertFalse((target / "agents" / ".gitkeep").exists())
             # install_minimal itself does not write the wrapper — that
             # lives in scripts/install.sh's --minimal short-circuit.
             self.assertFalse((target / "agent-config").exists())
@@ -46,51 +60,79 @@ class TestInstallMinimalPayload(_Silent):
             self.assertFalse((target / ".augment").exists())
             self.assertFalse((target / "AGENTS.md").exists())
 
-    def test_settings_stub_has_cost_profile(self) -> None:
+    def test_bridge_marker_points_at_global_root(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             install.install_minimal(target, force=False)
-            content = (target / ".agent-settings.yml").read_text(encoding="utf-8")
-            self.assertIn("cost_profile", content)
+            marker = target / "agents" / ".event4u-bridge.yml"
+            body = marker.read_text(encoding="utf-8")
+            self.assertIn("schema: event4u-bridge/v1", body)
+            self.assertIn("global_root:", body)
+            self.assertIn("installer_version:", body)
+
+    def test_overrides_readme_explains_layer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "fresh"
+            install.install_minimal(target, force=False)
+            body = (target / "agents" / "overrides" / "README.md").read_text(encoding="utf-8")
+            # Smoke check: the README names the override layer + bridge.
+            self.assertIn("overrides", body.lower())
+            self.assertIn("bridge", body.lower())
+
+    def test_user_type_writes_settings_stub(self) -> None:
+        """Back-compat: the step-9 interactive flow passes a `user_type`,
+        and that still appends a `.agent-settings.yml` stub on top of
+        the new overrides scaffold."""
+        with tempfile.TemporaryDirectory() as tmp:
+            target = Path(tmp) / "fresh"
+            install.install_minimal(target, force=False, user_type="developer")
+            settings = target / ".agent-settings.yml"
+            self.assertTrue(settings.is_file())
+            body = settings.read_text(encoding="utf-8")
+            self.assertIn("cost_profile", body)
+            self.assertIn("user_type: developer", body)
             # D4 — version pin commented out by default.
-            self.assertNotRegex(content, r"^agent_config_version:")
+            self.assertNotRegex(body, r"^agent_config_version:")
 
     def test_rerun_is_idempotent_without_force(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             install.install_minimal(target, force=False)
-            (target / ".agent-settings.yml").write_text(
-                "cost_profile: minimal\n# user edit\n", encoding="utf-8"
-            )
+            readme = target / "agents" / "overrides" / "README.md"
+            readme.write_text("# user edit\n", encoding="utf-8")
             rc = install.install_minimal(target, force=False)
             self.assertEqual(rc, 0)
-            content = (target / ".agent-settings.yml").read_text(encoding="utf-8")
-            self.assertIn("# user edit", content)
+            self.assertIn("# user edit", readme.read_text(encoding="utf-8"))
 
-    def test_force_overwrites_existing_settings(self) -> None:
+    def test_force_overwrites_existing_readme(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             install.install_minimal(target, force=False)
-            (target / ".agent-settings.yml").write_text("user_only: 1\n", encoding="utf-8")
+            readme = target / "agents" / "overrides" / "README.md"
+            readme.write_text("user_only\n", encoding="utf-8")
             install.install_minimal(target, force=True)
-            content = (target / ".agent-settings.yml").read_text(encoding="utf-8")
-            self.assertNotIn("user_only", content)
-            self.assertIn("cost_profile", content)
+            body = readme.read_text(encoding="utf-8")
+            self.assertNotIn("user_only", body)
+            self.assertIn("overrides", body.lower())
 
 
 # --- Nested-install guard ---
 
 
 class TestNestedInstallGuard(_Silent):
-    def test_refuses_install_inside_existing_agent_settings_layer(self) -> None:
+    def test_refuses_install_inside_existing_bridge_anchor(self) -> None:
+        """Phase 4.5: the bridge marker is the new project anchor for a
+        global-only consumer scaffold. Nesting another `--minimal` below
+        it must trip the guard."""
         with tempfile.TemporaryDirectory() as tmp:
             outer = Path(tmp) / "outer"
             install.install_minimal(outer, force=False)
+            # Sanity: outer is anchored by the bridge marker.
+            self.assertTrue((outer / "agents" / ".event4u-bridge.yml").is_file())
             nested = outer / "sub" / "deep"
             with self.assertRaises(SystemExit) as ctx:
                 install.install_minimal(nested, force=False)
             self.assertEqual(ctx.exception.code, 1)
-            self.assertFalse((nested / ".agent-settings.yml").exists())
             self.assertFalse((nested / "agents").exists())
 
     def test_refuses_install_inside_agents_anchor(self) -> None:
@@ -124,15 +166,23 @@ class TestBashOrchestratorMinimal(unittest.TestCase):
             env={**os.environ, "AGENT_CONFIG_NO_UPDATE_CHECK": "1"},
         )
 
-    def test_clean_install_writes_wrapper_and_settings(self) -> None:
+    def test_clean_install_writes_wrapper_and_scaffold(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             target = Path(tmp) / "fresh"
             result = self._run(target)
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertTrue((target / ".agent-settings.yml").is_file())
-            self.assertTrue((target / "agents" / ".gitkeep").is_file())
+            # Phase 4.5 overrides scaffold + bridge marker.
+            overrides = target / "agents" / "overrides"
+            self.assertTrue((overrides / "rules" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "skills" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "commands" / ".gitkeep").is_file())
+            self.assertTrue((overrides / "README.md").is_file())
+            self.assertTrue((target / "agents" / ".event4u-bridge.yml").is_file())
+            # Bash short-circuit installs the wrapper.
             self.assertTrue((target / "agent-config").is_file())
             self.assertTrue(os.access(target / "agent-config", os.X_OK))
+            # No project-local settings file in the default minimal payload.
+            self.assertFalse((target / ".agent-settings.yml").exists())
             # No payload.
             self.assertFalse((target / ".augment").exists())
 
@@ -144,7 +194,7 @@ class TestBashOrchestratorMinimal(unittest.TestCase):
             result = self._run(nested)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse((nested / "agent-config").exists())
-            self.assertFalse((nested / ".agent-settings.yml").exists())
+            self.assertFalse((nested / "agents").exists())
 
 
 if __name__ == "__main__":

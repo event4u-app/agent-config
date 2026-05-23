@@ -262,6 +262,18 @@ maintainer manifest).
   road-to-simplicity-and-everywhere" is **never built**. Roadmap
   entry should be updated to point at `export` instead.
 
+## Amendment 2026-05-23 — Global-only consumer scope (ADR-020)
+
+[`ADR-020`](ADR-020-global-only-consumer-scope.md) finishes the job
+this ADR started: the consumer surface becomes **global-only**
+end-to-end. The project-default in this ADR is therefore historical;
+new installs land at `~/.event4u/agent-config/` only. The project
+tree retains exactly two artefacts — `agents/overrides/` and
+`agents/.event4u-bridge.yml` — both written by
+`scripts/install.py`. Maintainer-only project scope survives behind
+`AGENT_CONFIG_DEV_MODE=1` (see
+[`docs/maintainers/dev-mode.md`](../maintainers/dev-mode.md)).
+
 ## Amendment 2026-05-13 — Augment global-only
 
 **Status:** Accepted · 2026-05-13 · signed off by Matze.

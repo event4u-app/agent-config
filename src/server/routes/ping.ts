@@ -23,6 +23,13 @@ export const PingResponseSchema = z.object({
     writeRoot: z.string().min(1),
     mode: z.enum(['package-sandbox', 'global']),
     dryRun: z.boolean(),
+    /**
+     * `true` when the wizard may offer the "scope to this project only"
+     * checkbox in Review (road-to-global-only-install § Phase 2.3). The
+     * server hides the checkbox in package-sandbox mode and when the
+     * operator pinned `writeRoot` via `--project`.
+     */
+    projectScopeAvailable: z.boolean(),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -38,6 +45,11 @@ function readPackageVersion(): string {
 
 export interface PingRouteOptions {
     writeRoot: string;
+    /**
+     * Consumer-project root the wizard may opt to scope to. `null` when
+     * no opt-in is available — the UI then hides the scope checkbox.
+     */
+    projectScopeRoot?: string | null;
     mode: 'package-sandbox' | 'global';
     /** Server-wide dry-run flag — surfaced to the UI for the banner. */
     dryRun?: boolean;
@@ -53,6 +65,7 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 writeRoot: opts.writeRoot,
                 mode: opts.mode,
                 dryRun: opts.dryRun === true,
+                projectScopeAvailable: opts.projectScopeRoot !== undefined && opts.projectScopeRoot !== null,
             };
             return response;
         });

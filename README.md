@@ -2,11 +2,13 @@
 
 # Agent Config — Universal AI Agent OS
 
-[![Skills](https://img.shields.io/badge/Skills-218-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-75-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-129-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm)](https://www.npmjs.com/package/@event4u/agent-config)
 
-> **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
+[![Skills](https://img.shields.io/badge/Skills-218-blue?style=flat-square)](.agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-75-blue?style=flat-square)](.agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-129-blue?style=flat-square)](.agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-blue?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-blue?style=flat-square)](.agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-blue?style=flat-square)](.agent-src/personas/advisors/)
 
-Give your AI agents an audit-disciplined execution layer: multiple **skills**, **governance rules**, **commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
+> **The Universal AI Agent OS for Founders, Content Creators, Consultants, Sales, Finance, and Engineering teams. Bring your own AI provider.**
+
+Six role-shaped entry paths, one shared **skills + rules + commands** layer that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member — without locking you to a single model or vendor.
 
 > **Cinematic AI video** — script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. See [`/video:from-script`](.augment/commands/video/from-script.md).
 
@@ -70,23 +72,23 @@ opt-in measurement loop. Source-of-truth tree is
 
 ## Quickstart
 
-**Three steps. Five minutes. Decision-traced first task.**
+**Three steps. Five minutes. Browser wizard, no YAML to write by hand.**
 
 ```bash
-# 1. Install (writes .agent-settings.yml, .augment/, .claude/, …)
-npx @event4u/agent-config init
+# 1. Install — the browser wizard auto-launches on first run.
+npx -y @event4u/agent-config init
 
-# 2. First-run setup — browser wizard (writes .agent-settings.yml)
-agent-config setup                # browser, lands on #/wizard
+# 2. Pick your role + pack in the wizard, click Finish.
+#    (Writes .agent-settings.yml + .augment/ + .claude/ atomically.)
 
-# 3. First real task — agent refines, plans, logs a decision_result
+# 3. First real task — agent refines, plans, logs the result.
 /work "your first real task"
 ```
 
-The wizard uses the `commitMulti` 2PC substrate to write
-`.agent-settings.yml` (and optional `.agent-user.md`) atomically — see
-[`docs/wizard.md`](docs/wizard.md). A `decision_result` lands in
-`agents/runtime/state/`. Stack-aware skills auto-load.
+**Headless / CI / no-browser:** add `--no-ui` to step 1 and pass
+flags (`--profile=developer --pack=engineering-base`); add `--dry-run`
+to preview writes. See [`docs/wizard.md`](docs/wizard.md) for the
+headless path · [`docs/featured-skills.md`](docs/featured-skills.md) for per-role workflows.
 
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
@@ -104,13 +106,13 @@ The wizard uses the `commitMulti` 2PC substrate to write
 Two minutes from `npx` to a better-behaved agent — no install, no
 vendored package, no postinstall hook.
 
-**v2.1+ — global-first by default.** Running `init` outside a project
-defaults to a user-scope install (`~/.claude/`, `~/.cursor/`, …) and
-records itself in `~/.config/agent-config/installed.lock`. Running it
-inside a project (a `package.json` / `composer.json` / `pyproject.toml`
-manifest is present) defaults to a project-scope install. Override with
-`--scope=global` or `--scope=project`. See
-[`docs/installation.md`](docs/installation.md) for the full matrix.
+**v2.5+ — global is the only consumer scope.** `init` always writes
+to user-scope paths (`~/.event4u/agent-config/`, `~/.claude/`,
+`~/.cursor/`, …) and records itself in
+`~/.event4u/agent-config/installed.lock`. The project tree only
+gets `agents/overrides/` and `agents/.event4u-bridge.yml`. No
+`--project` flag is exposed; project-scope is maintainer-only
+behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md)).
 
 ### For teams (recommended)
 
@@ -186,28 +188,27 @@ npx @event4u/agent-config init --tools=continue         # Continue
 
 Multiple AIs in one shot: `--tools=claude-code,cursor,augment`. Prefer a visual picker? Add `--gui` to open a local-only browser wizard on `127.0.0.1` (loopback-bound, CSRF-gated, CSP-strict — contract: [`docs/contracts/gui-wizard.md`](docs/contracts/gui-wizard.md)).
 
-#### Global install (user-scope, available across projects)
+#### Global-only (the only consumer scope)
 
-Add `--global` to write to the user-scope paths from
-[`ADR-007`](docs/decisions/ADR-007-agent-discovery-scopes.md) (`~/.claude/`,
-`~/.cursor/`, …) instead of the current project:
+`init` writes only to user-scope paths under
+`~/.event4u/agent-config/` — the only consumer scope per
+[`ADR-020`](docs/decisions/ADR-020-global-only-consumer-scope.md).
+The project tree gets only `agents/overrides/` and
+`agents/.event4u-bridge.yml`; no `--project` flag is exposed. The
+legacy `--global` flag is accepted as a no-op for back-compat:
 
 ```bash
-npx @event4u/agent-config init --global                       # all tools, user-scope
-npx @event4u/agent-config init --tools=claude-code --global   # → ~/.claude/
-npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
+npx @event4u/agent-config init                          # all tools, global
+npx @event4u/agent-config init --tools=claude-code      # → ~/.claude/
+npx @event4u/agent-config init --tools=cursor           # → ~/.cursor/
 ```
 
-Per-AI scope support varies — Claude Desktop and Augment Code, for
-example, are global-only (Claude Desktop has no project-local
-discovery on macOS; Augment ships from a single user-scope tree
-(`~/.augment/`) — see [`ADR-007 § Amendment 2026-05-13 — global-only`](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)),
-while Roo Code and Continue.dev are project-local. The Supported
-Tools table below documents per-AI scope. Incompatible combinations
-(e.g. `--tools=roocode --global`, `--tools=claude-desktop` without
-`--global`, or `--tools=augment` without `--global`) are rejected
-with a directive error; `--tools=all` silently filters to the scope's
-compatible subset.
+**Maintainers:** project-scoped install (link-based dev loop, dry-run
+sandboxes) requires `AGENT_CONFIG_DEV_MODE=1` — see
+[`docs/maintainers/dev-mode.md`](docs/maintainers/dev-mode.md). Without
+it, the installer rejects `--scope=project` with a one-line error.
+Roo Code and Continue.dev still pair with project-only discovery —
+the bridge marker, not a project-local payload, wires them.
 
 ### For individual use (optional)
 
@@ -722,18 +723,17 @@ re-enabled or the chat ends. Full scoring contract and hardening:
 [`adr-command-suggestion`](docs/contracts/adr-command-suggestion.md),
 [`command-suggestion-flow`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
 
----
-
 ## Development
 
-Working on the package itself? Edit in `.agent-src.uncompressed/`,
-then regenerate compressed and projected trees:
+Working on the package itself? Edit `.agent-src.uncompressed/`, regenerate trees:
 
 ```bash
 task sync             # regenerate .agent-src/ and .augment/
 task generate-tools   # regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task ci               # full pipeline — green before PR
 task test             # unit + integration tests
+task dev:setup        # boot the onboarding wizard against the working tree
+task dev:install:gui  # boot the unified Setup-Wizard (maintainer-only)
 ```
 
 → Full commands and project structure: [**docs/development.md**](docs/development.md). Stack: **TypeScript** CLI/UI (`dist/cli/`, `dist/ui/`) + **Python 3.10+** build/lint scripts. Prompt-engineering primitives — `/optimize-prompt`, `/refine-prompt`, the `prompt-engineering-patterns` skill — ship for every host agent. MCP registry payloads render under `dist/mcp/` (submissions tracked in [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md)).

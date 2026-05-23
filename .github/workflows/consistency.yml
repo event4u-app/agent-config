@@ -104,11 +104,23 @@ jobs:
       - name: Check kernel-rule bundle (one rule per PR; label override)
         # Phase 4.2 of road-to-always-budget-relief — slow-rollout guarantee.
         # Override: PR label `bundled-always-rules-acknowledged`.
+        # actions/checkout@v4 uses a shallow PR-merge fetch, so `git fetch
+        # origin <base>` can race with the configured auth extraheader on
+        # some runners (observed: "could not read Username for github.com").
+        # Sidestep the fetch entirely by pulling the PR's changed-file list
+        # from the GitHub API via `gh pr view` and feeding it to the script
+        # through its `--files` override.
         if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          git fetch --no-tags --depth=1 origin "${{ github.base_ref }}"
-          python3 scripts/check_kernel_rule_bundle.py \
-            --base-ref "origin/${{ github.base_ref }}"
+          mapfile -t CHANGED < <(gh pr view "${{ github.event.pull_request.number }}" \
+            --json files --jq '.files[].path')
+          if [ "${#CHANGED[@]}" -eq 0 ]; then
+            echo "No changed files reported by gh pr view; nothing to gate."
+            exit 0
+          fi
+          python3 scripts/check_kernel_rule_bundle.py --files "${CHANGED[@]}"
 
       - name: Lint marketplace.json
         run: task lint-marketplace

@@ -13,6 +13,12 @@
 
 set -uo pipefail
 
+# ADR-020: --scope=project is maintainer-only. This smoke suite exercises
+# the legacy project-scope path on purpose (setup.sh + `agent-config init`
+# default to --scope=project for backward compatibility). Opt in via the
+# documented dev-mode env so the consumer gate doesn't reject the install.
+export AGENT_CONFIG_DEV_MODE=1
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETUP_SH="$REPO_ROOT/setup.sh"
 TMPDIR=""

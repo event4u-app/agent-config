@@ -85,6 +85,10 @@
   description: Cashflow, runway, basic forecasting.
   workspaces: [finance, founder]
   trust_level_default: professional
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: runway-cognition
+    time_to_first_value_minutes: 8
 
 - id: finance-advanced
   label: Finance Advanced
@@ -98,6 +102,10 @@
   description: Pipeline, MEDDIC, forecast accuracy.
   workspaces: [gtm]
   trust_level_default: professional
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: deal-qualification-meddic
+    time_to_first_value_minutes: 7
 
 - id: gtm-marketing
   label: GTM — Marketing
@@ -110,12 +118,20 @@
   description: Hiring loops, onboarding programs, comp banding.
   workspaces: [ops]
   trust_level_default: professional
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: one-on-one-cadence
+    time_to_first_value_minutes: 6
 
 - id: founder-strategy
   label: Founder — Strategy
   description: Vision, fundraising narrative, competitive moat.
   workspaces: [founder]
   trust_level_default: core
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: vision-articulation
+    time_to_first_value_minutes: 10
 
 - id: small-business
   label: Small Business
@@ -134,6 +150,10 @@
   description: AI video pipeline (per ADR-011, the only heavyweight domain).
   workspaces: [small-business]
   trust_level_default: experimental
+  onboarding:
+    first_win_doc: FIRST_WIN.md
+    example_workflow: scene-expander
+    time_to_first_value_minutes: 12
 
 - id: meta
   label: Meta

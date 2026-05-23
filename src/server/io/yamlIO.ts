@@ -145,3 +145,29 @@ export function diffValues(
     }
     return out;
 }
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+    return value !== null && typeof value === 'object' && !Array.isArray(value);
+}
+
+/**
+ * Recursive dict merge — overlay wins, nested dicts are merged, lists
+ * are replaced (not concatenated). Mirrors `scripts/install.py::deep_merge`
+ * so the Python installer and the Fastify server produce the same
+ * three-layer settings tree (`defaults < global < project`).
+ */
+export function deepMerge(
+    base: Record<string, unknown>,
+    overlay: Record<string, unknown>,
+): Record<string, unknown> {
+    const result: Record<string, unknown> = { ...base };
+    for (const [key, value] of Object.entries(overlay)) {
+        const existing = result[key];
+        if (isPlainObject(existing) && isPlainObject(value)) {
+            result[key] = deepMerge(existing, value);
+        } else {
+            result[key] = value;
+        }
+    }
+    return result;
+}
