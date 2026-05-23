@@ -153,6 +153,10 @@ tasks:
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme
+      - task: lint-readme-size
+      - task: lint-readme-jargon
+      - task: lint-featured-skills
+      - task: lint-pack-first-win
 
   ci-strict:
     desc: Run ALL CI checks with WARN promoted to ERROR (release-tag gate — Phase 1.4 / U2)
@@ -244,3 +248,7 @@ tasks:
       - task: check-role-doc-links
       - task: roadmap-progress-check
       - task: lint-readme-strict
+      - task: lint-readme-size
+      - task: lint-readme-jargon
+      - task: lint-featured-skills
+      - task: lint-pack-first-win
