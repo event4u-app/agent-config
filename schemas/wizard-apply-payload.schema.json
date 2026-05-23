@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://event4u.app/schemas/wizard-apply-payload.schema.json",
+  "title": "WizardApplyPayload",
+  "description": "Discriminated-union payload for /api/apply on the unified Installer + Setup-Wizard. Locks the contract decided in road-to-global-only-install Phase 0.4 (D12). schema_version selects the variant.",
+  "oneOf": [
+    { "$ref": "#/$defs/InstallerPayloadV1" },
+    { "$ref": "#/$defs/WizardPayloadV2" }
+  ],
+  "$defs": {
+    "InstallerPayloadV1": {
+      "type": "object",
+      "description": "Legacy Installer-GUI payload — AI tools + per-tool configs only. Settings + packs not yet merged.",
+      "required": ["schema_version", "ai_tools", "configs"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "installer-v1" },
+        "ai_tools": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true,
+          "description": "Tool IDs as listed in dist/discovery/discovery-manifest.json (e.g. claude-code, cursor, augment)."
+        },
+        "configs": {
+          "type": "object",
+          "description": "Per-tool config bags; opaque to the schema, validated by the installer.",
+          "additionalProperties": { "type": "object" }
+        },
+        "dry_run": { "type": "boolean", "default": false }
+      }
+    },
+    "WizardPayloadV2": {
+      "type": "object",
+      "description": "Unified Setup-Wizard payload — AI tools + packs + settings in one envelope. Used by the 9-step wizard.",
+      "required": ["schema_version", "tools", "packs", "settings"],
+      "additionalProperties": false,
+      "properties": {
+        "schema_version": { "const": "wizard-v2" },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "packs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true,
+          "description": "Pack IDs from dist/discovery/discovery-manifest.json. Empty = base package only."
+        },
+        "settings": {
+          "type": "object",
+          "description": "Merged .agent-settings.yml + .agent-user.yml body. The wizard collects these in Steps 3-9; the installer atomically writes them to the global scope.",
+          "additionalProperties": true
+        },
+        "scope_to_project_only": {
+          "type": "boolean",
+          "default": false,
+          "description": "Step 9 (Review) checkbox. When true the settings are written to the project tree instead of the global location. Off by default per D8."
+        },
+        "dry_run": { "type": "boolean", "default": false }
+      }
+    }
+  }
+}

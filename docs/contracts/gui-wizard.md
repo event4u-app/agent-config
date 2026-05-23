@@ -130,3 +130,28 @@ tracked under the Phase 6 follow-ups.
 - Not a CI surface — every operation is reachable via `--gui-port=0
   --no-open` is supported for headless smoke tests, but the canonical
   CI path is the flag-driven non-interactive CLI.
+
+## Apply payload — versioning handshake (road-to-global-only-install Phase 0.4 · D12)
+
+`/api/apply` accepts a discriminated-union body keyed on
+`schema_version`. The full JSON Schema lives at
+[`schemas/wizard-apply-payload.schema.json`](../../schemas/wizard-apply-payload.schema.json).
+
+| `schema_version` | Variant | Shape |
+|---|---|---|
+| `"installer-v1"` | `InstallerPayloadV1` | `{ ai_tools[], configs{}, dry_run? }` — legacy Installer-GUI, AI tools only. |
+| `"wizard-v2"` | `WizardPayloadV2` | `{ tools[], packs[], settings{}, scope_to_project_only?, dry_run? }` — unified 9-step wizard. |
+
+**D12 (locked).** Single `/api/apply` endpoint with a `schema_version`
+discriminator — **not** two endpoints with a shared Python backend.
+Reasoning: one bind, one CSRF token, one transaction log; the
+Python `scripts/install.py` payload-router branches on
+`schema_version` before any disk write. The dual-endpoint variant was
+considered and rejected for doubling the CSRF + idle-timer surface
+with no observability gain.
+
+`schema_version` is **required**. Servers MUST reject any body that
+lacks it (HTTP 400, single-line error pointing at the schema). This
+locks the contract before Phase 1 implementation so no implicit fork
+can sneak in at Phase 1.5.
+
