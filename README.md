@@ -2,7 +2,9 @@
 
 # Agent Config — Universal AI Agent OS
 
-[![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm)](https://www.npmjs.com/package/@event4u/agent-config) [![Commands](https://img.shields.io/badge/Commands-129-blue?style=flat-square)](.agent-src/commands/)
+[![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm)](https://www.npmjs.com/package/@event4u/agent-config)
+
+[![Skills](https://img.shields.io/badge/Skills-218-blue?style=flat-square)](.agent-src/skills/) [![Rules](https://img.shields.io/badge/Rules-75-blue?style=flat-square)](.agent-src/rules/) [![Commands](https://img.shields.io/badge/Commands-129-blue?style=flat-square)](.agent-src/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-blue?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-blue?style=flat-square)](.agent-src/personas/) [![Advisors](https://img.shields.io/badge/Advisors-5-blue?style=flat-square)](.agent-src/personas/advisors/)
 
 > **The Universal AI Agent OS for Founders, Content Creators, Consultants, Sales, Finance, and Engineering teams. Bring your own AI provider.**
 
