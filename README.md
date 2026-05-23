@@ -724,12 +724,9 @@ re-enabled or the chat ends. Full scoring contract and hardening:
 [`adr-command-suggestion`](docs/contracts/adr-command-suggestion.md),
 [`command-suggestion-flow`](.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md) (beta).
 
----
-
 ## Development
 
-Working on the package itself? Edit in `.agent-src.uncompressed/`,
-then regenerate compressed and projected trees:
+Working on the package itself? Edit `.agent-src.uncompressed/`, regenerate trees:
 
 ```bash
 task sync             # regenerate .agent-src/ and .augment/
