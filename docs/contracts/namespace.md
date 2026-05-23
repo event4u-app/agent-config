@@ -5,8 +5,8 @@ stability: stable
 # Namespace contract — skills, rules, commands, personas
 
 > Every artefact name is a **stable identifier**: routed to from
-> `router.json`, cited from skills, surfaced in `/help`, embedded in
-> command paths, and back-referenced in test fixtures. Drift breaks
+> `dist/router.json`, cited from skills, surfaced in `/help`, embedded
+> in command paths, and back-referenced in test fixtures. Drift breaks
 > all five surfaces silently.
 >
 > **Source:** Step-11 Phase 5 Step 1
@@ -43,7 +43,7 @@ permitted when the stem already encodes both (`commit`, `eloquent`,
 | `claude-memories` | Reserved for the `~/.claude/CLAUDE.md` shape — host-agent state, not a package artefact. |
 | `default` | Ambiguous with profile / mode defaults; collides with `.agent-settings.yml` keys. |
 | `index` | Reserved for auto-generated INDEX.md files. |
-| `router` | Reserved for `router.json` and the router contract. |
+| `router` | Reserved for `dist/router.json` and the router contract. |
 
 Reserved names apply at the **top level** of each artefact type. A
 sub-verb under a namespaced group (e.g. `council/default.md` →
@@ -97,8 +97,8 @@ python3 scripts/lint_namespace.py
 ```
 
 If the candidate fails, the linter prints the rule it violated.
-**Renames after release are expensive** — touch router.json, every
-skill citing the old name, the bench corpus, and consumer settings.
+**Renames after release are expensive** — touch `dist/router.json`,
+every skill citing the old name, the bench corpus, and consumer settings.
 Pay the naming cost once, upfront.
 
 ## 6. Relationship to the frontmatter contract
@@ -111,7 +111,7 @@ the regex string.
 
 ## 7. Why this exists
 
-`router.json` resolves `<kind>:<id>` strings at session start. Any
+`dist/router.json` resolves `<kind>:<id>` strings at session start. Any
 artefact rename breaks every routing entry pointing at the old name
 without compile-time error. The linter catches the rename at the PR
 boundary, not at runtime in a consumer.

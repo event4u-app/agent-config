@@ -6,7 +6,7 @@ Covers the three Phase-5.4 invariants:
    ``*safety-floor*`` rule.
 2. Every artefact with ``trust.human_review_required: true`` carries
    the HRR banner marker in its compiled output under ``.agent-src/``.
-3. Rules listed in ``router.json`` ``kernel[]`` declare
+3. Rules listed in ``dist/router.json`` ``kernel[]`` declare
    ``trust.level: core``.
 
 Strategy: build a self-contained fixture (manifest JSON + router JSON

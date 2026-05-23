@@ -33,12 +33,21 @@ setup() {
     mkdir -p "$stage/agent-config"
     local src
     for src in scripts templates config .agent-src .agent-src.uncompressed \
-               AGENTS.md router.json .agent-settings.yml package.json \
+               AGENTS.md .agent-settings.yml package.json \
                bin docker .augment; do
         if [[ -e "$REPO_ROOT/$src" ]]; then
             cp -R "$REPO_ROOT/$src" "$stage/agent-config/"
         fi
     done
+    # Stage `dist/router.json` only — the router-kernel compiled artefact
+    # the installer reads. The rest of `dist/` (TS-compiled CLI) requires
+    # node_modules to run and is not staged here; the bin shim falls back
+    # to the legacy bash dispatcher when `dist/cli/agent-config.js` is
+    # absent, which is what these smoke tests exercise.
+    if [[ -f "$REPO_ROOT/dist/router.json" ]]; then
+        mkdir -p "$stage/agent-config/dist"
+        cp "$REPO_ROOT/dist/router.json" "$stage/agent-config/dist/router.json"
+    fi
     (cd "$stage" && tar -czf "$TARBALL" agent-config) \
         || { echo "  ❌  setup: failed to pack tarball" >&2; exit 1; }
     # Extract once for npx-style invocations (simulates `npx` post-fetch).

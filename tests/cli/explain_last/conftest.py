@@ -32,7 +32,9 @@ _ROUTER = {
 
 
 def _seed_project(tmp_path: Path) -> Path:
-    (tmp_path / "router.json").write_text(json.dumps(_ROUTER), encoding="utf-8")
+    dist_dir = tmp_path / "dist"
+    dist_dir.mkdir(parents=True, exist_ok=True)
+    (dist_dir / "router.json").write_text(json.dumps(_ROUTER), encoding="utf-8")
     presets_dir = tmp_path / ".agent-src.uncompressed" / "presets"
     presets_dir.mkdir(parents=True)
     (presets_dir / "balanced.yml").write_text(

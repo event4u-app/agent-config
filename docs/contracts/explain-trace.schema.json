@@ -58,7 +58,7 @@
     },
     "route": {
       "type": ["object", "null"],
-      "description": "Rule-router activation snapshot. Null when router.json is absent.",
+      "description": "Rule-router activation snapshot. Null when dist/router.json is absent.",
       "required": ["matched_rules", "kernel_rules", "persona"],
       "additionalProperties": false,
       "properties": {

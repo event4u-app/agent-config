@@ -29,7 +29,7 @@ import json, os, sys, pathlib
 sys.path.insert(0, "scripts")
 from _lib.agent_src import resolve_logical
 
-d = json.load(open("router.json"))
+d = json.load(open("dist/router.json"))
 kernel = d.get("kernel", [])
 tier1 = d.get("tier_1", [])
 tier2 = d.get("tier_2", [])

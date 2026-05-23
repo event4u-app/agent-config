@@ -31,6 +31,6 @@ task ci                # full pipeline — green before PR
 2. **What language?** — All `.md` content is English; agents mirror the user's language at runtime.
 3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
-5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).
+5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/router.json`, compiled by `scripts/compile_router.py`).
 
 

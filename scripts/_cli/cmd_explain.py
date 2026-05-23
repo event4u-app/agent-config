@@ -42,6 +42,7 @@ from scripts._lib.agent_settings import (
 from scripts.config import presets, profiles
 
 ROUTER_FILENAME = "router.json"
+ROUTER_RELATIVE = Path("dist") / ROUTER_FILENAME
 
 
 def _resolve_root(arg: str | None) -> tuple[Path, str]:
@@ -60,7 +61,7 @@ def _load_user_settings(project_root: Path) -> dict[str, Any]:
 
 
 def _load_router(project_root: Path) -> dict[str, Any]:
-    path = project_root / ROUTER_FILENAME
+    path = project_root / ROUTER_RELATIVE
     if not path.exists():
         return {}
     try:

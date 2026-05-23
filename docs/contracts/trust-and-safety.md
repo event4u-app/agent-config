@@ -112,7 +112,7 @@ asserts three invariants over `dist/discovery/discovery-manifest.json`:
    `trust.human_review_required: true` has its compiled output under
    `.agent-src/<logical>` and that output contains
    `<!-- agent-config:human-review-banner -->`.
-3. **Kernel trust floor.** Every rule listed in `router.json` `kernel[]`
+3. **Kernel trust floor.** Every rule listed in `dist/router.json` `kernel[]`
    declares `trust.level: core`. No escalation (advisory blocks the
    Iron-Law floor) and no demotion (experimental cannot guarantee it).
 
