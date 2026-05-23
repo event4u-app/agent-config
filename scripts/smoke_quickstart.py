@@ -20,6 +20,7 @@ Exit codes: 0 = green; 1 = one or more checks failed; 2 = setup error.
 """
 from __future__ import annotations
 
+import os
 import shutil
 import subprocess
 import sys
@@ -49,8 +50,10 @@ def _check_installer_runs(tmpdir: Path) -> tuple[int, Path | None]:
         str(ROOT),
         "--skip-bridges",
     ]
+    # ADR-020: --project is reserved for maintainers; CI is a maintainer context.
+    env = {**os.environ, "AGENT_CONFIG_DEV_MODE": "1"}
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=60, env=env)
     except subprocess.TimeoutExpired:
         return _fail("installer timed out after 60s"), None
     if result.returncode != 0:
