@@ -2,11 +2,11 @@
 
 # Agent Config — Universal AI Agent OS
 
-[![Skills](https://img.shields.io/badge/Skills-218-1f6feb?style=flat-square)](.augment/skills/) [![Rules](https://img.shields.io/badge/Rules-75-d73a49?style=flat-square)](.augment/rules/) [![Commands](https://img.shields.io/badge/Commands-129-2da44e?style=flat-square)](.augment/commands/) [![Guidelines](https://img.shields.io/badge/Guidelines-73-8957e5?style=flat-square)](docs/guidelines/) [![Personas](https://img.shields.io/badge/Personas-24-bf8700?style=flat-square)](docs/personas.md) [![Advisors](https://img.shields.io/badge/Advisors-5-fb8500?style=flat-square)](docs/profiles.md) [![AI Tools](https://img.shields.io/badge/AI%20Tools-8-1abc9c?style=flat-square)](docs/architecture.md) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
+[![Smoke](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml/badge.svg)](https://github.com/event4u-app/agent-config/actions/workflows/smoke.yml) [![npm](https://img.shields.io/npm/v/@event4u/agent-config?style=flat-square&label=npm)](https://www.npmjs.com/package/@event4u/agent-config)
 
-> **A deterministic orchestration contract for AI agents — audited skills, governance rules, replayable state — usable by developers, founders, and creators alike.**
+> **The Universal AI Agent OS for Founders, Content Creators, Consultants, Sales, Finance, and Engineering teams. Bring your own AI provider.**
 
-Give your AI agents an audit-disciplined execution layer: multiple **skills**, **governance rules**, **commands**, and a replayable state machine that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member.
+Six role-shaped entry paths, one shared **skills + rules + commands** layer that turns any host agent (Claude Code, Augment, Cursor, Copilot, Windsurf) into a reliable team member — without locking you to a single model or vendor.
 
 > **Cinematic AI video** — script → character-locked image → motion+audio prompt → provider render → stitched clip, with `AIV_DRYRUN=true` as the cost-safety default. See [`/video:from-script`](.augment/commands/video/from-script.md).
 
@@ -70,23 +70,23 @@ opt-in measurement loop. Source-of-truth tree is
 
 ## Quickstart
 
-**Three steps. Five minutes. Decision-traced first task.**
+**Three steps. Five minutes. Browser wizard, no YAML to write by hand.**
 
 ```bash
-# 1. Install (writes .agent-settings.yml, .augment/, .claude/, …)
-npx @event4u/agent-config init
+# 1. Install — the browser wizard auto-launches on first run.
+npx -y @event4u/agent-config init
 
-# 2. First-run setup — browser wizard (writes .agent-settings.yml)
-agent-config setup                # browser, lands on #/wizard
+# 2. Pick your role + pack in the wizard, click Finish.
+#    (Writes .agent-settings.yml + .augment/ + .claude/ atomically.)
 
-# 3. First real task — agent refines, plans, logs a decision_result
+# 3. First real task — agent refines, plans, logs the result.
 /work "your first real task"
 ```
 
-The wizard uses the `commitMulti` 2PC substrate to write
-`.agent-settings.yml` (and optional `.agent-user.md`) atomically — see
-[`docs/wizard.md`](docs/wizard.md). A `decision_result` lands in
-`agents/runtime/state/`. Stack-aware skills auto-load.
+**Headless / CI / no-browser:** add `--no-ui` to step 1 and pass
+flags (`--profile=developer --pack=engineering-base`); add `--dry-run`
+to preview writes. See [`docs/wizard.md`](docs/wizard.md) for the
+headless path · [`docs/featured-skills.md`](docs/featured-skills.md) for per-role workflows.
 
 > Pick specific AIs, switch to global scope, deploy MCP on Cloudflare,
 > or wire optional memory — see [**Detailed installation**](#detailed-installation)
