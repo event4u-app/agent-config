@@ -1311,6 +1311,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/rules/engineering-safety-floor.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/rules/external-reference-deep-dive.md": {
       "kind": "rule",
       "rule_type": "auto",
@@ -1318,6 +1324,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/fast-path-marker-visibility.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/finance-safety-floor.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -1541,6 +1553,12 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/rules/slash-command-routing-policy.md": {
+      "kind": "rule",
+      "rule_type": "auto",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/rules/strategy-safety-floor.md": {
       "kind": "rule",
       "rule_type": "auto",
       "load_context": [],
@@ -6782,6 +6800,13 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/context-hygiene.md",
+      "target": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/copilot-routing.md",
       "target": ".agent-src.uncompressed/rules/copilot-routing.md",
       "type": "WRITE",
@@ -6880,6 +6905,62 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/verify-before-complete.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/skills/launch-readiness/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/engineering-safety-floor.md",
+      "target": ".agent-src.uncompressed/skills/threat-modeling/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/rules/external-reference-deep-dive.md",
       "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "type": "READ_ONLY",
@@ -6927,6 +7008,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/finance-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/finance-safety-floor.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/finance-safety-floor.md",
+      "target": ".agent-src.uncompressed/skills/runway-cognition/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
@@ -7557,6 +7652,27 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/strategy-safety-floor.md",
+      "target": ".agent-src.uncompressed/rules/strategy-safety-floor.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/strategy-safety-floor.md",
+      "target": ".agent-src.uncompressed/skills/competitive-moat-analysis/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/strategy-safety-floor.md",
+      "target": ".agent-src.uncompressed/skills/positioning-strategy/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/symfony-routing.md",
@@ -12100,6 +12216,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
+      "target": ".agent-src.uncompressed/rules/context-hygiene.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/systematic-debugging/SKILL.md",
