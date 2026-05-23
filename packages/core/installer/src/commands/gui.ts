@@ -52,7 +52,29 @@ export async function runGui(
     const projectRoot = validateProjectRoot(shared.projectRoot);
 
     const { startGuiServer } = await import('../gui/server.js');
-    const handle = await startGuiServer({
+    type Handle = Awaited<ReturnType<typeof startGuiServer>>;
+
+    // Register signal handlers BEFORE booting the server. startGuiServer
+    // prints WIZARD_READY on stdout once it's listening; if the parent
+    // supervisor (Python install.py or a test harness) reads that line
+    // and sends SIGINT before this process has installed its handler,
+    // Node's default action terminates the child without clearing the
+    // PID file. Pre-registration closes that race window. The handler
+    // captures `handle` by closure once it's assigned below.
+    let handle: Handle | undefined;
+    let resolveDone!: () => void;
+    const done = new Promise<void>((r) => { resolveDone = r; });
+    const onSig = (): void => {
+        if (handle === undefined) {
+            resolveDone();
+            return;
+        }
+        void handle.close().then(resolveDone);
+    };
+    process.once('SIGINT', onSig);
+    process.once('SIGTERM', onSig);
+
+    handle = await startGuiServer({
         projectRoot,
         ...(shared.manifestPath !== undefined ? { manifestPath: shared.manifestPath } : {}),
         ...(opts.port !== undefined && Number.isFinite(opts.port) ? { port: opts.port } : {}),
@@ -63,12 +85,6 @@ export async function runGui(
     // Long-lived: wait for SIGINT / SIGTERM (Python supervisor closes
     // the pipe and propagates the signal) or for the idle-timer to fire
     // and self-terminate. handle.close() runs clearPidFile.
-    await new Promise<void>((resolve) => {
-        const onSig = (): void => {
-            void handle.close().then(resolve);
-        };
-        process.once('SIGINT', onSig);
-        process.once('SIGTERM', onSig);
-    });
+    await done;
     return 0;
 }
