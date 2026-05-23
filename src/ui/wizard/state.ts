@@ -9,7 +9,7 @@
 import { signal } from '@preact/signals';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
 import type { UserIdentity } from '@shared/userMd/schema.js';
-import { getWizardSteps } from './steps.js';
+import { getWizardSteps, type WizardStep } from './steps.js';
 
 export interface WizardServerState {
     step: number;
@@ -108,7 +108,7 @@ export const wizardComplete = signal(false);
  */
 export const extendedSteps = signal(false);
 
-export function getActiveSteps(): readonly import('./steps.js').WizardStep[] {
+export function getActiveSteps(): readonly WizardStep[] {
     return getWizardSteps({ extended: extendedSteps.value });
 }
 
