@@ -85,7 +85,8 @@ describe('generateCsrfToken / csrfEquals', () => {
         expect(csrfEquals(t, t)).toBe(true);
         expect(csrfEquals(undefined, t)).toBe(false);
         expect(csrfEquals('', t)).toBe(false);
-        expect(csrfEquals(t.slice(0, -1) + '0', t)).toBe(false);
+        const differentLast = t.endsWith('0') ? '1' : '0';
+        expect(csrfEquals(t.slice(0, -1) + differentLast, t)).toBe(false);
     });
 
     it('csrfEquals: rejects length mismatches without timingSafeEqual throw', () => {

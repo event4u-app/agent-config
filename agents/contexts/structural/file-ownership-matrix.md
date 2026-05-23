@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **491**
-- Edges (incl. self-WRITE): **1398**
+- Files indexed: **494**
+- Edges (incl. self-WRITE): **1413**
 
 ## READ_ONLY edges
 
@@ -348,16 +348,25 @@
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/commit-policy.md` | `contexts/authority/commit-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/context-hygiene.md` | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/direct-answers.md` | `.agent-src.uncompressed/contexts/contracts/frugality-charter.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/augment-edit-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/rule-type-governance.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/size-enforcement.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/domain-adoption-policy.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/skills/launch-readiness/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/engineering-safety-floor.md` | `.agent-src.uncompressed/skills/threat-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/commands/analyze-reference-repo.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/rules/think-before-action.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/external-reference-deep-dive.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` | `.agent-src.uncompressed/rules/direct-answers.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/finance-safety-floor.md` | `.agent-src.uncompressed/skills/runway-cognition/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` | `.agent-src.uncompressed/rules/skill-quality.md` | `body_link` | 1 |
@@ -412,6 +421,8 @@
 | `.agent-src.uncompressed/rules/scope-control.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `contexts/authority/kernel-rule-edits.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/scope-control.md` | `contexts/authority/scope-mechanics.md` | `load_context` | 1 |
+| `.agent-src.uncompressed/rules/strategy-safety-floor.md` | `.agent-src.uncompressed/skills/competitive-moat-analysis/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/strategy-safety-floor.md` | `.agent-src.uncompressed/skills/positioning-strategy/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/think-before-action.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/think-before-action-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/think-before-action.md` | `contexts/communication/rules-auto/think-before-action-mechanics.md` | `load_context` | 1 |
 | `.agent-src.uncompressed/rules/token-efficiency.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/token-efficiency-mechanics.md` | `body_link` | 1 |
@@ -849,6 +860,7 @@
 | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/do-in-worktrees.md` | `.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/subagent-orchestration/prompts/judge-with-debate.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/rules/context-hygiene.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/systematic-debugging/SKILL.md` | `.agent-src.uncompressed/skills/php-debugging/SKILL.md` | `body_link` | 1 |
@@ -927,6 +939,6 @@
 | `command` | 129 |
 | `context` | 32 |
 | `persona` | 31 |
-| `rule` | 72 |
+| `rule` | 75 |
 | `skill` | 227 |
 

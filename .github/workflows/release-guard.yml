@@ -11,6 +11,11 @@ on:
       - '[0-9]+.[0-9]+.[0-9]+'
       - '[0-9]+.[0-9]+.[0-9]+-*'
 
+concurrency:
+  group: release-guard-${{ github.ref }}
+  cancel-in-progress: false
+
+
 jobs:
   assert-version-matches-tag:
     name: package.json.version == tag

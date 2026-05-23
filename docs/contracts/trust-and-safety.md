@@ -7,7 +7,6 @@ keep-beta-until: 2026-08-21
 
 > **Status:** active · **Stability:** beta · **Owner:** monorepo-phase-5
 > · **Authoritative ADR:** [`ADR-018`](../decisions/ADR-018-trust-and-safety-layer.md)
-> · **Roadmap:** [`monorepo-phase-5-trust-safety-layer`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
 
 Phase 1 stamped every artefact with `trust.level`,
 `trust.confidence`, and `trust.human_review_required`. Phase 5
@@ -136,7 +135,6 @@ Exits 0 clean, 1 on any violation. Tests in
 ## § 7 — References
 
 - ADR: [`ADR-018 — Trust & Safety Layer`](../decisions/ADR-018-trust-and-safety-layer.md)
-- Roadmap: [`monorepo-phase-5-trust-safety-layer`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
 - Compressor implementation: [`scripts/compress.py`](../../scripts/compress.py)
   (`_inject_hrr_banner`, `_HRR_BANNER_MARKER`)
 - Installer implementation: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)

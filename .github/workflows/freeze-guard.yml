@@ -49,6 +49,11 @@ on:
     - cron: "17 3 * * *"
   workflow_dispatch: {}
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
   manifest-integrity:
     name: Manifest Integrity
@@ -77,6 +82,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
       - name: Install pytest (recipes drive pytest in the toy repo)
         run: python3 -m pip install --upgrade pip pytest
