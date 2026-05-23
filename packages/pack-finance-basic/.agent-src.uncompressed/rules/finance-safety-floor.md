@@ -106,7 +106,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## See also
 
-- [`domain-safety-disclaimer`](../../../core/.agent-src.uncompressed/rules/domain-safety-disclaimer.md) — generic advisory-content floor
+- `domain-safety-disclaimer` — generic advisory-content floor (core pack)
 - [`runway-cognition`](../skills/runway-cognition/SKILL.md) — operational depth on runway shape
-- [`dcf-modeling`](../../pack-finance-advanced/.agent-src.uncompressed/skills/dcf-modeling/SKILL.md) — valuation depth
-- [`scenario-modeling`](../../pack-finance-advanced/.agent-src.uncompressed/skills/scenario-modeling/SKILL.md) — base / upside / downside construction
+- `dcf-modeling` — valuation depth (pack-finance-advanced)
+- `scenario-modeling` — base / upside / downside construction (pack-finance-advanced)

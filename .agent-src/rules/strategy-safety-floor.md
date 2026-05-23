@@ -108,7 +108,7 @@ Active whenever any of these are in the request, the open file, or the loaded sk
 
 ## See also
 
-- [`domain-safety-disclaimer`](../../../core/.agent-src.uncompressed/rules/domain-safety-disclaimer.md) — generic advisory-content floor
-- [`finance-safety-floor`](../../pack-finance-basic/.agent-src.uncompressed/rules/finance-safety-floor.md) — finance-pack floor (often paired with strategy work)
+- `domain-safety-disclaimer` — generic advisory-content floor (core pack)
+- `finance-safety-floor` — finance-pack floor, often paired with strategy work (pack-finance-basic)
 - [`positioning-strategy`](../skills/positioning-strategy/SKILL.md) — opposable-axis discipline
 - [`competitive-moat-analysis`](../skills/competitive-moat-analysis/SKILL.md) — inversion test
