@@ -183,6 +183,20 @@ if $LIST_TOOLS; then
     exit 0
 fi
 
+# road-to-global-only-install § Phase 3.3 — consumer-floor gate.
+#
+# Consumer installs are global-only (ADR-020). Explicit --scope=project
+# (and its --scope project / --scope=project / SCOPE shorthand) is the
+# maintainer-only escape hatch behind AGENT_CONFIG_DEV_MODE=1. Without
+# the env flag we refuse here so the bash orchestrator fails fast with
+# a directive error pointing at the maintainer doc — install.py's
+# Python-side _enforce_consumer_global_only still backstops the same
+# check for direct python3 scripts/install.py invocations.
+if [[ "${SCOPE:-}" == "project" && "${AGENT_CONFIG_DEV_MODE:-}" != "1" ]]; then
+    err "--scope=project is reserved for maintainers (ADR-020 — consumer installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. See docs/maintainers/dev-mode.md."
+    exit 1
+fi
+
 # Interactive --tools picker (S9). Fires only when:
 #   - --tools was not explicitly passed
 #   - --yes / -y was not passed (CI / non-interactive opt-out)

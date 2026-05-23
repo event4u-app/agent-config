@@ -36,6 +36,7 @@ import subprocess
 import sys
 import threading
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -1604,7 +1605,8 @@ def ensure_roocode_bridge(project_root: Path, force: bool) -> None:
 # `~/Library/Application Support/Claude/` on macOS — no project-local
 # discovery. The project bridge is informational only: a marker file that
 # documents the link and tells humans where the canonical rules live.
-# Phase 2.3 will formalize this as scope=global-only via SCOPE_SUPPORT.
+# Formalized as scope=global-only via SCOPE_SUPPORT (Phase 3.1 of
+# road-to-global-only-install — consumer installs are global-only).
 CLAUDE_DESKTOP_MARKER = """# Agent Config bridge — Claude Desktop
 
 This file marks the project as an `event4u/agent-config` consumer.
@@ -2054,26 +2056,36 @@ USER_SCOPE_PATHS = {
 }
 
 
-# Per-tool scope support per ADR-007 matrix + Tier-1/2 verification.
-# Values: "both" · "project" · "global". Used by _validate_scope() to
-# reject explicit `--tools=X` selections that conflict with the chosen
-# scope (project default or `--global`). `--tools=all` silently filters
-# incompatible IDs so the default install path stays backward-compatible.
+# Per-tool scope support per ADR-007 matrix + ADR-020 consumer global-only
+# amendment. Values: "both" · "project" · "global". Used by _validate_scope()
+# to reject explicit `--tools=X` selections that conflict with the chosen
+# scope. `--tools=all` silently filters incompatible IDs so the default
+# install path stays backward-compatible.
 #
-# Rationale:
-#   - claude-desktop has no project discovery (informational marker only
-#     in project trees); --project rejects it explicitly.
-#   - jetbrains avoids mutating team-shared .idea/; --project marker is
-#     informational only; canonical scope is global.
-#   - roocode / kilocode auto-discover `.roo/rules/` and `.kilocode/rules/`
-#     per project; no user-scope discovery convention; --global rejects.
+# road-to-global-only-install § Phase 3.1 — consumer installs are
+# global-only. Every AI ID with a user-scope convention is pinned to
+# "global". Maintainers can still drive project-scope installs by
+# setting AGENT_CONFIG_DEV_MODE=1 — `_enforce_consumer_global_only`
+# gates the scope before validation, so the SCOPE_SUPPORT matrix is the
+# canonical declaration of "where this tool is allowed to write."
+#
+# Exception:
+#   - copilot is "both" because GitHub Copilot has no user-scope
+#     convention for instructions — `copilot-instructions.md` lives
+#     in-repo by design. Project scope still requires
+#     AGENT_CONFIG_DEV_MODE=1 (consumer-floor gate); the "both" value
+#     keeps the gate at the env-flag layer rather than the matrix layer.
 SCOPE_SUPPORT = {
-    "claude-code":    "both",
+    "claude-code":    "global",
     "claude-desktop": "global",
-    "cursor":         "both",
-    "windsurf":       "both",
-    "cline":          "both",
-    "gemini-cli":     "both",
+    "cursor":         "global",
+    "windsurf":       "global",
+    "cline":          "global",
+    "gemini-cli":     "global",
+    # GitHub Copilot ships `copilot-instructions.md` in-repo by design
+    # — no user-scope convention exists. Project scope stays available
+    # but is gated by AGENT_CONFIG_DEV_MODE=1 via the consumer-floor
+    # check, not by the matrix.
     "copilot":        "both",
     # `augment` is global-only by design: a single user-scope deploy to
     # `~/.augment/` is the canonical surface. The package owner accepts
@@ -2083,17 +2095,14 @@ SCOPE_SUPPORT = {
     # installs are rejected so the per-repo `.augment/` surface stays
     # out of the install matrix entirely.
     "augment":        "global",
-    "aider":          "both",
-    "codex":          "both",
-    # Phase 2.4: roocode / kilocode lifted to "both" — global deploys
-    # write to `~/.roo/skills/` and `~/.kilocode/skills/` matching the
-    # nextlevelbuilder/ui-ux-pro-max-skill anchors.
-    "roocode":        "both",
-    "continue":       "both",
-    "kilocode":       "both",
-    "zed":            "both",
+    "aider":          "global",
+    "codex":          "global",
+    "roocode":        "global",
+    "continue":       "global",
+    "kilocode":       "global",
+    "zed":            "global",
     "jetbrains":      "global",
-    "kiro":           "both",
+    "kiro":           "global",
     # Phase 2.4 expansion — global-only for new anchors; project bridges
     # are not yet implemented for these IDs.
     "qoder":          "global",
@@ -2250,6 +2259,15 @@ To remove this marker, delete this file.
 #: package-owned, not Claude-owned, content.
 _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles"
 
+#: road-to-global-only-install § Phase 2.1 — canonical global path
+#: constants. Single source of truth for the user-scope settings file
+#: locations. Used by the settings reader (Python + TypeScript via
+#: docs/contracts/settings-api.md) to merge ``defaults < global <
+#: project-overrides``.
+GLOBAL_ROOT = Path.home() / ".event4u" / "agent-config"
+GLOBAL_USER_SETTINGS_PATH = GLOBAL_ROOT / ".agent-user.yml"
+GLOBAL_AGENT_SETTINGS_PATH = GLOBAL_ROOT / ".agent-settings.yml"
+
 
 def _bridge_marker(tool_id: str, scope: str) -> str:
     """Return the canonical bridge-marker path for ``(tool_id, scope)``.
@@ -2271,9 +2289,22 @@ def _validate_scope(tools: set[str], scope: str, was_all: bool) -> set[str]:
     `--tools=all` or omitted the flag), incompatible tools are silently
     filtered so the default install stays backward-compatible. Explicit
     tool lists hard-reject with a directive error per Phase 2.3.
+
+    Maintainer dev mode (``AGENT_CONFIG_DEV_MODE=1``) bypasses the matrix
+    filter entirely. Per ``docs/maintainers/dev-mode.md`` the flag
+    "allows project-scope writes back into the repo tree" — that
+    contract requires the full bridge surface (cursor / cline / windsurf
+    / gemini-cli / …) to remain reachable under ``--project`` so
+    ``task dev:install-global`` can dogfood every projection. The
+    consumer-facing gate already runs upstream via
+    ``_enforce_consumer_global_only``; reaching this function with
+    ``scope == "project"`` means the dev gate already approved the
+    write, so the matrix filter would be double-gating maintainer flows.
     """
     if scope not in ("project", "global"):
         fail(f"_validate_scope: unknown scope '{scope}'")
+    if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return tools
     incompatible = sorted(
         t for t in tools
         if SCOPE_SUPPORT.get(t, "both") not in ("both", scope)
@@ -2291,6 +2322,125 @@ def _validate_scope(tools: set[str], scope: str, was_all: bool) -> set[str]:
         f"--{scope} scope ({hint})"
     )
     return tools  # unreachable; fail() exits
+
+
+def _enforce_consumer_global_only(scope: str) -> None:
+    """road-to-global-only-install § Phase 3.2 — gate the project scope.
+
+    Consumer installs ship global-only (ADR-020). The legacy project
+    scope stays available for maintainers via ``AGENT_CONFIG_DEV_MODE=1``
+    so the dogfood-on-this-repo loop keeps working. Anything else
+    routing through the orchestrator with ``scope == "project"`` aborts
+    with a directive error pointing at the maintainer doc.
+
+    Pure side-effect gate — separate from ``_resolve_scope`` so the
+    unit-tested resolver stays a pure function of its inputs.
+    """
+    if scope != "project":
+        return
+    if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return
+    fail(
+        "--scope=project is reserved for maintainers (ADR-020 — consumer "
+        "installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. "
+        "See docs/maintainers/dev-mode.md."
+    )
+
+
+# --- road-to-global-only-install § Phase 2.2 — three-layer settings reader ---
+#
+# Merge order (per ADR-020 / D9):
+#
+#     defaults  <  global  <  project-overrides
+#
+# The defaults layer is the rendered template body in
+# ``config/agent-settings.template.yml``. The global layer is
+# ``~/.event4u/agent-config/.agent-settings.yml``. The project layer is
+# ``<project_root>/.agent-settings.yml`` — tolerated but no longer
+# required to exist. Any layer that is missing or unparseable falls back
+# to an empty dict so the merge stays total.
+#
+# The TypeScript wizard route ``GET /api/v1/wizard/settings`` mirrors the
+# same precedence (see :mod:`src.server.routes.wizard`) so the Python
+# installer and the Fastify server agree on what *the user's effective
+# settings* look like at any given moment.
+
+def _load_yaml_doc(path: Path) -> dict:
+    """Load a YAML file as a dict; return ``{}`` on every recoverable error.
+
+    Used by the three-layer settings reader. Mirrors the defensive shape
+    of :func:`scripts.config.profiles._load_yaml`: missing PyYAML, missing
+    file, parse error, or non-dict root all collapse to an empty dict so
+    callers can blindly :func:`deep_merge` the result without guards.
+    """
+    try:
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        return {}
+    if not path.exists() or not path.is_file():
+        return {}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _load_default_settings(package_root: Path) -> dict:
+    """Parse the rendered settings template into a defaults dict.
+
+    The template carries ``__COST_PROFILE__`` / ``__USER_TYPE__``
+    placeholders that PyYAML cannot parse as scalars. We substitute the
+    most permissive defaults (``balanced`` + empty user_type) before
+    parsing — the resulting tree is the *defaults* layer of the merge,
+    and downstream layers overwrite cost_profile / user_type as needed.
+    """
+    template_source = package_root / "config" / "agent-settings.template.yml"
+    if not template_source.exists():
+        return {}
+    try:
+        text = template_source.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    rendered = text.replace(COST_PROFILE_PLACEHOLDER, DEFAULT_PROFILE).replace(
+        USER_TYPE_PLACEHOLDER, ""
+    )
+    try:
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        return {}
+    try:
+        data = yaml.safe_load(rendered)
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def read_layered_settings(
+    package_root: Path,
+    project_root: "Path | None" = None,
+) -> dict:
+    """Three-layer settings merge — ``defaults < global < project``.
+
+    ``project_root`` is optional: when ``None`` (or the project file is
+    absent), the merge collapses to ``defaults < global`` so a consumer
+    who installs global-only sees the same effective settings the
+    Fastify server would surface. Always returns a dict — never raises.
+
+    Used by :func:`main` to compute the effective configuration before
+    rendering per-tool bridges, and by the Phase 2.4 ``settings migrate``
+    subcommand to detect which keys are local-only overrides.
+    """
+    merged = _load_default_settings(package_root)
+    merged = deep_merge(merged, _load_yaml_doc(GLOBAL_AGENT_SETTINGS_PATH))
+    if project_root is not None:
+        project_file = project_root / SETTINGS_FILE
+        merged = deep_merge(merged, _load_yaml_doc(project_file))
+    return merged
 
 
 def _resolve_scope(
@@ -2747,6 +2897,284 @@ def _resolve_package_root_for_global() -> Path:
     return candidate
 
 
+#: Consumer bridge marker filename, relative to the project root.
+#: Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).
+CONSUMER_BRIDGE_MARKER_RELPATH = Path("agents") / ".event4u-bridge.yml"
+
+
+# ---------------------------------------------------------------------------
+# Phase 5.2 — migrate-to-global first-run hook
+# ---------------------------------------------------------------------------
+#
+# Legacy artefacts that signal a pre-ADR-020 install in the project root.
+# Same surface the ``migrate-to-global`` command detects (see
+# ``scripts/_cli/cmd_migrate_to_global.py``). Kept in sync intentionally so
+# the prompt and the migration tool agree on what counts as "legacy".
+MIGRATE_LEGACY_YAML_FILES = (".agent-settings.yml", ".agent-user.yml")
+MIGRATE_LEGACY_TOOL_DIRS = (".augment", ".claude", ".cursor")
+
+
+def _detect_legacy_for_migration(project_root: Path) -> list[str]:
+    """Return a sorted list of legacy artefact relpaths present in ``project_root``.
+
+    Skipped (returns ``[]``) when:
+
+    - ``AGENT_CONFIG_DEV_MODE=1`` is set (maintainer dogfood loop),
+    - the project root IS the agent-config source repo
+      (``.agent-src.uncompressed/`` present),
+    - the bridge marker already exists (project is already global-only).
+    """
+    if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return []
+    if (project_root / ".agent-src.uncompressed").is_dir():
+        return []
+    if (project_root / CONSUMER_BRIDGE_MARKER_RELPATH).is_file():
+        return []
+
+    found: list[str] = []
+    for name in MIGRATE_LEGACY_YAML_FILES:
+        if (project_root / name).is_file():
+            found.append(name)
+        elif (project_root / "settings" / name).is_file():
+            found.append(f"settings/{name}")
+    for name in MIGRATE_LEGACY_TOOL_DIRS:
+        p = project_root / name
+        if p.is_dir() and not p.is_symlink():
+            found.append(f"{name}/")
+    return sorted(found)
+
+
+def _prompt_migrate_to_global(project_root: Path, artefacts: list[str]) -> bool:
+    """Ask the user whether to run ``migrate-to-global`` now.
+
+    Interactive TTY → ``[Y/n]`` prompt (Enter = yes). Non-interactive (CI
+    or no TTY) → auto-yes per roadmap Phase 5.2 contract. Three invalid
+    replies short-circuit to "no" (defensive, never blocks the install).
+    """
+    if not QUIET:
+        print()
+        warn("Legacy project-local artefacts detected — pre-ADR-020 layout:")
+        for rel in artefacts:
+            info(f"  {project_root / rel}")
+        info("ADR-020 ships consumer installs as global-only.")
+        info("`agent-config migrate-to-global` copies → verifies → moves them safely.")
+
+    if not _is_interactive():
+        if not QUIET:
+            info("Non-interactive mode → defaulting to YES (run migration).")
+        return True
+
+    attempts = 0
+    while attempts < 3:
+        try:
+            reply = _read_line("Run `agent-config migrate-to-global` now? [Y/n]: ")
+        except EOFError:
+            return False
+        if reply == "" or reply.lower() in ("y", "yes"):
+            return True
+        if reply.lower() in ("n", "no"):
+            return False
+        attempts += 1
+        warn(f"Invalid choice '{reply}'. Enter Y or n.")
+    return False
+
+
+def _run_migrate_to_global(project_root: Path) -> int:
+    """Invoke ``cmd_migrate_to_global._do_migrate`` against ``project_root``.
+
+    Returns the migrator's exit code so the caller can abort the install
+    on failure. The perms gate is skipped because the install path runs
+    its own checks; surfacing two perm errors back-to-back would be
+    confusing for first-run users.
+    """
+    import importlib  # noqa: PLC0415 — local to keep startup lean.
+
+    try:
+        cmd_mod = importlib.import_module("scripts._cli.cmd_migrate_to_global")
+    except ImportError as exc:
+        warn(f"migrate-to-global unavailable: {exc}")
+        return 1
+
+    install_mod = sys.modules[__name__]
+    return cmd_mod._do_migrate(project_root, force=False, install_mod=install_mod, out=sys.stdout)
+
+
+def _format_global_root_for_marker(global_root: Path) -> str:
+    """Render ``global_root`` for the bridge marker.
+
+    Per ``docs/contracts/consumer-bridge.md``, readers MUST expand ``~``
+    against the **current process's** ``$HOME``. To keep the marker
+    portable across maintainer home dirs, render the path with a
+    leading ``~/`` when it lives under ``Path.home()``; fall back to
+    the absolute path otherwise (e.g. ``EVENT4U_CONFIG_HOME`` override
+    pointing outside ``$HOME``).
+    """
+    try:
+        rel = global_root.resolve().relative_to(Path.home().resolve())
+    except ValueError:
+        return str(global_root)
+    return f"~/{rel.as_posix()}"
+
+
+def _write_consumer_bridge_marker(
+    project_root: Path,
+    installer_version: str,
+    *,
+    env: Optional[dict] = None,
+    now: Optional[datetime] = None,
+) -> Optional[Path]:
+    """Write ``agents/.event4u-bridge.yml`` at the consumer project root.
+
+    Returns the written path, or ``None`` when the write was skipped per
+    ``docs/contracts/consumer-bridge.md`` § Writer contract:
+
+    - ``AGENT_CONFIG_DEV_MODE=1`` (maintainer dev installs never lay the
+      bridge into the source repo).
+    - The project root is the agent-config source repo itself
+      (``.agent-src.uncompressed/`` present) — same rationale.
+
+    Atomic write: ``tempfile`` in the same dir + ``os.replace``. Same
+    pattern the lockfile uses (see ``scripts/_lib/installed_lock.py``).
+    Mode ``0o644`` per contract — no secrets, world-readable.
+    """
+    import tempfile
+
+    env_map = env if env is not None else os.environ
+    if env_map.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return None
+    if (project_root / ".agent-src.uncompressed").is_dir():
+        return None
+
+    paths_mod = _load_user_global_paths_module()
+    global_root_str = _format_global_root_for_marker(paths_mod.event4u_root(env=env_map))
+    stamp = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    body = (
+        "# event4u/agent-config — consumer bridge marker (auto-written).\n"
+        "# Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).\n"
+        "# Reader contract: expand ~ against the current $HOME; fail closed\n"
+        "# when global_root is missing on disk; never write back through it.\n"
+        "schema: event4u-bridge/v1\n"
+        f"global_root: {global_root_str}\n"
+        f"installed_at: {stamp}\n"
+        f"installer_version: {installer_version}\n"
+    )
+
+    target = project_root / CONSUMER_BRIDGE_MARKER_RELPATH
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    fd, tmp_name = tempfile.mkstemp(
+        prefix=".event4u-bridge.", suffix=".yml.tmp",
+        dir=str(target.parent), text=False,
+    )
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            fh.write(body)
+        os.chmod(tmp_name, 0o644)
+        os.replace(tmp_name, target)
+    except Exception:
+        try:
+            os.unlink(tmp_name)
+        except OSError:
+            pass
+        raise
+    return target
+
+
+#: Per-tool project anchors (Phase 4.3). Some AI tools only load rules
+#: when an anchor file is **inside** the workspace. For those IDs we
+#: plant a thin pointer file under the tool's per-project directory
+#: whose body references the bridge marker (``agents/.event4u-bridge.yml``).
+#: Tools that load purely from user-scope (Claude Code, Cursor, Augment)
+#: read the marker once and need no per-tool file — they are absent
+#: from this map by design (see ``docs/contracts/consumer-bridge.md``
+#: § Per-tool anchor strategy).
+PROJECT_ANCHOR_TOOLS: dict[str, str] = {
+    "windsurf":   ".windsurf/agent-config.bridge.yml",
+    "cline":      ".clinerules/agent-config.bridge.yml",
+    "gemini-cli": ".gemini/agent-config.bridge.yml",
+}
+
+
+def _write_per_tool_project_anchors(
+    project_root: Path,
+    tools: set[str],
+    *,
+    env: Optional[dict] = None,
+    now: Optional[datetime] = None,
+) -> list[Path]:
+    """Plant thin pointer files for tools in :data:`PROJECT_ANCHOR_TOOLS`.
+
+    Each pointer is a tiny YAML body that references the bridge marker
+    at ``agents/.event4u-bridge.yml`` (relative from the pointer's
+    location) plus the resolved ``global_root`` for convenience. Same
+    gate semantics as :func:`_write_consumer_bridge_marker`:
+
+    - Skipped under ``AGENT_CONFIG_DEV_MODE=1``.
+    - Skipped inside the agent-config source repo
+      (``.agent-src.uncompressed/`` present).
+    - Skipped when the tool is not in ``tools``.
+
+    Atomic write per file (temp file + ``os.replace``); ``0o644``
+    permissions per ``docs/contracts/consumer-bridge.md`` (the pointers
+    contain no secrets, only paths).
+    """
+    import tempfile
+
+    env_map = env if env is not None else os.environ
+    if env_map.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return []
+    if (project_root / ".agent-src.uncompressed").is_dir():
+        return []
+
+    paths_mod = _load_user_global_paths_module()
+    global_root_str = _format_global_root_for_marker(paths_mod.event4u_root(env=env_map))
+    stamp = (now or datetime.now(timezone.utc)).strftime("%Y-%m-%dT%H:%M:%SZ")
+    written: list[Path] = []
+
+    for tool_id, rel_path in sorted(PROJECT_ANCHOR_TOOLS.items()):
+        if tool_id not in tools:
+            continue
+        target = project_root / rel_path
+        target.parent.mkdir(parents=True, exist_ok=True)
+
+        # Relative path from the pointer file back to the bridge marker.
+        # Both live inside ``project_root``; ``os.path.relpath`` keeps the
+        # result portable across machines (no absolute path leakage).
+        bridge_abs = project_root / CONSUMER_BRIDGE_MARKER_RELPATH
+        bridge_rel = os.path.relpath(bridge_abs, target.parent)
+
+        body = (
+            "# event4u/agent-config — per-tool project anchor (auto-written).\n"
+            "# Spec: docs/contracts/consumer-bridge.md § Per-tool anchor strategy.\n"
+            f"# Tool: {tool_id}. Bridge marker: agents/.event4u-bridge.yml.\n"
+            "schema: event4u-bridge/v1\n"
+            f"tool: {tool_id}\n"
+            f"bridge: {bridge_rel}\n"
+            f"global_root: {global_root_str}\n"
+            f"installed_at: {stamp}\n"
+        )
+
+        fd, tmp_name = tempfile.mkstemp(
+            prefix=".agent-config.bridge.", suffix=".yml.tmp",
+            dir=str(target.parent), text=False,
+        )
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                fh.write(body)
+            os.chmod(tmp_name, 0o644)
+            os.replace(tmp_name, target)
+        except Exception:
+            try:
+                os.unlink(tmp_name)
+            except OSError:
+                pass
+            raise
+        written.append(target)
+
+    return written
+
+
 #: Inline package identifier injected into deployed Markdown
 #: frontmatter (P5.1). Human-readable provenance only; the manifest
 #: remains the authoritative ownership source (see P5.3).
@@ -3139,6 +3567,38 @@ def install_global(
         if rc != 0:
             return rc
 
+        # Consumer bridge marker (Phase 4.2). One declarative pointer at
+        # ``agents/.event4u-bridge.yml`` lets per-tool adapters locate
+        # the global root from inside the repo. Skipped in maintainer
+        # dev mode and in the source repo (see contract § Writer
+        # contract; the surrounding ``.agent-src.uncompressed`` guard
+        # already covers the source-repo case, the dev-mode skip is
+        # enforced inside the writer).
+        marker_path = _write_consumer_bridge_marker(project_root, installed_version)
+        if marker_path is not None and not QUIET:
+            rel = (
+                marker_path.relative_to(project_root)
+                if marker_path.is_relative_to(project_root)
+                else marker_path
+            )
+            info(f"Bridge marker written: {rel}")
+
+        # Per-tool project anchors (Phase 4.3). Plant thin pointer files
+        # for tools that only load rules when an anchor exists inside
+        # the workspace (Windsurf, Cline, Gemini-CLI). Same dev-mode +
+        # source-repo gate as the bridge marker (enforced inside the
+        # writer). Filter to the tools the caller actually selected so
+        # we never plant anchors for tools the user excluded.
+        anchor_paths = _write_per_tool_project_anchors(project_root, tools)
+        if anchor_paths and not QUIET:
+            for p in anchor_paths:
+                rel = (
+                    p.relative_to(project_root)
+                    if p.is_relative_to(project_root)
+                    else p
+                )
+                info(f"Project anchor written: {rel}")
+
     if not QUIET:
         print()
         success("Global install completed.")
@@ -3436,19 +3896,26 @@ def _write_install_mode_marker(project_root: Path, mode: str) -> None:
 
 
 def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
-    """Bootstrap the project-local override layer only (D2-compliant).
+    """Bootstrap the project-local override layer only (ADR-020-compliant).
 
-    Writes:
+    Writes the global-only consumer scaffold:
 
-    * ``agents/.gitkeep`` so the folder is committable.
-    * ``.agent-settings.yml`` stub (cost_profile=balanced, version pin
-      commented out per D4).
+    * ``agents/overrides/{rules,skills,commands}/.gitkeep`` so the
+      override subdirs are committable in a fresh repo.
+    * ``agents/overrides/README.md`` explaining the override layer and
+      its resolution model.
+    * ``agents/.event4u-bridge.yml`` (Phase 4.2) anchoring the project
+      to the user-global ``~/.event4u/agent-config/`` install.
+    * ``.agent-settings.yml`` — only when ``user_type`` is supplied
+      (back-compat with the step-9 interactive flow); otherwise the
+      project-local settings file is **not** written (global config
+      is the source of truth per ADR-020 § D2).
 
     Refuses (exit 1) when ``target_root`` is **inside** an existing
     agent-config project (Phase-1 anchor walk above the target). The
     in-target case is allowed and treated as idempotent — re-running
-    ``--minimal`` in a folder that already has ``.agent-settings.yml``
-    does nothing unless ``--force`` is passed.
+    ``--minimal`` in a folder that already has the bridge marker does
+    nothing unless ``--force`` is passed.
 
     Does **not** touch ``.gitignore`` (D2 — user owns the ignore file).
     The ``./agent-config`` wrapper is installed by ``scripts/install.sh``
@@ -3480,40 +3947,71 @@ def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
 
     templates = _minimal_templates_root()
     settings_src = templates / SETTINGS_FILE
-    gitkeep_src = templates / "agents-gitkeep"
+    overrides_gitkeep_src = templates / "overrides-gitkeep"
+    overrides_readme_src = templates / "agents-overrides-readme.md"
 
-    if not settings_src.is_file() or not gitkeep_src.is_file():
-        fail(f"Bundled minimal templates missing under {templates}")
+    if not settings_src.is_file():
+        fail(f"Bundled minimal settings template missing under {templates}")
+    if not overrides_gitkeep_src.is_file() or not overrides_readme_src.is_file():
+        fail(f"Bundled overrides scaffold templates missing under {templates}")
 
     info(f"Minimal init → {target_root}")
 
-    # 1. agents/.gitkeep
-    agents_dir = target_root / "agents"
-    agents_dir.mkdir(exist_ok=True)
-    gitkeep_dst = agents_dir / ".gitkeep"
-    if gitkeep_dst.exists() and not force:
-        skip(f"agents/.gitkeep already exists (use --force to overwrite)")
-    else:
-        gitkeep_dst.write_text(gitkeep_src.read_text(encoding="utf-8"), encoding="utf-8")
-        success("Wrote agents/.gitkeep")
+    # 1. agents/overrides/{rules,skills,commands}/.gitkeep — committable
+    # scaffold for the project-local override layer (ADR-020 § Phase 4.5).
+    overrides_root = target_root / "agents" / "overrides"
+    overrides_root.mkdir(parents=True, exist_ok=True)
+    gitkeep_body = overrides_gitkeep_src.read_text(encoding="utf-8")
+    for sub in ("rules", "skills", "commands"):
+        sub_dir = overrides_root / sub
+        sub_dir.mkdir(exist_ok=True)
+        gitkeep_dst = sub_dir / ".gitkeep"
+        if gitkeep_dst.exists() and not force:
+            skip(f"agents/overrides/{sub}/.gitkeep already exists (use --force to overwrite)")
+        else:
+            gitkeep_dst.write_text(gitkeep_body, encoding="utf-8")
+            success(f"Wrote agents/overrides/{sub}/.gitkeep")
 
-    # 2. .agent-settings.yml stub
-    settings_dst = target_root / SETTINGS_FILE
-    if settings_dst.exists() and not force:
-        skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
+    # 2. agents/overrides/README.md — explains the override layer.
+    readme_dst = overrides_root / "README.md"
+    if readme_dst.exists() and not force:
+        skip("agents/overrides/README.md already exists (use --force to overwrite)")
     else:
-        body = settings_src.read_text(encoding="utf-8")
-        if user_type:
-            body = body.rstrip() + (
+        readme_dst.write_text(overrides_readme_src.read_text(encoding="utf-8"), encoding="utf-8")
+        success("Wrote agents/overrides/README.md")
+
+    # 3. .agent-settings.yml stub — only when user_type is supplied
+    # (back-compat with the step-9 interactive flow). Global config is
+    # the source of truth per ADR-020 § D2; a fresh `--minimal` run
+    # without user_type does not write a project-local settings file.
+    if user_type:
+        settings_dst = target_root / SETTINGS_FILE
+        if settings_dst.exists() and not force:
+            skip(f"{SETTINGS_FILE} already exists (use --force to overwrite)")
+        else:
+            body = settings_src.read_text(encoding="utf-8").rstrip() + (
                 "\n\n# --- Personal (step-9 user-type axis) ---\n"
                 "personal:\n"
                 f"  user_type: {user_type}\n"
             )
-        settings_dst.write_text(body, encoding="utf-8")
-        suffix = f" (user_type={user_type})" if user_type else ""
-        success(f"Wrote {SETTINGS_FILE}{suffix}")
+            settings_dst.write_text(body, encoding="utf-8")
+            success(f"Wrote {SETTINGS_FILE} (user_type={user_type})")
 
-    # 3. install-mode marker (Step 8 A5) — authoritative state for
+    # 4. Consumer bridge marker (Phase 4.2). Anchors the project to
+    # the user-global ``~/.event4u/agent-config/`` install. The writer
+    # itself enforces the dev-mode + source-repo skip contract.
+    lock_mod = _load_installed_lock_module()
+    installed_version = lock_mod.current_package_version()
+    marker_path = _write_consumer_bridge_marker(target_root, installed_version)
+    if marker_path is not None:
+        rel = (
+            marker_path.relative_to(target_root)
+            if marker_path.is_relative_to(target_root)
+            else marker_path
+        )
+        success(f"Wrote {rel}")
+
+    # 5. install-mode marker (Step 8 A5) — authoritative state for
     # doctor --context and future install-aware tooling. Written even
     # on idempotent re-runs so the marker is repaired if removed.
     _write_install_mode_marker(target_root, "minimal")
@@ -3533,7 +4031,7 @@ def install_minimal(target_root: Path, force: bool, user_type: str = "") -> int:
         print()
         info("Next steps:")
         info("  • Ensure `agent-config` is on $PATH: npm install -g @event4u/agent-config")
-        info("  • Add `.agent-settings.yml` and `agents/` to git (or to .gitignore — your call).")
+        info("  • Drop project-scoped overrides under `agents/overrides/{rules,skills,commands}/`.")
         info("  • Run `agent-config doctor` to verify the layer is picked up.")
     return 0
 
@@ -3931,6 +4429,7 @@ def main(argv: list[str]) -> int:
     detected, detect_reason = detect_scope(detect_root)
     custom_path: Path | None = Path(opts.custom_path).resolve() if opts.custom_path else None
     scope = _resolve_scope(opts, detected, detect_reason, custom_path)
+    _enforce_consumer_global_only(scope)
 
     # Scope validation runs before filesystem / package detection so
     # --tools=X / --scope conflicts fail fast with a directive error
@@ -3950,6 +4449,14 @@ def main(argv: list[str]) -> int:
 
     try:
         if scope == "global":
+            # Phase 5.2 — first-run hook: when legacy artefacts live in the
+            # project tree, prompt before laying down the global surface so
+            # the user is not left with a dual-stack install.
+            artefacts = _detect_legacy_for_migration(detect_root)
+            if artefacts and _prompt_migrate_to_global(detect_root, artefacts):
+                rc = _run_migrate_to_global(detect_root)
+                if rc != 0:
+                    return rc
             # Pass detect_root so the manifest refresh runs when --global is
             # invoked from within a project tree (ADR-008 Phase 3.2).
             return install_global(parsed_tools, opts.force, project_root=detect_root)

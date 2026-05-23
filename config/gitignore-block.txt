@@ -1,14 +1,30 @@
-# Agent config — symlinked from vendor (auto-managed)
+# Agent config — tool-scope leftovers (ADR-020 § global-only consumer
+# install). After the Phase-5 migration the entire `.augment/`, `.claude/`,
+# `.cursor/` trees live under `~/.event4u/agent-config/`; consumers carry
+# only `agents/overrides/` + `agents/.event4u-bridge.yml`. The per-tool
+# bridge pointer files for Windsurf / Cline / Gemini-CLI live under
+# `.windsurf/`, `.clinerules/`, `.gemini/` and ARE committed — those
+# directories stay tracked (not listed here). Pre-Phase-5 entries kept
+# as a defence-in-depth ignore list for legacy installs that have not
+# migrated yet — Phase 5 unstages them on first migrate run.
 .augment/skills/
 .augment/commands/
 .augment/guidelines/
 .augment/templates/
 .augment/contexts/
 .augment/scripts/
+.augment/rules/
 .augment/README.md
+.claude/skills/
+.claude/commands/
+.claude/agents/
+.claude/CLAUDE.md
+.cursor/rules/
 
-# Agent config — NOT ignored (real copies, may contain project overrides)
-# .augment/rules/
+# Agent config — Phase 5 migration snapshot (ADR-020). Written by
+# `agent-config migrate-to-global` as a copy-then-move safety net so a
+# migration can be rolled back. Local-only — never commit.
+.legacy-pre-global-only/
 
 # Agent config — CLI wrapper (auto-generated on every install)
 /agent-config

@@ -14,6 +14,7 @@
 
 import { useEffect } from 'preact/hooks';
 import { apiFetch, ApiCallError } from '../api.js';
+import { serverStatus } from '../serverStatus.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
 import { UserMdForm } from '../forms/UserMdForm.js';
@@ -48,6 +49,7 @@ import {
     userMdSkipped,
     values,
     wizardComplete,
+    wizardScope,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -274,7 +276,11 @@ async function finish(): Promise<void> {
     saving.value = true;
     banner.value = null;
     try {
-        const body: { settings: Record<string, JsonValue>; identity?: UserIdentity } = {
+        const body: {
+            settings: Record<string, JsonValue>;
+            identity?: UserIdentity;
+            scope?: 'global' | 'project';
+        } = {
             settings: values.value,
         };
         // Send the identity object only when the user actually edited or
@@ -282,6 +288,13 @@ async function finish(): Promise<void> {
         // existing `.agent-user.yml` alone.
         if (userMdChanged() && userMdBody.value !== null) {
             body.identity = userMdBody.value;
+        }
+        // road-to-global-only-install § Phase 2.3 — include the scope
+        // selection only when the server advertised the opt-in. Older
+        // server bundles ignore unknown fields, but omitting it on
+        // unavailable surfaces keeps the wire shape minimal.
+        if (serverStatus.value?.projectScopeAvailable === true) {
+            body.scope = wizardScope.value;
         }
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
@@ -355,6 +368,36 @@ function StepBody(): preact.JSX.Element | null {
             />
         );
     }
+    // road-to-global-only-install § Phase 1.4 — placeholder renderers for
+    // the extended-mode lead steps. The full picker UI ships in the
+    // follow-up phase that wires discovery state into the wizard store;
+    // these stubs keep the step navigation walkable today so the 9-step
+    // flow is testable end-to-end while the deeper UX is in flight.
+    if (step.kind === 'aiTools') {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p>
+                    Auto-detected AI tools will appear here. The wizard reads
+                    <code> /api/v1/wizard/auto-detect</code> and lets you toggle each
+                    discovered tool on or off. Pick-list UI lands in the follow-up
+                    extended-mode phase; the endpoint is already live so you can
+                    inspect raw output via <code>curl</code> in the meantime.
+                </p>
+            </div>
+        );
+    }
+    if (step.kind === 'packs') {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p>
+                    Capability packs (founder-strategy, finance-basic, gtm-sales,
+                    ops-people, ai-video) will appear here. The wizard reads
+                    <code> /api/v1/wizard/manifest</code> and lets you toggle each
+                    pack on or off. Selection UI lands in the follow-up phase.
+                </p>
+            </div>
+        );
+    }
     // review
     return (
         <WizardReview
@@ -366,6 +409,9 @@ function StepBody(): preact.JSX.Element | null {
             userMdAction={userMdExists.value ? 'replace' : 'create'}
             loading={diffLoading.value}
             onJump={(i): void => { void goTo(i); }}
+            scope={wizardScope.value}
+            scopeAvailable={serverStatus.value?.projectScopeAvailable === true}
+            onScopeChange={(next): void => { wizardScope.value = next; }}
         />
     );
 }

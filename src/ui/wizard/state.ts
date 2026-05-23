@@ -72,6 +72,17 @@ export const legacyHints = signal<SettingsLegacyHints>({});
 export const reviewChanges = signal<DiffChange[]>([]);
 
 /**
+ * Wizard write-scope choice — picked on the Review step when the server
+ * advertises `projectScopeAvailable: true` (road-to-global-only-install
+ * § Phase 2.3). `'global'` (default) routes the 2PC commit to the
+ * resolved global write root (typically `~/.event4u/agent-config/`).
+ * `'project'` routes the commit to `<cwd>/settings/` so the consumer
+ * pins settings to a single repo. The signal is wire-stable: the
+ * /finish payload sends the value verbatim under `scope`.
+ */
+export const wizardScope = signal<'global' | 'project'>('global');
+
+/**
  * Flipped to `true` once `/api/v1/wizard/finish` returns successfully (real
  * commit or dry-run). The page chrome uses it to suppress the Finish button
  * — there is nothing left to save — and the banner adds a close-window hint.

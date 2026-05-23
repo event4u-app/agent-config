@@ -48,8 +48,22 @@ Response (200):
 
 ### `GET /api/v1/settings`
 
-Reads `<projectRoot>/.agent-settings.yml` and returns the parsed values
-plus the freshness token for optimistic locking.
+Returns the **three-layer merged** settings tree plus the freshness
+token for optimistic locking. Merge order (per **ADR-020** + roadmap
+`road-to-global-only-install` § Phase 2.2):
+
+```text
+defaults (config/agent-settings.template.yml)
+  < global (~/.event4u/agent-config/settings/.agent-settings.yml)
+    < project (<projectRoot>/settings/.agent-settings.yml, optional)
+```
+
+Defaults come from the package template with `__COST_PROFILE__` /
+`__USER_TYPE__` placeholders substituted for their permissive defaults
+(`balanced` / `""`). Global and project layers are read with the typed
+subdir preferred over the legacy flat path. The route mirrors
+`scripts/install.py::read_layered_settings` 1:1 so the Python installer
+and the Fastify GUI cannot drift.
 
 Response (200):
 
@@ -57,7 +71,7 @@ Response (200):
 {
     "values":       { "cost_profile": "balanced", "...": "..." },
     "lastModified": 1747749791842,
-    "path":         ".agent-settings.yml",
+    "path":         "settings/.agent-settings.yml",
     "legacyHints":  { "user_name": "Matze" }
 }
 ```
@@ -75,9 +89,10 @@ does not yet exist — to pre-fill the merged identity field. Subsequent
 PUTs strip the legacy keys (Zod-unknown), so the next read returns no
 hints.
 
-Errors: **404** when the file is missing (the SPA should redirect to
-`/#/wizard/Welcome`); **500** with `code=YAML_PARSE` when YAML parsing
-fails (body includes the line/column).
+Errors: **404** when **neither** the global nor the project file
+exists (defaults alone are not an "installed" state — the SPA should
+redirect to `/#/wizard/Welcome`); **500** with `code=YAML_PARSE` when
+either layer is on disk but unparseable (body includes the line/column).
 
 ### `POST /api/v1/settings/diff`
 
@@ -152,6 +167,24 @@ Response (200): `{ writtenPaths: string[], txnId: string }`.
 Errors: **500** with `code=TXN_PARTIAL` when the marker survives a crash
 (client should redirect the user to a "your last save is being
 recovered" screen and refetch state).
+
+## CLI: `agent-config settings migrate`
+
+Companion to the layered reader (ADR-020). Lifts an existing
+project-local `.agent-user.yml` / `.agent-settings.yml` into
+`~/.event4u/agent-config/`. Idempotent — refuses to overwrite a
+non-empty global file without `--force`. Order matches Phase 5
+amendment A2 (`copy → verify`; the destructive `move` step is owned by
+`migrate-to-global`, not this subcommand).
+
+Flags:
+
+- `--from <path>` — project root to read from (default: `cwd`).
+- `--force` — overwrite a non-empty global file.
+- `--dry-run` — list intended copies; zero writes; exit 0.
+
+Exit codes: `0` on success or no-op; `1` on validation failure or a
+non-empty global file without `--force`.
 
 ## Status codes summary
 

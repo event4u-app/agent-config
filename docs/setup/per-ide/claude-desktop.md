@@ -9,8 +9,9 @@ server inside Claude Desktop. macOS / Windows / Linux. ~10 minutes.
 > ZIP per skill under
 > `~/.event4u/agent-config/claude-desktop/bundles/` so you can drag /
 > drop them into the Customize panel. The v1 npm / composer install
-> scheme is retired; the new global-first scheme is ADR-007 and writes
-> through `~/.event4u/agent-config/installed.lock` (legacy
+> scheme is retired; the current global-only scheme follows ADR-007 +
+> [ADR-020](../../decisions/ADR-020-global-only-consumer-scope.md) and
+> writes through `~/.event4u/agent-config/installed.lock` (legacy
 > `~/.config/agent-config/installed.lock` read as fallback).
 
 ## Prerequisites

@@ -71,7 +71,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         return 1;
     }
 
-    const { writeRoot, legacyReadRoot, mode } = resolveWriteRoot(
+    const { writeRoot, legacyReadRoot, projectScopeRoot, mode } = resolveWriteRoot(
         opts.projectRoot !== undefined ? { override: opts.projectRoot } : {},
     );
     ensureWriteRoot(writeRoot);
@@ -100,6 +100,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
     const app = await createApp({
         writeRoot,
         legacyReadRoot,
+        projectScopeRoot,
         mode,
         uiDistDir,
         token,

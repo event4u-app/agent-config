@@ -38,6 +38,9 @@ describe('resolveWriteRoot', () => {
         // Maintainer's in-repo `.agent-settings.yml` must be readable
         // as legacy fallback so the wizard pre-populates from it.
         expect(res.legacyReadRoot).toBe(repo);
+        // No project-scope opt-in inside the package — the writeRoot is
+        // already in-repo so a project-scope toggle would be a no-op.
+        expect(res.projectScopeRoot).toBeNull();
     });
 
     it('returns global mode with legacy fallback when CWD is a consumer project', () => {
@@ -52,6 +55,10 @@ describe('resolveWriteRoot', () => {
         expect(res.mode).toBe('global');
         expect(res.writeRoot).toBe(join(home, '.event4u', 'agent-config'));
         expect(res.legacyReadRoot).toBe(consumer);
+        // Consumer projects expose project-scope as an opt-in toggle so
+        // the wizard can route writes back into the repo when the user
+        // ticks the checkbox in Review.
+        expect(res.projectScopeRoot).toBe(consumer);
     });
 
     it('returns global mode with no legacy fallback when CWD has no package.json', () => {
@@ -65,6 +72,10 @@ describe('resolveWriteRoot', () => {
         expect(res.mode).toBe('global');
         expect(res.writeRoot).toBe(join(home, '.event4u', 'agent-config'));
         expect(res.legacyReadRoot).toBe(cwd);
+        // Even without a package.json the CWD is exposed as a candidate
+        // project-scope target — the wizard's checkbox copy clarifies
+        // what "project" means; the resolver only carries the path.
+        expect(res.projectScopeRoot).toBe(cwd);
     });
 
     it('honours explicit override and suppresses legacy fallback', () => {
@@ -78,6 +89,8 @@ describe('resolveWriteRoot', () => {
         expect(res.mode).toBe('global');
         expect(res.writeRoot).toBe(override);
         expect(res.legacyReadRoot).toBeNull();
+        // Explicit override pins the root — no project-scope opt-in.
+        expect(res.projectScopeRoot).toBeNull();
     });
 
     it('isInsidePackage detects a malformed package.json gracefully', () => {

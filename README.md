@@ -106,13 +106,13 @@ headless path · [`docs/featured-skills.md`](docs/featured-skills.md) for per-ro
 Two minutes from `npx` to a better-behaved agent — no install, no
 vendored package, no postinstall hook.
 
-**v2.1+ — global-first by default.** Running `init` outside a project
-defaults to a user-scope install (`~/.claude/`, `~/.cursor/`, …) and
-records itself in `~/.config/agent-config/installed.lock`. Running it
-inside a project (a `package.json` / `composer.json` / `pyproject.toml`
-manifest is present) defaults to a project-scope install. Override with
-`--scope=global` or `--scope=project`. See
-[`docs/installation.md`](docs/installation.md) for the full matrix.
+**v2.5+ — global is the only consumer scope.** `init` always writes
+to user-scope paths (`~/.event4u/agent-config/`, `~/.claude/`,
+`~/.cursor/`, …) and records itself in
+`~/.event4u/agent-config/installed.lock`. The project tree only
+gets `agents/overrides/` and `agents/.event4u-bridge.yml`. No
+`--project` flag is exposed; project-scope is maintainer-only
+behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md)).
 
 ### For teams (recommended)
 
@@ -188,28 +188,27 @@ npx @event4u/agent-config init --tools=continue         # Continue
 
 Multiple AIs in one shot: `--tools=claude-code,cursor,augment`. Prefer a visual picker? Add `--gui` to open a local-only browser wizard on `127.0.0.1` (loopback-bound, CSRF-gated, CSP-strict — contract: [`docs/contracts/gui-wizard.md`](docs/contracts/gui-wizard.md)).
 
-#### Global install (user-scope, available across projects)
+#### Global-only (the only consumer scope)
 
-Add `--global` to write to the user-scope paths from
-[`ADR-007`](docs/decisions/ADR-007-agent-discovery-scopes.md) (`~/.claude/`,
-`~/.cursor/`, …) instead of the current project:
+`init` writes only to user-scope paths under
+`~/.event4u/agent-config/` — the only consumer scope per
+[`ADR-020`](docs/decisions/ADR-020-global-only-consumer-scope.md).
+The project tree gets only `agents/overrides/` and
+`agents/.event4u-bridge.yml`; no `--project` flag is exposed. The
+legacy `--global` flag is accepted as a no-op for back-compat:
 
 ```bash
-npx @event4u/agent-config init --global                       # all tools, user-scope
-npx @event4u/agent-config init --tools=claude-code --global   # → ~/.claude/
-npx @event4u/agent-config init --tools=cursor --global        # → ~/.cursor/
+npx @event4u/agent-config init                          # all tools, global
+npx @event4u/agent-config init --tools=claude-code      # → ~/.claude/
+npx @event4u/agent-config init --tools=cursor           # → ~/.cursor/
 ```
 
-Per-AI scope support varies — Claude Desktop and Augment Code, for
-example, are global-only (Claude Desktop has no project-local
-discovery on macOS; Augment ships from a single user-scope tree
-(`~/.augment/`) — see [`ADR-007 § Amendment 2026-05-13 — global-only`](docs/decisions/ADR-007-agent-discovery-scopes.md#amendment-2026-05-13--augment-global-only)),
-while Roo Code and Continue.dev are project-local. The Supported
-Tools table below documents per-AI scope. Incompatible combinations
-(e.g. `--tools=roocode --global`, `--tools=claude-desktop` without
-`--global`, or `--tools=augment` without `--global`) are rejected
-with a directive error; `--tools=all` silently filters to the scope's
-compatible subset.
+**Maintainers:** project-scoped install (link-based dev loop, dry-run
+sandboxes) requires `AGENT_CONFIG_DEV_MODE=1` — see
+[`docs/maintainers/dev-mode.md`](docs/maintainers/dev-mode.md). Without
+it, the installer rejects `--scope=project` with a one-line error.
+Roo Code and Continue.dev still pair with project-only discovery —
+the bridge marker, not a project-local payload, wires them.
 
 ### For individual use (optional)
 
@@ -733,6 +732,8 @@ task sync             # regenerate .agent-src/ and .augment/
 task generate-tools   # regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task ci               # full pipeline — green before PR
 task test             # unit + integration tests
+task dev:setup        # boot the onboarding wizard against the working tree
+task dev:install:gui  # boot the unified Setup-Wizard (maintainer-only)
 ```
 
 → Full commands and project structure: [**docs/development.md**](docs/development.md). Stack: **TypeScript** CLI/UI (`dist/cli/`, `dist/ui/`) + **Python 3.10+** build/lint scripts. Prompt-engineering primitives — `/optimize-prompt`, `/refine-prompt`, the `prompt-engineering-patterns` skill — ship for every host agent. MCP registry payloads render under `dist/mcp/` (submissions tracked in [`docs/distribution/mcp-submission-checklist.md`](docs/distribution/mcp-submission-checklist.md)).

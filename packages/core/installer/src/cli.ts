@@ -19,6 +19,7 @@ import { runSync } from './commands/sync.js';
 import { runValidate } from './commands/validate.js';
 
 export type RunMode = 'interactive' | 'non-interactive' | 'agent';
+export type InstallScope = 'global' | 'project';
 
 export interface SharedFlags {
     readonly mode: RunMode;
@@ -26,6 +27,7 @@ export interface SharedFlags {
     readonly manifestPath?: string;
     readonly dryRun: boolean;
     readonly yes: boolean;
+    readonly scope: InstallScope;
 }
 
 function attachSharedFlags(cmd: Command): Command {
@@ -36,7 +38,15 @@ function attachSharedFlags(cmd: Command): Command {
         .option('--project-root <path>', 'Override the consumer project root', process.cwd())
         .option('--manifest <path>', 'Override the discovery-manifest path (default: walk up for dist/discovery)')
         .option('--dry-run', 'Resolve plan, do not write', false)
-        .option('--yes', 'Auto-confirm all prompts (non-interactive only)', false);
+        .option('--yes', 'Auto-confirm all prompts (non-interactive only)', false)
+        .addOption(
+            new Option(
+                '--scope <mode>',
+                'Install scope: global (default, consumer) | project (maintainer-only, requires AGENT_CONFIG_DEV_MODE=1)',
+            )
+                .choices(['global', 'project'])
+                .default('global'),
+        );
 }
 
 function resolveMode(opts: Record<string, unknown>): RunMode {
@@ -46,6 +56,28 @@ function resolveMode(opts: Record<string, unknown>): RunMode {
     return process.stdin.isTTY === true ? 'interactive' : 'non-interactive';
 }
 
+/**
+ * road-to-global-only-install § Phase 3.4 — TypeScript CLI mirror of the
+ * bash + Python consumer-global-only gate. Mirrors the bash gate in
+ * `scripts/install` and the Python `_enforce_consumer_global_only`:
+ * `--scope=project` is reserved for maintainers and requires
+ * `AGENT_CONFIG_DEV_MODE=1`. Throws so the top-level catch in
+ * `buildProgram`'s entry point surfaces a clean directive error.
+ */
+export function resolveScope(opts: Record<string, unknown>): InstallScope {
+    const raw = typeof opts.scope === 'string' ? opts.scope : 'global';
+    if (raw !== 'global' && raw !== 'project') {
+        throw new Error(`--scope: invalid value '${raw}' (expected global|project)`);
+    }
+    if (raw === 'project' && process.env.AGENT_CONFIG_DEV_MODE !== '1') {
+        throw new Error(
+            "--scope=project is reserved for maintainers (ADR-020 — consumer installs are global-only). " +
+                "Set AGENT_CONFIG_DEV_MODE=1 to opt in. See docs/maintainers/dev-mode.md.",
+        );
+    }
+    return raw;
+}
+
 function resolveShared(opts: Record<string, unknown>): SharedFlags {
     const flags: SharedFlags = {
         mode: resolveMode(opts),
@@ -53,6 +85,7 @@ function resolveShared(opts: Record<string, unknown>): SharedFlags {
         ...(typeof opts.manifest === 'string' ? { manifestPath: opts.manifest } : {}),
         dryRun: opts.dryRun === true,
         yes: opts.yes === true,
+        scope: resolveScope(opts),
     };
     return flags;
 }

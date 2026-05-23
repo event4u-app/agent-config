@@ -18,14 +18,30 @@ export interface ServerStatus {
     writeRoot: string;
     mode: 'package-sandbox' | 'global';
     dryRun: boolean;
+    /**
+     * `true` when the wizard may offer the "scope to this project only"
+     * checkbox in Review (road-to-global-only-install § Phase 2.3). The
+     * UI hides the checkbox when `false`. Older server bundles do not
+     * send the flag — the parser defaults to `false` so the UI stays
+     * safe by hiding the toggle.
+     */
+    projectScopeAvailable: boolean;
 }
 
 export const serverStatus = signal<ServerStatus | null>(null);
 
 export async function fetchServerStatus(): Promise<void> {
     try {
-        const res = await apiFetch<ServerStatus>('/api/v1/ping');
-        serverStatus.value = res;
+        const res = await apiFetch<Partial<ServerStatus> & Pick<ServerStatus, 'ok' | 'version' | 'writeRoot' | 'mode' | 'dryRun' | 'projectRoot'>>(
+            '/api/v1/ping',
+        );
+        // Default `projectScopeAvailable` to false so an older server
+        // bundle (pre Phase 2.3) keeps the checkbox hidden — safer than
+        // surfacing a toggle that would 422 on submit.
+        serverStatus.value = {
+            ...res,
+            projectScopeAvailable: res.projectScopeAvailable === true,
+        };
     } catch {
         // Banner stays hidden on transport errors — the page will surface
         // its own error UI when the user tries to save.

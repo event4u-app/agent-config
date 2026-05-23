@@ -110,6 +110,7 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"agents/learnings/"),           # consumer-project learning notes
     re.compile(r"agents/proposals/"),           # consumer-project self-improvement proposals
     re.compile(r"agents/drafts/"),              # consumer-project artefact drafts
+    re.compile(r"agents/\.event4u-bridge\.yml"),  # consumer-project bridge marker (ADR-020)
     re.compile(r"guidelines/php-"),             # flattened override naming convention
     re.compile(r"rules/no-commit"),            # example rule in commands
     re.compile(r"skills/[\w-]+\.md"),          # short skill refs in examples (not SKILL.md path)

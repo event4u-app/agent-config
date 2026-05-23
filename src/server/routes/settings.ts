@@ -22,8 +22,18 @@ import { dirname, join } from 'node:path';
 import type { ZodIssue } from 'zod';
 import { zodToJsonSchema } from 'zod-to-json-schema';
 import { settingsSchema } from '../schemas/settings.js';
-import { parseYaml, mergeIntoTemplate, diffValues } from '../io/yamlIO.js';
+import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlIO.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { PACKAGE_ROOT } from '../../cli/paths.js';
+
+/**
+ * Cost-profile placeholder default. Mirrors `scripts/install.py::DEFAULT_PROFILE`
+ * so the TypeScript defaults layer renders the same `cost_profile: 'balanced'`
+ * scalar the Python installer would substitute.
+ */
+const COST_PROFILE_PLACEHOLDER = '__COST_PROFILE__';
+const USER_TYPE_PLACEHOLDER = '__USER_TYPE__';
+const DEFAULT_COST_PROFILE = 'balanced';
 
 // Computed once — Zod → JSON Schema conversion is pure and the schema is static.
 const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
@@ -43,6 +53,13 @@ export interface SettingsRouteOptions {
      * next read prefers `writeRoot` once it exists).
      */
     legacyReadRoot?: string | null;
+    /**
+     * Package root — used to locate `config/agent-settings.template.yml`
+     * for the defaults layer of the three-layer merge (Phase 2.2 of
+     * road-to-global-only-install). Defaults to the resolved `PACKAGE_ROOT`
+     * so existing callers stay green; tests override via `createApp`.
+     */
+    packageRoot?: string;
     /**
      * Dry-run — PUT validates, merges, and returns `{ preview, dryRun }`
      * with the rendered would-be body; no `writeAtomic`, no `Last-Modified`
@@ -67,6 +84,51 @@ interface ReadState {
     raw: string;
     values: Record<string, unknown>;
     mtimeMs: number;
+}
+
+/**
+ * Three-layer merged settings — defaults < global < project.
+ *
+ * Mirrors `scripts/install.py::read_layered_settings` so the Python
+ * installer and the Fastify server produce the same effective tree.
+ *
+ *   - `values` is the deep-merged result across all layers.
+ *   - `raw` is the highest-priority real on-disk content (project, then
+ *     global); it scaffolds template comments through PUTs via
+ *     `mergeIntoTemplate`.
+ *   - `mtimeMs` is `max(globalMtime, projectMtime)` so any concurrent
+ *     edit anywhere in the stack invalidates the client's
+ *     `If-Unmodified-Since`. Defaults carry no mtime — the template is
+ *     a static package asset.
+ *   - `hasRealFile` is `false` only when neither global nor project
+ *     exists; in that case the route returns 404 (defaults alone are
+ *     not an "installed" state — `docs/decisions/ADR-020`).
+ */
+interface LayeredState {
+    raw: string;
+    values: Record<string, unknown>;
+    mtimeMs: number;
+    hasRealFile: boolean;
+}
+
+/**
+ * Parse the package settings template with `__COST_PROFILE__` /
+ * `__USER_TYPE__` substituted for their permissive defaults. Returns
+ * `{}` if the template is missing or YAML-invalid — callers treat this
+ * as "no defaults available" rather than erroring, matching the Python
+ * `_load_default_settings` shape.
+ */
+async function loadDefaultSettings(packageRoot: string): Promise<Record<string, unknown>> {
+    try {
+        const text = await fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
+        const rendered = text
+            .replaceAll(COST_PROFILE_PLACEHOLDER, DEFAULT_COST_PROFILE)
+            .replaceAll(USER_TYPE_PLACEHOLDER, '');
+        const parsed = parseYaml(rendered);
+        return parsed ?? {};
+    } catch {
+        return {};
+    }
 }
 
 /**
@@ -111,28 +173,53 @@ async function readSettingsFrom(root: string): Promise<ReadState | null> {
 }
 
 /**
- * Read `.agent-settings.yml` from `writeRoot/settings/`, falling back to:
- *   1. `writeRoot/.agent-settings.yml` (pre-typed-subdir flat-root).
- *   2. `legacyReadRoot/settings/.agent-settings.yml`.
- *   3. `legacyReadRoot/.agent-settings.yml`.
- * A hit on any fallback is what makes the silent-migration story work:
- * the next PUT writes to `writeRoot/settings/` and the legacy file is
- * no longer consulted (and is deleted by the wizard 2PC finish).
+ * Read the highest-priority real on-disk file at `<root>/settings/...`
+ * (typed subdir) or `<root>/.agent-settings.yml` (pre-typed-subdir
+ * flat-root). Used as the per-layer reader inside `readLayeredSettings`.
  */
-async function readSettings(
+async function readSingleLayer(root: string): Promise<ReadState | null> {
+    const typed = await readSettingsFrom(root);
+    if (typed !== null) return typed;
+    return readYamlFile(legacyFlatPath(root));
+}
+
+/**
+ * Three-layer settings merge — `defaults < global < project`.
+ *
+ *   - Defaults: package template with placeholders substituted.
+ *   - Global: `writeRoot/settings/.agent-settings.yml` (flat fallback).
+ *   - Project: `legacyReadRoot/settings/.agent-settings.yml` (flat
+ *     fallback) — only consulted when `legacyReadRoot` differs from
+ *     `writeRoot`.
+ *
+ * If neither global nor project exists, returns `hasRealFile: false`
+ * so the route can emit 404 (ADR-020 § "Installed" semantic).
+ *
+ * Mirrors `scripts/install.py::read_layered_settings`.
+ */
+async function readLayeredSettings(
+    packageRoot: string,
     writeRoot: string,
     legacyReadRoot: string | null | undefined,
-): Promise<ReadState | null> {
-    const primary = await readSettingsFrom(writeRoot);
-    if (primary !== null) return primary;
-    const flatInSandbox = await readYamlFile(legacyFlatPath(writeRoot));
-    if (flatInSandbox !== null) return flatInSandbox;
-    if (legacyReadRoot && legacyReadRoot !== writeRoot) {
-        const legacyTyped = await readSettingsFrom(legacyReadRoot);
-        if (legacyTyped !== null) return legacyTyped;
-        return readYamlFile(legacyFlatPath(legacyReadRoot));
-    }
-    return null;
+): Promise<LayeredState> {
+    const defaults = await loadDefaultSettings(packageRoot);
+    const globalLayer = await readSingleLayer(writeRoot);
+    const projectLayer = legacyReadRoot && legacyReadRoot !== writeRoot
+        ? await readSingleLayer(legacyReadRoot)
+        : null;
+
+    let merged: Record<string, unknown> = defaults;
+    if (globalLayer !== null) merged = deepMerge(merged, globalLayer.values);
+    if (projectLayer !== null) merged = deepMerge(merged, projectLayer.values);
+
+    const scaffold = projectLayer ?? globalLayer;
+    const mtimeMs = Math.max(globalLayer?.mtimeMs ?? 0, projectLayer?.mtimeMs ?? 0);
+    return {
+        raw: scaffold?.raw ?? '',
+        values: merged,
+        mtimeMs,
+        hasRealFile: scaffold !== null,
+    };
 }
 
 function zodIssuesToFields(issues: ZodIssue[]): Array<{ path: string; message: string }> {
@@ -146,11 +233,12 @@ function readIfUnmodified(header: unknown): number | null {
 }
 
 export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
+    const packageRoot = opts.packageRoot ?? PACKAGE_ROOT;
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/settings', async (_request, reply) => {
             try {
-                const state = await readSettings(opts.writeRoot, opts.legacyReadRoot);
-                if (state === null) {
+                const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+                if (!state.hasRealFile) {
                     await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                     return reply;
                 }
@@ -178,8 +266,8 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readSettings(opts.writeRoot, opts.legacyReadRoot);
-            if (current === null) {
+            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+            if (!current.hasRealFile) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;
             }
@@ -209,8 +297,8 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
                 });
                 return reply;
             }
-            const current = await readSettings(opts.writeRoot, opts.legacyReadRoot);
-            if (current === null) {
+            const current = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
+            if (!current.hasRealFile) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
                 return reply;
             }

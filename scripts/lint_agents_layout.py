@@ -7,19 +7,28 @@ runtime artefacts, settings, audits, and policies. Flat files at the
 everything else lives in a typed subdirectory (`runtime/`, `settings/`,
 `audits/`, `roadmaps/`, `policies/`, `contexts/`, etc.).
 
-Categories:
+Two layout tiers:
 
-  ALLOWED  — Whitelisted flat files. Linter is silent.
-  UNKNOWN  — Anything else. Linter fails.
+  MAINTAINER (this source repo, identified by ``.agent-src.uncompressed/``)
+      Full `agents/` tree allowed — only the flat-file whitelist is
+      enforced. Phase 4 of road-to-global-only-install keeps the
+      maintainer surface unchanged.
+
+  CONSUMER (any repo without ``.agent-src.uncompressed/``)
+      Global-only target shape: `agents/overrides/` + the bridge
+      marker `agents/.event4u-bridge.yml` are the **only** expected
+      artefacts. Anything else surfaces as a WARNING with a pointer
+      to ``agent-config settings migrate`` (exit code 0). Hard
+      violations (unknown flat files at the root) still fail.
 
 Exit codes:
-  0 — layout is clean.
-  1 — at least one UNKNOWN file.
+  0 — layout is clean (warnings ok in consumer mode).
+  1 — at least one UNKNOWN flat-file violation.
 
 Invocation (from project root):
   python3 scripts/lint_agents_layout.py
-  python3 scripts/lint_agents_layout.py --strict
   python3 scripts/lint_agents_layout.py --quiet
+  python3 scripts/lint_agents_layout.py --strict   # warnings → errors
 """
 
 from __future__ import annotations
@@ -43,8 +52,47 @@ ALLOWED_FLAT_FILES: frozenset[str] = frozenset(
         # Empty-tree sentinel so agents/ survives a fresh checkout
         # before any runtime artefact lands.
         ".gitkeep",
+        # Consumer bridge marker (Phase 4 of road-to-global-only-install).
+        # Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).
+        ".event4u-bridge.yml",
     }
 )
+
+# Consumer-target layout: only these top-level entries are expected in
+# the global-only world. Anything else is a WARNING in consumer mode.
+CONSUMER_EXPECTED_ENTRIES: frozenset[str] = frozenset(
+    {"overrides", ".event4u-bridge.yml", ".gitkeep"},
+)
+
+MIGRATE_HINT = (
+    "Run `agent-config settings migrate` (or `npx @event4u/agent-config "
+    "migrate-to-global`) to move legacy project-scope artefacts under "
+    "`~/.event4u/agent-config/` and leave `agents/overrides/` + "
+    "`agents/.event4u-bridge.yml` as the only consumer-side files."
+)
+
+
+def is_source_repo(project_root: Path) -> bool:
+    """True when running inside the agent-config source repo.
+
+    The maintainer surface is identified by **any** of:
+      - ``.agent-src.uncompressed/`` at the workspace root (legacy / single-pack layout),
+      - ``packages/<pack>/.agent-src.uncompressed/`` (current monorepo layout — see ``AGENTS.md``),
+      - ``.agent-src/`` at the workspace root (compressed authoring tree).
+
+    Consumer repos ship none of these — they only carry the deployed
+    `.augment/`, `.claude/`, etc. plus `agents/overrides/`.
+    """
+    if (project_root / ".agent-src.uncompressed").is_dir():
+        return True
+    if (project_root / ".agent-src").is_dir():
+        return True
+    packages = project_root / "packages"
+    if packages.is_dir():
+        for sub in packages.iterdir():
+            if (sub / ".agent-src.uncompressed").is_dir():
+                return True
+    return False
 
 
 def find_violations(root: Path) -> list[str]:
@@ -70,14 +118,40 @@ def find_violations(root: Path) -> list[str]:
     return unknown
 
 
+def find_consumer_warnings(root: Path) -> list[str]:
+    """Return WARNINGs for consumer repos that hold legacy artefacts.
+
+    Consumer-target shape (Phase 4 of road-to-global-only-install):
+    `agents/overrides/` + `agents/.event4u-bridge.yml` are the only
+    expected entries. Anything else is a soft warning — the linter
+    still exits 0, but the message points the user at the migration
+    subcommand so the legacy directory can be reclaimed.
+    """
+    warnings: list[str] = []
+    if not root.is_dir():
+        return warnings
+
+    for path in sorted(root.iterdir()):
+        if path.name in CONSUMER_EXPECTED_ENTRIES:
+            continue
+        # Flat-file UNKNOWNs are already an error — don't double-count.
+        if path.is_file() and path.name not in ALLOWED_FLAT_FILES:
+            continue
+        kind = "dir" if path.is_dir() else "file"
+        warnings.append(f"{path} ({kind}): legacy artefact outside the consumer-target shape.")
+
+    return warnings
+
+
 def main() -> int:
     args = sys.argv[1:]
-    # --strict kept for backward-compat; no longer affects exit code now
-    # that the LEGACY tier is gone.
-    _ = "--strict" in args
+    strict = "--strict" in args
     quiet = "--quiet" in args
 
+    project_root = Path.cwd()
     unknown = find_violations(AGENTS_ROOT)
+    consumer_mode = not is_source_repo(project_root)
+    warnings = find_consumer_warnings(AGENTS_ROOT) if consumer_mode else []
 
     if unknown:
         print("❌  agents/ layout violations (unknown flat files):\n")
@@ -91,7 +165,16 @@ def main() -> int:
         )
         return 1
 
-    if not quiet:
+    if warnings:
+        if not quiet:
+            print("⚠️  agents/ consumer-shape warnings:\n")
+            for w in warnings:
+                print(f"  - {w}")
+            print(f"\n{MIGRATE_HINT}")
+        if strict:
+            return 1
+
+    if not unknown and not warnings and not quiet:
         print("✅  agents/ layout clean.")
     return 0
 

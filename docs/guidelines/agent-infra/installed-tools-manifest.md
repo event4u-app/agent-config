@@ -86,14 +86,17 @@ intentionally pin an older version of the manifest.
 
 ## Scope migration
 
-Moving a tool between `project` and `global` is supported but loud:
+Under [ADR-020](../../decisions/ADR-020-global-only-consumer-scope.md)
+global is the only consumer scope. Consumers carrying a pre-2.5
+project-scope payload move to global with the one-shot
+`npx @event4u/agent-config migrate-to-global` subcommand — it copies
+each tool's project payload into the matching user-scope path, drops
+the bridge marker, and removes the legacy project artefacts.
 
-1. Run `init --tools=<id> --scope=<new> --force`. The installer detects
-   the conflict, warns, and rewrites the entry only when `--force` is
-   present.
-2. The old bridge is **not** removed automatically — clean up the
-   leftover marker yourself (`rm .windsurf/agent-config.md` etc.).
-3. `validate` afterwards confirms the new state.
+For maintainers running `AGENT_CONFIG_DEV_MODE=1`, project-scope
+re-installs remain available; the installer still detects scope
+conflicts and refuses to rewrite without `--force`. `validate`
+afterwards confirms the new state.
 
 Reasoning: scope is a project-wide decision; flipping it silently
 would surprise other team members who never asked for the change. The

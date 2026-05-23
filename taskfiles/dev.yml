@@ -62,4 +62,29 @@ tasks:
       - npm run build
       - node dist/cli/agent-config.js setup --dry-run
 
+  dev:install:gui:
+    desc: |
+      Boot the Installer-GUI (`packages/core/installer` CLI `gui`
+      subcommand) against the working tree. Used during the unified
+      Setup-Wizard rollout (road-to-global-only-install Phase 0.1) to
+      iterate the AI-tool + Pack selection flow before it is merged
+      into the onboarding wizard. Maintainer-only — requires
+      AGENT_CONFIG_DEV_MODE=1 once Phase 3 ships.
+      Usage:
+      task dev:install:gui
+    cmds:
+      - npm run --workspace @event4u/installer build
+      - node packages/core/installer/dist/cli.js gui
+
+  dev:install:gui:dry-run:
+    desc: |
+      Boot the Installer-GUI in dry-run mode. /api/apply receives
+      --dry-run so no filesystem writes occur. Pairs with the
+      Playwright spec tests/e2e/installer-gui-dry-run.spec.ts.
+      Usage:
+      task dev:install:gui:dry-run
+    cmds:
+      - npm run --workspace @event4u/installer build
+      - node packages/core/installer/dist/cli.js gui --dry-run
+
 

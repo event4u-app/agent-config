@@ -30,6 +30,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'global', disposition: 'delegate' },
     { name: 'export', disposition: 'delegate' },
     { name: 'settings:check', disposition: 'delegate' },
+    { name: 'settings:migrate', disposition: 'delegate', synopsis: 'Lift legacy project-local settings into ~/.event4u/agent-config/.' },
     { name: 'uninstall', disposition: 'delegate' },
     { name: 'prune', disposition: 'delegate' },
     { name: 'doctor', disposition: 'delegate' },
