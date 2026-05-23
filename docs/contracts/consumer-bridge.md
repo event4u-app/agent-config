@@ -1,3 +1,8 @@
+---
+stability: beta
+keep-beta-until: 2026-08-21
+---
+
 # Consumer Bridge Marker
 
 **Status:** Proposed — road-to-global-only-install Phase 4.1.
