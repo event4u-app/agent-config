@@ -2250,6 +2250,15 @@ To remove this marker, delete this file.
 #: package-owned, not Claude-owned, content.
 _CLAUDE_DESKTOP_BUNDLES_SUBPATH = "claude-desktop/bundles"
 
+#: road-to-global-only-install § Phase 2.1 — canonical global path
+#: constants. Single source of truth for the user-scope settings file
+#: locations. Used by the settings reader (Python + TypeScript via
+#: docs/contracts/settings-api.md) to merge ``defaults < global <
+#: project-overrides``.
+GLOBAL_ROOT = Path.home() / ".event4u" / "agent-config"
+GLOBAL_USER_SETTINGS_PATH = GLOBAL_ROOT / ".agent-user.yml"
+GLOBAL_AGENT_SETTINGS_PATH = GLOBAL_ROOT / ".agent-settings.yml"
+
 
 def _bridge_marker(tool_id: str, scope: str) -> str:
     """Return the canonical bridge-marker path for ``(tool_id, scope)``.
@@ -2291,6 +2300,125 @@ def _validate_scope(tools: set[str], scope: str, was_all: bool) -> set[str]:
         f"--{scope} scope ({hint})"
     )
     return tools  # unreachable; fail() exits
+
+
+def _enforce_consumer_global_only(scope: str) -> None:
+    """road-to-global-only-install § Phase 3.2 — gate the project scope.
+
+    Consumer installs ship global-only (ADR-020). The legacy project
+    scope stays available for maintainers via ``AGENT_CONFIG_DEV_MODE=1``
+    so the dogfood-on-this-repo loop keeps working. Anything else
+    routing through the orchestrator with ``scope == "project"`` aborts
+    with a directive error pointing at the maintainer doc.
+
+    Pure side-effect gate — separate from ``_resolve_scope`` so the
+    unit-tested resolver stays a pure function of its inputs.
+    """
+    if scope != "project":
+        return
+    if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
+        return
+    fail(
+        "--scope=project is reserved for maintainers (ADR-020 — consumer "
+        "installs are global-only). Set AGENT_CONFIG_DEV_MODE=1 to opt in. "
+        "See docs/maintainers/dev-mode.md."
+    )
+
+
+# --- road-to-global-only-install § Phase 2.2 — three-layer settings reader ---
+#
+# Merge order (per ADR-020 / D9):
+#
+#     defaults  <  global  <  project-overrides
+#
+# The defaults layer is the rendered template body in
+# ``config/agent-settings.template.yml``. The global layer is
+# ``~/.event4u/agent-config/.agent-settings.yml``. The project layer is
+# ``<project_root>/.agent-settings.yml`` — tolerated but no longer
+# required to exist. Any layer that is missing or unparseable falls back
+# to an empty dict so the merge stays total.
+#
+# The TypeScript wizard route ``GET /api/v1/wizard/settings`` mirrors the
+# same precedence (see :mod:`src.server.routes.wizard`) so the Python
+# installer and the Fastify server agree on what *the user's effective
+# settings* look like at any given moment.
+
+def _load_yaml_doc(path: Path) -> dict:
+    """Load a YAML file as a dict; return ``{}`` on every recoverable error.
+
+    Used by the three-layer settings reader. Mirrors the defensive shape
+    of :func:`scripts.config.profiles._load_yaml`: missing PyYAML, missing
+    file, parse error, or non-dict root all collapse to an empty dict so
+    callers can blindly :func:`deep_merge` the result without guards.
+    """
+    try:
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        return {}
+    if not path.exists() or not path.is_file():
+        return {}
+    try:
+        text = path.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    try:
+        data = yaml.safe_load(text)
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _load_default_settings(package_root: Path) -> dict:
+    """Parse the rendered settings template into a defaults dict.
+
+    The template carries ``__COST_PROFILE__`` / ``__USER_TYPE__``
+    placeholders that PyYAML cannot parse as scalars. We substitute the
+    most permissive defaults (``balanced`` + empty user_type) before
+    parsing — the resulting tree is the *defaults* layer of the merge,
+    and downstream layers overwrite cost_profile / user_type as needed.
+    """
+    template_source = package_root / "config" / "agent-settings.template.yml"
+    if not template_source.exists():
+        return {}
+    try:
+        text = template_source.read_text(encoding="utf-8")
+    except OSError:
+        return {}
+    rendered = text.replace(COST_PROFILE_PLACEHOLDER, DEFAULT_PROFILE).replace(
+        USER_TYPE_PLACEHOLDER, ""
+    )
+    try:
+        import yaml  # type: ignore[import-not-found]
+    except ImportError:
+        return {}
+    try:
+        data = yaml.safe_load(rendered)
+    except yaml.YAMLError:
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def read_layered_settings(
+    package_root: Path,
+    project_root: "Path | None" = None,
+) -> dict:
+    """Three-layer settings merge — ``defaults < global < project``.
+
+    ``project_root`` is optional: when ``None`` (or the project file is
+    absent), the merge collapses to ``defaults < global`` so a consumer
+    who installs global-only sees the same effective settings the
+    Fastify server would surface. Always returns a dict — never raises.
+
+    Used by :func:`main` to compute the effective configuration before
+    rendering per-tool bridges, and by the Phase 2.4 ``settings migrate``
+    subcommand to detect which keys are local-only overrides.
+    """
+    merged = _load_default_settings(package_root)
+    merged = deep_merge(merged, _load_yaml_doc(GLOBAL_AGENT_SETTINGS_PATH))
+    if project_root is not None:
+        project_file = project_root / SETTINGS_FILE
+        merged = deep_merge(merged, _load_yaml_doc(project_file))
+    return merged
 
 
 def _resolve_scope(
@@ -3931,6 +4059,7 @@ def main(argv: list[str]) -> int:
     detected, detect_reason = detect_scope(detect_root)
     custom_path: Path | None = Path(opts.custom_path).resolve() if opts.custom_path else None
     scope = _resolve_scope(opts, detected, detect_reason, custom_path)
+    _enforce_consumer_global_only(scope)
 
     # Scope validation runs before filesystem / package detection so
     # --tools=X / --scope conflicts fail fast with a directive error

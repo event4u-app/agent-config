@@ -1070,10 +1070,19 @@ class TestMainIntegration(unittest.TestCase):
         self.project = self.tmpdir / "proj"
         self.project.mkdir()
         self.package = make_fake_package(self.tmpdir)
+        # road-to-global-only-install § Phase 3.2 — project-scope integration
+        # tests exercise the maintainer dogfood path; opt in to dev mode so
+        # the consumer-global-only gate does not abort orchestration.
+        self._prev_dev_mode = install.os.environ.get("AGENT_CONFIG_DEV_MODE")
+        install.os.environ["AGENT_CONFIG_DEV_MODE"] = "1"
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmpdir)
         install.QUIET = False
+        if self._prev_dev_mode is None:
+            install.os.environ.pop("AGENT_CONFIG_DEV_MODE", None)
+        else:
+            install.os.environ["AGENT_CONFIG_DEV_MODE"] = self._prev_dev_mode
 
     def _run(self, *args: str) -> int:
         buf = io.StringIO()
@@ -1141,10 +1150,17 @@ class TestPostInstallSmoke(unittest.TestCase):
         self.project = self.tmpdir / "proj"
         self.project.mkdir()
         install.QUIET = True
+        # road-to-global-only-install § Phase 3.2 — see TestMainIntegration.
+        self._prev_dev_mode = install.os.environ.get("AGENT_CONFIG_DEV_MODE")
+        install.os.environ["AGENT_CONFIG_DEV_MODE"] = "1"
 
     def tearDown(self) -> None:
         shutil.rmtree(self.tmpdir)
         install.QUIET = False
+        if self._prev_dev_mode is None:
+            install.os.environ.pop("AGENT_CONFIG_DEV_MODE", None)
+        else:
+            install.os.environ["AGENT_CONFIG_DEV_MODE"] = self._prev_dev_mode
 
     def test_smoke_passes_when_all_bridges_installed(self) -> None:
         buf = io.StringIO()
