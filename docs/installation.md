@@ -1,23 +1,27 @@
 # Installation
 
-**Principle:** Global-first install (cross-project, in `~/.claude/`,
-`~/.cursor/`, …), opt-in project export when a team wants the config
-committed to a repo. No Task, no Make, no build tools required.
+**Principle:** Global is the only consumer scope. `init` writes to
+user-scope paths (`~/.event4u/agent-config/`, `~/.claude/`,
+`~/.cursor/`, …); the project tree only gets `agents/overrides/`
+and `agents/.event4u-bridge.yml`. Opt-in `export` if a team wants
+a tool's config committed to a repo. No Task, no Make, no build
+tools required.
 
-> **v2.1+** — the installer detects intent. Running `npx
-> @event4u/agent-config init` in `~/` or any directory without a
-> project manifest defaults to **global**. Running it inside a project
-> (`package.json` / `composer.json` / `pyproject.toml` / etc.) defaults
-> to **project**. Pass `--scope=global` or `--scope=project` to override
-> detection. See `--scope` in the CLI help for the full matrix.
+> **v2.5+** — `npx @event4u/agent-config init` always installs
+> globally. The `--project` / `--scope=project` flag is no longer
+> exposed to consumers; project-scope survives only behind the
+> maintainer-only `AGENT_CONFIG_DEV_MODE=1` flag (see
+> [`docs/maintainers/dev-mode.md`](maintainers/dev-mode.md)). The
+> legacy `--global` flag is accepted as a no-op for back-compat.
+> Rationale: [ADR-020](decisions/ADR-020-global-only-consumer-scope.md).
 
-A global install records itself in `~/.event4u/agent-config/installed.lock`
+The install records itself in `~/.event4u/agent-config/installed.lock`
 (schema_version, agent_config_version, installed_at, tools[]; the legacy
 `~/.config/agent-config/installed.lock` is read as a fallback). `npx
 @event4u/agent-config update` keeps that manifest in lockstep
 with the project pin in `.agent-settings.yml`. A version-mismatched
-re-run of `init --scope=global` is refused with exit code 1 until you
-`update` or pass `--force`.
+re-run of `init` is refused with exit code 1 until you `update` or
+pass `--force`.
 
 To commit a specific tool's config into a project repo, use:
 

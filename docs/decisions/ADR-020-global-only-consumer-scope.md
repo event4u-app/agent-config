@@ -1,6 +1,6 @@
 ---
 adr: 020
-status: proposed
+status: accepted
 date: 2026-05-23
 decision: global-only-consumer-scope
 supersedes: —
@@ -13,9 +13,11 @@ type: forward-looking
 
 ## Status
 
-**Proposed** · 2026-05-23. Lands in stages over the
-`road-to-global-only-install` roadmap. This ADR locks the
-decision; Phases 1-6 of the roadmap lock the mechanics.
+**Accepted** · 2026-05-23. Phases 1-5 of
+`road-to-global-only-install` shipped (Setup-Wizard, consumer scope
+gate, surface + bridge, migration tooling). Phase 6 (docs sweep)
+in progress. The ADR locks the decision; the roadmap locks the
+mechanics.
 
 Companion artefacts:
 - Roadmap: [`agents/roadmaps/road-to-global-only-install.md`](../../agents/roadmaps/road-to-global-only-install.md)
