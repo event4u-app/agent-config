@@ -9,15 +9,19 @@ hard-rejects the project scope otherwise. Run:
 """
 
 import io
+import os
+import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
+from typing import Dict, Optional
 from unittest import mock
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
+REPO_ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 import install  # type: ignore  # noqa: E402
 
@@ -148,6 +152,92 @@ class TestLayeredSettingsReader(unittest.TestCase):
         self.fake_global.write_text("::: not yaml :::\n", encoding="utf-8")
         merged = install.read_layered_settings(self.package_root, project_root=None)
         self.assertEqual(merged["cost_profile"], install.DEFAULT_PROFILE)
+
+
+class TestBashOrchestratorScopeGate(unittest.TestCase):
+    """Phase 3.3 / 3.5 — `scripts/install` bash gate is the consumer entry point.
+
+    Direct subprocess invocations cover the same surface a real
+    ``curl … | bash`` pipeline hits: the gate fires before any work,
+    the error message points at the maintainer doc, and ``--dry-run``
+    is strictly read-only (no filesystem writes, no env mutation that
+    leaks past the process boundary).
+    """
+
+    SCRIPT = REPO_ROOT / "scripts" / "install"
+
+    def _run(self, *args: str, env_overrides: Optional[Dict[str, str]] = None,
+             cwd: Optional[Path] = None) -> "subprocess.CompletedProcess[str]":
+        env = os.environ.copy()
+        env.pop("AGENT_CONFIG_DEV_MODE", None)
+        if env_overrides:
+            env.update(env_overrides)
+        return subprocess.run(
+            ["bash", str(self.SCRIPT), *args],
+            check=False,
+            capture_output=True,
+            text=True,
+            cwd=str(cwd or REPO_ROOT),
+            env=env,
+            timeout=30,
+        )
+
+    def test_scope_project_without_dev_mode_exits_nonzero(self) -> None:
+        result = self._run("--scope=project", "--dry-run", "--yes")
+        self.assertNotEqual(result.returncode, 0)
+        combined = result.stdout + result.stderr
+        self.assertIn("reserved for maintainers", combined)
+        self.assertIn("docs/maintainers/dev-mode.md", combined)
+
+    def test_scope_project_space_form_without_dev_mode_exits_nonzero(self) -> None:
+        # `--scope project` (with space) hits the same gate as `--scope=project`.
+        result = self._run("--scope", "project", "--dry-run", "--yes")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("reserved for maintainers", result.stdout + result.stderr)
+
+    def test_scope_project_with_dev_mode_passes_the_scope_gate(self) -> None:
+        # In dev mode the scope gate yields. A downstream "refusing to
+        # install into own source" guard is allowed to fire — the only
+        # assertion here is that the scope-gate message must NOT appear.
+        result = self._run(
+            "--scope=project",
+            "--dry-run",
+            "--yes",
+            env_overrides={"AGENT_CONFIG_DEV_MODE": "1"},
+        )
+        self.assertNotIn(
+            "reserved for maintainers",
+            result.stdout + result.stderr,
+        )
+
+    def test_scope_global_is_allowed_without_dev_mode(self) -> None:
+        # global is the consumer default and must never trip the gate.
+        result = self._run("--scope=global", "--dry-run", "--yes")
+        self.assertNotIn("reserved for maintainers", result.stdout + result.stderr)
+
+    def test_dry_run_is_strictly_read_only(self) -> None:
+        # `--dry-run` must not write anywhere under the consumer target.
+        # Run from a clean temp dir so we can assert zero filesystem
+        # side-effects: no agents/, no .augment/, no .claude/ created.
+        with tempfile.TemporaryDirectory() as raw:
+            target = Path(raw)
+            result = self._run(
+                "--dry-run",
+                "--yes",
+                f"--target={target}",
+                cwd=target,
+            )
+            # Exit code is allowed to be nonzero (e.g. missing source
+            # detection in an empty cwd) — the only contract is no writes.
+            sentinel = sorted(p.name for p in target.iterdir())
+            self.assertEqual(
+                sentinel,
+                [],
+                msg=(
+                    f"--dry-run leaked files into the target ({sentinel}). "
+                    f"stdout={result.stdout!r} stderr={result.stderr!r}"
+                ),
+            )
 
 
 if __name__ == "__main__":
