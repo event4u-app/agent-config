@@ -119,6 +119,21 @@ Skill: [`agents/roadmaps/archive/wizard-install-py-wiring.md`](../agents/roadmap
   receives `tabIndex={-1}` and `.focus()` so screen readers
   announce the new heading.
 
+## Headless / CI / no-browser
+
+When the wizard cannot or should not open — CI runs, SSH sessions
+without X forwarding, headless servers, automated provisioning —
+take the flag path instead. Three equivalent ways to suppress the
+GUI: pass `--no-ui` to `npx … init`, export `AGENT_CONFIG_NO_UI=1`
+in the environment, or run inside a `CI=1` context (auto-detected).
+With the GUI suppressed, pass profile + pack on the command line —
+`npx -y @event4u/agent-config init --no-ui --profile=developer
+--pack=engineering-base` — or hand-edit `.agent-settings.yml`
+directly. Preview the gate verdict and the planned writes with
+`python3 scripts/install.py --dry-run` (zero filesystem writes,
+exits 0). Settings can still be hand-edited at any time; the GUI
+is opt-in, not required.
+
 ## Disabling the GUI
 
 Set `AGENT_CONFIG_NO_UI=1` in the environment to skip every
