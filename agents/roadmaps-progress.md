@@ -6,10 +6,10 @@
 
 ## Overall
 
-**0 / 159 steps done · 0%**
+**6 / 159 steps done · 4%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   4%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md) | 7 | 41 | 41 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md) | 7 | 41 | 35 | 6 | 0 | 0 | ██░░░░░░░░ 15% |
 | 3 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -39,17 +39,17 @@
 
 ### [road-to-global-only-install.md](roadmaps/road-to-global-only-install.md)
 
-**Road to Global-Only Install** — 0 / 41 done (0%)
+**Road to Global-Only Install** — 6 / 41 done (15%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Test harness + contract definition | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Test harness + contract definition | 🟡 in progress | 2 | 2 | 0 | 0 | 50% |
 | 1 | Unified Setup-Wizard (KI + Packs prepended) | ⬜ not started | 10 | 0 | 0 | 0 | 0% |
 | 2 | Settings live globally | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | `SCOPE_SUPPORT` flip + `--project` gating | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Consumer surface = `agents/overrides/` + bridge | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | Migration tooling (legacy → global) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 6 | Docs, ADR, dev-mode survival | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Consumer surface = `agents/overrides/` + bridge | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 5 | Migration tooling (legacy → global) | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
+| 6 | Docs, ADR, dev-mode survival | 🟡 in progress | 3 | 2 | 0 | 0 | 40% |
 
 ### [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md)
 

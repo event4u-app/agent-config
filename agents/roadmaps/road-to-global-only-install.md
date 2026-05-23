@@ -28,7 +28,7 @@ Flip the consumer install path from **global-default** to **global-only**. The c
 | Setup wizard scope | 7 steps (behavior · cost · memory · user) | 9 steps — **AI-tool select** + **Pack select** prepended |
 | `SCOPE_SUPPORT` matrix | Most tools at `both` | Most tools at `global`; `both` survives only behind `AGENT_CONFIG_DEV_MODE=1` |
 
-ADR-007 D2–D6 stay valid. A follow-up ADR (`ADR-019` candidate) ratifies the global-only flip after Phase 1 of this roadmap lands.
+ADR-007 D2–D6 stay valid. A follow-up ADR (**`ADR-020`** — `ADR-019` was claimed by router-json-dist-location) ratifies the global-only flip after Phase 1 of this roadmap lands. Foundation drop (2026-05-23) ships ADR-020 in `Proposed` state alongside the bridge contract, the payload schema, the perms entry-gate, and the dev-mode doc — see the per-phase checkboxes below.
 
 ## Decisions (this roadmap)
 
@@ -69,10 +69,10 @@ Locked amendments (8):
 
 ## Phase 0 — Test harness + contract definition
 
-- [ ] **0.1** Add `task dev:install:gui` and `task dev:install:gui:dry-run` to `taskfiles/dev.yml`. Both boot the Installer-GUI (`node packages/core/installer/dist/cli.js gui`) so the AI + Pack flow can be tested in isolation **before** the Setup-Wizard merge in Phase 1. Dry-run path passes `--dry-run` through to `/api/apply`.
-- [ ] **0.2** Playwright E2E spec `tests/e2e/installer-gui-dry-run.spec.ts` walks: auto-detect → pick 2 AIs → pick 1 pack → preview → apply (dry-run) → assert zero filesystem writes under `/tmp/test-target`.
-- [ ] **0.3** Document the new tasks in `README.md` (still exactly 750 lines — replace an existing line, don't add).
-- [ ] **0.4** **(A1)** Define `schemas/wizard-apply-payload.schema.json` as a discriminated union: legacy `InstallerPayloadV1` (`{ai_tools, configs}`) + new `WizardPayloadV2` (`{tools, packs, settings}`). 30-line amendment to `docs/contracts/gui-wizard.md` specifying the versioning handshake. **Decision D12** (recorded in the eventual ADR-019): single `/api/apply` endpoint with `schema_version` discriminator vs two endpoints with shared Python backend — must be locked here, not deferred to Phase 1.5.
+- [x] **0.1** Add `task dev:install:gui` and `task dev:install:gui:dry-run` to `taskfiles/dev.yml`. Both boot the Installer-GUI (`node packages/core/installer/dist/cli.js gui`) so the AI + Pack flow can be tested in isolation **before** the Setup-Wizard merge in Phase 1. Dry-run path passes `--dry-run` through to `/api/apply`.
+- [ ] **0.2** Playwright E2E spec `tests/e2e/installer-gui-dry-run.spec.ts` walks: auto-detect → pick 2 AIs → pick 1 pack → preview → apply (dry-run) → assert zero filesystem writes under `/tmp/test-target`. **Deferred** — no Playwright harness in repo yet; tracked as a Phase 0 bootstrap follow-up.
+- [ ] **0.3** Document the new tasks in `README.md` (still exactly 750 lines — replace an existing line, don't add). Deferred to the Phase 6.2 README sweep so the README only re-flows once.
+- [x] **0.4** **(A1)** Define `schemas/wizard-apply-payload.schema.json` as a discriminated union: legacy `InstallerPayloadV1` (`{ai_tools, configs}`) + new `WizardPayloadV2` (`{tools, packs, settings}`). 30-line amendment to `docs/contracts/gui-wizard.md` specifying the versioning handshake. **Decision D12** (recorded in **ADR-020**, not ADR-019): single `/api/apply` endpoint with `schema_version` discriminator vs two endpoints with shared Python backend — locked here, not deferred to Phase 1.5.
 
 ## Phase 1 — Unified Setup-Wizard (KI + Packs prepended)
 
@@ -120,7 +120,7 @@ Removes the consumer-visible `--project` path. Maintainer dev loop survives behi
 
 Defines the minimal footprint a consumer project carries after install.
 
-- [ ] **4.1** Write the bridge marker spec. `agents/.event4u-bridge.yml` content:
+- [x] **4.1** Write the bridge marker spec. `agents/.event4u-bridge.yml` content:
 
       ```yaml
       schema: event4u-bridge/v1
@@ -129,7 +129,7 @@ Defines the minimal footprint a consumer project carries after install.
       installer_version: <semver>
       ```
 
-  Spec lives in `docs/contracts/consumer-bridge.md` (new file, ≤ 80 lines).
+  Spec lives in `docs/contracts/consumer-bridge.md` (new file, ≤ 80 lines). Shipped at 74 lines.
 - [ ] **4.2** Installer writes the bridge marker into the project root during every consumer install (global scope). Idempotent — same file, updated `installed_at`.
 - [ ] **4.3** Update the per-tool bridge logic so each tool that needs a per-project anchor (Windsurf / Cline / Gemini-CLI / Augment workspace) reads `global_root` from the marker and either symlinks (when supported) or generates a thin pointer file under the tool's per-project directory.
 - [ ] **4.4** `scripts/lint_agents_layout.py` learns the new shape: a consumer repo is **valid** if `agents/overrides/` and `agents/.event4u-bridge.yml` are the only `agents/*` artefacts. Anything else surfaces as a warning, pointing at `agent-config settings migrate`.
@@ -140,7 +140,7 @@ Defines the minimal footprint a consumer project carries after install.
 
 Idempotent one-shot migration for projects upgrading from v2.x global-default to v2.x global-only. **Order matters**: copy → verify → move → bridge (per A2).
 
-- [ ] **5.0** **(A7)** Permissions-audit entry-gate. `scripts/lint_global_paths.py` runs **before** any legacy snapshot write: confirms `~/.event4u/agent-config/` is `0700`, every `*.key` is `0600`, target dirs exist, no symlink escapes. Expected perms are parameterised via `scripts/expected_perms.json` so the policy can evolve without hard-coding. Phase 5 entry condition — audit failure aborts the migration with a one-line error before any disk write. Reasoning (council R2 + A): once `.legacy-pre-global-only/` is on disk, a perms leak cannot be un-written; the gate has to fire **before** the snapshot, not after.
+- [x] **5.0** **(A7)** Permissions-audit entry-gate. `scripts/lint_global_paths.py` runs **before** any legacy snapshot write: confirms `~/.event4u/agent-config/` is `0700`, every `*.key` is `0600`, target dirs exist, no symlink escapes. Expected perms are parameterised via `scripts/expected_perms.json` so the policy can evolve without hard-coding. Phase 5 entry condition — audit failure aborts the migration with a one-line error before any disk write. Reasoning (council R2 + A): once `.legacy-pre-global-only/` is on disk, a perms leak cannot be un-written; the gate has to fire **before** the snapshot, not after. Linter shipped standalone; Phase 5.1 wires it into the migrate subcommand.
 - [ ] **5.1** **(A2)** `agent-config migrate-to-global` subcommand. **Order** (`copy → verify → move → bridge`, not the inverse):
   1. Detect legacy artefacts: project-local `.agent-settings.yml`, `.agent-user.yml`, `.claude/`, `.cursor/`, `.augment/`, etc.
   2. **Copy** values into `~/.event4u/agent-config/` if the global file is absent or `--force`. YAML-parse + schema-validate every written file.
@@ -155,13 +155,13 @@ Idempotent one-shot migration for projects upgrading from v2.x global-default to
 
 ## Phase 6 — Docs, ADR, dev-mode survival
 
-- [ ] **6.1** Author `docs/decisions/ADR-019-global-only-consumer-scope.md`. Status: **Proposed** until Phase 1–4 land, then **Accepted**. Cross-link from ADR-007 § Amendment.
+- [x] **6.1** Author `docs/decisions/ADR-020-global-only-consumer-scope.md` (renumbered from ADR-019 — ADR-019 was claimed by router-json-dist-location). Status: **Proposed** until Phase 1–4 land, then **Accepted**. Cross-link from ADR-007 § Amendment deferred until ADR-020 is Accepted.
 - [ ] **6.2** Update `README.md` (still exactly 750 lines):
   - replace the project-vs-global section with the new global-only flow,
   - add `task dev:install:gui` to the dev-task table,
   - add a one-paragraph callout for maintainers about `AGENT_CONFIG_DEV_MODE=1`.
 - [ ] **6.3** Update `AGENTS.md` § *Working on this repo* — `task ci` table stays, add note that maintainer-only project-scope is gated behind the env flag.
-- [ ] **6.4** New maintainer-docs file `docs/maintainers/dev-mode.md` (≤ 120 lines): how `AGENT_CONFIG_DEV_MODE=1` unlocks project-scope, when to use it, what guarantees it gives up.
+- [x] **6.4** New maintainer-docs file `docs/maintainers/dev-mode.md` (≤ 120 lines): how `AGENT_CONFIG_DEV_MODE=1` unlocks project-scope, when to use it, what guarantees it gives up. Shipped at 105 lines.
 - [ ] **6.5** Cross-ref sweep — update every doc that previously said *"global is the default"* to *"global is the only consumer scope"*. Use `scripts/check_cross_refs.py` to verify nothing dangles.
 
 ## Acceptance criteria
@@ -171,7 +171,7 @@ Idempotent one-shot migration for projects upgrading from v2.x global-default to
 - `task dev:install:dry-run` requires `AGENT_CONFIG_DEV_MODE=1`; without it, fails fast with a one-line error.
 - All settings live under `~/.event4u/agent-config/`. Project-local copies are tolerated but never required.
 - 9-step Setup-Wizard passes Playwright in dry-run on every supported OS the suite covers.
-- ADR-019 is **Accepted** and cross-linked from ADR-007 and includes locked **D12** (payload-schema discriminator choice).
+- ADR-020 (renumbered from ADR-019) is **Accepted** and cross-linked from ADR-007 and includes locked **D12** (payload-schema discriminator choice).
 - `agent-config doctor` + `agent-config migrate-to-global --rollback` both ship with tests; rollback test asserts byte-identical pre/post state.
 - `scripts/lint_global_paths.py` is wired into Phase 5.0 and runs as a Phase-5 entry gate; failure aborts before any disk write.
 
