@@ -221,6 +221,16 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 > **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the ~112 Python scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
 
+### Deployment posture
+
+| Shape | Status | Path |
+|---|---|---|
+| **Single-user workspace** | ✅ today | `npx @event4u/agent-config init` — single machine, single user; no remote sync |
+| **Small team (3–10 people)** | ✅ today | Shared `agents/overrides/` Git repo + shared NAS for knowledge — no code change, no new server. Recipe: [`docs/deploy/small-team-recipe.md`](docs/deploy/small-team-recipe.md) |
+| **Organization mode** (SSO · central policy · team context · internal connectors) | ⏸ not started | Tracked under [`agents/roadmaps/stubs/`](agents/roadmaps/stubs/README.md); each stub gated on a recruited customer + funded audit + maintainer ADR. Posture rationale: [`docs/deploy/team-deployment-posture.md`](docs/deploy/team-deployment-posture.md) |
+
+The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled in the archived [`road-to-internal-ai-os-deployment.md`](agents/roadmaps/archive/road-to-internal-ai-os-deployment.md) until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
+
 ### Optional: persistent agent memory
 
 [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory) — MCP-based backend for cross-session learnings. **Strictly optional**; without it, skills fall back to file-based memory under `agents/memory/`.
