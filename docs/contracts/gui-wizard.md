@@ -155,3 +155,69 @@ lacks it (HTTP 400, single-line error pointing at the schema). This
 locks the contract before Phase 1 implementation so no implicit fork
 can sneak in at Phase 1.5.
 
+## Unified 9-step flow (road-to-global-only-install § Phase 1.6)
+
+The maintainer-facing wizard at `src/server/routes/wizard.ts` switches
+between two step layouts based on the server-side `extendedSteps`
+flag (default `false` for v2.x users; flipped to `true` by the
+`agent-config setup` CLI when the npm-version kill-switch is in
+effect):
+
+| `extendedSteps` | Steps | Layout |
+|---|---|---|
+| `false` | 7 | `editor → personality → cost → roadmap-quality → memory → user-md → review` |
+| `true`  | 9 | `ai-tools → packs → editor → personality → cost → roadmap-quality → memory → user-md → review` |
+
+The step shapes themselves are declared in
+[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the two
+prepended lead steps (`ai-tools`, `packs`) carry no `paths` and use
+dedicated renderers in `WizardPage.tsx`. `getWizardSteps({ extended })`
+is the single resolver; the UI consumes the active list via
+`getActiveSteps()` / `activeTotalSteps()` so a server toggle takes
+effect on the next reload without a code change.
+
+### `GET /api/v1/wizard/state` payload
+
+```jsonc
+{
+  "step": 0,
+  "totalSteps": 9,
+  "partial": {},
+  "startedAt": null,
+  "extendedSteps": true
+}
+```
+
+`extendedSteps` is **advisory** — older server bundles MAY omit it,
+and the UI treats `undefined` as `false`. `totalSteps` reflects the
+flow that was active when the partial was written, which the UI uses
+for resume continuity; the active step set is otherwise derived from
+the current `extendedSteps` flag.
+
+### State persistence + recovery
+
+Per-session state is written to `<writeRoot>/state/wizard-state.json`
+(under the global config root, typically
+`~/.event4u/agent-config/state/wizard-state.json`). If the file
+becomes malformed — partial JSON write, orphaned session from a
+previous npm version, manual edit gone wrong — the recovery path is:
+
+```
+agent-config doctor --repair wizard-state
+```
+
+The repair unlinks the file (idempotent; absent files are a no-op
+success). The next `agent-config setup` boots from step 1 with a
+fresh `startedAt`. A matching `wizard-state` health check is part of
+the standard `agent-config doctor` run and surfaces malformed JSON or
+schema-shape drift before the next setup attempt.
+
+### Extended-mode endpoints
+
+`extendedSteps: true` activates two additional read-only endpoints:
+
+| Method | Path                          | Purpose |
+|--------|-------------------------------|---------|
+| GET    | `/api/v1/wizard/auto-detect`  | Project-signal evidence (composer / package / pyproject / artisan / next.config) for the `ai-tools` step. 404 when extended-mode is off. |
+| GET    | `/api/v1/wizard/manifest`     | Locked discovery-manifest (ADR-015) so the `packs` step can render supported AI IDs + every pack the manifest exposes. 404 when extended-mode is off. |
+

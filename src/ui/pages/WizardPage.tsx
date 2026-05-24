@@ -22,16 +22,19 @@ import { defaultIdentity, mergeIdentity } from '@shared/userMd/formAdapter.js';
 import { parseUserIdentity } from '@shared/userMd/utils.js';
 import type { UserIdentity } from '@shared/userMd/schema.js';
 import type { JsonSchemaLeaf, JsonValue } from '../forms/schemaTypes.js';
-import { WIZARD_STEPS, WIZARD_TOTAL_STEPS, stepAt } from '../wizard/steps.js';
+import { stepAt } from '../wizard/steps.js';
 import { sliceSchema } from '../wizard/sliceSchema.js';
 import { StepHeader } from '../wizard/StepHeader.js';
 import { StepNav } from '../wizard/StepNav.js';
 import { WizardReview } from '../wizard/WizardReview.js';
 import {
+    activeTotalSteps,
     banner,
     clampStep,
     diffLoading,
     errors,
+    extendedSteps,
+    getActiveSteps,
     initialSettings,
     legacyHints,
     loaded,
@@ -116,6 +119,12 @@ async function loadAll(): Promise<void> {
         settingsLastModified.value = settingsRes.lastModified;
         initialSettings.value = settingsRes.values;
         legacyHints.value = settingsRes.legacyHints ?? {};
+        // road-to-global-only-install § Phase 1.6 — adopt the server's
+        // extended-mode flag BEFORE clamping the resumed step so the
+        // 9-step bound is in effect. Older server bundles omit the
+        // field; default to false to preserve the canonical 7-step
+        // contract.
+        extendedSteps.value = serverState.extendedSteps === true;
         // Resume from server partial when present; otherwise seed from disk values.
         const partialKeys = Object.keys(serverState.partial ?? {});
         values.value = partialKeys.length > 0
@@ -132,7 +141,7 @@ async function loadAll(): Promise<void> {
         // so the userMd fetch / settings diff would otherwise never run and
         // the step body would hang on "Loading .agent-user.yml…" or render
         // an empty review list.
-        const resumed = stepAt(stepIndex.value);
+        const resumed = stepAt(stepIndex.value, { extended: extendedSteps.value });
         if (resumed.kind === 'userMd' || resumed.kind === 'review') {
             void loadUserMdOnce();
         }
@@ -199,7 +208,7 @@ async function persistStep(nextIndex: number, partial: Record<string, JsonValue>
             method: 'POST',
             body: {
                 step: nextIndex,
-                totalSteps: WIZARD_TOTAL_STEPS,
+                totalSteps: activeTotalSteps(),
                 partial,
                 startedAt: startedAtNow(null),
             },
@@ -250,7 +259,7 @@ async function goTo(nextIndex: number): Promise<void> {
     await persistStep(target, values.value);
     stepIndex.value = target;
     banner.value = null;
-    const next = stepAt(target);
+    const next = stepAt(target, { extended: extendedSteps.value });
     if (next.kind === 'userMd') {
         void loadUserMdOnce();
     }
@@ -317,7 +326,7 @@ async function finish(): Promise<void> {
             banner.value = { message: `Wizard complete. ${closeHint}`, tone: 'success' };
         }
         // Drop wizard state on success — server unlinks; mirror locally.
-        stepIndex.value = clampStep(WIZARD_TOTAL_STEPS - 1);
+        stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
         // re-entry into the wizard doesn't show stale "changes".
         initialSettings.value = values.value;
@@ -337,7 +346,7 @@ async function finish(): Promise<void> {
 }
 
 function StepBody(): preact.JSX.Element | null {
-    const step = stepAt(stepIndex.value);
+    const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     if (step.kind === 'form') {
         const sliced = sliceSchema(schema.value!, step.paths ?? []);
         return (
@@ -401,7 +410,7 @@ function StepBody(): preact.JSX.Element | null {
     // review
     return (
         <WizardReview
-            steps={WIZARD_STEPS}
+            steps={getActiveSteps()}
             currentIndex={stepIndex.value}
             changes={reviewChanges.value}
             errors={errors.value}
@@ -431,15 +440,16 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     }
 
     const idx = stepIndex.value;
-    const step = stepAt(idx);
-    const isLast = idx === WIZARD_TOTAL_STEPS - 1;
+    const total = activeTotalSteps();
+    const step = stepAt(idx, { extended: extendedSteps.value });
+    const isLast = idx === total - 1;
 
     return (
         <div class="ac-page">
             <StepHeader
                 step={step}
                 index={idx}
-                total={WIZARD_TOTAL_STEPS}
+                total={total}
             />
             {banner.value !== null
                 ? (

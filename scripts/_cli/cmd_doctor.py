@@ -17,13 +17,20 @@ Drift categories (manifest ↔ filesystem):
   (P5.2). Hand-edited tags or accidental cross-package writes show up
   here; files without frontmatter are skipped (P5.1 contract).
 
-Health checks (nine categories, see :data:`CHECK_IDS`):
+Health checks (see :data:`CHECK_IDS`):
 scope · manifest-integrity · lockfile-freshness · bridge-drift ·
 mcp-mode · mcp-beta-readiness · offline-readiness · python-runtime ·
-unsupported-combos.
+tier-usage-readiness · council-cli · unsupported-combos ·
+wizard-state.
 Each emits a structured ``{id, status, message, remedy}`` record with
 ``status`` ∈ ``ok`` / ``warn`` / ``fail`` (rendered ``✅`` / ``⚠️`` /
 ``❌``). ``--check <id>`` runs a single check.
+
+Repair affordances: ``--repair wizard-state`` resets a malformed or
+orphaned ``state/wizard-state.json`` under the user-global root (the
+file the unified Setup-Wizard uses for resume continuity). Used as the
+recovery path when ``1.9``'s npm downgrade is not viable
+(road-to-global-only-install § 1.10 / A6).
 
 Exit codes: ``0`` (clean) · ``1`` (drift or any ``fail`` check) · ``2``
 (error such as "manifest missing"). Both human and ``--json`` output
@@ -443,7 +450,15 @@ CHECK_IDS = (
     "tier-usage-readiness",
     "council-cli",
     "unsupported-combos",
+    "wizard-state",
 )
+
+#: Repair targets that ``--repair <id>`` accepts. Each id maps to a
+#: function in :func:`_run_repair` that resets the named artefact and
+#: returns an exit code. Additive set: introduce by adding a new id
+#: here, a runner inside :func:`_run_repair`, and (optionally) a
+#: matching health check above.
+REPAIR_IDS = ("wizard-state",)
 
 #: Six gates that govern the MCP `experimental → beta` promotion. The
 #: artefact path under each gate id mirrors `tests/test_mcp_beta_gates.py`
@@ -983,6 +998,88 @@ def _check_unsupported_combos(manifest: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _wizard_state_path() -> Path:
+    """Return the on-disk location of the unified Setup-Wizard state file.
+
+    Mirrors ``STATE_REL`` in :mod:`src/server/routes/wizard.ts` — the
+    server writes ``<writeRoot>/state/wizard-state.json``. Under the
+    global-only install scope (ADR-020) ``writeRoot`` resolves to
+    :func:`user_global_paths.event4u_root` (typically
+    ``~/.event4u/agent-config/``); the ``EVENT4U_CONFIG_HOME`` override
+    is honoured implicitly so tests stay hermetic.
+    """
+    from scripts._lib.user_global_paths import event4u_root
+    return event4u_root() / "state" / "wizard-state.json"
+
+
+def _check_wizard_state() -> dict[str, Any]:
+    """Health-check the resumable Setup-Wizard state file.
+
+    Returns ``ok`` when the file is absent (no active session) or when
+    its JSON shape matches the contract from
+    :mod:`src/server/routes/wizard.ts` (``step: int``, ``partial: dict``,
+    optional ``totalSteps: int``, ``startedAt: str | null``).
+    Returns ``fail`` when the file exists but is unreadable, not valid
+    JSON, or violates the shape — ``--repair wizard-state`` resets it.
+    """
+    state_pth = _wizard_state_path()
+    if not state_pth.exists():
+        return {
+            "id": "wizard-state", "status": "ok",
+            "message": "no active wizard session",
+            "remedy": "",
+        }
+    try:
+        raw = state_pth.read_text(encoding="utf-8")
+    except OSError as exc:
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"unreadable wizard-state at {state_pth}: {exc}",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    try:
+        data = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"malformed JSON in wizard-state ({exc.msg} at line {exc.lineno})",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    if not isinstance(data, dict):
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"wizard-state root is {type(data).__name__}, expected object",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    step = data.get("step")
+    partial = data.get("partial", {})
+    if not isinstance(step, int) or step < 0:
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"wizard-state.step is {step!r}, expected non-negative integer",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    if not isinstance(partial, dict):
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"wizard-state.partial is {type(partial).__name__}, expected object",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    total = data.get("totalSteps")
+    if total is not None and (not isinstance(total, int) or total < 1):
+        return {
+            "id": "wizard-state", "status": "fail",
+            "message": f"wizard-state.totalSteps is {total!r}, expected positive integer or omitted",
+            "remedy": "agent-config doctor --repair wizard-state",
+        }
+    suffix = f" of {total}" if isinstance(total, int) else ""
+    return {
+        "id": "wizard-state", "status": "ok",
+        "message": f"resumable wizard session at step {step + 1}{suffix}",
+        "remedy": "",
+    }
+
+
 def _run_checks(
     project_root: Path,
     manifest: dict[str, Any],
@@ -1008,6 +1105,7 @@ def _run_checks(
         "tier-usage-readiness": lambda: _check_tier_usage_readiness(project_root),
         "council-cli": lambda: _check_council_cli(project_root),
         "unsupported-combos": lambda: _check_unsupported_combos(manifest),
+        "wizard-state": _check_wizard_state,
     }
     out: list[dict[str, Any]] = []
     for cid in CHECK_IDS:
@@ -1115,6 +1213,14 @@ def _parse(argv: list[str]) -> argparse.Namespace:
               "layer chain, wrapper, and install-mode; short-circuits "
               "the drift report"),
     )
+    parser.add_argument(
+        "--repair", default=None, metavar="ID",
+        choices=list(REPAIR_IDS),
+        help=("reset a recoverable artefact and exit "
+              f"({' · '.join(REPAIR_IDS)}); short-circuits the drift "
+              "report. Idempotent — absent files report 'nothing to "
+              "repair' and exit 0."),
+    )
     return parser.parse_args(argv)
 
 
@@ -1165,8 +1271,50 @@ def _run_context(opts: argparse.Namespace) -> int:
     return 0
 
 
+def _run_repair(opts: argparse.Namespace) -> int:
+    """Handle ``--repair <id>``: reset the named artefact, no drift report.
+
+    Currently the only target is ``wizard-state`` — unlinks the
+    resumable session file so the next ``agent-config setup`` boots
+    from step 1. Absent files are a no-op (idempotent re-run).
+    """
+    target = opts.repair
+    if target == "wizard-state":
+        state_pth = _wizard_state_path()
+        payload = {
+            "id": "wizard-state",
+            "path": str(state_pth),
+            "action": "remove" if state_pth.exists() else "noop",
+        }
+        if state_pth.exists():
+            try:
+                state_pth.unlink()
+            except OSError as exc:
+                payload["action"] = "error"
+                payload["error"] = str(exc)
+                if opts.json:
+                    print(json.dumps(payload, indent=2))
+                else:
+                    print(f"❌  doctor: could not remove {state_pth}: {exc}",
+                          file=sys.stderr)
+                return 2
+        if opts.json:
+            print(json.dumps(payload, indent=2))
+        else:
+            if payload["action"] == "remove":
+                print(f"✅  doctor: reset wizard-state ({state_pth})")
+            else:
+                print(f"✅  doctor: nothing to repair (no wizard-state at {state_pth})")
+        return 0
+    # argparse `choices=` already constrains target; defensive default.
+    print(f"❌  doctor: unknown repair target {target!r}", file=sys.stderr)
+    return 2
+
+
 def main(argv: list[str] | None = None) -> int:
     opts = _parse(list(argv) if argv is not None else sys.argv[1:])
+    if opts.repair is not None:
+        return _run_repair(opts)
     if opts.trace_root:
         return _run_trace_root(opts)
     if opts.context:
