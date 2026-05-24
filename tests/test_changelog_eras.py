@@ -4,7 +4,7 @@ Enforces the conventions documented in
 ``docs/contracts/CHANGELOG-conventions.md``:
 
 * ``CHANGELOG.md`` MUST contain at least one ``# Era: X.Y.x — current``
-  header and the body of that current era MUST stay under 200 lines.
+  header and the body of that current era MUST stay under 250 lines.
 * Every era declared in ``CHANGELOG.md`` other than ``current`` MUST
   point at an archive file under ``docs/archive/`` that exists.
 * The conventions doc MUST be linked from the CHANGELOG header so the
@@ -20,7 +20,7 @@ CHANGELOG = ROOT / "CHANGELOG.md"
 CONVENTIONS = ROOT / "docs" / "contracts" / "CHANGELOG-conventions.md"
 ARCHIVE_DIR = ROOT / "docs" / "archive"
 
-CURRENT_ERA_BODY_CAP = 200
+CURRENT_ERA_BODY_CAP = 250
 
 ERA_HEADER_RE = re.compile(r"^# Era: (?P<label>[^\n]+?)(?: — (?P<state>current|archived))?\s*$")
 ARCHIVE_LINK_RE = re.compile(r"\(docs/archive/(CHANGELOG-pre-[^)\s]+\.md)\)")

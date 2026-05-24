@@ -5,7 +5,7 @@
 DCF, scenario modelling, comp banding.
 
 - **id**: `finance-advanced`
-- **version**: `3.0.0`
+- **version**: `3.1.0`
 - **owner**: finance
 - **requires**: finance-basic
 - **artefacts**: 2
