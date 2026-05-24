@@ -1,13 +1,21 @@
 name: Visibility Drift Check
 
-# READ-ONLY drift detector. Runs on every push / PR that touches the
-# visibility manifests or the sync tooling. Fetches remote topics +
-# description, diffs against `.github/topics.yml` + `.github/about.yml`,
-# fails when drift exists. NEVER mutates the remote.
+# READ-ONLY drift detector. Runs on PRs that touch the visibility
+# manifests / sync tooling, on a weekly schedule (catches UI-side
+# edits), and on manual dispatch. Fetches remote topics + description,
+# diffs against `.github/topics.yml` + `.github/about.yml`, fails when
+# drift exists. NEVER mutates the remote.
 #
 # Mutating sync lives in `sync-visibility.yml` (workflow_dispatch only,
 # `administration: write`). Split-by-design per the AI-Council security
 # review of the strategic-visibility roadmap.
+#
+# NOTE: no `push:` trigger. Path-filtered push workflows create phantom
+# "failure" runs with 0 jobs in the runs list when paths don't match
+# (GitHub Actions quirk \u2014 the workflow registers a check-suite entry
+# but no job executes, conclusion=failure with empty logs). PR-gating +
+# weekly sweep + manual dispatch covers every drift-detection case
+# without polluting the main branch status badge.
 
 on:
   pull_request:
@@ -16,14 +24,6 @@ on:
       - ".github/about.yml"
       - "scripts/sync_github_metadata.py"
       - "scripts/lint_topics_yaml.py"
-      - ".github/workflows/check-visibility-drift.yml"
-  push:
-    branches:
-      - main
-    paths:
-      - ".github/topics.yml"
-      - ".github/about.yml"
-      - "scripts/sync_github_metadata.py"
       - ".github/workflows/check-visibility-drift.yml"
   schedule:
     # Weekly drift sweep \u2014 catches UI-side edits even when nobody
