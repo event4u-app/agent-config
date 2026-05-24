@@ -1,0 +1,20 @@
+{
+    "name": "@event4u/telemetry-worker",
+    "version": "0.0.0-source-only",
+    "private": true,
+    "description": "Cloudflare Worker source for @event4u/agent-config install-funnel telemetry. Deploying this worker is a Hard-Floor maintainer action; source ships unbuilt and unbound.",
+    "type": "module",
+    "main": "src/index.ts",
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "node --import tsx --test tests/*.test.mjs"
+    },
+    "devDependencies": {
+        "@cloudflare/workers-types": "^4.20240512.0",
+        "tsx": "^4.22.3",
+        "typescript": "^5.5.0"
+    },
+    "publishConfig": {
+        "access": "restricted"
+    }
+}
