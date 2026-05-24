@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-# Deprecated direct invocation.
+# Maintainer / source-checkout entry point.
 #
-# Public entry point is now `dist/cli/agent-config.js` via
-# `npx @event4u/agent-config`. This shim survives one minor cycle
-# then is removed (see ADR-012 + roadmap typescript-cli-and-local-gui-foundation).
+# Public consumer entry point is `dist/cli/agent-config.js` via
+# `npx @event4u/agent-config` — that's the path documented in README.
+# This shim is the canonical local invocation for maintainers working
+# in a source checkout, where `npx` can't resolve the bin without a
+# prior `npm link` (no `node_modules/.bin/agent-config` symlink).
 #
 # Behaviour:
 #   - If dist/cli/agent-config.js exists  → forward to the TS binary
@@ -12,8 +14,14 @@
 #     tests, work_engine harness — that pre-date the TS shell).
 #   - Else → error with a one-line build hint
 #
+# Deprecation warning is only emitted when this script is invoked from
+# an installed npm package (i.e. not a source-repo checkout). Source-
+# checkout detection: `$here/../src/cli/registry.ts` exists. Maintainers
+# running `./agent-config` from the repo root see no warning.
+#
 # Set AGENT_CONFIG_QUIET_DEPRECATION=1 to suppress the deprecation
-# warning (used by test harnesses that pin the stderr surface).
+# warning unconditionally (used by test harnesses that pin the stderr
+# surface).
 set -euo pipefail
 
 # Resolve $0 through symlinks (maintainer repo root has a ./agent-config
@@ -28,8 +36,11 @@ done
 here="$(cd -- "$(dirname -- "$src")" && pwd)"
 ts_entry="$here/../dist/cli/agent-config.js"
 legacy_entry="$here/_dispatch.bash"
+source_marker="$here/../src/cli/registry.ts"
 
-if [[ "${AGENT_CONFIG_QUIET_DEPRECATION:-0}" != "1" ]]; then
+# Suppress the deprecation warning when invoked from a source checkout
+# (maintainer path) — `src/` is not shipped in the published tarball.
+if [[ "${AGENT_CONFIG_QUIET_DEPRECATION:-0}" != "1" && ! -f "$source_marker" ]]; then
   echo "warning: scripts/agent-config is deprecated; use 'npx @event4u/agent-config' instead" >&2
 fi
 

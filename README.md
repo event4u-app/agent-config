@@ -89,7 +89,7 @@ npx -y @event4u/agent-config init
 
 **Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)).
 
-**Verify hook coverage:** `./agent-config hooks:status` prints the per-platform matrix (`--strict` for CI, `--format json` for tooling).
+**Verify hook coverage:** `npx @event4u/agent-config hooks:status` prints the per-platform matrix (`--strict` for CI, `--format json` for tooling).
 
 > **Scope (v2.5+):** `init` writes **global** only — `~/.event4u/agent-config/`, `~/.claude/`, `~/.cursor/`, …. The project tree gets `agents/overrides/` + `agents/.event4u-bridge.yml`. `--project` is maintainer-only behind `AGENT_CONFIG_DEV_MODE=1` ([ADR-020](docs/decisions/ADR-020-global-only-consumer-scope.md), [dev-mode](docs/maintainers/dev-mode.md)).
 
@@ -299,7 +299,7 @@ Three domain-safety rules ([`domain-safety-pii`](packages/core/.agent-src.uncomp
 
 ### Maintainer telemetry (opt-in, default-off)
 
-Local-only artefact-engagement log. Set `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. Records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded. Reports: `./agent-config telemetry:report`.
+Local-only artefact-engagement log. Set `telemetry.artifact_engagement.enabled: true` in `.agent-settings.yml`. Records which skills / rules / commands / guidelines the agent consults during `/implement-ticket` / `/work`. JSONL under the project root, nothing uploaded. Reports: `npx @event4u/agent-config telemetry:report`.
 
 ### Context-aware command suggestion
 
@@ -344,6 +344,8 @@ task ci               # full pipeline — green before PR
 task test             # unit + integration tests
 task dev:setup        # boot the onboarding wizard against the working tree
 ```
+
+**Invoking the CLI from a source checkout:** `./agent-config <command>` (the maintainer shim at the repo root → `scripts/agent-config` → `dist/cli/agent-config.js`). `npx @event4u/agent-config` doesn't resolve in the source repo without a prior `npm link`, since there's no `node_modules/.bin/agent-config` symlink — use `./agent-config` instead. Build the TS binary with `npm run build:cli` if `dist/cli/agent-config.js` is missing.
 
 → Full project structure and commands: [**docs/development.md**](docs/development.md) · [CONTRIBUTING.md](CONTRIBUTING.md). Stack: **TypeScript** CLI/UI + **Python 3.10+** build/lint scripts. MCP registry payloads render under `dist/mcp/` ([submission checklist](docs/distribution/mcp-submission-checklist.md)).
 
