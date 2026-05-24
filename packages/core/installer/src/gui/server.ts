@@ -27,10 +27,21 @@ import { findOpenLog, plannedPaths, readLog } from './transaction-log.js';
 import type { GuiServerHandle, GuiServerOptions } from './types.js';
 
 const DEFAULT_IDLE_SECONDS = 600;
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
 
-/** Boot a localhost HTTP server. Resolves once `listen()` succeeds. */
+/** Boot the GUI HTTP server. Resolves once `listen()` succeeds. */
 export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerHandle> {
     const stdout = opts.stdout ?? process.stdout;
+    const host = opts.host ?? '127.0.0.1';
+
+    // Defense-in-depth: non-loopback bind without an explicit allowlist
+    // is a DNS-rebinding waiting room. Refuse to boot. ADR-021 § Security.
+    if (!LOOPBACK_HOSTS.has(host) && (opts.allowedHosts === undefined || opts.allowedHosts.length === 0)) {
+        throw new Error(
+            `startGuiServer: host=${host} requires allowedHosts. Pass --allowed-hosts ` +
+                'or set ALLOWED_HOSTS (comma-separated host:port list). See ADR-021.',
+        );
+    }
 
     const loaded = loadManifest({
         searchFrom: opts.projectRoot,
@@ -53,8 +64,11 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
         handleRequest(req, res, csrfToken, loaded, opts, () => recovery, clearRecovery);
     });
 
-    await listen(server, opts.port ?? 0);
+    await listen(server, opts.port ?? 0, host);
     const port = (server.address() as AddressInfo).port;
+    // Readiness line always advertises loopback so a co-located Python
+    // supervisor reaches the server even when bound to 0.0.0.0. Remote
+    // operators read `--host` + `--port` from their compose / k8s config.
     const url = `http://127.0.0.1:${port}/`;
     // Atomic lock — throws PidLockConflictError if another live server
     // already owns this project root. Council Tier 2 § 6.
@@ -109,7 +123,7 @@ export async function startGuiServer(opts: GuiServerOptions): Promise<GuiServerH
     return { url, port, csrfToken, pidFile, close };
 }
 
-function listen(server: Server, port: number): Promise<void> {
+function listen(server: Server, port: number, host: string): Promise<void> {
     return new Promise((resolve, reject) => {
         const onError = (err: Error): void => {
             server.off('listening', onListening);
@@ -121,7 +135,7 @@ function listen(server: Server, port: number): Promise<void> {
         };
         server.once('error', onError);
         server.once('listening', onListening);
-        server.listen({ host: '127.0.0.1', port });
+        server.listen({ host, port });
     });
 }
 
@@ -135,8 +149,14 @@ function handleRequest(
     clearRecovery: () => void,
 ): void {
     const port = (req.socket.localPort as number | null) ?? 0;
-    const allowedHosts = buildAllowedHosts(port);
-    const allowedOrigins = buildAllowedOrigins(port);
+    const allowedHosts =
+        opts.allowedHosts !== undefined && opts.allowedHosts.length > 0
+            ? opts.allowedHosts
+            : buildAllowedHosts(port);
+    const allowedOrigins =
+        opts.allowedHosts !== undefined && opts.allowedHosts.length > 0
+            ? opts.allowedHosts.map((h) => `http://${h}`)
+            : buildAllowedOrigins(port);
     res.setHeader('Content-Security-Policy', CSP_HEADER);
     res.setHeader('X-Content-Type-Options', 'nosniff');
     res.setHeader('Cache-Control', 'no-store');

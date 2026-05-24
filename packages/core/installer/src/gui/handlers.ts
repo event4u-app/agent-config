@@ -80,6 +80,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'GET' && url === '/api/v1/council/recent') return getCouncilRecent(res, ctx);
     if (method === 'GET' && (url ?? '').startsWith('/api/v1/council/session/')) return getCouncilSession(req, res, ctx);
     if (method === 'GET' && url === '/api/v1/explain/last') return getExplainLast(res, ctx);
+    if (method === 'GET' && url === '/api/v1/health') return getHealth(req, res, ctx);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: 'not_found' }));
@@ -473,4 +474,56 @@ async function getExplainLast(res: ServerResponse, ctx: ApiContext): Promise<voi
     } catch (err) {
         return endJson(res, 500, { error: 'explain_failed', message: (err as Error).message });
     }
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 1 — Health endpoint (road-to-internal-ai-os-deployment Step 4)
+// ──────────────────────────────────────────────────────────────────────
+//
+// Threat-model note (security-sensitive-stop rule):
+//
+//   * Read-only. No mutations, no auth state, no PII.
+//   * No CSRF token required (no state-changing side effects).
+//   * Returns version, uptime, and the *names* of two config knobs
+//     (STORAGE_MODE, SESSION_BACKEND) — no secrets, no DB URL, no
+//     allowlist members.
+//   * Rate-limited to 1 request per second per remote IP via an
+//     in-memory token-bucket. Survives docker healthcheck cadence
+//     (10s default) by a wide margin.
+//   * The endpoint MUST stay under the host-header allowlist gate
+//     enforced by server.ts handleRequest; this handler only fires
+//     after that gate passes. Operators in front of a reverse proxy
+//     must extend ALLOWED_HOSTS so the proxy's probe is not 403'd.
+
+const HEALTH_RATE_LIMIT_MS = 1000;
+const healthLastHit = new Map<string, number>();
+const BOOT_TIME_MS = Date.now();
+
+function getHealth(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): void {
+    const ip = req.socket.remoteAddress ?? '0.0.0.0';
+    const now = Date.now();
+    const last = healthLastHit.get(ip);
+    if (last !== undefined && now - last < HEALTH_RATE_LIMIT_MS) {
+        res.setHeader('Retry-After', '1');
+        return endJson(res, 429, { error: 'rate_limited', retry_after_seconds: 1 });
+    }
+    healthLastHit.set(ip, now);
+    // Bound the map to avoid unbounded growth from spoofed probes.
+    if (healthLastHit.size > 1024) {
+        const cutoff = now - 60_000;
+        for (const [k, v] of healthLastHit) {
+            if (v < cutoff) healthLastHit.delete(k);
+        }
+    }
+    const storageMode = process.env['STORAGE_MODE'] ?? 'filesystem';
+    const sessionBackend = process.env['SESSION_BACKEND'] ?? 'memory';
+    return endJson(res, 200, {
+        status: 'ok',
+        version: AGENT_CONFIG_VERSION,
+        pack_version: PACK_VERSION,
+        uptime_seconds: Math.floor((now - BOOT_TIME_MS) / 1000),
+        storage_mode: storageMode,
+        session_backend: sessionBackend,
+        manifest_sha256: ctx.loaded.sha256,
+    });
 }

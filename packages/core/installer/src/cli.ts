@@ -160,6 +160,14 @@ export function buildProgram(): Command {
         .option('--port <port>', 'Bind to a fixed port (default: ephemeral)')
         .option('--idle <seconds>', 'Idle timeout in seconds (default: 600)')
         .option('--no-open', 'Do not auto-open the browser', false)
+        .option(
+            '--host <host>',
+            'Bind address. Default 127.0.0.1. Use 0.0.0.0 for container deployments — see ADR-021. Honors BIND_HOST env when flag absent.',
+        )
+        .option(
+            '--allowed-hosts <list>',
+            'Comma-separated host:port allowlist for the Host-header gate (required when --host is non-loopback). Honors ALLOWED_HOSTS env.',
+        )
         .action(async (opts: Record<string, unknown>) => {
             const code = await runGui(resolveShared(opts), opts);
             process.exit(code);

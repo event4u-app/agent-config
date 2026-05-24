@@ -24,6 +24,19 @@ export interface GuiServerOptions {
     readonly stdout?: NodeJS.WritableStream;
     /** Override the browser-launch hook (tests). */
     readonly openBrowser?: (url: string) => void;
+    /**
+     * Bind address. Default `127.0.0.1`. ADR-021 § Security — operators
+     * pass `0.0.0.0` for container deployments and MUST supply
+     * `allowedHosts` matching their public hostname(s).
+     */
+    readonly host?: string;
+    /**
+     * Host:port allowlist for the Host-header gate. When unset, the
+     * server derives the loopback allowlist (`127.0.0.1:<port>`,
+     * `localhost:<port>`). When `host` is non-loopback this MUST be set
+     * or `startGuiServer` throws.
+     */
+    readonly allowedHosts?: readonly string[];
 }
 
 /** Result of a successful server boot. */

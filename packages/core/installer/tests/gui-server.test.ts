@@ -145,3 +145,58 @@ describe('startGuiServer — API wiring', () => {
         expect(res.status).toBe(403);
     });
 });
+
+// road-to-internal-ai-os-deployment Phase 1 Steps 2 + 3 — host binding +
+// health endpoint. These tests do not share the outer beforeEach handle
+// because they need a server bound to a different host / allowlist.
+
+describe('startGuiServer — non-loopback bind (ADR-021)', () => {
+    it('refuses to boot when host is non-loopback without allowedHosts', async () => {
+        const tmpProj = mkdtempSync(join(tmpdir(), 'gui-host-'));
+        const mp = (() => {
+            const m = makeManifest({
+                packs: [makePack({ id: 'a' })],
+                artefacts: [makeArtefact({ path: '.agent-src.uncompressed/rules/foo.md', packs: ['a'] })],
+            });
+            const dir = join(tmpProj, 'dist', 'discovery');
+            mkdirSync(dir, { recursive: true });
+            const p = join(dir, 'discovery-manifest.json');
+            writeFileSync(p, JSON.stringify(m));
+            return p;
+        })();
+        await expect(
+            startGuiServer({
+                projectRoot: tmpProj,
+                manifestPath: mp,
+                host: '0.0.0.0',
+                noOpen: true,
+                stdout: new PassThrough(),
+            }),
+        ).rejects.toThrow(/allowedHosts/);
+        rmSync(tmpProj, { recursive: true, force: true });
+    });
+});
+
+describe('GET /api/v1/health', () => {
+    it('returns 200 with status + version + uptime + config', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/health`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.status).toBe('ok');
+        expect(body.version).toMatch(/^\d+\.\d+\.\d+/);
+        expect(body.uptime_seconds).toBeGreaterThanOrEqual(0);
+        expect(typeof body.storage_mode).toBe('string');
+        expect(typeof body.session_backend).toBe('string');
+        expect(body.manifest_sha256).toMatch(/^[a-f0-9]{64}$/);
+    });
+
+    it('rate-limits repeated probes from the same IP', async () => {
+        // First call resets the bucket for this IP after the previous
+        // test. Second call within 1s must return 429.
+        await fetch(`${baseUrl}/api/v1/health`);
+        const second = await fetch(`${baseUrl}/api/v1/health`);
+        expect(second.status).toBe(429);
+        const body = await second.json();
+        expect(body.error).toBe('rate_limited');
+    });
+});
