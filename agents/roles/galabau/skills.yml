@@ -1,0 +1,21 @@
+# Galabau owner — skill shortlist
+# Priority-ordered. The launcher (Phase 4) surfaces the first five in the default rail; the rest go behind "more".
+# Each `id` must resolve to an existing skill — verified by `task lint-role-experiences` (Phase 3 Step 6, deferred).
+
+skills:
+  - id: refine-prompt
+    why: "Tightens fuzzy customer briefs before any drafting so the agent does not invent scope."
+  - id: voice-and-tone-design
+    why: "Locks the voice so offers and emails read consistent across customers; the same shop tone, every time."
+  - id: doc-coauthoring
+    why: "Section-by-section drafting flow for longer offers and project briefs; never one giant generation."
+  - id: messaging-architecture
+    why: "Builds the offer's value proof — what's the customer outcome, what's the supporting evidence."
+  - id: customer-research
+    why: "Helps frame the customer-email reply by surfacing the customer's likely concern from the e-mail context."
+  - id: editorial-calendar
+    why: "When the role expands to social posts or seasonal mailings, the cadence shape is here."
+  - id: form-handler
+    why: "When offers move to a digital intake form (later phase), the form-validation lifecycle is here."
+  - id: blast-radius-analyzer
+    why: "Before sending an offer that references a multi-site customer, surfaces dependencies the maintainer might miss."

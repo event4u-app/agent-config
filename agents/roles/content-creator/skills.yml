@@ -1,0 +1,23 @@
+# Content creator — skill shortlist
+# Priority-ordered. Launcher (Phase 4) surfaces the first five in the default rail.
+# Each `id` must resolve to an existing skill — verified by `task lint-role-experiences` (Phase 3 Step 6, deferred).
+
+skills:
+  - id: voice-and-tone-design
+    why: "Defines and audits brand voice so the same tone holds across newsletter, social, and video."
+  - id: character-consistency
+    why: "Locks identity tokens (silhouette, palette, wardrobe, prop) so a character stays visually identical across video scenes."
+  - id: scene-expander
+    why: "Expands a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic."
+  - id: pixar-storyteller
+    why: "Anchors a scene in emotional beat, want, obstacle — turns flat scripts into watchable shorts."
+  - id: messaging-architecture
+    why: "Builds the primary message + audience-by-message matrix before any copy is written."
+  - id: editorial-calendar
+    why: "Maps cadence — evergreen vs campaign vs reactive — across the channels the role publishes on."
+  - id: video-director
+    why: "11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives."
+  - id: motion-choreographer
+    why: "Provider-tuned motion prompt (camera, primary + secondary motion, physics, native-audio sync)."
+  - id: voc-extract
+    why: "Pulls voice-of-customer themes from existing GH issues / Sentry / PR threads when the creator needs real audience signal."

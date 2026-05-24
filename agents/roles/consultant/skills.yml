@@ -1,0 +1,23 @@
+# Consultant / advisor — skill shortlist
+# Priority-ordered. Launcher (Phase 4) surfaces the first five in the default rail.
+# Each `id` must resolve to an existing skill — verified by `task lint-role-experiences` (Phase 3 Step 6, deferred).
+
+skills:
+  - id: refine-prompt
+    why: "Tightens fuzzy client briefs and board asks before any drafting; surfaces assumptions and open questions."
+  - id: doc-coauthoring
+    why: "Section-by-section drafting flow for memos and deck outlines; never one giant generation."
+  - id: customer-research
+    why: "JTBD-framed interview guide + verbatim quote extraction when the engagement starts with discovery."
+  - id: competitive-positioning
+    why: "Ours-vs-theirs verdict table, axis selection — the core of any positioning engagement."
+  - id: fundraising-narrative
+    why: "Why-now / why-us / why-this framing for investor memos and pitch reviews."
+  - id: market-entry-analysis
+    why: "Geo / segment / vertical sequencing, beachhead selection, regulatory-delta — go-to-market advisory."
+  - id: unit-economics-modeling
+    why: "CAC, LTV, payback, contribution margin — the numerical floor every advisory deliverable rests on."
+  - id: stakeholder-tradeoff
+    why: "Frames each stakeholder lens and builds a trade-off matrix when client interests pull in different directions."
+  - id: decision-record
+    why: "Locks the recommendation as an ADR-shaped artefact so the client has a durable record of why the call was made."
