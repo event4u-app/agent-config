@@ -92,7 +92,7 @@ under [`docs/archive/`](../archive/) and are read-only.
 
 Drift gate — `tests/test_changelog_eras.py` fails when the current
 era's body (lines between `# Era: X.Y.x — current` and the next era
-header) exceeds **200 lines**. When that happens:
+header) exceeds **250 lines**. When that happens:
 
 1. Pick the next major or significant minor boundary at the bottom of
    the current era (typically the last `X.Y.0` release).
