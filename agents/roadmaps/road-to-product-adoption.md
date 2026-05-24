@@ -23,54 +23,60 @@ The last 10 PRs were ~80 % architecture / governance / contracts and ~20 % exter
 
 Catch first-run regressions on platforms maintainers don't use daily.
 
-- [ ] **Step 1:** Add `.github/workflows/smoke-public-install.yml` — matrix on `{ubuntu-latest, macos-latest, windows-latest}` × Node `{20, 22}`. Each leg: `npx -y @event4u/agent-config init --no-ui --dry-run --project $TMP` then `--no-ui` real run, then `node packages/core/installer/dist/cli.js gui --port 0 --no-open --project-root $TMP` boot-test.
-- [ ] **Step 2:** Headless fallback assertion — leg with `AGENT_CONFIG_NO_UI=1` set, expect zero wizard spawn, exit 0.
-- [ ] **Step 3:** Hard fail on regression. Schedule weekly cron (`0 6 * * 1`) + on-`main`-push.
-- [ ] **Step 4:** Add `Public install smoke (3 OS × 2 Node)` badge to `README.md` immediately under the hero block. Keep one badge; do not start a badge wall.
-- [ ] **Step 5:** Document the gate in `docs/distribution/public-install-smoke.md` (new) — what the matrix proves, what it deliberately does not (provider creds, GUI in real browser).
+- [x] **Step 1:** Added `.github/workflows/smoke-public-install.yml` — matrix on `{ubuntu-latest, macos-latest, windows-latest}` × Node `{20, 22}` = 6 legs. Each leg runs `tests/test_one_liner_entrypoints.sh` (covers `setup.sh` curl path + `scripts/agent-config init` npx-bin path) plus an inline headless dry-run leg. **Roadmap deviation:** `--no-ui` and `AGENT_CONFIG_NO_UI` were aspirational; current CLI surface is `--yes` (non-interactive) + `--dry-run` (no writes). The GUI `port 0 --no-open` boot test is covered by `vitest` (`tests/cli/uiServe.test.ts`) and intentionally not duplicated here. See `docs/distribution/public-install-smoke.md` § Roadmap deviations.
+- [x] **Step 2:** Headless dry-run leg asserts `--yes --dry-run` writes zero files to the target temp dir — the canonical CI-safe entry per `scripts/install --help`.
+- [x] **Step 3:** Weekly cron `0 6 * * 1` + on-`main`-push + path-filtered PR triggers. No retry; matrix-leg flake policy in `docs/distribution/public-install-smoke.md` § Failure policy.
+- [x] **Step 4:** `Public install smoke (3 OS × 2 Node)` badge added to `README.md` hero line alongside existing `Smoke` + `npm` badges. No new badge row created.
+- [x] **Step 5:** `docs/distribution/public-install-smoke.md` documents the matrix shape, what it proves, what it deliberately does not, failure policy, and roadmap deviations.
 
 ## Phase 2: Distribution surfaces (P2 — feedback6 §8)
 
 Be findable when somebody is searching for what this package does, not when somebody already knows its name.
 
-- [ ] **Step 1:** Submit to `punkpeye/awesome-mcp-servers` (or successor) — one-line entry under the agent-tooling section, link to `README.md` hero anchor, not the org root. Capture PR link in `docs/distribution/registries.md` (new).
-- [ ] **Step 2:** Submit to two additional MCP / agent-OSS directories — `mcp.so`, `mcpservers.org` (verify URLs current at submission time). Same one-line shape.
-- [ ] **Step 3:** Audit `.github/topics.yml` against three search queries a target consumer would actually type — "AI agent governance", "MCP skill registry", "AI video pipeline". Each query must surface this repo within 2 pages on GitHub topic search. Add missing topics via the `notes:` / `equivalents:` flow (already enforced by `scripts/lint_positioning.py`).
-- [ ] **Step 4:** Verify `package.json` `keywords` mirror the topic list — same five categories (audience, host agents, capability, language, governance).
-- [ ] **Step 5:** Open a GitHub Discussions board (`Show & Tell`, `Q&A`, `Ideas`) — three categories, no more. README hero links to Discussions, not Issues, for first-touch questions.
+- [~] **Step 1:** *Deferred (human-owner).* Submission to `punkpeye/awesome-mcp-servers` requires opening a PR in a third-party repo. Template + checklist landed in `docs/distribution/registries.md`. Track PR link when submitted.
+- [~] **Step 2:** *Deferred (human-owner).* `mcp.so` and `mcpservers.org` submissions go through directory forms with human verification. Templates in `docs/distribution/registries.md`.
+- [x] **Step 3:** Audited `.github/topics.yml` — 13 topics cover the three test queries via `notes:` / `equivalents:` (audience: `ai-agent` · `llm`; host: `claude-code` · `cursor` · `windsurf` · `copilot`; capability: `mcp` · `ai-video` · `skills` · `prompt-engineering` · `agent-governance`; language: `typescript` · `python`). No additions needed this pass. Quarterly re-audit cadence documented in `docs/distribution/registries.md` § Audit cadence.
+- [x] **Step 4:** Added `keywords` field to `package.json` mirroring `.github/topics.yml` `topics:` list — 13 keywords, five categories (audience, host agents, capability, language, governance). Previously missing.
+- [~] **Step 5:** *Deferred (human-owner).* Enabling GitHub Discussions + creating three categories (`Show & Tell`, `Q&A`, `Ideas`) requires repo-admin in the GitHub UI. README hero already links to Discussions; checklist in `docs/distribution/registries.md` § GitHub Discussions.
 
 ## Phase 3: Adoption proof — five walkthroughs (P2 — feedback6 §7)
 
 The single most leveraged artefact: a consumer can read in 5 minutes and reproduce in 30.
 
-- [ ] **Step 1:** Author `docs/walkthroughs/founder.md` — blank machine → `npx ... init` (wizard path) → run `/refine-prompt` on a real fundraising deck question → output. Screenshots of the wizard, the chat surface, and the final artefact. Time-to-first-value target: ≤ 15 min.
-- [ ] **Step 2:** Author `docs/walkthroughs/content-creator.md` — same shape, ends with a 4-shot `/video:scene` storyboard generated by `packages/pack-ai-video`.
-- [ ] **Step 3:** Author `docs/walkthroughs/consultant.md` — ends with a refined deliverable (e.g. a re-shaped client brief or an investor memo).
-- [ ] **Step 4:** Author `docs/walkthroughs/finance.md` — runs a runway / DCF question through `pack-finance-basic`; ends with the trust-banner screenshot and a recorded "reviewed by human accountant" footer.
-- [ ] **Step 5:** Author `docs/walkthroughs/engineering-lead.md` — ends with a `/review-changes` pass on a small PR, judges' verdict captured.
-- [ ] **Step 6:** Link all five from `README.md`'s `Featured walkthroughs` block (Phase 5 below regulates README shape; this step adds links into whatever shape exists).
-- [ ] **Step 7:** Recruit ≥ 3 external users (one per audience) to reproduce one walkthrough and file feedback in Discussions. Track in `docs/walkthroughs/_external-runs.md` (new).
+> **Deferred — human-owner.** Walkthroughs require real provider keys, live wizard runs, and screenshots of the chat surface. The autonomous pass cannot produce these artefacts without invoking paid APIs and capturing UI state. Roadmap gate: only start after the Phase 1 smoke matrix shows three consecutive green cron cycles on `main`.
+
+- [~] **Step 1:** *Human-owner.* `docs/walkthroughs/founder.md` — blank machine → `npx ... init` (wizard path) → `/refine-prompt` on a fundraising deck question. ≤ 15 min target.
+- [~] **Step 2:** *Human-owner.* `docs/walkthroughs/content-creator.md` — 4-shot `/video:scene` storyboard via `packages/pack-ai-video`.
+- [~] **Step 3:** *Human-owner.* `docs/walkthroughs/consultant.md` — refined client brief / investor memo.
+- [~] **Step 4:** *Human-owner.* `docs/walkthroughs/finance.md` — runway / DCF through `pack-finance-basic`, trust-banner screenshot, accountant-reviewed footer.
+- [~] **Step 5:** *Human-owner.* `docs/walkthroughs/engineering-lead.md` — `/review-changes` pass with judges' verdict.
+- [~] **Step 6:** *Follows Steps 1–5.* Link all five from README's `Featured walkthroughs` block.
+- [~] **Step 7:** *Follows Steps 1–5.* Recruit ≥ 3 external users; track in `docs/walkthroughs/_external-runs.md`.
 
 ## Phase 4: Anonymous opt-in telemetry (P3 — feedback6 §10)
 
 Replace the current "we have no idea where consumers drop" blind spot.
 
-- [ ] **Step 1:** Spec the event schema in `docs/distribution/telemetry-schema.md` (new) — exactly four events: `install.completed`, `install.failed{step}`, `wizard.abandoned{step}`, `provider.validation_failed{provider}`. No identifying fields beyond OS, Node version, install path category (`npx | local-clone | global`).
-- [ ] **Step 2:** Implement client side under `packages/core/installer/src/telemetry/` — gated on `telemetry.enabled` in `.agent-settings.yml` (default `false`). Single POST to a Cloudflare Worker; no third-party SDK.
-- [ ] **Step 3:** Add the opt-in prompt to the wizard's last step — explicit copy: "Send anonymous install metrics? You can change this in `.agent-settings.yml` at any time." Default unchecked.
-- [ ] **Step 4:** Publish the Worker source under `packages/cloud/telemetry-worker/` (new) — readable, ≤ 200 LOC, no logs of IP, request-id-only retention 7 days.
-- [ ] **Step 5:** Add `docs/distribution/telemetry-privacy.md` — what is collected, what is not, how to disable, how the data is used.
-- [ ] **Step 6:** Surface aggregate weekly funnel in `docs/distribution/install-funnel.md` (autogen, redacted) — wired into a follow-up roadmap once data exists.
+> **Deferred — Hard Floor blocked.** Phase 4 ships new production infrastructure (`packages/cloud/telemetry-worker/`) plus a client SDK that POSTs install metrics. Both require explicit per-turn user authorization per `non-destructive-by-default` (prod-data / infra trigger). The autonomous pass cannot deploy a Cloudflare Worker. Specs and privacy doc can be drafted in a follow-up authoring pass; deployment is its own PR with maintainer review.
+
+- [~] **Step 1:** *Authoring pass possible — not in this PR's scope.* Spec `docs/distribution/telemetry-schema.md`.
+- [~] **Step 2:** *Hard-Floor blocked.* Client SDK under `packages/core/installer/src/telemetry/`.
+- [~] **Step 3:** *Hard-Floor blocked.* Wizard opt-in prompt.
+- [~] **Step 4:** *Hard-Floor blocked.* Cloudflare Worker source under `packages/cloud/telemetry-worker/`.
+- [~] **Step 5:** *Authoring pass possible — not in this PR's scope.* `docs/distribution/telemetry-privacy.md`.
+- [~] **Step 6:** *Follows Steps 1–5.* Aggregate weekly funnel.
 
 ## Phase 5: Architectural drift audit (P3 — feedback6 §12)
 
 Remove the speculative architecture overhang before it accumulates more carrying cost.
 
-- [ ] **Step 1:** Inventory zombie paths — anything in `packages/` or `.agent-src.uncompressed/` shipped for "future third-party packs" / "future marketplace" that has zero consumer today. Output: `agents/evidence/architectural-drift/inventory.md` (new).
-- [ ] **Step 2:** Classify each finding: `keep` (load-bearing today), `park` (sunset under flag), `remove` (no consumer, no near plan).
-- [ ] **Step 3:** Surface the `remove` set to council via `/council:default`. Decision recorded under `agents/evidence/architectural-drift/decisions.md` (new).
-- [ ] **Step 4:** Execute removals as a separate PR per cluster (no drive-by deletions; bulk deletions surface diff per `non-destructive-by-default`).
-- [ ] **Step 5:** Update `docs/architecture.md` to reflect the post-trim shape. No reference to removed surfaces survives.
+> **Deferred — separate PR per cluster.** Step 4 explicitly requires "a separate PR per cluster (no drive-by deletions; bulk deletions surface diff per `non-destructive-by-default`)". The autonomous pass cannot batch deletions across packages. Inventory + classification (Steps 1–3) can run in a follow-up authoring pass; removals (Step 4) are independent maintainer-reviewed PRs.
+
+- [~] **Step 1:** *Authoring pass possible — not in this PR's scope.* Zombie-paths inventory → `agents/evidence/architectural-drift/inventory.md`.
+- [~] **Step 2:** *Follows Step 1.* Classify `keep | park | remove`.
+- [~] **Step 3:** *Follows Step 2.* Council review of `remove` set.
+- [~] **Step 4:** *Per-cluster maintainer-reviewed PRs.* Hard-Floor authorization per cluster.
+- [~] **Step 5:** *Follows Step 4.* Update `docs/architecture.md`.
 
 ## Acceptance Criteria
 
