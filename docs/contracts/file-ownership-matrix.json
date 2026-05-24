@@ -915,6 +915,12 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md": {
+      "kind": "context",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/contexts/execution/interrupt-examples.md": {
       "kind": "context",
       "rule_type": null,
@@ -5883,6 +5889,55 @@
       "depth": 1
     },
     {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/commit-policy.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/no-cheap-questions.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/scope-control.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "target": ".agent-src.uncompressed/rules/security-sensitive-stop.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
       "source": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
       "target": ".agent-src.uncompressed/contexts/execution/interrupt-examples.md",
       "type": "WRITE",
@@ -7284,6 +7339,13 @@
     },
     {
       "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
+      "target": ".agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
       "target": ".agent-src.uncompressed/rules/ask-when-uncertain.md",
       "type": "READ_ONLY",
       "via": "body_link",
@@ -7295,20 +7357,6 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
-      "target": ".agent-src.uncompressed/rules/non-destructive-by-default.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
-    },
-    {
-      "source": ".agent-src.uncompressed/rules/no-cheap-questions.md",
-      "target": ".agent-src.uncompressed/rules/security-sensitive-stop.md",
-      "type": "READ_ONLY",
-      "via": "body_link",
-      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/rules/no-roadmap-references.md",
