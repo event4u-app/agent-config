@@ -1,0 +1,131 @@
+name: Public Install Smoke
+
+# Cross-platform install matrix for the two consumer entrypoints.
+# Phase 1 of road-to-product-adoption.md: prove `curl | bash`
+# (setup.sh) and `npx @event4u/agent-config init` install cleanly on
+# every (OS × Node) pair we tell consumers we support.
+#
+# Why a separate workflow (vs. tests.yml install-aux-tests):
+#   - tests.yml runs Linux + macOS only. Windows regressions slip
+#     through.
+#   - tests.yml uses the repo's default Node version. Consumers run
+#     Node 20 / 22 — both need a green leg.
+#   - Weekly cron catches drift introduced by upstream registry
+#     changes even when no PR touched our installer.
+#
+# What this matrix proves:
+#   - `setup.sh` (curl entrypoint) installs from a local tarball on
+#     all three OSes.
+#   - `scripts/agent-config init` (npx bin entry) installs from the
+#     same tarball — the path `npx @event4u/agent-config init` takes
+#     after the npm registry fetch.
+#   - Both flows write `.claude/` and `.agent-settings.yml` to the
+#     target project.
+#
+# What this matrix deliberately does NOT prove:
+#   - Provider credential flow (OpenAI / Anthropic keys) — no secrets
+#     in CI.
+#   - The GUI wizard in a real browser — `ui:serve` boot covered in
+#     vitest; end-to-end wizard runs are deferred to follow-up.
+#   - Network fetch from the public npm registry — the matrix uses a
+#     local tarball to isolate "is our installer correct?" from "is
+#     npm reachable?".
+#
+# Contract: docs/distribution/public-install-smoke.md
+
+on:
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'scripts/install'
+      - 'scripts/install.sh'
+      - 'scripts/install.py'
+      - 'scripts/agent-config'
+      - 'scripts/_dispatch.bash'
+      - 'scripts/_lib/**'
+      - 'scripts/_cli/**'
+      - 'setup.sh'
+      - 'tests/test_one_liner_entrypoints.sh'
+      - 'package.json'
+      - 'templates/**'
+      - '.github/workflows/smoke-public-install.yml'
+  push:
+    branches: [main, master]
+  schedule:
+    # Weekly Monday 06:00 UTC — catches drift from upstream registry
+    # changes even when our installer is untouched.
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    name: ${{ matrix.os }} · node ${{ matrix.node }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # fail-fast: false so a Windows-only break still surfaces the
+      # macOS / Linux results in the same run. Easier triage.
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['20', '22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Print toolchain versions
+        shell: bash
+        run: |
+          echo "node:    $(node --version)"
+          echo "npm:     $(npm --version)"
+          echo "python:  $(python3 --version)"
+          echo "bash:    $(bash --version | head -1)"
+          echo "tar:     $(tar --version | head -1)"
+
+      - name: One-liner entrypoint smoke (setup.sh + agent-config init)
+        # Bash on Windows runners is Git Bash. The test uses tar +
+        # mktemp + cp -R which Git Bash supports. If a Windows-only
+        # breakage shows up here, that's the exact regression this
+        # matrix was designed to catch.
+        shell: bash
+        run: bash tests/test_one_liner_entrypoints.sh
+
+      - name: Headless dry-run leg (init --dry-run --yes)
+        # Distinct from the script above: asserts the dispatcher
+        # accepts --dry-run --yes (non-interactive preview) without
+        # writing anything to the target. Equivalent to the roadmap's
+        # "headless fallback" — using flags that actually exist
+        # (--no-ui / AGENT_CONFIG_NO_UI were aspirational and never
+        # implemented; --yes + --dry-run is the canonical CI-safe
+        # entry per scripts/install --help).
+        shell: bash
+        env:
+          AGENT_CONFIG_DEV_MODE: '1'
+          AGENT_CONFIG_NO_PIN_REEXEC: '1'
+        run: |
+          set -euo pipefail
+          TMP="$(mktemp -d -t public-install-dry-XXXXXX)"
+          bash scripts/agent-config init \
+            --target "$TMP" \
+            --tools=claude-code \
+            --yes \
+            --dry-run
+          # Dry-run must not write bridge files.
+          if [[ -f "$TMP/.agent-settings.yml" ]]; then
+            echo "❌  dry-run wrote .agent-settings.yml; expected no-op" >&2
+            exit 1
+          fi
+          echo "✅  dry-run leg: no bridge files written"
+          rm -rf "$TMP"
