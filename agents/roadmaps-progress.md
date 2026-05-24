@@ -6,17 +6,17 @@
 
 ## Overall
 
-**16 / 108 steps done · 15%**
+**24 / 113 steps done · 21%**
 
 ```text
-██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   15%
+████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 27 | 11 | 16 | 0 | 0 | ██████░░░░ 59% |
+| 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 32 | 8 | 24 | 0 | 0 | ████████░░ 75% |
 | 2 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,15 +26,15 @@
 
 ### [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md)
 
-**AI OS Product UI — beyond the installer shell** — 16 / 27 done (59%)
+**AI OS Product UI — beyond the installer shell** — 24 / 32 done (75%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Task execution surface (feedback6 §P1.1) — **shipped** | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| 2 | Explain trace visualizer (feedback6 §P1.2) — **blocked** | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 2 | Explain trace visualizer (feedback6 §P1.2) — **complete** | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Provider setup wizard (feedback6 §P1.3) — **blocked** | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
 | 4 | Council & memory inspection (feedback6 §P1.4) — **partial** | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
-| 5 | Navigation & polish — **partial** | 🟡 in progress | 6 | 6 | 0 | 0 | 50% |
+| 5 | Navigation & polish — **complete** | 🟡 in progress | 4 | 8 | 0 | 0 | 67% |
 
 ### [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md)
 

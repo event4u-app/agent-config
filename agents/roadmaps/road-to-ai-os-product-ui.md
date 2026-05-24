@@ -8,22 +8,22 @@ complexity: lightweight
 
 ## Status (2026-05-24)
 
-**Shipped in PR `feat/road-to-ai-os-product-ui`** (3 surfaces, not 5 — see "Scope landed" below):
+**Shipped in PR `feat/road-to-ai-os-product-ui` (merged) + follow-up PR `feat/road-to-ai-os-product-ui-phase-2`:**
 
 - Phase 1 (Task execution) — **complete**, 4 inline allowlist entries, SSE streaming, 20-entry ring history.
+- Phase 2 (Explain trace) — **complete** in follow-up: GUI shells out to `agent-config explain last --json`, renders ExplainTrace v1 as a vertical timeline (inputs, route, council, memory, pack, assumptions, halt, provider).
 - Phase 4 (Council inspection) — **partial**: council recent + session detail done; memory inspection deferred.
-- Phase 5 (Navigation) — **partial**: top-nav with three tabs done; per-surface docs + smoke leg deferred.
-- Phase 2 (Explain trace) — **blocked**: requires `explain-last` CLI to land first (separate roadmap).
+- Phase 5 (Navigation) — **complete** in follow-up: 4-tab top-nav, per-surface help expanders on Setup / Tasks / Council / Explain.
 - Phase 3 (Provider wizard) — **blocked**: requires `packages/core/providers/` + `packages/core/secrets/` to land first (separate roadmap).
 
-The AI Council was consulted on the scope reduction. Verdict: ship the three feasible surfaces in this PR; spawn follow-up roadmaps for the blocked phases so the missing prerequisites are tracked as work, not assumed.
+The AI Council was consulted on the scope reduction. Verdict: ship the feasible surfaces in this PR; spawn follow-up roadmaps for the blocked phases so the missing prerequisites are tracked as work, not assumed.
 
 ## Prerequisites
 
 - [x] Read `agents/tmp/feedback6.txt` §P1 (task execution GUI, explain trace visualizer, provider setup wizard).
 - [x] Read `agents/tmp/feedback7.txt` — "no other AI product needed" framing.
 - [x] Confirm the wizard server contract: `packages/core/installer/src/gui/server.ts` exposes `manifest`, `auto-detect`, `preview`, `apply`, `cancel`, `open-lockfile`, `recovery/*` endpoints. PID file at `agents/runtime/gui/server.pid`. Idle timer `DEFAULT_IDLE_SECONDS=600`.
-- [ ] ~~Confirm `explain-last` exists as a CLI surface and emits structured JSON~~ — **does not exist**; Phase 2 deferred to its own roadmap.
+- [x] Confirm `explain-last` exists as a CLI surface and emits structured JSON — landed via `road-to-explainability-v2-explain-last.md`; wire format pinned by `docs/contracts/explain-trace.schema.json` (ExplainTrace v1).
 
 ## Context
 
@@ -45,13 +45,16 @@ Run skills and commands from the browser, see live output, capture artefacts.
 - [x] **Step 5:** Allowlist enforcement — closed allowlist in `TASK_CATALOG`. `gui_runnable: true` frontmatter property added to `scripts/schemas/command.schema.json` for future per-command marking; linter enforcement deferred.
 - [x] **Step 6:** Vitest coverage — `packages/core/installer/tests/gui-handlers.test.ts` covers catalog, history, run-with-bad-csrf, run-with-missing-id, run-with-unknown-task (5 task tests).
 
-## Phase 2: Explain trace visualizer (feedback6 §P1.2) — **blocked**
+## Phase 2: Explain trace visualizer (feedback6 §P1.2) — **complete**
 
 Turn `explain-last` from a JSON dump into a browser timeline.
 
-**Blocker:** `explain-last` CLI does not exist anywhere in the repo. Building the GUI on top of an absent CLI would be inventing the contract from scratch — out-of-scope for a UI roadmap. Spawn a separate roadmap for the CLI first, then re-open this phase.
-
-- [ ] **Step 1–6:** Deferred — see above.
+- [x] **Step 1:** New endpoint `GET /api/v1/explain/last` in `handlers.ts`. Spawns `node dist/cli/agent-config.js explain last --json` from the project root via `packages/core/installer/src/gui/explain-exec.ts` (no shell, 15 s wall-clock cap, 1 MiB stdout cap). Exit-code mapping: 0 → 200 + trace, 1 → 404 + `no_trace`, anything else → 500 + `explain_failed`.
+- [x] **Step 2:** Wire format: ExplainTrace v1 (`docs/contracts/explain-trace.schema.json`). PII / absolute-path scrubbing already happens in `scripts/_cli/explain_last/build_trace.py`; the GUI never touches `.work-state.json` directly.
+- [x] **Step 3:** UI surface `Explain` — fourth tab, manual Refresh button, meta-block (run_id / subject / generated_at / schema), vertical timeline with one step per ExplainTrace section.
+- [x] **Step 4:** Timeline renders inputs, route (kernel + tier-1 chips), council members, memory hits, pack, assumptions, halt (red badge on halt), and provider (video-only). Empty sections render as muted nodes with an explanatory note instead of being hidden — the absence is itself information.
+- [x] **Step 5:** Injectable runner — `ApiContext.explainRunner?: ExplainRunner` lets tests bypass the real CLI. Default is `defaultExplainRunner`.
+- [x] **Step 6:** Vitest coverage — 4 tests in `gui-handlers.test.ts`: ok (200 + trace), not_found (404 + message), error (500 + exitCode + message), runner-throws (500 + message).
 
 ## Phase 3: Provider setup wizard (feedback6 §P1.3) — **blocked**
 
@@ -77,25 +80,25 @@ Make the agent's internal state legible — the inverse of treating the AI as a 
 - [ ] **Step 6:** Memory UI — **deferred**: depends on Steps 3 + 4.
 - [x] **Step 7:** Vitest coverage — 5 council tests (`gui-handlers.test.ts`): recent-when-empty, recent-newest-first, invalid-id-400, missing-404, manifest+response happy path.
 
-## Phase 5: Navigation & polish — **partial**
+## Phase 5: Navigation & polish — **complete**
 
 Tie the shipped surfaces together as one product.
 
-- [x] **Step 1:** Top-nav with three tabs (`Setup`, `Tasks`, `Council`). `Explain` + `Providers` tabs deferred with their phases. Setup is the default landing; tab state in localStorage.
+- [x] **Step 1:** Top-nav with four tabs (`Setup`, `Tasks`, `Council`, `Explain`). Setup is the default landing; tab state persisted via the existing surface-switching logic. `Providers` tab still deferred with Phase 3.
 - [ ] **Step 2:** Session-state restore — deferred (route + scroll restoration is polish; the tab choice itself is already persisted).
 - [ ] **Step 3:** Idle-timer copy upgrade — deferred (cosmetic, no functional impact).
-- [ ] **Step 4:** Per-surface help docs — deferred (would need 3 new `docs/wizard/*.md` files; the surfaces are small enough to be self-documenting today).
+- [x] **Step 4:** Per-surface help docs — inline `<details class="help">` expanders on Setup (workspaces), Tasks (allowlist + SSE), Council (session folder layout), Explain (ExplainTrace v1 + scrubbing). Rejected the separate-`docs/wizard/*.md` approach — keeping the explanation next to the surface keeps it discoverable and removes the need for a second navigation layer.
 - [ ] **Step 5:** Smoke leg — deferred (smoke matrix lives in a separate roadmap; cross-roadmap edits are out-of-scope here).
 
 ## Acceptance Criteria
 
-- [x] Three GUI surfaces (`Setup`, `Tasks`, `Council`) reachable, with backend endpoints + Vitest coverage. (Five-surface target reduced — see "Status".)
-- [x] CSRF enforced on every state-changing endpoint (`/task/run` rejects bad CSRF with 403). PID lock + idle timer inherited from the existing wizard server.
+- [x] Four GUI surfaces (`Setup`, `Tasks`, `Council`, `Explain`) reachable, with backend endpoints + Vitest coverage. (Five-surface target — `Providers` still deferred per Phase 3 blocker.)
+- [x] CSRF enforced on every state-changing endpoint (`/task/run` rejects bad CSRF with 403). PID lock + idle timer inherited from the existing wizard server. Read-only endpoints (`/explain/last`, `/council/*`) intentionally CSRF-free — GET semantics.
 - [x] No credential value is ever written to a log or returned in an API response body. (No credential paths touched in this PR.)
 - [x] Closed allowlist enforced — `/api/v1/task/run` returns 404 for any id not in `TASK_CATALOG`. `gui_runnable: true` schema property added for future per-command marking.
-- [ ] ~~Five `docs/wizard/<surface>.md` docs published~~ — deferred with Phase 5 Step 4.
+- [x] Per-surface help expanders published inline (Setup, Tasks, Council, Explain) — supersedes the separate `docs/wizard/*.md` approach.
 - [ ] ~~Smoke matrix asserts every route returns 200~~ — deferred with Phase 5 Step 5.
-- [x] All quality gates pass — `npx tsc --noEmit` clean, `npx vitest run` 226/226 green (31 in `gui-handlers.test.ts`, +10 vs main).
+- [x] All quality gates pass — `npx tsc --noEmit` clean, `npx vitest run` 230/230 green (35 in `gui-handlers.test.ts`, +4 vs the Phase 1+4+5 PR).
 
 ## Notes
 
