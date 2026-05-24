@@ -235,7 +235,7 @@
   "rules/missing-tool-handling.md": "b7b8c3c6ab845a1475323eab4b821c9706e536a4bed7ca731ce906036d88f964",
   "rules/model-recommendation.md": "67c3d62d6c7b61aa1c7d85831bf4c4cb3651da732f01ae97d522051fbb163212",
   "rules/no-attribution-footers.md": "af894f3c796832c9f0ed081907650649bff8bc71904ee57092dbd43457b8d826",
-  "rules/no-cheap-questions.md": "e0ba44004e044812e73d8a6639bd5126d765795659d0fabdc5c82e911d266664",
+  "rules/no-cheap-questions.md": "5b1ebc03ca58b7a93a3a599b7ffa9a780f64bde8845ba537de09fd8659d3b515",
   "rules/no-roadmap-references.md": "96a89946739d2f431ec90bb882c204f1155257a6b94f50871a5e61fad5ad7375",
   "rules/non-destructive-by-default.md": "bb45c9ccd552ead24034971872cd3f2a92fbd199891d4c61a81a2e7c2e77378a",
   "rules/onboarding-gate.md": "fb44fe163a1f37ff54ae4d62c5385cb5260f02622cbb5a0af6550208961682b9",
