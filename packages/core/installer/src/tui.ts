@@ -117,6 +117,24 @@ export const defaultPicker: TuiPicker = {
     },
 };
 
+/**
+ * One-shot install-funnel telemetry prompt. Per `docs/distribution/
+ * telemetry-privacy.md`, this prompt is shown once per interactive
+ * install; the choice is never persisted. Default is "No thanks".
+ */
+export async function confirmTelemetryOptIn(): Promise<boolean> {
+    return confirm({
+        message:
+            'Share anonymous install-funnel telemetry?\n' +
+            '  - No IP, no project name, no file paths, no machine ID.\n' +
+            '  - Only: install stage, OS family, Node major, host-agent family.\n' +
+            '  - 14-day retention. Per-install scope. Off by default.\n' +
+            '  - Details: docs/distribution/telemetry-privacy.md\n' +
+            'Opt in?',
+        default: false,
+    });
+}
+
 /** Build workspace choices with the manifest's workspaces; none pre-checked. */
 export function buildWorkspaceChoices(
     workspaces: readonly ManifestWorkspace[],

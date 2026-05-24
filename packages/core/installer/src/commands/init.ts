@@ -29,11 +29,19 @@ import {
     buildPackChoices,
     buildWorkspaceChoices,
     collectAdvisoryPacks,
+    confirmTelemetryOptIn,
     defaultPicker,
     formatTrustSummary,
 } from '../tui.js';
 import type { TuiPicker } from '../tui.js';
 import type { SharedFlags } from '../cli.js';
+import { buildTelemetryConfig } from '../telemetry/bootstrap.js';
+import {
+    emit as emitTelemetry,
+    errorClassOf,
+    initSession as initTelemetrySession,
+} from '../telemetry/index.js';
+import { packCategoriesOf } from '../telemetry/pack-category.js';
 
 export interface InitOptions {
     readonly workspaces?: string;
@@ -124,6 +132,20 @@ export async function runInit(
     const excludePacks = parseCsv(opts.exclude);
     const detected = detectPacks({ projectRoot: shared.projectRoot });
     const picker = deps.picker ?? defaultPicker;
+
+    // Install-funnel telemetry (Phase 4 / ADR pending). Inert by default:
+    // remains silent unless workerBaseUrl + flagsUrl + hmacSecret are
+    // injected at publish time AND the kill-switch resolves enabled AND
+    // the user opts in this run. Choice never persisted; per-install.
+    const telemetryOptIn = shared.mode === 'interactive'
+        ? await confirmTelemetryOptIn().catch(() => false)
+        : false;
+    const telemetryConfig = buildTelemetryConfig({
+        entryPath: 'npx',
+        optedIn: telemetryOptIn,
+    });
+    await initTelemetrySession(telemetryConfig);
+    void emitTelemetry({ stage: 'started' });
 
     let workspaceIds: readonly string[];
     let packIds: readonly string[];
@@ -225,6 +247,9 @@ export async function runInit(
         }
     }
 
+    const packCategories = packCategoriesOf(resolved.packs.map((p) => p.id));
+    void emitTelemetry({ stage: 'packs_selected', packCategories });
+
     const plan = computeInstallPlan({
         manifest: loaded.manifest,
         workspaces: workspaceIds,
@@ -246,16 +271,22 @@ export async function runInit(
         return 0;
     }
 
-    const result = executeInstallPlan({
-        plan,
-        projectRoot: shared.projectRoot,
-        manifestSha256: loaded.sha256,
-        agentConfigVersion: AGENT_CONFIG_VERSION,
-        packVersion: PACK_VERSION,
-        manifest: loaded.manifest,
-    });
-    process.stdout.write(
-        `init: wrote ${result.filesWritten} files; lockfile at ${result.lockfileRelative}\n`,
-    );
-    return 0;
+    try {
+        const result = executeInstallPlan({
+            plan,
+            projectRoot: shared.projectRoot,
+            manifestSha256: loaded.sha256,
+            agentConfigVersion: AGENT_CONFIG_VERSION,
+            packVersion: PACK_VERSION,
+            manifest: loaded.manifest,
+        });
+        process.stdout.write(
+            `init: wrote ${result.filesWritten} files; lockfile at ${result.lockfileRelative}\n`,
+        );
+        void emitTelemetry({ stage: 'applied', packCategories });
+        return 0;
+    } catch (err) {
+        void emitTelemetry({ stage: 'errored', errorClass: errorClassOf(err) });
+        throw err;
+    }
 }
