@@ -241,7 +241,13 @@ def test_orphan_report_is_deterministic(repo: Path) -> None:
     _write_skill_with(repo, "php-solo", pack="php")
     m1, _ = mod._build(strict=False)
     m2, _ = mod._build(strict=False)
-    assert mod._orphan_report(m1) == mod._orphan_report(m2)
+    # `generated_at` is wall-clock (see `_finalise_checksum` carve-out); two
+    # back-to-back `_build()` calls can straddle a second boundary. The
+    # report's structural content must still match.
+    ts_re = re.compile(r"^- Generated: `[^`]+`$", re.MULTILINE)
+    r1 = ts_re.sub("- Generated: `<normalised>`", mod._orphan_report(m1))
+    r2 = ts_re.sub("- Generated: `<normalised>`", mod._orphan_report(m2))
+    assert r1 == r2
 
 
 def test_workspaces_view_lists_each_workspace(repo: Path) -> None:
