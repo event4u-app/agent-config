@@ -81,8 +81,10 @@ SKILL_REF_PATTERN = re.compile(r'`([\w-]+)`\s+skill')
 RULE_REF_PATTERN = re.compile(r'`([\w-]+)`\s+rule')
 
 # Unchecked TODO items (roadmap checkboxes) legitimately reference files
-# and artifacts that do not exist yet. Skip these lines.
-UNCHECKED_TODO_PATTERN = re.compile(r'^\s*[-*+]\s+\[ \]\s')
+# and artifacts that do not exist yet. Skip these lines. `[~]` marks
+# deferred work — same semantics as `[ ]` for reference resolution
+# (forward-looking path, will materialize when the step ships).
+UNCHECKED_TODO_PATTERN = re.compile(r'^\s*[-*+]\s+\[[ ~]\]\s')
 _SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one",
                "always", "auto", "fail", "vue", "guidelines", "naming",
                "orderBy", "no-commit", "skill-linter", "skill-validator",

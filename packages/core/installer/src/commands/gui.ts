@@ -20,6 +20,31 @@ export interface GuiCommandOptions {
     readonly port?: number;
     readonly idle?: number;
     readonly noOpen?: boolean;
+    /**
+     * Bind address. Default `127.0.0.1` (loopback). Operators set this to
+     * `0.0.0.0` (or a specific NIC) for container deployments. When
+     * non-loopback, `allowedHosts` MUST be set or the server refuses to
+     * boot. ADR-021 § Security.
+     */
+    readonly host?: string;
+    /** Comma-separated host:port allowlist (overrides the loopback default). */
+    readonly allowedHosts?: string;
+}
+
+const LOOPBACK_HOSTS = new Set(['127.0.0.1', 'localhost', '::1']);
+
+function resolveHost(raw: Record<string, unknown>): string {
+    if (typeof raw.host === 'string' && raw.host !== '') return raw.host;
+    const env = process.env['BIND_HOST'];
+    if (typeof env === 'string' && env !== '') return env;
+    return '127.0.0.1';
+}
+
+function resolveAllowedHosts(raw: Record<string, unknown>): string | undefined {
+    if (typeof raw.allowedHosts === 'string' && raw.allowedHosts !== '') return raw.allowedHosts;
+    const env = process.env['ALLOWED_HOSTS'];
+    if (typeof env === 'string' && env !== '') return env;
+    return undefined;
 }
 
 /** Reject roots that would let a stray invocation scribble on the OS. */
@@ -43,11 +68,27 @@ export async function runGui(
     shared: SharedFlags,
     raw: Record<string, unknown>,
 ): Promise<number> {
+    const host = resolveHost(raw);
+    const allowedHostsRaw = resolveAllowedHosts(raw);
     const opts: GuiCommandOptions = {
         ...(typeof raw.port === 'string' ? { port: Number.parseInt(raw.port, 10) } : {}),
         ...(typeof raw.idle === 'string' ? { idle: Number.parseInt(raw.idle, 10) } : {}),
         ...(raw.open === false ? { noOpen: true } : {}),
+        host,
+        ...(allowedHostsRaw !== undefined ? { allowedHosts: allowedHostsRaw } : {}),
     };
+
+    // Defense-in-depth: refuse non-loopback bind without an explicit
+    // ALLOWED_HOSTS allowlist. The server enforces the same check, but
+    // failing early at the CLI surface is easier to read than a deep
+    // listen() error. ADR-021 § Security.
+    if (!LOOPBACK_HOSTS.has(host) && allowedHostsRaw === undefined) {
+        throw new Error(
+            `gui: --host=${host} requires --allowed-hosts (or ALLOWED_HOSTS env). ` +
+                'Set the comma-separated host:port allowlist the wizard will accept on the Host header. ' +
+                'See docs/deploy/env-vars.md and ADR-021.',
+        );
+    }
 
     const projectRoot = validateProjectRoot(shared.projectRoot);
 
@@ -80,6 +121,10 @@ export async function runGui(
         ...(opts.port !== undefined && Number.isFinite(opts.port) ? { port: opts.port } : {}),
         ...(opts.idle !== undefined && Number.isFinite(opts.idle) && opts.idle > 0 ? { idleSeconds: opts.idle } : {}),
         ...(opts.noOpen === true ? { noOpen: true } : {}),
+        host: opts.host ?? '127.0.0.1',
+        ...(opts.allowedHosts !== undefined
+            ? { allowedHosts: opts.allowedHosts.split(',').map((s) => s.trim()).filter((s) => s.length > 0) }
+            : {}),
     });
 
     // Long-lived: wait for SIGINT / SIGTERM (Python supervisor closes
