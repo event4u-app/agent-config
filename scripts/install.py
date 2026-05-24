@@ -3789,6 +3789,20 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
             "passed to bridge sub-invocations."
         ),
     )
+    parser.add_argument(
+        "--apply-payload",
+        dest="apply_payload",
+        default=None,
+        help=(
+            "path to a WizardApplyPayload JSON file (schemas/"
+            "wizard-apply-payload.schema.json). When supplied, install.py "
+            "reads the payload, validates schema_version, translates "
+            "tools/packs/settings into CLI equivalents, and dispatches "
+            "as if those flags were passed directly. Combine with "
+            "--dry-run for the Phase 1.5 preview path "
+            "(road-to-global-only-install § D12 / Phase 1.5)."
+        ),
+    )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
     if opts.scope == "global" and opts.custom_path:
@@ -4366,11 +4380,99 @@ def _dry_run_summary(opts: argparse.Namespace) -> int:
 
 # --- Main ---
 
+def _apply_payload_preview(payload: dict[str, Any], opts: argparse.Namespace) -> int:
+    """Render a Phase 1.5 dry-run preview for a WizardApplyPayload.
+
+    Reads schema_version, lists tools / packs / settings keys, and
+    exits 0 without spawning. Used by the wizard `/api/v1/wizard/apply`
+    bridge to surface the apply diff before the maintainer commits.
+    """
+    schema_version = payload.get("schema_version", "<missing>")
+    target = Path(
+        opts.custom_path or opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()
+    ).resolve()
+    print()
+    print("[apply-payload] Plan summary — no files written, no subprocesses spawned:")
+    print(f"  schema:      {schema_version}")
+    if schema_version == "wizard-v2":
+        tools = payload.get("tools") or []
+        packs = payload.get("packs") or []
+        settings = payload.get("settings") or {}
+        scope_to_project = bool(payload.get("scope_to_project_only", False))
+        print(f"  tools:       {','.join(tools) if tools else '(none)'}")
+        print(f"  packs:       {','.join(packs) if packs else '(base)'}")
+        print(f"  settings:    {len(settings)} top-level key(s)")
+        print(f"  scope:       {'project' if scope_to_project else 'global'}")
+    elif schema_version == "installer-v1":
+        ai_tools = payload.get("ai_tools") or []
+        configs = payload.get("configs") or {}
+        print(f"  ai_tools:    {','.join(ai_tools) if ai_tools else '(none)'}")
+        print(f"  configs:     {len(configs)} tool config(s)")
+    else:
+        print(f"  error:       unsupported schema_version: {schema_version!r}")
+        print()
+        return 2
+    print(f"  target:      {target}")
+    print(f"  dry_run:     {bool(payload.get('dry_run', opts.dry_run))}")
+    print()
+    return 0
+
+
 def main(argv: list[str]) -> int:
     global QUIET
 
     opts = parse_options(argv)
     QUIET = opts.quiet
+
+    # road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
+    # When --apply-payload <path> is supplied, read the WizardApplyPayload
+    # JSON, validate schema_version, and (for dry-run) print a preview
+    # block. The bridge calls install.py with `--dry-run` set, so the
+    # short-circuit below this block keeps the run side-effect-free.
+    if getattr(opts, "apply_payload", None):
+        payload_path = Path(opts.apply_payload).resolve()
+        if not payload_path.is_file():
+            fail(f"--apply-payload path not found: {payload_path}")
+        try:
+            payload = json.loads(payload_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            fail(f"--apply-payload JSON parse error: {exc}")
+        if not isinstance(payload, dict):
+            fail("--apply-payload root must be a JSON object")
+        schema_version = payload.get("schema_version")
+        if schema_version not in ("wizard-v2", "installer-v1"):
+            fail(
+                f"--apply-payload schema_version must be 'wizard-v2' or "
+                f"'installer-v1', got {schema_version!r}"
+            )
+        # Translate payload → opts so the dry-run / real-install path
+        # downstream sees the same shape it would from CLI flags. Only
+        # dry-run preview is wired in Phase 1.5; real apply lands in a
+        # follow-up minor (kill-switch via package version per D7).
+        if schema_version == "wizard-v2":
+            tools = payload.get("tools") or []
+            if isinstance(tools, list) and tools:
+                opts.tools = ",".join(t for t in tools if isinstance(t, str))
+            if bool(payload.get("scope_to_project_only", False)):
+                opts.scope = "project"
+            else:
+                opts.scope = "global"
+        elif schema_version == "installer-v1":
+            ai_tools = payload.get("ai_tools") or []
+            if isinstance(ai_tools, list) and ai_tools:
+                opts.tools = ",".join(t for t in ai_tools if isinstance(t, str))
+        # Payload dry_run wins over CLI when explicitly set true.
+        if bool(payload.get("dry_run", False)):
+            opts.dry_run = True
+        if opts.dry_run:
+            return _apply_payload_preview(payload, opts)
+        # Real-apply path through the payload bridge is gated by the
+        # follow-up minor (Phase 1.9). Until then, fail loudly so the
+        # caller knows they need --dry-run.
+        fail(
+            "--apply-payload without --dry-run is not yet wired "
+            "(road-to-global-only-install § Phase 1.5 ships dry-run only)."
+        )
 
     # --offline: propagate via env so child subprocesses (versions /
     # update / check_update_banner) honor the air-gap guarantee

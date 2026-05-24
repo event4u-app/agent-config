@@ -94,6 +94,11 @@ export interface CreateAppOptions {
      * not be auto-finished by a dry-run boot).
      */
     dryRun?: boolean;
+    /**
+     * Enable the extended 9-step wizard endpoints (auto-detect, manifest,
+     * apply). road-to-global-only-install § Phase 1.5.
+     */
+    extendedSteps?: boolean;
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -176,7 +181,14 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     await app.register(schemaRoute());
     await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
-    await app.register(wizardRoute({ writeRoot, legacyReadRoot, projectScopeRoot, packageRoot, dryRun }));
+    await app.register(wizardRoute({
+        writeRoot,
+        legacyReadRoot,
+        projectScopeRoot,
+        packageRoot,
+        dryRun,
+        extendedSteps: opts.extendedSteps === true,
+    }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so

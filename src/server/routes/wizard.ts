@@ -18,7 +18,10 @@
  */
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { promises as fs, existsSync } from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
+import { spawn } from 'node:child_process';
+import { randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
 import { userIdentitySchema } from '../../shared/userMd/schema.js';
@@ -104,6 +107,32 @@ const wizardStateSchema = z.object({
 });
 
 type WizardState = z.infer<typeof wizardStateSchema>;
+
+// road-to-global-only-install § Phase 1.5 — WizardApplyPayload shape.
+// Mirrors `schemas/wizard-apply-payload.schema.json`; the discriminator
+// (`schema_version`) selects the variant. Real schema validation lives
+// in install.py — the route only enforces the outer envelope so the
+// bridge spawn surface stays tight.
+const installerV1PayloadSchema = z.object({
+    schema_version: z.literal('installer-v1'),
+    ai_tools: z.array(z.string().min(1)).min(1),
+    configs: z.record(z.record(z.unknown())).default({}),
+    dry_run: z.boolean().optional(),
+});
+
+const wizardV2PayloadSchema = z.object({
+    schema_version: z.literal('wizard-v2'),
+    tools: z.array(z.string().min(1)).min(1),
+    packs: z.array(z.string().min(1)).default([]),
+    settings: z.record(z.unknown()).default({}),
+    scope_to_project_only: z.boolean().optional(),
+    dry_run: z.boolean().optional(),
+});
+
+const applyPayloadSchema = z.discriminatedUnion('schema_version', [
+    installerV1PayloadSchema,
+    wizardV2PayloadSchema,
+]);
 
 function statePath(root: string): string {
     return join(root, STATE_REL);
@@ -194,6 +223,39 @@ async function deleteLegacyArtefacts(
     return removed;
 }
 
+/**
+ * Spawn the installer in a child process and collect its stdout / stderr.
+ * Used by `/api/v1/wizard/apply` to bridge the WizardApplyPayload into
+ * `scripts/install.py --apply-payload`. Caller pre-resolved `scriptPath`
+ * so this helper stays I/O-only (no path discovery).
+ */
+interface InstallerResult {
+    readonly exitCode: number;
+    readonly stdout: string;
+    readonly stderr: string;
+}
+
+async function spawnInstaller(scriptPath: string, args: readonly string[]): Promise<InstallerResult> {
+    return new Promise<InstallerResult>((resolve, reject) => {
+        const child = spawn('python3', [scriptPath, ...args], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' },
+        });
+        const stdoutChunks: Buffer[] = [];
+        const stderrChunks: Buffer[] = [];
+        child.stdout?.on('data', (chunk: Buffer) => stdoutChunks.push(chunk));
+        child.stderr?.on('data', (chunk: Buffer) => stderrChunks.push(chunk));
+        child.once('error', reject);
+        child.once('close', (code) => {
+            resolve({
+                exitCode: code ?? 1,
+                stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+                stderr: Buffer.concat(stderrChunks).toString('utf8'),
+            });
+        });
+    });
+}
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
@@ -270,6 +332,54 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             }
             await writeState(opts.writeRoot, parsed.data);
             return { ok: true };
+        });
+
+        // road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
+        // Validates the WizardApplyPayload envelope, spills it to a temp
+        // file, and spawns `python3 scripts/install.py --apply-payload
+        // <tmp> --dry-run`. Returns the installer's plan-summary stdout
+        // so the UI can render the preview before the maintainer commits.
+        // Real-apply (non-dry-run) is gated until Phase 1.9 minor release
+        // (kill-switch per D7 — no dual code paths).
+        app.post('/api/v1/wizard/apply', async (request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const parsed = applyPayloadSchema.safeParse(request.body);
+            if (!parsed.success) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'invalid apply payload', fields: zodIssuesToFields(parsed.error.issues) },
+                });
+                return reply;
+            }
+            // Force dry-run on the bridge until Phase 1.9 — protects
+            // against accidental real writes during the rollout window.
+            const payload = { ...parsed.data, dry_run: true };
+            const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
+            try {
+                await fs.writeFile(tmpPath, JSON.stringify(payload), { mode: 0o600 });
+                const scriptPath = join(opts.packageRoot, 'scripts', 'install.py');
+                const result = await spawnInstaller(scriptPath, ['--apply-payload', tmpPath, '--dry-run']);
+                if (result.exitCode !== 0) {
+                    await reply.code(500).send({
+                        error: { code: 'BRIDGE_FAILED', message: result.stderr || 'installer bridge exited non-zero', exitCode: result.exitCode },
+                    });
+                    return reply;
+                }
+                return {
+                    ok: true,
+                    dryRun: true,
+                    schemaVersion: payload.schema_version,
+                    preview: result.stdout,
+                };
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'apply bridge failed';
+                await reply.code(500).send({ error: { code: 'BRIDGE_FAILED', message } });
+                return reply;
+            } finally {
+                await fs.unlink(tmpPath).catch(() => undefined);
+            }
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
