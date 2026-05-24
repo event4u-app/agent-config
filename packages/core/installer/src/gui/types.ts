@@ -52,5 +52,5 @@ export type TransactionLogEntry =
 export type ApplyEvent =
     | { readonly type: 'plan-file'; readonly path: string; readonly pack: string }
     | { readonly type: 'progress'; readonly written: number; readonly total: number }
-    | { readonly type: 'done'; readonly filesWritten: number; readonly lockfileSha256: string }
+    | { readonly type: 'done'; readonly filesWritten: number; readonly lockfileSha256: string; readonly dryRun?: boolean }
     | { readonly type: 'error'; readonly message: string };
