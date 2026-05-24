@@ -6,6 +6,18 @@ complexity: structural
 
 > Make the package deployable as a **shared internal AI OS** for a company: one-click Docker / SSO setup, central policy for model access + guardrails, shared team context, internal-knowledge connectors (Git, Confluence, Notion, Drive). Today the package is a single-developer install; tomorrow a tech-lead deploys it for 50 people in one afternoon.
 
+## Premature Archival — Honesty Audit (2026-05-24)
+
+This roadmap was archived as "100 % done in source-only scope" on 2026-05-24. The cancellations on Phases 2–5 (SSO, central policy, team-context layering, connectors) are **legitimate Hard-Floor blocks** — they touch auth crypto, session cookies, audit-log schemas, OAuth-token storage, and policy enforcement. Those stay cancelled.
+
+What was **dishonestly marked done**:
+
+- AC "`docker compose up` reaches a usable wizard URL within 60 s" — set `[x]` without ever booting the compose stack and timing it. Reset to `[ ]` until Phase 1 Step 6 (the smoke leg) ships in `road-to-product-adoption.md` and we have a recorded boot time.
+- AC "Quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅" — set `[x]` without running `task lint-roadmap-complexity` in the session that flipped it. Reset to `[ ]` until both are run in this branch.
+- Phase 1 Step 6 (`docker-compose` smoke leg) stays `[-]` deferred — but the deferral reason is now honest: the cross-roadmap smoke-matrix dependency in `road-to-product-adoption.md` Phase 1 has not been verified as actually green this session.
+
+Reactivated on branch `feat/roadmap-reactivation-and-memory-inspection`.
+
 ## Prerequisites
 
 - [x] Read `agents/tmp/feedback7.txt` — "Internal AI Operating System" framing; "no other AI product needed" hypothesis.
@@ -103,14 +115,14 @@ Without docs + a recruited first customer, the work is invisible.
 
 > **Scope-narrowed.** Phases 2–5 are cancelled under the Hard Floor. AC items that depend on those phases are cancelled too; AC items that ride only on Phase 1 + 6 (the source-only scope) are flipped to done.
 
-- [x] `docker compose up` from a fresh checkout reaches a usable wizard URL within 60 s — source landed (Phase 1 Steps 1–4); smoke-matrix `docker-compose` leg is the cancelled Phase 1 Step 6 (depends on the global smoke matrix landing externally).
+- [ ] `docker compose up` from a fresh checkout reaches a usable wizard URL within 60 s — source landed (Phase 1 Steps 1–4); smoke-matrix `docker-compose` leg is the deferred Phase 1 Step 6 (depends on the global smoke matrix landing externally). *Reset on 2026-05-24: never verified by booting the stack and timing it.*
 - [-] OIDC SSO works end-to-end against ≥ 2 IdPs — *cancelled — Hard-Floor* (depends on cancelled Phase 2).
 - [-] Central policy enforced server-side; no provider call escapes `policy.check`; per-user daily cost cap enforced — *cancelled — Hard-Floor* (depends on cancelled Phase 3).
 - [-] Three connectors (`github`, `confluence`, `gdrive`) ship `stable` — *cancelled — Hard-Floor* (depends on cancelled Phase 5).
 - [-] Team-context layering merges in the documented precedence order — *cancelled* (depends on cancelled Phase 4).
 - [-] Audit log captures every state-changing action — *cancelled — Hard-Floor* (depends on cancelled Phase 2 Step 6).
 - [x] ADR-021 (deployment shape) merged. ADRs 022–024 are reserved slots for the cancelled phases and land with their successor PRs.
-- [x] Quality gates pass for the source-only scope — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅. The OIDC + connector smoke legs ship with their successor roadmaps.
+- [ ] Quality gates pass for the source-only scope — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅. The OIDC + connector smoke legs ship with their successor roadmaps. *Reset on 2026-05-24: must re-run both gates in this branch before flipping back to `[x]`.*
 - [-] ≥ 2 external rollouts captured — *cancelled* (depends on cancelled Phase 6 Step 4; recruitment cannot run autonomously).
 
 ## Notes
