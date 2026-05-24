@@ -43,6 +43,33 @@ Beyond software: [`user-types/`](packages/core/.agent-src.uncompressed/user-type
 
 ---
 
+## Use it in your project
+
+Run from a consumer repo — bootstrap via `npx`, the agent picks up
+your stack, and you ship work end-to-end. New install? Start with the
+[Quickstart](#quickstart). Already installed? [Supported tools](#supported-tools)
+shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
+lists the end-to-end workflows (`/implement-ticket`, `/work`,
+`/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
+
+## Prove it
+
+Audit-disciplined by construction — every memory consult, decision
+key, and hook concern lands in `agents/runtime/state/` so you can replay it.
+[Core principles](#core-principles) names the four invariants;
+[What `agent-config` is — and what it isn't](#what-agent-config-is--and-what-it-isnt)
+draws the scope boundary.
+
+## Contribute
+
+Working on the package itself? [Development](#development) covers the
+`task ci` pipeline, [Requirements](#requirements) the toolchain,
+[Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
+opt-in measurement loop. Source-of-truth tree is
+`packages/core/.agent-src.uncompressed/`; never hand-edit `.augment/` or `.agent-src/`.
+
+---
+
 ## Quickstart
 
 **Three steps. Five minutes. Browser wizard, no YAML by hand.**
@@ -194,7 +221,7 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 > **Scope — Lite, not Full.** The Worker serves read-only governance (skills · commands · rules · guidelines · contexts) as MCP prompts and resources, plus small read-only tools (`memory_lookup`, `chat_history_read`, `list_*`). It does **not** execute the ~112 Python scripts (linters, audits, `task ci`, work-engine hooks) — those require local install per [Quickstart](#quickstart).
 
-### Optional: persistent memory
+### Optional: persistent agent memory
 
 [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory) — MCP-based backend for cross-session learnings. **Strictly optional**; without it, skills fall back to file-based memory under `agents/memory/`.
 
@@ -306,7 +333,7 @@ Browse content: [all 129 commands](.agent-src/commands/) · [skills catalog](doc
 
 ---
 
-## Contribute
+## Development
 
 Working on the package itself? Edit `packages/core/.agent-src.uncompressed/`, regenerate trees:
 
