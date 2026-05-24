@@ -90,6 +90,7 @@ interface SelectionPayload {
     readonly packs: readonly string[];
     readonly acceptAdvisory: readonly string[];
     readonly csrf: string;
+    readonly dryRun: boolean;
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -105,7 +106,8 @@ function parseSelection(raw: unknown): SelectionPayload | { error: string } {
     const packs = Array.isArray(r.packs) ? r.packs.filter((x): x is string => typeof x === 'string') : [];
     const acceptAdvisory = Array.isArray(r.acceptAdvisory) ? r.acceptAdvisory.filter((x): x is string => typeof x === 'string') : [];
     const csrf = typeof r.csrf === 'string' ? r.csrf : '';
-    return { workspaces, packs, acceptAdvisory, csrf };
+    const dryRun = r.dry_run === true || r.dryRun === true;
+    return { workspaces, packs, acceptAdvisory, csrf, dryRun };
 }
 
 async function postPreview(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
@@ -199,6 +201,17 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
         for (const f of plan.files) {
             log({ kind: 'plan', ts: now(), path: f.destRelative, pack: f.pack });
             emit({ type: 'plan-file', path: f.destRelative, pack: f.pack });
+        }
+        if (sel.dryRun) {
+            // road-to-global-only-install Phase 0.2 — dry-run preview path.
+            // Plan is computed and surfaced but no files are written and no
+            // lockfile is materialised. The transaction log records the
+            // dry-run intent so a follow-up real apply is still resumable.
+            log({ kind: 'commit', ts: now(), filesWritten: 0, lockfileSha256: 'dry-run' });
+            emit({ type: 'progress', written: 0, total: plan.files.length });
+            emit({ type: 'done', filesWritten: 0, lockfileSha256: 'dry-run', dryRun: true });
+            res.end();
+            return;
         }
         const result = executeInstallPlan({
             plan,
