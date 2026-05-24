@@ -32,8 +32,14 @@ const INDEX_HTML = `<!doctype html>
 <header>
   <h1>@event4u/agent-config</h1>
   <p class="sub">Browser Wizard</p>
+  <nav class="topnav" aria-label="Surfaces">
+    <button type="button" class="tab active" data-surface="setup">Setup</button>
+    <button type="button" class="tab" data-surface="tasks">Tasks</button>
+    <button type="button" class="tab" data-surface="council">Council</button>
+  </nav>
 </header>
 <main>
+  <section id="surface-setup" class="surface active">
   <div id="recovery-banner" class="recovery" role="alert" hidden>
     <div class="recovery-text">
       <strong>Unfinished install detected.</strong>
@@ -92,6 +98,31 @@ const INDEX_HTML = `<!doctype html>
     <span id="error-message"></span>
     <button type="button" id="btn-retry" class="ghost" hidden>Retry</button>
   </div>
+  </section>
+  <section id="surface-tasks" class="surface" aria-labelledby="h-tasks" hidden>
+    <h2 id="h-tasks">Tasks</h2>
+    <p class="hint">Run allowlisted Taskfile targets. Output streams live.</p>
+    <div id="tasks-list" class="list" aria-live="polite"></div>
+    <div id="tasks-runner" class="runner" hidden>
+      <div class="runner-head">
+        <strong id="runner-title"></strong>
+        <span id="runner-state" class="badge auto">idle</span>
+      </div>
+      <pre id="runner-log" class="log" aria-live="polite"></pre>
+    </div>
+    <h3 class="sec-h">History</h3>
+    <div id="tasks-history" class="list small"></div>
+  </section>
+  <section id="surface-council" class="surface" aria-labelledby="h-council" hidden>
+    <h2 id="h-council">Council sessions</h2>
+    <p class="hint">Read-only browser for past AI Council calls (newest first).</p>
+    <div id="council-layout" class="council-grid">
+      <div id="council-list" class="list small council-list"></div>
+      <div id="council-detail" class="council-detail">
+        <p class="hint">Select a session to view manifest and response.</p>
+      </div>
+    </div>
+  </section>
 </main>
 <footer>
   <p>Local-only · 127.0.0.1 · No telemetry</p>
@@ -154,7 +185,36 @@ progress{width:100%;height:8px}
 .recovery{margin-bottom:16px;padding:12px 16px;background:#3d2c0d;border:1px solid #9e6a03;border-radius:8px;color:#f0c674;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
 .recovery .recovery-text{flex:1;min-width:240px}
 .recovery .recovery-text strong{display:block;margin-bottom:4px;color:#fff}
-.recovery .actions{margin-top:0;gap:8px}`;
+.recovery .actions{margin-top:0;gap:8px}
+nav.topnav{display:flex;gap:4px;margin-top:12px}
+nav.topnav .tab{background:transparent;border:1px solid #21262d;color:#7d8590;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer}
+nav.topnav .tab:hover{border-color:#30363d;color:#e6edf3}
+nav.topnav .tab.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
+.surface{display:none}
+.surface.active{display:block}
+.list.small .row{padding:8px 12px;font-size:13px}
+.sec-h{margin:24px 0 8px;font-size:14px;color:#7d8590;text-transform:uppercase;letter-spacing:.05em}
+.row.task-row{cursor:pointer}
+.row.task-row .desc{font-size:12px}
+.row.history-row .meta{display:flex;flex-direction:column;gap:2px}
+.row.history-row .ts{color:#7d8590;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+.row.history-row .exit-ok{color:#3fb950}
+.row.history-row .exit-err{color:#f85149}
+.runner{margin:16px 0;padding:12px;background:#161b22;border:1px solid #21262d;border-radius:8px}
+.runner-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.runner .log{max-height:320px}
+.council-grid{display:grid;grid-template-columns:280px 1fr;gap:16px}
+.council-list .row{cursor:pointer;flex-direction:column;align-items:stretch}
+.council-list .row.selected{border-color:#1f6feb;background:#1a2230}
+.council-list .row .ts{color:#7d8590;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+.council-list .row .artefact{font-size:12px;color:#e6edf3;word-break:break-word}
+.council-detail{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:16px;min-height:240px}
+.council-detail h3{margin:0 0 8px;font-size:16px}
+.council-detail dl{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;margin:0 0 16px;font-size:13px}
+.council-detail dt{color:#7d8590}
+.council-detail dd{margin:0;color:#e6edf3;word-break:break-word}
+.council-detail pre{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px;max-height:480px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;white-space:pre-wrap;color:#c9d1d9}
+@media (max-width:720px){.council-grid{grid-template-columns:1fr}}`;
 
 
 const APP_JS = `(function(){
@@ -574,6 +634,169 @@ function wireEvents(){
   $("btn-retry").addEventListener("click", function(){ applyChanges(); });
   $("btn-recovery-rollback").addEventListener("click", function(){ recoveryAction("/api/recovery/rollback"); });
   $("btn-recovery-discard").addEventListener("click", function(){ recoveryAction("/api/recovery/discard"); });
+  wireSurfaces();
+}
+
+// surface (top-level nav) ────────────────────────────────────────────
+var tasksLoaded = false;
+var councilLoaded = false;
+function wireSurfaces(){
+  var tabs = document.querySelectorAll("nav.topnav .tab");
+  for (var i = 0; i < tabs.length; i++){
+    tabs[i].addEventListener("click", function(e){ setSurface(e.currentTarget.getAttribute("data-surface")); });
+  }
+}
+function setSurface(name){
+  var tabs = document.querySelectorAll("nav.topnav .tab");
+  for (var i = 0; i < tabs.length; i++){
+    var on = tabs[i].getAttribute("data-surface") === name;
+    tabs[i].classList.toggle("active", on);
+  }
+  var surfaces = ["setup", "tasks", "council"];
+  for (var j = 0; j < surfaces.length; j++){
+    var el = $("surface-" + surfaces[j]);
+    if (!el) continue;
+    var on2 = surfaces[j] === name;
+    el.classList.toggle("active", on2);
+    el.hidden = !on2;
+  }
+  if (name === "tasks" && !tasksLoaded){ tasksLoaded = true; loadTasks(); loadHistory(); }
+  if (name === "council" && !councilLoaded){ councilLoaded = true; loadCouncil(); }
+}
+
+// tasks surface ───────────────────────────────────────────────────────
+function loadTasks(){
+  fetch("/api/v1/task/catalog").then(function(r){ return r.json(); }).then(function(d){
+    var list = $("tasks-list");
+    list.innerHTML = "";
+    (d.tasks || []).forEach(function(t){
+      var row = document.createElement("div");
+      row.className = "row task-row";
+      row.innerHTML =
+        '<div class="meta">' +
+        '<div class="title">' + escapeHtml(t.label) + '</div>' +
+        '<div class="desc">' + escapeHtml(t.description) + '</div>' +
+        '</div>' +
+        '<button type="button" class="primary" data-task-id="' + escapeHtml(t.id) + '">Run</button>';
+      row.querySelector("button").addEventListener("click", function(){ runTask(t); });
+      list.appendChild(row);
+    });
+  }).catch(function(err){ setError("Failed to load task catalog: " + err.message, {}); });
+}
+function loadHistory(){
+  fetch("/api/v1/task/history").then(function(r){ return r.json(); }).then(function(d){
+    var list = $("tasks-history");
+    list.innerHTML = "";
+    var runs = d.runs || [];
+    if (runs.length === 0){ list.innerHTML = '<p class="hint">No runs yet.</p>'; return; }
+    runs.forEach(function(r){
+      var row = document.createElement("div");
+      row.className = "row history-row small";
+      var cls = r.exitCode === 0 ? "exit-ok" : "exit-err";
+      row.innerHTML =
+        '<div class="meta">' +
+        '<div><strong>' + escapeHtml(r.id) + '</strong> <span class="' + cls + '">exit ' + r.exitCode + '</span> <span class="hint">(' + r.durationMs + ' ms)</span></div>' +
+        '<div class="ts">' + escapeHtml(r.startedAt) + '</div>' +
+        '</div>';
+      list.appendChild(row);
+    });
+  }).catch(function(){ /* non-fatal */ });
+}
+function runTask(task){
+  var runner = $("tasks-runner");
+  var title = $("runner-title");
+  var state = $("runner-state");
+  var logEl = $("runner-log");
+  runner.hidden = false;
+  title.textContent = task.label;
+  state.textContent = "running";
+  state.className = "badge core";
+  logEl.innerHTML = "";
+  fetch("/api/v1/task/run", { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ id: task.id, csrf: csrf }) })
+    .then(function(res){
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return streamSse(res, function(event){ onTaskEvent(event, logEl, state); });
+    })
+    .then(function(){ loadHistory(); })
+    .catch(function(err){ appendLog(logEl, "error " + err.message, "err"); state.textContent = "error"; state.className = "badge advisory"; });
+}
+function onTaskEvent(event, logEl, state){
+  if (event.type === "start"){ appendLog(logEl, "$ " + event.command.join(" ")); }
+  else if (event.type === "stdout"){ appendLog(logEl, event.line); }
+  else if (event.type === "stderr"){ appendLog(logEl, event.line, "err"); }
+  else if (event.type === "exit"){
+    var ok = event.code === 0;
+    appendLog(logEl, "exit " + event.code + " (" + event.durationMs + " ms)", ok ? "ok" : "err");
+    state.textContent = ok ? "ok" : "failed";
+    state.className = ok ? "badge auto" : "badge advisory";
+  }
+  else if (event.type === "error"){ appendLog(logEl, "error " + event.message, "err"); }
+}
+
+// council surface ─────────────────────────────────────────────────────
+var councilSelected = null;
+function loadCouncil(){
+  fetch("/api/v1/council/recent").then(function(r){ return r.json(); }).then(function(d){
+    var list = $("council-list");
+    list.innerHTML = "";
+    var sessions = d.sessions || [];
+    if (sessions.length === 0){ list.innerHTML = '<p class="hint">No council sessions yet.</p>'; return; }
+    sessions.forEach(function(s){
+      var row = document.createElement("div");
+      row.className = "row";
+      row.setAttribute("data-session-id", s.id);
+      row.innerHTML =
+        '<div class="ts">' + escapeHtml(s.timestamp || s.id) + '</div>' +
+        '<div class="artefact">' + escapeHtml(s.artefact || "(no artefact)") + '</div>' +
+        '<div class="hint">' + escapeHtml((s.provider || "") + " · " + (s.model || "") + " · " + (s.mode || "")) + '</div>';
+      row.addEventListener("click", function(){ openSession(s.id); });
+      list.appendChild(row);
+    });
+  }).catch(function(err){ setError("Failed to load council sessions: " + err.message, {}); });
+}
+function openSession(id){
+  councilSelected = id;
+  var rows = document.querySelectorAll("#council-list .row");
+  for (var i = 0; i < rows.length; i++){ rows[i].classList.toggle("selected", rows[i].getAttribute("data-session-id") === id); }
+  fetch("/api/v1/council/session/" + encodeURIComponent(id)).then(function(r){ return r.json(); }).then(function(d){
+    var detail = $("council-detail");
+    var s = d.session || {};
+    var dl = "";
+    var fields = [["Timestamp", s.timestamp], ["Artefact", s.artefact], ["Mode", s.mode], ["Provider", s.provider], ["Model", s.model], ["Tokens (in/out)", (s.inputTokens || 0) + "/" + (s.outputTokens || 0)], ["Cost (USD)", s.actualUsd != null ? "$" + s.actualUsd.toFixed(4) : "—"]];
+    for (var i = 0; i < fields.length; i++){
+      if (fields[i][1] == null) continue;
+      dl += "<dt>" + escapeHtml(fields[i][0]) + "</dt><dd>" + escapeHtml(String(fields[i][1])) + "</dd>";
+    }
+    var resp = d.response ? '<h3>Response</h3><pre>' + escapeHtml(d.response) + '</pre>' : '<p class="hint">No response captured.</p>';
+    detail.innerHTML = '<h3>' + escapeHtml(s.id || id) + '</h3><dl>' + dl + '</dl>' + resp;
+  }).catch(function(err){ $("council-detail").innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>'; });
+}
+
+// minimal SSE reader (fetch + ReadableStream)
+function streamSse(res, onEvent){
+  var reader = res.body.getReader();
+  var decoder = new TextDecoder();
+  var buf = "";
+  function pump(){
+    return reader.read().then(function(chunk){
+      if (chunk.done) return;
+      buf += decoder.decode(chunk.value, { stream: true });
+      var idx;
+      while ((idx = buf.indexOf("\\n\\n")) >= 0){
+        var frame = buf.slice(0, idx);
+        buf = buf.slice(idx + 2);
+        var lines = frame.split("\\n");
+        for (var i = 0; i < lines.length; i++){
+          var line = lines[i];
+          if (line.indexOf("data: ") === 0){
+            try { onEvent(JSON.parse(line.slice(6))); } catch (e) { /* skip */ }
+          }
+        }
+      }
+      return pump();
+    });
+  }
+  return pump();
 }
 
 document.addEventListener("DOMContentLoaded", function(){
