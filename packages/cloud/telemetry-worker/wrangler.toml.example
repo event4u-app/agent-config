@@ -1,0 +1,36 @@
+# Cloudflare Worker config template — install-funnel telemetry.
+#
+# This file is an EXAMPLE. To deploy, copy to `wrangler.toml`, fill in
+# the maintainer-owned account_id and KV namespace_id, and run:
+#
+#   wrangler secret put HMAC_NPX
+#   wrangler secret put HMAC_CURL
+#   wrangler secret put HMAC_GUI
+#   wrangler deploy
+#
+# Deploying this worker is a Hard-Floor maintainer action — see
+# `.augment/rules/non-destructive-by-default.md`. The worker stays
+# offline (and no telemetry leaves any consumer) until BOTH the deploy
+# happens AND the `install-telemetry-flags.json` flag flips to
+# `enabled: true`. Both steps require explicit per-turn authorization.
+
+name = "agent-config-telemetry"
+main = "src/index.ts"
+compatibility_date = "2026-05-24"
+workers_dev = false
+
+# Routes are configured AFTER first deploy via the Cloudflare dashboard
+# to avoid pinning the production hostname in source control.
+
+[[kv_namespaces]]
+binding = "TELEMETRY_KV"
+id = "REPLACE_WITH_MAINTAINER_KV_NAMESPACE_ID"
+
+# HMAC secrets are injected via `wrangler secret put` — never committed.
+# Listed here for documentation only:
+#   HMAC_NPX, HMAC_CURL, HMAC_GUI
+
+# Weekly aggregate cron (optional — aggregates are also incremented
+# inline by the fetch handler).
+# [triggers]
+# crons = ["0 0 * * 1"]

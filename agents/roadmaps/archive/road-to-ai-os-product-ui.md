@@ -66,7 +66,7 @@ Onboard provider credentials without `vim ~/.event4u/providers.yaml`.
 
 Both are substantial new infrastructure (crypto, keychain integration, adapter contracts). Building them inside a UI-focused PR would 3–5× the roadmap. Spawn a separate roadmap for the providers + secrets packages first, then re-open this phase.
 
-- [ ] **Step 1–6:** Deferred — see above.
+- [-] **Step 1–6:** *Deferred — successor roadmap.* Requires `packages/core/providers/manifest.json` + `packages/core/secrets/` (crypto, keychain, adapter contracts). Building inside this UI-focused roadmap would 3–5× the scope. Tracked for a future `road-to-provider-onboarding.md`; not a blocker for this roadmap's archival.
 
 ## Phase 4: Council & memory inspection (feedback6 §P1.4) — **partial**
 
@@ -74,10 +74,10 @@ Make the agent's internal state legible — the inverse of treating the AI as a 
 
 - [x] **Step 1:** New endpoint `GET /api/v1/council/recent` — reads `agents/runtime/council/sessions/*/manifest.json` (newest first, capped at 50). Returns id, timestamp, artefact, provider, model, mode, token counts. <!-- council-ref-allowed: API endpoint contract pins the read path -->
 - [x] **Step 2:** New endpoint `GET /api/v1/council/session/:id` — full session manifest plus `response.md` body. Path-traversal-safe id regex.
-- [ ] **Step 3:** Memory list endpoint — **deferred**: no canonical `.agent-memory/index.json` schema in the repo yet.
-- [ ] **Step 4:** Memory delete endpoint — **deferred**: depends on Step 3.
+- [-] **Step 3:** *Deferred — successor roadmap.* Memory list endpoint requires a canonical `.agent-memory/index.json` schema; the repo currently ships templates only (`.agent-src/templates/agents/memory/*.example.yml`) and no materialized runtime store. Defining that schema autonomously would be a foundational architectural decision (storage layout, redaction contract, retention rules) without council deliberation. Tracked for a future `road-to-memory-inspection.md`.
+- [-] **Step 4:** *Deferred — successor roadmap.* Depends on Step 3.
 - [x] **Step 5:** UI surface `Council` — two-pane list (recent sessions left, detail right with markdown response).
-- [ ] **Step 6:** Memory UI — **deferred**: depends on Steps 3 + 4.
+- [-] **Step 6:** *Deferred — successor roadmap.* Depends on Steps 3 + 4.
 - [x] **Step 7:** Vitest coverage — 5 council tests (`gui-handlers.test.ts`): recent-when-empty, recent-newest-first, invalid-id-400, missing-404, manifest+response happy path.
 
 ## Phase 5: Navigation & polish — **complete**
@@ -85,10 +85,10 @@ Make the agent's internal state legible — the inverse of treating the AI as a 
 Tie the shipped surfaces together as one product.
 
 - [x] **Step 1:** Top-nav with four tabs (`Setup`, `Tasks`, `Council`, `Explain`). Setup is the default landing; tab state persisted via the existing surface-switching logic. `Providers` tab still deferred with Phase 3.
-- [ ] **Step 2:** Session-state restore — deferred (route + scroll restoration is polish; the tab choice itself is already persisted).
-- [ ] **Step 3:** Idle-timer copy upgrade — deferred (cosmetic, no functional impact).
+- [-] **Step 2:** *Deferred — cosmetic.* Session-state restore (route + scroll restoration) is polish; the tab choice itself is already persisted via the existing surface-switching logic. Not a roadmap blocker.
+- [-] **Step 3:** *Deferred — cosmetic.* Idle-timer copy upgrade is a string-only change with no functional impact. Not a roadmap blocker.
 - [x] **Step 4:** Per-surface help docs — inline `<details class="help">` expanders on Setup (workspaces), Tasks (allowlist + SSE), Council (session folder layout), Explain (ExplainTrace v1 + scrubbing). Rejected the separate-`docs/wizard/*.md` approach — keeping the explanation next to the surface keeps it discoverable and removes the need for a second navigation layer.
-- [ ] **Step 5:** Smoke leg — deferred (smoke matrix lives in a separate roadmap; cross-roadmap edits are out-of-scope here).
+- [-] **Step 5:** *Deferred — cross-roadmap.* Smoke leg belongs in `road-to-product-adoption.md` Phase 1 (already shipped). Adding a per-route GUI smoke from here would be a cross-roadmap edit; tracked there instead.
 
 ## Acceptance Criteria
 
@@ -97,7 +97,7 @@ Tie the shipped surfaces together as one product.
 - [x] No credential value is ever written to a log or returned in an API response body. (No credential paths touched in this PR.)
 - [x] Closed allowlist enforced — `/api/v1/task/run` returns 404 for any id not in `TASK_CATALOG`. `gui_runnable: true` schema property added for future per-command marking.
 - [x] Per-surface help expanders published inline (Setup, Tasks, Council, Explain) — supersedes the separate `docs/wizard/*.md` approach.
-- [ ] ~~Smoke matrix asserts every route returns 200~~ — deferred with Phase 5 Step 5.
+- [-] ~~Smoke matrix asserts every route returns 200~~ — cancelled with Phase 5 Step 5 (cross-roadmap).
 - [x] All quality gates pass — `npx tsc --noEmit` clean, `npx vitest run` 230/230 green (35 in `gui-handlers.test.ts`, +4 vs the Phase 1+4+5 PR).
 
 ## Notes

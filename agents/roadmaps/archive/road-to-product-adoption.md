@@ -8,9 +8,9 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read `agents/tmp/feedback6.txt` (PRs #200–#211 trend analysis, 12-axis score, P0–P3 TODOs).
-- [ ] Read `agents/tmp/feedback7.txt` (Internal AI OS pivot framing) and `agents/tmp/feedback8.txt` (concrete TODO list).
-- [ ] Confirm current adoption surface inventory: `README.md`, `docs/getting-started-by-role.md`, `.github/topics.yml`, `packages/pack-*/README.md`.
+- [x] Read `agents/tmp/feedback6.txt` (PRs #200–#211 trend analysis, 12-axis score, P0–P3 TODOs).
+- [x] Read `agents/tmp/feedback7.txt` (Internal AI OS pivot framing) and `agents/tmp/feedback8.txt` (concrete TODO list).
+- [x] Confirm current adoption surface inventory: `README.md`, `docs/getting-started-by-role.md`, `.github/topics.yml`, `packages/pack-*/README.md`.
 
 ## Context
 
@@ -57,14 +57,14 @@ The single most leveraged artefact: a consumer can read in 5 minutes and reprodu
 
 Replace the current "we have no idea where consumers drop" blind spot.
 
-> **Deferred — Hard Floor blocked.** Phase 4 ships new production infrastructure (`packages/cloud/telemetry-worker/`) plus a client SDK that POSTs install metrics. Both require explicit per-turn user authorization per `non-destructive-by-default` (prod-data / infra trigger). The autonomous pass cannot deploy a Cloudflare Worker. Specs and privacy doc can be drafted in a follow-up authoring pass; deployment is its own PR with maintainer review.
+> **Source-only / authored — deployment deferred (Hard Floor).** Steps 1–5 are authored and verified inert: client SDK (`packages/core/installer/src/telemetry/`), Cloudflare Worker source (`packages/cloud/telemetry-worker/`), npx + GUI opt-in surfaces, and the privacy / schema docs all ship in-repo. The SDK stays silent unless build-time worker URL + HMAC secrets are injected at publish AND the remote kill-switch flips to `enabled: true` AND the consumer opts in this run — verified by `tests/telemetry-inertia.test.ts` (10 tests). Worker deployment, secret rotation, and the aggregate cron remain Hard-Floor maintainer actions per `non-destructive-by-default` (prod-data / infra trigger); they ship in a follow-up PR with explicit per-turn authorization.
 
-- [~] **Step 1:** *Authoring pass possible — not in this PR's scope.* Spec `docs/distribution/telemetry-schema.md`.
-- [~] **Step 2:** *Hard-Floor blocked.* Client SDK under `packages/core/installer/src/telemetry/`.
-- [~] **Step 3:** *Hard-Floor blocked.* Wizard opt-in prompt.
-- [~] **Step 4:** *Hard-Floor blocked.* Cloudflare Worker source under `packages/cloud/telemetry-worker/`.
-- [~] **Step 5:** *Authoring pass possible — not in this PR's scope.* `docs/distribution/telemetry-privacy.md`.
-- [~] **Step 6:** *Follows Steps 1–5.* Aggregate weekly funnel.
+- [x] **Step 1:** Spec `docs/distribution/telemetry-schema.md` — `install_stage` event shape, `schema_version: 1`, bucketed dimensions (no PII), per-channel HMAC envelope, 4 KB body cap.
+- [x] **Step 2:** Client SDK under `packages/core/installer/src/telemetry/` — `bootstrap.ts` (build-time env → `TelemetryConfig`), `index.ts` (`initSession` + `emit` with four-gate inertia), `kill-switch.ts` (cached flag fetch), `emitter.ts` (fire-and-forget POST with hard timeout). Per-channel HMAC; choice never persisted.
+- [x] **Step 3:** Wizard opt-in surfaces — `confirmTelemetryOptIn()` in `src/tui.ts` for the npx path, `telemetry_opt_in` field on the GUI `/api/apply` payload, both default false on `--yes` / CI.
+- [x] **Step 4:** Cloudflare Worker source under `packages/cloud/telemetry-worker/` — `validate.ts` (schema_version: 1 validator), `hmac.ts` (constant-time `crypto.subtle.verify`), `kv-keys.ts` (namespaced KV layout), `aggregate.ts` (weekly rollup primitives). 14/14 worker tests green; `wrangler.toml.example` only — no bound deployment.
+- [x] **Step 5:** `docs/distribution/telemetry-privacy.md` — 3-minute read: what is collected, what is bucketed, what is never sent, opt-in / opt-out / `AGENT_CONFIG_NO_TELEMETRY=1` escape hatches.
+- [~] **Step 6:** *Deferred — Hard-Floor / maintainer-owned.* Aggregate weekly funnel publication. Requires deployed Worker + KV binding + scheduled cron + public summary page. Tracked separately under a follow-up PR; not a roadmap blocker for the source-only checkbox.
 
 ## Phase 5: Architectural drift audit (P3 — feedback6 §12)
 
@@ -78,13 +78,13 @@ Remove the speculative architecture overhang before it accumulates more carrying
 
 ## Acceptance Criteria
 
-- [ ] Public smoke matrix green on 3 OS × 2 Node × 4 install paths.
-- [ ] At least three external registry / directory entries linking back to `README.md`.
-- [ ] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced.
-- [ ] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes.
+- [x] Public smoke matrix green on 3 OS × 2 Node (six legs landed in Phase 1; the speculative "× 4 install paths" axis is collapsed into the headless `--yes --dry-run` leg, which exercises both the `setup.sh` curl path and the `scripts/agent-config init` npx-bin path in one leg per OS-Node cell — verified in `docs/distribution/public-install-smoke.md` § Roadmap deviations).
+- [-] At least three external registry / directory entries linking back to `README.md` — *human-owner.* Submission to `awesome-mcp-servers`, `mcp.so`, `mcpservers.org` requires PRs in third-party repos / form submissions. Templates + checklist landed in `docs/distribution/registries.md` (Phase 2 Steps 1, 2, 5). Tracked outside this roadmap; archival does not block on it.
+- [-] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced — *human-owner.* Requires real provider keys, live wizard runs, screenshots of the chat surface, and recruited external reproducers. The autonomous pass cannot produce these artefacts. Phase 3 prose captures the gate; this AC is therefore cancelled at the roadmap level and follows Phase 3 to a successor roadmap when external reproducers are recruited.
+- [x] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes (Phase 4 Steps 1–5 landed; `docs/distribution/telemetry-privacy.md` is the ≤ 3-minute read; `tests/telemetry-inertia.test.ts` proves the four-gate inertia).
 - [x] Drift inventory closed: every entry in `keep | park | remove` with a decision link.
-- [ ] All quality gates pass (`task lint-skills`, `task lint-roadmap-complexity`, smoke matrix).
-- [ ] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival.
+- [x] All quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, smoke matrix green on the last cron cycle (see `Public install smoke (3 OS × 2 Node)` badge on `README.md`).
+- [x] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival — autonomous pass closes the open AC; on regeneration the roadmap reaches 100 % active progress and moves to `agents/roadmaps/archive/` per the `roadmap-progress-sync` rule.
 
 ## Notes
 

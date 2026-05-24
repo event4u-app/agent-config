@@ -29,6 +29,13 @@ import { findPack } from '../manifest-loader.js';
 import { resolvePacks } from '../resolver.js';
 import { sha256OfString } from '../io/sha256.js';
 import { packsForWorkspaces, validatePackIds, validateWorkspaces } from '../selection.js';
+import { buildTelemetryConfig } from '../telemetry/bootstrap.js';
+import {
+    emit as emitTelemetry,
+    errorClassOf,
+    initSession as initTelemetrySession,
+} from '../telemetry/index.js';
+import { packCategoriesOf } from '../telemetry/pack-category.js';
 import { collectAdvisoryPacks } from '../tui.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { csrfEquals } from './security.js';
@@ -106,6 +113,13 @@ interface SelectionPayload {
     readonly acceptAdvisory: readonly string[];
     readonly csrf: string;
     readonly dryRun: boolean;
+    /**
+     * Per-install telemetry opt-in choice from the browser wizard. Never
+     * persisted; only honoured when paired with the build-time worker
+     * URL + HMAC secret env (see `telemetry/bootstrap.ts`). Default
+     * `false` keeps the SDK inert on every legacy payload.
+     */
+    readonly telemetryOptIn: boolean;
 }
 
 async function readJsonBody(req: IncomingMessage): Promise<unknown> {
@@ -122,7 +136,8 @@ function parseSelection(raw: unknown): SelectionPayload | { error: string } {
     const acceptAdvisory = Array.isArray(r.acceptAdvisory) ? r.acceptAdvisory.filter((x): x is string => typeof x === 'string') : [];
     const csrf = typeof r.csrf === 'string' ? r.csrf : '';
     const dryRun = r.dry_run === true || r.dryRun === true;
-    return { workspaces, packs, acceptAdvisory, csrf, dryRun };
+    const telemetryOptIn = r.telemetry_opt_in === true || r.telemetryOptIn === true;
+    return { workspaces, packs, acceptAdvisory, csrf, dryRun, telemetryOptIn };
 }
 
 async function postPreview(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
@@ -172,6 +187,17 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
     if ('error' in sel) return endJson(res, 400, { error: sel.error });
     if (!csrfEquals(sel.csrf, ctx.csrfToken)) return endJson(res, 403, { error: 'csrf_invalid' });
 
+    // Install-funnel telemetry (Phase 4). Inert by default: stays silent
+    // unless the build-time worker URL + per-channel HMAC env are set
+    // AND the kill-switch resolves enabled AND `telemetry_opt_in` is
+    // true on the payload. Per-install, never persisted.
+    const telemetryConfig = buildTelemetryConfig({
+        entryPath: 'gui',
+        optedIn: sel.telemetryOptIn,
+    });
+    await initTelemetrySession(telemetryConfig);
+    void emitTelemetry({ stage: 'started', wizardUsed: true });
+
     res.statusCode = 200;
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-store');
@@ -192,6 +218,7 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
         if (resolved.missing.length > 0) {
             emit({ type: 'error', message: `unknown_pack: ${resolved.missing.join(',')}` });
             log({ kind: 'error', ts: now(), message: `unknown_pack: ${resolved.missing.join(',')}` });
+            void emitTelemetry({ stage: 'errored', errorClass: 'config_invalid', wizardUsed: true });
             res.end();
             return;
         }
@@ -202,9 +229,12 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
             const msg = `advisory_unacked: ${unacked.map((p) => p.id).join(',')}`;
             emit({ type: 'error', message: msg });
             log({ kind: 'error', ts: now(), message: msg });
+            void emitTelemetry({ stage: 'errored', errorClass: 'config_invalid', wizardUsed: true });
             res.end();
             return;
         }
+        const packCategories = packCategoriesOf(resolved.packs.map((p) => p.id));
+        void emitTelemetry({ stage: 'packs_selected', packCategories, wizardUsed: true });
         log({ kind: 'start', ts: now(), workspaces: wsIds, packs: resolved.packs.map((p) => p.id) });
         const plan = computeInstallPlan({
             manifest: ctx.loaded.manifest,
@@ -225,6 +255,7 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
             log({ kind: 'commit', ts: now(), filesWritten: 0, lockfileSha256: 'dry-run' });
             emit({ type: 'progress', written: 0, total: plan.files.length });
             emit({ type: 'done', filesWritten: 0, lockfileSha256: 'dry-run', dryRun: true });
+            // Dry-run is not a terminal install — do not emit 'applied'.
             res.end();
             return;
         }
@@ -240,11 +271,13 @@ async function postApply(req: IncomingMessage, res: ServerResponse, ctx: ApiCont
         log({ kind: 'commit', ts: now(), filesWritten: result.filesWritten, lockfileSha256: lockfileSha });
         emit({ type: 'progress', written: result.filesWritten, total: plan.files.length });
         emit({ type: 'done', filesWritten: result.filesWritten, lockfileSha256: lockfileSha });
+        void emitTelemetry({ stage: 'applied', packCategories, wizardUsed: true });
         res.end();
     } catch (err) {
         const message = (err as Error).message;
         emit({ type: 'error', message });
         log({ kind: 'error', ts: now(), message });
+        void emitTelemetry({ stage: 'errored', errorClass: errorClassOf(err), wizardUsed: true });
         res.end();
     }
 }
