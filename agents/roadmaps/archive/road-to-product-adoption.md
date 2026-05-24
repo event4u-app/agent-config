@@ -94,8 +94,8 @@ Remove the speculative architecture overhang before it accumulates more carrying
 - [-] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced — *human-owner.* Requires real provider keys, live wizard runs, screenshots of the chat surface, and recruited external reproducers. The autonomous pass cannot produce these artefacts. Phase 3 prose captures the gate; this AC is therefore cancelled at the roadmap level and follows Phase 3 to a successor roadmap when external reproducers are recruited.
 - [x] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes (Phase 4 Steps 1–5 landed; `docs/distribution/telemetry-privacy.md` is the ≤ 3-minute read; `tests/telemetry-inertia.test.ts` proves the four-gate inertia).
 - [x] Drift inventory closed: every entry in `keep | park | remove` with a decision link.
-- [ ] All quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, smoke matrix green on the last cron cycle (see `Public install smoke (3 OS × 2 Node)` badge on `README.md`). *Reset on 2026-05-24: previous `[x]` was set without running `task lint-roadmap-complexity` this session and without checking the cron badge.*
-- [ ] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival — autonomous pass closes the open AC; on regeneration the roadmap reaches 100 % active progress and moves to `agents/roadmaps/archive/` per the `roadmap-progress-sync` rule. *Reset on 2026-05-24: this is a self-referential check, not real work.*
+- [x] All quality gates pass — `task lint-skills` ✅ (445 pass, 4 warn, 0 fail) and `task lint-roadmap-complexity` ✅ (3 total: 1 lightweight · 2 structural) re-run 2026-05-24 in branch `feat/close-open-roadmap-ac`; smoke matrix green on the last cron cycle (run `26364147927`, `main`, `success`, 2026-05-24).
+- [x] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival — autonomous pass closed every active AC; on regeneration this roadmap reaches 100 % active progress and moves to `agents/roadmaps/archive/` per the `roadmap-progress-sync` rule (see commit landing this checkbox).
 
 ## Notes
 

@@ -115,14 +115,14 @@ Without docs + a recruited first customer, the work is invisible.
 
 > **Scope-narrowed.** Phases 2–5 are cancelled under the Hard Floor. AC items that depend on those phases are cancelled too; AC items that ride only on Phase 1 + 6 (the source-only scope) are flipped to done.
 
-- [ ] `docker compose up` from a fresh checkout reaches a usable wizard URL within 60 s — source landed (Phase 1 Steps 1–4); smoke-matrix `docker-compose` leg is the deferred Phase 1 Step 6 (depends on the global smoke matrix landing externally). *Reset on 2026-05-24: never verified by booting the stack and timing it.*
+- [x] `docker compose up` from a fresh checkout reaches a usable wizard URL within 60 s — verified 2026-05-24 in branch `feat/close-open-roadmap-ac`: clean `docker compose build agent-config` + `docker compose up -d` from `packages/core/deploy/` reached `READY at 12s (http 200)` against `GET /api/v1/health` (returned `{"status":"ok","manifest_sha256":"ac9b1488..."}`), with `WIZARD_READY url=http://127.0.0.1:8787/` printed in container logs. Dockerfile fixes that unblocked this: drop stale `static/` COPY (assets inlined in `dist/gui/static-assets.js`), switch `npm ci --workspaces` → root `npm ci --ignore-scripts` (root is not an npm-workspaces repo), bake `dist/discovery/` into `/app/dist/discovery/`, pass `--manifest /app/dist/discovery/discovery-manifest.json` so the upward walk from the volume-backed `--project-root` resolves.
 - [-] OIDC SSO works end-to-end against ≥ 2 IdPs — *cancelled — Hard-Floor* (depends on cancelled Phase 2).
 - [-] Central policy enforced server-side; no provider call escapes `policy.check`; per-user daily cost cap enforced — *cancelled — Hard-Floor* (depends on cancelled Phase 3).
 - [-] Three connectors (`github`, `confluence`, `gdrive`) ship `stable` — *cancelled — Hard-Floor* (depends on cancelled Phase 5).
 - [-] Team-context layering merges in the documented precedence order — *cancelled* (depends on cancelled Phase 4).
 - [-] Audit log captures every state-changing action — *cancelled — Hard-Floor* (depends on cancelled Phase 2 Step 6).
 - [x] ADR-021 (deployment shape) merged. ADRs 022–024 are reserved slots for the cancelled phases and land with their successor PRs.
-- [ ] Quality gates pass for the source-only scope — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅. The OIDC + connector smoke legs ship with their successor roadmaps. *Reset on 2026-05-24: must re-run both gates in this branch before flipping back to `[x]`.*
+- [x] Quality gates pass for the source-only scope — `task lint-skills` ✅ (445 pass, 4 warn, 0 fail) and `task lint-roadmap-complexity` ✅ (1 lightweight · 2 structural · 0 untagged) re-run 2026-05-24 in branch `feat/close-open-roadmap-ac`. The OIDC + connector smoke legs ship with their successor roadmaps.
 - [-] ≥ 2 external rollouts captured — *cancelled* (depends on cancelled Phase 6 Step 4; recruitment cannot run autonomously).
 
 ## Notes

@@ -8,10 +8,9 @@
 #
 # Image size budget: < 600 MB compressed. Stages:
 #   1. node-builder  — install + tsc -p packages/core/installer
-#   2. python-base   — slim runtime; carry installer dist + scripts
-#                      + .agent-src/ + manifest. No node_modules in
-#                      the final image (CLI runs via the pre-built
-#                      `dist/cli.js` with Node's stdlib only).
+#   2. runtime       — slim Node base; carry installer dist + node_modules.
+#                      Static GUI assets are inlined into
+#                      `dist/gui/static-assets.js` — no static/ dir to copy.
 
 # ---------- node-builder ----------
 FROM node:20.11-slim AS node-builder
@@ -24,12 +23,12 @@ COPY package.json package-lock.json ./
 COPY packages/core/installer/package.json packages/core/installer/
 COPY packages/core/installer/tsconfig.json packages/core/installer/
 
-# Workspaces install — pulls only the installer's deps (commander,
-# js-yaml, @inquirer/prompts) into a shared root node_modules.
-RUN npm ci --workspaces --include-workspace-root --no-audit --no-fund
+# Root install — the installer's runtime deps (commander, js-yaml,
+# @inquirer/prompts) live in the root package.json and resolve from
+# /build/node_modules at runtime.
+RUN npm ci --no-audit --no-fund --ignore-scripts
 
 COPY packages/core/installer/src packages/core/installer/src
-COPY packages/core/installer/static packages/core/installer/static
 
 RUN cd packages/core/installer && npx tsc -p tsconfig.json
 
@@ -50,10 +49,12 @@ WORKDIR /app
 COPY --from=node-builder --chown=agentcfg:agentcfg \
      /build/packages/core/installer/dist ./packages/core/installer/dist
 COPY --from=node-builder --chown=agentcfg:agentcfg \
-     /build/packages/core/installer/static ./packages/core/installer/static
-COPY --from=node-builder --chown=agentcfg:agentcfg \
      /build/node_modules ./node_modules
 COPY --chown=agentcfg:agentcfg package.json ./package.json
+
+# Discovery manifest — locked by ADR-015. The CLI walks up from cwd
+# (WORKDIR /app) looking for dist/discovery/discovery-manifest.json.
+COPY --chown=agentcfg:agentcfg dist/discovery ./dist/discovery
 
 # Runtime dirs that need to be writable by the non-root user.
 RUN mkdir -p /home/agentcfg/.event4u/agent-config \
@@ -81,4 +82,5 @@ HEALTHCHECK --interval=10s --timeout=5s --start-period=20s --retries=3 \
 # / BIND_HOST per-deployment without rebuilding the image.
 ENTRYPOINT ["node", "packages/core/installer/dist/cli.js", "gui"]
 CMD ["--host", "0.0.0.0", "--port", "8787", "--no-open", \
-     "--project-root", "/var/lib/agent-config/runtime"]
+     "--project-root", "/var/lib/agent-config/runtime", \
+     "--manifest", "/app/dist/discovery/discovery-manifest.json"]
