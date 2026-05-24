@@ -738,6 +738,18 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.2.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [3.1.1](https://github.com/event4u-app/agent-config/compare/3.1.0...3.1.1) (2026-05-24)
+
+### Bug Fixes
+
+* **deploy:** docker-compose smoke boots wizard URL in 12s ([0d34f95](https://github.com/event4u-app/agent-config/commit/0d34f9548bb219ee330fefcf0f8657dbc0930923))
+
+### Documentation
+
+* **roadmaps:** close last open ACs and archive completed roadmaps ([93035c5](https://github.com/event4u-app/agent-config/commit/93035c53d805327351d90b20b6b0662de6efead3))
+
+Tests: 4839 (+0 since 3.1.0)
+
 ## [3.1.0](https://github.com/event4u-app/agent-config/compare/3.0.0...3.1.0) (2026-05-24)
 
 ### Features

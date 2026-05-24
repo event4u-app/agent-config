@@ -12,7 +12,11 @@ Pipeline:
                            since the last tag, render CHANGELOG section.
     3. Confirm           — show preview, ask once (skippable with --yes).
     4. Branch + bump     — create `release/X.Y.Z`, update package.json,
-                           .claude-plugin/marketplace.json, CHANGELOG.md.
+                           .claude-plugin/marketplace.json, CHANGELOG.md,
+                           then run `task release-prepare` so pack
+                           manifests and tool projections pick up the
+                           new version (otherwise the PR's own consistency
+                           check fails — see PR #226 post-mortem).
     5. Commit + push     — `release: X.Y.Z`, push branch, open PR.
     6. Wait for CI       — `gh pr checks --watch` (skippable with --no-wait).
     7. Merge             — `gh pr merge --merge --delete-branch`.
@@ -573,6 +577,8 @@ def print_preview(plan: Plan) -> None:
     print(f"  · {PACKAGE_JSON.relative_to(REPO_ROOT)}")
     print(f"  · {MARKETPLACE_JSON.relative_to(REPO_ROOT)}")
     print(f"  · {CHANGELOG.relative_to(REPO_ROOT)}")
+    print("  · regenerated derived files via `task release-prepare`")
+    print("    (packages/*/pack.yaml + README.md, .agent-src/, tool projections)")
     print()
     print("Changelog section:")
     print("─" * 72)
@@ -642,6 +648,15 @@ def execute(
             set_marketplace_version(MARKETPLACE_JSON, plan.target)
             prepend_changelog(CHANGELOG, plan.changelog_entry)
 
+        # Regenerate derived files (pack manifests, .agent-src/, tool
+        # projections) so the PR's own consistency check passes. Without
+        # this the bump only lands in package.json + marketplace.json and
+        # the Sync + Generate Tools Consistency gate fails on the release
+        # PR itself — exactly the failure mode PR #226 hit. `task
+        # release-prepare` is idempotent, so resume runs are safe.
+        _step(2, total, "Regenerate derived files (`task release-prepare`)")
+        run("task", "release-prepare")
+
     # ─── 3. commit ──────────────────────────────────────────────────────────
     if pr_merged:
         _step(3, total, "PR already merged — skip commit")
@@ -652,7 +667,12 @@ def execute(
             _step(3, total, f"Last commit already `release: {plan.target}` and tree clean — skip")
         else:
             _step(3, total, f"Commit `release: {plan.target}`")
-            run("git", "add", str(PACKAGE_JSON), str(MARKETPLACE_JSON), str(CHANGELOG))
+            # `git add -A` stages the three primary bump files AND every
+            # regenerated derived file (packages/*/pack.yaml + README.md,
+            # .agent-src/, .augment/, tool projections). Listing them
+            # explicitly would silently drift the moment a new generated
+            # tree is added.
+            run("git", "add", "-A")
             run("git", "commit", "-m", f"release: {plan.target}")
 
     # ─── 4. push ────────────────────────────────────────────────────────────
