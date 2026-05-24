@@ -81,6 +81,18 @@ const INDEX_HTML = `<!doctype html>
   <section id="screen-apply" class="screen" aria-labelledby="h-apply">
     <h2 id="h-apply">Review &amp; apply</h2>
     <div id="apply-summary" class="summary"></div>
+    <fieldset class="telemetry-opt-in">
+      <legend>Install funnel telemetry</legend>
+      <label>
+        <input type="checkbox" id="telemetry-opt-in" />
+        Send anonymous install-funnel events for this run.
+      </label>
+      <p class="hint">
+        Off by default. One session id per install, 8 stage events max, no IP, no project path, no pack content.
+        Read the full spec in <a href="https://github.com/event4u/agent-config/blob/main/docs/distribution/telemetry-privacy.md" target="_blank" rel="noopener">telemetry-privacy.md</a>.
+        Choice is never persisted — uncheck on the next run to opt out.
+      </p>
+    </fieldset>
     <div class="actions">
       <button type="button" id="btn-back-packs" class="ghost">← Back</button>
       <button type="button" id="btn-apply" class="primary">Apply changes</button>
@@ -149,7 +161,7 @@ const INDEX_HTML = `<!doctype html>
   </section>
 </main>
 <footer>
-  <p>Local-only · 127.0.0.1 · No telemetry</p>
+  <p>Local-only · 127.0.0.1 · Telemetry off by default</p>
 </footer>
 <script src="/app.js"></script>
 </body>
@@ -170,6 +182,12 @@ nav.steps li.done{background:#238636;color:#fff}
 .screen.active{display:block}
 h2{margin:0 0 8px;font-size:20px}
 .hint{margin:0 0 16px;color:#7d8590}
+fieldset.telemetry-opt-in{margin:16px 0;padding:12px 16px;border:1px solid #21262d;border-radius:6px;background:#161b22}
+fieldset.telemetry-opt-in legend{padding:0 6px;color:#e6edf3;font-size:13px;font-weight:600}
+fieldset.telemetry-opt-in label{display:flex;align-items:center;gap:8px;color:#e6edf3;font-size:13px;cursor:pointer}
+fieldset.telemetry-opt-in input[type=checkbox]{margin:0;cursor:pointer}
+fieldset.telemetry-opt-in .hint{margin:8px 0 0;font-size:12px}
+fieldset.telemetry-opt-in a{color:#58a6ff}
 .list{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
 .row{display:flex;align-items:flex-start;gap:12px;padding:12px 16px;background:#161b22;border:1px solid #21262d;border-radius:8px}
 .row:hover{border-color:#30363d}
@@ -566,10 +584,12 @@ async function showApplySummary(){
 }
 
 function buildSelectionPayload(){
+  var optIn = $("telemetry-opt-in");
   return {
     workspaces: Array.from(selectedWorkspaces),
     packs: Array.from(selectedPacks),
     acceptAdvisory: Array.from(acceptedAdvisory),
+    telemetryOptIn: !!(optIn && optIn.checked),
     csrf: csrf,
   };
 }
