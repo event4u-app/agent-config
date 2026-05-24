@@ -72,7 +72,7 @@ Both are substantial new infrastructure (crypto, keychain integration, adapter c
 
 Make the agent's internal state legible — the inverse of treating the AI as a black box.
 
-- [x] **Step 1:** New endpoint `GET /api/v1/council/recent` — reads `agents/runtime/council/sessions/*/manifest.json` (newest first, capped at 50). Returns id, timestamp, artefact, provider, model, mode, token counts.
+- [x] **Step 1:** New endpoint `GET /api/v1/council/recent` — reads `agents/runtime/council/sessions/*/manifest.json` (newest first, capped at 50). Returns id, timestamp, artefact, provider, model, mode, token counts. <!-- council-ref-allowed: API endpoint contract pins the read path -->
 - [x] **Step 2:** New endpoint `GET /api/v1/council/session/:id` — full session manifest plus `response.md` body. Path-traversal-safe id regex.
 - [ ] **Step 3:** Memory list endpoint — **deferred**: no canonical `.agent-memory/index.json` schema in the repo yet.
 - [ ] **Step 4:** Memory delete endpoint — **deferred**: depends on Step 3.
