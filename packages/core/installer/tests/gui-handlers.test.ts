@@ -498,6 +498,110 @@ describe('GET /api/v1/council/session/:id', () => {
     });
 });
 
+// ──────────────────────────────────────────────────────────────────────
+// Phase 4 — Memory inspection (read-only)
+// ──────────────────────────────────────────────────────────────────────
+
+function writeMemoryFile(scope: string, relPath: string, content: string): void {
+    const abs = join(proj, 'agents', 'memory', scope, relPath);
+    mkdirSync(dirname(abs), { recursive: true });
+    writeFileSync(abs, content);
+}
+
+describe('GET /api/v1/memory/list', () => {
+    it('returns empty scopes when no memory dir exists', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/list`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.root).toBe('agents/memory');
+        expect(body.scopes).toHaveLength(6);
+        for (const s of body.scopes) {
+            expect(s.count).toBe(0);
+            expect(s.entries).toEqual([]);
+            expect(s.truncated).toBe(false);
+        }
+    });
+
+    it('lists files across scopes with size and mtime', async () => {
+        writeMemoryFile('decisions', 'adr-001.md', '# ADR 001\n');
+        writeMemoryFile('contexts', 'auth/model.yml', 'roles: []\n');
+        writeMemoryFile('evidence', 'sentry/event-1.json', '{}');
+        const res = await fetch(`${baseUrl}/api/v1/memory/list`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        const byName: Record<string, { count: number; entries: { id: string; sizeBytes: number; modifiedAtIso: string }[] }> =
+            Object.fromEntries(body.scopes.map((s: { name: string }) => [s.name, s]));
+        expect(byName.decisions.count).toBe(1);
+        expect(byName.decisions.entries[0].id).toBe('adr-001.md');
+        expect(byName.decisions.entries[0].sizeBytes).toBeGreaterThan(0);
+        expect(byName.decisions.entries[0].modifiedAtIso).toMatch(/Z$/);
+        expect(byName.contexts.entries[0].id).toBe('auth/model.yml');
+        expect(byName.evidence.entries[0].id).toBe('sentry/event-1.json');
+    });
+
+    it('skips dotfiles and non-files', async () => {
+        writeMemoryFile('decisions', '.hidden', 'no');
+        writeMemoryFile('decisions', 'visible.md', 'yes');
+        const res = await fetch(`${baseUrl}/api/v1/memory/list`);
+        const body = await res.json();
+        const decisions = body.scopes.find((s: { name: string }) => s.name === 'decisions');
+        expect(decisions.entries.map((e: { id: string }) => e.id)).toEqual(['visible.md']);
+    });
+});
+
+describe('GET /api/v1/memory/file', () => {
+    it('returns 400 on missing params', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/file`);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('missing_param');
+    });
+
+    it('returns 400 on invalid scope', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=secrets&id=x.md`);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('invalid_scope');
+    });
+
+    it('returns 400 on traversal attempt', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=decisions&id=../../etc/passwd`);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('invalid_id');
+    });
+
+    it('returns 400 on absolute id', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=decisions&id=/etc/passwd`);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('invalid_id');
+    });
+
+    it('returns 404 for missing file', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=decisions&id=missing.md`);
+        expect(res.status).toBe(404);
+        expect((await res.json()).error).toBe('not_found');
+    });
+
+    it('returns plaintext content on hit', async () => {
+        writeMemoryFile('decisions', 'adr-001.md', '# ADR 001\n\nBody.');
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=decisions&id=adr-001.md`);
+        expect(res.status).toBe(200);
+        expect(res.headers.get('content-type')).toMatch(/text\/plain/);
+        expect(res.headers.get('x-memory-scope')).toBe('decisions');
+        expect(res.headers.get('x-memory-modified-at')).toMatch(/Z$/);
+        expect(await res.text()).toBe('# ADR 001\n\nBody.');
+    });
+
+    it('rejects files above the size cap', async () => {
+        const big = 'x'.repeat(256 * 1024 + 1);
+        writeMemoryFile('reference', 'big.md', big);
+        const res = await fetch(`${baseUrl}/api/v1/memory/file?scope=reference&id=big.md`);
+        expect(res.status).toBe(413);
+        const body = await res.json();
+        expect(body.error).toBe('file_too_large');
+        expect(body.maxBytes).toBe(256 * 1024);
+    });
+});
+
+
 
 describe('GET /api/v1/explain/last', () => {
     async function withRunner(runner: ExplainRunner): Promise<string> {

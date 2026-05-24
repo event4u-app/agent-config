@@ -36,6 +36,7 @@ const INDEX_HTML = `<!doctype html>
     <button type="button" class="tab active" data-surface="setup">Setup</button>
     <button type="button" class="tab" data-surface="tasks">Tasks</button>
     <button type="button" class="tab" data-surface="council">Council</button>
+    <button type="button" class="tab" data-surface="memory">Memory</button>
     <button type="button" class="tab" data-surface="explain">Explain</button>
   </nav>
 </header>
@@ -142,6 +143,19 @@ const INDEX_HTML = `<!doctype html>
       <div id="council-list" class="list small council-list"></div>
       <div id="council-detail" class="council-detail">
         <p class="hint">Select a session to view manifest and response.</p>
+      </div>
+    </div>
+  </section>
+  <section id="surface-memory" class="surface" aria-labelledby="h-memory" hidden>
+    <h2 id="h-memory">Memory inspection</h2>
+    <p class="hint">Read-only browser for agent memory artefacts on disk.</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>The agent persists curated knowledge under <code>agents/memory/</code> across six scopes: <code>contexts</code>, <code>decisions</code>, <code>evidence</code>, <code>features</code>, <code>overrides</code>, <code>reference</code>. This surface lists files per scope and shows raw plaintext (no markdown rendering — what you see is what's on disk). Read-only — writes still flow through the agent's normal proposal path.</p>
+    </details>
+    <div id="memory-layout" class="memory-grid">
+      <div id="memory-tree" class="list small memory-tree"></div>
+      <div id="memory-detail" class="memory-detail">
+        <p class="hint">Select a file to view its content.</p>
       </div>
     </div>
   </section>
@@ -284,7 +298,24 @@ details.help a:hover{text-decoration:underline}
 .explain-step .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:3px;background:#21262d;color:#7d8590;margin-right:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
 .explain-step .tag.kernel{background:#1f6feb;color:#fff}
 .explain-step .tag.tier1{background:#238636;color:#fff}
-@media (max-width:720px){.council-grid{grid-template-columns:1fr}}`;
+.memory-grid{display:grid;grid-template-columns:320px 1fr;gap:16px}
+.memory-tree{padding:0}
+.memory-tree .scope{margin:0 0 12px}
+.memory-tree .scope-head{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:#161b22;border:1px solid #21262d;border-radius:6px;font-size:12px;color:#7d8590;text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+.memory-tree .scope-head .count{color:#e6edf3;background:#0d1117;border:1px solid #21262d;border-radius:10px;padding:1px 8px;font-size:11px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;text-transform:none;letter-spacing:0}
+.memory-tree .scope-files{list-style:none;margin:4px 0 0;padding:0}
+.memory-tree .scope-files li{padding:4px 8px;font-size:12px;color:#c9d1d9;cursor:pointer;border-radius:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;word-break:break-all}
+.memory-tree .scope-files li:hover{background:#161b22}
+.memory-tree .scope-files li.selected{background:#1a2230;color:#e6edf3;border:1px solid #1f6feb}
+.memory-tree .scope-files li .meta{display:block;color:#7d8590;font-size:10px;margin-top:2px}
+.memory-tree .scope-files .empty{color:#7d8590;font-style:italic;cursor:default;font-family:inherit}
+.memory-tree .scope-files .empty:hover{background:transparent}
+.memory-detail{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:16px;min-height:240px}
+.memory-detail h3{margin:0 0 8px;font-size:14px;color:#e6edf3;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;word-break:break-all}
+.memory-detail .meta-line{color:#7d8590;font-size:11px;margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+.memory-detail pre{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px;max-height:560px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;white-space:pre-wrap;color:#c9d1d9;margin:0;counter-reset:ln}
+.memory-detail pre .ln{display:inline-block;width:3em;color:#484f58;user-select:none;text-align:right;padding-right:12px}
+@media (max-width:720px){.council-grid,.memory-grid{grid-template-columns:1fr}}`;
 
 
 const APP_JS = `(function(){
@@ -712,6 +743,7 @@ function wireEvents(){
 // surface (top-level nav) ────────────────────────────────────────────
 var tasksLoaded = false;
 var councilLoaded = false;
+var memoryLoaded = false;
 var explainLoaded = false;
 function wireSurfaces(){
   var tabs = document.querySelectorAll("nav.topnav .tab");
@@ -727,7 +759,7 @@ function setSurface(name){
     var on = tabs[i].getAttribute("data-surface") === name;
     tabs[i].classList.toggle("active", on);
   }
-  var surfaces = ["setup", "tasks", "council", "explain"];
+  var surfaces = ["setup", "tasks", "council", "memory", "explain"];
   for (var j = 0; j < surfaces.length; j++){
     var el = $("surface-" + surfaces[j]);
     if (!el) continue;
@@ -737,6 +769,7 @@ function setSurface(name){
   }
   if (name === "tasks" && !tasksLoaded){ tasksLoaded = true; loadTasks(); loadHistory(); }
   if (name === "council" && !councilLoaded){ councilLoaded = true; loadCouncil(); }
+  if (name === "memory" && !memoryLoaded){ memoryLoaded = true; loadMemory(); }
   if (name === "explain" && !explainLoaded){ explainLoaded = true; loadExplain(); }
 }
 
@@ -846,6 +879,86 @@ function openSession(id){
     var resp = d.response ? '<h3>Response</h3><pre>' + escapeHtml(d.response) + '</pre>' : '<p class="hint">No response captured.</p>';
     detail.innerHTML = '<h3>' + escapeHtml(s.id || id) + '</h3><dl>' + dl + '</dl>' + resp;
   }).catch(function(err){ $("council-detail").innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>'; });
+}
+
+// memory surface ─────────────────────────────────────────────────────
+var memorySelected = null;
+function formatBytes(n){
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KiB";
+  return (n / (1024 * 1024)).toFixed(2) + " MiB";
+}
+function loadMemory(){
+  var tree = $("memory-tree");
+  tree.innerHTML = '<p class="hint">Loading…</p>';
+  fetch("/api/v1/memory/list").then(function(r){ return r.json(); }).then(function(d){
+    renderMemoryTree(d.scopes || []);
+  }).catch(function(err){
+    tree.innerHTML = '<p class="error">Failed to load: ' + escapeHtml(err.message) + '</p>';
+  });
+}
+function renderMemoryTree(scopes){
+  var tree = $("memory-tree");
+  tree.innerHTML = "";
+  for (var i = 0; i < scopes.length; i++){
+    var s = scopes[i];
+    var scopeEl = document.createElement("div");
+    scopeEl.className = "scope";
+    var head = document.createElement("div");
+    head.className = "scope-head";
+    head.innerHTML = '<span>' + escapeHtml(s.name) + '</span><span class="count">' + s.count + (s.truncated ? "+" : "") + '</span>';
+    scopeEl.appendChild(head);
+    var ul = document.createElement("ul");
+    ul.className = "scope-files";
+    if (s.entries.length === 0){
+      var li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "(empty)";
+      ul.appendChild(li);
+    } else {
+      for (var j = 0; j < s.entries.length; j++){
+        var e = s.entries[j];
+        var item = document.createElement("li");
+        item.setAttribute("data-scope", s.name);
+        item.setAttribute("data-id", e.id);
+        item.innerHTML = escapeHtml(e.id) + '<span class="meta">' + formatBytes(e.sizeBytes) + ' · ' + escapeHtml(e.modifiedAtIso) + '</span>';
+        item.addEventListener("click", (function(scope, id){ return function(){ openMemoryFile(scope, id); }; })(s.name, e.id));
+        ul.appendChild(item);
+      }
+    }
+    scopeEl.appendChild(ul);
+    tree.appendChild(scopeEl);
+  }
+}
+function openMemoryFile(scope, id){
+  memorySelected = scope + "/" + id;
+  var items = document.querySelectorAll("#memory-tree .scope-files li");
+  for (var i = 0; i < items.length; i++){
+    var match = items[i].getAttribute("data-scope") === scope && items[i].getAttribute("data-id") === id;
+    items[i].classList.toggle("selected", match);
+  }
+  var detail = $("memory-detail");
+  detail.innerHTML = '<p class="hint">Loading…</p>';
+  var url = "/api/v1/memory/file?scope=" + encodeURIComponent(scope) + "&id=" + encodeURIComponent(id);
+  fetch(url).then(function(res){
+    if (!res.ok){
+      return res.json().then(function(d){ throw new Error((d && d.error) || ("HTTP " + res.status)); });
+    }
+    var modified = res.headers.get("x-memory-modified-at") || "";
+    return res.text().then(function(text){ return { text: text, modified: modified }; });
+  }).then(function(d){
+    var lines = d.text.split("\\n");
+    var numbered = "";
+    for (var i = 0; i < lines.length; i++){
+      numbered += '<span class="ln">' + (i + 1) + '</span>' + escapeHtml(lines[i]) + (i < lines.length - 1 ? "\\n" : "");
+    }
+    detail.innerHTML =
+      '<h3>' + escapeHtml(scope + "/" + id) + '</h3>' +
+      '<p class="meta-line">Modified: ' + escapeHtml(d.modified) + '</p>' +
+      '<pre>' + numbered + '</pre>';
+  }).catch(function(err){
+    detail.innerHTML = '<p class="error">Failed: ' + escapeHtml(err.message) + '</p>';
+  });
 }
 
 // explain surface ────────────────────────────────────────────────────
