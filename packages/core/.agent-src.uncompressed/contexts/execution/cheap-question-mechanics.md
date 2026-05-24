@@ -40,12 +40,12 @@ A clean edit-batch is not a halt condition — pick the next item.
 
 When the user authorizes a top-level action ("commit", "push", "open PR", "run tests", "deploy"), the following prereq work is execution, not a decision point — never raise a numbered-options block about it:
 
-- compression / `task sync-check-hashes` before commit
+- compression / hash-sync before commit
 - code formatting / linter auto-fix before commit
 - type-check / quality-tool repairs to clear CI gates
 - test repair when the user said "commit and the tests pass"
 - symlink / index regeneration after edits
-- `marketplace.json` / discovery-manifest refresh
+- manifest / discovery refresh
 - branch-base inventory when user named the destination
 - pre-push hook fix when it blocks an authorized push and the fix is obvious (gate-script update, stale pattern removal)
 
