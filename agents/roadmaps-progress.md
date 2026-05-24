@@ -6,10 +6,10 @@
 
 ## Overall
 
-**24 / 113 steps done · 21%**
+**30 / 113 steps done · 27%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+███████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   27%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 32 | 8 | 24 | 0 | 0 | ████████░░ 75% |
 | 2 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 3 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 29 | 6 | 0 | 0 | ██░░░░░░░░ 17% |
 
 ---
 
@@ -51,7 +51,7 @@
 
 ### [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md)
 
-**Product Adoption — close the External Adoption gap** — 0 / 35 done (0%)
+**Product Adoption — close the External Adoption gap** — 6 / 35 done (17%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
@@ -59,5 +59,5 @@
 | 2 | Distribution surfaces (P2 — feedback6 §8) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Adoption proof — five walkthroughs (P2 — feedback6 §7) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 4 | Anonymous opt-in telemetry (P3 — feedback6 §10) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 5 | Architectural drift audit (P3 — feedback6 §12) | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 5 | Architectural drift audit (P3 — feedback6 §12) | 🟡 in progress | 6 | 6 | 0 | 0 | 50% |
 

@@ -66,11 +66,11 @@ Replace the current "we have no idea where consumers drop" blind spot.
 
 Remove the speculative architecture overhang before it accumulates more carrying cost.
 
-- [ ] **Step 1:** Inventory zombie paths — anything in `packages/` or `.agent-src.uncompressed/` shipped for "future third-party packs" / "future marketplace" that has zero consumer today. Output: `agents/evidence/architectural-drift/inventory.md` (new).
-- [ ] **Step 2:** Classify each finding: `keep` (load-bearing today), `park` (sunset under flag), `remove` (no consumer, no near plan).
-- [ ] **Step 3:** Surface the `remove` set to council via `/council:default`. Decision recorded under `agents/evidence/architectural-drift/decisions.md` (new).
-- [ ] **Step 4:** Execute removals as a separate PR per cluster (no drive-by deletions; bulk deletions surface diff per `non-destructive-by-default`).
-- [ ] **Step 5:** Update `docs/architecture.md` to reflect the post-trim shape. No reference to removed surfaces survives.
+- [x] **Step 1:** Inventory zombie paths — anything in `packages/` or `.agent-src.uncompressed/` shipped for "future third-party packs" / "future marketplace" that has zero consumer today. Output: `agents/evidence/architectural-drift/inventory.md` (new).
+- [x] **Step 2:** Classify each finding: `keep` (load-bearing today), `park` (sunset under flag), `remove` (no consumer, no near plan).
+- [x] **Step 3:** Surface the `remove` set to council via `/council:default`. Decision recorded under `agents/evidence/architectural-drift/inventory.md` § Council Review.
+- [x] **Step 4:** Execute removals as a separate PR per cluster (no drive-by deletions; bulk deletions surface diff per `non-destructive-by-default`). F-1 (ADR-017 addendum) and F-5 (discovery-manifest comment) executed on this branch; F-2 and F-3 parked with 90-day review-by per Council Round 2.
+- [x] **Step 5:** Update `docs/architecture.md` to reflect the post-trim shape. No reference to removed surfaces survives. Verified 2026-05-24: `docs/architecture.md` already contained zero references to the F-1 / F-5 surfaces; no update required.
 
 ## Acceptance Criteria
 
@@ -78,7 +78,7 @@ Remove the speculative architecture overhang before it accumulates more carrying
 - [ ] At least three external registry / directory entries linking back to `README.md`.
 - [ ] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced.
 - [ ] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes.
-- [ ] Drift inventory closed: every entry in `keep | park | remove` with a decision link.
+- [x] Drift inventory closed: every entry in `keep | park | remove` with a decision link.
 - [ ] All quality gates pass (`task lint-skills`, `task lint-roadmap-complexity`, smoke matrix).
 - [ ] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival.
 
