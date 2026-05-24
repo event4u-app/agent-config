@@ -142,9 +142,61 @@ in the other audience must find their link within the first screen too.
 
 ---
 
+## First-screen contract
+
+The "first screen" is roughly the **first ~40 rendered lines** (one
+laptop viewport on GitHub at default zoom). Every README must place
+the following inside the first screen:
+
+1. **Project name** as `# H1`
+2. **One-sentence pitch** — what it is, who it's for
+3. **Status badges** (CI, version, license) when they exist
+4. **Primary CTA** — either the install command or an explicit deep
+   link to the install section
+5. **Audience marker** — at least a chip / sentence telling the reader
+   which audience this README is written for
+
+What does **not** belong on the first screen: feature lists longer
+than a single line, architecture diagrams, contributor notes, license
+boilerplate.
+
+The skills `readme-writing`, `readme-writing-package`, and
+`readme-reviewer` enforce this checklist verbatim. Drift here is a
+hard finding, not a stylistic preference.
+
+---
+
+## Banner / visual-identity preservation
+
+When a README already carries a banner, hero image, badge row, or
+official logo lockup, the rewrite must preserve it **byte-identical**
+unless the user explicitly asks to change it. This includes:
+
+- The `<p align="center">` / banner image block (with its surrounding
+  HTML and the source URL of the image asset)
+- The status / npm / build badge block, including the exact badge
+  order if it was deliberate
+- Any profile / role / persona grid that establishes audience routing
+
+The re-analysis gate in each writing skill captures the exact line
+range as `visual_keep:` in the evidence ledger; the rewrite must
+echo those lines without paraphrase. If the badges' **counts** are
+out of date, propose new counts via the link-delta / currency-check
+output — do not silently rewrite the badge HTML to update numbers
+without surfacing the diff.
+
+Visual changes that are allowed without explicit user opt-in:
+
+- Repointing a badge whose `href` 404s to its current location
+- Repointing a banner image whose source path moved, when the file
+  is unambiguously the same asset
+
+---
+
 ## Validation checklist
 
-- [ ] First screen answers what / why / install
+- [ ] First screen answers what / why / install (see *First-screen contract*)
+- [ ] Banner / badge block preserved byte-identical (see *Banner / visual-identity preservation*)
 - [ ] Size is below the "overloaded" threshold, or splitting is in place
 - [ ] ToC present if > 150 lines or > 6 top-level sections
 - [ ] No duplication between README and `/docs/`

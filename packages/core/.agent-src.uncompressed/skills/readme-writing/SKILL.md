@@ -49,8 +49,33 @@ the intended audience. Reflects the real repository — not assumptions.
 - **Strong quickstart over exhaustive noise** — a reader should get started in 30 seconds
 - **Right scope** — high-level overview in README, deep content in dedicated docs
 - **Match the repo type** — a package README differs from an app, CLI tool, or framework
+- **Re-analyze every time** — never trust cached knowledge of the repo; the README that drifted yesterday is the README the model wrote from memory
+- **Preserve existing visual identity** — banner, badges, profile/role grids, official logo lockups stay byte-identical unless the user explicitly asks to change them
 
 ## Procedure
+
+### 0. Re-analysis gate — MANDATORY before any writing
+
+Before drafting a single line, run a fresh repository inspection in **this**
+session. Do not rely on prior knowledge, prior turns, or the existing README
+prose. Produce an explicit evidence ledger:
+
+```
+ledger:
+  package:      <name + version from manifest>
+  description:  <verbatim from manifest>
+  cli_entry:    <bin / entry from manifest, if any>
+  commands:     <list of real commands from Taskfile / Makefile / package.json scripts>
+  install:      <verified install path(s) from scripts/install.* or docs>
+  doc_targets:  <list of /docs files actually linked from the new draft>
+  counts:       <skills / rules / commands / personas / advisors — if surfaced as badges>
+  visual_keep:  <line range of existing README header, banner, badge block to preserve>
+```
+
+If any cell is unknown, run `ls`, `grep`, `find`, or read the file before
+writing — never invent. If the user asks to "use the existing banner",
+locate the exact source lines and reproduce them byte-for-byte, including
+the surrounding HTML.
 
 ### 1. Identify README type and audience
 
@@ -139,26 +164,49 @@ for install, first example, or requirements).
 splitting strategies (reference-split, deep-link tables, collapsibles),
 multi-audience handling, and anti-patterns.
 
-### 7. Validate
+### 7. Validate links and detect orphans — MANDATORY
+
+For every internal link in the new draft:
+
+1. Resolve the path. If it points to a file, `test -f` the path. If a
+   directory, `test -d`. Strip `#anchor` and `?query` before the check.
+2. For every anchor link (`file.md#section`), grep the target file for
+   the heading slug. Missing anchor = broken link.
+3. Build the **link-delta** between the old README and the new one:
+   - **kept**: linked in both
+   - **added**: only linked by the new README
+   - **dropped**: only linked by the old README
+
+For every `dropped` target, search the rest of the repository
+(`grep -r "<path>"` over `AGENTS.md`, `docs/`, `.agent-src*/`,
+`.augment/`, `packages/`). If no other file references it, mark
+**orphan-candidate**. Surface the list to the user — do not delete
+silently.
+
+### 8. Validate
 
 After writing, verify:
 
 - [ ] Every documented command exists in the repo (`Taskfile.yml`, `Makefile`, `package.json scripts`, etc.)
 - [ ] Setup steps are reproducible (no missing prerequisites)
 - [ ] No features or capabilities are invented
-- [ ] First screen answers: what, why, how-to-start
+- [ ] **First screen contract** — within the first ~40 lines: project name, one-sentence pitch, install command (or pointer), and the primary CTA
+- [ ] Banner, badges, and any explicit "preserve" block from Step 0 are byte-identical to source
 - [ ] No dead sections (heading with 1-2 trivial sentences)
 - [ ] Scope is right — deep content moved to dedicated docs, not crammed in
 - [ ] Size below the "overloaded" threshold, or splitting is in place (see size guideline)
 - [ ] ToC present if README > 150 lines or > 6 top-level sections
 - [ ] Matches existing tonality if repo has established voice
-- [ ] All file paths and references are valid
+- [ ] Every internal link resolved per Step 7 — zero broken file or anchor links
+- [ ] Orphan-candidate list produced even if empty
 
 ## Output format
 
 1. Full README draft
 2. Short note: detected repo type + audience
-3. Any uncertainties or assumptions that need confirmation
+3. **Link delta** — `kept` / `added` / `dropped` with orphan-candidates flagged
+4. Evidence ledger (Step 0) so the user can audit assumptions
+5. Any uncertainties or assumptions that need confirmation
 
 ## Gotcha
 
