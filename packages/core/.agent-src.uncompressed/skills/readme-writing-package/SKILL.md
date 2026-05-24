@@ -48,8 +48,32 @@ what it does, whether it fits their stack, how to install it, and how to use it.
 - **Compatibility must be explicit** — don't imply broad support without evidence
 - **First code example must be real, minimal, and verified** — no pseudo-code
 - **README = onboarding, /docs = reference** — keep README focused
+- **Re-analyze every time** — never write from cached knowledge; verify the manifest, source, and CI matrix in this session
+- **Preserve existing visual identity** — banner, badges, hero images, and logo lockups stay byte-identical unless the user explicitly asks to change them
 
 ## Procedure
+
+### 0. Re-analysis gate — MANDATORY before any writing
+
+Before drafting, produce an evidence ledger from a fresh inspection of
+the package — manifest, source, CI, examples. Do not rely on prior turns
+or the existing README prose.
+
+```
+ledger:
+  package:       <name + version from manifest>
+  description:   <verbatim from manifest>
+  install_cmd:   <verified against the manifest's package manager>
+  requirements:  <language version, framework version, ext-*, services>
+  public_api:    <entry classes / functions / exports from source>
+  test_command:  <real command from manifest scripts / Taskfile>
+  doc_targets:   <list of /docs files actually linked from the new draft>
+  visual_keep:   <line range of existing README header / banner / badges to preserve>
+```
+
+If any cell is unknown, run `ls`, `grep`, `find`, or read the file before
+writing — never invent. When the user asks to keep the existing banner
+or badge row, reproduce it byte-for-byte from the source.
 
 ### 1. Identify package type and audience
 
@@ -255,7 +279,21 @@ capability comparison. They serve different jobs — install vs. coverage.
 
 README = enough to adopt. Docs = enough to master.
 
-### 8. Validate
+### 8. Validate links and detect orphans — MANDATORY
+
+For every internal link in the new draft:
+
+1. Resolve the path. `test -f` files, `test -d` directories. Strip
+   `#anchor` and `?query` before the check.
+2. For every anchor link, grep the target for the heading slug.
+3. Build the **link-delta** vs. the old README — `kept` / `added` /
+   `dropped`. For every `dropped` target, search the rest of the repo
+   (`grep -r` over `AGENTS.md`, `docs/`, `.agent-src*/`, `packages/`).
+   No other reference → mark **orphan-candidate**.
+
+Surface the orphan-candidate list to the user — never delete silently.
+
+### 9. Validate
 
 - [ ] Install command is correct and complete
 - [ ] Compatibility/requirements match the manifest (`composer.json`, `package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `*.gemspec`) and the CI matrix
@@ -266,15 +304,20 @@ README = enough to adopt. Docs = enough to master.
 - [ ] Deep content is in docs, not README (see size guideline)
 - [ ] Multi-platform install uses a table, not stacked blocks
 - [ ] No duplication between README and `/docs/`
-- [ ] First screen shows: what, install, requirements
+- [ ] **First screen contract** — within ~40 lines: name, one-sentence pitch, install command, requirements (or pointer)
+- [ ] Banner / badges / hero from Step 0 visual_keep are byte-identical to source
+- [ ] Every internal link resolved per Step 8 — zero broken file or anchor links
+- [ ] Orphan-candidate list produced even if empty
 
 ## Output format
 
 1. Full README draft
 2. Detected package type + audience
 3. Compatibility summary
-4. Uncertainties needing confirmation
-5. Suggested follow-up docs if README would become too large
+4. **Link delta** — `kept` / `added` / `dropped` with orphan-candidates flagged
+5. Evidence ledger (Step 0) so the user can audit assumptions
+6. Uncertainties needing confirmation
+7. Suggested follow-up docs if README would become too large
 
 ## Gotcha
 

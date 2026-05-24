@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **494**
-- Edges (incl. self-WRITE): **1413**
+- Files indexed: **495**
+- Edges (incl. self-WRITE): **1419**
 
 ## READ_ONLY edges
 
@@ -272,6 +272,12 @@
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/commit-policy.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `.agent-src.uncompressed/rules/autonomous-execution.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/interrupt-examples.md` | `.agent-src.uncompressed/rules/user-interrupt-priority.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md` | `.agent-src.uncompressed/commands/roadmap/create.md` | `body_link` | 1 |
@@ -389,9 +395,8 @@
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/commands/create-pr.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/commit-conventions.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-attribution-footers.md` | `.agent-src.uncompressed/rules/scope-control.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/contexts/execution/cheap-question-mechanics.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/non-destructive-by-default.md` | `body_link` | 1 |
-| `.agent-src.uncompressed/rules/no-cheap-questions.md` | `.agent-src.uncompressed/rules/security-sensitive-stop.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/augment-edit-discipline.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/augment-source-of-truth.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/rules/no-roadmap-references.md` | `.agent-src.uncompressed/rules/roadmap-progress-sync.md` | `body_link` | 1 |
@@ -937,7 +942,7 @@
 | Kind | Count |
 |---|---:|
 | `command` | 129 |
-| `context` | 32 |
+| `context` | 33 |
 | `persona` | 31 |
 | `rule` | 75 |
 | `skill` | 227 |

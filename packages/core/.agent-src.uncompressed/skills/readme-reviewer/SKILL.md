@@ -153,6 +153,48 @@ Structure checks:
 → See `docs/guidelines/docs/readme-size-and-splitting.md` for full thresholds,
 splitting strategies, and anti-patterns.
 
+### 9. Validate every link and detect orphans — MANDATORY
+
+For every internal link in the README:
+
+1. Resolve the path. `test -f` files, `test -d` directories. Strip
+   `#anchor` and `?query` before the check.
+2. For every anchor link (`file.md#section`), grep the target file for
+   the heading slug. Missing slug = broken anchor.
+3. Group findings:
+   - **broken** — target does not exist (❌ Critical)
+   - **anchor-broken** — file exists, anchor does not (⚠️ Major)
+   - **path-drift** — target moved but a valid path exists elsewhere
+     (⚠️ Major, propose the corrected path)
+
+For every documentation file referenced by the README, check whether
+it has any **other** references in the repo (`grep -r` over
+`AGENTS.md`, `docs/`, `.agent-src*/`, `.augment/`, `packages/`).
+Files referenced only by this README are **single-use** — note them
+so they can be moved or inlined later.
+
+For every doc under `/docs/` that the README **does not** link, check
+whether anything else in the repo links it. Files with zero inbound
+references are **orphan-candidates** — surface them, never delete
+silently.
+
+### 10. Currency check — drift detection
+
+The README may have been correct at write-time but drifted since.
+Compare the README's claims to the live repository:
+
+- **Counts** (badges like "Skills: 218") — recount from the source tree
+  and flag any drift > 0
+- **Commands** — every documented `task`, `npm run`, `npx`, or `bash`
+  call must exist in `Taskfile.yml`, `package.json scripts`, or the
+  named script file at its claimed path
+- **Profiles / user-types / packs** — list members against the live
+  directory listing
+- **Version pins** — runtime, framework, peer-dep versions stated in
+  README vs. the manifest's `engines` / `require` / `dependencies`
+- **Visual identity** — banner / hero image references resolve to real
+  files (not 404s in GitHub rendering)
+
 ## Output format
 
 1. Produce three subsections in order: Summary, Findings, Confidence; no prose outside them.
@@ -172,8 +214,11 @@ splitting strategies, and anti-patterns.
 | # | Severity | Section | Issue | Fix |
 |---|---|---|---|---|
 | 1 | ❌ Critical | Install | Command `X` does not exist | Replace with `Y` |
-| 2 | ⚠️ Major | Usage | Example uses deprecated API | Update to current API |
-| 3 | ℹ️ Minor | Structure | Requirements buried below usage | Move above install |
+| 2 | ❌ Critical | Profile grid | Link `.agent-src.uncompressed/profiles/` 404s | Repoint to `packages/core/.agent-src.uncompressed/profiles/` |
+| 3 | ⚠️ Major | Badges | "Skills: 218" — live count is 207 | Update badge or note drift |
+| 4 | ⚠️ Major | Usage | Example uses deprecated API | Update to current API |
+| 5 | ℹ️ Minor | Structure | Requirements buried below usage | Move above install |
+| 6 | ℹ️ Minor | Docs | `docs/foo.md` only linked by README | Either inline or keep as standalone |
 
 Severity levels:
 

@@ -36,6 +36,7 @@ const INDEX_HTML = `<!doctype html>
     <button type="button" class="tab active" data-surface="setup">Setup</button>
     <button type="button" class="tab" data-surface="tasks">Tasks</button>
     <button type="button" class="tab" data-surface="council">Council</button>
+    <button type="button" class="tab" data-surface="explain">Explain</button>
   </nav>
 </header>
 <main>
@@ -60,6 +61,9 @@ const INDEX_HTML = `<!doctype html>
   <section id="screen-workspaces" class="screen active" aria-labelledby="h-workspaces">
     <h2 id="h-workspaces">Select workspaces</h2>
     <p class="hint">Auto-detected workspaces are pre-selected. Toggle any to include or exclude.</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>A <strong>workspace</strong> is a coarse-grained tag (engineering, product, founder, …) that groups packs by audience. Packs declare a <code>workspaces:</code> list in their manifest; selecting a workspace surfaces every pack tagged with it. The auto-detection in this wizard inspects your repo (lockfiles, framework markers, top-level paths) and pre-checks the workspaces that look applicable.</p>
+    </details>
     <div id="workspaces-list" class="list"></div>
     <div class="actions">
       <button type="button" id="btn-to-packs" class="primary" disabled>Continue →</button>
@@ -102,6 +106,9 @@ const INDEX_HTML = `<!doctype html>
   <section id="surface-tasks" class="surface" aria-labelledby="h-tasks" hidden>
     <h2 id="h-tasks">Tasks</h2>
     <p class="hint">Run allowlisted Taskfile targets. Output streams live.</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>A small, hard-coded allowlist of read-only / idempotent <code>task</code> targets you can run from the browser. The catalog is closed — the server cannot spawn arbitrary commands. Output streams over Server-Sent Events; only one task runs at a time. History keeps the last 20 runs in memory and is cleared on server restart.</p>
+    </details>
     <div id="tasks-list" class="list" aria-live="polite"></div>
     <div id="tasks-runner" class="runner" hidden>
       <div class="runner-head">
@@ -116,12 +123,29 @@ const INDEX_HTML = `<!doctype html>
   <section id="surface-council" class="surface" aria-labelledby="h-council" hidden>
     <h2 id="h-council">Council sessions</h2>
     <p class="hint">Read-only browser for past AI Council calls (newest first).</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>Every AI Council call (multi-model deliberation triggered by <code>/council</code>, <code>/work</code>, or roadmap execution) writes a session folder under <code>agents/runtime/council/sessions/</code>. This surface lists them newest-first and shows manifest + response for the selected session. Read-only — no edits possible.</p>
+    </details>
     <div id="council-layout" class="council-grid">
       <div id="council-list" class="list small council-list"></div>
       <div id="council-detail" class="council-detail">
         <p class="hint">Select a session to view manifest and response.</p>
       </div>
     </div>
+  </section>
+  <section id="surface-explain" class="surface" aria-labelledby="h-explain" hidden>
+    <h2 id="h-explain">Explain last run</h2>
+    <p class="hint">Decision chain behind the most recent <code>/work</code> or <code>/implement-ticket</code> run.</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>The agent persists a state file (<code>.work-state.json</code>) plus council session, memory hits, and router activations for every run. This surface re-renders that chain as a timeline so you can see <em>why</em> the agent picked the rules / persona / provider it did. Powered by <code>agent-config explain last --json</code>; the wire format is <a href="https://event4u.app/agent-config/schemas/explain-trace.schema.json">ExplainTrace v1</a>.</p>
+    </details>
+    <div class="actions">
+      <button type="button" id="btn-explain-refresh" class="primary">Refresh</button>
+      <span id="explain-status" class="hint"></span>
+    </div>
+    <div id="explain-meta" class="explain-meta" hidden></div>
+    <ol id="explain-timeline" class="explain-timeline" hidden></ol>
+    <div id="explain-empty" class="hint" hidden>No trace available. Run <code>/work</code> or <code>/implement-ticket</code> first.</div>
   </section>
 </main>
 <footer>
@@ -214,6 +238,34 @@ nav.topnav .tab.active{background:#1f6feb;border-color:#1f6feb;color:#fff}
 .council-detail dt{color:#7d8590}
 .council-detail dd{margin:0;color:#e6edf3;word-break:break-word}
 .council-detail pre{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px;max-height:480px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;white-space:pre-wrap;color:#c9d1d9}
+details.help{margin:0 0 16px;padding:8px 12px;background:#161b22;border:1px solid #21262d;border-radius:8px;font-size:13px}
+details.help summary{cursor:pointer;color:#7d8590;font-weight:500;outline:none}
+details.help[open] summary{color:#e6edf3;margin-bottom:8px}
+details.help p{margin:0;color:#c9d1d9;line-height:1.6}
+details.help code{background:#0d1117;border:1px solid #21262d;border-radius:4px;padding:1px 5px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px}
+details.help a{color:#58a6ff;text-decoration:none}
+details.help a:hover{text-decoration:underline}
+.explain-meta{margin:16px 0;padding:12px 16px;background:#161b22;border:1px solid #21262d;border-radius:8px;display:grid;grid-template-columns:auto 1fr;gap:4px 16px;font-size:13px}
+.explain-meta dt{color:#7d8590;font-weight:500}
+.explain-meta dd{margin:0;color:#e6edf3;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;word-break:break-all}
+.explain-timeline{list-style:none;margin:16px 0 0;padding:0;position:relative}
+.explain-timeline::before{content:"";position:absolute;left:11px;top:8px;bottom:8px;width:2px;background:#21262d}
+.explain-step{position:relative;padding:0 0 16px 32px;margin:0}
+.explain-step::before{content:"";position:absolute;left:6px;top:6px;width:12px;height:12px;border-radius:50%;background:#1f6feb;border:2px solid #0e1116;box-shadow:0 0 0 1px #1f6feb}
+.explain-step.empty::before{background:#30363d;box-shadow:0 0 0 1px #30363d}
+.explain-step.halt::before{background:#f85149;box-shadow:0 0 0 1px #f85149}
+.explain-step h3{margin:0 0 6px;font-size:14px;color:#e6edf3;font-weight:600}
+.explain-step.empty h3{color:#7d8590}
+.explain-step .step-body{background:#161b22;border:1px solid #21262d;border-radius:6px;padding:10px 12px;font-size:13px;color:#c9d1d9}
+.explain-step .step-body .empty-note{color:#7d8590;font-style:italic;margin:0}
+.explain-step dl{margin:0;display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:12px}
+.explain-step dl dt{color:#7d8590}
+.explain-step dl dd{margin:0;color:#e6edf3;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;word-break:break-word}
+.explain-step ul{margin:4px 0 0;padding-left:18px;font-size:12px;color:#c9d1d9}
+.explain-step ul li{margin:2px 0;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+.explain-step .tag{display:inline-block;font-size:11px;padding:1px 6px;border-radius:3px;background:#21262d;color:#7d8590;margin-right:4px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
+.explain-step .tag.kernel{background:#1f6feb;color:#fff}
+.explain-step .tag.tier1{background:#238636;color:#fff}
 @media (max-width:720px){.council-grid{grid-template-columns:1fr}}`;
 
 
@@ -640,11 +692,14 @@ function wireEvents(){
 // surface (top-level nav) ────────────────────────────────────────────
 var tasksLoaded = false;
 var councilLoaded = false;
+var explainLoaded = false;
 function wireSurfaces(){
   var tabs = document.querySelectorAll("nav.topnav .tab");
   for (var i = 0; i < tabs.length; i++){
     tabs[i].addEventListener("click", function(e){ setSurface(e.currentTarget.getAttribute("data-surface")); });
   }
+  var refresh = $("btn-explain-refresh");
+  if (refresh) refresh.addEventListener("click", function(){ loadExplain(); });
 }
 function setSurface(name){
   var tabs = document.querySelectorAll("nav.topnav .tab");
@@ -652,7 +707,7 @@ function setSurface(name){
     var on = tabs[i].getAttribute("data-surface") === name;
     tabs[i].classList.toggle("active", on);
   }
-  var surfaces = ["setup", "tasks", "council"];
+  var surfaces = ["setup", "tasks", "council", "explain"];
   for (var j = 0; j < surfaces.length; j++){
     var el = $("surface-" + surfaces[j]);
     if (!el) continue;
@@ -662,6 +717,7 @@ function setSurface(name){
   }
   if (name === "tasks" && !tasksLoaded){ tasksLoaded = true; loadTasks(); loadHistory(); }
   if (name === "council" && !councilLoaded){ councilLoaded = true; loadCouncil(); }
+  if (name === "explain" && !explainLoaded){ explainLoaded = true; loadExplain(); }
 }
 
 // tasks surface ───────────────────────────────────────────────────────
@@ -770,6 +826,159 @@ function openSession(id){
     var resp = d.response ? '<h3>Response</h3><pre>' + escapeHtml(d.response) + '</pre>' : '<p class="hint">No response captured.</p>';
     detail.innerHTML = '<h3>' + escapeHtml(s.id || id) + '</h3><dl>' + dl + '</dl>' + resp;
   }).catch(function(err){ $("council-detail").innerHTML = '<p class="error">' + escapeHtml(err.message) + '</p>'; });
+}
+
+// explain surface ────────────────────────────────────────────────────
+function loadExplain(){
+  var status = $("explain-status");
+  var meta = $("explain-meta");
+  var timeline = $("explain-timeline");
+  var empty = $("explain-empty");
+  status.textContent = "Loading…";
+  meta.hidden = true; timeline.hidden = true; empty.hidden = true;
+  fetch("/api/v1/explain/last").then(function(res){
+    if (res.status === 404){ return res.json().then(function(d){ throw { kind: "not_found", message: (d && d.message) || "No trace available." }; }); }
+    if (!res.ok){ return res.json().then(function(d){ throw { kind: "error", message: (d && d.message) || ("HTTP " + res.status) }; }); }
+    return res.json();
+  }).then(function(d){
+    status.textContent = "";
+    renderExplain(d.trace || {});
+  }).catch(function(err){
+    if (err && err.kind === "not_found"){ status.textContent = ""; empty.hidden = false; return; }
+    status.textContent = "Failed: " + ((err && err.message) || String(err));
+  });
+}
+function renderExplain(trace){
+  var meta = $("explain-meta");
+  var fields = [["run_id", trace.run_id], ["subject", trace.subject], ["generated_at", trace.generated_at], ["schema", "ExplainTrace v" + (trace.version || "?")]];
+  var html = "";
+  for (var i = 0; i < fields.length; i++){
+    if (fields[i][1] == null) continue;
+    html += "<dt>" + escapeHtml(fields[i][0]) + "</dt><dd>" + escapeHtml(String(fields[i][1])) + "</dd>";
+  }
+  meta.innerHTML = html;
+  meta.hidden = false;
+  var timeline = $("explain-timeline");
+  timeline.innerHTML = "";
+  timeline.appendChild(stepInputs(trace.inputs));
+  timeline.appendChild(stepRoute(trace.route));
+  timeline.appendChild(stepCouncil(trace.council));
+  timeline.appendChild(stepMemory(trace.memory));
+  timeline.appendChild(stepPack(trace.pack));
+  timeline.appendChild(stepAssumptions(trace.assumptions));
+  timeline.appendChild(stepHalt(trace.halt));
+  if (trace.provider) timeline.appendChild(stepProvider(trace.provider));
+  timeline.hidden = false;
+}
+function makeStep(title, isEmpty, isHalt){
+  var li = document.createElement("li");
+  li.className = "explain-step" + (isEmpty ? " empty" : "") + (isHalt ? " halt" : "");
+  var h = document.createElement("h3"); h.textContent = title; li.appendChild(h);
+  var body = document.createElement("div"); body.className = "step-body"; li.appendChild(body);
+  return { li: li, body: body };
+}
+function dlPairs(pairs){
+  var dl = document.createElement("dl");
+  for (var i = 0; i < pairs.length; i++){
+    if (pairs[i][1] == null) continue;
+    var dt = document.createElement("dt"); dt.textContent = pairs[i][0];
+    var dd = document.createElement("dd"); dd.textContent = String(pairs[i][1]);
+    dl.appendChild(dt); dl.appendChild(dd);
+  }
+  return dl;
+}
+function emptyNote(text){ var p = document.createElement("p"); p.className = "empty-note"; p.textContent = text; return p; }
+function stepInputs(inputs){
+  if (!inputs){ var s = makeStep("Inputs (profile / preset / cost)", true, false); s.body.appendChild(emptyNote("No profile / preset / cost_profile recorded.")); return s.li; }
+  var s = makeStep("Inputs (profile / preset / cost)", false, false);
+  s.body.appendChild(dlPairs([["profile", inputs.profile], ["preset", inputs.preset], ["cost_profile", inputs.cost_profile]]));
+  var src = inputs.source_per_knob || {};
+  var keys = Object.keys(src);
+  if (keys.length > 0){
+    var sub = document.createElement("div"); sub.style.marginTop = "8px";
+    var label = document.createElement("div"); label.style.color = "#7d8590"; label.style.fontSize = "11px"; label.textContent = "Source per knob:"; sub.appendChild(label);
+    var ul = document.createElement("ul");
+    for (var i = 0; i < keys.length; i++){ var li = document.createElement("li"); li.textContent = keys[i] + " = " + src[keys[i]]; ul.appendChild(li); }
+    sub.appendChild(ul); s.body.appendChild(sub);
+  }
+  return s.li;
+}
+function stepRoute(route){
+  if (!route){ var s = makeStep("Route (rule activation)", true, false); s.body.appendChild(emptyNote("dist/router.json not loaded; no rule activation captured.")); return s.li; }
+  var s2 = makeStep("Route (rule activation)", false, false);
+  if (route.persona) s2.body.appendChild(dlPairs([["persona", route.persona]]));
+  var addList = function(label, items, cls){
+    if (!items || items.length === 0) return;
+    var lbl = document.createElement("div"); lbl.style.color = "#7d8590"; lbl.style.fontSize = "11px"; lbl.style.marginTop = "6px"; lbl.textContent = label; s2.body.appendChild(lbl);
+    var wrap = document.createElement("div");
+    for (var i = 0; i < items.length; i++){ var t = document.createElement("span"); t.className = "tag " + cls; t.textContent = items[i]; wrap.appendChild(t); }
+    s2.body.appendChild(wrap);
+  };
+  addList("Kernel rules (always active):", route.kernel_rules, "kernel");
+  addList("Matched tier-1 rules:", route.matched_rules, "tier1");
+  return s2.li;
+}
+function stepCouncil(council){
+  if (!council || council.length === 0){ var s = makeStep("Council deliberation", true, false); s.body.appendChild(emptyNote("No council session attached to this run.")); return s.li; }
+  var s2 = makeStep("Council deliberation (" + council.length + " member" + (council.length === 1 ? "" : "s") + ")", false, false);
+  var ul = document.createElement("ul");
+  for (var i = 0; i < council.length; i++){
+    var m = council[i];
+    var li = document.createElement("li");
+    li.textContent = m.member_id + " \u2192 " + (m.verdict || "(no verdict)");
+    ul.appendChild(li);
+  }
+  s2.body.appendChild(ul);
+  return s2.li;
+}
+function stepMemory(memory){
+  if (!memory || memory.length === 0){ var s = makeStep("Memory hits", true, false); s.body.appendChild(emptyNote("No memory entries consulted.")); return s.li; }
+  var s2 = makeStep("Memory hits (" + memory.length + ")", false, false);
+  var ul = document.createElement("ul");
+  for (var i = 0; i < memory.length; i++){
+    var m = memory[i];
+    var li = document.createElement("li");
+    li.textContent = m.entry_id + " (score " + m.hit_score + ", used in " + m.used_in + ")";
+    ul.appendChild(li);
+  }
+  s2.body.appendChild(ul);
+  return s2.li;
+}
+function stepPack(pack){
+  if (!pack){ var s = makeStep("Active pack", true, false); s.body.appendChild(emptyNote("No workspace pack active.")); return s.li; }
+  var s2 = makeStep("Active pack", false, false);
+  s2.body.appendChild(dlPairs([["id", pack.id], ["reason", pack.reason]]));
+  return s2.li;
+}
+function stepAssumptions(assumptions){
+  if (!assumptions || assumptions.length === 0){ var s = makeStep("Assumptions", true, false); s.body.appendChild(emptyNote("No assumptions recorded.")); return s.li; }
+  var s2 = makeStep("Assumptions (" + assumptions.length + ")", false, false);
+  var ul = document.createElement("ul");
+  for (var i = 0; i < assumptions.length; i++){
+    var a = assumptions[i];
+    var li = document.createElement("li");
+    li.textContent = a.id + " \u2014 " + (a.accepted ? "accepted" : "rejected") + " (" + a.source + ")";
+    ul.appendChild(li);
+  }
+  s2.body.appendChild(ul);
+  return s2.li;
+}
+function stepHalt(halt){
+  if (!halt){ var s = makeStep("Halt", true, false); s.body.appendChild(emptyNote("Clean run \u2014 no halt persisted.")); return s.li; }
+  var s2 = makeStep("Halt \u2014 " + (halt.reason || "(unknown reason)"), false, true);
+  s2.body.appendChild(dlPairs([["reason", halt.reason], ["step", halt.step]]));
+  if (halt.surface && halt.surface.length){
+    var lbl = document.createElement("div"); lbl.style.color = "#7d8590"; lbl.style.fontSize = "11px"; lbl.style.marginTop = "6px"; lbl.textContent = "Surface:"; s2.body.appendChild(lbl);
+    var ul = document.createElement("ul");
+    for (var i = 0; i < halt.surface.length; i++){ var li = document.createElement("li"); li.textContent = halt.surface[i]; ul.appendChild(li); }
+    s2.body.appendChild(ul);
+  }
+  return s2.li;
+}
+function stepProvider(provider){
+  var s2 = makeStep("Video provider", false, false);
+  s2.body.appendChild(dlPairs([["id", provider.id], ["selection_reason", provider.selection_reason]]));
+  return s2.li;
 }
 
 // minimal SSE reader (fetch + ReadableStream)

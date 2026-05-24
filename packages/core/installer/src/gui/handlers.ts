@@ -34,6 +34,7 @@ import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { csrfEquals } from './security.js';
 import { appendEntry, discardLog, newLogPath, rollback } from './transaction-log.js';
 import { getTaskHistory, resolveTask, runTask, TASK_CATALOG } from './task-exec.js';
+import { defaultExplainRunner, type ExplainRunner } from './explain-exec.js';
 import type { ApplyEvent, TransactionLogEntry } from './types.js';
 
 /**
@@ -53,6 +54,12 @@ export interface ApiContext {
     readonly projectRoot: string;
     readonly recovery?: RecoveryState | undefined;
     readonly clearRecovery?: () => void;
+    /**
+     * Optional explain-trace runner. Defaults to `defaultExplainRunner`
+     * (spawns the CLI). Tests inject fakes to avoid needing a real
+     * `.work-state.json` and Python environment in the tmpdir.
+     */
+    readonly explainRunner?: ExplainRunner;
 }
 
 export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
@@ -72,6 +79,7 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'GET' && url === '/api/v1/task/history') return getTaskHistoryEndpoint(res);
     if (method === 'GET' && url === '/api/v1/council/recent') return getCouncilRecent(res, ctx);
     if (method === 'GET' && (url ?? '').startsWith('/api/v1/council/session/')) return getCouncilSession(req, res, ctx);
+    if (method === 'GET' && url === '/api/v1/explain/last') return getExplainLast(res, ctx);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: 'not_found' }));
@@ -448,4 +456,21 @@ function getCouncilSession(req: IncomingMessage, res: ServerResponse, ctx: ApiCo
     let response: string | undefined;
     try { response = readFileSync(join(sessionDir, 'response.md'), 'utf8'); } catch { /* optional */ }
     return endJson(res, 200, { session: manifest, response });
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 2 — Explain-trace surface (road-to-ai-os-product-ui)
+// ──────────────────────────────────────────────────────────────────────
+
+async function getExplainLast(res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const runner = ctx.explainRunner ?? defaultExplainRunner;
+    const pkgRoot = packageRootOf(ctx.loaded.path);
+    try {
+        const result = await runner(ctx.projectRoot, pkgRoot);
+        if (result.kind === 'ok') return endJson(res, 200, { trace: result.trace });
+        if (result.kind === 'not_found') return endJson(res, 404, { error: 'no_trace', message: result.stderr.trim() });
+        return endJson(res, 500, { error: 'explain_failed', exitCode: result.exitCode, message: result.stderr.trim() });
+    } catch (err) {
+        return endJson(res, 500, { error: 'explain_failed', message: (err as Error).message });
+    }
 }

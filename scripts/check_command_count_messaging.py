@@ -18,13 +18,13 @@ Patterns checked (per file):
 
     README.md
       hero badge   "/badge/Commands-{N}-…"                    → active
-      browse line  "Browse all {N} active commands"           → active
-      browse meta  "{N} files total"                          → total
-      browse meta  "{N} are deprecation shims"                → shims
-      tools blurb  "{N} native commands"                      → active
+      (Prose phrasings "Browse all {N} active commands" and
+       "{N} native commands" were retired in the modernized
+       README — the badge alone now carries the count.)
 
     AGENTS.md
       tree         "commands/  ({N} files — {A} active + {S} deprecation shims)"
+      (Thin-Root: only checked when a `commands/` tree block exists.)
 
     docs/getting-started.md
       browse line  "Browse all {N} active commands"           → active
@@ -104,11 +104,9 @@ def main() -> int:
     print(f"Canonical counts: {total} files · {shims} shims · {active} active")
 
     checks = [
-        # README.md
+        # README.md — modernized: badge is the sole count surface
         (README, r"/badge/Commands-(\d+)-", active, "hero badge"),
-        (README, r"Browse all (\d+) active commands", active, "browse line"),
-        (README, r"\+ (\d+) native commands\)", active, "tools blurb"),
-        # docs/getting-started.md
+        # docs/getting-started.md — still carries the prose browse line
         (GETTING_STARTED, r"Browse all (\d+) active commands", active, "browse line"),
     ]
     # Shim-specific messaging only applies during a deprecation window.

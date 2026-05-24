@@ -19,6 +19,7 @@ import { handleApi, type ApiContext } from '../src/gui/handlers.js';
 import type { LoadedManifest } from '../src/manifest-loader.js';
 import { sha256OfString } from '../src/io/sha256.js';
 import { __resetTaskState, TASK_CATALOG } from '../src/gui/task-exec.js';
+import type { ExplainResult, ExplainRunner } from '../src/gui/explain-exec.js';
 import { makeArtefact, makeManifest, makePack } from './_fixtures.js';
 
 const CSRF = 'a'.repeat(64);
@@ -33,7 +34,7 @@ function writeSource(relPath: string, content: string): void {
     writeFileSync(abs, content);
 }
 
-function buildContext(): ApiContext {
+function buildContext(overrides: Partial<ApiContext> = {}): ApiContext {
     const manifest = makeManifest({
         packs: [makePack({ id: 'a' })],
         artefacts: [makeArtefact({ path: '.agent-src.uncompressed/rules/foo.md', packs: ['a'] })],
@@ -44,7 +45,7 @@ function buildContext(): ApiContext {
         sha256: sha256OfString(json),
         path: join(pkg, 'dist', 'discovery', 'discovery-manifest.json'),
     };
-    return { csrfToken: CSRF, loaded, projectRoot: proj };
+    return { csrfToken: CSRF, loaded, projectRoot: proj, ...overrides };
 }
 
 beforeEach(async () => {
@@ -494,5 +495,82 @@ describe('GET /api/v1/council/session/:id', () => {
         expect(body.session.id).toBe('2026-06-01T12-00-00Z');
         expect(body.session.artefact).toBe('rules/baz.md');
         expect(body.response).toContain('Looks good');
+    });
+});
+
+
+describe('GET /api/v1/explain/last', () => {
+    async function withRunner(runner: ExplainRunner): Promise<string> {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        const ctx = buildContext({ explainRunner: runner });
+        server = createServer((req, res) => void handleApi(req, res, ctx));
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const port = (server.address() as AddressInfo).port;
+        return `http://127.0.0.1:${port}`;
+    }
+
+    it('returns 200 + trace payload on ok', async () => {
+        const trace = {
+            version: 1,
+            generated_at: '2026-05-24T10:00:00Z',
+            run_id: 'r-1',
+            subject: 'work',
+            inputs: null,
+            route: null,
+            council: null,
+            memory: null,
+            pack: null,
+            assumptions: [],
+            halt: null,
+            provider: null,
+        };
+        const fake: ExplainRunner = async (): Promise<ExplainResult> => ({ kind: 'ok', trace });
+        const url = await withRunner(fake);
+        const res = await fetch(`${url}/api/v1/explain/last`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.trace.run_id).toBe('r-1');
+        expect(body.trace.subject).toBe('work');
+    });
+
+    it('returns 404 + message when no trace is available', async () => {
+        const fake: ExplainRunner = async (): Promise<ExplainResult> => ({
+            kind: 'not_found',
+            stderr: '❌ explain last: no .work-state.json found\n',
+        });
+        const url = await withRunner(fake);
+        const res = await fetch(`${url}/api/v1/explain/last`);
+        expect(res.status).toBe(404);
+        const body = await res.json();
+        expect(body.error).toBe('no_trace');
+        expect(body.message).toContain('no .work-state.json');
+    });
+
+    it('returns 500 + error payload when runner reports failure', async () => {
+        const fake: ExplainRunner = async (): Promise<ExplainResult> => ({
+            kind: 'error',
+            exitCode: 2,
+            stderr: 'boom',
+            stdout: '',
+        });
+        const url = await withRunner(fake);
+        const res = await fetch(`${url}/api/v1/explain/last`);
+        expect(res.status).toBe(500);
+        const body = await res.json();
+        expect(body.error).toBe('explain_failed');
+        expect(body.exitCode).toBe(2);
+        expect(body.message).toBe('boom');
+    });
+
+    it('returns 500 when runner throws', async () => {
+        const fake: ExplainRunner = async (): Promise<ExplainResult> => {
+            throw new Error('spawn ENOENT');
+        };
+        const url = await withRunner(fake);
+        const res = await fetch(`${url}/api/v1/explain/last`);
+        expect(res.status).toBe(500);
+        const body = await res.json();
+        expect(body.error).toBe('explain_failed');
+        expect(body.message).toContain('spawn ENOENT');
     });
 });

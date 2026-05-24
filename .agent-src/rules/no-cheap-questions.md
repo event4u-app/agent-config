@@ -20,60 +20,62 @@ install:
 
 # No Cheap Questions
 
-A question is **cheap** when context already answers it, an option breaches an Iron Law, choices differ only in sequencing / format, or one option is dominant. Mode-independent. Autonomy never lifts the floor.
+Cheap = context answers it, option breaches an Iron Law, choices differ only in sequencing / format, or one option dominates. Mode-independent; autonomy never lifts the floor.
 
 ## The Iron Laws
 
 ```
-NEVER ASK WHAT THE STATED CONTEXT ALREADY ANSWERS.
-NEVER PRESENT AN OPTION THAT VIOLATES AN IRON LAW.
-NEVER OFFER NUMBERED CHOICES WITHOUT A REAL TRADE-OFF.
+NEVER ASK WHAT CONTEXT ANSWERS.
+NEVER OFFER AN IRON-LAW-VIOLATING OPTION.
+NEVER NUMBER CHOICES WITHOUT A REAL TRADE-OFF.
 ```
 
-## Cheap classes
-
-Sequencing · format-only · commit asks · CI / test asks · fenced re-ask · Iron-Law option · context-derived · dominant option · re-ask after decline · paternalistic (Iron Law 3) · continuation under mandate (Iron Law 4). Catalog: [`asking-and-brevity-examples`](../docs/guidelines/agent-infra/asking-and-brevity-examples.md#cheap-question-class-catalog--extended-examples).
+Cheap-class catalog + IL 3 (no paternalistic state-assuming options): [`cheap-question-mechanics § cheap classes`](../contexts/execution/cheap-question-mechanics.md#cheap-classes--full-catalog).
 
 ## Iron Law 4 — No Continuation Prompts Under Autonomous Mandate
 
 ```
-WHEN A STANDING AUTONOMOUS MANDATE IS ACTIVE — /roadmap:process-full,
-/roadmap:process-phase, EXPLICIT "ENTSCHEIDE SELBST / DECIDE AND DON'T
-ASK" — NEVER ASK "WEITER? / NEXT STEP? / SHALL I CONTINUE?".
-A CLEAN EDIT-BATCH IS NOT A HALT CONDITION. THE ONLY HALTS ARE THE
-FIVE NAMED IN THE INVOKING COMMAND (HARD-FLOOR, COUNCIL-OFF +
-AMBIGUITY, SECURITY-SENSITIVE, SCOPE-OUT-OF-ROADMAP, TEST/QUALITY RED).
+STANDING AUTONOMOUS MANDATE ACTIVE → NEVER ASK
+"WEITER? / NEXT STEP? / SHALL I CONTINUE?".
+A CLEAN EDIT-BATCH IS NOT A HALT CONDITION.
 ```
 
-## Iron Law 3 — No Paternalistic State-Assuming Options
+Mandate triggers + halt list: [`cheap-question-mechanics § Iron Law 4`](../contexts/execution/cheap-question-mechanics.md#iron-law-4--halt-conditions-under-autonomous-mandate).
+
+## Iron Law 5 — Prereq Work Is Execution, Not a Question
 
 ```
-NEVER FABRICATE USER STATE TO JUSTIFY AN OPTION.
-"TAKE A BREAK", "SLEEP ON IT", "COME BACK FRESH" — FORBIDDEN.
-THE USER DECIDES WHEN TO STOP. THE AGENT DECIDES WHAT TO BUILD NEXT.
+USER AUTHORIZES X ("COMMIT" / "PUSH" / "OPEN PR" / "DEPLOY")
+→ ALL PREREQ WORK IS EXECUTION. NEVER ASK, NEVER OFFER
+"DO THE PREREQ" vs "SKIP AND BREAK THE GATE".
 ```
+
+Prereq catalog + halt conditions: [`cheap-question-mechanics § Iron Law 5`](../contexts/execution/cheap-question-mechanics.md#iron-law-5--prereq-examples-silent-execution-never-a-question).
+
+## Iron Law 6 — Destination Already Stated, Never Re-Ask
+
+```
+USER NAMED THE DESTINATION → DO NOT RE-ASK.
+NO BRANCH-BASE INVENTORY, NO "WHICH BRANCH?", NO "NEW PR?".
+```
+
+Triggers + scope-control interaction: [`cheap-question-mechanics § Iron Law 6`](../contexts/execution/cheap-question-mechanics.md#iron-law-6--destination-triggers-never-re-ask).
 
 ## Pre-Send Self-Check — MANDATORY before every question
 
-Silent, before any numbered-options block:
+Silent, before any numbered-options block. Any "yes" → don't ask:
 
-1. Answer already in stated context?
-2. Option violates `commit-policy`, `scope-control § git-ops`, or `non-destructive-by-default`?
+1. Answer in stated context?
+2. Option violates `commit-policy` / `scope-control § git-ops` / `non-destructive-by-default`?
 3. Pure sequencing / format, no trade-off?
 4. One option obviously dominant?
 5. User fenced step (*"plan only"*, *"review first"*) → deliver + handback.
 6. User already declined? Re-ask forbidden.
-7. Option assumes user fatigue / frustration without in-message citation? Iron Law 3 — drop.
-8. Standing autonomous mandate + "weiter? / continue?" — Iron Law 4, drop; pick next item.
+7. Assumes user fatigue / frustration without citation? IL 3.
+8. Mandate active + "weiter? / continue?" — IL 4, pick next item.
+9. Prereq for user-authorized action? IL 5, execute silently.
+10. Destination (branch / PR) already named? IL 6, never re-ask.
 
-Any "yes" → don't ask. Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
+Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
 
-## When asking IS allowed
-
-- Real architectural / scope decision with non-obvious trade-offs.
-- Vague-request trigger ([`ask-when-uncertain`](ask-when-uncertain.md)).
-- Security-sensitive ([`security-sensitive-stop`](security-sensitive-stop.md)).
-- Hard Floor ([`non-destructive-by-default`](non-destructive-by-default.md)).
-- Two genuinely-equivalent paths; user preference is the tiebreaker.
-
-In doubt → ask. This rule narrows asking, never widens silence.
+In doubt → ask. This rule narrows asking, never widens silence. When asking IS allowed: [`cheap-question-mechanics § when-asking-is-allowed`](../contexts/execution/cheap-question-mechanics.md#when-asking-is-allowed).
