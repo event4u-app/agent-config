@@ -32,12 +32,12 @@ Make the package run as a long-lived server for a team, not a per-developer inst
 - [x] **Step 2:** Author `packages/core/deploy/docker-compose.yml` — services: `agent-config` (the image), `redis` (session + queue), `postgres` (audit log + memory persistence — replaces filesystem JSONL when `STORAGE_MODE=postgres`). Three named volumes: `agent-config-core`, `agent-config-runtime`, `postgres-data`.
 - [x] **Step 3:** New env var contract — `STORAGE_MODE` (`filesystem | postgres`), `SESSION_BACKEND` (`memory | redis`), `BIND_HOST` (default `127.0.0.1` for dev, `0.0.0.0` for compose). Documented in `docs/deploy/env-vars.md`.
 - [x] **Step 4:** Healthcheck endpoint — `GET /api/v1/health` returns `{status: "ok", version, uptime_seconds, storage_mode, session_backend}`. CSRF-exempt; rate-limited to 1 rps per IP.
-- [x] **Step 5:** Council artefact — opened in `agents/tmp/council-question-deployment-shape.md`; council **not invoked** (no provider API keys configured); defensible defaults captured in `docs/decisions/ADR-021-deployment-shape.md` (ADR-020 was already taken by global-only-consumer-scope, so this ADR is numbered 021).
+- [x] **Step 5:** Council artefact — open question captured locally under `agents/tmp/` (gitignored); council **not invoked** (no provider API keys configured); defensible defaults captured in `docs/decisions/ADR-021-deployment-shape.md` (ADR-020 was already taken by global-only-consumer-scope, so this ADR is numbered 021).
 - [-] **Step 6:** Deferred — depends on `road-to-product-adoption.md` Phase 1 smoke matrix landing (PR #219, not yet merged). Once merged, add a `docker-compose` leg that boots the image, hits `/api/v1/health`, asserts 200 + valid JSON body.
 
 ## Phase 2: SSO & multi-user identity (central auth)
 
-> **Status: deferred.** Phase 2 touches authentication code, session crypto, and the audit log — all security-sensitive paths that fall under the `non-destructive-by-default` Hard Floor for autonomous execution. Needs a human-reviewed PR with a security audit before merge. Council question stub authored at `agents/tmp/council-question-identity-model.md`.
+> **Status: deferred.** Phase 2 touches authentication code, session crypto, and the audit log — all security-sensitive paths that fall under the `non-destructive-by-default` Hard Floor for autonomous execution. Needs a human-reviewed PR with a security audit before merge. Council question stub captured locally under `agents/tmp/` (gitignored).
 
 The wizard today assumes one local user. A team deployment needs SSO + per-user session state + per-user provider keys (or shared keys with audit).
 
@@ -51,7 +51,7 @@ The wizard today assumes one local user. A team deployment needs SSO + per-user 
 
 ## Phase 3: Central policy file — model access + guardrails
 
-> **Status: deferred.** Phase 3 sets org-level ceilings for autonomy, redaction allowlist, provider allowlist, and cost cap. Each one is a security-sensitive / financial-control surface; needs human-reviewed PR. Council question stub authored at `agents/tmp/council-question-central-policy.md`; doc skeleton at `docs/deploy/policy-cookbook.md`. Depends on Phase 2 for user-scoped enforcement.
+> **Status: deferred.** Phase 3 sets org-level ceilings for autonomy, redaction allowlist, provider allowlist, and cost cap. Each one is a security-sensitive / financial-control surface; needs human-reviewed PR. Council question stub captured locally under `agents/tmp/` (gitignored); doc skeleton at `docs/deploy/policy-cookbook.md`. Depends on Phase 2 for user-scoped enforcement.
 
 Today every developer picks their own provider; in a company that's a compliance hole. Define a policy file an admin authors once.
 
@@ -77,7 +77,7 @@ Project context today is per-machine `agents/overrides/`. A team needs **shared*
 
 ## Phase 5: Internal-knowledge connectors (read-only)
 
-> **Status: deferred.** OAuth token storage is a security-sensitive surface; cross-tenant data caching is a tenant-isolation surface. Both fall under the Hard Floor for autonomous execution. Council question stub authored at `agents/tmp/council-question-connector-scope.md`; doc skeleton at `docs/deploy/connector-setup.md`. Depends on Phase 2 (per-user OAuth) and Phase 3 (policy gate).
+> **Status: deferred.** OAuth token storage is a security-sensitive surface; cross-tenant data caching is a tenant-isolation surface. Both fall under the Hard Floor for autonomous execution. Council question stub captured locally under `agents/tmp/` (gitignored); doc skeleton at `docs/deploy/connector-setup.md`. Depends on Phase 2 (per-user OAuth) and Phase 3 (policy gate).
 
 Make team docs / code searchable without exporting to a SaaS chat tool — the "no other AI product needed" pitch.
 
