@@ -1,0 +1,93 @@
+# road-to-internal-ai-os-deployment Phase 1 Step 2.
+#
+# Single-host deployment compose. Services:
+#   - agent-config : the GUI server image (Dockerfile in this dir)
+#   - redis        : session backend + per-user cost meter (Phase 3)
+#   - postgres     : audit log + memory persistence when
+#                    STORAGE_MODE=postgres (Phase 2+)
+#
+# Bring up:   docker compose -f packages/core/deploy/docker-compose.yml up
+# Tear down:  docker compose -f packages/core/deploy/docker-compose.yml down
+# Wipe state: add --volumes to `down`. Audit log + memory destroyed.
+#
+# Phase-1 reality: STORAGE_MODE=filesystem + SESSION_BACKEND=memory
+# are the defaults — redis + postgres land but are not yet read by
+# the server (Phase 2 + 3 wire them in). They ship here so the
+# deployment shape is settled before the auth/policy code arrives,
+# per ADR-021.
+
+services:
+  agent-config:
+    build:
+      context: ../../..
+      dockerfile: packages/core/deploy/Dockerfile
+    image: event4u/agent-config:dev
+    container_name: agent-config
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8787:8787"
+    environment:
+      BIND_HOST: 0.0.0.0
+      GUI_PORT: 8787
+      STORAGE_MODE: ${STORAGE_MODE:-filesystem}
+      SESSION_BACKEND: ${SESSION_BACKEND:-memory}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost:8787,127.0.0.1:8787}
+      # Phase-2+ env (no-op until auth lands)
+      AUTH_MODE: ${AUTH_MODE:-none}
+      # Phase-3+ env (no-op until policy lands)
+      POLICY_PATH: ${POLICY_PATH:-/etc/event4u/policy.yaml}
+      DATABASE_URL: ${DATABASE_URL:-}
+      REDIS_URL: ${REDIS_URL:-}
+    volumes:
+      - agent-config-core:/home/agentcfg/.event4u/agent-config
+      - agent-config-runtime:/var/lib/agent-config/runtime
+    depends_on:
+      redis:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8787/api/v1/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    container_name: agent-config-redis
+    restart: unless-stopped
+    # Loopback-only — internal service, not exposed to the host.
+    expose:
+      - "6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: agent-config-postgres
+    restart: unless-stopped
+    expose:
+      - "5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-agent_config}
+      POSTGRES_USER: ${POSTGRES_USER:-agent_config}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change-me-in-production}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-agent_config} -d ${POSTGRES_DB:-agent_config}"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  agent-config-core:
+    name: agent-config-core
+  agent-config-runtime:
+    name: agent-config-runtime
+  postgres-data:
+    name: agent-config-postgres-data

@@ -38,16 +38,16 @@
 
 ### [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md)
 
-**Internal AI OS Deployment — one-click company rollout + central policy** — 0 / 46 done (0%)
+**Internal AI OS Deployment — one-click company rollout + central policy** — 8 / 43 done (19%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Deployment artefact — Docker + Compose (single-host first) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Deployment artefact — Docker + Compose (single-host first) | ✅ done | 0 | 5 | 0 | 1 | 100% |
 | 2 | SSO & multi-user identity (central auth) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 3 | Central policy file — model access + guardrails | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 4 | Shared team context — overrides + memory at the team level | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | Internal-knowledge connectors (read-only) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 6 | Admin docs + first-customer rollout playbook | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
+| 6 | Admin docs + first-customer rollout playbook | 🟡 in progress | 9 | 3 | 0 | 2 | 25% |
 
 ### [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md)
 
