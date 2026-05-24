@@ -480,8 +480,8 @@ def _workspaces_view(manifest: dict[str, Any]) -> dict[str, Any]:
     """Flattened workspace sub-view (ADR-015 Phase 5).
 
     For each workspace: artefact count + per-pack artefact ids. Cheap
-    surface for the browser wizard and marketing site so they don't need
-    to walk the full manifest.
+    surface for the browser wizard (and any other lightweight consumer)
+    so they don't need to walk the full manifest.
     """
     pack_to_artefacts: dict[str, list[str]] = {}
     for a in manifest["artefacts"]:
@@ -627,8 +627,8 @@ def main(argv: list[str] | None = None) -> int:
         args.deprecation_report.write_text(_deprecation_report(manifest), encoding="utf-8")
         args.trust_report.write_text(_trust_report(manifest), encoding="utf-8")
         args.orphan_report.write_text(_orphan_report(manifest), encoding="utf-8")
-        # Phase 5 sub-views — flattened workspace/pack JSON for lightweight
-        # consumers (browser wizard, marketing site) so they don't need to
+        # Phase 5 sub-views — flattened workspace/pack JSON for
+        # lightweight consumers (browser wizard) so they don't need to
         # walk the full manifest.
         args.workspaces_json.write_text(
             json.dumps(_workspaces_view(manifest), indent=2, sort_keys=True, ensure_ascii=False) + "\n",
