@@ -12,11 +12,26 @@ complexity: lightweight
 
 - Phase 1 (Task execution) — **complete**, 4 inline allowlist entries, SSE streaming, 20-entry ring history.
 - Phase 2 (Explain trace) — **complete** in follow-up: GUI shells out to `agent-config explain last --json`, renders ExplainTrace v1 as a vertical timeline (inputs, route, council, memory, pack, assumptions, halt, provider).
-- Phase 4 (Council inspection) — **partial**: council recent + session detail done; memory inspection deferred.
-- Phase 5 (Navigation) — **complete** in follow-up: 4-tab top-nav, per-surface help expanders on Setup / Tasks / Council / Explain.
+- Phase 4 (Council + Memory inspection) — **complete** on branch `feat/roadmap-reactivation-and-memory-inspection`: council recent + session detail + memory list + memory file + Memory tab UI (two-pane scope tree + plaintext viewer with line numbers) + 10 memory tests. 253/253 vitest green.
+- Phase 5 (Navigation) — **complete**: 5-tab top-nav (Setup / Tasks / Council / Memory / Explain), per-surface help expanders on every surface.
 - Phase 3 (Provider wizard) — **blocked**: requires `packages/core/providers/` + `packages/core/secrets/` to land first (separate roadmap).
 
 The AI Council was consulted on the scope reduction. Verdict: ship the feasible surfaces in this PR; spawn follow-up roadmaps for the blocked phases so the missing prerequisites are tracked as work, not assumed.
+
+## Premature Archival — Honesty Audit (2026-05-24)
+
+This roadmap was archived as "100 % done" with Phase 4 Steps 3 / 4 / 6 (Memory Inspection) marked `[-]` "deferred — successor roadmap". Re-reading my own triage that called these **autonomously buildable**: the "needs canonical `.agent-memory/index.json` schema" excuse was a bequemlichkeits-decision, not a hard-floor block. The repo already ships:
+
+- `.agent-src/templates/agents/memory/*.example.yml` — templates a consumer installs.
+- `agents/runtime/` — materialized YAML + JSONL the runtime writes (council sessions, decisions, contexts, evidence).
+
+A read-only inspection surface over `agents/memory/` (consumer-installed) + `agents/runtime/` (runtime-written), mirroring the council-recent / council-session pattern, is buildable inside this roadmap without a new schema ADR. Reactivated on branch `feat/roadmap-reactivation-and-memory-inspection`.
+
+Legitimate deferrals that **stay** `[-]`:
+
+- Phase 3 (Provider wizard) — real prerequisite block on `packages/core/providers/` + `packages/core/secrets/`.
+- Phase 5 Steps 2 / 3 — cosmetic polish, correctly out of scope.
+- Phase 5 Step 5 — cross-roadmap (belongs in `road-to-product-adoption.md`).
 
 ## Prerequisites
 
@@ -68,17 +83,18 @@ Both are substantial new infrastructure (crypto, keychain integration, adapter c
 
 - [-] **Step 1–6:** *Deferred — successor roadmap.* Requires `packages/core/providers/manifest.json` + `packages/core/secrets/` (crypto, keychain, adapter contracts). Building inside this UI-focused roadmap would 3–5× the scope. Tracked for a future `road-to-provider-onboarding.md`; not a blocker for this roadmap's archival.
 
-## Phase 4: Council & memory inspection (feedback6 §P1.4) — **partial**
+## Phase 4: Council & memory inspection (feedback6 §P1.4) — **complete**
 
 Make the agent's internal state legible — the inverse of treating the AI as a black box.
 
 - [x] **Step 1:** New endpoint `GET /api/v1/council/recent` — reads `agents/runtime/council/sessions/*/manifest.json` (newest first, capped at 50). Returns id, timestamp, artefact, provider, model, mode, token counts. <!-- council-ref-allowed: API endpoint contract pins the read path -->
 - [x] **Step 2:** New endpoint `GET /api/v1/council/session/:id` — full session manifest plus `response.md` body. Path-traversal-safe id regex.
-- [-] **Step 3:** *Deferred — successor roadmap.* Memory list endpoint requires a canonical `.agent-memory/index.json` schema; the repo currently ships templates only (`.agent-src/templates/agents/memory/*.example.yml`) and no materialized runtime store. Defining that schema autonomously would be a foundational architectural decision (storage layout, redaction contract, retention rules) without council deliberation. Tracked for a future `road-to-memory-inspection.md`.
-- [-] **Step 4:** *Deferred — successor roadmap.* Depends on Step 3.
+- [x] **Step 3:** New endpoint `GET /api/v1/memory/list` — read-only enumeration of memory artefacts the runtime has written. Scopes (all read-only, all `projectRoot`-anchored): `agents/memory/contexts/`, `agents/memory/decisions/`, `agents/memory/evidence/`, `agents/memory/features/`, `agents/memory/overrides/`, `agents/memory/reference/`. Returns `{ name, count, entries: [{id, sizeBytes, modifiedAtIso}], truncated }` per scope. Capped at 500 entries per scope; dotfiles skipped; missing dirs return empty (no error).
+- [x] **Step 4:** New endpoint `GET /api/v1/memory/file?scope=…&id=…` — returns the file content as `text/plain` (UTF-8, capped at 256 KiB → 413 above cap). Path-traversal-safe: `scope` is the closed enum, `id` matches `^[A-Za-z0-9._/-]+$` and rejects `..` / leading `/`, final resolved absolute path MUST be a child of the resolved scope dir. Headers: `X-Memory-Scope`, `X-Memory-Modified-At`. Read-only — no mutation surface in this phase.
 - [x] **Step 5:** UI surface `Council` — two-pane list (recent sessions left, detail right with markdown response).
-- [-] **Step 6:** *Deferred — successor roadmap.* Depends on Steps 3 + 4.
+- [x] **Step 6:** UI surface `Memory` — fifth top-nav tab. Two-pane (`memory-grid`, 320 px tree + content): scope tree groups files per scope with count badge, file rows show `id` + `sizeBytes` + `modifiedAtIso`. Detail pane renders raw plaintext in a `<pre>` with line numbers (no markdown render — what's on disk is what you see). Empty scopes render an explicit `(empty)` row.
 - [x] **Step 7:** Vitest coverage — 5 council tests (`gui-handlers.test.ts`): recent-when-empty, recent-newest-first, invalid-id-400, missing-404, manifest+response happy path.
+- [x] **Step 8:** Vitest coverage for memory endpoints — 10 tests in `gui-handlers.test.ts`: list-empty-when-no-dir, list-with-fixtures-multi-scope, list-skips-dotfiles, file-missing-param-400, file-invalid-scope-400, file-traversal-400, file-absolute-id-400, file-missing-404, file-happy-200-plaintext-headers, file-too-large-413.
 
 ## Phase 5: Navigation & polish — **complete**
 
@@ -92,13 +108,13 @@ Tie the shipped surfaces together as one product.
 
 ## Acceptance Criteria
 
-- [x] Four GUI surfaces (`Setup`, `Tasks`, `Council`, `Explain`) reachable, with backend endpoints + Vitest coverage. (Five-surface target — `Providers` still deferred per Phase 3 blocker.)
-- [x] CSRF enforced on every state-changing endpoint (`/task/run` rejects bad CSRF with 403). PID lock + idle timer inherited from the existing wizard server. Read-only endpoints (`/explain/last`, `/council/*`) intentionally CSRF-free — GET semantics.
+- [x] Five GUI surfaces (`Setup`, `Tasks`, `Council`, `Explain`, `Memory`) reachable, with backend endpoints + Vitest coverage. (`Providers` still deferred per Phase 3 blocker — six-surface target tracked separately.)
+- [x] CSRF enforced on every state-changing endpoint (`/task/run` rejects bad CSRF with 403). PID lock + idle timer inherited from the existing wizard server. Read-only endpoints (`/explain/last`, `/council/*`, `/memory/*`) intentionally CSRF-free — GET semantics.
 - [x] No credential value is ever written to a log or returned in an API response body. (No credential paths touched in this PR.)
 - [x] Closed allowlist enforced — `/api/v1/task/run` returns 404 for any id not in `TASK_CATALOG`. `gui_runnable: true` schema property added for future per-command marking.
-- [x] Per-surface help expanders published inline (Setup, Tasks, Council, Explain) — supersedes the separate `docs/wizard/*.md` approach.
+- [x] Per-surface help expanders published inline (Setup, Tasks, Council, Explain, Memory) — supersedes the separate `docs/wizard/*.md` approach. Memory surface ships a `<details class="help">` block explaining the six scopes and read-only semantics.
 - [-] ~~Smoke matrix asserts every route returns 200~~ — cancelled with Phase 5 Step 5 (cross-roadmap).
-- [x] All quality gates pass — `npx tsc --noEmit` clean, `npx vitest run` 230/230 green (35 in `gui-handlers.test.ts`, +4 vs the Phase 1+4+5 PR).
+- [x] All quality gates pass — `tsc --noEmit` clean, `vitest run` green (253 tests across 24 files after Memory phase).
 
 ## Notes
 

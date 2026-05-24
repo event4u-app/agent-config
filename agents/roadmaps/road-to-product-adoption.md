@@ -6,6 +6,17 @@ complexity: lightweight
 
 > Shift the package from "technically excellent, market-unproven" (External Adoption 3/10 in `agents/tmp/feedback6.txt`) to "demonstrably useful for real consumers" — without restarting the architecture.
 
+## Premature Archival — Honesty Audit (2026-05-24)
+
+This roadmap was archived on 2026-05-24 as "100 % done" after the Phase 4 Telemetry source landed. That was **premature archival**:
+
+- Phase 4 Steps 1–5 were genuinely implemented this session (SDK + Worker + Docs + GUI wiring + 24 tests green). Those stay `[x]`.
+- The AC "All quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, smoke matrix green on the last cron cycle" was marked `[x]` without actually running `task lint-roadmap-complexity` this session and without checking the cron-cycle badge state. Reset to `[ ]` until verified in this branch.
+- The AC "≥ 80 % before archival" was a self-referential auto-check, not real work. Reset to `[ ]`.
+- The two human-owner ACs (registries, walkthroughs) stay `[-]` with a "successor roadmap" note — that is a legitimate scope boundary, not a cancellation of convenience.
+
+Reactivated on branch `feat/roadmap-reactivation-and-memory-inspection`.
+
 ## Prerequisites
 
 - [x] Read `agents/tmp/feedback6.txt` (PRs #200–#211 trend analysis, 12-axis score, P0–P3 TODOs).
@@ -83,8 +94,8 @@ Remove the speculative architecture overhang before it accumulates more carrying
 - [-] Five walkthroughs published, all with screenshots, ≥ 3 externally reproduced — *human-owner.* Requires real provider keys, live wizard runs, screenshots of the chat surface, and recruited external reproducers. The autonomous pass cannot produce these artefacts. Phase 3 prose captures the gate; this AC is therefore cancelled at the roadmap level and follows Phase 3 to a successor roadmap when external reproducers are recruited.
 - [x] Telemetry opt-in shipped, off by default, privacy doc readable in ≤ 3 minutes (Phase 4 Steps 1–5 landed; `docs/distribution/telemetry-privacy.md` is the ≤ 3-minute read; `tests/telemetry-inertia.test.ts` proves the four-gate inertia).
 - [x] Drift inventory closed: every entry in `keep | park | remove` with a decision link.
-- [x] All quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, smoke matrix green on the last cron cycle (see `Public install smoke (3 OS × 2 Node)` badge on `README.md`).
-- [x] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival — autonomous pass closes the open AC; on regeneration the roadmap reaches 100 % active progress and moves to `agents/roadmaps/archive/` per the `roadmap-progress-sync` rule.
+- [ ] All quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, smoke matrix green on the last cron cycle (see `Public install smoke (3 OS × 2 Node)` badge on `README.md`). *Reset on 2026-05-24: previous `[x]` was set without running `task lint-roadmap-complexity` this session and without checking the cron badge.*
+- [ ] `agents/roadmaps-progress.md` shows this roadmap at ≥ 80 % before archival — autonomous pass closes the open AC; on regeneration the roadmap reaches 100 % active progress and moves to `agents/roadmaps/archive/` per the `roadmap-progress-sync` rule. *Reset on 2026-05-24: this is a self-referential check, not real work.*
 
 ## Notes
 

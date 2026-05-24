@@ -20,7 +20,7 @@
 import { spawn } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { join } from 'node:path';
+import { join, resolve as resolvePath } from 'node:path';
 import { detectPacks } from '../detect.js';
 import { computeInstallPlan, executeInstallPlan } from '../install-plan.js';
 import { LOCKFILE_NAME, lockfileToYaml } from '../lockfile.js';
@@ -86,6 +86,8 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'GET' && url === '/api/v1/task/history') return getTaskHistoryEndpoint(res);
     if (method === 'GET' && url === '/api/v1/council/recent') return getCouncilRecent(res, ctx);
     if (method === 'GET' && (url ?? '').startsWith('/api/v1/council/session/')) return getCouncilSession(req, res, ctx);
+    if (method === 'GET' && url === '/api/v1/memory/list') return getMemoryList(res, ctx);
+    if (method === 'GET' && (url ?? '').startsWith('/api/v1/memory/file')) return getMemoryFile(req, res, ctx);
     if (method === 'GET' && url === '/api/v1/explain/last') return getExplainLast(res, ctx);
     if (method === 'GET' && url === '/api/v1/health') return getHealth(req, res, ctx);
     res.statusCode = 404;
@@ -490,6 +492,122 @@ function getCouncilSession(req: IncomingMessage, res: ServerResponse, ctx: ApiCo
     let response: string | undefined;
     try { response = readFileSync(join(sessionDir, 'response.md'), 'utf8'); } catch { /* optional */ }
     return endJson(res, 200, { session: manifest, response });
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 4 — Memory inspection (read-only)
+// ──────────────────────────────────────────────────────────────────────
+//
+// Surfaces materialized memory artefacts the runtime writes under
+// `<projectRoot>/agents/memory/<scope>/`. Read-only inspection; no
+// mutation in this phase — write access lives behind a council decision
+// (road-to-ai-os-product-ui Phase 4 Step 4 contract).
+//
+// Path-safety contract:
+//   * `scope` is a closed enum (MEMORY_SCOPES). Anything else → 400.
+//   * `id` matches MEMORY_ID_RE (no leading slash, no `..`, no whitespace).
+//   * Final resolved absolute path MUST be a child of the scope dir.
+//     Symlinks that escape are rejected via the resolved-path check.
+//   * Per-scope listing capped at MEMORY_MAX_ENTRIES.
+//   * File read capped at MEMORY_MAX_BYTES.
+
+const MEMORY_SCOPES = ['contexts', 'decisions', 'evidence', 'features', 'overrides', 'reference'] as const;
+type MemoryScope = (typeof MEMORY_SCOPES)[number];
+const MEMORY_ID_RE = /^[A-Za-z0-9._/-]+$/;
+const MEMORY_MAX_ENTRIES = 500;
+const MEMORY_MAX_BYTES = 256 * 1024;
+
+function memoryRoot(ctx: ApiContext): string {
+    return join(ctx.projectRoot, 'agents', 'memory');
+}
+
+function isMemoryScope(s: string): s is MemoryScope {
+    return (MEMORY_SCOPES as readonly string[]).includes(s);
+}
+
+interface MemoryEntry {
+    readonly id: string;
+    readonly sizeBytes: number;
+    readonly modifiedAtIso: string;
+}
+
+interface MemoryScopeSummary {
+    readonly name: MemoryScope;
+    readonly count: number;
+    readonly entries: readonly MemoryEntry[];
+    readonly truncated: boolean;
+}
+
+function listScopeEntries(scopeDir: string): { entries: MemoryEntry[]; truncated: boolean } {
+    if (!existsSync(scopeDir)) return { entries: [], truncated: false };
+    const out: MemoryEntry[] = [];
+    let truncated = false;
+    const walk = (dir: string, rel: string): void => {
+        if (out.length >= MEMORY_MAX_ENTRIES) { truncated = true; return; }
+        let names: string[];
+        try { names = readdirSync(dir); } catch { return; }
+        names.sort();
+        for (const name of names) {
+            if (out.length >= MEMORY_MAX_ENTRIES) { truncated = true; return; }
+            if (name.startsWith('.')) continue;
+            const abs = join(dir, name);
+            let s;
+            try { s = statSync(abs); } catch { continue; }
+            const relPath = rel === '' ? name : `${rel}/${name}`;
+            if (s.isDirectory()) { walk(abs, relPath); continue; }
+            if (!s.isFile()) continue;
+            out.push({ id: relPath, sizeBytes: s.size, modifiedAtIso: s.mtime.toISOString() });
+        }
+    };
+    walk(scopeDir, '');
+    return { entries: out, truncated };
+}
+
+function getMemoryList(res: ServerResponse, ctx: ApiContext): void {
+    const root = memoryRoot(ctx);
+    const scopes: MemoryScopeSummary[] = MEMORY_SCOPES.map((name) => {
+        const { entries, truncated } = listScopeEntries(join(root, name));
+        return { name, count: entries.length, entries, truncated };
+    });
+    return endJson(res, 200, { root: 'agents/memory', scopes });
+}
+
+function parseMemoryQuery(url: string): { scope: string; id: string } | { error: string } {
+    const q = url.split('?')[1] ?? '';
+    const params = new URLSearchParams(q);
+    const scope = params.get('scope') ?? '';
+    const id = params.get('id') ?? '';
+    if (scope === '' || id === '') return { error: 'missing_param' };
+    return { scope, id };
+}
+
+function getMemoryFile(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): void {
+    const parsed = parseMemoryQuery(req.url ?? '');
+    if ('error' in parsed) return endJson(res, 400, { error: parsed.error });
+    if (!isMemoryScope(parsed.scope)) return endJson(res, 400, { error: 'invalid_scope' });
+    if (!MEMORY_ID_RE.test(parsed.id) || parsed.id.includes('..') || parsed.id.startsWith('/')) {
+        return endJson(res, 400, { error: 'invalid_id' });
+    }
+    const scopeDir = join(memoryRoot(ctx), parsed.scope);
+    const candidate = resolvePath(scopeDir, parsed.id);
+    const scopeResolved = resolvePath(scopeDir);
+    if (!candidate.startsWith(scopeResolved + '/') && candidate !== scopeResolved) {
+        return endJson(res, 400, { error: 'path_escape' });
+    }
+    let stats;
+    try { stats = statSync(candidate); } catch { return endJson(res, 404, { error: 'not_found' }); }
+    if (!stats.isFile()) return endJson(res, 404, { error: 'not_found' });
+    if (stats.size > MEMORY_MAX_BYTES) {
+        return endJson(res, 413, { error: 'file_too_large', sizeBytes: stats.size, maxBytes: MEMORY_MAX_BYTES });
+    }
+    let content: string;
+    try { content = readFileSync(candidate, 'utf8'); }
+    catch (err) { return endJson(res, 500, { error: 'read_failed', message: (err as Error).message }); }
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+    res.setHeader('X-Memory-Scope', parsed.scope);
+    res.setHeader('X-Memory-Modified-At', stats.mtime.toISOString());
+    res.end(content);
 }
 
 // ──────────────────────────────────────────────────────────────────────
