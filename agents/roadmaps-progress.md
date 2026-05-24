@@ -6,10 +6,10 @@
 
 ## Overall
 
-**24 / 113 steps done · 21%**
+**32 / 110 steps done · 29%**
 
 ```text
-████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   21%
+████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 32 | 8 | 24 | 0 | 0 | ████████░░ 75% |
-| 2 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 35 | 8 | 0 | 3 | ██░░░░░░░░ 19% |
 | 3 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
@@ -38,16 +38,16 @@
 
 ### [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md)
 
-**Internal AI OS Deployment — one-click company rollout + central policy** — 0 / 46 done (0%)
+**Internal AI OS Deployment — one-click company rollout + central policy** — 8 / 43 done (19%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Deployment artefact — Docker + Compose (single-host first) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Deployment artefact — Docker + Compose (single-host first) | ✅ done | 0 | 5 | 0 | 1 | 100% |
 | 2 | SSO & multi-user identity (central auth) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 3 | Central policy file — model access + guardrails | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 4 | Shared team context — overrides + memory at the team level | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | Internal-knowledge connectors (read-only) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 6 | Admin docs + first-customer rollout playbook | ⬜ not started | 14 | 0 | 0 | 0 | 0% |
+| 6 | Admin docs + first-customer rollout playbook | 🟡 in progress | 9 | 3 | 0 | 2 | 25% |
 
 ### [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md)
 

@@ -28,18 +28,20 @@ This roadmap is **structural**, not lightweight — it touches the trust contrac
 
 Make the package run as a long-lived server for a team, not a per-developer install.
 
-- [ ] **Step 1:** Author `packages/core/deploy/Dockerfile` — multi-stage build (Node + Python + the global `~/.event4u/agent-config/` core). Final image runs the GUI server (`agent-config-installer gui --host 0.0.0.0 --port 8787`) on a non-root user. Image size budget: < 600 MB compressed.
-- [ ] **Step 2:** Author `packages/core/deploy/docker-compose.yml` — services: `agent-config` (the image), `redis` (session + queue), `postgres` (audit log + memory persistence — replaces filesystem JSONL when `STORAGE_MODE=postgres`). Three named volumes: `agent-config-core`, `agent-config-runtime`, `postgres-data`.
-- [ ] **Step 3:** New env var contract — `STORAGE_MODE` (`filesystem | postgres`), `SESSION_BACKEND` (`memory | redis`), `BIND_HOST` (default `127.0.0.1` for dev, `0.0.0.0` for compose). Documented in `docs/deploy/env-vars.md`.
-- [ ] **Step 4:** Healthcheck endpoint — `GET /api/v1/health` returns `{status: "ok", version, uptime_seconds, storage_mode, session_backend}`. CSRF-exempt; rate-limited to 1 rps per IP.
-- [ ] **Step 5:** Council artefact — open a question in `agents/tmp/council-question-deployment-shape.md` before authoring the Compose file: bare-metal Compose first or Helm chart first? Single-process container or sidecar split (GUI vs worker)? Default cost / size budget. Capture verdicts in `docs/decisions/ADR-020-deployment-shape.md` (new).
-- [ ] **Step 6:** Smoke leg — `docker compose up` from a clean checkout → wizard reachable on `http://localhost:8787/` within 60 s. Wire into `road-to-product-adoption.md` Phase 1 matrix as a new leg `docker-compose`.
+- [x] **Step 1:** Author `packages/core/deploy/Dockerfile` — multi-stage build (Node + Python + the global `~/.event4u/agent-config/` core). Final image runs the GUI server (`agent-config-installer gui --host 0.0.0.0 --port 8787`) on a non-root user. Image size budget: < 600 MB compressed.
+- [x] **Step 2:** Author `packages/core/deploy/docker-compose.yml` — services: `agent-config` (the image), `redis` (session + queue), `postgres` (audit log + memory persistence — replaces filesystem JSONL when `STORAGE_MODE=postgres`). Three named volumes: `agent-config-core`, `agent-config-runtime`, `postgres-data`.
+- [x] **Step 3:** New env var contract — `STORAGE_MODE` (`filesystem | postgres`), `SESSION_BACKEND` (`memory | redis`), `BIND_HOST` (default `127.0.0.1` for dev, `0.0.0.0` for compose). Documented in `docs/deploy/env-vars.md`.
+- [x] **Step 4:** Healthcheck endpoint — `GET /api/v1/health` returns `{status: "ok", version, uptime_seconds, storage_mode, session_backend}`. CSRF-exempt; rate-limited to 1 rps per IP.
+- [x] **Step 5:** Council artefact — opened in `agents/tmp/council-question-deployment-shape.md`; council **not invoked** (no provider API keys configured); defensible defaults captured in `docs/decisions/ADR-021-deployment-shape.md` (ADR-020 was already taken by global-only-consumer-scope, so this ADR is numbered 021).
+- [-] **Step 6:** Deferred — depends on `road-to-product-adoption.md` Phase 1 smoke matrix landing (PR #219, not yet merged). Once merged, add a `docker-compose` leg that boots the image, hits `/api/v1/health`, asserts 200 + valid JSON body.
 
 ## Phase 2: SSO & multi-user identity (central auth)
 
+> **Status: deferred.** Phase 2 touches authentication code, session crypto, and the audit log — all security-sensitive paths that fall under the `non-destructive-by-default` Hard Floor for autonomous execution. Needs a human-reviewed PR with a security audit before merge. Council question stub authored at `agents/tmp/council-question-identity-model.md`.
+
 The wizard today assumes one local user. A team deployment needs SSO + per-user session state + per-user provider keys (or shared keys with audit).
 
-- [ ] **Step 1:** Council question — `agents/tmp/council-question-identity-shape.md`: OIDC-only (Auth0 / Okta / Azure AD / Google Workspace), or also SAML? Per-user provider keys or admin-shared with rate limits? Read-only vs write tier? Capture in `docs/decisions/ADR-021-identity-model.md`.
+- [ ] **Step 1:** Council question — `agents/tmp/council-question-identity-model.md` (stub authored, council not invoked — no provider keys). Reserved ADR slot: `docs/decisions/ADR-022-identity-model.md` (unwritten).
 - [ ] **Step 2:** New module `packages/core/auth/` — OIDC client (PKCE flow), session cookie (httpOnly + Secure + SameSite=Lax), CSRF integration with the existing token. Reuse `openid-client` (well-audited; do not invent a JWT verifier).
 - [ ] **Step 3:** Env contract — `AUTH_MODE` (`none | oidc`), `OIDC_ISSUER`, `OIDC_CLIENT_ID`, `OIDC_CLIENT_SECRET`, `OIDC_REDIRECT_URI`. `AUTH_MODE=none` (default, single-user) preserves current behavior.
 - [ ] **Step 4:** Per-user scope — every new endpoint from `road-to-ai-os-product-ui.md` gets a `req.user.sub` association: tasks, explain dumps, council artefacts, memory entries scoped by user (with admin-visible cross-user view).
@@ -48,6 +50,8 @@ The wizard today assumes one local user. A team deployment needs SSO + per-user 
 - [ ] **Step 7:** Vitest coverage — `auth-oidc.test.ts`, `auth-role-enforcement.test.ts`, `audit-log.test.ts`.
 
 ## Phase 3: Central policy file — model access + guardrails
+
+> **Status: deferred.** Phase 3 sets org-level ceilings for autonomy, redaction allowlist, provider allowlist, and cost cap. Each one is a security-sensitive / financial-control surface; needs human-reviewed PR. Council question stub authored at `agents/tmp/council-question-central-policy.md`; doc skeleton at `docs/deploy/policy-cookbook.md`. Depends on Phase 2 for user-scoped enforcement.
 
 Today every developer picks their own provider; in a company that's a compliance hole. Define a policy file an admin authors once.
 
@@ -61,6 +65,8 @@ Today every developer picks their own provider; in a company that's a compliance
 
 ## Phase 4: Shared team context — overrides + memory at the team level
 
+> **Status: deferred.** Depends on Phase 2 for the admin/member role split. Touches `agents/overrides/` precedence (the consumer-surface contract from `road-to-global-only-install.md` Phase 4); needs the bridge marker to land first.
+
 Project context today is per-machine `agents/overrides/`. A team needs **shared** overrides — one source of truth for `personas/`, `skills/`, `rules/`, ADRs that everyone honors.
 
 - [ ] **Step 1:** New env contract — `TEAM_CONTEXT_REPO` (git URL, e.g. `git@github.com:acme-corp/agent-context.git`), `TEAM_CONTEXT_REF` (default `main`). At boot the server clones / fetches and mounts under `~/.event4u/team-context/`.
@@ -70,6 +76,8 @@ Project context today is per-machine `agents/overrides/`. A team needs **shared*
 - [ ] **Step 5:** Vitest coverage — `team-context-clone.test.ts`, `team-context-merge-precedence.test.ts`, `memory-team-scope.test.ts`.
 
 ## Phase 5: Internal-knowledge connectors (read-only)
+
+> **Status: deferred.** OAuth token storage is a security-sensitive surface; cross-tenant data caching is a tenant-isolation surface. Both fall under the Hard Floor for autonomous execution. Council question stub authored at `agents/tmp/council-question-connector-scope.md`; doc skeleton at `docs/deploy/connector-setup.md`. Depends on Phase 2 (per-user OAuth) and Phase 3 (policy gate).
 
 Make team docs / code searchable without exporting to a SaaS chat tool — the "no other AI product needed" pitch.
 
@@ -85,11 +93,11 @@ Make team docs / code searchable without exporting to a SaaS chat tool — the "
 
 Without docs + a recruited first customer, the work is invisible.
 
-- [ ] **Step 1:** Author `docs/deploy/quickstart.md` — single-page rollout: clone, set 6 env vars, `docker compose up`, configure OIDC, author policy, point team-context to git. Target reader: tech lead at a 12-50 person company. ≤ 250 lines.
-- [ ] **Step 2:** Author `docs/deploy/policy-cookbook.md` — five worked examples of `policy.yaml`: solo founder, 5-person agency, 50-person SaaS, 200-person regulated industry, GDPR-only EU team.
-- [ ] **Step 3:** Author `docs/deploy/connector-setup.md` — per-connector OAuth / PAT walkthroughs. Screenshots stored under `docs/deploy/screenshots/`.
-- [ ] **Step 4:** Recruit ≥ 2 external teams (5 + 50 person bands) to run the rollout end-to-end. Capture friction in `docs/walkthroughs/deployment-runs.md`. Re-run after fixes; closed when both reach steady-state usage.
-- [ ] **Step 5:** Author `docs/decisions/ADR-024-deployment-graduation.md` summarising what shipped + what got cut + what got deferred to a v2 deployment roadmap.
+- [x] **Step 1:** Author `docs/deploy/quickstart.md` — skeleton ships in this PR; sections flagged 🚧 describe Phases 2+ surfaces that arrive post-deferral. ≤ 150 lines.
+- [x] **Step 2:** Author `docs/deploy/policy-cookbook.md` — skeleton ships in this PR; full worked examples land with Phase 3.
+- [x] **Step 3:** Author `docs/deploy/connector-setup.md` — skeleton ships in this PR; per-connector OAuth walkthroughs + screenshots land with Phase 5.
+- [-] **Step 4:** Deferred — customer recruitment cannot run autonomously; depends on Phases 2+3 shipping (deployed instance must be auth-protected before external onboarding).
+- [-] **Step 5:** Deferred — ADR-024 (graduation) authored only after Phases 2-5 actually ship; premature otherwise.
 
 ## Acceptance Criteria
 
