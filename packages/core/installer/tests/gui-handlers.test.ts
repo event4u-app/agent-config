@@ -18,6 +18,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { handleApi, type ApiContext } from '../src/gui/handlers.js';
 import type { LoadedManifest } from '../src/manifest-loader.js';
 import { sha256OfString } from '../src/io/sha256.js';
+import { __resetTaskState, TASK_CATALOG } from '../src/gui/task-exec.js';
 import { makeArtefact, makeManifest, makePack } from './_fixtures.js';
 
 const CSRF = 'a'.repeat(64);
@@ -350,5 +351,148 @@ describe('unknown route', () => {
     it('returns 404', async () => {
         const res = await fetch(`${baseUrl}/api/nope`);
         expect(res.status).toBe(404);
+    });
+});
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 1 — Task execution surface
+// ──────────────────────────────────────────────────────────────────────
+
+describe('GET /api/v1/task/catalog', () => {
+    it('returns the frozen allowlist', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/task/catalog`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(Array.isArray(body.tasks)).toBe(true);
+        expect(body.tasks.length).toBe(TASK_CATALOG.length);
+        const ids = body.tasks.map((t: { id: string }) => t.id);
+        expect(ids).toContain('lint-skills');
+        expect(ids).toContain('test');
+        expect(ids).toContain('sync');
+    });
+});
+
+describe('GET /api/v1/task/history', () => {
+    beforeEach(() => __resetTaskState());
+
+    it('returns an empty list initially', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/task/history`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.runs).toEqual([]);
+    });
+});
+
+describe('POST /api/v1/task/run', () => {
+    beforeEach(() => __resetTaskState());
+
+    it('rejects bad csrf with 403', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/task/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 'lint-skills', csrf: 'bad' }),
+        });
+        expect(res.status).toBe(403);
+        expect((await res.json()).error).toBe('csrf_invalid');
+    });
+
+    it('rejects missing id with 400', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/task/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ csrf: CSRF }),
+        });
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('missing_id');
+    });
+
+    it('rejects unknown task id with 404', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/task/run`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ id: 'rm-rf-root', csrf: CSRF }),
+        });
+        expect(res.status).toBe(404);
+        expect((await res.json()).error).toBe('unknown_task');
+    });
+});
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 4 — Council inspection (read-only)
+// ──────────────────────────────────────────────────────────────────────
+
+function writeCouncilSession(id: string, manifest: Record<string, unknown>, response?: string): void {
+    const dir = join(pkg, 'agents', 'runtime', 'council', 'sessions', id);
+    mkdirSync(dir, { recursive: true });
+    writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest));
+    if (response !== undefined) writeFileSync(join(dir, 'response.md'), response);
+}
+
+describe('GET /api/v1/council/recent', () => {
+    it('returns empty list when sessions dir is absent', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/council/recent`);
+        expect(res.status).toBe(200);
+        expect(await res.json()).toEqual({ sessions: [] });
+    });
+
+    it('returns sessions newest first', async () => {
+        writeCouncilSession('2026-05-01T10-00-00Z', {
+            timestamp_utc: '2026-05-01T10:00:00Z',
+            artefact: 'rules/foo.md',
+            provider: 'openai',
+            model: 'gpt-5',
+            mode: 'review',
+            input_tokens: 100,
+            output_tokens: 50,
+            actual_usd: 0.001,
+        });
+        writeCouncilSession('2026-05-02T10-00-00Z', {
+            timestamp_utc: '2026-05-02T10:00:00Z',
+            artefact: 'rules/bar.md',
+            provider: 'anthropic',
+            model: 'claude-4',
+            mode: 'review',
+        });
+        const res = await fetch(`${baseUrl}/api/v1/council/recent`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.sessions).toHaveLength(2);
+        expect(body.sessions[0].id).toBe('2026-05-02T10-00-00Z');
+        expect(body.sessions[0].artefact).toBe('rules/bar.md');
+        expect(body.sessions[1].id).toBe('2026-05-01T10-00-00Z');
+    });
+});
+
+describe('GET /api/v1/council/session/:id', () => {
+    it('rejects invalid id with 400', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/council/session/..%2Fetc`);
+        expect(res.status).toBe(400);
+        expect((await res.json()).error).toBe('invalid_session_id');
+    });
+
+    it('returns 404 for missing session', async () => {
+        const res = await fetch(`${baseUrl}/api/v1/council/session/2026-01-01T00-00-00Z`);
+        expect(res.status).toBe(404);
+        expect((await res.json()).error).toBe('session_not_found');
+    });
+
+    it('returns manifest + response.md for known session', async () => {
+        writeCouncilSession(
+            '2026-06-01T12-00-00Z',
+            {
+                timestamp_utc: '2026-06-01T12:00:00Z',
+                artefact: 'rules/baz.md',
+                provider: 'openai',
+                model: 'gpt-5',
+                mode: 'review',
+            },
+            '# Response body\n\nLooks good.\n',
+        );
+        const res = await fetch(`${baseUrl}/api/v1/council/session/2026-06-01T12-00-00Z`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.session.id).toBe('2026-06-01T12-00-00Z');
+        expect(body.session.artefact).toBe('rules/baz.md');
+        expect(body.response).toContain('Looks good');
     });
 });

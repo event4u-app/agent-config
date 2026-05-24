@@ -18,7 +18,7 @@
  */
 
 import { spawn } from 'node:child_process';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 import { join } from 'node:path';
 import { detectPacks } from '../detect.js';
@@ -33,6 +33,7 @@ import { collectAdvisoryPacks } from '../tui.js';
 import { AGENT_CONFIG_VERSION, PACK_VERSION } from '../version.js';
 import { csrfEquals } from './security.js';
 import { appendEntry, discardLog, newLogPath, rollback } from './transaction-log.js';
+import { getTaskHistory, resolveTask, runTask, TASK_CATALOG } from './task-exec.js';
 import type { ApplyEvent, TransactionLogEntry } from './types.js';
 
 /**
@@ -66,6 +67,11 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'GET' && url === '/api/recovery') return getRecovery(res, ctx);
     if (method === 'POST' && url === '/api/recovery/rollback') return postRecoveryRollback(req, res, ctx);
     if (method === 'POST' && url === '/api/recovery/discard') return postRecoveryDiscard(req, res, ctx);
+    if (method === 'GET' && url === '/api/v1/task/catalog') return getTaskCatalog(res);
+    if (method === 'POST' && url === '/api/v1/task/run') return postTaskRun(req, res, ctx);
+    if (method === 'GET' && url === '/api/v1/task/history') return getTaskHistoryEndpoint(res);
+    if (method === 'GET' && url === '/api/v1/council/recent') return getCouncilRecent(res, ctx);
+    if (method === 'GET' && (url ?? '').startsWith('/api/v1/council/session/')) return getCouncilSession(req, res, ctx);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({ error: 'not_found' }));
@@ -323,4 +329,123 @@ async function postRecoveryDiscard(req: IncomingMessage, res: ServerResponse, ct
     } catch (err) {
         return endJson(res, 500, { error: 'discard_failed', message: (err as Error).message });
     }
+}
+
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 1 — Task execution surface (road-to-ai-os-product-ui)
+// ──────────────────────────────────────────────────────────────────────
+
+function getTaskCatalog(res: ServerResponse): void {
+    return endJson(res, 200, { tasks: TASK_CATALOG });
+}
+
+function getTaskHistoryEndpoint(res: ServerResponse): void {
+    return endJson(res, 200, { runs: getTaskHistory() });
+}
+
+interface TaskRunPayload {
+    readonly id: string;
+    readonly csrf: string;
+}
+
+function parseTaskRun(raw: unknown): TaskRunPayload | { error: string } {
+    if (raw === null || typeof raw !== 'object') return { error: 'body_not_object' };
+    const r = raw as Record<string, unknown>;
+    const id = typeof r.id === 'string' ? r.id : '';
+    const csrf = typeof r.csrf === 'string' ? r.csrf : '';
+    if (id.length === 0) return { error: 'missing_id' };
+    return { id, csrf };
+}
+
+async function postTaskRun(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const body = parseTaskRun(await readJsonBody(req).catch(() => null));
+    if ('error' in body) return endJson(res, 400, { error: body.error });
+    if (!csrfEquals(body.csrf, ctx.csrfToken)) return endJson(res, 403, { error: 'csrf_invalid' });
+    const entry = resolveTask(body.id);
+    if (entry === undefined) return endJson(res, 404, { error: 'unknown_task' });
+
+    res.statusCode = 200;
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Connection', 'keep-alive');
+
+    try {
+        for await (const event of runTask(entry, ctx.projectRoot)) {
+            res.write(`data: ${JSON.stringify(event)}\n\n`);
+        }
+    } catch (err) {
+        res.write(`data: ${JSON.stringify({ type: 'error', message: (err as Error).message })}\n\n`);
+    }
+    res.end();
+}
+
+// ──────────────────────────────────────────────────────────────────────
+// Phase 4 — Council inspection (read-only)
+// ──────────────────────────────────────────────────────────────────────
+
+const COUNCIL_SESSIONS_REL = 'agents/runtime/council/sessions';
+const MAX_RECENT = 50;
+const SESSION_ID_RE = /^[A-Za-z0-9._:T-]+$/;
+
+function councilSessionsDir(ctx: ApiContext): string {
+    const pkgRoot = packageRootOf(ctx.loaded.path);
+    return join(pkgRoot, COUNCIL_SESSIONS_REL);
+}
+
+interface CouncilSessionSummary {
+    readonly id: string;
+    readonly timestamp: string;
+    readonly artefact?: string | undefined;
+    readonly provider?: string | undefined;
+    readonly model?: string | undefined;
+    readonly mode?: string | undefined;
+    readonly actualUsd?: number | undefined;
+    readonly inputTokens?: number | undefined;
+    readonly outputTokens?: number | undefined;
+}
+
+function readCouncilManifest(dir: string, id: string): CouncilSessionSummary | undefined {
+    try {
+        const raw = JSON.parse(readFileSync(join(dir, id, 'manifest.json'), 'utf8')) as Record<string, unknown>;
+        const pick = <T>(k: string): T | undefined => (raw[k] === undefined ? undefined : raw[k] as T);
+        return {
+            id,
+            timestamp: pick<string>('timestamp_utc') ?? id,
+            artefact: pick<string>('artefact'),
+            provider: pick<string>('provider'),
+            model: pick<string>('model'),
+            mode: pick<string>('mode'),
+            actualUsd: pick<number>('actual_usd'),
+            inputTokens: pick<number>('input_tokens'),
+            outputTokens: pick<number>('output_tokens'),
+        };
+    } catch { return undefined; }
+}
+
+function getCouncilRecent(res: ServerResponse, ctx: ApiContext): void {
+    const dir = councilSessionsDir(ctx);
+    if (!existsSync(dir)) return endJson(res, 200, { sessions: [] });
+    try {
+        const ids = readdirSync(dir).filter((id) => SESSION_ID_RE.test(id) && statSync(join(dir, id)).isDirectory());
+        ids.sort((a, b) => (a < b ? 1 : a > b ? -1 : 0));
+        const sessions = ids.slice(0, MAX_RECENT).map((id) => readCouncilManifest(dir, id)).filter((s): s is CouncilSessionSummary => s !== undefined);
+        return endJson(res, 200, { sessions });
+    } catch (err) {
+        return endJson(res, 500, { error: 'council_listing_failed', message: (err as Error).message });
+    }
+}
+
+function getCouncilSession(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): void {
+    const url = req.url ?? '';
+    const id = url.slice('/api/v1/council/session/'.length).split('?')[0] ?? '';
+    if (!SESSION_ID_RE.test(id)) return endJson(res, 400, { error: 'invalid_session_id' });
+    const dir = councilSessionsDir(ctx);
+    const sessionDir = join(dir, id);
+    if (!existsSync(sessionDir)) return endJson(res, 404, { error: 'session_not_found' });
+    const manifest = readCouncilManifest(dir, id);
+    if (manifest === undefined) return endJson(res, 404, { error: 'manifest_unreadable' });
+    let response: string | undefined;
+    try { response = readFileSync(join(sessionDir, 'response.md'), 'utf8'); } catch { /* optional */ }
+    return endJson(res, 200, { session: manifest, response });
 }

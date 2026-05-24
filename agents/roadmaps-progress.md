@@ -6,17 +6,17 @@
 
 ## Overall
 
-**0 / 118 steps done · 0%**
+**16 / 108 steps done · 15%**
 
 ```text
-░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   0%
+██████░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░   15%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 37 | 37 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md) | 5 | 27 | 11 | 16 | 0 | 0 | ██████░░░░ 59% |
 | 2 | [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md) | 6 | 46 | 46 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-product-adoption.md](roadmaps/road-to-product-adoption.md) | 5 | 35 | 35 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -26,15 +26,15 @@
 
 ### [road-to-ai-os-product-ui.md](roadmaps/road-to-ai-os-product-ui.md)
 
-**AI OS Product UI — beyond the installer shell** — 0 / 37 done (0%)
+**AI OS Product UI — beyond the installer shell** — 16 / 27 done (59%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Task execution surface (feedback6 §P1.1) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Explain trace visualizer (feedback6 §P1.2) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Provider setup wizard (feedback6 §P1.3) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Council & memory inspection (feedback6 §P1.4) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 5 | Navigation & polish | ⬜ not started | 12 | 0 | 0 | 0 | 0% |
+| 1 | Task execution surface (feedback6 §P1.1) — **shipped** | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Explain trace visualizer (feedback6 §P1.2) — **blocked** | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 3 | Provider setup wizard (feedback6 §P1.3) — **blocked** | ⬜ not started | 1 | 0 | 0 | 0 | 0% |
+| 4 | Council & memory inspection (feedback6 §P1.4) — **partial** | 🟡 in progress | 3 | 4 | 0 | 0 | 57% |
+| 5 | Navigation & polish — **partial** | 🟡 in progress | 6 | 6 | 0 | 0 | 50% |
 
 ### [road-to-internal-ai-os-deployment.md](roadmaps/road-to-internal-ai-os-deployment.md)
 
