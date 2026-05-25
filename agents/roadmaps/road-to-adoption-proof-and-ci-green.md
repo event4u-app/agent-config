@@ -1,0 +1,103 @@
+---
+slug: adoption-proof-and-ci-green
+title: Adoption Proof + CI Green — convert the three deferred 3.2.0 actions into shipped reality
+owner: matze4u
+opened: 2026-05-25
+status: ready
+complexity: structural
+related_adrs:
+  - ADR-022-daily-workspace-decomposition
+  - ADR-025-workspace-chrome
+related_feedback:
+  - 2026-05-25 PR #230 / 3.2.0 review (A 116/120, "External proof is the only remaining problem")
+depends_on:
+  - road-to-employee-product-and-external-proof.md
+---
+
+# Adoption Proof + CI Green — convert the three deferred 3.2.0 actions into shipped reality
+
+> The 3.2.0 review (A 116/120, 2026-05-25) names three concrete next steps: run the three recruit sessions, submit the MCP registry listing, restore CI-green-as-hard-gate. Audit against current state: all three are **legitimately open** in the parent roadmap (`road-to-employee-product-and-external-proof.md`) — Steps 1, 2 deferred on human-owner (real recruit + maintainer GitHub identity), Step 3 a regression (4 workflows red today despite Phase 0 Step 4 marked done). This roadmap converts the deferred items into shipped reality by (a) fixing the technical CI regression autonomously, (b) building operational scaffolds that make the human-owner steps 5-minute-press-go instead of 2-hour-figure-it-out. No Hard-Floor lift — adoption work only, no auth-adjacent code.
+
+## Prerequisites
+
+- [x] Read the 3.2.0 review (chat 2026-05-25). Three asks: recruit-sessions-not-scaffolds, MCP listing submission, CI-green-as-hard-gate before 4.0.0.
+- [x] Confirm parent roadmap state — `road-to-employee-product-and-external-proof.md` Phase 0 Steps 1–2 deferred (MCP listing), Phase 1 Steps 3–6 deferred (recruit sessions + findings), Phase 0 Step 4 marked done but new red CI runs visible today.
+- [x] Confirm CI regression — `gh run list --limit 10` today shows 4 failed workflows: `check-visibility-drift.yml`, `sync-visibility.yml`, `Cloud Release`, `deploy-mcp-worker`. The `Cloud Release` and `deploy-mcp-worker` failures are new; the two `visibility` workflows are the same class Phase 0 Step 4 claimed to have fixed.
+- [x] Confirm rules — `non-destructive-by-default` (no prod-branch merge / no infra autonomy), `engineering-safety-floor` (no auth-adjacent code), `commit-policy` (no auto-commit; one of four exceptions required), `roadmap-progress-sync` (every edit regenerates dashboard).
+- [x] Confirm no duplication with `road-to-frictionless-employee-workspace.md` — that roadmap closes UI deferred wires (Workspace surface, new roles, plain-language). This roadmap is **operational** (adoption proof + CI hygiene), not surface-completion. No phase overlaps.
+
+## Context
+
+Three deferred 3.2.0 actions, three different unblock paths:
+
+- **CI regression** is purely technical. The four red workflows today are 100 % addressable without a human-owner gate. Phase A ships the fix.
+- **Recruit sessions** are blocked on a real recruit + recording session — a calendar problem, not a code problem. Phase B does **not** force the sessions to happen autonomously; it removes every other obstacle so when the human-owner picks a date, the session is 5 minutes of prep instead of 2 hours.
+- **MCP registry listing** is blocked on a maintainer GitHub fork + PR submission. Phase C ships a ready-to-paste PR body + a maintainer runbook so the submission is one terminal command + one button-click.
+
+The bet: a 4–5 week focused execution slice converts all three deferred items into shipped reality. Adoption-dimension lifts from 6/10 to ≥ 8/10 the day the first recruit-session report lands at `agents/recruit-sessions/01-galabau-owner.md`. CI dimension lifts from "rolling regressions" to "green as hard gate" before any 4.0.0 conversation can start.
+
+This roadmap is honest about what it cannot do alone. Phase B Steps 3–5 and Phase C Step 4 are **human-owner-gated by design**. The roadmap ships everything *around* those steps so when the human owner moves, the move is friction-free.
+
+## Phase A: CI green restoration — fix the four red workflows from today's runs
+
+The four failures today (`check-visibility-drift`, `sync-visibility`, `Cloud Release`, `deploy-mcp-worker`) need a one-pass triage + fix. Parent Phase 0 Step 4 addressed the two visibility workflows by removing the `push:` trigger — but they are red again today, meaning either the change did not land or a different trigger path was re-introduced. Phase A is fully autonomous-able; no human-owner gate.
+
+- [ ] **Step 1:** Triage the four red workflows — `gh run view <run-id> --log-failed` on each. Categorise per failure: (a) genuine bug, (b) flake / phantom run, (c) infra outage (worker deploy / cloud release). Document each in `agents/evidence/audits/2026-05-ci-triage/01-red-workflows.md`. ≤ 1 h.
+- [ ] **Step 2:** Fix `check-visibility-drift.yml` + `sync-visibility.yml` regressions. Parent Phase 0 Step 4 removed `push:` from `check-visibility-drift.yml`; verify in current `HEAD` that change is still present and that today's red runs are from a different trigger. Fix: either restore the deferred state per parent Step 4 or document why the change must roll back. Coverage: workflow lint (`actionlint`) + a dry-run dispatch via `workflow_dispatch` to confirm green.
+- [ ] **Step 3:** Triage `Cloud Release` + `deploy-mcp-worker` failures. Both are deployment-shaped → **Hard-Floor adjacent.** Do not autonomously change deployment behaviour. Either (a) the failure is a config / env regression fixable in the workflow YAML (e.g. missing secret reference, drift in expected file path) — fix only the YAML; or (b) the failure is a real deployment-side issue — file the finding to `agents/evidence/audits/2026-05-ci-triage/02-deployment-failures.md` and STOP autonomous edits. Human-owner decides next.
+- [ ] **Step 4:** Author `docs/contracts/ci-green-floor.md` — the CI-green-as-hard-gate contract. Defines: what counts as a "blocking" CI failure (everything in `Required` status checks), what counts as "advisory" (e.g. `bench-drift.yml`), the merge-blocker rule (any required-check red on `main` triggers a freeze-tag on subsequent PRs until cleared). Cites `freeze-guard.yml` as the enforcement mechanism. Cross-link from `AGENTS.md` § Emergency triage.
+- [ ] **Step 5:** Wire the `ci-green-floor` contract into branch protection — author `docs/contracts/branch-protection-policy.md` listing the required status checks (`Consistency`, `Smoke Contracts`, `Release Guard`, `tests`, `skill-lint`, `smoke`). **Human-owner gate:** branch-protection ruleset change in GitHub UI is maintainer-side, not autonomous. Roadmap ships the *policy doc*; the maintainer applies the ruleset.
+- [ ] **Step 6:** Add a Taskfile target `task ci:status` that wraps `gh run list --branch main --limit 10 --json conclusion,name` and asserts zero red entries in the required-check set. Wire into `task ci` as a final gate when run with `--strict`. Coverage: a unit test for the JSON parser at `tests/test_ci_status.py`.
+
+## Phase B: Recruit-session execution scaffolds — remove every obstacle except the recruit + the calendar
+
+The infrastructure (`README.md`, `_template.md`) is shipped. The remaining friction for the human-owner: finding a recruit, scheduling, pre-flight prep, recording + redaction handling, post-session report compilation. Phase B ships the **runbook layer** that turns each step from "figure it out" into "checklist + run".
+
+- [ ] **Step 1:** Author `agents/recruit-sessions/_runbook.md` — the maintainer-side operational playbook. Sections: (1) finding a recruit (channels: Galabau owner network, ZH content-creator scene, consultant peers — concrete outreach templates per persona); (2) scheduling (which timezone, which recording tool, what consent paragraph to send beforehand); (3) day-of pre-flight (provider keys configured, clean machine snapshot, screen-recording armed, network stable, notifications muted); (4) during-session script (timing per question, escape hatches if recruit gets stuck); (5) post-session (redaction pass, report compilation from `_template.md`, retraction-window communication).
+- [ ] **Step 2:** Author `scripts/recruit_preflight.sh` — runs the day-of pre-flight checklist as a script. Checks: provider keys present in env (`ANTHROPIC_API_KEY`, `OPENAI_API_KEY`, optional `GOOGLE_API_KEY`); no in-progress experiments in `~/.augment/`; `agents/recruit-sessions/` writable; `task ci` green at HEAD. Output: pass/fail per check + total runtime ≤ 5 s. Coverage: `tests/test_recruit_preflight.sh` with fixture envs.
+- [ ] **Step 3:** *Human-owner.* Run recruit session 01 — galabau owner. Use `_runbook.md` § outreach templates. File the report at `agents/recruit-sessions/01-galabau-owner.md` per the `_template.md` skeleton. **Deferred — human-owner:** needs real recruit + 60-minute calendar slot.
+- [ ] **Step 4:** *Human-owner.* Run recruit session 02 — content creator. File `02-content-creator.md`. **Deferred — human-owner.**
+- [ ] **Step 5:** *Human-owner.* Run recruit session 03 — consultant. File `03-consultant.md`. **Deferred — human-owner.**
+- [ ] **Step 6:** Author `agents/recruit-sessions/_findings.md` — consolidates the three reports into a ranked top-10 friction list, each linked to the roadmap home that owns the fix. **Depends on Steps 3–5.** Once filed, parent roadmap Phase 1 Step 6 flips to done and the "external proof" claim becomes evidence-backed for the next review round.
+
+## Phase C: MCP registry submission scaffold — make the submission one terminal command
+
+The PR body already exists (parent Phase 0 Step 1 description). What's missing: the fork-script + the post-submission tracking + the parallel directory entries (`mcp.so`, `mcpservers.org`). Phase C ships the scaffold so the maintainer runs one script + clicks two submission forms.
+
+- [ ] **Step 1:** Author `scripts/mcp_registry_submit.sh` — interactive script that (a) verifies `gh auth status` shows the maintainer identity, (b) forks `punkpeye/awesome-mcp-servers` to the maintainer's account, (c) creates a branch with the entry pre-filled, (d) opens a PR with the body from `docs/distribution/registries.md` § MCP registries pre-populated, (e) prints the PR URL. ≤ 200 LOC bash. Coverage: dry-run mode (`--dry-run`) that validates entry shape without forking; `tests/test_mcp_registry_submit.sh`.
+- [ ] **Step 2:** Author `agents/recruit-sessions/_registry-tracking.md` — wait, wrong scope. **Re-scoped:** author `docs/distribution/registry-submissions.md` — the post-submission tracking sheet. Columns: registry, submission-date, PR / form URL, status (`pending` / `accepted` / `rejected`), maintainer notes. Pre-populated with the three known registries (`awesome-mcp-servers`, `mcp.so`, `mcpservers.org`) as `pending` rows.
+- [ ] **Step 3:** Extend the PR body in `docs/distribution/registries.md` § MCP registries with the 3.2.0 reality update — 4929 tests, `/knowledge` cluster, three role experiences, AI-video pipeline. Reviewer's verbatim quote: "deutlich mehr vorzuweisen als bei jedem vorherigen Erwähnungszeitpunkt." One-paragraph addition; no policy change.
+- [ ] **Step 4:** *Human-owner.* Run `bash scripts/mcp_registry_submit.sh` against the awesome-mcp-servers fork. **Deferred — human-owner:** maintainer GitHub identity required.
+- [ ] **Step 5:** *Human-owner.* Submit `mcp.so` + `mcpservers.org` directory entries via web forms (no programmatic API). Capture submission timestamps in `docs/distribution/registry-submissions.md`. **Deferred — human-owner.**
+- [ ] **Step 6:** Wire a `task adoption:status` target that prints the current state of `docs/distribution/registry-submissions.md` + the recruit-session report count + the latest CI required-check colour. One-screen adoption dashboard for the maintainer's weekly review.
+
+## Phase D: Adoption-signal collection — turn first proof into ongoing measurement
+
+Once the three recruit-session reports + the three registry listings are in, the next question is: do they convert? Phase D ships the lightweight measurement layer that distinguishes "submitted" from "adopted".
+
+- [ ] **Step 1:** Author `docs/contracts/adoption-signal-floor.md` — defines the privacy-floor for adoption-signal collection. Local-only by default. Allowed signals: install count (npm-side, public), package version distribution (npm-side, public), GitHub stars / forks / topic-search-traffic (public via API). Disallowed without explicit opt-in: any consumer-side telemetry, any per-user data, any cross-project correlation.
+- [ ] **Step 2:** Author `scripts/adoption_snapshot.py` — pulls the four public signals (npm installs / version distribution / GitHub stars-forks / topic-search rank for `agent-skills` + `cinematic-ai-video`) into a single dated JSONL row at `agents/runtime/metrics/adoption-snapshots.jsonl`. Runs on `workflow_dispatch` + weekly cron. Coverage: pytest with mocked HTTP responses.
+- [ ] **Step 3:** Wire a `task adoption:report` target that produces `agents/runtime/metrics/adoption-report.md` — rolling 8-week trend chart per signal. Mirrors the `skill-usage:report` task shape exactly.
+- [ ] **Step 4:** Cross-reference the parent roadmap's "adoption dimension 6/10" claim with the first 4 weekly snapshots. If the 4-week trend on any signal is flat or negative, file a `findings.md` row + propose a remediation step to the parent roadmap. **Human-owner gate:** strategy decision, not roadmap-autonomous.
+
+## Acceptance Criteria
+
+- [ ] Phase A: Four red CI workflows triaged + green; `docs/contracts/ci-green-floor.md` shipped; `docs/contracts/branch-protection-policy.md` shipped; `task ci:status` target green on a clean main; required-check rule documented (branch-protection application stays maintainer-side).
+- [ ] Phase B: `_runbook.md` + `scripts/recruit_preflight.sh` + preflight tests shipped; **at least one** of recruit-sessions 01 / 02 / 03 reports filed (proves the scaffold works end-to-end); `_findings.md` filed if all three land.
+- [ ] Phase C: `scripts/mcp_registry_submit.sh` + `docs/distribution/registry-submissions.md` shipped; PR body refreshed with 3.2.0 reality; **at least one** registry submission row flipped from `pending` to `submitted` (proves the scaffold works end-to-end).
+- [ ] Phase D: `docs/contracts/adoption-signal-floor.md` + `scripts/adoption_snapshot.py` + `task adoption:report` shipped; first 4 weekly snapshots captured at `agents/runtime/metrics/adoption-snapshots.jsonl`.
+- [ ] Quality gates pass — `task lint-skills` ✅, `task lint-roadmap-complexity` ✅, `task ci` ✅ on each phase's PR; required-check set documented in branch-protection-policy.md is the same set used by `task ci:status` and `freeze-guard.yml`.
+- [ ] **No Hard-Floor lift** — no auth-adjacent code, no consumer-side telemetry without opt-in, no deployment-behaviour autonomy. Phase A Step 3 documents but does not auto-fix deployment failures. Phase B Steps 3–5, Phase C Steps 4–5, Phase D Step 4 stay human-owner.
+
+## Notes
+
+- **Continuation, not duplication.** Sibling of `road-to-frictionless-employee-workspace.md`. That one ships UI surface + plain-language. This one ships adoption proof + CI hygiene. No phase overlap.
+- **Sequencing.** Phase A is standalone — fully autonomous-able. Phase B + C are scaffolds (autonomous-able) + their human-owner-gated execution steps. Phase D depends on B / C landing the first signal sources.
+- **Hard Floor honoured.** Phase A Step 3 explicitly STOPs on deployment-side failures. Phase B Step 1 § post-session covers redaction floor per `domain-safety-pii`. Phase D Step 1 sets the consumer-telemetry floor at "explicit opt-in only".
+- **Estimated scope.** Phase A: 1 week (CI triage + contracts). Phase B: 1 week scaffold + N weeks human-owner schedule. Phase C: 3 days scaffold + maintainer-clock for submissions. Phase D: 1 week + 4 weeks first-trend window. Total scaffold time: ~2.5 weeks; total elapsed-time-to-evidence: ~6–8 weeks depending on recruit-calendar.
+- **What this roadmap is not.** Not a SaaS-hosted offering. Not a multi-tenant memory roadmap. Not an SSO roadmap. Not a knowledge-connector roadmap. Those stay cancelled per `road-to-internal-ai-os-deployment.md`.
+- **No commit / push / merge implied.** Roadmap describes work; release shape and commit timing decided per turn per `commit-policy`. Each phase likely opens its own PR.
+- **Cross-references.**
+  - Depends on: `road-to-employee-product-and-external-proof.md` Phase 0 + Phase 1 (parent — defines the deferred items this roadmap converts to shipped).
+  - Sibling: `road-to-frictionless-employee-workspace.md` (UI surface; non-overlapping).
+  - Honours: `road-to-internal-ai-os-deployment.md` (Hard-Floor cancellations preserved).
