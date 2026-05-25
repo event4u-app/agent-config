@@ -35,7 +35,7 @@ from typing import Callable, IO, Protocol
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SKILLS_SOURCE = PROJECT_ROOT / ".agent-src.uncompressed" / "skills"
-RESULTS_DIR = PROJECT_ROOT / "evals" / "results"
+RESULTS_DIR = PROJECT_ROOT / "internal" / "evals" / "results"
 DEFAULT_MODEL = "claude-sonnet-4-5"
 
 # Approximate Anthropic API pricing (USD per 1M tokens). Used for the
@@ -577,7 +577,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         type=Path,
         default=None,
         help=(
-            "Path to write the result. Default: evals/results/"
+            "Path to write the result. Default: internal/evals/results/"
             "<timestamp>-<skill>-<model>.json (live) or "
             "<triggers-dir>/last-run.json (dry-run)."
         ),

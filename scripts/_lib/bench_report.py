@@ -2,7 +2,7 @@
 #
 # Serializes the unified report dict to JSON + Markdown per
 # docs/contracts/benchmark-report-schema.md. Filename format:
-# `bench/reports/<UTC ISO-8601 with : -> ->-<corpus_id>.{json,md}`.
+# `internal/bench/reports/<UTC ISO-8601 with : -> ->-<corpus_id>.{json,md}`.
 """Report emitter for the bench runner."""
 from __future__ import annotations
 
@@ -133,7 +133,7 @@ def render_markdown(report: dict[str, Any]) -> str:
     notes = (
         "## Notes\n\n"
         f"- corpus path: `{corpus['path']}` · prompts: **{corpus['prompt_count']}**\n"
-        f"- pricing: `bench/pricing.yaml`\n"
+        f"- pricing: `internal/bench/pricing.yaml`\n"
         f"- baseline collector: `{report['runner']['baseline_collector']}`\n"
     )
     return "\n\n".join([

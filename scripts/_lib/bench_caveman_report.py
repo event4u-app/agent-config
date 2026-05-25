@@ -144,7 +144,7 @@ def render_caveman_markdown(report: dict[str, Any]) -> str:
         "## Notes",
         "",
         f"- corpus: `{report['corpus']['path']}`",
-        f"- pricing: `bench/pricing.yaml` (sourced {cost.get('pricing_sourced_on') or '—'})",
+        f"- pricing: `internal/bench/pricing.yaml` (sourced {cost.get('pricing_sourced_on') or '—'})",
         f"- schema: `caveman-v1` (see `docs/contracts/benchmark-report-schema.md`)",
         f"- bench_run version: `{report['runner']['bench_run_version']}`",
         "",

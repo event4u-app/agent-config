@@ -5,7 +5,7 @@ Wraps the selection-accuracy baseline collector (`scripts/bench_runner.py`),
 captures token / cost data from `agents/cost-tracking/sessions.jsonl` if
 present (per ruflo pattern, external-findings § 2), runs structural
 quality assertions per prompt, and emits a versioned JSON + Markdown
-report under `bench/reports/` per
+report under `internal/bench/reports/` per
 `docs/contracts/benchmark-report-schema.md`.
 
 Usage:
@@ -46,11 +46,11 @@ except ImportError:
     sys.exit(2)
 
 BENCH_RUN_VERSION = "0.2.0"
-PRICING_PATH = REPO_ROOT / "bench" / "pricing.yaml"
+PRICING_PATH = REPO_ROOT / "internal" / "bench" / "pricing.yaml"
 SESSIONS_JSONL = REPO_ROOT / "agents" / "cost-tracking" / "sessions.jsonl"
-REPORTS_DIR = REPO_ROOT / "bench" / "reports"
+REPORTS_DIR = REPO_ROOT / "internal" / "bench" / "reports"
 CORPUS_DIR = REPO_ROOT / "tests" / "eval"
-CAVEMAN_CORPUS = REPO_ROOT / "bench" / "corpora" / "caveman" / "prompts.yaml"
+CAVEMAN_CORPUS = REPO_ROOT / "internal" / "bench" / "corpora" / "caveman" / "prompts.yaml"
 BASELINE_COLLECTOR = REPO_ROOT / "scripts" / "bench_runner.py"
 
 

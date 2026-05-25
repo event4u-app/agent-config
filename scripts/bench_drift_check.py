@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Drift detector for the bench corpus — step-4 Phase 3 Step 2.
 
-Compares the latest `bench/reports/<stamp>-<corpus>.json` against the
+Compares the latest `internal/bench/reports/<stamp>-<corpus>.json` against the
 previous N reports (default 5) for the same corpus. Drift defined as:
 
     - selection-accuracy: latest is more than `accuracy_drop_pp` below
@@ -99,7 +99,7 @@ def _check(latest: dict[str, Any], baseline: list[dict[str, Any]],
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--corpus", default="dev")
-    ap.add_argument("--reports-dir", default="bench/reports")
+    ap.add_argument("--reports-dir", default="internal/bench/reports")
     ap.add_argument("--window", type=int, default=5, help="rolling window size (default 5)")
     ap.add_argument("--accuracy-drop-pp", type=float, default=5.0)
     ap.add_argument("--cost-increase-pct", type=float, default=20.0)

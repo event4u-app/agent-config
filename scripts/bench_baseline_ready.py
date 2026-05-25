@@ -2,7 +2,7 @@
 """Baseline-closure check — step-4 Phase 3 Step 4.
 
 Returns exit 0 iff the 60-day clock has elapsed since
-`bench/baseline-start.txt` AND `bench/reports/` contains at least
+`internal/bench/baseline-start.txt` AND `internal/bench/reports/` contains at least
 `--min-reports` complete runs for the named corpus (default 30).
 
 Read by P2 enforcement roadmaps as their precondition (G1 gate in
@@ -50,8 +50,8 @@ def main(argv: list[str] | None = None) -> int:
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     ap.add_argument("--corpus", default="dev")
-    ap.add_argument("--reports-dir", default="bench/reports")
-    ap.add_argument("--baseline-file", default="bench/baseline-start.txt")
+    ap.add_argument("--reports-dir", default="internal/bench/reports")
+    ap.add_argument("--baseline-file", default="internal/bench/baseline-start.txt")
     ap.add_argument("--min-days", type=int, default=60)
     ap.add_argument("--min-reports", type=int, default=30)
     ap.add_argument("--json", action="store_true")

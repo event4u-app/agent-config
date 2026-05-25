@@ -43,7 +43,7 @@ from .catalog import (
 from .telemetry import Outcome, record_call
 
 # Stable transport tag for the stub envelope. Mirrored verbatim by
-# `workers/mcp/src/stubs.ts` with ``"worker"``.
+# `internal/workers/mcp/src/stubs.ts` with ``"worker"``.
 STDIO_TRANSPORT = "stdio"
 
 # Allowlisted directories (relative to consumer_root) where tool writes

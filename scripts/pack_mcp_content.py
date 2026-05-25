@@ -3,12 +3,12 @@
 Walks `.agent-src/skills/`, `.agent-src/commands/`, `.agent-src/rules/`,
 `docs/guidelines/`, `.agent-src/contexts/` via the same Python loaders
 that drive the local stdio kernel, emits one JSON blob and a sidecar
-manifest for `workers/mcp/`.
+manifest for `internal/workers/mcp/`.
 
 Outputs (relative to repo root):
-- `workers/mcp/content.json`      — uncompressed, bundled by `wrangler deploy`.
-- `workers/mcp/content.json.gz`   — gzipped archival copy for R2.
-- `workers/mcp/manifest.json`     — manifest only (RCA / R2 sidecar).
+- `internal/workers/mcp/content.json`      — uncompressed, bundled by `wrangler deploy`.
+- `internal/workers/mcp/content.json.gz`   — gzipped archival copy for R2.
+- `internal/workers/mcp/manifest.json`     — manifest only (RCA / R2 sidecar).
 
 Hard-fail thresholds (Phase 2-5 council verdict D2):
 - Uncompressed JSON > 2 MB         → SystemExit(1).
@@ -262,14 +262,14 @@ def main(argv: list[str] | None = None) -> int:
         "--out",
         type=Path,
         default=None,
-        help="Output directory (defaults to <root>/workers/mcp).",
+        help="Output directory (defaults to <root>/internal/workers/mcp).",
     )
     parser.add_argument(
         "--quiet", action="store_true", help="Suppress success summary."
     )
     args = parser.parse_args(argv)
 
-    out_dir = args.out or (args.root / "workers" / "mcp")
+    out_dir = args.out or (args.root / "internal" / "workers" / "mcp")
     manifest = pack(args.root, out_dir)
 
     if not args.quiet:
