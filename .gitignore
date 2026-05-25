@@ -7,6 +7,9 @@
 # Dependencies
 /vendor/
 /node_modules/
+# pnpm — repo uses npm (package-lock.json). Stray pnpm-lock.yaml from
+# accidental `pnpm install` runs must never enter the tree.
+pnpm-lock.yaml
 # Python virtualenv — used only for the live trigger-eval runner
 # (anthropic SDK). Never commit.
 /.venv/
