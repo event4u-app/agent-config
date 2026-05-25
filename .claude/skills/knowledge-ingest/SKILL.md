@@ -1,0 +1,1 @@
+../../../.agent-src/commands/knowledge/ingest.md

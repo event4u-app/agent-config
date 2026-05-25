@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `3.1.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 357
+- **artefacts**: 361
 
-## Commands (128)
+## Commands (132)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -81,6 +81,10 @@ Core framework-neutral artefacts.
 - **`judge:on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - **`judge:solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - **`judge:steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
+- **`knowledge`** — Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
+- **`knowledge:forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
+- **`knowledge:ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
+- **`knowledge:list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
 - **`memory:add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
 - **`memory:learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
