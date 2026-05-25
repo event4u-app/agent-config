@@ -5,7 +5,7 @@ Worker. Read-only, identity-stable per release. Optional Bearer-token
 auth — see [§ Bearer auth](#bearer-auth) below.
 
 > **No public endpoint.** This package ships the Worker source under
-> `workers/mcp/`, but does **not** operate a shared hosted MCP server.
+> `internal/workers/mcp/`, but does **not** operate a shared hosted MCP server.
 > Deploy your own per [`mcp-cloud-setup.md`](mcp-cloud-setup.md) — your
 > URL will be `https://agent-config-mcp.<your-account>.workers.dev`
 > (or a custom domain you wire up in Step 7).

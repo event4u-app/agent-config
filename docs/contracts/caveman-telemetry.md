@@ -13,7 +13,7 @@ keep-beta-until: 2026-08-15
 
 | Key | Value | Provenance |
 |---|---|---|
-| `caveman_multiplier_version` | `v1` | Tied to `bench/reports/caveman-v1.{json,md}` |
+| `caveman_multiplier_version` | `v1` | Tied to `internal/bench/reports/caveman-v1.{json,md}` |
 | `caveman_multiplier_value` | `0.9155` | `median(terse_control_tokens / compressed_tokens)` over the 10-prompt v1 corpus |
 | `caveman_multiplier_p10` | `0.4506` | 10th percentile (worst-case carve-out-tax prompts) |
 | `caveman_multiplier_p90` | `2.3664` | 90th percentile (pure-prose prompts where caveman wins) |
@@ -40,7 +40,7 @@ where `M = caveman_multiplier_value`.
 
 ## Why suspended after v1
 
-The `caveman-v1` bench (`bench/reports/caveman-v1.md`, 30 calls,
+The `caveman-v1` bench (`internal/bench/reports/caveman-v1.md`, 30 calls,
 2026-05-16) found:
 
 - Median savings vs raw uncompressed: **+23.51 %** (inflated by the
@@ -78,6 +78,6 @@ Until a v2 bench (broader corpus or a re-tuned dialect) lifts the
 ## See also
 
 - [`compression-default-kill-criterion.md`](compression-default-kill-criterion.md) — the rule-default-flip gate; this multiplier is gated on the same `vs_terse` arm.
-- [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) — provenance for the `v1` value.
-- [`bench/reports/caveman-v2.md`](../../bench/reports/caveman-v2.md) — input-side (orthogonal); does NOT feed this multiplier (this multiplier is output-side).
+- [`internal/bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) — provenance for the `v1` value.
+- [`internal/bench/reports/caveman-v2.md`](../../bench/reports/caveman-v2.md) — input-side (orthogonal); does NOT feed this multiplier (this multiplier is output-side).
 - [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md) — runtime rule the multiplier measures.

@@ -23,7 +23,7 @@ soak in [`bench.json`](bench.json) flips from `warmup` to `baseline_ready`
 
 | # | Ruflo pattern | Verdict | Evidence |
 |---|---|---|---|
-| 1 | **Cost-tracker plugin** — real model pricing, per-1M, separated input/output/cache | `[x] covered by` | [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) + [`bench/pricing.yaml`](../../bench/pricing.yaml) (Haiku/Sonnet/Opus per-1M, input/output/cache-read/cache-write split). Step-11 Phase 1. |
+| 1 | **Cost-tracker plugin** — real model pricing, per-1M, separated input/output/cache | `[x] covered by` | [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) + [`internal/bench/pricing.yaml`](../../bench/pricing.yaml) (Haiku/Sonnet/Opus per-1M, input/output/cache-read/cache-write split). Step-11 Phase 1. |
 | 2 | **Auto-capture from session jsonl** — reads Claude Code log, no manual tracking | `[x] covered by` | [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs) reads `~/.claude/projects/*/sessions/*.jsonl` automatically. Step-11 Phase 1 Step 1. |
 | 3 | **50/75/90/100 % budget ladder with hard stop** | `[x] covered by` | [`scripts/cost/budget.mjs`](../../scripts/cost/budget.mjs) — exit codes 0/1/2/3 per tier; opt-in fail-closed via `cost.enforcement` setting. Fixtures: `tests/fixtures/cost/budget/{under-50,at-100,over-100}/`. Step-11 Phase 2. |
 | 4 | **Measured-vs-claimed disclaimer** — every percentage tagged "claimed upstream" | `[x] covered by` | One-line `**Measured-vs-claimed disclaimer:**` header block on all 9 active roadmaps in `agents/roadmaps/`. Verified 2026-05-16. Step-11 Phase 5 Step 4. |

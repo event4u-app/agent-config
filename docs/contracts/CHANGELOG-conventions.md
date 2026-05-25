@@ -52,7 +52,7 @@ Tests: NNNN (+M since X.Y.(Z-1))
 ```
 
 The test-count line is enforced for any release that ships changes to
-`scripts/`, `workers/`, or `.agent-src/` content; it can be omitted for
+`scripts/`, `internal/workers/`, or `.agent-src/` content; it can be omitted for
 pure-docs releases.
 
 ## What counts as breaking

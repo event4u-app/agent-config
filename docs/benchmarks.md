@@ -18,13 +18,13 @@ discipline (upstream `5b71c7a`).
 | Corpus | Path | Purpose |
 |---|---|---|
 | `dev` | `tests/eval/corpus-dev.yaml` | router / engine selection |
-| `caveman` | `bench/corpora/caveman/prompts.yaml` | compression dialect (`vs_raw` + `vs_terse`) |
+| `caveman` | `internal/bench/corpora/caveman/prompts.yaml` | compression dialect (`vs_raw` + `vs_terse`) |
 
 ## Reports — naming and trail
 
-- **Canonical pointer:** `bench/reports/<corpus>-v<N>.{json,md}` — always
+- **Canonical pointer:** `internal/bench/reports/<corpus>-v<N>.{json,md}` — always
   reflects the latest published run for that corpus version.
-- **Timestamped trail:** `bench/reports/<ISO-Zulu>-<corpus>-v<N>.{json,md}`
+- **Timestamped trail:** `internal/bench/reports/<ISO-Zulu>-<corpus>-v<N>.{json,md}`
   — every committed run keeps an immutable history copy alongside.
 
 Both are produced in one `scripts/bench_run.py` invocation; do not commit
@@ -37,7 +37,7 @@ one without the other.
 | Pre-release bake (any `vX.Y.0`) | `dev` + `caveman` | both reports refreshed |
 | Edit to `.agent-src.uncompressed/rules/caveman-speak.md` | `caveman` | report refreshed in same PR |
 | Edit to `scripts/bench_run.py` `--caveman` arm | `caveman` | report refreshed in same PR |
-| Edit to `bench/corpora/caveman/prompts.yaml` | `caveman` | report refreshed, version bumped (`caveman-vN+1`) |
+| Edit to `internal/bench/corpora/caveman/prompts.yaml` | `caveman` | report refreshed, version bumped (`caveman-vN+1`) |
 | Edit to `scripts/_lib/bench_caveman*.py` | `caveman` | report refreshed in same PR |
 
 A PR that touches any of the cadence triggers without refreshing the

@@ -69,7 +69,7 @@ curl -s -X POST https://mcp.<your-domain>/ \
 ```
 
 After DNS is live, uncomment the `routes` block in
-`workers/mcp/wrangler.toml` and redeploy via `wrangler deploy` (or let
+`internal/workers/mcp/wrangler.toml` and redeploy via `wrangler deploy` (or let
 the GitHub Action pick it up on the next release).
 
 The fallback `*.workers.dev` URL stays live for free; the custom

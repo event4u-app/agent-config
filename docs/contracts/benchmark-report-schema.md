@@ -7,12 +7,12 @@ keep-beta-until: 2026-08-14
 
 Parser-visible contract for the JSON + Markdown reports emitted by
 [`scripts/bench_run.py`](../../scripts/bench_run.py). Every `task bench`
-run writes one `bench/reports/<ts>-<corpus_id>.json` + matching `.md`.
+run writes one `internal/bench/reports/<ts>-<corpus_id>.json` + matching `.md`.
 
 ## File layout
 
 ```
-bench/
+internal/bench/
 ├── pricing.yaml                       # per-1M model rates + sourced_on dates
 └── reports/
     ├── 2026-05-16T10-30-00Z-dev.json  # machine-readable
@@ -60,7 +60,7 @@ cost:
   per_tier:                                        # haiku / sonnet / opus / unknown
     sonnet: { messages: <int>, cost_usd: <float> }
     ...
-  pricing_sourced_on: <ISO date from bench/pricing.yaml>
+  pricing_sourced_on: <ISO date from internal/bench/pricing.yaml>
 quality:
   source: <path-or-"not_collected">
   prompts_with_assertion: <int>
@@ -99,7 +99,7 @@ Headers in order:
   `quality.source: not_collected` and `verdict.overall: partial`. Score
   stays `0.0`; never inflate by assuming pass.
 - **Pricing dated.** Every cost row reads `sourced_on` from
-  `bench/pricing.yaml`. Stale price (> 90 days) → warning line in the
+  `internal/bench/pricing.yaml`. Stale price (> 90 days) → warning line in the
   Markdown footer.
 
 ## Cross-references
@@ -107,5 +107,5 @@ Headers in order:
 - Runner — [`scripts/bench_run.py`](../../scripts/bench_run.py)
 - Baseline collector — [`scripts/bench_runner.py`](../../scripts/bench_runner.py)
 - Corpus contract — [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md)
-- Pricing source — [`bench/pricing.yaml`](../../bench/pricing.yaml)
+- Pricing source — [`internal/bench/pricing.yaml`](../../bench/pricing.yaml)
 - Cost session reader (live sessions) — [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs)

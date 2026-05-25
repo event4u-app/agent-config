@@ -20,7 +20,7 @@ a 500.
 ## Source of truth
 
 `scripts/mcp_server/consumer_tool_catalog.json` (schema_version 1).
-Both the stdio server and the Cloud Worker bundle (`workers/mcp/`,
+Both the stdio server and the Cloud Worker bundle (`internal/workers/mcp/`,
 packed by `scripts/pack_mcp_content.py`) read from this file. The
 manifest returned by `tools/list` is byte-identical apart from
 per-tool `implemented_on` metadata.

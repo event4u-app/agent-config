@@ -82,7 +82,7 @@ Dashboard → **My Profile → API Tokens → Create Token → Custom token**:
 | Account · Workers R2 Storage | your account | Edit |
 | User · User Details | — | Read |
 
-If you uncomment the `routes` block in `workers/mcp/wrangler.toml`
+If you uncomment the `routes` block in `internal/workers/mcp/wrangler.toml`
 (custom domain cutover, Phase 5.2), add **Zone · DNS · Edit** on the
 relevant zone.
 
@@ -180,4 +180,4 @@ setup. Until cutover, the Worker serves on the free
 - [`docs/contracts/mcp-cloud-scope.md`](../contracts/mcp-cloud-scope.md) — A0-cloud contract
 - [`docs/setup/mcp-r2-bootstrap.md`](mcp-r2-bootstrap.md) — R2 layout & break-glass
 - [`docs/setup/mcp-cloud-endpoints.md`](mcp-cloud-endpoints.md) — URL shapes & DNS
-- [`workers/mcp/README.md`](../../workers/mcp/README.md) — Worker source overview
+- [`internal/workers/mcp/README.md`](../../internal/workers/mcp/README.md) — Worker source overview
