@@ -11,11 +11,11 @@
     "type": "claimed_upstream_not_verified_in_repo"
   },
   "measurement_protocol": {
-    "corpus": "bench/corpus/* (25-prompt corpus owned by step-4-measurement-and-benchmark.md)",
+    "corpus": "internal/bench/corpus/* (25-prompt corpus owned by step-4-measurement-and-benchmark.md)",
     "tracker": "scripts/cost/track.mjs",
-    "pricing": "bench/pricing.yaml",
+    "pricing": "internal/bench/pricing.yaml",
     "session_source": "~/.claude/projects/*/sessions/*.jsonl (Claude Code-native, no manual tracking)",
-    "tokens_to_dollars": "track.mjs multiplies input/output/cache-read/cache-write tokens by per-1M pricing from bench/pricing.yaml, separated by model id",
+    "tokens_to_dollars": "track.mjs multiplies input/output/cache-read/cache-write tokens by per-1M pricing from internal/bench/pricing.yaml, separated by model id",
     "headline_output": "average dollar cost per 25-prompt run, with min / max / p50 / p90 across N reports"
   },
   "current_window": {

@@ -108,7 +108,7 @@ def not_implemented_envelope(
 ) -> dict[str, Any]:
     """Wire-shape error envelope used when a stub is invoked.
 
-    Mirrored verbatim by the Cloud Worker (`workers/mcp/src/stubs.ts`).
+    Mirrored verbatim by the Cloud Worker (`internal/workers/mcp/src/stubs.ts`).
     """
     return {
         "code": NOT_IMPLEMENTED_CODE,

@@ -67,19 +67,19 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: workers/mcp/package-lock.json
+          cache-dependency-path: internal/workers/mcp/package-lock.json
 
       - name: Install Worker deps
         run: npm ci
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Pack content blob
         id: pack
         run: |
           python3 scripts/pack_mcp_content.py
-          sig=$(python3 -c "import json; print(json.load(open('workers/mcp/manifest.json'))['signature'])")
-          release_key=$(python3 -c "import json; print(json.load(open('workers/mcp/manifest.json'))['release_key'])")
-          pkg=$(python3 -c "import json; print(json.load(open('workers/mcp/manifest.json'))['package_version'])")
+          sig=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['signature'])")
+          release_key=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['release_key'])")
+          pkg=$(python3 -c "import json; print(json.load(open('internal/workers/mcp/manifest.json'))['package_version'])")
           echo "signature=$sig" >> "$GITHUB_OUTPUT"
           echo "release_key=$release_key" >> "$GITHUB_OUTPUT"
           echo "package_version=$pkg" >> "$GITHUB_OUTPUT"
@@ -91,7 +91,7 @@ jobs:
             echo "::error::R2 prefix releases/${{ steps.pack.outputs.release_key }}/ already exists; refusing to overwrite."
             exit 1
           fi
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Upload archival copy to R2
         run: |
@@ -100,27 +100,27 @@ jobs:
             --file content.json.gz --content-type application/gzip
           npx wrangler r2 object put "$R2_BUCKET/$base/manifest.json" \
             --file manifest.json --content-type application/json
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Deploy Worker
         run: |
           npx wrangler deploy \
             --var PACKAGE_VERSION:"${{ steps.pack.outputs.package_version }}" \
             --var RELEASE_KEY:"${{ steps.pack.outputs.release_key }}"
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Post-deploy smoke
         env:
           MCP_WORKER_URL: https://agent-config-mcp.${{ secrets.CLOUDFLARE_WORKER_SUBDOMAIN }}.workers.dev
         run: npx tsx test/dev-smoke.ts
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Repoint latest.txt (only after smoke passes)
         run: |
           echo -n "${{ steps.pack.outputs.release_key }}" | \
             npx wrangler r2 object put "$R2_BUCKET/releases/latest.txt" \
               --pipe --content-type text/plain
-        working-directory: workers/mcp
+        working-directory: internal/workers/mcp
 
       - name: Comment on release
         if: github.event_name == 'release'

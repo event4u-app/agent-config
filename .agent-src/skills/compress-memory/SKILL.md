@@ -23,7 +23,7 @@ install:
 
 # compress-memory
 
-> **Experimental.** Output-side caveman dialect did not meet kill-criterion in [`bench/reports/caveman-v1.md`](../../../bench/reports/caveman-v1.md) (`vs_terse` median −9.27 %). Input-side memory compression is orthogonal use case: savings target always-loaded memory budget, not reply stream. Treat ship-criterion as **per-target measurement**, not v1 verdict.
+> **Experimental.** Output-side caveman dialect did not meet kill-criterion in [`internal/bench/reports/caveman-v1.md`](../../../bench/reports/caveman-v1.md) (`vs_terse` median −9.27 %). Input-side memory compression is orthogonal use case: savings target always-loaded memory budget, not reply stream. Treat ship-criterion as **per-target measurement**, not v1 verdict.
 
 ## When to use
 

@@ -24,7 +24,7 @@ Four axes, all numeric, all reproducible from the same input:
 
 Schemas: [`benchmark-report-schema.md`](benchmark-report-schema.md) ·
 [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md). Reports land at
-`bench/reports/<utc-stamp>-<corpus>[-projection].{json,md}` —
+`internal/bench/reports/<utc-stamp>-<corpus>[-projection].{json,md}` —
 timestamped, never overwritten, content-addressed by run.
 
 ## Corpora — frozen for the soak window
@@ -67,10 +67,10 @@ NO ANECDOTE, NO INDIVIDUAL REPORT, NO ROADMAP-SIDE OVERRIDE.
 [`scripts/bench_baseline_ready.py`](../../scripts/bench_baseline_ready.py)
 returns exit 0 iff both:
 
-1. **Wall-clock soak:** `today − bench/baseline-start.txt ≥ --min-days` (default 60)
-2. **Report density:** `bench/reports/*-<corpus>.json` count ≥ `--min-reports` (default 30)
+1. **Wall-clock soak:** `today − internal/bench/baseline-start.txt ≥ --min-days` (default 60)
+2. **Report density:** `internal/bench/reports/*-<corpus>.json` count ≥ `--min-reports` (default 30)
 
-Soak start anchored at [`bench/baseline-start.txt`](../../bench/baseline-start.txt)
+Soak start anchored at [`internal/bench/baseline-start.txt`](../../bench/baseline-start.txt)
 = **2026-05-16**. Earliest possible flip: **2026-07-15**, contingent
 on the 30-report floor.
 
@@ -86,11 +86,11 @@ On baseline closure, the step-4 closeout writes the numeric verdict to
 [`docs/parity/bench.json`](../parity/bench.json) — frozen snapshot with
 the 30+ reports averaged, drift verdict, and the compression-default
 decision per the kill-criterion table. That file is the artefact every
-P2 roadmap reads — not the live `bench/reports/` directory.
+P2 roadmap reads — not the live `internal/bench/reports/` directory.
 
 ## Carve-outs
 
-- **Pricing freshness:** [`bench/pricing.yaml`](../../bench/pricing.yaml) rows must carry `sourced_on: YYYY-MM-DD`. Stale prices = stale numbers = no trust (ruflo "measured-vs-claimed" pattern).
+- **Pricing freshness:** [`internal/bench/pricing.yaml`](../../bench/pricing.yaml) rows must carry `sourced_on: YYYY-MM-DD`. Stale prices = stale numbers = no trust (ruflo "measured-vs-claimed" pattern).
 - **Subjective grading excluded:** quality scoring is mechanical via `quality_assertion`. No vibes.
 - **Cursor / Cline / Windsurf:** rules-only surfaces, no SKILL.md projection. `bench:projection` reports them as `not_applicable` — the gap is acknowledged, not silently dropped.
 

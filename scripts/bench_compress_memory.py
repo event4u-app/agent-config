@@ -3,10 +3,10 @@
 
 Runs `compress_memory.py` over a fixed corpus of memory-target files, records
 pre/post char counts, approximates input-token savings (chars / 4 — the
-GPT-4 / Claude rule of thumb), and emits `bench/reports/caveman-v2.{json,md}`.
+GPT-4 / Claude rule of thumb), and emits `internal/bench/reports/caveman-v2.{json,md}`.
 
 Offline (no API calls). Cadence-aligned with `docs/benchmarks.md`. Citation
-in `bench/reports/caveman-v2.md` notes the chars→tokens approximation and
+in `internal/bench/reports/caveman-v2.md` notes the chars→tokens approximation and
 points at upstream tiktoken / claude-tokenizer if a calibrated number is
 later needed.
 """
@@ -23,8 +23,8 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMPRESS_SCRIPT = REPO_ROOT / "scripts" / "compress_memory.py"
-REPORT_JSON = REPO_ROOT / "bench" / "reports" / "caveman-v2.json"
-REPORT_MD = REPO_ROOT / "bench" / "reports" / "caveman-v2.md"
+REPORT_JSON = REPO_ROOT / "internal" / "bench" / "reports" / "caveman-v2.json"
+REPORT_MD = REPO_ROOT / "internal" / "bench" / "reports" / "caveman-v2.md"
 
 CORPUS: list[tuple[str, str]] = [
     ("AGENTS.md", "thin-root-package"),

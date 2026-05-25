@@ -16,7 +16,7 @@ on:
       - "scripts/bench_runner.py"
       - "scripts/_lib/bench_*.py"
       - "tests/eval/**"
-      - "bench/**"
+      - "internal/bench/**"
       - ".github/workflows/bench-drift.yml"
   workflow_dispatch:
 

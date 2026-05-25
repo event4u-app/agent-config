@@ -4,7 +4,7 @@
 Reads three on-disk sources:
   * `package.json`                          — name, version, description, homepage, repository
   * `.github/topics.yml`                    — topics list (for registries that accept tags)
-  * `workers/mcp/content.json`              — `tool_catalog` (tools_count, install_hint_stdio)
+  * `internal/workers/mcp/content.json`     — `tool_catalog` (tools_count, install_hint_stdio)
   * `dist/discovery/discovery-manifest.json` — artefact_count + scanner_version (HARD prereq per AI-Council R5)
 
 Emits:
@@ -37,7 +37,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 PKG_FILE = ROOT / "package.json"
 TOPICS_FILE = ROOT / ".github" / "topics.yml"
-CONTENT_FILE = ROOT / "workers" / "mcp" / "content.json"
+CONTENT_FILE = ROOT / "internal" / "workers" / "mcp" / "content.json"
 DISCOVERY_FILE = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 OUT_DIR = ROOT / "dist" / "mcp"
 OUT_MANIFEST = OUT_DIR / "registry-manifest.json"

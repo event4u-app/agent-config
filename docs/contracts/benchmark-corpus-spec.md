@@ -13,12 +13,12 @@ and validation invariants.
 ## Path decision
 
 Roadmap `step-4-measurement-and-benchmark.md`
-Phase 1 Step 2 names `bench/corpus.yaml`. The existing benchmark
+Phase 1 Step 2 names `internal/bench/corpus.yaml`. The existing benchmark
 infrastructure (runner + non-dev corpus + `task bench`) lives under
 `tests/eval/` and `scripts/bench_runner.py` hardcodes that directory.
-**Canonical location:** `tests/eval/corpus-<id>.yaml`. The `bench/`
+**Canonical location:** `tests/eval/corpus-<id>.yaml`. The `internal/bench/`
 directory is reserved for **reports + pricing** (Phase 2 deliverables).
-Migration to `bench/corpus.yaml` is a no-op rename if downstream Phase
+Migration to `internal/bench/corpus.yaml` is a no-op rename if downstream Phase
 2 work proves the consolidation is worth the diff cost.
 
 ## Composition (25 prompts)

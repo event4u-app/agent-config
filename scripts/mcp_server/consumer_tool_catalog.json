@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "description": "Source-of-truth catalog of consumer-relevant MCP tools. Read by the stdio server (scripts/mcp_server/) and packed into the Cloud Worker bundle (workers/mcp/). Phase 1 of road-to-mcp-full-coverage: tools without 'implemented' transports return the 'not_implemented' envelope defined in docs/contracts/mcp-tool-stub-envelope.md. The 'implemented_on' field lists transports where the real handler is wired; everything else is a discovery stub. See agents/roadmaps/archive/road-to-mcp-full-coverage.md.",
+  "description": "Source-of-truth catalog of consumer-relevant MCP tools. Read by the stdio server (scripts/mcp_server/) and packed into the Cloud Worker bundle (internal/workers/mcp/). Phase 1 of road-to-mcp-full-coverage: tools without 'implemented' transports return the 'not_implemented' envelope defined in docs/contracts/mcp-tool-stub-envelope.md. The 'implemented_on' field lists transports where the real handler is wired; everything else is a discovery stub. See agents/roadmaps/archive/road-to-mcp-full-coverage.md.",
   "install_hint_stdio": "pip install agent-config[mcp] && ./agent-config mcp:run",
   "tools": [
     {

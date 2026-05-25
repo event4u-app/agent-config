@@ -117,7 +117,7 @@ tasks:
 
   mcp:cloud:dev:
     desc: "Run the Cloudflare Worker locally on :8787 (`wrangler dev`)."
-    dir: workers/mcp
+    dir: internal/workers/mcp
     cmds:
       - npm install --silent
       - npm run dev

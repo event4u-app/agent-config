@@ -7,7 +7,7 @@ mcp_scope: lite
 
 > **Status:** Active · governs the `experimental → beta` promotion for
 > the MCP surface (`scripts/mcp_server/` local stdio kernel + the
-> hosted `workers/mcp/` bridge). Owned by Phase 3 of the
+> hosted `internal/workers/mcp/` bridge). Owned by Phase 3 of the
 > `road-to-surface-discipline` roadmap (see `agents/roadmaps/`).
 > Companion contract:
 > [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md) (local) ·

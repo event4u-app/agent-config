@@ -1,6 +1,6 @@
 {
   "commands/agent-handoff.md": "19eed2a9fe1f16ec98d701136f6d3211165c2008f9b2934cf81a015d4e9fc29c",
-  "commands/agent-status.md": "49fb191906820408d13c36a881e46ab647cb3b53ffb2d407702626be646f71a0",
+  "commands/agent-status.md": "7e87fc67ad1454f21236bd03260fb768e9bbcbed4595c4d89e9cee542645e74d",
   "commands/agents.md": "9fb7d3546aa2961d2bf427c95dd1e75a1f072fbbd3b60a47fc875e1af38ac9cc",
   "commands/agents/audit.md": "4551d562eb197282da47010d0c4083c94c90e72fecfabcf0339f0527c3a8e3be",
   "commands/agents/init.md": "3bd3504a938a740bd4be4a5955fa90d3538a975746ec68816dd5c879a7707b50",
@@ -308,7 +308,7 @@
   "skills/competitive-moat-analysis/SKILL.md": "6deb47c5368b9ea06e1a7a3d9a9ca8e61db2946b3c574bba8b4dce943c09e969",
   "skills/competitive-positioning/SKILL.md": "f0b2b64131ccf52d9aea7bb0e9723e3719b47c3253f2ab2a68ef832da3f18d5f",
   "skills/composer-packages/SKILL.md": "afe62ba52f7db355c66fb5ff72b8bc3e01f0876f64d6a151b6e7489acdef9692",
-  "skills/compress-memory/SKILL.md": "a907b32668de18abed188af5d2eebf50e652b8cc8aa95897aceaa5c7a7b7446f",
+  "skills/compress-memory/SKILL.md": "7b5600467fa6cba60f83720f7b6f360c62ee82c0caec85d2ec26eadd8820c82f",
   "skills/content-funnel-design/SKILL.md": "a28594b5018c70d8120bc6888e0565ebd33e3716b5496fcebed4a4751b5e337e",
   "skills/context-authoring/SKILL.md": "68d69f5bc3512d5514179e8024d58ae5989f2676ee66c0dce2539ac590e44f44",
   "skills/context-document/SKILL.md": "79f6ff00a0f451870974cd4b465770d455b05b6c8c40a455e4f2f45c52102dcc",

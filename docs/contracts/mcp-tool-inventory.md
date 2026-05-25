@@ -47,7 +47,7 @@ keep-beta-until: 2026-08-14
 ## Glossary
 
 - **Side-effect** — `ro` (read-only) · `fs-write` (filesystem write) · `shell` (spawns processes).
-- **Transports** — `stdio` (`scripts/mcp_server/`) · `worker` (`workers/mcp/`). A tool may live on both.
+- **Transports** — `stdio` (`scripts/mcp_server/`) · `worker` (`internal/workers/mcp/`). A tool may live on both.
 - **Stub** — catalog-listed for discovery; returns the `not_implemented` envelope from
   [`mcp-tool-stub-envelope.md`](mcp-tool-stub-envelope.md) until promoted.
 

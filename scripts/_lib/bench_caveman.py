@@ -1,6 +1,6 @@
 # Caveman compression bench — step-16 Phase 1 Step 4.
 #
-# Three-arm live bench against bench/corpora/caveman/prompts.yaml:
+# Three-arm live bench against internal/bench/corpora/caveman/prompts.yaml:
 #   compressed     — system prompt embeds caveman-speak rule (aggressive).
 #   terse_control  — system prompt = "Answer concisely. …" (carve-out-free baseline).
 #   uncompressed   — generic helpful-assistant system prompt.
@@ -131,7 +131,7 @@ class PromptResult:
 # ── corpus + runner ────────────────────────────────────────────────────
 
 def load_corpus(corpus_path: Path) -> list[dict[str, Any]]:
-    """Read bench/corpora/caveman/prompts.yaml → list of prompt dicts."""
+    """Read internal/bench/corpora/caveman/prompts.yaml → list of prompt dicts."""
     data = yaml.safe_load(corpus_path.read_text(encoding="utf-8")) or {}
     prompts = data.get("prompts") or []
     if not prompts:

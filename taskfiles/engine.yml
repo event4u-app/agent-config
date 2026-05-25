@@ -17,7 +17,7 @@ tasks:
     silent: true
     desc: |
       Run the unified bench orchestrator (selection + cost + quality).
-      Emits versioned JSON + Markdown reports under bench/reports/.
+      Emits versioned JSON + Markdown reports under internal/bench/reports/.
       Usage: task bench -- --corpus dev
              task bench -- --corpus dev --top-k 3 --quiet
              task bench -- --corpus dev --agent-output outputs.json

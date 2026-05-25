@@ -2,7 +2,7 @@
 
 mcp_scope: full — local stdio access can be extended to tool execution
 under the Phase 7 wake-up triggers in `docs/contracts/mcp-cloud-scope.md`.
-The hosted Worker (`workers/mcp/`) is `mcp_scope: lite` and is
+The hosted Worker (`internal/workers/mcp/`) is `mcp_scope: lite` and is
 intentionally narrower.
 
 Exposes a hand-picked subset of `.agent-src/skills/` as MCP `prompts`

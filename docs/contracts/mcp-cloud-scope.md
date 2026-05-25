@@ -5,7 +5,7 @@ mcp_scope: lite
 
 # MCP Server — Cloud Scope (A0-cloud Hard Contract)
 
-> **Status:** Active · covers `workers/mcp/` (TypeScript Cloudflare
+> **Status:** Active · covers `internal/workers/mcp/` (TypeScript Cloudflare
 > Worker bridge), MVP-1 surface. Extends — does **not** supersede —
 > [`mcp-phase-1-scope.md`](mcp-phase-1-scope.md), which retains
 > exclusive ownership of `scripts/mcp_server/` (local stdio).
@@ -15,7 +15,7 @@ mcp_scope: lite
 ## Purpose
 
 Locks the **execution-safety boundary** for the hosted MCP Worker. Any
-code under `workers/mcp/` must satisfy this contract verbatim. The
+code under `internal/workers/mcp/` must satisfy this contract verbatim. The
 local stdio kernel and the hosted Worker are two distinct surfaces; a
 deviation in one is **not** authorized by a precedent in the other.
 
@@ -46,7 +46,7 @@ prose-only.
 - **What it never does:** execute Python scripts, shell out, spawn
   runtimes, touch consumer FS, write to R2, mutate consumer state,
   call upstream LLM APIs, or read `.agent-src.uncompressed/`.
-- **Owner code path:** `workers/mcp/` (TypeScript, Cloudflare Worker).
+- **Owner code path:** `internal/workers/mcp/` (TypeScript, Cloudflare Worker).
   This contract is the normative spec.
 - **Auth model:** `public` (default) or `bearer-auth` (operator opt-in)
   per `## Auth surface`. HMAC and CF Access are declared but deferred.
@@ -194,7 +194,7 @@ runtime mode switch.
   returns HTTP `401` with a JSON-RPC error envelope (code `-32001`,
   message `"Unauthorized"`) and the RFC 6750
   `WWW-Authenticate: Bearer realm="agent-config-mcp"` header.
-  Implementation: `workers/mcp/src/index.ts` § auth gate (the
+  Implementation: `internal/workers/mcp/src/index.ts` § auth gate (the
   `if (requiredToken) { … }` block).
 - **Liveness carve-out:** the `GET /` liveness probe is
   unauthenticated by design — health checks and `curl` smoke tests

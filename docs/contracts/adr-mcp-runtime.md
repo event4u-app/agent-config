@@ -17,7 +17,7 @@ per [`scripts/mcp_server/requirements.txt`](../../scripts/mcp_server/requirement
 **FastMCP** (the higher-level decorator wrapper) and the **MCP TypeScript SDK**
 are explicitly rejected for this surface.
 
-The hosted Cloudflare Worker bridge (`workers/mcp/`) is the only place a
+The hosted Cloudflare Worker bridge (`internal/workers/mcp/`) is the only place a
 non-Python runtime is allowed, and it stays bound to the same wire contract
 (see [`mcp-cloud-scope.md`](mcp-cloud-scope.md)).
 

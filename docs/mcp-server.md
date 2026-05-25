@@ -13,7 +13,7 @@ coexist:
   over JSON-RPC. Used by clients that speak MCP natively. Default for personal
   installs.
 - **Remote MCP** *(experimental, opt-in)* — a Cloudflare-hosted TypeScript
-  Worker (`workers/mcp/`) serves the same wire surface over HTTP/SSE for
+  Worker (`internal/workers/mcp/`) serves the same wire surface over HTTP/SSE for
   hosted-agent platforms. URL shapes pinned in
   [`docs/setup/mcp-cloud-endpoints.md`](setup/mcp-cloud-endpoints.md);
   safety contract in

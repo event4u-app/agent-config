@@ -52,7 +52,7 @@
                 "tools_count": {
                     "type": "integer",
                     "minimum": 0,
-                    "description": "Sourced from workers/mcp/content.json#/tool_catalog/tools. Hard-sourced — no fallback. R3 (discovery roadmap) is a hard prerequisite per the AI-Council external review."
+                    "description": "Sourced from internal/workers/mcp/content.json#/tool_catalog/tools. Hard-sourced — no fallback. R3 (discovery roadmap) is a hard prerequisite per the AI-Council external review."
                 },
                 "install_hint_stdio": { "type": "string", "minLength": 1 }
             }

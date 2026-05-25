@@ -44,7 +44,7 @@ npx wrangler r2 bucket create agent-config-mcp
 npx wrangler r2 bucket list | grep agent-config-mcp
 ```
 
-The Worker binding is declared in `workers/mcp/wrangler.toml` under
+The Worker binding is declared in `internal/workers/mcp/wrangler.toml` under
 `[[r2_buckets]]`. The pipeline reads/writes via the wrangler CLI in CI,
 not via the Worker — A0-cloud invariant 2 forbids the Worker from
 issuing R2 writes.

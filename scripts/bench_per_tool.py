@@ -43,7 +43,7 @@ from bench_runner import rank_skills  # type: ignore  # noqa: E402
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 CORPUS_DIR = REPO_ROOT / "tests" / "eval"
-REPORTS_DIR = REPO_ROOT / "bench" / "reports"
+REPORTS_DIR = REPO_ROOT / "internal" / "bench" / "reports"
 
 # tool_id -> (skills_root, kind). kind = "skills" | "rules_only" | "single_file".
 SURFACES: dict[str, tuple[Path, str]] = {
@@ -185,7 +185,7 @@ def main(argv=None) -> int:
     ap.add_argument("--threshold", type=float, default=0.85)
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--write-report", action="store_true",
-                    help="emit bench/reports/<ts>-<corpus>-projection.{json,md}")
+                    help="emit internal/bench/reports/<ts>-<corpus>-projection.{json,md}")
     args = ap.parse_args(argv)
 
     corpus_path = CORPUS_DIR / f"corpus-{args.corpus}.yaml"

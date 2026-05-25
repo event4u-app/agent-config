@@ -2,7 +2,7 @@
 #
 # Reads Claude Code session jsonl summaries (one summary line per session)
 # from agents/cost-tracking/sessions.jsonl — produced by scripts/cost/track.mjs
-# — and aggregates totals using model rates from bench/pricing.yaml.
+# — and aggregates totals using model rates from internal/bench/pricing.yaml.
 #
 # Returns the dict shape declared in docs/contracts/benchmark-report-schema.md
 # § JSON schema (v1) `cost`. When the source jsonl is missing, returns the
@@ -24,7 +24,7 @@ TIER_KEYS = ("haiku", "sonnet", "opus", UNKNOWN_TIER)
 
 
 def load_pricing(pricing_path: Path) -> tuple[dict[str, dict[str, float]], str | None]:
-    """Return ({tier: rates}, oldest_sourced_on) from bench/pricing.yaml."""
+    """Return ({tier: rates}, oldest_sourced_on) from internal/bench/pricing.yaml."""
     if yaml is None or not pricing_path.is_file():
         return {}, None
     data = yaml.safe_load(pricing_path.read_text(encoding="utf-8")) or {}

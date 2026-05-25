@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-14
 # Compression default — kill-criterion
 
 > **Status:** v1-measured · criterion not met · default stays `off` · **Owner:** `step-16-caveman-substance.md`
-> Phase 1 closeout · **Sources:** [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) ·
+> Phase 1 closeout · **Sources:** [`internal/bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md) ·
 > [`council-synthesis.md` § 7](../../agents/evidence/audits/2026-05-14-north-star/council-synthesis.md) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict --> ·
 > [`caveman-v1-kc-verdict.json`](../../agents/runtime/council/responses/caveman-v1-kc-verdict.json) <!-- council-ref-allowed: ADR decision trace for v1 kill-criterion verdict -->
 
@@ -23,14 +23,14 @@ DECISION OWNED BY THE NEXT BENCH CLOSEOUT, NOT BY THIS DOC.
    [`caveman-speak`](../../.agent-src.uncompressed/rules/caveman-speak.md)
    but the feature is non-promoted: no skill recommends turning it on,
    no preset enables it, no profile depends on it.
-2. **Baselines.** Every published `bench/reports/caveman-v<N>.{json,md}`
+2. **Baselines.** Every published `internal/bench/reports/caveman-v<N>.{json,md}`
    measures three arms (`compressed` · `terse-control` ·
    `uncompressed`) and reports two savings columns:
    - `vs_raw` — median savings against the uncompressed arm.
    - `vs_terse` — **load-bearing** median savings against the
      `Answer concisely.` terse-control arm. `vs_raw` is inflated by the
      carve-out-tax-free pure-prose case and is **not** the gate metric.
-3. **Decision table.** Read the latest `bench/reports/caveman-v<N>.md`
+3. **Decision table.** Read the latest `internal/bench/reports/caveman-v<N>.md`
    and apply exactly one of:
 
    | Measured `vs_terse` median | Quality regression on corpus | Verdict |
@@ -50,7 +50,7 @@ DECISION OWNED BY THE NEXT BENCH CLOSEOUT, NOT BY THIS DOC.
 
 ## v1 verdict (2026-05-16)
 
-[`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
+[`internal/bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
 landed 30 calls · $0.0805 · 0 errors · `claude-sonnet-4-5`:
 
 | Metric | Median | p10 | p90 |
@@ -100,7 +100,7 @@ re-litigating compression on every PR.
 
 ## Cross-references
 
-- [`bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
+- [`internal/bench/reports/caveman-v1.md`](../../bench/reports/caveman-v1.md)
   — v1 measurement; canonical baseline this doc cites.
 - [`docs/benchmarks.md`](../benchmarks.md)
   — cadence + when the next bench run is mandatory.
