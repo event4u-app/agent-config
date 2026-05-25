@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # At-Rest Encryption Contract
 
 > **Status** · v0 / design · 2026-05-24. Phase 8 of the

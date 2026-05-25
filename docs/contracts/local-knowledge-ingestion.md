@@ -1,6 +1,6 @@
 ---
 stability: beta
-keep-beta-until: 2026-08-24
+keep-beta-until: 2026-08-23
 ---
 
 # Local knowledge ingestion contract

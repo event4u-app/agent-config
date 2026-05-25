@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Explain Modes Contract
 
 > **Status** · v0 / design · 2026-05-24. Phase 6 of the

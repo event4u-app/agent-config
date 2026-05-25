@@ -31,7 +31,7 @@ Companion artefacts:
 
 - Roadmap: [`agents/roadmaps/road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md)
 - Council question: [`agents/decisions/open-questions/daily-workspace-shape.md`](../../agents/decisions/open-questions/daily-workspace-shape.md)
-- Council verdict: `agents/runtime/council/responses/daily-workspace-shape.json` (gitignored)
+- Council verdict: `agents/runtime/council/responses/daily-workspace-shape.json` (gitignored) <!-- council-ref-allowed: ADR decision trace -->
 - Predecessor ADRs: [`ADR-014`](ADR-014-gui-framework-choice.md) (installer chrome), [`ADR-016`](ADR-016-installer-architecture.md) (installer architecture), [`ADR-020`](ADR-020-global-only-consumer-scope.md) (consumer scope).
 
 ## Context

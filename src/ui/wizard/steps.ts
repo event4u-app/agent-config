@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs' | 'modules';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -50,6 +50,13 @@ const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
         navLabel: 'Packs',
         subtitle: 'Founder-strategy, finance-basic, gtm-sales, ops-people, ai-video — pick zero or more. You can change this later.',
         kind: 'packs',
+    },
+    {
+        id: 'modules',
+        title: 'Module roots for this project',
+        navLabel: 'Modules',
+        subtitle: 'Auto-detected source roots from the project. Pick which ones the agent should treat as modules, or skip to leave .agent-project-settings.yml as-is.',
+        kind: 'modules',
     },
 ];
 

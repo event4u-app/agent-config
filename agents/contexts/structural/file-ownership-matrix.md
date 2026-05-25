@@ -5,8 +5,8 @@
 
 - Schema version: `1`
 - Source of truth: `.agent-src.uncompressed/`
-- Files indexed: **495**
-- Edges (incl. self-WRITE): **1419**
+- Files indexed: **502**
+- Edges (incl. self-WRITE): **1438**
 
 ## READ_ONLY edges
 
@@ -42,6 +42,8 @@
 | `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/init.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/review.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/agents/user/update.md` | `.agent-src.uncompressed/commands/agents/user/show.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/analytics/prune.md` | `.agent-src.uncompressed/commands/analytics/show.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/analytics/show.md` | `.agent-src.uncompressed/commands/analytics/prune.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/challenge-me/vision.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/council/default.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/challenge-me.md` | `.agent-src.uncompressed/commands/grill-me.md` | `body_link` | 1 |
@@ -121,6 +123,13 @@
 | `.agent-src.uncompressed/commands/implement-ticket.md` | `.agent-src.uncompressed/rules/verify-before-complete.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/judge.md` | `.agent-src.uncompressed/commands/review-changes.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/judge.md` | `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/forget.md` | `.agent-src.uncompressed/commands/knowledge/ingest.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/forget.md` | `.agent-src.uncompressed/commands/knowledge/list.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/ingest.md` | `.agent-src.uncompressed/commands/knowledge/forget.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/ingest.md` | `.agent-src.uncompressed/commands/knowledge/list.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/ingest.md` | `.agent-src.uncompressed/skills/markitdown/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/list.md` | `.agent-src.uncompressed/commands/knowledge/forget.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/knowledge/list.md` | `.agent-src.uncompressed/commands/knowledge/ingest.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/memory/load.md` | `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/memory/mine-session.md` | `.agent-src.uncompressed/commands/memory/promote.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/memory/mine-session.md` | `.agent-src.uncompressed/commands/memory/propose.md` | `body_link` | 1 |
@@ -128,6 +137,7 @@
 | `.agent-src.uncompressed/commands/memory/propose.md` | `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/ask-when-uncertain.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/mode.md` | `.agent-src.uncompressed/rules/role-mode-adherence.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/commands/module/explore.md` | `.agent-src.uncompressed/commands/context/create.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize-prompt.md` | `.agent-src.uncompressed/skills/prompt-optimizer/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/commands/optimize/agents-dir.md` | `.agent-src.uncompressed/commands/agents.md` | `body_link` | 1 |
@@ -686,6 +696,8 @@
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/data-flow-mapper/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/decision-record/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/migration-architect/SKILL.md` | `.agent-src.uncompressed/skills/laravel-migration/SKILL.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/module-management/SKILL.md` | `.agent-src.uncompressed/commands/agents/init.md` | `body_link` | 1 |
+| `.agent-src.uncompressed/skills/module-management/SKILL.md` | `.agent-src.uncompressed/commands/module/explore.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/motion-choreographer/SKILL.md` | `.agent-src.uncompressed/skills/scene-expander/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/dcf-modeling/SKILL.md` | `body_link` | 1 |
 | `.agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md` | `.agent-src.uncompressed/skills/funnel-analysis/SKILL.md` | `body_link` | 1 |
@@ -941,7 +953,7 @@
 
 | Kind | Count |
 |---|---:|
-| `command` | 129 |
+| `command` | 136 |
 | `context` | 33 |
 | `persona` | 31 |
 | `rule` | 75 |

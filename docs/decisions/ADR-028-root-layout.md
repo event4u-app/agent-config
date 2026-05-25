@@ -15,7 +15,7 @@ review_date: 2027-05-25
 ## Status
 
 **Accepted** · 2026-05-25. Encodes the AI Council verdict from
-[`root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md)
+[`root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) <!-- council-ref-allowed: ADR decision trace -->
 and opens
 [`road-to-root-layout-cleanup.md`](../../agents/roadmaps/archive/road-to-root-layout-cleanup.md) (archived; complete).
 Time-boxed: review on **2027-05-25** or earlier if any trigger below fires.
@@ -137,8 +137,8 @@ blocker.
 
 ## References
 
-- [`agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md`](../../agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md) — council brief.
-- [`agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) — full synthesis.
+- [`agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md`](../../agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md) — council brief. <!-- council-ref-allowed: ADR decision trace -->
+- [`agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) — full synthesis. <!-- council-ref-allowed: ADR decision trace -->
 - [`agents/roadmaps/archive/road-to-root-layout-cleanup.md`](../../agents/roadmaps/archive/road-to-root-layout-cleanup.md) — execution roadmap (archived; Phase 1 ✅, Phase 2 ✅, Phase 3 closed).
 - [`agents/evidence/audits/2026-05-root-layout-phase2/`](../../agents/evidence/audits/2026-05-root-layout-phase2/) — Phase 2 audit verdict bundle.
 - [`ADR-029`](ADR-029-multi-workspace-deferred.md) — Phase 3 close-out (multi-workspace deferred indefinitely).

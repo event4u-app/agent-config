@@ -118,5 +118,5 @@ Phase 3 becomes eligible when **all** of these hold:
   full audit bundle (4 verdict files + README).
 - [`agents/roadmaps/archive/road-to-root-layout-cleanup.md`](../../agents/roadmaps/archive/road-to-root-layout-cleanup.md) —
   execution roadmap, archived (Phase 1 ✅, Phase 2 ✅, Phase 3 closed via this ADR).
-- [`agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) —
-  original council synthesis that proposed the multi-workspace shape.
+- [`agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) <!-- council-ref-allowed: ADR decision trace -->
+  — original council synthesis that proposed the multi-workspace shape.

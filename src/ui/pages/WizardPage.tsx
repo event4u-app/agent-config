@@ -39,6 +39,16 @@ import {
     legacyHints,
     loaded,
     loadError,
+    moduleCandidates,
+    moduleSelection,
+    modulesAgentFolder,
+    modulesEnabled,
+    modulesLoadError,
+    modulesLoaded,
+    modulesLoading,
+    modulesNamespaceTemplate,
+    modulesProjectRoot,
+    modulesSkipped,
     reviewChanges,
     saving,
     schema,
@@ -53,6 +63,8 @@ import {
     values,
     wizardComplete,
     wizardScope,
+    type ModulesDetectResponse,
+    type ProposedModulesBlock,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -145,6 +157,9 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'userMd' || resumed.kind === 'review') {
             void loadUserMdOnce();
         }
+        if (resumed.kind === 'modules') {
+            void loadModulesOnce();
+        }
         if (resumed.kind === 'review') {
             void refreshDiff();
         }
@@ -201,6 +216,45 @@ async function loadUserMdOnce(): Promise<void> {
         userMdLoaded.value = true;
     }
 }
+
+/**
+ * Fetch `/api/v1/modules/detect` once per wizard session. The endpoint
+ * shells out to `scripts/propose_modules_config.py --json` which can be
+ * slow on large repos, so we cache the result behind `modulesLoaded`
+ * and only re-fetch on an explicit page reload.
+ *
+ * On error we surface the message on `modulesLoadError` and leave the
+ * candidates list empty — the renderer falls back to the "no roots
+ * detected" branch which still lets the user skip the step.
+ */
+async function loadModulesOnce(): Promise<void> {
+    if (modulesLoaded.value || modulesLoading.value) return;
+    modulesLoading.value = true;
+    modulesLoadError.value = null;
+    try {
+        const res = await apiFetch<ModulesDetectResponse>('/api/v1/modules/detect');
+        moduleCandidates.value = res.candidates;
+        modulesProjectRoot.value = res.project_root;
+        // Pre-select every detected candidate — the most common path is
+        // "yes, all of them"; declining is one click per row.
+        const sel: Record<string, boolean> = {};
+        for (const c of res.candidates) sel[c.path] = true;
+        moduleSelection.value = sel;
+        modulesEnabled.value = res.proposed_block.enabled;
+        modulesNamespaceTemplate.value = res.proposed_block.namespace_template ?? '';
+        modulesAgentFolder.value = res.proposed_block.agent_folder ?? 'agents';
+    } catch (err) {
+        if (err instanceof ApiCallError) {
+            modulesLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+        } else {
+            modulesLoadError.value = err instanceof Error ? err.message : String(err);
+        }
+    } finally {
+        modulesLoading.value = false;
+        modulesLoaded.value = true;
+    }
+}
+
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -263,6 +317,9 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'userMd') {
         void loadUserMdOnce();
     }
+    if (next.kind === 'modules') {
+        void loadModulesOnce();
+    }
     if (next.kind === 'review') {
         void refreshDiff();
     }
@@ -289,6 +346,7 @@ async function finish(): Promise<void> {
             settings: Record<string, JsonValue>;
             identity?: UserIdentity;
             scope?: 'global' | 'project';
+            modulesConfig?: ProposedModulesBlock;
         } = {
             settings: values.value,
         };
@@ -304,6 +362,14 @@ async function finish(): Promise<void> {
         // unavailable surfaces keeps the wire shape minimal.
         if (serverStatus.value?.projectScopeAvailable === true) {
             body.scope = wizardScope.value;
+        }
+        // road-to-configurable-modules § Phase E — include the modules
+        // payload only when the maintainer reached the modules step and
+        // didn't explicitly skip. Omitted on skip / decline so the team
+        // file (`.agent-project-settings.yml`) stays untouched.
+        const modulesConfig = buildModulesConfig();
+        if (modulesConfig !== null) {
+            body.modulesConfig = modulesConfig;
         }
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
@@ -343,6 +409,148 @@ async function finish(): Promise<void> {
     } finally {
         saving.value = false;
     }
+}
+
+/**
+ * Renderer for the extended-mode `modules` step. Bespoke (not driven by
+ * `SchemaForm`) because the data source is the live `/modules/detect`
+ * scan, not the static settings schema — candidates change per project,
+ * per branch, even per commit. road-to-configurable-modules § Phase E.
+ *
+ * UI shape:
+ *   - Loading spinner while detection runs.
+ *   - Error banner with retry copy when the bridge fails.
+ *   - "No roots detected" branch with a skip hint when the scan finds
+ *     nothing — the user can still click Skip on the StepNav to leave
+ *     `.agent-project-settings.yml` untouched.
+ *   - One checkbox per detected candidate; pre-selected on first load.
+ *   - Two text inputs for `namespace_template` and `agent_folder`
+ *     (default `agents`) so a maintainer can tighten the proposal
+ *     before persisting.
+ *   - Master enable/disable toggle — turning it off writes
+ *     `modules.enabled: false` so the team file stays explicit.
+ */
+function ModulesStepBody(): preact.JSX.Element {
+    if (modulesLoading.value) {
+        return <p>Detecting module roots…</p>;
+    }
+    if (modulesLoadError.value !== null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner ac-banner--error">
+                    Module detection failed: {modulesLoadError.value}
+                </p>
+                <p>
+                    You can skip this step — `.agent-project-settings.yml` will be
+                    left as-is. Re-run the wizard after fixing the underlying
+                    bridge to populate `modules:` automatically.
+                </p>
+            </div>
+        );
+    }
+    const candidates = moduleCandidates.value;
+    const sel = moduleSelection.value;
+    const root = modulesProjectRoot.value;
+    return (
+        <div class="ac-wizard-step-stub">
+            {root !== null
+                ? (
+                    <p>
+                        Scanning <code>{root}</code>. Pick which detected roots the
+                        agent should treat as modules. Skip leaves
+                        <code> .agent-project-settings.yml</code> untouched.
+                    </p>
+                )
+                : null}
+            <label>
+                <input
+                    type="checkbox"
+                    checked={modulesEnabled.value}
+                    onChange={(e): void => {
+                        modulesEnabled.value = (e.currentTarget as HTMLInputElement).checked;
+                        modulesSkipped.value = false;
+                    }}
+                />
+                {' '}Enable module discovery (writes <code>modules.enabled</code>)
+            </label>
+            {candidates.length === 0
+                ? (
+                    <p>
+                        <em>No module roots detected.</em> The wizard found no
+                        common module layouts (Laravel <code>app/Modules/</code>,
+                        Symfony <code>src/Module/</code>, Node <code>packages/</code>,
+                        Python <code>src/</code>, Go <code>internal/</code>). Skip to
+                        leave <code>modules:</code> blank.
+                    </p>
+                )
+                : (
+                    <ul style="list-style: none; padding-left: 0;">
+                        {candidates.map((cand) => (
+                            <li key={cand.path}>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={sel[cand.path] ?? false}
+                                        onChange={(e): void => {
+                                            const checked = (e.currentTarget as HTMLInputElement).checked;
+                                            moduleSelection.value = { ...sel, [cand.path]: checked };
+                                            modulesSkipped.value = false;
+                                        }}
+                                    />
+                                    {' '}<code>{cand.path}</code> — {cand.stack}{' '}
+                                    <small>({cand.confidence} confidence)</small>
+                                </label>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            <label>
+                Namespace template:{' '}
+                <input
+                    type="text"
+                    value={modulesNamespaceTemplate.value}
+                    placeholder="e.g. App\\Modules\\{ModuleName}\\App"
+                    onInput={(e): void => {
+                        modulesNamespaceTemplate.value = (e.currentTarget as HTMLInputElement).value;
+                        modulesSkipped.value = false;
+                    }}
+                />
+            </label>
+            <label>
+                Agent folder:{' '}
+                <input
+                    type="text"
+                    value={modulesAgentFolder.value}
+                    placeholder="agents"
+                    onInput={(e): void => {
+                        modulesAgentFolder.value = (e.currentTarget as HTMLInputElement).value;
+                        modulesSkipped.value = false;
+                    }}
+                />
+            </label>
+        </div>
+    );
+}
+
+/**
+ * Build the `modulesConfig` body sent to `/api/v1/wizard/finish` when
+ * the user didn't skip the modules step. Filters `moduleSelection` to
+ * the keys that are still in the candidates list (defends against a
+ * stale selection if the candidates were refreshed) and intersects
+ * with truthy values. Returns `null` when nothing should be persisted.
+ */
+function buildModulesConfig(): ProposedModulesBlock | null {
+    if (modulesSkipped.value) return null;
+    if (!modulesLoaded.value) return null;
+    const knownPaths = new Set(moduleCandidates.value.map((c) => c.path));
+    const sel = moduleSelection.value;
+    const root_paths = Object.keys(sel).filter((p) => sel[p] === true && knownPaths.has(p));
+    return {
+        enabled: modulesEnabled.value,
+        root_paths,
+        namespace_template: modulesNamespaceTemplate.value,
+        agent_folder: modulesAgentFolder.value || 'agents',
+    };
 }
 
 function StepBody(): preact.JSX.Element | null {
@@ -407,6 +615,10 @@ function StepBody(): preact.JSX.Element | null {
             </div>
         );
     }
+    if (step.kind === 'modules') {
+        return <ModulesStepBody />;
+    }
+
     // review
     return (
         <WizardReview
@@ -464,14 +676,21 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
             <StepNav
                 canGoPrev={idx > 0}
                 canGoNext={!isLast}
-                canSkip={step.kind === 'userMd'}
+                canSkip={step.kind === 'userMd' || step.kind === 'modules'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
                 canFinish={reviewChanges.value.length > 0 || userMdChanged()}
                 completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
                 onNext={(): void => { void goTo(idx + 1); }}
-                onSkip={(): void => { userMdSkipped.value = true; void goTo(idx + 1); }}
+                onSkip={(): void => {
+                    if (step.kind === 'modules') {
+                        modulesSkipped.value = true;
+                    } else {
+                        userMdSkipped.value = true;
+                    }
+                    void goTo(idx + 1);
+                }}
                 onFinish={(): void => { void finish(); }}
             />
         </div>
