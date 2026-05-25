@@ -1,7 +1,7 @@
 # Local Analytics Contract
 
-> **Status** · v0 / design · 2026-05-24. Phase 7 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> **Status** · v0 / design · 2026-05-24. Phase 7 of the
+> employee-product workstream.
 > **Local-only.** Does NOT lift the Hard-Floor item from 3.1.0 — no
 > network egress, no remote Worker, no POST. Inertia of the prior
 > telemetry roadmap is preserved.

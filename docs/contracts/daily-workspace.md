@@ -1,8 +1,7 @@
 # Daily Workspace Surface Contract
 
 > **Status** · v0 / design · 2026-05-24. Surface contract for the daily
-> workspace introduced in Phase 4 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> workspace introduced as Phase 4 of the employee-product workstream.
 > Governed by ADRs [`022`](../decisions/ADR-022-daily-workspace-decomposition.md) ·
 > [`023`](../decisions/ADR-023-host-agent-protocol.md) ·
 > [`024`](../decisions/ADR-024-workspace-v0-feature-floor.md) ·

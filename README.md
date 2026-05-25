@@ -227,9 +227,9 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 |---|---|---|
 | **Single-user workspace** | ✅ today | `npx @event4u/agent-config init` — single machine, single user; no remote sync |
 | **Small team (3–10 people)** | ✅ today | Shared `agents/overrides/` Git repo + shared NAS for knowledge — no code change, no new server. Recipe: [`docs/deploy/small-team-recipe.md`](docs/deploy/small-team-recipe.md) |
-| **Organization mode** (SSO · central policy · team context · internal connectors) | ⏸ not started | Tracked under [`agents/roadmaps/stubs/`](agents/roadmaps/stubs/README.md); each stub gated on a recruited customer + funded audit + maintainer ADR. Posture rationale: [`docs/deploy/team-deployment-posture.md`](docs/deploy/team-deployment-posture.md) |
+| **Organization mode** (SSO · central policy · team context · internal connectors) | ⏸ not started | Each shape gated on a recruited customer + funded audit + maintainer ADR. Posture rationale: [`docs/deploy/team-deployment-posture.md`](docs/deploy/team-deployment-posture.md) |
 
-The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled in the archived [`road-to-internal-ai-os-deployment.md`](agents/roadmaps/archive/road-to-internal-ai-os-deployment.md) until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
+The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
 
 ### Optional: persistent agent memory
 
