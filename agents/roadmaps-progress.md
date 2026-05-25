@@ -6,17 +6,17 @@
 
 ## Overall
 
-**47 / 77 steps done · 61%**
+**56 / 77 steps done · 73%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   61%
+█████████████████████████████░░░░░░░░░░░   73%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-changelog-era-auto-split.md](roadmaps/road-to-changelog-era-auto-split.md) | 4 | 17 | 12 | 5 | 0 | 0 | ███░░░░░░░ 29% |
+| 1 | [road-to-changelog-era-auto-split.md](roadmaps/road-to-changelog-era-auto-split.md) | 4 | 17 | 3 | 14 | 0 | 0 | ████████░░ 82% |
 | 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 
 ---
@@ -25,13 +25,13 @@
 
 ### [road-to-changelog-era-auto-split.md](roadmaps/road-to-changelog-era-auto-split.md)
 
-**CHANGELOG era auto-split — turn release-blocker into release-script affordance** — 5 / 17 done (29%)
+**CHANGELOG era auto-split — turn release-blocker into release-script affordance** — 14 / 17 done (82%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Tier 1 — Manual era split for the in-flight release (DONE) | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| 2 | Tier 2 — Auto-split logic in `scripts/release.py` | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Tier 3 — Drift-gate hardening | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
+| 2 | Tier 2 — Auto-split logic in `scripts/release.py` | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 3 | Tier 3 — Drift-gate hardening | ✅ done | 0 | 3 | 0 | 0 | 100% |
 | 4 | Tier 4 — Discovery loop: question the convention itself | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
