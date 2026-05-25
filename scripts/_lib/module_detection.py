@@ -41,6 +41,78 @@ _SKIP_DIRS: frozenset[str] = frozenset({
     ".example",
 })
 
+#: Path segments that exclude a file from module-like detection.
+#: Vendored dependencies, build artefacts, VCS state, IDE config —
+#: never a real module no matter what shape the parent directory has.
+_NOISE_SEGMENTS: frozenset[str] = frozenset({
+    "vendor",
+    "node_modules",
+    ".git",
+    ".idea",
+    ".vscode",
+    "dist",
+    "build",
+    "tmp",
+    "var",
+    "storage",
+    "bootstrap",
+    "public",
+    ".venv",
+    "venv",
+    "__pycache__",
+})
+
+#: Parent directory names that hint at a module layout when their
+#: immediate child is a non-noise segment (i.e. ``Modules/User/...``,
+#: ``packages/foo/...``). Case-sensitive — ``Modules`` (Laravel HMVC)
+#: differs from ``modules`` (Node convention) intentionally; both are
+#: accepted.
+_MODULE_PARENTS: frozenset[str] = frozenset({
+    "Modules",
+    "modules",
+    "packages",
+    "apps",
+    "internal",
+})
+
+
+def is_module_like_path(rel_path: str) -> bool:
+    """Return ``True`` when ``rel_path`` sits inside a module-shaped tree.
+
+    Heuristic for the ``module-detect-on-the-fly`` skill: triggered by
+    repo-relative POSIX paths the agent is about to edit or reference.
+    A path is *module-like* when:
+
+    1. None of its segments are in :data:`_NOISE_SEGMENTS` (vendored,
+       build, VCS, IDE state — never a real module).
+    2. At least one segment matches :data:`_MODULE_PARENTS` AND has a
+       non-noise sibling directly underneath (so ``Modules/`` alone
+       does not trigger, but ``Modules/User/...`` does).
+
+    Pure, case-sensitive on parent names. Empty / dotted / Windows-style
+    inputs return ``False``. The function never touches the filesystem
+    — callers pass in a path string they already know about.
+    """
+    if not rel_path:
+        return False
+    normalised = rel_path.replace("\\", "/").strip("/")
+    if not normalised:
+        return False
+    parts = normalised.split("/")
+    for segment in parts:
+        if segment in _NOISE_SEGMENTS:
+            return False
+    for idx, segment in enumerate(parts[:-1]):
+        if segment not in _MODULE_PARENTS:
+            continue
+        child = parts[idx + 1]
+        if not child or child.startswith("."):
+            continue
+        if child in _SKIP_DIRS:
+            continue
+        return True
+    return False
+
 
 @dataclass(frozen=True)
 class ModuleCandidate:

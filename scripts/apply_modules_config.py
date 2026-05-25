@@ -192,13 +192,31 @@ def _patch_modules(template: str, payload: dict[str, object]) -> str:
         "skip_dirs",
     )
 
+    acknowledged = bool(payload.get("detection_acknowledged", False))
+
     out = template
     out = _replace_template_value_raw(out, "modules.enabled", _yaml_bool(enabled))
     out = _replace_template_value_raw(out, "modules.root_paths", _yaml_flow_list(root_paths))
     out = _replace_template_value_raw(out, "modules.namespace_template", _yaml_scalar(ns_template))
     out = _replace_template_value_raw(out, "modules.agent_folder", _yaml_scalar(agent_folder))
     out = _replace_template_value_raw(out, "modules.skip_dirs", _yaml_flow_list(skip_dirs))
+    out = _replace_template_value_raw(
+        out, "modules.detection_acknowledged", _yaml_bool(acknowledged)
+    )
     return out
+
+
+def _patch_acknowledge_only(template: str) -> str:
+    """Flip ``modules.detection_acknowledged`` to ``true`` without touching siblings.
+
+    Used by the ``--acknowledge-only`` flag: the user said "not now" to
+    the on-the-fly prompt and we only want to silence future nags. Every
+    other ``modules.*`` key stays at whatever the template / team file
+    already had.
+    """
+    return _replace_template_value_raw(
+        template, "modules.detection_acknowledged", _yaml_bool(True)
+    )
 
 
 def _bootstrap_team_file(team_path: Path) -> str:
@@ -237,6 +255,15 @@ def main(argv: list[str]) -> int:
         action="store_true",
         help="payload represents an explicit decline — write nothing, exit 0",
     )
+    parser.add_argument(
+        "--acknowledge-only",
+        action="store_true",
+        help=(
+            "flip modules.detection_acknowledged=true without touching any "
+            "other modules.* key — used by the on-the-fly detection skill "
+            "when the user said 'not now'. Reads no payload."
+        ),
+    )
     args = parser.parse_args(argv)
     if args.decline:
         return 0
@@ -244,13 +271,16 @@ def main(argv: list[str]) -> int:
     if not root.is_dir():
         print(f"error: project root is not a directory: {root}", file=sys.stderr)
         return 2
-    payload = _load_payload(args)
     team_path = root / TEAM_FILE
     if team_path.is_file():
         template = team_path.read_text(encoding="utf-8")
     else:
         template = _bootstrap_team_file(team_path)
-    patched = _patch_modules(template, payload)
+    if args.acknowledge_only:
+        patched = _patch_acknowledge_only(template)
+    else:
+        payload = _load_payload(args)
+        patched = _patch_modules(template, payload)
     team_path.write_text(patched, encoding="utf-8")
     print(str(team_path))
     return 0
