@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-24
 
 **Purpose.** Freeze the input shape, bounds, storage target, and redaction defaults for the single-user, local-only knowledge surface (`/knowledge:ingest`, `/knowledge:list`, `/knowledge:forget`) **before** any implementation lands. Closes the "Copy/Paste AI" complaint from feedback A without touching OAuth, multi-tenancy, or Hard-Floor connector territory.
 
-Last refreshed: 2026-05-24. Roadmap home: `agents/roadmaps/road-to-employee-product-and-external-proof.md` Phase 2.
+Last refreshed: 2026-05-24. Phase 2 of the employee-product workstream.
 
 ## What this doc is **not**
 

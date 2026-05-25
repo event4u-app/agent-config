@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-24
 
 **Purpose.** Freeze the on-disk shape of a `role-experience` — the artefact that turns a non-developer persona (galabau owner, content creator, consultant, …) into a first-class entry point with three first tasks, a named prompt library, and a curated skill shortlist. Pins the interface **before** the launcher in Phase 4 reads it, so the launcher and the role authors can move independently.
 
-Last refreshed: 2026-05-24. Roadmap home: `agents/roadmaps/road-to-employee-product-and-external-proof.md` Phase 3.
+Last refreshed: 2026-05-24. Phase 3 of the employee-product workstream.
 
 ## What a role experience is
 

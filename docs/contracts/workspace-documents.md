@@ -1,7 +1,7 @@
 # Workspace Documents Contract
 
-> **Status** · v0 / design · 2026-05-24. Phase 5 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> **Status** · v0 / design · 2026-05-24. Phase 5 of the
+> employee-product workstream.
 > Builds on the [`daily-workspace`](daily-workspace.md) surface and
 > the host-agent protocol from
 > [`ADR-023`](../decisions/ADR-023-host-agent-protocol.md). Documents

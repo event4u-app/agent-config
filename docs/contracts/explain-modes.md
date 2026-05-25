@@ -1,7 +1,7 @@
 # Explain Modes Contract
 
-> **Status** · v0 / design · 2026-05-24. Phase 6 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> **Status** · v0 / design · 2026-05-24. Phase 6 of the
+> employee-product workstream.
 > Governed by [`ADR-026`](../decisions/ADR-026-explain-mode-translation.md).
 > Translates the existing engineer-shaped `explain-v1` envelope into a
 > role-aware plain surface, without changing the underlying data.

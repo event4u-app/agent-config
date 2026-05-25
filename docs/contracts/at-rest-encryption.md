@@ -1,7 +1,7 @@
 # At-Rest Encryption Contract
 
-> **Status** · v0 / design · 2026-05-24. Phase 8 of
-> [`road-to-employee-product-and-external-proof.md`](../../agents/roadmaps/road-to-employee-product-and-external-proof.md).
+> **Status** · v0 / design · 2026-05-24. Phase 8 of the
+> employee-product workstream.
 > Single-user, single-machine encryption for the three workspace
 > stores added in Phases 4 / 5 / 7. Does **not** touch the existing
 > `agents/memory/` store — that gets a separate decision.
