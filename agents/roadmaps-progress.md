@@ -6,10 +6,10 @@
 
 ## Overall
 
-**71 / 187 steps done · 38%**
+**77 / 190 steps done · 41%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   38%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   41%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-proof-and-ci-green.md](roadmaps/road-to-adoption-proof-and-ci-green.md) | 4 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-configurable-modules.md](roadmaps/road-to-configurable-modules.md) | 5 | 37 | 4 | 29 | 1 | 3 | █████████░ 88% |
+| 2 | [road-to-configurable-modules.md](roadmaps/road-to-configurable-modules.md) | 5 | 37 | 1 | 35 | 0 | 1 | ██████████ 97% |
 | 3 | [road-to-deep-root-restructure.md](roadmaps/road-to-deep-root-restructure.md) | 6 | 17 | 17 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 5 | [road-to-frictionless-employee-workspace.md](roadmaps/road-to-frictionless-employee-workspace.md) | 4 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -40,15 +40,15 @@
 
 ### [road-to-configurable-modules.md](roadmaps/road-to-configurable-modules.md)
 
-**Road to configurable modules — project-driven module paths and per-module agent folders** — 29 / 33 done (88%)
+**Road to configurable modules — project-driven module paths and per-module agent folders** — 35 / 36 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | A | Schema — `modules:` block in `.agent-project-settings.yml` | ✅ done | 0 | 5 | 0 | 0 | 100% |
-| B | Install + onboarding — detect, suggest, confirm | ✅ done | 0 | 4 | 0 | 2 | 100% |
+| B | Install + onboarding — detect, suggest, confirm | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | C | Generalize `module-management` skill across stacks | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | D | Per-module `agents/` folder discovery and context loading | ✅ done | 0 | 6 | 0 | 1 | 100% |
-| E | GUI parity (follow-up) | 🟡 in progress | 4 | 8 | 1 | 0 | 67% |
+| E | GUI parity (follow-up) | 🟡 in progress | 1 | 12 | 0 | 0 | 92% |
 
 ### [road-to-deep-root-restructure.md](roadmaps/road-to-deep-root-restructure.md)
 

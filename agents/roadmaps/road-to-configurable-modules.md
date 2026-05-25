@@ -55,10 +55,10 @@ Wire the new schema into the consumer onboarding path so a fresh install actuall
 
 - [x] **Step 1:** Extract the multi-stack detection table from `commands/module/explore.md` Step 1 into a reusable Python helper (e.g. `scripts/_lib/module_detection.py`) — pure function: `detect_module_roots(project_root: Path) -> list[dict]` returning candidates with `{path, stack, namespace_template_guess, confidence}`. No interactive logic here.
 - [x] **Step 2:** Add a module-detection step to `scripts/install.py` — runs after stack detection, calls the Phase B Step 1 helper, surfaces candidates as numbered options ("Found `app/Modules/` — use it as module root? [1] yes [2] no [3] enter custom path"). Default to `modules.enabled: false` when the user declines or no candidates surface.
-- [-] **Step 3:** Mirror the install-time step in the wizard UI (`src/ui/wizard/steps.ts` + corresponding TSX) — same detection helper, called via the Python bridge per the [`gui-wizard`](../../docs/contracts/gui-wizard.md) contract. Output goes into the same `.agent-project-settings.yml`. → **Deferred to Phase E (GUI parity)**: requires a new `/api/v1/modules/detect` endpoint + custom step renderer; CLI path (`/agents init`, `scripts/install.py`, `scripts/propose_modules_config.py`) covers the parity flow.
+- [x] **Step 3:** Mirror the install-time step in the wizard UI (`src/ui/wizard/steps.ts` + corresponding TSX) — same detection helper, called via the Python bridge per the [`gui-wizard`](../../docs/contracts/gui-wizard.md) contract. Output goes into the same `.agent-project-settings.yml`. → **Closed in Phase E**: `/api/v1/modules/detect` endpoint + custom step renderer landed; CLI path (`/agents init`, `scripts/install.py`, `scripts/propose_modules_config.py`) and GUI path now share the detection helper.
 - [x] **Step 4:** Update `/agents init` / onboarding rerun flow so existing projects can populate the block after the fact — invoke the same detection helper and patch `.agent-project-settings.yml` in place (preserve comments + ordering; the install script already does this for other blocks).
 - [x] **Step 5:** Add a Pytest case for the detection helper covering each of the six stack shapes from `/module explore` Step 1 (Laravel HMVC, Symfony DDD, Composer/library, Node monorepo, Python `src/<package>/`, Go `internal/`). Use fixture directories under `tests/fixtures/module_detection/`.
-- [-] **Step 6:** Add a Vitest case for the wizard step under `tests/ui/` covering: candidate shown, user accepts, settings written; user declines, `modules.enabled` stays false; custom path entered, accepted. → **Deferred to Phase E** (blocked on Step 3).
+- [x] **Step 6:** Add a Vitest case for the wizard step under `tests/ui/` covering: candidate shown, user accepts, settings written; user declines, `modules.enabled` stays false; custom path entered, accepted. → **Closed in Phase E**: `tests/ui/WizardPage.modulesStep.test.tsx` + Python-side `tests/test_apply_modules_config.py` cover the three flows.
 
 **Exit:** install + wizard + `/agents init` all populate `modules:` from auto-detection with explicit user confirmation; detection helper has six fixture-backed Pytest cases; wizard step has Vitest coverage.
 
@@ -99,10 +99,10 @@ Make per-module agent docs (features / roadmaps / contexts) discoverable from th
 
 Tracked separately; not blocking this roadmap's close. Captures the three deferred items (Phase B Step 3, Phase B Step 6, Phase D Step 6).
 
-- [ ] **Step 1:** Add a `/api/v1/modules/detect` endpoint to the wizard server bridge — wraps `scripts/_lib/module_detection.detect_module_roots()` per the [`gui-wizard`](../../docs/contracts/gui-wizard.md) contract.
-- [ ] **Step 2:** Add a `modules` step to `src/ui/wizard/steps.ts` with a bespoke renderer (writes the `modules:` block to `.agent-project-settings.yml`, not `.agent-settings.yml`).
-- [ ] **Step 3:** Add Vitest coverage under `tests/ui/` for the new step — accept-candidate / decline / custom-path paths.
-- [ ] **Step 4:** Add a command-rendering smoke harness (new infrastructure — no other command has one today) and use it to cover `/module explore` against a two-root fixture project.
+- [x] **Step 1:** Add a `/api/v1/modules/detect` endpoint to the wizard server bridge — wraps `scripts/_lib/module_detection.detect_module_roots()` per the [`gui-wizard`](../../docs/contracts/gui-wizard.md) contract.
+- [x] **Step 2:** Add a `modules` step to `src/ui/wizard/steps.ts` with a bespoke renderer (writes the `modules:` block to `.agent-project-settings.yml` via `scripts/apply_modules_config.py`, not `.agent-settings.yml`).
+- [x] **Step 3:** Add Vitest coverage under `tests/ui/` for the new step — accept-candidate / decline / custom-path paths (`tests/ui/WizardPage.modulesStep.test.tsx` + Python-side `tests/test_apply_modules_config.py`).
+- [ ] **Step 4:** Add a command-rendering smoke harness (new infrastructure — no other command has one today) and use it to cover `/module explore` against a two-root fixture project. → **Out of scope for Phase E**: would only verify the prose template; `enumerate_modules()` is already covered by `tests/test_agent_settings.py`. Tracked for a future "command-rendering test harness" roadmap.
 
 ## Acceptance criteria
 
@@ -112,6 +112,6 @@ Tracked separately; not blocking this roadmap's close. Captures the three deferr
 - [x] `/module explore` on a configured project lists every module under every configured root, with accurate "Agent Docs" flags driven by `modules.agent_folder`.
 - [x] `module-management` skill body contains no hard-coded `app/Modules/` reference outside its Laravel HMVC carve-out section; `task lint-skills` enforces this.
 - [x] Entering a module via `/module explore <Name>` auto-loads any `contexts/*.md` it ships; absent folders are skipped silently.
-- [~] Pytest + Vitest coverage for the schema accessor, the detection helper (six stacks), the `enumerate_modules()` helper, and the per-module context loader is green. → Vitest wizard-step coverage deferred to Phase E.
+- [x] Pytest + Vitest coverage for the schema accessor, the detection helper (six stacks), the `enumerate_modules()` helper, and the per-module context loader is green (`tests/ui/WizardPage.modulesStep.test.tsx` + `tests/test_apply_modules_config.py` close the Phase E Vitest gap).
 - [x] Layered-settings guideline doc names `modules.*` as a team-tier example; example template ships the block.
 - [x] No changes to user-global whitelist; no Hard-Floor moves; no commit / push / merge steps inside this roadmap.
