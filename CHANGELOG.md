@@ -738,6 +738,30 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [3.3.0](https://github.com/event4u-app/agent-config/compare/3.2.0...3.3.0) (2026-05-25)
+
+### Features
+
+* **scripts:** point bench / eval / mcp tooling at internal/ (ADR-028 phase 1) ([c20b515](https://github.com/event4u-app/agent-config/commit/c20b515dfc80d03244e54af7b50e07d562647799))
+
+### Bug Fixes
+
+* **ci:** repoint bench/ -> internal/bench/ in projected agent-status + compress-memory ([682040b](https://github.com/event4u-app/agent-config/commit/682040b230248bd054767ab10bd1e90ed3a1d0b7))
+
+### Documentation
+
+* **roadmap:** archive road-to-root-layout-cleanup at 100% complete ([948f1a8](https://github.com/event4u-app/agent-config/commit/948f1a8cd9ec63fa831d5abab25aeb3657a0a7d4))
+* **adr:** land Phase 2 audit evidence + ADR-029 multi-workspace deferral ([c4dabf1](https://github.com/event4u-app/agent-config/commit/c4dabf1f718fee0d4709d727d1e3eb781f8db62f))
+* **adr:** land ADR-028 + root-layout-cleanup roadmap ([7b0fd28](https://github.com/event4u-app/agent-config/commit/7b0fd281288a87f9c218d9fa9d73f01a48a56626))
+* repoint bench / mcp-worker paths to internal/ (ADR-028 phase 1) ([85278dd](https://github.com/event4u-app/agent-config/commit/85278dd831d44a187dcfe7684e895bac0ca97ae4))
+
+### Chores
+
+* **root:** move bench/ and workers/ under internal/ (ADR-028 phase 1) ([2a1dd1e](https://github.com/event4u-app/agent-config/commit/2a1dd1e363f9aabb59b6eebf35f64a47609abebb))
+* **roadmap:** close changelog-era-auto-split (Phase 4 → ADR-027) ([b10b326](https://github.com/event4u-app/agent-config/commit/b10b32623b42739f0eba12a52173b810169929b6))
+
+Tests: 4938 (+9 since 3.2.0)
+
 ## [3.2.0](https://github.com/event4u-app/agent-config/compare/3.1.1...3.2.0) (2026-05-25)
 
 ### Features
