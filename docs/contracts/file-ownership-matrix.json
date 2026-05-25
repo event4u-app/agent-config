@@ -75,6 +75,24 @@
       "load_context": [],
       "load_context_eager": []
     },
+    ".agent-src.uncompressed/commands/analytics.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/analytics/prune.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/analytics/show.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
     ".agent-src.uncompressed/commands/analyze-reference-repo.md": {
       "kind": "command",
       "rule_type": null,
@@ -418,6 +436,30 @@
       "load_context_eager": []
     },
     ".agent-src.uncompressed/commands/judge/steps.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/knowledge.md": {
+      "kind": "command",
+      "rule_type": "orchestrator",
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/knowledge/forget.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/knowledge/ingest.md": {
+      "kind": "command",
+      "rule_type": null,
+      "load_context": [],
+      "load_context_eager": []
+    },
+    ".agent-src.uncompressed/commands/knowledge/list.md": {
       "kind": "command",
       "rule_type": null,
       "load_context": [],
@@ -3299,6 +3341,41 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/analytics.md",
+      "target": ".agent-src.uncompressed/commands/analytics.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/analytics/prune.md",
+      "target": ".agent-src.uncompressed/commands/analytics/prune.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/analytics/prune.md",
+      "target": ".agent-src.uncompressed/commands/analytics/show.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/analytics/show.md",
+      "target": ".agent-src.uncompressed/commands/analytics/prune.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/analytics/show.md",
+      "target": ".agent-src.uncompressed/commands/analytics/show.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "target": ".agent-src.uncompressed/commands/analyze-reference-repo.md",
       "type": "WRITE",
@@ -4258,6 +4335,83 @@
       "depth": 0
     },
     {
+      "source": ".agent-src.uncompressed/commands/knowledge.md",
+      "target": ".agent-src.uncompressed/commands/knowledge.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "target": ".agent-src.uncompressed/skills/markitdown/SKILL.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/forget.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/ingest.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "target": ".agent-src.uncompressed/commands/knowledge/list.md",
+      "type": "WRITE",
+      "via": "self",
+      "depth": 0
+    },
+    {
       "source": ".agent-src.uncompressed/commands/memory.md",
       "target": ".agent-src.uncompressed/commands/memory.md",
       "type": "WRITE",
@@ -4375,6 +4529,13 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/commands/module/explore.md",
+      "target": ".agent-src.uncompressed/commands/context/create.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/commands/module/explore.md",
@@ -10423,6 +10584,20 @@
       "type": "WRITE",
       "via": "self",
       "depth": 0
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/module-management/SKILL.md",
+      "target": ".agent-src.uncompressed/commands/agents/init.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
+    },
+    {
+      "source": ".agent-src.uncompressed/skills/module-management/SKILL.md",
+      "target": ".agent-src.uncompressed/commands/module/explore.md",
+      "type": "READ_ONLY",
+      "via": "body_link",
+      "depth": 1
     },
     {
       "source": ".agent-src.uncompressed/skills/module-management/SKILL.md",
