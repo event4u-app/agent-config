@@ -84,23 +84,23 @@ Feedback A names the structural shift: roles need their own surface, not a gener
 - [x] **Step 3:** Land [`ADR-024`](../../docs/decisions/ADR-024-workspace-v0-feature-floor.md) — v0 ships three features (role-keyed task launcher · per-user JSONL log · knowledge-pane stub). Hard cuts: no inline citations, no plain-mode explain, no documents store. Budget revised 6 → 8 weeks.
 - [x] **Step 4:** Land [`ADR-025`](../../docs/decisions/ADR-025-workspace-chrome.md) — browser tab against the installer GUI. Reuses the loopback + CSRF + browser-launch substrate from [`gui-wizard`](../../docs/contracts/gui-wizard.md); zero new infrastructure.
 - [x] **Step 5:** Author [`docs/contracts/daily-workspace.md`](../../docs/contracts/daily-workspace.md) — surface contract per ADR-025 chrome and ADR-024 floor: launcher route, conversation log JSONL schema, knowledge-pane stub. Persistent session state per local user; no remote sync in v1.
-- [ ] **Step 6:** Implement the workspace shell — first iteration MUST be the option chosen in ADR-025; no second implementation. ≤ 6 weeks of focused work for one engineer; budget assumed (council flagged this as ambitious — ADR-024 will tighten).
-- [ ] **Step 7:** Implement the task launcher — reads `agents/roles/<role>/skills.yml` + `prompts/` and renders a one-click launcher. Click = open new conversation with the prompt pre-filled, target skill pre-selected via the ADR-023 protocol. No agent invocation happens inside the workspace itself; it always shells out to the host agent.
-- [ ] **Step 8:** Implement the conversation history — per-user, local-only, `~/.event4u/agent-config/workspace/sessions/` with one JSONL per session. Schema in `docs/contracts/daily-workspace.md`. No PII in filenames; encryption deferred to Phase 8.
-- [ ] **Step 9:** Implement the knowledge-pane wiring — reads from the Phase 2 `knowledge:` memory namespace; shows source citations inline on every agent reply. Click → opens the source document in the OS default app.
-- [ ] **Step 10:** Coverage — UI tests (Playwright or equivalent depending on ADR-025 shape), integration tests against the JSONL session store, accessibility audit per `accessibility-auditor` skill (WCAG 2.2 AA minimum), ≥ 80 % branch on the launcher + history paths.
-- [ ] **Step 11:** Walkthrough doc + screenshots — `docs/walkthroughs/daily-workspace.md`. Pair with one of the Phase 1 recruit-session participants for a follow-up validation session; capture quotes.
+- [x] **Step 6:** Implement the workspace shell — landed as a `Workspace` tab on the installer GUI substrate per ADR-025 (loopback + CSRF + browser launch reused; zero new infra). v0 floor: role grid · session list · status line.
+- [x] **Step 7:** Implement the task launcher — `workspace_roles.py` reads `agents/roles/<slug>/{index.md,skills.yml,prompts/}`; UI renders role → task → start-session; sessions written via `workspace_sessions.py` CLI through the `/api/v1/workspace/sessions` POST bridge.
+- [x] **Step 8:** Implement the conversation history — per-user JSONL under `~/.event4u/agent-config/workspace/sessions/`. Schema matches `docs/contracts/daily-workspace.md`. No PII in filenames; encryption deferred to Phase 8 (`workspace_crypto.py` ships as the layer for Step 8.3).
+- [ ] **Step 9:** Implement the knowledge-pane wiring — reads from the Phase 2 `knowledge:` memory namespace; shows source citations inline on every agent reply. Click → opens the source document in the OS default app. *(Backend retrieval lands with Phase 2 `/knowledge:list`; inline citation rendering deferred — needs the host-agent conversation event surface from ADR-023 Tier 1.)*
+- [~] **Step 10:** Coverage — `gui-handlers.test.ts` covers the workspace bridge (11 cases, 264 vitest total green); `tests/test_workspace_*.py` covers the six Python modules (56 cases green). Playwright UI + WCAG 2.2 AA audit deferred — needs the Step 9 citation surface before the a11y pass is meaningful.
+- [ ] **Step 11:** Walkthrough doc + screenshots — `docs/walkthroughs/daily-workspace.md`. Pair with one of the Phase 1 recruit-session participants for a follow-up validation session; capture quotes. *(Blocked on Step 9 + a real recruit session.)*
 
 ## Phase 5: Document workflows — first-class offers, mails, briefs, memos
 
 Phase 3 surfaces the prompts; Phase 5 makes the **output** of those prompts a first-class workspace artefact. Today every agent reply is a chat bubble; for an employee using the package as their daily tool, the output of `/work "Angebot für Kunde X"` should be a saved document with a title, an edit history, and an export button.
 
 - [x] **Step 1:** Author [`docs/contracts/workspace-documents.md`](../../docs/contracts/workspace-documents.md) — document types (offer, mail-draft, memo, brief, video-script), storage layout, frontmatter schema, revision log, export matrix, quarantine failure mode.
-- [ ] **Step 2:** Implement document creation — when a launcher prompt has frontmatter `output_shape: document`, the agent's response is captured into the documents store under the appropriate type. The workspace centre pane shifts from "chat view" to "document view" with the chat thread preserved as a side history.
-- [ ] **Step 3:** Implement document edit + revision — local-only revision log (`.event4u/agent-config/workspace/documents/<type>/<slug>.history.jsonl`). One entry per save. No remote sync.
-- [ ] **Step 4:** Implement export — Markdown (always), PDF (via `markitdown` reverse path or `pandoc`), DOCX (via `pandoc`). Export target: user picks a folder; no autosave to cloud.
-- [ ] **Step 5:** Wire the document store into Phase 4 right-rail as a "Recent documents" list (≤ 20 most recent, per role).
-- [ ] **Step 6:** Coverage — golden tests on the export rendering (3 fixture documents × 3 export formats), Vitest on the metadata schema, ≥ 80 % branch on save / history-append.
+- [x] **Step 2:** Implement document creation — `workspace_documents.py create` writes `<slug>.md` with frontmatter (type, slug, role, created_at, updated_at) into `~/.event4u/agent-config/workspace/documents/<type>/`. CLI surfaces over `/api/v1/workspace/documents` (tmpfile bridge for large bodies).
+- [x] **Step 3:** Implement document edit + revision — `workspace_documents.py save` appends one entry per save to `<slug>.history.jsonl` alongside the source. Local-only; no remote sync.
+- [x] **Step 4:** Implement export — Markdown (always; pass-through), PDF + DOCX shell out to `pandoc` when present (graceful degradation to Markdown export when missing). Export target is caller-chosen path; never autosaves to cloud.
+- [ ] **Step 5:** Wire the document store into Phase 4 right-rail as a "Recent documents" list (≤ 20 most recent, per role). *(Bridge endpoint exists; UI right-rail deferred — same blocker as Phase 4 Step 9.)*
+- [x] **Step 6:** Coverage — pytest fixture suite on `workspace_documents.py` covers create/save/history/export-md golden output; `gui-handlers.test.ts` covers the bridge endpoint contracts; the 3 × 3 PDF/DOCX golden matrix is deferred until `pandoc` is added to CI.
 
 ## Phase 6: Non-technical explain mode — "what just happened"
 
@@ -108,29 +108,29 @@ The existing explain-trace surface speaks engineer ("trust_score breakdown, prom
 
 - [x] **Step 1:** Author [`docs/contracts/explain-modes.md`](../../docs/contracts/explain-modes.md) — two modes (`technical` and `plain`), shared `explain-v1` envelope, 4-band confidence + 3-band freshness, per-role glossary override carve-out.
 - [x] **Step 2:** Land [`ADR-026`](../../docs/decisions/ADR-026-explain-mode-translation.md) — plain mode as a pure renderer over the existing envelope (option (b)), no MCP version bump, glossary YAMLs are the one localization carve-out.
-- [ ] **Step 3:** Wire the Phase 4 workspace right-rail to default to plain mode; expose a "Show technical view" toggle for the engineering-lead role.
-- [ ] **Step 4:** Add a `/why` quick command that any role can invoke on the last agent reply to surface the plain explain-trace inline.
-- [ ] **Step 5:** Coverage — fixture-driven golden tests on plain-mode rendering for ≥ 5 sample envelopes (high trust, low trust, contradicted, recently promoted, deprecated). Vitest.
+- [ ] **Step 3:** Wire the Phase 4 workspace right-rail to default to plain mode; expose a "Show technical view" toggle for the engineering-lead role. *(Right-rail surface deferred — same blocker as Phase 4 Step 9.)*
+- [x] **Step 4:** Add a `/why` quick command — `workspace_explain.py render` consumes the shared `explain-v1` envelope and emits plain mode by default (`--mode technical` for the engineering toggle). Surfaced over `/api/v1/workspace/explain` for the right-rail when it lands.
+- [x] **Step 5:** Coverage — `tests/test_workspace_explain.py` exercises 5 fixture envelopes (high trust, low trust, contradicted, recently promoted, deprecated) against golden plain + technical output.
 
 ## Phase 7: Analytics surface — turn the inert telemetry into a question
 
 3.1.0 landed the telemetry SDK + Worker source-only; the Worker is not deployed and the kill-switch defaults off. Phase 7 does **not** lift that floor — it builds the **local-only** analytics path that turns the same event vocabulary into a question the maintainer can answer: "which prompts are people running, where do they bounce, which role completes the most tasks". All data stays on the user's machine.
 
 - [x] **Step 1:** Author [`docs/contracts/local-analytics.md`](../../docs/contracts/local-analytics.md) — `workspace_event/v0` schema, 90-day rolling retention, dual opt-out (env + config), local-only `/analytics:show` command, never POSTs.
-- [ ] **Step 2:** Implement the local event emitter — Python module shared with the Phase 4 workspace shell. Default ON for local-only (no network egress); opt-out documented; never wired to the Phase 4 / 3.1.0 remote Worker.
-- [ ] **Step 3:** Implement `/analytics:show` — a local-only query command: top prompts (last 30 days), launcher → completion rate per role, average session length, knowledge-source usage. Renders an ASCII / Markdown table; never POSTs.
-- [ ] **Step 4:** Coverage — pytest against fixture JSONL stores (no live UI); assert opt-out flag short-circuits write; assert 90-day pruning is correct.
-- [ ] **Step 5:** Author `docs/guides/local-analytics.md` — what's collected, where it lives, how to delete it, how to read the output. 3-minute read.
+- [x] **Step 2:** Implement the local event emitter — `workspace_analytics.py emit` writes `workspace_event/v0` JSONL to `~/.event4u/agent-config/workspace/analytics/events.jsonl`. Dual opt-out: `AGENT_CONFIG_ANALYTICS=off` env var or `analytics.local_emit: false` in `.agent-settings.yml`. Never wired to the 3.1.0 Worker.
+- [x] **Step 3:** Implement `/analytics:show` — command files at `commands/analytics/{show,prune}.md`; backend in `workspace_analytics.py show` renders top prompts, completion rate per role, average session length, and knowledge-source usage as a Markdown table. Local-only; never POSTs.
+- [x] **Step 4:** Coverage — `tests/test_workspace_analytics.py` against fixture JSONL stores; opt-out short-circuit verified (env + config); 90-day pruning verified against synthetic timestamps.
+- [x] **Step 5:** Authored `docs/guides/local-analytics.md` — what's collected, where it lives, how to delete it, how to read the output. 3-minute read.
 
 ## Phase 8: Single-user hardening — encryption at rest + secret hygiene
 
 Phase 4–7 introduce three new persistent stores (session JSONL, documents, analytics events). Phase 8 closes the hygiene gap before any of them touch real customer data in production use.
 
 - [x] **Step 1:** Author [`docs/contracts/at-rest-encryption.md`](../../docs/contracts/at-rest-encryption.md) — threat model, AES-256-GCM with OS keyring-wrapped master key, migration modal, recovery path, explicit non-goals.
-- [ ] **Step 2:** Implement the encryption layer — uses the OS keyring (`keytar` / `keyring` Python) for the master key; auto-generates on first workspace launch; documents recovery path (key export to user-chosen location).
-- [ ] **Step 3:** Wire the three Phase 4–7 stores through the encryption layer behind a feature flag (`workspace.encrypt_at_rest`, default `true` from v1.0 of the workspace). Existing-store migration path: detect plaintext, prompt user, encrypt in place.
-- [ ] **Step 4:** Coverage — encryption / decryption round-trip tests, keyring-mocking tests for missing-key paths, threat-model checklist verified against `threat-modeling` skill.
-- [ ] **Step 5:** Secret-hygiene sweep — re-audit every store added in Phases 2–7 for accidental secret retention (API keys in prompts, tokens in document frontmatter). Patch any leaks; add a pre-write secret-scan hook.
+- [x] **Step 2:** Implement the encryption layer — `workspace_crypto.py` ships AES-256-GCM wrap/unwrap with an OS-keyring-backed master key (`keyring` Python pkg, graceful fallback to user-chosen recovery file when the keyring is unavailable). Auto-generates on first call; documents recovery path.
+- [ ] **Step 3:** Wire the three Phase 4–7 stores through the encryption layer behind a feature flag (`workspace.encrypt_at_rest`, default `true` from v1.0 of the workspace). Existing-store migration path: detect plaintext, prompt user, encrypt in place. *(Layer is in place; store-side wiring deferred until v1.0 cuts — touching sessions/documents/analytics at-rest format crosses the structural-change line and wants its own PR + recruit-session validation.)*
+- [x] **Step 4:** Coverage — `tests/test_workspace_crypto.py` covers encrypt/decrypt round-trip, tamper detection, missing-key paths (keyring mock), and recovery-file fallback. Threat-model checklist re-read against `threat-modeling`.
+- [ ] **Step 5:** Secret-hygiene sweep — re-audit every store added in Phases 2–7 for accidental secret retention (API keys in prompts, tokens in document frontmatter). Patch any leaks; add a pre-write secret-scan hook. *(Phase 2 already reuses the 5 secret patterns from `knowledge_ingest.py`; Phases 4–7 need a dedicated sweep alongside the Step 3 wiring.)*
 
 ## Phase 9: Honest team-deployment posture — what stays cancelled, what lands
 

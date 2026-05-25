@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `3.1.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 361
+- **artefacts**: 364
 
-## Commands (132)
+## Commands (135)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -24,6 +24,9 @@ Core framework-neutral artefacts.
 - **`agents:user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 - **`agents:user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 - **`agents:user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+- **`analytics`** — Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
+- **`analytics:prune`** — Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
+- **`analytics:show`** — Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
