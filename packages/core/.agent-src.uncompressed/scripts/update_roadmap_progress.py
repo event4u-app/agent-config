@@ -65,7 +65,7 @@ PHASE_RE = re.compile(
 TITLE_RE = re.compile(r"^#\s+(?:Roadmap:\s*)?(.+?)\s*$", re.MULTILINE)
 EXCLUDE_NAMES = {"template.md", "README.md", "progress.md", "roadmaps-progress.md"}
 EXCLUDE_PREFIXES = ("open-questions",)
-EXCLUDE_DIRS = {"archive", "skipped"}
+EXCLUDE_DIRS = {"archive", "skipped", "stubs"}
 
 # Frontmatter — minimal YAML block at the top of a roadmap. Used to hide
 # drafts (`status: draft`) from the dashboard. Anything else (no
