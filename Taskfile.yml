@@ -77,6 +77,7 @@ tasks:
       - task: check-refs
       - task: check-token-optimizer-freshness
       - task: check-portability
+      - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: validate-decision-engine
       - task: smoke-quickstart
@@ -174,6 +175,7 @@ tasks:
       - task: check-refs
       - task: check-token-optimizer-freshness
       - task: check-portability
+      - task: check-module-management-neutral
       - task: check-release-trunk-sync
       - task: validate-decision-engine
       - task: smoke-quickstart
