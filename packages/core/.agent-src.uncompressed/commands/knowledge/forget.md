@@ -11,7 +11,7 @@ suggestion:
   trigger_description: "forget this ingest, drop the acme knowledge, remove the customer folder from agent memory"
   trigger_context: "user wants to purge a specific knowledge ingest"
 workspaces:
-  - all
+  - agent-config-maintainer
 packs:
   - meta
 lifecycle: active

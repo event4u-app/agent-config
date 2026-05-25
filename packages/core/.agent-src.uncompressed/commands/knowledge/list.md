@@ -11,7 +11,7 @@ suggestion:
   trigger_description: "what knowledge has the agent ingested, list ingested folders, show knowledge memory, pin this ingest"
   trigger_context: "user wants to inspect or curate the local knowledge namespace"
 workspaces:
-  - all
+  - agent-config-maintainer
 packs:
   - meta
 lifecycle: active

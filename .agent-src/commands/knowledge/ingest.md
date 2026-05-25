@@ -11,7 +11,7 @@ suggestion:
   trigger_description: "ingest this folder, add these PDFs to the agent, point the agent at my customer files, /knowledge:ingest <path>"
   trigger_context: "user wants the agent to know about a local folder or document without OAuth connectors"
 workspaces:
-  - all
+  - agent-config-maintainer
 packs:
   - meta
 lifecycle: active

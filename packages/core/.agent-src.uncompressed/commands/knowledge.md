@@ -10,7 +10,7 @@ suggestion:
   trigger_description: "ingest local folder, add my customer files, point the agent at this folder, list ingested knowledge, forget that ingest"
   trigger_context: "user wants to feed local files (folder, .zip, single doc) to the agent without OAuth connectors"
 workspaces:
-  - all
+  - agent-config-maintainer
 packs:
   - meta
 lifecycle: active
