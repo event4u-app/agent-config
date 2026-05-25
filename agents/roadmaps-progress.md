@@ -6,17 +6,17 @@
 
 ## Overall
 
-**22 / 56 steps done · 39%**
+**27 / 61 steps done · 44%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   39%
+██████████████████░░░░░░░░░░░░░░░░░░░░░░   44%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 34 | 22 | 15 | 0 | ████░░░░░░ 39% |
+| 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 34 | 27 | 10 | 0 | ████░░░░░░ 44% |
 
 ---
 
@@ -24,13 +24,13 @@
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 
-**Employee Product + External Proof — close the two adoption gaps** — 22 / 56 done (39%)
+**Employee Product + External Proof — close the two adoption gaps** — 27 / 61 done (44%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 0 | Fast wins — MCP listing, content-creator path, CI hardening | ✅ done | 0 | 3 | 2 | 0 | 100% |
 | 1 | External adoption proof — three recruit sessions | ✅ done | 0 | 2 | 4 | 0 | 100% |
-| 2 | Single-user knowledge surface — local file ingestion | ✅ done | 0 | 1 | 5 | 0 | 100% |
+| 2 | Single-user knowledge surface — local file ingestion | ✅ done | 0 | 6 | 0 | 0 | 100% |
 | 3 | Role experiences — first three role-specific entry points | ✅ done | 0 | 2 | 4 | 0 | 100% |
 | 4 | Daily workspace UI — the structural inflection point | 🟡 in progress | 6 | 5 | 0 | 0 | 45% |
 | 5 | Document workflows — first-class offers, mails, briefs, memos | 🟡 in progress | 5 | 1 | 0 | 0 | 17% |
