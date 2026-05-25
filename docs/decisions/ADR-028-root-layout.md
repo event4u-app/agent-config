@@ -17,7 +17,7 @@ review_date: 2027-05-25
 **Accepted** · 2026-05-25. Encodes the AI Council verdict from
 [`root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md)
 and opens
-[`road-to-root-layout-cleanup.md`](../../agents/roadmaps/road-to-root-layout-cleanup.md).
+[`road-to-root-layout-cleanup.md`](../../agents/roadmaps/archive/road-to-root-layout-cleanup.md) (archived; complete).
 Time-boxed: review on **2027-05-25** or earlier if any trigger below fires.
 
 ## Context
@@ -26,7 +26,7 @@ A request to move "everything not needed at root into `./src/`" failed
 the reality check on three counts:
 
 1. **`./src/` is occupied** — the TypeScript application (CLI · Server · UI · shared) per
-   [`ADR-012`](ADR-012-typescript-cli-shell.md) / [`ADR-016`](ADR-016-typescript-stack-decision.md).
+   [`ADR-012`](ADR-012-typescript-cli-shell.md) / [`ADR-016`](ADR-016-installer-architecture.md).
    Moving general tooling into `./src/` collides with the app boundary.
 2. **`router.json` is not at root** — lives under `./dist/`, governed by
    [`ADR-019`](ADR-019-router-json-dist-location.md). Out of scope.
@@ -139,7 +139,9 @@ blocker.
 
 - [`agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md`](../../agents/runtime/council/questions/root-cleanup-organizing-principle-2026-05-25.md) — council brief.
 - [`agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md`](../../agents/runtime/council/sessions/root-cleanup-organizing-principle-2026-05-25.synthesis.md) — full synthesis.
-- [`agents/roadmaps/road-to-root-layout-cleanup.md`](../../agents/roadmaps/road-to-root-layout-cleanup.md) — execution roadmap.
-- [`ADR-012`](ADR-012-typescript-cli-shell.md), [`ADR-016`](ADR-016-typescript-stack-decision.md) — `./src/` is the TS app.
+- [`agents/roadmaps/archive/road-to-root-layout-cleanup.md`](../../agents/roadmaps/archive/road-to-root-layout-cleanup.md) — execution roadmap (archived; Phase 1 ✅, Phase 2 ✅, Phase 3 closed).
+- [`agents/evidence/audits/2026-05-root-layout-phase2/`](../../agents/evidence/audits/2026-05-root-layout-phase2/) — Phase 2 audit verdict bundle.
+- [`ADR-029`](ADR-029-multi-workspace-deferred.md) — Phase 3 close-out (multi-workspace deferred indefinitely).
+- [`ADR-012`](ADR-012-typescript-cli-shell.md), [`ADR-016`](ADR-016-installer-architecture.md) — `./src/` is the TS app.
 - [`ADR-019`](ADR-019-router-json-dist-location.md) — `router.json` lives in `./dist/`.
 - `scripts/install.py:52` (`USER_TYPES_DIR`), `scripts/compress.py:1106` (`AUGMENT_SYMLINK_DIRS`) — evidence pinning `user-types/` to root.
