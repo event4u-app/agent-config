@@ -75,6 +75,10 @@ The drift check
 fails if any of the four sub-pages exists without its cited script /
 Taskfile target — or vice versa.
 
+### Canonical distribution channel per AI tool
+
+For every tool the package supports, **filesystem** is the canonical channel that the consumer installer (`scripts/install.sh`) writes — see [`contracts/skill-distribution-channels.md`](contracts/skill-distribution-channels.md). Pipeline C above always writes the filesystem trees (`.claude/skills/`, `.cursor/rules/`, `.clinerules/`, `.windsurfrules`, etc.) into the consumer project. Plugin manifests at the package source (`.claude-plugin/marketplace.json`, `.augment-plugin/marketplace.json`) are preserved for users who install via the host's plugin registry, but the installer does **not** project a second registry into consumer projects. Users on older harnesses that require both channels opt in with `bash scripts/install.sh --legacy-both`. Regression test: [`tests/test_canonical_distribution.py`](../tests/test_canonical_distribution.py).
+
 Cross-references inside `.agent-src/rules/*.md` are written
 **relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
 `../docs/guidelines/agent-infra/foo.md`). Source files under
