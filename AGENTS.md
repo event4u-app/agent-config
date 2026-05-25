@@ -34,6 +34,5 @@ task ci                # full pipeline — green before PR
 3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/router.json`).
-6. **Why does a skill appear twice in my AI tool?** — Cross-scope drift (user-global install + project-local install at different versions). Default install path is filesystem-only; see [`docs/contracts/skill-distribution-channels.md`](docs/contracts/skill-distribution-channels.md). Run `task probe:skills` (Phase C of `road-to-clean-skill-distribution-channels`) to detect duplicates.
 
 

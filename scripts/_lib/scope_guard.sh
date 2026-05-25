@@ -124,13 +124,16 @@ main() {
 
     local count_ok=0 count_warn=0 count_drift=0 finding
 
-    # Each probe_tool call prints exactly one line.
+    # Each probe_tool call prints exactly one line. Use
+    # assignment-arithmetic (returns 0) rather than post-increment
+    # (returns the OLD value — 0 trips `set -e` on the first OK hit
+    # under bash 5+ / GitHub Actions runners).
     while IFS= read -r finding; do
         echo "$finding"
         case "${finding%%$'\t'*}" in
-            OK)    ((count_ok++))    ;;
-            WARN)  ((count_warn++))  ;;
-            DRIFT) ((count_drift++)) ;;
+            OK)    count_ok=$((count_ok + 1))       ;;
+            WARN)  count_warn=$((count_warn + 1))   ;;
+            DRIFT) count_drift=$((count_drift + 1)) ;;
         esac
     done < <(
         probe_tool claude-code "$home_root/.claude/skills" "$project_root/.claude/skills"
