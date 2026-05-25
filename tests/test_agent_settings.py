@@ -378,3 +378,259 @@ def test_iter_setting_overrides_groups_by_key(tmp_path: Path) -> None:
     assert [v for v, _ in ide_obs] == ["vscode", "phpstorm", "nvim"]
     # The last observation wins — same as load_agent_settings.
     assert ide_obs[-1][1] == sub / ".agent-settings.yml"
+
+
+# --- modules config (road-to-configurable-modules Phase A) -----------------
+
+def test_get_modules_config_defaults_when_team_file_missing(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    result = ags.get_modules_config(
+        team_path=tmp_path / "missing.yml",
+        cwd=tmp_path,
+    )
+    assert result == ags.MODULES_DEFAULTS
+    # Returned dict is a fresh copy — caller may mutate without poisoning defaults.
+    result["root_paths"].append("mutated")
+    assert ags.MODULES_DEFAULTS["root_paths"] == []
+
+
+def test_get_modules_config_team_values_win_over_defaults(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    team = _write(
+        tmp_path / ".agent-project-settings.yml",
+        """
+        modules:
+          enabled: true
+          root_paths: [app/Modules, packages]
+          namespace_template: "App\\\\Modules\\\\{ModuleName}"
+        """,
+    )
+    result = ags.get_modules_config(team_path=team, cwd=tmp_path)
+    assert result["enabled"] is True
+    assert result["root_paths"] == ["app/Modules", "packages"]
+    assert result["namespace_template"] == "App\\Modules\\{ModuleName}"
+    # Keys absent from the team block fall back to defaults.
+    assert result["agent_folder"] == "agents"
+    assert result["skip_dirs"] == [".module-template", ".example"]
+
+
+def test_get_modules_config_dev_cascade_overrides_unlocked_keys(
+    tmp_path: Path,
+) -> None:
+    _init_git_dir(tmp_path)
+    team = _write(
+        tmp_path / ".agent-project-settings.yml",
+        """
+        modules:
+          enabled: true
+          root_paths: [app/Modules]
+          agent_folder: agents
+        """,
+    )
+    _write(
+        tmp_path / ".agent-settings.yml",
+        "modules:\n  agent_folder: docs\n",
+    )
+    result = ags.get_modules_config(team_path=team, cwd=tmp_path)
+    # Dev cascade wins on the key it touched.
+    assert result["agent_folder"] == "docs"
+    # Team values preserved for keys the dev cascade did not touch.
+    assert result["root_paths"] == ["app/Modules"]
+    assert result["enabled"] is True
+
+
+def test_get_modules_config_locked_keys_block_dev_override(
+    tmp_path: Path,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    _init_git_dir(tmp_path)
+    team = _write(
+        tmp_path / ".agent-project-settings.yml",
+        """
+        locked_keys:
+          - modules.root_paths
+        modules:
+          enabled: true
+          root_paths: [app/Modules]
+        """,
+    )
+    _write(
+        tmp_path / ".agent-settings.yml",
+        "modules:\n  root_paths: [src/local]\n  agent_folder: docs\n",
+    )
+    with caplog.at_level(logging.INFO, logger=ags.logger.name):
+        result = ags.get_modules_config(team_path=team, cwd=tmp_path)
+    # Locked key keeps the team value.
+    assert result["root_paths"] == ["app/Modules"]
+    # Unlocked dev override still applies.
+    assert result["agent_folder"] == "docs"
+    # INFO log emitted for the ignored override.
+    assert any("modules.root_paths" in r.getMessage() for r in caplog.records)
+
+
+def test_get_modules_config_locked_key_inert_without_team_value(
+    tmp_path: Path,
+) -> None:
+    """A lock on a key the team file does not set leaves the dev cascade
+    free to set it — locks pin *team decisions*, they do not freeze defaults.
+    """
+    _init_git_dir(tmp_path)
+    team = _write(
+        tmp_path / ".agent-project-settings.yml",
+        """
+        locked_keys:
+          - modules.root_paths
+        modules:
+          enabled: true
+        """,
+    )
+    _write(
+        tmp_path / ".agent-settings.yml",
+        "modules:\n  root_paths: [src/local]\n",
+    )
+    result = ags.get_modules_config(team_path=team, cwd=tmp_path)
+    assert result["root_paths"] == ["src/local"]
+
+
+# --- enumerate_modules (Phase D Step 1) ------------------------------------
+
+
+def test_enumerate_modules_empty_root_paths_returns_empty(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={"enabled": True, "root_paths": [], "skip_dirs": [], "agent_folder": "agents"},
+    )
+    assert result == []
+
+
+def test_enumerate_modules_lists_subdirs_under_each_root(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    (tmp_path / "app" / "Modules" / "Alpha").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / "Beta").mkdir(parents=True)
+    (tmp_path / "src" / "modules" / "Gamma").mkdir(parents=True)
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["app/Modules", "src/modules"],
+            "skip_dirs": [],
+            "agent_folder": "agents",
+        },
+    )
+    names = [(m["root_path"], m["name"]) for m in result]
+    assert names == [
+        ("app/Modules", "Alpha"),
+        ("app/Modules", "Beta"),
+        ("src/modules", "Gamma"),
+    ]
+
+
+def test_enumerate_modules_honors_skip_dirs(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    (tmp_path / "app" / "Modules" / "Real").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / ".module-template").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / ".example").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / ".hidden").mkdir(parents=True)
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["app/Modules"],
+            "skip_dirs": [".module-template", ".example"],
+            "agent_folder": "agents",
+        },
+    )
+    assert [m["name"] for m in result] == ["Real"]
+
+
+def test_enumerate_modules_has_agent_folder_flag(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    (tmp_path / "app" / "Modules" / "WithDocs" / "agents").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / "NoDocs").mkdir(parents=True)
+    # File where folder is expected — must not flip the flag to True.
+    (tmp_path / "app" / "Modules" / "FileNotDir").mkdir(parents=True)
+    (tmp_path / "app" / "Modules" / "FileNotDir" / "agents").write_text("x", encoding="utf-8")
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["app/Modules"],
+            "skip_dirs": [],
+            "agent_folder": "agents",
+        },
+    )
+    by_name = {m["name"]: m for m in result}
+    assert by_name["WithDocs"]["has_agent_folder"] is True
+    assert by_name["WithDocs"]["agent_folder_path"] == "app/Modules/WithDocs/agents"
+    assert by_name["NoDocs"]["has_agent_folder"] is False
+    assert by_name["NoDocs"]["agent_folder_path"] is None
+    assert by_name["FileNotDir"]["has_agent_folder"] is False
+
+
+def test_enumerate_modules_custom_agent_folder_name(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    (tmp_path / "packages" / "core" / "ai-docs").mkdir(parents=True)
+    (tmp_path / "packages" / "tools").mkdir(parents=True)
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["packages"],
+            "skip_dirs": [],
+            "agent_folder": "ai-docs",
+        },
+    )
+    by_name = {m["name"]: m for m in result}
+    assert by_name["core"]["has_agent_folder"] is True
+    assert by_name["core"]["agent_folder_path"] == "packages/core/ai-docs"
+    assert by_name["tools"]["has_agent_folder"] is False
+
+
+def test_enumerate_modules_missing_root_is_silent(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    (tmp_path / "app" / "Modules" / "Real").mkdir(parents=True)
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["app/Modules", "does/not/exist"],
+            "skip_dirs": [],
+            "agent_folder": "agents",
+        },
+    )
+    assert [m["name"] for m in result] == ["Real"]
+
+
+def test_enumerate_modules_skips_non_directories(tmp_path: Path) -> None:
+    _init_git_dir(tmp_path)
+    root = tmp_path / "app" / "Modules"
+    root.mkdir(parents=True)
+    (root / "Real").mkdir()
+    (root / "README.md").write_text("ignored\n", encoding="utf-8")
+    result = ags.enumerate_modules(
+        project_root=tmp_path,
+        modules_config={
+            "enabled": True,
+            "root_paths": ["app/Modules"],
+            "skip_dirs": [],
+            "agent_folder": "agents",
+        },
+    )
+    assert [m["name"] for m in result] == ["Real"]
+
+
+def test_enumerate_modules_resolves_modules_config_from_settings(tmp_path: Path) -> None:
+    """When ``modules_config`` is omitted, the function reads the team file."""
+    _init_git_dir(tmp_path)
+    (tmp_path / "app" / "Modules" / "Auto").mkdir(parents=True)
+    _write(
+        tmp_path / ".agent-project-settings.yml",
+        """
+        modules:
+          enabled: true
+          root_paths: [app/Modules]
+        """,
+    )
+    result = ags.enumerate_modules(project_root=tmp_path, cwd=tmp_path)
+    assert [m["name"] for m in result] == ["Auto"]
