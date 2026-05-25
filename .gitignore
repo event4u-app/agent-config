@@ -103,7 +103,7 @@ __pycache__/
 .agent-src.uncompressed/skills/*/evals/last-run.json
 .agent-src/skills/*/evals/last-run.json
 # Live trigger-eval outputs — timestamped JSON per run, not committed.
-evals/results/
+internal/evals/results/
 
 # Quantitative skill-eval runs (produced by `scripts/run_skill_evals.py`;
 # evals.json is tracked, per-run outputs and benchmarks are not).
