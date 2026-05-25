@@ -9,6 +9,14 @@ name: Visibility Sync (manual)
 # Split-by-design per the AI-Council security review: the read-only
 # detector lives in `check-visibility-drift.yml`. Trade-off documented
 # in CONTRIBUTING.md \u00a7 "Visibility surface".
+#
+# Known GitHub Actions anomaly: workflows with `workflow_dispatch`-only
+# triggers occasionally register phantom "failure" runs on pushes to
+# main (0 jobs, empty logs, conclusion=failure). These do not represent
+# real failures and cannot be eliminated workflow-side; they are
+# GitHub's check-suite registration behavior for workflow files at
+# HEAD. Treat any run on this workflow with 0 jobs as a phantom and
+# ignore it. Real runs always have a `sync` job in the run details.
 
 on:
   workflow_dispatch:

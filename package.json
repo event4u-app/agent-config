@@ -26,7 +26,9 @@
         "skills",
         "prompt-engineering",
         "typescript",
-        "python"
+        "python",
+        "agent-skills",
+        "cinematic-ai-video"
     ],
     "files": [
         ".agent-src/",

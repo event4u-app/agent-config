@@ -8,9 +8,13 @@
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.
 
+> **Deployment posture.** Single-user workspace today (one machine, one user — `npx @event4u/agent-config init`). Small team today (3–10 people) via shared `agents/overrides/` Git repo + shared NAS for knowledge — recipe: [`docs/deploy/small-team-recipe.md`](deploy/small-team-recipe.md). Organization mode (SSO · central policy · team context · internal connectors) is **not started** — tracked under [`agents/roadmaps/stubs/`](../agents/roadmaps/stubs/README.md) with explicit gating (recruited customer + funded audit + maintainer ADR). Rationale: [`docs/deploy/team-deployment-posture.md`](deploy/team-deployment-posture.md).
+
 ---
 
 ## Creator (writer, marketer, indie content shop)
+
+> **Tailored role experience available →** [`agents/roles/content-creator/`](../agents/roles/content-creator/index.md) — three first tasks, priority-ordered skill shortlist, prompt scaffolds. Status `draft` until recruit-session 02 lands.
 
 **You want this if:** you draft blog posts, marketing emails, launch copy, or release announcements and want a writing assistant that holds a defined brand voice across surfaces. You need brand-voice discipline more than code-quality enforcement. You will spend most of your time in Claude Desktop / ChatGPT, not in a terminal.
 
@@ -29,6 +33,13 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 - [`character-consistency`](../.agent-src/skills/character-consistency/SKILL.md) — lock identity tokens (silhouette, palette, wardrobe, prop) so a character stays visually identical across scenes.
 
 `AIV_DRYRUN=true` is the mandatory default — no provider call, no spend until you opt in.
+
+**Worked example — one-line idea to stitched cut, four commands:**
+
+1. `/video:from-script "kurzes Werbevideo für ein Galabau-Projekt"` — agent expands the one-line idea into a 12-block blueprint, locks the character identity, and prints the provider-tuned prompt set.
+2. `/video:storyboard` — review the 12-block scene plan before any provider call; edit blocks inline (camera, lighting, blocking, motion) until the storyboard reads as intended.
+3. `/video:scene` — render one scene at a time against the configured provider adapter; iterate on the motion + audio prompt without paying for the full clip.
+4. `/video:stitch` — assemble the rendered scenes into the final clip via ffmpeg, with the character-lock JSON enforcing identity across cuts.
 
 **Try the first win →** [`pack-ai-video/FIRST_WIN.md`](../packages/pack-ai-video/FIRST_WIN.md) — one-line idea to a provider-tuned motion prompt in ~12 minutes.
 
@@ -66,6 +77,8 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 ## Consultant (advisory, freelance, fractional)
 
+> **Tailored role experience available →** [`agents/roles/consultant/`](../agents/roles/consultant/index.md) — three first tasks (client-brief refinement, investor memo, deck outline), priority-ordered skill shortlist. Status `draft` until recruit-session 03 lands.
+
 **You want this if:** you sell discovery, positioning, competitive analysis, or roadmap audits. Output is briefs and slide content for a client, not code. You need defensible methodology behind every deliverable.
 
 - [`discovery-interview`](../.agent-src/skills/discovery-interview/SKILL.md) — switch-event JTBD guides, bias audit, falsifiable hypothesis.
@@ -73,6 +86,20 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 - [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) — per-lens framing, trade-off matrix with cost per choice.
 
 **Install path:** **MCP recommended.** Most consulting work is doc + slide drafting; the terminal adds friction without payback. Switch to CLI only if you also write code for the client.
+
+---
+
+## Galabau owner (Garten- und Landschaftsbau, small-business operator)
+
+> **Tailored role experience available →** [`agents/roles/galabau/`](../agents/roles/galabau/index.md) — three first tasks (offer drafting, customer-email reply, project-brief refinement), priority-ordered skill shortlist. Status `draft` until recruit-session 01 lands.
+
+**You want this if:** you run or co-run a small Garten-und-Landschaftsbau shop and draft customer offers, customer emails, and project briefs every week — usually after the on-site day is done. You want a writing assistant that knows your tone, holds it across customers, and turns a one-paragraph project sketch into a structured document you can send the next morning.
+
+- [`refine-prompt`](../.agent-src/skills/refine-prompt/SKILL.md) — tighten fuzzy customer briefs before any drafting so the agent does not invent scope.
+- [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) — lock the shop tone so offers and emails read consistent across customers.
+- [`doc-coauthoring`](../.agent-src/skills/doc-coauthoring/SKILL.md) — section-by-section drafting for longer offers; never one giant generation.
+
+**Install path:** **MCP recommended.** Claude Desktop opens, the package shows up as a tool, no terminal required. See [`docs/mcp.md`](mcp.md). CLI install is the right path only if you also sit in this repo with code-shaped work.
 
 ---
 

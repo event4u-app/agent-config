@@ -27,6 +27,8 @@ topics:
   - prompt-engineering
   - typescript
   - python
+  - agent-skills
+  - cinematic-ai-video
 
 notes:
   # Topics not in this list MUST NOT be set in the GitHub UI.
@@ -44,6 +46,8 @@ notes:
   prompt-engineering: "Skill catalogue covers prompt patterns."
   typescript: "CLI + UI shipped as TypeScript."
   python: "Maintenance scripts + build pipeline."
+  agent-skills: "Differentiates from generic `skills` — agent-specific skill execution model."
+  cinematic-ai-video: "Hollywood-grade video pipeline differentiator (`/video:*` commands)."
 
 equivalents:
   # Optional paraphrase map consumed by `scripts/lint_positioning.py`.
