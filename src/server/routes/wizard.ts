@@ -256,6 +256,78 @@ async function spawnInstaller(scriptPath: string, args: readonly string[]): Prom
     });
 }
 
+async function spawnBash(scriptPath: string, args: readonly string[]): Promise<InstallerResult> {
+    return new Promise<InstallerResult>((resolve, reject) => {
+        const child = spawn('bash', [scriptPath, ...args], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' },
+        });
+        const stdoutChunks: Buffer[] = [];
+        const stderrChunks: Buffer[] = [];
+        child.stdout?.on('data', (chunk: Buffer) => stdoutChunks.push(chunk));
+        child.stderr?.on('data', (chunk: Buffer) => stderrChunks.push(chunk));
+        child.once('error', reject);
+        child.once('close', (code) => {
+            resolve({
+                exitCode: code ?? 1,
+                stdout: Buffer.concat(stdoutChunks).toString('utf8'),
+                stderr: Buffer.concat(stderrChunks).toString('utf8'),
+            });
+        });
+    });
+}
+
+/**
+ * Phase B Step 4 of road-to-clean-skill-distribution-channels.
+ * Parses the line-oriented output of scripts/_lib/scope_guard.sh into
+ * a structured response for the wizard UI. Each non-SUMMARY line carries
+ * verdict, tool, otherScopePath, otherVersion, thisVersion.
+ */
+interface ScopeGuardFinding {
+    verdict: 'OK' | 'WARN' | 'DRIFT';
+    tool: string;
+    otherScopePath: string;
+    otherVersion: string;
+    thisVersion: string;
+}
+
+interface ScopeGuardResult {
+    overall: 'OK' | 'WARN' | 'DRIFT';
+    countOk: number;
+    countWarn: number;
+    countDrift: number;
+    findings: ScopeGuardFinding[];
+}
+
+function parseScopeGuardOutput(stdout: string): ScopeGuardResult {
+    const findings: ScopeGuardFinding[] = [];
+    let overall: 'OK' | 'WARN' | 'DRIFT' = 'OK';
+    let countOk = 0;
+    let countWarn = 0;
+    let countDrift = 0;
+    for (const line of stdout.split('\n')) {
+        if (!line.trim()) continue;
+        const parts = line.split('\t');
+        if (parts[0] === 'SUMMARY') {
+            overall = (parts[1] as 'OK' | 'WARN' | 'DRIFT') ?? 'OK';
+            countOk = Number.parseInt(parts[2] ?? '0', 10);
+            countWarn = Number.parseInt(parts[3] ?? '0', 10);
+            countDrift = Number.parseInt(parts[4] ?? '0', 10);
+            continue;
+        }
+        const [verdict, tool, otherScopePath, otherVersion, thisVersion] = parts;
+        if (verdict !== 'OK' && verdict !== 'WARN' && verdict !== 'DRIFT') continue;
+        findings.push({
+            verdict: verdict as 'OK' | 'WARN' | 'DRIFT',
+            tool: tool ?? '?',
+            otherScopePath: otherScopePath ?? '-',
+            otherVersion: otherVersion ?? '-',
+            thisVersion: thisVersion ?? '-',
+        });
+    }
+    return { overall, countOk, countWarn, countDrift, findings };
+}
+
 // road-to-configurable-modules § Phase E — wire shape of the
 // `modulesConfig` field on `POST /api/v1/wizard/finish`. Matches the
 // `proposed_block` JSON emitted by `propose_modules_config.py --json`
@@ -360,6 +432,123 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             } catch (err) {
                 const message = err instanceof Error ? err.message : 'manifest read failed';
                 await reply.code(500).send({ error: { code: 'MANIFEST_UNAVAILABLE', message } });
+                return reply;
+            }
+        });
+
+        // road-to-clean-skill-distribution-channels § Phase D Step 3 —
+        // harness-expectations endpoint. Returns the three classes the
+        // wizard's final review step renders after install completes.
+        // Content is static + sourced from docs/contracts/harness-expectations.md
+        // (the doc is the long form; this endpoint is the wizard-shaped
+        // short form so the UI does not have to parse markdown).
+        app.get('/api/v1/wizard/harness-expectations', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            return {
+                contractPath: 'docs/contracts/harness-expectations.md',
+                classes: [
+                    {
+                        id: 'sibling-plugins',
+                        title: 'Plugin-namespaced peer skills',
+                        symptom: 'Skills appear under namespaces like codex:* or cc-gemini-plugin:*.',
+                        cause: 'Sibling AI-tool plugins loaded by the harness; not owned by this package.',
+                        action: 'Use the harness’s plugin-list command to identify the source.',
+                    },
+                    {
+                        id: 'deferred-tools',
+                        title: 'Tools deferred behind ToolSearch',
+                        symptom: 'system-reminder mentions “deferred tools … available via ToolSearch”.',
+                        cause: 'Harness defers schema load until needed to protect context budget.',
+                        action: 'Run ToolSearch with select:<name> to load the schema before calling.',
+                    },
+                    {
+                        id: 'duplicate-registration',
+                        title: 'Duplicate skill registration',
+                        symptom: 'Same skill name appears twice in the available-skills list.',
+                        cause: 'Cross-scope install drift (~/.claude/skills/ + ./.claude/skills/ at different versions).',
+                        action: 'Run `task probe:skills` — if findings show DUPLICATE/DRIFT, clean with `bash scripts/cleanup_other_scope.sh --confirm`.',
+                    },
+                ],
+                triage: [
+                    'Run `task probe:skills` first — confirms or rules out class 3.',
+                    'If a vendor: prefix shows, check the harness’s plugin list.',
+                    'deferred-tools reminder = expected; the skill must call ToolSearch.',
+                ],
+            };
+        });
+
+        // road-to-clean-skill-distribution-channels § Phase C Step 6 —
+        // probe endpoint. Spawns scripts/probe_skill_registration.py with
+        // --format=json so the wizard's final step can surface DUPLICATE /
+        // DRIFT findings before the operator closes the install. Read-only.
+        app.get('/api/v1/wizard/probe', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const probePath = join(opts.packageRoot, 'scripts', 'probe_skill_registration.py');
+            if (!existsSync(probePath)) {
+                await reply.code(500).send({ error: { code: 'PROBE_MISSING', message: `probe script not found at ${probePath}` } });
+                return reply;
+            }
+            const projectRoot = legacyReadRoot ?? process.cwd();
+            try {
+                const result = await spawnInstaller(probePath, ['--project', projectRoot, '--format=json']);
+                // Default mode exits 0 regardless of findings; --strict (not
+                // passed here) is the only path with a non-zero exit.
+                if (result.exitCode !== 0) {
+                    await reply.code(500).send({
+                        error: { code: 'PROBE_FAILED', message: result.stderr || `probe exited ${result.exitCode}`, exitCode: result.exitCode },
+                    });
+                    return reply;
+                }
+                try {
+                    return JSON.parse(result.stdout) as unknown;
+                } catch (err) {
+                    const message = err instanceof Error ? err.message : 'invalid JSON from probe';
+                    await reply.code(500).send({ error: { code: 'PROBE_PARSE_FAILED', message } });
+                    return reply;
+                }
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'probe failed to spawn';
+                await reply.code(500).send({ error: { code: 'PROBE_FAILED', message } });
+                return reply;
+            }
+        });
+
+        // road-to-clean-skill-distribution-channels § Phase B Step 4 —
+        // scope-guard endpoint. Spawns scripts/_lib/scope_guard.sh against
+        // the target project root and the user's $HOME, returns a
+        // structured verdict the wizard's first step renders before the
+        // operator picks an install scope. Read-only — no file writes.
+        app.get('/api/v1/wizard/scope-guard', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const guardPath = join(opts.packageRoot, 'scripts', '_lib', 'scope_guard.sh');
+            if (!existsSync(guardPath)) {
+                await reply.code(500).send({ error: { code: 'GUARD_MISSING', message: `scope_guard.sh not found at ${guardPath}` } });
+                return reply;
+            }
+            const projectRoot = legacyReadRoot ?? process.cwd();
+            try {
+                const result = await spawnBash(guardPath, ['project', opts.packageRoot, projectRoot]);
+                // The script always exits 0; we still pass through stderr
+                // on a non-zero so the UI can surface platform issues.
+                if (result.exitCode !== 0) {
+                    await reply.code(500).send({
+                        error: { code: 'GUARD_FAILED', message: result.stderr || `scope_guard.sh exited ${result.exitCode}`, exitCode: result.exitCode },
+                    });
+                    return reply;
+                }
+                return parseScopeGuardOutput(result.stdout);
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'scope_guard.sh failed to spawn';
+                await reply.code(500).send({ error: { code: 'GUARD_FAILED', message } });
                 return reply;
             }
         });
