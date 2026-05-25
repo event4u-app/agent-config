@@ -150,3 +150,58 @@ def test_unreachable_project_root_errors_with_exit_2(tmp_path: Path) -> None:
     )
     assert proc.returncode == 2
     assert "project root" in proc.stderr
+
+
+# --- --acknowledge-only flag ---------------------------------------------
+
+
+def _run_ack_only(project: Path) -> subprocess.CompletedProcess[str]:
+    return subprocess.run(
+        [sys.executable, str(SCRIPT), "--project", str(project), "--acknowledge-only"],
+        capture_output=True, text=True, check=False,
+    )
+
+
+def test_acknowledge_only_flips_just_the_ack_flag(tmp_path: Path) -> None:
+    team = _seed_team_file(tmp_path)
+    before = team.read_text(encoding="utf-8")
+    assert "  detection_acknowledged: false" in before
+    proc = _run_ack_only(tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    after = team.read_text(encoding="utf-8")
+    assert "  detection_acknowledged: true" in after
+    # Every other modules.* key stays exactly as the template shipped.
+    assert "  enabled: false" in after
+    assert "  root_paths: []" in after
+    assert '  namespace_template: ""' in after
+
+
+def test_acknowledge_only_bootstraps_when_team_file_missing(tmp_path: Path) -> None:
+    target = tmp_path / ".agent-project-settings.yml"
+    assert not target.exists()
+    proc = _run_ack_only(tmp_path)
+    assert proc.returncode == 0, proc.stderr
+    assert target.is_file()
+    text = target.read_text(encoding="utf-8")
+    assert "  detection_acknowledged: true" in text
+    assert "  enabled: false" in text  # default preserved
+    assert "schema_version: 1" in text
+
+
+def test_acknowledge_only_is_idempotent(tmp_path: Path) -> None:
+    _seed_team_file(tmp_path)
+    _run_ack_only(tmp_path)
+    first = (tmp_path / ".agent-project-settings.yml").read_text(encoding="utf-8")
+    _run_ack_only(tmp_path)
+    second = (tmp_path / ".agent-project-settings.yml").read_text(encoding="utf-8")
+    assert first == second
+
+
+def test_acknowledge_only_ignores_stdin_payload(tmp_path: Path) -> None:
+    """--acknowledge-only never reads JSON — it must not error on missing input."""
+    _seed_team_file(tmp_path)
+    proc = subprocess.run(
+        [sys.executable, str(SCRIPT), "--project", str(tmp_path), "--acknowledge-only"],
+        capture_output=True, text=True, check=False, input="",
+    )
+    assert proc.returncode == 0, proc.stderr

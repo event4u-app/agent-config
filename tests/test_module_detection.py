@@ -12,6 +12,7 @@ from pathlib import Path
 from scripts._lib.module_detection import (
     ModuleCandidate,
     detect_module_roots,
+    is_module_like_path,
 )
 
 
@@ -147,3 +148,51 @@ def test_absent_directories_never_appear(tmp_path: Path) -> None:
     result = detect_module_roots(tmp_path)
     stacks = {c.stack for c in result}
     assert stacks == {"laravel-hmvc"}
+
+
+# --- is_module_like_path() ------------------------------------------------
+
+def test_is_module_like_path_accepts_laravel_hmvc_shape() -> None:
+    assert is_module_like_path("app/Modules/User/Models/User.php")
+    assert is_module_like_path("Modules/Billing/Service.php")
+
+
+def test_is_module_like_path_accepts_node_monorepo_shape() -> None:
+    assert is_module_like_path("packages/ui/src/index.ts")
+    assert is_module_like_path("apps/web/pages/index.tsx")
+
+
+def test_is_module_like_path_accepts_go_internal_shape() -> None:
+    assert is_module_like_path("internal/auth/handler.go")
+
+
+def test_is_module_like_path_rejects_vendor_and_build_paths() -> None:
+    # Even with module-shaped parent, noise segments hard-disqualify.
+    assert not is_module_like_path("vendor/foo/Modules/Bar/file.php")
+    assert not is_module_like_path("node_modules/pkg/packages/x.js")
+    assert not is_module_like_path("dist/Modules/User.js")
+    assert not is_module_like_path("storage/Modules/x.log")
+
+
+def test_is_module_like_path_rejects_flat_paths() -> None:
+    assert not is_module_like_path("src/App.php")
+    assert not is_module_like_path("README.md")
+    assert not is_module_like_path("config/app.php")
+
+
+def test_is_module_like_path_rejects_bare_parent_without_child() -> None:
+    # "Modules" alone (last segment) is not module-like.
+    assert not is_module_like_path("app/Modules")
+    assert not is_module_like_path("packages")
+
+
+def test_is_module_like_path_rejects_skip_dir_children() -> None:
+    assert not is_module_like_path("Modules/.module-template/stub.php")
+    assert not is_module_like_path("packages/.example/file.ts")
+
+
+def test_is_module_like_path_handles_empty_and_windows_input() -> None:
+    assert not is_module_like_path("")
+    assert not is_module_like_path("/")
+    # Backslashes normalised; trailing/leading slashes stripped.
+    assert is_module_like_path("app\\Modules\\User\\file.php")

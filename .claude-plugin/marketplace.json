@@ -245,6 +245,7 @@
         "./.claude/skills/mode",
         "./.claude/skills/module",
         "./.claude/skills/module-create",
+        "./.claude/skills/module-detect-on-the-fly",
         "./.claude/skills/module-explore",
         "./.claude/skills/module-management",
         "./.claude/skills/motion-choreographer",

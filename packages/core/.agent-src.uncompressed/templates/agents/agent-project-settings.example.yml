@@ -106,6 +106,14 @@ modules:
   # scaffolds and example modules should not show up as real modules.
   skip_dirs: [".module-template", ".example"]
 
+  # On-the-fly detection acknowledgement. The `module-detect-on-the-fly`
+  # skill flips this to `true` once the agent has asked the user whether
+  # detected module candidates should be enabled — regardless of the
+  # answer. Prevents repeated nagging on subsequent sessions when the
+  # user said "not now". Re-detection still runs if a new root appears
+  # outside the previously surfaced set.
+  detection_acknowledged: false
+
 # --- Memory layer (optional) ---
 #
 # Opt-in signal for the @event4u/agent-memory companion package and
