@@ -123,7 +123,7 @@ entries over a flat commit dump.
 
 - [`docs/contracts/CHANGELOG-conventions.md`](../contracts/CHANGELOG-conventions.md) — convention being confirmed.
 - [`agents/roadmaps/archive/road-to-changelog-era-auto-split.md`](../../agents/roadmaps/archive/road-to-changelog-era-auto-split.md) — closes Phase 4.
-- [`agents/runtime/council/responses/changelog-era-split-2026-05-25.json`](../../agents/runtime/council/responses/changelog-era-split-2026-05-25.json) — the originating council synthesis.
+- [`agents/runtime/council/responses/changelog-era-split-2026-05-25.json`](../../agents/runtime/council/responses/changelog-era-split-2026-05-25.json) — the originating council synthesis. <!-- council-ref-allowed: ADR decision trace -->
 - `scripts/_lib/changelog_eras.py` — shared cap + splitter (Tier 2 output).
 - `scripts/release.py:818` — `plan.changelog_body` → GitHub Release notes wire.
 - `tests/test_changelog_eras.py`, `tests/test_changelog_split.py` — gate + splitter coverage.
