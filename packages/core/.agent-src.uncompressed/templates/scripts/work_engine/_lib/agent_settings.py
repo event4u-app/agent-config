@@ -104,6 +104,7 @@ MODULES_DEFAULTS: dict[str, Any] = {
     "namespace_template": "",
     "agent_folder": "agents",
     "skip_dirs": [".module-template", ".example"],
+    "detection_acknowledged": False,
 }
 
 
