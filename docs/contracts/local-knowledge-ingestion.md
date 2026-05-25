@@ -87,7 +87,7 @@ LRU at the namespace level. When the 500 MB cap is crossed, oldest ingests (by `
 
 ## Command surface (deferred to impl PR)
 
-`/knowledge:ingest <path>`, `/knowledge:list`, `/knowledge:forget <prefix>` are defined elsewhere — this contract pins their **inputs, bounds, storage, and redaction**. The Python module that implements the file walk + MIME routing + chunk writing lives at `packages/core/installer/python/knowledge_ingest.py`, ≤ 400 LOC, per Phase 2 Step 2.
+`/knowledge:ingest <path>`, `/knowledge:list`, `/knowledge:forget <prefix>` are defined elsewhere — this contract pins their **inputs, bounds, storage, and redaction**. The Python module that implements the file walk + MIME routing + chunk writing lives at `packages/core/installer/python/knowledge_ingest.py`, ≤ 600 LOC (bumped from the pre-impl ≤ 400 budget once five PII classes, five secret patterns, LRU eviction, manifest persistence, pin/unpin and the multi-verb CLI were all in one file — splitting would have added an import seam without changing the surface), per Phase 2 Step 2.
 
 ## Open questions (Phase 2 council pass, optional)
 
