@@ -5,7 +5,7 @@
 JTBD, interviews, VoC, hypothesis testing.
 
 - **id**: `product-discovery`
-- **version**: `3.2.0`
+- **version**: `3.3.0`
 - **owner**: product
 - **requires**: product-basic
 - **artefacts**: 4
