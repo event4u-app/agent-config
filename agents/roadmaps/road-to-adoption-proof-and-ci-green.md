@@ -34,7 +34,7 @@ Three deferred 3.2.0 actions, three different unblock paths:
 - **Recruit sessions** are blocked on a real recruit + recording session — a calendar problem, not a code problem. Phase B does **not** force the sessions to happen autonomously; it removes every other obstacle so when the human-owner picks a date, the session is 5 minutes of prep instead of 2 hours.
 - **MCP registry listing** is blocked on a maintainer GitHub fork + PR submission. Phase C ships a ready-to-paste PR body + a maintainer runbook so the submission is one terminal command + one button-click.
 
-The bet: a 4–5 week focused execution slice converts all three deferred items into shipped reality. Adoption-dimension lifts from 6/10 to ≥ 8/10 the day the first recruit-session report lands at `agents/recruit-sessions/01-galabau-owner.md`. CI dimension lifts from "rolling regressions" to "green as hard gate" before any 4.0.0 conversation can start.
+The bet: a 4–5 week focused execution slice converts all three deferred items into shipped reality. Adoption-dimension lifts from 6/10 to ≥ 8/10 the day the first recruit-session report lands at `agents/recruit-sessions/01-galabau-owner.md`. CI dimension lifts from "rolling regressions" to "green as hard gate" before any 4.0.0 conversation can start. <!-- ref-ignore -->
 
 This roadmap is honest about what it cannot do alone. Phase B Steps 3–5 and Phase C Step 4 are **human-owner-gated by design**. The roadmap ships everything *around* those steps so when the human owner moves, the move is friction-free.
 
