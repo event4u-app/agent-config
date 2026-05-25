@@ -21,6 +21,8 @@ def _chdir(monkeypatch, tmp_path: Path) -> None:
                         Path("agents/memory"))
     monkeypatch.setattr(memory_lookup, "INTAKE_ROOT",
                         Path("agents/memory/intake"))
+    monkeypatch.setattr(memory_lookup, "KNOWLEDGE_ROOT",
+                        Path("agents/memory/knowledge"))
 
 
 def _write(path: Path, content: str) -> None:
@@ -245,3 +247,122 @@ def test_package_operational_provider_returns_callable_when_present(
     provider = memory_lookup.package_operational_provider()
     assert provider is not None
     assert callable(provider)
+
+
+
+# ---------------------------------------------------------------------------
+# Knowledge namespace (Phase 2 — local-knowledge-ingestion contract)
+# ---------------------------------------------------------------------------
+
+
+def _write_knowledge_ingest(
+    tmp_path: Path,
+    ingest_id: str,
+    source: str,
+    chunks: list[str],
+    pinned: bool = False,
+) -> Path:
+    ingest_dir = tmp_path / "agents/memory/knowledge" / ingest_id
+    chunks_dir = ingest_dir / "chunks"
+    chunks_dir.mkdir(parents=True, exist_ok=True)
+    manifest = {
+        "ingest_id": ingest_id,
+        "source": source,
+        "created_at": "2026-05-25T00:00:00Z",
+        "last_touched": "2026-05-25T00:00:00Z",
+        "documents": 1,
+        "chunks": len(chunks),
+        "bytes_stored": sum(len(c) for c in chunks),
+        "redacted": True,
+        "pinned": pinned,
+        "pii_redacted": {},
+        "secrets_redacted": 0,
+        "skipped": [],
+        "files": [],
+        "contains_redactions": False,
+    }
+    (ingest_dir / "manifest.json").write_text(
+        json.dumps(manifest), encoding="utf-8"
+    )
+    for i, body in enumerate(chunks):
+        (chunks_dir / f"{i:04d}.md").write_text(body, encoding="utf-8")
+    return ingest_dir
+
+
+def test_knowledge_retrieval_returns_chunks(tmp_path, monkeypatch):
+    _chdir(monkeypatch, tmp_path)
+    _write_knowledge_ingest(
+        tmp_path,
+        ingest_id="018f4a1b-0000-7000-8000-000000000001",
+        source="/Users/maintainer/clients/acme/brief.pdf",
+        chunks=["Acme pricing model uses tiered SaaS billing."],
+    )
+    hits = memory_lookup.retrieve(["knowledge"], ["acme"], limit=5)
+    assert len(hits) == 1
+    assert hits[0].type == "knowledge"
+    assert hits[0].source == "knowledge"
+    assert hits[0].entry["source_kind"] == "knowledge"
+    assert hits[0].score > 0
+
+
+def test_knowledge_retrieval_returns_empty_when_no_root(tmp_path, monkeypatch):
+    _chdir(monkeypatch, tmp_path)
+    assert memory_lookup.retrieve(["knowledge"], ["anything"]) == []
+
+
+def test_knowledge_pinned_chunks_rank_higher(tmp_path, monkeypatch):
+    _chdir(monkeypatch, tmp_path)
+    _write_knowledge_ingest(
+        tmp_path,
+        ingest_id="018f4a1b-0000-7000-8000-000000000002",
+        source="docs/normal.md",
+        chunks=["acme normal content"],
+        pinned=False,
+    )
+    _write_knowledge_ingest(
+        tmp_path,
+        ingest_id="018f4a1b-0000-7000-8000-000000000003",
+        source="docs/pinned.md",
+        chunks=["acme pinned content"],
+        pinned=True,
+    )
+    hits = memory_lookup.retrieve(["knowledge"], ["acme"], limit=5)
+    assert len(hits) == 2
+    pinned_hit = next(h for h in hits if h.entry["pinned"])
+    normal_hit = next(h for h in hits if not h.entry["pinned"])
+    assert pinned_hit.score >= normal_hit.score
+
+
+def test_knowledge_v1_envelope_maps_to_repo(tmp_path, monkeypatch):
+    _chdir(monkeypatch, tmp_path)
+    _write_knowledge_ingest(
+        tmp_path,
+        ingest_id="018f4a1b-0000-7000-8000-000000000004",
+        source="docs/spec.md",
+        chunks=["billing rules and edge cases"],
+    )
+    envelope = memory_lookup.retrieve_v1(
+        ["knowledge"], ["billing"], limit=5
+    )
+    assert envelope["status"] == "ok"
+    assert envelope["slices"]["knowledge"]["status"] == "ok"
+    assert envelope["slices"]["knowledge"]["count"] >= 1
+    knowledge_entries = [
+        e for e in envelope["entries"] if e["type"] == "knowledge"
+    ]
+    assert len(knowledge_entries) == 1
+    # Schema enum is {repo, operational} — knowledge projects to repo.
+    assert knowledge_entries[0]["source"] == "repo"
+    # Body carries the source_kind tag so the host model can
+    # distinguish user-ingested knowledge from curated repo entries.
+    assert knowledge_entries[0]["body"]["source_kind"] == "knowledge"
+
+
+def test_knowledge_skips_dir_without_manifest(tmp_path, monkeypatch):
+    _chdir(monkeypatch, tmp_path)
+    # Stray directory without manifest.json or chunks — must not crash.
+    stray = tmp_path / "agents/memory/knowledge/stray-dir"
+    stray.mkdir(parents=True)
+    (stray / "random.txt").write_text("noise", encoding="utf-8")
+    hits = memory_lookup.retrieve(["knowledge"], ["noise"])
+    assert hits == []

@@ -39,6 +39,7 @@ from typing import Any, Callable, Iterable, Optional, Union
 
 MEMORY_ROOT = Path("agents/memory")
 INTAKE_ROOT = MEMORY_ROOT / "intake"
+KNOWLEDGE_ROOT = MEMORY_ROOT / "knowledge"
 
 CURATED_TYPES = {
     "ownership",
@@ -48,6 +49,12 @@ CURATED_TYPES = {
     "incident-learnings",
     "product-rules",
 }
+
+# `knowledge` is its own type: user-ingested local documents that live
+# under `agents/memory/knowledge/<ingest-id>/chunks/*.md`. They are
+# repo-side (file-backed) but not "curated" and not intake — the
+# conflict rule still treats them as repo entries against operational.
+KNOWLEDGE_TYPE = "knowledge"
 
 
 @dataclass
@@ -165,6 +172,58 @@ def _iter_intake_entries(mtype: str) -> Iterable[tuple[Path, dict]]:
             if mtype and obj.get("entry_type") and obj["entry_type"] != mtype:
                 continue
             yield jsonl, obj
+
+
+def _iter_knowledge_entries() -> Iterable[tuple[Path, dict]]:
+    """Yield (chunk-file, entry) pairs from `agents/memory/knowledge/`.
+
+    Layout (frozen in `docs/contracts/local-knowledge-ingestion.md`):
+
+        agents/memory/knowledge/<ingest-id>/
+            manifest.json
+            chunks/<n>.md
+
+    Each chunk becomes one retrieval entry. The chunk body, the
+    manifest source path, and pinned flag are surfaced into the entry
+    so `_score()` can match on either the source path or the chunk
+    text. The entry id is ``<ingest-id>:<chunk-stem>`` so callers can
+    locate the exact file on disk.
+    """
+    if not KNOWLEDGE_ROOT.is_dir():
+        return
+    for ingest_dir in sorted(KNOWLEDGE_ROOT.iterdir()):
+        if not ingest_dir.is_dir():
+            continue
+        manifest_path = ingest_dir / "manifest.json"
+        manifest: dict = {}
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(
+                    manifest_path.read_text(encoding="utf-8")
+                )
+            except (ValueError, OSError):
+                manifest = {}
+        ingest_id = str(manifest.get("ingest_id") or ingest_dir.name)
+        source = str(manifest.get("source") or "")
+        pinned = bool(manifest.get("pinned", False))
+        chunks_dir = ingest_dir / "chunks"
+        if not chunks_dir.is_dir():
+            continue
+        for chunk in sorted(chunks_dir.glob("*.md")):
+            try:
+                body = chunk.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            entry = {
+                "id": f"{ingest_id}:{chunk.stem}",
+                "ingest_id": ingest_id,
+                "source": source,
+                "path": source,
+                "body": body,
+                "pinned": pinned,
+                "source_kind": "knowledge",
+            }
+            yield chunk, entry
 
 
 def _score(entry: dict, keys: list[str]) -> float:
@@ -378,6 +437,24 @@ def retrieve(
     """
     repo_hits: list[Hit] = []
     for mtype in types:
+        if mtype == KNOWLEDGE_TYPE:
+            for path, entry in _iter_knowledge_entries():
+                base = _score(entry, keys)
+                # Pinned entries get a slight ranking boost so the
+                # `/knowledge:list --pin` flag has retrieval effect.
+                if entry.get("pinned"):
+                    base = min(1.0, base + 0.05)
+                repo_hits.append(Hit(
+                    id=str(entry.get("id", "")),
+                    type=KNOWLEDGE_TYPE,
+                    source="knowledge",
+                    path=str(path),
+                    # Discount vs curated/intake so hand-reviewed repo
+                    # entries still win on equal relevance.
+                    score=base * 0.85,
+                    entry=entry,
+                ))
+            continue
         if mtype not in CURATED_TYPES:
             continue
         for path, entry in _iter_curated_entries(mtype):
@@ -426,7 +503,7 @@ CONTRACT_VERSION = 1
 
 # Memory types this file-backed backend can answer. Types outside this
 # set map to `unknown_type` per the retrieval contract.
-_KNOWN_TYPES = CURATED_TYPES
+_KNOWN_TYPES = CURATED_TYPES | {KNOWLEDGE_TYPE}
 
 
 def retrieve_v1(
