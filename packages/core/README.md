@@ -5,7 +5,7 @@
 Core framework-neutral artefacts.
 
 - **id**: `core`
-- **version**: `3.1.1`
+- **version**: `3.2.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
 - **artefacts**: 364
