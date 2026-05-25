@@ -67,6 +67,11 @@ tasks:
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
     cmd: python3 scripts/compress.py --generate-tools
 
+  probe:skills:
+    silent: true
+    desc: Detect duplicate/drifting skill registrations across user-global and project-local scopes (road-to-clean-skill-distribution-channels Phase C)
+    cmd: python3 scripts/probe_skill_registration.py --format=text
+
   release-prepare:
     silent: true
     desc: Release pipeline — sync, regenerate discovery manifest, regenerate tool projections (monorepo Phase 2, ADR-015)

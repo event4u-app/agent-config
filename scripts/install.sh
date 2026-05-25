@@ -37,6 +37,12 @@ DRY_RUN=false
 VERBOSE=false
 QUIET=false
 SKIP_GITIGNORE=false
+# Per the canonical-channel contract (docs/contracts/skill-distribution-channels.md),
+# consumer installs default to the filesystem channel only (e.g. .claude/skills/) and
+# do NOT project the plugin manifest (.claude-plugin/marketplace.json). Set this true
+# via --legacy-both to also copy the plugin manifest for users on older harnesses
+# that require both channels.
+LEGACY_BOTH=false
 # When true, skip payload sync entirely and only install the project-local
 # `./agent-config` wrapper (Step 7 Phase 2). The bridge stage (install.py)
 # handles the .agent-settings.yml stub + nested-install guard.
@@ -87,6 +93,7 @@ parse_args() {
             --user-type)   shift 2 ;;
             --user-type=*) shift ;;
             --minimal|--settings-only) MINIMAL=true; shift ;;
+            --legacy-both) LEGACY_BOTH=true; shift ;;
             --help|-h) show_help; exit 0 ;;
             *) log_error "Unknown argument: $1"; show_help; exit 1 ;;
         esac
@@ -141,6 +148,10 @@ Options:
   --verbose        Show detailed output
   --quiet          Suppress all output except errors
   --skip-gitignore Do not touch the target project's .gitignore
+  --legacy-both    Also project the Claude plugin manifest
+                   (.claude-plugin/marketplace.json) into the consumer install.
+                   Default is filesystem-only per the canonical-channel contract
+                   at docs/contracts/skill-distribution-channels.md.
   --help, -h       Show this help
 
 Environment:
@@ -604,6 +615,163 @@ generate_windsurfrules() {
 }
 
 
+# Run scripts/_lib/scope_guard.sh as a pre-flight check. On DRIFT findings
+# the function surfaces a numbered-options prompt and aborts on no-confirm
+# paths. SCOPE_GUARD_BYPASS=1 (set by the orchestrator, CI runs, and
+# --dry-run) skips the prompt entirely. Findings are always logged in
+# verbose mode regardless.
+run_scope_guard() {
+    local target="$1"
+    local guard="$SOURCE_DIR/scripts/_lib/scope_guard.sh"
+
+    # Skip when the guard is not present (e.g. trimmed install bundle).
+    [[ -f "$guard" ]] || { log_verbose "scope_guard.sh not found — skipping cross-scope drift check"; return 0; }
+
+    # Bypass paths that cannot or must not be interactive.
+    if $DRY_RUN; then
+        log_verbose "skip scope_guard (--dry-run)"
+        return 0
+    fi
+    if [[ "${SCOPE_GUARD_BYPASS:-0}" == "1" ]]; then
+        log_verbose "skip scope_guard (SCOPE_GUARD_BYPASS=1)"
+        return 0
+    fi
+    if [[ "${CI:-0}" == "true" ]] || [[ "${CI:-0}" == "1" ]]; then
+        log_verbose "skip scope_guard (CI=true)"
+        return 0
+    fi
+
+    local output verdict
+    output="$(bash "$guard" project "$SOURCE_DIR" "$target" 2>/dev/null || true)"
+    [[ -n "$output" ]] || return 0
+
+    local summary
+    summary="$(echo "$output" | grep '^SUMMARY' | tail -1)"
+    [[ -n "$summary" ]] || return 0
+    verdict="$(echo "$summary" | cut -f2)"
+
+    if [[ "$verdict" == "OK" ]]; then
+        log_verbose "scope_guard OK (no cross-scope install)"
+        return 0
+    fi
+
+    if [[ "$verdict" == "WARN" ]]; then
+        $QUIET || {
+            echo ""
+            echo "  ⚠️  Cross-scope install detected (same version, no drift)."
+            echo "$output" | awk -F'\t' '$1=="WARN" { printf "       - %s at %s (v%s)\n", $2, $3, $4 }'
+            echo ""
+        }
+        return 0
+    fi
+
+    # DRIFT: surface the gate. Non-interactive shells get the warning and
+    # an exit code that the caller can short-circuit with SCOPE_GUARD_BYPASS=1.
+    echo ""
+    echo "  ❌  Cross-scope DRIFT detected — same package installed at user AND project scope at different versions:"
+    echo "$output" | awk -F'\t' '$1=="DRIFT" { printf "       - %s: other-scope=%s (v%s) vs this-install=v%s\n", $2, $3, $4, $5 }'
+    echo ""
+    echo "      The 2026-05-25 root cause (duplicate skill registration with stale frontmatter)"
+    echo "      will fire when both registrations load. Choose how to proceed:"
+    echo ""
+    echo "         1. Abort install — fix drift first (recommended)"
+    echo "         2. Upgrade the OTHER scope first (run scripts/install.sh --target=\$HOME or equivalent)"
+    echo "         3. Force install at this scope — accept drift (set SCOPE_GUARD_BYPASS=1)"
+    echo "         4. Clean the other scope (bash scripts/cleanup_other_scope.sh --confirm)"
+    echo ""
+    echo "      Recommendation: 1"
+    echo ""
+
+    # In interactive mode the caller has stdin; we honour SCOPE_GUARD_BYPASS=1
+    # already above. Default: abort.
+    if [[ -t 0 ]]; then
+        local choice
+        read -r -p "      Enter 1-4 [default 1]: " choice || choice=1
+        case "${choice:-1}" in
+            2) echo "      → Re-run scripts/install.sh against the other scope first; aborting this run."; exit 2 ;;
+            3) log_warn "Continuing despite DRIFT (user opted into option 3)" ;;
+            4) echo "      → Run: bash scripts/cleanup_other_scope.sh --confirm — then retry."; exit 2 ;;
+            *) echo "      → Aborting (option 1)."; exit 2 ;;
+        esac
+    else
+        echo "      Non-interactive shell — aborting. Set SCOPE_GUARD_BYPASS=1 to override."
+        exit 2
+    fi
+}
+
+# Post-install skill-registration probe (Phase C Step 6). Informational by
+# default; PROBE_STRICT=1 turns drift findings into a non-zero exit so a
+# release install fails loudly. Skipped in dry-run and when python3 or the
+# probe script is missing (older bundles).
+run_post_install_probe() {
+    local target="$1"
+    local probe="$SOURCE_DIR/scripts/probe_skill_registration.py"
+
+    [[ -f "$probe" ]] || { log_verbose "skip probe_skill_registration.py (not found)"; return 0; }
+    if ! command -v python3 >/dev/null 2>&1; then
+        log_verbose "skip skill-registration probe (python3 missing)"
+        return 0
+    fi
+    if $DRY_RUN; then
+        log_verbose "skip skill-registration probe (--dry-run)"
+        return 0
+    fi
+    if [[ "${PROBE_BYPASS:-0}" == "1" ]]; then
+        log_verbose "skip skill-registration probe (PROBE_BYPASS=1)"
+        return 0
+    fi
+
+    local args=( "$probe" "--project" "$target" "--format=text" )
+    [[ "${PROBE_STRICT:-0}" == "1" ]] && args+=("--strict")
+
+    if python3 "${args[@]}" > /tmp/agent-config-probe.$$ 2>&1; then
+        # On clean output (no findings) only show a one-liner.
+        if grep -qE 'DUPLICATE|DRIFT' /tmp/agent-config-probe.$$; then
+            $QUIET || echo ""
+            $QUIET || echo "  ⚠️  Skill-registration findings:"
+            $QUIET || sed -n '/DUPLICATE\|DRIFT/,$p' /tmp/agent-config-probe.$$ | head -40
+            $QUIET || echo ""
+            $QUIET || echo "      Run: python3 scripts/probe_skill_registration.py — for the full report."
+        else
+            log_info "Skill-registration probe: clean (no duplicates / drift)"
+        fi
+        rm -f /tmp/agent-config-probe.$$
+        return 0
+    else
+        local code=$?
+        echo ""
+        echo "  ❌  Skill-registration probe surfaced DUPLICATE / DRIFT findings (PROBE_STRICT=1):"
+        sed -n '/DUPLICATE\|DRIFT/,$p' /tmp/agent-config-probe.$$ | head -40
+        rm -f /tmp/agent-config-probe.$$
+        return "$code"
+    fi
+}
+
+# Project the Claude plugin manifest into the consumer install — gated on
+# --legacy-both. Default install path is filesystem-only per the canonical-
+# channel contract (docs/contracts/skill-distribution-channels.md). Only
+# users on older Claude Code harnesses that need both channels opt in.
+project_legacy_plugin_manifest() {
+    local project_root="$1"
+    local source_manifest="$SOURCE_DIR/.claude-plugin/marketplace.json"
+    local target_manifest="$project_root/.claude-plugin/marketplace.json"
+
+    if ! $LEGACY_BOTH; then
+        log_verbose "skip .claude-plugin/marketplace.json (filesystem is canonical; use --legacy-both to opt in)"
+        return 0
+    fi
+    is_tool_enabled "claude-code" || { log_verbose "skip .claude-plugin/marketplace.json (claude-code not selected)"; return 0; }
+    [[ -f "$source_manifest" ]] || { log_verbose "skip .claude-plugin/marketplace.json (source manifest absent)"; return 0; }
+
+    if $DRY_RUN; then
+        log_verbose "copy .claude-plugin/marketplace.json (--legacy-both)"
+        return
+    fi
+    mkdir -p "$(dirname "$target_manifest")"
+    cp "$source_manifest" "$target_manifest"
+    log_info "Projected .claude-plugin/marketplace.json (--legacy-both opted in)"
+}
+
 # Create GEMINI.md symlink (gemini-cli only).
 create_gemini_md() {
     local project_root="$1"
@@ -883,7 +1051,15 @@ main() {
         echo ""
     fi
 
-    # 0. Migrate legacy infra files (root → agents/) before any content sync.
+    # 0a. Cross-scope drift pre-flight (Phase B Step 3). Detect prior installs
+    #     of the same package at the OTHER scope (user-global ↔ project-local).
+    #     On DRIFT the function surfaces a numbered-options gate per the
+    #     non-destructive-by-default contract. SCOPE_GUARD_BYPASS=1 from the
+    #     orchestrator or a CI run skips the gate so non-interactive paths do
+    #     not hang.
+    run_scope_guard "$TARGET_DIR"
+
+    # 0b. Migrate legacy infra files (root → agents/) before any content sync.
     migrate_legacy_root_infra "$TARGET_DIR"
     migrate_legacy_low_impact_decisions "$TARGET_DIR"
     migrate_legacy_prices_file "$TARGET_DIR"
@@ -920,12 +1096,22 @@ main() {
     create_tool_symlinks "$TARGET_DIR"
     create_skill_symlinks "$TARGET_DIR"
 
+    # 3b. Optionally project the Claude plugin manifest (--legacy-both).
+    project_legacy_plugin_manifest "$TARGET_DIR"
+
     # 4. Generate files
     generate_windsurfrules "$TARGET_DIR"
     create_gemini_md "$TARGET_DIR"
 
     # 5. Install consumer CLI wrapper (gitignored, overwritten on every install)
     install_cli_wrapper "$TARGET_DIR"
+
+    # 5b. Post-install registration probe (Phase C Step 6). Surfaces any
+    #     duplicate / drifting skill registrations the new install would
+    #     conflict with. PROBE_STRICT=1 (set by release installs) flips
+    #     informational output into a non-zero exit so a release stops on
+    #     drift findings.
+    run_post_install_probe "$TARGET_DIR"
 
     # 6. Manage .gitignore
     ensure_gitignore "$TARGET_DIR"
