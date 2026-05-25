@@ -256,6 +256,21 @@ async function spawnInstaller(scriptPath: string, args: readonly string[]): Prom
     });
 }
 
+// road-to-configurable-modules § Phase E — wire shape of the
+// `modulesConfig` field on `POST /api/v1/wizard/finish`. Matches the
+// `proposed_block` JSON emitted by `propose_modules_config.py --json`
+// so the wizard can round-trip the detection output untouched. Extra
+// fields are rejected — the persistence helper has its own coercion
+// for older payload shapes, but the wizard always sends the strict
+// shape.
+const modulesConfigSchema = z.object({
+    enabled: z.boolean(),
+    root_paths: z.array(z.string()),
+    namespace_template: z.string().optional(),
+    agent_folder: z.string().optional(),
+    skip_dirs: z.array(z.string()).optional(),
+}).strict();
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
@@ -291,6 +306,43 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             const root = legacyReadRoot ?? process.cwd();
             const signals = detectProjectSignals(root);
             return { root, signals };
+        });
+
+        // road-to-configurable-modules § Phase E — Modules detect endpoint.
+        // Read-only scan: spawns `scripts/propose_modules_config.py --json`
+        // against the consumer project so the wizard's modules step can
+        // surface candidate root_paths + a prefilled `modules:` block.
+        // Same root-resolution rule as `/auto-detect` (legacyReadRoot ??
+        // cwd) — the consumer repo the maintainer is running the wizard
+        // against. Gated by extended-mode so the canonical 7-step flow
+        // stays clean.
+        app.get('/api/v1/modules/detect', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const root = legacyReadRoot ?? process.cwd();
+            const scriptPath = join(opts.packageRoot, 'scripts', 'propose_modules_config.py');
+            try {
+                const result = await spawnInstaller(scriptPath, ['--json', '--project', root]);
+                if (result.exitCode !== 0) {
+                    await reply.code(500).send({
+                        error: { code: 'DETECT_FAILED', message: result.stderr || 'module detect bridge exited non-zero', exitCode: result.exitCode },
+                    });
+                    return reply;
+                }
+                try {
+                    return JSON.parse(result.stdout) as unknown;
+                } catch (err) {
+                    const message = err instanceof Error ? err.message : 'invalid JSON from module detect bridge';
+                    await reply.code(500).send({ error: { code: 'DETECT_PARSE_FAILED', message } });
+                    return reply;
+                }
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'module detect bridge failed';
+                await reply.code(500).send({ error: { code: 'DETECT_FAILED', message } });
+                return reply;
+            }
         });
 
         // road-to-global-only-install § Phase 1.3 — Manifest endpoint.
@@ -383,7 +435,12 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
-            const body = (request.body ?? {}) as { settings?: unknown; identity?: unknown; scope?: unknown };
+            const body = (request.body ?? {}) as {
+                settings?: unknown;
+                identity?: unknown;
+                scope?: unknown;
+                modulesConfig?: unknown;
+            };
             const settingsParsed = settingsSchema.safeParse(body.settings);
             if (!settingsParsed.success) {
                 await reply.code(422).send({
@@ -402,6 +459,28 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                     error: { code: 'VALIDATION', message: 'invalid user identity', fields: zodIssuesToFields(identityParsed.error.issues) },
                 });
                 return reply;
+            }
+            // road-to-configurable-modules § Phase E — parse the modules
+            // payload. Extended-mode only; legacy 7-step flow never sends
+            // this field. Omitted / null → skip persistence (the team
+            // file stays untouched).
+            const rawModulesConfig = body.modulesConfig;
+            let modulesConfigData: z.infer<typeof modulesConfigSchema> | null = null;
+            if (rawModulesConfig !== undefined && rawModulesConfig !== null) {
+                if (!extended) {
+                    await reply.code(422).send({
+                        error: { code: 'VALIDATION', message: 'modulesConfig requires extended mode', fields: [{ path: 'modulesConfig', message: 'extended-mode only' }] },
+                    });
+                    return reply;
+                }
+                const modulesParsed = modulesConfigSchema.safeParse(rawModulesConfig);
+                if (!modulesParsed.success) {
+                    await reply.code(422).send({
+                        error: { code: 'VALIDATION', message: 'invalid modulesConfig', fields: zodIssuesToFields(modulesParsed.error.issues) },
+                    });
+                    return reply;
+                }
+                modulesConfigData = modulesParsed.data;
             }
             // road-to-global-only-install § Phase 2.3 — explicit scope opt-in.
             // `'global'` (default) lands writes under the resolved writeRoot
@@ -443,6 +522,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                             settingsYaml: settingsBody,
                             identity: identityParsed && identityParsed.success ? identityParsed.data : null,
                             userIdentityYaml: identityBody,
+                            modulesConfig: modulesConfigData,
                         },
                     };
                 }
@@ -466,11 +546,44 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 // and the flat-root files are independent legacy artefacts
                 // that should still be cleaned. The helper handles that.
                 const migratedFrom = await deleteLegacyArtefacts(legacyReadRoot, effectiveWriteRoot).catch(() => []);
+                // road-to-configurable-modules § Phase E — invoke the
+                // persistence helper after the 2PC commit so a failed
+                // settings write never leaves a half-applied
+                // `.agent-project-settings.yml` behind. Best-effort: a
+                // bridge failure surfaces in `modulesApply.error` but
+                // does NOT roll back the settings commit (the team file
+                // is a separate artefact and the user can re-apply).
+                // Same root rule as `/auto-detect`: legacyReadRoot ??
+                // process.cwd() — that's the consumer repo, not the
+                // server's writeRoot.
+                let modulesAppliedTo: string | null = null;
+                let modulesApplyError: { code: string; message: string; exitCode?: number } | null = null;
+                if (modulesConfigData !== null) {
+                    const projectRoot = legacyReadRoot ?? process.cwd();
+                    const scriptPath = join(opts.packageRoot, 'scripts', 'apply_modules_config.py');
+                    const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
+                    try {
+                        await fs.writeFile(tmpPath, JSON.stringify(modulesConfigData), { mode: 0o600 });
+                        const result = await spawnInstaller(scriptPath, ['--project', projectRoot, '--input-file', tmpPath]);
+                        if (result.exitCode !== 0) {
+                            modulesApplyError = { code: 'MODULES_APPLY_FAILED', message: result.stderr || 'modules apply bridge exited non-zero', exitCode: result.exitCode };
+                        } else {
+                            modulesAppliedTo = result.stdout.trim() || null;
+                        }
+                    } catch (err) {
+                        const message = err instanceof Error ? err.message : 'modules apply bridge failed';
+                        modulesApplyError = { code: 'MODULES_APPLY_FAILED', message };
+                    } finally {
+                        await fs.unlink(tmpPath).catch(() => undefined);
+                    }
+                }
                 return {
                     writtenPaths: payloads.map((p) => p.target),
                     txnId,
                     scope,
                     ...(migratedFrom.length > 0 ? { migratedFrom } : {}),
+                    ...(modulesAppliedTo !== null ? { modulesAppliedTo } : {}),
+                    ...(modulesApplyError !== null ? { modulesApplyError } : {}),
                 };
             } catch (err) {
                 const message = err instanceof Error ? err.message : '2PC commit failed';

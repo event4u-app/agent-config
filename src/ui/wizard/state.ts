@@ -108,6 +108,63 @@ export const wizardComplete = signal(false);
  */
 export const extendedSteps = signal(false);
 
+/**
+ * Module-root candidate emitted by `GET /api/v1/modules/detect`.
+ * Mirrors the JSON shape produced by
+ * `scripts/propose_modules_config.py --json` (the wire format the server
+ * passes through unchanged). The `confidence` field is a free-form
+ * string so the UI can render it verbatim without normalising on the
+ * client. See road-to-configurable-modules § Phase E.
+ */
+export interface ModuleCandidate {
+    path: string;
+    stack: string;
+    namespace_template_guess: string;
+    confidence: string;
+}
+
+/**
+ * `modules:` block proposed by the detection helper — the same shape
+ * that gets patched into `.agent-project-settings.yml` by
+ * `scripts/apply_modules_config.py` when the user confirms. Optional
+ * fields stay optional on the wire so future schema additions are
+ * backwards-compatible.
+ */
+export interface ProposedModulesBlock {
+    enabled: boolean;
+    root_paths: string[];
+    namespace_template?: string;
+    agent_folder?: string;
+    skip_dirs?: string[];
+}
+
+export interface ModulesDetectResponse {
+    project_root: string;
+    candidates: ModuleCandidate[];
+    proposed_block: ProposedModulesBlock;
+}
+
+/**
+ * Signals for the modules wizard step (extended mode only). The step is
+ * skippable: when `modulesSkipped` is true the /finish handler never
+ * invokes the persistence helper and `.agent-project-settings.yml`
+ * stays untouched.
+ *
+ * `moduleSelection` is keyed by candidate path so toggling a checkbox
+ * is O(1) and the on-wire payload is just the keys of the truthy
+ * entries — no need to diff against the source list.
+ */
+export const modulesLoaded = signal(false);
+export const modulesLoading = signal(false);
+export const modulesLoadError = signal<string | null>(null);
+export const moduleCandidates = signal<ModuleCandidate[]>([]);
+export const moduleSelection = signal<Record<string, boolean>>({});
+export const modulesEnabled = signal(true);
+export const modulesNamespaceTemplate = signal('');
+export const modulesAgentFolder = signal('agents');
+export const modulesSkipped = signal(false);
+export const modulesProjectRoot = signal<string | null>(null);
+
 export function getActiveSteps(): readonly WizardStep[] {
     return getWizardSteps({ extended: extendedSteps.value });
 }
