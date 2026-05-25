@@ -66,7 +66,7 @@ Extract from latest record:
 - `by_model[]` — per-tier (haiku / sonnet / opus) input / output / cache split
 - `budget.tier` — `under` / `50` / `75` / `90` / `100` (from `node scripts/cost/budget.mjs check`)
 
-Pricing source: [`bench/pricing.yaml`](../../bench/pricing.yaml). Reader
+Pricing source: [`internal/bench/pricing.yaml`](../../bench/pricing.yaml). Reader
 implementation: [`scripts/cost/track.mjs`](../../scripts/cost/track.mjs).
 
 ### 3b. Read caveman delta + per-conversation cost lens
