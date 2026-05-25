@@ -502,6 +502,26 @@ in `.agent-settings.yml`; the command then exits 0 with a one-line
 notice instead of producing a trace. Exit codes: `0` rendered or
 disabled · `1` no recent run found · `2` invocation error.
 
+## Troubleshooting
+
+### A skill appears twice in my AI tool
+
+Most common cause: cross-scope drift between a user-global install (e.g.
+`~/.claude/skills/`) and a project-local install (e.g. `./.claude/skills/`).
+Run the probe to confirm:
+
+```bash
+task probe:skills
+# or directly: python3 scripts/probe_skill_registration.py
+```
+
+The probe lists every registration across all six tools and flags
+`DUPLICATE` (same skill in ≥ 2 sources) and `DRIFT` (same skill, different
+descriptions or versions — the actual 2026-05-25 failure mode). To clean a
+stale install at the other scope: `bash scripts/cleanup_other_scope.sh --confirm`.
+Background: [`docs/contracts/skill-distribution-channels.md`](contracts/skill-distribution-channels.md)
++ [`docs/contracts/install-scopes.md`](contracts/install-scopes.md).
+
 ---
 
 ← [Back to README](../README.md)

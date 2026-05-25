@@ -52,6 +52,12 @@ shows the wired AIs; [`docs/featured-commands.md`](docs/featured-commands.md)
 lists the end-to-end workflows (`/implement-ticket`, `/work`,
 `/commit`, `/create-pr`). Deeper tour: [2-minute demo](#2-minute-demo--implement-ticket).
 
+**Install scope.** Pick **one** scope per machine — project-local (default, recommended for application repos) or user-global (recommended for tooling repos / dotfiles). The installer refuses cross-scope drift via the `scope_guard` pre-flight. Contract: [`docs/contracts/install-scopes.md`](docs/contracts/install-scopes.md). Cleanup when needed: `bash scripts/cleanup_other_scope.sh --confirm`.
+
+## Harness expectations
+
+Three classes of behaviour look like package bugs but are host-harness behaviour the package cannot control — sibling-plugin namespaces (`codex:*`, `cc-gemini-plugin:*`), deferred tools surfaced via `ToolSearch`, and cross-scope skill drift (real bug, fixed in the distribution-channels track). Diagnostics + the package's response: [`docs/contracts/harness-expectations.md`](docs/contracts/harness-expectations.md). First step when a skill appears twice: `task probe:skills`.
+
 ## Prove it
 
 Audit-disciplined by construction — every memory consult, decision
