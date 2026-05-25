@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Workspace Documents Contract
 
 > **Status** · v0 / design · 2026-05-24. Phase 5 of the

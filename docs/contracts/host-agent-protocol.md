@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Host-Agent Protocol Contract
 
 > **Status** · v0 / inventory · 2026-05-24. The daily workspace shells out to

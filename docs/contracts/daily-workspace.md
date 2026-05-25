@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Daily Workspace Surface Contract
 
 > **Status** · v0 / design · 2026-05-24. Surface contract for the daily

@@ -1,3 +1,7 @@
+---
+stability: experimental
+---
+
 # Local Analytics Contract
 
 > **Status** · v0 / design · 2026-05-24. Phase 7 of the
