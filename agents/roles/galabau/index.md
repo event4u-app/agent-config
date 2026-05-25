@@ -31,4 +31,4 @@ You run or co-run a small Garten-und-Landschaftsbau shop. You draft customer off
 
 **MCP recommended.** Claude Desktop opens, the package shows up as a tool, no terminal needed. The five-minute install lives at [`docs/mcp.md`](../../../docs/mcp.md). CLI install ([`docs/installation.md`](../../../docs/installation.md)) is the right path only if you also sit in this repo with code-shaped work.
 
-> **Status:** `draft` — the three first tasks above are the maintainer's hypothesis. Recruit-session 01 (`agents/recruit-sessions/01-galabau-owner.md`) will either confirm them or rewrite them. The prompts themselves are deferred to the follow-up impl PR; the scaffold here pins the **shape** so the launcher in Phase 4 can read it.
+> **Status:** `draft` — the three first tasks above are the maintainer's hypothesis. Recruit-session 01 (`agents/recruit-sessions/01-galabau-owner.md`) will either confirm them or rewrite them. The prompts themselves are deferred to the follow-up impl PR; the scaffold here pins the **shape** so the launcher in Phase 4 can read it. <!-- ref-ignore -->

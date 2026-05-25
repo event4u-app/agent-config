@@ -168,4 +168,4 @@ The prior archived `road-to-internal-ai-os-deployment.md` correctly cancelled Ph
 - **Cross-references.**
   - Depends on: `road-to-internal-ai-os-deployment.md` (archived; Phase 1 Docker + Phase 6 docs already shipped), `road-to-product-adoption.md` (archived; Phase 1 smoke matrix, Phase 4 telemetry source already shipped).
   - Unlocks: `road-to-team-sso.md` (stub, not started), `road-to-central-policy.md` (stub, not started), `road-to-team-context.md` (stub, not started), `road-to-internal-connectors.md` (stub, not started). All four wait on a recruited team customer per the prior archived roadmap's gating.
-  - Cross-links: `agents/recruit-sessions/_findings.md` is the input contract for any rework to Phases 2+ scope.
+  - Cross-links: `agents/recruit-sessions/_findings.md` is the input contract for any rework to Phases 2+ scope. <!-- ref-ignore -->
