@@ -30,7 +30,9 @@ install:
 ### 1. Find the context
 
 - List all context documents in `agents/settings/contexts/`.
-- Also check module-level `app/Modules/*/agents/settings/contexts/`.
+- Also check module-level contexts via `enumerate_modules()` — for each
+  module, look in `{module_path}/{modules.agent_folder}/settings/contexts/`
+  (Laravel shape: `app/Modules/*/agents/settings/contexts/`).
 
 If only one context exists, ask if that's the one to refactor.
 If the user has a context file open in their editor, use that one.

@@ -150,6 +150,60 @@ pattern (e.g. `*.yml` in a nested folder) would otherwise match.
   rules](#section-aware-merge-rules) — preserve existing values,
   template order, and comments. No ad-hoc YAML rewrites.
 
+## Module discovery
+
+Module-aware skills and commands (`module-management`, `/module
+explore`, `/module create`, roadmap-writing) consult the `modules:`
+block on the **team** layer
+([`agent-project-settings.example.yml`](../../templates/agents/agent-project-settings.example.yml))
+to find module roots, namespace conventions, and per-module
+`agents/` folders. Lives next to `project.stack` because it
+describes the same thing — repo layout.
+
+| Key | Default | Purpose |
+|---|---|---|
+| `modules.enabled` | `false` | Master switch; when off, every module-aware surface treats the repo as flat |
+| `modules.root_paths` | `[]` | Repo-relative directories whose direct children are modules |
+| `modules.namespace_template` | `""` | Substitution template (`{ModuleName}`) for stacks with a PHP-style namespace |
+| `modules.agent_folder` | `"agents"` | Per-module folder the agent auto-loads on `/module explore <Name>` |
+| `modules.skip_dirs` | `[".module-template", ".example"]` | Directory names skipped during enumeration |
+
+Stack-by-stack starting points (manual setup; the installer fills
+these on opt-in when it detects a known shape):
+
+```yaml
+# Laravel HMVC
+modules:
+  enabled: true
+  root_paths: [app/Modules]
+  namespace_template: "App\\Modules\\{ModuleName}\\App"
+
+# Symfony DDD-lite (or PHP with a single src tree)
+modules:
+  enabled: true
+  root_paths: [src]
+  namespace_template: "App\\{ModuleName}"
+
+# Node monorepo
+modules:
+  enabled: true
+  root_paths: [packages]
+  namespace_template: ""
+
+# Go internal layout
+modules:
+  enabled: true
+  root_paths: [internal]
+  namespace_template: ""
+```
+
+Multi-root repos list each root once; enumeration walks every
+listed root and merges results.
+
+Lock via `locked_keys: [modules.root_paths]` when the layout must
+not drift between developers — typical for compliance-critical or
+multi-team repos.
+
 ## Persona-list merge semantics
 
 Persona configuration does **not** follow the simple "higher layer

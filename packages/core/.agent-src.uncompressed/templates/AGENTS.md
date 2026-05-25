@@ -31,3 +31,4 @@
 3. **Where do I edit agent-config?** — Do not edit `.augment/` or `.agent-src/` here; they are installed artifacts. Project edits live in `agents/` and project source.
 4. **Lint / test / sync entry point?** — Project-specific (see project README); agent-config reinstalls via `composer update event4u/agent-config` or `npm update @event4u/agent-config`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `.agent-src/router.json`).
+6. **Per-module agent docs?** — If `modules.enabled: true`, each module under `modules.root_paths` may carry its own `{agent_folder}/` (default `agents/`). See `module-management` skill.

@@ -130,8 +130,8 @@ After the code changes are verified, update all affected documentation:
 |---|---|---|
 | **Project docs** | When conventions, patterns, or key files change | `agents/reference/docs/*.md` |
 | **Project contexts** | When architecture or high-level flow changes | `agents/settings/contexts/*.md` |
-| **Module agent docs** | When module-specific behavior changes | `app/Modules/*/agents/` |
-| **Module Docs/** | When module internals change | `app/Modules/*/Docs/` |
+| **Module agent docs** | When module-specific behavior changes | `{module_root}/*/{agent_folder}/` (per `modules.root_paths` + `modules.agent_folder`) |
+| **Module Docs/** | When module internals change | `{module_root}/*/Docs/` |
 | **AGENTS.md** | When project-wide conventions change | `AGENTS.md` |
 | **Roadmaps** | When a roadmap step is completed | `agents/roadmaps/*.md` |
 

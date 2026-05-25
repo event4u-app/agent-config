@@ -4579,6 +4579,65 @@ def main(argv: list[str]) -> int:
         _set_conflict_policy(None)
 
 
+def _propose_modules_config(project_root: Path, is_first_run: bool) -> None:
+    """Surface module-root candidates as numbered options on first install.
+
+    Phase B Step 2 of road-to-configurable-modules. Hooks into the
+    project-install path: when the install is first-run, the terminal
+    is a TTY, ``.agent-project-settings.yml`` exists without a populated
+    ``modules:`` block, and the detection helper finds at least one
+    candidate, the installer prints the proposed block and asks the
+    user to paste it into the team file. No automatic write — the
+    layered-settings contract treats ``.agent-project-settings.yml``
+    as user-curated.
+
+    Gates (any miss → silent no-op):
+
+    * ``is_first_run`` must be True — re-runs never re-prompt.
+    * stdin + stdout must be TTYs — non-interactive installs (CI,
+      wizard apply-payload, ``--quiet``) skip silently.
+    * ``QUIET`` must be False.
+    * The detection helper must surface at least one candidate.
+    """
+    if not is_first_run or QUIET or not sys.stdin.isatty() or not sys.stdout.isatty():
+        return
+    try:
+        from scripts._lib.module_detection import detect_module_roots
+    except ImportError:
+        return
+    try:
+        candidates = detect_module_roots(project_root)
+    except OSError:
+        return
+    if not candidates:
+        return
+    print()
+    info("Module-root candidates detected — propose `modules:` block")
+    info(
+        "Paste into .agent-project-settings.yml to enable module-aware "
+        "skills (or skip; the block stays opt-in)."
+    )
+    print()
+    print("  modules:")
+    print("    enabled: true")
+    print(
+        "    root_paths: [" + ", ".join(c.path for c in candidates) + "]"
+    )
+    primary_ns = next(
+        (c.namespace_template_guess for c in candidates if c.namespace_template_guess),
+        "",
+    )
+    if primary_ns:
+        print(f"    namespace_template: '{primary_ns}'")
+    print("    agent_folder: agents")
+    print("    skip_dirs: [.module-template, .example]")
+    print()
+    info(
+        "Re-run anytime via `python3 scripts/propose_modules_config.py` "
+        "(installed under <package>/scripts/)."
+    )
+
+
 def _main_project_install(
     opts: argparse.Namespace,
     project_root: Path,
@@ -4727,6 +4786,12 @@ def _main_project_install(
         else:
             print("  Re-run complete. Walkthrough: https://github.com/event4u-app/agent-config/blob/main/docs/getting-started.md")
             print()
+
+    # Module-root proposal (road-to-configurable-modules Phase B Step 2).
+    # First-run TTY installs surface detected `modules:` candidates so
+    # the user can paste an opt-in block into .agent-project-settings.yml.
+    # Silent no-op on re-runs, CI, --quiet, and wizard apply-payload runs.
+    _propose_modules_config(project_root, is_first_run)
 
     # Wizard auto-launch (Phase 6 follow-up). Runs after the success
     # banner so the user sees install completion even if the wizard

@@ -30,7 +30,9 @@ install:
 ### 1. Find the feature
 
 - List feature plans in `agents/features/`.
-- Also check module-level `app/Modules/*/agents/features/`.
+- Also check module-level feature dirs via `enumerate_modules()` — for
+  each module, look in `{module_path}/{modules.agent_folder}/features/`
+  (Laravel shape: `app/Modules/*/agents/features/`).
 
 If the user specified a feature name, load it directly.
 Otherwise show a list and ask:
@@ -117,7 +119,7 @@ For each roadmap, work through the phases interactively:
 - Read `.augment/templates/roadmaps.md` for the format.
 - Determine the target directory from the feature's location:
   - Feature in `agents/features/` → roadmap in `agents/roadmaps/`
-  - Feature in `app/Modules/{Module}/agents/features/` → roadmap in `app/Modules/{Module}/agents/roadmaps/`
+  - Feature in `{module_root}/{Module}/{agent_folder}/features/` → roadmap in `{module_root}/{Module}/{agent_folder}/roadmaps/` (Laravel example: `app/Modules/{Module}/agents/features/` → `app/Modules/{Module}/agents/roadmaps/`)
 - Create the target directory if it doesn't exist.
 
 **Naming convention:**
@@ -130,8 +132,9 @@ nested subdirs:
 
 ```bash
 find agents/roadmaps -type f -iname "{feature-name}.md" 2>/dev/null
-# Module-scoped:
-find app/Modules/{Module}/agents/roadmaps -type f -iname "{feature-name}.md" 2>/dev/null
+# Module-scoped (Laravel example shown; substitute the discovered module path):
+find {module_root}/{Module}/{agent_folder}/roadmaps -type f -iname "{feature-name}.md" 2>/dev/null
+# e.g. find app/Modules/{Module}/agents/roadmaps -type f -iname "{feature-name}.md"
 ```
 
 If any planned name already exists anywhere under the namespace,

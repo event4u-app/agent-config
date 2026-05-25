@@ -35,8 +35,9 @@ Run in parallel:
 - `git branch --show-current` → current branch
 - `git log --oneline -3` → recent activity
 - Count files in `agents/` (docs, features, roadmaps, contexts)
-- Count files in `app/Modules/*/agents/` (per module)
-- Check `app/Modules/` for module list
+- Resolve modules via `scripts/_lib/agent_settings.py::enumerate_modules()`
+- For every module: count files in `{module_path}/{modules.agent_folder}/` (Laravel shape: `app/Modules/*/agents/`)
+- Module list comes from `enumerate_modules()` (Laravel shape: `app/Modules/`)
 - Count test files
 
 ### 2. Display health report

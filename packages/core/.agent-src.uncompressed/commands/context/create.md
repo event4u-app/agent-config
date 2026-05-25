@@ -44,18 +44,21 @@ Examples:
 
 ### 2. Determine scope (module vs. project-wide)
 
-Check if `app/Modules/` exists. If yes, ask:
+Resolve module roots via `scripts/_lib/agent_settings.py::enumerate_modules()`
+(reads `modules.root_paths` + `modules.agent_folder` from
+`.agent-project-settings.yml`). If at least one module is discovered, ask:
 
 ```
 Should the context be created in a module or in the project root?
 
-1. 📦 In a module → app/Modules/{Module}/agents/settings/contexts/
+1. 📦 In a module → {module_root}/{Module}/{agent_folder}/settings/contexts/
 2. 🌐 Project root → agents/settings/contexts/
 ```
 
 If module:
-- List available modules and ask which one.
-- Target: `app/Modules/{Module}/agents/settings/contexts/`
+- Render the list of modules from `enumerate_modules()` and ask which one.
+- Target: `{module_root}/{Module}/{agent_folder}/settings/contexts/`
+  (Laravel example: `app/Modules/{Module}/agents/settings/contexts/`)
 - Create directory if it doesn't exist.
 
 If project-wide:

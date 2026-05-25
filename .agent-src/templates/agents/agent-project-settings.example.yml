@@ -55,6 +55,57 @@ project:
   # "zend-laminas", "multi" (polyglot monorepo).
   stack: ""
 
+# --- Modules (optional) ---
+#
+# Module-aware skills and commands (`module-management`, `/module
+# explore`, `/module create`, roadmap-writing) consult this block to
+# discover where modules live, which namespace template they use, and
+# whether per-module `agents/` folders ship contexts the agent should
+# auto-load. When `modules.enabled` is false (default), every
+# module-aware surface skips its module branch — the project is
+# treated as a flat repo.
+#
+# Populated automatically by `scripts/install.py` on a fresh install
+# when an `app/Modules/`, `src/modules/`, `packages/`, `internal/`, or
+# similar shape is detected. Set manually for custom layouts. Lockable
+# via `locked_keys: [modules.root_paths]` for compliance-critical
+# repos where the module layout must not drift.
+modules:
+  # Opt-in flag. When false, module-aware skills behave as if the
+  # block were absent — no enumeration, no auto-context-load. Flip to
+  # true once `root_paths` is populated and the team has agreed on the
+  # layout.
+  enabled: false
+
+  # Repo-relative paths to module root directories. Multiple entries
+  # supported for polyglot repos (e.g. `[app/Modules, packages]` for a
+  # Laravel + JS monorepo). Each subdirectory under a root path is a
+  # module unless its name is in `skip_dirs`. Examples by stack:
+  #   Laravel HMVC          → [app/Modules]
+  #   Symfony DDD-lite      → [src]
+  #   Node monorepo         → [packages]
+  #   Python src layout     → [src]
+  #   Go internal layout    → [internal]
+  root_paths: []
+
+  # Namespace template used when generating files for a new module.
+  # `{ModuleName}` is replaced with the module's directory name.
+  # Empty when the stack does not use a PHP-style namespace (Node,
+  # Python, Go). Examples:
+  #   Laravel HMVC          → "App\\Modules\\{ModuleName}\\App"
+  #   Symfony DDD-lite      → "App\\{ModuleName}"
+  namespace_template: ""
+
+  # Per-module agent docs directory name. The agent looks for this
+  # folder under every module to auto-load `contexts/*.md` when the
+  # user enters the module via `/module explore <Name>`. Override
+  # only if your project already uses a different convention.
+  agent_folder: "agents"
+
+  # Directory names skipped during module enumeration. Template
+  # scaffolds and example modules should not show up as real modules.
+  skip_dirs: [".module-template", ".example"]
+
 # --- Memory layer (optional) ---
 #
 # Opt-in signal for the @event4u/agent-memory companion package and

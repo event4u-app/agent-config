@@ -32,10 +32,14 @@ install:
 Ask the user (in their language) where the roadmap should be created:
 
 > 1. Project root (`agents/roadmaps/`)
-> 2. In a module (`app/Modules/{Name}/agents/roadmaps/`)
+> 2. In a module (`{module_root}/{Name}/{agent_folder}/roadmaps/`)
 
-If the user picks a module → ask which module (list available modules if needed).
-Create the `agents/roadmaps/` directory if it doesn't exist at the chosen location.
+If the user picks a module → resolve module roots via
+`scripts/_lib/agent_settings.py::enumerate_modules()`, list available
+modules from `modules.root_paths`, and ask which one. The target
+directory is `{module_path}/{modules.agent_folder}/roadmaps/`
+(default `agent_folder` = `agents`).
+Create the `roadmaps/` directory if it doesn't exist at the chosen location.
 
 ### 2. Read the roadmap template
 
@@ -117,7 +121,8 @@ NAME="<kebab-case-name>.md"
 # Project-root roadmaps:
 find agents/roadmaps -type f -iname "$NAME" 2>/dev/null
 # Module-scoped roadmaps (only if step 1 picked a module):
-find app/Modules/<Module>/agents/roadmaps -type f -iname "$NAME" 2>/dev/null
+# resolve <ModuleRoot>/<Module>/<AgentFolder>/roadmaps/ via enumerate_modules()
+find <ModuleRoot>/<Module>/<AgentFolder>/roadmaps -type f -iname "$NAME" 2>/dev/null
 ```
 
 Use `-iname` (case-insensitive) so case-only differences still count

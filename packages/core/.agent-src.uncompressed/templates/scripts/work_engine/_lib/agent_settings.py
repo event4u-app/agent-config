@@ -50,6 +50,7 @@ Contract — pure, read-only, tolerant:
 """
 from __future__ import annotations
 
+import copy
 import logging
 import os
 from pathlib import Path
@@ -60,6 +61,7 @@ from . import user_global_paths
 logger = logging.getLogger(__name__)
 
 DEFAULT_PROJECT_FILE = ".agent-settings.yml"
+DEFAULT_TEAM_FILE = ".agent-project-settings.yml"
 USER_GLOBAL_FILENAME = "agent-settings.yml"
 
 #: Canonical write target under the new ``~/.event4u/agent-config/``
@@ -90,6 +92,19 @@ MERGEABLE_KEYS: tuple[str, ...] = (
 )
 
 _DEFAULTS: dict[str, Any] = {}
+
+#: Defaults applied by :func:`get_modules_config` when a key is absent
+#: from both the team file and the developer cascade. The values mirror
+#: the ``modules:`` block shipped in
+#: ``templates/agents/agent-project-settings.example.yml``. Lists are
+#: returned as fresh copies — callers may mutate the result safely.
+MODULES_DEFAULTS: dict[str, Any] = {
+    "enabled": False,
+    "root_paths": [],
+    "namespace_template": "",
+    "agent_folder": "agents",
+    "skip_dirs": [".module-template", ".example"],
+}
 
 
 #: Anchor identifier returned by :func:`find_project_root_with_anchor`.
@@ -468,6 +483,184 @@ def load_agent_settings(
         if layer:
             _deep_merge(merged, layer)
     return merged
+
+
+def get_modules_config(
+    project_root: Path | str | None = None,
+    team_path: Path | str | None = None,
+    project_path: Path | str | None = None,
+    cwd: Path | None = None,
+) -> dict[str, Any]:
+    """Return the merged ``modules:`` configuration with defaults applied.
+
+    Three-tier precedence (deepest wins) per the layered-settings model
+    documented in ``docs/guidelines/agent-infra/layered-settings.md``:
+
+    1. :data:`MODULES_DEFAULTS` — package-shipped defaults.
+    2. Team file — ``<project_root>/.agent-project-settings.yml``
+       (committed, all developers see the same values).
+    3. Developer cascade — every ``.agent-settings.yml`` walked by
+       :func:`_resolve_cascade_paths` (git-ignored local overrides).
+
+    The team layer may pin keys via a top-level ``locked_keys`` list of
+    dotted paths (e.g. ``[modules.root_paths]``). Locked keys discard any
+    matching override from the developer cascade and emit a ``logging``
+    INFO record. Locks are advisory — the team file always wins anyway —
+    but the explicit list makes the intent reviewable and gives the loader
+    a hook for the warning.
+
+    ``project_root`` defaults to ``find_project_root(cwd or Path.cwd())``.
+    ``team_path`` overrides the resolved team-file location for tests.
+    ``project_path`` + ``cwd`` flow through to :func:`load_agent_settings`
+    unchanged.
+
+    Pure, read-only — no file is ever written. Missing files / malformed
+    YAML / absent ``modules:`` block all return the defaults.
+    """
+    cwd_resolved = cwd if cwd is not None else Path.cwd()
+
+    if team_path is not None:
+        team_file = Path(team_path)
+    else:
+        if project_root is not None:
+            root = Path(project_root)
+        else:
+            root = find_project_root(cwd_resolved) or cwd_resolved
+        team_file = root / DEFAULT_TEAM_FILE
+
+    team_raw = _read_yaml(team_file) or {}
+    team_modules = team_raw.get("modules") if isinstance(team_raw.get("modules"), dict) else {}
+    locked_keys_raw = team_raw.get("locked_keys")
+    locked_keys: tuple[str, ...] = tuple(
+        k for k in (locked_keys_raw or []) if isinstance(k, str)
+    )
+
+    dev_merged = load_agent_settings(
+        project_path=project_path,
+        cwd=cwd,
+    )
+    dev_modules = dev_merged.get("modules") if isinstance(dev_merged.get("modules"), dict) else {}
+
+    merged: dict[str, Any] = copy.deepcopy(MODULES_DEFAULTS)
+    if team_modules:
+        _deep_merge(merged, team_modules)
+
+    if dev_modules:
+        for key, value in dev_modules.items():
+            dotted = f"modules.{key}"
+            if dotted in locked_keys and key in (team_modules or {}):
+                logger.info(
+                    "agent_settings: ignoring developer override of locked key %s",
+                    dotted,
+                )
+                continue
+            if isinstance(value, dict) and isinstance(merged.get(key), dict):
+                _deep_merge(merged[key], value)
+            else:
+                merged[key] = value
+
+    return merged
+
+
+def enumerate_modules(
+    project_root: Path | str | None = None,
+    cwd: Path | None = None,
+    modules_config: dict[str, Any] | None = None,
+) -> list[dict[str, Any]]:
+    """Enumerate every module under ``modules.root_paths``.
+
+    Phase D Step 1 of road-to-configurable-modules. For each path in
+    ``modules.root_paths`` (resolved relative to ``project_root``), lists
+    immediate subdirectories that survive the ``modules.skip_dirs`` filter
+    and reports whether each module ships a per-module agent folder
+    (``modules.agent_folder``, default ``agents``).
+
+    Returns a list of dicts \u2014 one per discovered module \u2014 sorted by
+    ``(root_path, name)`` for deterministic output:
+
+    * ``name``               \u2014 directory name of the module
+    * ``root_path``          \u2014 repo-relative root containing the module
+    * ``module_path``        \u2014 repo-relative path to the module itself
+    * ``has_agent_folder``   \u2014 ``True`` iff a directory matching
+      ``modules.agent_folder`` lives directly under the module
+    * ``agent_folder_path``  \u2014 repo-relative path to that folder
+      (``None`` when ``has_agent_folder`` is ``False``)
+
+    Contract:
+
+    * ``modules.enabled`` is **not** consulted \u2014 callers decide whether
+      to skip the call. Disabled projects normally yield ``[]`` because
+      ``root_paths`` is empty by default.
+    * Missing roots are skipped silently (logged at INFO).
+    * Hidden directories (leading ``.``) and entries in
+      ``modules.skip_dirs`` are filtered out.
+    * Symlinks are followed only when they resolve inside the project
+      root \u2014 same boundary as ``find_project_root``.
+    * Pure, read-only \u2014 no file or directory is ever written.
+
+    ``modules_config`` lets tests inject a pre-built dict; when ``None``
+    the function calls :func:`get_modules_config` with the same
+    ``project_root`` / ``cwd`` so the precedence chain matches.
+    """
+    cwd_resolved = cwd if cwd is not None else Path.cwd()
+    if project_root is not None:
+        root = Path(project_root)
+    else:
+        root = find_project_root(cwd_resolved) or cwd_resolved
+    root = root.resolve()
+
+    if modules_config is None:
+        modules_config = get_modules_config(project_root=root, cwd=cwd)
+
+    root_paths_raw = modules_config.get("root_paths") or []
+    skip_dirs_raw = modules_config.get("skip_dirs") or MODULES_DEFAULTS["skip_dirs"]
+    agent_folder = str(modules_config.get("agent_folder") or MODULES_DEFAULTS["agent_folder"])
+
+    skip_dirs: set[str] = {str(s) for s in skip_dirs_raw if isinstance(s, str)}
+
+    discovered: list[dict[str, Any]] = []
+    for raw in root_paths_raw:
+        if not isinstance(raw, str) or not raw.strip():
+            continue
+        root_rel = raw.strip().strip("/")
+        root_abs = (root / root_rel).resolve()
+        try:
+            if not root_abs.is_dir() or not str(root_abs).startswith(str(root)):
+                logger.info("enumerate_modules: skipping missing/out-of-tree root %s", root_rel)
+                continue
+        except OSError:
+            logger.info("enumerate_modules: unreadable root %s", root_rel)
+            continue
+
+        try:
+            children = sorted(root_abs.iterdir(), key=lambda p: p.name)
+        except OSError:
+            logger.info("enumerate_modules: cannot list %s", root_rel)
+            continue
+
+        for child in children:
+            name = child.name
+            if name.startswith(".") or name in skip_dirs:
+                continue
+            if not child.is_dir():
+                continue
+            agent_dir = child / agent_folder
+            has_agent = agent_dir.is_dir()
+            try:
+                module_rel = child.resolve().relative_to(root)
+            except ValueError:
+                continue
+            entry: dict[str, Any] = {
+                "name": name,
+                "root_path": root_rel,
+                "module_path": str(module_rel),
+                "has_agent_folder": has_agent,
+                "agent_folder_path": str(module_rel / agent_folder) if has_agent else None,
+            }
+            discovered.append(entry)
+
+    discovered.sort(key=lambda m: (m["root_path"], m["name"]))
+    return discovered
 
 
 def iter_setting_overrides(

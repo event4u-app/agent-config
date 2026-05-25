@@ -78,7 +78,11 @@ projects use `docs/decisions/`. Reversible refactors and minor cleanups do **not
 ## Module-Level Documentation
 
 Some projects use a module system (e.g. `app/Modules/` in Laravel, `apps/`/`packages/` in a Turborepo, `src/modules/` in NestJS, `internal/` in Go).
-Modules may have their own agent docs in `app/Modules/*/agents/` with:
+Module roots and the per-module agent-docs folder are configured via
+`modules.root_paths` and `modules.agent_folder` in `.agent-settings.yml`
+(resolve at runtime via `scripts/_lib/agent_settings.py::enumerate_modules()`).
+Modules may have their own agent docs under
+`{module_root}/*/{agent_folder}/` (Laravel shape: `app/Modules/*/agents/`) with:
 
 - Module descriptions and feature docs
 - Module-specific roadmaps (`agents/roadmaps/`)

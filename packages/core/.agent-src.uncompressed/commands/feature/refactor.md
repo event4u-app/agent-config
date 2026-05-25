@@ -30,7 +30,9 @@ install:
 ### 1. Find the feature
 
 - List all feature plans in `agents/features/`.
-- Also check module-level `app/Modules/*/agents/features/` directories.
+- Also check module-level feature dirs via `enumerate_modules()` — for
+  each module, look in `{module_path}/{modules.agent_folder}/features/`
+  (Laravel shape: `app/Modules/*/agents/features/`).
 
 If only one feature exists, load it directly.
 If multiple exist, show a list:

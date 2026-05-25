@@ -67,8 +67,20 @@ different agents.
 | Location | Scope |
 |---|---|
 | `agents/roadmaps/` | Project-wide roadmaps |
-| `app/Modules/{Module}/agents/roadmaps/` | Module-specific roadmaps |
+| `{module_root}/{Module}/{agent_folder}/roadmaps/` | Module-specific roadmaps (see note) |
 | `{package-root}/agents/roadmaps/` | Package-specific roadmaps |
+
+**Module path resolution.** `{module_root}` and `{agent_folder}` come from
+`modules.root_paths` and `modules.agent_folder` in
+`.agent-project-settings.yml` — see [`layered-settings`](../../../../../docs/guidelines/agent-infra/layered-settings.md).
+Common shapes:
+
+- Laravel — `app/Modules/{Module}/agents/roadmaps/`
+- Symfony bundles — `src/Bundle/{Bundle}/agents/roadmaps/`
+- Node / Python / Go monorepo packages — `packages/{Pkg}/agents/roadmaps/`
+
+Use `scripts/_lib/agent_settings.py::enumerate_modules()` to discover the
+actual paths in the current project; never assume `app/Modules/`.
 
 The file `.augment/templates/roadmaps.md` defines the canonical structure.
 **Always read it first** before creating or modifying roadmaps.

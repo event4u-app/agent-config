@@ -5,7 +5,7 @@ description: "Authoring or executing roadmaps — forbid task ci / make test / n
 source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
-  - path_prefix: "app/Modules/"
+  - path_prefix: "{module_root}/"  # resolved via modules.root_paths; Laravel shape: app/Modules/
   - keyword: "task ci"
   - keyword: "make test"
   - keyword: "npm run check"
@@ -77,7 +77,8 @@ inline note (the next indented `<!-- … -->` or `(…)` annotation).
 | `vendor/bin/phpunit` (whole-suite, no path arg) | `vendor/bin/phpunit` |
 | `php artisan test` (no `--filter`) | `php artisan test` |
 
-Targeted commands (`vendor/bin/phpstan analyse app/Modules/X`,
+Targeted commands (`vendor/bin/phpstan analyse <module-path>` such as
+`vendor/bin/phpstan analyse app/Modules/X` in Laravel,
 `php artisan test --filter=…`, `npm run lint -- --fix path/`) are
 **not** CI-shaped — they are narrow verifications, allowed regardless
 of the setting.
@@ -104,7 +105,10 @@ of the setting.
 
 `task lint-roadmap-ci-steps` (wired into `task ci-fast` /
 `lint-roadmap-complexity` cadence) scans `agents/roadmaps/*.md` and
-`app/Modules/*/agents/roadmaps/*.md`. Exit code:
+per-module roadmap dirs resolved via
+`scripts/_lib/agent_settings.py::enumerate_modules()`
+(`{module_path}/{modules.agent_folder}/roadmaps/*.md`; Laravel shape:
+`app/Modules/*/agents/roadmaps/*.md`). Exit code:
 
 - `0` — no CI-shaped steps, or setting is `true`, or every match is
   carve-out-marked.

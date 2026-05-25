@@ -1316,7 +1316,7 @@
           "path_prefix": "agents/roadmaps/"
         },
         {
-          "path_prefix": "app/Modules/"
+          "path_prefix": "{module_root}/"
         },
         {
           "keyword": "task ci"

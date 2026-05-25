@@ -255,6 +255,11 @@ tasks:
     desc: Check package portability (no project-specific references)
     cmd: python3 scripts/check_portability.py
 
+  check-module-management-neutral:
+    silent: true
+    desc: Verify module-management SKILL stays framework-neutral (Phase C of road-to-configurable-modules)
+    cmd: python3 scripts/check_module_management_neutral.py
+
   check-release-trunk-sync:
     silent: true
     desc: Fail if main is more than one tagged release behind a release/X.Y.Z branch (P1.3 of road-to-productization, contract docs/contracts/release-trunk-sync.md)

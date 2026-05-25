@@ -115,11 +115,17 @@ agents/
 **Structure rule:** Structural docs directly in `agents/`, features/roadmaps in subdirectories.
 **Templates** live in `.augment/templates/`, NOT in `agents/` subdirectories.
 
-### Layer 6: `app/Modules/*/agents/` — Module-specific documentation
+### Layer 6: `{module_root}/{Module}/{agent_folder}/` — Module-specific documentation
+
+`{module_root}` comes from `modules.root_paths` and `{agent_folder}` from
+`modules.agent_folder` in `.agent-project-settings.yml`. Discover via
+`scripts/_lib/agent_settings.py::enumerate_modules()`. Common shapes:
+Laravel `app/Modules/{Module}/agents/`, Symfony `src/Bundle/{Bundle}/agents/`,
+monorepo `packages/{Pkg}/agents/`.
 
 ```
-app/Modules/ClientSoftware/
-├── agents/
+{module_root}/{Module}/                  ← e.g. app/Modules/ClientSoftware/
+├── {agent_folder}/                      ← e.g. agents/
 │   ├── module-description.md
 │   ├── features/               ← Module-scoped feature plans
 │   │   └── {feature-name}.md
@@ -137,8 +143,8 @@ app/Modules/ClientSoftware/
 ### Layer 7: `Docs/` — Technical documentation
 
 ```
-Docs/                           ← Project-level technical docs
-app/Modules/*/Docs/             ← Module-level technical docs
+Docs/                                    ← Project-level technical docs
+{module_root}/{Module}/Docs/             ← Module-level technical docs
 ```
 
 **Purpose:** Technical documentation for humans (setup guides, architecture diagrams, API docs).
@@ -164,9 +170,9 @@ When starting work, read documentation in this order:
 2. `.github/copilot-instructions.md` (if it exists) — coding standards
 4. `agents/overrides/` — check for project-level overrides of skills/rules/commands
 5. `./agents/` — project-specific docs relevant to the task
-6. `app/Modules/{Module}/agents/` — if working on a module
-7. `agents/features/` or module `agents/features/` — if related feature plan exists
-8. `agents/roadmaps/` or module `agents/roadmaps/` — if continuing existing work
+6. `{module_root}/{Module}/{agent_folder}/` — if working on a module (resolved via `modules.root_paths` + `modules.agent_folder`; Laravel: `app/Modules/{Module}/agents/`, Symfony: `src/Bundle/{Bundle}/agents/`, monorepo: `packages/{Pkg}/agents/`)
+7. `agents/features/` or module `{agent_folder}/features/` — if related feature plan exists
+8. `agents/roadmaps/` or module `{agent_folder}/roadmaps/` — if continuing existing work
 
 ## Procedure: Create or update agent docs
 
@@ -177,7 +183,7 @@ When starting work, read documentation in this order:
 
 | Trigger | Action |
 |---|---|
-| New module created | Create `app/Modules/{Module}/agents/` with module description |
+| New module created | Create `{module_root}/{Module}/{agent_folder}/` with module description (Laravel example: `app/Modules/{Module}/agents/`) |
 | Significant multi-step change | Ask user about creating a roadmap in `agents/roadmaps/` |
 | New convention introduced | Update relevant doc in `./agents/` or `.augment/guidelines/` |
 | Database schema changed | Update `agents/reference/docs/database-setup.md` |
@@ -199,7 +205,7 @@ After completing a significant code change, run this mental checklist:
 |---|---|
 | Database schema (migration) | `agents/reference/docs/database-setup.md` |
 | New API endpoint | OpenAPI annotations, `AGENTS.md` API section |
-| New module created | Create `app/Modules/{Module}/agents/` |
+| New module created | Create `{module_root}/{Module}/{agent_folder}/` (resolve via `modules.root_paths` + `modules.agent_folder`) |
 | Service/repository signature changed | Check if referenced in `agents/reference/docs/services-and-repos.md` |
 | New environment variable | `.env.example`, `AGENTS.md` environment section |
 | Docker/compose change | `agents/reference/docs/docker.md`, `Makefile` documentation |
@@ -232,7 +238,7 @@ Do NOT auto-update docs without the user's knowledge. Flag what needs updating a
 - Don't create documentation files unless explicitly requested — the scope-control rule overrides this skill.
 - Always check if a doc already exists before creating a new one — duplicates are worse than gaps.
 - AGENTS.md and copilot-instructions.md have different audiences — don't copy content between them.
-- Module docs go in `app/Modules/*/agents/`, NOT in the central `agents/` directory.
+- Module docs go in `{module_root}/{Module}/{agent_folder}/` (per `modules.root_paths`), NOT in the central `agents/` directory.
 
 ## Frugality Standards
 

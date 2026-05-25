@@ -156,10 +156,36 @@ Next steps:
   3. Run `/agents optimize` periodically to deduplicate against .augment/
 ```
 
-### 7. Follow-ups
+### 7. Module-root proposal (optional)
+
+Surface configurable-module candidates so the team file can opt in to
+module-aware skills (road-to-configurable-modules Phase B). Skips
+silently when the helper finds no candidates.
+
+```bash
+python3 scripts/propose_modules_config.py --json
+```
+
+If the JSON `candidates` array is non-empty, render the proposed
+`modules:` block as numbered options:
+
+```
+> 1. Accept all candidates — patch .agent-project-settings.yml
+> 2. Pick a subset — choose root paths interactively
+> 3. Skip — leave modules.enabled: false (default)
+```
+
+On accept, append the `modules:` block to the team file
+`.agent-project-settings.yml` (preserve comments + ordering per the
+[`layered-settings`](../../docs/guidelines/agent-infra/layered-settings.md)
+contract). On skip, do nothing — the block stays opt-in.
+
+### 8. Follow-ups
 
 If `agents/` directory does not exist, suggest running `/optimize agents-dir --scaffold`.
 If `.agent-settings.yml` does not exist, suggest running `scripts/install` (then `/onboard` for first-run setup).
+If module candidates surfaced in Step 7 but the user skipped, note that
+`python3 scripts/propose_modules_config.py` can be re-run anytime.
 
 ## Rules
 

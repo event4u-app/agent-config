@@ -15,7 +15,9 @@ delta**.
 Search both locations:
 
 - `agents/roadmaps/*.md` (project root)
-- `app/Modules/*/agents/roadmaps/*.md` (module-scoped)
+- `{module_root}/*/{agent_folder}/roadmaps/*.md` (module-scoped; resolve
+  via `scripts/_lib/agent_settings.py::enumerate_modules()`. Laravel
+  shape: `app/Modules/*/agents/roadmaps/*.md`)
 
 **Exclude** `template.md`, `archive/`, and `skipped/`.
 

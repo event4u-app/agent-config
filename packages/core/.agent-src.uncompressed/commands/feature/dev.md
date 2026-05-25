@@ -59,7 +59,7 @@ Do NOT use for single-line fixes, trivial changes, or urgent hotfixes.
    - Architecture patterns in the affected area
    - Key files, services, models, routes involved
 2. Read identified files to build deep understanding.
-3. Check module docs (`app/Modules/*/agents/`) if applicable.
+3. Check module docs via `enumerate_modules()` — for each module, look in `{module_path}/{modules.agent_folder}/` (Laravel shape: `app/Modules/*/agents/`) if applicable.
 4. Check existing contexts (`agents/settings/contexts/`) for the affected area.
 5. Present findings with file references.
 
