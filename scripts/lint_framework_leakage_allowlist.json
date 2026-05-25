@@ -472,6 +472,66 @@
       "file": ".agent-src.uncompressed/rules/architecture.md",
       "lines": [80],
       "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) — comparative example, no project mandate"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/module-management/SKILL.md",
+      "lines": "*",
+      "reason": "Canonical module-management skill — enumerates Laravel HMVC / Symfony DDD / Node / Python / Go carve-outs by design (road-to-configurable-modules Phase C)"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/context-document/SKILL.md",
+      "lines": [63, 64, 87],
+      "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs — comparative example, no mandate"
+    },
+    {
+      "file": ".agent-src.uncompressed/skills/roadmap-writing/SKILL.md",
+      "lines": [28],
+      "reason": "Single Laravel-shape example showing how `{module_root}/{agent_folder}/roadmaps/` resolves on a Laravel HMVC project"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/architecture.md",
+      "lines": [85],
+      "reason": "Single Laravel-shape example showing how `{module_root}/*/{agent_folder}/` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "lines": [110],
+      "reason": "Single Laravel-shape example showing module-scoped roadmap path (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/context/create.md",
+      "lines": [61],
+      "reason": "Single Laravel-shape example for module-context target directory (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/context/refactor.md",
+      "lines": [35],
+      "reason": "Single Laravel-shape example for module-context discovery path (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/feature/explore.md",
+      "lines": [131],
+      "reason": "Single Laravel-shape example showing how `enumerate_modules()` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/feature/plan.md",
+      "lines": [150, 179, 263],
+      "reason": "Laravel-shape examples for module-scoped contexts and feature target paths (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/feature/refactor.md",
+      "lines": [35],
+      "reason": "Single Laravel-shape example for module-feature discovery path (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/feature/roadmap.md",
+      "lines": [35, 135],
+      "reason": "Laravel-shape examples for module-feature/roadmap discovery and target paths (road-to-configurable-modules Phase D)"
+    },
+    {
+      "file": ".agent-src.uncompressed/commands/optimize/agents-dir.md",
+      "lines": [32],
+      "reason": "Single Laravel-shape example for per-module agents directory (road-to-configurable-modules Phase D)"
     }
   ]
 }

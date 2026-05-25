@@ -39,6 +39,7 @@ SKIP_DIRS = [
     "agents/runtime/council/questions",  # design Q&A trail — forward-refs to planned artifacts
     "agents/evidence/analysis",           # plate-comparison working docs — forward-refs to planned artifacts
     "agents/runtime",            # volatile / machine-generated artefacts (gitignored)
+    "agents/tmp",                # transient working docs (gitignored) — pr-bodies, council questions, manual-step scratchpads
 ]
 
 # Per-file opt-out marker. When present in the first 10 lines of a .md
