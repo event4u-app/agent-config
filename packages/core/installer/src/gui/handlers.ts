@@ -42,6 +42,14 @@ import { csrfEquals } from './security.js';
 import { appendEntry, discardLog, newLogPath, rollback } from './transaction-log.js';
 import { getTaskHistory, resolveTask, runTask, TASK_CATALOG } from './task-exec.js';
 import { defaultExplainRunner, type ExplainRunner } from './explain-exec.js';
+import {
+    defaultWorkspaceRunner,
+    isAllowed as isWorkspaceAllowed,
+    parseJsonLines as parseWorkspaceJsonLines,
+    parseJsonObject as parseWorkspaceJsonObject,
+    type WorkspaceModule,
+    type WorkspaceRunner,
+} from './workspace-exec.js';
 import type { ApplyEvent, TransactionLogEntry } from './types.js';
 
 /**
@@ -67,6 +75,12 @@ export interface ApiContext {
      * `.work-state.json` and Python environment in the tmpdir.
      */
     readonly explainRunner?: ExplainRunner;
+    /**
+     * Optional workspace-CLI runner. Defaults to `defaultWorkspaceRunner`
+     * (spawns the `workspace_*.py` modules). Tests inject fakes to avoid
+     * needing python on PATH in the tmpdir.
+     */
+    readonly workspaceRunner?: WorkspaceRunner;
 }
 
 export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
@@ -89,6 +103,8 @@ export async function handleApi(req: IncomingMessage, res: ServerResponse, ctx: 
     if (method === 'GET' && url === '/api/v1/memory/list') return getMemoryList(res, ctx);
     if (method === 'GET' && (url ?? '').startsWith('/api/v1/memory/file')) return getMemoryFile(req, res, ctx);
     if (method === 'GET' && url === '/api/v1/explain/last') return getExplainLast(res, ctx);
+    if (method === 'GET' && (url ?? '').startsWith('/api/v1/workspace/')) return getWorkspace(req, res, ctx);
+    if (method === 'POST' && (url ?? '').startsWith('/api/v1/workspace/')) return postWorkspace(req, res, ctx);
     if (method === 'GET' && url === '/api/v1/health') return getHealth(req, res, ctx);
     res.statusCode = 404;
     res.setHeader('Content-Type', 'application/json');
@@ -626,6 +642,258 @@ async function getExplainLast(res: ServerResponse, ctx: ApiContext): Promise<voi
         return endJson(res, 500, { error: 'explain_failed', message: (err as Error).message });
     }
 }
+
+// ──────────────────────────────────────────────────────────────────────
+// Phases 4–8 — Workspace bridge (road-to-employee-product-and-external-proof)
+// ──────────────────────────────────────────────────────────────────────
+//
+// GET  /api/v1/workspace/roles                          → list role slugs
+// GET  /api/v1/workspace/roles/:role/tasks              → list role tasks
+// GET  /api/v1/workspace/roles/:role                    → full role payload
+// GET  /api/v1/workspace/sessions?limit=N               → list sessions
+// GET  /api/v1/workspace/sessions/:id                   → read session
+// POST /api/v1/workspace/sessions                       → start session
+// POST /api/v1/workspace/sessions/:id/append            → append event
+// GET  /api/v1/workspace/documents?type=&role=&limit=   → list documents
+// GET  /api/v1/workspace/documents/:type/:slug          → read document
+// POST /api/v1/workspace/documents                      → create document
+// POST /api/v1/workspace/documents/:type/:slug/save     → overwrite body
+// POST /api/v1/workspace/explain/render                 → render envelope
+// POST /api/v1/workspace/analytics/emit                 → emit one event
+// GET  /api/v1/workspace/analytics/show?window=         → render report
+// POST /api/v1/workspace/analytics/prune                → drop expired
+//
+// All POSTs require __CSRF__ header. All paths reject `..`, `/`, and
+// non-ASCII slug characters. The spawn allowlist is in workspace-exec.ts.
+
+const SLUG_RE = /^[a-z0-9][a-z0-9._-]{0,63}$/;
+
+function isSlug(s: string | undefined): s is string {
+    return typeof s === 'string' && SLUG_RE.test(s);
+}
+
+async function getWorkspace(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const url = req.url ?? '';
+    const [pathOnly, qs] = url.split('?', 2);
+    const parts = (pathOnly ?? '').slice('/api/v1/workspace/'.length).split('/');
+    const params = new URLSearchParams(qs ?? '');
+    const runner = ctx.workspaceRunner ?? defaultWorkspaceRunner;
+    const pkgRoot = packageRootOf(ctx.loaded.path);
+
+    if (parts[0] === 'roles') {
+        if (parts.length === 1) {
+            const r = await runner(pkgRoot, 'roles', 'list', []);
+            if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+            const roles = r.stdout.split('\n').map((s) => s.trim()).filter(Boolean);
+            return endJson(res, 200, { roles });
+        }
+        if (parts.length >= 2 && isSlug(parts[1])) {
+            if (parts[2] === 'tasks') {
+                const r = await runner(pkgRoot, 'roles', 'tasks', [parts[1]]);
+                if (r.kind === 'not_found') return endJson(res, 404, { error: 'unknown_role' });
+                if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+                return endJson(res, 200, { tasks: parseWorkspaceJsonLines(r.stdout) });
+            }
+            if (parts.length === 2) {
+                const r = await runner(pkgRoot, 'roles', 'show', [parts[1]]);
+                if (r.kind === 'not_found') return endJson(res, 404, { error: 'unknown_role' });
+                if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+                return endJson(res, 200, parseWorkspaceJsonObject(r.stdout) ?? {});
+            }
+        }
+    }
+
+    if (parts[0] === 'sessions') {
+        if (parts.length === 1) {
+            const limit = clampLimit(params.get('limit'));
+            const r = await runner(pkgRoot, 'sessions', 'list', ['--limit', String(limit)]);
+            if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+            return endJson(res, 200, { sessions: parseWorkspaceJsonLines(r.stdout) });
+        }
+        if (parts.length === 2 && isSlug(parts[1])) {
+            const r = await runner(pkgRoot, 'sessions', 'read', [parts[1]]);
+            if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+            return endJson(res, 200, { events: parseWorkspaceJsonLines(r.stdout) });
+        }
+    }
+
+    if (parts[0] === 'documents') {
+        if (parts.length === 1) {
+            const args: string[] = ['--limit', String(clampLimit(params.get('limit')))];
+            if (isSlug(params.get('type') ?? undefined)) args.push('--type', params.get('type')!);
+            if (isSlug(params.get('role') ?? undefined)) args.push('--role', params.get('role')!);
+            const r = await runner(pkgRoot, 'documents', 'list', args);
+            if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+            return endJson(res, 200, { documents: parseWorkspaceJsonLines(r.stdout) });
+        }
+        if (parts.length === 3 && isSlug(parts[1]) && isSlug(parts[2])) {
+            const r = await runner(pkgRoot, 'documents', 'read', [parts[1], parts[2]]);
+            if (r.kind === 'not_found') return endJson(res, 404, { error: 'unknown_document' });
+            if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+            return endJson(res, 200, { body: r.stdout });
+        }
+    }
+
+    if (parts[0] === 'analytics' && parts[1] === 'show') {
+        const window = params.get('window') ?? '30d';
+        const args = ['--window', window, '--format', params.get('format') ?? 'markdown'];
+        if (isSlug(params.get('event') ?? undefined)) args.push('--event', params.get('event')!);
+        if (isSlug(params.get('role') ?? undefined)) args.push('--role', params.get('role')!);
+        const r = await runner(pkgRoot, 'analytics', 'show', args);
+        if (r.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: r.stderr.trim() });
+        return endJson(res, 200, { report: r.stdout });
+    }
+
+    return endJson(res, 404, { error: 'unknown_workspace_route' });
+}
+
+function clampLimit(raw: string | null): number {
+    const n = raw === null ? 20 : parseInt(raw, 10);
+    if (Number.isNaN(n) || n < 1) return 20;
+    if (n > 200) return 200;
+    return n;
+}
+
+async function postWorkspace(req: IncomingMessage, res: ServerResponse, ctx: ApiContext): Promise<void> {
+    const body = await readJsonBody(req).catch(() => null);
+    if (body === null || typeof body !== 'object') return endJson(res, 400, { error: 'invalid_json' });
+    const r = body as Record<string, unknown>;
+    const csrf = typeof r['csrf'] === 'string' ? r['csrf'] as string : '';
+    if (!csrfEquals(csrf, ctx.csrfToken)) return endJson(res, 403, { error: 'csrf_invalid' });
+
+    const url = req.url ?? '';
+    const pathOnly = url.split('?', 1)[0] ?? '';
+    const parts = pathOnly.slice('/api/v1/workspace/'.length).split('/');
+    const runner = ctx.workspaceRunner ?? defaultWorkspaceRunner;
+    const pkgRoot = packageRootOf(ctx.loaded.path);
+
+    if (parts[0] === 'sessions') {
+        if (parts.length === 1) {
+            const role = strField(r, 'role');
+            const task = strField(r, 'task');
+            if (!isSlug(role) || !isSlug(task)) return endJson(res, 400, { error: 'invalid_role_or_task' });
+            const out = await runner(pkgRoot, 'sessions', 'start', ['--role', role, '--task', task]);
+            if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+            return endJson(res, 200, { session_id: out.stdout.trim() });
+        }
+        if (parts.length === 3 && isSlug(parts[1]) && parts[2] === 'append') {
+            const kind = strField(r, 'kind');
+            if (!isSlug(kind)) return endJson(res, 400, { error: 'invalid_kind' });
+            const args = [parts[1], '--kind', kind];
+            const data = r['data'];
+            if (data !== undefined && typeof data === 'object' && data !== null) {
+                for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+                    if (!isSlug(k)) continue;
+                    args.push('--data', `${k}=${String(v)}`);
+                }
+            }
+            const out = await runner(pkgRoot, 'sessions', 'append', args);
+            if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+            return endJson(res, 200, { ok: true });
+        }
+    }
+
+    if (parts[0] === 'documents') {
+        if (parts.length === 1) {
+            const type = strField(r, 'type');
+            const title = strField(r, 'title');
+            const docBody = strField(r, 'body');
+            if (!isSlug(type) || title.length === 0 || docBody.length === 0) {
+                return endJson(res, 400, { error: 'invalid_document' });
+            }
+            const bodyFile = await writeTmpFile(docBody);
+            try {
+                const args = ['--type', type, '--title', title, '--body-file', bodyFile];
+                if (isSlug(strField(r, 'role'))) args.push('--role', strField(r, 'role'));
+                const out = await runner(pkgRoot, 'documents', 'create', args);
+                if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+                return endJson(res, 200, parseWorkspaceJsonObject(out.stdout) ?? { ok: true });
+            } finally {
+                await unlinkSafe(bodyFile);
+            }
+        }
+        if (parts.length === 4 && isSlug(parts[1]) && isSlug(parts[2]) && parts[3] === 'save') {
+            const docBody = strField(r, 'body');
+            if (docBody.length === 0) return endJson(res, 400, { error: 'empty_body' });
+            const bodyFile = await writeTmpFile(docBody);
+            try {
+                const out = await runner(pkgRoot, 'documents', 'save', [parts[1], parts[2], '--body-file', bodyFile]);
+                if (out.kind === 'not_found') return endJson(res, 404, { error: 'unknown_document' });
+                if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+                return endJson(res, 200, parseWorkspaceJsonObject(out.stdout) ?? { ok: true });
+            } finally {
+                await unlinkSafe(bodyFile);
+            }
+        }
+    }
+
+    if (parts[0] === 'explain' && parts[1] === 'render') {
+        const mode = strField(r, 'mode') || 'plain';
+        if (mode !== 'plain' && mode !== 'technical') return endJson(res, 400, { error: 'invalid_mode' });
+        const envelope = r['envelope'];
+        if (envelope === undefined || typeof envelope !== 'object') return endJson(res, 400, { error: 'invalid_envelope' });
+        const envFile = await writeTmpFile(JSON.stringify(envelope));
+        try {
+            const out = await runner(pkgRoot, 'explain', 'render', ['--mode', mode, '--envelope-file', envFile]);
+            if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+            return endJson(res, 200, parseWorkspaceJsonObject(out.stdout) ?? {});
+        } finally {
+            await unlinkSafe(envFile);
+        }
+    }
+
+    if (parts[0] === 'analytics') {
+        if (parts[1] === 'emit') {
+            const event = strField(r, 'event');
+            if (!isSlug(event)) return endJson(res, 400, { error: 'invalid_event' });
+            const args = [event];
+            const data = r['data'];
+            if (data !== undefined && typeof data === 'object' && data !== null) {
+                for (const [k, v] of Object.entries(data as Record<string, unknown>)) {
+                    if (!isSlug(k)) continue;
+                    args.push('--data', `${k}=${String(v)}`);
+                }
+            }
+            const out = await runner(pkgRoot, 'analytics', 'emit', args);
+            if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+            return endJson(res, 200, { ok: true });
+        }
+        if (parts[1] === 'prune') {
+            const out = await runner(pkgRoot, 'analytics', 'prune', []);
+            if (out.kind !== 'ok') return endJson(res, 500, { error: 'workspace_failed', message: out.stderr.trim() });
+            return endJson(res, 200, { ok: true, message: out.stdout.trim() });
+        }
+    }
+
+    return endJson(res, 404, { error: 'unknown_workspace_route' });
+}
+
+function strField(r: Record<string, unknown>, key: string): string {
+    const v = r[key];
+    return typeof v === 'string' ? v : '';
+}
+
+async function writeTmpFile(content: string): Promise<string> {
+    const { mkdtemp, writeFile } = await import('node:fs/promises');
+    const { tmpdir } = await import('node:os');
+    const dir = await mkdtemp(join(tmpdir(), 'ws-'));
+    const p = join(dir, 'payload');
+    await writeFile(p, content, 'utf8');
+    return p;
+}
+
+async function unlinkSafe(p: string): Promise<void> {
+    try {
+        const { unlink, rmdir } = await import('node:fs/promises');
+        await unlink(p);
+        await rmdir(join(p, '..'));
+    } catch { /* best effort */ }
+}
+
+// Suppress no-unused warnings for the workspace allowlist guard;
+// callers reach it via the runner. Re-export keeps the symbol in
+// the build graph for the test surface.
+export const __workspaceAllowedGuard = isWorkspaceAllowed;
 
 // ──────────────────────────────────────────────────────────────────────
 // Phase 1 — Health endpoint (road-to-internal-ai-os-deployment Step 4)

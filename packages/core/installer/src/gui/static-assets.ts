@@ -38,6 +38,7 @@ const INDEX_HTML = `<!doctype html>
     <button type="button" class="tab" data-surface="council">Council</button>
     <button type="button" class="tab" data-surface="memory">Memory</button>
     <button type="button" class="tab" data-surface="explain">Explain</button>
+    <button type="button" class="tab" data-surface="workspace">Workspace</button>
   </nav>
 </header>
 <main>
@@ -172,6 +173,27 @@ const INDEX_HTML = `<!doctype html>
     <div id="explain-meta" class="explain-meta" hidden></div>
     <ol id="explain-timeline" class="explain-timeline" hidden></ol>
     <div id="explain-empty" class="hint" hidden>No trace available. Run <code>/work</code> or <code>/implement-ticket</code> first.</div>
+  </section>
+  <section id="surface-workspace" class="surface" aria-labelledby="h-workspace" hidden>
+    <h2 id="h-workspace">Workspace</h2>
+    <p class="hint">Pick a role, launch a task, see your recent sessions.</p>
+    <details class="help"><summary>What is this?</summary>
+      <p>The Workspace surface is the v0 employee-product floor (ADR-024). Roles live under <code>agents/roles/&lt;slug&gt;/</code> with per-role tasks; sessions are stored as JSONL under <code>~/.event4u/agent-config/workspace/sessions/</code>. All local-only.</p>
+    </details>
+    <div class="workspace-grid">
+      <div>
+        <label for="ws-role" class="small">Role</label>
+        <select id="ws-role" class="ws-select"></select>
+        <label for="ws-task" class="small">Task</label>
+        <select id="ws-task" class="ws-select" disabled></select>
+        <button type="button" id="btn-ws-start" class="primary" disabled>Start session</button>
+        <p id="ws-status" class="hint" aria-live="polite"></p>
+      </div>
+      <div>
+        <h3 class="small">Recent sessions</h3>
+        <div id="ws-sessions" class="list small"></div>
+      </div>
+    </div>
   </section>
 </main>
 <footer>
@@ -315,7 +337,18 @@ details.help a:hover{text-decoration:underline}
 .memory-detail .meta-line{color:#7d8590;font-size:11px;margin:0 0 12px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace}
 .memory-detail pre{background:#0d1117;border:1px solid #21262d;border-radius:6px;padding:12px;max-height:560px;overflow:auto;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px;white-space:pre-wrap;color:#c9d1d9;margin:0;counter-reset:ln}
 .memory-detail pre .ln{display:inline-block;width:3em;color:#484f58;user-select:none;text-align:right;padding-right:12px}
-@media (max-width:720px){.council-grid,.memory-grid{grid-template-columns:1fr}}`;
+.workspace-grid{display:grid;grid-template-columns:320px 1fr;gap:16px;margin-top:16px}
+.workspace-grid label.small{display:block;color:#7d8590;font-size:12px;margin:8px 0 4px;text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+.workspace-grid h3.small{margin:0 0 8px;font-size:12px;color:#7d8590;text-transform:uppercase;letter-spacing:0.05em;font-weight:600}
+.ws-select{width:100%;background:#0d1117;border:1px solid #21262d;color:#e6edf3;padding:6px 8px;border-radius:6px;font-size:13px;margin-bottom:8px}
+.ws-select:disabled{opacity:0.5;cursor:not-allowed}
+#btn-ws-start{margin-top:8px;width:100%}
+#ws-sessions .ws-session{padding:8px 10px;border:1px solid #21262d;background:#161b22;border-radius:6px;margin-bottom:6px;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,monospace;font-size:12px}
+#ws-sessions .ws-session .role{color:#7d8590}
+#ws-sessions .ws-session .task{color:#e6edf3}
+#ws-sessions .ws-session .ts{color:#7d8590;font-size:11px;display:block;margin-top:2px}
+#ws-sessions .empty{color:#7d8590;font-style:italic}
+@media (max-width:720px){.council-grid,.memory-grid,.workspace-grid{grid-template-columns:1fr}}`;
 
 
 const APP_JS = `(function(){
@@ -745,6 +778,7 @@ var tasksLoaded = false;
 var councilLoaded = false;
 var memoryLoaded = false;
 var explainLoaded = false;
+var workspaceLoaded = false;
 function wireSurfaces(){
   var tabs = document.querySelectorAll("nav.topnav .tab");
   for (var i = 0; i < tabs.length; i++){
@@ -752,6 +786,10 @@ function wireSurfaces(){
   }
   var refresh = $("btn-explain-refresh");
   if (refresh) refresh.addEventListener("click", function(){ loadExplain(); });
+  var roleSel = $("ws-role");
+  if (roleSel) roleSel.addEventListener("change", function(){ onWsRoleChange(); });
+  var startBtn = $("btn-ws-start");
+  if (startBtn) startBtn.addEventListener("click", function(){ wsStartSession(); });
 }
 function setSurface(name){
   var tabs = document.querySelectorAll("nav.topnav .tab");
@@ -759,7 +797,7 @@ function setSurface(name){
     var on = tabs[i].getAttribute("data-surface") === name;
     tabs[i].classList.toggle("active", on);
   }
-  var surfaces = ["setup", "tasks", "council", "memory", "explain"];
+  var surfaces = ["setup", "tasks", "council", "memory", "explain", "workspace"];
   for (var j = 0; j < surfaces.length; j++){
     var el = $("surface-" + surfaces[j]);
     if (!el) continue;
@@ -771,6 +809,7 @@ function setSurface(name){
   if (name === "council" && !councilLoaded){ councilLoaded = true; loadCouncil(); }
   if (name === "memory" && !memoryLoaded){ memoryLoaded = true; loadMemory(); }
   if (name === "explain" && !explainLoaded){ explainLoaded = true; loadExplain(); }
+  if (name === "workspace" && !workspaceLoaded){ workspaceLoaded = true; loadWorkspace(); }
 }
 
 // tasks surface ───────────────────────────────────────────────────────
@@ -1139,6 +1178,92 @@ function streamSse(res, onEvent){
     });
   }
   return pump();
+}
+
+// workspace surface ───────────────────────────────────────────────────
+function loadWorkspace(){
+  setWsStatus("Loading roles…");
+  fetch("/api/v1/workspace/roles").then(function(r){ return r.json(); }).then(function(d){
+    var sel = $("ws-role");
+    if (!sel) return;
+    sel.innerHTML = "";
+    var ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "— pick a role —"; ph.disabled = true; ph.selected = true;
+    sel.appendChild(ph);
+    var roles = d.roles || [];
+    roles.forEach(function(slug){
+      var opt = document.createElement("option");
+      opt.value = slug; opt.textContent = slug;
+      sel.appendChild(opt);
+    });
+    if (roles.length === 0) setWsStatus("No roles found under agents/roles/.");
+    else setWsStatus("");
+  }).catch(function(err){ setWsStatus("Failed to load roles: " + err.message); });
+  loadWsSessions();
+}
+function onWsRoleChange(){
+  var roleSel = $("ws-role");
+  var taskSel = $("ws-task");
+  var startBtn = $("btn-ws-start");
+  if (!roleSel || !taskSel || !startBtn) return;
+  var role = roleSel.value;
+  taskSel.innerHTML = "";
+  taskSel.disabled = true;
+  startBtn.disabled = true;
+  if (!role) return;
+  setWsStatus("Loading tasks for " + role + "…");
+  fetch("/api/v1/workspace/roles/" + encodeURIComponent(role) + "/tasks").then(function(r){ return r.json(); }).then(function(d){
+    var tasks = d.tasks || [];
+    var ph = document.createElement("option");
+    ph.value = ""; ph.textContent = "— pick a task —"; ph.disabled = true; ph.selected = true;
+    taskSel.appendChild(ph);
+    tasks.forEach(function(t){
+      var opt = document.createElement("option");
+      opt.value = t.slug; opt.textContent = t.title || t.slug;
+      taskSel.appendChild(opt);
+    });
+    taskSel.disabled = tasks.length === 0;
+    taskSel.addEventListener("change", function(){ startBtn.disabled = !taskSel.value; });
+    setWsStatus(tasks.length === 0 ? "No tasks defined for this role." : "");
+  }).catch(function(err){ setWsStatus("Failed to load tasks: " + err.message); });
+}
+function wsStartSession(){
+  var role = ($("ws-role") || {}).value;
+  var task = ($("ws-task") || {}).value;
+  if (!role || !task) return;
+  setWsStatus("Starting session…");
+  fetch("/api/v1/workspace/sessions", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ role: role, task: task, csrf: csrf })
+  }).then(function(r){ return r.json().then(function(b){ return { status: r.status, body: b }; }); })
+  .then(function(o){
+    if (o.status !== 200){ setWsStatus("Error: " + (o.body.error || "unknown")); return; }
+    setWsStatus("Session " + o.body.session_id + " started.");
+    loadWsSessions();
+  }).catch(function(err){ setWsStatus("Failed to start session: " + err.message); });
+}
+function loadWsSessions(){
+  fetch("/api/v1/workspace/sessions?limit=20").then(function(r){ return r.json(); }).then(function(d){
+    var list = $("ws-sessions");
+    if (!list) return;
+    list.innerHTML = "";
+    var sessions = d.sessions || [];
+    if (sessions.length === 0){ list.innerHTML = '<p class="empty">No sessions yet.</p>'; return; }
+    sessions.forEach(function(s){
+      var row = document.createElement("div");
+      row.className = "ws-session";
+      row.innerHTML =
+        '<span class="task">' + escapeHtml(s.task || "(no task)") + '</span> ' +
+        '<span class="role">· ' + escapeHtml(s.role || "") + '</span>' +
+        '<span class="ts">' + escapeHtml(s.session_id || "") + ' · ' + escapeHtml(s.started_at || "") + '</span>';
+      list.appendChild(row);
+    });
+  }).catch(function(err){ setWsStatus("Failed to load sessions: " + err.message); });
+}
+function setWsStatus(msg){
+  var s = $("ws-status");
+  if (s) s.textContent = msg || "";
 }
 
 document.addEventListener("DOMContentLoaded", function(){

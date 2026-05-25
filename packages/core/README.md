@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `3.1.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 357
+- **artefacts**: 364
 
-## Commands (128)
+## Commands (135)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -24,6 +24,9 @@ Core framework-neutral artefacts.
 - **`agents:user-review`** — List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
 - **`agents:user-show`** — Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
 - **`agents:user-update`** — Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
+- **`analytics`** — Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
+- **`analytics:prune`** — Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
+- **`analytics:show`** — Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
 - **`analyze-reference-repo`** — Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
 - **`bug-fix`** — Plan and implement a bug fix — based on investigation, with quality checks and test verification
 - **`bug-investigate`** — Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
@@ -81,6 +84,10 @@ Core framework-neutral artefacts.
 - **`judge:on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
 - **`judge:solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - **`judge:steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
+- **`knowledge`** — Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
+- **`knowledge:forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
+- **`knowledge:ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
+- **`knowledge:list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
 - **`memory`** — Memory orchestrator — routes to add, load, mine-session, promote, propose
 - **`memory:add`** — Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules)
 - **`memory:learn-low-impact`** — Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.

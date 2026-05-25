@@ -20,6 +20,7 @@ import type { LoadedManifest } from '../src/manifest-loader.js';
 import { sha256OfString } from '../src/io/sha256.js';
 import { __resetTaskState, TASK_CATALOG } from '../src/gui/task-exec.js';
 import type { ExplainResult, ExplainRunner } from '../src/gui/explain-exec.js';
+import type { WorkspaceCallResult, WorkspaceRunner } from '../src/gui/workspace-exec.js';
 import { makeArtefact, makeManifest, makePack } from './_fixtures.js';
 
 const CSRF = 'a'.repeat(64);
@@ -676,5 +677,151 @@ describe('GET /api/v1/explain/last', () => {
         const body = await res.json();
         expect(body.error).toBe('explain_failed');
         expect(body.message).toContain('spawn ENOENT');
+    });
+});
+
+
+describe('Workspace bridge (/api/v1/workspace/*)', () => {
+    type Call = { module: string; subcommand: string; args: readonly string[] };
+
+    async function withRunner(runner: WorkspaceRunner): Promise<string> {
+        await new Promise<void>((resolve) => server.close(() => resolve()));
+        const ctx = buildContext({ workspaceRunner: runner });
+        server = createServer((req, res) => void handleApi(req, res, ctx));
+        await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+        const port = (server.address() as AddressInfo).port;
+        return `http://127.0.0.1:${port}`;
+    }
+
+    function fakeRunner(
+        out: WorkspaceCallResult,
+        sink?: Call[],
+    ): WorkspaceRunner {
+        return async (_root, module, subcommand, args) => {
+            sink?.push({ module, subcommand, args });
+            return out;
+        };
+    }
+
+    it('GET /roles returns slug list', async () => {
+        const calls: Call[] = [];
+        const url = await withRunner(fakeRunner(
+            { kind: 'ok', stdout: 'galabau\nconsultant\n', stderr: '' },
+            calls,
+        ));
+        const res = await fetch(`${url}/api/v1/workspace/roles`);
+        expect(res.status).toBe(200);
+        expect((await res.json()).roles).toEqual(['galabau', 'consultant']);
+        expect(calls[0]).toEqual({ module: 'roles', subcommand: 'list', args: [] });
+    });
+
+    it('GET /roles/:role/tasks parses JSONL', async () => {
+        const stdout = '{"slug":"plan","title":"Plan"}\n{"slug":"audit","title":"Audit"}\n';
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout, stderr: '' }));
+        const res = await fetch(`${url}/api/v1/workspace/roles/galabau/tasks`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.tasks).toHaveLength(2);
+        expect(body.tasks[0].slug).toBe('plan');
+    });
+
+    it('GET /roles/:role returns 404 when unknown', async () => {
+        const url = await withRunner(fakeRunner({ kind: 'not_found', stderr: 'unknown role' }));
+        const res = await fetch(`${url}/api/v1/workspace/roles/nope`);
+        expect(res.status).toBe(404);
+    });
+
+    it('GET /sessions clamps limit and parses JSONL', async () => {
+        const calls: Call[] = [];
+        const stdout = '{"session_id":"a","role":"galabau"}\n';
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout, stderr: '' }, calls));
+        const res = await fetch(`${url}/api/v1/workspace/sessions?limit=9999`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.sessions[0].session_id).toBe('a');
+        expect(calls[0]?.args).toEqual(['--limit', '200']);
+    });
+
+    it('POST /sessions requires CSRF', async () => {
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout: 'sess-1\n', stderr: '' }));
+        const res = await fetch(`${url}/api/v1/workspace/sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'galabau', task: 'plan' }),
+        });
+        expect(res.status).toBe(403);
+    });
+
+    it('POST /sessions starts a session', async () => {
+        const calls: Call[] = [];
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout: 'sess-1\n', stderr: '' }, calls));
+        const res = await fetch(`${url}/api/v1/workspace/sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'galabau', task: 'plan', csrf: CSRF }),
+        });
+        expect(res.status).toBe(200);
+        expect((await res.json()).session_id).toBe('sess-1');
+        expect(calls[0]).toEqual({
+            module: 'sessions',
+            subcommand: 'start',
+            args: ['--role', 'galabau', '--task', 'plan'],
+        });
+    });
+
+    it('POST /sessions rejects non-slug task', async () => {
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout: '', stderr: '' }));
+        const res = await fetch(`${url}/api/v1/workspace/sessions`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ role: 'galabau', task: '../../../etc/passwd', csrf: CSRF }),
+        });
+        expect(res.status).toBe(400);
+    });
+
+    it('POST /documents creates a document via tmpfile', async () => {
+        const calls: Call[] = [];
+        const url = await withRunner(fakeRunner(
+            { kind: 'ok', stdout: '{"slug":"my-doc","path":"/tmp/x"}', stderr: '' },
+            calls,
+        ));
+        const res = await fetch(`${url}/api/v1/workspace/documents`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type: 'note', title: 'My Doc', body: 'Hello world', csrf: CSRF,
+            }),
+        });
+        expect(res.status).toBe(200);
+        expect((await res.json()).slug).toBe('my-doc');
+        expect(calls[0]?.subcommand).toBe('create');
+        expect(calls[0]?.args).toContain('--type');
+    });
+
+    it('GET /analytics/show returns markdown report', async () => {
+        const calls: Call[] = [];
+        const url = await withRunner(fakeRunner(
+            { kind: 'ok', stdout: '# Report\n\nno data\n', stderr: '' },
+            calls,
+        ));
+        const res = await fetch(`${url}/api/v1/workspace/analytics/show?window=7d`);
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.report).toContain('# Report');
+        expect(calls[0]?.args).toContain('--window');
+        expect(calls[0]?.args).toContain('7d');
+    });
+
+    it('rejects unknown route', async () => {
+        const url = await withRunner(fakeRunner({ kind: 'ok', stdout: '', stderr: '' }));
+        const res = await fetch(`${url}/api/v1/workspace/nope`);
+        expect(res.status).toBe(404);
+    });
+
+    it('surfaces runner error as 500', async () => {
+        const url = await withRunner(fakeRunner({ kind: 'error', exitCode: 2, stderr: 'boom', stdout: '' }));
+        const res = await fetch(`${url}/api/v1/workspace/roles`);
+        expect(res.status).toBe(500);
+        expect((await res.json()).error).toBe('workspace_failed');
     });
 });

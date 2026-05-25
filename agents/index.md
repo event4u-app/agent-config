@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **495 artefacts** in this package.
+Maintainer-facing index of all **502 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -310,7 +310,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../packages/core/.agent-src.uncompressed/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../packages/core/.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (129)
+## Commands (136)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -326,6 +326,9 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`agents:user-review`](../packages/core/.agent-src.uncompressed/commands/agents/user/review.md) | cluster: agents | List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually. |
 | command | [`agents:user-show`](../packages/core/.agent-src.uncompressed/commands/agents/user/show.md) | cluster: agents | Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start. |
 | command | [`agents:user-update`](../packages/core/.agent-src.uncompressed/commands/agents/user/update.md) | cluster: agents | Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save. |
+| command | [`analytics`](../packages/core/.agent-src.uncompressed/commands/analytics.md) | cluster: analytics | Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`. |
+| command | [`analytics:prune`](../packages/core/.agent-src.uncompressed/commands/analytics/prune.md) | cluster: analytics | Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent. |
+| command | [`analytics:show`](../packages/core/.agent-src.uncompressed/commands/analytics/show.md) | cluster: analytics | Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log. |
 | command | [`analyze-reference-repo`](../packages/core/.agent-src.uncompressed/commands/analyze-reference-repo.md) |  | Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project. |
 | command | [`bug-fix`](../packages/core/.agent-src.uncompressed/commands/bug-fix.md) |  | Plan and implement a bug fix — based on investigation, with quality checks and test verification |
 | command | [`bug-investigate`](../packages/core/.agent-src.uncompressed/commands/bug-investigate.md) |  | Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause |
@@ -384,6 +387,10 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`judge:on-diff`](../packages/core/.agent-src.uncompressed/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |
 | command | [`judge:solo`](../packages/core/.agent-src.uncompressed/commands/judge/solo.md) | cluster: judge | Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only |
 | command | [`judge:steps`](../packages/core/.agent-src.uncompressed/commands/judge/steps.md) | cluster: judge | Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict |
+| command | [`knowledge`](../packages/core/.agent-src.uncompressed/commands/knowledge.md) | cluster: knowledge | Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace. |
+| command | [`knowledge:forget`](../packages/core/.agent-src.uncompressed/commands/knowledge/forget.md) | cluster: knowledge | Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same. |
+| command | [`knowledge:ingest`](../packages/core/.agent-src.uncompressed/commands/knowledge/ingest.md) | cluster: knowledge | Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`. |
+| command | [`knowledge:list`](../packages/core/.agent-src.uncompressed/commands/knowledge/list.md) | cluster: knowledge | List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction. |
 | command | [`memory`](../packages/core/.agent-src.uncompressed/commands/memory.md) | cluster: memory | Memory orchestrator — routes to add, load, mine-session, promote, propose |
 | command | [`memory:add`](../packages/core/.agent-src.uncompressed/commands/memory/add.md) | cluster: memory | Interactively add a validated entry to an engineering-memory file (domain-invariants, architecture-decisions, incident-learnings, product-rules) |
 | command | [`memory:learn-low-impact`](../packages/core/.agent-src.uncompressed/commands/memory/learn-low-impact.md) | cluster: memory | Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction. |
