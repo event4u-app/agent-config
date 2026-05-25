@@ -1,9 +1,8 @@
 ---
 name: module-management
-description: "Use when working within any module under the project's configured `modules.root_paths` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src layout, Go internal/, or a custom path. Reads roots from `.agent-project-settings.yml` instead of hardcoding `app/Modules/`."
+description: "Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path."
 source: package
 domain: process
-framework: laravel
 workspaces:
   - agent-config-maintainer
 packs:
@@ -32,6 +31,23 @@ stack-specific carve-out at the bottom.
 When `modules.enabled` is `false` (the default) the skill is a no-op —
 the project does not opt into module-aware behavior.
 
+## Understand the current layout before editing
+
+Before creating, renaming, or modifying anything inside a module:
+
+1. Read the `modules:` block from `.agent-project-settings.yml` —
+   never assume a specific module root.
+2. List the existing modules under each `modules.root_paths` entry and
+   review the target module's `README.md` (or `package.json` /
+   `pyproject.toml` description) to understand its purpose.
+3. Read any module-scoped agent docs under
+   `{module_root}/{ModuleName}/{modules.agent_folder}/contexts/`.
+4. Match the stack carve-out below by `modules.namespace_template`
+   shape and confirm the conventions before generating files.
+
+Skip this step → risk creating files in the wrong root, breaking
+stack-native auto-loading, or duplicating existing modules.
+
 ## Procedure: Work with modules
 
 1. Read `modules:` block from `.agent-project-settings.yml` via the
@@ -44,7 +60,7 @@ the project does not opt into module-aware behavior.
    or root-path heuristic — apply stack-specific conventions on top of
    the generic procedure.
 
-## Detection
+## Detection (fallback when `modules:` block is empty)
 
 When `modules.enabled` is unset / false, the skill consults the
 auto-detection table in
@@ -54,7 +70,7 @@ block automatically; that is `propose_modules_config.py` plus user
 confirmation per
 [`/agents init`](../../commands/agents/init.md) Step 7.
 
-## Architecture
+## Generic module structure
 
 ```
 {module_root}/{ModuleName}/
@@ -71,13 +87,7 @@ The agent-folder name comes from `modules.agent_folder` (default
 `agents`). Skip directories listed in `modules.skip_dirs` (default
 `.module-template`, `.example`).
 
-1. **Route loading** — automatically loads `Routes/api.php`, `Routes/web.php`, `Routes/console.php`
-   - API routes: prefixed with `/api`, `api` middleware
-   - Web routes: `web` middleware
-   - Console routes: loaded via `require_once`
-   - Fallback: also checks lowercase `routes/` for legacy modules
-2. **Command registration** — auto-discovers commands in `App/Console/Commands/`
-   - Fallback: also checks `Console/Commands/` for legacy modules
+## Stack carve-outs
 
 Apply the section that matches the project's
 `modules.namespace_template` and root-path layout.
@@ -89,34 +99,18 @@ Apply the section that matches the project's
 
 ```
 app/Modules/{ModuleName}/
-├── App/                         # All application code (PSR-4)
-│   ├── Console/Commands/        # Artisan commands (auto-registered)
-│   ├── Enums/
-│   ├── Http/
-│   │   ├── Controllers/
-│   │   ├── Middleware/
-│   │   └── Requests/
-│   ├── Jobs/
-│   ├── Models/
-│   ├── Rules/
-│   └── Services/
-├── Routes/                      # Auto-loaded route files
-│   ├── api.php
-│   ├── web.php
-│   └── console.php
-├── Tests/                       # Module-specific tests
-│   ├── Component/
-│   ├── Integration/
-│   └── Unit/
-├── Docs/                        # Optional technical docs
-├── agents/                      # Agent docs for this module
-│   ├── features/
-│   ├── roadmaps/
-│   └── contexts/
-└── README.md                    # Optional module description
+├── App/                              # PSR-4 source (capitalized)
+│   ├── Console/Commands/             # auto-registered
+│   ├── Http/{Controllers,Middleware,Requests}/
+│   ├── Jobs/  Models/  Services/  Rules/  Enums/
+├── Routes/                           # auto-loaded
+│   ├── api.php   web.php   console.php
+├── Tests/{Unit,Integration,Component}/
+└── agents/
 ```
 
-**Important:** Directory names use capital letters (App, Routes, Tests) for PSR-4 compliance.
+**Namespace:** `App\Modules\{ModuleName}\App\{Layer}\{Class}` — note the
+extra `App` segment.
 
 **Auto-loading:** `app/Providers/ModuleServiceProvider.php` scans
 `app/Modules/` and registers routes (`Routes/api.php` → `/api` prefix +
@@ -141,30 +135,37 @@ notation.
 `Modules` segment) or root path is `src/` with `<Domain>/` subdirs.
 
 ```
-App\Modules\{ModuleName}\App\{Layer}\{Class}
+src/{Domain}/
+├── Application/                      # use cases, command handlers
+├── Domain/                           # entities, value objects
+├── Infrastructure/                   # adapters, repositories
+├── UserInterface/                    # controllers, console
+└── Tests/
 ```
 
-Examples:
-- `App\Modules\ClientSoftware\App\Services\ImportService`
-- `App\Modules\ClientSoftware\App\Http\Controllers\Import\ImportDataController`
-- `App\Modules\ClientSoftware\App\Console\Commands\ProcessImportUploadsCommand`
+**Namespace:** `App\{Domain}\{Layer}\{Class}` — no extra segment.
 
-### Route conventions
+**Auto-loading:** Symfony service container auto-wires each
+`{Domain}/` subtree per `services.yaml` resource imports.
 
-```php
-// Routes/api.php — auto-prefixed with /api by ModuleServiceProvider
-Route::name('v1.')
-    ->prefix('v1/{module-prefix}')
-    ->group(function(): void {
-        Route::get('/', [Controller::class, 'index'])->name('{module-prefix}.index');
-    });
+### Node monorepo carve-out
+
+**Triggers when:** root path is `packages/` and each child has
+`package.json`.
+
+```
+packages/{pkg-name}/
+├── package.json
+├── src/                              # entry points re-exported via "main"
+├── tests/   __tests__/
+└── README.md
 ```
 
 **Module identity** comes from `package.json#name`, not the directory
 name. The agent folder still lives at
 `packages/{pkg-name}/{modules.agent_folder}/`.
 
-## Existing modules
+### Python src-layout carve-out
 
 **Triggers when:** root path is `src/` and each child has `__init__.py`.
 
@@ -175,6 +176,22 @@ src/{package_name}/
 └── tests/                            # or root-level tests/{package_name}/
 ```
 
+**Namespace** is the import path: `{package_name}.<sub>.<class>`. Project
+metadata in `pyproject.toml`.
+
+### Go internal carve-out
+
+**Triggers when:** root path is `internal/` (one-level structure).
+
+```
+internal/{pkgname}/
+├── *.go                              # package files
+└── *_test.go                         # tests colocated
+```
+
+**Import path:** `{module-path-from-go.mod}/internal/{pkgname}`. No
+top-level grouping — each subdir of `internal/` is its own package.
+
 ## Output format
 
 1. Module directory under the matched stack carve-out.
@@ -183,10 +200,11 @@ src/{package_name}/
 
 ## Auto-trigger keywords
 
-- Laravel module
 - module structure
 - module creation
 - module namespace
+- create / explore module
+- per-module agent docs
 
 ### Validate
 
@@ -195,6 +213,7 @@ src/{package_name}/
   Laravel HMVC, `bin/console debug:container` for Symfony,
   `npm test --workspace=<pkg>` for Node monorepo).
 - Run module tests — must pass.
+- Run quality tools scoped to the new path.
 
 ## Gotcha
 

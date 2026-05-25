@@ -1,6 +1,6 @@
 ---
 name: module-management
-description: "Use when working within any module under the project's configured `modules.root_paths` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src layout, Go internal/, or a custom path. Reads roots from `.agent-project-settings.yml` instead of hardcoding `app/Modules/`."
+description: "Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path."
 source: package
 domain: process
 workspaces:
@@ -30,6 +30,23 @@ stack-specific carve-out at the bottom.
 
 When `modules.enabled` is `false` (the default) the skill is a no-op —
 the project does not opt into module-aware behavior.
+
+## Understand the current layout before editing
+
+Before creating, renaming, or modifying anything inside a module:
+
+1. Read the `modules:` block from `.agent-project-settings.yml` —
+   never assume a specific module root.
+2. List the existing modules under each `modules.root_paths` entry and
+   review the target module's `README.md` (or `package.json` /
+   `pyproject.toml` description) to understand its purpose.
+3. Read any module-scoped agent docs under
+   `{module_root}/{ModuleName}/{modules.agent_folder}/contexts/`.
+4. Match the stack carve-out below by `modules.namespace_template`
+   shape and confirm the conventions before generating files.
+
+Skip this step → risk creating files in the wrong root, breaking
+stack-native auto-loading, or duplicating existing modules.
 
 ## Procedure: Work with modules
 
