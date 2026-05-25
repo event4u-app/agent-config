@@ -108,6 +108,25 @@ header) exceeds **250 lines**. When that happens:
 Each era split lands as its own `chore(changelog): split era X.Y.x →
 pre-X.Y.x` commit — never bundled with a feature release.
 
+### Gate-vs-script contract
+
+- **Canonical splitter** — `scripts/release.py`. When a release crosses
+  a minor/major boundary and the current era body is at or over the
+  250-line cap, the release pipeline writes the
+  `chore(changelog): split era …` commit **first**, then the
+  `release: X.Y.Z` commit. The maintainer does not run the split by
+  hand for the release path.
+- **Backstop** — `tests/test_changelog_eras.py::test_current_era_body_under_cap`
+  catches entries written **outside** the release script (hand-edited
+  Unreleased section, agent-authored hotfix entries, doc patches). The
+  failure message names `task release` as the auto-split path.
+- **Shared cap constant** — `scripts/_lib/changelog_eras.py` owns
+  `CURRENT_ERA_BODY_CAP` and the era-header regex. Both the test and
+  the release script import from there; no parallel copies.
+- **Patch-release overflow** — a `patch` bump cannot cross an era
+  boundary by definition, so the release script refuses to auto-split
+  on a patch and surfaces the manual-intervention message instead.
+
 ## Cross-references
 
 - [`../../CHANGELOG.md`](../../CHANGELOG.md) — active era + Unreleased.

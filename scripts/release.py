@@ -47,6 +47,16 @@ from dataclasses import dataclass
 from datetime import date as _date
 from pathlib import Path
 
+from _lib.changelog_eras import (
+    CURRENT_ERA_BODY_CAP,
+    SplitPlan,
+    current_era_body_size,
+    current_era_insertion_point,
+    perform_split,
+    plan_split,
+    read_changelog_lines,
+)
+
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PACKAGE_JSON = REPO_ROOT / "package.json"
 MARKETPLACE_JSON = REPO_ROOT / ".claude-plugin" / "marketplace.json"
@@ -96,6 +106,10 @@ class Plan:
     last_tag: str | None
     changelog_body: str  # rendered body (without the heading)
     changelog_entry: str  # full entry including heading, for CHANGELOG.md
+    # Populated only when the release crosses an era boundary AND the
+    # current era body has grown past CURRENT_ERA_BODY_CAP. None for
+    # patch releases and for minor/major bumps where the era still fits.
+    split_plan: SplitPlan | None = None
 
 
 # ─── utilities ────────────────────────────────────────────────────────────────
@@ -453,16 +467,32 @@ def _render_test_trend_line(prev_tag: str | None) -> str | None:
 
 
 def prepend_changelog(path: Path, entry: str) -> None:
-    """Insert `entry` directly above the most recent `## [` heading."""
+    """Insert ``entry`` inside the current era block.
+
+    Strategy delegates to ``current_era_insertion_point`` so a fresh
+    era (no version headings yet, just the intro blockquote) places the
+    new entry after the intro instead of appended at end-of-file. When
+    no current era header exists, falls back to the legacy "above the
+    most recent ## [" heuristic for safety.
+    """
     text = path.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    insert_at = current_era_insertion_point(lines)
+    if insert_at is not None:
+        before = "\n".join(lines[:insert_at])
+        after = "\n".join(lines[insert_at:])
+        head = before + ("\n" if before else "")
+        path.write_text(head + entry + "\n" + after + "\n", encoding="utf-8")
+        return
+
+    # Legacy fallback — no era header present at all.
     marker_re = re.compile(r"^## \[?\d+\.\d+\.\d+", re.MULTILINE)
     m = marker_re.search(text)
     if not m:
-        # No prior release heading — append after the introduction.
         path.write_text(text.rstrip() + "\n\n" + entry, encoding="utf-8")
         return
     before = text[: m.start()]
-    after = text[m.start() :]
+    after = text[m.start():]
     path.write_text(before + entry + "\n" + after, encoding="utf-8")
 
 
@@ -579,6 +609,14 @@ def print_preview(plan: Plan) -> None:
     print(f"  · {CHANGELOG.relative_to(REPO_ROOT)}")
     print("  · regenerated derived files via `task release-prepare`")
     print("    (packages/*/pack.yaml + README.md, .agent-src/, tool projections)")
+    if plan.split_plan is not None:
+        sp = plan.split_plan
+        print()
+        print("Era split (separate commit, before release commit):")
+        print(f"  · archive   → {sp.archive_path.relative_to(REPO_ROOT)}")
+        print(f"  · old era   → pre-{sp.boundary} (archived pointer)")
+        print(f"  · new era   → {sp.new_era_label} — current (empty body)")
+        print(f"  · subject   → {sp.commit_subject}")
     print()
     print("Changelog section:")
     print("─" * 72)
@@ -634,6 +672,39 @@ def execute(
     else:
         _step(1, total, f"Create branch {branch}")
         run("git", "checkout", "-b", branch)
+
+    # ─── 1b. era split (optional, separate commit) ─────────────────────────
+    # Lands as `chore(changelog): split era ...` BEFORE the release commit
+    # so the split is reviewable on its own and the release commit only
+    # touches the bump + new entry. Idempotent: archive already on disk
+    # OR a prior split commit on the branch is treated as already done.
+    if plan.split_plan is not None and not pr_merged:
+        sp = plan.split_plan
+        split_already_committed = (
+            sp.commit_subject
+            in git("log", f"{MAIN_BRANCH}..HEAD", "--format=%s", capture=True)
+            .splitlines()
+        )
+        if sp.archive_path.exists() and split_already_committed:
+            _step(
+                1, total,
+                f"Era split for pre-{sp.boundary} already committed — skip",
+            )
+        elif sp.archive_path.exists() and not split_already_committed:
+            die(
+                f"era archive {sp.archive_path.relative_to(REPO_ROOT)} exists "
+                "but no matching split commit found on this branch — inspect "
+                "manually before resuming"
+            )
+        else:
+            _step(
+                1, total,
+                f"Split era {sp.old_era_label} → pre-{sp.boundary} "
+                f"(new era {sp.new_era_label})",
+            )
+            perform_split(sp)
+            run("git", "add", "-A")
+            run("git", "commit", "-m", sp.commit_subject)
 
     # ─── 2. file mutations ──────────────────────────────────────────────────
     if pr_merged:
@@ -883,6 +954,24 @@ def main(argv: list[str] | None = None) -> int:
     full, body = render_changelog_entry(
         target, prev, commits, today, test_trend_line=test_trend_line
     )
+
+    # Era-split planning: only crosses the gate when the current era body
+    # has grown past the drift cap AND the release crosses a minor/major
+    # boundary. Patch overflow is caught by the drift test (red CI), not
+    # by an auto-split into a nonsensical "pre-X.Y.Z" archive.
+    split: SplitPlan | None = None
+    body_size = current_era_body_size()
+    if body_size > CURRENT_ERA_BODY_CAP:
+        candidate = plan_split(target)
+        if candidate is None:
+            die(
+                f"current era body is {body_size} lines (cap "
+                f"{CURRENT_ERA_BODY_CAP}) but release {target} is a patch "
+                f"within the same era — split needs a minor/major bump. "
+                "Cut a minor release or split CHANGELOG.md manually first."
+            )
+        split = candidate
+
     plan = Plan(
         current=current,
         target=target,
@@ -891,6 +980,7 @@ def main(argv: list[str] | None = None) -> int:
         last_tag=prev,
         changelog_body=body,
         changelog_entry=full,
+        split_plan=split,
     )
     print_preview(plan)
     if args.resume:
