@@ -147,7 +147,7 @@ I analyzed the code. Here's what I found:
 
 Check if a context document exists for the affected area:
 - `agents/settings/contexts/` for project-wide contexts
-- `app/Modules/{Module}/agents/settings/contexts/` if a module is involved
+- `{module_root}/{Module}/{agent_folder}/settings/contexts/` if a module is involved (resolved via `modules.root_paths` + `modules.agent_folder`; Laravel example: `app/Modules/{Module}/agents/settings/contexts/`)
 
 If a context exists:
 ```
@@ -162,7 +162,9 @@ If no context exists, note this for step 8 (offer to create one after planning).
 
 ### 5b. Determine scope (module vs. project-wide)
 
-Check if `app/Modules/` exists in the project. If yes, ask:
+Resolve module roots via `scripts/_lib/agent_settings.py::enumerate_modules()`
+(reads `modules.root_paths` + `modules.agent_folder` from
+`.agent-project-settings.yml`). If at least one module is discovered, ask:
 
 ```
 Does this feature belong to a specific module?
@@ -172,11 +174,11 @@ Does this feature belong to a specific module?
 ```
 
 If the user chooses a module:
-- List available modules from `app/Modules/`.
+- Render the list of modules from `enumerate_modules()`.
 - Ask which module, or accept the module name directly.
-- Target directories become:
-  - Feature: `app/Modules/{Module}/agents/features/`
-  - Roadmaps (later): `app/Modules/{Module}/agents/roadmaps/`
+- Target directories become (Laravel example shown in parentheses):
+  - Feature: `{module_root}/{Module}/{agent_folder}/features/` (`app/Modules/{Module}/agents/features/`)
+  - Roadmaps (later): `{module_root}/{Module}/{agent_folder}/roadmaps/` (`app/Modules/{Module}/agents/roadmaps/`)
   - Create directories if they don't exist (with `.gitkeep`).
 
 If project-wide:
@@ -258,7 +260,7 @@ If picked **2** → continue.
 
 - Read `.augment/templates/features.md` for the structure.
 - Create the feature file in the target directory determined in step 5a:
-  - Module: `app/Modules/{Module}/agents/features/{feature-name}.md`
+  - Module: `{module_root}/{Module}/{agent_folder}/features/{feature-name}.md` (Laravel example: `app/Modules/{Module}/agents/features/{feature-name}.md`)
   - Project-wide: `agents/features/{feature-name}.md`
 - Fill in all sections based on the conversation.
 - Set the `Module` field in the feature doc accordingly.
@@ -270,7 +272,7 @@ If picked **2** → continue.
 What should the feature be named?
 
 Suggestion: {suggested-kebab-case-name}
-{If module: "Target: app/Modules/{Module}/agents/features/{name}.md"}
+{If module: "Target: {module_root}/{Module}/{agent_folder}/features/{name}.md"}
 {If root: "Target: agents/features/{name}.md"}
 ```
 

@@ -1,6 +1,6 @@
 # Roadmap Template
 
-Templates for roadmap files stored in `agents/roadmaps/` or `app/Modules/{Module}/agents/roadmaps/`.
+Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Module}/{agent_folder}/roadmaps/` (resolved via `modules.root_paths` + `modules.agent_folder` in `.agent-project-settings.yml`; Laravel example: `app/Modules/{Module}/agents/roadmaps/`).
 
 ---
 

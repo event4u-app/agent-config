@@ -27,7 +27,19 @@ install:
 # /module explore
 ## Instructions
 
-### 1. Check for modules
+### 1. Resolve module roots
+
+Read the `modules:` block from `.agent-project-settings.yml` via the
+loader (`get_modules_config()` in `scripts/_lib/agent_settings.py`):
+
+- If `modules.enabled` is `true` and `modules.root_paths` is non-empty,
+  use those paths verbatim. Skip the fallback table.
+- If the block is missing / disabled / empty, fall back to the
+  auto-detection table below — same shape `propose_modules_config.py`
+  uses internally.
+
+**Auto-detection fallback table** (consulted only when `modules:` is
+unset):
 
 - **Laravel HMVC**: Check `app/Modules/`.
 - **Symfony / DDD-lite**: Check `src/<Domain>/` or `src/Module/<Domain>/`.
@@ -35,15 +47,23 @@ install:
 - **Node / TS monorepo**: Check `packages/`, `apps/`, or `modules/`.
 - **Python**: Check top-level package dirs under `src/<package>/` or flat `<package>/`.
 - **Go**: Check `internal/<domain>/` or `cmd/<service>/`.
-- If none of the above exists:
-  ```
-  ⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
-  ```
-  Stop.
+
+If both the `modules:` block and the fallback table yield nothing:
+
+```
+⚠️  No module system found (no Modules/, src/<Domain>/, packages/, internal/, or equivalent directory).
+   Run `python3 scripts/propose_modules_config.py` to surface candidates.
+```
+
+Stop.
 
 ### 2. List available modules
 
-Scan the detected modules directory (see step 1) and show all modules. Skip `.module-template`, `.example`, and hidden dirs:
+Enumerate modules across every resolved root via `enumerate_modules()`
+(see `scripts/_lib/agent_settings.py`). Skip directories listed in
+`modules.skip_dirs` (defaults: `.module-template`, `.example`) and
+hidden dirs. The "Agent Docs" column reflects the configured
+`modules.agent_folder` (default `agents/`):
 
 ```
 📦 Available modules:
@@ -60,30 +80,39 @@ Which module do you want to explore? (number or name)
 
 ### 3. Analyze the module
 
-For the selected module, gather in parallel:
+Resolve `{agent_folder}` from `modules.agent_folder` (default `agents`).
+Let `{module_dir}` be the selected module's `module_path` from
+`enumerate_modules()`. For the selected module, gather in parallel:
+
+**Auto-load module contexts (entry-point hook):**
+- If `{module_dir}/{agent_folder}/settings/contexts/` exists, read every
+  `*.md` it ships and surface it into the conversation context per the
+  same conventions as [`commands/context/create.md`](../context/create.md).
+- Skip silently when the folder is absent — never error.
 
 **Structure:**
 - List all directories and files (2 levels deep)
-- Count PHP files per directory (Controllers, Services, Models, Jobs, Commands, etc.)
-- List route files and their contents
+- Count source files per directory (Controllers, Services, Models, Jobs, Commands, etc. — adapt to the configured stack)
+- List route / entry-point files and their contents
 
 **Code:**
 - Use `codebase-retrieval` to understand the module's purpose and key classes
 - Read `README.md` if it exists
-- Read agent docs (`agents/`) if they exist — including features, roadmaps, contexts
+- Read agent docs (`{module_dir}/{agent_folder}/`) if they exist — features, roadmaps, contexts
 - Read `Docs/` if it exists (human-facing documentation)
 
 **Tests:**
 - Count test files per suite (Unit, Component, Integration)
 
 **Roadmaps:**
-- Check `agents/roadmaps/*.md` for active roadmaps
+- Check `{module_dir}/{agent_folder}/roadmaps/*.md` for active roadmaps
 - For each: count completed vs total steps (e.g. "3/7 steps done")
 - Highlight the next open step
 
 **Context:**
-- Check `agents/settings/contexts/` for existing context docs (project-root and module-level)
-- Check `agents/features/` for related feature plans
+- Check `{module_dir}/{agent_folder}/settings/contexts/` for module-level context docs (already surfaced by the auto-load hook above)
+- Check `agents/settings/contexts/` for project-root contexts
+- Check `{module_dir}/{agent_folder}/features/` for related feature plans
 
 ### 4. Display module overview
 
@@ -124,7 +153,8 @@ STRUCTURE:
 NAMESPACE:
 ───────────────────────────────────────────────
 
-  App\Modules\{ModuleName}\App\
+  {modules.namespace_template substituted with {ModuleName}, or
+   "—" when the stack has no PHP-style namespace}
 
 ───────────────────────────────────────────────
 KEY CLASSES:

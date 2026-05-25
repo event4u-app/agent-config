@@ -37,7 +37,7 @@ Gather in parallel:
 - Check for: `artisan`, `Makefile`, `Taskfile.yml`, `docker-compose.yml`
 - Check for: `phpstan.neon`, `ecs.php`, `rector.php`, `config-dev/`
 - Check for: `.github/workflows/`, `CODEOWNERS`, `.editorconfig`
-- Check for: `app/Modules/`, multi-tenant indicators (`customer_database`)
+- Check for module roots (resolve via `scripts/_lib/agent_settings.py::enumerate_modules()`; Laravel shape: `app/Modules/`), multi-tenant indicators (`customer_database`)
 - Read: `AGENTS.md`, `.github/copilot-instructions.md` (if exist)
 
 Display:
@@ -138,7 +138,7 @@ CODE INVENTORY:
 
 ### Phase 3: Module inventory (if modules exist)
 
-If `app/Modules/` exists, analyze each module:
+If `enumerate_modules()` returns any modules (Laravel shape: `app/Modules/` exists), analyze each module:
 
 ```
 ───────────────────────────────────────────────

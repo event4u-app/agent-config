@@ -128,7 +128,7 @@ While exploring, proactively research:
 
 - Use `codebase-retrieval` to find related code, existing patterns, and affected areas.
 - Check `agents/features/` for existing feature plans that might overlap.
-- Check the module structure (`app/Modules/`) for where this would live.
+- Check the module structure via `enumerate_modules()` (resolves `modules.root_paths`; Laravel shape: `app/Modules/`) for where this would live.
 - Look for existing services, models, or endpoints that could be extended.
 
 **Share findings naturally:**

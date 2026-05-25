@@ -24,7 +24,9 @@ install:
 ## When to use
 
 * Authoring a new roadmap file in `agents/roadmaps/{name}.md` (or
-  module-scoped under `app/Modules/{Module}/agents/roadmaps/`)
+  module-scoped under `{module_root}/{Module}/{agent_folder}/roadmaps/` —
+  per `modules.root_paths` + `modules.agent_folder`; Laravel shape:
+  `app/Modules/{Module}/agents/roadmaps/`)
 * Rewriting an existing roadmap (phase restructure, goal pivot,
   council-pass integration — not a checkbox flip)
 * Drafting a phase block, exit criteria, or rollback section that

@@ -28,7 +28,9 @@ install:
 
 One command for everything that touches the **`agents/` folder** — the
 project's prose layer (features, contexts, roadmaps, overrides) and the
-mirror dirs under `app/Modules/*/agents/`. Replaces the legacy three-leaf
+mirror dirs under each module's `{agent_folder}/` (per
+`modules.root_paths` + `modules.agent_folder`; Laravel shape:
+`app/Modules/*/agents/`). Replaces the legacy three-leaf
 surface (`/agents prepare` + `/agents audit` + `/agents cleanup`) with
 one entry-point and three explicit modes.
 
@@ -41,7 +43,7 @@ one entry-point and three explicit modes.
 | Flag | Mode | Was | What it does |
 |---|---|---|---|
 | `--scaffold` | scaffold | `/agents prepare` | Create `agents/`, `agents/features/`, `agents/settings/contexts/`, `agents/roadmaps/`, module mirrors, `.gitkeep` files |
-| `--audit` | folder-audit | `/agents audit` | Read-only inventory of `agents/`, module agents, overrides; flag duplicates, orphans, structural drift |
+| `--audit` | folder-audit | `/agents audit` | Read-only inventory of `agents/`, per-module agent docs (via `enumerate_modules()`), overrides; flag duplicates, orphans, structural drift |
 | `--fix` | fix | `/agents cleanup` | Execute actions from a prior `--audit` (or roadmap) — move, merge, delete, update; per-action confirmation |
 
 **No flag → interactive wizard.** Print the table above, ask:
@@ -62,7 +64,7 @@ surface changes.
 
 1. **Verify project root** — look for `composer.json`, `artisan`, or `package.json`.
 2. **Create directory structure** — `agents/{roadmaps,features,contexts}/.gitkeep` + `.augment/guidelines/php/.gitkeep`. Skip dirs that already exist with content.
-3. **Module support** — if `app/Modules/` exists, mirror the layout in every module: `app/Modules/{Module}/agents/{roadmaps,features,contexts}/.gitkeep`.
+3. **Module support** — resolve module roots via `scripts/_lib/agent_settings.py::enumerate_modules()`. For every discovered module, mirror the layout: `{module_root}/{Module}/{agent_folder}/{roadmaps,features,contexts}/.gitkeep` (Laravel example: `app/Modules/{Module}/agents/{roadmaps,features,contexts}/.gitkeep`). Skip when `modules.enabled: false` or no roots configured.
 4. **Verify templates** — confirm `.augment/templates/{features,roadmaps,contexts}.md` exist; warn on missing.
 5. **Clean up old templates** — offer to delete legacy `agents/features/template.md` etc. (now in `.augment/templates/`); ask before delete.
 6. **Show summary** — table with status per directory and template; flag missing as `⚠️`.
@@ -71,8 +73,8 @@ surface changes.
 
 ### `--audit` (was the folder side of `/agents audit`)
 
-1. **Inventory all agent docs** — `find agents/ -maxdepth 1`, `agents/features/`, `agents/settings/contexts/`, `agents/overrides/`, `.augment/guidelines/`, `app/Modules/*/agents/`. For each: filename, first heading, size, last `git log` date.
-2. **Module coverage** — for every `app/Modules/*/`: docs count, presence of description file, features dir, contexts dir; flag inactive modules with no docs as `🔵 Info` only.
+1. **Inventory all agent docs** — `find agents/ -maxdepth 1`, `agents/features/`, `agents/settings/contexts/`, `agents/overrides/`, `.augment/guidelines/`, and per-module `{module_path}/{agent_folder}/` (resolved via `enumerate_modules()`). For each: filename, first heading, size, last `git log` date.
+2. **Module coverage** — for every module returned by `enumerate_modules()`: docs count, presence of description file, features dir, contexts dir; flag inactive modules with no docs as `🔵 Info` only.
 3. **Scan overrides** — for every `agents/overrides/*.md`: extract `Mode:` (`extend`/`replace`) and `Original:` headers; check the original file exists; flag orphans.
 4. **Classify documents** — `Architecture / Convention / Pattern / Feature / Context / Module Doc / Override / Unclear`.
 5. **Detect issues**:
@@ -90,7 +92,7 @@ surface changes.
    Roadmap phases: critical fixes → structural cleanup → fill gaps → cleanup.
 8. **Offer next steps** — `/optimize agents-dir --fix`, `/context refactor`, or done.
 
-**Rules:** read-only — no file edits; do NOT audit `agents/roadmaps/` or `app/Modules/*/agents/roadmaps/` (separate lifecycle); do NOT audit `.augment/` (route to `/agents audit`); be specific (file, reference, what's wrong); don't flag inactive modules.
+**Rules:** read-only — no file edits; do NOT audit `agents/roadmaps/` or per-module `{module_path}/{agent_folder}/roadmaps/` (separate lifecycle); do NOT audit `.augment/` (route to `/agents audit`); be specific (file, reference, what's wrong); don't flag inactive modules.
 
 ### `--fix` (was `/agents cleanup`)
 

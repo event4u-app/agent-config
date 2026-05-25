@@ -20,7 +20,7 @@ Layer 2: AGENTS.md                    ← Project entry point
 Layer 3: .github/copilot-instructions ← Coding standards
 Layer 4: agents/overrides/            ← Project customizations of Layer 1
 Layer 5: agents/                      ← Project-specific docs
-Layer 6: app/Modules/*/agents/        ← Module-specific docs
+Layer 6: {module_root}/*/{agent_folder}/  ← Module-specific docs (e.g. app/Modules/*/agents/)
 Layer 7: Docs/                        ← Technical docs for humans
 Layer 8: {package}/agents/            ← Package-specific docs
 ```
@@ -69,19 +69,26 @@ See `.augment/contexts/override-system.md` for naming conventions and format.
 Project-specific knowledge that doesn't belong in the shared package.
 Structural docs live directly in `agents/`, organized content in subdirectories.
 
-### Layer 6: `app/Modules/*/agents/` — Module Documentation
+### Layer 6: `{module_root}/*/{agent_folder}/` — Module Documentation
 
 **Scope:** Single module
-**Location:** `app/Modules/{Module}/agents/`
+**Location:** `{module_root}/{Module}/{agent_folder}/` — resolved via
+`modules.root_paths` + `modules.agent_folder` in `.agent-project-settings.yml`.
+Common shapes:
+
+- Laravel — `app/Modules/{Module}/agents/`
+- Symfony bundles — `src/Bundle/{Bundle}/agents/`
+- Node / Python / Go monorepo packages — `packages/{Pkg}/agents/`
+
 **Contains:** Module description, module-scoped features, roadmaps, contexts
 
 Created when a module has its own conventions or active development.
-Roadmaps are stored in `agents/roadmaps/`.
+Roadmaps are stored in `{agent_folder}/roadmaps/` per module.
 
 ### Layer 7: `Docs/` — Technical Documentation
 
 **Scope:** Project or module
-**Location:** `Docs/` or `app/Modules/*/Docs/`
+**Location:** `Docs/` or `{module_root}/{Module}/Docs/`
 **Contains:** Setup guides, architecture diagrams, API docs
 
 For human readers. `agents/` is optimized for AI agents, `Docs/` for humans.
@@ -105,7 +112,7 @@ When starting work, agents read in this order:
 | 3 | `agents/roadmaps/` | Active roadmap context |
 | 4 | `agents/overrides/` | Project customizations |
 | 5 | `agents/` | Project-specific docs for the task |
-| 6 | `app/Modules/{Module}/agents/` | Module docs (if working on a module) |
+| 6 | `{module_root}/{Module}/{agent_folder}/` | Module docs (if working on a module; Laravel: `app/Modules/{Module}/agents/`) |
 | 7 | `agents/features/` | Related feature plans |
 | 8 | `agents/roadmaps/` | Active roadmaps |
 
@@ -125,7 +132,7 @@ agents/overrides/skills/eloquent.md        ← Override (Layer 4)
 |---|---|---|
 | `.augment/contexts/` | Shared (about the agent system) | `augment-infrastructure.md` |
 | `agents/settings/contexts/` | Project-wide | `import-pipeline.md` |
-| `app/Modules/*/agents/settings/contexts/` | Module-specific | `client-api.md` |
+| `{module_root}/*/{agent_folder}/settings/contexts/` (per `modules.root_paths` + `modules.agent_folder`; Laravel: `app/Modules/*/agents/settings/contexts/`) | Module-specific | `client-api.md` |
 
 ### Template Usage (Layer 1 → Layer 5/6)
 

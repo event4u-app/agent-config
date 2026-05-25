@@ -1,6 +1,6 @@
 # Feature Planning Template
 
-Templates for feature plan files stored in `agents/features/` or `app/Modules/{Module}/agents/features/`.
+Templates for feature plan files stored in `agents/features/` or `{module_root}/{Module}/{agent_folder}/features/` (resolved via `modules.root_paths` + `modules.agent_folder` in `.agent-project-settings.yml`; Laravel example: `app/Modules/{Module}/agents/features/`).
 
 ---
 

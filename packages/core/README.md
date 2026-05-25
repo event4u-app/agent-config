@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `3.3.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 364
+- **artefacts**: 365
 
 ## Commands (135)
 
@@ -264,7 +264,7 @@ Core framework-neutral artefacts.
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 - **`verify-before-complete`** — Verify before completion — run tests and quality tools before claiming done
 
-## Skills (120)
+## Skills (121)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
@@ -329,6 +329,7 @@ Core framework-neutral artefacts.
 - **`memory-consolidation`** — Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'.
 - **`migration-architect`** — Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
 - **`mobile-e2e-strategy`** — Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps.
+- **`module-management`** — Use when working within any module under the project's configured `modules.root_paths` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src layout, Go internal/, or a custom path. Reads roots from `.agent-project-settings.yml` instead of hardcoding `app/Modules/`.
 - **`multi-tenancy`** — Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
 - **`openapi`** — Use when documenting APIs — OpenAPI/Swagger, PHP attributes, Redocly validation, versioned specs — even when the user just says 'document this endpoint' without naming OpenAPI.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.

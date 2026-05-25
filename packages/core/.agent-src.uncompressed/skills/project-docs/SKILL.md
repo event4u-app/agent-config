@@ -85,10 +85,12 @@ regulations, workflows, and edge cases that the agent needs to understand the pr
 1. **List `agents/settings/contexts/`** — read any context file whose name matches the work area.
 2. **List `agents/settings/contexts/domain/`** — read domain knowledge files relevant to the business logic.
 3. **List `agents/reference/docs/`** — read detail docs for the specific topic you're working on.
-4. **Check module docs** — if working in a module, also check:
-   - `app/Modules/{Module}/agents/` — module-specific docs
-   - `app/Modules/{Module}/agents/settings/contexts/` — module-specific contexts (if exists)
-   - `app/Modules/{Module}/agents/settings/contexts/domain/` — module-specific domain knowledge (if exists)
+4. **Check module docs** — if working in a module, resolve `{module_root}` from
+   `modules.root_paths` and `{agent_folder}` from `modules.agent_folder` (see
+   `scripts/_lib/agent_settings.py::enumerate_modules()`), then check:
+   - `{module_root}/{Module}/{agent_folder}/` — module-specific docs
+   - `{module_root}/{Module}/{agent_folder}/settings/contexts/` — module-specific contexts (if exists)
+   - `{module_root}/{Module}/{agent_folder}/settings/contexts/domain/` — module-specific domain knowledge (if exists)
 
 ### Reading order
 

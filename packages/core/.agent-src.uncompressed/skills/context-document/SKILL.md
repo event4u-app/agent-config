@@ -56,11 +56,13 @@ Unlike feature plans (future-focused) or roadmaps (task-focused), contexts are
 ├── skills-and-commands.md
 └── documentation-hierarchy.md
 
-agents/settings/contexts/                         # Project-wide contexts
+agents/settings/contexts/                                # Project-wide contexts
 ├── {context-name}.md
 
-app/Modules/{Module}/agents/settings/contexts/    # Module-scoped contexts
-├── {context-name}.md
+{module_root}/{Module}/{agent_folder}/settings/contexts/ # Module-scoped contexts
+├── {context-name}.md                                    # Laravel: app/Modules/…
+                                                         # Symfony: src/Bundle/…
+                                                         # Monorepo: packages/…
 
 .augment/templates/
 └── contexts.md                          # Context template
@@ -82,7 +84,7 @@ app/Modules/{Module}/agents/settings/contexts/    # Module-scoped contexts
 |---|---|
 | About the `.augment/` system itself | `.augment/contexts/` (shared package) |
 | Project-wide or cross-module | `agents/settings/contexts/` |
-| Module-specific | `app/Modules/{Module}/agents/settings/contexts/` |
+| Module-specific | `{module_root}/{Module}/{agent_folder}/settings/contexts/` (resolved via `modules.root_paths` + `modules.agent_folder`; Laravel example: `app/Modules/{Module}/agents/settings/contexts/`) |
 | If unsure | Ask the user |
 
 ### Shared vs. project-specific contexts
