@@ -77,27 +77,27 @@ Re-use the existing skill-trigger eval surface and run it twice — once with pa
 
 The hard track — actually run Claude Code on small coding tasks and measure end-to-end output quality.
 
-- [ ] **Step 1:** Author `internal/bench/corpora/ab-trackb.yaml` — 10-15 tasks across 5 categories:
+- [x] **Step 1:** Author `internal/bench/corpora/ab-trackb.yaml` — 10-15 tasks across 5 categories:
   - **Bug-fix** (2-3 tasks): seeded buggy snippet + expected behaviour
   - **Feature-add** (2-3 tasks): small additive change
   - **Refactor** (2 tasks): existing-pattern-aware rewrite
   - **UI-audit** (2 tasks): "where would you add component X" (touches `existing-ui-audit` gate)
   - **Test-add** (2-3 tasks): missing test for an existing function
   Each task carries: `id`, `category`, `prompt`, `success_criteria` (structural — see Step 3), `expected_artifacts`, `seed_files`.
-- [ ] **Step 2:** Build `scripts/bench_ab_task_runner.py` — for each task, in each variant:
+- [x] **Step 2:** Build `scripts/bench_ab_task_runner.py` — for each task, in each variant:
   1. Boot a clean clone of the variant.
   2. Invoke `claude` CLI with the task prompt (headless / programmatic mode if supported; otherwise driver-script).
   3. Capture stdout transcript, tool-call log, wall-time, token counts (from session jsonl if `cost-tracking` enabled).
   4. Snapshot the resulting working tree.
-- [ ] **Step 3:** Define **structural success criteria** in `scripts/_lib/bench_ab_scoring.py` — no LLM-judge in this roadmap; LLM-judge is a separate later roadmap if signal is too weak. Criteria per category:
+- [x] **Step 3:** Define **structural success criteria** in `scripts/_lib/bench_ab_scoring.py` — no LLM-judge in this roadmap; LLM-judge is a separate later roadmap if signal is too weak. Criteria per category:
   - **Bug-fix:** target test file exists and target assertion would pass against the diff (best-effort static check, not full test execution)
   - **Feature-add:** target file modified, no `commit-policy` violation in transcript (no `git commit` without ask)
   - **Refactor:** target file changed AND the existing-pattern reference file was read in the transcript
   - **UI-audit:** transcript contains a `state.ui_audit` write or an `existing-ui-audit` reference before any component file write
   - **Test-add:** test file created, no untouched-prod-file violation, no `--no-verify` in transcript
-- [ ] **Step 4:** Track-B metrics computed by `bench_ab_diff.py`: completion-rate per category, mean wall-time, mean tokens, cost-per-task, ask-vs-act ratio (% commit-class events that asked instead of acted), tool-call count.
+- [x] **Step 4:** Track-B metrics computed by `bench_ab_diff.py`: completion-rate per category, mean wall-time, mean tokens, cost-per-task, ask-vs-act ratio (% commit-class events that asked instead of acted), tool-call count.
 
-**Exit criteria:** `task bench:ab:track-b` runs all 10-15 tasks in both variants, produces a per-category table, and at least 3 categories show a measurable delta (positive or negative — both are signal).
+**Exit criteria:** `task bench:ab:track-b` runs all 10-15 tasks in both variants, produces a per-category table, and at least 3 categories show a measurable delta (positive or negative — both are signal). Plumbing verified in `--mode dry-run` (both variants 0/13 — honest dry-run signal); the measurable delta surfaces under `--mode live` once a maintainer approves the per-task cost spend.
 
 **Rollback:** remove `ab-trackb.yaml`, the runner, and the scoring lib; Track A still produces output on its own.
 
