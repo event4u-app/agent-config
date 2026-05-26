@@ -26,6 +26,7 @@
 import { useEffect } from 'preact/hooks';
 import { route, initRouter, navigate } from './router.js';
 import { WizardPage } from './pages/WizardPage.js';
+import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
 
 interface Surface {
@@ -136,7 +137,7 @@ function dispatch(path: string): preact.JSX.Element {
     if (path === '/council')   return <ComingSoon name="Council" />;
     if (path === '/memory')    return <ComingSoon name="Memory" />;
     if (path === '/explain')   return <ComingSoon name="Explain" />;
-    if (path === '/workspace') return <ComingSoon name="Workspace" />;
+    if (path === '/workspace') return <WorkspacePage />;
     return <NotFound path={path} />;
 }
 

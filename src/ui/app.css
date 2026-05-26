@@ -363,3 +363,205 @@ code {
 
 .ac-role-add { display: flex; gap: var(--space-2); align-items: center; }
 .ac-role-add .ac-input { flex: 1; }
+
+/* Workspace surface — daily-workspace tab (ADR-025).
+ * Three-column grid: roles · main (tasks + sessions) · right rail
+ * (knowledge / docs / explain-toggle). Responsive collapse to single
+ * column below 900 px so the narrow Workspace tab on small screens
+ * stacks without horizontal scroll.
+ */
+.ac-workspace__grid {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr) minmax(260px, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+@media (max-width: 900px) {
+    .ac-workspace__grid { grid-template-columns: 1fr; }
+}
+
+.ac-workspace__heading {
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-medium);
+    margin: 0 0 var(--space-2) 0;
+    color: var(--color-text);
+}
+.ac-workspace__empty {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.ac-workspace__role-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.ac-workspace__role {
+    text-align: left;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    cursor: pointer;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-1);
+    color: inherit;
+    font: inherit;
+}
+.ac-workspace__role:hover { border-color: var(--color-border-strong); }
+.ac-workspace__role--active {
+    border-color: var(--color-primary, var(--color-text));
+    background: var(--color-surface-alt);
+}
+.ac-workspace__role:focus-visible {
+    outline: 2px solid var(--color-primary, var(--color-text));
+    outline-offset: 2px;
+}
+.ac-workspace__role-name {
+    font-weight: var(--font-weight-medium);
+}
+.ac-workspace__role-status {
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+.ac-workspace__role-status[data-status="stable"] { color: var(--color-success, #15803d); }
+.ac-workspace__role-status[data-status="beta"]   { color: var(--color-warn, #b45309); }
+.ac-workspace__role-status[data-status="draft"]  { color: var(--color-text-muted); }
+.ac-workspace__role-tagline {
+    grid-column: 1 / -1;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+}
+
+.ac-workspace__main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.ac-workspace__task-list,
+.ac-workspace__session-list,
+.ac-workspace__doc-list,
+.ac-workspace__skill-list,
+.ac-workspace__citation-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+.ac-workspace__task {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+    background: var(--color-surface);
+}
+.ac-workspace__task-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-2);
+}
+.ac-workspace__task-name { font-weight: var(--font-weight-medium); }
+.ac-workspace__task-intent {
+    color: var(--color-text-muted);
+    font-size: var(--font-size-sm);
+    margin: var(--space-1) 0 0 0;
+}
+.ac-workspace__task-prompt {
+    display: inline-block;
+    margin-top: var(--space-2);
+    font-size: var(--font-size-xs);
+    color: var(--color-text-muted);
+}
+
+.ac-workspace__session {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) minmax(80px, 1fr) 2fr;
+    gap: var(--space-2);
+    font-size: var(--font-size-sm);
+    padding: var(--space-2) var(--space-3);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+.ac-workspace__session-id { font-family: var(--font-mono, monospace); color: var(--color-text-muted); }
+
+.ac-workspace__rail {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.ac-workspace__citation {
+    border-left: 3px solid var(--color-border);
+    padding: var(--space-1) var(--space-2);
+}
+.ac-workspace__citation-marker {
+    font-weight: var(--font-weight-medium);
+    margin-right: var(--space-1);
+}
+.ac-workspace__citation-source {
+    text-decoration: none;
+    color: var(--color-text);
+    border-bottom: 1px dotted var(--color-border-strong);
+}
+.ac-workspace__citation-source:hover { color: var(--color-primary, var(--color-text)); }
+.ac-workspace__citation-pin {
+    margin-left: var(--space-1);
+    color: var(--color-warn, #b45309);
+}
+.ac-workspace__citation-excerpt {
+    margin: var(--space-1) 0 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
+
+.ac-workspace__doc {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-2);
+    align-items: center;
+    font-size: var(--font-size-sm);
+    padding: var(--space-2);
+    border-radius: var(--radius-sm);
+}
+.ac-workspace__doc-type {
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    padding: 0 var(--space-1);
+}
+.ac-workspace__doc-time {
+    font-family: var(--font-mono, monospace);
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
+
+.ac-workspace__explain {
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+}
+.ac-workspace__explain legend {
+    padding: 0 var(--space-1);
+}
+.ac-workspace__explain-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    cursor: pointer;
+    padding: var(--space-1) 0;
+}
+.ac-workspace__explain-hint {
+    margin: var(--space-2) 0 0 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
