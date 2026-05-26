@@ -29,7 +29,20 @@ Search both locations:
 
 ## 2. Pre-run summary — single confirmation gate
 
-Before the loop runs, show the resolved config in the user's language:
+Read `roadmap.skip_pre_run_gate` from `.agent-settings.yml` (default
+`true`).
+
+- `true` **and** the roadmap is unambiguous (user named it, or exactly
+  one active roadmap exists) → **skip the interactive gate**. Emit the
+  summary block below as a one-shot inline note (no numbered options,
+  no wait) so the user can still abort mid-stream if the wrong file
+  was picked, then continue straight into § 3.
+- `false`, **or** the roadmap is ambiguous (multiple active roadmaps
+  and none named), **or** an unresolvable cadence / scope conflict
+  is detected → show the gate and wait for input.
+
+Summary block (shown in both modes; the gate-mode adds the numbered
+options + wait):
 
 > Roadmap: `<resolved-path>`
 > Phase 1: `<name>` — 3/5 done
@@ -43,8 +56,11 @@ Before the loop runs, show the resolved config in the user's language:
 > 1. Go — start processing autonomously
 > 2. Different roadmap · 3. Different scope · 4. Toggle council · 5. Abort
 
-Skip the gate when scope, roadmap, and council are all unambiguous in
-the invocation (e.g. `/roadmap:process-phase road-to-X.md with council`).
+The gate is also skipped — regardless of `skip_pre_run_gate` — when
+scope, roadmap, and council are all unambiguous in the invocation
+(e.g. `/roadmap:process-phase road-to-X.md with council`); the
+invocation-level skip is the legacy path that still works under
+`skip_pre_run_gate: false`.
 
 ## 3. Commit-step pre-scan — one upfront ask
 
