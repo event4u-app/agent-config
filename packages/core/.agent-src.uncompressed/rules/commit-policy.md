@@ -48,6 +48,16 @@ Anything else → no commit. Hard Floor (bulk deletions, infra changes) still fi
 
 Quoted commit phrases (chat-log paste, log excerpt, roadmap snippet) are **not** permission — see [`commit-mechanics § Speech-act check`](../contexts/authority/commit-mechanics.md).
 
+## Always split into logical chunks — never ask how
+
+```
+COMMIT AUTHORIZED → SPLIT INTO LOGICAL CHUNKS BY DEFAULT.
+NEVER ASK "ONE COMMIT OR MULTIPLE?", "HOW SHOULD I SPLIT?",
+"WHICH CHUNK FIRST?". THE AGENT PICKS THE SPLIT.
+```
+
+One chunk per concern (scope / refactor / rules / config / cleanup), foundation-first. Generated files ride with their source chunk. State the split inline, execute. Full mechanics + carve-outs: [`commit-mechanics § Always split into logical chunks`](../contexts/authority/commit-mechanics.md).
+
 ## NEVER write commit steps into roadmaps unsolicited
 
 When **creating** a roadmap (`/roadmap-create`, `/feature-roadmap`, any roadmap-producing flow) — do **not** include commit steps unless the user explicitly requested them. Commits are a delivery decision; roadmaps plan **work**.

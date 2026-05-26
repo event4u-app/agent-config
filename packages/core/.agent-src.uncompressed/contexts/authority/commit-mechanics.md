@@ -21,6 +21,21 @@ Outside the four below, no commit is allowed and no commit ask is allowed.
 4. **Roadmap authorization** — roadmap lists explicit commit steps and
    the user invoked roadmap execution; each commit matches a step.
 
+## Always split into logical chunks — default mandate
+
+```
+WHEN A COMMIT IS AUTHORIZED, ALWAYS SPLIT THE DIFF INTO THE
+SMALLEST LOGICAL CHUNKS THAT MAKE SENSE. NEVER ASK "EIN COMMIT
+ODER MEHRERE?", "WIE SOLL ICH SPLITTEN?", "WELCHER ZUERST?".
+THE SPLIT IS THE AGENT'S CALL, NOT THE USER'S.
+```
+
+Default shape — one chunk per concern (scope / refactor / rules / config / cleanup), in dependency order (foundation → feature → cleanup). Mixed-concern files split by hunk via `git add -p`. Generated / projected files (e.g. `.agent-src/`, `.augment/`, `.claude/`) ride with the source-of-truth chunk that produced them, not as a separate "regenerate projections" commit.
+
+The chunking decision is **never** a numbered option. Pick a sensible split, state it inline ("splitte in 3 chunks: workspace-scope · rules-hardening · gitignore-cleanup"), execute. The user retains revert / amend control after the fact — they don't need to pre-approve the chunk boundary.
+
+Carve-out — if the diff is genuinely indivisible (single hunk, single concern, single file family) → one commit, state inline. If a chunk would cross the Hard Floor below (bulk deletion / infra), surface that chunk's diff per the next section before its commit lands, not before the chunk boundary is chosen.
+
 ## Hard Floor still applies — bulk deletions and infra changes
 
 Even when one of the four `commit-policy` exceptions authorizes a
