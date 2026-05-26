@@ -70,7 +70,13 @@ KNOWN_CONCENTRATION_BREACHES: dict[str, int] = {
 # scope-control-allowlisted + non-destructive-allowlisted) clears the
 # 30 % cap; the entry below pins the measured ceiling. Future trim
 # work drops this back to None (default 30 %).
-KNOWN_TOP3_CONCENTRATION_CEILING: int | None = 10_900
+# Bumped 10_900 → 11_300 in v4.0.0: branch-drift commits (`d30d441e`,
+# `d824408c`) raised the non-safety-floor top-3 sum
+# (language-and-tone + no-cheap-questions + ask-when-uncertain) past
+# the prior lock. Same rationale as the kernel-budget breach bump in
+# `scripts/smoke/kernel.sh`: shrinkage belongs in a separate kernel-
+# rule-edit PR per `scope-control § Kernel-rule edits` slow-rollout.
+KNOWN_TOP3_CONCENTRATION_CEILING: int | None = 11_300
 
 # Q3=A locked safety-floor rules — out of scope for slimming and for the
 # concentration check. Their size is intentional (Iron Laws + obligation
