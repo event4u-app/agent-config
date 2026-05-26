@@ -25,7 +25,7 @@ Companion artefacts:
 - Wizard contract: [`docs/contracts/gui-wizard.md`](../contracts/gui-wizard.md)
 - Predecessor ADR: [`ADR-007`](ADR-007-agent-discovery-scopes.md) — scope precedence, global-default amendment
 - Perms entry-gate: [`scripts/lint_global_paths.py`](../../scripts/lint_global_paths.py)
-- Payload schema: [`schemas/wizard-apply-payload.schema.json`](../../schemas/wizard-apply-payload.schema.json)
+- Payload schema: [`internal/schemas/wizard-apply-payload.schema.json`](../../internal/schemas/wizard-apply-payload.schema.json)
 
 ## Context
 

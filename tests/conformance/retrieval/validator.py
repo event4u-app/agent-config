@@ -1,6 +1,6 @@
 """Pure-Python validator for retrieval contract v1 envelopes.
 
-Mirrors `schemas/retrieval-v1.schema.json`. Deliberately hand-written
+Mirrors `internal/schemas/retrieval-v1.schema.json`. Deliberately hand-written
 so the conformance harness has zero third-party runtime dependencies.
 If `jsonschema` is ever added to the toolchain, this file can be
 replaced with a thin wrapper; until then, keeping the shape assertions

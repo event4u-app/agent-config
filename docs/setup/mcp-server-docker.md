@@ -1,6 +1,6 @@
 # MCP server — Docker (stdio bundle)
 
-Phase-6 F3 ships `docker/mcp-server/Dockerfile`: a stdio-only image of
+Phase-6 F3 ships `internal/docker/mcp-server/Dockerfile`: a stdio-only image of
 the agent-config MCP server, pinned to the same `mcp` + `PyYAML`
 versions the test suite runs against. No HTTP / SSE transport — that
 lives in [`road-to-mcp-distribution.md`](../../agents/roadmaps/road-to-mcp-distribution.md)
@@ -8,11 +8,11 @@ under its own A0 amendment.
 
 ## Build
 
-Build context is the **repo root**, not `docker/mcp-server/` — the
+Build context is the **repo root**, not `internal/docker/mcp-server/` — the
 `COPY` lines reference paths relative to the project root.
 
 ```bash
-docker build -f docker/mcp-server/Dockerfile -t agent-config-mcp:local .
+docker build -f internal/docker/mcp-server/Dockerfile -t agent-config-mcp:local .
 ```
 
 Tag conventions:

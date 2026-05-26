@@ -126,7 +126,7 @@ const wizardStateSchema = z.object({
 type WizardState = z.infer<typeof wizardStateSchema>;
 
 // road-to-global-only-install § Phase 1.5 — WizardApplyPayload shape.
-// Mirrors `schemas/wizard-apply-payload.schema.json`; the discriminator
+// Mirrors `internal/schemas/wizard-apply-payload.schema.json`; the discriminator
 // (`schema_version`) selects the variant. Real schema validation lives
 // in install.py — the route only enforces the outer envelope so the
 // bridge spawn surface stays tight.

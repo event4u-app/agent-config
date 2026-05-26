@@ -3,7 +3,7 @@
  * unified 9-step Setup-Wizard. Boots the Fastify app from `src/server`
  * in-process against a temp writeRoot, walks the full state machine in
  * dry-run, asserts the apply preview payload matches the locked schema
- * (`schemas/wizard-apply-payload.schema.json` / `WizardPayloadV2`), and
+ * (`internal/schemas/wizard-apply-payload.schema.json` / `WizardPayloadV2`), and
  * verifies that zero files land under the temp writeRoot.
  *
  * The spec uses Playwright's `request` fixture only — no browser
