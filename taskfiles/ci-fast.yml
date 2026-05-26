@@ -96,6 +96,16 @@ tasks:
       live skill cites an archived slug as replaced_by. Step-2 Phase 3.
     cmd: python3 scripts/lint_archived_skills.py {{.QUIET_FLAG}}
 
+  ci:required-checks:
+    silent: true
+    desc: |
+      Print the required-check set the current branch will face on the
+      PR — per-PR-shape resolution (feature / release / docs-only) per
+      docs/contracts/branch-protection-policy.md. Pure preview, no
+      network, no spend. Useful before pushing to confirm the diff
+      stays within the release-PR allowlist.
+    cmd: python3 scripts/print_required_checks.py {{.CLI_ARGS}}
+
   lint-bench:
     silent: true
     desc: |

@@ -33,6 +33,16 @@ Each step prints what it's about to do before doing it, so a crash
 leaves a recoverable trail.
 
 Stdlib-only (Python 3.10+). No third-party runtime dependencies.
+
+See also:
+    - docs/contracts/release-pr-gating.md — release-PR shape, cut surface,
+      kept surface, fail-closed contract.
+    - docs/contracts/branch-protection-policy.md — per-PR-shape
+      required-check matrix; `task ci:required-checks` previews it.
+    - docs/contracts/ci-cost-budget.md — measured baselines + quarterly
+      review cadence.
+    - .github/workflows/release-validation.yml — the tight release-PR
+      validation jobs (release-shape, changelog-entry, version-consistency).
 """
 
 from __future__ import annotations
