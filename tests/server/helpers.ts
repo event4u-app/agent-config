@@ -39,6 +39,12 @@ export interface BootOptions {
     replay?: boolean;
     /** Boot in dry-run mode (every write returns a `preview` payload). */
     dryRun?: boolean;
+    /** Enable the extended 10-step wizard (ai-tools + packs + modules lead). */
+    extendedSteps?: boolean;
+    /** Initial wizard step index reported when no `wizard-state.json` exists. */
+    initialStep?: number;
+    /** Wizard entry mode — surfaces in `/api/v1/wizard/state.wizardMode`. */
+    wizardMode?: 'install' | 'setup' | null;
 }
 
 const PACKAGE_ROOT = resolve(process.cwd());
@@ -72,6 +78,9 @@ export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
         logLevel: 'fatal',
         skipReplay: opts.replay !== true,
         dryRun: opts.dryRun === true,
+        extendedSteps: opts.extendedSteps === true,
+        ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
+        ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     });
     await app.ready();
 

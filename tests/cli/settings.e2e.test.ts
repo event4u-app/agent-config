@@ -22,6 +22,12 @@ interface BootResult {
     port: string;
     token: string;
     hash: string;
+    /**
+     * Buffered stdout up to the moment the URL is matched. Lets callers
+     * assert on out-of-band markers (e.g. `WIZARD_READY`) that the bash
+     * bootstrap watches for — road-to-unified-setup § B4.
+     */
+    stdout: string;
 }
 
 /**
@@ -49,6 +55,7 @@ async function bootAndCapture(args: readonly string[]): Promise<{ proc: ExecaChi
                     port: match[1] ?? '',
                     token: match[2] ?? '',
                     hash: match[3] ?? '',
+                    stdout: buffer,
                 });
             }
         };
@@ -142,5 +149,57 @@ describe('compiled CLI — settings / ui:serve e2e', () => {
         });
         expect(res.exitCode).toBe(2);
         expect(res.stderr).toContain('Headless environment detected');
+    });
+
+    // road-to-unified-setup § B0 — `install` + `setup` share the same boot
+    // path as `ui:serve`, only the initial wizard step differs. The hash
+    // is identical (`#/wizard`); landing-step assertions live in the
+    // server-side integration suite (tests/server/wizard.initialStep.test.ts).
+    it('install --no-open --allow-headless boots with #/wizard hash', async () => {
+        const uiDist = makeUiDistStub();
+        const { proc, boot } = await bootAndCapture([
+            'install', '--no-open', '--allow-headless', '--ui-dist', uiDist,
+        ]);
+        try {
+            expect(boot.hash).toBe('#/wizard');
+            expect(boot.token.length).toBeGreaterThan(8);
+        } finally {
+            await stop(proc);
+        }
+    });
+
+    it('setup --no-open --allow-headless boots with #/wizard hash', async () => {
+        const uiDist = makeUiDistStub();
+        const { proc, boot } = await bootAndCapture([
+            'setup', '--no-open', '--allow-headless', '--ui-dist', uiDist,
+        ]);
+        try {
+            expect(boot.hash).toBe('#/wizard');
+            expect(boot.token.length).toBeGreaterThan(8);
+        } finally {
+            await stop(proc);
+        }
+    });
+
+    // road-to-unified-setup § B4 — WIZARD_READY stdout contract.
+    // The bash bootstrap (scripts/bootstrap.sh) watches stdout for the
+    // marker so it does not have to poll the port. The marker must
+    // appear in the buffered stdout that contains the URL, must lead
+    // the URL on the same line, and must include the tokenized URL.
+    it('ui:serve emits WIZARD_READY <url> on stdout once Fastify is listening', async () => {
+        const uiDist = makeUiDistStub();
+        const { proc, boot } = await bootAndCapture([
+            'ui:serve', '--no-open', '--allow-headless', '--ui-dist', uiDist,
+        ]);
+        try {
+            expect(boot.stdout).toContain('WIZARD_READY ');
+            const wizardLine = boot.stdout
+                .split('\n')
+                .find((l) => l.startsWith('WIZARD_READY '));
+            expect(wizardLine).toBeDefined();
+            expect(wizardLine).toContain(`http://127.0.0.1:${boot.port}/?token=`);
+        } finally {
+            await stop(proc);
+        }
     });
 });

@@ -69,6 +69,23 @@ export interface WizardRouteOptions {
      */
     extendedSteps?: boolean;
     /**
+     * Initial step index reported by `GET /api/v1/wizard/state` when no
+     * `wizard-state.json` is present. road-to-unified-setup § B0 — the
+     * `install` subcommand lands at index 0 (AI tools) and `setup` lands
+     * at index 3 (Identity / first settings step), both off the same
+     * 10-step extended flow. Ignored when state has been persisted: a
+     * resumed wizard always picks up where the user left off.
+     */
+    initialStep?: number;
+    /**
+     * Wizard entry mode — road-to-unified-setup § B5. `install` runs the
+     * three install-only steps (ai-tools / packs / modules) then renders
+     * a hard-stop continue-screen before identity. `setup` skips the lead
+     * and lands on identity. `null` / undefined preserves the canonical
+     * navigation contract for legacy ui:serve callers.
+     */
+    wizardMode?: 'install' | 'setup' | null;
+    /**
      * Dry-run — POST /state writes to a per-server in-memory Map (initial
      * read still hits disk so an in-progress real run can be previewed);
      * POST /finish skips `commitMulti` and returns `{ ok, dryRun, preview }`
@@ -87,10 +104,10 @@ const LEGACY_USER_MD_REL = '.agent-user.md';
 const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
 // and the chat-side `~/.claude/skills/onboard/SKILL.md`. Bump in lockstep.
-// Extended mode (road-to-global-only-install § Phase 1) prepends two
-// steps (ai-tools + packs) to ship the unified 9-step flow.
+// Extended mode (road-to-global-only-install § Phase 1) prepends three
+// steps (ai-tools + packs + modules) to ship the unified 10-step flow.
 const DEFAULT_TOTAL_STEPS = 7;
-const EXTENDED_TOTAL_STEPS = 9;
+const EXTENDED_TOTAL_STEPS = 10;
 
 /**
  * Discovery-manifest path. Resolved from the package root the server
@@ -346,6 +363,11 @@ const modulesConfigSchema = z.object({
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
+    // Clamp the CLI-provided initial step to the active step range so a
+    // stale `--initial-step=99` cannot shove the UI past the last screen.
+    const rawInitial = opts.initialStep ?? 0;
+    const initialStep = Math.max(0, Math.min(totalSteps - 1, Math.trunc(rawInitial)));
+    const wizardMode: 'install' | 'setup' | null = opts.wizardMode ?? null;
     const dryRun = opts.dryRun === true;
     const legacyReadRoot = opts.legacyReadRoot ?? null;
     const projectScopeRoot = opts.projectScopeRoot ?? null;
@@ -361,9 +383,21 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             // in-progress real run can be previewed.
             const existing = dryRun ? (memState ?? await readState(opts.writeRoot)) : await readState(opts.writeRoot);
             if (existing === null) {
-                return { step: 0, totalSteps, partial: {}, startedAt: null, extendedSteps: extended };
+                return {
+                    step: initialStep,
+                    totalSteps,
+                    partial: {},
+                    startedAt: null,
+                    extendedSteps: extended,
+                    wizardMode,
+                };
             }
-            return { ...existing, totalSteps: existing.totalSteps ?? totalSteps, extendedSteps: extended };
+            return {
+                ...existing,
+                totalSteps: existing.totalSteps ?? totalSteps,
+                extendedSteps: extended,
+                wizardMode,
+            };
         });
 
         // road-to-global-only-install § Phase 1.2 — Auto-detect endpoint.

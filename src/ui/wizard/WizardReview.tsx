@@ -12,6 +12,12 @@
 
 import type { JsonValue } from '../forms/schemaTypes.js';
 import type { WizardStep } from './steps.js';
+import { WizardConflicts } from './WizardConflicts.js';
+import type {
+    ConflictBatchChoice,
+    ConflictEntryWire,
+    ConflictResolutionWire,
+} from './state.js';
 
 export interface DiffRow {
     path: string;
@@ -38,6 +44,36 @@ export interface WizardReviewProps {
     scope: 'global' | 'project';
     scopeAvailable: boolean;
     onScopeChange: (next: 'global' | 'project') => void;
+    /**
+     * Selection counts surfaced on the aiTools / packs rows of the
+     * jump-back nav (road-to-unified-setup § Phase 2). `undefined` keeps
+     * the row in its idle state — used in the legacy 7-step flow where
+     * neither step is present.
+     */
+    selectedToolsCount?: number;
+    selectedPacksCount?: number;
+    /**
+     * Install plan summary — per-tool file counts plus a flag for
+     * "nothing to install". `undefined` keeps the panel hidden (legacy
+     * 7-step flow); `installPlanReady === false` shows a loading state;
+     * empty `installPlanByTool` shows the "nothing to install" line.
+     * road-to-unified-setup § Phase B2.
+     */
+    installPlanByTool?: Record<string, number>;
+    installPlanReady?: boolean;
+    installPlanError?: string | null;
+    /**
+     * Filesystem-collision panel surfaced beneath the install summary
+     * (road-to-unified-setup § Phase B3). `undefined` keeps the panel
+     * hidden — used by the legacy 7-step flow and when the install plan
+     * hasn't loaded yet. Empty array still hides the panel because
+     * `WizardConflicts` short-circuits on zero entries.
+     */
+    conflicts?: ReadonlyArray<ConflictEntryWire>;
+    conflictResolutions?: Readonly<Record<string, ConflictResolutionWire>>;
+    conflictBatchChoice?: ConflictBatchChoice | null;
+    onConflictResolutionChange?: (path: string, choice: ConflictResolutionWire) => void;
+    onConflictBatchChoice?: (choice: ConflictBatchChoice | null) => void;
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -86,6 +122,16 @@ function stepStatus(
         const count = props.changes.filter((c) => stepOwnsPath(step, c.path)).length;
         if (count === 0) return { label: '', tone: 'idle' };
         return { label: `${count} change${count === 1 ? '' : 's'}`, tone: 'changed' };
+    }
+    if (step.kind === 'aiTools') {
+        const count = props.selectedToolsCount ?? 0;
+        if (count === 0) return { label: '', tone: 'idle' };
+        return { label: `${count} tool${count === 1 ? '' : 's'}`, tone: 'changed' };
+    }
+    if (step.kind === 'packs') {
+        const count = props.selectedPacksCount ?? 0;
+        if (count === 0) return { label: '', tone: 'idle' };
+        return { label: `${count} pack${count === 1 ? '' : 's'}`, tone: 'changed' };
     }
     return { label: '', tone: 'idle' };
 }
@@ -154,6 +200,82 @@ export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
                     </label>
                 </fieldset>
             ) : null}
+            {props.installPlanByTool !== undefined ? (
+                <InstallPlanSummary
+                    byTool={props.installPlanByTool}
+                    ready={props.installPlanReady === true}
+                    error={props.installPlanError ?? null}
+                />
+            ) : null}
+            {props.conflicts !== undefined
+                && props.conflictResolutions !== undefined
+                && props.onConflictResolutionChange !== undefined
+                && props.onConflictBatchChoice !== undefined ? (
+                <WizardConflicts
+                    conflicts={props.conflicts}
+                    resolutions={props.conflictResolutions}
+                    batchChoice={props.conflictBatchChoice ?? null}
+                    onResolutionChange={props.onConflictResolutionChange}
+                    onBatchChoice={props.onConflictBatchChoice}
+                />
+            ) : null}
         </>
+    );
+}
+
+/**
+ * Renders the per-tool file-count summary returned by the v4 engine
+ * (`POST /api/v1/install/plan`). Three render states:
+ *   - loading  → "Calculating install plan…"
+ *   - error    → red banner with the server message
+ *   - ready    → list of tools + total, or "nothing to install" line
+ * road-to-unified-setup § Phase B2.
+ */
+function InstallPlanSummary(props: {
+    byTool: Record<string, number>;
+    ready: boolean;
+    error: string | null;
+}): preact.JSX.Element {
+    if (!props.ready && props.error === null) {
+        return (
+            <section class="ac-wizard__install-plan" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">Calculating install plan…</p>
+            </section>
+        );
+    }
+    if (props.error !== null) {
+        return (
+            <section class="ac-wizard__install-plan ac-wizard__install-plan--error" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">{props.error}</p>
+            </section>
+        );
+    }
+    const entries = Object.entries(props.byTool).filter(([, n]) => n > 0);
+    if (entries.length === 0) {
+        return (
+            <section class="ac-wizard__install-plan" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">Nothing to install — no files match the selected tools.</p>
+            </section>
+        );
+    }
+    const total = entries.reduce((sum, [, n]) => sum + n, 0);
+    return (
+        <section class="ac-wizard__install-plan" aria-live="polite">
+            <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+            <p class="ac-wizard__install-plan-status">
+                {total} file{total === 1 ? '' : 's'} across {entries.length} tool{entries.length === 1 ? '' : 's'}.
+            </p>
+            <ul class="ac-wizard__install-plan-list">
+                {entries.map(([tool, n]) => (
+                    <li key={tool} class="ac-wizard__install-plan-row">
+                        <span class="ac-wizard__install-plan-tool">{tool}</span>
+                        <span class="ac-wizard__install-plan-count">{n} file{n === 1 ? '' : 's'}</span>
+                    </li>
+                ))}
+            </ul>
+        </section>
     );
 }

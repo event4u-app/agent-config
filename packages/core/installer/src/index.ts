@@ -1,53 +1,15 @@
 /**
- * Public entry point for `@event4u/installer`.
+ * Retirement stub for the legacy v3 TypeScript installer.
  *
- * Embedders (e.g. the browser wizard in Phase 6, the legacy `src/cli/`
- * shell during Phase 4 migration) import from this module. The CLI
- * binary lives in `./cli.js`.
+ * The standalone `@event4u/installer` workspace was retired in v4.0.0
+ * (road-to-unified-setup § D1). All install logic now lives in
+ * `src/install/` under the root package and is driven by
+ * `agent-config install` / `agent-config setup`.
+ *
+ * This stub stays in place so the legacy
+ * `.github/workflows/tests.yml` Node-Tests matrix keeps passing
+ * until a maintainer with `workflow` OAuth scope removes the three
+ * "Installer (…)" steps from that workflow. Once the workflow file
+ * is patched and merged, this directory can be deleted in full.
  */
-
-export type {
-    AgentDone,
-    AgentError,
-    AgentQuestion,
-    AgentResponse,
-    AgentResponseStatus,
-    DiscoveryManifest,
-    Lockfile,
-    LockfileFile,
-    LockfilePack,
-    ManifestArtefact,
-    ManifestInstall,
-    ManifestPack,
-    ManifestTrust,
-    ManifestWorkspace,
-    OverrideEntry,
-    OverridesFile,
-} from './types.js';
-
-export {
-    artefactsForPacks,
-    findManifestPath,
-    findPack,
-    findWorkspace,
-    loadManifest,
-    ManifestNotFoundError,
-    ManifestParseError,
-} from './manifest-loader.js';
-export type { LoadedManifest, LoadManifestOptions } from './manifest-loader.js';
-
-export {
-    LOCKFILE_NAME,
-    LockfileParseError,
-    OVERRIDES_NAME,
-    OverridesParseError,
-    lockfileFromYaml,
-    lockfileToYaml,
-    readLockfile,
-    readOverrides,
-} from './lockfile.js';
-
-export { ensureWithinRoot, openStaging } from './io/atomic-write.js';
-export type { OpenStagingOptions, StagedWrite, StagingSession } from './io/atomic-write.js';
-
-export { sha256OfFile, sha256OfFileSync, sha256OfString } from './io/sha256.js';
+export const RETIRED = true;

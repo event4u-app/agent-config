@@ -170,3 +170,64 @@ carry over. Concretely: *"arbeite eigenständig"* given for
 "Roadmap A" is consumed when Roadmap A's deliverable lands. A new
 named task (Roadmap B, ticket Y, "next slice") needs fresh
 authorization. See [`autonomous-execution § task-scope`](../../rules/autonomous-execution.md#task-scope--autonomy-is-bound-to-the-named-task).
+
+## Post-artifact hard stop — no auto-offer of execution
+
+```
+ARTIFACT LANDED (ROADMAP / ADR / PLAN / PITCH / TICKET / DESIGN DOC)
+→ STOP. NEVER ASK "READY TO START?" / "BEGIN PHASE 1?" / "SOFORT
+AUSFÜHREN?" / "SOLL ICH MIT E1.1 ANFANGEN?". EXECUTION STARTS ON A
+LATER TURN WITH AN EXPLICIT EXECUTION VERB FROM THE USER.
+```
+
+Authoring verbs (`create`, `draft`, `write`, `erstelle`, …) authorize
+the artifact only. The moment the file is saved, the turn ends —
+silence on execution. The artifact is the deliverable; the work it
+plans is a **separate decision** the user pins on a later turn.
+
+This anchor binds three command surfaces:
+
+- [`/roadmap:create` Step 9](../../commands/roadmap/create.md) —
+  hand-back is a hard stop; never propose `/roadmap:process-*` after
+  save.
+- [`/challenge-me vision` Step 6 (`!roadmap` branch)](../../commands/challenge-me/vision.md) —
+  routing into `/roadmap:create` ends at file save; the chain does
+  **not** chain into execution.
+- `/adr:create`, `/feature-roadmap`, `/feature-plan`, any future
+  authoring command — same rule, no per-command opt-out.
+
+**Anti-pattern catalogue** (each of these IS the violation, not a
+near-miss):
+
+- *"Roadmap fertig. Soll ich mit Phase A anfangen?"* — execution
+  offer disguised as a status line.
+- Numbered options `1. Start now / 2. Review first / 3. Cancel`
+  after the save line — the user did not ask for an execution menu.
+- *"Recommended next step: `/roadmap:process-phase`"* in the
+  hand-back — back-channels the same ask.
+- Treating *"sieht gut aus"* / *"passt"* / *"alright"* / thumbs-up
+  as authorization to start. None of those are execution verbs.
+- Soft-routing prose: *"the roadmap is ready, kicking off E1.1…"* —
+  hand-off to execution disguised as continuation.
+- Council-review hop counted as an execution authorization: review
+  ends, agent jumps straight to Phase 1.
+
+**Allowed**
+
+- A single hand-back line citing the saved path and any regenerated
+  dashboard count.
+- A "Recommended next step" line in the artifact body itself (e.g.
+  in a pitch) that **names a command** the user can copy — that is
+  reference material in the artifact, not a routing offer in the
+  reply.
+- Continuing on the **same turn** if and only if the user already
+  used an explicit execution verb alongside the authoring verb
+  (*"create the roadmap and start Phase A"*). Mixed-verb handling:
+  default to authoring-only and ask; see [`Authoring vs.
+  implementation`](#authoring-vs-implementation--verb-discipline).
+
+**Bypass** — the user resumes with an explicit execution verb on a
+later turn: `implement`, `build`, `start Phase A`, `arbeite die
+Roadmap ab`, `mach weiter mit Phase 1`. That verb — not the prior
+authoring turn, not a council pass, not a thumbs-up — lifts the
+post-artifact stop.

@@ -541,20 +541,8 @@ tasks:
     desc: Vitest run over tests/{cli,server,ui}/**/*.ts (TS CLI shell — ADR-012)
     cmd: npm run test:ts --silent
 
-  # ---------------------------------------------------------------------------
-  # Installer package gates — Phase 3.1 of monorepo-phase-3-typescript-installer
-  # (ADR-016). The installer lives in packages/core/installer/ with its own
-  # tsconfig + vitest config; the root node_modules supplies the toolchain.
-  # ---------------------------------------------------------------------------
-
-  installer-typecheck:
-    silent: true
-    desc: tsc --noEmit over packages/core/installer/ (ADR-016 § 1)
-    dir: packages/core/installer
-    cmd: npx tsc -p tsconfig.json --noEmit
-
-  installer-test:
-    silent: true
-    desc: Vitest run over packages/core/installer/tests/**/*.ts (ADR-016 § 1)
-    dir: packages/core/installer
-    cmd: npx vitest run
+  # Note: the `installer-typecheck` / `installer-test` gates were removed
+  # in v4.0.0 — the TypeScript installer at `packages/core/installer/{src,
+  # tests}` was deleted in road-to-unified-setup § D1. The unified setup
+  # engine lives under `src/install/` and is covered by the root
+  # `test:ts` gate above (Vitest run over `tests/**/*.ts`).

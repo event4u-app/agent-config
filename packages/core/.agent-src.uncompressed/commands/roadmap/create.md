@@ -187,21 +187,47 @@ If the user picks **1**:
 
 If the user picks **2** → continue.
 
-### 9. Offer execution
+### 9. Hand back — HARD STOP, never auto-offer execution
 
-After saving (and any council review), ask the user (in their language) whether to start executing the roadmap immediately.
+```
+ROADMAP SAVED → STOP. NEVER ASK "READY TO START?" / "BEGIN PHASE 1?"
+/ "SOFORT AUSFÜHREN?". CREATE = ARTIFACT ONLY. EXECUTION NEEDS A
+FRESH, EXPLICIT EXECUTION VERB FROM THE USER.
+```
 
-If yes → switch to [`/roadmap:process-phase`](process-phase.md) with
-the newly created file (the default execution scope of the `/roadmap`
-cluster). Offer [`process-step`](process-step.md) and
-[`process-full`](process-full.md) as alternatives. The legacy
-`/roadmap execute` command was removed — autonomous execution is the
-only path now.
+Emit a single hand-back line citing the saved path and (if regenerated)
+the new dashboard count. Then **stop the turn**.
+
+- Do **not** present numbered options for "start execution / pick
+  process-phase / pick process-step / pick process-full". The user
+  picks the next move when they're ready — silence on execution.
+- Do **not** soft-route ("*the roadmap is ready, kicking off E1.1…*").
+  That is a hand-off to execution disguised as a status line.
+- Do **not** include "Recommended next step: `/roadmap:process-phase`"
+  in the hand-back. Mentioning the command back-channels the same
+  ask.
+- The user resumes with an explicit execution verb (`implement`,
+  `build`, `start Phase A`, `arbeite die Roadmap ab`, `mach weiter
+  mit Phase 1`) on a **later turn**. That verb — not this command —
+  authorizes execution. See [`scope-mechanics § Post-artifact hard
+  stop`](../../contexts/authority/scope-mechanics.md).
+
+Failure modes covered by this hard stop:
+
+- Asking *"Soll ich jetzt mit Phase A anfangen?"* after the save line.
+- Offering *"1. Start now / 2. Review first / 3. Cancel"* — the user
+  did not ask for an execution menu, the create verb covered authoring
+  only.
+- Treating a thumbs-up / *"sieht gut aus"* / *"passt"* as authorization
+  to start. None of those are execution verbs.
 
 ### Rules
 
 - **Do NOT auto-generate content** — always ask the user for input.
 - **Do NOT commit or push.**
+- **Do NOT offer execution after save** — Step 9 is a hard stop.
+  Execution starts on a later turn with an explicit execution verb
+  ([`scope-control § Authoring vs. implementation`](../rules/scope-control.md#authoring-vs-implementation)).
 - **Do NOT include commit steps in the roadmap** unless the user explicitly
   requested them. See [`commit-policy`](../rules/commit-policy.md#never-write-commit-steps-into-roadmaps-unsolicited).
   Roadmaps plan **work**; commits are a separate delivery decision.

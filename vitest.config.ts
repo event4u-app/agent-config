@@ -9,6 +9,7 @@ export default defineConfig({
             '@server': new URL('./src/server', import.meta.url).pathname,
             '@shared': new URL('./src/shared', import.meta.url).pathname,
             '@ui': new URL('./src/ui', import.meta.url).pathname,
+            '@install': new URL('./src/install', import.meta.url).pathname,
         },
     },
     test: {

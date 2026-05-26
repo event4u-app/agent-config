@@ -27,16 +27,34 @@ import { sliceSchema } from '../wizard/sliceSchema.js';
 import { StepHeader } from '../wizard/StepHeader.js';
 import { StepNav } from '../wizard/StepNav.js';
 import { WizardReview } from '../wizard/WizardReview.js';
+import { RecoveryBanner } from '../wizard/RecoveryBanner.js';
+import { ContinueScreen } from '../wizard/ContinueScreen.js';
+import { BackupScreen } from '../wizard/BackupScreen.js';
 import {
     activeTotalSteps,
     banner,
     clampStep,
+    conflictBatchChoice,
+    conflictResolutions,
+    continueAcknowledged,
+    detectedPackIds,
     diffLoading,
+    discoveryLoadError,
+    discoveryLoaded,
+    discoveryLoading,
+    discoveryPacks,
     errors,
     extendedSteps,
     getActiveSteps,
     initialSettings,
+    installPlan,
+    installPlanError,
+    installPlanLoading,
     legacyHints,
+    legacyV3,
+    legacyV3Acknowledged,
+    legacyV3Busy,
+    legacyV3Error,
     loaded,
     loadError,
     moduleCandidates,
@@ -49,9 +67,13 @@ import {
     modulesNamespaceTemplate,
     modulesProjectRoot,
     modulesSkipped,
+    recoveryDismissed,
+    recoveryStatus,
     reviewChanges,
     saving,
     schema,
+    selectedPacks,
+    selectedTools,
     settingsLastModified,
     startedAtNow,
     stepIndex,
@@ -60,11 +82,19 @@ import {
     userMdInitial,
     userMdLoaded,
     userMdSkipped,
+    VALID_TOOLS,
     values,
     wizardComplete,
+    wizardMode,
     wizardScope,
+    type ConflictBatchChoice,
+    type ConflictResolutionWire,
+    type DiscoveryPack,
+    type InstallPlanWire,
+    type LegacyV3Status,
     type ModulesDetectResponse,
     type ProposedModulesBlock,
+    type RecoveryStatus,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -120,9 +150,76 @@ async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
     }
 }
 
+/**
+ * Fetch the recovery status from `/api/v1/install/recovery` — road-to-unified-setup
+ * § Phase B4. Silent failure on transport errors so a missing endpoint
+ * (older server bundles) never blocks wizard boot; the banner just stays
+ * hidden. Aborts the result if the txlog reports a clean tail.
+ */
+async function loadRecovery(): Promise<void> {
+    try {
+        const res = await apiFetch<RecoveryStatus>('/api/v1/install/recovery');
+        recoveryStatus.value = res.incomplete ? res : null;
+    } catch {
+        recoveryStatus.value = null;
+    }
+}
+
+/**
+ * Probe the v3 legacy install state via `GET /api/v1/install/legacy-v3` —
+ * road-to-unified-setup § E2. Silent failure on transport errors so the
+ * wizard never blocks on an older server bundle.
+ */
+async function loadLegacyV3(): Promise<void> {
+    try {
+        const res = await apiFetch<LegacyV3Status>('/api/v1/install/legacy-v3');
+        legacyV3.value = res.present ? res : null;
+    } catch {
+        legacyV3.value = null;
+    }
+}
+
+async function runBackupV3(): Promise<void> {
+    legacyV3Busy.value = true;
+    legacyV3Error.value = null;
+    try {
+        await apiFetch('/api/v1/install/backup-v3', { method: 'POST' });
+        legacyV3Acknowledged.value = true;
+    } catch (err) {
+        legacyV3Error.value = err instanceof ApiCallError
+            ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+            : err instanceof Error ? err.message : String(err);
+    } finally {
+        legacyV3Busy.value = false;
+    }
+}
+
+async function dismissRecovery(reason: 'resume' | 'rollback' | 'ignore'): Promise<void> {
+    try {
+        await apiFetch('/api/v1/install/recovery/dismiss', {
+            method: 'POST',
+            body: { reason },
+        });
+    } catch (err) {
+        banner.value = {
+            message: err instanceof Error ? err.message : String(err),
+            tone: 'error',
+        };
+        return;
+    }
+    recoveryStatus.value = null;
+    recoveryDismissed.value = true;
+}
+
 async function loadAll(): Promise<void> {
     loadError.value = null;
     try {
+        // Phase B4 — fire recovery alongside the regular boot fetches so
+        // the banner is ready by the time the wizard renders Step 1.
+        void loadRecovery();
+        // Phase E2 — v3 legacy probe in parallel; the BackupScreen
+        // renders pre-Step-1 when `present: true`.
+        void loadLegacyV3();
         const [serverState, settingsRes] = await Promise.all([
             apiFetch<WizardServerState>('/api/v1/wizard/state'),
             fetchSettingsWithFallback(),
@@ -137,6 +234,9 @@ async function loadAll(): Promise<void> {
         // field; default to false to preserve the canonical 7-step
         // contract.
         extendedSteps.value = serverState.extendedSteps === true;
+        // road-to-unified-setup § B5 — adopt the wizardMode signal so the
+        // continue-screen renders on the right step transition.
+        wizardMode.value = serverState.wizardMode ?? null;
         // Resume from server partial when present; otherwise seed from disk values.
         const partialKeys = Object.keys(serverState.partial ?? {});
         values.value = partialKeys.length > 0
@@ -160,8 +260,12 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'modules') {
             void loadModulesOnce();
         }
+        if (resumed.kind === 'aiTools' || resumed.kind === 'packs') {
+            void loadDiscoveryOnce();
+        }
         if (resumed.kind === 'review') {
             void refreshDiff();
+            void loadInstallPlan();
         }
     } catch (err) {
         if (err instanceof ApiCallError) {
@@ -255,6 +359,75 @@ async function loadModulesOnce(): Promise<void> {
     }
 }
 
+interface ManifestResponse {
+    packs?: Array<{
+        id: string;
+        label?: string;
+        description?: string;
+        requires_hint?: string[];
+    }>;
+}
+
+interface AutoDetectResponse {
+    root: string;
+    signals: Array<{ id: string; reason: string; evidence: string }>;
+}
+
+/**
+ * Fetch the discovery manifest + auto-detect signals once per session
+ * (road-to-global-only-install § Phase 2). Both endpoints are gated on
+ * extended-mode (HTTP 404 in legacy 7-step bundles); the loader stays
+ * silent in that case so older servers don't break the step navigation.
+ *
+ * Detection signals arrive with a `pack-` prefix (`pack-php`, `pack-js`,
+ * …); the loader strips it so the ids join 1:1 to the manifest's pack
+ * ids. Detected packs are pre-selected on first load — declining is one
+ * click per row.
+ */
+async function loadDiscoveryOnce(): Promise<void> {
+    if (discoveryLoaded.value || discoveryLoading.value) return;
+    discoveryLoading.value = true;
+    discoveryLoadError.value = null;
+    try {
+        const [manifest, autoDetect] = await Promise.all([
+            apiFetch<ManifestResponse>('/api/v1/wizard/manifest'),
+            apiFetch<AutoDetectResponse>('/api/v1/wizard/auto-detect'),
+        ]);
+        const packs: DiscoveryPack[] = (manifest.packs ?? []).map((p) => ({
+            id: p.id,
+            label: p.label ?? p.id,
+            description: p.description ?? '',
+            requires_hint: p.requires_hint,
+        }));
+        discoveryPacks.value = packs;
+        // Strip the `pack-` prefix so ids match the manifest. Unknown
+        // signals (e.g. future detector additions not yet in the
+        // manifest) are dropped silently rather than rendering as
+        // orphan checkboxes.
+        const knownIds = new Set(packs.map((p) => p.id));
+        const detected = autoDetect.signals
+            .map((s) => s.id.startsWith('pack-') ? s.id.slice(5) : s.id)
+            .filter((id) => knownIds.has(id));
+        detectedPackIds.value = detected;
+        // Pre-select detected packs only when the user hasn't already
+        // touched the selection (e.g. resume from server partial).
+        if (Object.keys(selectedPacks.value).length === 0) {
+            const seed: Record<string, boolean> = {};
+            for (const id of detected) seed[id] = true;
+            selectedPacks.value = seed;
+        }
+    } catch (err) {
+        if (err instanceof ApiCallError) {
+            discoveryLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+        } else {
+            discoveryLoadError.value = err instanceof Error ? err.message : String(err);
+        }
+    } finally {
+        discoveryLoading.value = false;
+        discoveryLoaded.value = true;
+    }
+}
+
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -297,6 +470,56 @@ async function refreshDiff(): Promise<void> {
     }
 }
 
+/**
+ * Fetch the install plan for the current AI-tool selection from the v4
+ * TypeScript engine (`POST /api/v1/install/plan`, wizard branch). Runs
+ * on every Review-step entry so a back-edit on the AI-tools step is
+ * reflected without a manual refresh. Empty `selectedTools` → skips
+ * the fetch and clears the plan so the Review screen renders the
+ * "nothing to install" line. road-to-unified-setup § Phase B2.
+ */
+async function loadInstallPlan(): Promise<void> {
+    const toolIds = Object.entries(selectedTools.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    if (toolIds.length === 0) {
+        installPlan.value = null;
+        installPlanError.value = null;
+        return;
+    }
+    installPlanLoading.value = true;
+    installPlanError.value = null;
+    try {
+        const res = await apiFetch<InstallPlanWire>(
+            '/api/v1/install/plan',
+            {
+                method: 'POST',
+                body: {
+                    target: 'global',
+                    root: '~',
+                    toolIds,
+                    policy: {
+                        force: false,
+                        interactive: true,
+                        knownPaths: [],
+                        knownPointers: [],
+                        defaultStrategy: 'surface-to-ui',
+                    },
+                },
+            },
+        );
+        installPlan.value = res;
+    } catch (err) {
+        installPlan.value = null;
+        const message = err instanceof ApiCallError
+            ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+            : err instanceof Error ? err.message : String(err);
+        installPlanError.value = message;
+    } finally {
+        installPlanLoading.value = false;
+    }
+}
+
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
     if (userMdBody.value === null || userMdInitial.value === null) {
@@ -320,8 +543,12 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'modules') {
         void loadModulesOnce();
     }
+    if (next.kind === 'aiTools' || next.kind === 'packs') {
+        void loadDiscoveryOnce();
+    }
     if (next.kind === 'review') {
         void refreshDiff();
+        void loadInstallPlan();
     }
 }
 
@@ -336,6 +563,51 @@ interface FinishResponse {
         identity: UserIdentity | null;
         userIdentityYaml: string | null;
     };
+}
+
+interface ApplyResponse {
+    ok: boolean;
+    dryRun: boolean;
+    schemaVersion: 'wizard-v2' | 'installer-v1';
+    preview?: string;
+}
+
+/**
+ * Build the wizard-v2 apply payload from the current selection signals.
+ * Returns `null` when no AI tool is checked — the server schema requires
+ * `tools.min(1)`, and an empty selection means there is nothing for the
+ * installer bridge to do. Packs default to `[]` when unset.
+ */
+function buildApplyPayload(): {
+    schema_version: 'wizard-v2';
+    tools: string[];
+    packs: string[];
+    settings: Record<string, JsonValue>;
+    scope_to_project_only?: boolean;
+} | null {
+    const tools = Object.entries(selectedTools.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    if (tools.length === 0) return null;
+    const packs = Object.entries(selectedPacks.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    const payload: {
+        schema_version: 'wizard-v2';
+        tools: string[];
+        packs: string[];
+        settings: Record<string, JsonValue>;
+        scope_to_project_only?: boolean;
+    } = {
+        schema_version: 'wizard-v2',
+        tools,
+        packs,
+        settings: values.value,
+    };
+    if (serverStatus.value?.projectScopeAvailable === true && wizardScope.value === 'project') {
+        payload.scope_to_project_only = true;
+    }
+    return payload;
 }
 
 async function finish(): Promise<void> {
@@ -384,13 +656,44 @@ async function finish(): Promise<void> {
         // is cleared and userMdInitial is realigned below) and re-enables
         // automatically once a new edit makes canFinish true again.
         const closeHint = 'You can close this browser window now.';
-        if (res.dryRun === true) {
-            banner.value = { message: `Dry-run complete — no files written. Settings would be saved. ${closeHint}`, tone: 'success' };
-        } else if (Array.isArray(res.writtenPaths)) {
-            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete. ${closeHint}`, tone: 'success' };
-        } else {
-            banner.value = { message: `Wizard complete. ${closeHint}`, tone: 'success' };
+        const finishCopy = res.dryRun === true
+            ? `Dry-run complete — no files written. Settings would be saved.`
+            : Array.isArray(res.writtenPaths)
+                ? `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`
+                : `Wizard complete.`;
+        // road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
+        // After the 2PC settings commit lands, hand the AI-tool + pack
+        // selection to `/api/v1/wizard/apply` so `scripts/install.py`
+        // can dry-run the install plan. The server forces `dry_run:true`
+        // until Phase 1.9 — the preview text comes back as
+        // installer-side stdout. Skipped when no tool is selected
+        // (schema requires `tools.min(1)`) or when extended-mode is off
+        // (endpoint returns 404). Apply failures are soft: settings are
+        // already persisted, so we surface the error as a warning
+        // instead of rolling the banner back to red.
+        const applyPayload = extendedSteps.value ? buildApplyPayload() : null;
+        let applyCopy = '';
+        if (applyPayload !== null) {
+            try {
+                const applyRes = await apiFetch<ApplyResponse>(
+                    '/api/v1/wizard/apply',
+                    { method: 'POST', body: applyPayload },
+                );
+                const toolCount = applyPayload.tools.length;
+                const packCount = applyPayload.packs.length;
+                applyCopy = applyRes.dryRun
+                    ? ` Installer dry-run planned ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
+                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.')
+                    : ` Installer applied ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
+                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.');
+            } catch (err) {
+                const message = err instanceof ApiCallError
+                    ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+                    : err instanceof Error ? err.message : String(err);
+                applyCopy = ` Installer bridge failed: ${message}. Settings were saved; re-run the wizard to retry the install plan.`;
+            }
         }
+        banner.value = { message: `${finishCopy}${applyCopy} ${closeHint}`, tone: 'success' };
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -553,8 +856,151 @@ function buildModulesConfig(): ProposedModulesBlock | null {
     };
 }
 
+/**
+ * Renderer for the extended-mode `ai-tools` step. The list is static
+ * (mirrors `_VALID_TOOLS` in `scripts/install.py`) because tools are a
+ * substrate-level concept — which AI client the user runs — not a
+ * package artefact discovered from the manifest.
+ *
+ * Selection is stored in `selectedTools` and consumed by the eventual
+ * Wizard Apply bridge (road-to-global-only-install § Phase 1.5). The
+ * current finish endpoint accepts only settings + identity, so the
+ * selection is captured but not yet persisted — the apply bridge is
+ * gated until the merged path ships end-to-end.
+ */
+function AiToolsStepBody(): preact.JSX.Element {
+    const sel = selectedTools.value;
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the AI tools you use. The installer wires each selected
+                tool's surface (skills, rules, commands) on apply. You can
+                change this list later by re-running the wizard.
+            </p>
+            <ul style="list-style: none; padding-left: 0;">
+                {VALID_TOOLS.map((tool) => (
+                    <li key={tool.id}>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={sel[tool.id] ?? false}
+                                onChange={(e): void => {
+                                    const checked = (e.currentTarget as HTMLInputElement).checked;
+                                    selectedTools.value = { ...sel, [tool.id]: checked };
+                                }}
+                            />
+                            {' '}{tool.label} <small><code>{tool.id}</code></small>
+                        </label>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+/**
+ * Renderer for the extended-mode `packs` step. Reads the live discovery
+ * manifest (ADR-015) so the available packs always match the bundle on
+ * disk. Auto-detected packs (e.g. `pack-php` when `composer.json` is
+ * present) are pre-selected by `loadDiscoveryOnce`.
+ *
+ * `requires_hint` is surfaced as informational copy under each pack —
+ * the installer resolves dependencies at apply time, so the wizard
+ * does not force the user to tick the hinted parents.
+ */
+function PacksStepBody(): preact.JSX.Element {
+    if (discoveryLoading.value) {
+        return <p>Loading discovery manifest…</p>;
+    }
+    if (discoveryLoadError.value !== null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner ac-banner--error">
+                    Discovery failed: {discoveryLoadError.value}
+                </p>
+                <p>
+                    The manifest endpoint is gated on extended-mode. Re-run the
+                    server with extended steps enabled to populate this list.
+                </p>
+            </div>
+        );
+    }
+    const packs = discoveryPacks.value;
+    const sel = selectedPacks.value;
+    const detected = new Set(detectedPackIds.value);
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the capability packs to install. Auto-detected packs are
+                pre-selected based on files in your project root.
+            </p>
+            {packs.length === 0
+                ? <p><em>No packs available in the manifest.</em></p>
+                : (
+                    <ul style="list-style: none; padding-left: 0;">
+                        {packs.map((pack) => (
+                            <li key={pack.id}>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={sel[pack.id] ?? false}
+                                        onChange={(e): void => {
+                                            const checked = (e.currentTarget as HTMLInputElement).checked;
+                                            selectedPacks.value = { ...sel, [pack.id]: checked };
+                                        }}
+                                    />
+                                    {' '}<strong>{pack.label}</strong>{' '}
+                                    <small><code>{pack.id}</code></small>
+                                    {detected.has(pack.id)
+                                        ? <small> — <em>auto-detected</em></small>
+                                        : null}
+                                    {pack.description !== ''
+                                        ? <div><small>{pack.description}</small></div>
+                                        : null}
+                                    {pack.requires_hint && pack.requires_hint.length > 0
+                                        ? (
+                                            <div>
+                                                <small>
+                                                    Requires: {pack.requires_hint.map((r) => <code key={r}>{r}</code>).reduce<preact.JSX.Element[]>((acc, el, i) => i === 0 ? [el] : [...acc, <>, </>, el], [])}
+                                                </small>
+                                            </div>
+                                        )
+                                        : null}
+                                </label>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+        </div>
+    );
+}
+
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
+    // road-to-unified-setup § B5 — hard-stop continue-screen between the
+    // three install-only steps (ai-tools / packs / modules) and the
+    // settings section. The user just finished modules at index 2 and
+    // is now landing on Step 4 (identity, index 3). Render the handoff
+    // only when the install entry mode is active and the user has not
+    // already acknowledged the transition in this session.
+    const onContinueHandoff = extendedSteps.value
+        && wizardMode.value === 'install'
+        && stepIndex.value === 3
+        && !continueAcknowledged.value;
+    if (onContinueHandoff) {
+        return (
+            <ContinueScreen
+                busy={saving.value}
+                onContinue={(): void => {
+                    continueAcknowledged.value = true;
+                }}
+                onFinishHere={(): void => {
+                    continueAcknowledged.value = true;
+                    void goTo(activeTotalSteps() - 1);
+                }}
+            />
+        );
+    }
     if (step.kind === 'form') {
         const sliced = sliceSchema(schema.value!, step.paths ?? []);
         return (
@@ -585,35 +1031,11 @@ function StepBody(): preact.JSX.Element | null {
             />
         );
     }
-    // road-to-global-only-install § Phase 1.4 — placeholder renderers for
-    // the extended-mode lead steps. The full picker UI ships in the
-    // follow-up phase that wires discovery state into the wizard store;
-    // these stubs keep the step navigation walkable today so the 9-step
-    // flow is testable end-to-end while the deeper UX is in flight.
     if (step.kind === 'aiTools') {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p>
-                    Auto-detected AI tools will appear here. The wizard reads
-                    <code> /api/v1/wizard/auto-detect</code> and lets you toggle each
-                    discovered tool on or off. Pick-list UI lands in the follow-up
-                    extended-mode phase; the endpoint is already live so you can
-                    inspect raw output via <code>curl</code> in the meantime.
-                </p>
-            </div>
-        );
+        return <AiToolsStepBody />;
     }
     if (step.kind === 'packs') {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p>
-                    Capability packs (founder-strategy, finance-basic, gtm-sales,
-                    ops-people, ai-video) will appear here. The wizard reads
-                    <code> /api/v1/wizard/manifest</code> and lets you toggle each
-                    pack on or off. Selection UI lands in the follow-up phase.
-                </p>
-            </div>
-        );
+        return <PacksStepBody />;
     }
     if (step.kind === 'modules') {
         return <ModulesStepBody />;
@@ -633,8 +1055,42 @@ function StepBody(): preact.JSX.Element | null {
             scope={wizardScope.value}
             scopeAvailable={serverStatus.value?.projectScopeAvailable === true}
             onScopeChange={(next): void => { wizardScope.value = next; }}
+            selectedToolsCount={Object.values(selectedTools.value).filter(Boolean).length}
+            selectedPacksCount={Object.values(selectedPacks.value).filter(Boolean).length}
+            installPlanByTool={extendedSteps.value ? installPlanByTool() : undefined}
+            installPlanReady={extendedSteps.value ? installPlan.value !== null : undefined}
+            installPlanError={extendedSteps.value && !installPlanLoading.value ? installPlanError.value : null}
+            conflicts={extendedSteps.value ? (installPlan.value?.conflicts ?? []) : undefined}
+            conflictResolutions={extendedSteps.value ? conflictResolutions.value : undefined}
+            conflictBatchChoice={extendedSteps.value ? conflictBatchChoice.value : undefined}
+            onConflictResolutionChange={extendedSteps.value
+                ? (path: string, choice: ConflictResolutionWire): void => {
+                    conflictResolutions.value = { ...conflictResolutions.value, [path]: choice };
+                }
+                : undefined}
+            onConflictBatchChoice={extendedSteps.value
+                ? (choice: ConflictBatchChoice | null): void => {
+                    conflictBatchChoice.value = choice;
+                }
+                : undefined}
         />
     );
+}
+
+/**
+ * Collapse the InstallPlan wire shape into the flat per-tool count map
+ * the Review panel consumes. Returns an empty map when the plan hasn't
+ * loaded yet (the panel renders the loading state in that branch).
+ * road-to-unified-setup § Phase B2.
+ */
+function installPlanByTool(): Record<string, number> {
+    const plan = installPlan.value;
+    if (plan === null) return {};
+    const out: Record<string, number> = {};
+    for (const [tool, files] of Object.entries(plan.filesByTool)) {
+        out[tool] = files.length;
+    }
+    return out;
 }
 
 export function WizardPage({ path: _path }: { path: string }): preact.JSX.Element {
@@ -656,6 +1112,40 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     const step = stepAt(idx, { extended: extendedSteps.value });
     const isLast = idx === total - 1;
 
+    const rec = recoveryStatus.value;
+    const showRecovery = rec !== null && !recoveryDismissed.value;
+    const v3 = legacyV3.value;
+    const showBackup = v3 !== null && v3.present && !legacyV3Acknowledged.value;
+
+    // road-to-unified-setup § E2 — BackupScreen is a hard gate. Until
+    // the operator picks "Backup v3 and proceed" or "Abort", the rest
+    // of the wizard chrome stays hidden so a stale v3 tree cannot get
+    // silently overwritten by the v4 plan.
+    if (showBackup) {
+        return (
+            <div class="ac-page">
+                <BackupScreen
+                    sourcePath={v3.path}
+                    backupTarget={v3.backupTarget}
+                    version={v3.version}
+                    busy={legacyV3Busy.value}
+                    error={legacyV3Error.value}
+                    onBackupAndProceed={(): void => { void runBackupV3(); }}
+                    onAbort={(): void => {
+                        // Operator handles the cleanup manually — closing
+                        // the tab is the documented exit. We surface a
+                        // banner so they know the wizard is dismissed.
+                        banner.value = {
+                            tone: 'info',
+                            message: 'Aborted. Uninstall v3 manually, then re-run `agent-config install`.',
+                        };
+                        legacyV3Acknowledged.value = true;
+                    }}
+                />
+            </div>
+        );
+    }
+
     return (
         <div class="ac-page">
             <StepHeader
@@ -663,6 +1153,19 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 index={idx}
                 total={total}
             />
+            {showRecovery
+                ? (
+                    <RecoveryBanner
+                        abortedAt={rec.abortedAt}
+                        abortNote={rec.abortNote}
+                        writesSinceRollback={rec.writesSinceRollback}
+                        busy={saving.value}
+                        onResume={(): void => { void dismissRecovery('resume'); }}
+                        onRollback={(): void => { void dismissRecovery('rollback'); }}
+                        onIgnore={(): void => { void dismissRecovery('ignore'); }}
+                    />
+                )
+                : null}
             {banner.value !== null
                 ? (
                     <p class={`ac-banner${banner.value.tone === 'error' ? ' ac-banner--error' : ''}`}>

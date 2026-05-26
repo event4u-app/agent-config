@@ -1,13 +1,13 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **502 artefacts** in this package.
+Maintainer-facing index of all **503 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
 > **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)
 > Do not edit manually.
 
-## Skills (218)
+## Skills (219)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -129,6 +129,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`messaging-architecture`](../packages/pack-gtm-marketing/.agent-src.uncompressed/skills/messaging-architecture/SKILL.md) |  | Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'. |
 | skill | [`migration-architect`](../packages/core/.agent-src.uncompressed/skills/migration-architect/SKILL.md) |  | Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked. |
 | skill | [`mobile-e2e-strategy`](../packages/core/.agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
+| skill | [`module-detect-on-the-fly`](../packages/core/.agent-src.uncompressed/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config. |
 | skill | [`module-management`](../packages/core/.agent-src.uncompressed/skills/module-management/SKILL.md) |  | Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`motion-choreographer`](../packages/pack-ai-video/.agent-src.uncompressed/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../packages/core/.agent-src.uncompressed/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
@@ -230,7 +231,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../packages/pack-product-discovery/.agent-src.uncompressed/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../packages/pack-gtm-marketing/.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (75)
+## Rules (76)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -278,6 +279,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`model-recommendation`](../packages/core/.agent-src.uncompressed/rules/model-recommendation.md) | auto | Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT) |
 | rule | [`no-attribution-footers`](../packages/core/.agent-src.uncompressed/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../packages/core/.agent-src.uncompressed/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-pr-progress-comments`](../packages/core/.agent-src.uncompressed/rules/no-pr-progress-comments.md) | auto | Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true |
 | rule | [`no-roadmap-references`](../packages/core/.agent-src.uncompressed/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings |
 | rule | [`non-destructive-by-default`](../packages/core/.agent-src.uncompressed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../packages/core/.agent-src.uncompressed/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |
@@ -310,7 +312,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`user-interrupt-priority`](../packages/core/.agent-src.uncompressed/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../packages/core/.agent-src.uncompressed/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (136)
+## Commands (135)
 
 | kind | name | cluster/shim | description |
 |---|---|---|---|
@@ -381,7 +383,6 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | command | [`ghostwriter:write`](../packages/core/.agent-src.uncompressed/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
 | command | [`grill-me`](../packages/core/.agent-src.uncompressed/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../packages/core/.agent-src.uncompressed/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
-| command | [`install-via-agent`](../packages/core/.agent-src.uncompressed/commands/install-via-agent.md) |  | Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY. |
 | command | [`jira-ticket`](../packages/core/.agent-src.uncompressed/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../packages/core/.agent-src.uncompressed/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge:on-diff`](../packages/core/.agent-src.uncompressed/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |

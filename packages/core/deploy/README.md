@@ -7,7 +7,7 @@ Decision shape: [`ADR-021`](../../../docs/decisions/ADR-021-deployment-shape.md)
 
 | File | Purpose |
 |---|---|
-| `Dockerfile` | Multi-stage Node 20 + TypeScript build → slim runtime image (~ 500 MB target). Non-root `agentcfg` user. Entrypoint: `agent-config-installer gui --host 0.0.0.0 --port 8787`. |
+| `Dockerfile` | Multi-stage Node 20 + TypeScript build → slim runtime image (~ 500 MB target). Non-root `agentcfg` user. Entrypoint (v4.0.0+): `agent-config setup --allow-headless --port 8787`. The v3 entrypoint (`agent-config-installer gui`) was retired with the TypeScript installer workspace — see road-to-unified-setup § D1. |
 | `docker-compose.yml` | Single-host deployment. Services: `agent-config`, `redis`, `postgres`. Three named volumes. Host-side only `127.0.0.1:8787` is exposed; redis + postgres are container-internal. |
 
 ## Quickstart

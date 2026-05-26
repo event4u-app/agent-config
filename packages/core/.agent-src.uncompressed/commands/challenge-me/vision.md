@@ -320,7 +320,13 @@ Output a single fenced Markdown block the user can copy verbatim. Shape:
 The outer fence uses four backticks so the inner triple-backtick stays
 literal when the user copies it.
 
-### Step 6: Hand back
+### Step 6: Hand back — HARD STOP after artifact
+
+```
+PITCH OR ROADMAP LANDED → STOP. NEVER PROPOSE IMPLEMENTATION,
+NEVER ASK "READY TO START?". THE USER PICKS THE NEXT MOVE WITH AN
+EXPLICIT EXECUTION VERB ON A LATER TURN.
+```
 
 Branch on which trigger fired (or the natural 95%-stop):
 
@@ -335,10 +341,16 @@ Branch on which trigger fired (or the natural 95%-stop):
   this is opt-in routing, not silent execution. Mention the route in a
   single line under the pitch (e.g. *"Routing to `/roadmap:create` —
   this pitch becomes the seed for title + context + phase 1."*).
+  The chain ends when `/roadmap:create` saves the file — its own Step
+  9 is a hard stop ([`roadmap/create § 9`](../roadmap/create.md)), no
+  execution offer rides on the back of `!roadmap`.
 - **`!ai` / `!ai-council` / `!council`** — handled by Step 4-bis, never
   reaches Step 6.
 
-If the user wants any other follow-up, they invoke it explicitly.
+If the user wants any other follow-up, they invoke it explicitly. The
+"Recommended next step" line in the pitch (Step 5) names a *command*
+(`/work`, `/roadmap:create`, …) — it is a suggestion the user copies,
+**not** an offer this command auto-routes through.
 
 ## Output format
 
@@ -386,7 +398,9 @@ If the user wants any other follow-up, they invoke it explicitly.
 - **No auto-execution** — emit the pitch, not the implementation it
   describes. Do not chain into `/work` or `/roadmap:create` without
   explicit user invocation. The `!roadmap` trigger **is** explicit
-  invocation by user opt-in; routing under it is permitted.
+  invocation by user opt-in; routing under it is permitted **and ends
+  at file save** — never propose "ready to start Phase 1?" after the
+  roadmap lands. See [`scope-mechanics § Post-artifact hard stop`](../../contexts/authority/scope-mechanics.md).
 - **No file writes from /challenge-me itself** — the pitch is
   conversational. No commits, no roadmap edits, no `agents/` writes.
   The `!roadmap` trigger routes to `/roadmap:create`, which writes

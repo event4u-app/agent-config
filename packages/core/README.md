@@ -5,12 +5,12 @@
 Core framework-neutral artefacts.
 
 - **id**: `core`
-- **version**: `3.3.0`
+- **version**: `4.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
 - **artefacts**: 366
 
-## Commands (135)
+## Commands (134)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -78,7 +78,6 @@ Core framework-neutral artefacts.
 - **`ghostwriter:write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
 - **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 - **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
-- **`install-via-agent`** — Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
 - **`judge:on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
@@ -192,7 +191,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (69)
+## Rules (70)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -235,6 +234,7 @@ Core framework-neutral artefacts.
 - **`model-recommendation`** — Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT)
 - **`no-attribution-footers`** — Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
+- **`no-pr-progress-comments`** — Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true
 - **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings
 - **`non-destructive-by-default`** — Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass
 - **`onboarding-gate`** — First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request

@@ -75,6 +75,9 @@ Silent, before any numbered-options block. Any "yes" → don't ask:
 8. Mandate active + "weiter? / continue?" — IL 4, pick next item.
 9. Prereq for user-authorized action? IL 5, execute silently.
 10. Destination (branch / PR) already named? IL 6, never re-ask.
+11. Cleanup of gitignored / auto-pruned / TTL-managed artefact? Self-managing — state inline, never offer.
+12. Numbered option contains a commit-message body, "message preview", or "Vorschlag falls Du committen willst"? Disguised commit ask — `commit-policy` violation, drop it.
+13. Commit authorized + asking "one commit or multiple?", "how should I split?", "which chunk first?"? Forbidden — `commit-policy § Always split into logical chunks`. Pick the split, state inline, execute.
 
 Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
 
