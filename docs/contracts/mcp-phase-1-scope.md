@@ -154,7 +154,7 @@ change invalidates it.
 
 ### F3 — Stdio Docker bundle
 
-`docker/mcp-server/Dockerfile` ships a stdio-only image. The contract:
+`internal/docker/mcp-server/Dockerfile` ships a stdio-only image. The contract:
 
 - **No HTTP / SSE listener** in the image. Stdio is the only wire.
 - The image embeds `scripts/mcp_server/`, the two tool dependencies

@@ -68,7 +68,7 @@ measurement: that figure compares `.agent-src.uncompressed/` to
 `.agent-src/`, but the pipeline's claimed function is *projection*, not
 byte compression. The table below is produced by
 [`scripts/measure_projection_bytes.py --regenerate`](../../scripts/measure_projection_bytes.py)
-with every tool ID temporarily enabled in `.agent-tools.yml`.
+with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
 
 | Surface | Files | Symlinks | Bytes materialized | Method |
 |---|---:|---:|---:|---|

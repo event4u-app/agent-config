@@ -516,7 +516,7 @@ def retrieve_v1(
 
     Wraps :func:`retrieve` and projects the internal ``Hit`` shape into
     the shape defined by
-    ``schemas/retrieval-v1.schema.json``. Unknown types are reported as
+    ``internal/schemas/retrieval-v1.schema.json``. Unknown types are reported as
     ``status: unknown_type`` for that slice only, rather than failing
     the whole call.
     """

@@ -41,7 +41,7 @@ _CACHE_ENV = "AGENT_MEMORY_STATUS"
 _CACHE_FILE = Path(".agent-memory") / "status.cache"
 
 # Retrieval contract version served by the file-backed fallback.
-# Source of truth: schemas/retrieval-v1.schema.json.
+# Source of truth: internal/schemas/retrieval-v1.schema.json.
 CONTRACT_VERSION = 1
 _FILE_BACKEND_VERSION = "0.0.0-file"
 _FILE_BACKEND_FEATURES = ("file-fallback",)
@@ -200,7 +200,7 @@ def status(refresh: bool = False) -> Result:
 def health(refresh: bool = False) -> dict:
     """Return a v1 retrieval-contract health envelope.
 
-    Schema: ``schemas/retrieval-v1.schema.json`` (HealthResponse).
+    Schema: ``internal/schemas/retrieval-v1.schema.json`` (HealthResponse).
     Maps the three-state :func:`status` result onto the contract's
     ``ok | degraded | error`` so consumers can read
     ``contract_version`` without caring about the file-vs-package split.

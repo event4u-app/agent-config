@@ -135,7 +135,7 @@ tracked under the Phase 6 follow-ups.
 
 `/api/apply` accepts a discriminated-union body keyed on
 `schema_version`. The full JSON Schema lives at
-[`schemas/wizard-apply-payload.schema.json`](../../schemas/wizard-apply-payload.schema.json).
+[`internal/schemas/wizard-apply-payload.schema.json`](../../internal/schemas/wizard-apply-payload.schema.json).
 
 | `schema_version` | Variant | Shape |
 |---|---|---|

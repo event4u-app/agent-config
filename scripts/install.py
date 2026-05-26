@@ -3794,7 +3794,7 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         dest="apply_payload",
         default=None,
         help=(
-            "path to a WizardApplyPayload JSON file (schemas/"
+            "path to a WizardApplyPayload JSON file (internal/schemas/"
             "wizard-apply-payload.schema.json). When supplied, install.py "
             "reads the payload, validates schema_version, translates "
             "tools/packs/settings into CLI equivalents, and dispatches "
