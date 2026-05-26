@@ -45,6 +45,13 @@ export interface UiServeOptions {
      * See `agents/roadmaps/onboarding-wizard-takeover.md` § Dry-run.
      */
     dryRun?: boolean;
+    /**
+     * Enable the extended 9-step wizard (ai-tools + packs + modules
+     * ahead of the canonical 7 settings steps). road-to-global-only-install
+     * § Phase 1.5. Default off for `ui:serve`; `setup` flips this on so
+     * the unified onboarding flow is the default landing.
+     */
+    extendedSteps?: boolean;
 }
 
 function isHeadless(): boolean {
@@ -106,6 +113,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         token,
         expectedPort: port,
         dryRun,
+        extendedSteps: opts.extendedSteps === true,
     });
 
     try {

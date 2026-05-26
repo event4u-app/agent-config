@@ -126,6 +126,10 @@ async function main(argv: readonly string[]): Promise<number> {
 
     // `setup` — onboarding-only alias for `ui:serve` that lands on the
     // `#/wizard` route. Replaces the deprecated `/onboard` chat skill.
+    // road-to-unified-setup § Option 2: `setup` defaults to the extended
+    // 9-step flow (ai-tools + packs + modules ahead of the canonical 7
+    // settings steps). Pass `--no-extended` to fall back to the 7-step
+    // settings-only wizard.
     program
         .command('setup')
         .description('Open the onboarding wizard (boots the UI server and lands on #/wizard)')
@@ -135,6 +139,7 @@ async function main(argv: readonly string[]): Promise<number> {
         .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
         .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
         .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
+        .option('--no-extended', 'Use the 7-step settings-only wizard (skip ai-tools, packs, modules)')
         .action(async (opts: {
             port?: number;
             open?: boolean;
@@ -142,8 +147,12 @@ async function main(argv: readonly string[]): Promise<number> {
             allowHeadless?: boolean;
             projectRoot?: string;
             dryRun?: boolean;
+            extended?: boolean;
         }) => {
-            const forwarded: Parameters<typeof runUiServe>[0] = { initialRoute: '/wizard' };
+            const forwarded: Parameters<typeof runUiServe>[0] = {
+                initialRoute: '/wizard',
+                extendedSteps: opts.extended !== false,
+            };
             if (opts.port !== undefined) forwarded.port = opts.port;
             if (opts.open !== undefined) forwarded.open = opts.open;
             if (opts.uiDist !== undefined) forwarded.uiDist = opts.uiDist;
