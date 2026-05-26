@@ -124,15 +124,51 @@ async function main(argv: readonly string[]): Promise<number> {
             process.exit(code);
         });
 
+    // `install` — install-flow alias for `ui:serve` that lands on Step 1
+    // (AI tools, index 0) of the extended 10-step wizard. road-to-unified-setup
+    // § B0 — same Fastify server, same bundle, only the initial step
+    // differs from `setup`.
+    program
+        .command('install')
+        .description('Open the install wizard (boots the UI server and lands on Step 1 / AI tools)')
+        .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
+        .option('--no-open', 'Do not launch the browser')
+        .option('--ui-dist <path>', 'Override the dist/ui directory')
+        .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
+        .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
+        .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
+        .action(async (opts: {
+            port?: number;
+            open?: boolean;
+            uiDist?: string;
+            allowHeadless?: boolean;
+            projectRoot?: string;
+            dryRun?: boolean;
+        }) => {
+            const forwarded: Parameters<typeof runUiServe>[0] = {
+                initialRoute: '/wizard',
+                extendedSteps: true,
+                initialStep: 0,
+            };
+            if (opts.port !== undefined) forwarded.port = opts.port;
+            if (opts.open !== undefined) forwarded.open = opts.open;
+            if (opts.uiDist !== undefined) forwarded.uiDist = opts.uiDist;
+            if (opts.allowHeadless !== undefined) forwarded.allowHeadless = opts.allowHeadless;
+            if (opts.projectRoot !== undefined) forwarded.projectRoot = opts.projectRoot;
+            if (opts.dryRun !== undefined) forwarded.dryRun = opts.dryRun;
+            const code = await runUiServe(forwarded);
+            process.exit(code);
+        });
+
     // `setup` — onboarding-only alias for `ui:serve` that lands on the
     // `#/wizard` route. Replaces the deprecated `/onboard` chat skill.
-    // road-to-unified-setup § Option 2: `setup` defaults to the extended
-    // 9-step flow (ai-tools + packs + modules ahead of the canonical 7
-    // settings steps). Pass `--no-extended` to fall back to the 7-step
-    // settings-only wizard.
+    // road-to-unified-setup § B0: `setup` defaults to the extended
+    // 10-step flow and lands on Step 4 (Identity, index 3) so install-only
+    // prep steps (ai-tools + packs + modules) are skipped. Pass
+    // `--no-extended` to fall back to the 7-step settings-only wizard.
     program
         .command('setup')
-        .description('Open the onboarding wizard (boots the UI server and lands on #/wizard)')
+        .description('Open the onboarding wizard (boots the UI server and lands on Step 4 / Identity)')
         .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
         .option('--no-open', 'Do not launch the browser')
         .option('--ui-dist <path>', 'Override the dist/ui directory')
@@ -149,9 +185,14 @@ async function main(argv: readonly string[]): Promise<number> {
             dryRun?: boolean;
             extended?: boolean;
         }) => {
+            const extended = opts.extended !== false;
             const forwarded: Parameters<typeof runUiServe>[0] = {
                 initialRoute: '/wizard',
-                extendedSteps: opts.extended !== false,
+                extendedSteps: extended,
+                // Setup skips the install-only lead (ai-tools/packs/modules) —
+                // when the extended flow is active, jump to Identity (index 3).
+                // Non-extended mode starts at the canonical first step (0).
+                initialStep: extended ? 3 : 0,
             };
             if (opts.port !== undefined) forwarded.port = opts.port;
             if (opts.open !== undefined) forwarded.open = opts.open;
@@ -219,7 +260,7 @@ async function main(argv: readonly string[]): Promise<number> {
     }
 
     // Native subcommand → commander handles it (exits inside action).
-    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'setup', 'workspaces', 'packs', 'help'];
+    const native = ['versions', 'doctor-shell', 'ui:serve', 'settings', 'install', 'setup', 'workspaces', 'packs', 'help'];
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;

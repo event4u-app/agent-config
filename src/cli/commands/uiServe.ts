@@ -46,12 +46,18 @@ export interface UiServeOptions {
      */
     dryRun?: boolean;
     /**
-     * Enable the extended 9-step wizard (ai-tools + packs + modules
+     * Enable the extended 10-step wizard (ai-tools + packs + modules
      * ahead of the canonical 7 settings steps). road-to-global-only-install
      * § Phase 1.5. Default off for `ui:serve`; `setup` flips this on so
      * the unified onboarding flow is the default landing.
      */
     extendedSteps?: boolean;
+    /**
+     * Initial wizard step index forwarded to the server when no
+     * persisted state exists. road-to-unified-setup § B0 — `install`
+     * passes 0 (AI tools); `setup` passes 3 (Identity).
+     */
+    initialStep?: number;
 }
 
 function isHeadless(): boolean {
@@ -114,6 +120,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         expectedPort: port,
         dryRun,
         extendedSteps: opts.extendedSteps === true,
+        ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
     });
 
     try {

@@ -143,4 +143,34 @@ describe('compiled CLI — settings / ui:serve e2e', () => {
         expect(res.exitCode).toBe(2);
         expect(res.stderr).toContain('Headless environment detected');
     });
+
+    // road-to-unified-setup § B0 — `install` + `setup` share the same boot
+    // path as `ui:serve`, only the initial wizard step differs. The hash
+    // is identical (`#/wizard`); landing-step assertions live in the
+    // server-side integration suite (tests/server/wizard.initialStep.test.ts).
+    it('install --no-open --allow-headless boots with #/wizard hash', async () => {
+        const uiDist = makeUiDistStub();
+        const { proc, boot } = await bootAndCapture([
+            'install', '--no-open', '--allow-headless', '--ui-dist', uiDist,
+        ]);
+        try {
+            expect(boot.hash).toBe('#/wizard');
+            expect(boot.token.length).toBeGreaterThan(8);
+        } finally {
+            await stop(proc);
+        }
+    });
+
+    it('setup --no-open --allow-headless boots with #/wizard hash', async () => {
+        const uiDist = makeUiDistStub();
+        const { proc, boot } = await bootAndCapture([
+            'setup', '--no-open', '--allow-headless', '--ui-dist', uiDist,
+        ]);
+        try {
+            expect(boot.hash).toBe('#/wizard');
+            expect(boot.token.length).toBeGreaterThan(8);
+        } finally {
+            await stop(proc);
+        }
+    });
 });

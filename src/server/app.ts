@@ -24,6 +24,7 @@ import fastifyStatic from '@fastify/static';
 import { tokensMatch } from './token.js';
 import { pingRoute } from './routes/ping.js';
 import { discoveryRoute } from './routes/discovery.js';
+import { installRoute, type InstallRouteOptions } from './routes/install.js';
 import { schemaRoute } from './routes/schema.js';
 import { settingsRoute } from './routes/settings.js';
 import { userMdRoute } from './routes/userMd.js';
@@ -95,10 +96,25 @@ export interface CreateAppOptions {
      */
     dryRun?: boolean;
     /**
-     * Enable the extended 9-step wizard endpoints (auto-detect, manifest,
+     * Enable the extended 10-step wizard endpoints (auto-detect, manifest,
      * apply). road-to-global-only-install § Phase 1.5.
      */
     extendedSteps?: boolean;
+    /**
+     * Initial wizard step index reported by `GET /api/v1/wizard/state`
+     * when no `wizard-state.json` is persisted. road-to-unified-setup
+     * § B0 — `install` mode lands at 0 (AI tools); `setup` mode lands
+     * at 3 (Identity). Ignored once a partial run is on disk.
+     */
+    initialStep?: number;
+    /**
+     * Test-only overrides for the install route — `cwd` redirects the
+     * `/detect` handler to a fixture project root, `logPath` redirects
+     * the apply transaction log to a per-test temp file. Never set in
+     * production; the unit tests in `tests/server/install.test.ts` are
+     * the only legitimate caller.
+     */
+    installRouteOptions?: InstallRouteOptions;
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -181,6 +197,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     await app.register(schemaRoute());
     await app.register(settingsRoute({ writeRoot, legacyReadRoot, packageRoot, dryRun }));
     await app.register(userMdRoute({ writeRoot, legacyReadRoot, dryRun }));
+    await app.register(installRoute(opts.installRouteOptions ?? {}));
     await app.register(wizardRoute({
         writeRoot,
         legacyReadRoot,
@@ -188,6 +205,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         packageRoot,
         dryRun,
         extendedSteps: opts.extendedSteps === true,
+        ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
     }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
