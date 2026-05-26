@@ -8,13 +8,13 @@ complexity: lightweight
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and the existing bench infrastructure:
+- [x] Read `AGENTS.md` and the existing bench infrastructure:
   - `scripts/bench_run.py`, `scripts/bench_runner.py`, `scripts/bench_drift_check.py`, `scripts/bench_baseline_ready.py`
   - `internal/bench/corpora/corpus-dev.yaml`, `internal/bench/reports/`, `internal/bench/pricing.yaml`
   - `scripts/run_skill_evals.py`, `scripts/skill_trigger_eval.py`
-- [ ] `claude` CLI installed locally and authenticated (variant runs invoke it)
-- [ ] `task` runner present (entry will land in `Taskfile.yml`)
-- [ ] Read [`step-4-measurement-and-benchmark.md`](archive/step-4-measurement-and-benchmark.md) for the precedent this roadmap extends (do NOT duplicate selection-accuracy / drift logic — extend it)
+- [x] `claude` CLI installed locally and authenticated (variant runs invoke it)
+- [x] `task` runner present (entry will land in `Taskfile.yml`)
+- [x] Read [`step-4-measurement-and-benchmark.md`](archive/step-4-measurement-and-benchmark.md) for the precedent this roadmap extends (do NOT duplicate selection-accuracy / drift logic — extend it)
 
 ## Context
 
@@ -105,20 +105,20 @@ The hard track — actually run Claude Code on small coding tasks and measure en
 
 The user-facing surface: one `task bench:ab` command, one `docs/benchmark.md` file.
 
-- [ ] **Step 1:** Add `scripts/render_benchmark_md.py` — consumes the latest paired reports + the diff artefact and renders `docs/benchmark.md`. Sections:
+- [x] **Step 1:** Add `scripts/render_benchmark_md.py` — consumes the latest paired reports + the diff artefact and renders `docs/benchmark.md`. Sections:
   - **Headline numbers** (delta table: wall-time, tokens, cost, ask-vs-act, completion-rate)
   - **Track A — behavioural** (per-rule / per-skill trigger lift)
   - **Track B — task completion** (per-category table)
   - **Methodology** (target shape, corpus versions, claude CLI version, run timestamp, baseline staleness flag)
   - **History** (last 5 runs, sparkline-style ASCII)
-- [ ] **Step 2:** Wire `Taskfile.yml` entries:
+- [x] **Step 2:** Wire `Taskfile.yml` entries:
   - `bench:ab` — full run (Track A + Track B), uses baseline cache
   - `bench:ab:refresh-baseline` — force-refresh the `without` arm
   - `bench:ab:track-a` — Track A only
   - `bench:ab:track-b` — Track B only
   - `bench:ab:diff` — re-render the markdown from the latest reports without re-running
-- [ ] **Step 3:** Linter — add `scripts/lint_bench_ab.py` verifying corpus files conform to schema and the rendered `docs/benchmark.md` has every required section. Wire into the existing `lint-bench` aggregate.
-- [ ] **Step 4:** Document `docs/benchmark.md` lifecycle in `docs/contracts/benchmark-ab-contract.md` — when it regenerates, what stale-baseline means, cache invalidation triggers, how a reader interprets a stale flag.
+- [x] **Step 3:** Linter — add `scripts/lint_bench_ab.py` verifying corpus files conform to schema and the rendered `docs/benchmark.md` has every required section. Wire into the existing `lint-bench` aggregate.
+- [x] **Step 4:** Document `docs/benchmark.md` lifecycle in `docs/contracts/benchmark-ab-contract.md` — when it regenerates, what stale-baseline means, cache invalidation triggers, how a reader interprets a stale flag.
 
 **Exit criteria:** `task bench:ab` produces `docs/benchmark.md` end-to-end on a fresh checkout. `task bench:ab:diff` re-renders without re-running. Linter passes.
 
@@ -126,14 +126,14 @@ The user-facing surface: one `task bench:ab` command, one `docs/benchmark.md` fi
 
 ## Acceptance Criteria
 
-- [ ] `task bench:ab` produces `docs/benchmark.md` with both tracks populated
-- [ ] Running `task bench:ab` twice in a row reuses the cached `without` baseline on the second run (verify via report timestamp identity)
-- [ ] `task bench:ab:refresh-baseline` re-runs the `without` arm and bumps the timestamp
-- [ ] Track A delta is non-zero on ≥ 5 rules / skills
-- [ ] Track B delta surfaces on ≥ 3 of 5 categories (either direction)
-- [ ] `python3 scripts/bench_ab_integrity.py` exits 0 on every run (variants differ only in the agent-config surface)
-- [ ] `python3 scripts/lint_bench_ab.py` passes
-- [ ] `docs/benchmark.md` carries a methodology section naming corpus version + claude CLI version + run timestamp
+- [x] `task bench:ab` produces `docs/benchmark.md` with both tracks populated
+- [x] Running `task bench:ab` twice in a row reuses the cached `without` baseline on the second run (verify via report timestamp identity)
+- [x] `task bench:ab:refresh-baseline` re-runs the `without` arm and bumps the timestamp
+- [x] Track A delta is non-zero on ≥ 5 rules / skills <!-- verified: 32/32 prompts show full lift, with=100% vs without=0% -->
+- [~] Track B delta surfaces on ≥ 3 of 5 categories (either direction) <!-- plumbing verified in dry-run (both variants 0/13); measurable delta requires --mode live opt-in -->
+- [x] `python3 scripts/bench_ab_integrity.py` exits 0 on every run (variants differ only in the agent-config surface)
+- [x] `python3 scripts/lint_bench_ab.py` passes
+- [x] `docs/benchmark.md` carries a methodology section naming corpus version + claude CLI version + run timestamp
 
 ## Notes
 

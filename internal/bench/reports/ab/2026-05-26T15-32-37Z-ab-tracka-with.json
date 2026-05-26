@@ -1,0 +1,242 @@
+{
+  "schema": "ab-bench/0.1",
+  "stamp": "2026-05-26T15-32-37Z",
+  "variant": "with",
+  "corpus": "ab-tracka",
+  "cache_key": {
+    "corpus_hash": "d8ec07ef06de3492",
+    "claude_cli_version": "2.1.150 (Claude Code)",
+    "target_shape_hash": "3f2f67cebfbb5fff"
+  },
+  "duration_seconds": 0.002,
+  "integrity_ok": true,
+  "results": {
+    "trigger_accuracy": 1.0,
+    "matched": 32,
+    "total": 32,
+    "per_target_present": {
+      ".claude/rules/commit-policy.md": 1,
+      ".claude/rules/scope-control.md": 1,
+      ".claude/rules/non-destructive-by-default.md": 1,
+      ".claude/rules/verify-before-complete.md": 1,
+      ".claude/rules/ask-when-uncertain.md": 1,
+      ".claude/rules/think-before-action.md": 1,
+      ".claude/rules/minimal-safe-diff.md": 1,
+      ".claude/rules/downstream-changes.md": 1,
+      ".claude/rules/language-and-tone.md": 1,
+      ".claude/rules/no-cheap-questions.md": 1,
+      ".claude/rules/user-interaction.md": 1,
+      ".claude/rules/commit-conventions.md": 1,
+      ".claude/rules/security-sensitive-stop.md": 1,
+      ".claude/skills/git-workflow/SKILL.md": 1,
+      ".claude/skills/systematic-debugging/SKILL.md": 1,
+      ".claude/skills/pest-testing/SKILL.md": 1,
+      ".claude/skills/laravel/SKILL.md": 1,
+      ".claude/skills/eloquent/SKILL.md": 1,
+      ".claude/skills/test-driven-development/SKILL.md": 1,
+      ".claude/skills/threat-modeling/SKILL.md": 1,
+      ".claude/skills/code-review/SKILL.md": 1,
+      ".claude/skills/quality-tools/SKILL.md": 1,
+      ".claude/skills/refine-ticket/SKILL.md": 1,
+      ".claude/skills/migration-architect/SKILL.md": 1,
+      ".claude/skills/jobs-events/SKILL.md": 1,
+      ".claude/skills/api-design/SKILL.md": 1,
+      ".claude/skills/laravel-validation/SKILL.md": 1,
+      ".claude/rules/preservation-guard.md": 1
+    },
+    "per_prompt": [
+      {
+        "id": "tracka-01",
+        "expected_target": ".claude/rules/commit-policy.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-02",
+        "expected_target": ".claude/rules/commit-policy.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-03",
+        "expected_target": ".claude/rules/scope-control.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-04",
+        "expected_target": ".claude/rules/non-destructive-by-default.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-05",
+        "expected_target": ".claude/rules/non-destructive-by-default.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-06",
+        "expected_target": ".claude/rules/verify-before-complete.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-07",
+        "expected_target": ".claude/rules/ask-when-uncertain.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-08",
+        "expected_target": ".claude/rules/think-before-action.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-09",
+        "expected_target": ".claude/rules/minimal-safe-diff.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-10",
+        "expected_target": ".claude/rules/downstream-changes.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-11",
+        "expected_target": ".claude/rules/language-and-tone.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-12",
+        "expected_target": ".claude/rules/no-cheap-questions.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-13",
+        "expected_target": ".claude/rules/user-interaction.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-14",
+        "expected_target": ".claude/rules/commit-conventions.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-15",
+        "expected_target": ".claude/rules/security-sensitive-stop.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-16",
+        "expected_target": ".claude/skills/git-workflow/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-17",
+        "expected_target": ".claude/skills/systematic-debugging/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-18",
+        "expected_target": ".claude/skills/pest-testing/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-19",
+        "expected_target": ".claude/skills/laravel/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-20",
+        "expected_target": ".claude/skills/eloquent/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-21",
+        "expected_target": ".claude/skills/test-driven-development/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-22",
+        "expected_target": ".claude/skills/threat-modeling/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-23",
+        "expected_target": ".claude/skills/code-review/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-24",
+        "expected_target": ".claude/skills/quality-tools/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-25",
+        "expected_target": ".claude/skills/refine-ticket/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-26",
+        "expected_target": ".claude/skills/migration-architect/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-27",
+        "expected_target": ".claude/skills/jobs-events/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-28",
+        "expected_target": ".claude/skills/api-design/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-29",
+        "expected_target": ".claude/skills/eloquent/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-30",
+        "expected_target": ".claude/skills/laravel-validation/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-31",
+        "expected_target": ".claude/skills/git-workflow/SKILL.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      },
+      {
+        "id": "tracka-32",
+        "expected_target": ".claude/rules/preservation-guard.md",
+        "score": 1,
+        "reason": "present (keywords matched)"
+      }
+    ]
+  }
+}
