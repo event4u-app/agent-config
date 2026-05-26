@@ -201,6 +201,26 @@ The setting flip is the easy part. Before enabling it, confirm:
   `tests/test_install_orchestrator.sh` (orchestrator + wrappers), and
   Python unit tests under `tests/`.
 
+### npm workspaces — scope discipline
+
+The root `package.json` declares `workspaces: ["packages/core/installer"]`
+**only** so `task dev:install:gui*` can invoke the installer build with
+`npm run --workspace @event4u/installer …`. This is the single justified
+use case. The published tarball (`files` allowlist) does **not** ship
+`packages/`; workspaces are a local-dev convenience, not a publish
+contract.
+
+Do **not** add `npm test --workspaces`, `npm run build --workspaces`,
+or monorepo-style fan-out scripts without architectural review. Do
+**not** add new packages to `workspaces` unless they need root-level
+script orchestration — `packages/cloud/telemetry-worker` deliberately
+stays out because it is deployed via `wrangler`, not built through
+the root.
+
+If the only need is "run an npm script inside a sub-package", prefer
+`npm run <script> --prefix packages/<pack>` — it works without any
+root `workspaces` field and avoids hoisting side effects.
+
 ## Versioning policy
 
 The package follows [Semantic Versioning](https://semver.org). Because the
