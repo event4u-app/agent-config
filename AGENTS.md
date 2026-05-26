@@ -34,5 +34,6 @@ task ci                # full pipeline — green before PR
 3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / tier-2 routed via `dist/router.json`).
+6. **What CI checks will my branch face?** — `task ci:required-checks` previews the required-check set for the current branch per [`branch-protection-policy.md`](docs/contracts/branch-protection-policy.md); release-PR gating contract: [`release-pr-gating.md`](docs/contracts/release-pr-gating.md).
 
 
