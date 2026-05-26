@@ -165,3 +165,4 @@ agents/reference/ai-video/*
 # Wizard runtime state — local-only resume snapshot (current step + partial form),
 # written 0600 by the GUI wizard. Never committed.
 agents/state/
+/.claude/scheduled_tasks.lock
