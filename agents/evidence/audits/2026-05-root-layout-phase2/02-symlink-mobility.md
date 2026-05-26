@@ -5,7 +5,7 @@
 ## Method
 
 1. Enumerate the current symlink topology under `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`.
-2. Read `scripts/compress.py` symlink generation logic (`AUGMENT_SYMLINK_DIRS`, `generate_rule_symlinks`).
+2. Read `scripts/condense.py` symlink generation logic (`AUGMENT_SYMLINK_DIRS`, `generate_rule_symlinks`).
 3. Classify each symlink by depth: **L1** (`.tool/sub` → `../.agent-src/sub`) vs **L0** (`.tool/` → `projections/.tool/`).
 4. Identify which class Phase 3 ("projections/" umbrella) would require.
 5. Document the test that would be required to verify L0.
@@ -14,7 +14,7 @@
 
 ### Current topology — L1 symlinks (subdirectory level)
 
-`.augment/` projection (from `compress.py:1106`):
+`.augment/` projection (from `condense.py:1106`):
 
 ```
 AUGMENT_SYMLINK_DIRS = ("skills", "commands", "guidelines", "personas",
@@ -34,9 +34,9 @@ Each maps to `.augment/<sub> → ../.agent-src/<sub>`. Verified live:
 .augment/README.md     -> ../.agent-src/README.md
 ```
 
-`.augment/rules/` is a **copy** (not a symlink) because Augment Code historically failed to load symlinked rule files (`compress.py:1098–1100` documents this carve-out). Opt-in via `augment.rules_use_symlinks: true` in `.agent-settings.yml`.
+`.augment/rules/` is a **copy** (not a symlink) because Augment Code historically failed to load symlinked rule files (`condense.py:1098–1100` documents this carve-out). Opt-in via `augment.rules_use_symlinks: true` in `.agent-settings.yml`.
 
-`.claude/`, `.cursor/`, `.clinerules/` use **per-file** symlinks via `generate_rule_symlinks()` (`compress.py:644`):
+`.claude/`, `.cursor/`, `.clinerules/` use **per-file** symlinks via `generate_rule_symlinks()` (`condense.py:644`):
 
 ```
 .claude/personas/backend-architect.md       -> ../../.agent-src/personas/backend-architect.md
@@ -94,7 +94,7 @@ Defer Phase 3 until a maintainer runs the L0 test on at least Cursor + Claude Co
 
 ## Evidence
 
-- `scripts/compress.py:644` — `generate_rule_symlinks()`.
-- `scripts/compress.py:1106` — `AUGMENT_SYMLINK_DIRS`.
-- `scripts/compress.py:1098–1100` — Augment rules-copy carve-out.
+- `scripts/condense.py:644` — `generate_rule_symlinks()`.
+- `scripts/condense.py:1106` — `AUGMENT_SYMLINK_DIRS`.
+- `scripts/condense.py:1098–1100` — Augment rules-copy carve-out.
 - Live `find -type l` output captured during audit (Phase 2 run, 2026-05-25).

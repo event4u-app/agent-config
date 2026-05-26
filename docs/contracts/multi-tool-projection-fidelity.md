@@ -8,11 +8,11 @@ keep-beta-until: 2026-08-13
 **Status:** beta · **Phase 4 of the `step-1-v2-feedback-followup`
 roadmap** (under `agents/roadmaps/`).
 
-Names the **per-tool guarantees** the projection pipeline (`scripts/compress.py --sync` + `scripts/compress.py --generate-tools`) actually delivers. Byte-equivalence is not behaviour-fidelity — each consumer tool has its own frontmatter grammar, its own activation model, and its own surface for skills / rules / commands.
+Names the **per-tool guarantees** the projection pipeline (`scripts/condense.py --sync` + `scripts/condense.py --generate-tools`) actually delivers. Byte-equivalence is not behaviour-fidelity — each consumer tool has its own frontmatter grammar, its own activation model, and its own surface for skills / rules / commands.
 
 ## Source of truth
 
-Every projection starts from `.agent-src/` (compressed) which is generated from `.agent-src.uncompressed/`. The projection layer **never** writes to source; it only reads.
+Every projection starts from `.agent-src/` (condensed) which is generated from `.agent-src.uncondensed/`. The projection layer **never** writes to source; it only reads.
 
 ## Per-tool projection map
 
@@ -96,7 +96,7 @@ These are **architectural facts**, not regressions. They are documented so insta
 2. **Windsurf single-file (`.windsurfrules`) strips per-rule frontmatter.** Legacy compatibility surface. The new `.windsurf/rules/*.md` per-rule files preserve the full frontmatter — consumers should prefer those.
 3. **Skills do not project to Cursor / Windsurf / Cline / Gemini / Copilot.** These tools have no native skill loader. Skill content reaches consumers indirectly via rule bodies and the `AGENTS.md` catalogue.
 4. **Augment historically did not load symlinked rules.** Default is to **copy** rules into `.augment/rules/`. Opt into symlinks via `augment.rules_use_symlinks: true` in `.agent-settings.yml`.
-5. **`task generate-tools` does not refresh `.augment/rules/`.** Only `task sync` (== `scripts/compress.py --sync`) copies rules into the Augment tree. Investigators who edit a rule, run only `generate-tools`, and then `ls .augment/rules/` will see stale state.
+5. **`task generate-tools` does not refresh `.augment/rules/`.** Only `task sync` (== `scripts/condense.py --sync`) copies rules into the Augment tree. Investigators who edit a rule, run only `generate-tools`, and then `ls .augment/rules/` will see stale state.
 
 ## Acceptance criteria for this contract
 
@@ -108,7 +108,7 @@ These are **architectural facts**, not regressions. They are documented so insta
 
 ## Related
 
-- [`source-projection`](../architecture/source-projection.md) — pipeline A (source compression)
+- [`source-projection`](../architecture/source-projection.md) — pipeline A (source condensation)
 - [`augment-projection`](../architecture/augment-projection.md) — pipeline B (Augment-specific)
 - [`multi-tool-projection`](../architecture/multi-tool-projection.md) — pipeline C (the per-tool emitters)
 - [`rule-router`](rule-router.md) — the `triggers:` / `routes_to:` grammar this contract pins

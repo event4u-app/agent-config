@@ -2,7 +2,7 @@
 
 > Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions
 
-_Origin: migrated from `.agent-src.uncompressed/rules/php-coding.md` per P4.2 of `road-to-kernel-and-router.md`._
+_Origin: migrated from `.agent-src.uncondensed/rules/php-coding.md` per P4.2 of `road-to-kernel-and-router.md`._
 
 # PHP Coding Rules
 

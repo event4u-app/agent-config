@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """One-shot migration: inject the `suggestion:` frontmatter block into every
-command under `.agent-src.uncompressed/commands/`.
+command under `.agent-src.uncondensed/commands/`.
 
 Source-of-truth table: `agents/settings/contexts/command-suggestion-eligibility.md`
 (locked at end of road-to-context-aware-command-suggestion Phase 1).
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = ROOT / ".agent-src.uncompressed" / "commands"
+COMMANDS_DIR = ROOT / ".agent-src.uncondensed" / "commands"
 
 INELIGIBLE: dict[str, str] = {
     "agent-handoff": "Explicit fresh-chat handoff — must be deliberate, never inferred from prose.",
@@ -25,7 +25,7 @@ INELIGIBLE: dict[str, str] = {
     "chat-history": "Status display only; no NL trigger distinct from 'show status'.",
     "chat-history-clear": "Destructive log wipe — must be deliberate.",
     "chat-history-resume": "Explicit resume mechanic with foreign/returning state machine.",
-    "compress": "Package-internal tooling; only the event4u/agent-config repo runs this.",
+    "condense": "Package-internal tooling; only the event4u/agent-config repo runs this.",
     "copilot-agents-init": "Project init — only deliberately during onboarding.",
     "copilot-agents-optimize": "Maintenance refactor; only when the maintainer chooses to run it.",
     "do-and-judge": "Subagent orchestration — overlaps /work and judge skills; keep explicit.",

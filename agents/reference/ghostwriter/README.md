@@ -12,7 +12,7 @@ documented public figures so `/ghostwriter:write` and
   explicitly opts in (the `--shared` flag is deferred to v2 — until
   then, profiles stay local).
 - **Real-person profiles only.** Fictional fixtures belong in the
-  package source at `.agent-src.uncompressed/ghostwriter/`, not here.
+  package source at `.agent-src.uncondensed/ghostwriter/`, not here.
   The `task lint-ghostwriter-source` CI gate fails on any consumer
   file carrying `fictional: true`.
 - **Created by `/ghostwriter:fetch`.** Direct hand-editing works but
@@ -41,5 +41,5 @@ command surface.
 
 - [`docs/contracts/ghostwriter-schema.md`](../../docs/contracts/ghostwriter-schema.md)
   — the locked v1 schema.
-- [`.agent-src.uncompressed/ghostwriter/README.md`](../../.agent-src.uncompressed/ghostwriter/README.md)
+- [`.agent-src.uncondensed/ghostwriter/README.md`](../../.agent-src.uncondensed/ghostwriter/README.md)
   — package-source side and fixture allowlist policy.

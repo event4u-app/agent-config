@@ -10,7 +10,7 @@ agent-memory contract.
 Strict gates: opt-in transcript access (``--confirm-transcript-access``
 required per invocation), ≤ 5 normalised facts per cycle, redaction
 applied to every yielded text. See
-``.agent-src.uncompressed/commands/memory/mine-session.md`` for the
+``.agent-src.uncondensed/commands/memory/mine-session.md`` for the
 authored spec.
 """
 

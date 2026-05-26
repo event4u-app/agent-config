@@ -5,7 +5,7 @@
 ```
 NEW CLI ENTRY POINTS, INTERNAL TOOLS, AND LOGIC-CARRYING MODULES IN THIS
 PACKAGE LAND IN TYPESCRIPT BY DEFAULT. PYTHON IS RESERVED FOR EXISTING
-TOOLING (THE WORK ENGINE HARNESS, COMPRESSION/LINT SCRIPTS WIRED INTO
+TOOLING (THE WORK ENGINE HARNESS, CONDENSATION/LINT SCRIPTS WIRED INTO
 TASKFILE) UNTIL EACH IS PORTED ON ITS OWN ROADMAP.
 ```
 
@@ -36,7 +36,7 @@ The agent consults this policy when any of the following fires:
 ## Allowed (Python stays)
 
 - The `work_engine` harness (`scripts/work_engine/**`) and its callers — production-grade Python with an established contract; port only on its own roadmap.
-- Compression, linting, and skill-validation scripts wired into `Taskfile.yml` (`task lint-skills`, `task sync`, `task generate-tools`, `task lint-rule-budget`) — port opportunistically, never as a side-quest.
+- Condensation, linting, and skill-validation scripts wired into `Taskfile.yml` (`task lint-skills`, `task sync`, `task generate-tools`, `task lint-rule-budget`) — port opportunistically, never as a side-quest.
 - Pest / pytest test harnesses for existing Python surfaces.
 - One-shot maintenance scripts that never ship to consumers.
 

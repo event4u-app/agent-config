@@ -252,9 +252,9 @@ members:
 #                          for this advisor call only. Falls back to the
 #                          member's `model:` when omitted.
 #
-# Persona files live under .agent-src.uncompressed/personas/advisors/
+# Persona files live under .agent-src.uncondensed/personas/advisors/
 # and ship with the package; the orchestrator loads them from
-# .agent-src/personas/advisors/<key>.md (compressed projection) at call
+# .agent-src/personas/advisors/<key>.md (condensed projection) at call
 # time. See personas/advisors/ + docs/contracts/ai-council-config.md.
 advisors:
   contrarian:

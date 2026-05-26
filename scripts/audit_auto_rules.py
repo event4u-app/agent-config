@@ -2,7 +2,7 @@
 """Audit auto-rules for the Rule-Governance pass (Phase 5.1 of
 road-to-augment-limit-fit).
 
-Walk `.agent-src.uncompressed/rules/*.md`, collect per-rule frontmatter
+Walk `.agent-src.uncondensed/rules/*.md`, collect per-rule frontmatter
 (`description`, `triggers`, `routes_to`, `tier`), measure body and
 registry-stub costs, and emit:
 
@@ -25,7 +25,7 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SRC_RULES = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+SRC_RULES = REPO_ROOT / ".agent-src.uncondensed" / "rules"
 PROJECTED_RULES = REPO_ROOT / ".augment" / "rules"
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 JSON_OUT = REPORT_DIR / "auto-rules-audit.json"

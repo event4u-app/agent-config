@@ -13,12 +13,12 @@ stability: stable
 The `/implement-ticket` orchestrator ships on **Python 3.10+** (stdlib + `pyyaml`).
 
 Bash is rejected as the runtime. It stays only where it already lives —
-the install driver, compression helper, and test runner — not the
+the install driver, condensation helper, and test runner — not the
 delivery flow.
 
 ## Why this was a real question
 
-The repo already ships a Bash install + compression toolchain. A
+The repo already ships a Bash install + condensation toolchain. A
 shell-native dispatcher would have reused the existing muscle memory and
 avoided adding Python as a delivery-runtime dependency. The spike
 existed to verify whether Bash could still carry the 8-step linear flow
@@ -85,7 +85,7 @@ Python is 3 files with shared types.
 ## Tradeoffs we accept
 
 - **New hard dependency on Python 3.10+ and `pyyaml`.** Mitigated: Python 3
-  is already a build/test dependency of this repo (linters, compression,
+  is already a build/test dependency of this repo (linters, condensation,
   `update_counts.py`). `pyyaml` is already pinned in `pyproject.toml` /
   `requirements-*.txt`. Zero new install surface for contributors.
 - **We lose the "just-shell" story.** The install script stays Bash. The
@@ -100,7 +100,7 @@ Python is 3 files with shared types.
   on its own evidence.
 - Does not commit to a specific framework (click, typer, bare argparse);
   that is chosen during Phase 1 and kept minimal.
-- Does not move the compression/install scripts off Bash.
+- Does not move the condensation/install scripts off Bash.
 
 ## Consequences — unblocks
 

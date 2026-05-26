@@ -37,7 +37,7 @@ landed in `kernel-membership.md` § 5.2:
 **Variant (a) — status quo through P2.2 + P3.1.**
 
 - Keep `agent-authority` in the kernel.
-- Keep `autonomous-execution` in `compress-and-keep` (auto-tier) per
+- Keep `autonomous-execution` in `condense-and-keep` (auto-tier) per
   `docs/contracts/rule-classification.md` § 3.2.
 - Re-evaluate the swap as a P3.2 ADR after the router schema and
   compiler ship.
@@ -47,7 +47,7 @@ landed in `kernel-membership.md` § 5.2:
 ### Accepted
 
 - 25k hard cap stays intact (no governance erosion via cap-raise).
-- 2 Iron-Law-override ADRs land in P2.2 if post-compression
+- 2 Iron-Law-override ADRs land in P2.2 if post-condensation
   measurement confirms overage (`direct-answers`, `language-and-tone`).
 - The 9-rule set carried into P2.2 is the locked § 4 list.
 
@@ -78,7 +78,7 @@ precedence at build time. At that point:
   (`docs/guidelines/agent-authority.md`) as documentation of the
   band model.
 - `autonomous-execution` can be promoted into the kernel under a
-  new ADR (ADR-N) that replaces this one, *if* its post-compression
+  new ADR (ADR-N) that replaces this one, *if* its post-condensation
   size fits the cap with no further demotion.
 
 This deferral is **not** indefinite: P3.2 ships the router compiler;
@@ -90,7 +90,7 @@ migrations) so the migration plan reflects the final kernel set.
 - **Variant (b) — swap + raise cap to 27k.** Rejected. Raising the
   hard cap mid-roadmap weakens the original 25k contract that the
   whole roadmap is built around. If 27k turns out to be the real
-  ceiling, that is a separate ADR after compression measurement
+  ceiling, that is a separate ADR after condensation measurement
   proves the band, not a pre-emptive concession.
 - **Variant (c) — swap + demote `verify-before-complete`.**
   Rejected. `verify-before-complete` carries criterion #1 (Iron
@@ -105,5 +105,5 @@ migrations) so the migration plan reflects the final kernel set.
 - `docs/contracts/kernel-membership.md` § 4, § 5.2
 - `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json` <!-- council-ref-allowed: ADR decision trace -->
 - `agents/roadmaps/road-to-kernel-and-router.md` § Decisions, § Phase 2
-- `.agent-src.uncompressed/rules/agent-authority.md` (subject)
-- `.agent-src.uncompressed/rules/autonomous-execution.md` (proposed promotion)
+- `.agent-src.uncondensed/rules/agent-authority.md` (subject)
+- `.agent-src.uncondensed/rules/autonomous-execution.md` (proposed promotion)

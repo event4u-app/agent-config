@@ -25,8 +25,8 @@ CONTRACT_ROOT = ROOT / "docs" / "contracts"
 AREAS: dict[str, dict[str, str]] = {
     "cost":    {"contract": "cost-enforcement.md",
                 "scope":    "Budget ladder, hard-stop hook, cost reporting and dashboards."},
-    "caveman": {"contract": "compression-default-kill-criterion.md",
-                "scope":    "Caveman-speak compression, decompression, reversibility guards."},
+    "telegraph": {"contract": "condensation-default-kill-criterion.md",
+                "scope":    "Telegraph-speak condensation, decondensation, reversibility guards."},
     "schema":  {"contract": "agents/reference/docs/frontmatter-contract.md",
                 "scope":    "Frontmatter schemas, v2 rigor, lint behaviour for skills / rules / commands."},
     "router":  {"contract": "rule-router.md",

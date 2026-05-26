@@ -60,7 +60,7 @@ Cluster locked in
 - **Do NOT omit the disclosure footer from `:ghostwriter`** — it is
   mandatory on every invocation. `:me` omits it because the user is
   the author.
-- **Edit `.agent-src.uncompressed/` only.** `.agent-src/` and
+- **Edit `.agent-src.uncondensed/` only.** `.agent-src/` and
   `.augment/` regenerate from source.
 
 ## See also

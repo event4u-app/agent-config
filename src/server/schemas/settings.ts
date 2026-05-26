@@ -19,7 +19,7 @@ const autonomyMode = z.enum(['on', 'off', 'auto']);
 const userType = z.enum(['', 'consultant', 'creator', 'developer', 'finance', 'founder', 'gtm', 'ops']);
 const accessStyle = z.enum(['getters_setters', 'get_attribute', 'magic_properties']);
 const chatFreq = z.enum(['per_turn', 'per_phase', 'per_tool']);
-const chatOverflow = z.enum(['rotate', 'compress']);
+const chatOverflow = z.enum(['rotate', 'condense']);
 const qualityCadence = z.enum(['end_of_roadmap', 'per_phase', 'per_step']);
 const regenCadence = z.enum(['per_step', 'every_5_steps', 'phase_boundary']);
 const worktreeMode = z.enum(['off', 'on', 'ask']);
@@ -114,10 +114,10 @@ export const settingsSchema = z.object({
             'How often the chat-history writer flushes to disk. per_turn = after every user / agent exchange (default, lowest data loss on crash). per_phase = at phase boundaries (cheaper I/O). per_tool = after every tool call (highest fidelity, noisiest log).',
         ),
         max_size_kb: z.number().int().min(0).default(2048).describe(
-            'Maximum size (KB) of the active chat-history file before chat_history.on_overflow kicks in. Set 0 to disable rotation / compression entirely (file grows forever).',
+            'Maximum size (KB) of the active chat-history file before chat_history.on_overflow kicks in. Set 0 to disable rotation / condensation entirely (file grows forever).',
         ),
         on_overflow: chatOverflow.default('rotate').describe(
-            'What happens when chat_history.max_size_kb is hit. rotate = move the current log aside and start fresh (default). compress = caveman-compress the oldest entries in place to keep recent context.',
+            'What happens when chat_history.max_size_kb is hit. rotate = move the current log aside and start fresh (default). condense = telegraph-condense the oldest entries in place to keep recent context.',
         ),
         text_limits: z.object({
             user: z.number().int().min(0).default(0).describe(

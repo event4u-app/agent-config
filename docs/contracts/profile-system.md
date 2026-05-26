@@ -18,7 +18,7 @@ keep-beta-until: 2026-08-14
 
 A **profile** declares the user's audience identity. Six seed profiles
 ship; users can declare their own under
-`.agent-src.uncompressed/profiles/<id>.yml`.
+`.agent-src.uncondensed/profiles/<id>.yml`.
 
 | `profile.id` | Audience | README entry-paragraph | Default `preset.id` |
 |---|---|---|---|
@@ -101,7 +101,7 @@ command (Phase 1 item 3).
 ## User-defined profiles
 
 A consumer project MAY ship a custom profile under
-`.agent-src.uncompressed/profiles/<id>.yml`. Constraints:
+`.agent-src.uncondensed/profiles/<id>.yml`. Constraints:
 
 - `id` MUST be unique across seed + user-defined profiles.
 - Shape MUST match the seed contract above (audience / defaults / surface).
@@ -121,7 +121,7 @@ Only changes to the **seed set** require an ADR.
 - A profile YAML references a non-existent `preset_id`.
 - The seed-profile count diverges from this contract's table.
 - `defaults.personas` references a persona id that does not exist
-  under `.agent-src.uncompressed/personas/`.
+  under `.agent-src.uncondensed/personas/`.
 
 ## Non-goals
 

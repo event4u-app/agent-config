@@ -11,7 +11,7 @@ import re
 import sys
 from pathlib import Path
 
-ROOT = Path(".agent-src.uncompressed")
+ROOT = Path(".agent-src.uncondensed")
 
 CARVE_OUT_PATTERNS = [
     r"laravel", r"^php-", r"^eloquent", r"^blade", r"^livewire", r"^flux",

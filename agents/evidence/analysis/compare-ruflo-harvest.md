@@ -58,8 +58,8 @@ TDD as the default. Standalone SPARC guideline rejected (would be ignored).
 
 | # | Adoption | Path | Sunset | Lines | Effort |
 |---|---|---|---|---|---|
-| 1 | **`adr-create` skill + `adr-index` regen script** | `.agent-src.uncompressed/skills/adr-create/` + `scripts/adr/` | clean (≤120 lines per skill) | ~120 + ~50 | 0.5 d |
-| 2 | **`cost-track` + `cost-budget` scripts** + `/cost:report` command | `scripts/cost/{track,budget}.mjs` + `.agent-src.uncompressed/commands/cost-report.md` | scripts outside `.agent-src/`; command ≤120 lines | ~250 (scripts) + ~80 (cmd) | 1.0 d |
+| 1 | **`adr-create` skill + `adr-index` regen script** | `.agent-src.uncondensed/skills/adr-create/` + `scripts/adr/` | clean (≤120 lines per skill) | ~120 + ~50 | 0.5 d |
+| 2 | **`cost-track` + `cost-budget` scripts** + `/cost:report` command | `scripts/cost/{track,budget}.mjs` + `.agent-src.uncondensed/commands/cost-report.md` | scripts outside `.agent-src/`; command ≤120 lines | ~250 (scripts) + ~80 (cmd) | 1.0 d |
 | 3 | **`mcp-hmac-auth` guideline** | `docs/guidelines/agent-infra/mcp-request-signing.md` | clean (≤150 lines) | ~150 | 0.5 d |
 
 **Suite-integration step (P1.4)** runs all gates: `task sync`, `task generate-tools`, `task ci`.

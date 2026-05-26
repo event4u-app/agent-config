@@ -3,14 +3,14 @@
 ## Prerequisites
 
 - [Task](https://taskfile.dev/) (task runner)
-- Python 3.10+ (for linter, compression tools)
+- Python 3.10+ (for linter, condensation tools)
 - Bash (for install scripts, tests)
 
 ## Editing content
 
-1. **Always edit in `.agent-src.uncompressed/`** — never in `.agent-src/` or `.augment/` directly
+1. **Always edit in `.agent-src.uncondensed/`** — never in `.agent-src/` or `.augment/` directly
 2. Run `task sync` to copy non-`.md` files
-3. Use the `/compress` command to compress changed `.md` files
+3. Use the `/condense` command to condense changed `.md` files
 4. Run `task ci` to verify everything passes before pushing
 
 ---
@@ -30,15 +30,15 @@ task consistency               # Verify sync + generated tool outputs are clean
 task consistency-fix           # Regenerate all derived outputs from source
 ```
 
-### Sync & Compression
+### Sync & Condensation
 
 ```bash
-task sync                      # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
-task sync-changed              # List .md files changed since last compression
+task sync                      # .agent-src.uncondensed/ → .agent-src/, then project → .augment/
+task sync-changed              # List .md files changed since last condensation
 task sync-check                # Check if .agent-src/ is in sync (for CI)
-task sync-check-hashes         # Verify compressed .md hashes match source
-task sync-mark-done <file>     # Mark a single file as compressed
-task sync-mark-all-done        # Mark ALL files as compressed
+task sync-check-hashes         # Verify condensed .md hashes match source
+task sync-mark-done <file>     # Mark a single file as condensed
+task sync-mark-all-done        # Mark ALL files as condensed
 task sync-clean-hashes         # Remove stale hashes for deleted source files
 ```
 
@@ -54,7 +54,7 @@ task clean-tools               # Remove all generated tool directories
 ```bash
 task test                      # Run all tests (bash + Python)
 task test-install              # Install script integration tests
-task test-python               # Compression and linter tests
+task test-python               # Condensation and linter tests
 task test-linter               # Skill linter unit tests
 task test-readme-linter        # README linter unit tests
 task test-runtime              # Runtime registry + dispatcher tests
@@ -85,14 +85,14 @@ task lint-skills-strict        # Lint with warnings as failures
 task lint-skills-changed       # Lint only changed files
 task lint-skills-report        # Per-file quality breakdown
 task lint-skills-regression    # Compare against main branch (detect regressions)
-task lint-skills-pairs         # Check compression quality (source vs compressed)
+task lint-skills-pairs         # Check condensation quality (source vs condensed)
 task lint-readme               # Lint README.md
 ```
 
 ### Quality Checks
 
 ```bash
-task check-compression         # Verify code blocks, headings, frontmatter preserved
+task check-condensation         # Verify code blocks, headings, frontmatter preserved
 task check-refs                # No broken cross-references
 task check-portability         # No project-specific references in shared files
 task quality-report            # Per-artifact-type quality scores
@@ -167,8 +167,8 @@ scripts/
 ├── install.py                 ← Bridge files stage (.agent-settings.yml, JSONs)
 ├── postinstall.sh             ← npm postinstall hook → scripts/install
 ├── setup.sh                   ← One-time Composer hook setup
-├── compress.py                ← Compression hash management
-├── check_compression.py       ← Compression quality checker
+├── condense.py                ← Condensation hash management
+├── check_condensation.py       ← Condensation quality checker
 ├── skill_linter.py            ← Skill/rule/command linter
 ├── lint_regression.py         ← Branch regression detection
 ├── generate_tools.sh          ← Generate tool-specific directories
@@ -190,7 +190,7 @@ tests/
 └── consistency.yml            ← Sync + hash + tool verification
 templates/consumer-settings/   ← Settings templates for consumer projects
 
-.agent-src.uncompressed/         ← Source of truth (human-readable, verbose)
+.agent-src.uncondensed/         ← Source of truth (human-readable, verbose)
 ├── rules/                     ← Behavior rules
 ├── skills/                    ← Skill definitions (SKILL.md per skill)
 ├── commands/                  ← Slash command definitions
@@ -198,8 +198,8 @@ templates/consumer-settings/   ← Settings templates for consumer projects
 ├── templates/                 ← Document scaffolds
 └── contexts/                  ← System knowledge documents
 
-.agent-src/                    ← Compressed output (token-efficient, shipped)
-├── (same structure)           ← Compressed .md + copied non-.md files
+.agent-src/                    ← Condensed output (token-efficient, shipped)
+├── (same structure)           ← Condensed .md + copied non-.md files
 
 .augment/                      ← Local projection for Augment Code (gitignored)
 ├── rules/                     ← Real file copies (Augment cannot load symlinked rules)

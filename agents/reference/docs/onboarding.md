@@ -63,21 +63,21 @@ These 5 rules have the highest impact on quality:
 ## How to Run CI
 
 ```bash
-task ci              # Full pipeline: lint + refs + portability + compression + consistency
+task ci              # Full pipeline: lint + refs + portability + condensation + consistency
 task lint-skills     # Skill/rule/command quality only
 task check-refs      # Cross-reference integrity
-task check-compression # Compression quality
-task sync-check      # Source ↔ compressed sync
+task check-condensation # Condensation quality
+task sync-check      # Source ↔ condensed sync
 ```
 
 ## Editing Rules/Skills
 
-**NEVER edit `.augment/` directly.** The source of truth is `.agent-src.uncompressed/`.
+**NEVER edit `.augment/` directly.** The source of truth is `.agent-src.uncondensed/`.
 
-1. Edit the file in `.agent-src.uncompressed/`
-2. Copy (or compress) to `.augment/`
-3. Run `python3 scripts/compress.py --mark-done {path}`
-4. Run `python3 scripts/compress.py --generate-tools`
+1. Edit the file in `.agent-src.uncondensed/`
+2. Copy (or condense) to `.augment/`
+3. Run `python3 scripts/condense.py --mark-done {path}`
+4. Run `python3 scripts/condense.py --generate-tools`
 5. Verify: `task ci`
 
 ## Where to Find More

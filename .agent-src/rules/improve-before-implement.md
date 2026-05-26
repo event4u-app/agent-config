@@ -11,7 +11,7 @@ triggers:
   - keyword: "refactor"
 validator_ignore:
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
+    pattern: ".agent-src.uncondensed/"
     reason: "Rule cites the authoring tree when describing where examples live."
 workspaces:
   - engineering
@@ -117,5 +117,5 @@ When the request is to create or significantly rewrite a skill, rule, command,
 or guideline, the "fit the existing architecture" check above is handled by
 [`artifact-drafting-protocol`](artifact-drafting-protocol.md)'s Phase B
 (Research). Follow that protocol instead of improvising a one-shot check — it
-scans `.agent-src.uncompressed/` for overlap and reports candidates to extend
+scans `.agent-src.uncondensed/` for overlap and reports candidates to extend
 before creating a new file.

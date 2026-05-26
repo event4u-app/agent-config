@@ -79,7 +79,7 @@ scripts/              ← Teils lieferbar
 
 **Rolle 2: Entwicklungstools für das Paket**
 ```
-.agent-src.uncompressed/ ← Entwicklung (ausgeschlossen via archive.exclude)
+.agent-src.uncondensed/ ← Entwicklung (ausgeschlossen via archive.exclude)
 tests/                ← Entwicklung (ausgeschlossen)
 Taskfile.yml          ← Entwicklung (ausgeschlossen)
 ```
@@ -108,7 +108,7 @@ agent-config/
 │   ├── claude-plugin/
 │   └── templates/               ← AGENTS.md Template, consumer-settings
 ├── source/                      ← Unkomprimierte Entwicklungsquellen
-│   └── augment/                 ← (bisher: .agent-src.uncompressed/)
+│   └── augment/                 ← (bisher: .agent-src.uncondensed/)
 ├── bin/                         ← CLI-Tools
 ├── scripts/                     ← Installationsskripte
 ├── tests/                       ← Tests
@@ -169,7 +169,7 @@ Wenn `bin/install.php` PHP 8.2-Features nutzt: `"^8.2"`.
 
 ### Diagnose
 
-Das Repository enthält `.augment/`, `.agent-src.uncompressed/`, und `.augment-plugin/`
+Das Repository enthält `.augment/`, `.agent-src.uncondensed/`, und `.augment-plugin/`
 im Root. Wenn Augment Code dieses Repository öffnet (z.B. wenn jemand das Paket
 weiterentwickeln will), interpretiert es die `.augment/`-Dateien als
 Projekt-Konfiguration des Repositories selbst.
@@ -258,5 +258,5 @@ mit den Kern-Layern dargestellt. Das ist misleading.
 | Installer canonical klären | ✅ Erledigt (docs/installation.md Canonical-Box, Wrapper-Hinweise) | `feat/improve-agent-setup-2` |
 | Repository-Struktur aufräumen | ✅ Erledigt — `.gitattributes export-ignore` + npm `files` whitelist; `composer archive` 1221→433 Dateien, `npm pack` 313 Dateien | `feat/improve-agent-setup-2` |
 | PHP-Version in composer.json | ✅ Erledigt — `require.php: >=8.0` ist gesetzt. Tighter constraint (`^8.1`/`^8.2`) nur nötig, wenn `bin/install.php` neuere Features nutzt; aktuell nicht der Fall. | `feat/improve-agent-setup-2` |
-| Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.agent-src.uncompressed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
+| Augment-Root-Konflikt lösen | ✅ Erledigt — `.augmentignore` schließt `.agent-src.uncondensed/` und Tool-Mirrors aus | `feat/improve-agent-setup-2` |
 | Observability-Doku vereinfachen | ✅ Erledigt — Layer 4–6 in `docs/observability.md` ausgelagert, `docs/architecture.md` verweist nur noch mit Opt-in-Hinweis | `feat/improve-agent-setup-2` |

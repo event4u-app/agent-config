@@ -67,10 +67,10 @@
 
   **Decision required:** which lever to pull? Three honest options:
 
-  1. **Compress one of the top-5** to free ≥ 685 chars. Cheapest
+  1. **Condense one of the top-5** to free ≥ 685 chars. Cheapest
      candidates (longest with most ceremony):
      - `language-and-tone.md` — Iron Law block + duplicate "source of
-       language truth" section likely compressible without semantic
+       language truth" section likely condensable without semantic
        loss.
      - `non-destructive-by-default.md` — section "Bulk deletions
        during WIP" lists allowed/floor-fires with overlapping bullets.
@@ -179,7 +179,7 @@ the decision and re-runs the affected work.
 
 - **Q42** ✅ `architecture` — **Roadmap dashboard regex drops
   digit+letter phase ids.** `PHASE_RE` in
-  `.agent-src.uncompressed/scripts/update_roadmap_progress.py`
+  `.agent-src.uncondensed/scripts/update_roadmap_progress.py`
   accepted numeric (`Phase 0`), Roman (`Phase III`), and letter-track
   (`Phase A`, `Phase B1`) — but not digit-then-letter (`Phase 2a`).
   Side effect: `road-to-council-modes.md` produced zero detected
@@ -200,36 +200,36 @@ the decision and re-runs the affected work.
   headings — no phase structure at all).
 
 - **Q43** ✅ `resolved` — **`.agent-src/commands/council.md`
-  compressed mirror is stale on Pre-Phase-1.** The compressed
+  condensed mirror is stale on Pre-Phase-1.** The condensed
   command file does not yet reflect Phase-1 (pricing / estimate gate
   / overrun callback), Phase-2a (handoff preamble), or Phase-2b
-  (mode selection / non-billable bypass). The uncompressed source is
-  current; `compress.py --changed` flags it; the hash-based
+  (mode selection / non-billable bypass). The uncondensed source is
+  current; `condense.py --changed` flags it; the hash-based
   `--check` is satisfied because earlier passes ran `--mark-done`
-  to defer the recompression deliberately.
+  to defer the recondensation deliberately.
 
-  Each phase-pass deferred the LLM-recompression step deliberately
-  to avoid landing partial compressed updates. The skill mirror
+  Each phase-pass deferred the LLM-recondensation step deliberately
+  to avoid landing partial condensed updates. The skill mirror
   (`.agent-src/skills/ai-council/SKILL.md`) was updated in this pass
   with a structured Execution-modes section, but the `/council`
-  command is a heavier compression rewrite (Pre-Phase-1 → Phase-2b
+  command is a heavier condensation rewrite (Pre-Phase-1 → Phase-2b
   in one go).
 
-  **Decision required:** when to do the compression sweep?
+  **Decision required:** when to do the condensation sweep?
 
   1. **Now**, in a dedicated session per `artifact-drafting-protocol`
      (Understand → Research → Draft) — single PR.
-  2. **After Phase 2c** lands so the compressed file covers all
+  2. **After Phase 2c** lands so the condensed file covers all
      three execution modes in one rewrite.
-  3. **Never** — keep the compressed file frozen at Pre-Phase-1 and
-     point readers at the uncompressed source. Lowest effort, but
-     the compression contract is broken.
+  3. **Never** — keep the condensed file frozen at Pre-Phase-1 and
+     point readers at the uncondensed source. Lowest effort, but
+     the condensation contract is broken.
 
-  **Resolved 2026-05-02** — Option 1 selected. Compression sweep to
+  **Resolved 2026-05-02** — Option 1 selected. Condensation sweep to
   run **now** as a dedicated `artifact-drafting-protocol` session
   (Understand → Research → Draft). Phase 2c has no committed
   timeline; deferring further would land a fourth drift layer on
-  the next phase-pass. Compression contract must hold.
+  the next phase-pass. Condensation contract must hold.
 
   **Landed 2026-05-02.** `.agent-src/commands/council.md` rewritten
   Pre-Phase-1 → Phase-2b in a single `artifact-drafting-protocol`
@@ -238,8 +238,8 @@ the decision and re-runs the affected work.
   gate, billable-only cost estimate with all-manual short-circuit,
   `consult(..., project, original_ask, on_overrun)`, four new
   failure modes (manual aborted, invalid mode, stale-table refresher
-  fail, corrupt prices). `compress.py --check` green;
-  `compress.py --changed` clean for `commands/council.md`.
+  fail, corrupt prices). `condense.py --check` green;
+  `condense.py --changed` clean for `commands/council.md`.
 
 ## See also
 

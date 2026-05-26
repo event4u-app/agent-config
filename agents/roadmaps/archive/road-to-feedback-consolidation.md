@@ -171,7 +171,7 @@ with the gate ready to validate them on landing.
 
 **Mockable until:** *"58 rules, 0 tier frontmatter; tier system
 unenforced"* (Slots 2, 3).
-**Resolved when:** every rule under `.agent-src.uncompressed/rules/`
+**Resolved when:** every rule under `.agent-src.uncondensed/rules/`
 declares `tier:` frontmatter (1, 2a, 2b, 3); `lint_rule_tiers.py`
 fails if a new rule lands without one; `road-to-always-budget-relief`
 status flips `draft → ready`.
@@ -181,13 +181,13 @@ status flips `draft → ready`.
       `agents/settings/contexts/rule-trigger-matrix.md` via
       `scripts/_one_off/2026-05/_one_off_tier-retrofit.py`.
 - [x] **2.2 Apply frontmatter (mechanical).** All 58 rule files
-      under `.agent-src.uncompressed/rules/` carry `tier: "<value>"`
+      under `.agent-src.uncondensed/rules/` carry `tier: "<value>"`
       (quoted-string per the schema enum at
       `scripts/schemas/rule.schema.json`). Diff is frontmatter-only.
-- [x] **2.3 Compress + sync.** `task sync` regenerated
+- [x] **2.3 Condense + sync.** `task sync` regenerated
       `.agent-src/`, `.augment/`, and tool projections; the retrofit
       mirrored the tier line into `.agent-src/rules/` so the body
-      compression remains untouched.
+      condensation remains untouched.
 - [x] **2.4 Linter `lint_rule_tiers.py`.** Hard-fails CI if any
       rule lacks a valid `tier:` value. Wired into `task ci` after
       `task lint-skills` via `task lint-rule-tiers`.
@@ -217,7 +217,7 @@ test fixtures; CI gate fails on regression.
       `no-roadmap-references` rule).
 - [x] **3.2 Surface in `work_engine` template.** Decision-trace
       hook implemented at
-      `.agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/decision_trace.py`;
+      `.agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/decision_trace.py`;
       opt-in via `.agent-settings.yml` `decision_engine.surface_traces: true`
       mirrored into `hooks.decision_trace.enabled` by the settings
       loader. JSON envelope written next to the WorkState file
@@ -236,7 +236,7 @@ test fixtures; CI gate fails on regression.
       rules and evidence anchors. New pair
       `scope-x-verify-before-complete` added to the matrix.
 - [x] **3.4 Confidence-band heuristic.** Implemented in
-      `.agent-src.uncompressed/templates/scripts/work_engine/scoring/decision_trace.py`
+      `.agent-src.uncondensed/templates/scripts/work_engine/scoring/decision_trace.py`
       (`derive_confidence_band`). Inputs: (a) `memory.hits` from
       `state.memory`, (b) ambiguity flag from `state.questions`
       populated by `refine-prompt` and the directive layers,
@@ -245,7 +245,7 @@ test fixtures; CI gate fails on regression.
       `tests/work_engine/scoring/test_decision_trace_scoring.py`.
 - [x] **3.5 Cross-link Block A.** `docs/contracts/decision-trace-v1.md`
       § Cross-references points to the durable persona library
-      (`.agent-src.uncompressed/personas/`) as the home of
+      (`.agent-src.uncondensed/personas/`) as the home of
       Architect + Risk-Officer personas. Direct link to the
       Block-A roadmap file is intentionally avoided per
       `no-roadmap-references` — the contract names the durable
@@ -367,7 +367,7 @@ gate and the cost-confirmation contract.
 - [x] **6.5 Counts drift sentinel.** Extended
       `tests/test_readme_hero_counts.py` with
       `test_every_rule_declares_a_valid_tier`, which asserts every
-      rule under `.agent-src.uncompressed/rules/` declares a `tier:`
+      rule under `.agent-src.uncondensed/rules/` declares a `tier:`
       from the locked vocabulary (`1`, `2a`, `2b`, `3`,
       `safety-floor`, `mechanical-already`). Mirrors the
       `lint-rule-tiers` Taskfile gate at the pytest layer so a
@@ -407,10 +407,10 @@ gate and the cost-confirmation contract.
       - Tests under `tests/ai_council/test_cli.py`: estimate-only
         path uses pricing fixtures (no network), run-with-confirm
         uses a stub client (no network), help text snapshot.
-      - Update `.agent-src.uncompressed/commands/council/default.md`
+      - Update `.agent-src.uncondensed/commands/council/default.md`
         execution section to point at the CLI instead of the
         "orchestrate programmatically" instruction; `task sync`
-        regenerates compressed copies. **Source-of-truth rule
+        regenerates condensed copies. **Source-of-truth rule
         respected — no edit under `.agent-src/` or `.augment/`.**
       - Migrate the most recent one-off (`tmp/run_council.py` ad-hoc
         + the `_one_off_*.py` template) to use the new CLI in its

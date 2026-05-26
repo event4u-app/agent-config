@@ -18,18 +18,18 @@ Repos surveyed:
 
 ---
 
-## 1. Caveman — what we should steal
+## 1. Telegraph — what we should steal
 
 | Pattern | What it is | Why it matters | Our delta |
 |---|---|---|---|
-| **Measured token reduction** | `benchmarks/run.py` with reproducible 10-prompt corpus; published table (avg 65 %, range 22–87 %) | Trust comes from numbers, not claims | We have **zero** measured output / context numbers. `caveman.speak_scope` exists but is opt-in scope, default `off`, no telemetry, no per-run delta. |
-| **Intensity ladder** | `lite` / `full` / `ultra` / `wenyan-{lite,full,ultra}` — six levels, all documented with side-by-side examples | One knob the user actually turns | We have `caveman.speak_scope` as a single flag. No ladder. No `/caveman ultra` analog. |
-| **`caveman-compress` memory file rewrite** | Compresses CLAUDE.md in place, keeps `<FILE>.original.md` backup, ~46 % input-token savings per session forever | One-shot work, lifetime payoff; structurally honest about what it touches | Our compression pipeline (`.agent-src.uncompressed` → `.agent-src`) measures bytes between two trees the **agent never reads**. Per `feedback/02`, this is wrong-boundary measurement. |
-| **Auto-clarity carve-outs** | Disable caveman speak on security warnings, destructive ops, multi-step sequences where omitted conjunctions risk misread | Compression that knows when to stop | We have no such switchback rule. If `caveman.speak_scope=on`, it applies everywhere. |
+| **Measured token reduction** | `benchmarks/run.py` with reproducible 10-prompt corpus; published table (avg 65 %, range 22–87 %) | Trust comes from numbers, not claims | We have **zero** measured output / context numbers. `telegraph.speak_scope` exists but is opt-in scope, default `off`, no telemetry, no per-run delta. |
+| **Intensity ladder** | `lite` / `full` / `ultra` / `wenyan-{lite,full,ultra}` — six levels, all documented with side-by-side examples | One knob the user actually turns | We have `telegraph.speak_scope` as a single flag. No ladder. No `/telegraph ultra` analog. |
+| **`telegraph-condense` memory file rewrite** | Condensees CLAUDE.md in place, keeps `<FILE>.original.md` backup, ~46 % input-token savings per session forever | One-shot work, lifetime payoff; structurally honest about what it touches | Our condensation pipeline (`.agent-src.uncondensed` → `.agent-src`) measures bytes between two trees the **agent never reads**. Per `feedback/02`, this is wrong-boundary measurement. |
+| **Auto-clarity carve-outs** | Disable telegraph speak on security warnings, destructive ops, multi-step sequences where omitted conjunctions risk misread | Condensation that knows when to stop | We have no such switchback rule. If `telegraph.speak_scope=on`, it applies everywhere. |
 | **Statusline integration** | Lifetime tokens saved on the IDE status bar, updated from session jsonl | Constant feedback loop | We have no observable telemetry surface. |
-| **Honest disclaimer** | README states "caveman only affects output tokens — thinking/reasoning tokens untouched" | Don't oversell | Our `token-efficiency` rule is vaguer about what it does NOT do. |
+| **Honest disclaimer** | README states "telegraph only affects output tokens — thinking/reasoning tokens untouched" | Don't oversell | Our `token-efficiency` rule is vaguer about what it does NOT do. |
 
-**Read-across:** caveman is a one-trick repo done exceptionally well. We do
+**Read-across:** telegraph is a one-trick repo done exceptionally well. We do
 14 things — and none of them have a benchmark table.
 
 ---
@@ -94,10 +94,10 @@ Honesty pass. `+` = we're ahead; `=` = on par; `–` = behind.
 
 > **Refresh 2026-05-16:** Seven rows flipped after [`step-11-ruflo-parity.md`](../roadmaps/step-11-ruflo-parity.md) Phases 1–6 closed. Evidence rows below are mechanism-covered; numbers attached to those mechanisms remain claimed until [`docs/parity/bench.json`](../../../docs/parity/bench.json) soak completes. See [`docs/parity/ruflo.md`](../../../docs/parity/ruflo.md) for per-row citations.
 
-| Axis | vs Caveman | vs Ruflo | vs Harmonist | vs KW-Plugins |
+| Axis | vs Telegraph | vs Ruflo | vs Harmonist | vs KW-Plugins |
 |---|:-:|:-:|:-:|:-:|
 | Iron Law rigor (kernel + tier-1/tier-2) | + | + | + | + |
-| Compression / token economy — measurement | – | – | = | = |
+| Condensation / token economy — measurement | – | – | = | = |
 | Cost attribution / budget alerts | = | = | = | = |
 | Schema-driven agent registry + migrations | + | = | – | = |
 | Mechanical enforcement (runtime hooks) | = | = | – | = |
@@ -146,7 +146,7 @@ The remaining gaps are the North Star inputs that survive past step-11.
    `index.json`, ownership tables from frontmatter. Add `schema_version`,
    `model_tier`, `distinguishes_from`, `disambiguation`. Migration registry.
    **Leverage:** unblocks every other improvement.
-2. **Measured benchmark corpus** (caveman + ruflo). 10-prompt golden set.
+2. **Measured benchmark corpus** (telegraph + ruflo). 10-prompt golden set.
    `task bench` produces output-token, context-token, cost, selection-accuracy
    numbers. CI publishes drift. **Leverage:** ends the "is this getting
    better?" question.
@@ -159,9 +159,9 @@ The remaining gaps are the North Star inputs that survive past step-11.
 5. **`AGENT: <slug>` + PROJECT PRECEDENCE preamble** (harmonist). First
    line of every subagent prompt. Hook verifies the reviewer ran.
    **Leverage:** review gates stop being agent-side opt-in.
-6. **Auto-clarity carve-outs** (caveman). When `caveman.speak_scope=on`,
+6. **Auto-clarity carve-outs** (telegraph). When `telegraph.speak_scope=on`,
    disable for security / destructive / multi-step. **Leverage:** removes the
-   "compression bit me on a destructive op" risk that currently keeps the
+   "condensation bit me on a destructive op" risk that currently keeps the
    flag off by default.
 7. **Plugin-style role bundles** (KW-plugins). `personas/engineer.yml`,
    `personas/product-owner.yml` as composable install bundles (skills +

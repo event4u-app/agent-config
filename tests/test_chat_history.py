@@ -1503,18 +1503,18 @@ def test_overflow_handle_rotate_drops_oldest_keeps_header(hist: Path):
     assert nums[-1] == 9  # newest entry must survive
 
 
-def test_overflow_handle_compress_appends_marker(hist: Path):
+def test_overflow_handle_condense_appends_marker(hist: Path):
     ch.init(path=hist)
     big = "x" * 400
     for i in range(5):
         ch.append({"t": "user", "text": f"{i}-{big}"}, path=hist)
-    res = ch.overflow_handle(1, mode="compress", path=hist)
-    assert res["action"] == "compress_marked"
+    res = ch.overflow_handle(1, mode="condense", path=hist)
+    assert res["action"] == "condense_marked"
     assert res["dropped"] == 0
     entries = ch.read_entries(path=hist)
     # Original entries intact; a marker is the trailing entry.
-    assert any(e.get("t") == "needs_compress" for e in entries)
-    assert entries[-1]["t"] == "needs_compress"
+    assert any(e.get("t") == "needs_condense" for e in entries)
+    assert entries[-1]["t"] == "needs_condense"
     assert "1 KB" in entries[-1]["reason"]
 
 

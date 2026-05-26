@@ -130,7 +130,7 @@ persistence on cloud platforms; the rule is a no-op.
   partitions workspace / team / personal. Step 3 only needs to
   document the three-layer rationale for the README.
 - Re-classify on every audit run; if a rule is added to
-  `.agent-src.uncompressed/rules/`, this document MUST gain a row.
+  `.agent-src.uncondensed/rules/`, this document MUST gain a row.
 
 ## Source of tier data
 

@@ -39,7 +39,7 @@ Core framework-neutral artefacts.
 - **`chat-history:show`** — Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
 - **`commit`** — Stage and commit all uncommitted changes — splits into logical commits following Conventional Commits
 - **`commit:in-chunks`** — Stage and commit all uncommitted changes in logical chunks WITHOUT confirmation — sibling of /commit for autonomous flows
-- **`compress`** — Compress .md files from .agent-src.uncompressed/ into caveman format and write to .agent-src/
+- **`condense`** — Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
 - **`context`** — Context orchestrator — routes to create, refactor
 - **`context:create`** — Analyze a codebase area and create a structured context document
 - **`context:refactor`** — Analyze, update, and extend an existing context document
@@ -199,10 +199,9 @@ Core framework-neutral artefacts.
 - **`artifact-drafting-protocol`** — Creating a new skill/rule/command/guideline or significantly rewriting one — runs mandatory Understand → Research → Draft first
 - **`artifact-engagement-recording`** — After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call
 - **`ask-when-uncertain`** — Ask when uncertain — don't guess, assume, or improvise
-- **`augment-edit-discipline`** — Editing .augment/ or .agent-src.uncompressed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
-- **`augment-source-of-truth`** — Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncompressed/; never edit generated dirs directly
+- **`augment-edit-discipline`** — Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete
+- **`augment-source-of-truth`** — Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly
 - **`autonomous-execution`** — Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default
-- **`caveman-speak`** — When caveman.speak_scope != off — compress prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers
 - **`cli-output-handling`** — Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback
 - **`command-suggestion-policy`** — Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes
 - **`commit-conventions`** — Git commit format, branch naming, conventional commits, committing, pushing, creating PRs
@@ -241,7 +240,7 @@ Core framework-neutral artefacts.
 - **`onboarding-gate`** — First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request
 - **`package-ci-checks`** — Before pushing to remote or creating a PR in the agent-config package — run all CI checks locally first
 - **`persona-governance`** — Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path
-- **`preservation-guard`** — Merging/refactoring/compressing skills, rules, commands, or guidelines — prevent quality loss
+- **`preservation-guard`** — Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss
 - **`provider-lifecycle-discipline`** — Editing an AI video/image/audio adapter — declare lifecycle tier (experimental | stable | deprecated | community); never default to non-stable
 - **`reviewer-awareness`** — Suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary
 - **`roadmap-ci-steps-policy`** — Authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline
@@ -255,6 +254,7 @@ Core framework-neutral artefacts.
 - **`skill-improvement-trigger`** — After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled
 - **`skill-quality`** — Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained
 - **`slash-command-routing-policy`** — User types a slash command like /create-pr, /commit, or pastes command file content
+- **`telegraph-speak`** — When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers
 - **`think-before-action`** — Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error
 - **`token-efficiency`** — Running CLI tools, fetching logs, or producing replies — redirect verbose output, minimize tool calls, keep replies concise
 - **`token-optimizer-maintenance`** — Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit
@@ -286,8 +286,8 @@ Core framework-neutral artefacts.
 - **`check-refs`** — Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions.
 - **`code-refactoring`** — Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 - **`command-routing`** — Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
-- **`command-writing`** — Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
-- **`compress-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via caveman grammar — refuses sensitive paths, round-trips via .original.md backup.
+- **`command-writing`** — Use when creating or editing a slash command in .agent-src.uncondensed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
+- **`condense-memory`** — Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
 - **`context-authoring`** — Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
 - **`conventional-commits-writing`** — Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits.
 - **`copilot-agents-optimization`** — Use when optimizing AGENTS.md or copilot-instructions.md — deduplicates against .augment/ content, enforces line budgets, and focuses each file on its audience.
@@ -337,7 +337,7 @@ Core framework-neutral artefacts.
 - **`override-management`** — Creates and manages project-level overrides for shared skills, rules, and commands — extending or replacing originals from .augment/ with project-specific behavior in agents/overrides/.
 - **`performance`** — Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design.
 - **`performance-analysis`** — ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work.
-- **`persona-writing`** — Use when creating or editing a persona in .agent-src.uncompressed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
+- **`persona-writing`** — Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 - **`playwright-architect`** — Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'.
 - **`playwright-testing`** — Use when writing Playwright E2E tests — browser automation, visual regression testing, Page Objects, fixtures, and reliable test patterns.
 - **`privacy-review`** — Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'.
@@ -360,14 +360,14 @@ Core framework-neutral artefacts.
 - **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
 - **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
-- **`rule-writing`** — Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
+- **`rule-writing`** — Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 - **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'.
 - **`secrets-management`** — Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized.
 - **`security`** — Use when applying security best practices — authentication, authorization, CSRF protection, input sanitization, rate limiting, or secure coding — stack-agnostic.
 - **`security-audit`** — ONLY when user explicitly requests: security audit, vulnerability scan, or penetration test review. NOT for regular feature work.
 - **`sequential-thinking`** — ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
 - **`skill-improvement-pipeline`** — ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
-- **`skill-management`** — Use when compressing, decompressing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
+- **`skill-management`** — Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 - **`skill-reviewer`** — Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
 - **`skill-writing`** — Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
 - **`sql-writing`** — Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.

@@ -34,7 +34,7 @@ def make_skill(
     ``related_links`` go under ``**WHEN NOT to use this**`` — alternative
     pointers, validated for dangling/tier-mismatch but never as cycle edges.
     """
-    skills_dir = root / ".agent-src.uncompressed" / "skills" / slug
+    skills_dir = root / ".agent-src.uncondensed" / "skills" / slug
     skills_dir.mkdir(parents=True, exist_ok=True)
     lines = [
         "---",
@@ -67,7 +67,7 @@ def codes(violations) -> list[str]:
 
 def test_valid_w3_launch_chain(tmp_path: Path) -> None:
     """positioning → messaging-architecture → gtm-launch (no violations)."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "positioning", tier="senior", related_links=[])
     make_skill(tmp_path, "messaging-architecture", tier="senior",
                related_links=[("positioning", "../positioning/SKILL.md")])
@@ -78,7 +78,7 @@ def test_valid_w3_launch_chain(tmp_path: Path) -> None:
 
 def test_valid_w4_forecasting_chain(tmp_path: Path) -> None:
     """forecast-accuracy → forecasting (no violations)."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "forecasting", tier="senior", related_links=[])
     make_skill(tmp_path, "forecast-accuracy", tier="senior",
                related_links=[("forecasting", "../forecasting/SKILL.md")])
@@ -87,7 +87,7 @@ def test_valid_w4_forecasting_chain(tmp_path: Path) -> None:
 
 def test_cycle_detected(tmp_path: Path) -> None:
     """Mutual WHEN-to-use links form a composition cycle → flagged."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "alpha", tier="senior",
                composition_links=[("beta", "../beta/SKILL.md")])
     make_skill(tmp_path, "beta", tier="senior",
@@ -100,7 +100,7 @@ def test_when_not_mutual_pointers_are_not_cycles(tmp_path: Path) -> None:
     """Phase 4.6: bidirectional ``WHEN NOT to use`` pointers (peer cognition
     alternatives like ``DCF ↔ unit-economics``) are intentional and MUST
     NOT be reported as composition cycles."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "alpha", tier="senior",
                related_links=[("beta", "../beta/SKILL.md")])
     make_skill(tmp_path, "beta", tier="senior",
@@ -111,7 +111,7 @@ def test_when_not_mutual_pointers_are_not_cycles(tmp_path: Path) -> None:
 
 
 def test_dangling_reference(tmp_path: Path) -> None:
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "alpha", tier="senior",
                related_links=[("ghost", "../ghost/SKILL.md")])
     violations = lint(skills)
@@ -120,7 +120,7 @@ def test_dangling_reference(tmp_path: Path) -> None:
 
 def test_tier_mismatch(tmp_path: Path) -> None:
     """Senior may not link to a non-senior peer."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "alpha", tier="senior",
                related_links=[("legacy", "../legacy/SKILL.md")])
     make_skill(tmp_path, "legacy", tier=None, related_links=[])
@@ -130,7 +130,7 @@ def test_tier_mismatch(tmp_path: Path) -> None:
 
 def test_valid_cross_wing_chain(tmp_path: Path) -> None:
     """build-buy-partner (W4) → org-design (W4); plus W4 → W3 forecast handoff."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "build-buy-partner", tier="senior", related_links=[])
     make_skill(tmp_path, "org-design", tier="senior",
                related_links=[("build-buy-partner", "../build-buy-partner/SKILL.md")])
@@ -142,7 +142,7 @@ def test_valid_cross_wing_chain(tmp_path: Path) -> None:
 
 def test_non_senior_skills_ignored(tmp_path: Path) -> None:
     """Non-senior skills with bad links are not enforced (forward-only)."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "legacy", tier=None,
                related_links=[("ghost", "../ghost/SKILL.md")])
     assert lint(skills) == []
@@ -153,7 +153,7 @@ def test_mode_6_worktree_chain_accepted(tmp_path: Path) -> None:
     via worktree handoff lints clean. Worktree boundary is an
     orchestration-layer concern; lint_handoffs accepts the chain
     shape identically to in-process handoffs."""
-    skills = tmp_path / ".agent-src.uncompressed" / "skills"
+    skills = tmp_path / ".agent-src.uncondensed" / "skills"
     make_skill(tmp_path, "build-buy-partner", tier="senior", related_links=[])
     make_skill(tmp_path, "org-design", tier="senior",
                related_links=[("build-buy-partner", "../build-buy-partner/SKILL.md")])

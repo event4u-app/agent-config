@@ -9,8 +9,8 @@
 #   - Exclude authoring sources, dev tooling, tool mirrors, and CI files.
 
 # Authoring + dev tooling
-/.agent-src.uncompressed export-ignore
-/.compression-hashes.json export-ignore
+/.agent-src.uncondensed export-ignore
+/.condensation-hashes.json export-ignore
 /.augmentignore          export-ignore
 /.agent-settings         export-ignore
 /agents                  export-ignore

@@ -88,7 +88,7 @@ class DetectionTests(_Base):
             self.assertEqual(install._detect_legacy_for_migration(self.project), [])
 
     def test_source_repo_bypasses_detection(self) -> None:
-        (self.project / ".agent-src.uncompressed").mkdir()
+        (self.project / ".agent-src.uncondensed").mkdir()
         self.assertEqual(install._detect_legacy_for_migration(self.project), [])
 
     def test_bridge_marker_bypasses_detection(self) -> None:

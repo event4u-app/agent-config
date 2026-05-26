@@ -166,7 +166,7 @@ Schema v1:
 ### Advisor block (Phase 6, replace-mode)
 
 Five built-in advisor keys ship under
-[`.agent-src.uncompressed/personas/advisors/`](../../.agent-src.uncompressed/personas/advisors/):
+[`.agent-src.uncondensed/personas/advisors/`](../../.agent-src.uncondensed/personas/advisors/):
 `contrarian`, `first-principles`, `expansionist`, `outsider`,
 `executor`. Each entry binds one advisor to one enabled provider. When
 `enabled: true`, the orchestrator REPLACES that provider's plain-member
@@ -446,7 +446,7 @@ Transparency markers on every fast-path attempt:
 
 The marker is mandatory; the agent never silently substitutes a
 fast-path verdict for its own answer. See
-[`ai-council § Lightweight-QA fast-path`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md#lightweight-qa-fast-path-phase-11)
+[`ai-council § Lightweight-QA fast-path`](../../.agent-src.uncondensed/skills/ai-council/SKILL.md#lightweight-qa-fast-path-phase-11)
 for the orchestration contract and session-artefact format.
 
 ### Solo-member dispatch (step-9 P8/P9 · U1 · U2 · U3)

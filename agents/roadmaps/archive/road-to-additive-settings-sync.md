@@ -336,7 +336,7 @@ cycle without trigger reports, the toggle is removed in Phase 6.
       to `requirements*.txt`, `pyproject.toml`, or `Taskfile.yml`).
       `task ci` itself passes every functional gate (test,
       lint-skills, check-refs, check-portability, sync,
-      generate-tools, compress); only the final `consistency`
+      generate-tools, condense); only the final `consistency`
       step (`git diff --quiet`) trips while this branch's work
       is uncommitted — green at commit time.
 - [x] Phase 2.5 toggle (`_USE_RT_SYNC`) was added with a

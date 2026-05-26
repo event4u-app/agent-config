@@ -86,16 +86,16 @@ Deliverables:
 - [x] **4.1** Update all cross-refs across skills, commands, contexts,
       templates pointing at the merged targets.
 - [x] **4.2** Regenerate `.agent-src/` projected layer + refresh
-      `.compression-hashes.json`.
+      `.condensation-hashes.json`.
 - [x] **4.3** Re-run `auto-rules-{audit,likelihood,overlap}.{json,md}`
       reports.
-- [x] **4.4** Commit `43191ae8 chore(compress): update cross-refs and refresh projected layer`.
+- [x] **4.4** Commit `43191ae8 chore(condense): update cross-refs and refresh projected layer`.
 
 ## Acceptance criteria
 
 - [x] `python3 scripts/measure_augment_budget.py` ≤ 95 % utilisation
       (measured: **90.5 %, 44,813 / 49,512 chars**, 4,699 char headroom).
-- [x] `python3 scripts/compress.py --check` → in sync.
+- [x] `python3 scripts/condense.py --check` → in sync.
 - [x] `task lint-skills` green at marketplace.json sync.
 - [x] Auto-stub count: 72 → **53** (−19).
 - [x] No prose edit to any rule (changes are structural merges only).
@@ -117,7 +117,7 @@ Deliverables:
 ## References
 
 - [`framework-neutrality-audit.md`](../framework-neutrality-audit.md) — sibling roadmap whose budget exhaustion triggered this intervention
-- [`rules/architecture.md`](../../../.agent-src.uncompressed/rules/architecture.md) — package architecture, carve-out pattern
-- [`skills/rule-refactor/SKILL.md`](../../../.agent-src.uncompressed/skills/rule-refactor/SKILL.md) — new audit pipeline
-- [`skills/rule-writing/SKILL.md`](../../../.agent-src.uncompressed/skills/rule-writing/SKILL.md) — Budget-Discipline-Gate definition
+- [`rules/architecture.md`](../../../.agent-src.uncondensed/rules/architecture.md) — package architecture, carve-out pattern
+- [`skills/rule-refactor/SKILL.md`](../../../.agent-src.uncondensed/skills/rule-refactor/SKILL.md) — new audit pipeline
+- [`skills/rule-writing/SKILL.md`](../../../.agent-src.uncondensed/skills/rule-writing/SKILL.md) — Budget-Discipline-Gate definition
 - [`scripts/measure_augment_budget.py`](../../../scripts/measure_augment_budget.py) — budget measurement + threshold

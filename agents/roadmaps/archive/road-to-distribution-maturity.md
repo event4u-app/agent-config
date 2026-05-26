@@ -195,13 +195,13 @@ they harden the shift instead.
 > first run.
 
 - [x] **Step 1:** Inventoried the four pipelines `docs/architecture.md`
-      conflated: (a) `.agent-src.uncompressed/` → `.agent-src/`
-      compression, (b) `.agent-src/` → `.augment/` projection, (c)
+      conflated: (a) `.agent-src.uncondensed/` → `.agent-src/`
+      condensation, (b) `.agent-src/` → `.augment/` projection, (c)
       `.agent-src/` → multi-tool stubs (`.claude/`, `.cursor/`,
       `.clinerules/`, `.windsurfrules`, `GEMINI.md`), (d) Claude.ai
       bundle (ZIP) pipeline.
 - [x] **Step 2:** Split `docs/architecture.md` into a top-level overview
-      + four sub-pages under `docs/architecture/` (`compression.md`,
+      + four sub-pages under `docs/architecture/` (`condensation.md`,
       `augment-projection.md`, `multi-tool-projection.md`,
       `claude-bundle.md`). Each page owns one pipeline end-to-end:
       input, transform, output, invariants, failure modes.
@@ -235,7 +235,7 @@ they harden the shift instead.
       Step 5's hermetic-install commands land Tier-2 unless explicitly
       promoted (closes the Phase 2 → Phase 4 coupling raised by o1).
 - [x] **Step 3:** Tagged every command file with `tier: 0|1|2` in
-      frontmatter — both `.agent-src.uncompressed/commands/**` (source)
+      frontmatter — both `.agent-src.uncondensed/commands/**` (source)
       and `.agent-src/commands/**` (consumer-facing projection). 106
       commands per tree: tier-0=6, tier-1=29, tier-2=71. Bootstrap
       script `scripts/_bootstrap_tier_frontmatter.py` walks both trees
@@ -367,7 +367,7 @@ they harden the shift instead.
       `[~]` deferred / `[-]` cancelled with a one-line rationale.
 - [x] `task ci` green on the final commit (record SHA in Notes).
 - [x] `task lint-skills`, `task sync`, `task generate-tools` clean
-      — no drift between `.agent-src.uncompressed/` and generated
+      — no drift between `.agent-src.uncondensed/` and generated
       trees.
 - [x] `agents/roadmaps-progress.md` regenerated, dashboard reflects
       this roadmap's completion.
@@ -524,8 +524,8 @@ Recorded 2026-05-13 as the baseline command-surface inventory.
 | Surface | Source | Count |
 |---|---|---|
 | CLI commands (`./agent-config --help`) | `agent-config` heredoc | 45 |
-| Slash commands (root) | `.agent-src.uncompressed/commands/*.md` | 52 |
-| Slash sub-commands (orchestrator children) | `.agent-src.uncompressed/commands/*/*.md` | 54 |
+| Slash commands (root) | `.agent-src.uncondensed/commands/*.md` | 52 |
+| Slash sub-commands (orchestrator children) | `.agent-src.uncondensed/commands/*/*.md` | 54 |
 | **Slash command total** | | **106** |
 
 Pre-tiering, every command is implicitly Tier-0 (all of them render in

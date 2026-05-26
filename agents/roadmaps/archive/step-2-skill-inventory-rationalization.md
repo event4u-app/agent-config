@@ -12,7 +12,7 @@ complexity: lightweight
 
 This roadmap is **closed via partial-completion + sunset of Phase 4 + 5**:
 
-- **Phases 1–3 shipped** (telemetry collector, structural overlap pass, archive-notes contract). The infrastructure for rationalization exists: `task skill-usage:collect`, `task skill-overlap`, `task lint-archived-skills`, `.agent-src.uncompressed/templates/skill-archive-note.md`, and `agents/evidence/archived-skills/` directory all live.
+- **Phases 1–3 shipped** (telemetry collector, structural overlap pass, archive-notes contract). The infrastructure for rationalization exists: `task skill-usage:collect`, `task skill-overlap`, `task lint-archived-skills`, `.agent-src.uncondensed/templates/skill-archive-note.md`, and `agents/evidence/archived-skills/` directory all live.
 - **Phase 4–5 sunset.** The 30-day soak from Phase 2 Step 1 (gate 2026-06-15) never produced enough activation signal to drive merge/supersede decisions — the structural overlap pass yielded 0 merge candidates (all 16 flagged pairs map to router-dispatched families). The 208 → ≤ 160 target is dropped; current inventory stays as-is.
 - The mechanism survives. If future activation data ever justifies rationalization, the candidate table + linter + archive-notes contract are ready. This is sunset of the **target**, not of the **tooling**.
 
@@ -42,7 +42,7 @@ Build a passive collector that records which skill triggered on which prompt —
 - [x] **Step 1 — Source-of-truth audit:** drafted 2026-05-16 → [`skill-usage-sources.md`](../../audits/2026-05-14-north-star/skill-usage-sources.md). Primary signal = Claude Code session jsonl `attachment.type=skill_listing` + assistant-text mention heuristic; cross-correlation = `agents/.mcp-telemetry/calls.jsonl` for MCP-backed skills. No PII surface.
 - [x] **Step 2 — Collector script:** authored 2026-05-16 → `scripts/skill_usage_collect.py`. Reads `~/.claude/projects/<repo-slug>/*.jsonl`; emits `agents/runtime/metrics/skill-usage.jsonl` with `{ session_id, turn_idx, slug, kind ∈ {exposure, mention}, ts, prompt_excerpt_hash }`. SHA-256 over first 200 chars; raw bodies never persisted. Append-only with dedup on `(session, turn, slug, kind)`.
 - [x] **Step 3 — Aggregator script:** authored 2026-05-16 → `scripts/skill_usage_report.py`. Groups by slug; emits `agents/runtime/metrics/skill-usage-report.md` with columns slug · status · exposures_30d · mentions_30d · exposures_total · mentions_total · last_seen. `status` ∈ { active, exposed-only, dead } per `mentions_30d ≥ 1` / `exposures_30d ≥ 1` / else.
-- [x] **Step 4 — Task wiring:** added `task skill-usage:collect` and `task skill-usage:report` to `taskfiles/ci-fast.yml`. Both `silent: true` and `{{.QUIET_FLAG}}`-routed per [`script-writing`](../../.agent-src.uncompressed/skills/script-writing/SKILL.md). Raw `.jsonl` is gitignored (carries hashes of maintainer prompts); `skill-usage-report.md` is committed as the baseline.
+- [x] **Step 4 — Task wiring:** added `task skill-usage:collect` and `task skill-usage:report` to `taskfiles/ci-fast.yml`. Both `silent: true` and `{{.QUIET_FLAG}}`-routed per [`script-writing`](../../.agent-src.uncondensed/skills/script-writing/SKILL.md). Raw `.jsonl` is gitignored (carries hashes of maintainer prompts); `skill-usage-report.md` is committed as the baseline.
 - [x] **Step 5 — First baseline run:** executed 2026-05-16 against the single available session (1 turn, 181 exposures, 0 mentions). Baseline report committed as the 0-day snapshot; status spread = 156 dead / 181 exposed-only / 0 active. Active counts will grow as more sessions accumulate; Phase 2 starts after the 30-day soak per Step 1 of that phase.
 
 **Exit:** `task skill-usage:report` produces a numbered table covering all 208 skills with a per-skill count. **Rollback:** revert the script files and remove the task entries; the metrics dir stays gitignored until the report exists.
@@ -62,7 +62,7 @@ Use the Phase 1 report + structural overlap detection to identify merge / supers
 
 Before any deletion, every removed skill needs an archive note explaining *why* and *what replaces it*. Council Opus #5 made this an explicit floor.
 
-- [x] **Step 1 — Archive-notes template:** authored 2026-05-16 → `.agent-src.uncompressed/templates/skill-archive-note.md`. Six required frontmatter fields (`slug`, `archived_on`, `last_seen_count`, `reason`, `replacement`, `last_known_callers`); three body sections (*Why archived*, *What replaces it*, *Last-known callers*); five lint contract clauses.
+- [x] **Step 1 — Archive-notes template:** authored 2026-05-16 → `.agent-src.uncondensed/templates/skill-archive-note.md`. Six required frontmatter fields (`slug`, `archived_on`, `last_seen_count`, `reason`, `replacement`, `last_known_callers`); three body sections (*Why archived*, *What replaces it*, *Last-known callers*); five lint contract clauses.
 - [x] **Step 2 — Archive-notes directory:** created 2026-05-16 → `agents/evidence/archived-skills/` with `README.md` documenting the contract: one `<slug>.md` per removed skill, paired with the SKILL.md removal in the same commit, no stray files allowed.
 - [x] **Step 3 — Linter gate:** authored 2026-05-16 → `scripts/lint_archived_skills.py`. Validates frontmatter completeness, `reason` enum, replacement-slug existence for `{merged, superseded}`, zombie detection, and live-skill `replaced_by` cross-checks. Verified green against the empty archive directory (only README present).
 - [x] **Step 4 — Task wiring:** added `task lint-archived-skills` to `taskfiles/ci-fast.yml`; included in `task ci` and `task ci-strict` immediately after `lint-skills` / `lint-skills-strict`. `silent: true` and `{{.QUIET_FLAG}}`-routed.
@@ -75,9 +75,9 @@ Apply the Phase 2 candidates table — one PR-shaped commit per action category 
 
 - [-] **Step 1 — Merges (lowest risk):** For every `merge_into:<target>` row, fold the source skill's unique content into the target. Generate the archive note from Phase 3 template. Run `task lint-skills && task lint-archived-skills`.
 - [-] **Step 2 — Supersessions:** For every `supersede_by:<target>` row, the source skill becomes a thin redirect (frontmatter + one-line body pointing to the successor) and gets an archive note. The successor adopts the source's trigger phrases where they don't conflict.
-- [-] **Step 3 — Archives (unused):** For every `archive` row, move the skill out of `.agent-src.uncompressed/skills/` and write the archive note. Update `router.json` to remove the slug.
+- [-] **Step 3 — Archives (unused):** For every `archive` row, move the skill out of `.agent-src.uncondensed/skills/` and write the archive note. Update `router.json` to remove the slug.
 - [-] **Step 4 — Regenerate generated trees:** `task sync && task generate-tools` to refresh `.agent-src/`, `.augment/`, multi-tool projections. Verify the new skill count.
-- [-] **Step 5 — Verify the 160 target:** `ls .agent-src.uncompressed/skills/ | wc -l` ≤ 160. If still over, repeat Phase 2 with a tighter overlap threshold or a longer soak window — do **not** shave to hit a number.
+- [-] **Step 5 — Verify the 160 target:** `ls .agent-src.uncondensed/skills/ | wc -l` ≤ 160. If still over, repeat Phase 2 with a tighter overlap threshold or a longer soak window — do **not** shave to hit a number.
 
 **Exit:** Skill count ≤ 160; `task lint-skills` green; `task lint-archived-skills` green; archive notes exist for every removed slug. **Rollback:** `git revert` the rationalization commit chain; the candidates table + archive notes directory stay for the next attempt.
 
@@ -85,7 +85,7 @@ Apply the Phase 2 candidates table — one PR-shaped commit per action category 
 
 Every removed slug may be cited from rules, commands, contexts, docs. Sweep before closing.
 
-- [-] **Step 1 — `task check-refs` after rationalization:** Per [`check-refs`](../../.agent-src.uncompressed/skills/check-refs/SKILL.md). Any reference to a removed slug must point to its successor (from the archive note's `replacement` field) or be deleted.
+- [-] **Step 1 — `task check-refs` after rationalization:** Per [`check-refs`](../../.agent-src.uncondensed/skills/check-refs/SKILL.md). Any reference to a removed slug must point to its successor (from the archive note's `replacement` field) or be deleted.
 - [-] **Step 2 — Update `agents/roadmaps-progress.md`:** Regenerate via `task roadmap-progress`. The dashboard's skill-count delta is visible.
 - [-] **Step 3 — Update composite scorecard:** [`external-findings.md § 5`](../../audits/2026-05-14-north-star/external-findings.md) — the "governance" row stays `+`, but no axis regresses.
 
@@ -93,7 +93,7 @@ Every removed slug may be cited from rules, commands, contexts, docs. Sweep befo
 
 ## Acceptance Criteria
 
-- [-] Skill count ≤ 160 (verified via `ls .agent-src.uncompressed/skills/ | wc -l`)
+- [-] Skill count ≤ 160 (verified via `ls .agent-src.uncondensed/skills/ | wc -l`)
 - [-] Every archived / merged / superseded slug has a matching `agents/evidence/archived-skills/<slug>.md`
 - [-] `agents/runtime/metrics/skill-usage-report.md` reflects ≥ 30 days of activation data (or documented fallback to structural overlap if data unavailable)
 - [-] `task ci` green (includes `lint-skills`, `lint-archived-skills`, `check-refs`)

@@ -12,7 +12,7 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 | Skill quality (pointer-only risk) | 8.7 | ✅ 9.5 | 1 |
 | Merge safety | ~8.5 | ✅ 9.5 | 2 |
 | Optimize command safety | ~7.5 | ✅ 9.0 | 3 |
-| Compression quality | unmeasured | ✅ 9.0 | 4 |
+| Condensation quality | unmeasured | ✅ 9.0 | 4 |
 | Quality visibility | none | ✅ 9.0 | 5 |
 
 ---
@@ -32,7 +32,7 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 - [x] `skill-quality` rule: merge preservation documented (lines 38-51)
 - [x] `skill-reviewer`: K6 checks if refactor weakened validation/examples/gotchas
 - [x] `think-before-action` rule: "Refactors must preserve behavior, validation, examples"
-- [~] Linter: semantic comparison (source vs compressed step loss) — not feasible statically
+- [~] Linter: semantic comparison (source vs condensed step loss) — not feasible statically
 
 ---
 
@@ -40,15 +40,15 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 
 - [x] `optimize-agents`: references rule-type-governance, has preservation gate, advisory only
 - [x] `optimize-skills`: references size-and-scope, has preservation gate
-- [x] Both operate on `.agent-src.uncompressed/` only
+- [x] Both operate on `.agent-src.uncondensed/` only
 
 ---
 
-## Phase 4: Compression Preservation ✅
+## Phase 4: Condensation Preservation ✅
 
-- [x] `/compress` command: full preservation checklist (NEVER modify/remove sections)
-- [x] `check_compression.py` in CI: headings, code blocks, frontmatter, word count
-- [x] `task check-compression` target + `--summary` flag
+- [x] `/condense` command: full preservation checklist (NEVER modify/remove sections)
+- [x] `check_condensation.py` in CI: headings, code blocks, frontmatter, word count
+- [x] `task check-condensation` target + `--summary` flag
 
 ---
 
@@ -76,7 +76,7 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 | 1 — Skill independence | Low | 🔴 High | ✅ Complete |
 | 2 — Merge preservation | Low | 🔴 High | ✅ Complete |
 | 3 — Optimize commands | Medium | 🟡 Medium | ✅ Complete |
-| 4 — Compression preservation | Medium | 🟡 Medium | ✅ Complete |
+| 4 — Condensation preservation | Medium | 🟡 Medium | ✅ Complete |
 | 5 — Quality score/report | Medium | 🟢 Nice-to-have | ✅ Complete |
 | Bonus — Interaction quality | Medium | 🟡 Medium | ✅ Complete |
 
@@ -87,7 +87,7 @@ Goal: Close last structural quality gaps without adding complexity bloat.
 All targets met:
 
 - ✅ Skills always executable without guidelines (K6 + linter enforcement)
-- ✅ Merges/compressions never silently weaken content (preservation rules + CI)
+- ✅ Merges/condensations never silently weaken content (preservation rules + CI)
 - ✅ Optimize commands cannot break system integrity (advisory only + guards)
 - ✅ Weak areas visible and trackable (`task quality-report` = 9.0/10)
 - ✅ System improves itself safely over time (linter + CI + interaction quality)

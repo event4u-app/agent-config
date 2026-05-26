@@ -316,7 +316,7 @@ settings editor; the editor has extra fields the wizard does not.
 ### Council TODOs
 
 > Pass executed in-session 2026-05-18 against the repo personas listed
-> in `.agent-src.uncompressed/personas/`. External `/council` (paid
+> in `.agent-src.uncondensed/personas/`. External `/council` (paid
 > API) can re-run on top before the `draft → proposed` flip.
 
 **`frontend-engineer` — shared-codebase claim is load-bearing and undefended**

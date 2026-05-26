@@ -27,7 +27,7 @@ def _load(path: Path) -> list[dict]:
 def group(rows: list[dict]) -> dict:
     by_conv: dict = defaultdict(lambda: {
         "sessions": 0, "total_cost_usd": 0.0, "input_tokens": 0,
-        "output_tokens": 0, "caveman_delta_tokens": 0,
+        "output_tokens": 0, "telegraph_delta_tokens": 0,
         "by_model": defaultdict(lambda: {"sessions": 0, "cost_usd": 0.0}),
     })
     for row in rows:
@@ -38,7 +38,7 @@ def group(rows: list[dict]) -> dict:
         b["total_cost_usd"] += cost
         b["input_tokens"] += int(row.get("input_tokens") or 0)
         b["output_tokens"] += int(row.get("output_tokens") or 0)
-        b["caveman_delta_tokens"] += int(row.get("caveman_delta_tokens") or 0)
+        b["telegraph_delta_tokens"] += int(row.get("telegraph_delta_tokens") or 0)
         m = b["by_model"][str(row.get("model") or "unknown")]
         m["sessions"] += 1
         m["cost_usd"] += cost
@@ -53,7 +53,7 @@ def render_text(report: dict) -> str:
         lines.append(
             f"  {cid}: {b['sessions']} sessions · ${b['total_cost_usd']:.4f} · "
             f"in {b['input_tokens']:,} · out {b['output_tokens']:,} · "
-            f"caveman_delta {b['caveman_delta_tokens']:+,}"
+            f"telegraph_delta {b['telegraph_delta_tokens']:+,}"
         )
         for model, m in sorted(b["by_model"].items()):
             lines.append(f"      {model}: {m['sessions']} sessions · ${m['cost_usd']:.4f}")

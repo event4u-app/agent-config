@@ -6,7 +6,7 @@ keep-beta-until: 2026-08-12
 # Rule-Interaction Matrix
 
 > **Audience:** rule authors and reviewers — anyone editing
-> `.agent-src.uncompressed/rules/*.md` or proposing a new always-rule.
+> `.agent-src.uncondensed/rules/*.md` or proposing a new always-rule.
 > **Authoritative source:** [`rule-interactions.yml`](rule-interactions.yml).
 > **Linter:** `scripts/lint_rule_interactions.py` (run via `task lint-rule-interactions`).
 
@@ -73,8 +73,8 @@ The YAML uses six relation kinds. Definitions:
   conflict: …                                                  # what triggers both
   resolution: …                                                # what the agent does
   evidence:
-    - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
-    - .agent-src.uncompressed/rules/autonomous-execution.md#hard-floor--see-non-destructive-by-default
+    - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+    - .agent-src.uncondensed/rules/autonomous-execution.md#hard-floor--see-non-destructive-by-default
 ```
 
 `rules: [a, b]` is ordered: `a` is senior (wins on conflict), `b` is
@@ -117,7 +117,7 @@ source of truth and weaken it. Canonical contracts:
 | Decision-trace shape (what the engine emits per phase) | [`decision-trace-v1.md`](decision-trace-v1.md) |
 | Memory contract (entries, scopes, retention) | [`agent-memory-contract.md`](agent-memory-contract.md) |
 | Memory visibility in the trace (`affected` keys) | [`memory-visibility-v1.md`](memory-visibility-v1.md) |
-| AI-Council consultation flow | [`../skills/ai-council/SKILL.md`](../../.agent-src.uncompressed/skills/ai-council/SKILL.md) |
+| AI-Council consultation flow | [`../skills/ai-council/SKILL.md`](../../.agent-src.uncondensed/skills/ai-council/SKILL.md) |
 
 Where an `always`-rule **does** interact with one of these surfaces
 (e.g. `non-destructive-by-default` gating a memory-driven action), the

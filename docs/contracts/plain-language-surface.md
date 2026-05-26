@@ -62,7 +62,7 @@ them.
 
 The matrix MUST NOT apply to:
 
-- `.agent-src.uncompressed/`, `.agent-src/`, `.augment/`, `.claude/`,
+- `.agent-src.uncondensed/`, `.agent-src/`, `.augment/`, `.claude/`,
   `.cursor/`, `.windsurf/`, `.clinerules/` — all skill / rule /
   command / persona artefacts.
 - `docs/contracts/`, `docs/decisions/`, `docs/architecture.md`,

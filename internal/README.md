@@ -6,7 +6,7 @@ Maintainer-only tooling. **Not shipped to consumers.** Convention pinned to
 Nothing under this directory is part of the public contract:
 
 - not symlinked by `scripts/install.py`
-- not projected by `scripts/compress.py`
+- not projected by `scripts/condense.py`
 - not referenced by any installer or projector path constant
 - not consumed by the `dist/router.json` runtime
 
@@ -19,7 +19,7 @@ Nothing under this directory is part of the public contract:
 | [`workers/`](workers/) | Cloudflare MCP worker source (`internal/workers/mcp/`) |
 | [`docker/`](docker/) | Maintainer-only Dockerfiles (e.g. `internal/docker/mcp-server/Dockerfile`) |
 | [`schemas/`](schemas/) | Maintainer-only JSON Schemas (`retrieval-v1.schema.json`, `wizard-apply-payload.schema.json`); `scripts/schemas/` is the published artefact-schema tree |
-| `.compression-hashes.json` | Hash ledger for `scripts/compress.py` (rewritten on every sync) |
+| `.condensation-hashes.json` | Hash ledger for `scripts/condense.py` (rewritten on every sync) |
 
 ## Placement rule
 

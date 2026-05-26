@@ -42,7 +42,7 @@ any rule add/merge/deprecate to refresh the baseline.
 | 25 | `minimal-safe-diff` | 2a | 146 | 253 | 3323 | 0p / 1k / 2i | — |
 | 26 | `onboarding-gate` | 1 | 148 | 253 | 311 | 1p / 1k / 0i | command:onboard |
 | 27 | `reviewer-awareness` | 2a | 144 | 252 | 586 | 0p / 1k / 0i | skill:review-routing |
-| 28 | `caveman-speak` | 1 | 148 | 251 | 3307 | 0p / 0k / 1i | — |
+| 28 | `telegraph-speak` | 1 | 148 | 251 | 3307 | 0p / 0k / 1i | — |
 | 29 | `model-recommendation` | 2a | 141 | 251 | 310 | 0p / 0k / 0i | command:set-cost-profile |
 | 30 | `media-governance-routing` | 2a | 136 | 250 | 4330 | 0p / 8k / 0i | — |
 | 31 | `upstream-proposal` | 2a | 143 | 250 | 316 | 0p / 1k / 0i | skill:upstream-contribute |
@@ -83,7 +83,7 @@ Pairs flagged: **6** (thresholds: path-Jaccard ≥ 0.5, keyword-overlap ≥ 0.4)
 | # | Rule A | Rule B | Path-J | Keyword-O | Shared keywords |
 |---|--------|--------|--------|-----------|-----------------|
 | 1 | `domain-adoption-policy` | `skill-quality` | 1.00 | 0.00 | — |
-| 2 | `augment-edit-discipline` | `augment-source-of-truth` | 0.20 | 0.43 | `agent-src`, `augment`, `edit`, `editing`, `files`, `uncompressed` |
+| 2 | `augment-edit-discipline` | `augment-source-of-truth` | 0.20 | 0.43 | `agent-src`, `augment`, `edit`, `editing`, `files`, `uncondensed` |
 | 3 | `cli-output-handling` | `docker-commands` | 0.00 | 0.59 | `artisan`, `cli`, `commands`, `composer`, `docker`, `phpstan` |
 | 4 | `roadmap-ci-steps-policy` | `roadmap-progress-sync` | 0.50 | 0.06 | `inline` |
 | 5 | `artifact-drafting-protocol` | `upstream-proposal` | 0.00 | 0.46 | `command`, `creating`, `guideline`, `rule`, `significantly`, `skill` |

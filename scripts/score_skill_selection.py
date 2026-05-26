@@ -36,7 +36,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parent.parent
 FIXTURES = REPO_ROOT / "tests" / "fixtures" / "skill_selection" / "fixtures.yml"
 CLUSTERS = REPO_ROOT / "agents" / "reports" / "skill-collision-clusters.json"
-SKILLS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_DIR = REPO_ROOT / ".agent-src.uncondensed" / "skills"
 DEFAULT_OUT = REPO_ROOT / "agents" / "reports" / "skill-selection-accuracy.json"
 
 PASS_A = 0.90

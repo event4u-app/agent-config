@@ -49,7 +49,7 @@ threshold is documented inline in
 - `task lint-skills` — runs `skill_linter.py` against all skills + rules.
 - `task ci` — wraps `lint-skills` plus router + smoke smokes.
 - Smoke contract `scripts/smoke/schema.sh` — fast random-sample check
-  for PRs touching `.agent-src.uncompressed/**` (see
+  for PRs touching `.agent-src.uncondensed/**` (see
   [`docs/contracts/smoke-contracts.md`](../../contracts/smoke-contracts.md)).
 
 ## Considered alternatives

@@ -127,7 +127,7 @@ github:
 #
 # Controls how rule files are written into .augment/rules/ during
 # install (scripts/install.sh) and the package's own projection
-# (scripts/compress.py --project-augment).
+# (scripts/condense.py --project-augment).
 #
 # Augment Code historically does not load symlinked rule files, so the
 # default is to write each rule as a real copy. Flip the toggle to true
@@ -167,7 +167,7 @@ chat_history:
 
   # Overflow behavior
   #   rotate   = drop oldest entries to stay under max_size_kb
-  #   compress = mark for summarization on the next agent turn
+  #   condense = mark for summarization on the next agent turn
   on_overflow: __CHAT_HISTORY_ON_OVERFLOW__
 
   # Per-entry-type text-length caps (chars). 0 = verbatim, no slice.

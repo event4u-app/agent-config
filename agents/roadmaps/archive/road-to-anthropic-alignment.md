@@ -120,8 +120,8 @@ claude marketplace add event4u-app/agent-config
 ### 2.1 Update `skill-quality` rule ✅
 
 - [x] New section *Description Triggering* in
-      [`.agent-src.uncompressed/rules/skill-quality.md`](../../../.agent-src.uncompressed/rules/skill-quality.md)
-      and mirrored compressed copy. Cites `anthropics/skills/skills/skill-creator`.
+      [`.agent-src.uncondensed/rules/skill-quality.md`](../../../.agent-src.uncondensed/rules/skill-quality.md)
+      and mirrored condensed copy. Cites `anthropics/skills/skills/skill-creator`.
 - [x] Pattern prescribes: concrete verb prefix, 2+ triggers, explicit
       `... even if they don't explicitly ask for \`<skill-name>\`.` tail,
       no hedges (`may help with`, `can be useful for`).
@@ -152,8 +152,8 @@ claude marketplace add event4u-app/agent-config
 > not a guideline — the before/after example lives in the skill body.
 
 - [x] New section `### 1b. Pushy frontmatter description` in
-      [`.agent-src.uncompressed/skills/skill-writing/SKILL.md`](../../../.agent-src.uncompressed/skills/skill-writing/SKILL.md)
-      and compressed copy.
+      [`.agent-src.uncondensed/skills/skill-writing/SKILL.md`](../../../.agent-src.uncondensed/skills/skill-writing/SKILL.md)
+      and condensed copy.
 - [x] Canonical before/after uses the `playwright-testing` description
       (from the baseline report) — 138 chars polite → pushy with second
       trigger class (*CI, flaky tests*) and the explicit tail.

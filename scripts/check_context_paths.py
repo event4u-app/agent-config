@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Context-file path & orphan checker.
 
-Validates that every `*.md` under `.agent-src.uncompressed/contexts/`:
+Validates that every `*.md` under `.agent-src.uncondensed/contexts/`:
 
 1. Lives in a locked sub-tree (or is one of six grandfathered root files).
 2. Does not collide on basename with another context file in another sub-tree.
@@ -22,7 +22,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CONTEXTS_ROOT = ROOT / ".agent-src.uncompressed" / "contexts"
+CONTEXTS_ROOT = ROOT / ".agent-src.uncondensed" / "contexts"
 
 # Sub-trees that may contain context files. Update in lock-step with
 # docs/contracts/context-paths.md whenever a roadmap revision adds one.
@@ -56,10 +56,10 @@ GRANDFATHERED_ROOT_FILES = frozenset({
 # Without this scan dir, every newly-introduced context would orphan
 # until the consuming artefact lands, blocking phase-by-phase commits.
 REFERENCE_SCAN_DIRS = (
-    ".agent-src.uncompressed/rules",
-    ".agent-src.uncompressed/skills",
-    ".agent-src.uncompressed/commands",
-    ".agent-src.uncompressed/contexts",
+    ".agent-src.uncondensed/rules",
+    ".agent-src.uncondensed/skills",
+    ".agent-src.uncondensed/commands",
+    ".agent-src.uncondensed/contexts",
     "agents/roadmaps",
 )
 
@@ -139,7 +139,7 @@ def _build_reference_corpus(root: Path) -> str:
 def _check_orphans(contexts: list[Path], corpus: str, root: Path) -> list[Violation]:
     out: list[Violation] = []
     for ctx in contexts:
-        rel_src = str(ctx.relative_to(root))                       # .agent-src.uncompressed/contexts/...
+        rel_src = str(ctx.relative_to(root))                       # .agent-src.uncondensed/contexts/...
         rel_short = rel_src.split("contexts/", 1)[-1]               # judges/persona-voice-rubric.md
         candidates = (rel_src, f"contexts/{rel_short}", rel_short)
         # Exclude self-references: drop this file's own content from the

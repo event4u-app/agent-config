@@ -3,7 +3,7 @@ name: Skill Lint
 on:
   pull_request:
     paths:
-      - ".agent-src.uncompressed/**"
+      - ".agent-src.uncondensed/**"
       - ".augment/**"
       - ".claude/**"
       - "scripts/skill_linter.py"
@@ -15,7 +15,7 @@ on:
     branches:
       - main
     paths:
-      - ".agent-src.uncompressed/**"
+      - ".agent-src.uncondensed/**"
       - ".augment/**"
       - ".claude/**"
       - "scripts/skill_linter.py"
@@ -35,7 +35,7 @@ permissions:
 
 jobs:
   # Phase 4.4 (ADR-017): per-pack matrix gate. Each pack lints its own
-  # `.agent-src.uncompressed/` tree in parallel; merge requires every
+  # `.agent-src.uncondensed/` tree in parallel; merge requires every
   # matrix shard green.
   skill-lint-per-pack:
     runs-on: ubuntu-latest

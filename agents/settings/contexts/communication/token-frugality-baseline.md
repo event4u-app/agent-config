@@ -48,7 +48,7 @@ branch.
    count of every assistant message in the flow.
 3. Flip the same flags to **verbose** (`personal.play_by_play:
    true`, `verbosity.intent_announcements: true`,
-   `caveman.speak_scope: off`, `verbosity.numbered_options: on`,
+   `telegraph.speak_scope: off`, `verbosity.numbered_options: on`,
    `verbosity.status_blocks: on`, `verbosity.report_blocks:
    full`). Re-run the same three flows. Capture the same counts.
 4. Record the per-flow deltas in the table below.

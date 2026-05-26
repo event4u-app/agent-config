@@ -53,7 +53,7 @@ file and the eval-finding file agree.
 If any friction maps to a fix in a skill description, a rule trigger,
 or a command step, list the deltas here so the corpus learns.
 
-- `.agent-src.uncompressed/skills/<skill>/SKILL.md` — `<one-line change>`
+- `.agent-src.uncondensed/skills/<skill>/SKILL.md` — `<one-line change>`
 - `<...>`
 
 If none, write `none — friction was workflow / docs only`.

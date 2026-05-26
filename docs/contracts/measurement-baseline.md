@@ -5,7 +5,7 @@ stability: stable
 # Measurement baseline — contract
 
 > **Status:** locked 2026-05-16 · **Owner:** `step-4-measurement-and-benchmark.md`
-> · **Cited by:** every P2 enforcement roadmap (skill rationalization G0, north-star G1, compression default decision).
+> · **Cited by:** every P2 enforcement roadmap (skill rationalization G0, north-star G1, condensation default decision).
 
 Single source of truth for what `task bench` measures, what counts as
 drift, and what unblocks enforcement. Read this before pinning a number
@@ -36,7 +36,7 @@ timestamped, never overwritten, content-addressed by run.
 
 Total 26 prompts ≥ Acceptance Criteria floor of 25. Mid-window edits
 to either YAML restart the 60-day clock per
-[`compression-default-kill-criterion.md`](compression-default-kill-criterion.md) § 2.
+[`condensation-default-kill-criterion.md`](condensation-default-kill-criterion.md) § 2.
 
 ## What counts as drift
 
@@ -77,14 +77,14 @@ on the 30-report floor.
 Downstream consumers:
 
 - ``step-99-north-star-restructure.md` § Acceptance G1` — reads this exit code.
-- [`compression-default-kill-criterion.md` § 3](compression-default-kill-criterion.md) — reads the decision table after baseline closes.
+- [`condensation-default-kill-criterion.md` § 3](condensation-default-kill-criterion.md) — reads the decision table after baseline closes.
 - ``step-2-skill-inventory-rationalization.md` § G0` — usage-data soak floor.
 
 ## What the closeout writes
 
 On baseline closure, the step-4 closeout writes the numeric verdict to
 [`docs/parity/bench.json`](../parity/bench.json) — frozen snapshot with
-the 30+ reports averaged, drift verdict, and the compression-default
+the 30+ reports averaged, drift verdict, and the condensation-default
 decision per the kill-criterion table. That file is the artefact every
 P2 roadmap reads — not the live `internal/bench/reports/` directory.
 
@@ -98,5 +98,5 @@ P2 roadmap reads — not the live `internal/bench/reports/` directory.
 
 - [`benchmark-report-schema.md`](benchmark-report-schema.md) · per-report JSON schema
 - [`benchmark-corpus-spec.md`](benchmark-corpus-spec.md) · corpus YAML schema
-- [`compression-default-kill-criterion.md`](compression-default-kill-criterion.md) · decision table read by step-4 closeout
+- [`condensation-default-kill-criterion.md`](condensation-default-kill-criterion.md) · decision table read by step-4 closeout
 - `step-4-measurement-and-benchmark.md` · the owning roadmap

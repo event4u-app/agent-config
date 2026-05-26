@@ -2,7 +2,7 @@
 """Lint persona governance — per-domain cap (hard) + citation floor (warn).
 
 Enforces the mechanical checks in
-`.agent-src.uncompressed/rules/persona-governance.md`:
+`.agent-src.uncondensed/rules/persona-governance.md`:
 
   1. **Per-domain cap (HARD)** — ≤ 2 active specialist personas per
      content domain. Core-tier personas are exempt. `status:
@@ -11,7 +11,7 @@ Enforces the mechanical checks in
      deletion, no soak window.
   2. **Skill citation floor (WARN)** — every active specialist
      persona SHOULD be cited by `personas: [<id>]` in at least one
-     skill SKILL.md under `.agent-src.uncompressed/skills/` or
+     skill SKILL.md under `.agent-src.uncondensed/skills/` or
      `.claude/skills/`. Surfaced as a warning, never blocks CI:
      the citation floor is enforced at PR time per the rule (a new
      specialist MUST land with a cite); pre-existing wiring debt is
@@ -39,9 +39,9 @@ from pathlib import Path
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-PERSONA_DIR = REPO / ".agent-src.uncompressed" / "personas"
+PERSONA_DIR = REPO / ".agent-src.uncondensed" / "personas"
 SKILL_ROOTS: tuple[Path, ...] = (
-    REPO / ".agent-src.uncompressed" / "skills",
+    REPO / ".agent-src.uncondensed" / "skills",
     REPO / ".claude" / "skills",
 )
 

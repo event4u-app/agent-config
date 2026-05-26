@@ -1,6 +1,6 @@
 #!/bin/bash
 # Phase 10.7 baseline measurement: post-consistency task ci subset.
-TASKS="counts-check check-index check-router check-compression check-compressed-paths check-refs check-token-optimizer-freshness check-portability check-examples-shape lint-roadmap-complexity check-public-links check-public-catalog-links check-command-count lint-no-new-atomic-commands check-cluster-patterns lint-rule-interactions lint-load-context check-context-paths check-no-roadmap-refs check-council-references lint-one-off-age check-ownership-matrix check-reply-consistency check-iron-law-prominence check-always-budget check-one-off-location validate-schema lint-rule-budget lint-skills lint-rule-tiers lint-handoffs lint-hook-manifest lint-showcase-sessions lint-marketplace"
+TASKS="counts-check check-index check-router check-condensation check-condensed-paths check-refs check-token-optimizer-freshness check-portability check-examples-shape lint-roadmap-complexity check-public-links check-public-catalog-links check-command-count lint-no-new-atomic-commands check-cluster-patterns lint-rule-interactions lint-load-context check-context-paths check-no-roadmap-refs check-council-references lint-one-off-age check-ownership-matrix check-reply-consistency check-iron-law-prominence check-always-budget check-one-off-location validate-schema lint-rule-budget lint-skills lint-rule-tiers lint-handoffs lint-hook-manifest lint-showcase-sessions lint-marketplace"
 
 echo "=== MINIMAL ==="
 AGENT_SCRIPT_VERBOSITY=minimal task $TASKS 2>&1 > /tmp/ci-min.log

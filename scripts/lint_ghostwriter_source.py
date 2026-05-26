@@ -3,7 +3,7 @@
 
 Two storage tiers exist (see docs/contracts/ghostwriter-schema.md):
 
-  * .agent-src.uncompressed/ghostwriter/  — package source. Ships
+  * .agent-src.uncondensed/ghostwriter/  — package source. Ships
     fictional fixtures ONLY (`fictional: true`). Every file stem must
     be on scripts/ghostwriter_fixture_allowlist.txt. `aliases:` is
     forbidden here (consumer-only feature).
@@ -28,7 +28,7 @@ import yaml
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-PACKAGE_DIR = REPO / ".agent-src.uncompressed" / "ghostwriter"
+PACKAGE_DIR = REPO / ".agent-src.uncondensed" / "ghostwriter"
 CONSUMER_DIR = REPO / "agents" / "ghostwriter"
 ALLOWLIST = REPO / "scripts" / "ghostwriter_fixture_allowlist.txt"
 EXEMPT_STEMS = frozenset({"README"})
@@ -159,7 +159,7 @@ def lint_consumer_side() -> list[str]:
         if data.get("fictional") is True:
             errors.append(
                 f"    'fictional: true' in consumer tree: {path.relative_to(REPO)} "
-                f"— fictional fixtures belong in .agent-src.uncompressed/ghostwriter/"
+                f"— fictional fixtures belong in .agent-src.uncondensed/ghostwriter/"
             )
 
         aliases = data.get("aliases")

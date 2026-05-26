@@ -99,11 +99,11 @@ def validate(text: str, strict: bool = False) -> tuple[int, str]:
 
 
 def cmd_scan_dir(root: Path) -> int:
-    # If the requested root is the legacy ".agent-src.uncompressed" and it
+    # If the requested root is the legacy ".agent-src.uncondensed" and it
     # no longer exists (post-monorepo-move), fall back to artefact_roots()
-    # so every packages/*/.agent-src.uncompressed/ is scanned.
+    # so every packages/*/.agent-src.uncondensed/ is scanned.
     if not root.is_dir():
-        legacy = ROOT / ".agent-src.uncompressed"
+        legacy = ROOT / ".agent-src.uncondensed"
         if root.resolve() == legacy.resolve():
             roots = artefact_roots()
             if not roots:

@@ -53,8 +53,8 @@ PATTERN = re.compile(
 # Only these durable surfaces are scanned. Archive, analysis, and the
 # council dirs themselves are excluded by design.
 #
-# Source roots (legacy `.agent-src.uncompressed/` and every
-# `packages/*/.agent-src.uncompressed/`) are discovered at runtime via
+# Source roots (legacy `.agent-src.uncondensed/` and every
+# `packages/*/.agent-src.uncondensed/`) are discovered at runtime via
 # `artefact_roots()` so the linter follows the monorepo physical layout.
 FIXED_SCAN_ROOTS = (
     "agents/roadmaps",
@@ -92,12 +92,12 @@ ALLOWLIST_PREFIXES: tuple[str, ...] = (
     # the SKIP_DIRS contract in scripts/check_references.py).
     "agents/evidence/analysis/",
     # The rule itself documents forbidden vs. allowed forms.
-    ".agent-src.uncompressed/rules/no-roadmap-references.md",
+    ".agent-src.uncondensed/rules/no-roadmap-references.md",
     # ai-council skill documents the output-path schema.
-    ".agent-src.uncompressed/skills/ai-council/",
+    ".agent-src.uncondensed/skills/ai-council/",
     # Council commands document the output-path schema.
-    ".agent-src.uncompressed/commands/council/",
-    ".agent-src.uncompressed/commands/council.md",
+    ".agent-src.uncondensed/commands/council/",
+    ".agent-src.uncondensed/commands/council.md",
 )
 # Top-level files that are also exempt (e.g. CHANGELOG with historical entries).
 ALLOWLIST_FILES: frozenset[str] = frozenset({
@@ -136,8 +136,8 @@ def _is_allowlisted(rel: str) -> bool:
     """Match a repo-relative POSIX path against the allowlist.
 
     Allowlist prefixes are written against the legacy
-    ``.agent-src.uncompressed/`` layout. A physical hit under
-    ``packages/*/.agent-src.uncompressed/`` is normalised to the same
+    ``.agent-src.uncondensed/`` layout. A physical hit under
+    ``packages/*/.agent-src.uncondensed/`` is normalised to the same
     logical path before matching so entries keep covering relocated files.
     """
     if rel in ALLOWLIST_FILES:
@@ -152,7 +152,7 @@ def _is_allowlisted(rel: str) -> bool:
     return False
 
 
-_LEGACY_PREFIX_STR = ".agent-src.uncompressed/"
+_LEGACY_PREFIX_STR = ".agent-src.uncondensed/"
 
 
 def _is_structurally_allowed(source_rel: str, target_capture: str) -> bool:

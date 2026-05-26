@@ -37,7 +37,7 @@ Goal: **≥ 4,000 chars headroom** (gap to current: 363 chars).
 Untouchable: rows 1, 2, 3, 9 (safety-floor). Outcome-untested touchable
 rules (rows 5, 7) restricted to **4d only** per the inputs gate.
 
-| Rule | 4a Demote→auto | 4b Merge | 4c Shared-context | 4d Compress | Verdict |
+| Rule | 4a Demote→auto | 4b Merge | 4c Shared-context | 4d Condense | Verdict |
 |---|---|---|---|---|---|
 | `verify-before-complete` | high-risk: rule's whole point is the agent does NOT self-trigger reliably; demotion to auto trusts the trigger detection it was created to backstop. **Reject without council.** | no sibling with overlapping Iron Law | no-op (Q3=3a) | tight prose, ~150–250 chars achievable | **4d candidate (low yield)** |
 | `direct-answers` | three Iron Laws apply every turn (no flattery / no invented facts / brevity). Demote breaks brevity-by-default which is per-reply, not per-trigger. **Reject.** | no sibling | no-op | severity-tier table prose dense; ~250–400 chars achievable via emoji-scope + failure-mode trims | **4d candidate (medium yield)** |

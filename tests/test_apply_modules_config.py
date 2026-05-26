@@ -18,7 +18,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = REPO_ROOT / "scripts" / "apply_modules_config.py"
-TEMPLATE = REPO_ROOT / "packages" / "core" / ".agent-src.uncompressed" / "templates" / "agents" / "agent-project-settings.example.yml"
+TEMPLATE = REPO_ROOT / "packages" / "core" / ".agent-src.uncondensed" / "templates" / "agents" / "agent-project-settings.example.yml"
 
 
 def _run(project: Path, payload: dict[str, object] | None, *, decline: bool = False) -> subprocess.CompletedProcess[str]:

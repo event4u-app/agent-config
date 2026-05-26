@@ -51,7 +51,7 @@ Mechanical enforcement: the structural-malice check in
 - Shell injection in subprocess calls (string-concat shell commands
   with user-controlled input).
 
-See `.agent-src.uncompressed/rules/skill-quality.md` § Structural
+See `.agent-src.uncondensed/rules/skill-quality.md` § Structural
 Malice Floor for the full rule.
 
 ## Distribution mechanics
@@ -69,7 +69,7 @@ Malice Floor for the full rule.
 - [`AGENTS.md`](../../AGENTS.md) — front-door (kernel orientation only)
 - [`docs/architecture.md`](../../docs/architecture.md) — package
   architecture and cloud-bundle pipeline
-- [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
+- [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   — Structural Malice Floor
 - [`.agent-src/skills/markitdown/SKILL.md`](../../.agent-src/skills/markitdown/SKILL.md)
   — markitdown skill entry point

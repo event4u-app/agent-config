@@ -2,7 +2,7 @@
 """R3 Phase 4 — one-off artefact-to-pack bucket map.
 
 Encodes the council-locked mapping for all skills/rules/commands under
-.agent-src.uncompressed/. Run with `--check` to emit a CSV preview;
+.agent-src.uncondensed/. Run with `--check` to emit a CSV preview;
 run with `--pack <id>` to print the artefact paths for that pack so
 the annotator can consume them via xargs.
 
@@ -17,7 +17,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 
 # Explicit per-name overrides (highest priority). Use when domain/keyword
 # heuristics misclassify. Council Q3 fallback is applied only if no entry.
@@ -80,7 +80,7 @@ NAME_TO_PACK: dict[str, str] = {
     "video-director": "ai-video", "canvas-design": "ai-video",
     # Meta (agent-config maintenance)
     "ai-council": "meta", "command-routing": "meta", "command-writing": "meta",
-    "compress-memory": "meta", "context-authoring": "meta", "context-document": "meta",
+    "condense-memory": "meta", "context-authoring": "meta", "context-document": "meta",
     "copilot-agents-optimization": "meta", "copilot-config": "meta",
     "description-assist": "meta", "guideline-writing": "meta",
     "learning-to-rule-or-skill": "meta", "lint-skills": "meta",

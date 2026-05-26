@@ -33,7 +33,7 @@ look for MCP server config inside `.agent-settings.yml`.
 | File | Where | Who reads it | Purpose |
 |---|---|---|---|
 | MCP client config (this page) | client-specific path per section above | the MCP client at startup | which MCP servers to talk to (name + URL / command) |
-| `.agent-settings.yml` | consumer project root (`<repo>/.agent-settings.yml`) | the agent at runtime (Claude / Cursor / …) | per-developer preferences: `name`, `ide`, `cost_profile`, `personal.autonomy`, `pipelines.skill_improvement`, `caveman.speak_scope`, … |
+| `.agent-settings.yml` | consumer project root (`<repo>/.agent-settings.yml`) | the agent at runtime (Claude / Cursor / …) | per-developer preferences: `name`, `ide`, `cost_profile`, `personal.autonomy`, `pipelines.skill_improvement`, `telegraph.speak_scope`, … |
 
 The Worker is **stateless** and **project-agnostic** — it serves the
 same skill / rule / command catalog to every client. Personalization

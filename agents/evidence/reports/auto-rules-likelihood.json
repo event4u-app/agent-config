@@ -172,7 +172,7 @@
         "never",
         "source",
         "truth",
-        "uncompressed"
+        "uncondensed"
       ],
       "hits": {
         "source": 294,
@@ -180,7 +180,7 @@
         "directly": 102,
         "edit": 91,
         "agent-src": 86,
-        "uncompressed": 79,
+        "uncondensed": 79,
         "augment": 78,
         "creating": 71
       },
@@ -254,11 +254,11 @@
       "low_likelihood": false
     },
     {
-      "name": "caveman-speak",
+      "name": "telegraph-speak",
       "tokens": [
         "carve-outs",
-        "caveman",
-        "compress",
+        "telegraph",
+        "condense",
         "error",
         "grammar",
         "iron-law",
@@ -279,7 +279,7 @@
         "prose": 57,
         "reply": 33,
         "iron-law": 29,
-        "compress": 25
+        "condense": 25
       },
       "hit_count": 14,
       "total_hit_volume": 545,
@@ -1803,8 +1803,8 @@
       "name": "preservation-guard",
       "tokens": [
         "artifact",
-        "compress",
-        "compressing",
+        "condense",
+        "condensing",
         "guard",
         "guidelines",
         "iron",
@@ -1826,7 +1826,7 @@
         "iron": 59,
         "artifact": 57,
         "refactoring": 26,
-        "compress": 25
+        "condense": 25
       },
       "hit_count": 15,
       "total_hit_volume": 594,

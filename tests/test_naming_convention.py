@@ -61,7 +61,7 @@ def test_no_rule_uses_tool_noun_suffix() -> None:
     assert not offenders, (
         f"Rules using tool-noun suffix (should be skill names): {offenders}. "
         f"Tool-noun suffixes reserved for skills: {TOOL_NOUN_SUFFIXES}. "
-        f"Rename the rule with a policy-verb suffix or move it to .agent-src.uncompressed/skills/."
+        f"Rename the rule with a policy-verb suffix or move it to .agent-src.uncondensed/skills/."
     )
 
 
@@ -74,7 +74,7 @@ def test_no_skill_uses_policy_verb_suffix() -> None:
     assert not offenders, (
         f"Skills using policy-verb suffix (should be rule names): {offenders}. "
         f"Policy-verb suffixes reserved for rules: {POLICY_VERB_SUFFIXES}. "
-        f"Rename the skill with a tool-noun suffix or move it to .agent-src.uncompressed/rules/."
+        f"Rename the skill with a tool-noun suffix or move it to .agent-src.uncondensed/rules/."
     )
 
 

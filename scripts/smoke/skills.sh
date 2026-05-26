@@ -2,7 +2,7 @@
 # scripts/smoke/skills.sh — skills-tier smoke (step-11 Phase 3 Step 5).
 #
 # Picks 5 random skills (deterministic seed = epoch day) from
-# .agent-src.uncompressed/skills/*/SKILL.md and asserts:
+# .agent-src.uncondensed/skills/*/SKILL.md and asserts:
 #   1. SKILL.md exists.
 #   2. Frontmatter parses + validates against scripts/schemas/skill.schema.json.
 #   3. `name:` field matches the parent directory name.

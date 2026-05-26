@@ -7,15 +7,15 @@
 ## Input → Transform → Output
 
 ```
-.agent-src/**                      ← Compressed payload
-    ↓ scripts/compress.py --generate-tools
+.agent-src/**                      ← Condensed payload
+    ↓ scripts/condense.py --generate-tools
 .claude/      .cursor/             ← Claude Code, Cursor (rules + skills)
 .clinerules/  .windsurfrules       ← Cline (rules dir), Windsurf (concatenated file)
 GEMINI.md                          ← Gemini CLI (symlink → AGENTS.md)
 .github/copilot-instructions.md    ← Copilot Chat + PR review (already shipped)
 ```
 
-Per-tool method ([`scripts/compress.py:_filter_tool_dirs`](../../scripts/compress.py)):
+Per-tool method ([`scripts/condense.py:_filter_tool_dirs`](../../scripts/condense.py)):
 
 | Tool | Surface | Method | Coverage |
 |---|---|---|---|
@@ -37,7 +37,7 @@ removes `.cursor/` on next `task generate-tools`.
 |---|---|
 | Regenerate all enabled | `task generate-tools` ([`taskfiles/content.yml:63`](../../taskfiles/content.yml)) |
 | Clean output | `task clean-tools` ([`taskfiles/content.yml:69`](../../taskfiles/content.yml)) |
-| Direct script | `python3 scripts/compress.py --generate-tools` |
+| Direct script | `python3 scripts/condense.py --generate-tools` |
 | Consumer install | `scripts/install.sh` (calls `--generate-tools` after `--project-augment`) |
 
 ## Invariants
@@ -64,15 +64,15 @@ removes `.cursor/` on next `task generate-tools`.
 ## Per-tool projection size
 
 The previous "0.45 % reduction" headline was a wrong-boundary
-measurement: that figure compares `.agent-src.uncompressed/` to
+measurement: that figure compares `.agent-src.uncondensed/` to
 `.agent-src/`, but the pipeline's claimed function is *projection*, not
-byte compression. The table below is produced by
+byte condensation. The table below is produced by
 [`scripts/measure_projection_bytes.py --regenerate`](../../scripts/measure_projection_bytes.py)
 with every tool ID temporarily enabled in `agents/.agent-tools.yml`.
 
 | Surface | Files | Symlinks | Bytes materialized | Method |
 |---|---:|---:|---:|---|
-| `.agent-src.uncompressed/` | 596 | 0 | 3,253,997 | verbose source (input) |
+| `.agent-src.uncondensed/` | 596 | 0 | 3,253,997 | verbose source (input) |
 | `.agent-src/` | 596 | 0 | 3,242,579 | source projection (path-rewrite + `.npmignore`) |
 | `.augment/` | 61 | 7 | 136,146 | Augment Code — copies (rules) + symlinks (skills/cmds) |
 | `.claude/` | 0 | 395 | 0 | Claude Code — pure symlinks |
@@ -116,8 +116,8 @@ python3 scripts/measure_projection_bytes.py --json    # CI-friendly
 - [`tests/test_modern_editor_formats.py`](../../tests/test_modern_editor_formats.py)
   — verifies Claude / Cursor receive modern format with correct
   frontmatter; runs only when `task generate-tools` has been executed.
-- [`tests/test_compress.py`](../../tests/test_compress.py) — covers
-  the shared compress / generate-tools entrypoint and `_filter_tool_dirs`.
+- [`tests/test_condense.py`](../../tests/test_condense.py) — covers
+  the shared condense / generate-tools entrypoint and `_filter_tool_dirs`.
 - [`scripts/measure_projection_bytes.py`](../../scripts/measure_projection_bytes.py)
   — per-tool byte / file / symlink count; the per-tool-size table above
   is its output.

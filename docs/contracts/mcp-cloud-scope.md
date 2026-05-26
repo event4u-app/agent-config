@@ -45,7 +45,7 @@ prose-only.
   `list_*`, `read_resource_body`) that touch the content blob only.
 - **What it never does:** execute Python scripts, shell out, spawn
   runtimes, touch consumer FS, write to R2, mutate consumer state,
-  call upstream LLM APIs, or read `.agent-src.uncompressed/`.
+  call upstream LLM APIs, or read `.agent-src.uncondensed/`.
 - **Owner code path:** `internal/workers/mcp/` (TypeScript, Cloudflare Worker).
   This contract is the normative spec.
 - **Auth model:** `public` (default) or `bearer-auth` (operator opt-in)
@@ -120,7 +120,7 @@ prose-only.
   shape `releases/v<X.Y.Z>-<sha>/` (immutable per release). The blob
   bundles `.agent-src/skills/<name>/SKILL.md`,
   `.agent-src/commands/**/*.md`, and `docs/guidelines/` (the same
-  projection the local kernel reads). Never reads `.agent-src.uncompressed/`.
+  projection the local kernel reads). Never reads `.agent-src.uncondensed/`.
 - **Identity surface:** `serverInfo.version` reads from a Worker-
   bundled constant, `_meta.packageVersion` reads from a
   `wrangler.toml` env var, `_meta.skillSetSignature` reads from a

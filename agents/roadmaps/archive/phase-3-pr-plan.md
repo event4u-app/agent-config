@@ -13,14 +13,14 @@ Each PR should:
 
 ---
 
-# ✅ PR 1 — Safe optimize commands (sync uncompressed → compressed) — ALREADY DONE
+# ✅ PR 1 — Safe optimize commands (sync uncondensed → condensed) — ALREADY DONE
 
 ## Purpose
 
-Align the uncompressed source versions of `optimize-skills` and `optimize-agents` with
-the already-safe compressed versions. The compressed commands (`.augment/commands/`) already
+Align the uncondensed source versions of `optimize-skills` and `optimize-agents` with
+the already-safe condensed versions. The condensed commands (`.augment/commands/`) already
 have: "Suggest only, never auto-apply", Preservation Gate, `disable-model-invocation: true`.
-The uncompressed sources still contain dangerous legacy logic.
+The uncondensed sources still contain dangerous legacy logic.
 
 ## What already exists (no changes needed)
 
@@ -29,39 +29,39 @@ The uncompressed sources still contain dangerous legacy logic.
 
 ## Files to change
 
-* `.agent-src.uncompressed/commands/optimize-skills.md` — sync to match compressed version's safe design
-* `.agent-src.uncompressed/commands/optimize-agents.md` — sync to match compressed version's safe design
+* `.agent-src.uncondensed/commands/optimize-skills.md` — sync to match condensed version's safe design
+* `.agent-src.uncondensed/commands/optimize-agents.md` — sync to match condensed version's safe design
 
-## Specific problems in uncompressed versions
+## Specific problems in uncondensed versions
 
-### `optimize-skills.md` (uncompressed)
+### `optimize-skills.md` (uncondensed)
 
-* Still references `.augment/skills/` instead of `.agent-src.uncompressed/`
+* Still references `.augment/skills/` instead of `.agent-src.uncondensed/`
 * Contains Killer 1–5 checks that duplicate the linter (`scripts/skill_linter.py`)
 * Has auto-apply options ("Apply all merge/delete recommendations")
 * Adds Gotcha sections and rewrites descriptions — should be audit-only
 
-### `optimize-agents.md` (uncompressed)
+### `optimize-agents.md` (uncondensed)
 
 * Description says "optimizes" instead of "audits"
 * Missing `disable-model-invocation: true` in frontmatter
-* Broader scope than the safe compressed version
+* Broader scope than the safe condensed version
 
 ## Changes
 
-For both files: rewrite uncompressed source to match the safe compressed version's structure:
+For both files: rewrite uncondensed source to match the safe condensed version's structure:
 
 * advisory only, never auto-apply
-* read from `.agent-src.uncompressed/`
+* read from `.agent-src.uncondensed/`
 * preservation gate mandatory before any suggestion
 * delegate quality checks to linter and skill-reviewer
 * add `disable-model-invocation: true` to frontmatter
 
-Then run `/compress` to sync.
+Then run `/condense` to sync.
 
 ## Acceptance criteria
 
-* uncompressed and compressed versions are aligned
+* uncondensed and condensed versions are aligned
 * commands are advisory only in both versions
 * no auto-apply options remain
 * linter passes after changes
@@ -155,41 +155,41 @@ Suggested issue codes:
 
 ---
 
-# ✅ PR 4 — Preservation guards for merges and compression — DONE
+# ✅ PR 4 — Preservation guards for merges and condensation — DONE
 
 ## Purpose
 
-Prevent merges, refactors, and compression from silently reducing skill quality.
-Combines the original PR 4 (merge preservation) and PR 5 (compression preservation)
+Prevent merges, refactors, and condensation from silently reducing skill quality.
+Combines the original PR 4 (merge preservation) and PR 5 (condensation preservation)
 since both target the same concern: quality loss during transformation.
 
 ## What already exists
 
-* `/compress` command has a 10-point "Compression quality checklist"
-* `skill-reviewer` has "Compression safety" checks
-* `skill_linter.py` has `check_compression_quality()` for section survival
+* `/condense` command has a 10-point "Condensation quality checklist"
+* `skill-reviewer` has "Condensation safety" checks
+* `skill_linter.py` has `check_condensation_quality()` for section survival
 * `skill-management` skill has preservation guidance
 
 ## Files to change
 
 ### New rule
 
-* `.agent-src.uncompressed/rules/preservation-guard.md` — single rule covering both merge and compression preservation
+* `.agent-src.uncondensed/rules/preservation-guard.md` — single rule covering both merge and condensation preservation
 
 ### Skills to update
 
-* `.agent-src.uncompressed/skills/skill-reviewer/SKILL.md` — add merge preservation checks
-* `.agent-src.uncompressed/skills/skill-management/SKILL.md` — reference new rule
+* `.agent-src.uncondensed/skills/skill-reviewer/SKILL.md` — add merge preservation checks
+* `.agent-src.uncondensed/skills/skill-management/SKILL.md` — reference new rule
 
-### Existing compression docs to strengthen
+### Existing condensation docs to strengthen
 
-* `.agent-src.uncompressed/commands/compress.md` — reference new rule from quality checklist
+* `.agent-src.uncondensed/commands/condense.md` — reference new rule from quality checklist
 
 ## Changes
 
 ### New `preservation-guard` rule
 
-For any merge, refactor, or compression:
+For any merge, refactor, or condensation:
 
 * preserve strongest validation step
 * preserve strongest example
@@ -209,36 +209,36 @@ Add to `skill-reviewer` procedure:
 
 * preservation policy exists as a rule (always-loaded)
 * reviewer checks for loss of examples/validation/anti-patterns
-* compression checklist references the rule
+* condensation checklist references the rule
 * linter passes after changes
 
 ---
 
-# ✅ PR 5 — Compression-aware linting (extend existing) — DONE
+# ✅ PR 5 — Condensation-aware linting (extend existing) — DONE
 
 ## Purpose
 
-Extend the existing `check_compression_quality()` with deeper heuristics.
+Extend the existing `check_condensation_quality()` with deeper heuristics.
 
 ## What already exists
 
-* `skill_linter.py` has `check_compression_quality()` — checks section survival
-* `skill_linter.py` has `check_compression_pairs()` — checks pair existence
-* `--pairs` and `--compression-quality` flags exist
+* `skill_linter.py` has `check_condensation_quality()` — checks section survival
+* `skill_linter.py` has `check_condensation_pairs()` — checks pair existence
+* `--pairs` and `--condensation-quality` flags exist
 * Taskfile has no dedicated pairs target yet
 
 ## Files to change
 
-* `scripts/skill_linter.py` — extend `check_compression_quality()`
+* `scripts/skill_linter.py` — extend `check_condensation_quality()`
 * `tests/test_skill_linter.py` — add pair comparison test fixtures
 * `Taskfile.yml` — add `lint-skills-pairs` target
 
 ## Changes
 
-Extend `check_compression_quality()` to also check:
+Extend `check_condensation_quality()` to also check:
 
 * validation keyword preservation (verify, confirm, must pass, run test)
-* code block / example count (compressed should have ≥ source count)
+* code block / example count (condensed should have ≥ source count)
 * anti-pattern / "Do NOT" bullet count
 * decision-hint keywords (if/when/unless/prefer)
 
@@ -246,9 +246,9 @@ Start simple — heuristic keyword counting, no semantic analysis.
 
 Suggested new issue codes:
 
-* `compression_lost_validation`
-* `compression_lost_example`
-* `compression_lost_antipattern`
+* `condensation_lost_validation`
+* `condensation_lost_example`
+* `condensation_lost_antipattern`
 
 ## Acceptance criteria
 
@@ -273,12 +273,12 @@ Add structured categories to the existing feedback capture system.
 
 ## Files to change
 
-* `.agent-src.uncompressed/skills/skill-improvement-pipeline/SKILL.md` — add category enum to capture phase
-* `.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md` — add category tags to classification step
+* `.agent-src.uncondensed/skills/skill-improvement-pipeline/SKILL.md` — add category enum to capture phase
+* `.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md` — add category tags to classification step
 
 ### Optional new file
 
-* `.agent-src.uncompressed/contexts/feedback-categories.md` — reference document for category definitions
+* `.agent-src.uncondensed/contexts/feedback-categories.md` — reference document for category definitions
 
 ## Changes
 
@@ -327,7 +327,7 @@ Extend `format_report()` to include per-file detail table:
 * structure: pass/fail
 * validation: strong/weak (based on existing `missing_validation` check)
 * scope: focused/broad (based on existing `broad_scope` check)
-* compression risk: low/medium/high (based on pair-check results from PR 5)
+* condensation risk: low/medium/high (based on pair-check results from PR 5)
 
 Keep it simple — derive all classifications from existing linter issue codes.
 No new analysis engine, just reformatting existing data.
@@ -377,18 +377,18 @@ Generate markdown PR summary:
 
 ## Core safety first
 
-1. PR 1 — Safe optimize commands (sync uncompressed → compressed)
+1. PR 1 — Safe optimize commands (sync uncondensed → condensed)
 2. PR 3 — Pointer-only / weak-skill detection
-3. PR 4 — Preservation guards (merges + compression combined)
+3. PR 4 — Preservation guards (merges + condensation combined)
 
 ## Visibility next
 
 4. PR 2 — Quality summary artifact (extend existing linter)
 5. PR 7 — Quality report (extend existing --report)
 
-## Compression hardening next
+## Condensation hardening next
 
-6. PR 5 — Compression-aware linting (extend existing pair checks)
+6. PR 5 — Condensation-aware linting (extend existing pair checks)
 
 ## Feedback intelligence last
 
@@ -434,7 +434,7 @@ After these PRs, the package should have:
 * strong enforcement
 * strong observability
 * safe optimization
-* compression safety
+* condensation safety
 * feedback-driven improvement
 
 Target outcome:

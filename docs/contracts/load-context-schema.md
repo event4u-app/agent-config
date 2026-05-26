@@ -33,10 +33,10 @@ load_context_eager:          # opt-in eager — auto-loaded on rule fire
 ---
 ```
 
-> **Logical names only.** The `.agent-src.uncompressed/` prefix is
+> **Logical names only.** The `.agent-src.uncondensed/` prefix is
 > rejected by the schema regex (`scripts/schemas/rule.schema.json`) and
-> by `scripts/lint_load_context.py`. The compress-time rewriter
-> (`scripts/compress.py::_rewrite_paths`) resolves logical names to the
+> by `scripts/lint_load_context.py`. The condense-time rewriter
+> (`scripts/condense.py::_rewrite_paths`) resolves logical names to the
 > deployment-correct relative path (e.g. `../contexts/<area>/<file>.md`
 > for a rule at `rules/<name>.md`). The full migration history lives
 > in the archived path-fixes roadmap under `agents/roadmaps/archive/`.
@@ -53,16 +53,16 @@ opt-in and budget-gated.
 ## Path rules
 
 - Logical names rooted at the source. The rewriter resolves them at
-  compress time.
+  condense time.
 - Paths MUST end in `.md`.
 - Allowed roots:
   - `contexts/<area>/<file>.md` — canonical logical name (resolves
-    against `.agent-src.uncompressed/`).
+    against `.agent-src.uncondensed/`).
   - `agents/settings/contexts/<file>.md` — project-local material (consumer
     repo only).
-  - `.agent-src/contexts/<file>.md` — compressed mirror; tolerated
+  - `.agent-src/contexts/<file>.md` — condensed mirror; tolerated
     defensively, not authored.
-- The `.agent-src.uncompressed/` prefix is **rejected** by the schema
+- The `.agent-src.uncondensed/` prefix is **rejected** by the schema
   regex and by `lint_load_context.py` with a remediation hint pointing
   at the canonical logical name.
 - A rule MAY reference contexts under either tree, but a package-shipped
@@ -144,10 +144,10 @@ definition it is not loaded into every turn.
 
 ## Public-vs-internal leak
 
-A rule shipped to consumers (`.agent-src.uncompressed/rules/`) may
+A rule shipped to consumers (`.agent-src.uncondensed/rules/`) may
 declare `load_context:` entries pointing at:
 
-- `.agent-src.uncompressed/contexts/` — public, OK.
+- `.agent-src.uncondensed/contexts/` — public, OK.
 - `agents/settings/contexts/` — package-internal, **lint warning** (the entry
   will not exist in consumer projects).
 
@@ -163,7 +163,7 @@ defined across both `load_context:` and `load_context_eager:` edges.
 
 ### Real consumer — `autonomous-execution`
 
-`.agent-src.uncompressed/rules/autonomous-execution.md` is the first
+`.agent-src.uncondensed/rules/autonomous-execution.md` is the first
 production rule to declare `load_context:`. Its frontmatter:
 
 ```yaml
@@ -173,9 +173,9 @@ description: "Deciding whether to ask the user or just act on a workflow step �
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/execution/autonomy-detection.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-mechanics.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-examples.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-detection.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-mechanics.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-examples.md
 ---
 ```
 

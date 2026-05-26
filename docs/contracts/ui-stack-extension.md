@@ -24,10 +24,10 @@ change.
 
 | Artefact | File | Change |
 |---|---|---|
-| Stack label | [`scripts/work_engine/stack/detect.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/stack/detect.py) | New entry in `KNOWN_STACKS` + a heuristic in `detect_stack` |
-| Apply skill | `.agent-src.uncompressed/skills/ui-apply-<stack>/SKILL.md` | New skill bundle |
-| Review skill | `.agent-src.uncompressed/skills/ui-design-review-<stack>/SKILL.md` | New skill bundle |
-| Polish skill | `.agent-src.uncompressed/skills/ui-polish-<stack>/SKILL.md` | New skill bundle |
+| Stack label | [`scripts/work_engine/stack/detect.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/stack/detect.py) | New entry in `KNOWN_STACKS` + a heuristic in `detect_stack` |
+| Apply skill | `.agent-src.uncondensed/skills/ui-apply-<stack>/SKILL.md` | New skill bundle |
+| Review skill | `.agent-src.uncondensed/skills/ui-design-review-<stack>/SKILL.md` | New skill bundle |
+| Polish skill | `.agent-src.uncondensed/skills/ui-polish-<stack>/SKILL.md` | New skill bundle |
 | Dispatch tables | `directives/ui/{apply,review,polish}.py` | New row in each `STACK_DIRECTIVES` map |
 | Golden fixture | `tests/golden/sandbox/recipes/gt_u<NN>_<stack>_*.py` | One happy-path baseline at minimum |
 
@@ -131,9 +131,9 @@ the skill does **not** check the ceiling itself but must respect
 ## Step 4 — wire dispatch tables
 
 Three identical edits in
-[`directives/ui/apply.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/apply.py),
-[`directives/ui/review.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/review.py),
-and [`directives/ui/polish.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/polish.py):
+[`directives/ui/apply.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/apply.py),
+[`directives/ui/review.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/review.py),
+and [`directives/ui/polish.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/polish.py):
 
 ```python
 STACK_DIRECTIVES: dict[str, str] = {

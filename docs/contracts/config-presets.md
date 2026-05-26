@@ -17,7 +17,7 @@ keep-beta-until: 2026-08-14
 
 A **preset** owns governance knobs that the user wants to tune as a
 bundle, not individually. Three seed presets ship; users can declare
-their own under `.agent-src.uncompressed/presets/<id>.yml`.
+their own under `.agent-src.uncondensed/presets/<id>.yml`.
 
 | `preset.id` | Stance | Typical user |
 |---|---|---|

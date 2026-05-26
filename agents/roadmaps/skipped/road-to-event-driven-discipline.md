@@ -386,13 +386,13 @@ Goal — keep dispatcher overhead bounded as fan-out doubles from 6 to 16.
       `md-language-check` skill uses. Decision: `warn` with file +
       line list of hits.
 - [-] **Step 2:** `size-enforcement` (C5). On writes to
-      `.agent-src.uncompressed/{rules,skills,commands}/`, runs the
+      `.agent-src.uncondensed/{rules,skills,commands}/`, runs the
       skill linter in `--budget-only` mode (per A6). Warns when the
       hard ceiling is breached.
 - [-] **Step 3:** `markdown-safe-codeblocks` (C6). On writes to any
       `.md`, runs the nesting check from the rule body. Warn-only.
 - [-] **Step 4:** `docs-sync-check` (C7). On create/rename/delete
-      under `.agent-src.uncompressed/`, runs `check-refs` +
+      under `.agent-src.uncondensed/`, runs `check-refs` +
       counter-update preview. Warn when counts in `AGENTS.md` /
       `copilot-instructions.md` would drift. **Suppression (A7):**
       honours `hooks.docs-sync-check.suppress_paths` and

@@ -62,7 +62,7 @@ Plain-PHP-suitable (Track A.4 verification target): `php-coder`,
 - No Ruby / Go / Python tracks. Out of scope for this roadmap.
 - Agent-infra skills (`skill-writing`, `rule-writing`,
   `guideline-writing`, `command-writing`, `lint-skills`,
-  `check-refs`, `compress`) are package-internal — never
+  `check-refs`, `condense`) are package-internal — never
   stack-specific.
 
 ## Coverage snapshot (2026-04-22)
@@ -82,4 +82,4 @@ session per the roadmap's Phase 1+ discipline.
 
 - [`../roadmaps/road-to-multi-stack.md`](../roadmaps/road-to-multi-stack.md) — governing roadmap
 - [`../roadmaps/road-to-stronger-skills.md`](../roadmaps/road-to-stronger-skills.md) — pattern-compliance baseline for new skills
-- [`../../.agent-src.uncompressed/rules/augment-portability.md`](../../.agent-src.uncompressed/rules/augment-portability.md) — portability gate
+- [`../../.agent-src.uncondensed/rules/augment-portability.md`](../../.agent-src.uncondensed/rules/augment-portability.md) — portability gate

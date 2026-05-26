@@ -51,7 +51,7 @@ above):
    or CI-safe install pattern) is the right minimal fallback. The AI
    Council decides whether Composer specifically still fits the
    current installer shape.
-3. **Architecture docs conflate four pipelines** — compression,
+3. **Architecture docs conflate four pipelines** — condensation,
    `.augment/` projection, multi-tool stubs, Claude.ai ZIP bundle.
    Split into discrete pages so each pipeline is grep-able and
    testable.

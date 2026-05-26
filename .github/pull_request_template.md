@@ -32,8 +32,8 @@
 - [ ] Does not break or weaken existing guidance
 
 ### Completeness Gate
-- [ ] Both uncompressed + compressed versions present
-- [ ] Compressed preserves: triggers, validation, decisions, gotchas
+- [ ] Both uncondensed + condensed versions present
+- [ ] Condensed preserves: triggers, validation, decisions, gotchas
 - [ ] Symlinks regenerated (`task generate-tools`)
 
 ## Testing

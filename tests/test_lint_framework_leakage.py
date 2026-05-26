@@ -1,7 +1,7 @@
 """Tests for ``scripts/lint_framework_leakage.py``.
 
 Covers the framework-neutrality linter contract from
-``.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md``:
+``.agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md``:
 detection of PHP/Laravel/etc. patterns in generic skills/rules/commands,
 the carve-out filename exemption, allowlist semantics, and the
 auto-cross-stack heuristic.
@@ -22,7 +22,7 @@ import lint_framework_leakage as mod  # noqa: E402
 
 
 def _make_tree(tmp_path: Path, files: dict[str, str]) -> Path:
-    """Create a mock .agent-src.uncompressed/ subtree under tmp_path."""
+    """Create a mock .agent-src.uncondensed/ subtree under tmp_path."""
     for rel, body in files.items():
         p = tmp_path / rel
         p.parent.mkdir(parents=True, exist_ok=True)

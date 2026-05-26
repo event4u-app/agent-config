@@ -53,7 +53,7 @@ and cites the script, Taskfile target, and test file that prove
 the pipeline.
 
 ```
-.agent-src.uncompressed/   ──Pipeline A──▶  .agent-src/
+.agent-src.uncondensed/   ──Pipeline A──▶  .agent-src/
                                               │
                                               ├──Pipeline B──▶  .augment/
                                               │
@@ -82,12 +82,12 @@ For every tool the package supports, **filesystem** is the canonical channel tha
 Cross-references inside `.agent-src/rules/*.md` are written
 **relative to `.agent-src/rules/`** (e.g. `../contexts/execution/foo.md`,
 `../docs/guidelines/agent-infra/foo.md`). Source files under
-`.agent-src.uncompressed/rules/` use **logical names** without a
+`.agent-src.uncondensed/rules/` use **logical names** without a
 directory prefix (e.g. `contexts/execution/foo.md`); the
-compress-time path rewriter in `scripts/compress.py` translates
+condense-time path rewriter in `scripts/condense.py` translates
 them to the relative form when writing into `.agent-src/`. Hardcoding
-`.agent-src.uncompressed/` in source frontmatter or body links is
-forbidden and caught by `scripts/check_compressed_paths.py`.
+`.agent-src.uncondensed/` in source frontmatter or body links is
+forbidden and caught by `scripts/check_condensed_paths.py`.
 
 ### Distribution model — npx-only + version-pin governance
 
@@ -148,7 +148,7 @@ note, package-internal path-swap, description budget, and the
 |---|---|---|
 | **Skills** | 219 | On-demand expertise — stack analysis (Laravel · Symfony · Zend / Laminas · Next.js · React · Node), testing, Docker, API design, security, observability, … |
 | **Rules** | 77 | Always-active constraints — coding standards, scope control, verification, language-and-tone, agent-authority |
-| **Commands** | 135 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/compress`, … |
+| **Commands** | 135 | Slash-command workflows — `/commit`, `/create-pr`, `/fix ci`, `/optimize skills`, `/feature plan`, `/work`, `/implement-ticket`, `/condense`, … |
 | **Guidelines** | 73 | Reference material cited by skills — PHP patterns, Eloquent, Playwright, agent-infra, … |
 | **Templates** | 7 | Scaffolds for features, roadmaps, contexts, skills, overrides |
 | **Contexts** | 5 | Shared knowledge about the system itself |
@@ -223,7 +223,7 @@ Planned scope: `php` / `node` handlers, tool-registry wiring for
 > `refine → score → plan → implement → test → verify → report` loop,
 > persists state in `.work-state.json`, and routes UI-shaped work
 > through the product UI track. Lives at
-> [`templates/scripts/work_engine/`](../.agent-src.uncompressed/templates/scripts/work_engine/);
+> [`templates/scripts/work_engine/`](../.agent-src.uncondensed/templates/scripts/work_engine/);
 > shipped to consumer projects via `scripts/install.py`.
 
 > **Status: beta.** The contract (directive sets, halt budgets,
@@ -277,7 +277,7 @@ The Runtime Dispatcher and Tool Adapters activate only under the
 cost profile. The default `minimal` profile ships rules, skills, and
 commands and nothing else. All settings and their profile defaults
 are documented in
-[`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
+[`.agent-src.uncondensed/templates/agent-settings.md`](../.agent-src.uncondensed/templates/agent-settings.md).
 
 ---
 
@@ -326,15 +326,15 @@ file. The first 4000 characters are the budget; keep
 high-priority rules (Scope Control, Known False Positives) up top.
 
 Installed (copy-if-missing) by `scripts/install.sh` from
-`.agent-src.uncompressed/templates/`. Consumers can edit it freely;
+`.agent-src.uncondensed/templates/`. Consumers can edit it freely;
 the installer never overwrites.
 
-The mechanical floor is `scripts/check_compressed_paths.py`, wired into
-`task ci` as `check-compressed-paths`. It validates `.agent-src/rules/*.md`:
+The mechanical floor is `scripts/check_condensed_paths.py`, wired into
+`task ci` as `check-condensed-paths`. It validates `.agent-src/rules/*.md`:
 
 - `load_context:` entries must resolve to existing files.
-- Forbidden substrings (`.agent-src.uncompressed/`, `../../docs/`,
-  `../../agents/`) must not survive compression — unless declared
+- Forbidden substrings (`.agent-src.uncondensed/`, `../../docs/`,
+  `../../agents/`) must not survive condensation — unless declared
   per-rule via the `validator_ignore:` frontmatter primitive (audited).
 - Body links to `../docs/guidelines/...` are intentionally **not**
   checked (they are package-internal reference material, silenced by

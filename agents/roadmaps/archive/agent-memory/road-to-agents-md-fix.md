@@ -68,7 +68,7 @@ None. This is a documentation fix inside the `agent-memory` repo.
 ## Safety: re-use `agent-config`'s own template
 
 `agent-config` already ships a neutral `AGENTS.md` template under
-`.agent-src.uncompressed/templates/AGENTS.md` (used by consumer
+`.agent-src.uncondensed/templates/AGENTS.md` (used by consumer
 projects on install). The fix should derive from that template, not
 from another project's `AGENTS.md`. That prevents the same cross-
 contamination happening again.
@@ -101,5 +101,5 @@ Before closing this spec:
 - [`road-to-consumer-integration-guide.md`](road-to-consumer-integration-guide.md) —
   references the agent-memory docs as the canonical source
 - `agent-config`'s own `AGENTS.md` and
-  `.agent-src.uncompressed/templates/AGENTS.md` — the template to
+  `.agent-src.uncondensed/templates/AGENTS.md` — the template to
   derive from

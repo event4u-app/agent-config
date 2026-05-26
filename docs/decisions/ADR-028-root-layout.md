@@ -48,7 +48,7 @@ conditional follow-up gated by evidence the package does not yet have.
 Re-audit of `bench/`, `evals/`, `workers/`, `user-types/` against the
 installer / projector / CI:
 
-| Dir | `scripts/install.py` | `scripts/compress.py` projection | `.github/workflows/*` | Verdict |
+| Dir | `scripts/install.py` | `scripts/condense.py` projection | `.github/workflows/*` | Verdict |
 |---|---|---|---|---|
 | `bench/` | — | — | `bench-drift.yml` (path filter) | **movable** |
 | `evals/` | — | — | — | **movable** |
@@ -91,7 +91,7 @@ Four audits must complete and pass before Phase 3 opens:
    `scripts/`, `templates/`, `config/`, `schemas/` references.
 2. **Symlink-mobility test** — verify Cursor / Claude / Windsurf
    honor symlinked projections (`.cursor/` → `./projections/.cursor/`).
-3. **Hash-sequencing audit** — confirm `.compression-hashes.json`
+3. **Hash-sequencing audit** — confirm `.condensation-hashes.json`
    uses paths that survive `.agent-src/` relocation (or document the
    regeneration migration).
 4. **CI-path audit** — every hardcoded path in
@@ -131,7 +131,7 @@ blocker.
 |---|---|
 | Move everything into `./src/` (original request) | `./src/` is the TS app per ADR-012/016. Collision. |
 | Option 2 — `./tooling/` umbrella with `templates/` / `config/` / `schemas/` | Council: cost underestimated (duplicate-then-deprecate + 2-month window + major bump); installer paths in those dirs are unaudited. |
-| Option 3 — full category-coded migration | Council hard-reject: projection mobility unproven; compression-hash sequencing risk; unshippable without symlink test. |
+| Option 3 — full category-coded migration | Council hard-reject: projection mobility unproven; condensation-hash sequencing risk; unshippable without symlink test. |
 | Option 4 — `MAP.md` documentation | Council: adds 51st entry; documentation-as-apology; AGENTS.md already serves this role. |
 | Skip Phase 1, jump to multi-workspace prototype | Loses the cheap visible win; Phase 2 audits unfunded; risks scope creep into Phase 3. |
 
@@ -144,4 +144,4 @@ blocker.
 - [`ADR-029`](ADR-029-multi-workspace-deferred.md) — Phase 3 close-out (multi-workspace deferred indefinitely).
 - [`ADR-012`](ADR-012-typescript-cli-shell.md), [`ADR-016`](ADR-016-installer-architecture.md) — `./src/` is the TS app.
 - [`ADR-019`](ADR-019-router-json-dist-location.md) — `router.json` lives in `./dist/`.
-- `scripts/install.py:52` (`USER_TYPES_DIR`), `scripts/compress.py:1106` (`AUGMENT_SYMLINK_DIRS`) — evidence pinning `user-types/` to root.
+- `scripts/install.py:52` (`USER_TYPES_DIR`), `scripts/condense.py:1106` (`AUGMENT_SYMLINK_DIRS`) — evidence pinning `user-types/` to root.

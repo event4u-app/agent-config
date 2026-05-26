@@ -99,7 +99,7 @@ should match `ls .windsurf/workflows/`.
 | Rules not picked up | Windsurf < 1.0 — upgrade or rely on `.windsurfrules`. |
 | Workflow not in Cascade panel | Reload window after `task generate-tools`. |
 | Global workflows missing | Check `~/.codeium/windsurf/global_workflows/` exists. |
-| Frontmatter parse error | Re-run `python3 scripts/compress.py --generate-tools`. |
+| Frontmatter parse error | Re-run `python3 scripts/condense.py --generate-tools`. |
 
 ## Cross-references
 

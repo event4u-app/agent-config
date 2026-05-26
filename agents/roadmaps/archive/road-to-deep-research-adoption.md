@@ -83,7 +83,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 
 - [x] **P1.1 — `deep-reading-analyst` skill (CHUNKED, Sunset split path).**
   Author ≤300-line core SKILL in
-  `.agent-src.uncompressed/skills/deep-reading-analyst/`. Core handles
+  `.agent-src.uncondensed/skills/deep-reading-analyst/`. Core handles
   the depth-level orchestrator (Quick / Standard / Deep / Research)
   and the framework dispatch table. Reference modules
   (`mental_models`, `scqa`, `inversion`, `six_hats`,
@@ -111,7 +111,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   `threat-modeling`, `improve-before-implement`. Effort: 0.5 day.
 - [x] **P1.5 — `/research` command (refactored).** Port Weizhena's
   145-line `/research` command as
-  `.agent-src.uncompressed/commands/research.md`. Refactor every
+  `.agent-src.uncondensed/commands/research.md`. Refactor every
   `~/.claude/` path to `$PROJECT_ROOT/agents/research/`. Drop the
   Pydantic validator dependency — replace with a JSON-Schema
   reference link (no runtime dependency). Defer `/research-deep` and
@@ -119,11 +119,11 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   `check-portability`. Effort: 1.0 day.
 - [x] **P1.6 — Suite integration.** Add the new skill, three
   guidelines, and one command to the index (`AGENTS.md` skill /
-  guideline / command counts). Regenerate compressed output (`task
+  guideline / command counts). Regenerate condensed output (`task
   sync`), regenerate tool projections (`task generate-tools`), run
   full CI (`task ci`).
   **Closure (2026-05-08):** counts synced to skills=145, commands=104,
-  guidelines=62; `task ci` green locally (1m 44s); compressed mirrors
+  guidelines=62; `task ci` green locally (1m 44s); condensed mirrors
   + hashes regenerated; `marketplace.json` clean; ownership matrix +
   index regenerated.
 
@@ -153,8 +153,8 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   native PHP-typed classes (no Python runtime). Refactor remaining
   `~/.claude/` paths.
   **Closure (2026-05-09):** ported as cluster sub-commands
-  `.agent-src.uncompressed/commands/research/deep.md` +
-  `.agent-src.uncompressed/commands/research/report.md`. Validator
+  `.agent-src.uncondensed/commands/research/deep.md` +
+  `.agent-src.uncondensed/commands/research/report.md`. Validator
   replaced with the JSON-Schema reference at
   `contexts/contracts/research-schema.md` + `jq -e` well-formedness
   escape hatch (jq optional, agent skips gracefully). `web-search-agent`
@@ -172,7 +172,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   **Closure (2026-05-09, DROPPED — audit gate negative):** audited
   `agent-docs-writing` (256 lines, 8-layer hierarchy + procedure
   +rules); the skill scopes **doc placement and freshness**, not
-  document templates. Searched the full source tree (`.agent-src.uncompressed/`,
+  document templates. Searched the full source tree (`.agent-src.uncondensed/`,
   `docs/`) for `swot` and `executive summary` — zero hits. Analytical
   reasoning is already covered by the eight in-tree guidelines
   (`5w2h-analysis`, `six-hats`, `systems-thinking`, `first-principles`,

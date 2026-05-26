@@ -85,7 +85,7 @@ Laut `docs/quality.md` gibt es Tests:
 ```
 task test          # Run all tests
 task test-install  # Install script tests only (bash)
-task test-python   # Compress script tests only (Python)
+task test-python   # Condense script tests only (Python)
 ```
 
 Aber was testen diese Tests genau? Der Linter testet die Struktur von Skills.

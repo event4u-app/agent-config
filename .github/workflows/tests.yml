@@ -18,8 +18,8 @@ on:
       - "taskfiles/**"
       - "install.sh"
       - "setup.sh"
-      - ".agent-src.uncompressed/skills/lint-skills/**"
-      - ".agent-src.uncompressed/skills/check-refs/**"
+      - ".agent-src.uncondensed/skills/lint-skills/**"
+      - ".agent-src.uncondensed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
   push:
     branches: [main, master]
@@ -38,8 +38,8 @@ on:
       - "taskfiles/**"
       - "install.sh"
       - "setup.sh"
-      - ".agent-src.uncompressed/skills/lint-skills/**"
-      - ".agent-src.uncompressed/skills/check-refs/**"
+      - ".agent-src.uncondensed/skills/lint-skills/**"
+      - ".agent-src.uncondensed/skills/check-refs/**"
       - ".github/workflows/tests.yml"
   # Manual re-trigger from the Actions UI / `gh workflow run tests.yml`.
   # Needed because the path filter sometimes skips a synchronize event
@@ -167,7 +167,7 @@ jobs:
         # that step, so without this bootstrap `_copy_dir_dereferencing
         # _symlinks` returns 0 written files (src missing) and the
         # tests fail with "rules dir does not exist".
-        run: python3 scripts/compress.py --sync
+        run: python3 scripts/condense.py --sync
 
       - name: Golden Replay — smoke subset (P2.4 PR budget)
         # Replays the smoke-tagged Golden Transcripts (~6 of 25) for

@@ -66,7 +66,7 @@ runs in parallel with Phase 1 + 2.
 ## Phase 1 — Ruflo-track Phase-1 plate (READY)
 
 - [x] **P1.1 — `adr-create` skill + `adr-index` regen script.**
-  Author new skill at `.agent-src.uncompressed/skills/adr-create/`
+  Author new skill at `.agent-src.uncondensed/skills/adr-create/`
   with sequential ADR-NNN numbering, the standard ADR template
   (Status / Context / Decision / Consequences / Links), and zero
   MCP-tool dependency. Add `scripts/adr/regenerate_index.py` (≤80
@@ -79,7 +79,7 @@ runs in parallel with Phase 1 + 2.
   `plugins/ruflo-cost-tracker/scripts/` into `scripts/cost/`, swap
   the `mcp__claude-flow__memory_store` call for a local JSONL
   append at `agents/cost-tracking/sessions.jsonl`. Add new command
-  at `.agent-src.uncompressed/commands/cost-report.md` that runs
+  at `.agent-src.uncondensed/commands/cost-report.md` that runs
   the tracker, computes the 50/75/90/100% alert ladder, and surfaces
   cost-profile suggestions. Tie to existing `set-cost-profile`
   command via cross-reference. Lines budget: ≤300 scripts (combined),

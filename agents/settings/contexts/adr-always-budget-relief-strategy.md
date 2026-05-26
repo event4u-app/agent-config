@@ -36,7 +36,7 @@ Five non-mutually-exclusive levers. Council Round 2 surfaced that **precondition
 - **Precondition (gating):** Host-agent Auto-description honour-rate ≥ 95 % over a 50-interaction sample. **Unvalidated. Pilot required before S1 is scoreable.** Pilot design: instrument `router.json` lookups, count fire-events per rule, compare against a control rule that stays always-on.
 - **Char delta estimate:** −1,000 to −3,000 (per demoted rule).
 - **Risk:** Silent regression — an Auto rule that fails to fire is invisible until an Iron Law breach reaches the user.
-- **Compression tier:** N/A (structural move).
+- **Condensation tier:** N/A (structural move).
 
 ### S2 — Merge two kernel rules
 
@@ -45,21 +45,21 @@ Five non-mutually-exclusive levers. Council Round 2 surfaced that **precondition
 - **Candidate pairs (vocabulary-flagged, orthogonality unverified):** `ask-when-uncertain` + `no-cheap-questions` (both ask-policy, likely overlapping triggers — hazard); `commit-policy` + `non-destructive-by-default` (commit-policy is an exception-list, NDBD is a hard floor — orthogonal, candidate).
 - **Char delta estimate:** −500 to −1,500 (per merge, after de-duplication).
 - **Risk:** Iron Law collision on overlapping trigger paths; reduced citability.
-- **Compression tier:** N/A (consolidation).
+- **Condensation tier:** N/A (consolidation).
 
-### S3 — Hard-compress (three-tier model)
+### S3 — Hard-condense (three-tier model)
 
 Council Round 2 forced tier discipline. "Lossless" must be defined per tier:
 
-| Tier | Compress | Risk | Char delta |
+| Tier | Condense | Risk | Char delta |
 |---|---|---|---|
 | **Tier 1 (safe)** | redundant restatements, duplicate examples, prose → tables | none — losslessly recoverable | −300 to −800 / rule |
 | **Tier 2 (risky)** | failure-mode catalogues → context link, examples → context link | rhetorical weight loss; rule still fires but cited less | −500 to −1,200 / rule |
-| **Tier 3 (unsafe)** | Iron-Law motivational framing, fence repetitions | rule stops firing — DO NOT compress | 0 (forbidden) |
+| **Tier 3 (unsafe)** | Iron-Law motivational framing, fence repetitions | rule stops firing — DO NOT condense | 0 (forbidden) |
 
 - **Precondition (gating):** Each candidate line classified into a tier before the char-delta is counted.
 - **Char delta estimate:** −2,500 to −5,000 across the kernel (Tier-1 + Tier-2 only).
-- **Risk:** Tier-2 compression silently weakens Iron Law adherence; needs golden-outcome regression check.
+- **Risk:** Tier-2 condensation silently weakens Iron Law adherence; needs golden-outcome regression check.
 
 ### S4 — Top-rule rewrite
 
@@ -78,7 +78,7 @@ Council Round 2 forced tier discipline. "Lossless" must be defined per tier:
 
 ## Picked strategy
 
-**Primary: S3 (Hard-compress, Tier-1 + Tier-2 only).**
+**Primary: S3 (Hard-condense, Tier-1 + Tier-2 only).**
 **Fallback: S5 (N-rule sharing on `asking-and-brevity-examples`).**
 
 Rationale (5-axis scoring, 1 = best, 5 = worst):
@@ -87,7 +87,7 @@ Rationale (5-axis scoring, 1 = best, 5 = worst):
 |---|---|---|---|---|---|---|
 | S1 Demote | 1 | 5 | 2 | 4 | 3 | 15 |
 | S2 Merge | 3 | 4 | 3 | 5 | 4 | 19 |
-| **S3 Hard-compress** | **1** | **3** | **2** | **2** | **2** | **10** |
+| **S3 Hard-condense** | **1** | **3** | **2** | **2** | **2** | **10** |
 | S4 Rewrite | 3 | 5 | 4 | 5 | 3 | 20 |
 | **S5 N-rule sharing** | **3** | **2** | **2** | **2** | **2** | **11** |
 

@@ -38,7 +38,7 @@ Reserved areas (bootstrap pass — step-11 Phase 4 Step 3):
 | Area | Scope | Owner contract |
 |---|---|---|
 | `cost` | Budget ladder, hard-stop hook, cost reporting | [`cost-enforcement.md`](cost-enforcement.md) |
-| `caveman` | Caveman-speak compression, decompression, reversibility | [`compression-default-kill-criterion.md`](compression-default-kill-criterion.md) |
+| `telegraph` | Telegraph-speak condensation, decondensation, reversibility | [`condensation-default-kill-criterion.md`](condensation-default-kill-criterion.md) |
 | `schema` | Frontmatter schemas, v2 rigor, lint behaviour | [`schema-versioning.md`](schema-versioning.md) (when published) |
 | `router` | `router.json` shape, tier semantics, dispatch precedence | [`rule-router.md`](rule-router.md) |
 | `smoke` | Per-tier smoke contracts, baseline locks | [`smoke-contracts.md`](smoke-contracts.md) |
@@ -91,7 +91,7 @@ Default mode is **warn** at the consumer surface; **fail** under `task ci`. Rati
 
 ## Relationship to `adr-create` skill
 
-[`adr-create`](../../.agent-src.uncompressed/skills/adr-create/SKILL.md) accepts an optional `<area>` argument (added in step-11 Phase 4 Step 4):
+[`adr-create`](../../.agent-src.uncondensed/skills/adr-create/SKILL.md) accepts an optional `<area>` argument (added in step-11 Phase 4 Step 4):
 
 - No `<area>` → flat surface, `docs/decisions/`.
 - `<area>` matches inventory → per-area surface, `docs/adrs/<area>/`.

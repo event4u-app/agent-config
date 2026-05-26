@@ -8,7 +8,7 @@ HUMAN-AUTHORED CONTENT CARRIES A MANDATORY, NON-REMOVABLE DISCLOSURE.
 NO --no-disclosure FLAG. NO --internal FLAG. NO OPT-OUT.
 ```
 
-Working precedent: the `/ghostwriter:*` and `/post-as:ghostwriter` cluster already enforces a mandatory non-removable disclosure footer when writing in a public figure's voice (see [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncompressed/commands/post-as/ghostwriter.md) and the `write-engine` contract in [`docs/contracts/write-engine.md`](../../../docs/contracts/write-engine.md)). This policy **extends that contract from prose to image / video / voice** and binds it to every adapter-side render path the agent invokes.
+Working precedent: the `/ghostwriter:*` and `/post-as:ghostwriter` cluster already enforces a mandatory non-removable disclosure footer when writing in a public figure's voice (see [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncondensed/commands/post-as/ghostwriter.md) and the `write-engine` contract in [`docs/contracts/write-engine.md`](../../../docs/contracts/write-engine.md)). This policy **extends that contract from prose to image / video / voice** and binds it to every adapter-side render path the agent invokes.
 
 ## Triggers
 
@@ -54,6 +54,6 @@ LLM-readable decision framework + the existing `write-engine` mandatory-footer p
 
 ## See also
 
-- [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncompressed/commands/post-as/ghostwriter.md) — the prose disclosure precedent.
+- [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncondensed/commands/post-as/ghostwriter.md) — the prose disclosure precedent.
 - [`public-figures.md`](public-figures.md) · [`likeness.md`](likeness.md) · [`voice-cloning.md`](voice-cloning.md) — what triggers the disclosure surface.
 - [`transparency.md`](transparency.md) — provenance metadata layer (C2PA, EXIF) that complements human-readable disclosure.

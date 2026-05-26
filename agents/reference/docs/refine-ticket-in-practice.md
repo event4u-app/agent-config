@@ -197,9 +197,9 @@ section without redaction.
 - [`archive/road-to-ticket-refinement.md`](../roadmaps/archive/road-to-ticket-refinement.md) — v1 shipped (all phases done)
 - [`road-to-refine-ticket-hardening.md`](../roadmaps/archive/road-to-refine-ticket-hardening.md) — v2 follow-ups (F1–F7)
 - [`open-questions-2.md`](../roadmaps/archive/open-questions-2.md) — Q27 resolution
-- [`.agent-src.uncompressed/skills/refine-ticket/SKILL.md`](../../.agent-src.uncompressed/skills/refine-ticket/SKILL.md)
-- [`.agent-src.uncompressed/skills/refine-ticket/detection-map.yml`](../../.agent-src.uncompressed/skills/refine-ticket/detection-map.yml)
-- [`.agent-src.uncompressed/commands/refine-ticket.md`](../../.agent-src.uncompressed/commands/refine-ticket.md)
+- [`.agent-src.uncondensed/skills/refine-ticket/SKILL.md`](../../.agent-src.uncondensed/skills/refine-ticket/SKILL.md)
+- [`.agent-src.uncondensed/skills/refine-ticket/detection-map.yml`](../../.agent-src.uncondensed/skills/refine-ticket/detection-map.yml)
+- [`.agent-src.uncondensed/commands/refine-ticket.md`](../../.agent-src.uncondensed/commands/refine-ticket.md)
 - [`scripts/refine_ticket_detect.py`](../../scripts/refine_ticket_detect.py)
 - [`tests/test_refine_ticket_detect.py`](../../tests/test_refine_ticket_detect.py)
 

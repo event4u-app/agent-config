@@ -20,7 +20,7 @@ All Phase 1–6 checkboxes flip `[-]`. The Acceptance row stays explicitly unsat
 
 ## Prerequisites
 
-- [-] Read `AGENTS.md`, [`skill-quality`](../../.agent-src.uncompressed/rules/skill-quality.md), [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)
+- [-] Read `AGENTS.md`, [`skill-quality`](../../.agent-src.uncondensed/rules/skill-quality.md), [`docs/contracts/kernel-membership.md`](../../docs/contracts/kernel-membership.md)
 - [-] Read [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md) (Harmonist — all 10 patterns)
 - [-] [`step-2-skill-inventory-rationalization.md`](step-2-skill-inventory-rationalization.md) Phase 4 complete (do **not** migrate 208 skills; migrate ≤ 160)
 - [-] [`step-4-measurement-and-benchmark.md`](step-4-measurement-and-benchmark.md) Phase 2 complete (so each schema phase can re-measure)
@@ -44,7 +44,7 @@ Mechanical, low-risk, foundational. Lets subagent orchestration pick the right c
 - [x] **Sunset closure 2026-05-16** — Phase 1 + all downstream phases cancelled per closure block at top. Prerequisites (step-2 Phase 4, step-4 Phase 2) are sunset / archived; mechanism without a consumer.
 - [-] **Step 1 — Schema decision:** `model_tier ∈ { fast, inherit, reasoning }` per [`external-findings.md § 3`](../../audits/2026-05-14-north-star/external-findings.md). Default `inherit`. Document the contract in `docs/contracts/skill-schema.md` (new).
 - [-] **Step 2 — Linter rule:** `scripts/lint_skills.py` warns when `model_tier` is missing; errors after Phase 1 close. Wire to `task lint-skills`.
-- [-] **Step 3 — Backfill pass:** Every skill in `.agent-src.uncompressed/skills/` declares `model_tier`. Default heuristic: ≤ 80 LOC body → `fast`; declares `Iron Law` or `reasoning frame` → `reasoning`; otherwise `inherit`.
+- [-] **Step 3 — Backfill pass:** Every skill in `.agent-src.uncondensed/skills/` declares `model_tier`. Default heuristic: ≤ 80 LOC body → `fast`; declares `Iron Law` or `reasoning frame` → `reasoning`; otherwise `inherit`.
 - [-] **Step 4 — Subagent integration:** `subagent-orchestration` reads `model_tier` from invoked skill frontmatter — overrides `.agent-settings.yml` profile when present. Cited contract: `docs/contracts/skill-schema.md`.
 
 **Exit:** every skill carries `model_tier`; linter errors on missing; subagent orchestration consults it. **Rollback:** demote the linter from error → warn; revert the orchestration consumption; metadata stays harmless.
@@ -56,7 +56,7 @@ Every skill > 80 body lines splits into essentials (always loaded) + deep refere
 - [-] **Step 1 — Cut-point standard:** `docs/contracts/skill-schema.md § Deep Reference` — header is literally `## Deep Reference`; everything above is < 80 lines (essentials); everything below is on-demand. Linter measures essentials region.
 - [-] **Step 2 — Inventory:** Generate `agents/runtime/metrics/skill-essentials-size.md` listing essentials-region LOC per skill. Sort desc; top 30 are migration candidates.
 - [-] **Step 3 — Helper script:** `scripts/extract_essentials.py` proposes a cut point (heuristic: after `## Procedure`, before `## Examples` / `## Gotchas`). Human review per file — no batch rewrite.
-- [-] **Step 4 — Migrate top 25:** Apply cut-points to the 25 largest skills (caveman's published corpus size for comparison). Each migration commit cites the LOC saving in the message body.
+- [-] **Step 4 — Migrate top 25:** Apply cut-points to the 25 largest skills (telegraph's published corpus size for comparison). Each migration commit cites the LOC saving in the message body.
 - [-] **Step 5 — Loader respects the cut:** Update generated trees (`.agent-src/`, `.augment/`) projection logic to ship essentials by default; deep reference loaded on explicit citation. Validate `task generate-tools` honors it.
 
 **Exit:** ≥ 80 % of skills > 80 body lines carry `## Deep Reference`; loader projection respects the split. **Rollback:** cut-points harmless if loader doesn't split — restore the loader, leave the markers.

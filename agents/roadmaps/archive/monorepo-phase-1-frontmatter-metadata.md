@@ -32,7 +32,7 @@ status: completed
 ## Goal
 
 Every skill, rule, command, persona, guideline, and template under
-`.agent-src.uncompressed/` carries a normalized frontmatter block that
+`.agent-src.uncondensed/` carries a normalized frontmatter block that
 declares its `id`, `type`, `workspaces`, `packs`, `requires`, `lifecycle`,
 `owner`, `trust`, and `install` block. A linter rejects any artefact that
 lacks the contract or violates it. The contract is the single source of
@@ -57,16 +57,16 @@ truth for everything downstream.
       <!-- DROPPED: enforcement lives inline in scripts/lint_artefact_frontmatter.py
            citing ADR-013 directly; no separate JSON Schema file shipped. -->
 - [x] `scripts/lint_artefact_frontmatter.py` enforces the schema
-      against every `.md` file under `.agent-src.uncompressed/skills/`,
-      `.agent-src.uncompressed/rules/`, `.agent-src.uncompressed/commands/`,
-      `.agent-src.uncompressed/templates/` and exits 0
+      against every `.md` file under `.agent-src.uncondensed/skills/`,
+      `.agent-src.uncondensed/rules/`, `.agent-src.uncondensed/commands/`,
+      `.agent-src.uncondensed/templates/` and exits 0
       <!-- Personas + guidelines deferred to Phase 2 — see "Phase 4" below. -->
 - [x] Every existing artefact (skills, rules, commands, templates) has
       been augmented with the required keys without losing any
       pre-existing frontmatter content
 - [x] `task ci` is green; new linter is wired via `task lint-artefact-frontmatter`
 - [x] `task sync` regenerates `.agent-src/` and `.augment/` from the
-      uncompressed sources and the frontmatter survives compression
+      uncondensed sources and the frontmatter survives condensation
       (guarded by `tests/test_frontmatter_roundtrip.py`)
 
 ## Non-goals
@@ -223,12 +223,12 @@ privacy, threat-modeling, secrets, authz, incident
 - [x] `task lint-artefact-frontmatter` is green across the four covered
       directories
 
-## Phase 5 — Compression survives, sync wired
+## Phase 5 — Condensation survives, sync wired
 
-- [x] Caveman compressor preserves the five ADR-013 keys verbatim
+- [x] Telegraph condenseor preserves the five ADR-013 keys verbatim
       through `task sync`
 - [x] `tests/test_frontmatter_roundtrip.py` round-trips every artefact
-      through compression and asserts byte-stable frontmatter for the
+      through condensation and asserts byte-stable frontmatter for the
       five required keys
 - [x] `task sync` regenerates `.agent-src/` and `.augment/`; both trees
       pass `task lint-artefact-frontmatter`
@@ -239,7 +239,7 @@ privacy, threat-modeling, secrets, authz, incident
 ## Phase 6 — Lockdown
 
 - [x] Pre-commit hook ships as the combined
-      `.agent-src.uncompressed/templates/hooks/pre-commit-roadmap-progress`
+      `.agent-src.uncondensed/templates/hooks/pre-commit-roadmap-progress`
       (single Git hook, runs roadmap-progress + frontmatter checks
       opt-in by staged files)
 - [x] Hook installation documented in

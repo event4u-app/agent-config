@@ -103,7 +103,7 @@ option is chosen) opens a PR against `agent-config`:
 
 - Branch naming: `improve/agent-memory-signal-<short-id>`
 - Target: a new or extended rule, skill, or guideline under
-  `.agent-src.uncompressed/`
+  `.agent-src.uncondensed/`
 - PR body includes: the signal summary, evidence counts, list of
   `consumer_hash` values (not names), suggested artefact type, and a
   "reject if..." checklist for the reviewer

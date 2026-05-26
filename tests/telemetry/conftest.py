@@ -1,7 +1,7 @@
 """Test-time path wiring for the ``telemetry`` template package.
 
 Mirrors ``tests/work_engine/conftest.py`` — the production code ships
-under ``.agent-src.uncompressed/templates/scripts/telemetry/``, so we
+under ``.agent-src.uncondensed/templates/scripts/telemetry/``, so we
 expose the template scripts directory on ``sys.path`` for the
 duration of the test run.
 """
@@ -13,7 +13,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Post-monorepo Phase 4 the templates tree moved under
-# packages/<pack>/.agent-src.uncompressed/templates/. Discover every
+# packages/<pack>/.agent-src.uncondensed/templates/. Discover every
 # active source root and add its templates/scripts/ child to sys.path.
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402

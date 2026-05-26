@@ -58,7 +58,7 @@ upstream (anthropic, ComposioHQ, K-Dense-AI, obra/superpowers). We
 have already analysed the relevant upstreams in
 `compare-anthropics-skills.md` and
 `compare-composiohq-awesome-claude-skills.md`. There is no governance,
-no linter, no build pipeline, no compression layer, no portability
+no linter, no build pipeline, no condensation layer, no portability
 checks, no test suite — by design. It is a search-and-clone surface,
 not a system.
 
@@ -190,7 +190,7 @@ Legend: **mc** = Microck/ordinary-claude-skills, **us** = this repo.
 | Skill format | Anthropic YAML frontmatter | Anthropic YAML frontmatter + senior-tier blocks (Context-First, Related Skills, Loading triggers, Output) | DIVERGE | Our format is a superset; theirs validates as ours minus the senior blocks. |
 | Provenance metadata | `metadata.json` with author + stars + source URL | `source` field in frontmatter only | **ADAPT** | Add a project-level provenance index, not per-skill JSON. |
 | Linting | none | `skill_linter.py`, `check_portability.py`, `check_references.py`, `readme_linter.py` | OURS WINS | n/a |
-| Compression / authoring split | none | `.agent-src.uncompressed/` → `.agent-src/` | OURS WINS | n/a |
+| Condensation / authoring split | none | `.agent-src.uncondensed/` → `.agent-src/` | OURS WINS | n/a |
 | Multi-tool projection | claude.ai + generic MCP filesystem | 7 host agents via `task generate-tools` | OURS WINS | n/a |
 | Test suite | none | 324+ pytest + bash tests | OURS WINS | n/a |
 | Maintenance model | passive, solo, "may or may not fix it" | governed, multi-pipeline, CI-gated | DIVERGE | Different goals. |

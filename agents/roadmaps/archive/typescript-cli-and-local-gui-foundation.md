@@ -412,7 +412,7 @@ in this roadmap, is the cheaper sequence.
 ### Council TODOs (filled by the council pass)
 
 > Pass executed in-session 2026-05-18 against the repo personas listed
-> in `.agent-src.uncompressed/personas/`. External `/council` (paid
+> in `.agent-src.uncondensed/personas/`. External `/council` (paid
 > API) can re-run on top before the `draft → proposed` flip; status
 > stays `draft` until the items below are either resolved in this
 > roadmap or carved out to a sibling roadmap with a citation.

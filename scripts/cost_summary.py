@@ -2,8 +2,8 @@
 """Emit `cost-summary/v1` JSON per `docs/contracts/cost-summary-schema.md`.
 
 Reads `agents/cost-tracking/sessions.jsonl` (or `--input`), aggregates by
-session, conversation, and model. Honors the caveman suspended-multiplier
-contract (delta = 0 while suspended; see `caveman-telemetry.md`).
+session, conversation, and model. Honors the telegraph suspended-multiplier
+contract (delta = 0 while suspended; see `telegraph-telemetry.md`).
 """
 from __future__ import annotations
 import argparse, json, sys
@@ -36,12 +36,12 @@ def _load(path: Path) -> list[dict]:
 def _delta(row: dict) -> int:
     if not MULTIPLIER_ACTIVE:
         return 0
-    return int(row.get("caveman_delta_tokens") or 0)
+    return int(row.get("telegraph_delta_tokens") or 0)
 
 
 def _zero_kv() -> dict:
     return {"sessions": 0, "total_cost_usd": 0.0, "input_tokens": 0,
-            "output_tokens": 0, "caveman_delta_tokens": 0}
+            "output_tokens": 0, "telegraph_delta_tokens": 0}
 
 
 def _zero_model() -> dict:
@@ -66,14 +66,14 @@ def aggregate(rows: list[dict]) -> dict:
             bucket["total_cost_usd"] += cost
             bucket["input_tokens"] += itok
             bucket["output_tokens"] += otok
-            bucket["caveman_delta_tokens"] += delta
+            bucket["telegraph_delta_tokens"] += delta
         m = by_model[model]
         m["sessions"] += 1
         m["total_cost_usd"] += cost
         m["input_tokens"] += itok
         m["output_tokens"] += otok
-    totals["caveman_multiplier_version"] = MULTIPLIER_VERSION
-    totals["caveman_multiplier_active"] = MULTIPLIER_ACTIVE
+    totals["telegraph_multiplier_version"] = MULTIPLIER_VERSION
+    totals["telegraph_multiplier_active"] = MULTIPLIER_ACTIVE
     return {
         "schema_version": SCHEMA,
         "generated_at": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

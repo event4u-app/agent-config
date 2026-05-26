@@ -67,16 +67,16 @@ def _make_repo(tmp_path: Path) -> Path:
         encoding="utf-8",
     )
     (vocab / "unassigned-artefacts.yml").write_text("[]\n", encoding="utf-8")
-    (tmp_path / ".agent-src.uncompressed" / "skills").mkdir(parents=True)
-    (tmp_path / ".agent-src.uncompressed" / "rules").mkdir()
-    (tmp_path / ".agent-src.uncompressed" / "commands").mkdir()
+    (tmp_path / ".agent-src.uncondensed" / "skills").mkdir(parents=True)
+    (tmp_path / ".agent-src.uncondensed" / "rules").mkdir()
+    (tmp_path / ".agent-src.uncondensed" / "commands").mkdir()
     return tmp_path
 
 
 @pytest.fixture
 def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = _make_repo(tmp_path)
-    src = root / ".agent-src.uncompressed"
+    src = root / ".agent-src.uncondensed"
     monkeypatch.setattr(mod, "ROOT", root)
     monkeypatch.setattr(mod, "SRC", src)
     monkeypatch.setattr(mod, "VOCAB_DIR", root / "config" / "discovery")
@@ -94,7 +94,7 @@ def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 def _write_skill(repo: Path, name: str, extra: str = "") -> Path:
-    p = repo / ".agent-src.uncompressed" / "skills" / name / "SKILL.md"
+    p = repo / ".agent-src.uncondensed" / "skills" / name / "SKILL.md"
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(SKILL_BASE.format(name=name, extra=extra), encoding="utf-8")
     return p
@@ -193,7 +193,7 @@ def _write_skill_with(
         # {name}
         """
     )
-    p = repo / ".agent-src.uncompressed" / "skills" / name / "SKILL.md"
+    p = repo / ".agent-src.uncondensed" / "skills" / name / "SKILL.md"
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(body, encoding="utf-8")
     return p

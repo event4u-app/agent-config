@@ -28,8 +28,8 @@ from pathlib import Path
 from typing import Dict, List
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SKILLS = ROOT / ".agent-src.uncompressed" / "skills"
-DEFAULT_PERSONAS = ROOT / ".agent-src.uncompressed" / "personas"
+DEFAULT_SKILLS = ROOT / ".agent-src.uncondensed" / "skills"
+DEFAULT_PERSONAS = ROOT / ".agent-src.uncondensed" / "personas"
 THRESHOLDS = {"core": 5, "specialist": 3}
 
 

@@ -65,7 +65,7 @@ or supersession before opening a new one.
 ### 1. Read the canonical template first
 
 The structure, frontmatter, lifecycle, and complexity-tier rules live
-in [`.agent-src.uncompressed/templates/roadmaps.md`](../../templates/roadmaps.md).
+in [`.agent-src.uncondensed/templates/roadmaps.md`](../../templates/roadmaps.md).
 Read it before authoring. Do not restate its rules in the roadmap
 body — link the template if a phase needs to override one.
 

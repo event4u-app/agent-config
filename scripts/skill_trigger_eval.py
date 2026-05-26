@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Callable, IO, Protocol
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_SOURCE = PROJECT_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_SOURCE = PROJECT_ROOT / ".agent-src.uncondensed" / "skills"
 RESULTS_DIR = PROJECT_ROOT / "internal" / "evals" / "results"
 DEFAULT_MODEL = "claude-sonnet-4-5"
 
@@ -153,7 +153,7 @@ def load_skill_metas(root: Path | None = None) -> list[SkillMeta]:
     """Parse name + description from every SKILL.md frontmatter under root.
 
     If ``root`` is None, the package's ``artefact_roots()`` are scanned so
-    discovery works across the monorepo's per-pack ``.agent-src.uncompressed/``
+    discovery works across the monorepo's per-pack ``.agent-src.uncondensed/``
     trees. A single explicit ``root`` keeps tests that mock a sub-tree working
     unchanged.
     """
@@ -570,7 +570,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--triggers",
         type=Path,
         default=None,
-        help="Path to evals/triggers.json. Default: .agent-src.uncompressed/skills/<skill>/evals/triggers.json",
+        help="Path to evals/triggers.json. Default: .agent-src.uncondensed/skills/<skill>/evals/triggers.json",
     )
     parser.add_argument(
         "--output",

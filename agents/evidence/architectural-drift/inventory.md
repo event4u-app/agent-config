@@ -7,7 +7,7 @@ demand cut", "documented-only") and have **zero consumer today**.
 **Method:** keyword scan (`future:`, `documented-only`, `not_implemented`,
 `speculative`, `not implemented`, `third-party pack`, `marketplace`,
 `when…requested`, `Phase [4-9].*future`) across `packages/`,
-`.agent-src.uncompressed/`, `scripts/`, `docs/`, `workers/`, plus the
+`.agent-src.uncondensed/`, `scripts/`, `docs/`, `workers/`, plus the
 strategic critique in `agents/tmp/feedback6.txt` §12.
 **Last refreshed:** 2026-05-24.
 

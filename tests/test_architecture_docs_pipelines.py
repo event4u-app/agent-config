@@ -5,7 +5,7 @@ Per Phase 3 Step 5 of `agents/roadmaps/road-to-distribution-maturity.md`.
 Asserts three drift directions:
 
 1. **Index -> sub-pages.** `docs/architecture.md` must link to all four
-   sub-pages (compression, augment-projection, multi-tool-projection,
+   sub-pages (condensation, augment-projection, multi-tool-projection,
    claude-bundle). A sub-page added without being indexed = drift.
 2. **Sub-page -> cited scripts / tests.** Every relative-path citation
    inside a sub-page (markdown links and ``backtick`` paths that point

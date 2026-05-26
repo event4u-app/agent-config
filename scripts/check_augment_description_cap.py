@@ -2,7 +2,7 @@
 """Auto-rule description-length CI gate (Phase 1.3 of
 road-to-augment-limit-fit).
 
-For every `type: auto` rule under `.agent-src.uncompressed/rules/`,
+For every `type: auto` rule under `.agent-src.uncondensed/rules/`,
 fail CI when the frontmatter `description:` exceeds DESC_CAP chars.
 
 Why: Augment injects each auto-rule's description into the
@@ -10,7 +10,7 @@ workspace-guidelines registry stub. Empirical 2026-05-08 budget
 analysis showed this channel consuming 25 % of the 49,512-char
 ceiling. Capping descriptions guards future drift.
 
-Source of truth: `.agent-src.uncompressed/rules/`. The compressed
+Source of truth: `.agent-src.uncondensed/rules/`. The condensed
 projection is regenerated; the source dictates what ships.
 
 Exit codes: 0 = pass, 1 = at least one rule over cap.
@@ -23,7 +23,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+RULES_DIR = REPO_ROOT / ".agent-src.uncondensed" / "rules"
 DESC_CAP = 150
 
 

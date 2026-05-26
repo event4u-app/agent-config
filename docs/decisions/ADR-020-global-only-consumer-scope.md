@@ -65,7 +65,7 @@ fanning out from there.
 
 The single project-local exception is `agents/overrides/`, which
 remains the canonical place to override or extend a shared skill /
-rule / command per [override-management](../../.agent-src.uncompressed/skills/override-management/SKILL.md).
+rule / command per [override-management](../../.agent-src.uncondensed/skills/override-management/SKILL.md).
 
 The maintainer-side dev experience is preserved by the
 `AGENT_CONFIG_DEV_MODE=1` environment gate documented in

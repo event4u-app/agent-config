@@ -44,10 +44,10 @@ Where:
   (per [`load-context-schema.md`](load-context-schema.md)).
 - `transitive_closure` walks `load_context:` declarations on
   context files **up to depth 2** — see § Nesting cap below.
-- `RawSize` is the byte size of the compressed file
+- `RawSize` is the byte size of the condensed file
   (`.agent-src/...`), measured by `os.path.getsize()`. The
-  uncompressed source paths in frontmatter are mapped to their
-  compressed counterparts before sizing.
+  uncondensed source paths in frontmatter are mapped to their
+  condensed counterparts before sizing.
 - A context loaded by N always-rules counts **N times** (once per
   loading rule). Rationale: the always-budget protects context-window
   utilization at activation time; if rule A and rule B both fire on
@@ -138,7 +138,7 @@ the full `RawSize(X)` under Model (b). No `chars(X) / N` discount.
   has no measurable upside.
 - Phase 4c (shared-context discount) becomes a no-op under 3a.
   Phase 4 leverage shifts to 4a (demote), 4b (merge), and 4d
-  (hard-compress) — see `road-to-context-layer-maturity` Phase 4
+  (hard-condense) — see `road-to-context-layer-maturity` Phase 4
   inputs gate.
 
 **Reopener:** if a future inventory shows ≥ 3 shared-context loaders

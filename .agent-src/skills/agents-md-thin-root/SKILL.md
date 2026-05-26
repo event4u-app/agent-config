@@ -29,7 +29,7 @@ install:
 
 Use when:
 - Editing `AGENTS.md` at the package root.
-- Editing `packages/core/.agent-src.uncompressed/templates/AGENTS.md` (consumer-shipped template).
+- Editing `packages/core/.agent-src.uncondensed/templates/AGENTS.md` (consumer-shipped template).
 - Reviewing a PR that changes either file.
 - Running `/optimize/agents`.
 - A budget meter (`scripts/measure_augment_budget.py`) flags the package-root AGENTS.md as the dominant cost.
@@ -37,7 +37,7 @@ Use when:
 ## Do NOT
 
 - Edit `.github/copilot-instructions.md` with this skill (use `copilot-agents-optimization` instead).
-- Edit other `.md` files under `.augment/`, `packages/*/.agent-src.uncompressed/`, or `agents/` with this skill.
+- Edit other `.md` files under `.augment/`, `packages/*/.agent-src.uncondensed/`, or `agents/` with this skill.
 - Add a section to AGENTS.md without first checking whether an outboard target already exists in `agents/settings/contexts/` or `docs/contracts/`.
 - Replace prose with a bare link `[label](path)` — every pointer needs a *why*-clause ≥ 60 chars or it does not count toward the 40 % ratio.
 - Reuse the package-root anatomy in the consumer template — caps and target paths differ.
@@ -55,7 +55,7 @@ Every entry describes **what** the project does or **where** to learn more — n
 | File | FAIL above | WARN above | Target |
 |---|---|---|---|
 | `AGENTS.md` (package root) | 3,000 chars | 2,800 chars | ≤ 2,800 |
-| `packages/core/.agent-src.uncompressed/templates/AGENTS.md` (consumer) | 2,500 chars | 2,300 chars | ≤ 2,300 |
+| `packages/core/.agent-src.uncondensed/templates/AGENTS.md` (consumer) | 2,500 chars | 2,300 chars | ≤ 2,300 |
 
 Char-count is raw file size (`wc -c`), frontmatter included. Enforcement: `scripts/lint_agents_md.py` (Phase 7), wired into the package's CI pipeline via the `lint-agents-md` task. WARN is a soft signal in CI; FAIL blocks merge.
 
@@ -93,7 +93,7 @@ Every substantive pointer specifies, on the same line or the immediately followi
 
 ## The contract — emergency-triage block
 
-Every Thin-Root AGENTS.md MUST contain an **Emergency Triage** section verbatim from `packages/core/.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md` (Phase 6.4 will create that file as the canonical source). The block lists the five questions a host agent answers from the root file alone when network / tool access is degraded:
+Every Thin-Root AGENTS.md MUST contain an **Emergency Triage** section verbatim from `packages/core/.agent-src.uncondensed/contexts/contracts/emergency-triage-block.md` (Phase 6.4 will create that file as the canonical source). The block lists the five questions a host agent answers from the root file alone when network / tool access is degraded:
 
 1. What is this repository?
 2. What language(s) does this repository accept?
@@ -107,22 +107,22 @@ Each answer must fit on one line. The block exists so the root never silently de
 
 1. **Measure baseline.** `wc -c AGENTS.md` and `python3 scripts/measure_augment_budget.py`. Record current char-count and the gap to 2,200 / 2,500.
 2. **Inventory sections.** List every `## ` heading and its char-count. Mark each as `keep-inline` (Iron-Law-adjacent, ≤ 200 chars, no good outboard target) or `outboard-candidate` (longer-form prose, table-only sections, narrative).
-3. **Identify outboard targets.** For each `outboard-candidate`, name the destination — `packages/core/.agent-src.uncompressed/contexts/`, `docs/contracts/`, an existing rule body, an existing skill body. Never invent a new top-level directory.
+3. **Identify outboard targets.** For each `outboard-candidate`, name the destination — `packages/core/.agent-src.uncondensed/contexts/`, `docs/contracts/`, an existing rule body, an existing skill body. Never invent a new top-level directory.
 4. **Move content; insert pointer.** Cut the section into the target file. Replace it in AGENTS.md with a single substantive pointer per anatomy above. Verify the *why*-clause length.
 5. **Re-measure.** `wc -c AGENTS.md` again. If above 2,200, repeat steps 2–4 on the next-largest section. Above 2,500 = must outboard further before commit.
 6. **Validate pointer ratio.** Count non-blank lines and substantive-pointer lines. Ratio < 0.40 = collapse decorative or boilerplate lines into a single pointer or remove.
-7. **Verify emergency-triage block.** Diff the in-file block against `packages/core/.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md`. Drift = revert to canonical.
+7. **Verify emergency-triage block.** Diff the in-file block against `packages/core/.agent-src.uncondensed/contexts/contracts/emergency-triage-block.md`. Drift = revert to canonical.
 8. **Run lints.** `task lint-agents-md && task check-refs && task lint-skills`. All green before commit.
 
 ## Procedure — apply Thin-Root to consumer template
 
-Same procedure, applied to `packages/core/.agent-src.uncompressed/templates/AGENTS.md`. Hard cap shifts to 2,000 / 1,700. The consumer template intentionally lacks the package-self-references — its pointers target files that exist in the **consumer's** repo (`.augment/skills/`, `agents/settings/contexts/`, ...), not this package's authoring tree.
+Same procedure, applied to `packages/core/.agent-src.uncondensed/templates/AGENTS.md`. Hard cap shifts to 2,000 / 1,700. The consumer template intentionally lacks the package-self-references — its pointers target files that exist in the **consumer's** repo (`.augment/skills/`, `agents/settings/contexts/`, ...), not this package's authoring tree.
 
 ## Gotchas
 
-- **Outboarding to a new top-level dir.** Inventing `agents/explainers/` or `docs/notes/` for the moved content silently widens the contract surface. Outboard only into `packages/core/.agent-src.uncompressed/contexts/`, `docs/contracts/`, an existing rule body, or an existing skill body.
+- **Outboarding to a new top-level dir.** Inventing `agents/explainers/` or `docs/notes/` for the moved content silently widens the contract surface. Outboard only into `packages/core/.agent-src.uncondensed/contexts/`, `docs/contracts/`, an existing rule body, or an existing skill body.
 - **Pointer-ratio inflation by decoration.** Adding boilerplate "Browse all skills" / "See also" links to lift the ratio above 40 % defeats the purpose. The lint counts only substantive pointers (with a *why*-clause ≥ 60 chars); decorative links get filtered out and the ratio drops back below threshold.
-- **Emergency-triage drift.** Editing the in-file emergency-triage block instead of the canonical `packages/core/.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md` causes the package-root and consumer-template versions to diverge silently. Always edit the canonical file and let the lint diff pull both back in sync.
+- **Emergency-triage drift.** Editing the in-file emergency-triage block instead of the canonical `packages/core/.agent-src.uncondensed/contexts/contracts/emergency-triage-block.md` causes the package-root and consumer-template versions to diverge silently. Always edit the canonical file and let the lint diff pull both back in sync.
 - **Cap inversion under WARN.** A 2,250-char AGENTS.md (above 2,200 WARN, below 2,500 FAIL) is a yellow signal not a green one — every additional sentence raises the probability of the next FAIL. Treat WARN as the spend boundary, not a buffer.
 - **Char-count includes frontmatter.** `wc -c` counts every byte including the YAML preamble, blank lines, and the trailing newline. Stripping a section to "look smaller" without re-running `wc -c` understates the true budget impact.
 - **Path enumeration.** A run of three or more bare `` `path/to/dir/` `` bullets without *why*-clauses is the classic re-bloat pattern. The lint emits a WARN at ≥ 3 such lines. Collapse them into one capability-style pointer — see the recipe in [`agents-md-anatomy § Iron Law`](../../contexts/contracts/agents-md-anatomy.md#iron-law--capabilities-over-structure).

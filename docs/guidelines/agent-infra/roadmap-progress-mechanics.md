@@ -2,7 +2,7 @@
 
 > Any touch to agents/roadmaps/ — create/rename/delete/move, edit checkboxes ([x]/[~]/[-]), add/rename/remove phases — must regenerate dashboard and archive if 0 open items, same response
 
-_Origin: migrated from `.agent-src.uncompressed/rules/roadmap-progress-sync.md` per P4.2 of `road-to-kernel-and-router.md`._
+_Origin: migrated from `.agent-src.uncondensed/rules/roadmap-progress-sync.md` per P4.2 of `road-to-kernel-and-router.md`._
 
 <!-- cloud_safe: degrade -->
 <!-- Authoring discipline applies in cloud; local script + regen are no-ops there. -->
@@ -147,7 +147,7 @@ dashboard, commit if commit policy allows.
 A reply that lands a verified step without flipping its checkbox is a rule violation.
 
 **Deterministic flip-guard.** The autonomous loop carries a per-step
-guard at [`roadmap-process-loop § 5b`](../../.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
+guard at [`roadmap-process-loop § 5b`](../../.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic):
 after the atomic flip, the loop runs
 `git diff --name-only -- agents/roadmaps/<file>.md` and halts loudly
 when the diff is empty. The `command:` triggers on

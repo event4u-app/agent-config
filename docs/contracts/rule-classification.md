@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-12
 # Rule Classification — Phase 1.2 of road-to-kernel-and-router
 
 > **Status:** active · **Stability:** beta · **Owner:** road-to-kernel-and-router P1.2
-> · **Source of truth:** `.agent-src.uncompressed/rules/*.md`
+> · **Source of truth:** `.agent-src.uncondensed/rules/*.md`
 
 Migration plan for all 56 source rules. **No edits land here** — this
 document is the disposition map P2 / P4 will execute against.
@@ -16,8 +16,8 @@ document is the disposition map P2 / P4 will execute against.
 
 | code | meaning |
 |---|---|
-| `keep-in-kernel` | Iron Law floor / behaviour / safety / tone / ask-policy. Loaded every session. Compressed to ≤ 2.5k chars (P2.2; raised from 1.5k per Council R2). |
-| `compress-and-keep` | Behavioural rule that stays in `rules/` as auto-tier. Compressed in place per the P2.2 playbook. Loaded by router on trigger match. |
+| `keep-in-kernel` | Iron Law floor / behaviour / safety / tone / ask-policy. Loaded every session. Condensed to ≤ 2.5k chars (P2.2; raised from 1.5k per Council R2). |
+| `condense-and-keep` | Behavioural rule that stays in `rules/` as auto-tier. Condensed in place per the P2.2 playbook. Loaded by router on trigger match. |
 | `move-to-skill:<id>` | Procedural how-to content. Body migrates into the named skill (P4.1); rule shrinks to Iron Law one-liner + `routes_to:`. |
 | `move-to-guideline:<id>` | Reference / examples / mechanics tables. Body migrates into `docs/guidelines/<id>.md` (P4.2); rule keeps Iron Law + pointer. |
 
@@ -51,25 +51,25 @@ yet.
 | scope-control | 4368 | `keep-in-kernel` | Iron Law (safety-floor): no unsolicited refactors / git-ops gate |
 | verify-before-complete | 2344 | `keep-in-kernel` | Iron Law: no completion claims without fresh verification |
 
-**Always-bucket total: 32 403 chars.** Pilot compression rate `r`
+**Always-bucket total: 32 403 chars.** Pilot condensation rate `r`
 locked at **median 0.712** (P1.3, Council R2 amendment); projection
 sum = 23 071 chars, under the 25k hard cap with 1 929 chars headroom.
 Per-rule cap raised to ≤ 2.5k (Council R2). Iron-Law-override ADRs
 may lift individual rules above 2.5k where Iron-Law density forbids
-further compression — currently 2 expected (`direct-answers` +342,
+further condensation — currently 2 expected (`direct-answers` +342,
 `language-and-tone` +1286). See `kernel-membership.md` § 5.
 
 > **Council swap ADR (P2.1 input).** Sonnet 4.5 flagged
 > `agent-authority` as a routing index (no Iron-Law fence; should
 > demote to auto-tier-3) and `autonomous-execution` (currently
-> `compress-and-keep` below) as a mode-independent Band-4 authority
+> `condense-and-keep` below) as a mode-independent Band-4 authority
 > that should promote to kernel. Swap accepted ⇒ +1213 chars over
 > the 25k cap. Decision deferred to P2.1 ADR; current dispositions
 > below remain locked until the ADR resolves.
 
-### § 3.2 — auto-rules: compress-and-keep (22)
+### § 3.2 — auto-rules: condense-and-keep (22)
 
-Behavioural rules with too much Iron-Law content for migration; compress
+Behavioural rules with too much Iron-Law content for migration; condense
 in place per P2.2 playbook. Loaded by router on trigger match.
 
 | id | chars | tier | rationale |
@@ -101,7 +101,7 @@ in place per P2.2 playbook. Loaded by router on trigger match.
 
 Procedural how-to. Rule body migrates into named skill (P4.1); rule
 shrinks to Iron-Law one-liner + `routes_to:`. Skill IDs reference
-existing skills under `.agent-src.uncompressed/skills/`.
+existing skills under `.agent-src.uncondensed/skills/`.
 
 | id | chars | target skill | rationale |
 |---|---:|---|---|
@@ -130,7 +130,7 @@ Reference / examples / mechanics. Body migrates into
 
 | id | chars | target guideline | rationale |
 |---|---:|---|---|
-| artifact-engagement-recording | 3462 | `artifact-engagement-flow` | Mechanics doc lives in `.agent-src.uncompressed/contexts/contracts/` (P4.1) |
+| artifact-engagement-recording | 3462 | `artifact-engagement-flow` | Mechanics doc lives in `.agent-src.uncondensed/contexts/contracts/` (P4.1) |
 | augment-portability | 2956 | `augment-portability-patterns` | Project-agnostic-patterns reference |
 | command-suggestion-policy | 3954 | `command-suggestion-flow` | Flow doc already exists |
 | php-coding | 3433 | `php-coding-patterns` | Reference table; per-stack |
@@ -142,9 +142,9 @@ Reference / examples / mechanics. Body migrates into
 
 | check | command | acceptance |
 |---|---|---|
-| Coverage | `python3 scripts/measure_rule_budget.py` | 56 rules total → 9 kernel + 22 compress + 18 skill + 7 guideline |
+| Coverage | `python3 scripts/measure_rule_budget.py` | 56 rules total → 9 kernel + 22 condense + 18 skill + 7 guideline |
 | Determinism | `python3 scripts/measure_rule_budget.py --json` × 2 | byte-identical output |
-| No-edits | `git diff --stat .agent-src.uncompressed/rules/` | clean (this is plan-only) |
+| No-edits | `git diff --stat .agent-src.uncondensed/rules/` | clean (this is plan-only) |
 
 ## § 5 — Open questions
 
@@ -166,6 +166,6 @@ Reference / examples / mechanics. Body migrates into
    spec; flagged by Council R2 to prevent inconsistent implementer
    calls.
 5. **`think-before-action` / `context-hygiene` / `augment-source-of-
-   truth` boundary.** Currently `compress-and-keep` (auto). Council
+   truth` boundary.** Currently `condense-and-keep` (auto). Council
    did not flag for promotion; revisit only if the swap ADR (#1)
    forces a re-projection.

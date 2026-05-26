@@ -13,7 +13,7 @@
   cannot be resolved from this repo alone.
 - **Autonomy-blocked items** are marked with `🛑 artifact-drafting` —
   these require the full Understand → Research → Draft user flow per
-  [`artifact-drafting-protocol`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md)
+  [`artifact-drafting-protocol`](../../.agent-src.uncondensed/rules/artifact-drafting-protocol.md)
   and cannot be drafted silently.
 
 ## Triage summary — 2026-04-22 pass
@@ -40,9 +40,9 @@ Everything else surfaces here as a question.
 | No-circular-dep clause in `CONTRIBUTING.md` | `road-to-memory-self-consumption.md` Phase 0 | ✅ Ticked off |
 | Skill count drift (roadmap said 116, reality 121) | `road-to-stronger-skills.md` | ✅ Roadmap text updated to match reality |
 | `.gitattributes.fragment` template shipped | `road-to-memory-merge-safety.md` Phase 0 | ✅ Committed under `templates/agents/` |
-| Arxiv citations (6 skills: Self-Refine, CoVe, Reflexion, ToT, CoT, LLM-as-Judge) | `road-to-autonomous-agent.md` §8 | ✅ All retrofits done, uncompressed + compressed in sync |
+| Arxiv citations (6 skills: Self-Refine, CoVe, Reflexion, ToT, CoT, LLM-as-Judge) | `road-to-autonomous-agent.md` §8 | ✅ All retrofits done, uncondensed + condensed in sync |
 | Master-frame link to decision hub | `archive/road-to-agent-outcomes.md` | ✅ Linked (archived 2026-04-23) |
-| Compression sync + hash verification | repo-wide | ✅ `compress.py --check-hashes` clean |
+| Condensation sync + hash verification | repo-wide | ✅ `condense.py --check-hashes` clean |
 | CI checks (lint-skills, check-refs, check-portability) | repo-wide | ✅ All green |
 | `package.json` / `marketplace.json` version drift to 1.8.0 + release guard | release-infra | ✅ Both synced, CI workflow asserts tag == package.json == marketplace.json on tag push; `task release:bump` keeps all three aligned going forward. Externally visible bug (Packagist showed 1.4.0 while git was at 1.8.0) flagged by a repo-review pass on 2026-04-22. |
 
@@ -68,7 +68,7 @@ Everything else surfaces here as a question.
   building a parallel `role-contracts` system with 6 skeletons, the
   role/mode axis gets absorbed into the persona primitive — likely
   via a `mode:` field on each persona (e.g. `advisory` vs `executing`)
-  or a separate mode concept owned by the same linter/compression
+  or a separate mode concept owned by the same linter/condensation
   infra. `road-to-role-modes.md` will be folded into
   `road-to-personas.md` when the latter is drafted.
   → [Phase 1](road-to-role-modes.md#phase-1)
@@ -310,8 +310,8 @@ Everything else surfaces here as a question.
 - **Q17 — Arxiv reference retrofit. ✅ DECIDED (2026-04-22) —
   Confirmed, Phase 9 closed.** The 6 skills (Self-Refine, CoVe,
   Reflexion, ToT, CoT, LLM-as-Judge) already have their
-  `## References` section shipped and synced (uncompressed +
-  compressed). CI is green. No further review needed.
+  `## References` section shipped and synced (uncondensed +
+  condensed). CI is green. No further review needed.
   → [Phase 9](road-to-autonomous-agent.md)
 
 ### External adoption feedback (2026-04-22 review pass)
@@ -690,7 +690,7 @@ broken first impression is worse than no README rewrite at all.
 
   **Decision (confirmed by maintainer):**
     - Adopt **Option 1 — Full Persona Primitive** at
-      `.agent-src.uncompressed/personas/`. Each persona is a small
+      `.agent-src.uncondensed/personas/`. Each persona is a small
       file. Skills reference personas by name in a
       `personas: [senior-engineer, product-owner]` frontmatter key.
       User invocation supports "one, several, or all personas":
@@ -752,7 +752,7 @@ broken first impression is worse than no README rewrite at all.
     1. Persona file schema — frontmatter fields, required sections
        (Focus / Mindset / Questions / Output Expectations /
        Anti-Patterns), size budget.
-    2. Compression semantics — each persona compresses separately
+    2. Condensation semantics — each persona condenses separately
        (symmetric with skills/rules), OR only via the skills that
        cite them? Open.
     3. Do personas get triggers/descriptions (like skills), or are
@@ -771,7 +771,7 @@ broken first impression is worse than no README rewrite at all.
        persona the same way as a skill?
 
   🛑 **Requires `artifact-drafting-protocol`** — new artifact kind =
-  new linter rules, new compression handling, new cross-ref
+  new linter rules, new condensation handling, new cross-ref
   semantics. Draft `road-to-personas.md` BEFORE writing Core files
   so Q23 and Q25 land on the finalized primitive.
   → Needs its own `road-to-personas.md`. Creation blocks Q23 + Q25

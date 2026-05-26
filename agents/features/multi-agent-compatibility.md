@@ -40,24 +40,24 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 - Classify skills and commands (universal vs Augment-only)
 - Portable `install.sh` creates rules + skills symlinks in target projects
 - Update `composer.json` archive to include new directories/files
-- Update `scripts/compress.py` to generate rules, skills, and commands outputs
+- Update `scripts/condense.py` to generate rules, skills, and commands outputs
 - Tests for all generation and install logic
 
 ### Out of Scope (deferred)
 
 - Per-file glob scoping for Cursor/Claude (all rules load always for now)
 - Custom `.cursorrules` legacy format (deprecated by Cursor)
-- Tool-specific rule compression (same compressed file for all tools)
+- Tool-specific rule condensation (same condensed file for all tools)
 - Skills delivery to tools other than Claude Code (future: Cursor, Copilot when paths are confirmed)
 
 ## Affected Areas
 
 | Area | Impact |
 |---|---|
-| `.agent-src.uncompressed/rules/` | Refactor 2 files, add frontmatter to all 24 |
-| `.agent-src.uncompressed/skills/` | Add YAML frontmatter to all ~60 SKILL.md files |
-| `.augment/rules/` | Compressed versions get new frontmatter |
-| `.augment/skills/` | Compressed versions get new frontmatter |
+| `.agent-src.uncondensed/rules/` | Refactor 2 files, add frontmatter to all 24 |
+| `.agent-src.uncondensed/skills/` | Add YAML frontmatter to all ~60 SKILL.md files |
+| `.augment/rules/` | Condensed versions get new frontmatter |
+| `.augment/skills/` | Condensed versions get new frontmatter |
 | `.claude/rules/` | New directory with rule symlinks |
 | `.claude/skills/` | New directory with skill symlinks + converted commands |
 | `.cursor/rules/` | New directory with rule symlinks |
@@ -65,7 +65,7 @@ The `event4u/agent-config` package currently only works with **Augment Code**. O
 | `.windsurfrules` | New generated file |
 | `GEMINI.md` | New symlink → `AGENTS.md` |
 | `scripts/install.sh` | Portable installer: hybrid sync, symlinks, gitignore management |
-| `scripts/compress.py` | New `--generate-tools` mode for rules, skills, commands |
+| `scripts/condense.py` | New `--generate-tools` mode for rules, skills, commands |
 | `composer.json` | Update archive.exclude |
 | `Taskfile.yml` | New tasks for generation |
 
@@ -125,7 +125,7 @@ Fallback: if symlink creation fails (Windows, restricted filesystem), copy files
 
 ## Dependencies
 
-- Completed compression roadmap (done — `caveman-compress-integration.md`)
+- Completed condensation roadmap (done — `telegraph-condense-integration.md`)
 - No external packages needed
 
 ## Acceptance Criteria

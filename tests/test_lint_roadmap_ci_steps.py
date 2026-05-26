@@ -1,7 +1,7 @@
 """Tests for ``scripts/lint_roadmap_ci_steps.py``.
 
 Covers the Hard-Gate semantics from
-``.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md``:
+``.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md``:
 detection of CI-shaped literals in checkbox steps and fenced bash
 blocks, the carve-out marker, acceptance-criteria suppression, and
 the ``quality.local_auto_run`` toggle that short-circuits the linter.

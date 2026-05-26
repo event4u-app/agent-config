@@ -118,7 +118,7 @@ documentation site, and any third-party consumer read.
 
 - [x] Create `scripts/build_discovery_manifest.py` (stdlib + PyYAML,
       ≤ 400 LOC, `--quiet`, `--out <path>`, `--validate`)
-- [x] Walk `.agent-src/` (the compressed canonical tree); for each
+- [x] Walk `.agent-src/` (the condensed canonical tree); for each
       `.md` file, parse frontmatter via Phase 1 parser
 - [x] Build the workspace graph by aggregating artefacts grouped on
       `workspaces[]`; build the pack graph the same way on `packs[]`
@@ -137,7 +137,7 @@ documentation site, and any third-party consumer read.
 ## Phase 3 — Wire it into the pipeline
 
 - [x] Add `task build-discovery` to `Taskfile.yml`; depends on
-      `task sync` (Phase 1 produces the compressed tree first)
+      `task sync` (Phase 1 produces the condensed tree first)
 - [x] Add `task validate-discovery-manifest` that re-runs the build
       to a temp file and `diff`s against the committed manifest;
       non-zero diff = CI fail (catches "forgot to regenerate")

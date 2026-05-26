@@ -143,7 +143,7 @@ chat_history:
   # Max file size in KB before overflow handling kicks in
   max_size_kb: 256
 
-  # Overflow behavior: rotate (drop oldest) | compress (summarize)
+  # Overflow behavior: rotate (drop oldest) | condense (summarize)
   on_overflow: rotate
 
 # --- Work-engine hooks ---
@@ -385,18 +385,18 @@ verbosity:
   # safe task per Phase 10.3.
   taskfile_command_echo: false
 
-# --- Caveman speak (authoring-only) ---
+# --- Telegraph speak (authoring-only) ---
 #
-# Caveman-style compression scope for newly authored prose. The
-# compile-time toggle (`caveman.speak`) is added in Phase 8.
+# Telegraph-style condensation scope for newly authored prose. The
+# compile-time toggle (`telegraph.speak`) is added in Phase 8.
 # `speak_scope` lands now so the charter and consumers can pin it.
-caveman:
-  # speak_scope = how widely caveman-speak grammar applies in chat
-  #   off          = no caveman grammar in output (compile-time still
-  #                  governed by caveman.speak)
-  #   prose_only   = caveman in body prose; numbered options +
+telegraph:
+  # speak_scope = how widely telegraph-speak grammar applies in chat
+  #   off          = no telegraph grammar in output (compile-time still
+  #                  governed by telegraph.speak)
+  #   prose_only   = telegraph in body prose; numbered options +
   #                  Iron-Law-literal blocks stay full prose
-  #   aggressive   = caveman everywhere except Iron-Law literals
+  #   aggressive   = telegraph everywhere except Iron-Law literals
   speak_scope: prose_only
 
 telemetry:
@@ -430,7 +430,7 @@ Personal and project-level settings (initial file written by
 **Key paths use dot-notation** to denote nesting: `personal.user_name`
 lives under `personal:` in YAML.
 
-The `verbosity.*` and `caveman.speak_scope` rows are summarized below;
+The `verbosity.*` and `telegraph.speak_scope` rows are summarized below;
 the canonical narrative lives in
 [`docs/customization.md` § Verbosity](../../docs/customization.md#verbosity).
 
@@ -453,7 +453,7 @@ the canonical narrative lives in
 | `chat_history.enabled` | `true`, `false` | `true` | Persist chat events to `agents/runtime/.agent-chat-history` (JSONL) for crash recovery. |
 | `chat_history.frequency` | `per_turn`, `per_phase`, `per_tool` | per profile | Logging granularity. Defaults: `minimal`→`per_turn`, `balanced`→`per_phase`, `full`→`per_tool`. |
 | `chat_history.max_size_kb` | integer | per profile | Max file size before overflow handling. Defaults: `minimal`→`128`, `balanced`→`256`, `full`→`512`. |
-| `chat_history.on_overflow` | `rotate`, `compress` | per profile | On overflow: `rotate` drops oldest entries; `compress` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`compress`. |
+| `chat_history.on_overflow` | `rotate`, `condense` | per profile | On overflow: `rotate` drops oldest entries; `condense` marks the file for summarization on the next turn. Defaults: `minimal`/`balanced`→`rotate`, `full`→`condense`. |
 | `chat_history.text_limits.{user,agent,tool,phase}` | integer (chars) | `user=0`, `agent=5000`, `tool=200`, `phase=200` | Per-entry-type text-length cap. `0` = verbatim, no slice. `N > 0` = collapse whitespace, slice to N chars, append `" … [+K chars]"` so the log self-reports truncation. Defaults match `DEFAULT_TEXT_LIMITS` in `scripts/chat_history.py`. |
 | `hooks.enabled` | `true`, `false` | `false` | Master switch for the work-engine hook layer. When `false` (default) the registry stays empty and golden replay is byte-stable. See [`agents/settings/contexts/work-engine-hooks.md`](../../../agents/settings/contexts/work-engine-hooks.md). |
 | `hooks.trace` | `true`, `false` | `false` | Emit per-event trace lines on stderr. Useful for debugging; off by default because it is noisy. |
@@ -486,7 +486,7 @@ the canonical narrative lives in
 | `verbosity.offer_council_in_delivery` | `true`, `false` | `false` | Offer "run AI Council on this?" inside delivery commands (`/feature-plan`, `/review-changes`, `/roadmap-create`). Council commands themselves are unaffected. |
 | `verbosity.post_action_reports` | `off`, `minimal`, `full` | `minimal` | Multi-line status / summary blocks after a successful action. `off` = no report; `minimal` = one-line confirmation; `full` = bullet list. |
 | `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
-| `caveman.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely caveman-speak grammar applies in chat. `off` = no caveman grammar; `prose_only` = caveman in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = caveman everywhere except Iron-Law literals. Compile-time toggle (`caveman.speak`) lands in Phase 8. |
+| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph grammar; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. Compile-time toggle (`telegraph.speak`) lands in Phase 8. |
 | `telemetry.artifact_engagement.enabled` | `true`, `false` | `false` | Master switch for the artefact engagement log. Default-off; zero file IO and zero token cost when `false`. Maintainer-targeted; consumers leave it off. |
 | `telemetry.artifact_engagement.granularity` | `task`, `phase-step`, `tool-call` | `task` | Boundary at which events are recorded. `tool-call` is expensive — opt-in only. |
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |

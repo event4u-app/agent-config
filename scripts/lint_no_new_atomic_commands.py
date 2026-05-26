@@ -3,7 +3,7 @@
 Atomic-command linter for the command-collapse policy.
 
 Reads the locked verb clusters from `docs/contracts/command-clusters.md`,
-finds every command file under `.agent-src.uncompressed/commands/` that
+finds every command file under `.agent-src.uncondensed/commands/` that
 was **added** since `--baseline` (default: `main`), and requires each
 new file to declare either:
 
@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-COMMANDS_DIR = Path(".agent-src.uncompressed/commands")
+COMMANDS_DIR = Path(".agent-src.uncondensed/commands")
 CLUSTER_CONTRACT = Path("docs/contracts/command-clusters.md")
 
 

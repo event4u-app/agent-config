@@ -79,7 +79,7 @@ Each finance deliverable surfaces, in this order:
 1. **Assumptions block** — every input value the model uses, sourced or marked `assumption`.
 2. **Sensitivity** — at least one variable swept (±20% or ±1 σ); single-point estimates without sensitivity are forbidden for valuation and runway.
 3. **Confidence band** — `high` / `medium` / `low` per the surrounding council / skill conventions, with the reason for the band (data quality, model fit, time horizon).
-4. **Counter-case** — one sentence on what would invalidate the conclusion ("if growth halves, runway compresses to 7 months").
+4. **Counter-case** — one sentence on what would invalidate the conclusion ("if growth halves, runway condenses to 7 months").
 
 ## Human review escalation
 

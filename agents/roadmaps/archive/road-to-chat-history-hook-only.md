@@ -23,7 +23,7 @@ complexity: lightweight
       `chat_history_append.py`, `chat_history_halt_append.py`) do **not**
       import or reference the cooperative hooks being removed
       (`turn_check`, `heartbeat`). Run:
-      `grep -rn 'turn_check\|heartbeat' .agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/_chat_history_base.py .agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/chat_history_append.py .agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/chat_history_halt_append.py`
+      `grep -rn 'turn_check\|heartbeat' .agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/_chat_history_base.py .agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/chat_history_append.py .agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/chat_history_halt_append.py`
       Expected output: empty. Non-empty → **roadmap blocked** until the
       coupling is refactored away. This audit must pass before Phase 1
       ships, not Phase 2 — once Phase 1 deletes cooperative rules,
@@ -129,15 +129,15 @@ path is the part that keeps failing.
          skips the bad entry and rotates correctly OR returns
          `adopt_failed` with `reason` naming the corruption — never
          silently overwrites valid history.
-- [x] **Step 5:** Remove from `.agent-src.uncompressed/rules/`:
+- [x] **Step 5:** Remove from `.agent-src.uncondensed/rules/`:
       `chat-history-cadence.md`, `chat-history-ownership.md`,
       `chat-history-visibility.md` (–364 lines of always-rules). Verified
       2026-05-05: `grep -rln 'chat-history-cadence|chat-history-ownership|chat-history-visibility'`
-      against `.agent-src.uncompressed/`, `.agent-src/`, `.augment/`
+      against `.agent-src.uncondensed/`, `.agent-src/`, `.augment/`
       returns empty.
 - [x] **Step 6:** `task sync` → confirm `.agent-src/rules/` and
       `.augment/rules/` regenerate without the three files. Verified
-      2026-05-05: no `chat-*` rules in source, compressed, or augment
+      2026-05-05: no `chat-*` rules in source, condensed, or augment
       output trees.
 - [x] **Step 7:** Run `task check-refs`. Update or remove every cross-ref
       in skills/rules/commands/contexts pointing at the deleted rules
@@ -161,7 +161,7 @@ path is the part that keeps failing.
       still empty. Non-empty → STOP this phase, refactor before Step 1.
 - [x] **Step 1:** Remove `chat_history_turn_check.py` and
       `chat_history_heartbeat.py` from
-      `.agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/`
+      `.agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/`
       — both are cooperative-only.
 - [x] **Step 2:** Keep `chat_history_append.py`, `chat_history_halt_append.py`,
       `_chat_history_base.py` — these are structural and engine-driven
@@ -172,7 +172,7 @@ path is the part that keeps failing.
 
 ## Phase 3: Trim agent-facing sub-commands
 
-- [x] **Step 1:** Delete `.agent-src.uncompressed/commands/chat-history/`
+- [x] **Step 1:** Delete `.agent-src.uncondensed/commands/chat-history/`
       sub-commands `checkpoint.md`, `clear.md`, `resume.md` — their
       semantics (Adopt/Replace/Merge prompts) belong to the cooperative
       handshake we are removing.
@@ -203,7 +203,7 @@ path is the part that keeps failing.
 ## Phase 5: Settings, docs, CI green, archive
 
 - [x] **Step 1:** Remove `heartbeat:` block from
-      `.agent-src.uncompressed/templates/agent-settings.yml` (cooperative-only
+      `.agent-src.uncondensed/templates/agent-settings.yml` (cooperative-only
       knob). Keep `enabled`, `frequency`, `max_size_kb`, `on_overflow`.
 - [x] **Step 2:** Mark `docs/contracts/adr-chat-history-split.md` as
       `STATUS: Superseded` with a pointer to this roadmap.
@@ -216,13 +216,13 @@ path is the part that keeps failing.
       remove `chat-history-*` rule rows from
       `scripts/build_rule_trigger_matrix.py`; mark the related-split
       section in `docs/migrations/commands-1.15.0.md` superseded.
-- [x] **Step 4:** `task ci` → exit 0 (sync-check, check-compression,
+- [x] **Step 4:** `task ci` → exit 0 (sync-check, check-condensation,
       check-refs, check-portability, lint-skills, test, lint-readme).
       `consistency` (= `git diff --quiet`) is the only gate that fails
       pre-commit because the working tree carries the entire Phase 1–5
       diff; it flips green automatically once the work is committed.
       All structural checks are green: 2271/2271 tests pass, 0 broken
-      refs, 0 portability violations, 0 🔴 compression errors, 0 lint
+      refs, 0 portability violations, 0 🔴 condensation errors, 0 lint
       failures, README clean.
 - [x] **Step 5:** Manual verification (Phase 1 Step 8 repeated against the
       final state — fresh-chat launch, observe `.agent-chat-history`

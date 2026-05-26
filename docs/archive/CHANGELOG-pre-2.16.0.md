@@ -43,6 +43,6 @@
 * **docs:** bump command count from 109 to 115 ([f8c61b1](https://github.com/event4u-app/agent-config/commit/f8c61b1d0ec48034e0d66e8d32534056ca4aa1f0))
 * **template:** bump agent_config_version pin to 2.14.0 ([fcb885f](https://github.com/event4u-app/agent-config/commit/fcb885fd19bdbca46ef91ec4d5e723cc6c186c6d))
 * **index:** regenerate agents/index.md + docs/catalog.md for /agents user ([56b281d](https://github.com/event4u-app/agent-config/commit/56b281d69960d3e57adbd24b9ec6fd24fc1a5aff))
-* **agent-user:** regenerate compressed sources + claude tool stubs ([f79b6d1](https://github.com/event4u-app/agent-config/commit/f79b6d1cfcf1caccde4a723ad779c65d9ed87198))
+* **agent-user:** regenerate condensed sources + claude tool stubs ([f79b6d1](https://github.com/event4u-app/agent-config/commit/f79b6d1cfcf1caccde4a723ad779c65d9ed87198))
 
 Tests: 4352 (+12 since 2.14.0)

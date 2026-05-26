@@ -41,8 +41,8 @@ from scripts.ai_council.session import SessionManifest, save as save_session
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARTEFACTS = [
-    REPO_ROOT / ".agent-src.uncompressed/rules/non-destructive-by-default.md",
-    REPO_ROOT / ".agent-src.uncompressed/contexts/authority/destructive-mechanics.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/non-destructive-by-default.md",
+    REPO_ROOT / ".agent-src.uncondensed/contexts/authority/destructive-mechanics.md",
 ]
 
 ORIGINAL_ASK = (
@@ -192,7 +192,7 @@ def main() -> int:
 
     manifest = SessionManifest(
         mode="files",
-        artefact=".agent-src.uncompressed/rules/non-destructive-by-default.md",
+        artefact=".agent-src.uncondensed/rules/non-destructive-by-default.md",
         original_ask=ORIGINAL_ASK,
         members=[f"{r.provider}/{r.model}" for r in final_round],
         rounds=len(rounds_collected),

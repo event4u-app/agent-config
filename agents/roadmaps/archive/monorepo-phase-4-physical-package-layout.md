@@ -8,7 +8,7 @@ status: ready
 > Fourth of six monorepo roadmaps. Phases 1–3 produced the metadata,
 > the discovery manifest, and the TS installer **without** moving any
 > file on disk. This phase performs the actual physical migration
-> from the current flat `.agent-src.uncompressed/` layout into a
+> from the current flat `.agent-src.uncondensed/` layout into a
 > `packages/core/` + `packages/pack-*` monorepo, in a way that keeps
 > the installer working from the first commit to the last.
 
@@ -20,7 +20,7 @@ The source tree is restructured into:
 packages/
   core/                       # rules, kernel skills, installer source
     installer/                # TS CLI (Phase 3)
-    .agent-src.uncompressed/  # core artefacts only
+    .agent-src.uncondensed/  # core artefacts only
   pack-php/
   pack-laravel/
   pack-symfony/
@@ -56,7 +56,7 @@ keep working at every commit — no flag day.
 ## Acceptance criteria
 
 - [x] Source tree matches the layout above; no `.md` file remains
-      under the legacy `.agent-src.uncompressed/` root
+      under the legacy `.agent-src.uncondensed/` root
 - [x] `task sync` produces the same `.agent-src/` and `.augment/`
       trees byte-for-byte before vs. after the move (verified by
       sha256 snapshot taken on the last pre-move commit)
@@ -89,12 +89,12 @@ frontmatter and emits a `dist/migration/move-plan.json`:
 ```json
 {
   "moves": [
-    { "from": ".agent-src.uncompressed/skills/laravel/SKILL.md",
+    { "from": ".agent-src.uncondensed/skills/laravel/SKILL.md",
       "to":   "packages/pack-laravel/skills/laravel/SKILL.md",
       "reason": "primary pack: pack.laravel" }
   ],
   "stays_in_core": [
-    { "path": "packages/core/.agent-src.uncompressed/rules/scope-control.md",
+    { "path": "packages/core/.agent-src.uncondensed/rules/scope-control.md",
       "reason": "rule, owner: core" }
   ],
   "conflicts": []

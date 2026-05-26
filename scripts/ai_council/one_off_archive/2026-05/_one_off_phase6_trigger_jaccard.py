@@ -16,7 +16,7 @@ from itertools import combinations
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = ROOT / ".agent-src.uncompressed/rules"
+RULES_DIR = ROOT / ".agent-src.uncondensed/rules"
 
 RULES = [
     "chat-history-cadence",

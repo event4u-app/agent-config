@@ -1,12 +1,12 @@
 # Archived Skills
 
-> Tombstones for skills removed from `.agent-src.uncompressed/skills/`.
+> Tombstones for skills removed from `.agent-src.uncondensed/skills/`.
 > Contract owner: [`step-2-skill-inventory-rationalization.md`](../roadmaps/step-2-skill-inventory-rationalization.md)
 > Phase 3.
 
 ## The contract
 
-Every skill that disappears from `.agent-src.uncompressed/skills/` must
+Every skill that disappears from `.agent-src.uncondensed/skills/` must
 leave one file here:
 
 ```
@@ -14,7 +14,7 @@ agents/evidence/archived-skills/<slug>.md
 ```
 
 The file follows the template at
-[`.agent-src.uncompressed/templates/skill-archive-note.md`](../../.agent-src.uncompressed/templates/skill-archive-note.md)
+[`.agent-src.uncondensed/templates/skill-archive-note.md`](../../.agent-src.uncondensed/templates/skill-archive-note.md)
 and is validated by `scripts/lint_archived_skills.py`. Removal without
 the matching note is a CI failure — `task lint-archived-skills` runs
 inside `task ci`.
@@ -52,7 +52,7 @@ files.
 1. Mark the row in `skill-rationalization-candidates.md` as actioned
    (date, PR link).
 2. Copy the template body from
-   [`.agent-src.uncompressed/templates/skill-archive-note.md`](../../.agent-src.uncompressed/templates/skill-archive-note.md).
+   [`.agent-src.uncondensed/templates/skill-archive-note.md`](../../.agent-src.uncondensed/templates/skill-archive-note.md).
 3. Fill the six required frontmatter fields (`slug`, `archived_on`,
    `last_seen_count`, `reason`, `replacement`, `last_known_callers`).
 4. Write the three body sections (*Why archived*, *What replaces it*,

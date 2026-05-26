@@ -34,7 +34,7 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 # to the legacy root for pre-move checkouts.
 _template_scripts = resolve_logical("templates/scripts")
 TEMPLATE_SCRIPTS = _template_scripts or (
-    REPO_ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+    REPO_ROOT / ".agent-src.uncondensed" / "templates" / "scripts"
 )
 if str(TEMPLATE_SCRIPTS) not in sys.path:
     sys.path.insert(0, str(TEMPLATE_SCRIPTS))

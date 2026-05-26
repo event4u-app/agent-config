@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Lint slash-command frontmatter for the `tier:` key.
 
-Hard-fails CI if any command under .agent-src.uncompressed/commands/
+Hard-fails CI if any command under .agent-src.uncondensed/commands/
 lacks a `tier:` declaration or uses an unknown tier value. The valid
 tier set is locked by docs/contracts/command-surface-tiers.md.
 
@@ -27,7 +27,7 @@ from _lib.agent_src import artefact_roots  # noqa: E402
 COMMANDS_DIRS = [root / "commands" for root in artefact_roots() if (root / "commands").is_dir()]
 # Consumer-facing projection — must also carry tier so .augment/commands/
 # (which symlinks to .agent-src/commands/) renders the tier filter.
-COMMANDS_DIR_COMPRESSED = REPO / ".agent-src" / "commands"
+COMMANDS_DIR_CONDENSED = REPO / ".agent-src" / "commands"
 
 VALID_TIERS = frozenset({"0", "1", "2"})
 
@@ -116,11 +116,11 @@ def main() -> int:
     rc = 0
     for commands_dir in COMMANDS_DIRS:
         rc |= lint(commands_dir, quiet=QUIET)
-    # The compressed projection is the consumer-facing tree (via the
+    # The condensed projection is the consumer-facing tree (via the
     # .augment/commands → .agent-src/commands symlink). It must also
     # carry tier so the surface stays uniform.
-    if COMMANDS_DIR_COMPRESSED.is_dir():
-        rc |= lint(COMMANDS_DIR_COMPRESSED, quiet=QUIET)
+    if COMMANDS_DIR_CONDENSED.is_dir():
+        rc |= lint(COMMANDS_DIR_CONDENSED, quiet=QUIET)
     return rc
 
 

@@ -35,10 +35,10 @@ axes, one orthogonal product.
 
 ## Decision
 
-Split into a parallel axis. Add `.agent-src.uncompressed/user-types/`
+Split into a parallel axis. Add `.agent-src.uncondensed/user-types/`
 as a first-class directory mirroring the persona pipeline:
 
-- Source dir: `.agent-src.uncompressed/user-types/`
+- Source dir: `.agent-src.uncondensed/user-types/`
 - Schema doc: [`user-type-schema`](user-type-schema.md) — 7-section spine, ≤ 120 lines
 - JSON schema: [`scripts/schemas/user-type.schema.json`](../../scripts/schemas/user-type.schema.json)
 - Linter: `scripts/skill_linter.py § lint_usertype`
@@ -102,7 +102,7 @@ Markdown prose + frontmatter), completely different consumer
 (`scripts/install.sh` vs. `refine-ticket`). Co-locating them would
 force a single `kind:` discriminator on a directory whose two halves
 do not share a schema. The separation is in different physical paths
-(`user-types/` root vs. `.agent-src.uncompressed/user-types/`) and
+(`user-types/` root vs. `.agent-src.uncondensed/user-types/`) and
 the vocabulary overlap is deliberate per [`adr-install-user-type-axis`](adr-install-user-type-axis.md).
 
 **Alt-3 — Defer the axis until end-user lenses prove themselves in

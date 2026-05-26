@@ -8,7 +8,7 @@
 ## Input → Transform → Output
 
 ```
-.agent-src/skills/<id>/SKILL.md     ← Compressed skill (+ supporting assets)
+.agent-src/skills/<id>/SKILL.md     ← Condensed skill (+ supporting assets)
     ↓ scripts/build_cloud_bundle.py
 dist/cloud/<skill>.zip              ← Anthropic Skills bundle (Claude.ai Web / Skills API)
 ```

@@ -10,8 +10,8 @@ task ci
 
 This runs, in order:
 
-1. **Sync check** — `.agent-src/` matches `.agent-src.uncompressed/` (non-`.md` files)
-2. **Compression hashes** — Compressed `.md` hashes match source
+1. **Sync check** — `.agent-src/` matches `.agent-src.uncondensed/` (non-`.md` files)
+2. **Condensation hashes** — Condensed `.md` hashes match source
 3. **Reference check** — No broken cross-references between files
 4. **Portability check** — No project-specific paths in shared files
 5. **Schema validation** — Frontmatter of every skill/rule/command/persona matches its JSON-Schema contract
@@ -29,7 +29,7 @@ The linter (`scripts/skill_linter.py`) validates:
 - **Required structure** — YAML frontmatter, description, triggers
 - **Frontmatter schema** — Each artefact type has a JSON-Schema in `scripts/schemas/`; violations surface as `schema_<rule>` errors (see [frontmatter contract](../agents/reference/docs/frontmatter-contract.md))
 - **Anti-patterns** — Procedural rules in behavior rules, overlong skills, scope creep
-- **Compression quality** — Key sections preserved after compression
+- **Condensation quality** — Key sections preserved after condensation
 
 Schema validation also runs standalone via `task validate-schema` — fast
 fail before the full linter.
@@ -50,32 +50,32 @@ fail before the full linter.
 
 ---
 
-## Compression System
+## Condensation System
 
-Content flows from verbose (`.agent-src.uncompressed/`) to compressed (`.agent-src/`),
+Content flows from verbose (`.agent-src.uncondensed/`) to condensed (`.agent-src/`),
 which is then projected into `.augment/` for Augment Code.
 
 ### Rules
 
-- Source of truth is **always** `.agent-src.uncompressed/`
+- Source of truth is **always** `.agent-src.uncondensed/`
 - Never edit `.agent-src/` or `.augment/` directly
-- The `/compress` command produces token-efficient output
-- Compression hashes track which files have been compressed
+- The `/condense` command produces token-efficient output
+- Condensation hashes track which files have been condensed
 
 ### Verification
 
 ```bash
 task sync-check          # Non-.md files in sync?
 task sync-check-hashes   # .md hashes current?
-task check-compression   # Compression quality OK?
-task lint-skills-pairs   # Source vs compressed comparison
+task check-condensation   # Condensation quality OK?
+task lint-skills-pairs   # Source vs condensed comparison
 ```
 
 ### Fixing
 
 ```bash
 task sync                # Copy non-.md files
-task sync-mark-all-done  # Mark all hashes as current (after manual compress)
+task sync-mark-all-done  # Mark all hashes as current (after manual condense)
 task consistency-fix     # Regenerate ALL derived outputs
 ```
 

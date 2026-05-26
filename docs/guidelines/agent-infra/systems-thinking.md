@@ -7,7 +7,7 @@ feedback loops, leverage points, and cross-domain archetypes that
 reveal where intervention has the highest impact. Adopted under the
 **Reference-Guideline Sunset Policy** and cross-referenced from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
   — L3 Deep analysis depth.
 - [`mental-models`](mental-models.md) — Munger's lattice; systems
   thinking is one of the strongest engineering / biology lenses.

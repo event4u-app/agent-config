@@ -88,7 +88,7 @@ python3 scripts/audit_skill_descriptions.py --full
 # Machine-readable:
 python3 scripts/audit_skill_descriptions.py --json > /tmp/audit.json
 
-# Audit a different tree (e.g. compressed):
+# Audit a different tree (e.g. condensed):
 python3 scripts/audit_skill_descriptions.py --root .agent-src/skills
 ```
 
@@ -125,7 +125,7 @@ shift in the flagged count. History so far:
 
 ## Related
 
-- Rule: [`rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
+- Rule: [`rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   § *Description Triggering*.
 - Parent analysis: [`compare-anthropics-skills.md`](compare-anthropics-skills.md).
 - Follow-up roadmap: [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md).

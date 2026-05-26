@@ -3,7 +3,7 @@ title: "Direct Answers — mechanics & failure modes"
 parent_rule: direct-answers
 type: context
 loaded_by:
-  - .agent-src.uncompressed/rules/direct-answers.md
+  - .agent-src.uncondensed/rules/direct-answers.md
 stability: beta
 status: draft
 ---

@@ -70,7 +70,7 @@ def _package_version() -> str:
 
 
 def _collect_artefacts(pkg_dir: Path) -> list[dict[str, Any]]:
-    src_root = pkg_dir / ".agent-src.uncompressed"
+    src_root = pkg_dir / ".agent-src.uncondensed"
     if not src_root.is_dir():
         return []
     items: list[dict[str, Any]] = []

@@ -72,7 +72,7 @@ One skill, 10 queries, 10 API calls. Runs in minutes. Costs cents.
 ## Concrete example
 
 Skill: `laravel-validation`.
-File: `.agent-src.uncompressed/skills/laravel-validation/evals/triggers.json`.
+File: `.agent-src.uncondensed/skills/laravel-validation/evals/triggers.json`.
 
 ```json
 {
@@ -151,9 +151,9 @@ Rationale:
 ### 1.2 Author `evals/triggers.json` per skill ✅
 
 Shipped:
-- [`.agent-src.uncompressed/skills/php-coder/evals/triggers.json`](../../.agent-src.uncompressed/skills/php-coder/evals/triggers.json)
-- [`.agent-src.uncompressed/skills/eloquent/evals/triggers.json`](../../.agent-src.uncompressed/skills/eloquent/evals/triggers.json)
-- [`.agent-src.uncompressed/skills/skill-writing/evals/triggers.json`](../../.agent-src.uncompressed/skills/skill-writing/evals/triggers.json)
+- [`.agent-src.uncondensed/skills/php-coder/evals/triggers.json`](../../.agent-src.uncondensed/skills/php-coder/evals/triggers.json)
+- [`.agent-src.uncondensed/skills/eloquent/evals/triggers.json`](../../.agent-src.uncondensed/skills/eloquent/evals/triggers.json)
+- [`.agent-src.uncondensed/skills/skill-writing/evals/triggers.json`](../../.agent-src.uncondensed/skills/skill-writing/evals/triggers.json)
 
 Each carries 5 should-trigger + 5 should-not-trigger queries, first-person,
 single-sentence, no skill-name leakage, near-miss should-not-trigger queries
@@ -170,7 +170,7 @@ Shipped [`scripts/skill_trigger_eval.py`](../../scripts/skill_trigger_eval.py)
   `AnthropicRouter` (wraps SDK, prompt sends the full 100-skill catalogue
   and asks for `{"would_load": [...]}` structured JSON).
 - **Input:** `--skill <name>` + optional `--triggers <path>` (default:
-  `.agent-src.uncompressed/skills/<name>/evals/triggers.json`).
+  `.agent-src.uncondensed/skills/<name>/evals/triggers.json`).
 - **Output:** `evals/last-run.json` — timestamp, model, router (mock vs
   anthropic), per-query `{q, expected, observed, loaded_skills, passed}`,
   aggregate metrics (TP/FP/TN/FN + precision + recall), token counts,
@@ -250,7 +250,7 @@ and stop. Do not expand scope.
 ### 3.1 Tooling integration
 
 - Add `evals/triggers.json` as optional file in the new-skill scaffold
-  (`.agent-src.uncompressed/templates/skill.md` neighborhood)
+  (`.agent-src.uncondensed/templates/skill.md` neighborhood)
 - `task test-triggers -- <skill>` runs the eval for one skill
 - `task test-triggers-all` runs the full set (cost-gated by the same
   key-file + per-skill confirmation gates as the single-skill runner)
@@ -273,9 +273,9 @@ and stop. Do not expand scope.
 
 ### 3.4 Documentation
 
-- New section in [`skill-quality` rule](../../.agent-src.uncompressed/rules/skill-quality.md):
+- New section in [`skill-quality` rule](../../.agent-src.uncondensed/rules/skill-quality.md):
   "If your skill has `evals/triggers.json`, it must pass before merge."
-- New section in [`skill-writing` guideline](../../.agent-src.uncompressed/guidelines/skill-writing.md):
+- New section in [`skill-writing` guideline](../../.agent-src.uncondensed/guidelines/skill-writing.md):
   one canonical example (one good query, one bad query, one near-miss).
 
 ### 3.5 Output-template presence enforcement (inherited from Q26) ✅ shipped
@@ -293,9 +293,9 @@ and stop. Do not expand scope.
   output: `refine-ticket` (`Refined ticket` / `Top-5 risks` /
   `Persona voices`) and `estimate-ticket` (same three-section shape).
   *(2026-04-23:
-  [`.agent-src.uncompressed/skills/refine-ticket/evals/output-schema.yml`](../../.agent-src.uncompressed/skills/refine-ticket/evals/output-schema.yml)
+  [`.agent-src.uncondensed/skills/refine-ticket/evals/output-schema.yml`](../../.agent-src.uncondensed/skills/refine-ticket/evals/output-schema.yml)
   and
-  [`.agent-src.uncompressed/skills/estimate-ticket/evals/output-schema.yml`](../../.agent-src.uncompressed/skills/estimate-ticket/evals/output-schema.yml)
+  [`.agent-src.uncondensed/skills/estimate-ticket/evals/output-schema.yml`](../../.agent-src.uncondensed/skills/estimate-ticket/evals/output-schema.yml)
   ship the three-section contract each; `estimate-ticket` uses
   `Persona voices (sizing-focused)` and intentionally omits the
   conditional `Split points` section. 9 new linter tests, 564/564

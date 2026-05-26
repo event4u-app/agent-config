@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Measure rule-bucket char counts (kernel + auto) for the rule-kernel roadmap.
 
-Source of truth: `.agent-src.uncompressed/rules/*.md`. Frontmatter (YAML
+Source of truth: `.agent-src.uncondensed/rules/*.md`. Frontmatter (YAML
 between two `---` lines at file start) is stripped before counting; only
 the rule body counts toward the bucket.
 
@@ -97,8 +97,8 @@ def measure_rule(path: Path) -> dict[str, object]:
 def collect() -> list[dict[str, object]]:
     """Collect rule measurements from every source root (multi-root aware).
 
-    Pre-move: reads .agent-src.uncompressed/rules/*.md.
-    Post-move (ADR-017): reads packages/*/.agent-src.uncompressed/rules/*.md.
+    Pre-move: reads .agent-src.uncondensed/rules/*.md.
+    Post-move (ADR-017): reads packages/*/.agent-src.uncondensed/rules/*.md.
     Deduplicates on logical rule id (stem) — first root wins.
     """
     seen: set[str] = set()

@@ -2,7 +2,7 @@
 
 Mirrors ``tests/work_engine/conftest.py`` — contract tests sometimes
 import scoring helpers from
-``.agent-src.uncompressed/templates/scripts/work_engine/`` (e.g. the
+``.agent-src.uncondensed/templates/scripts/work_engine/`` (e.g. the
 memory-visibility redaction test). Expose the template scripts
 directory on ``sys.path`` so collection works regardless of order.
 """
@@ -14,7 +14,7 @@ from pathlib import Path
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 
 # Post-monorepo Phase 4 the templates tree moved under
-# packages/<pack>/.agent-src.uncompressed/templates/. Discover every
+# packages/<pack>/.agent-src.uncondensed/templates/. Discover every
 # active source root and add its templates/scripts/ child to sys.path.
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402

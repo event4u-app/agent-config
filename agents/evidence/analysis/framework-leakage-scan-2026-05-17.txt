@@ -1,24 +1,24 @@
 
 ===== SKILLS (generic, non-carve-out) =====
 
-  [  2] .agent-src.uncompressed/skills/agent-docs-writing/SKILL.md
+  [  2] .agent-src.uncondensed/skills/agent-docs-writing/SKILL.md
       Laravel: 2
         L  62  /\bEloquent\b/  - Eloquent & database rules
         L 194  /\bArtisan\b/  | New Artisan command | `AGENTS.md` commands section |
 
-  [  2] .agent-src.uncompressed/skills/ai-council/SKILL.md
+  [  2] .agent-src.uncondensed/skills/ai-council/SKILL.md
       PHP: 1
         L 115  /\bcomposer\.json\b/  | Project name (from `composer.json` / `package.json` / repo dir) | Host-agent identity (Augment, Claude Code, Cursor, Cline, Windsurf, Copilot agent) — strippe
       JS-specific: 1
         L 115  /\bpackage\.json\b/  | Project name (from `composer.json` / `package.json` / repo dir) | Host-agent identity (Augment, Claude Code, Cursor, Cline, Windsurf, Copilot agent) — strippe
 
-  [  2] .agent-src.uncompressed/skills/analysis-autonomous-mode/SKILL.md
+  [  2] .agent-src.uncondensed/skills/analysis-autonomous-mode/SKILL.md
       Laravel: 1
         L  45  /\bLaravel\b/  | Laravel | `project-analysis-laravel` |
       Symfony: 1
         L  46  /\bSymfony\b/  | Symfony | `project-analysis-symfony` |
 
-  [  5] .agent-src.uncompressed/skills/analysis-skill-router/SKILL.md
+  [  5] .agent-src.uncondensed/skills/analysis-skill-router/SKILL.md
       Laravel: 3
         L  56  /\bLaravel\b/  * Laravel, Symfony, Zend/Laminas, Node/Express, React, Next.js
         L  73  /\bLaravel\b/  * Laravel → `project-analysis-laravel`
@@ -27,13 +27,13 @@
         L  56  /\bSymfony\b/  * Laravel, Symfony, Zend/Laminas, Node/Express, React, Next.js
         L  74  /\bSymfony\b/  * Symfony → `project-analysis-symfony`
 
-  [  3] .agent-src.uncompressed/skills/api-design/SKILL.md
+  [  3] .agent-src.uncondensed/skills/api-design/SKILL.md
       PHP: 3
         L  39  /\.php\b/  routes/api/v1/projects.php  → /api/v1/projects
         L  40  /\.php\b/  routes/api/v2/projects.php  → /api/v2/projects
         L  45  /\.php\b/  If a route doesn't exist in the requested version, the system falls back to the next older version. Configured in `config/app.php`:
 
-  [ 31] .agent-src.uncompressed/skills/api-endpoint/SKILL.md
+  [ 31] .agent-src.uncondensed/skills/api-endpoint/SKILL.md
       Laravel: 20
         L  28  /\bLaravel\b/  ## Laravel projects
         L 175  /\bEloquent\b/  - Do NOT return raw Eloquent models — always use API Resources.
@@ -51,28 +51,28 @@
         L 145  /\.php\b/  | FormRequest | `app/Http/Requests/v{N}/{Domain}/{Action}{Entity}Request.php` |
         ... +5 more
 
-  [  2] .agent-src.uncompressed/skills/api-testing/SKILL.md
+  [  2] .agent-src.uncondensed/skills/api-testing/SKILL.md
       Laravel: 1
         L 197  /\bLaravel\b/  - Don't test framework internals (e.g., "does Laravel return 422 on validation error") — test YOUR validation rules.
       PHP: 1
         L 183  /\bPest\b(?! Control)/  1. Pest test file covering happy path, validation, auth, and edge cases
 
-  [  2] .agent-src.uncompressed/skills/authz-review/SKILL.md
+  [  2] .agent-src.uncondensed/skills/authz-review/SKILL.md
       Laravel: 1
         L  17  /\bLaravel\b/  > the *authorization layer* (Laravel Policies/Gates · Symfony Voters · Express
       Symfony: 1
         L  17  /\bSymfony\b/  > the *authorization layer* (Laravel Policies/Gates · Symfony Voters · Express
 
-  [  1] .agent-src.uncompressed/skills/blast-radius-analyzer/SKILL.md
+  [  1] .agent-src.uncondensed/skills/blast-radius-analyzer/SKILL.md
       Laravel: 1
         L 162  /\bLaravel\b/  strings, Laravel `resolve($classString)`. Grep the string too, not just the symbol.
 
-  [  2] .agent-src.uncompressed/skills/bug-analyzer/SKILL.md
+  [  2] .agent-src.uncondensed/skills/bug-analyzer/SKILL.md
       Laravel: 2
         L 176  /\bLaravel\b/  ### 3. Known bug patterns (PHP/Laravel)
         L 180  /\bEloquent\b/  - Eloquent lazy loading in queued jobs (serialization issues)
 
-  [ 20] .agent-src.uncompressed/skills/code-refactoring/SKILL.md
+  [ 20] .agent-src.uncondensed/skills/code-refactoring/SKILL.md
       Laravel: 3
         L  55  /\bFormRequest\b/  | **FormRequest** | `authorize()`, `rules()`, validated field names |
         L 103  /\bphp artisan\b/  - Run tests related to the changed code first (`php artisan test --filter=...`).
@@ -86,7 +86,7 @@
         L 136  /\bPHPStan\b/  1. Move file → update namespace → find all `use` statements → update imports → update docs → run PHPStan.
         ... +11 more
 
-  [ 14] .agent-src.uncompressed/skills/code-review/SKILL.md
+  [ 14] .agent-src.uncondensed/skills/code-review/SKILL.md
       Laravel: 6
         L  49  /\bFormRequest\b/  | **No magic** | No magic properties on models (use getters/setters). No `$request->input()` without FormRequest. |
         L  58  /\bFormRequest\b/  | **FormRequest** | Every controller has a dedicated FormRequest. No inline `$request->validate()`. |
@@ -103,14 +103,14 @@
         L  98  /\bECS\b/  1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill for commands)
         ... +2 more
 
-  [  3] .agent-src.uncompressed/skills/context-authoring/SKILL.md
+  [  3] .agent-src.uncondensed/skills/context-authoring/SKILL.md
       Laravel: 2
         L  74  /\bEloquent\b/  | `data-sensitivity.md` | Eloquent `$hidden` / `$casts`, Sentry `beforeSend`, logging helpers, API resources, export commands |
         L  75  /\bdatabase/(migrations|seeders|factories)\b/  | `deployment-order.md` | `database/migrations/`, feature-flag config (Pennant / LaunchDarkly), deploy scripts, CI workflow, rollback runbooks in `docs/` |
       PHP: 1
         L  76  /\.php\b/  | `observability.md` | `config/logging.php`, Sentry init, dashboard links in READMEs, alert rules in Terraform/Grafana dashboards |
 
-  [ 10] .agent-src.uncompressed/skills/dashboard-design/SKILL.md
+  [ 10] .agent-src.uncondensed/skills/dashboard-design/SKILL.md
       Laravel: 10
         L  14  /\bLaravel\b/  Use when designing a new Grafana or admin dashboard, deciding what goes where (Grafana vs. app), or embedding Grafana panels in the Laravel app.
         L  25  /\bLaravel\b/  | **Business/Admin** | Laravel + Livewire + Tailwind | Customer KPIs, import stats, usage metrics |
@@ -120,23 +120,23 @@
         L  25  /\bLivewire\b/  | **Business/Admin** | Laravel + Livewire + Tailwind | Customer KPIs, import stats, usage metrics |
         ... +4 more
 
-  [  1] .agent-src.uncompressed/skills/data-flow-mapper/SKILL.md
+  [  1] .agent-src.uncondensed/skills/data-flow-mapper/SKILL.md
       Laravel: 1
         L 139  /\bFormRequest\b/  * **Confusing validation with authorization** — a FormRequest-style validator
 
-  [  3] .agent-src.uncompressed/skills/database/SKILL.md
+  [  3] .agent-src.uncondensed/skills/database/SKILL.md
       Laravel: 2
         L  17  /\bEloquent\b/  - Writing Eloquent models (use `eloquent` skill)
         L  55  /\bphp artisan\b/  3. **Run schema queries** — `php artisan tinker --execute="Schema::getColumnListing('table')"`
       PHP: 1
         L  25  /\.php\b/  2. Check `config/database.php` for connection definitions.
 
-  [  2] .agent-src.uncompressed/skills/defense-in-depth/SKILL.md
+  [  2] .agent-src.uncondensed/skills/defense-in-depth/SKILL.md
       Laravel: 2
         L  35  /\bLaravel\b/  Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in pure PHP services it is the public method on the 
         L  35  /\bFormRequest\b/  Reject obviously invalid input at the API / route / command boundary. In Laravel this is FormRequest rules; in pure PHP services it is the public method on the 
 
-  [ 22] .agent-src.uncompressed/skills/dependency-upgrade/SKILL.md
+  [ 22] .agent-src.uncondensed/skills/dependency-upgrade/SKILL.md
       Laravel: 3
         L   3  /\bLaravel\b/  description: "Use when upgrading dependencies — "update Laravel", "bump PHP version", or "upgrade packages". Covers changelog review, breaking change detection,
         L  81  /\bLaravel\b/  # PHP/Laravel
@@ -158,7 +158,7 @@
         L 158  /\bnpm (install|run|test|ci)\b/  npm install new-package
         ... +1 more
 
-  [  5] .agent-src.uncompressed/skills/developer-like-execution/SKILL.md
+  [  5] .agent-src.uncondensed/skills/developer-like-execution/SKILL.md
       Laravel: 5
         L  87  /\bLaravel\b/  - Laravel: `route:list --json | jq '.[] | select(.uri | test("users"))'`
         L 159  /\bLaravel\b/  # Laravel route lookup — targeted, not full dump
@@ -166,7 +166,7 @@
         L 163  /\bphp artisan\b/  php artisan config:show app | grep env
         L 174  /\bphp artisan\b/  php artisan tinker --execute="User::where('email', 'test@example.com')->first(['id','email','status'])"
 
-  [  6] .agent-src.uncompressed/skills/dto-creator/SKILL.md
+  [  6] .agent-src.uncondensed/skills/dto-creator/SKILL.md
       Laravel: 1
         L 104  /\bEloquent\b/  - The model forgets to add the model linkage (`$modelClass`) when the DTO maps to an Eloquent model.
       PHP: 5
@@ -176,7 +176,7 @@
         L  93  /\bdeclare\(strict_types=1\)/  - **`declare(strict_types=1)`** in every new file.
         L  57  /\bnamespace App\\/  namespace App\DTO;
 
-  [  4] .agent-src.uncompressed/skills/error-handling-patterns/SKILL.md
+  [  4] .agent-src.uncondensed/skills/error-handling-patterns/SKILL.md
       Laravel: 3
         L   8  /\bLaravel\b/  sunset_criterion: "When the upstream framework docs (Laravel, FastAPI, Express, Axum, Effect-TS) all carry an equivalent in-tree decision framework AND consumer
         L  25  /\bLaravel\b/  - The failure is a single-call Laravel validation error — route to [`laravel-validation`](../laravel-validation/SKILL.md).
@@ -184,7 +184,7 @@
       PHP: 1
         L 128  /\.php\b/  - PHP / Laravel: https://laravel.com/docs/errors · https://www.php.net/manual/en/language.exceptions.php
 
-  [ 14] .agent-src.uncompressed/skills/existing-ui-audit/SKILL.md
+  [ 14] .agent-src.uncondensed/skills/existing-ui-audit/SKILL.md
       Laravel: 2
         L 196  /\bBlade\b(?! Runner)/  - Greenfield is detected, not assumed — a project with one Blade layout and no components is still greenfield only if tokens AND design system markers AND compo
         L  35  /\bLivewire\b/  | `blade-livewire-flux` | `resources/views/components/`, `resources/views/livewire/`, `resources/views/partials/`, `resources/views/layouts/`, `app/View/Compone
@@ -201,7 +201,7 @@
         L  74  /\bpackage\.json\b/  version: <from package.json shadcn registry CLI version, or null>,
         ... +3 more
 
-  [  8] .agent-src.uncompressed/skills/fe-design/SKILL.md
+  [  8] .agent-src.uncondensed/skills/fe-design/SKILL.md
       Laravel: 8
         L  64  /\bBlade\b(?! Runner)/  The stack-specific mapping (Blade partial vs. Livewire component vs.
         L 217  /\bBlade\b(?! Runner)/  4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched implementation skill, never from this refe
@@ -211,7 +211,7 @@
         L 217  /\bLivewire\b/  4. **Defer to the stack apply skill** — Blade vs. Livewire vs. Flux vs. React-shadcn choices come from the dispatched implementation skill, never from this refe
         ... +2 more
 
-  [  4] .agent-src.uncompressed/skills/feature-planning/SKILL.md
+  [  4] .agent-src.uncondensed/skills/feature-planning/SKILL.md
       Laravel: 2
         L 148  /\bdatabase/(migrations|seeders|factories)\b/  3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*.
         L 148  /\bphp artisan\b/  3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*.
@@ -219,7 +219,7 @@
         L 146  /\.php\b/  1. **Exact file path** — `app/Modules/Auth/Services/LoginService.php`, never *"the login service"*.
         L 148  /\.php\b/  3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*.
 
-  [  7] .agent-src.uncompressed/skills/file-editor/SKILL.md
+  [  7] .agent-src.uncondensed/skills/file-editor/SKILL.md
       PHP: 7
         L 124  /\bPHPStan\b/  - Don't open files during batch operations (e.g., fixing 20 PHPStan errors) — only open when specifically relevant.
         L  78  /\.php\b/  phpstorm --line 42 app/Models/User.php
@@ -229,18 +229,18 @@
         L  88  /\.php\b/  phpstorm app/Models/User.php
         ... +1 more
 
-  [  3] .agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md
+  [  3] .agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md
       PHP: 3
         L  64  /\bPHPStan\b/  3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green
         L  64  /\bRector\b/  3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green
         L  64  /\bECS\b/  3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green
 
-  [  2] .agent-src.uncompressed/skills/form-handler/SKILL.md
+  [  2] .agent-src.uncondensed/skills/form-handler/SKILL.md
       Laravel: 2
         L  15  /\bBlade\b(?! Runner)/  > server-rendered Blade — the lens is the same. Pair with
         L  14  /\bLivewire\b/  > optimistic UI. Stack-agnostic — Livewire, Inertia, React Hook Form,
 
-  [  4] .agent-src.uncompressed/skills/git-workflow/SKILL.md
+  [  4] .agent-src.uncondensed/skills/git-workflow/SKILL.md
       Laravel: 1
         L  31  /\bphp artisan\b/  2. Run tests: `php artisan test`.
       PHP: 3
@@ -248,7 +248,7 @@
         L  30  /\bRector\b/  1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).
         L  30  /\bECS\b/  1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).
 
-  [  5] .agent-src.uncompressed/skills/judge-code-quality/SKILL.md
+  [  5] .agent-src.uncondensed/skills/judge-code-quality/SKILL.md
       PHP: 5
         L  65  /\bPHPStan\b/  (PHPStan, mypy, eslint), or a rule-based refactor tool (Rector) would
         L 128  /\bPHPStan\b/  PHPStan/mypy/clippy will catch it, do not duplicate.
@@ -256,40 +256,40 @@
         L  64  /\bECS\b/  If a formatter (prettier, ECS, gofmt, rustfmt), a static analyzer
         L 127  /\bECS\b/  * **Flagging what the linter flags** — if ECS/eslint/rustfmt/gofmt or
 
-  [  1] .agent-src.uncompressed/skills/launch-readiness/SKILL.md
+  [  1] .agent-src.uncondensed/skills/launch-readiness/SKILL.md
       PHP: 1
         L  56  /\bPHPStan\b/  - Quality gates green (PHPStan / linters / type-checks).
 
-  [  2] .agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md
+  [  2] .agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md
       Laravel: 1
         L 291  /\bLaravel\b/  Decision: Create focused skill for Laravel route inspection via JSON and jq.
       PHP: 1
         L 293  /\bPHPStan\b/  Learning: "I forgot to run PHPStan once."
 
-  [  1] .agent-src.uncompressed/skills/logging-monitoring/SKILL.md
+  [  1] .agent-src.uncondensed/skills/logging-monitoring/SKILL.md
       PHP: 1
         L  20  /\.php\b/  1. Read `config/logging.php` for available channels.
 
-  [  2] .agent-src.uncompressed/skills/markitdown/SKILL.md
+  [  2] .agent-src.uncondensed/skills/markitdown/SKILL.md
       Python-specific: 2
         L  70  /\bpip install\b/  uv pip install 'markitdown-mcp==0.0.1a4'
         L 107  /\bpip install\b/  Plugins enable arbitrary code paths inside the conversion pipeline. The four-layer defense from Step 2 stops at the MCP boundary; plugin code runs on the consum
 
-  [  2] .agent-src.uncompressed/skills/mcp/SKILL.md
+  [  2] .agent-src.uncondensed/skills/mcp/SKILL.md
       Laravel: 2
         L 106  /\bLaravel\b/  **Use for:** Laravel, PHP, Livewire, Tailwind, or any library docs.
         L 106  /\bLivewire\b/  **Use for:** Laravel, PHP, Livewire, Tailwind, or any library docs.
 
-  [  2] .agent-src.uncompressed/skills/mcp-builder/SKILL.md
+  [  2] .agent-src.uncondensed/skills/mcp-builder/SKILL.md
       JS-specific: 2
         L  38  /\bpackage\.json\b/  1. **Project layout**. Python: single `.py` or modular package; Pydantic v2 with `model_config`. TypeScript: standard `package.json` + `tsconfig.json` strict mo
         L  51  /\bnpm (install|run|test|ci)\b/  - TypeScript: `npm run build`; verify `dist/index.js`.
 
-  [  1] .agent-src.uncompressed/skills/memory-consolidation/SKILL.md
+  [  1] .agent-src.uncondensed/skills/memory-consolidation/SKILL.md
       PHP: 1
         L 211  /\.php\b/  (`Stripe webhook signing key lives in `config/services.php` only —
 
-  [ 15] .agent-src.uncompressed/skills/merge-conflicts/SKILL.md
+  [ 15] .agent-src.uncondensed/skills/merge-conflicts/SKILL.md
       Laravel: 2
         L  66  /\bphp artisan\b/  - After resolving, run migrations to verify: `php artisan migrate --env=testing`
         L 108  /\bphp artisan\b/  php artisan test
@@ -306,7 +306,7 @@
         L  49  /\bnpm (install|run|test|ci)\b/  | Lock file conflicts (`composer.lock`, `package-lock.json`) | **Regenerate** — accept theirs, then run `composer install` / `npm install` |
         L  71  /\bnpm (install|run|test|ci)\b/  - `package.json` — resolve, then run `npm install` to regenerate `package-lock.json`.
 
-  [ 12] .agent-src.uncompressed/skills/migration-creator/SKILL.md
+  [ 12] .agent-src.uncondensed/skills/migration-creator/SKILL.md
       Laravel: 10
         L  28  /\bLaravel\b/  ## Laravel projects
         L  37  /\bdatabase/(migrations|seeders|factories)\b/  | Migration directories | `database/migrations/` (default), check for additional directories |
@@ -319,7 +319,7 @@
         L  32  /\.php\b/  Some projects use multiple database connections. Check `config/database.php` for connections.
         L  36  /\.php\b/  | Available connections | `config/database.php` → `'connections'` array |
 
-  [ 10] .agent-src.uncompressed/skills/module-management/SKILL.md
+  [ 10] .agent-src.uncondensed/skills/module-management/SKILL.md
       Laravel: 2
         L 132  /\bLaravel\b/  - Laravel module
         L  43  /\bArtisan\b/  │   ├── Console/Commands/        # Artisan commands (auto-registered)
@@ -332,7 +332,7 @@
         L  55  /\.php\b/  │   ├── web.php
         ... +2 more
 
-  [  4] .agent-src.uncompressed/skills/multi-tenancy/SKILL.md
+  [  4] .agent-src.uncondensed/skills/multi-tenancy/SKILL.md
       Laravel: 2
         L  54  /\bLaravel\b/  1. Store tenant context (e.g., in Laravel Context or a singleton)
         L  88  /\bArtisan\b/  - **Artisan commands** that need tenant access must use the appropriate trait (search for it in the project).
@@ -340,21 +340,21 @@
         L  21  /\.php\b/  1. **Gather context** — read `agents/reference/docs/` for multi-tenant architecture, `config/database.php` for connection definitions, and search for the tenant switching
         L  48  /\.php\b/  Projects may have additional connections for admin operations, provisioning, or monitoring. Check `config/database.php`.
 
-  [  1] .agent-src.uncompressed/skills/performance/SKILL.md
+  [  1] .agent-src.uncondensed/skills/performance/SKILL.md
       Laravel: 1
         L  55  /\bEloquent\b/  - Don't cache Eloquent collections with loaded relations — too large.
 
-  [  1] .agent-src.uncompressed/skills/po-discovery/SKILL.md
+  [  1] .agent-src.uncondensed/skills/po-discovery/SKILL.md
       Laravel: 1
         L  37  /\bLaravel\b/  ("upgrade Laravel to 11") — discovery adds noise; skip.
 
-  [  2] .agent-src.uncompressed/skills/project-analysis-core/SKILL.md
+  [  2] .agent-src.uncondensed/skills/project-analysis-core/SKILL.md
       PHP: 1
         L  34  /\bcomposer\.json\b/  * `composer.json`, `composer.lock`
       JS-specific: 1
         L  35  /\bpackage\.json\b/  * `package.json`, lock files
 
-  [ 15] .agent-src.uncompressed/skills/project-analyzer/SKILL.md
+  [ 15] .agent-src.uncondensed/skills/project-analyzer/SKILL.md
       Laravel: 4
         L 179  /\bLaravel\b/  | Laravel version       | `composer.json` → `require.laravel/framework` |
         L 180  /\bLaravel\b/  | Laravel or standalone | `artisan` file exists → Laravel               |
@@ -373,14 +373,14 @@
         L 182  /\bpackage\.json\b/  | Frontend framework    | `package.json` → Vue, React, etc.             |
         L 340  /\bnode_modules\b/  - Do NOT analyze third-party code in `vendor/` or `node_modules/`.
 
-  [  3] .agent-src.uncompressed/skills/readme-reviewer/SKILL.md
+  [  3] .agent-src.uncondensed/skills/readme-reviewer/SKILL.md
       PHP: 1
         L  50  /\bcomposer\.json\b/  - `package.json` / `composer.json` — name, scripts, dependencies
       JS-specific: 2
         L  34  /\bpackage\.json\b/  - Commands must exist — check `Taskfile.yml`, `Makefile`, `package.json scripts`
         L  50  /\bpackage\.json\b/  - `package.json` / `composer.json` — name, scripts, dependencies
 
-  [  4] .agent-src.uncompressed/skills/readme-writing/SKILL.md
+  [  4] .agent-src.uncondensed/skills/readme-writing/SKILL.md
       PHP: 1
         L  61  /\bcomposer\.json\b/  - `package.json`, `composer.json` — name, description, scripts, dependencies
       JS-specific: 3
@@ -388,7 +388,7 @@
         L 134  /\bpackage\.json\b/  - [ ] Every documented command exists in the repo (`Taskfile.yml`, `Makefile`, `package.json scripts`, etc.)
         L 158  /\bpackage\.json\b/  - The model forgets to validate commands against `Taskfile.yml` / `Makefile` / `package.json scripts`
 
-  [  8] .agent-src.uncompressed/skills/readme-writing-package/SKILL.md
+  [  8] .agent-src.uncondensed/skills/readme-writing-package/SKILL.md
       Laravel: 2
         L  92  /\bLaravel\b/  - Laravel 11.x
         L 107  /\bphp artisan\b/  php artisan vendor:publish --tag=package-config
@@ -401,7 +401,7 @@
         L  56  /\bpackage\.json\b/  - `composer.json` / `package.json` — name, description, requirements, scripts
         L 178  /\bpackage\.json\b/  - [ ] Compatibility/requirements match `composer.json` / `package.json` / CI matrix
 
-  [ 14] .agent-src.uncompressed/skills/refine-prompt/SKILL.md
+  [ 14] .agent-src.uncondensed/skills/refine-prompt/SKILL.md
       Laravel: 1
         L  90  /\bLaravel\b/  - `composer.json` — PHP framework detection (Laravel, Symfony,
       PHP: 5
@@ -422,27 +422,27 @@
         L 270  /\brequirements\.txt\b/  `requirements.txt`, `CLAUDE.md`, `AGENTS.md`, `.cursorrules`,
         L 148  /\bpytest\b/  pytest / etc.). Avoid:
 
-  [  2] .agent-src.uncompressed/skills/refine-ticket/SKILL.md
+  [  2] .agent-src.uncondensed/skills/refine-ticket/SKILL.md
       PHP: 1
         L 154  /\bcomposer\.json\b/  - `repo_aware` — on when `.git/`, `agents/settings/contexts/`, `composer.json`,
       JS-specific: 1
         L 155  /\bpackage\.json\b/  or `package.json` is present in the cwd; off otherwise.
 
-  [  3] .agent-src.uncompressed/skills/repomix-packer/SKILL.md
+  [  3] .agent-src.uncondensed/skills/repomix-packer/SKILL.md
       PHP: 1
         L  62  /\.php\b/  repomix --include "src/**/*.php,*.md"
       JS-specific: 2
         L  39  /\bnpm (install|run|test|ci)\b/  npm install -g repomix
         L 111  /\bnode_modules\b/  - `--no-gitignore` plus a wildcard include can pull in `.env`, `vendor/`, `node_modules/` — never combine without a tight `--include` first.
 
-  [  3] .agent-src.uncompressed/skills/roadmap-management/SKILL.md
+  [  3] .agent-src.uncondensed/skills/roadmap-management/SKILL.md
       PHP: 2
         L  96  /\bPHPStan\b/  - [ ] All quality gates pass (PHPStan, Rector, tests)
         L  96  /\bRector\b/  - [ ] All quality gates pass (PHPStan, Rector, tests)
       JS-specific: 1
         L 307  /\bnode_modules\b/  `node_modules/@event4u/agent-config/` or `vendor/event4u/agent-config/`.
 
-  [  3] .agent-src.uncompressed/skills/roadmap-writing/SKILL.md
+  [  3] .agent-src.uncondensed/skills/roadmap-writing/SKILL.md
       Laravel: 1
         L 143  /\bphp artisan\b/  whole-suite `php artisan test`) as checkbox steps when
       PHP: 1
@@ -450,7 +450,7 @@
       JS-specific: 1
         L 141  /\bpnpm (install|add|run|test)\b/  `task ci-strict`, `make ci`, `make test`, `npm/pnpm run check`,
 
-  [  8] .agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md
+  [  8] .agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md
       Laravel: 2
         L 156  /\bLaravel\b/  Custom filters for the project's PHP/Laravel toolchain live in `.rtk/filters.toml`
         L 159  /\bArtisan\b/  Covered: PHPStan, Pest, ECS, Rector, Docker Compose, Artisan, Composer.
@@ -463,11 +463,11 @@
         L  36  /\bnpm (install|run|test|ci)\b/  rtk npm test          # same for JS/TS
         L 138  /\bnpm (install|run|test|ci)\b/  | Test runners (`cargo test`, `npm test`, `phpunit`) | ✅ Always |
 
-  [  1] .agent-src.uncompressed/skills/rule-writing/SKILL.md
+  [  1] .agent-src.uncondensed/skills/rule-writing/SKILL.md
       Laravel: 1
         L  72  /\bEloquent\b/  description: "Writing or reviewing PHP code — strict types, naming, comparisons, early returns, Eloquent conventions"
 
-  [  5] .agent-src.uncompressed/skills/security/SKILL.md
+  [  5] .agent-src.uncondensed/skills/security/SKILL.md
       Laravel: 3
         L  40  /\bFormRequest\b/  2. Use in FormRequest `authorize()` or controller `$this->authorize()`.
         L  54  /\bFormRequest\b/  - Verify all user input is validated via FormRequest before use.
@@ -476,21 +476,21 @@
         L  57  /\bPHPStan\b/  - Run PHPStan — must pass (catches type-safety issues that enable injection).
         L  34  /\.php\b/  - Check `config/auth.php` for guards and providers.
 
-  [  3] .agent-src.uncompressed/skills/security-audit/SKILL.md
+  [  3] .agent-src.uncondensed/skills/security-audit/SKILL.md
       Laravel: 3
         L  79  /\bLaravel\b/  **Laravel:**
         L 119  /\bLaravel\b/  - The model tends to flag framework-handled security as issues (e.g., Laravel's CSRF is already handled).
         L  65  /\bBlade\b(?! Runner)/  | **XSS** | Unescaped output in Blade (`{!! !!}`), JSON responses with HTML |
 
-  [  1] .agent-src.uncompressed/skills/sentry-integration/SKILL.md
+  [  1] .agent-src.uncondensed/skills/sentry-integration/SKILL.md
       PHP: 1
         L 146  /\.php\b/  - **Config:** `config/sentry.php` — Sentry DSN and configuration
 
-  [  1] .agent-src.uncompressed/skills/skill-reviewer/SKILL.md
+  [  1] .agent-src.uncondensed/skills/skill-reviewer/SKILL.md
       Laravel: 1
         L  66  /\bLaravel\b/  - ❌  Describing how Laravel middleware works (in a middleware skill)
 
-  [  5] .agent-src.uncompressed/skills/skill-writing/SKILL.md
+  [  5] .agent-src.uncondensed/skills/skill-writing/SKILL.md
       Laravel: 4
         L 125  /\bLaravel\b/  Use when creating Laravel middleware for request filtering
         L 128  /\bLaravel\b/  Use when working with Laravel
@@ -499,19 +499,19 @@
       Symfony: 1
         L 391  /\bSymfony\b/  Symfony, Express, React, Next.js). **Not** for Tailwind, CSS frameworks,
 
-  [  2] .agent-src.uncompressed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md
+  [  2] .agent-src.uncondensed/skills/subagent-orchestration/prompts/do-and-judge-two-stage.md
       PHP: 1
         L  82  /\bPest\b(?! Control)/  4. Test shape matches project conventions (Pest / pytest / etc.).
       Python-specific: 1
         L  82  /\bpytest\b/  4. Test shape matches project conventions (Pest / pytest / etc.).
 
-  [  3] .agent-src.uncompressed/skills/systematic-debugging/SKILL.md
+  [  3] .agent-src.uncondensed/skills/systematic-debugging/SKILL.md
       PHP: 3
         L 257  /\bPHPStan\b/  * PHPStan / Rector / ECS output → [`quality-tools`](../quality-tools/SKILL.md)
         L 257  /\bRector\b/  * PHPStan / Rector / ECS output → [`quality-tools`](../quality-tools/SKILL.md)
         L 257  /\bECS\b/  * PHPStan / Rector / ECS output → [`quality-tools`](../quality-tools/SKILL.md)
 
-  [ 11] .agent-src.uncompressed/skills/test-driven-development/SKILL.md
+  [ 11] .agent-src.uncondensed/skills/test-driven-development/SKILL.md
       Laravel: 1
         L 274  /\bLaravel\b/  * Full Pest conventions, Laravel testing helpers → [`pest-testing`](../pest-testing/SKILL.md)
       PHP: 10
@@ -523,7 +523,7 @@
         L 273  /\bECS\b/  * Quality tools, PHPStan, ECS, Rector → [`quality-tools`](../quality-tools/SKILL.md)
         ... +4 more
 
-  [ 15] .agent-src.uncompressed/skills/test-performance/SKILL.md
+  [ 15] .agent-src.uncondensed/skills/test-performance/SKILL.md
       Laravel: 6
         L  67  /\bLaravel\b/  Laravel's `schema:dump` consolidates all migrations into one SQL file.
         L  37  /\bdatabase/(migrations|seeders|factories)\b/  ls database/migrations/*.php | wc -l
@@ -540,22 +540,22 @@
         L  40  /\.php\b/  find database/seeders database/seeder-data -name "*.php" -path "*/data/*" | wc -l
         ... +3 more
 
-  [  2] .agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md
+  [  2] .agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md
       Laravel: 1
         L 117  /\bLaravel\b/  **Concrete capture tools** for recording the real shape: `curl -s <url> | jq '.'` against a staging endpoint, Postman's "Save Response", Laravel's `Http::fake()
       PHP: 1
         L  80  /\.php\b/  Replacement: a `tests/Support/cleanupSession.php` helper or a trait used only by test classes.
 
-  [  1] .agent-src.uncompressed/skills/testing-anti-patterns/process-anti-patterns.md
+  [  1] .agent-src.uncondensed/skills/testing-anti-patterns/process-anti-patterns.md
       PHP: 1
         L  59  /\bPest\b(?! Control)/  - Pest conventions: [`pest-testing`](../pest-testing/SKILL.md)
 
-  [  2] .agent-src.uncompressed/skills/ui-component-architect/SKILL.md
+  [  2] .agent-src.uncondensed/skills/ui-component-architect/SKILL.md
       Laravel: 2
         L  16  /\bBlade\b(?! Runner)/  > the same lens applies to Blade, Livewire, React, or Vue trees.
         L  16  /\bLivewire\b/  > the same lens applies to Blade, Livewire, React, or Vue trees.
 
-  [  4] .agent-src.uncompressed/skills/universal-project-analysis/SKILL.md
+  [  4] .agent-src.uncondensed/skills/universal-project-analysis/SKILL.md
       Laravel: 2
         L  99  /\bLaravel\b/  * Laravel → `project-analysis-laravel`
         L 164  /\bLaravel\b/  Examples that qualify: Laravel, Symfony, Express, React, Next.js.
@@ -563,11 +563,11 @@
         L 100  /\bSymfony\b/  * Symfony → `project-analysis-symfony`
         L 164  /\bSymfony\b/  Examples that qualify: Laravel, Symfony, Express, React, Next.js.
 
-  [  1] .agent-src.uncompressed/skills/upstream-contribute/SKILL.md
+  [  1] .agent-src.uncondensed/skills/upstream-contribute/SKILL.md
       PHP: 1
         L 226  /\bcomposer (require|install|update|dump-autoload)\b/  composer update event4u/agent-config  # or npm update
 
-  [  8] .agent-src.uncompressed/skills/using-git-worktrees/SKILL.md
+  [  8] .agent-src.uncondensed/skills/using-git-worktrees/SKILL.md
       PHP: 2
         L 130  /\bcomposer\.json\b/  | `composer.json`   | `composer install`                      |
         L 130  /\bcomposer (require|install|update|dump-autoload)\b/  | `composer.json`   | `composer install`                      |
@@ -580,7 +580,7 @@
         L 132  /\bpyproject\.toml\b/  | `pyproject.toml`  | `poetry install` or `pip install -e .`  |
         L 132  /\bpip install\b/  | `pyproject.toml`  | `poetry install` or `pip install -e .`  |
 
-  [ 19] .agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md
+  [ 19] .agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md
       PHP: 19
         L  53  /\bPHPStan\b/  | "no static errors" | PHPStan / TypeScript / mypy on changed scope |
         L  80  /\bPHPStan\b/  * PHPStan exit 0 but only analyzed one file → do not say "no static
@@ -590,7 +590,7 @@
         L 111  /\bPHPStan\b/  | New feature | Tests (new + suite) + PHPStan + smoke check (curl/UI) |
         ... +13 more
 
-  [  6] .agent-src.uncompressed/skills/websocket/SKILL.md
+  [  6] .agent-src.uncondensed/skills/websocket/SKILL.md
       Laravel: 2
         L  39  /\bLaravel\b/  Use Laravel Echo to listen on the channel. Wire up reconnection with exponential backoff.
         L  74  /\bLaravel\b/  - Laravel Echo
@@ -602,7 +602,7 @@
 
 ===== RULES (generic, non-carve-out) =====
 
-  [  7] .agent-src.uncompressed/rules/architecture.md
+  [  7] .agent-src.uncondensed/rules/architecture.md
       Laravel: 4
         L  30  /\bLaravel\b/  - Check `composer.json` for framework (Laravel, Symfony, standalone).
         L  31  /\bLaravel\b/  - Check if `artisan` exists → Laravel project.
@@ -615,23 +615,23 @@
       JS-specific: 1
         L  32  /\bpackage\.json\b/  - Check `package.json` for frontend framework (React, Vue, Next.js, etc.).
 
-  [  2] .agent-src.uncompressed/rules/context-hygiene.md
+  [  2] .agent-src.uncondensed/rules/context-hygiene.md
       PHP: 2
         L  64  /\bPHPStan\b/  - Quality check (PHPStan, ECS) that still errors
         L  64  /\bECS\b/  - Quality check (PHPStan, ECS) that still errors
 
-  [  2] .agent-src.uncompressed/rules/downstream-changes.md
+  [  2] .agent-src.uncondensed/rules/downstream-changes.md
       PHP: 2
         L  74  /\bPHPStan\b/  1. **No broken imports** — `php -l` or PHPStan catches these
         L  76  /\bPHPStan\b/  3. **No broken types** — PHPStan Level 9 catches signature mismatches
 
-  [  2] .agent-src.uncompressed/rules/external-reference-deep-dive.md
+  [  2] .agent-src.uncondensed/rules/external-reference-deep-dive.md
       PHP: 1
         L  46  /\bcomposer\.json\b/  - Treating `package.json` / `composer.json` keywords as evidence of behavior.
       JS-specific: 1
         L  46  /\bpackage\.json\b/  - Treating `package.json` / `composer.json` keywords as evidence of behavior.
 
-  [  3] .agent-src.uncompressed/rules/missing-tool-handling.md
+  [  3] .agent-src.uncondensed/rules/missing-tool-handling.md
       PHP: 1
         L  45  /\bcomposer (require|install|update|dump-autoload)\b/  `composer require`, `npm install`, `pip install` per the package-manager
       JS-specific: 1
@@ -639,7 +639,7 @@
       Python-specific: 1
         L  45  /\bpip install\b/  `composer require`, `npm install`, `pip install` per the package-manager
 
-  [ 10] .agent-src.uncompressed/rules/roadmap-ci-steps-policy.md
+  [ 10] .agent-src.uncondensed/rules/roadmap-ci-steps-policy.md
       Laravel: 2
         L  66  /\bphp artisan\b/  | `php artisan test` (no `--filter`) | `php artisan test` |
         L  69  /\bphp artisan\b/  `php artisan test --filter=…`, `npm run lint -- --fix path/`) are
@@ -654,14 +654,14 @@
         L  12  /\bpnpm (install|add|run|test)\b/  - keyword: "pnpm run check"
         L  63  /\bpnpm (install|add|run|test)\b/  | `npm run check` / `pnpm run check` / `yarn check` | `npm run check before commit` |
 
-  [  2] .agent-src.uncompressed/rules/verify-before-complete.md
+  [  2] .agent-src.uncondensed/rules/verify-before-complete.md
       PHP: 2
         L  25  /\bPHPStan\b/  1. **IDENTIFY** — What command proves this claim? (tests, PHPStan, build, etc.)
         L  46  /\bPHPStan\b/  - Relying on partial verification (ran tests but not PHPStan)
 
 ===== COMMANDS (generic, non-carve-out) =====
 
-  [ 10] .agent-src.uncompressed/commands/agents/init.md
+  [ 10] .agent-src.uncondensed/commands/agents/init.md
       Laravel: 2
         L  54  /\bLaravel\b/  - `composer.json` → framework (Laravel / Symfony), PHP version, package name
         L 108  /\bLaravel\b/  | `{{target_language_level}}` | e.g. "PHP 8.2 / Laravel 11" |
@@ -678,7 +678,7 @@
         L  56  /\brequirements\.txt\b/  - `pyproject.toml` / `requirements.txt` → Python framework + version
         L  64  /\bpytest\b/  - `phpunit.xml` / `pest.config` / `jest.config` / `vitest.config` / `pytest.ini` → test framework
 
-  [  3] .agent-src.uncompressed/commands/analyze-reference-repo.md
+  [  3] .agent-src.uncondensed/commands/analyze-reference-repo.md
       PHP: 1
         L  62  /\bcomposer\.json\b/  - `package.json` / `composer.json` / `pyproject.toml` / `Cargo.toml`
       JS-specific: 1
@@ -686,7 +686,7 @@
       Python-specific: 1
         L  62  /\bpyproject\.toml\b/  - `package.json` / `composer.json` / `pyproject.toml` / `Cargo.toml`
 
-  [ 14] .agent-src.uncompressed/commands/bug-fix.md
+  [ 14] .agent-src.uncondensed/commands/bug-fix.md
       PHP: 14
         L 138  /\bPHPStan\b/  PHPStan:  {✅ passed | ❌ errors}
         L 178  /\bPHPStan\b/  - **Always run PHPStan** after changes.
@@ -696,25 +696,25 @@
         L  89  /\bvendor/bin//  vendor/bin/phpstan analyse           # 1. Check for type errors
         ... +8 more
 
-  [  2] .agent-src.uncompressed/commands/bug-investigate.md
+  [  2] .agent-src.uncondensed/commands/bug-investigate.md
       PHP: 2
         L 115  /\.php\b/  • {file1.php} — {role in the bug}
         L 116  /\.php\b/  • {file2.php} — {role in the bug}
 
-  [  1] .agent-src.uncompressed/commands/challenge-me/vision.md
+  [  1] .agent-src.uncondensed/commands/challenge-me/vision.md
       PHP: 1
         L 138  /\.php\b/  already exists at `path/to/file.php`"). The user should never have to
 
-  [  1] .agent-src.uncompressed/commands/challenge-me/with-docs.md
+  [  1] .agent-src.uncondensed/commands/challenge-me/with-docs.md
       PHP: 1
         L 259  /\.php\b/  > Your seed says X works via Y. The code (`path/to/file.php:123`) shows
 
-  [  2] .agent-src.uncompressed/commands/commit/in-chunks.md
+  [  2] .agent-src.uncondensed/commands/commit/in-chunks.md
       PHP: 2
         L  54  /\bRector\b/  - Style-only changes (ECS/Rector/formatter) → separate `style:` /
         L  54  /\bECS\b/  - Style-only changes (ECS/Rector/formatter) → separate `style:` /
 
-  [ 10] .agent-src.uncompressed/commands/commit.md
+  [ 10] .agent-src.uncondensed/commands/commit.md
       Laravel: 2
         L 118  /\bapp/Http//  → app/Http/Controllers/WorkingTimeController.php
         L 119  /\bapp/Http//  → app/Http/Resources/WorkingTimeResource.php
@@ -727,29 +727,29 @@
         L 119  /\.php\b/  → app/Http/Resources/WorkingTimeResource.php
         ... +2 more
 
-  [  2] .agent-src.uncompressed/commands/compress.md
+  [  2] .agent-src.uncondensed/commands/condense.md
       Laravel: 1
         L 220  /\bphp artisan\b/  - Changing `php artisan test --filter=MyTest` to `php artisan test`
       PHP: 1
         L  26  /\.php\b/  This copies non-`.md` files (`.php`, etc.), deletes stale files, and shows the count of
 
-  [  2] .agent-src.uncompressed/commands/council/default.md
+  [  2] .agent-src.uncondensed/commands/council/default.md
       Python-specific: 2
         L 258  /\bpip install\b/  message; tell the user exactly which `pip install` runs
         L 259  /\bpip install\b/  (`pip install anthropic` / `pip install openai`). Do not fall back
 
-  [  1] .agent-src.uncompressed/commands/feature/dev.md
+  [  1] .agent-src.uncondensed/commands/feature/dev.md
       PHP: 1
         L  95  /\bPHPStan\b/  - PHPStan (or equivalent)
 
-  [  4] .agent-src.uncompressed/commands/feature/roadmap.md
+  [  4] .agent-src.uncondensed/commands/feature/roadmap.md
       PHP: 4
         L 100  /\bPHPStan\b/  - [ ] Quality: PHPStan + Rector
         L 209  /\bPHPStan\b/  - **Include quality gates** (PHPStan, Rector, tests) in every phase.
         L 100  /\bRector\b/  - [ ] Quality: PHPStan + Rector
         L 209  /\bRector\b/  - **Include quality gates** (PHPStan, Rector, tests) in every phase.
 
-  [  7] .agent-src.uncompressed/commands/fix/ci.md
+  [  7] .agent-src.uncondensed/commands/fix/ci.md
       Laravel: 1
         L  36  /\bLaravel\b/  - Detect the project type: if `artisan` exists → Laravel, otherwise → Composer (see `rules/docker-commands.md`).
       PHP: 5
@@ -761,18 +761,18 @@
       JS-specific: 1
         L  42  /\bnpm (install|run|test|ci)\b/  - **Biome / TypeScript errors** — run `npm run biome:fix` or `npm run tscheck` and fix.
 
-  [  2] .agent-src.uncompressed/commands/fix/pr-bot-comments.md
+  [  2] .agent-src.uncondensed/commands/fix/pr-bot-comments.md
       PHP: 2
         L  78  /\.php\b/  > **Comment 1/3** — `WorkingTimeService.php:108`
         L  86  /\.php\b/  > **Comment 2/3** — `AbsencePlannerService.php:520`
 
-  [  3] .agent-src.uncompressed/commands/fix/pr-developer-comments.md
+  [  3] .agent-src.uncondensed/commands/fix/pr-developer-comments.md
       PHP: 3
         L  81  /\.php\b/  > **Comment 1/3** — @cjost1988 in `WorkingTimeService.php:108`
         L  89  /\.php\b/  > **Comment 2/3** — @cjost1988 in `AbsencePlannerService.php:520`
         L  97  /\.php\b/  > **Comment 3/3** — @cjost1988 in `KS21Client.php:42`
 
-  [  6] .agent-src.uncompressed/commands/fix/seeder.md
+  [  6] .agent-src.uncondensed/commands/fix/seeder.md
       Laravel: 2
         L  12  /\bdatabase/(migrations|seeders|factories)\b/  trigger_context: "seeder error output or recent edits in database/seeders/"
         L 142  /\bphp artisan\b/  docker compose exec -T <php-service> php artisan db:seed --env=testing
@@ -782,11 +782,11 @@
         L  77  /\.php\b/  If a new exception is truly needed, add it to `.augment/scripts/scan-seeder-violations.php`
         L  87  /\.php\b/  | 1 | material-delivery-bill-catalog-data.php:11 | CategorySeeder::REFERENCE_A | CatalogSeeder |
 
-  [  1] .agent-src.uncompressed/commands/jira-ticket.md
+  [  1] .agent-src.uncondensed/commands/jira-ticket.md
       PHP: 1
         L  59  /\bdeclare\(strict_types=1\)/  - Use `Math` helper for calculations, proper type hints, `declare(strict_types=1)` in new files, etc.
 
-  [  8] .agent-src.uncompressed/commands/module/create.md
+  [  8] .agent-src.uncondensed/commands/module/create.md
       PHP: 8
         L  88  /\bcomposer\.json\b/  // composer.json → autoload → psr-4
         L  60  /\.php\b/  [x] API Routes (Routes/api.php)
@@ -796,7 +796,7 @@
         L  95  /\bcomposer (require|install|update|dump-autoload)\b/  Please run `composer dump-autoload` or check if a wildcard mapping exists.
         ... +2 more
 
-  [  4] .agent-src.uncompressed/commands/module/explore.md
+  [  4] .agent-src.uncondensed/commands/module/explore.md
       Laravel: 1
         L  20  /\bLaravel\b/  - **Laravel projects**: Check if `app/Modules/` exists.
       PHP: 3
@@ -804,7 +804,7 @@
         L  96  /\.php\b/  console.php          {command count} Commands
         L  97  /\.php\b/  web.php              {route count} Routes
 
-  [  4] .agent-src.uncompressed/commands/onboard.md
+  [  4] .agent-src.uncondensed/commands/onboard.md
       PHP: 1
         L 220  /\bcomposer\.json\b/  [ -f composer.json ] && stacks+=("php")
       JS-specific: 1
@@ -813,13 +813,13 @@
         L 224  /\bpyproject\.toml\b/  [ -f pyproject.toml ] || [ -f requirements.txt ] && stacks+=("python")
         L 224  /\brequirements\.txt\b/  [ -f pyproject.toml ] || [ -f requirements.txt ] && stacks+=("python")
 
-  [  2] .agent-src.uncompressed/commands/optimize/agents-dir.md
+  [  2] .agent-src.uncondensed/commands/optimize/agents-dir.md
       PHP: 1
         L  51  /\bcomposer\.json\b/  1. **Verify project root** — look for `composer.json`, `artisan`, or `package.json`.
       JS-specific: 1
         L  51  /\bpackage\.json\b/  1. **Verify project root** — look for `composer.json`, `artisan`, or `package.json`.
 
-  [ 24] .agent-src.uncompressed/commands/optimize/augmentignore.md
+  [ 24] .agent-src.uncondensed/commands/optimize/augmentignore.md
       Laravel: 1
         L  36  /\bLaravel\b/  | `storage/` exists (Laravel) | `storage/logs/`, `storage/framework/cache/`, `storage/framework/sessions/`, `storage/framework/views/` |
       PHP: 12
@@ -841,7 +841,7 @@
         L 130  /\bpackage\.json\b/  | `vue`, `nuxt` | No Vue/Nuxt in package.json |
         ... +4 more
 
-  [ 21] .agent-src.uncompressed/commands/optimize/rtk.md
+  [ 21] .agent-src.uncondensed/commands/optimize/rtk.md
       Laravel: 1
         L  35  /\bArtisan\b/  | `composer.json` contains scripts like `quality:phpstan` | Artisan quality commands |
       PHP: 16
@@ -858,11 +858,11 @@
         L  38  /\bpackage\.json\b/  | `package.json` contains `biome` or `eslint` | JS linter |
         L  39  /\bpackage\.json\b/  | `package.json` contains `typescript` | TypeScript compiler |
 
-  [  1] .agent-src.uncompressed/commands/override/create.md
+  [  1] .agent-src.uncondensed/commands/override/create.md
       Laravel: 1
         L  55  /\bEloquent\b/  > **Summary:** Writes Eloquent models with getter/setter pattern, eager loading, type safety...
 
-  [ 12] .agent-src.uncompressed/commands/package-reset.md
+  [ 12] .agent-src.uncondensed/commands/package-reset.md
       PHP: 6
         L  24  /\bcomposer\.json\b/  Read `composer.json` → `repositories` array. Find entries with `"type": "path"`:
         L  34  /\bcomposer\.json\b/  For each, extract the package name from the local path's `composer.json`.
@@ -878,7 +878,7 @@
         L  39  /\bnode_modules\b/  - Symlinks in `node_modules/` pointing outside the project (via `npm link`)
         L 126  /\bnode_modules\b/  - **npm:** Check `node_modules/{package-name}` is NOT a symlink anymore
 
-  [ 16] .agent-src.uncompressed/commands/package-test.md
+  [ 16] .agent-src.uncondensed/commands/package-test.md
       PHP: 8
         L  20  /\bcomposer\.json\b/  Check the project root for `composer.json` and `package.json`.
         L  40  /\bcomposer\.json\b/  ❌  No composer.json or package.json found in project root. Cannot link a local package.
@@ -896,7 +896,7 @@
         L 119  /\bnpm (install|run|test|ci)\b/  Then: `npm install`
         ... +2 more
 
-  [ 14] .agent-src.uncompressed/commands/project-analyze.md
+  [ 14] .agent-src.uncondensed/commands/project-analyze.md
       Laravel: 4
         L  39  /\bLaravel\b/  🏗️  Framework:  {Laravel 11 / Standalone PHP / etc.}
         L  41  /\bLaravel\b/  📊 Type:       {Modular Laravel SaaS / Monolith / Package / Legacy}
@@ -914,11 +914,11 @@
         L  24  /\bpackage\.json\b/  - `package.json` → Node.js, frontend framework (if exists)
         L 309  /\bnode_modules\b/  - **Do NOT analyze `vendor/` or `node_modules/`.**
 
-  [  1] .agent-src.uncompressed/commands/project-health.md
+  [  1] .agent-src.uncondensed/commands/project-health.md
       PHP: 1
         L  22  /\bcomposer\.json\b/  - `composer.json` → framework, PHP version
 
-  [ 28] .agent-src.uncompressed/commands/quality-fix.md
+  [ 28] .agent-src.uncondensed/commands/quality-fix.md
       Laravel: 2
         L  37  /\bArtisan\b/  - Project ships a `quality:*` wrapper (Artisan or Composer script) → prefer `php artisan quality:phpstan` / `php artisan quality:rector --fix`
         L  37  /\bphp artisan\b/  - Project ships a `quality:*` wrapper (Artisan or Composer script) → prefer `php artisan quality:phpstan` / `php artisan quality:rector --fix`
@@ -936,30 +936,30 @@
         L  87  /\bnpm (install|run|test|ci)\b/  npm run tscheck            # or: npx tsc --noEmit
         L  98  /\bnpm (install|run|test|ci)\b/  npm test
 
-  [  2] .agent-src.uncompressed/commands/roadmap/create.md
+  [  2] .agent-src.uncondensed/commands/roadmap/create.md
       PHP: 2
         L  79  /\bPHPStan\b/  - [ ] All quality gates pass (PHPStan, Rector, tests)
         L  79  /\bRector\b/  - [ ] All quality gates pass (PHPStan, Rector, tests)
 
-  [  2] .agent-src.uncompressed/commands/rule-compliance-audit.md
+  [  2] .agent-src.uncondensed/commands/rule-compliance-audit.md
       Laravel: 1
         L  42  /\bBlade\b(?! Runner)/  - Specific file types or paths (e.g., ".augment/", "Blade views")
       PHP: 1
         L  40  /\bPHPStan\b/  - Specific keywords a user would type (e.g., "PHPStan", "commit", "Docker")
 
-  [  1] .agent-src.uncompressed/commands/sync-agent-settings.md
+  [  1] .agent-src.uncondensed/commands/sync-agent-settings.md
       JS-specific: 1
         L  55  /\bnode_modules\b/  3. `node_modules/@event4u/agent-config/scripts/sync_agent_settings.py` — npm.
 
-  [  1] .agent-src.uncompressed/commands/sync-gitignore/fix.md
+  [  1] .agent-src.uncondensed/commands/sync-gitignore/fix.md
       JS-specific: 1
         L  52  /\bnode_modules\b/  3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.py`
 
-  [  1] .agent-src.uncompressed/commands/sync-gitignore.md
+  [  1] .agent-src.uncondensed/commands/sync-gitignore.md
       JS-specific: 1
         L  68  /\bnode_modules\b/  3. `node_modules/@event4u/agent-config/scripts/sync_gitignore.py` — npm.
 
-  [  8] .agent-src.uncompressed/commands/tests/create.md
+  [  8] .agent-src.uncondensed/commands/tests/create.md
       PHP: 8
         L  20  /\bPest\b(?! Control)/  - Check if **Pest** is installed: look for `pestphp/pest` in `composer.json` or `vendor/bin/pest`.
         L  21  /\bPest\b(?! Control)/  - If Pest is available → write **Pest tests**.
@@ -969,7 +969,7 @@
         L  61  /\bPHPUnit\b/  - Group related tests with `describe` blocks (Pest) or separate test methods (PHPUnit).
         ... +2 more
 
-  [ 11] .agent-src.uncompressed/commands/tests/execute.md
+  [ 11] .agent-src.uncondensed/commands/tests/execute.md
       Laravel: 3
         L  23  /\bLaravel\b/  2. **`artisan` exists** → Laravel project → `php artisan test`
         L  36  /\bArtisan\b/  - Pest/Artisan: `--filter="test name"` or `tests/path/to/TestFile.php`
@@ -983,7 +983,7 @@
         L  25  /\bvendor/bin//  4. **Fallback** → PHPUnit → `vendor/bin/phpunit`
         ... +2 more
 
-  [ 15] .agent-src.uncompressed/commands/update-form-request-messages.md
+  [ 15] .agent-src.uncondensed/commands/update-form-request-messages.md
       Laravel: 7
         L 121  /\bLaravel\b/  - You may use Laravel's standard placeholders (`:attribute`, `:max`, `:min`, etc.) instead of embedding the label directly.
         L   5  /\bFormRequest\b/  description: Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones
@@ -1003,6 +1003,6 @@
       JS-specific: 1
         L 138  /\bnode_modules\b/  2. **Search the relevant source directories** for that exact lang key string, excluding `vendor/` and `node_modules/` (e.g. `grep -r "validation.super_user.user
 
-  [  1] .agent-src.uncompressed/commands/upstream-contribute.md
+  [  1] .agent-src.uncondensed/commands/upstream-contribute.md
       PHP: 1
         L 173  /\bcomposer (require|install|update|dump-autoload)\b/  > composer update event4u/agent-config  # or: npm update

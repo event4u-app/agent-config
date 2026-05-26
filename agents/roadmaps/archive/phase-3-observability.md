@@ -12,7 +12,7 @@ Summary of what was delivered:
 
 * ✅ Observability layer (lint reports, per-file quality, regression detection)
 * ✅ Safe optimization commands (were already safe, verified)
-* ✅ Compression preservation guard (new rule + linter checks)
+* ✅ Condensation preservation guard (new rule + linter checks)
 * ✅ Quality score / review report (per-file breakdown in --report)
 * ✅ Feedback aggregation loop (category tags in pipeline)
 * ❌ Execution memory (intentionally skipped — no runtime consumer)
@@ -26,7 +26,7 @@ Previously identified gaps (now resolved):
 * ~~limited feedback aggregation~~ → category tags in improvement pipeline
 * ~~unsafe or outdated optimize commands~~ → verified safe, synced
 * ~~no quality scoring / trend visibility~~ → per-file quality report + regression delta
-* ~~no strong preservation guard~~ → preservation-guard rule + compression-aware linting
+* ~~no strong preservation guard~~ → preservation-guard rule + condensation-aware linting
 
 ---
 
@@ -36,7 +36,7 @@ Previously identified gaps (now resolved):
 
 1. Observability layer
 2. Safe optimization commands
-3. Compression preservation guard
+3. Condensation preservation guard
 
 ## P1 — Next layer
 
@@ -132,7 +132,7 @@ Convert to:
 
 Must:
 
-* read from `.agent-src.uncompressed/`
+* read from `.agent-src.uncondensed/`
 * respect linter output
 * never weaken automatically
 * produce suggestions only
@@ -148,7 +148,7 @@ Convert to:
 
 Must:
 
-* read from `.agent-src.uncompressed/`
+* read from `.agent-src.uncondensed/`
 * never silently weaken rules
 * never suggest `always -> auto` without explicit proof
 
@@ -167,21 +167,21 @@ Optimize commands can no longer damage the system.
 
 ---
 
-# 3. Add compression preservation guard
+# 3. Add condensation preservation guard
 
 ## Problem
 
-Compression is structurally safer now, but still vulnerable to hidden quality loss.
+Condensation is structurally safer now, but still vulnerable to hidden quality loss.
 
 ## Goal
 
-Ensure compression preserves skill quality, not just file shape.
+Ensure condensation preserves skill quality, not just file shape.
 
 ## Deliverables
 
 ### 3.1 Manual preservation checklist
 
-For compressed output, confirm preservation of:
+For condensed output, confirm preservation of:
 
 * concrete validation
 * strongest example
@@ -204,9 +204,9 @@ Start simple:
 * keyword preservation
 * validation phrase comparison
 
-### 3.3 Compression reject criteria
+### 3.3 Condensation reject criteria
 
-Reject compression if it:
+Reject condensation if it:
 
 * removes concrete validation
 * removes strongest example without replacement
@@ -215,7 +215,7 @@ Reject compression if it:
 
 ## Definition of done
 
-Compressed skills remain as strong as source skills.
+Condensed skills remain as strong as source skills.
 
 ---
 
@@ -239,7 +239,7 @@ For each skill/rule:
 * validation: strong/weak
 * scope: focused/broad
 * guideline dependency: low/medium/high
-* compression risk: low/medium/high
+* condensation risk: low/medium/high
 
 ### 4.2 Repo-level report
 
@@ -325,7 +325,7 @@ Examples:
 * last changed skills
 * most failing checks
 * recently promoted learnings
-* recent risky merges/compressions
+* recent risky merges/condensations
 
 This can be:
 
@@ -368,8 +368,8 @@ Reviewers can understand quality impact quickly without opening raw artifacts.
 
 ## Phase 3B — Quality preservation
 
-4. Add compression preservation checklist
-5. Extend pair-check / compression comparison
+4. Add condensation preservation checklist
+5. Extend pair-check / condensation comparison
 
 ## Phase 3C — Intelligence layer
 
@@ -389,7 +389,7 @@ Phase 3 is complete when:
 
 * optimize commands are safe
 * quality trends are visible
-* compression cannot silently weaken skills
+* condensation cannot silently weaken skills
 * repeated feedback becomes structured improvement
 * CI outputs are useful, not just pass/fail
 * the package evolves safely with less manual detective work

@@ -130,7 +130,7 @@ roadmap reintroduces a capture-and-paste cycle for a new platform.
 python3 -m pytest tests/ -q                       # delta to baseline 127
 python3 -m pytest tests/hooks/ -q                 # must stay 59 passed
 python3 scripts/lint_hook_manifest.py             # exit 0
-python3 scripts/check_compression.py              # exit 0
+python3 scripts/check_condensation.py              # exit 0
 python3 scripts/check_references.py               # exit 0
 python3 scripts/check_portability.py              # exit 0
 python3 scripts/skill_linter.py --all             # 0 fail

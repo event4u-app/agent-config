@@ -6,7 +6,7 @@ Produces:
   * docs/contracts/file-ownership-matrix.json (machine, internal-locked)
   * agents/settings/contexts/structural/file-ownership-matrix.md (human-readable)
 
-Walks `.agent-src.uncompressed/{rules,skills,commands,contexts,personas}/`,
+Walks `.agent-src.uncondensed/{rules,skills,commands,contexts,personas}/`,
 parses frontmatter for `load_context:` / `load_context_eager:`, scans
 markdown bodies for inline links to `.md` files inside the scanned roots,
 and emits READ_ONLY edges plus depth-2 transitive closure of load_context
@@ -39,10 +39,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from _lib.agent_src import artefact_roots, resolve_logical, strip_source_prefix  # noqa: E402
 
 # Canonical anchor used in the committed matrix. Paths are always
-# emitted as ".agent-src.uncompressed/<sub>/<...>" regardless of which
+# emitted as ".agent-src.uncondensed/<sub>/<...>" regardless of which
 # physical root (legacy or packages/*) contains the file, so the matrix
 # stays stable across the monorepo migration.
-CANONICAL_SRC_PREFIX = ".agent-src.uncompressed"
+CANONICAL_SRC_PREFIX = ".agent-src.uncondensed"
 
 SCAN_DIRS = ("rules", "skills", "commands", "contexts", "personas")
 
@@ -76,7 +76,7 @@ def _rel(p: Path) -> str:
 
 def _kind_for(rel: str) -> str:
     parts = rel.split("/")
-    if len(parts) >= 3 and parts[0] == ".agent-src.uncompressed":
+    if len(parts) >= 3 and parts[0] == ".agent-src.uncondensed":
         return parts[1].rstrip("s") if parts[1] != "personas" else "persona"
     return "unknown"
 
@@ -98,7 +98,7 @@ def _parse_frontmatter(p: Path) -> dict:
 def _collect_files(root: Path | None = None) -> list[tuple[Path, str]]:
     """Walk every artefact root and yield ``(physical_path, canonical_rel)``.
 
-    ``canonical_rel`` is always anchored at ``.agent-src.uncompressed/`` so
+    ``canonical_rel`` is always anchored at ``.agent-src.uncondensed/`` so
     the matrix is byte-identical pre- and post-monorepo-move. Duplicates
     across roots resolve to the first hit (legacy first, then packages
     alphabetically) — matches the priority in ``artefact_roots()``.
@@ -212,17 +212,17 @@ def build_matrix(root: Path | None = None) -> tuple[dict[str, FileEntry], list[E
 def _resolve_link(source_rel: str, source_phys: Path, href: str) -> str | None:
     """Resolve a markdown link href to a canonical scanned-root path, or None.
 
-    ``source_rel`` is the canonical (``.agent-src.uncompressed/...``)
+    ``source_rel`` is the canonical (``.agent-src.uncondensed/...``)
     identity of the source file. Relative hrefs are resolved against
     the source's *logical* directory, then looked up across every
     artefact root via :func:`resolve_logical`. This keeps the matrix
     stable when source and target live in different physical packages.
 
     Repo-rooted hrefs (``agents/...``, ``packages/...``, or those
-    starting with ``.agent-src.uncompressed/``) are resolved against
+    starting with ``.agent-src.uncondensed/``) are resolved against
     the repo root and normalised through :func:`strip_source_prefix`.
     """
-    if href.startswith(".agent-src.uncompressed/") or href.startswith("agents/") \
+    if href.startswith(".agent-src.uncondensed/") or href.startswith("agents/") \
             or href.startswith("packages/"):
         cand = (ROOT / href).resolve()
         if not cand.exists():
@@ -267,7 +267,7 @@ def _to_json(files: dict[str, FileEntry], edges: list[Edge]) -> dict:
     return {
         "version": 1,
         "generated_by": "scripts/generate_ownership_matrix.py",
-        "source_of_truth": ".agent-src.uncompressed/",
+        "source_of_truth": ".agent-src.uncondensed/",
         "files": {
             rel: {
                 "kind": e.kind,
@@ -342,7 +342,7 @@ def main(argv: Iterable[str] | None = None) -> int:
     args = ap.parse_args(list(argv) if argv is not None else None)
 
     if not artefact_roots():
-        print("❌  no artefact roots found (legacy or packages/*/.agent-src.uncompressed/)",
+        print("❌  no artefact roots found (legacy or packages/*/.agent-src.uncondensed/)",
               file=sys.stderr)
         return 3
 

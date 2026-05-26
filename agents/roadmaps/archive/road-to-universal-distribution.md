@@ -10,8 +10,8 @@
 - [ ] Read [`docs/architecture.md`](../../docs/architecture.md) — distribution model
 - [ ] Read [`agents/evidence/analysis/compare-anthropics-skills.md`](../analysis/compare-anthropics-skills.md) — prior reference analysis (mentions Plugin Marketplace as adoption candidate)
 - [ ] Read [`scripts/audit_cloud_compatibility.py`](../../scripts/audit_cloud_compatibility.py) — the tier-classification tool that produced the Phase 0 numbers below
-- [ ] Re-read [`.agent-src.uncompressed/templates/roadmaps.md`](../../.agent-src.uncompressed/templates/roadmaps.md)
-- [ ] Skim [`.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md`](../../.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md) — how docs propagate across `.augment/`, `.claude/`, `.cursor/`, etc.
+- [ ] Re-read [`.agent-src.uncondensed/templates/roadmaps.md`](../../.agent-src.uncondensed/templates/roadmaps.md)
+- [ ] Skim [`.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md`](../../.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md) — how docs propagate across `.augment/`, `.claude/`, `.cursor/`, etc.
 - [ ] Inventory current consumer-facing tools: `scripts/install.sh`, `scripts/install.py`, `Taskfile.yml` (especially `generate-tools`, `ci`)
 
 ## Context
@@ -37,7 +37,7 @@ Output of `python3 scripts/audit_cloud_compatibility.py` (292 artefacts in scope
 |---|---|
 | `rules/chat-history.md` | Persistence contract is `scripts/chat_history.py`-only |
 | `commands/chat-history.md`, `chat-history-clear.md`, `chat-history-resume.md` | Front ends for the same script |
-| `skills/command-writing/SKILL.md` | Calls compress + skill-linter at the end |
+| `skills/command-writing/SKILL.md` | Calls condense + skill-linter at the end |
 | `skills/rule-writing/SKILL.md` | Same |
 | `skills/guideline-writing/SKILL.md` | Same |
 | `skills/description-assist/SKILL.md` | `scripts/skill_trigger_eval.py` is the gate |
@@ -80,7 +80,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 **Anthropic Skills API & Claude.ai Web** (treat as one — same skill format).
 
 - ✅ T1: ships as-is in a per-skill ZIP.
-- ✅ T2: the sandbox provides a writable filesystem; the agent can scaffold under `/mnt/skill_output/`. Where today's prose says "edit `.agent-src.uncompressed/...`", we need a header that swaps to "in this session's sandbox, work under `/mnt/...`".
+- ✅ T2: the sandbox provides a writable filesystem; the agent can scaffold under `/mnt/skill_output/`. Where today's prose says "edit `.agent-src.uncondensed/...`", we need a header that swaps to "in this session's sandbox, work under `/mnt/...`".
 - ✅ T3-S: degrades automatically once the optional script call is gated by an "if available" wrapper.
 - ❌ **T3-H (8 files):** must either (a) ship a cloud-degraded variant, (b) declare the skill local-only with a clear pointer, or (c) bundle a sandbox-runnable copy of the script. chat-history specifically is moot on cloud — no persistence — so **(b) noop on cloud** is the right answer. Authoring skills (4) can ship **(a) "agent does the linter check by reading the rules instead"**.
 - ❌ Description budget: Claude.ai Web caps frontmatter `description` at 200 characters; the spec allows 1024. Several of our skill descriptions are >200 chars. Linter must enforce a tighter cap when building the cloud bundle.
@@ -100,7 +100,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 - [x] **Step 1:** Spec `scripts/build_cloud_bundle.py` — inputs (`.agent-src/skills/`), outputs (`dist/cloud/<skill-name>.zip` per skill), shape (`SKILL.md` + optional `scripts/`, `references/`, `assets/`)
 - [x] **Step 2:** Implement description-budget enforcer (truncate / refuse if frontmatter `description` > 200 chars on cloud bundle path; raise lint error on the source if > 1024 chars)
 - [x] **Step 3:** Implement T3-H gating — read tier from `audit_cloud_compatibility.py`, **skip** T3-H skills with an explicit log line; emit them only when Phase 2's cloud-degraded variants exist
-- [x] **Step 4:** Implement sandbox path-swap — replace literal `.agent-src.uncompressed/`, `.agent-src/`, `agents/` mentions with sandbox equivalents only inside generated bundles, not in source
+- [x] **Step 4:** Implement sandbox path-swap — replace literal `.agent-src.uncondensed/`, `.agent-src/`, `agents/` mentions with sandbox equivalents only inside generated bundles, not in source
 - [x] **Step 5:** Add `task build-cloud-bundle` (single skill) and `task build-cloud-bundles-all` (full set), plus `task ci-cloud-bundle` to fail when source breaks the cloud invariants
 - [x] **Step 6:** Pytest suite: `tests/test_build_cloud_bundle.py` — fixture skill round-trips, description-budget enforcement, T3-H exclusion, sandbox path-swap correctness
 - [~] **Step 7:** Manual smoke — protocol drafted at [`agents/runtime/reports/cloud-bundle-smoke.md`](../reports/cloud-bundle-smoke.md); awaiting real upload to Claude.ai Web + screenshots
@@ -112,11 +112,11 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 
 - [x] **Step 1:** `chat-history` — add a `Cloud Behavior` section to `rules/chat-history.md`: "On platforms without persistent filesystem, this rule is fully inert. Iron Law turn-check / append / heartbeat are skipped. Settings.enabled is treated as false." Mirror it in the three commands.
 - [x] **Step 2:** Wire a runtime detection hint — add a `cloud_safe: noop` frontmatter field (or equivalent comment in the body, since `agent-skills.io` frontmatter is fixed) so `build_cloud_bundle.py` knows to ship a stripped variant
-- [x] **Step 3:** `command-writing` — replace the closing "run `bash scripts/compress.sh` + `python3 scripts/skill_linter.py`" block with a cloud-aware fallback: "On cloud, the agent verifies the new command by **re-reading** the relevant rules (frontmatter shape, size budget, numbered-options compliance) and emits a self-review block instead of running the linter."
+- [x] **Step 3:** `command-writing` — replace the closing "run `bash scripts/condense.sh` + `python3 scripts/skill_linter.py`" block with a cloud-aware fallback: "On cloud, the agent verifies the new command by **re-reading** the relevant rules (frontmatter shape, size budget, numbered-options compliance) and emits a self-review block instead of running the linter."
 - [x] **Step 4:** Same change for `rule-writing/SKILL.md`, `guideline-writing/SKILL.md`
 - [x] **Step 5:** `description-assist` — the trigger-eval loop is genuinely script-only (it samples user prompts and measures activation); cloud variant: skill emits its **prompts list and rubric** so the user can run the eval manually or off-platform, and the skill collects the user-pasted results
 - [x] **Step 6:** Re-run audit — `python3 scripts/audit_cloud_compatibility.py` should now show **0** T3-H artefacts after Phase 2 (variants make them T3-S or T2)
-- [x] **Step 7:** Add a regression test asserting T3-H count is 0 going forward (similar to `test_agent_src_uncompressed_clean` for legacy tags)
+- [x] **Step 7:** Add a regression test asserting T3-H count is 0 going forward (similar to `test_agent_src_uncondensed_clean` for legacy tags)
 
 ## Phase 3: Linear AI — Rules Digest Distribution
 
@@ -147,7 +147,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 - [x] **Step 2:** Document the four install paths — local, Claude Code plugin, Claude.ai Web, Linear AI. Landed in `docs/installation.md` (canonical install reference) with one section per path; README's compact at-a-glance tables (`Project-installed`, `Plugin-installed`, `Cloud / Hosted-agent surfaces`) link into them. Claude Code subsection now shows both CLI (`claude plugin install …`) and in-Agent slash-command (`/plugin marketplace add event4u-app/agent-config` → `/plugin install …`) per the plan-sketch's literal wording. New cloud section covers Claude.ai Web (`task build-cloud-bundles-all` → upload ZIP via Skills UI) and Linear AI (`task build-linear-digest` → paste three layers into Linear's Agents settings) with concrete steps and per-layer rationale links. Screenshots deferred — `agents/runtime/reports/` capture requires manual UI walkthrough; the prose steps are self-sufficient. `check-refs` ✅ · `check-portability` ✅ · `lint-readme` ✅.
 - [x] **Step 3:** GitHub Actions workflow `cloud-release.yml` — on tag push (`[0-9]+.[0-9]+.[0-9]+` + pre-release suffix, mirrors `publish-npm.yml` / `release-guard.yml`) or `workflow_dispatch` with explicit `tag` input. Builds all cloud bundles via `python3 scripts/build_cloud_bundle.py --all --clean` (asserts ≥ 1 ZIP produced; locally 125 bundles built · 0 skipped) and the Linear digest via `python3 scripts/build_linear_digest.py --strict-missing` (asserts all three layers present: workspace · team · personal; locally 18 + 4 + 0 rules). Stages per-skill ZIPs alongside two combined tarballs (`cloud-bundles-<tag>.tar.gz`, `linear-digest-<tag>.tar.gz`) plus the three Linear layer `.md` files; uploads via `actions/upload-artifact@v4` (30-day retention, debug fallback) and attaches to the GitHub Release via `softprops/action-gh-release@v2` with `fail_on_unmatched_files: true`. Purely additive — does not tag, bump, or publish to package registries; companion to `publish-npm.yml` on the same tag triggers. `permissions: contents: write` only on the release-attach step. YAML syntax ✅ · local dry-runs ✅ · `check-refs` ✅ · `check-portability` ✅. End-to-end verification deferred to first real tag push (next release run).
 - [~] **Step 4:** Confirm the Claude Code plugin path works end-to-end on a clean test repo. Mechanical simulation landed (fresh-clone resolve of all 196 manifest paths ✅ · all 196 SKILL.md files have valid frontmatter with `name` + `description` ✅ · marketplace.json schema matches Anthropic shape: `name` / `owner.{name,email}` / `plugins[].{name,source,strict,description,skills}` / `metadata.{description,version}` ✅ · `task lint-marketplace` ✅). Deferred to manual UI walkthrough — same hold pattern as Phase 1 Step 7 / Phase 4 Step 5: `/plugin marketplace add event4u-app/agent-config` → `/plugin install agent-config@event4u-agent-config` → trigger-smoke (e.g. "write a Pest test" → `pest-testing` activates) inside a real Claude Code session. Re-check together with the other deferred manual smokes after sibling roadmaps archive.
-- [x] **Step 5:** Wire `task ci` to also run the cloud-bundle build and the Linear digest build in dry-run mode, so source-breaking changes fail PR checks. Local `task ci` already chained both (`ci-cloud-bundle` → `python3 scripts/build_cloud_bundle.py --check`, `ci-linear-digest` → `python3 scripts/build_linear_digest.py --strict-missing`); the gap was that no PR-time GitHub Actions workflow ran them. Extended `.github/workflows/consistency.yml` to add three steps after the compression check: `task lint-marketplace`, `task ci-cloud-bundle`, `task ci-linear-digest`. Also widened the workflow's path triggers to include `scripts/build_cloud_bundle.py`, `scripts/build_linear_digest.py`, `scripts/lint_marketplace.py`, and `.claude-plugin/marketplace.json` so changes to those source files actually trigger the gates. Local smoke: `task lint-marketplace` ✅ (196 skills, no issues) · `task ci-cloud-bundle` ✅ (125 built, 0 skipped) · `task ci-linear-digest` ✅ (workspace 18 rules · team 4 · personal 0, all under budget). YAML syntax valid · `check-refs` ✅ · `check-portability` ✅.
+- [x] **Step 5:** Wire `task ci` to also run the cloud-bundle build and the Linear digest build in dry-run mode, so source-breaking changes fail PR checks. Local `task ci` already chained both (`ci-cloud-bundle` → `python3 scripts/build_cloud_bundle.py --check`, `ci-linear-digest` → `python3 scripts/build_linear_digest.py --strict-missing`); the gap was that no PR-time GitHub Actions workflow ran them. Extended `.github/workflows/consistency.yml` to add three steps after the condensation check: `task lint-marketplace`, `task ci-cloud-bundle`, `task ci-linear-digest`. Also widened the workflow's path triggers to include `scripts/build_cloud_bundle.py`, `scripts/build_linear_digest.py`, `scripts/lint_marketplace.py`, and `.claude-plugin/marketplace.json` so changes to those source files actually trigger the gates. Local smoke: `task lint-marketplace` ✅ (196 skills, no issues) · `task ci-cloud-bundle` ✅ (125 built, 0 skipped) · `task ci-linear-digest` ✅ (workspace 18 rules · team 4 · personal 0, all under budget). YAML syntax valid · `check-refs` ✅ · `check-portability` ✅.
 
 ## Phase 6: Telemetry & Validation
 
@@ -181,7 +181,7 @@ T3-S is the **manageable** tier — 37 files mention scripts, but the underlying
 
 ## Notes
 
-- This roadmap describes work, not releases. No version numbers, no tags. Per [`scope-control`](../../.agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated).
+- This roadmap describes work, not releases. No version numbers, no tags. Per [`scope-control`](../../.agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated).
 - The audit script (`scripts/audit_cloud_compatibility.py`) is permanent — re-run before every cloud-bundle release to catch regressions.
 - chat-history's "noop on cloud" is the cleanest hard-dep resolution we have. Other potential hard deps in future skills should aim for the same shape: declare cloud-inertness, don't ship a half-broken variant.
 - All work runs on the current branch (`feat/intent-based-development-thinking`) unless the user explicitly requests a separate branch. No mid-roadmap branch switches.

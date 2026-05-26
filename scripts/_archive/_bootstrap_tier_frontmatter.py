@@ -3,7 +3,7 @@
 
 Per Phase 4 Step 3 of `agents/roadmaps/road-to-distribution-maturity.md`.
 
-Walks `.agent-src.uncompressed/commands/**.md`. For each file:
+Walks `.agent-src.uncondensed/commands/**.md`. For each file:
 
 - Tier-0 promotions match TIER_0 below — typed by hand.
 - Tier-1 promotions match TIER_1 below — typed by hand.
@@ -21,7 +21,7 @@ from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 COMMANDS_DIRS = (
-    REPO_ROOT / ".agent-src.uncompressed" / "commands",
+    REPO_ROOT / ".agent-src.uncondensed" / "commands",
     REPO_ROOT / ".agent-src" / "commands",
 )
 
@@ -57,7 +57,7 @@ TIER_1 = {
     "bug-fix.md",
     "bug-investigate.md",
     "jira-ticket.md",
-    "compress.md",
+    "condense.md",
     "mode.md",
     "project-analyze.md",
     "project-health.md",

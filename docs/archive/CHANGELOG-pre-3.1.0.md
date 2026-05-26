@@ -76,7 +76,7 @@
 
 ### Bug Fixes
 
-* **ci:** sync compressed outputs (fetch description, failure-modes heading, agent-settings code block) ([6bb9b36](https://github.com/event4u-app/agent-config/commit/6bb9b363a46310ffe32d1859ed356eaf0cbd6b18))
+* **ci:** sync condensed outputs (fetch description, failure-modes heading, agent-settings code block) ([6bb9b36](https://github.com/event4u-app/agent-config/commit/6bb9b363a46310ffe32d1859ed356eaf0cbd6b18))
 * **ci:** propagate path refactor into .agent-src/, trim ghostwriter description ([2747288](https://github.com/event4u-app/agent-config/commit/2747288b62ee4135d5f5459d2864f3a8fe0ce97a))
 * **ui:** surface field errors on wizard step nav and toggle/radio inputs ([3abd156](https://github.com/event4u-app/agent-config/commit/3abd1560691397a4bfbf85f1279b6f9146513418))
 * **roadmaps:** update wizard-install-py-wiring parent link to archive path ([a40ae6e](https://github.com/event4u-app/agent-config/commit/a40ae6e2da01e2b96120af3fe87f2a787dc9b076))
@@ -147,7 +147,7 @@
 * **roadmap:** archive completed convergence roadmap ([9b5f9fe](https://github.com/event4u-app/agent-config/commit/9b5f9fe7ee86f5c6415c77589cba716ee0d73ca3))
 * **policy:** add project-local TypeScript-first engineering policy ([9b4f0b8](https://github.com/event4u-app/agent-config/commit/9b4f0b85734d4ec6e73cd1cf361fd880bd7614f9))
 * **rules:** add pre-PR freshness gate to prevent stale-base conflicts ([c913a7f](https://github.com/event4u-app/agent-config/commit/c913a7fa3ab78bbb090c4203e3d291063a90be57))
-* **sync:** regenerate compressed mirrors + hashes for trimmed descriptions ([fe8c7c2](https://github.com/event4u-app/agent-config/commit/fe8c7c23e9127a5031ece5b0f85e68dcbde59c2a))
+* **sync:** regenerate condensed mirrors + hashes for trimmed descriptions ([fe8c7c2](https://github.com/event4u-app/agent-config/commit/fe8c7c23e9127a5031ece5b0f85e68dcbde59c2a))
 * **rules:** trim 4 over-budget rule descriptions to ≤150 chars ([326f7d1](https://github.com/event4u-app/agent-config/commit/326f7d1f68d1fd2e438d1e6d5caf7c0b2ddc09dc))
 * **ownership:** regenerate file-ownership matrix ([aaabe42](https://github.com/event4u-app/agent-config/commit/aaabe4220edebea9f52185bf9322893cb5540f6c))
 * **lint:** allowlist 2 pre-existing multi-stack enumerations ([e192281](https://github.com/event4u-app/agent-config/commit/e1922817e251aeb2b9fd0e47735b93ca08fb26ad))

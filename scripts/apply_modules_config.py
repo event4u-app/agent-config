@@ -135,7 +135,7 @@ def _resolve_template_path() -> Path | None:
     src = resolve_logical(TEMPLATE_LOGICAL)
     if src is not None and src.is_file():
         return src
-    fallback = REPO_ROOT / ".agent-src.uncompressed" / TEMPLATE_LOGICAL
+    fallback = REPO_ROOT / ".agent-src.uncondensed" / TEMPLATE_LOGICAL
     if fallback.is_file():
         return fallback
     return None

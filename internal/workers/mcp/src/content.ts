@@ -1,7 +1,7 @@
 /**
  * Bundled content loader.
  *
- * The Worker bundle inlines `content.json` (uncompressed, schema_version 1)
+ * The Worker bundle inlines `content.json` (uncondensed, schema_version 1)
  * at deploy time via `wrangler deploy`. R2 holds the gzipped archival copy
  * (Phase 3.4) but the Worker never fetches it at runtime — the bundle
  * IS the truth, per `mcp-cloud-scope.md` §3.3.

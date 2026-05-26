@@ -148,18 +148,18 @@ def test_consumer_expected_entries_minimal_set() -> None:
     )
 
 
-def test_is_source_repo_detects_root_uncompressed(tmp_path: Path) -> None:
-    (tmp_path / ".agent-src.uncompressed").mkdir()
+def test_is_source_repo_detects_root_uncondensed(tmp_path: Path) -> None:
+    (tmp_path / ".agent-src.uncondensed").mkdir()
     assert is_source_repo(tmp_path) is True
 
 
-def test_is_source_repo_detects_root_compressed(tmp_path: Path) -> None:
+def test_is_source_repo_detects_root_condensed(tmp_path: Path) -> None:
     (tmp_path / ".agent-src").mkdir()
     assert is_source_repo(tmp_path) is True
 
 
-def test_is_source_repo_detects_pack_uncompressed(tmp_path: Path) -> None:
-    (tmp_path / "packages" / "core" / ".agent-src.uncompressed").mkdir(parents=True)
+def test_is_source_repo_detects_pack_uncondensed(tmp_path: Path) -> None:
+    (tmp_path / "packages" / "core" / ".agent-src.uncondensed").mkdir(parents=True)
     assert is_source_repo(tmp_path) is True
 
 

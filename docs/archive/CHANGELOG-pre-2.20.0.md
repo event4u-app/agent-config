@@ -36,7 +36,7 @@
 
 * **adr:** drop transient roadmap links from user-types axis ADR ([e8d30fe](https://github.com/event4u-app/agent-config/commit/e8d30fe80c2d0b87406571b2c3dbbdd031312998))
 * **contracts:** clamp user-type beta-review markers to 90-day window ([25af8cc](https://github.com/event4u-app/agent-config/commit/25af8ccd650d6ea304f5060ebb55c2d034d746a2))
-* **refine-ticket:** sync compressed SKILL.md with --user-type persona-voice bullet ([14b9dcd](https://github.com/event4u-app/agent-config/commit/14b9dcdab69f063e1dcfc8d9070892b4d56305b1))
+* **refine-ticket:** sync condensed SKILL.md with --user-type persona-voice bullet ([14b9dcd](https://github.com/event4u-app/agent-config/commit/14b9dcdab69f063e1dcfc8d9070892b4d56305b1))
 * **refs:** inline AI Council Phase 4 convergence summary ([0e6a578](https://github.com/event4u-app/agent-config/commit/0e6a5780773fbabba6f98a01bd4b25726c996903))
 * **adr:** drop transient roadmap links from MCP runtime ADR ([8f2691e](https://github.com/event4u-app/agent-config/commit/8f2691e90130a9333bd9e01d0863ecb0c9f7ec97))
 * **template:** bump agent_config_version pin to 2.18.0 ([dd7441d](https://github.com/event4u-app/agent-config/commit/dd7441d2fc0fd785a70272b6520eb0eb29a61a66))
@@ -146,7 +146,7 @@ Tests: 4476 (+17 since 2.17.0)
 
 * **scripts:** draft update-github-metadata.sh (step-12 P6 L113) ([2a2c5c2](https://github.com/event4u-app/agent-config/commit/2a2c5c20cadb4ba653a5660797b28add7dfc43a6))
 * **index:** regen index + catalog after description trimming ([f4915e4](https://github.com/event4u-app/agent-config/commit/f4915e47172a7b4482a5440f17d543072c90c303))
-* **compression:** propagate trimmed descriptions to .agent-src + hashes ([0a9352d](https://github.com/event4u-app/agent-config/commit/0a9352d7d20856301746a5839d25e2d52398920b))
+* **condensation:** propagate trimmed descriptions to .agent-src + hashes ([0a9352d](https://github.com/event4u-app/agent-config/commit/0a9352d7d20856301746a5839d25e2d52398920b))
 * **ownership:** regen file-ownership matrix ([bc13dd2](https://github.com/event4u-app/agent-config/commit/bc13dd2fe67d5c571f05964b84702cb6d7b193c2))
 * **index:** regen agents/index.md + docs/catalog.md ([20fefb0](https://github.com/event4u-app/agent-config/commit/20fefb043a25034a715cb7e76ec6174831357061))
 * **roadmaps:** step-12 phases 3 / 5 / 6 done + regen dashboard ([f07a0b1](https://github.com/event4u-app/agent-config/commit/f07a0b15cbe784eb17b9b75d06cae91e726b08f8))

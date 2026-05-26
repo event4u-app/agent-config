@@ -4,18 +4,18 @@ Reference guideline for Wing-1 deep-thinking work — Carl Jacobi's
 "invert, always invert" applied to **decisions and arguments**, not
 diffs. The pre-mortem on a strategy, an argument, or a written plan;
 distinct from
-[`adversarial-review`](../../../.agent-src.uncompressed/skills/adversarial-review/SKILL.md)
+[`adversarial-review`](../../../.agent-src.uncondensed/skills/adversarial-review/SKILL.md)
 which stress-tests **diffs**. Adopted under the **Reference-Guideline
 Sunset Policy** (see frontmatter `upstream` / `refresh_trigger` keys)
 and cross-referenced from:
 
-- [`refine-prompt`](../../../.agent-src.uncompressed/skills/refine-prompt/SKILL.md)
+- [`refine-prompt`](../../../.agent-src.uncondensed/skills/refine-prompt/SKILL.md)
   — pre-mortem on a free-form prompt before planning.
-- [`refine-ticket`](../../../.agent-src.uncompressed/skills/refine-ticket/SKILL.md)
+- [`refine-ticket`](../../../.agent-src.uncondensed/skills/refine-ticket/SKILL.md)
   — pre-mortem on a Jira / Linear ticket before estimation.
-- [`threat-modeling`](../../../.agent-src.uncompressed/skills/threat-modeling/SKILL.md)
+- [`threat-modeling`](../../../.agent-src.uncondensed/skills/threat-modeling/SKILL.md)
   — abuse-case generation pairs with goal inversion.
-- [`improve-before-implement`](../../../.agent-src.uncompressed/rules/improve-before-implement.md)
+- [`improve-before-implement`](../../../.agent-src.uncondensed/rules/improve-before-implement.md)
   — challenge weak requirements before writing code.
 
 > **Core principle:** "Invert, always invert." — Carl Jacobi

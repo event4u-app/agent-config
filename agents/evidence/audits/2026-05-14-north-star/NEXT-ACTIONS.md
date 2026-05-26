@@ -43,11 +43,11 @@ After renames + new drafts:
 
 See [`council-synthesis.md § 8`](council-synthesis.md). G0–G4 all green = v3.0.0 ship.
 
-## Pending — compression decision (criterion-deferred)
+## Pending — condensation decision (criterion-deferred)
 
 Per [`council-synthesis.md § 7`](council-synthesis.md):
 
-- Until `task bench` exists: `caveman.speak_scope` stays default `off`.
+- Until `task bench` exists: `telegraph.speak_scope` stays default `off`.
 - After 60-day baseline:
   - measured saving < 30 % → **deprecate** the feature (Opus reasoning)
   - measured saving ≥ 30 % + <5 % quality regression → **flip default on** with carve-outs
@@ -58,7 +58,7 @@ Bound to step-4 completion. Don't decide before then.
 
 1. Runtime stop-hook approach (CLI vs native-hook vs none) — decide during step-3 (ai-council-consolidation).
 2. `AGENT: <slug>` marker contract — decide during step-3.
-3. Default-on caveman — decide at step-4 closeout (see above).
+3. Default-on telegraph — decide at step-4 closeout (see above).
 
 ## When this file gets deleted
 

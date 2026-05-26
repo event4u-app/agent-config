@@ -43,7 +43,7 @@ This roadmap does **not**:
 - Teach vulnerability exploitation, only detection + remediation
 - Replace `security` / `security-audit` / `bug-analyzer` — it **complements** them
 - Rewrite existing skills (that is [`road-to-stronger-skills.md`](road-to-stronger-skills.md))
-- Add project-specific knowledge into `.agent-src.uncompressed/` — knowledge
+- Add project-specific knowledge into `.agent-src.uncondensed/` — knowledge
   belongs in consumer `agents/settings/contexts/` (templates ship from the package)
 
 ## Offensive-capability guardrail
@@ -89,7 +89,7 @@ stack-specific examples in parentheses.
 | `multi-tenant-boundary-review` | "the tenant-scoping mechanism" | `BelongsToTenant` trait · `tenant_id` global scope · row-level security · schema-per-tenant |
 | `secure-laravel-architecture` | **stack-gated** — frontmatter `stacks: [laravel]` | — (only activates in Laravel projects) |
 
-Knowledge-layer content stays **out** of `.agent-src.uncompressed/`. It ships
+Knowledge-layer content stays **out** of `.agent-src.uncondensed/`. It ships
 as **templates** under the future `templates/contexts/` directory (files such
 as *auth-model*, *tenant-boundaries*, *data-sensitivity*) that consumers fill
 in their own `agents/settings/contexts/` — created in Wave 3, not yet on disk.
@@ -110,7 +110,7 @@ in their own `agents/settings/contexts/` — created in Wave 3, not yet on disk.
 
 The roadmap is **done** when:
 
-1. All 13 new skills + 3 new rules exist in `.agent-src.uncompressed/`
+1. All 13 new skills + 3 new rules exist in `.agent-src.uncondensed/`
 2. Each new skill scores ≥ tier target on `scripts/measure_patterns.py` on first commit
    (Tier-1 review skills → 8/8; Tier-2 analysis skills → 4/4)
 3. `security`, `security-audit`, `bug-analyzer` have updated `## Do NOT use when` sections routing to the new siblings
@@ -180,7 +180,7 @@ These ship **between Wave phases** when a real gap shows up before the next wave
 
 - Ownership-map + historical-bug-patterns YAML files are optional — missing files produce a neutral report, not an error
 - Break-glass never auto-activates — requires explicit user flag (`break-glass: true`, "hotfix") and a documented follow-up commitment
-- `task ci` green after integration (sync · compression · refs · portability · skill-lint · tests · readme)
+- `task ci` green after integration (sync · condensation · refs · portability · skill-lint · tests · readme)
 
 ## Wave 2 — Sehr wertvoll (Review Depth)
 
@@ -220,17 +220,17 @@ into the shared package.
 
 ### 3.2 — Knowledge-layer templates
 
-Ship in `.agent-src.uncompressed/templates/contexts/`:
+Ship in `.agent-src.uncondensed/templates/contexts/`:
 
-- [x] `auth-model.md` — roles, permissions, override/impersonation rules *(2026-04-22: [`templates/contexts/auth-model.md`](../../.agent-src.uncompressed/templates/contexts/auth-model.md))*
-- [x] `tenant-boundaries.md` — tenancy type, scope propagation, known exceptions *(2026-04-22: [`templates/contexts/tenant-boundaries.md`](../../.agent-src.uncompressed/templates/contexts/tenant-boundaries.md))*
-- [x] `data-sensitivity.md` — field classification, masking rules, log-safe types *(2026-04-22: [`templates/contexts/data-sensitivity.md`](../../.agent-src.uncompressed/templates/contexts/data-sensitivity.md))*
-- [x] `deployment-order.md` — migration/deploy staging, rollback plan, feature flags *(2026-04-22: [`templates/contexts/deployment-order.md`](../../.agent-src.uncompressed/templates/contexts/deployment-order.md))*
-- [x] `observability.md` — Sentry scopes, log channels, known alerts *(2026-04-22: [`templates/contexts/observability.md`](../../.agent-src.uncompressed/templates/contexts/observability.md))*
+- [x] `auth-model.md` — roles, permissions, override/impersonation rules *(2026-04-22: [`templates/contexts/auth-model.md`](../../.agent-src.uncondensed/templates/contexts/auth-model.md))*
+- [x] `tenant-boundaries.md` — tenancy type, scope propagation, known exceptions *(2026-04-22: [`templates/contexts/tenant-boundaries.md`](../../.agent-src.uncondensed/templates/contexts/tenant-boundaries.md))*
+- [x] `data-sensitivity.md` — field classification, masking rules, log-safe types *(2026-04-22: [`templates/contexts/data-sensitivity.md`](../../.agent-src.uncondensed/templates/contexts/data-sensitivity.md))*
+- [x] `deployment-order.md` — migration/deploy staging, rollback plan, feature flags *(2026-04-22: [`templates/contexts/deployment-order.md`](../../.agent-src.uncondensed/templates/contexts/deployment-order.md))*
+- [x] `observability.md` — Sentry scopes, log channels, known alerts *(2026-04-22: [`templates/contexts/observability.md`](../../.agent-src.uncondensed/templates/contexts/observability.md))*
 
 Plus a new skill:
 
-- [x] `context-authoring` — Tier 3, walks the user through filling in the above templates *(2026-04-22: [`skills/context-authoring/SKILL.md`](../../.agent-src.uncompressed/skills/context-authoring/SKILL.md) — harvest-first walkthrough, preserves template contract, emits `<!-- TBD: ... -->` markers instead of fabricating)*
+- [x] `context-authoring` — Tier 3, walks the user through filling in the above templates *(2026-04-22: [`skills/context-authoring/SKILL.md`](../../.agent-src.uncondensed/skills/context-authoring/SKILL.md) — harvest-first walkthrough, preserves template contract, emits `<!-- TBD: ... -->` markers instead of fabricating)*
 
 ### 3.3 — Acceptance criteria
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Audit the user-type axis frontmatter coverage (step-9 Phase 4).
 
-Two checks across `.agent-src.uncompressed/skills/`:
+Two checks across `.agent-src.uncondensed/skills/`:
 
 1. **Orphan values** — every `recommended_for_user_types` value must have
    a corresponding `user-types/<value>.yml` config. Orphans are FATAL
@@ -27,7 +27,7 @@ from collections import defaultdict
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_ROOT = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_ROOT = REPO_ROOT / ".agent-src.uncondensed" / "skills"
 USER_TYPES_ROOT = REPO_ROOT / "user-types"
 REPORT_PATH = REPO_ROOT / "agents" / "reports" / "user-type-axis-audit.md"
 

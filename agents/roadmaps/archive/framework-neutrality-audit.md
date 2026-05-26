@@ -4,11 +4,11 @@ complexity: structural
 
 # Roadmap: Framework Neutrality Audit — Remove PHP/Laravel Leakage from Generic Skills, Rules & Commands
 
-> Eliminate hardcoded PHP/Laravel assumptions from every generic artifact in `.agent-src.uncompressed/{skills,rules,commands}/`. Generic artifacts must be framework-neutral; framework-specific implementations belong in dedicated carve-out artifacts (`laravel-*`, `nextjs-*`, etc.). Future leakage is blocked by a new Tier-2 rule + linter.
+> Eliminate hardcoded PHP/Laravel assumptions from every generic artifact in `.agent-src.uncondensed/{skills,rules,commands}/`. Generic artifacts must be framework-neutral; framework-specific implementations belong in dedicated carve-out artifacts (`laravel-*`, `nextjs-*`, etc.). Future leakage is blocked by a new Tier-2 rule + linter.
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md`, [`rules/architecture.md`](../../.agent-src.uncompressed/rules/architecture.md), [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md)
+- [ ] Read `AGENTS.md`, [`rules/architecture.md`](../../.agent-src.uncondensed/rules/architecture.md), [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md)
 - [ ] Read evidence file: `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt` (1008 lines, 584 hits)
 - [ ] Confirm scanner is on disk: `scripts/_tmp_scan_framework_leakage.py` (temporary, replaced by permanent linter in Phase 0)
 - [ ] Confirm `quality.local_auto_run: false` is still set in `.agent-settings.yml` (governs CI-step policy referenced throughout)
@@ -33,7 +33,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 ## Acceptance criteria (whole roadmap)
 
-- [ ] `python3 scripts/lint_framework_leakage.py` exits 0 against `.agent-src.uncompressed/{skills,rules,commands}/` excluding carve-outs
+- [ ] `python3 scripts/lint_framework_leakage.py` exits 0 against `.agent-src.uncondensed/{skills,rules,commands}/` excluding carve-outs
 - [ ] `pytest tests/test_lint_framework_leakage.py` 100% green
 - [ ] `task lint-skills` green (warnings ok, no fails)
 - [ ] `task sync` + `task generate-tools` regenerate cleanly
@@ -57,7 +57,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 ### Step 0.1: Create new Tier-2 rule
 
-- [ ] **Create file** `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md` (NEW, ~80 lines).
+- [ ] **Create file** `.agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md` (NEW, ~80 lines).
 - [ ] **Frontmatter** (exact):
   ```yaml
   ---
@@ -78,13 +78,13 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
     - phrase: "every controller"
     - phrase: "all controllers"
     - phrase: "generic skill"
-  description: "When editing a generic skill, rule, or command in .agent-src.uncompressed/ — block PHP/Laravel/Symfony as the only path. Generic artifacts must offer language-agnostic procedures with framework-specific carve-out pointers."
+  description: "When editing a generic skill, rule, or command in .agent-src.uncondensed/ — block PHP/Laravel/Symfony as the only path. Generic artifacts must offer language-agnostic procedures with framework-specific carve-out pointers."
   ---
   ```
 - [ ] **Body sections** (in order):
   1. `# framework-neutrality-in-generic-skills`
   2. `## The Iron Law` — fenced block: `NO GENERIC ARTIFACT MAY MANDATE A SPECIFIC FRAMEWORK. SPECIFICS BELONG IN CARVE-OUT ARTIFACTS (laravel-*, symfony-*, nextjs-*, pest-*, eloquent, quality-tools).`
-  3. `## Scope` — list directories: `.agent-src.uncompressed/skills/`, `.agent-src.uncompressed/rules/`, `.agent-src.uncompressed/commands/`. Exempt: file/dir matches `laravel`, `symfony`, `nextjs`, `react-*`, `^php-`, `^pest-`, `^eloquent`, `^blade`, `^livewire`, `^flux`, `^artisan-`, `^composer-`, `^docker`, `^aws-`, `^grafana`, `^openapi$`, `^quality-tools`, `^sql-writing`, `^tailwind`, `^terraform`, `^terragrunt`, `^traefik`, `^mobile-e2e`, `-routing$`, `project-analysis-(laravel|symfony|nextjs|react|node-express|zend-laminas)`.
+  3. `## Scope` — list directories: `.agent-src.uncondensed/skills/`, `.agent-src.uncondensed/rules/`, `.agent-src.uncondensed/commands/`. Exempt: file/dir matches `laravel`, `symfony`, `nextjs`, `react-*`, `^php-`, `^pest-`, `^eloquent`, `^blade`, `^livewire`, `^flux`, `^artisan-`, `^composer-`, `^docker`, `^aws-`, `^grafana`, `^openapi$`, `^quality-tools`, `^sql-writing`, `^tailwind`, `^terraform`, `^terragrunt`, `^traefik`, `^mobile-e2e`, `-routing$`, `project-analysis-(laravel|symfony|nextjs|react|node-express|zend-laminas)`.
   4. `## Forbidden patterns in generic artifacts` — table mirroring `LEAKAGE` dict in `scripts/lint_framework_leakage.py` (see Step 0.2). Each row: pattern · why · fix.
   5. `## Allowed: cross-stack documentation` — multi-stack tables / detection maps with **at least 2 ecosystems side-by-side** (`composer.json` AND `package.json`, etc.).
   6. `## Allowed: carve-out pointers` — `→ Laravel-specific: see [laravel-validation](../skills/laravel-validation/SKILL.md)` is the canonical handoff shape.
@@ -102,12 +102,12 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   - **Output format** (default, non-`--json`): one block per file: `path` header, then `LNNN  category  pattern  snippet`. Trailing summary `N hits across M files (K allowlisted)`.
   - **`--json`**: emit `{"version":1, "hits":[...], "summary":{...}}` with `allowlisted` bool per hit.
   - **`--quiet`**: only summary line.
-  - **Default paths** when `--paths` omitted: `.agent-src.uncompressed/skills`, `.agent-src.uncompressed/rules`, `.agent-src.uncompressed/commands`.
+  - **Default paths** when `--paths` omitted: `.agent-src.uncondensed/skills`, `.agent-src.uncondensed/rules`, `.agent-src.uncondensed/commands`.
 - [ ] **Carve-out list**: identical to `CARVE_OUT_PATTERNS` in temp scanner — keep verbatim.
 - [ ] **Leakage dict**: identical to `LEAKAGE` in temp scanner — keep verbatim.
 - [ ] **Header comment** at top:
   ```python
-  # Enforces `.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md`.
+  # Enforces `.agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md`.
   # Allowlist legitimate cross-stack docs in `scripts/lint_framework_leakage_allowlist.json`.
   ```
 
@@ -119,12 +119,12 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
     "version": 1,
     "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
     "entries": [
-      { "file": ".agent-src.uncompressed/skills/using-git-worktrees/SKILL.md", "lines": [130, 131, 132], "reason": "Multi-stack package-manager comparison table" },
-      { "file": ".agent-src.uncompressed/skills/refine-prompt/SKILL.md", "lines": [88, 90, 92, 269], "reason": "Project-detection enumeration listing all supported stacks" },
-      { "file": ".agent-src.uncompressed/commands/onboard.md", "lines": [220, 221, 224], "reason": "Stack-detection enumeration in onboard flow" },
-      { "file": ".agent-src.uncompressed/commands/analyze-reference-repo.md", "lines": [62], "reason": "Manifest-file enumeration across ecosystems" },
-      { "file": ".agent-src.uncompressed/commands/optimize/augmentignore.md", "lines": "*", "reason": "Per-stack augmentignore rules — by definition stack-aware" },
-      { "file": ".agent-src.uncompressed/commands/optimize/rtk.md", "lines": "*", "reason": "Per-tool rtk filter detection — by definition tool-aware" }
+      { "file": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md", "lines": [130, 131, 132], "reason": "Multi-stack package-manager comparison table" },
+      { "file": ".agent-src.uncondensed/skills/refine-prompt/SKILL.md", "lines": [88, 90, 92, 269], "reason": "Project-detection enumeration listing all supported stacks" },
+      { "file": ".agent-src.uncondensed/commands/onboard.md", "lines": [220, 221, 224], "reason": "Stack-detection enumeration in onboard flow" },
+      { "file": ".agent-src.uncondensed/commands/analyze-reference-repo.md", "lines": [62], "reason": "Manifest-file enumeration across ecosystems" },
+      { "file": ".agent-src.uncondensed/commands/optimize/augmentignore.md", "lines": "*", "reason": "Per-stack augmentignore rules — by definition stack-aware" },
+      { "file": ".agent-src.uncondensed/commands/optimize/rtk.md", "lines": "*", "reason": "Per-tool rtk filter detection — by definition tool-aware" }
     ]
   }
   ```
@@ -179,7 +179,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 > Generic rules and high-traffic skills that **mandate** a PHP/Laravel pattern as the only path. Surgical edits, exact old→new blocks.
 
-### Step 1.1: `.agent-src.uncompressed/rules/architecture.md`
+### Step 1.1: `.agent-src.uncondensed/rules/architecture.md`
 
 **Why**: This file is loaded on every "controller / service / module / structural decision" trigger, regardless of project language. L18–L22 mandate Laravel-only patterns (`__invoke()`, `FormRequest`, `services/` directory).
 
@@ -245,7 +245,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   Some projects use a module system (e.g. `app/Modules/` in Laravel, `apps/`/`packages/` in a Turborepo, `src/modules/` in NestJS, `internal/` in Go).
   ```
 
-### Step 1.2: `.agent-src.uncompressed/rules/verify-before-complete.md`
+### Step 1.2: `.agent-src.uncondensed/rules/verify-before-complete.md`
 
 - [ ] **Edit L25**. Find: `1. **IDENTIFY** — What command proves this claim? (tests, PHPStan, build, etc.)`
   Replace with: `1. **IDENTIFY** — What command proves this claim? (tests, type-checker, linter, build — whichever the project actually runs)`
@@ -253,7 +253,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 - [ ] **Edit L46**. Find: `- Relying on partial verification (ran tests but not PHPStan)`
   Replace with: `- Relying on partial verification (ran tests but skipped the type-checker / linter)`
 
-### Step 1.3: `.agent-src.uncompressed/rules/downstream-changes.md`
+### Step 1.3: `.agent-src.uncondensed/rules/downstream-changes.md`
 
 - [ ] **Edit L74–L77**. Find:
   ```
@@ -270,12 +270,12 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   4. **No stale references** — grep for the old name / namespace / import path to confirm zero results.
   ```
 
-### Step 1.4: `.agent-src.uncompressed/rules/context-hygiene.md`
+### Step 1.4: `.agent-src.uncondensed/rules/context-hygiene.md`
 
 - [ ] **Edit L64**. Find: `- Quality check (PHPStan, ECS) that still errors`
   Replace with: `- Quality check (type-checker, linter, formatter) that still errors`
 
-### Step 1.5: `.agent-src.uncompressed/skills/verify-completion-evidence/SKILL.md`
+### Step 1.5: `.agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md`
 
 - [ ] **Edit L51–L58** (claim → evidence table). Find the rows for PHPStan / Rector / ECS and broaden them:
   ```
@@ -336,7 +336,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 - [ ] **Edit L143**. Find: `* Silencing a warning with `@phpstan-ignore-next-line` or `// @ts-expect-error``
   Replace with: `* Silencing a warning with `@phpstan-ignore-next-line`, `// @ts-expect-error`, `# type: ignore`, `//nolint`` — leave the rest of the bullet intact.
 
-### Step 1.6: `.agent-src.uncompressed/skills/code-review/SKILL.md`
+### Step 1.6: `.agent-src.uncondensed/skills/code-review/SKILL.md`
 
 **Why**: `code-review` is a top-50 entry skill triggered on every "review this", "check my code". Its checklist is a 100% Laravel-only spec (FormRequest, Eloquent, Pest, Blade) that misguides reviews on TS / Python / Go diffs.
 
@@ -420,7 +420,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 - [ ] **Edit L214**. Find: `- Do NOT nitpick style issues that ECS/Rector handle automatically.`
   Replace with: `- Do NOT nitpick style issues that the project's formatter / linter handles automatically.`
 
-### Step 1.7: `.agent-src.uncompressed/skills/security/SKILL.md`
+### Step 1.7: `.agent-src.uncondensed/skills/security/SKILL.md`
 
 **Why**: `security` is loaded on every auth / authorization / CSRF / XSS trigger. Today it hard-mandates Laravel primitives (`tymon/jwt-auth`, `sanctum`, `app/Policies/`, `FormRequest::authorize()`, `Gate::`, `PHPStan`).
 
@@ -508,16 +508,16 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ```
 
 
-### Step 1.8: `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` — extract + rewrite
+### Step 1.8: `.agent-src.uncondensed/skills/api-endpoint/SKILL.md` — extract + rewrite
 
 **Why**: This file is the **trigger artifact** for this audit. Today it is 100% Laravel: every code block, every file-path convention, every Do-NOT. The user's report ("API endpoints don't have to be Laravel, don't have to be PHP") names this file directly.
 
 **Strategy**: Two-step — extract the Laravel-specific content into a new carve-out skill `laravel-api-endpoint`, then rewrite `api-endpoint` itself as a thin stack-routing shell.
 
-#### Step 1.8a: Create new carve-out `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` (NEW)
+#### Step 1.8a: Create new carve-out `.agent-src.uncondensed/skills/laravel-api-endpoint/SKILL.md` (NEW)
 
-- [ ] **Create directory** `.agent-src.uncompressed/skills/laravel-api-endpoint/`.
-- [ ] **Create file** `.agent-src.uncompressed/skills/laravel-api-endpoint/SKILL.md` (~165 lines).
+- [ ] **Create directory** `.agent-src.uncondensed/skills/laravel-api-endpoint/`.
+- [ ] **Create file** `.agent-src.uncondensed/skills/laravel-api-endpoint/SKILL.md` (~165 lines).
 - [ ] **Frontmatter** (exact):
   ```yaml
   ---
@@ -573,7 +573,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   - invokable controller
   ```
 
-#### Step 1.8b: Rewrite `.agent-src.uncompressed/skills/api-endpoint/SKILL.md` as a stack-routing shell
+#### Step 1.8b: Rewrite `.agent-src.uncondensed/skills/api-endpoint/SKILL.md` as a stack-routing shell
 
 - [ ] **Replace the entire file** with the content below (~110 lines):
   ```
@@ -666,10 +666,10 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 #### Step 1.8c: Update consumers + verify
 
-- [ ] **Grep for references** to `api-endpoint` across `.agent-src.uncompressed/`, `docs/`, and `AGENTS.md`. Find: `rg -n "api-endpoint" .agent-src.uncompressed docs AGENTS.md`. For each match, decide:
+- [ ] **Grep for references** to `api-endpoint` across `.agent-src.uncondensed/`, `docs/`, and `AGENTS.md`. Find: `rg -n "api-endpoint" .agent-src.uncondensed docs AGENTS.md`. For each match, decide:
   - If the context is Laravel-specific → update the reference to `laravel-api-endpoint`.
   - If the context is generic → leave the reference pointing at `api-endpoint` (now the router shell).
-- [ ] **Verify** `python3 scripts/lint_framework_leakage.py --paths .agent-src.uncompressed/skills/api-endpoint --quiet` exits 0.
+- [ ] **Verify** `python3 scripts/lint_framework_leakage.py --paths .agent-src.uncondensed/skills/api-endpoint --quiet` exits 0.
 - [ ] **Verify** `python3 scripts/lint_skills.py` passes for the new `laravel-api-endpoint` skill (frontmatter, sections present).
 
 
@@ -677,7 +677,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 ## Phase 1 acceptance criteria
 
-- [ ] `python3 scripts/lint_framework_leakage.py --paths .agent-src.uncompressed/rules .agent-src.uncompressed/skills/api-endpoint .agent-src.uncompressed/skills/code-review .agent-src.uncompressed/skills/security .agent-src.uncompressed/skills/verify-completion-evidence --quiet` exits 0.
+- [ ] `python3 scripts/lint_framework_leakage.py --paths .agent-src.uncondensed/rules .agent-src.uncondensed/skills/api-endpoint .agent-src.uncondensed/skills/code-review .agent-src.uncondensed/skills/security .agent-src.uncondensed/skills/verify-completion-evidence --quiet` exits 0.
 - [ ] `task lint-skills` green for all files touched in Phase 1 (and the new `laravel-api-endpoint`).
 - [ ] `git diff --stat` shows changes in exactly the 8 files Phase 1 names (4 rules + 4 skills) plus 1 new file (`laravel-api-endpoint/SKILL.md`).
 - [ ] Manual smoke: open `api-endpoint/SKILL.md` and confirm the stack-routing table is present; open `laravel-api-endpoint/SKILL.md` and confirm the PHP code blocks are intact.
@@ -688,7 +688,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 > 8 high-impact skills where Laravel is currently the default or only path. Every fix removes the hard mandate, demotes Laravel to "e.g." status, and adds peer examples for Symfony / JS-TS / Python / Go. No carve-out renames in this phase — those are Phase 5.
 
-### Step 2.1: `.agent-src.uncompressed/skills/code-refactoring/SKILL.md` (20 hits)
+### Step 2.1: `.agent-src.uncondensed/skills/code-refactoring/SKILL.md` (20 hits)
 
 **Why**: Step 3 is a Laravel-only API-layer table (FormRequest, Resource, OpenAPI attributes). Steps 5–6 mandate PHPStan + Rector + ECS + `php artisan test`. Step 7 names `app/Modules/`. Description leads with "Safely refactors PHP code".
 
@@ -773,7 +773,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 
 
-### Step 2.2: `.agent-src.uncompressed/skills/dependency-upgrade/SKILL.md` (18 hits)
+### Step 2.2: `.agent-src.uncondensed/skills/dependency-upgrade/SKILL.md` (18 hits)
 
 **Why**: Description leads with "update Laravel" / "bump PHP version". Verification block at L80–91 lists PHP/Laravel commands as the canonical pipeline and treats JS as a secondary path. Python, Go, Rust have no peer examples. Common-pitfalls table at L114 names PHPStan as the only verifier.
 
@@ -880,7 +880,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 - [ ] **Edit L114** (Common pitfalls — Skipping tests row). Find: `| Skipping tests after upgrade | Full test suite + PHPStan after every upgrade |`
   Replace with: `| Skipping tests after upgrade | Full test suite + project type-checker (PHPStan / tsc / mypy / `go vet` / `cargo check`) after every upgrade |`
 
-### Step 2.3: `.agent-src.uncompressed/skills/merge-conflicts/SKILL.md` (12 hits)
+### Step 2.3: `.agent-src.uncondensed/skills/merge-conflicts/SKILL.md` (12 hits)
 
 **Why**: Step 4 has a `#### PHP files` subsection that uses `php -l` and PHPStan as the canonical post-resolve check. Step 4 `#### Migrations` mandates `php artisan migrate --env=testing`. Step 6 verify-block hardcodes `php artisan test` and `vendor/bin/phpstan analyse`. Result: a JS-only or Python-only project can't follow Step 6 without translation.
 
@@ -1002,7 +1002,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 
 
-### Step 2.4: `.agent-src.uncompressed/skills/project-analyzer/SKILL.md` (15 hits)
+### Step 2.4: `.agent-src.uncondensed/skills/project-analyzer/SKILL.md` (15 hits)
 
 **Why**: `Detection checklist` (L172–214) prioritises PHP/Laravel as the default and lists Node.js / TypeScript / Python / Go / Rust as afterthoughts. `Project type`, `Legacy indicators`, and `Build & tooling` tables are PHP-only. A generic "scan this project" skill cannot return a useful first-pass for a Next.js or FastAPI repo today.
 
@@ -1136,7 +1136,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ```
 
 
-### Step 2.5: `.agent-src.uncompressed/skills/test-driven-development/SKILL.md` (11 hits)
+### Step 2.5: `.agent-src.uncondensed/skills/test-driven-development/SKILL.md` (11 hits)
 
 **Why**: Step 3 (L104–L110) already shows PHP/Pest **and** JS/Vitest in parallel — that's correct. The `## Examples` section (L173–L235), however, only shows PHP/Pest. Add a parallel TypeScript/Vitest worked example so neither stack is privileged. The `See also` block at L273–L275 names Pest as the "full conventions" link without a TypeScript peer.
 
@@ -1193,7 +1193,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   * Running tests inside Docker → [`tests-execute`](../tests-execute/SKILL.md)
   ```
 
-### Step 2.6: `.agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md` (8 hits)
+### Step 2.6: `.agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md` (8 hits)
 
 **Why**: L156–L159 declare custom filters are "for the project's PHP/Laravel toolchain" and the covered list (PHPStan, Pest, ECS, Rector, Artisan, Composer) is PHP-only. A Next.js / Python / Go project gets no guidance.
 
@@ -1217,7 +1217,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   - Infra / runtime: Docker Compose, Terraform, kubectl
   ```
 
-### Step 2.7: `.agent-src.uncompressed/skills/file-editor/SKILL.md` (7 hits)
+### Step 2.7: `.agent-src.uncondensed/skills/file-editor/SKILL.md` (7 hits)
 
 **Why**: Generic skill that opens edited files in the user's IDE, but every example pins PhpStorm + `app/Models/User.php`. A TypeScript developer in WebStorm or VS Code learns nothing useful. The `personal.ide` value enum at L43 lists only `code` and `phpstorm`.
 
@@ -1309,7 +1309,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   - JetBrains IDEs (PhpStorm, WebStorm, IDEA, PyCharm, GoLand, RubyMine, Rider) sometimes briefly lock a file on open — wait a moment before editing the same file.
   ```
 
-### Step 2.8: `.agent-src.uncompressed/skills/readme-writing-package/SKILL.md` (8 hits)
+### Step 2.8: `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` (8 hits)
 
 **Why**: A "package README writer" must work for npm packages, PyPI packages, Cargo crates, Go modules, and Composer packages alike. The current Examples (L91–L107) lock to `composer require` + `php artisan vendor:publish` — a Node, Python, Go, or Rust author can't reuse anything below the header.
 
@@ -1405,7 +1405,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
 
 **Verification per step**: `task sync && task lint-skills` must stay green (commands compile, frontmatter intact). The router does not auto-load commands, so no `task ci` re-run is forced — but the slash-command-suggestion catalog (`docs/contracts/slash-command-suggestion-policy.md`) should still list every edited command unchanged.
 
-### Step 3.1: `.agent-src.uncompressed/commands/quality-fix.md` (22 hits)
+### Step 3.1: `.agent-src.uncondensed/commands/quality-fix.md` (22 hits)
 
 **Why**: This command is the central "fix everything the linters / type-checkers find" entry point. Its current body assumes PHPStan + Rector + ECS only. The `trigger_description` (L9) and `trigger_context` (L10) name PHPStan explicitly, the detection block (L36–L40) only enumerates PHP recipes, and Steps 1–3 (L42–L63) are a PHPStan/Rector loop. A TypeScript or Python project invoking `/quality-fix` today receives no actionable instructions.
 
@@ -1534,7 +1534,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ```
 
 
-### Step 3.2: `.agent-src.uncompressed/commands/optimize/rtk.md` (13 hits)
+### Step 3.2: `.agent-src.uncondensed/commands/optimize/rtk.md` (13 hits)
 
 **Why**: The detection table (L31–L36) and noise-pattern table (L82–L85) already list `package.json` / `playwright` alongside Composer — that's good. But the table is still PHP-first, the priorities recipe (L118–L121) only seeds PHP tools, and the Composer / Pest / ECS / Rector entries dominate. A polyglot project gets PHPStan + Pest filters auto-installed and nothing for tsc / vitest / pytest / cargo.
 
@@ -1629,7 +1629,7 @@ Every hit falls into one of three buckets. Phases 1–5 act on Cat-B and Cat-C o
   ```
 
 
-### Step 3.3: `.agent-src.uncompressed/commands/package-test.md` (18 hits)
+### Step 3.3: `.agent-src.uncondensed/commands/package-test.md` (18 hits)
 
 **Why**: The command already supports **both** Composer and npm in parallel — that's correct structurally. The leakage is narrower: the flow has no path for Python (editable installs via `pip install -e .` / `uv pip install -e .` / `poetry add --editable`), Go (`go mod edit -replace`), Rust (`cargo add --path`), or Ruby (`bundle config local.<gem>`). For a TypeScript-only or Python-only project the existing 2-way branch works; for a Go / Rust / Python contributor invoking `/package-test`, the command currently exits with "no composer.json or package.json found" even though their ecosystem has a perfectly good local-link mechanism.
 
@@ -1768,7 +1768,7 @@ This step adds ecosystems as opt-in rows rather than rewriting the dual Composer
   ```
 
 
-### Step 3.4: `.agent-src.uncompressed/commands/optimize/augmentignore.md` (16 hits)
+### Step 3.4: `.agent-src.uncondensed/commands/optimize/augmentignore.md` (16 hits)
 
 **Why**: The stack-detection table (L26–L39) already covers composer / npm / cargo / go correctly. The leakage sits in three places: (a) the **default Laravel-storage rows** (L34, L36, L65) treat Laravel paths as universal even though most consumer projects are not Laravel; (b) the **whitelist-own-packages step** (L89–L97) only reads `composer.json`; (c) the **stack-source step** (L114–L116) only reads `composer.json` + `package.json`. The fix is to (a) gate Laravel rows behind a Laravel detection, (b) extend the whitelist step to npm scopes / Go module prefixes / Python namespace packages, (c) extend the stack source to all major manifests.
 
@@ -1883,7 +1883,7 @@ This step adds ecosystems as opt-in rows rather than rewriting the dual Composer
 - [ ] **Edit L267** (Rules section, meta-skills list). Find:
   `` - **Never ignore meta/agent-system skills** — `agent-docs-writing-writing`, `commands`, `context-create`, `override-management`, `guidelines`, `project-docs`, `roadmap-management`, `naming`, `skill-reviewer`, `file-editor`, `copilot-config`, `copilot-agents-optimization`. ``
   Replace with:
-  `` - **Never ignore meta / agent-system skills** — these are framework-independent and used by every project regardless of stack: `agent-docs-writing`, `agents-md-thin-root`, `check-refs`, `command-routing`, `command-writing`, `compress-memory`, `context-authoring`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `file-editor`, `guideline-writing`, `learning-to-rule-or-skill`, `lint-skills`, `md-language-check`, `override-management`, `persona-writing`, `project-analyzer`, `project-docs`, `project-health`, `roadmap-writing`, `rule-writing`, `skill-improvement-pipeline`, `skill-management`, `skill-reviewer`, `skill-writing`. ``
+  `` - **Never ignore meta / agent-system skills** — these are framework-independent and used by every project regardless of stack: `agent-docs-writing`, `agents-md-thin-root`, `check-refs`, `command-routing`, `command-writing`, `condense-memory`, `context-authoring`, `copilot-agents-optimization`, `copilot-config`, `description-assist`, `file-editor`, `guideline-writing`, `learning-to-rule-or-skill`, `lint-skills`, `md-language-check`, `override-management`, `persona-writing`, `project-analyzer`, `project-docs`, `project-health`, `roadmap-writing`, `rule-writing`, `skill-improvement-pipeline`, `skill-management`, `skill-reviewer`, `skill-writing`. ``
   Rationale: the original list contained stale names (`agent-docs-writing-writing`, `roadmap-management`, `naming`, `commands`, `context-create`, `guidelines`) that no longer exist as skill directories.
 
 
@@ -1894,7 +1894,7 @@ This step adds ecosystems as opt-in rows rather than rewriting the dual Composer
 
 Files NOT in this phase (verified acceptable on re-scan): `error-handling-patterns/SKILL.md`, `judge-code-quality/SKILL.md`, `skill-writing/SKILL.md`, `systematic-debugging/SKILL.md`, `missing-tool-handling.md`, `readme-writing/SKILL.md`, `readme-reviewer/SKILL.md`, `roadmap-writing/SKILL.md`, `analysis-skill-router/SKILL.md`, `universal-project-analysis/SKILL.md`, `security-audit/SKILL.md` (already has explicit `**Laravel:**` carve-out heading).
 
-### Step 4.1: `.agent-src.uncompressed/rules/downstream-changes.md` (2 hits)
+### Step 4.1: `.agent-src.uncondensed/rules/downstream-changes.md` (2 hits)
 
 - [ ] **Edit L74**. Find: `` 1. **No broken imports** — `php -l` or PHPStan catches these ``
   Replace with: `` 1. **No broken imports** — `php -l` / PHPStan (PHP), `tsc --noEmit` (TS), `mypy` / `pyright` (Python), `cargo check` (Rust), `go build ./...` (Go) catches these ``
@@ -1902,12 +1902,12 @@ Files NOT in this phase (verified acceptable on re-scan): `error-handling-patter
 - [ ] **Edit L76**. Find: `` 3. **No broken types** — PHPStan Level 9 catches signature mismatches ``
   Replace with: `` 3. **No broken types** — the project's strict type-checker (PHPStan Level 9, `tsc --strict`, `mypy --strict`, `cargo check`, `go vet`) catches signature mismatches ``
 
-### Step 4.2: `.agent-src.uncompressed/rules/context-hygiene.md` (2 hits)
+### Step 4.2: `.agent-src.uncondensed/rules/context-hygiene.md` (2 hits)
 
 - [ ] **Edit L64**. Find: `- Quality check (PHPStan, ECS) that still errors`
   Replace with: `- Quality check (type-checker + linter — e.g. PHPStan + ECS, tsc + eslint, mypy + ruff) that still errors`
 
-### Step 4.3: `.agent-src.uncompressed/skills/git-workflow/SKILL.md` (4 hits)
+### Step 4.3: `.agent-src.uncondensed/skills/git-workflow/SKILL.md` (4 hits)
 
 - [ ] **Edit L30**. Find: `1. Run quality pipeline: PHPStan → Rector → ECS → PHPStan (see `quality-tools` skill).`
   Replace with: `1. Run the project's quality pipeline (see `quality-tools` skill) — typically: type-checker → auto-fixer → linter → type-checker.`
@@ -1915,7 +1915,7 @@ Files NOT in this phase (verified acceptable on re-scan): `error-handling-patter
 - [ ] **Edit L31**. Find: `` 2. Run tests: `php artisan test`. ``  <!-- carve-out: new-gate-verification -->
   Replace with: `2. Run the project's test command — detect from manifest: `php artisan test` / `vendor/bin/phpunit` (PHP), `npm test` / `pnpm test` / `vitest` / `jest` (JS-TS), `pytest` (Python), `cargo test` (Rust), `go test ./...` (Go).`
 
-### Step 4.4: `.agent-src.uncompressed/skills/security/SKILL.md` (5 hits — heaviest cosmetic fix)
+### Step 4.4: `.agent-src.uncondensed/skills/security/SKILL.md` (5 hits — heaviest cosmetic fix)
 
 This skill currently mandates Laravel `FormRequest` and lists `tymon/jwt-auth` / `laravel/sanctum` as if they were the universal auth path. The fix is to keep the security principles framework-agnostic while keeping Laravel as one named example.
 
@@ -1949,7 +1949,7 @@ This skill currently mandates Laravel `FormRequest` and lists `tymon/jwt-auth` /
 - [ ] **Edit L73**. Find: `- Do NOT bypass FormRequest validation in controllers.`
   Replace with: `- Do NOT bypass the framework's request-boundary validation in controllers / route handlers.`
 
-### Step 4.5: `.agent-src.uncompressed/skills/developer-like-execution/SKILL.md` (5 hits — Laravel-only examples)
+### Step 4.5: `.agent-src.uncondensed/skills/developer-like-execution/SKILL.md` (5 hits — Laravel-only examples)
 
 The skill teaches "minimal-evidence execution" but every example uses `php artisan` / Laravel logs. Add parallel examples for the other major stacks so the principle survives translation.
 
@@ -1991,7 +1991,7 @@ The skill teaches "minimal-evidence execution" but every example uses `php artis
   psql -d mydb -c "SELECT id,email,status FROM users WHERE email='x@y' LIMIT 1"                 # raw SQL fallback
   ```
 
-### Step 4.6: `.agent-src.uncompressed/skills/database/SKILL.md` (3 hits)
+### Step 4.6: `.agent-src.uncondensed/skills/database/SKILL.md` (3 hits)
 
 - [ ] **Edit L5**. Find: `  - eloquent-tamer`
   Replace with: `  - eloquent-tamer    # Laravel-specific carve-out`
@@ -2010,28 +2010,28 @@ The skill teaches "minimal-evidence execution" but every example uses `php artis
      - Generic SQL: `psql -d mydb -c "\d table"` / `mysql -e "DESCRIBE table"`
   ```
 
-### Step 4.7: `.agent-src.uncompressed/skills/feature-planning/SKILL.md` (4 hits)
+### Step 4.7: `.agent-src.uncondensed/skills/feature-planning/SKILL.md` (4 hits)
 
 - [ ] **Edit L148**. Find: `` 3. **Exact command** — `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php`, never *"run the migration"*. ``
   Replace with: `` 3. **Exact command** — the precise CLI invocation, never *"run the migration"*. Examples: `php artisan migrate --path=database/migrations/2026_05_09_create_logins.php` (Laravel), `bin/console doctrine:migrations:migrate --no-interaction` (Symfony), `bin/rails db:migrate VERSION=20260509…` (Rails), `npx prisma migrate deploy` (Prisma), `alembic upgrade +1` (Python / Alembic), `sqlx migrate run` (Rust). ``
 
-### Step 4.8: `.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md` (3 hits)
+### Step 4.8: `.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md` (3 hits)
 
 - [ ] **Edit L64**. Find: `3. Quality pipeline (PHPStan → Rector dry-run → ECS → PHPStan) green`
   Replace with: `3. Quality pipeline green — the project's full sequence (type-checker → auto-fixer dry-run → linter → type-checker; e.g. PHPStan → Rector → ECS → PHPStan for Laravel-PHP, tsc → eslint --fix → eslint → tsc for TS, mypy → ruff --fix → ruff → mypy for Python)`
 
-### Step 4.9: `.agent-src.uncompressed/skills/context-authoring/SKILL.md` (3 hits)
+### Step 4.9: `.agent-src.uncondensed/skills/context-authoring/SKILL.md` (3 hits)
 
 - [ ] **Edit L74**. Find: `` | `data-sensitivity.md` | Eloquent `$hidden` / `$casts`, Sentry `beforeSend`, logging helpers, API resources, export commands | ``
   Replace with: `` | `data-sensitivity.md` | ORM hidden-field config (Eloquent `$hidden` / `$casts`, Symfony `#[Ignore]`, Prisma `select` defaults, SQLAlchemy `__init__` filters), Sentry `beforeSend`, logging redaction helpers, API serialisers / resources, export commands | ``
 
-### Step 4.10: `.agent-src.uncompressed/skills/roadmap-management/SKILL.md` (3 hits)
+### Step 4.10: `.agent-src.uncondensed/skills/roadmap-management/SKILL.md` (3 hits)
 
 - [ ] **Edit L96**. Find: `- [ ] All quality gates pass (PHPStan, Rector, tests)`
   Replace with: `- [ ] All quality gates pass — the project's type-checker, auto-fixer, linter, and full test suite (see the `quality-tools` skill for stack-specific invocations)`
 
 
-### Step 4.11: `.agent-src.uncompressed/skills/multi-tenancy/SKILL.md` (2 hits — declare scope)
+### Step 4.11: `.agent-src.uncondensed/skills/multi-tenancy/SKILL.md` (2 hits — declare scope)
 
 This skill is **deeply** coupled to Laravel (Eloquent `$connection`, `DB::connection()`, `RefreshDatabase`, Artisan). Rather than rewrite all examples, declare the scope at the top so the agent does not load it for non-Laravel projects.
 
@@ -2045,7 +2045,7 @@ This skill is **deeply** coupled to Laravel (Eloquent `$connection`, `DB::connec
 - [ ] **Edit L52**. Find: `Search the codebase for the service responsible for tenant switching. Typical responsibilities:`
   Replace with: `**Scope**: Laravel-specific (see frontmatter). For non-Laravel multi-tenant systems, the concepts below still apply but the implementation differs — consult the framework's connection / session / DI conventions.\n\nSearch the codebase for the service responsible for tenant switching. Typical responsibilities:`
 
-### Step 4.12: `.agent-src.uncompressed/commands/feature/roadmap.md` (2 hits)
+### Step 4.12: `.agent-src.uncondensed/commands/feature/roadmap.md` (2 hits)
 
 - [ ] **Edit L100**. Find: `- [ ] Quality: PHPStan + Rector`
   Replace with: `- [ ] Quality: project's type-checker + auto-fixer (see `quality-tools` skill — e.g. PHPStan + Rector for PHP, tsc + eslint --fix for TS, mypy + ruff for Python)`
@@ -2053,7 +2053,7 @@ This skill is **deeply** coupled to Laravel (Eloquent `$connection`, `DB::connec
 - [ ] **Edit L209**. Find: `- **Include quality gates** (PHPStan, Rector, tests) in every phase.`
   Replace with: `- **Include quality gates** in every phase — the project's type-checker, auto-fixer, and full test run. Look up the actual commands via `quality-tools` instead of hardcoding stack-specific tool names in the roadmap.`
 
-### Step 4.13: `.agent-src.uncompressed/commands/module/explore.md` (3 hits — frontmatter + body)
+### Step 4.13: `.agent-src.uncondensed/commands/module/explore.md` (3 hits — frontmatter + body)
 
 - [ ] **Edit L6 (frontmatter)**. Find: `skills: [laravel]`
   Replace with:
@@ -2082,7 +2082,7 @@ This skill is **deeply** coupled to Laravel (Eloquent `$connection`, `DB::connec
 - [ ] **Edit L25**. Find: `Scan `app/Modules/` and show all modules (skip `.module-template` and hidden dirs):`
   Replace with: `Scan the detected modules directory (see step 1) and show all modules. Skip `.module-template`, `.example`, and hidden dirs:`
 
-### Step 4.14: `.agent-src.uncompressed/commands/onboard.md` (1 hit — symbolic, keep as-is + add Symfony hint)
+### Step 4.14: `.agent-src.uncondensed/commands/onboard.md` (1 hit — symbolic, keep as-is + add Symfony hint)
 
 The probe at L218–L226 is **already** multi-stack (PHP, Node, Rust, Go, Python, Ruby). The one improvement is splitting PHP detection so Symfony is named.
 
@@ -2106,7 +2106,7 @@ The probe at L218–L226 is **already** multi-stack (PHP, Node, Rust, Go, Python
 
 **Goal**: 3 skills and 1 command currently sit at the top level with generic-sounding names but are 100 % Laravel-coupled. Rename them with a `laravel-` prefix (matching the existing carve-out pattern `laravel-reverb`, `laravel-mail`, `laravel-middleware`, `laravel-validation`, `laravel-pulse`, `laravel-horizon`, `laravel-notifications`, `laravel-pennant`, `laravel-scheduling`), update **every** cross-reference, and propagate through the source / Augment / multi-tool pipelines via `task sync`.
 
-**Rule**: edits go to `.agent-src.uncompressed/` only. Generated trees (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) regenerate via `task sync` + `task generate-tools` (Step 6.2).
+**Rule**: edits go to `.agent-src.uncondensed/` only. Generated trees (`.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`) regenerate via `task sync` + `task generate-tools` (Step 6.2).
 
 ### Step 5.1: Rename `skills/websocket` → `skills/laravel-websocket`
 
@@ -2114,10 +2114,10 @@ Skill body uses `ShouldBroadcast`, `broadcastOn()`, `routes/channels.php`, Larav
 
 - [ ] **Move directory**:
   ```bash
-  git mv .agent-src.uncompressed/skills/websocket .agent-src.uncompressed/skills/laravel-websocket
+  git mv .agent-src.uncondensed/skills/websocket .agent-src.uncondensed/skills/laravel-websocket
   ```
 
-- [ ] **Edit `.agent-src.uncompressed/skills/laravel-websocket/SKILL.md` L2**. Find: `name: websocket`
+- [ ] **Edit `.agent-src.uncondensed/skills/laravel-websocket/SKILL.md` L2**. Find: `name: websocket`
   Replace with: `name: laravel-websocket`
 
 - [ ] **Edit same file L3**. Find: `description: "Use when building real-time features — WebSocket broadcasting, live updates, presence channels, connection state — even when the user just says 'push this to the client live'."`
@@ -2134,10 +2134,10 @@ Skill body uses `ShouldBroadcast`, `broadcastOn()`, `routes/channels.php`, Larav
   Replace with: `# laravel-websocket`
 
 - [ ] **Update cross-references** (4 files):
-  - `.agent-src.uncompressed/contexts/augment-infrastructure.md:89` — find `` `jobs-events`, `logging-monitoring`, `grafana`, `websocket` `` → replace with `` `jobs-events`, `logging-monitoring`, `grafana`, `laravel-websocket` ``
-  - `.agent-src.uncompressed/contexts/skills-and-commands.md:104` — find `` `laravel-reverb`, `websocket` `` → replace with `` `laravel-reverb`, `laravel-websocket` ``
-  - `.agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md:36` — find `` | `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management | `` → replace with `` | `laravel-websocket.md` | Laravel Broadcasting conventions — channel types, connection management, Echo client | ``
-  - `.agent-src.uncompressed/skills/laravel-reverb/SKILL.md:19` — find `[websocket](../websocket/SKILL.md)` → replace with `[laravel-websocket](../laravel-websocket/SKILL.md)`
+  - `.agent-src.uncondensed/contexts/augment-infrastructure.md:89` — find `` `jobs-events`, `logging-monitoring`, `grafana`, `websocket` `` → replace with `` `jobs-events`, `logging-monitoring`, `grafana`, `laravel-websocket` ``
+  - `.agent-src.uncondensed/contexts/skills-and-commands.md:104` — find `` `laravel-reverb`, `websocket` `` → replace with `` `laravel-reverb`, `laravel-websocket` ``
+  - `.agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md:36` — find `` | `websocket.md` | WebSocket conventions — Broadcasting, channel types, connection management | `` → replace with `` | `laravel-websocket.md` | Laravel Broadcasting conventions — channel types, connection management, Echo client | ``
+  - `.agent-src.uncondensed/skills/laravel-reverb/SKILL.md:19` — find `[websocket](../websocket/SKILL.md)` → replace with `[laravel-websocket](../laravel-websocket/SKILL.md)`
 
 ### Step 5.2: Rename `skills/dto-creator` → `skills/laravel-dto`
 
@@ -2145,10 +2145,10 @@ Skill body uses `SimpleDto` base class, attribute mapping, PHP-attribute syntax 
 
 - [ ] **Move directory**:
   ```bash
-  git mv .agent-src.uncompressed/skills/dto-creator .agent-src.uncompressed/skills/laravel-dto
+  git mv .agent-src.uncondensed/skills/dto-creator .agent-src.uncondensed/skills/laravel-dto
   ```
 
-- [ ] **Edit `.agent-src.uncompressed/skills/laravel-dto/SKILL.md` L2**. Find: `name: dto-creator`
+- [ ] **Edit `.agent-src.uncondensed/skills/laravel-dto/SKILL.md` L2**. Find: `name: dto-creator`
   Replace with: `name: laravel-dto`
 
 - [ ] **Edit same file L3**. Find: `description: "Use when the user says "create a DTO", "new data transfer object", or needs to convert request/response data into a typed PHP class. Creates DTOs with SimpleDto base class and attribute mapping."`
@@ -2165,9 +2165,9 @@ Skill body uses `SimpleDto` base class, attribute mapping, PHP-attribute syntax 
   Replace with: `# laravel-dto`
 
 - [ ] **Update cross-references** (3 files):
-  - `.agent-src.uncompressed/contexts/augment-infrastructure.md:82` — in the PHP/Laravel table row, find `` `dto-creator` `` → replace with `` `laravel-dto` ``
-  - `.agent-src.uncompressed/skills/php-service/SKILL.md:16` — find `` - DTOs (use `dto-creator` skill) `` → replace with `` - DTOs (use `laravel-dto` skill for Laravel/PHP; framework-native skill for other stacks) ``
-  - `.agent-src.uncompressed/skills/skill-reviewer/SKILL.md:196` — find `| dto-creator |` → replace with `| laravel-dto |`
+  - `.agent-src.uncondensed/contexts/augment-infrastructure.md:82` — in the PHP/Laravel table row, find `` `dto-creator` `` → replace with `` `laravel-dto` ``
+  - `.agent-src.uncondensed/skills/php-service/SKILL.md:16` — find `` - DTOs (use `dto-creator` skill) `` → replace with `` - DTOs (use `laravel-dto` skill for Laravel/PHP; framework-native skill for other stacks) ``
+  - `.agent-src.uncondensed/skills/skill-reviewer/SKILL.md:196` — find `| dto-creator |` → replace with `| laravel-dto |`
 
 
 ### Step 5.3: Rename `skills/migration-creator` → `skills/laravel-migration`
@@ -2176,10 +2176,10 @@ Skill body uses Laravel migration commands (`php artisan make:migration`), Schem
 
 - [ ] **Move directory**:
   ```bash
-  git mv .agent-src.uncompressed/skills/migration-creator .agent-src.uncompressed/skills/laravel-migration
+  git mv .agent-src.uncondensed/skills/migration-creator .agent-src.uncondensed/skills/laravel-migration
   ```
 
-- [ ] **Edit `.agent-src.uncompressed/skills/laravel-migration/SKILL.md` L2**. Find: `name: migration-creator`
+- [ ] **Edit `.agent-src.uncondensed/skills/laravel-migration/SKILL.md` L2**. Find: `name: migration-creator`
   Replace with: `name: laravel-migration`
 
 - [ ] **Edit same file L3**. Find: `description: "Use when the user says "create migration", "add column", or "new table". Creates migrations with correct table prefixes, column naming, and multi-tenant awareness."`
@@ -2196,22 +2196,22 @@ Skill body uses Laravel migration commands (`php artisan make:migration`), Schem
   Replace with: `# laravel-migration`
 
 - [ ] **Update cross-references** (6 files):
-  - `.agent-src.uncompressed/contexts/augment-infrastructure.md:88` — find `` `database`, `migration-creator`, `multi-tenancy` `` → replace with `` `database`, `laravel-migration`, `multi-tenancy` ``
-  - `.agent-src.uncompressed/contexts/skills-and-commands.md:98` — find `` `database`, `migration-creator`, `multi-tenancy`, `sql-writing` `` → replace with `` `database`, `laravel-migration`, `multi-tenancy`, `sql-writing` ``
-  - `.agent-src.uncompressed/skills/database/SKILL.md:18` — find `` - Creating migrations only (use `migration-creator` skill) `` → replace with `` - Creating migrations only — use the framework-specific migration skill (`laravel-migration` for Laravel, framework-native for others) ``
-  - `.agent-src.uncompressed/skills/migration-architect/SKILL.md:3` — find `hands off to `migration-creator` for DDL once locked.` → replace with `hands off to the framework-specific migration skill (`laravel-migration`, Doctrine `bin/console make:migration`, etc.) for DDL once locked.`
-  - `.agent-src.uncompressed/skills/migration-architect/SKILL.md:16` — find `[`migration-creator`](../migration-creator/SKILL.md)` → replace with `[`laravel-migration`](../laravel-migration/SKILL.md)`
-  - `.agent-src.uncompressed/skills/migration-architect/SKILL.md:31` — same find/replace as L16
-  - `.agent-src.uncompressed/skills/migration-architect/SKILL.md:103` — find `Next: /migration-creator for the DDL of phase 1` → replace with `Next: /laravel-migration (or framework-native equivalent) for the DDL of phase 1`
-  - `.agent-src.uncompressed/skills/migration-architect/SKILL.md:115` — find `Do NOT write DDL — that is `migration-creator`'s job.` → replace with `Do NOT write DDL — that is the framework-specific migration skill's job (`laravel-migration` for Laravel).`
-  - `.agent-src.uncompressed/skills/adversarial-review/SKILL.md:107` — find `- **migration-creator** — review migration for data safety.` → replace with `- **laravel-migration** (or framework-native equivalent) — review migration for data safety.`
-  - `.agent-src.uncompressed/skills/eloquent/SKILL.md:18` — find `` - Creating migrations only (use `migration-creator` skill) `` → replace with `` - Creating migrations only (use `laravel-migration` skill) ``
+  - `.agent-src.uncondensed/contexts/augment-infrastructure.md:88` — find `` `database`, `migration-creator`, `multi-tenancy` `` → replace with `` `database`, `laravel-migration`, `multi-tenancy` ``
+  - `.agent-src.uncondensed/contexts/skills-and-commands.md:98` — find `` `database`, `migration-creator`, `multi-tenancy`, `sql-writing` `` → replace with `` `database`, `laravel-migration`, `multi-tenancy`, `sql-writing` ``
+  - `.agent-src.uncondensed/skills/database/SKILL.md:18` — find `` - Creating migrations only (use `migration-creator` skill) `` → replace with `` - Creating migrations only — use the framework-specific migration skill (`laravel-migration` for Laravel, framework-native for others) ``
+  - `.agent-src.uncondensed/skills/migration-architect/SKILL.md:3` — find `hands off to `migration-creator` for DDL once locked.` → replace with `hands off to the framework-specific migration skill (`laravel-migration`, Doctrine `bin/console make:migration`, etc.) for DDL once locked.`
+  - `.agent-src.uncondensed/skills/migration-architect/SKILL.md:16` — find `[`migration-creator`](../migration-creator/SKILL.md)` → replace with `[`laravel-migration`](../laravel-migration/SKILL.md)`
+  - `.agent-src.uncondensed/skills/migration-architect/SKILL.md:31` — same find/replace as L16
+  - `.agent-src.uncondensed/skills/migration-architect/SKILL.md:103` — find `Next: /migration-creator for the DDL of phase 1` → replace with `Next: /laravel-migration (or framework-native equivalent) for the DDL of phase 1`
+  - `.agent-src.uncondensed/skills/migration-architect/SKILL.md:115` — find `Do NOT write DDL — that is `migration-creator`'s job.` → replace with `Do NOT write DDL — that is the framework-specific migration skill's job (`laravel-migration` for Laravel).`
+  - `.agent-src.uncondensed/skills/adversarial-review/SKILL.md:107` — find `- **migration-creator** — review migration for data safety.` → replace with `- **laravel-migration** (or framework-native equivalent) — review migration for data safety.`
+  - `.agent-src.uncondensed/skills/eloquent/SKILL.md:18` — find `` - Creating migrations only (use `migration-creator` skill) `` → replace with `` - Creating migrations only (use `laravel-migration` skill) ``
 
 ### Step 5.4: Tag `commands/update-form-request-messages.md` as Laravel-specific
 
 The command is already named after a Laravel concept (FormRequest) and lists `skills: [laravel-validation]`. The fix is to make the framework binding **explicit** in the frontmatter so the rule-router and the command-suggester treat it as a carve-out.
 
-- [ ] **Edit `.agent-src.uncompressed/commands/update-form-request-messages.md` frontmatter**. Find:
+- [ ] **Edit `.agent-src.uncondensed/commands/update-form-request-messages.md` frontmatter**. Find:
   ```yaml
   ---
   name: update-form-request-messages
@@ -2232,7 +2232,7 @@ The command is already named after a Laravel concept (FormRequest) and lists `sk
   ```
 
 - [ ] **Update cross-reference** (1 file):
-  - `.agent-src.uncompressed/contexts/augment-infrastructure.md:110` — leave as-is (already lists by command name; the `framework: laravel` tag is the discriminator that downstream tools read).
+  - `.agent-src.uncondensed/contexts/augment-infrastructure.md:110` — leave as-is (already lists by command name; the `framework: laravel` tag is the discriminator that downstream tools read).
 
 - [ ] **Optional follow-up** (NOT in this roadmap — file a follow-up): rename the command file itself to `commands/laravel/update-form-request-messages.md` once the broader carve-out subdirectory convention is decided in a separate ADR.
 
@@ -2240,8 +2240,8 @@ The command is already named after a Laravel concept (FormRequest) and lists `sk
 ## Phase 5 acceptance criteria
 
 - [ ] `git status` shows 4 directory renames (R) plus the frontmatter / cross-reference edits — no orphan duplicates
-- [ ] `grep -rn "migration-creator\|dto-creator\|^| .* websocket .*|" .agent-src.uncompressed/` returns 0 hits (old names fully retired)
-- [ ] `grep -rn "framework: laravel" .agent-src.uncompressed/skills/laravel-*/SKILL.md .agent-src.uncompressed/commands/update-form-request-messages.md` returns one match per renamed artifact
+- [ ] `grep -rn "migration-creator\|dto-creator\|^| .* websocket .*|" .agent-src.uncondensed/` returns 0 hits (old names fully retired)
+- [ ] `grep -rn "framework: laravel" .agent-src.uncondensed/skills/laravel-*/SKILL.md .agent-src.uncondensed/commands/update-form-request-messages.md` returns one match per renamed artifact
 - [ ] `task check-refs` exits 0 (no broken cross-references)
 - [ ] `task lint-skills` green for all 4 renamed artifacts (frontmatter still valid)
 
@@ -2249,11 +2249,11 @@ The command is already named after a Laravel concept (FormRequest) and lists `sk
 
 **Goal**: prove every edit in Phases 0–5 holds together, regenerate the four downstream projections (source / Augment / multi-tool / Claude bundle), and stage the rollout so a single broken step does not poison `main`.
 
-**Hard Gate Policy**: every `task` invocation below is a **carve-out for this roadmap only**. `quality.local_auto_run: false` is the project default; CI steps in roadmaps are normally blocked by [`roadmap-ci-steps-policy`](../../.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md). The carve-out is justified because this roadmap touches the source-of-truth of the linter / rule-router / cross-reference graph itself — validation can only be done after the edits land.
+**Hard Gate Policy**: every `task` invocation below is a **carve-out for this roadmap only**. `quality.local_auto_run: false` is the project default; CI steps in roadmaps are normally blocked by [`roadmap-ci-steps-policy`](../../.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md). The carve-out is justified because this roadmap touches the source-of-truth of the linter / rule-router / cross-reference graph itself — validation can only be done after the edits land.
 
 ### Step 6.1: Source-of-truth lints (run BEFORE regeneration)
 
-- [ ] `python3 scripts/lint_framework_leakage.py .agent-src.uncompressed/` — must exit 0. If non-zero, the offending file / line is printed; fix in place before continuing.
+- [ ] `python3 scripts/lint_framework_leakage.py .agent-src.uncondensed/` — must exit 0. If non-zero, the offending file / line is printed; fix in place before continuing.
 - [ ] `task lint-skills` — frontmatter validation across all skills incl. the 4 renames. Must exit 0 or `warn`-only.
 - [ ] `task lint-rule-budget` — confirms the new Tier-2 rule from Phase 0 stays within the per-rule character cap.
 - [ ] `task lint-rule-tiers` — confirms `framework-neutrality-in-generic-skills` is correctly classified as Tier 2 (auto-loaded only on matching repo signal).
@@ -2264,11 +2264,11 @@ The command is already named after a Laravel concept (FormRequest) and lists `sk
 
 ### Step 6.2: Regenerate downstream projections
 
-The four projections regenerate from `.agent-src.uncompressed/` in a fixed order. Skipping or reordering breaks the cross-tool consistency check.
+The four projections regenerate from `.agent-src.uncondensed/` in a fixed order. Skipping or reordering breaks the cross-tool consistency check.
 
-- [ ] **A → B (compress source)**: `task sync`
-  - Compresses `.agent-src.uncompressed/` → `.agent-src/` (caveman grammar) and projects to `.augment/`.
-  - Expect: ~50 files changed (the edited skills + their compressed twins), plus `router.json` regen if Phase 0 added a rule.
+- [ ] **A → B (condense source)**: `task sync`
+  - Condensees `.agent-src.uncondensed/` → `.agent-src/` (telegraph grammar) and projects to `.augment/`.
+  - Expect: ~50 files changed (the edited skills + their condensed twins), plus `router.json` regen if Phase 0 added a rule.
 
 - [ ] **B → C (multi-tool projection)**: `task generate-tools`
   - Regenerates `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`.
@@ -2312,7 +2312,7 @@ The diff touches ~50 source files + ~150 generated files. Land it in **three com
   - Includes: Phase 5 renames (`websocket` → `laravel-websocket`, `dto-creator` → `laravel-dto`, `migration-creator` → `laravel-migration`, `update-form-request-messages` framework-tag), all cross-reference updates, regenerated projections.
   - Verifies: `task check-refs`, `task lint-projection-fidelity`, `task ci`.
 
-**Branch + PR convention**: per [`commit-policy`](../../.agent-src.uncompressed/rules/commit-policy.md), do NOT push or open a PR without explicit user permission for this roadmap. The agent stops after Commit C is locally green and reports back.
+**Branch + PR convention**: per [`commit-policy`](../../.agent-src.uncondensed/rules/commit-policy.md), do NOT push or open a PR without explicit user permission for this roadmap. The agent stops after Commit C is locally green and reports back.
 
 ### Step 6.7: Post-merge follow-ups (file as separate issues, do NOT include in this roadmap)
 
@@ -2329,7 +2329,7 @@ The diff touches ~50 source files + ~150 generated files. Land it in **three com
 
 ## Success criteria (whole roadmap)
 
-- [ ] `python3 scripts/lint_framework_leakage.py` exits 0 against every generic artifact in `.agent-src.uncompressed/{skills,rules,commands}/`
+- [ ] `python3 scripts/lint_framework_leakage.py` exits 0 against every generic artifact in `.agent-src.uncondensed/{skills,rules,commands}/`
 - [ ] `framework-neutrality-in-generic-skills` rule appears in `router.json` at Tier 2 and blocks future leakage in CI
 - [ ] All 4 renamed carve-outs (`laravel-websocket`, `laravel-dto`, `laravel-migration`, framework-tagged `update-form-request-messages`) carry `framework: laravel` in their frontmatter
 - [ ] Generic artifacts touched in Phases 1–4 either (a) have no framework mention, or (b) name PHP/Laravel as one of ≥2 parallel examples ("e.g. PHPStan for PHP, mypy for Python, tsc for TS")
@@ -2367,10 +2367,10 @@ The 11-commit final shape is the authoritative rollout record; the 3-commit plan
 
 ## See also
 
-- [`rules/architecture.md`](../../.agent-src.uncompressed/rules/architecture.md) — package architecture, carve-out pattern
+- [`rules/architecture.md`](../../.agent-src.uncondensed/rules/architecture.md) — package architecture, carve-out pattern
 - [`docs/contracts/rule-router.md`](../../docs/contracts/rule-router.md) — Tier-1 / Tier-2 routing, per-rule char budget
-- [`rules/roadmap-ci-steps-policy.md`](../../.agent-src.uncompressed/rules/roadmap-ci-steps-policy.md) — CI-step gate (this roadmap declares a carve-out in Phase 6)
-- [`contexts/execution/roadmap-process-loop.md`](../../.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md) — how `/roadmap:process-step` walks this file
+- [`rules/roadmap-ci-steps-policy.md`](../../.agent-src.uncondensed/rules/roadmap-ci-steps-policy.md) — CI-step gate (this roadmap declares a carve-out in Phase 6)
+- [`contexts/execution/roadmap-process-loop.md`](../../.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md) — how `/roadmap:process-step` walks this file
 - `agents/evidence/analysis/framework-leakage-scan-2026-05-17.txt` — raw evidence (1008 lines, 584 hits)
 - `scripts/_tmp_scan_framework_leakage.py` — throwaway scanner (replaced by Phase 0's permanent linter)
 

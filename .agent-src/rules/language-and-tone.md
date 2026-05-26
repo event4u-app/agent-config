@@ -6,7 +6,7 @@ alwaysApply: true
 source: package
 validator_ignore:
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
+    pattern: ".agent-src.uncondensed/"
     reason: "Rule scopes the .md-English mandate to the authoring tree."
 workspaces:
   - agent-config-maintainer
@@ -72,7 +72,7 @@ Examples + wrong-vs-correct: [`language-and-tone-examples`](../docs/guidelines/a
 
 ## `.md` files — ALWAYS English
 
-Every text inside `.md` under `.augment/`, `.agent-src/`, `.agent-src.uncompressed/`, `agents/`: headings, paragraphs, bullets, option labels, prompts, placeholders, ASCII labels, table headers / content. Agent translates at runtime.
+Every text inside `.md` under `.augment/`, `.agent-src/`, `.agent-src.uncondensed/`, `agents/`: headings, paragraphs, bullets, option labels, prompts, placeholders, ASCII labels, table headers / content. Agent translates at runtime.
 
 **Labeled-anchor exception** — quoting German inside English prose is forbidden. Either translate, OR use a labeled `DE: … · EN: …` anchor block (only allowed location for German prose).
 

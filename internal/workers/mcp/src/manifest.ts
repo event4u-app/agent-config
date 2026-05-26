@@ -23,7 +23,7 @@ export type Manifest = {
   schema_version: SchemaVersion;
   /** SHA-256 hex (12 chars) — same algo as local kernel. Wire-surfaced. */
   signature: string;
-  /** Full SHA-256 hex of the uncompressed content JSON. Diagnostic. */
+  /** Full SHA-256 hex of the uncondensed content JSON. Diagnostic. */
   content_hash_sha256: string;
   /** Mirrors `package.json::version` at pack time. Wire-surfaced. */
   package_version: string;

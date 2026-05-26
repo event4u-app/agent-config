@@ -32,8 +32,8 @@ from pathlib import Path
 from typing import Dict, List, Set
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_USER_TYPES = ROOT / ".agent-src.uncompressed" / "user-types"
-DEFAULT_SEARCH_ROOT = ROOT / ".agent-src.uncompressed"
+DEFAULT_USER_TYPES = ROOT / ".agent-src.uncondensed" / "user-types"
+DEFAULT_SEARCH_ROOT = ROOT / ".agent-src.uncondensed"
 REFERENCE_THRESHOLD = 1  # user-type with 0 references → flagged.
 
 # Matches `--user-type=<id>` in command markdown, skill prose, docs.

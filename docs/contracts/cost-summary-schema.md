@@ -11,7 +11,7 @@ Schema-versioned so downstream consumers can pin and migrate explicitly.
 
 Design reference: Ruflo `scripts/summary.mjs` (upstream cite). Our shape
 diverges to align with the local `agents/cost-tracking/sessions.jsonl`
-fields and the caveman-suspended-multiplier contract.
+fields and the telegraph-suspended-multiplier contract.
 
 ## Envelope
 
@@ -43,15 +43,15 @@ fields and the caveman-suspended-multiplier contract.
   "total_cost_usd": 1.2345,
   "input_tokens": 100000,
   "output_tokens": 50000,
-  "caveman_delta_tokens": 0,
-  "caveman_multiplier_version": "v1",
-  "caveman_multiplier_active": false
+  "telegraph_delta_tokens": 0,
+  "telegraph_multiplier_version": "v1",
+  "telegraph_multiplier_active": false
 }
 ```
 
-`caveman_delta_tokens` is always `0` while
-`caveman_multiplier_active == false` — see
-[`caveman-telemetry.md`](caveman-telemetry.md) for the suspension contract.
+`telegraph_delta_tokens` is always `0` while
+`telegraph_multiplier_active == false` — see
+[`telegraph-telemetry.md`](telegraph-telemetry.md) for the suspension contract.
 
 ## `by_session` / `by_conversation` row shape
 
@@ -62,7 +62,7 @@ fields and the caveman-suspended-multiplier contract.
   "total_cost_usd": 0.4567,
   "input_tokens": 8000,
   "output_tokens": 4500,
-  "caveman_delta_tokens": 0
+  "telegraph_delta_tokens": 0
 }
 ```
 
@@ -81,7 +81,7 @@ group by inspecting which array the row lives in.
 }
 ```
 
-`by_model` omits caveman fields — the multiplier is dialect-scoped, not
+`by_model` omits telegraph fields — the multiplier is dialect-scoped, not
 model-scoped.
 
 ## Stability guarantees
@@ -100,8 +100,8 @@ model-scoped.
 
 ## See also
 
-- [`caveman-telemetry.md`](caveman-telemetry.md) — defines the
-  `caveman_*` fields and the suspended-multiplier contract.
+- [`telegraph-telemetry.md`](telegraph-telemetry.md) — defines the
+  `telegraph_*` fields and the suspended-multiplier contract.
 - [`scripts/cost_summary.py`](../../scripts/cost_summary.py) — implementation.
 - [`scripts/cost_by_conversation.py`](../../scripts/cost_by_conversation.py) — narrower per-conversation lens with the same JSONL source.
-- [`scripts/caveman_stats.py`](../../scripts/caveman_stats.py) — caveman-only delta lens with the same JSONL source.
+- [`scripts/telegraph_stats.py`](../../scripts/telegraph_stats.py) — telegraph-only delta lens with the same JSONL source.

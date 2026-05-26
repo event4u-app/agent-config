@@ -102,7 +102,7 @@ chat_history:
 
   # Overflow behavior
   #   rotate   = drop oldest entries to stay under max_size_kb
-  #   compress = mark for summarization on the next agent turn
+  #   condense = mark for summarization on the next agent turn
   on_overflow: rotate
 
 # --- Optional pipelines ---

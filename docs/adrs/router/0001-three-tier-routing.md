@@ -6,7 +6,7 @@
 
 ## Context
 
-Every rule in `.agent-src.uncompressed/rules/` loads into a host
+Every rule in `.agent-src.uncondensed/rules/` loads into a host
 agent's system prompt. Loading them all is wasteful (the workspace
 budget is finite) and noisy (irrelevant rules degrade attention).
 The kernel-membership work
@@ -47,7 +47,7 @@ unconditional by definition.
 
 ### Compilation pipeline
 
-1. `scripts/sync.py` projects `.agent-src.uncompressed/` → `.agent-src/`.
+1. `scripts/sync.py` projects `.agent-src.uncondensed/` → `.agent-src/`.
 2. `scripts/compile_router.py` walks rule frontmatter, validates the
    `routes_to:` targets exist on disk, writes `dist/router.json`.
 3. `scripts/skill_linter.py` runs the bidirectional check: every
@@ -66,8 +66,8 @@ enforced by the linter.
 
 All rules `always`-load.
 
-**Why rejected:** the rules tree is ~70 entries; even with caveman
-compression the workspace budget blows past the kernel cap. Static
+**Why rejected:** the rules tree is ~70 entries; even with telegraph
+condensation the workspace budget blows past the kernel cap. Static
 loading wastes attention on rules irrelevant to the current turn.
 
 ### Alt 2 — Pure-runtime semantic search (rejected)

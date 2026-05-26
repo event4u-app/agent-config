@@ -22,7 +22,7 @@ audit's evidence trail. `agents/runtime/` is exempt too — the
 canonical council dirs live at `agents/runtime/council/{questions,
 responses,sessions}/` and the whole `runtime/` tree is gitignored.
 
-Failure modes are enforced by `.agent-src.uncompressed/skills/ai-council/SKILL.md`
+Failure modes are enforced by `.agent-src.uncondensed/skills/ai-council/SKILL.md`
 § "Output path convention".
 
 Exit codes:
@@ -112,7 +112,7 @@ def main() -> int:
         for f in findings:
             print(f"  - {f}")
         print(
-            "\nRule: .agent-src.uncompressed/skills/ai-council/SKILL.md "
+            "\nRule: .agent-src.uncondensed/skills/ai-council/SKILL.md "
             '§ "Output path convention"'
         )
         return 1

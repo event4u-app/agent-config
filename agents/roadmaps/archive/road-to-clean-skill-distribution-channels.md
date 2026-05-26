@@ -21,7 +21,7 @@ depends_on: []
 - [x] Inventory provider distribution surfaces — Claude ships `.claude/skills/` (351 entries) + `.claude-plugin/marketplace.json` (351 unique paths). Augment ships `.augment/` (rules + commands + contexts + personas + skills) + `.augment-plugin/marketplace.json` (`source: "."`). Cursor ships `.cursor/{rules,commands,personas,user-types}` filesystem-only. Cline ships `.clinerules/` (75 flat files) filesystem-only. Windsurf ships `.windsurf/{rules,workflows}` filesystem-only. Copilot ships a single `copilot-instructions.md` file, no skill registry.
 - [x] Confirm `quality.local_auto_run: false` in `agents/settings/.agent-settings.yml` — roadmap must NOT schedule full-pipeline CI steps per `roadmap-ci-steps-policy`. Targeted verifications only.
 - [x] Confirm no overlap with `road-to-adoption-proof-and-ci-green.md` (CI workflows + recruit sessions + MCP registry) and `road-to-deep-root-restructure.md` (root layout). This roadmap is **distribution hygiene** — orthogonal to both.
-- [x] Confirm relevant rules — `non-destructive-by-default` (no destructive scope changes without explicit confirmation), `commit-policy` (no auto-commit), `roadmap-progress-sync` (flip + dashboard same reply), `roadmap-ci-steps-policy` (`local_auto_run: false` → no `task ci` shaped steps), `augment-source-of-truth` (edits land in `packages/<pack>/.agent-src.uncompressed/`).
+- [x] Confirm relevant rules — `non-destructive-by-default` (no destructive scope changes without explicit confirmation), `commit-policy` (no auto-commit), `roadmap-progress-sync` (flip + dashboard same reply), `roadmap-ci-steps-policy` (`local_auto_run: false` → no `task ci` shaped steps), `augment-source-of-truth` (edits land in `packages/<pack>/.agent-src.uncondensed/`).
 
 ## Context
 

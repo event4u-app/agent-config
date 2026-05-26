@@ -1,17 +1,17 @@
 """Locate artefact source roots across the monorepo physical layout.
 
 Phase 4 of the monorepo migration (ADR-017) physically moves source
-artefacts out of the flat ``.agent-src.uncompressed/`` directory into
-``packages/core/.agent-src.uncompressed/`` and
-``packages/pack-*/.agent-src.uncompressed/`` trees. This helper hides
+artefacts out of the flat ``.agent-src.uncondensed/`` directory into
+``packages/core/.agent-src.uncondensed/`` and
+``packages/pack-*/.agent-src.uncondensed/`` trees. This helper hides
 that decision from every scanner so they keep working pre-move and
 post-move with the same call shape.
 
 Contract:
 
 - ``artefact_roots()`` returns every directory that contains source
-  ``.md`` artefacts. Pre-move that is ``.agent-src.uncompressed/`` at
-  the repo root. Post-move it is every ``packages/*/.agent-src.uncompressed/``.
+  ``.md`` artefacts. Pre-move that is ``.agent-src.uncondensed/`` at
+  the repo root. Post-move it is every ``packages/*/.agent-src.uncondensed/``.
   Both can coexist during the migration window.
 - ``iter_artefacts()`` yields every source ``.md`` path under those roots.
 - ``logical_relpath(p)`` returns the artefact's stable identity path
@@ -19,7 +19,7 @@ Contract:
   root contains it. This is what manifests, hash maps, and projections
   use as the artefact key.
 - ``strip_source_prefix(p)`` returns the same as ``logical_relpath``
-  but accepts repo-relative POSIX strings (used by the compressor's
+  but accepts repo-relative POSIX strings (used by the condenseor's
   output-path computation and the LEGACY_SRC_PREFIX logic).
 """
 from __future__ import annotations
@@ -28,22 +28,22 @@ from pathlib import Path
 from typing import Iterator
 
 ROOT = Path(__file__).resolve().parents[2]
-LEGACY_SRC = ROOT / ".agent-src.uncompressed"
+LEGACY_SRC = ROOT / ".agent-src.uncondensed"
 PACKAGES = ROOT / "packages"
 
 # Repo-relative POSIX path prefixes that anchor an artefact source tree.
 # Order: legacy first (kept until the move lands), then packages/*. Each
 # entry is the prefix that gets stripped to obtain the logical path.
-_LEGACY_PREFIX = ".agent-src.uncompressed/"
-_PACKAGE_SUFFIX = "/.agent-src.uncompressed/"
+_LEGACY_PREFIX = ".agent-src.uncondensed/"
+_PACKAGE_SUFFIX = "/.agent-src.uncondensed/"
 
 
 def artefact_roots() -> list[Path]:
     """Every existing directory that contains source ``.md`` artefacts.
 
-    Returns at most one ``.agent-src.uncompressed/`` root (legacy) plus
+    Returns at most one ``.agent-src.uncondensed/`` root (legacy) plus
     one root per ``packages/*/`` subdirectory that exposes its own
-    ``.agent-src.uncompressed/`` tree. Order is stable: legacy first,
+    ``.agent-src.uncondensed/`` tree. Order is stable: legacy first,
     then ``packages/`` entries sorted alphabetically.
     """
     roots: list[Path] = []
@@ -51,7 +51,7 @@ def artefact_roots() -> list[Path]:
         roots.append(LEGACY_SRC)
     if PACKAGES.exists():
         for pkg in sorted(PACKAGES.iterdir()):
-            sub = pkg / ".agent-src.uncompressed"
+            sub = pkg / ".agent-src.uncondensed"
             if sub.is_dir():
                 roots.append(sub)
     return roots
@@ -111,11 +111,11 @@ def logical_relpath(path: Path) -> str:
     """Return the artefact's logical identity path (POSIX, no prefix).
 
     Examples:
-        ``.agent-src.uncompressed/skills/laravel/SKILL.md``
+        ``.agent-src.uncondensed/skills/laravel/SKILL.md``
             → ``skills/laravel/SKILL.md``
-        ``packages/pack-laravel/.agent-src.uncompressed/skills/laravel/SKILL.md``
+        ``packages/pack-laravel/.agent-src.uncondensed/skills/laravel/SKILL.md``
             → ``skills/laravel/SKILL.md``
-        ``packages/core/.agent-src.uncompressed/rules/scope-control.md``
+        ``packages/core/.agent-src.uncondensed/rules/scope-control.md``
             → ``rules/scope-control.md``
 
     Raises ``ValueError`` if ``path`` is not under any known source root.
@@ -130,15 +130,15 @@ def logical_relpath(path: Path) -> str:
 
 
 def strip_source_prefix(rel: str) -> str | None:
-    """Strip the ``.agent-src.uncompressed/`` anchor from a repo-relative path.
+    """Strip the ``.agent-src.uncondensed/`` anchor from a repo-relative path.
 
     Accepts both the legacy flat layout and the monorepo packages layout.
     Returns ``None`` if the path is not under any source root.
 
     Examples:
-        ``".agent-src.uncompressed/rules/foo.md"`` → ``"rules/foo.md"``
-        ``"packages/core/.agent-src.uncompressed/rules/foo.md"`` → ``"rules/foo.md"``
-        ``"packages/pack-laravel/.agent-src.uncompressed/skills/x/SKILL.md"``
+        ``".agent-src.uncondensed/rules/foo.md"`` → ``"rules/foo.md"``
+        ``"packages/core/.agent-src.uncondensed/rules/foo.md"`` → ``"rules/foo.md"``
+        ``"packages/pack-laravel/.agent-src.uncondensed/skills/x/SKILL.md"``
             → ``"skills/x/SKILL.md"``
         ``"docs/architecture.md"`` → ``None``
     """

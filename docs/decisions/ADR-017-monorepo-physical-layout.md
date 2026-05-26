@@ -36,7 +36,7 @@ TypeScript installer **without** moving a single file. The on-disk
 source tree is still flat:
 
 ```text
-.agent-src.uncompressed/
+.agent-src.uncondensed/
   rules/        # 72 entries
   skills/       # 218 entries
   commands/     # 129 entries
@@ -64,11 +64,11 @@ refs, cross-pack drift, hand-edited paths) all bite hardest here.
 packages/
   core/
     installer/                       # TS CLI (already there post-Phase 3)
-    .agent-src.uncompressed/         # rules + kernel skills + scaffolds
-  pack-php/.agent-src.uncompressed/
-  pack-laravel/.agent-src.uncompressed/
+    .agent-src.uncondensed/         # rules + kernel skills + scaffolds
+  pack-php/.agent-src.uncondensed/
+  pack-laravel/.agent-src.uncondensed/
   …
-  pack-ai-video/.agent-src.uncompressed/
+  pack-ai-video/.agent-src.uncondensed/
 ```
 
 No flag day: every commit between "before" and "after" the move builds
@@ -98,7 +98,7 @@ Implemented in [`scripts/plan_physical_move.py`](../../scripts/plan_physical_mov
 6. **Quarantined scaffolds** (the 26 entries in
    [`config/discovery/unassigned-artefacts.yml`](../../config/discovery/unassigned-artefacts.yml))
    → `packages/core/` with `unassigned scaffold:` reason recorded in the
-   move plan. The top-level `.agent-src.uncompressed/README.md` was added
+   move plan. The top-level `.agent-src.uncondensed/README.md` was added
    here during dry-run.
 7. **`primary pack: meta`** → `packages/core/` (package-internal
    scaffolding, not a real pack).
@@ -135,7 +135,7 @@ installer behaviour change.
 - Metadata-to-disk parity: a consumer can now `cd packages/pack-laravel`
   and see exactly what `pack.laravel` ships, no manifest indirection.
 - Phase 5 (trust) lands cleanly inside `packages/core/installer/` and
-  reads per-pack metadata from `packages/pack-*/.agent-src.uncompressed/`.
+  reads per-pack metadata from `packages/pack-*/.agent-src.uncondensed/`.
 - Phase 6 (browser wizard) maps packs 1:1 to its left-nav.
 - Cross-pack drift is now lintable (`task lint-pack-boundaries` in
   Phase 4.4 of the roadmap).
@@ -172,11 +172,11 @@ installer behaviour change.
 Four blocking items and two refinements raised by the council; each
 resolved before `--apply` runs.
 
-### B1 — Final source location of `.agent-src.uncompressed/`
+### B1 — Final source location of `.agent-src.uncondensed/`
 
 The council asked whether the source tree nests inside `packages/core/`
 (current design) or becomes a peer `pack-core/`. **Decision: keep
-`packages/core/.agent-src.uncompressed/`.** Three reasons:
+`packages/core/.agent-src.uncondensed/`.** Three reasons:
 
 1. `packages/core/` is the engine + installer + kernel rules +
    scaffolding (templates, profiles, presets, contexts, user-types).
@@ -199,7 +199,7 @@ similarity) on every moved file. Verification script enforces this.
 
 ### B3 — Consumer-facing output contract
 
-`task sync` writes `.agent-src/` (compressed) and `.augment/` (overlay)
+`task sync` writes `.agent-src/` (condensed) and `.augment/` (overlay)
 at repo root — **unchanged** location and structure. The byte-identity
 contract covers exactly these two trees plus the discovery manifest.
 What changes:

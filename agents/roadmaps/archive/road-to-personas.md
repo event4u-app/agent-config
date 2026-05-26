@@ -18,7 +18,7 @@
 - [x] [`road-to-role-modes.md`](road-to-role-modes.md) Phases 1–4 shipped — six contract skeletons live as `role-contracts` guideline + linter check; personas subsume the axis without replacing the shipped mechanism
 - [x] `skill-quality`, `preservation-guard`, `augment-portability`, `size-enforcement` rules active — new artifact kind inherits the same gates
 - [x] `scripts/skill_linter.py`, `scripts/check_references.py`, `scripts/check_portability.py`, `scripts/update_counts.py` are the extension points — no parallel linter stack
-- [x] `.agent-src.uncompressed/` is the source of truth; `.agent-src/` is regenerated
+- [x] `.agent-src.uncondensed/` is the source of truth; `.agent-src/` is regenerated
 
 ## Vision
 
@@ -43,7 +43,7 @@ This is what separates them from skills.
 - **No** auto-firing personas — personas are invoked by skills, not by user triggers.
 - **No** fine-grained developer variants by default (frontend / backend / devops) — overlap risk without unique signal; decide case-by-case during drafting.
 - **No** replacement of `role-contracts` (shipped via role-modes roadmap) — personas subsume the *voice* axis, role-contracts own the *workflow closing contract* axis. They coexist.
-- **No** project-specific personas in `.agent-src.uncompressed/` — consumer overrides land in `.agent-src/personas/` of the consumer repo, same pattern as skills.
+- **No** project-specific personas in `.agent-src.uncondensed/` — consumer overrides land in `.agent-src/personas/` of the consumer repo, same pattern as skills.
 - **No** LLM-generated personas without human sign-off — every Core persona is authored via `artifact-drafting-protocol`.
 
 ## The Core-6 (v1 canon, always loaded by default)
@@ -89,14 +89,14 @@ the agent surfaces the numbered prompt, never silently switches.
 
 ## Phases
 
-### Phase 1 — primitive + linter + compression ✅ SHIPPED (2026-04-22)
+### Phase 1 — primitive + linter + condensation ✅ SHIPPED (2026-04-22)
 
 - [x] Persona file schema drafted and frozen — frontmatter
   (`id`, `role`, `description`, `mode?`, `tier: core | specialist`,
   `questions` count target, `version`) + required sections
   (Focus / Mindset / Unique Questions / Output Expectations / Anti-Patterns).
   Size budget: Core ≤ 120 lines, Specialist ≤ 80 lines.
-  → [`.agent-src.uncompressed/personas/README.md`](../../.agent-src.uncompressed/personas/README.md) + [`templates/persona.md`](../../.agent-src.uncompressed/templates/persona.md).
+  → [`.agent-src.uncondensed/personas/README.md`](../../.agent-src.uncondensed/personas/README.md) + [`templates/persona.md`](../../.agent-src.uncondensed/templates/persona.md).
 - [x] `scripts/skill_linter.py` gains a persona validator: required
   frontmatter fields, required sections, Unique-Questions heuristic
   enforcement (≥ 3 questions that don't appear verbatim in any other
@@ -108,12 +108,12 @@ the agent surfaces the numbered prompt, never silently switches.
   `.agent-src*` recursive scan already includes `personas/`.
 - [x] `scripts/update_counts.py` TARGETS extended so README /
   AGENTS.md / docs pick up `personas: <n>` automatically.
-- [x] Compression handling: each persona compresses separately
+- [x] Condensation handling: each persona condenses separately
   (symmetric with skills/rules), preserving frontmatter and
-  section markers. `scripts/compress.py` updated; hashes
-  tracked in `.compression-hashes.json`.
+  section markers. `scripts/condense.py` updated; hashes
+  tracked in `.condensation-hashes.json`.
 - [x] Projection to `.augment/personas/`, `.claude/personas/`,
-  `.cursor/personas/` added to `scripts/compress.py
+  `.cursor/personas/` added to `scripts/condense.py
   --generate-tools` — same strategy as skills (symlinks).
 
 ### Phase 2 — Core-6 authored ✅ SHIPPED (2026-04-22)
@@ -121,18 +121,18 @@ the agent surfaces the numbered prompt, never silently switches.
 Each of the six Core personas drafted via `artifact-drafting-protocol`,
 committed in a single batch so cross-references resolve at once.
 
-- [x] `.agent-src.uncompressed/personas/developer.md`
-- [x] `.agent-src.uncompressed/personas/senior-engineer.md`
-- [x] `.agent-src.uncompressed/personas/product-owner.md`
-- [x] `.agent-src.uncompressed/personas/stakeholder.md`
-- [x] `.agent-src.uncompressed/personas/critical-challenger.md`
-- [x] `.agent-src.uncompressed/personas/ai-agent.md`
+- [x] `.agent-src.uncondensed/personas/developer.md`
+- [x] `.agent-src.uncondensed/personas/senior-engineer.md`
+- [x] `.agent-src.uncondensed/personas/product-owner.md`
+- [x] `.agent-src.uncondensed/personas/stakeholder.md`
+- [x] `.agent-src.uncondensed/personas/critical-challenger.md`
+- [x] `.agent-src.uncondensed/personas/ai-agent.md`
 - [x] Every persona passes the Unique-Questions heuristic against
   the other five — linter enforces.
 
 ### Phase 3 — specialist: qa ✅ SHIPPED (2026-04-22)
 
-- [x] `.agent-src.uncompressed/personas/qa.md` drafted (strong
+- [x] `.agent-src.uncondensed/personas/qa.md` drafted (strong
   recommendation per Q24).
 - [x] `artifact-drafting-protocol` run verifies qa produces
   questions Core-6 does not cover; if not, the persona is dropped.
@@ -164,10 +164,10 @@ committed in a single batch so cross-references resolve at once.
 - [x] `.agent-project-settings.yml` gains `personas.default: [...]`
   (team-wide default lens selection) and
   `personas.specialists.auto_include: [qa]` (auto-include on every
-  multi-lens run). *(2026-04-22: [`agent-project-settings.example.yml`](../../.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml) — `personas:` block with Core-6 default and `[qa]` auto-include)*
+  multi-lens run). *(2026-04-22: [`agent-project-settings.example.yml`](../../.agent-src.uncondensed/templates/agents/agent-project-settings.example.yml) — `personas:` block with Core-6 default and `[qa]` auto-include)*
 - [x] `.agent-settings.yml` gains `personas.override: [...]` so a
   developer can narrow or widen their local defaults without
-  changing team config. *(2026-04-22: [`agent-settings.md`](../../.agent-src.uncompressed/templates/agent-settings.md) — `personas.override` (full replacement) + `personas.ignore` (drop-only) with settings-reference rows)*
+  changing team config. *(2026-04-22: [`agent-settings.md`](../../.agent-src.uncondensed/templates/agent-settings.md) — `personas.override` (full replacement) + `personas.ignore` (drop-only) with settings-reference rows)*
 - [x] Merge contract documented in [`layered-settings.md`](../../docs/guidelines/agent-infra/layered-settings.md)
   — six-step resolution (project default → override → specialist auto-include
   → ignore → `.augmentignore` → skill frontmatter wins). No separate
@@ -199,7 +199,7 @@ selection is wrong often enough to justify the complexity.
 
 ## Open questions (for Phase 1 drafting)
 
-- Persona compression semantics — single pass per file, or
+- Persona condensation semantics — single pass per file, or
   cross-persona deduplication? Default: single pass per file
   (symmetric with skills). Revisit if total persona count > 15.
 - Persona versioning — frontmatter `version: 1.0` required? Or
@@ -216,13 +216,13 @@ selection is wrong often enough to justify the complexity.
 | Persona proliferation via drive-by additions | Unique-Questions heuristic enforced in linter; `artifact-drafting-protocol` mandatory per new persona |
 | Overlap with role-contracts muddles the model | Personas = voice; role-contracts = workflow closing contract. Advisory `mode:` link, no cross-enforcement |
 | Consumer overrides drift from package baseline | Consumer personas live in consumer `.agent-src/personas/` overrides; package check_portability stays strict |
-| Compression doubles the maintenance load | Personas compress independently; linter verifies frontmatter survives; CI enforces `task sync` parity |
+| Condensation doubles the maintenance load | Personas condense independently; linter verifies frontmatter survives; CI enforces `task sync` parity |
 
 ## Acceptance criteria
 
 Phase 1 is shipped when: persona schema is frozen, linter
 validates, check_references resolves `personas:` entries,
-compression round-trips, and at least one Core persona (pilot:
+condensation round-trips, and at least one Core persona (pilot:
 `critical-challenger`) is drafted and cited by `adversarial-review`
 end-to-end. Phase 2 is shipped when all Core-6 personas exist,
 pass the Unique-Questions heuristic, and are cross-linked from
@@ -234,6 +234,6 @@ at least one skill each.
 - [`road-to-role-modes.md`](road-to-role-modes.md) — role-contracts guideline personas compose with
 - [`road-to-ticket-refinement.md`](road-to-ticket-refinement.md) — primary consumer
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — Tier-1 rewrites absorb persona references
-- [`.agent-src.uncompressed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md) — mandatory per new persona
-- [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — quality baseline personas inherit
+- [`.agent-src.uncondensed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncondensed/rules/artifact-drafting-protocol.md) — mandatory per new persona
+- [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md) — quality baseline personas inherit
 - [`docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md) — workflow closing contracts

@@ -32,8 +32,8 @@ AUDIT_MD = REPORT_DIR / "auto-rules-audit.md"
 LIKELIHOOD_JSON = REPORT_DIR / "auto-rules-likelihood.json"
 
 CORPUS_GLOBS = [
-    ".agent-src.uncompressed/skills/**/SKILL.md",
-    ".agent-src.uncompressed/commands/**/*.md",
+    ".agent-src.uncondensed/skills/**/SKILL.md",
+    ".agent-src.uncondensed/commands/**/*.md",
     "agents/settings/contexts/**/*.md",
     "docs/guidelines/**/*.md",
 ]

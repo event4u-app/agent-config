@@ -14,7 +14,7 @@ export default defineConfig({
     },
     test: {
         include: ['tests/**/*.test.{ts,tsx}', 'src/**/*.test.{ts,tsx}'],
-        exclude: ['node_modules/**', 'dist/**', '.agent-src/**', '.agent-src.uncompressed/**'],
+        exclude: ['node_modules/**', 'dist/**', '.agent-src/**', '.agent-src.uncondensed/**'],
         environmentMatchGlobs: [
             ['tests/ui/**', 'happy-dom'],
             ['src/ui/**', 'happy-dom'],

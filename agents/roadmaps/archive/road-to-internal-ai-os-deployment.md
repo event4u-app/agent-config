@@ -40,7 +40,7 @@ This roadmap is **structural**, not lightweight — it touches the trust contrac
 
 Make the package run as a long-lived server for a team, not a per-developer install.
 
-- [x] **Step 1:** Author `packages/core/deploy/Dockerfile` — multi-stage build (Node + Python + the global `~/.event4u/agent-config/` core). Final image runs the GUI server (`agent-config-installer gui --host 0.0.0.0 --port 8787`) on a non-root user. Image size budget: < 600 MB compressed.
+- [x] **Step 1:** Author `packages/core/deploy/Dockerfile` — multi-stage build (Node + Python + the global `~/.event4u/agent-config/` core). Final image runs the GUI server (`agent-config-installer gui --host 0.0.0.0 --port 8787`) on a non-root user. Image size budget: < 600 MB condensed.
 - [x] **Step 2:** Author `packages/core/deploy/docker-compose.yml` — services: `agent-config` (the image), `redis` (session + queue), `postgres` (audit log + memory persistence — replaces filesystem JSONL when `STORAGE_MODE=postgres`). Three named volumes: `agent-config-core`, `agent-config-runtime`, `postgres-data`.
 - [x] **Step 3:** New env var contract — `STORAGE_MODE` (`filesystem | postgres`), `SESSION_BACKEND` (`memory | redis`), `BIND_HOST` (default `127.0.0.1` for dev, `0.0.0.0` for compose). Documented in `docs/deploy/env-vars.md`.
 - [x] **Step 4:** Healthcheck endpoint — `GET /api/v1/health` returns `{status: "ok", version, uptime_seconds, storage_mode, session_backend}`. CSRF-exempt; rate-limited to 1 rps per IP.

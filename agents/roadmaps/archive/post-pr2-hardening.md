@@ -11,7 +11,7 @@ and strengthening the areas with the largest remaining score gaps.
 | Commands/Tooling | ✅ 9.0 | — | Phase 6 (✅ done) |
 | Guidelines Overuse Risk | ✅ mitigated | — | Phase 1.1, 4.1 (✅ done) |
 | Complexity/Onboarding | ✅ 8.5 | — | Phase 3, 8 (✅ done) |
-| Compression Quality | ✅ checked | — | Phase 7 (✅ done) |
+| Condensation Quality | ✅ checked | — | Phase 7 (✅ done) |
 | Rule Compliance | ✅ audited | — | Phase 5 (✅ done) |
 
 ## Phase 1: Guardrail Enforcement
@@ -30,11 +30,11 @@ Core principle: **A skill must remain executable without opening a guideline.**
 - [x] Remaining strategic items tracked in `road-to-10.md` (now 100% complete)
 
 ### 1.2 Consistency CI Hardening
-- [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /compress not run)
+- [x] `task sync-check-hashes` — CI check that source hash matches stored hash (fails if /condense not run)
 - [x] Added to `.github/workflows/consistency.yml` as separate step
 - [x] Stale hash cleanup: `--check-hashes` now warns about hashes for deleted source files
 - [x] `--clean-hashes` subcommand for standalone stale hash removal
-- [x] Verified: `task sync-check` checks .augment/ ↔ .agent-src.uncompressed/ file existence
+- [x] Verified: `task sync-check` checks .augment/ ↔ .agent-src.uncondensed/ file existence
 - [x] CI: `sync + generate-tools + git diff --quiet` catches ALL drift (symlinks, .windsurfrules, GEMINI.md, content)
 - [x] CI blocks merge on failure (exit 1 + error annotation)
 - [x] Pre-push: `task ci` covers full pipeline locally
@@ -56,7 +56,7 @@ Adapt optimize commands to use all new rules and guardrails.
 - [x] References `size-and-scope` for AGENTS.md + copilot-instructions.md limits (Step 4)
 - [x] Has preservation gate (MANDATORY before any change)
 - [x] Advisory only — never auto-applies
-- [x] Operates on `.agent-src.uncompressed/` only
+- [x] Operates on `.agent-src.uncondensed/` only
 
 ### 2.2 optimize-skills
 - [x] References `size-and-scope` for size checks (Step 5)
@@ -163,25 +163,25 @@ with weak trigger descriptions. Rules are only effective if they reliably activa
 - [x] No same-named command/skill pairs — clean separation
 - [x] Boundary documented in `size-and-scope.md`
 
-## Phase 7: Compression Quality Verification (✅ done)
+## Phase 7: Condensation Quality Verification (✅ done)
 
-### 7.1 Compression Diff Audit
-- [x] Script: `scripts/check_compression.py` — compares source vs compressed
-- [x] Check: H1/H2 headings in source present in compressed
+### 7.1 Condensation Diff Audit
+- [x] Script: `scripts/check_condensation.py` — compares source vs condensed
+- [x] Check: H1/H2 headings in source present in condensed
 - [x] Check: code blocks preserved exactly (byte-compare)
 - [x] Check: YAML frontmatter identical
-- [x] `task check-compression` target
+- [x] `task check-condensation` target
 - [x] CI workflow: added to `.github/workflows/consistency.yml`
 - [x] Part of `task ci` pipeline
 
-### 7.2 Compression Quality Metrics
+### 7.2 Condensation Quality Metrics
 - [x] Word-count ratio per file: warn if >60% reduction, info if <5%
-- [x] `--summary` flag: per-category stats (files, avg source/compressed words, avg reduction %)
-- [x] Baseline: 170 files, 4% avg reduction (most skills not yet caveman-compressed)
+- [x] `--summary` flag: per-category stats (files, avg source/condensed words, avg reduction %)
+- [x] Baseline: 170 files, 4% avg reduction (most skills not yet telegraph-condensed)
 
-### 7.3 Automated Compression Validation
-- [x] check_compression.py already validates: headings, code blocks, frontmatter, word count
-- [x] Linter integration: --report now includes compression pairs + quality checks automatically
+### 7.3 Automated Condensation Validation
+- [x] check_condensation.py already validates: headings, code blocks, frontmatter, word count
+- [x] Linter integration: --report now includes condensation pairs + quality checks automatically
 
 ## Phase 8: Complexity Reduction (✅ done)
 

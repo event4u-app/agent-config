@@ -43,7 +43,7 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 - [x] `agent-config doctor` reports per-CLI-member: binary present · auth probe · parse fixture · quota remaining · billable flag.
 - [x] Corpus parser test suite covers: missing anchor, renamed heading, bullet without quotes, duplicate entry, anti-example wrongly under Validated, malformed ISO timestamp, redactor-bypass attempt. Each case has a deterministic error message.
 - [x] Fuzzy matching opt-in via `low_impact.fuzzy_match.enabled: true` (default off). Threshold default `0.92`, configurable. High-impact-trigger veto + anti-example-veto enforced and tested.
-- [x] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (Iron-Law) prevents host agents from swallowing `Resolved via low-impact council fast-path: …` markers.
+- [x] New rule `.agent-src.uncondensed/rules/fast-path-marker-visibility.md` (Iron-Law) prevents host agents from swallowing `Resolved via low-impact council fast-path: …` markers.
 - [x] `/memory learn-low-impact` accepts `--preview` (default) and `--apply`; preview prints promoted · refused · redaction reasons · source-project-stripped diff · upstream PR body draft.
 - [x] New setting `defaults.member_mode: cli | api` (default `cli`) flips the global default transport. Per-member explicit `mode:` continues to override. Airgapped installs auto-set `api` via installer detection (no DNS resolution to provider hosts).
 - [x] New setting `routing.solo_member_fallback_chain: [provider, ...]` selects the preferred single member for solo-mode dispatch. Disabled members skipped; duplicates rejected at config-load time; all-invalid escalates to full council (does not fail the decision).
@@ -65,7 +65,7 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 ### Phase 1 — Docs clarity (G1)
 
 - [x] Add `docs/contracts/ai-council-config.md` section "Low-impact council opt-in" with the full snippet (`decision_resolution.classes.low_impact.mode = council` + per-member `participate_low_impact: true`).
-- [x] Update `.agent-src.uncompressed/skills/ai-council/SKILL.md` to cross-reference the opt-in pattern.
+- [x] Update `.agent-src.uncondensed/skills/ai-council/SKILL.md` to cross-reference the opt-in pattern.
 - [x] `agents/.ai-council.yml` example header gets a comment block calling out the default-agent vs opt-in-council distinction.
 
 ### Phase 2 — CLI-binary UX hint (C1)
@@ -96,7 +96,7 @@ Address the six Claude+GPT follow-up findings from PR #150 plus three user-reque
 
 ### Phase 6 — Host-agent transparency Iron-Law rule (G4)
 
-- [x] New rule `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` (always-active, kernel-tier).
+- [x] New rule `.agent-src.uncondensed/rules/fast-path-marker-visibility.md` (always-active, kernel-tier).
 - [x] Iron Law: host agent MUST surface the fast-path marker verbatim in the reply opening.
 - [x] Mirror to `.agent-src/`, regenerate `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` via `task sync && task generate-tools`.
 

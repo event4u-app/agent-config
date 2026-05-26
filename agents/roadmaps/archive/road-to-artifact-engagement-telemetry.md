@@ -14,7 +14,7 @@ This roadmap **does not** change agent behaviour for consumers who keep the defa
 
 ## Prerequisites
 
-- [x] Read `.agent-src.uncompressed/templates/agent-settings.md` (telemetry namespace confirmed clear — sits between `onboarding:` and Settings Reference)
+- [x] Read `.agent-src.uncondensed/templates/agent-settings.md` (telemetry namespace confirmed clear — sits between `onboarding:` and Settings Reference)
 - [x] Read `agents/settings/contexts/implement-ticket-flow.md` (task-boundary semantics — engagement records align to the eight-step linear flow)
 - [x] Confirm `.gitignore` entries for `.agent-engagement.jsonl` (added to root + `config/gitignore-block.txt` so the consumer installer ships the entry)
 
@@ -22,9 +22,9 @@ This roadmap **does not** change agent behaviour for consumers who keep the defa
 
 | Alias | Resolves to | Role |
 |---|---|---|
-| `<engine-src>` | `.agent-src.uncompressed/templates/scripts/` | Source of truth — engagement engine lives here |
-| `<engine-mirror>` | `.agent-src/templates/scripts/` | Compressed projection — auto-generated |
-| `<settings-template>` | `.agent-src.uncompressed/templates/agent-settings.md` | Settings schema lives here |
+| `<engine-src>` | `.agent-src.uncondensed/templates/scripts/` | Source of truth — engagement engine lives here |
+| `<engine-mirror>` | `.agent-src/templates/scripts/` | Condensed projection — auto-generated |
+| `<settings-template>` | `.agent-src.uncondensed/templates/agent-settings.md` | Settings schema lives here |
 | `<engagement-log>` | `.agent-engagement.jsonl` (consumer repo root) | Append-only JSONL, gitignored, opt-in only |
 
 ## Context
@@ -88,7 +88,7 @@ Each event is a single JSONL line: `{ts, task_id, boundary_kind, consulted: {ski
 
 ## Phase 3: Agent-side hooks
 
-- [x] **Step 1:** Shipped `.agent-src.uncompressed/rules/artifact-engagement-recording.md` — `type: auto`, `cloud_safe: noop`, fires on /implement-ticket and /work boundary completion. Rule body: read settings once per task, cache, then emit one `./agent-config telemetry:record` per boundary with consulted+applied lists. `enabled: false` → no-op.
+- [x] **Step 1:** Shipped `.agent-src.uncondensed/rules/artifact-engagement-recording.md` — `type: auto`, `cloud_safe: noop`, fires on /implement-ticket and /work boundary completion. Rule body: read settings once per task, cache, then emit one `./agent-config telemetry:record` per boundary with consulted+applied lists. `enabled: false` → no-op.
 - [x] **Step 2:** Wired into `/implement-ticket` and `/work` command rules — single bullet under `### Rules` in each, pointing at the rule for the full contract. Boundary cadence governed by `telemetry.artifact_engagement.granularity` (`task` | `phase-step`); both flows share the same eight-step contract from `agents/settings/contexts/implement-ticket-flow.md`.
 - [x] **Step 3:** Cost-floor verified by `tests/telemetry/test_cost_floor.py` (6 cases) — fresh-subprocess imports of `work_engine.dispatcher` and `work_engine.cli` confirm zero `telemetry.*` modules load; disabled `telemetry:record` creates no files, doesn't even create parent dirs; rule frontmatter type/cloud-safe markers locked.
 - [x] **Step 4:** Recording contract documented in `agents/settings/contexts/artifact-engagement-flow.md` — boundary semantics, consulted-vs-applied taxonomy, forbidden fields (paths, content, secrets, oversized strings), failure modes (telemetry never blocks the user's task), cost-floor invariants, hand-audit recipes.

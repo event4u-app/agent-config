@@ -218,8 +218,8 @@ def test_command_skips_cluster_agents_md(tmp_path: Path) -> None:
 
 def test_command_skipped_when_skill_with_same_name_exists(tmp_path: Path) -> None:
     pkg = tmp_path / "pkg"
-    _make_skill(pkg, "compress", skill_md="# real skill\n")
-    _make_command(pkg, "compress.md", body="# command shadow\n")
+    _make_skill(pkg, "condense", skill_md="# real skill\n")
+    _make_command(pkg, "condense.md", body="# command shadow\n")
     _make_command(pkg, "research.md", body="# research\n")
     dest = tmp_path / "bundles"
 
@@ -227,7 +227,7 @@ def test_command_skipped_when_skill_with_same_name_exists(tmp_path: Path) -> Non
 
     names = sorted(p.name for p in written)
     assert names == ["research.zip"]
-    assert not (dest / "compress.zip").exists()
+    assert not (dest / "condense.zip").exists()
 
 
 def test_command_bundle_idempotent_second_call(tmp_path: Path) -> None:

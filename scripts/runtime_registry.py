@@ -63,10 +63,10 @@ class SkillRuntime:
 
 
 def discover_skills(root: Path) -> List[Path]:
-    """Find all SKILL.md files, preferring .agent-src.uncompressed/."""
-    uncompressed = root / ".agent-src.uncompressed" / "skills"
-    compressed = root / ".agent-src" / "skills"
-    base = uncompressed if uncompressed.exists() else compressed
+    """Find all SKILL.md files, preferring .agent-src.uncondensed/."""
+    uncondensed = root / ".agent-src.uncondensed" / "skills"
+    condensed = root / ".agent-src" / "skills"
+    base = uncondensed if uncondensed.exists() else condensed
     if not base.exists():
         return []
     return sorted(f for f in base.rglob("SKILL.md") if not f.is_symlink())

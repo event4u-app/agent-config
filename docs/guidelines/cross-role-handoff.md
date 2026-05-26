@@ -93,7 +93,7 @@ Council Q3 (2026-05-05) locks the disambiguation between L4
   shipping — becomes **input to L4**. The escalation is one-way:
   L4 produces the dissent log that decides whether C8's verdict
   is overridden, with the override recorded in
-  [`decision-record`](../../.agent-src.uncompressed/skills/decision-record/SKILL.md).
+  [`decision-record`](../../.agent-src.uncondensed/skills/decision-record/SKILL.md).
 
 The boundary keeps the two skills sharp — neither absorbs the other —
 and gives the agent a deterministic rule for which one to load when
@@ -123,5 +123,5 @@ No cluster collision, no tier mismatch, no untyped drift.
 - [`docs/contracts/context-spine.md`](../contracts/context-spine.md)
   — orthogonal context-slot mechanism, often used together with a
   handoff (e.g. delegate reads `team` slot the initiator opted in to).
-- `.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md` § mode 6
+- `.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md` § mode 6
   — when the chain runs in fresh worktrees.

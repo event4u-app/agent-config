@@ -250,7 +250,7 @@ No clone, no execute, no credentials used.
 ## Related
 
 - Command that produced this document:
-  [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
+  [`.agent-src.uncondensed/commands/analyze-reference-repo.md`](../../.agent-src.uncondensed/commands/analyze-reference-repo.md)
 - Active roadmaps: [`road-to-autonomous-agent.md`](../roadmaps/road-to-autonomous-agent.md).
 - Related archived roadmap:
   [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md).

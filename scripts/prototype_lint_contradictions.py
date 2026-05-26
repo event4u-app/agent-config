@@ -31,7 +31,7 @@ import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-SRC = REPO / ".agent-src.uncompressed"
+SRC = REPO / ".agent-src.uncondensed"
 
 ARTIFACT_DIRS = {
     "rule": SRC / "rules",

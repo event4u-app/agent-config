@@ -88,21 +88,21 @@ For each approved verdict:
 
 * **merge** → rewrite the surviving rule to cover both domains;
   delete the absorbed one; update any `routes_to:` references.
-* **delete** → remove the file from `.agent-src.uncompressed/rules/`
+* **delete** → remove the file from `.agent-src.uncondensed/rules/`
   and the corresponding `.agent-src/rules/` projection.
 * **move-to-context** → extract the body into
-  `.agent-src.uncompressed/contexts/<area>/<name>.md`, replace the
+  `.agent-src.uncondensed/contexts/<area>/<name>.md`, replace the
   rule body with the obligation + a `load_context:` pointer.
 * **promote-to-skill** → create
-  `.agent-src.uncompressed/skills/<name>/SKILL.md`, replace the rule
+  `.agent-src.uncondensed/skills/<name>/SKILL.md`, replace the rule
   with an auto-trigger stub that routes to it (or delete the rule
   entirely if the skill's own trigger suffices).
 
 ### 6. Re-validate
 
 ```bash
-bash scripts/compress.sh --sync
-python3 scripts/compress.py --generate-tools
+bash scripts/condense.sh --sync
+python3 scripts/condense.py --generate-tools
 python3 scripts/measure_augment_budget.py --check   # must exit 0
 python3 scripts/skill_linter.py --all               # 0 FAIL
 ```

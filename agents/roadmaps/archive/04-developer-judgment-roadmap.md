@@ -120,7 +120,7 @@ Add a linter check that flags skills missing validation/challenge guidance.
 
 **Deliverable:**
 - New: `docs/guidelines/agent-infra/developer-judgment.md`
-- Compressed: `docs/guidelines/agent-infra/developer-judgment.md`
+- Condensed: `docs/guidelines/agent-infra/developer-judgment.md`
 
 **Content:**
 - Decision table: when to challenge vs. when to proceed

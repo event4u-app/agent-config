@@ -6,8 +6,8 @@
 ## Input → Transform → Output
 
 ```
-.agent-src/**                      ← Compressed payload (shipped in @event4u/agent-config)
-    ↓ scripts/compress.py:project_to_augment()
+.agent-src/**                      ← Condensed payload (shipped in @event4u/agent-config)
+    ↓ scripts/condense.py:project_to_augment()
 .augment/**                        ← Local projection (gitignored on consumer side)
     rules/                         ← copies (Augment historically does not load symlinked rules)
     skills/ commands/ contexts/
@@ -34,7 +34,7 @@ After projection, those paths resolve through the symlinks in
 | Project self-projection | `task sync` (`project_to_augment()` step) — [`taskfiles/content.yml:4`](../../taskfiles/content.yml) |
 | Standalone project-augment | `task project-augment` — [`taskfiles/content.yml:23`](../../taskfiles/content.yml) |
 | Consumer install | `scripts/install.sh` (delegates to `scripts/install.py`) |
-| Direct script | `python3 scripts/compress.py --project-augment` |
+| Direct script | `python3 scripts/condense.py --project-augment` |
 
 ## Invariants
 
@@ -59,7 +59,7 @@ After projection, those paths resolve through the symlinks in
 
 ## Proving the pipeline
 
-- [`tests/test_compress.py`](../../tests/test_compress.py) §
+- [`tests/test_condense.py`](../../tests/test_condense.py) §
   `test_project_to_augment_rules_mode_toggle` and surrounding cases
   — exercises both copy-mode and symlink-mode for rules; verifies
   symlink targets for skills / commands / contexts.

@@ -13,7 +13,7 @@ keep-beta-until: 2026-08-12
 > - **Created:** 2026-05-01
 > - **Status:** Phase 1–6 shipped — audit / design / apply / review /
 >   polish handlers live under
->   [`.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/).
+>   [`.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/).
 >   Mixed under `directives/mixed/`. `ui-trivial` under
 >   `directives/ui_trivial/`. R4 (Visual Review Loop) added the
 >   a11y gate, the preview envelope, and a polish-termination rewrite
@@ -56,9 +56,9 @@ exists so the dispatcher's completeness check is satisfied; no logic
 runs and no state is touched.
 
 Source of truth for slot wiring:
-[`directives/ui/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/__init__.py),
-[`directives/mixed/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/mixed/__init__.py),
-[`directives/ui_trivial/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui_trivial/__init__.py).
+[`directives/ui/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/__init__.py),
+[`directives/mixed/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/mixed/__init__.py),
+[`directives/ui_trivial/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/__init__.py).
 
 ## The `ui` set — slot-by-slot
 
@@ -75,7 +75,7 @@ Mandatory pre-step. Routes on `state.ui_audit` shape:
 | Anything else populated | `BLOCKED` numbered options | User picks candidate to extend (or "build new"); records `audit_path = "ambiguous"` + `candidate_pick` |
 
 Constants live in
-[`directives/ui/audit.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/audit.py):
+[`directives/ui/audit.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/audit.py):
 `STRONG_SIMILARITY = 0.7`, `TIE_GAP = 0.05`,
 `TESTED_AGAINST_SHADCN_MAJOR = 2`. Idempotent re-entry: once
 `audit_path` is set the step round-trips through `SUCCESS` without
@@ -199,7 +199,7 @@ Stack-directive table mirrors apply / review with prefix
 ### `report` → backend renderer
 
 Re-export of
-[`directives.backend.report.run`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/report.py).
+[`directives.backend.report.run`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/report.py).
 The renderer is pure and state-driven; the same Markdown contract
 serves both tracks.
 
@@ -234,7 +234,7 @@ adjustment). Phase-1 intent classifier writes
 `directive_set = "ui-trivial"`.
 
 Hard preconditions in
-[`directives/ui_trivial/apply.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/ui_trivial/apply.py):
+[`directives/ui_trivial/apply.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/ui_trivial/apply.py):
 
 - `MAX_FILES = 1` — exactly one file touched.
 - `MAX_LINES_CHANGED = 5` — diff stays under five changed lines.
@@ -323,7 +323,7 @@ suite asserts every `BLOCKED` path has a matching declaration.
 - [`adr-product-ui-track.md`](adr-product-ui-track.md) — locked
   decisions for the UI track (R3) and the visual-review-loop
   amendment (R4: a11y gate, preview envelope, polish-termination).
-- [`existing-ui-audit` SKILL](../../.agent-src.uncompressed/skills/existing-ui-audit/SKILL.md)
+- [`existing-ui-audit` SKILL](../../.agent-src.uncondensed/skills/existing-ui-audit/SKILL.md)
   — producer of `state.ui_audit`.
-- [`ui-audit-gate` rule](../../.agent-src.uncompressed/rules/ui-audit-gate.md)
+- [`ui-audit-gate` rule](../../.agent-src.uncondensed/rules/ui-audit-gate.md)
   — the always-on rule that mirrors the audit gate at the agent layer.

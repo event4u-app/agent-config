@@ -16,7 +16,7 @@ type: prospective
 **Accepted** · 2026-05-21 · external AI Council pass on the Phase 5
 roadmap (`claude-sonnet-4-5` + `gpt-4o`, `design` lens). Council
 confirmed the closed-enum trust ladder, the per-pack safety-floor
-rule, and the compressor-injected HRR banner; refinement folded into
+rule, and the condenseor-injected HRR banner; refinement folded into
 the lint script and the installer's confirm copy.
 
 Session: [`agents/runtime/council/responses/phase-5-trust-safety.json`](../../agents/runtime/council/responses/phase-5-trust-safety.json) <!-- council-ref-allowed: ADR decision-trace -->
@@ -25,7 +25,7 @@ Companion artefacts:
 - Contract: [`docs/contracts/trust-and-safety.md`](../contracts/trust-and-safety.md)
 - Roadmap: [`agents/roadmaps/monorepo-phase-5-trust-safety-layer.md`](../../agents/roadmaps/monorepo-phase-5-trust-safety-layer.md)
 - Lint: [`scripts/lint_trust_coherence.py`](../../scripts/lint_trust_coherence.py) + [`tests/test_lint_trust_coherence.py`](../../tests/test_lint_trust_coherence.py)
-- Compressor: [`scripts/compress.py`](../../scripts/compress.py) (`_inject_hrr_banner`)
+- Condenseor: [`scripts/condense.py`](../../scripts/condense.py) (`_inject_hrr_banner`)
 - Installer: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
 
 ## Context
@@ -44,7 +44,7 @@ After Phase 4 we had the **metadata** end-to-end but **no enforcement**:
 - Installer treated all packs identically — no surface for advisory
   content, no confirm step before opting into legally-flavoured
   finance / strategy material.
-- Compressor preserved frontmatter but did not propagate the
+- Condenseor preserved frontmatter but did not propagate the
   `human_review_required` signal into the compiled artefact, so the
   runtime had no parser-stable hook to gate output on.
 - Domain-specific safety floors (finance, founder-strategy,
@@ -70,10 +70,10 @@ Ship a four-piece trust & safety layer:
 1. **Closed-enum trust ladder.** `core` · `professional` · `advisory`
    · `restricted` · `experimental`. Authoritative table and meaning
    live in [`trust-and-safety § 1`](../contracts/trust-and-safety.md#-1--trust-levels).
-2. **HRR banner injection.** The compressor scans frontmatter and
+2. **HRR banner injection.** The condenseor scans frontmatter and
    prepends `<!-- agent-config:human-review-banner -->\n> HUMAN REVIEW
    REQUIRED · trust: <level> · owner: <domain>` to any artefact with
-   `trust.human_review_required: true`. Idempotent on re-compression.
+   `trust.human_review_required: true`. Idempotent on re-condensation.
 3. **Per-pack safety-floor rules.** `core` ships
    `engineering-safety-floor.md`; `pack-finance-basic` ships
    `finance-safety-floor.md`; `pack-founder-strategy` ships
@@ -97,7 +97,7 @@ Ship a four-piece trust & safety layer:
 ### Good
 
 - **Single source of trust truth.** The frontmatter field is the
-  one input; the installer, compressor, lint, and runtime all read
+  one input; the installer, condenseor, lint, and runtime all read
   it. No parallel registry, no duplicated copy.
 - **Banner is parser-stable.** The HTML-comment marker survives every
   downstream surface (Augment, Claude, Cursor, Windsurf) because it is

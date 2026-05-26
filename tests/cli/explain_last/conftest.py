@@ -35,7 +35,7 @@ def _seed_project(tmp_path: Path) -> Path:
     dist_dir = tmp_path / "dist"
     dist_dir.mkdir(parents=True, exist_ok=True)
     (dist_dir / "router.json").write_text(json.dumps(_ROUTER), encoding="utf-8")
-    presets_dir = tmp_path / ".agent-src.uncompressed" / "presets"
+    presets_dir = tmp_path / ".agent-src.uncondensed" / "presets"
     presets_dir.mkdir(parents=True)
     (presets_dir / "balanced.yml").write_text(
         "preset:\n"
@@ -45,7 +45,7 @@ def _seed_project(tmp_path: Path) -> Path:
         "  autonomy: {default: auto}\n",
         encoding="utf-8",
     )
-    profiles_dir = tmp_path / ".agent-src.uncompressed" / "profiles"
+    profiles_dir = tmp_path / ".agent-src.uncondensed" / "profiles"
     profiles_dir.mkdir(parents=True)
     (profiles_dir / "developer.yml").write_text(
         "profile:\n  id: developer\n  preset: balanced\n",

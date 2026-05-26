@@ -62,7 +62,7 @@ separate distribution model. Mixing both in one roadmap obscures the trade-offs.
 |---|---|---|
 | `prompts/list`, `prompts/get` | Skills (~128) + Commands (~77) | One prompt per `SKILL.md` / command file. Frontmatter `description` → MCP prompt description. Body → prompt text. |
 | `resources/list`, `resources/read` | Rules (~53) + Guidelines (~46) + Contexts | URIs: `rule://<name>`, `guideline://<name>`, `context://<name>`. |
-| `tools/list`, `tools/call` | Engine helpers | `lint_skills`, `chat_history.append`, `work_engine.refine` (subset), `compress`, … — explicit allowlist, not auto-exposed. |
+| `tools/list`, `tools/call` | Engine helpers | `lint_skills`, `chat_history.append`, `work_engine.refine` (subset), `condense`, … — explicit allowlist, not auto-exposed. |
 
 **Locked decision:** prompts and resources are **read-only projections** of
 existing files. No new content authored MCP-side. Tools are an explicit
@@ -88,7 +88,7 @@ Estimated effort: 1-2 dev days, gated on SDK verification.
 - [x] **A2** — Confirm at least one MCP-aware client supports stdio Python servers without paid features (Claude Desktop free tier, Zed, Continue, …). One confirmed client = Phase 1 unblocked. _Done 2026-05-10 — Claude Desktop (free), Zed, and Continue all support stdio MCP servers without a paid tier per their published docs._
 - [x] **A3** — `scripts/mcp_server/__init__.py` + `__main__.py` entrypoint, stdio transport boilerplate. _Done 2026-05-10 — `scripts/mcp_server/{__init__,__main__,server,prompts}.py`. `python -m scripts.mcp_server` boots clean._
 - [x] **A4** — `prompts/list` returns 5 hand-picked skills (frontmatter → MCP prompt metadata). Picks: `verify-completion-evidence`¹, `systematic-debugging`, `test-driven-development`, `refine-ticket`, `conventional-commits-writing` — stack-agnostic on purpose, so the demo lands on any consumer regardless of language/framework. _Done 2026-05-10 — `scripts/mcp_server/prompts.py::PHASE_1_SKILLS`._<br>¹ Original list named `verify-before-complete`; that artefact is a **rule**, not a skill. Its skill counterpart is `verify-completion-evidence` (same evidence-gate obligation, different surface). Substituted on implementation — both reviewers' "5 stack-agnostic instructional skills" intent preserved.
-- [x] **A5** — `prompts/get` returns the SKILL.md body (compressed `.agent-src/` form, not uncompressed). _Done 2026-05-10 — frontmatter is stripped at load time; body served verbatim._
+- [x] **A5** — `prompts/get` returns the SKILL.md body (condensed `.agent-src/` form, not uncondensed). _Done 2026-05-10 — frontmatter is stripped at load time; body served verbatim._
 - [x] **A6** — Manual smoke test in confirmed client from A2; record session transcript outside `agents/roadmaps/`. _Done 2026-05-10 — programmatic stdio JSON-RPC handshake recorded in `agents/evidence/mcp-sessions/2026-05-10-phase-1-stdio-smoke.md`. Substitutes for a GUI smoke in autonomous mode; same wire protocol Claude Desktop / Zed / Continue would use._
 - [x] **A7** — `tests/test_mcp_server.py` — at minimum: prompts/list returns ≥5 entries, prompts/get returns non-empty body, JSON-RPC envelope is valid. _Done 2026-05-10 — 10 tests pass (loader · import-surface guard · server handlers). SDK-dependent tests use `pytest.importorskip` so CI matrices without the `mcp` SDK still run the loader layer._
 
@@ -221,7 +221,7 @@ one confirmed client.
 
 - `docs/architecture.md` — projection model description.
 - `road-to-better-skills-and-profiles.md` § "Multi-client expansion" — sister roadmap, file-projection axis.
-- `.agent-src.uncompressed/skills/mcp/SKILL.md` — current consumer-side MCP skill (will be expanded once we ship our own server).
+- `.agent-src.uncondensed/skills/mcp/SKILL.md` — current consumer-side MCP skill (will be expanded once we ship our own server).
 - [`docs/guidelines/agent-infra/mcp-request-signing.md`](../../docs/guidelines/agent-infra/mcp-request-signing.md) — HMAC-SHA256 signing primitive for any non-stdio transport. Pairs with **D4** allowlist; load-bearing once **F2** (SSE) or **F3** (cloud bundle) ship.
 - Anthropic MCP spec — verify URL + version in A1 before locking.
 

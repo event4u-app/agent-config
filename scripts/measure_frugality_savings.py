@@ -9,7 +9,7 @@ Metrics:
   A. footprint    — per-rule char/token count, kernel/tier breakdown
   B. fillers      — filler-phrase prevalence in chat-history corpus
                     (heuristic signal, not full transcript)
-  C. compression  — uncompressed → compressed char delta per rule
+  C. condensation  — uncondensed → condensed char delta per rule
   D. redundancy   — cross-ref overlap across "Interactions:" /
                     "See also" sections in the canon
 
@@ -29,7 +29,7 @@ CANON_RULES = [
     ("no-cheap-questions", "kernel"),
     ("ask-when-uncertain", "kernel"),
     ("user-interaction", "tier_1"),
-    ("caveman-speak", "tier_1"),
+    ("telegraph-speak", "tier_1"),
     ("token-efficiency", "tier_2"),
 ]
 CHARTER = "frugality-charter"
@@ -60,8 +60,8 @@ def metric_a_footprint(root: Path) -> dict:
     tier1_total = 0
     tier2_total = 0
     for name, tier in CANON_RULES:
-        compressed = root / ".agent-src" / "rules" / f"{name}.md"
-        chars = len(_read(compressed))
+        condensed = root / ".agent-src" / "rules" / f"{name}.md"
+        chars = len(_read(condensed))
         tokens = chars // 4  # rough 4-char/token approximation
         rows.append({"rule": name, "tier": tier, "chars": chars, "tokens_approx": tokens})
         if tier == "kernel":
@@ -112,15 +112,15 @@ def metric_b_fillers(corpus: Path) -> dict:
     }
 
 
-def metric_c_compression(root: Path) -> dict:
-    """Uncompressed → compressed char delta per rule."""
+def metric_c_condensation(root: Path) -> dict:
+    """Uncondensed → condensed char delta per rule."""
     rows = []
     for name, _ in CANON_RULES:
-        un = len(_read(root / ".agent-src.uncompressed" / "rules" / f"{name}.md"))
+        un = len(_read(root / ".agent-src.uncondensed" / "rules" / f"{name}.md"))
         co = len(_read(root / ".agent-src" / "rules" / f"{name}.md"))
         delta = un - co
         ratio = round(co / un, 3) if un else 0
-        rows.append({"rule": name, "uncompressed_chars": un, "compressed_chars": co, "delta": delta, "ratio": ratio})
+        rows.append({"rule": name, "uncondensed_chars": un, "condensed_chars": co, "delta": delta, "ratio": ratio})
     return {"rules": rows}
 
 
@@ -128,7 +128,7 @@ def metric_d_redundancy(root: Path) -> dict:
     """Cross-ref section count + total xref-block size."""
     rows = []
     for name, _ in CANON_RULES:
-        path = root / ".agent-src.uncompressed" / "rules" / f"{name}.md"
+        path = root / ".agent-src.uncondensed" / "rules" / f"{name}.md"
         text = _read(path)
         xref_count = len(XREF_HEADERS.findall(text))
         # naive: chars after last xref header to EOF
@@ -148,7 +148,7 @@ def main() -> int:
         "phase": "phase_0_baseline",
         "metric_a_footprint": metric_a_footprint(root),
         "metric_b_fillers": metric_b_fillers(corpus),
-        "metric_c_compression": metric_c_compression(root),
+        "metric_c_condensation": metric_c_condensation(root),
         "metric_d_redundancy": metric_d_redundancy(root),
     }
 

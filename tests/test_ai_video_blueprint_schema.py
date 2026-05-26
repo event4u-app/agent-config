@@ -2,7 +2,7 @@
 
 Wraps the bash-based validator ``scripts/ai-video/lib/parse-blueprint.sh``
 and the canonical schema at
-``.agent-src.uncompressed/skills/scene-expander/scene-blueprint.schema.yaml``.
+``.agent-src.uncondensed/skills/scene-expander/scene-blueprint.schema.yaml``.
 
 Filesystem + subprocess only — no network, no provider API calls. The
 parser exits ``0`` on a valid blueprint, ``2`` on a missing required

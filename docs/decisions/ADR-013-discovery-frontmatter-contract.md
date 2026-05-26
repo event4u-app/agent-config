@@ -142,7 +142,7 @@ matching `config/discovery/packs.yml` row in the same PR.
   are accepted; the scanner emits `unassigned[]` warnings; CI logs but
   does not fail.
 - **Phase 4**: every artefact under
-  `.agent-src.uncompressed/{skills,rules,commands,templates}` either
+  `.agent-src.uncondensed/{skills,rules,commands,templates}` either
   declares the new keys, or sits in `config/discovery/unassigned-artefacts.yml`
   with a one-line reason.
 - **Phase 4+**: CI flips strict; missing annotation is a fail.
@@ -150,7 +150,7 @@ matching `config/discovery/packs.yml` row in the same PR.
 ### Trust-root allow-list (security-engineer council fold-in)
 
 The scanner honours frontmatter only on files under the trusted roots:
-`.augment/`, `.claude/`, `.agent-src.uncompressed/`, `.agent-src/`.
+`.augment/`, `.claude/`, `.agent-src.uncondensed/`, `.agent-src/`.
 Files under `agents/`, `tmp/`, or any consumer-writable path **cannot**
 claim ownership of a workspace or pack. Phase 2 enforces.
 
@@ -201,7 +201,7 @@ discovery-driven action.
 
 The five required keys (`workspaces`, `packs`, `lifecycle`, `trust`,
 `install`) are now **strictly enforced** across every artefact under
-`.agent-src.uncompressed/{skills,rules,commands,templates}` by
+`.agent-src.uncondensed/{skills,rules,commands,templates}` by
 [`scripts/lint_artefact_frontmatter.py`](../../scripts/lint_artefact_frontmatter.py),
 wired into `task lint-artefact-frontmatter`, `task ci`, and the opt-in
 combined pre-commit hook (`./agent-config hooks:install`). The migration

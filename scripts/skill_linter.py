@@ -1214,7 +1214,7 @@ def parse_execution_block(frontmatter: str) -> Optional[dict]:
 def lint_senior_tier_blocks(text: str) -> List[Issue]:
     """Validate the four required blocks for `tier: senior` skills.
 
-    Per .agent-src.uncompressed/rules/skill-quality.md § Senior-Tier
+    Per .agent-src.uncondensed/rules/skill-quality.md § Senior-Tier
     Required Structure: Context-First lead (description), Related Skills
     (with WHEN / WHEN NOT lists), Proactive Triggers, Output Artifacts.
 
@@ -1830,7 +1830,7 @@ def lint_persona(path: Path, text: str) -> LintResult:
             artifact_type="persona",
             status="fail",
             issues=issues,
-            suggestions=["See .agent-src.uncompressed/templates/persona.md for the schema"],
+            suggestions=["See .agent-src.uncondensed/templates/persona.md for the schema"],
         )
 
     # Required frontmatter fields
@@ -1975,7 +1975,7 @@ def lint_usertype(path: Path, text: str) -> LintResult:
             artifact_type="user-type",
             status="fail",
             issues=issues,
-            suggestions=[".agent-src.uncompressed/user-types/_template/user-type.md"],
+            suggestions=[".agent-src.uncondensed/user-types/_template/user-type.md"],
         )
 
     # Required keys per docs/contracts/user-type-schema.md § 1.
@@ -2061,8 +2061,8 @@ def lint_usertype(path: Path, text: str) -> LintResult:
 def gather_all_candidate_files(root: Path) -> list[Path]:
     """Gather all lintable files across every source root (ADR-017 multi-root).
 
-    Walks ``artefact_roots()`` (legacy ``.agent-src.uncompressed/`` plus every
-    ``packages/*/.agent-src.uncompressed/``). Falls back to ``.agent-src/``
+    Walks ``artefact_roots()`` (legacy ``.agent-src.uncondensed/`` plus every
+    ``packages/*/.agent-src.uncondensed/``). Falls back to ``.agent-src/``
     only when no source root exists. Skips symlinks to avoid double-counting.
     Deduplicates on logical relpath \u2014 first root wins per the agent_src
     contract.
@@ -2106,8 +2106,8 @@ def gather_all_candidate_files(root: Path) -> list[Path]:
             if charter.exists() and not charter.is_symlink():
                 _add(charter, src_root)
     else:
-        # Pure-compressed fallback (.agent-src/ only). Used by consumer
-        # projects that vendor the compressed tree without sources.
+        # Pure-condensed fallback (.agent-src/ only). Used by consumer
+        # projects that vendor the condensed tree without sources.
         augment_root = root / ".agent-src"
         if augment_root.exists():
             for sub_pattern in (
@@ -2138,7 +2138,7 @@ def gather_candidate_files_under(src_root: Path) -> list[Path]:
     """Gather lintable files under an arbitrary source root.
 
     Mirrors the per-root walk used by ``gather_all_candidate_files`` but
-    scoped to a single directory \u2014 e.g. ``packages/pack-laravel/.agent-src.uncompressed/``
+    scoped to a single directory \u2014 e.g. ``packages/pack-laravel/.agent-src.uncondensed/``
     so CI can lint a single pack in parallel (ADR-017 Phase 4.4).
     Skips symlinks and ``README.md`` siblings under ``personas/`` /
     ``user-types/``.
@@ -2219,11 +2219,11 @@ def gather_changed_candidate_files(root: Path) -> list[Path]:
             # tool-native frontmatter (e.g. Windsurf's trigger/globs) that
             # the linter does not validate — they regenerate from source.
             # ADR-017: accept legacy flat layout AND
-            # packages/*/.agent-src.uncompressed/ paths.
+            # packages/*/.agent-src.uncondensed/ paths.
             in_source = (
-                norm.startswith(".agent-src.uncompressed/")
+                norm.startswith(".agent-src.uncondensed/")
                 or norm.startswith(".agent-src/")
-                or "/.agent-src.uncompressed/" in norm
+                or "/.agent-src.uncondensed/" in norm
                 or "/.agent-src/" in norm
             )
             if not in_source:
@@ -2716,7 +2716,7 @@ def _skill_id_from_path(path: Path) -> Optional[str]:
 
 def _is_frugality_charter(path: Path) -> bool:
     """True iff the path ends in the canonical charter relpath, regardless
-    of whether it lives under .agent-src/ or .agent-src.uncompressed/."""
+    of whether it lives under .agent-src/ or .agent-src.uncondensed/."""
     norm = str(path).replace("\\", "/")
     return norm.endswith("/" + FRUGALITY_CHARTER_RELPATH)
 
@@ -2836,7 +2836,7 @@ def lint_frugality_charter_index(path: Path, text: str) -> List[Issue]:
 def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path | None = None) -> List[Issue]:
     """Check governance and packaging consistency.
 
-    - Compressed/uncompressed pairs must exist
+    - Condensed/uncondensed pairs must exist
     - No duplicate skill names
     - Files must be in correct location for their type
     """
@@ -2847,44 +2847,44 @@ def lint_governance(path: Path, text: str, artifact_type: str, repo_root: Path |
     path_str = str(path)
     path_relative = path_str
 
-    # Determine if this is a compressed or uncompressed artifact
-    is_compressed = "/.agent-src/" in path_str and "/.agent-src.uncompressed/" not in path_str
-    is_uncompressed = "/.agent-src.uncompressed/" in path_str
+    # Determine if this is a condensed or uncondensed artifact
+    is_condensed = "/.agent-src/" in path_str and "/.agent-src.uncondensed/" not in path_str
+    is_uncondensed = "/.agent-src.uncondensed/" in path_str
 
-    if not is_compressed and not is_uncompressed:
+    if not is_condensed and not is_uncondensed:
         return issues
 
-    # --- Check: compressed/uncompressed pair exists ---
-    # ADR-017: sources live under packages/*/.agent-src.uncompressed/ but
+    # --- Check: condensed/uncondensed pair exists ---
+    # ADR-017: sources live under packages/*/.agent-src.uncondensed/ but
     # all packs project into the single repo-root .agent-src/ tree. The
     # pair-check now resolves via logical relpath, not a path-swap.
     from _lib.agent_src import strip_source_prefix as _strip
     norm = path_str.replace("\\", "/")
-    if is_uncompressed:
+    if is_uncondensed:
         # Compute logical path then map to .agent-src/ at repo root.
         # Try direct strip first; fall back to substring split for absolute paths.
         logical = _strip(norm)
         if logical is None:
-            marker = "/.agent-src.uncompressed/"
+            marker = "/.agent-src.uncondensed/"
             idx = norm.rfind(marker)
             logical = norm[idx + len(marker):] if idx != -1 else None
         if logical:
-            compressed_path = repo_root / ".agent-src" / logical
-            if not compressed_path.exists():
-                issues.append(Issue("warning", "compressed_variant_missing",
-                                    f"Uncompressed file exists but compressed variant missing: "
-                                    f"{compressed_path.name}"))
-    elif is_compressed:
-        # Compressed lives at repo-root .agent-src/<logical>. Source could
+            condensed_path = repo_root / ".agent-src" / logical
+            if not condensed_path.exists():
+                issues.append(Issue("warning", "condensed_variant_missing",
+                                    f"Uncondensed file exists but condensed variant missing: "
+                                    f"{condensed_path.name}"))
+    elif is_condensed:
+        # Condensed lives at repo-root .agent-src/<logical>. Source could
         # be at any source root \u2014 resolve via artefact_roots.
         marker = "/.agent-src/"
         idx = norm.rfind(marker)
         logical = norm[idx + len(marker):] if idx != -1 else None
         if logical:
-            uncompressed_path = resolve_logical(logical)
-            if uncompressed_path is None or not uncompressed_path.exists():
-                issues.append(Issue("warning", "uncompressed_variant_missing",
-                                    f"Compressed file exists but uncompressed source missing: "
+            uncondensed_path = resolve_logical(logical)
+            if uncondensed_path is None or not uncondensed_path.exists():
+                issues.append(Issue("warning", "uncondensed_variant_missing",
+                                    f"Condensed file exists but uncondensed source missing: "
                                     f"{Path(logical).name}"))
 
     # --- Check: file in correct location for type ---
@@ -3277,8 +3277,8 @@ def format_json(results: list[LintResult]) -> str:
     return json.dumps(payload, indent=2, ensure_ascii=False)
 
 
-def check_compression_pairs(root: Path) -> list[LintResult]:
-    """Check that every uncompressed skill/rule/command has a compressed counterpart and vice versa."""
+def check_condensation_pairs(root: Path) -> list[LintResult]:
+    """Check that every uncondensed skill/rule/command has a condensed counterpart and vice versa."""
     results: list[LintResult] = []
 
     pairs = [
@@ -3289,78 +3289,78 @@ def check_compression_pairs(root: Path) -> list[LintResult]:
 
     for subdir, pattern, is_nested in pairs:
         # ADR-017: union across every source root.
-        compressed_dir = root / ".agent-src" / subdir
-        uncompressed_names: set[str] = set()
+        condensed_dir = root / ".agent-src" / subdir
+        uncondensed_names: set[str] = set()
         any_source = False
         for src_root in artefact_roots():
-            uncompressed_dir = src_root / subdir
-            if not uncompressed_dir.exists():
+            uncondensed_dir = src_root / subdir
+            if not uncondensed_dir.exists():
                 continue
             any_source = True
             if is_nested:
-                uncompressed_names |= {d.name for d in uncompressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+                uncondensed_names |= {d.name for d in uncondensed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
             else:
-                uncompressed_names |= {f.name for f in uncompressed_dir.glob(pattern) if f.is_file()}
+                uncondensed_names |= {f.name for f in uncondensed_dir.glob(pattern) if f.is_file()}
 
         if not any_source:
             continue
 
-        # Collect names from compressed
-        if compressed_dir.exists():
+        # Collect names from condensed
+        if condensed_dir.exists():
             if is_nested:
-                compressed_names = {d.name for d in compressed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
+                condensed_names = {d.name for d in condensed_dir.iterdir() if d.is_dir() and (d / pattern).exists()}
             else:
-                compressed_names = {f.name for f in compressed_dir.glob(pattern) if f.is_file()}
+                condensed_names = {f.name for f in condensed_dir.glob(pattern) if f.is_file()}
         else:
-            compressed_names = set()
+            condensed_names = set()
 
-        # Missing compressed
-        for name in sorted(uncompressed_names - compressed_names):
+        # Missing condensed
+        for name in sorted(uncondensed_names - condensed_names):
             path_str = f".agent-src/{subdir}/{name}/{pattern}" if is_nested else f".agent-src/{subdir}/{name}"
             results.append(LintResult(
                 file=path_str,
                 artifact_type=subdir.rstrip("s"),
                 status="fail",
-                issues=[Issue("error", "missing_compressed", f"Uncompressed exists but compressed version is missing")],
-                suggestions=[f"Run /compress to generate .agent-src/{subdir}/{name}"],
+                issues=[Issue("error", "missing_condensed", f"Uncondensed exists but condensed version is missing")],
+                suggestions=[f"Run /condense to generate .agent-src/{subdir}/{name}"],
             ))
 
-        # Orphaned compressed (no source)
-        for name in sorted(compressed_names - uncompressed_names):
+        # Orphaned condensed (no source)
+        for name in sorted(condensed_names - uncondensed_names):
             path_str = f".agent-src/{subdir}/{name}/{pattern}" if is_nested else f".agent-src/{subdir}/{name}"
             results.append(LintResult(
                 file=path_str,
                 artifact_type=subdir.rstrip("s"),
                 status="fail",
-                issues=[Issue("error", "orphaned_compressed", f"Compressed exists but uncompressed source is missing")],
-                suggestions=[f"Delete orphaned file or restore uncompressed source"],
+                issues=[Issue("error", "orphaned_condensed", f"Condensed exists but uncondensed source is missing")],
+                suggestions=[f"Delete orphaned file or restore uncondensed source"],
             ))
 
     return results
 
 
-def check_compression_quality(root: Path) -> list[LintResult]:
-    """Check that compressed skills preserve key content from their uncompressed source."""
+def check_condensation_quality(root: Path) -> list[LintResult]:
+    """Check that condensed skills preserve key content from their uncondensed source."""
     results: list[LintResult] = []
-    compressed_dir = root / ".agent-src" / "skills"
-    if not compressed_dir.exists():
+    condensed_dir = root / ".agent-src" / "skills"
+    if not condensed_dir.exists():
         return results
 
     # ADR-017: collect skill dirs from every source root.
     skill_sources: list[Path] = []
     for src_root in artefact_roots():
-        uncompressed_dir = src_root / "skills"
-        if uncompressed_dir.exists():
-            skill_sources.extend(sorted(uncompressed_dir.iterdir()))
+        uncondensed_dir = src_root / "skills"
+        if uncondensed_dir.exists():
+            skill_sources.extend(sorted(uncondensed_dir.iterdir()))
     if not skill_sources:
         return results
 
-    # Sections that MUST exist in compressed if they exist in uncompressed
+    # Sections that MUST exist in condensed if they exist in uncondensed
     preserved_sections = ["When to use", "Procedure", "Gotcha", "Gotchas", "Do NOT", "Output format", "Output"]
 
     for skill_dir in skill_sources:
         src = skill_dir / "SKILL.md"
-        dst = compressed_dir / skill_dir.name / "SKILL.md"
+        dst = condensed_dir / skill_dir.name / "SKILL.md"
         if not src.exists() or not dst.exists():
             continue
 
@@ -3372,11 +3372,11 @@ def check_compression_quality(root: Path) -> list[LintResult]:
         issues: list[Issue] = []
         suggestions: list[str] = []
 
-        # Check required sections survived compression
+        # Check required sections survived condensation
         for section in preserved_sections:
             if section_matches(section, src_sections) and not section_matches(section, dst_sections):
-                issues.append(Issue("warning", "compression_lost_section",
-                                    f"Compressed version lost '{section}' section"))
+                issues.append(Issue("warning", "condensation_lost_section",
+                                    f"Condensed version lost '{section}' section"))
 
         # Check validation keywords survived
         src_proc = find_procedure_block(src_text) or ""
@@ -3385,23 +3385,23 @@ def check_compression_quality(root: Path) -> list[LintResult]:
         src_has_validation = any(re.search(p, src_proc, re.IGNORECASE) for p in validation_patterns)
         dst_has_validation = any(re.search(p, dst_proc, re.IGNORECASE) for p in validation_patterns)
         if src_has_validation and not dst_has_validation:
-            issues.append(Issue("warning", "compression_lost_validation",
-                                "Compressed procedure lost validation keywords present in uncompressed"))
+            issues.append(Issue("warning", "condensation_lost_validation",
+                                "Condensed procedure lost validation keywords present in uncondensed"))
 
         # Check code blocks / examples survived
         src_code_blocks = len(re.findall(r"```", src_text))  # pairs of ``` = blocks
         dst_code_blocks = len(re.findall(r"```", dst_text))
         if src_code_blocks > 0 and dst_code_blocks < src_code_blocks // 2:
-            issues.append(Issue("warning", "compression_lost_example",
-                                f"Compressed version has fewer code blocks "
+            issues.append(Issue("warning", "condensation_lost_example",
+                                f"Condensed version has fewer code blocks "
                                 f"({dst_code_blocks // 2} vs {src_code_blocks // 2} in source)"))
 
         # Check anti-pattern / "Do NOT" bullets survived
         src_donot = len(re.findall(r"(?:Do NOT|NEVER|MUST NOT)\b", src_text))
         dst_donot = len(re.findall(r"(?:Do NOT|NEVER|MUST NOT)\b", dst_text))
         if src_donot > 0 and dst_donot < src_donot // 2:
-            issues.append(Issue("warning", "compression_lost_antipattern",
-                                f"Compressed version lost anti-pattern constraints "
+            issues.append(Issue("warning", "condensation_lost_antipattern",
+                                f"Condensed version lost anti-pattern constraints "
                                 f"({dst_donot} vs {src_donot} in source)"))
 
         if issues:
@@ -3411,7 +3411,7 @@ def check_compression_quality(root: Path) -> list[LintResult]:
                 artifact_type="skill",
                 status="pass_with_warnings",
                 issues=issues,
-                suggestions=suggestions or ["Re-compress to preserve lost content"],
+                suggestions=suggestions or ["Re-condense to preserve lost content"],
             ))
 
     return results
@@ -3458,7 +3458,7 @@ def check_duplication(root: Path) -> list[LintResult]:
                 if len(words_a) > 3 and len(words_b) > 3:
                     overlap = len(words_a & words_b) / min(len(words_a), len(words_b))
                     if overlap > 0.7:
-                        rel_a = f".agent-src.uncompressed/skills/{name_a}/SKILL.md"
+                        rel_a = f".agent-src.uncondensed/skills/{name_a}/SKILL.md"
                         results.append(LintResult(
                             file=rel_a,
                             artifact_type="skill",
@@ -3490,9 +3490,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--all", action="store_true", help="Lint all skills/rules in the repo")
     parser.add_argument("--changed", action="store_true", help="Lint changed skills/rules")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
-    parser.add_argument("--pairs", action="store_true", help="Check compression pairs (uncompressed vs compressed)")
+    parser.add_argument("--pairs", action="store_true", help="Check condensation pairs (uncondensed vs condensed)")
     parser.add_argument("--duplicates", action="store_true", help="Detect skills with similar descriptions")
-    parser.add_argument("--compression-quality", action="store_true", help="Check compressed skills preserve key content")
+    parser.add_argument("--condensation-quality", action="store_true", help="Check condensed skills preserve key content")
     parser.add_argument("--strict-warnings", action="store_true", help="Return non-zero on warnings")
     parser.add_argument("--report", action="store_true", help="Output quality score report")
     parser.add_argument("--repo-root", default=".", help="Repository root")
@@ -3562,7 +3562,7 @@ def format_report(results: list[LintResult]) -> str:
         lines.append("| File | Issues | Status |")
         lines.append("|---|---|---|")
         for fpath, count, status in files_with_issues[:10]:
-            short = fpath.replace(".agent-src.uncompressed/", "")
+            short = fpath.replace(".agent-src.uncondensed/", "")
             lines.append(f"| `{short}` | {count} | {status} |")
 
     # Per-file quality breakdown (skills only)
@@ -3572,7 +3572,7 @@ def format_report(results: list[LintResult]) -> str:
         lines.append("| Skill | Structure | Validation | Scope | Dependency | Lines |")
         lines.append("|---|---|---|---|---|---|")
         for r in sorted(skill_results, key=lambda x: x.file):
-            short = r.file.replace(".agent-src.uncompressed/skills/", "").replace(".agent-src/skills/", "").replace("/SKILL.md", "")
+            short = r.file.replace(".agent-src.uncondensed/skills/", "").replace(".agent-src/skills/", "").replace("/SKILL.md", "")
             codes = {i.code for i in r.issues}
 
             # Structure: fail if missing required sections
@@ -3625,7 +3625,7 @@ def main() -> int:
                 continue
             if path.is_dir():
                 # Walk the directory like a source root so callers can pass
-                # `packages/pack-laravel/.agent-src.uncompressed/` (ADR-017 Phase 4.4).
+                # `packages/pack-laravel/.agent-src.uncondensed/` (ADR-017 Phase 4.4).
                 paths.extend(gather_candidate_files_under(path))
             else:
                 paths.append(path)
@@ -3646,11 +3646,11 @@ def main() -> int:
 
         # Additional checks
         if args.pairs or args.report:
-            results.extend(check_compression_pairs(root))
+            results.extend(check_condensation_pairs(root))
         if args.duplicates:
             results.extend(check_duplication(root))
-        if args.compression_quality or args.report:
-            results.extend(check_compression_quality(root))
+        if args.condensation_quality or args.report:
+            results.extend(check_condensation_quality(root))
 
         if args.report:
             print(format_report(results))

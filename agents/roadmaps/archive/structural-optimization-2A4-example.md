@@ -7,7 +7,7 @@ complexity: lightweight
 sandbox:
   - agents/roadmaps/examples/2A4-direct-answers/direct-answers.slim.md
   - agents/roadmaps/examples/2A4-direct-answers/direct-answers-mechanics.md
-target_rule: .agent-src.uncompressed/rules/direct-answers.md
+target_rule: .agent-src.uncondensed/rules/direct-answers.md
 council_session: agents/council-sessions/2026-05-03T09-45-33Z/
 ---
 
@@ -18,7 +18,7 @@ Status: locked
 Phase 0.4 dry-run of the 2A.4 obligation-keyword diff contract on a
 representative top-3 always-rule. Sandbox artefacts in
 `agents/roadmaps/examples/2A4-direct-answers/`. **Nothing in
-`.agent-src.uncompressed/rules/` is touched by this artefact** —
+`.agent-src.uncondensed/rules/` is touched by this artefact** —
 the rule itself only moves in Phase 2A.
 
 ## 1. Why `direct-answers`
@@ -40,7 +40,7 @@ generalization notes; not a contract bug.
 
 | Layer | File | Chars |
 |---|---|---:|
-| Original (untouched) | `.agent-src.uncompressed/rules/direct-answers.md` | 4 722 |
+| Original (untouched) | `.agent-src.uncondensed/rules/direct-answers.md` | 4 722 |
 | Slim rule (sandbox) | `…/direct-answers.slim.md` | 2 758 |
 | Mechanics context (sandbox) | `…/direct-answers-mechanics.md` | 3 525 |
 | **Slim + context total** | — | **6 283** |
@@ -214,7 +214,7 @@ each Iron-Law obligation lives on its own line by markdown
 convention; per-line is what governs reading-comprehension load.
 
 ```bash
-RULE=.agent-src.uncompressed/rules/direct-answers.md
+RULE=.agent-src.uncondensed/rules/direct-answers.md
 SLIM=agents/roadmaps/examples/2A4-direct-answers/direct-answers.slim.md
 CTX=agents/roadmaps/examples/2A4-direct-answers/direct-answers-mechanics.md
 
@@ -276,7 +276,7 @@ candidate list is generated automatically from the original rule;
 the curator may drop with justification but must not silently omit.
 
 ```bash
-RULE=.agent-src.uncompressed/rules/direct-answers.md
+RULE=.agent-src.uncondensed/rules/direct-answers.md
 
 # (a) Caps-block obligations: any 4+ char ALL-CAPS word
 grep -oE '\b[A-Z][A-Z]{3,}\b' "$RULE" \

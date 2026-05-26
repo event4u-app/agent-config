@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-12
 
 > **Status:** active · **Stability:** beta · **Owner:** road-to-better-skills-and-profiles Block A
 > · **Linter:** `scripts/skill_linter.py § lint_persona`
-> · **Source-of-truth dir:** `.agent-src.uncompressed/personas/`
+> · **Source-of-truth dir:** `.agent-src.uncondensed/personas/`
 > · **Council verdict:** iter-1 A-OQ1 (c) — hybrid
 
 Locks the canonical persona shape: a uniform frontmatter across both
@@ -116,9 +116,9 @@ The linter (A2 work) enforces:
 - description ≤ 160 chars
 
 Specialist authors must use the template at
-`.agent-src.uncompressed/personas/_template-specialist/persona.md`.
+`.agent-src.uncondensed/personas/_template-specialist/persona.md`.
 Core authors continue to use
-`.agent-src.uncompressed/templates/persona.md` (unchanged).
+`.agent-src.uncondensed/templates/persona.md` (unchanged).
 
 ## § 6 — Persona inventory (v1 snapshot)
 
@@ -148,7 +148,7 @@ loosening is non-breaking.
 
 - [`skill-domains`](skill-domains.md) — sister taxonomy for skills
 - [`role-contracts`](../guidelines/agent-infra/role-contracts.md) — workflow-mode axis personas compose with
-- `.agent-src.uncompressed/personas/README.md` — authoring entry point + Core-6 cast
-- `.agent-src.uncompressed/personas/_template-specialist/persona.md` — specialist starter
-- `.agent-src.uncompressed/templates/persona.md` — core starter (v1, unchanged)
+- `.agent-src.uncondensed/personas/README.md` — authoring entry point + Core-6 cast
+- `.agent-src.uncondensed/personas/_template-specialist/persona.md` — specialist starter
+- `.agent-src.uncondensed/templates/persona.md` — core starter (v1, unchanged)
 - `road-to-better-skills-and-profiles.md` — Block A (schema lock + extension)

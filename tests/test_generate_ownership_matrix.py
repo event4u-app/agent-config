@@ -17,7 +17,7 @@ SPEC.loader.exec_module(gom)
 
 
 def _make_src(tmp_path: Path) -> Path:
-    src = tmp_path / ".agent-src.uncompressed"
+    src = tmp_path / ".agent-src.uncondensed"
     for sub in gom.SCAN_DIRS:
         (src / sub).mkdir(parents=True, exist_ok=True)
     return src
@@ -47,15 +47,15 @@ def test_load_context_edges_emitted(tmp_path):
     src = _make_src(tmp_path)
     _write(src / "rules" / "alpha.md", (
         "---\ntype: \"auto\"\nload_context:\n"
-        "  - .agent-src.uncompressed/contexts/foo/bar.md\n---\nbody\n"
+        "  - .agent-src.uncondensed/contexts/foo/bar.md\n---\nbody\n"
     ))
     _write(src / "contexts" / "foo" / "bar.md", "stub\n")
     files, edges, depth3 = gom.build_matrix(src)
     assert depth3 == []
     lc = [e for e in edges if e.via == "load_context"]
     assert len(lc) == 1
-    assert lc[0].source == ".agent-src.uncompressed/rules/alpha.md"
-    assert lc[0].target == ".agent-src.uncompressed/contexts/foo/bar.md"
+    assert lc[0].source == ".agent-src.uncondensed/rules/alpha.md"
+    assert lc[0].target == ".agent-src.uncondensed/contexts/foo/bar.md"
     assert lc[0].type == "READ_ONLY"
     assert lc[0].depth == 1
 
@@ -64,7 +64,7 @@ def test_load_context_eager_edges_emitted(tmp_path):
     src = _make_src(tmp_path)
     _write(src / "rules" / "alpha.md", (
         "---\ntype: \"auto\"\nload_context_eager:\n"
-        "  - .agent-src.uncompressed/contexts/foo/bar.md\n---\n"
+        "  - .agent-src.uncondensed/contexts/foo/bar.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "bar.md", "stub\n")
     _, edges, _ = gom.build_matrix(src)
@@ -77,31 +77,31 @@ def test_load_context_eager_edges_emitted(tmp_path):
 def test_transitive_depth2_emitted(tmp_path):
     src = _make_src(tmp_path)
     _write(src / "rules" / "r.md", (
-        "---\nload_context:\n  - .agent-src.uncompressed/contexts/foo/a.md\n---\n"
+        "---\nload_context:\n  - .agent-src.uncondensed/contexts/foo/a.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "a.md", (
-        "---\nload_context:\n  - .agent-src.uncompressed/contexts/foo/b.md\n---\n"
+        "---\nload_context:\n  - .agent-src.uncondensed/contexts/foo/b.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "b.md", "leaf\n")
     files, edges, depth3 = gom.build_matrix(src)
     assert depth3 == []
     transitive = [e for e in edges if e.via == "load_context_transitive"]
     assert len(transitive) == 1
-    assert transitive[0].source == ".agent-src.uncompressed/rules/r.md"
-    assert transitive[0].target == ".agent-src.uncompressed/contexts/foo/b.md"
+    assert transitive[0].source == ".agent-src.uncondensed/rules/r.md"
+    assert transitive[0].target == ".agent-src.uncondensed/contexts/foo/b.md"
     assert transitive[0].depth == 2
 
 
 def test_depth3_chain_aborts(tmp_path):
     src = _make_src(tmp_path)
     _write(src / "rules" / "r.md", (
-        "---\nload_context:\n  - .agent-src.uncompressed/contexts/foo/a.md\n---\n"
+        "---\nload_context:\n  - .agent-src.uncondensed/contexts/foo/a.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "a.md", (
-        "---\nload_context:\n  - .agent-src.uncompressed/contexts/foo/b.md\n---\n"
+        "---\nload_context:\n  - .agent-src.uncondensed/contexts/foo/b.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "b.md", (
-        "---\nload_context:\n  - .agent-src.uncompressed/contexts/foo/c.md\n---\n"
+        "---\nload_context:\n  - .agent-src.uncondensed/contexts/foo/c.md\n---\n"
     ))
     _write(src / "contexts" / "foo" / "c.md", "leaf\n")
     _, _, depth3 = gom.build_matrix(src)
@@ -120,7 +120,7 @@ def test_body_link_edges(tmp_path):
     _, edges, _ = gom.build_matrix(src)
     body = [e for e in edges if e.via == "body_link"]
     assert len(body) == 1
-    assert body[0].target == ".agent-src.uncompressed/skills/s.md"
+    assert body[0].target == ".agent-src.uncondensed/skills/s.md"
 
 
 def test_body_link_to_unknown_target_dropped(tmp_path):

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Plan + apply the physical monorepo migration (Phase 4).
 
-Reads every `.md` artefact under `.agent-src.uncompressed/`, decides
+Reads every `.md` artefact under `.agent-src.uncondensed/`, decides
 its destination under `packages/core/` or `packages/pack-<id>/` using
 the deterministic rules from
 `agents/roadmaps/monorepo-phase-4-physical-package-layout.md` § Mapping
@@ -28,9 +28,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import parse_frontmatter  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 PACKAGES = ROOT / "packages"
-CORE = PACKAGES / "core" / ".agent-src.uncompressed"
+CORE = PACKAGES / "core" / ".agent-src.uncondensed"
 VOCAB_DIR = ROOT / "config" / "discovery"
 PLAN_OUT = ROOT / "dist" / "migration" / "move-plan.json"
 UNASSIGNED_YAML = VOCAB_DIR / "unassigned-artefacts.yml"
@@ -129,7 +129,7 @@ def _dest_for(src: Path, fm: dict[str, Any] | None, pack_ids: set[str]) -> tuple
         # meta = package-internal scaffolding; lives in core alongside the kernel.
         return CORE / rel, "primary pack: meta (package internals → core)", None
 
-    dest_root = PACKAGES / f"pack-{primary}" / ".agent-src.uncompressed"
+    dest_root = PACKAGES / f"pack-{primary}" / ".agent-src.uncondensed"
     return dest_root / rel, f"primary pack: {primary}", None
 
 
@@ -182,7 +182,7 @@ def _find_owning_skill_fm(src: Path) -> dict[str, Any] | None:
     """For a non-SKILL.md file under skills/<name>/, return the sibling SKILL.md frontmatter.
 
     Looks first at the source location (pre-move) and then under
-    ``packages/*/.agent-src.uncompressed/skills/<name>/SKILL.md`` so the
+    ``packages/*/.agent-src.uncondensed/skills/<name>/SKILL.md`` so the
     planner can resume mid-migration when the parent SKILL.md has already
     been relocated.
     """
@@ -196,7 +196,7 @@ def _find_owning_skill_fm(src: Path) -> dict[str, Any] | None:
     pkgs_root = ROOT / "packages"
     if pkgs_root.exists():
         for pkg in pkgs_root.iterdir():
-            cand = pkg / ".agent-src.uncompressed" / "skills" / skill_name / "SKILL.md"
+            cand = pkg / ".agent-src.uncondensed" / "skills" / skill_name / "SKILL.md"
             if cand.exists():
                 candidates.append(cand)
     for cand in candidates:

@@ -67,7 +67,7 @@ our SKILL.md files lack YAML frontmatter (`name`, `description`).
 
 ### Step 1.1: Refactor `token-efficiency.md`
 
-Source: `.agent-src.uncompressed/rules/token-efficiency.md`
+Source: `.agent-src.uncondensed/rules/token-efficiency.md`
 
 Changes:
 - [x] **Line 20-23**: Replace `sequentialthinking` → "extended reasoning / chain-of-thought tools". Keep the anti-loop guidance.
@@ -91,18 +91,18 @@ Changes:
   ### Ignored Skills Recovery
   {existing content}
   ```
-- [x] Compress updated file → `.augment/rules/token-efficiency.md`
+- [x] Condense updated file → `.augment/rules/token-efficiency.md`
 
 ### Step 1.2: Refactor `rtk.md`
 
-Source: `.agent-src.uncompressed/rules/rtk.md`
+Source: `.agent-src.uncondensed/rules/rtk.md`
 
 Changes:
 - [x] **Line 33**: Replace `.agent-settings` check → "project settings file"
 - [x] **Line 39**: Remove "recommended by Matze" (personal reference)
 - [x] **Line 50**: Replace `/optimize-rtk-filters` → "generate project-local filters (see Post-Install Setup)"
 - [x] **Line 52**: Replace `.agent-settings` → "project settings file"
-- [x] Compress updated file → `.augment/rules/rtk.md`
+- [x] Condense updated file → `.augment/rules/rtk.md`
 
 ### Step 1.3: Verify no quality loss
 
@@ -162,18 +162,18 @@ Notes:
 - [x] `user-interaction.md` — add `description` + `alwaysApply: true`
 - [x] `verify-before-complete.md` — add `description` + `alwaysApply: true`
 
-### Step 2.3: Compress all updated rules
+### Step 2.3: Condense all updated rules
 
 - [x] Run `task sync` to copy non-.md changes
-- [x] Compress all 17 modified rules to `.augment/rules/`
+- [x] Condense all 17 modified rules to `.augment/rules/`
 - [x] `task sync-mark-all-done` to update hashes
-- [x] Verify: `python3 scripts/compress.py --check` passes
+- [x] Verify: `python3 scripts/condense.py --check` passes
 
 ---
 
 ## Phase 3: Create symlink directories
 
-### Step 3.1: Add generation logic to `scripts/compress.py`
+### Step 3.1: Add generation logic to `scripts/condense.py`
 
 Add `--generate-tools` mode that:
 
@@ -208,8 +208,8 @@ Part of `--generate-tools`:
 
 ### Step 3.4: Add Taskfile targets
 
-- [x] Add `task generate-tools` → `python3 scripts/compress.py --generate-tools`
-- [x] Add `task clean-tools` → `python3 scripts/compress.py --clean-tools`
+- [x] Add `task generate-tools` → `python3 scripts/condense.py --generate-tools`
+- [x] Add `task clean-tools` → `python3 scripts/condense.py --clean-tools`
 - [x] Update `task sync` to also run `--generate-tools` after sync
 
 ### Step 3.5: Update `composer.json`
@@ -229,7 +229,7 @@ Ensure the following are **NOT** in `archive.exclude`:
 
 ### Step 3b.1: Add YAML frontmatter to all SKILL.md files
 
-Our `.agent-src.uncompressed/skills/*/SKILL.md` files already follow the directory structure
+Our `.agent-src.uncondensed/skills/*/SKILL.md` files already follow the directory structure
 of the Agent Skills standard, but lack YAML frontmatter. Adding `name` and `description`
 makes them compliant with the agentskills.io spec.
 
@@ -245,9 +245,9 @@ description: "Use when running code quality checks — PHPStan, Rector, ECS. Kno
 Augment Code ignores YAML frontmatter in SKILL.md — it reads descriptions from `<available_skills>`
 in the system prompt. So adding frontmatter is backward-compatible.
 
-- [x] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.agent-src.uncompressed/skills/`
+- [x] Add `name` + `description` frontmatter to all ~60 SKILL.md files in `.agent-src.uncondensed/skills/`
 - [x] Verify Augment still loads skills correctly (frontmatter is ignored)
-- [x] Compress all updated SKILL.md files to `.augment/skills/`
+- [x] Condense all updated SKILL.md files to `.augment/skills/`
 
 ### Step 3b.2: Deliver all skills to other tools
 
@@ -299,7 +299,7 @@ Part of `--generate-tools`:
    (This automatically includes SKILL.md + any scripts, templates, examples)
 3. Remove stale skill symlinks on re-run
 
-- [x] Implement `generate_skill_symlinks()` function in `compress.py`
+- [x] Implement `generate_skill_symlinks()` function in `condense.py`
 - [x] Symlink entire directories (not individual files) for future-proofing
 - [x] Add stale cleanup for removed skills
 
@@ -371,7 +371,7 @@ For commands with variable input: add `$ARGUMENTS` and `argument-hint`.
 
 ## Phase 3d: Extend generation for skills and commands
 
-### Step 3d.1: Update `scripts/compress.py`
+### Step 3d.1: Update `scripts/condense.py`
 
 Extend `--generate-tools` to also handle:
 
@@ -439,17 +439,17 @@ In `install()` method, after existing syncs:
 
 ### ~~Step 4.4: Create `config/universal-rules.json`~~ → Removed
 
-> Config files were removed. Both `compress.py` and `AgentConfigPlugin.php` scan
+> Config files were removed. Both `condense.py` and `AgentConfigPlugin.php` scan
 > `.augment/rules/` and `.augment/skills/` directories directly.
 
 - [x] ~~Create `config/universal-rules.json`~~ → Replaced by directory scanning
-- [x] Both `compress.py` and `AgentConfigPlugin.php` scan `.augment/` directly
+- [x] Both `condense.py` and `AgentConfigPlugin.php` scan `.augment/` directly
 
 ---
 
 ## Phase 5: Tests
 
-### Step 5.1: Python tests (extend `tests/test_compress.py`)
+### Step 5.1: Python tests (extend `tests/test_condense.py`)
 
 Rules generation:
 - [x] Test `generate_rule_symlinks()`: creates symlinks in all tool dirs for all `.augment/rules/*.md`
@@ -487,7 +487,7 @@ File: `tests/AgentConfigPluginTest.php`
 ### Step 6.1: Update documentation
 
 - [x] `AGENTS.md`: add section "Multi-Agent Support" listing supported tools and Agent Skills standard
-- [x] `.agent-src.uncompressed/README.md`: mention generated tool directories and skills
+- [x] `.agent-src.uncondensed/README.md`: mention generated tool directories and skills
 - [x] Create `.claude/rules/README.md`: "Auto-generated symlinks — see .augment/rules/"
 - [x] Create `.claude/skills/README.md`: "Auto-generated from .augment/skills/ and .augment/commands/"
 - [x] Create `.cursor/rules/README.md`: same as .claude
@@ -508,7 +508,7 @@ File: `tests/AgentConfigPluginTest.php`
 
 ### Step 6.3: Final verification
 
-- [x] `python3 scripts/compress.py --check` passes
+- [x] `python3 scripts/condense.py --check` passes
 - [x] `python3 -m pytest tests/` all green
 - [x] `ls -la .claude/rules/` — 24 rule symlinks, all resolve
 - [x] `ls -la .claude/skills/` — 99 skill symlinks + 46 command skills

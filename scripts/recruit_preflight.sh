@@ -107,7 +107,7 @@ fi
 #    exists. /tmp/agent-config-ci-start.txt is written by _ci-start
 #    at the start of every 'task ci' run; /tmp/agent-config-ci-end.txt
 #    by _ci-end on success. Pre-flight passes when both exist AND
-#    end > start AND no .agent-src.uncompressed file is newer than end.
+#    end > start AND no .agent-src.uncondensed file is newer than end.
 START_MARKER="/tmp/agent-config-ci-start.txt"
 END_MARKER="/tmp/agent-config-ci-end.txt"
 if [ ! -f "$START_MARKER" ] || [ ! -f "$END_MARKER" ]; then

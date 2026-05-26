@@ -93,8 +93,8 @@ follow-ups Phase 1+2 closed) produced converging findings.
   too heavy — auditable but not consumable for normal feature work,
   needs complexity standard; (3) always-budget headroom 1,552 chars
   (96.8% utilization) — slimming hebel exhausted, new strategy needed
-  (demote / merge / hard-compress / shared-context amortization);
-  (4) slow-rollout protocol compressed under autonomy mandate;
+  (demote / merge / hard-condense / shared-context amortization);
+  (4) slow-rollout protocol condensed under autonomy mandate;
   (5) one-off scripts accumulating in scripts/ai_council/.
 - P0 before merge: PR description rewrite, one-off-script decision,
   honest budget block, Phase 2A as finding.

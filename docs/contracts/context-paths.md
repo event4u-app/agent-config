@@ -13,7 +13,7 @@ keep-beta-until: 2026-08-12
 > frontmatter contract for citing a context from a rule.
 
 This contract defines **where** a context file is allowed to live under
-`.agent-src.uncompressed/contexts/` (the source-of-truth tree). It is the
+`.agent-src.uncondensed/contexts/` (the source-of-truth tree). It is the
 DAG root of `road-to-structural-optimization` Phase 0: the file-ownership
 matrix (Phase 0.1) greps for context-file fan-out at the locked tree, and
 several later phases (2A, 2B, 3a/b/c, 6) extract material into specific
@@ -55,7 +55,7 @@ contexts/subagent-configuration.md
 ## Rules enforced by `check_context_paths.py`
 
 1. **Sub-tree allow-list.** Every `*.md` under
-   `.agent-src.uncompressed/contexts/` must be either (a) in one of the
+   `.agent-src.uncondensed/contexts/` must be either (a) in one of the
    nine locked sub-trees above, or (b) one of the six grandfathered
    root-level files. Anything else fails CI.
 2. **No collisions.** No two context files may share the same basename
@@ -66,7 +66,7 @@ contexts/subagent-configuration.md
    a frontmatter `load_context:` / `load_context_eager:` entry, **or** a
    markdown body mention of the relative path
    (`contexts/<sub-tree>/<file>.md` or
-   `.agent-src.uncompressed/contexts/<sub-tree>/<file>.md`).
+   `.agent-src.uncondensed/contexts/<sub-tree>/<file>.md`).
 
 The linter exits non-zero on any violation and prints a one-line
 diagnostic per offence.

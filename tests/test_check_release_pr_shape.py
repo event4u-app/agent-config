@@ -116,7 +116,7 @@ def test_pack_readme_only_passes(capsys: pytest.CaptureFixture[str]) -> None:
 def test_matches_helper_rejects_unrelated_paths() -> None:
     """Spot-check the matcher: random project paths must not slip through."""
     assert not shape._matches("scripts/install.py")
-    assert not shape._matches("tests/test_compress.py")
+    assert not shape._matches("tests/test_condense.py")
     assert not shape._matches(".github/workflows/tests.yml")
     assert not shape._matches("packages/core/installer/foo.ts")
     assert shape._matches("package.json")

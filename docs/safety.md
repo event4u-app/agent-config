@@ -1,6 +1,6 @@
 # Data governance & domain safety
 
-`agent-config` ships **12 domain-safety rules** (`.agent-src.uncompressed/rules/domain-safety-*.md`) that act as a per-domain output floor — PII redaction, disclaimer requirements, and retention guidance. Rules fire automatically via the router when their triggers match.
+`agent-config` ships **12 domain-safety rules** (`.agent-src.uncondensed/rules/domain-safety-*.md`) that act as a per-domain output floor — PII redaction, disclaimer requirements, and retention guidance. Rules fire automatically via the router when their triggers match.
 
 ## Surface → rule(s) → floor
 
@@ -21,8 +21,8 @@
 
 ## Related skills
 
-- [`privacy-review`](../.agent-src.uncompressed/skills/privacy-review/SKILL.md) — end-to-end data-flow review for a regulatory regime (GDPR / CCPA / HIPAA).
-- [`data-handling-judgment`](../.agent-src.uncompressed/skills/data-handling-judgment/SKILL.md) — classification, retention, cross-border transfer, DSR workflow.
+- [`privacy-review`](../.agent-src.uncondensed/skills/privacy-review/SKILL.md) — end-to-end data-flow review for a regulatory regime (GDPR / CCPA / HIPAA).
+- [`data-handling-judgment`](../.agent-src.uncondensed/skills/data-handling-judgment/SKILL.md) — classification, retention, cross-border transfer, DSR workflow.
 
 ## See also
 

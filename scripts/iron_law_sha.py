@@ -13,7 +13,7 @@ line), case-folded, then SHA-256-hashed. Empty fences hash to
 SHA-256(''), which is `e3b0c442…` (the well-known empty-string hash).
 
 Acceptance per `road-to-kernel-and-router.md` P2.2: re-runnable,
-deterministic, stdlib-only, no network. Compression of a kernel rule
+deterministic, stdlib-only, no network. Condensation of a kernel rule
 must preserve this SHA (or surface a deliberate ADR-tracked diff).
 """
 
@@ -26,7 +26,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+RULES_DIR = REPO_ROOT / ".agent-src.uncondensed" / "rules"
 
 # Locked kernel set — kept in sync with measure_rule_budget.KERNEL_RULES.
 KERNEL_RULES = (
@@ -50,7 +50,7 @@ def iron_law_sha(text: str) -> str:
 
     Algorithm matches `scripts/_pilot_measure.py` exactly so the SHAs
     recorded in `docs/contracts/kernel-membership.md` § 2 stay
-    reproducible across pre / post compression.
+    reproducible across pre / post condensation.
     """
     blocks = _FENCE_RE.findall(text)
     norm = "".join(_WS_RE.sub(" ", b).strip().upper() for b in blocks)

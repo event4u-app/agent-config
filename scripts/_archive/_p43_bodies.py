@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""P4.3 — Write compressed rule bodies. Run after _p43_compress.py."""
+"""P4.3 — Write condensed rule bodies. Run after _p43_condense.py."""
 from __future__ import annotations
 import pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-RULES = ROOT / ".agent-src.uncompressed" / "rules"
+RULES = ROOT / ".agent-src.uncondensed" / "rules"
 
 
 def write(name: str, content: str) -> None:
@@ -23,7 +23,7 @@ description: "Before coding, modifying, or debugging — analyze first, verify w
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/think-before-action-mechanics.md
+  - .agent-src.uncondensed/contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
   - intent: "before coding"
   - intent: "before debugging"
@@ -63,7 +63,7 @@ description: "Writing or reviewing code — check relevant guideline before writ
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/guidelines-mechanics.md
+  - .agent-src.uncondensed/contexts/communication/rules-auto/guidelines-mechanics.md
 triggers:
   - intent: "writing code"
   - intent: "reviewing code"
@@ -94,7 +94,7 @@ description: "When running CLI tools, fetching logs, or producing replies — re
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/token-efficiency-mechanics.md
+  - .agent-src.uncondensed/contexts/communication/rules-auto/token-efficiency-mechanics.md
 triggers:
   - intent: "verbose CLI output"
   - intent: "fetching logs"
@@ -132,9 +132,9 @@ description: "Deciding whether to ask the user or just act on a workflow step �
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/execution/autonomy-detection.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-mechanics.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-examples.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-detection.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-mechanics.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-examples.md
 triggers:
   - intent: "trivial workflow question"
   - intent: "autonomy mode"
@@ -176,7 +176,7 @@ description: "Asking the user a question, presenting options, or summarizing pro
 alwaysApply: false
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md
+  - .agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md
 triggers:
   - intent: "ask user a question"
   - intent: "numbered options"
@@ -232,4 +232,4 @@ lookup material.
 if __name__ == "__main__":
     for name, content in FILES.items():
         write(name, content)
-    print(f"✓ wrote {len(FILES)} compressed rule bodies")
+    print(f"✓ wrote {len(FILES)} condensed rule bodies")

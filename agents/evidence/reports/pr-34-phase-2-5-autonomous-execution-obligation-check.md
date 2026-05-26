@@ -1,12 +1,12 @@
 # Phase 2.5 — Obligation Regression Check for `autonomous-execution.md`
 
 > **Roadmap step:** [`road-to-pr-34-followups.md`](../roadmaps/road-to-pr-34-followups.md) § Phase 2.5
-> **Pre-split source:** `2bead66~1:.agent-src.uncompressed/rules/autonomous-execution.md` (192 lines)
+> **Pre-split source:** `2bead66~1:.agent-src.uncondensed/rules/autonomous-execution.md` (192 lines)
 > **Post-split sources:**
-> - `.agent-src.uncompressed/rules/autonomous-execution.md` (119 lines)
-> - `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` (cited via `load_context:`)
-> - `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` (cited via `load_context:`)
-> - `.agent-src.uncompressed/contexts/execution/autonomy-examples.md` (cited via `load_context:`)
+> - `.agent-src.uncondensed/rules/autonomous-execution.md` (119 lines)
+> - `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` (cited via `load_context:`)
+> - `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` (cited via `load_context:`)
+> - `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` (cited via `load_context:`)
 
 ## Acceptance criterion
 
@@ -53,9 +53,9 @@ The slim rule's frontmatter declares:
 
 ```yaml
 load_context:
-  - .agent-src.uncompressed/contexts/execution/autonomy-detection.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-mechanics.md
-  - .agent-src.uncompressed/contexts/execution/autonomy-examples.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-detection.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-mechanics.md
+  - .agent-src.uncondensed/contexts/execution/autonomy-examples.md
 ```
 
 Plus three explicit in-prose links to the same files (one per moved-content section). The agent has both lazy-load and explicit-pointer access to every extracted obligation surface.

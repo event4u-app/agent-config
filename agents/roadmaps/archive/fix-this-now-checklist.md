@@ -33,7 +33,7 @@ Compared to `main`, PR #3 is weaker or riskier in:
 - enforcement of concrete validation
 - risk of skills becoming too dependent on guidelines
 - risk of routing into weak but formally valid skills
-- risk of drift between `.agent-src.uncompressed/` and generated outputs
+- risk of drift between `.agent-src.uncondensed/` and generated outputs
 
 ---
 
@@ -47,7 +47,7 @@ Compared to `main`, PR #3 is weaker or riskier in:
 
 ### P1 — Fix next
 - Strengthen analysis routing safety
-- Add compression-preservation checks
+- Add condensation-preservation checks
 - Refactor optimize commands so they cannot weaken skills or rules
 
 ### P2 — Follow-up
@@ -104,7 +104,7 @@ PR #3 made the linter more flexible and downgraded missing validation.
 
 Without strict validation:
 - weak skills still pass review
-- compressed skills can lose their strongest safety lines
+- condensed skills can lose their strongest safety lines
 - “looks good” can replace “works well”
 
 ### What was better before
@@ -280,13 +280,13 @@ The reviewer must detect:
 
 ### Problem
 
-PR #3 improved editing workflow by removing immediate compress-after-edit.
+PR #3 improved editing workflow by removing immediate condense-after-edit.
 
 ### Why PR #3 is better than `main`
 
 This is better for real editing:
 - less interruption
-- fewer pointless compress cycles
+- fewer pointless condense cycles
 - safer while drafting
 
 ### What was better on `main`
@@ -311,7 +311,7 @@ Before review or PR:
 ### Acceptance criteria
 
 A PR should fail consistency checks if:
-- `.agent-src.uncompressed/` changed
+- `.agent-src.uncondensed/` changed
 - but derived files are not regenerated
 
 ---
@@ -339,7 +339,7 @@ Add required CI checks for:
 
 ---
 
-# P1 — Strengthen routing and compression safety
+# P1 — Strengthen routing and condensation safety
 
 ## 9. Strengthen `analysis-skill-routing`
 
@@ -368,15 +368,15 @@ Routing must consider not only scope match, but also target skill quality.
 
 ---
 
-## 10. Add compression-preservation guardrails
+## 10. Add condensation-preservation guardrails
 
 ### Problem
 
-PR #3 introduced strong compression ideas, but the system still risks over-compressing skills.
+PR #3 introduced strong condensation ideas, but the system still risks over-condensing skills.
 
 ### Why this matters
 
-A compressed skill can remain structurally valid while losing:
+A condensed skill can remain structurally valid while losing:
 - concrete checks
 - examples
 - anti-patterns
@@ -384,9 +384,9 @@ A compressed skill can remain structurally valid while losing:
 
 ### Fix
 
-Add this rule to compression behavior:
+Add this rule to condensation behavior:
 
-Reject compression if it removes:
+Reject condensation if it removes:
 - concrete validation
 - strongest example
 - strongest anti-pattern
@@ -394,7 +394,7 @@ Reject compression if it removes:
 
 ### Acceptance criteria
 
-Compression must preserve:
+Condensation must preserve:
 - trigger quality
 - procedure quality
 - validation quality
@@ -411,7 +411,7 @@ Compression must preserve:
 `optimize-skills` still makes sense, but not in its current form.
 
 ### Risks
-- works on `.augment/` instead of `.agent-src.uncompressed/`
+- works on `.augment/` instead of `.agent-src.uncondensed/`
 - has its own quality logic
 - could recommend merges/deletions that weaken preserved sharpness
 
@@ -430,7 +430,7 @@ Remove or replace:
 ### Acceptance criteria
 
 `optimize-skills` must:
-- read `.agent-src.uncompressed/`
+- read `.agent-src.uncondensed/`
 - respect linter findings
 - propose only, never weaken automatically
 - include preservation check before merge recommendations
@@ -463,7 +463,7 @@ Remove or constrain:
 ### Acceptance criteria
 
 `optimize-agents` must:
-- use `.agent-src.uncompressed/`
+- use `.agent-src.uncondensed/`
 - never weaken rules blindly
 - never suggest `always -> auto` without explicit safety reasoning
 - defer quality judgment to linter/reviewer
@@ -537,9 +537,9 @@ Reviewer/linter must fail or warn clearly when:
 - [x] Add `task sync-changed` pre-review rule — `augment-source-of-truth.md`
 - [x] Add CI consistency check — `consistency.yml`
 - [x] Strengthen `analysis-skill-routing` — routing quality gate
-- [x] Add compression-preservation check — `--compression-quality` in linter
-- [x] Refactor `optimize-skills` — uses `.agent-src.uncompressed/`, preservation gate, defers quality to linter, suggest-only
-- [x] Refactor `optimize-agents` — uses `.agent-src.uncompressed/`, safety gate for always→auto, preservation gate, suggest-only
+- [x] Add condensation-preservation check — `--condensation-quality` in linter
+- [x] Refactor `optimize-skills` — uses `.agent-src.uncondensed/`, preservation gate, defers quality to linter, suggest-only
+- [x] Refactor `optimize-agents` — uses `.agent-src.uncondensed/`, safety gate for always→auto, preservation gate, suggest-only
 - [x] Add merge-preservation checklist — `skill-quality.md` rule
 - [x] Add minimum-sharpness rule — `skill-quality.md` rule
 - [x] Fix `broad_scope` false positives — narrowed heuristic to description + "When to use" only
@@ -573,7 +573,7 @@ But restore:
 - strict execution-quality enforcement
 - workflow independence of skills
 - consistency checkpoints
-- preservation checks during optimization and compression
+- preservation checks during optimization and condensation
 
 The target state is:
 

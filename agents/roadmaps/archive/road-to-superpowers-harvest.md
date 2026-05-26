@@ -56,7 +56,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
 ## Phase 1 — Five-unit adoption plate (READY)
 
 - [x] **P1.1 — TDD hardening with anti-pattern externalization** (Adoption A).
-  Strengthen `.agent-src.uncompressed/skills/test-driven-development/SKILL.md`
+  Strengthen `.agent-src.uncondensed/skills/test-driven-development/SKILL.md`
   with their delete-and-restart Iron Law and the 12-row anti-rationalization
   table. Externalize the table to a sibling reference doc
   (`testing-anti-patterns.md`) to stay under the 400-line sunset trigger.
@@ -126,7 +126,7 @@ Phase 1 is the visible plate. Phase 2 is **out-of-horizon**.
   by gating the granularity on plan complexity (`structural` complexity
   flag in roadmap frontmatter triggers it; `lightweight` skips).
 - [x] **P1.6 — Suite integration.** Update `AGENTS.md` skill/rule counts,
-  regenerate compressed output (`bash scripts/compress.sh --changed`),
+  regenerate condensed output (`bash scripts/condense.sh --changed`),
   regenerate tool projections (`task generate-tools`), run full CI
   (`task ci`). No commit chunking until evidence captured.
 

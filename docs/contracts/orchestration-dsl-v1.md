@@ -13,7 +13,7 @@ that re-runs the same step sequence with the same inputs.
 **Scope.** Defines the file location, top-level shape, step kinds,
 input / output wiring, and the linter contract. Does **not** define
 the runtime semantics of each step kind — those live in the
-[`/orchestrate`](../../.agent-src.uncompressed/commands/orchestrate.md)
+[`/orchestrate`](../../.agent-src.uncondensed/commands/orchestrate.md)
 command and the `work_engine` directive modules it delegates to.
 
 Last refreshed: 2026-05-11.
@@ -95,10 +95,10 @@ outputs:
 
 | `kind` | `ref` resolves to | Runtime |
 |---|---|---|
-| `skill` | `.agent-src.uncompressed/skills/<ref>/SKILL.md` | Dispatched via `work_engine` directive matching the skill's domain. |
-| `command` | `.agent-src.uncompressed/commands/<ref>.md` | Same dispatch path the slash-command takes when typed by the user. |
-| `persona` | `.agent-src.uncompressed/personas/<ref>.md` | Sets `roles.active_role` for the next dependent step; does not produce its own output. |
-| `subagent` | `subagent-orchestration` mode name | Spawned per [`subagent-orchestration`](../../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md). |
+| `skill` | `.agent-src.uncondensed/skills/<ref>/SKILL.md` | Dispatched via `work_engine` directive matching the skill's domain. |
+| `command` | `.agent-src.uncondensed/commands/<ref>.md` | Same dispatch path the slash-command takes when typed by the user. |
+| `persona` | `.agent-src.uncondensed/personas/<ref>.md` | Sets `roles.active_role` for the next dependent step; does not produce its own output. |
+| `subagent` | `subagent-orchestration` mode name | Spawned per [`subagent-orchestration`](../../.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md). |
 
 ## Interpolation
 
@@ -147,7 +147,7 @@ majors.
 
 ## Cross-references
 
-- Command surface: [`/orchestrate`](../../.agent-src.uncompressed/commands/orchestrate.md).
+- Command surface: [`/orchestrate`](../../.agent-src.uncondensed/commands/orchestrate.md).
 - Linter: [`lint_orchestration_dsl.py`](../../scripts/lint_orchestration_dsl.py).
 - Runtime dispatcher precedent: [`implement-ticket-flow.md`](implement-ticket-flow.md).
-- Subagent runtime: [`subagent-orchestration`](../../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md).
+- Subagent runtime: [`subagent-orchestration`](../../.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md).

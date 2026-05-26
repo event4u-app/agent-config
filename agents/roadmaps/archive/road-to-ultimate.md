@@ -22,12 +22,12 @@ where it differentiates us. No blind copies, no feature cargo-cult.
 
 - [ ] [`road-to-9.md`](road-to-9.md) Phase 1 landed — a real minimal runtime
       exists. Ecosystem features on a scaffold are wasted effort.
-- [ ] Read [`.agent-src.uncompressed/skills/mcp/SKILL.md`](../../.agent-src.uncompressed/skills/mcp/SKILL.md)
+- [ ] Read [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../../.agent-src.uncondensed/skills/mcp/SKILL.md)
       — current MCP surface and what it already promises.
 - [ ] Read [`scripts/install.py`](../../scripts/install.py) and
       [`scripts/install.sh`](../../scripts/install.sh) — the installers to
       extend.
-- [ ] Read [`.agent-src.uncompressed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncompressed/skills/upstream-contribute/SKILL.md)
+- [ ] Read [`.agent-src.uncondensed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncondensed/skills/upstream-contribute/SKILL.md)
       — existing one-way contribution story.
 - [ ] Read [`docs/architecture.md`](../../docs/architecture.md) — confirm the
       stable/experimental split before extending surfaces.
@@ -50,7 +50,7 @@ where it differentiates us. No blind copies, no feature cargo-cult.
 ### What **we** do better (and must not lose)
 
 - Curated library (>200 skills/rules/commands/guidelines vs. a handful).
-- Compression pipeline (`.agent-src.uncompressed/` → `.agent-src/`).
+- Condensation pipeline (`.agent-src.uncondensed/` → `.agent-src/`).
 - Governance rules (`rule-type-governance`, `size-enforcement`,
   `skill-quality`, `tool-safety`, `runtime-safety`).
 - Cross-tool projection via `task generate-tools` (Claude, Cursor, Cline,
@@ -274,10 +274,10 @@ Patterns the competitor ships that we deliberately reject:
 - [`road-to-9.md`](road-to-9.md) — depth/runtime roadmap (sibling).
 - [`docs/architecture.md`](../../docs/architecture.md) — stable vs.
   experimental layers.
-- [`.agent-src.uncompressed/skills/mcp/SKILL.md`](../../.agent-src.uncompressed/skills/mcp/SKILL.md).
-- [`.agent-src.uncompressed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncompressed/skills/upstream-contribute/SKILL.md).
+- [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../../.agent-src.uncondensed/skills/mcp/SKILL.md).
+- [`.agent-src.uncondensed/skills/upstream-contribute/SKILL.md`](../../.agent-src.uncondensed/skills/upstream-contribute/SKILL.md).
 - [`scripts/install.py`](../../scripts/install.py).
 - Source of competitive analysis:
   [`agents/evidence/analysis/compare-dongitran-ai-agent-config.md`](../analysis/compare-dongitran-ai-agent-config.md)
   *(created by `/analyze-reference-repo` — see
-  [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md))*.
+  [`.agent-src.uncondensed/commands/analyze-reference-repo.md`](../../.agent-src.uncondensed/commands/analyze-reference-repo.md))*.

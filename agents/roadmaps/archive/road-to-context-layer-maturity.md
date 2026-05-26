@@ -84,7 +84,7 @@ optional and do not need a separate roadmap.
       (47,448 / 49,000 chars, 1,552 headroom, 96.8 % utilisation) are
       surfaced in `docs/contracts/load-context-budget-model.md`
       instead, which is the durable contract surface.
-- [-] **0.4** Slow-rollout compression noted in the PR body. Cancelled
+- [-] **0.4** Slow-rollout condensation noted in the PR body. Cancelled
       for the same reason; the durable note lives in
       `road-to-1-16-followups.md` line 1.1.2.
 
@@ -241,7 +241,7 @@ alternative strategies remain:
 - **4c — Shared-context discount:** only viable if Phase 1 Q3 picks
   3b. If Q3 picks 3a, this phase has no engineering work — skip
   outright and document the decision.
-- **4d — Hard compress:** caveman-format an Iron-Law section
+- **4d — Hard condense:** telegraph-format an Iron-Law section
   (already done on three rules; audit which of the remaining 35
   could absorb it without semantic loss).
 
@@ -253,7 +253,7 @@ alternative strategies remain:
       clean; (c) Phase 1 Q3 decision (3a or 3b) recorded. **Do not
       evaluate 4a (demote) or 4b (merge) for any rule whose
       behaviour is not yet outcome-tested.** Outcome-untested rules
-      stay in scope only for 4d (hard compress).
+      stay in scope only for 4d (hard condense).
 - [x] **4.1** Decision matrix: per always-rule, evaluate 4a/4b/4c/4d
       feasibility *given the locked Phase 2 + 3 baselines*. Output
       (created by this step):
@@ -264,7 +264,7 @@ alternative strategies remain:
       4d on `direct-answers` + 4d on `no-cheap-questions`.
 - [x] **4.3** Execute the picked paths in atomic commits. Each
       change must keep all four safety-floor rules untouched.
-      Trims landed in source + compressed; safety-floor (scope-control,
+      Trims landed in source + condensed; safety-floor (scope-control,
       non-destructive-by-default, commit-policy, agent-authority)
       verified untouched via `git diff --stat`. Atomic-commit step
       held for user authorization per `commit-policy`.
@@ -338,7 +338,7 @@ open roadmaps tagged.
 | 2 | Phase 2 outcome scorer becomes a flaky test that gets disabled | Scope to three rules with the sharpest Iron Laws + observable signals; step 2.3a caps the scorer at 50 LOC stdlib-only; failure mode is "the test was overfitted", not "outcome testing is wrong" |
 | 3 | Phase 3 examples-as-demos drifts into a doc-rewrite project | Hard cap: three files, format lock, opt-in for the rest |
 | 4 | Phase 4 fails to find ≥ 4k headroom | Step 4.4 contingency: document and accept the residual gap; do not add a third path mid-flight; the structural ceiling is real |
-| 5 | Phase 4 demotes / merges a rule whose behaviour was not outcome-tested | Step 4.0 inputs gate: only 4d (hard compress) is permitted on outcome-untested rules; 4a / 4b require a locked Phase 2 baseline |
+| 5 | Phase 4 demotes / merges a rule whose behaviour was not outcome-tested | Step 4.0 inputs gate: only 4d (hard condense) is permitted on outcome-untested rules; 4a / 4b require a locked Phase 2 baseline |
 | 6 | Phase 5 roadmap-complexity linter is gamed (split a heavy roadmap into two lightweight ones) | The trigger is contract-layer change, not line count alone — reviewer judgment required |
 | 7 | This roadmap itself violates Phase 5's lightweight tier | It does — by design, this is the seed; the standard locks afterwards |
 | 8 | Headroom margin (4,072 chars, +72 over goal) is fragile against safety-floor edits or new always-rules (Phase 4.5 Anthropic finding) | Re-open trigger: any always-rule edit that consumes ≥ 200 chars headroom OR allowlist breach resolution (`scope-control` / `non-destructive-by-default`) → spawn a Budget-v3 evaluation; do not silently absorb |
@@ -382,5 +382,5 @@ as the closing phase that locks the standard for sibling roadmaps.
 | # | Source | Date | Scope |
 |---|---|---|---|
 | 1 | Reviewer #1 (preview-review on PR #36) | 2026-05-03 | 3-Layer Architecture thesis, context-loading gaps, outcome-system gap, examples-as-demos framing |
-| 2 | Reviewer #2 (preview-review on PR #36) | 2026-05-03 | PR-size critique, Always-Budget v2 strategies, slow-rollout compression, roadmap-complexity standard, P0 cleanup list |
+| 2 | Reviewer #2 (preview-review on PR #36) | 2026-05-03 | PR-size critique, Always-Budget v2 strategies, slow-rollout condensation, roadmap-complexity standard, P0 cleanup list |
 | 3 | Council session `2026-05-03T17-56-21Z` (claude-sonnet-4-5 + gpt-4o) | 2026-05-03 | v1 → v2 critique on this roadmap + PR #36 diff. Both verdicts: CONDITIONAL GREENLIGHT. Sonnet 3 binding revisions; gpt-4o 6 clarifications. All compatible revisions applied to v2. |

@@ -31,10 +31,10 @@ first-class outcome, not a failure.
 ## Architectural constraints (non-negotiable)
 
 1. **No runtime code in `scripts/`.** `scripts/` is package tooling
-   (installers, linters, compression, count sync). Orchestrator
-   composition lives inside a skill (`.agent-src.uncompressed/skills/
+   (installers, linters, condensation, count sync). Orchestrator
+   composition lives inside a skill (`.agent-src.uncondensed/skills/
    implement-ticket/`) plus a command. Any extracted helper modules
-   go under `.agent-src.uncompressed/templates/scripts/` so consumer
+   go under `.agent-src.uncondensed/templates/scripts/` so consumer
    repos receive them via the installer.
 2. **Technology TBD.** Neither Python nor Bash is committed upfront.
    The spike in Phase 0 picks the runtime; the roadmap must not
@@ -119,14 +119,14 @@ works end-to-end on one real ticket.
 - [x] Decide runtime + location of orchestrator code. Record in a
       short ADR under `agents/settings/contexts/` (not a roadmap).
       *(Decision: **Python 3.10+**, orchestrator under
-      `.agent-src.uncompressed/templates/scripts/implement_ticket/`
+      `.agent-src.uncondensed/templates/scripts/implement_ticket/`
       per architectural constraint #1. See
       [`adr-implement-ticket-runtime.md`](../contexts/adr-implement-ticket-runtime.md).)*
 - [x] Throwaway code lives on a spike branch; nothing merged into
-      `.agent-src.uncompressed/` from this phase.
+      `.agent-src.uncondensed/` from this phase.
       *(Working branch: `feat/improve-agent-setup-10`; spike code
       sat at repo root under `spike/` and did **not** touch
-      `.agent-src.uncompressed/`. Deleted after Phase 1 shipped —
+      `.agent-src.uncondensed/`. Deleted after Phase 1 shipped —
       see ADR and commit `79f30e7` for the history.)*
 
 ## Phase 1 — DeliveryState + linear dispatcher ✅ shipped (2026-04-23)
@@ -134,12 +134,12 @@ works end-to-end on one real ticket.
 - [x] Implement `DeliveryState` per
       [`implement-ticket-flow`](../contexts/implement-ticket-flow.md).
       *(Dataclass under
-      [`.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py)
+      [`.agent-src.uncondensed/templates/scripts/implement_ticket/delivery_state.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/delivery_state.py)
       — all 10 contract fields, `Outcome` enum, `StepResult`, and the
       `Step` protocol.)*
 - [x] Implement step dispatcher with three terminal states
       (`success | blocked | partial`).
-      *([`dispatcher.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/dispatcher.py)
+      *([`dispatcher.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/dispatcher.py)
       — linear walk over `STEP_ORDER`, rejects missing handlers and
       silent blocked/partial outcomes up front.)*
 - [x] Every step reads + writes `DeliveryState`; no hidden state.
@@ -156,14 +156,14 @@ works end-to-end on one real ticket.
 ## Phase 2 — step wiring to existing skills ✅ shipped (2026-04-23)
 
 - [x] Step `refine` → deterministic gate in front of `refine-ticket`.
-      *([`steps/refine.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/refine.py)
+      *([`steps/refine.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/refine.py)
       — SUCCESS when ticket carries id + non-trivial title + at
       least one concrete AC; BLOCKED otherwise with three numbered
       options that route to `/refine-ticket`, paste-in-chat, or
       abandon. 8 tests cover id/title/AC deficiencies plus the
       success path.)*
 - [x] Step `memory` → bounded retrieval, 12 hits across four types.
-      *([`steps/memory.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/memory.py)
+      *([`steps/memory.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/memory.py)
       — forwards the four allowed types
       (`domain-invariants`, `architecture-decisions`,
       `incident-learnings`, `historical-patterns`) to
@@ -171,41 +171,41 @@ works end-to-end on one real ticket.
       from `files` → title → AC, stop-words dropped, duplicates
       removed. 6 tests with a spy over `retrieve`.)*
 - [x] Step `analyze` → deterministic precondition gate.
-      *([`steps/analyze.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/analyze.py)
+      *([`steps/analyze.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/analyze.py)
       — SUCCESS when `refine` + `memory` both succeeded and the
       ticket still carries AC; BLOCKED with numbered retry/abort
       options otherwise. Pure gate, no mutation. 7 tests cover
       single failures, combined failures, and the clean path.)*
 - [x] Step `plan` → gate + Option-A delegation to `feature-plan`.
-      *([`steps/plan.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/plan.py)
+      *([`steps/plan.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/plan.py)
       — blocks on missing `analyze` precondition, blocks with
       `@agent-directive: create-plan` when `state.plan` is empty,
       validates shape (string / list of steps / `{steps: [...]}`)
       otherwise. 11 tests cover every gate path + directive
       formatting.)*
 - [x] Step `implement` → gate + Option-A delegation.
-      *([`steps/implement.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/implement.py)
+      *([`steps/implement.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/implement.py)
       — blocks on missing `plan` precondition; blocks with
       `@agent-directive: apply-plan` when `state.changes` empty;
       validates that every change dict carries a non-empty `path`
       (`file` accepted as alias). Agent applies the plan under
       `minimal-safe-diff` + `scope-control` on the rebound. 7 tests.)*
 - [x] Step `test` → gate + Option-A delegation to `tests-execute`.
-      *([`steps/test.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/test.py)
+      *([`steps/test.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/test.py)
       — blocks on missing `implement` precondition; blocks with
       `@agent-directive: run-tests scope=targeted` when
       `state.tests` empty; requires `verdict` ∈ {success, failed,
       mixed} and halts on non-success verdicts so a bad test
       result cannot be silently skipped. 8 tests.)*
 - [x] Step `verify` → gate + Option-A delegation to `review-changes`.
-      *([`steps/verify.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/verify.py)
+      *([`steps/verify.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/verify.py)
       — blocks on missing `test` precondition; blocks with
       `@agent-directive: review-changes` when `state.verify`
       empty; requires `verdict` ∈ {success, blocked, partial} and
       halts on non-success verdicts per `verify-before-complete`.
       7 tests.)*
 - [x] Step `report` → delivery-report renderer.
-      *([`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py)
+      *([`steps/report.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/report.py)
       — pure deterministic Markdown renderer per the 9-section
       report schema in `implement-ticket-flow.md`. Drops the
       "Memory that mattered" section when no hit carries a
@@ -221,7 +221,7 @@ works end-to-end on one real ticket.
       `verify` declare 3–4 codes each; `memory` and `report`
       declare `()` explicitly so "forgot to declare" stays
       distinguishable from "nothing to declare". Aggregated via
-      [`steps.all_ambiguities()`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/__init__.py);
+      [`steps.all_ambiguities()`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/__init__.py);
       mirrored in the flow contract
       [`implement-ticket-flow.md#declared-ambiguity-surfaces`](../contexts/implement-ticket-flow.md#declared-ambiguity-surfaces).
       20 codes total across 6 gate steps.)*
@@ -230,15 +230,15 @@ works end-to-end on one real ticket.
       *([`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
       — 5 tests lock the contract: every BLOCKED surface emits
       ≥2 options matching `^> \d+\. ` per the
-      [`user-interaction`](../../.agent-src.uncompressed/rules/user-interaction.md)
+      [`user-interaction`](../../.agent-src.uncondensed/rules/user-interaction.md)
       rule; every ambiguity entry carries `code` / `trigger` /
       `resolution`; codes are unique per step. Delegation gates
       additionally emit an `@agent-directive:` marker ahead of
       the numbered options so the orchestrator can route to the
       matching skill; see `agent-directive()` in
-      [`delivery_state.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/delivery_state.py).)*
+      [`delivery_state.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/delivery_state.py).)*
 - [x] Persona policies: `senior-engineer`, `qa`, `advisory` shipped.
-      *([`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py)
+      *([`persona_policy.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/persona_policy.py)
       — frozen `PersonaPolicy` dataclass with five flags
       (`allows_implement` / `allows_test` / `allows_verify` /
       `widen_tests` / `suggests_next_commands`). `qa` widens the
@@ -260,7 +260,7 @@ works end-to-end on one real ticket.
 - [x] Report schema (see context doc) — diffs summary, tests,
       memory-hits-that-mattered, follow-ups, suggested next
       commands.
-      *([`steps/report.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/steps/report.py)
+      *([`steps/report.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/steps/report.py)
       renders all nine sections in the order fixed by
       [`implement-ticket-flow.md#delivery-report-schema`](../contexts/implement-ticket-flow.md#delivery-report-schema):
       Ticket · Persona · Plan · Changes · Tests · Verify ·
@@ -291,7 +291,7 @@ works end-to-end on one real ticket.
 - [x] `AGENTS.md` + `copilot-instructions.md` reference
       `/implement-ticket` as the recommended entry flow.
       *(Command shipped at
-      [`.agent-src.uncompressed/commands/implement-ticket.md`](../../.agent-src.uncompressed/commands/implement-ticket.md)
+      [`.agent-src.uncondensed/commands/implement-ticket.md`](../../.agent-src.uncondensed/commands/implement-ticket.md)
       — agent-facing instructions for the Option-A dispatch loop
       over `python3 -m implement_ticket`, with a directive-to-
       skill mapping table (`create-plan` → `/feature-plan`,

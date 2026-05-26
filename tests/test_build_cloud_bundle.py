@@ -89,7 +89,7 @@ def test_budget_hard_spec_limit_always_raises() -> None:
 
 def test_swap_paths_replaces_package_internal_only() -> None:
     body = (
-        "Edit `.agent-src.uncompressed/skills/foo/SKILL.md` and "
+        "Edit `.agent-src.uncondensed/skills/foo/SKILL.md` and "
         "see (`.agent-src/rules/x.md`). The `agents/roadmaps/` dir "
         "stays intact."
     )
@@ -188,8 +188,8 @@ def test_build_all_skips_t3h_and_explicit_request_raises(
 # ---------- regression: T3-H must stay 0 in shipped sources --------------
 
 
-def test_no_t3h_in_uncompressed_source() -> None:
-    """The shipped uncompressed sources must never reintroduce a T3-H tier.
+def test_no_t3h_in_uncondensed_source() -> None:
+    """The shipped uncondensed sources must never reintroduce a T3-H tier.
 
     Every previously hard-blocked artefact must declare a `cloud_safe: noop`
     or `cloud_safe: degrade` marker so the audit downgrades it.

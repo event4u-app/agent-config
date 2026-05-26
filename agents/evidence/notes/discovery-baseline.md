@@ -9,10 +9,10 @@
 
 | Category | Path | Count |
 |---|---|---|
-| Skills | `.agent-src.uncompressed/skills/*/SKILL.md` | 218 |
-| Rules | `.agent-src.uncompressed/rules/**/*.md` | 72 |
-| Commands | `.agent-src.uncompressed/commands/**/*.md` | 129 |
-| Templates | `.agent-src.uncompressed/templates/**/*` | 141 |
+| Skills | `.agent-src.uncondensed/skills/*/SKILL.md` | 218 |
+| Rules | `.agent-src.uncondensed/rules/**/*.md` | 72 |
+| Commands | `.agent-src.uncondensed/commands/**/*.md` | 129 |
+| Templates | `.agent-src.uncondensed/templates/**/*` | 141 |
 
 ## Distinct `domain:` values (skills)
 
@@ -55,7 +55,7 @@
 | `rules/augment-edit-discipline.md` | auto | 2a | package |
 | `rules/augment-source-of-truth.md` | auto | 1 | package |
 | `rules/autonomous-execution.md` | auto | 3 | package |
-| `rules/caveman-speak.md` | auto | 1 | package |
+| `rules/telegraph-speak.md` | auto | 1 | package |
 
 ## Sample commands (first 10)
 

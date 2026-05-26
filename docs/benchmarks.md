@@ -5,7 +5,7 @@ keep-beta-until: 2026-08-14
 
 # Benchmark cadence
 
-> **Status:** active · **Owner:** `step-16-caveman-substance.md` Phase 1 ·
+> **Status:** active · **Owner:** `step-16-telegraph-substance.md` Phase 1 ·
 > **Sources:** [`benchmark-corpus-spec.md`](contracts/benchmark-corpus-spec.md) ·
 > [`benchmark-report-schema.md`](contracts/benchmark-report-schema.md)
 
@@ -18,7 +18,7 @@ discipline (upstream `5b71c7a`).
 | Corpus | Path | Purpose |
 |---|---|---|
 | `dev` | `tests/eval/corpus-dev.yaml` | router / engine selection |
-| `caveman` | `internal/bench/corpora/caveman/prompts.yaml` | compression dialect (`vs_raw` + `vs_terse`) |
+| `telegraph` | `internal/bench/corpora/telegraph/prompts.yaml` | condensation dialect (`vs_raw` + `vs_terse`) |
 
 ## Reports — naming and trail
 
@@ -34,19 +34,19 @@ one without the other.
 
 | Trigger | Required corpus | Required artefact |
 |---|---|---|
-| Pre-release bake (any `vX.Y.0`) | `dev` + `caveman` | both reports refreshed |
-| Edit to `.agent-src.uncompressed/rules/caveman-speak.md` | `caveman` | report refreshed in same PR |
-| Edit to `scripts/bench_run.py` `--caveman` arm | `caveman` | report refreshed in same PR |
-| Edit to `internal/bench/corpora/caveman/prompts.yaml` | `caveman` | report refreshed, version bumped (`caveman-vN+1`) |
-| Edit to `scripts/_lib/bench_caveman*.py` | `caveman` | report refreshed in same PR |
+| Pre-release bake (any `vX.Y.0`) | `dev` + `telegraph` | both reports refreshed |
+| Edit to `.agent-src.uncondensed/rules/telegraph-speak.md` | `telegraph` | report refreshed in same PR |
+| Edit to `scripts/bench_run.py` `--telegraph` arm | `telegraph` | report refreshed in same PR |
+| Edit to `internal/bench/corpora/telegraph/prompts.yaml` | `telegraph` | report refreshed, version bumped (`telegraph-vN+1`) |
+| Edit to `scripts/_lib/bench_telegraph*.py` | `telegraph` | report refreshed in same PR |
 
 A PR that touches any of the cadence triggers without refreshing the
 corresponding report is rejected by reviewer convention (no CI gate yet
 — the trigger surface is too small to warrant one).
 
-## Cost envelope (`caveman` corpus)
+## Cost envelope (`telegraph` corpus)
 
-10 prompts × 3 arms (`compressed` · `terse-control` · `uncompressed`) = 30
+10 prompts × 3 arms (`condensed` · `terse-control` · `uncondensed`) = 30
 Anthropic calls per run. Observed envelope on `claude-sonnet-4-5` (v1,
 2026-05-16): **$0.0805 actual** · 0 errors · realised carve-out share
 30.67 %.
@@ -54,9 +54,9 @@ Anthropic calls per run. Observed envelope on `claude-sonnet-4-5` (v1,
 ## Commands
 
 ```bash
-task bench -- --caveman                                  # full run
-task bench -- --caveman --caveman-max-prompts 1          # 1-prompt smoke
-task bench -- --caveman --caveman-dry-run --no-write     # offline shape
+task bench -- --telegraph                                  # full run
+task bench -- --telegraph --telegraph-max-prompts 1          # 1-prompt smoke
+task bench -- --telegraph --telegraph-dry-run --no-write     # offline shape
 ```
 
 Cost-touched runs require an `ANTHROPIC_API_KEY` at
@@ -68,7 +68,7 @@ Cost-touched runs require an `ANTHROPIC_API_KEY` at
   per-prompt schema.
 - [`benchmark-report-schema.md`](contracts/benchmark-report-schema.md) —
   per-report JSON / Markdown contract.
-- [`compression-default-kill-criterion.md`](contracts/compression-default-kill-criterion.md)
-  — how a published `caveman-v<N>` report is read against the kill table.
-- `agents/roadmaps/step-16-caveman-substance.md` Phase 1 — where the
-  caveman corpus was authored.
+- [`condensation-default-kill-criterion.md`](contracts/condensation-default-kill-criterion.md)
+  — how a published `telegraph-v<N>` report is read against the kill table.
+- `agents/roadmaps/step-16-telegraph-substance.md` Phase 1 — where the
+  telegraph corpus was authored.

@@ -98,9 +98,9 @@ class TestWriteConsumerBridgeMarker(unittest.TestCase):
         self.assertFalse((self.project_root / "agents" / ".event4u-bridge.yml").exists())
 
     def test_skipped_inside_source_repo(self) -> None:
-        # Presence of ``.agent-src.uncompressed/`` marks the maintainer
+        # Presence of ``.agent-src.uncondensed/`` marks the maintainer
         # source repo; the marker must never land here.
-        (self.project_root / ".agent-src.uncompressed").mkdir()
+        (self.project_root / ".agent-src.uncondensed").mkdir()
         path = install._write_consumer_bridge_marker(
             self.project_root, "2.4.0", env=self.home_env, now=FIXED_NOW,
         )

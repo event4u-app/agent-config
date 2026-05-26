@@ -22,7 +22,7 @@ The ceiling is structural, not parameter-tunable. Three alternative
 strategies remain on the table for budget relief
 (`road-to-context-layer-maturity.md` Phase 4): demote `always` →
 `auto`, merge two narrow always-rules whose Iron Laws share a domain,
-or hard-compress an Iron-Law section. Splitting is not one of them.
+or hard-condense an Iron-Law section. Splitting is not one of them.
 
 ## Why this was a real question
 
@@ -87,7 +87,7 @@ surface cannot move.
   remains correct as written — splitting was never going to give it
   more headroom.
 - `road-to-context-layer-maturity.md` Phase 4 inherits the three
-  surviving budget-relief paths (demote / merge / hard compress)
+  surviving budget-relief paths (demote / merge / hard condense)
   and the optional shared-context discount under Phase 1 Q3=3b.
 - New contributors who think "this rule is too big, split it" are
   redirected here. The next attempt requires a contract revision

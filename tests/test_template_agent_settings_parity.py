@@ -1,7 +1,7 @@
 """Parity guard for the work_engine template copy of ``agent_settings``.
 
 Road-to-portable-dev-preferences P3 mirrors ``scripts/_lib/agent_settings.
-py`` into ``.agent-src.uncompressed/templates/scripts/work_engine/_lib/
+py`` into ``.agent-src.uncondensed/templates/scripts/work_engine/_lib/
 agent_settings.py`` so the loader ships with consumer-deployed bundles
 without depending on the host package's ``scripts/_lib/`` layout.
 
@@ -9,7 +9,7 @@ This test fails on the next byte of drift between the two files. If you
 intend to change one, regenerate the other:
 
     cp scripts/_lib/agent_settings.py \\
-       .agent-src.uncompressed/templates/scripts/work_engine/_lib/agent_settings.py
+       .agent-src.uncondensed/templates/scripts/work_engine/_lib/agent_settings.py
 
 Add a comment to the change to flag the new whitelist / behavior in the
 roadmap so consumers know what cascaded.

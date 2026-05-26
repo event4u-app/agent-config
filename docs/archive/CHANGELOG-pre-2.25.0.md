@@ -60,7 +60,7 @@ Tests: 4569 (+10 since 2.23.0)
 ### Documentation
 
 * **guidelines:** add prompt-templates.md (12-template catalogue) ([ec91b31](https://github.com/event4u-app/agent-config/commit/ec91b31d71d7169f2aef6184d5e5f8d01b237f9b))
-* **roadmap:** close out step-16-caveman-substance (38/38, kill-criterion deferred) ([7a60f1e](https://github.com/event4u-app/agent-config/commit/7a60f1eddd66dfdf54bc2664b45c97954eb2b7e3))
+* **roadmap:** close out step-16-telegraph-substance (38/38, kill-criterion deferred) ([7a60f1e](https://github.com/event4u-app/agent-config/commit/7a60f1eddd66dfdf54bc2664b45c97954eb2b7e3))
 
 ### Chores
 
@@ -90,7 +90,7 @@ Tests: 4559 (+0 since 2.21.0)
 ### Documentation
 
 * **guidelines:** add prompt-templates.md (12-template catalogue) ([ec91b31](https://github.com/event4u-app/agent-config/commit/ec91b31d71d7169f2aef6184d5e5f8d01b237f9b))
-* **roadmap:** close out step-16-caveman-substance (38/38, kill-criterion deferred) ([7a60f1e](https://github.com/event4u-app/agent-config/commit/7a60f1eddd66dfdf54bc2664b45c97954eb2b7e3))
+* **roadmap:** close out step-16-telegraph-substance (38/38, kill-criterion deferred) ([7a60f1e](https://github.com/event4u-app/agent-config/commit/7a60f1eddd66dfdf54bc2664b45c97954eb2b7e3))
 
 ### Chores
 
@@ -103,19 +103,19 @@ Tests: 4559 (+0 since 2.21.0)
 
 ### Features
 
-* **telemetry:** caveman stats + per-conversation cost lens ([13300cc](https://github.com/event4u-app/agent-config/commit/13300cc2d709ec2cce58520621cf560fbd6414c3))
-* **memory:** input-side compression for always-loaded files ([abfd5b1](https://github.com/event4u-app/agent-config/commit/abfd5b120f2effd2abd68adea45c8b15f315dfec))
-* **bench:** add caveman v1 benchmark with terse-control arm ([1e37062](https://github.com/event4u-app/agent-config/commit/1e37062cada6f9be5bfa0dfe4083753ade87f2f2))
-* **security:** add safe-paths denylist and caveman carve-outs validators ([249114d](https://github.com/event4u-app/agent-config/commit/249114d900a9d6960aee7bbeda5c28f85be718ad))
+* **telemetry:** telegraph stats + per-conversation cost lens ([13300cc](https://github.com/event4u-app/agent-config/commit/13300cc2d709ec2cce58520621cf560fbd6414c3))
+* **memory:** input-side condensation for always-loaded files ([abfd5b1](https://github.com/event4u-app/agent-config/commit/abfd5b120f2effd2abd68adea45c8b15f315dfec))
+* **bench:** add telegraph v1 benchmark with terse-control arm ([1e37062](https://github.com/event4u-app/agent-config/commit/1e37062cada6f9be5bfa0dfe4083753ade87f2f2))
+* **security:** add safe-paths denylist and telegraph carve-outs validators ([249114d](https://github.com/event4u-app/agent-config/commit/249114d900a9d6960aee7bbeda5c28f85be718ad))
 
 ### Bug Fixes
 
-* **caveman-speak:** bullet-format prose lines to satisfy structural-density lock ([5c8006d](https://github.com/event4u-app/agent-config/commit/5c8006d8bd70fea93671361160e6b7c4399302c6))
+* **telegraph-speak:** bullet-format prose lines to satisfy structural-density lock ([5c8006d](https://github.com/event4u-app/agent-config/commit/5c8006d8bd70fea93671361160e6b7c4399302c6))
 * **refs:** inline roadmap council citations + mark contract council-refs as ADR trace ([5a11951](https://github.com/event4u-app/agent-config/commit/5a11951ebff87ba95465c0a6b9b59fd9a4d4cee2))
-* **contracts:** drop roadmap reference from compression-default-kill-criterion ([f2b2124](https://github.com/event4u-app/agent-config/commit/f2b212495744dae1904b256aa11d47e230e7b534))
-* **contracts:** add stability frontmatter to caveman-telemetry + cost-summary-schema ([c7efa54](https://github.com/event4u-app/agent-config/commit/c7efa54cc3587f42f3a21ca18b783b5504c56e04))
+* **contracts:** drop roadmap reference from condensation-default-kill-criterion ([f2b2124](https://github.com/event4u-app/agent-config/commit/f2b212495744dae1904b256aa11d47e230e7b534))
+* **contracts:** add stability frontmatter to telegraph-telemetry + cost-summary-schema ([c7efa54](https://github.com/event4u-app/agent-config/commit/c7efa54cc3587f42f3a21ca18b783b5504c56e04))
 * **portability:** apply task-invocation fix in .agent-src/ projection ([be87c2b](https://github.com/event4u-app/agent-config/commit/be87c2be1637570a61b7a8863216288f3828609c))
-* **portability:** swap task invocations for script paths in compress-memory skill ([886f9f4](https://github.com/event4u-app/agent-config/commit/886f9f4a615fa2351b9261a62fd49173f8e87c2f))
+* **portability:** swap task invocations for script paths in condense-memory skill ([886f9f4](https://github.com/event4u-app/agent-config/commit/886f9f4a615fa2351b9261a62fd49173f8e87c2f))
 * **roadmap:** clarify agent-status is a command not a skill in step-16 ([96df39d](https://github.com/event4u-app/agent-config/commit/96df39de7a7562df946c37fea8bc42927851071f))
 * **template:** bump agent_config_version pin to 2.20.1 ([c275864](https://github.com/event4u-app/agent-config/commit/c2758641718077baaaaefea1191760d397f6b47e))
 
@@ -123,14 +123,14 @@ Tests: 4559 (+0 since 2.21.0)
 
 * **readme:** compact banner and badge row to stay under 750-line lint budget ([2f411a7](https://github.com/event4u-app/agent-config/commit/2f411a78993260d3bd1f5fb819779cad2b19ed07))
 * **readme:** add hero banner and migrate count display to shields.io badges ([980fe1a](https://github.com/event4u-app/agent-config/commit/980fe1ac1c529e3c57c967db148f2b162240ff27))
-* **caveman:** v1 kill-criterion verdict + Suspended state ([ca1751e](https://github.com/event4u-app/agent-config/commit/ca1751e8957783fa4e40ddfb89172702619f12bc))
+* **telegraph:** v1 kill-criterion verdict + Suspended state ([ca1751e](https://github.com/event4u-app/agent-config/commit/ca1751e8957783fa4e40ddfb89172702619f12bc))
 
 ### Chores
 
 * **ownership:** regenerate ownership matrix ([1331bce](https://github.com/event4u-app/agent-config/commit/1331bce63d223adb971a931babe5e163b5a8aa12))
-* **index:** regenerate agents/index.md + docs/catalog.md for compress-memory ([6d16e7f](https://github.com/event4u-app/agent-config/commit/6d16e7fb3ca0a2fbe76a18337a94e98607262d06))
-* **sync:** bump skill count 210 -> 211 (compress-memory) ([bb361ed](https://github.com/event4u-app/agent-config/commit/bb361edb4e5e65cbc4e7eb41382f88f1909e5583))
-* **roadmaps:** close step-16 caveman-substance + archive-phantom-scan ([9388f9b](https://github.com/event4u-app/agent-config/commit/9388f9be662da17b98eb4000f16ff8fcf376e626))
+* **index:** regenerate agents/index.md + docs/catalog.md for condense-memory ([6d16e7f](https://github.com/event4u-app/agent-config/commit/6d16e7fb3ca0a2fbe76a18337a94e98607262d06))
+* **sync:** bump skill count 210 -> 211 (condense-memory) ([bb361ed](https://github.com/event4u-app/agent-config/commit/bb361edb4e5e65cbc4e7eb41382f88f1909e5583))
+* **roadmaps:** close step-16 telegraph-substance + archive-phantom-scan ([9388f9b](https://github.com/event4u-app/agent-config/commit/9388f9be662da17b98eb4000f16ff8fcf376e626))
 
 Tests: 4559 (+24 since 2.20.1)
 
@@ -154,7 +154,7 @@ Tests: 4535 (+0 since 2.20.0)
 
 * **product:** step-15 product refinement — profiles + packs + presets + explain CLI ([59e7d6f](https://github.com/event4u-app/agent-config/commit/59e7d6f3ddce025e558da08c1da1b4c8155e68eb))
 * **parity:** step-11 ruflo parity — smoke + ADR + cost + namespace + MCP ([521b4c6](https://github.com/event4u-app/agent-config/commit/521b4c62f5fe266f5c18dfcca2abf4e06d97c217))
-* **caveman:** step-10 default-kill criterion + parity roadmap ([dd7ec3c](https://github.com/event4u-app/agent-config/commit/dd7ec3cae4f8839b28b4d3ff9dbdbb316ec5d035))
+* **telegraph:** step-10 default-kill criterion + parity roadmap ([dd7ec3c](https://github.com/event4u-app/agent-config/commit/dd7ec3cae4f8839b28b4d3ff9dbdbb316ec5d035))
 * **bench:** step-4 measurement + benchmark infrastructure ([981d0cd](https://github.com/event4u-app/agent-config/commit/981d0cd1c48e2d23eede29bd86e833cd826ddfd9))
 * **skills:** step-2 skill inventory rationalization ([3fa651d](https://github.com/event4u-app/agent-config/commit/3fa651d2496e4fc483cd7ed452bb39f41dd39365))
 

@@ -121,7 +121,7 @@ class TestWritePerToolProjectAnchors(unittest.TestCase):
             self.assertFalse((self.project_root / rel).exists())
 
     def test_skipped_inside_source_repo(self) -> None:
-        (self.project_root / ".agent-src.uncompressed").mkdir()
+        (self.project_root / ".agent-src.uncondensed").mkdir()
         written = install._write_per_tool_project_anchors(
             self.project_root, ALL_ANCHOR_TOOLS, env=self.home_env, now=FIXED_NOW,
         )

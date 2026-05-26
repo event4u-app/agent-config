@@ -124,7 +124,7 @@ round 1 left qualitative judgments.
 | Q3 | Tier-3 ordering | **`event-driven-discipline` BEFORE `deep-research-adoption` Phase 2.** | Phase 2's 6-week stability gate cannot be earned without infrastructure hardening first; cognitive skills require predictable substrate. |
 | Q4 | Wing roadmaps | **Stay in Tier 4** — content depth first, GTM second. | Escalate Wing 3 (`gtm-and-growth`) to Tier 3 if (a) star plateau persists past 8 weeks post-`proof-not-features` AND (b) ≥ 3 inbound requests explicitly ask for adoption / GTM tooling. |
 
-Rationale (compressed):
+Rationale (condensed):
 
 - **Q1** — Option B (drop) conflates timing with validity; the work
   may be premature now but the commitment remains valid at 5–10 stars.

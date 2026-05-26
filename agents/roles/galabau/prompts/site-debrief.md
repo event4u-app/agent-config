@@ -1,6 +1,6 @@
 ---
 name: site-debrief
-intent: "Compress a site-visit debrief into the team-facing brief — what we saw, what's at risk, what we owe the customer."
+intent: "Condense a site-visit debrief into the team-facing brief — what we saw, what's at risk, what we owe the customer."
 inputs:
   - name: site_observations
     required: true

@@ -2,7 +2,7 @@
 
 > Creating or editing rules, or auditing rule types — decides when a rule should be always vs auto
 
-_Origin: migrated from `.agent-src.uncompressed/rules/rule-type-governance.md` per P4.2 of `road-to-kernel-and-router.md`._
+_Origin: migrated from `.agent-src.uncondensed/rules/rule-type-governance.md` per P4.2 of `road-to-kernel-and-router.md`._
 
 # rule-type-governance
 

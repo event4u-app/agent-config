@@ -70,9 +70,9 @@ Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
 | Metric | Value | Augmentcode budget | Status |
 |---|---:|---:|---|
 | Always-active rules (count) | 18 | — | — |
-| Always-active rules (chars, compressed) | **93,652** | **~49,000** | ❌ **191 % over** |
-| Always-active rules (chars, uncompressed) | 97,612 | — | — |
-| All rules combined (compressed) | 199,530 | — | — |
+| Always-active rules (chars, condensed) | **93,652** | **~49,000** | ❌ **191 % over** |
+| Always-active rules (chars, uncondensed) | 97,612 | — | — |
+| All rules combined (condensed) | 199,530 | — | — |
 | Commands total | **77** | — | claude-skills: ~10 |
 | Skills total | 128 | — | — |
 | Guidelines total | 46 | — | — |
@@ -84,8 +84,8 @@ Per `road-to-better-skills-and-profiles.md` "Roadmap horizon" decision —
 
 ## Finding 1 — Always-rule budget breach (CRITICAL)
 
-**Diagnosis:** 18 always-active rules sum to 93,652 chars (compressed), 191 % over
-the ~49k char budget Augmentcode considers safe. Compression alone cannot close
+**Diagnosis:** 18 always-active rules sum to 93,652 chars (condensed), 191 % over
+the ~49k char budget Augmentcode considers safe. Condensation alone cannot close
 the gap (existing pass already saves only ~5 %).
 
 | Option | Idea | Trade-off |
@@ -93,7 +93,7 @@ the gap (existing pass already saves only ~5 %).
 | **A — Tiering** | Split into "safety floor" (always: ≤49k) + "operational guidance" (auto-trigger). Keep always: `non-destructive-by-default`, `scope-control`, `commit-policy`, `ask-when-uncertain`, `direct-answers`, `language-and-tone` (trimmed), `verify-before-complete`. Demote to auto: `chat-history`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-before-build`. | 18→~7 always-rules, ~35k chars. Risk: auto-trigger precision must rise. |
 | **B — Body relocation to `agents/settings/contexts/`** | Large always-rules keep header + Iron Law inline; mechanics, tables, examples move to `agents/settings/contexts/<rule>-mechanics.md`. Rule references context. | All rules stay always; each <2k. Risk: agent must read context → more tool calls. Effective char saving only if context loads stay rare. |
 | **C — Hard merge of overlapping rules** | `autonomous-execution` + `commit-policy` + `non-destructive-by-default` + `scope-control` share ~30 % textual overlap (all four answer "may the agent do this autonomously?"). Merge into single `agent-authority.md` with clear sections. | -10 to -15k chars; fewer cross-refs to maintain. Risk: 1 large rule replaces 4 small ones — harder to audit per concern. |
-| **D — Always-rule-only aggressive compression profile** | Separate compression pass with stricter budget targeting only `type: always`. | Fast; diminishing returns (existing compression already ~5 %). No 50k saving on its own. |
+| **D — Always-rule-only aggressive condensation profile** | Separate condensation pass with stricter budget targeting only `type: always`. | Fast; diminishing returns (existing condensation already ~5 %). No 50k saving on its own. |
 
 **Synthesis read:** **A + C combined** is the only path that reaches <49k without
 function loss. B+D alone are insufficient.
@@ -175,7 +175,7 @@ agent-config has 10× the surface and no central index.
 
 | Option | Idea | Trade-off |
 |---|---|---|
-| **A — Auto-generated `agents/index.md`** | Generator scans `.agent-src.uncompressed/`, emits one row per artifact: name · type · trigger · 1-line purpose · link. Re-runs in `task ci`. | Single discovery entry; bonus: generator can flag naming-convention violations. |
+| **A — Auto-generated `agents/index.md`** | Generator scans `.agent-src.uncondensed/`, emits one row per artifact: name · type · trigger · 1-line purpose · link. Re-runs in `task ci`. | Single discovery entry; bonus: generator can flag naming-convention violations. |
 | **B — Per-type indexes** | `agents/index-rules.md`, `-skills.md`, `-commands.md`, `-guidelines.md`. | Smaller files; user has to know which type to look at. |
 | **C — README expansion** | Inline-list everything in README. | Zero new infra; README breaks the 500-line linter cap immediately. |
 
@@ -266,7 +266,7 @@ decided, the surface needs reframing. The two questions are independent.
 | Hidden prompt consumption | Few skills, short descriptions | 128 skills surfaced with full descriptions | Finding 6 |
 
 **What we do NOT copy from claude-skills:** their rule-less `CLAUDE.md` model
-(unstable at scale), their thin test layer, their absent compression pipeline.
+(unstable at scale), their thin test layer, their absent condensation pipeline.
 Their *governance shape* is borrowable; their *engineering discipline* is
 weaker than ours.
 
@@ -307,7 +307,7 @@ order of operations is locked below.
   - `agent-authority.md` becomes a **short always-active Priority Index**
     (~1.5k chars max): one-line per rule, authority band, link. Acts as
     the router agents read first; full bodies live in their own files.
-- **Compression pass (D):** Run an always-only stricter compression profile
+- **Condensation pass (D):** Run an always-only stricter condensation profile
   *after* A + C-router; treat the saving as gravy, not the plan.
 - **Skip (B):** Body-relocation is rejected — relocates pages, not authority;
   agents would still pay the cost on every read.
@@ -363,7 +363,7 @@ does not solve confusion at the agent-loading layer.
 ### F4 — Guidelines → **A (referenced only) + ship-metadata**
 
 Guidelines are **never auto-loaded**; only skill/rule body links to them.
-Move all 46 guideline files from `.agent-src.uncompressed/guidelines/` to
+Move all 46 guideline files from `.agent-src.uncondensed/guidelines/` to
 `docs/guidelines/`. Linter rule: skill/rule referencing a guideline must
 use a `docs/guidelines/<name>.md` path; broken paths fail CI.
 
@@ -395,7 +395,7 @@ Two artefacts, one generator (`scripts/generate_index.py`):
 
 | Artefact | Audience | Source scope | Rendered fields |
 |---|---|---|---|
-| `agents/index.md` | Internal authors | All artefacts in `.agent-src.uncompressed/` | name · type · trigger · 1-line purpose · ship-flag · link |
+| `agents/index.md` | Internal authors | All artefacts in `.agent-src.uncondensed/` | name · type · trigger · 1-line purpose · ship-flag · link |
 | `docs/catalog.md` | Package consumers | Only `ship: true` guidelines + all rules/skills/commands marked public | name · type · trigger · 1-line purpose · contract-stability · link |
 
 Both run in `task ci` as a sync-check (drift = build break). The public
@@ -490,22 +490,22 @@ Stack-specific skills (`laravel`, `eloquent`, `pest-testing`, `php-coding`)
 
 ## Phase 1: Cleanup execution
 
-- [x] F1.1 — Draft `agent-authority.md` as the C-router Priority Index (≤ 1,500 chars, always-active): one row per authority rule with its band (Hard Floor · Permission Gate · Commit Default · Trivial-vs-Blocking) and link. Iron Laws preserved verbatim **in their own files** — the router never restates them. *(Landed 2026-05-02: 1468 chars source/compressed, lint + check-refs + check-compression green, projected to `.augment/rules/`.)*
+- [x] F1.1 — Draft `agent-authority.md` as the C-router Priority Index (≤ 1,500 chars, always-active): one row per authority rule with its band (Hard Floor · Permission Gate · Commit Default · Trivial-vs-Blocking) and link. Iron Laws preserved verbatim **in their own files** — the router never restates them. *(Landed 2026-05-02: 1468 chars source/condensed, lint + check-refs + check-condensation green, projected to `.augment/rules/`.)*
 - [x] F1.2 — Demote to `type: auto`: `autonomous-execution`, `chat-history-cadence`, `chat-history-ownership`, `chat-history-visibility`, `command-suggestion`, `model-recommendation`, `onboarding-gate`, `ui-audit-gate`, `user-interaction`, `think-before-action`, `token-efficiency`, `minimal-safe-diff`, `context-hygiene`. *(Landed 2026-05-02: Keep-list of 7 + router enforced; expanded set vs roadmap-original list is mathematically required to hit 49k cap given the locked keep list.)*
 - [x] F1.3 — Trim `language-and-tone` to <6k always-char (relocate examples to `docs/guidelines/language-and-tone-examples.md`) *(Landed 2026-05-02: 8141 → 6568 chars; failure-mode list and wrong-vs-correct snippets relocated to `docs/guidelines/language-and-tone-examples.md`.)*
-- [x] F1.4 — Run always-only compression profile; verify ≤ 49k total *(Landed 2026-05-02: total = **37,879 chars** across 8 always-rules — 11,121 chars under the 49,000 cap. agent-authority 1468 · ask-when-uncertain 5188 · commit-policy 4505 · direct-answers 4765 · language-and-tone 6568 · non-destructive-by-default 6516 · scope-control 4391 · verify-before-complete 4478.)*
+- [x] F1.4 — Run always-only condensation profile; verify ≤ 49k total *(Landed 2026-05-02: total = **37,879 chars** across 8 always-rules — 11,121 chars under the 49,000 cap. agent-authority 1468 · ask-when-uncertain 5188 · commit-policy 4505 · direct-answers 4765 · language-and-tone 6568 · non-destructive-by-default 6516 · scope-control 4391 · verify-before-complete 4478.)*
 - [x] F1.5 — Add CI guard `tests/test_always_budget.py` failing if total > 49k *(Landed 2026-05-02: 3 guards — total ≤ 49k · per-rule ≤ 8k · top-5 ≤ 28k. All green.)*
-- [x] F3.1 — Rename per F3 table *(Landed 2026-05-02: rows 1, 2, 3, 5, 6 renamed; row 4 (`chat-history` → `chat-history-policy`) marked N/A — the rule was previously atomized into `chat-history-cadence`/`-ownership`/`-visibility`, which already carry policy-aspect names and are more precise than a single `*-policy` umbrella. No deprecation stubs created — none of the renamed artefacts had stable downstream consumers outside this repo. Cross-refs updated atomically with each rename. lint-skills, check-refs, check-compression, 1723/1723 tests green after each rename.)*
+- [x] F3.1 — Rename per F3 table *(Landed 2026-05-02: rows 1, 2, 3, 5, 6 renamed; row 4 (`chat-history` → `chat-history-policy`) marked N/A — the rule was previously atomized into `chat-history-cadence`/`-ownership`/`-visibility`, which already carry policy-aspect names and are more precise than a single `*-policy` umbrella. No deprecation stubs created — none of the renamed artefacts had stable downstream consumers outside this repo. Cross-refs updated atomically with each rename. lint-skills, check-refs, check-condensation, 1723/1723 tests green after each rename.)*
 - [x] F3.2 — Enforce policy-verb (rules) vs tool-noun (skills) split via CI guard *(Landed 2026-05-02: `tests/test_naming_convention.py` adds 3 guards — no rule may use a tool-noun suffix (`-evidence`, `-audit`, `-mapper`, `-router`, `-tool`, `-checker`, `-finder`, `-analyzer`, `-tracker`); no skill may use a policy-verb suffix (`-policy`, `-gate`, `-floor`, `-authority`); no rule↔skill name collision. Implemented as a pytest guard rather than extending `check_references.py` because naming convention is a static-namespace concern, not a cross-reference concern. 1726/1726 tests green.)*
 - [x] F2.1 — Implement `/fix`, `/optimize`, `/feature` orchestrators with sub-command dispatch *(Landed 2026-05-02: 3 cluster orchestrators with `cluster:` frontmatter + `/<cluster> <sub>` dispatch tables aligned with `docs/contracts/command-clusters.md`.)*
 - [x] F2.2 — Convert old commands to deprecation shims (one-line stub → routes to new) *(Landed 2026-05-02: 15 atomic commands carry `superseded_by` + `deprecated_in: 1.15.0` in frontmatter and a one-line warning banner; schema extended with `cluster`/`sub`/`superseded_by`/`deprecated_in`; lint-skills + sync-check-hashes green.)*
 - [x] F2.3 — Update README + AGENTS.md command examples *(Landed 2026-05-02 alongside F2.1.)*
-- [x] F4.1 — Move `.agent-src.uncompressed/guidelines/` → `docs/guidelines/` *(Landed 2026-05-02: 47 guideline files relocated with full git history; 4 sub-categories preserved.)*
-- [x] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md` *(Landed 2026-05-02: ~330 cross-references rewritten across `.agent-src.uncompressed/`, AGENTS.md, README.md, contracts.)*
+- [x] F4.1 — Move `.agent-src.uncondensed/guidelines/` → `docs/guidelines/` *(Landed 2026-05-02: 47 guideline files relocated with full git history; 4 sub-categories preserved.)*
+- [x] F4.2 — Update all skill/rule cross-refs to `docs/guidelines/<name>.md` *(Landed 2026-05-02: ~330 cross-references rewritten across `.agent-src.uncondensed/`, AGENTS.md, README.md, contracts.)*
 - [x] F4.3 — Add check-refs guard rejecting old guideline paths *(Landed 2026-05-02: `scripts/check_references.py` blocks any `guidelines/` path outside `docs/guidelines/`; check-refs green.)*
-- [x] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md` + `docs/catalog.md` *(Landed 2026-05-02: stdlib-only generator parses frontmatter from `.agent-src.uncompressed/{skills,rules,commands}/` and `docs/guidelines/`; renders 311-row internal index and 293-row public catalog (rules excludes the 3 internal `augment-*`/`docs-sync` rules, commands exclude shims). README links the public catalog as primary entry point.)*
-- [x] F5.2 — Wire into `task ci` as drift check *(Landed 2026-05-02: `task generate-index` regenerates; `task check-index` runs in `task ci` between `counts-check` and `check-compression`; `--check` mode exits 1 on drift.)*
-- [x] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones *(Landed 2026-05-02: 14 over-budget artefacts identified (3 skills, 9 rules, 2 commands) and rewritten to ≤ 200 chars; uncompressed and compressed copies kept in lockstep, hashes re-marked.)*
+- [x] F5.1 — Implement `scripts/generate_index.py` → `agents/index.md` + `docs/catalog.md` *(Landed 2026-05-02: stdlib-only generator parses frontmatter from `.agent-src.uncondensed/{skills,rules,commands}/` and `docs/guidelines/`; renders 311-row internal index and 293-row public catalog (rules excludes the 3 internal `augment-*`/`docs-sync` rules, commands exclude shims). README links the public catalog as primary entry point.)*
+- [x] F5.2 — Wire into `task ci` as drift check *(Landed 2026-05-02: `task generate-index` regenerates; `task check-index` runs in `task ci` between `counts-check` and `check-condensation`; `--check` mode exits 1 on drift.)*
+- [x] F6.1 — Audit all 128 skill descriptions; rewrite over-budget ones *(Landed 2026-05-02: 14 over-budget artefacts identified (3 skills, 9 rules, 2 commands) and rewritten to ≤ 200 chars; uncondensed and condensed copies kept in lockstep, hashes re-marked.)*
 - [x] F6.2 — Add 200-char cap to `lint-skills` *(Landed 2026-05-02: cap promoted from warning → error in `scripts/skill_linter.py` for skills, rules, and commands; lint-skills green at 0 fail.)*
 - [x] F6.3 — Surface `optimize-augmentignore` as advisory in `task ci` *(Landed 2026-05-02: `scripts/check_augmentignore.py` reminds when `.augmentignore` is missing, >90 days stale, or has <5 active entries; wired as `task check-augmentignore`, always exits 0, runs at the tail of `task ci`.)*
 - [x] F7.1 — Rewrite README tagline + sub-tagline to stack-neutral *(Landed 2026-05-02: tagline now leads with "audit-disciplined orchestration contract" + "120+ stack-aware skills"; sub-tagline names Laravel as reference implementation alongside parallel Symfony / Zend / Laminas / Next.js / React / Node skill sets.)*

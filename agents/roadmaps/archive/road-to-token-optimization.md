@@ -24,7 +24,7 @@ integration). Phase 2 reopens only on observable signal.
 
 Close the architectural gap that today forces the agent to synthesize
 `direct-answers` + `token-efficiency` + `cli-output-handling` +
-`rtk-output-filtering` + `markitdown` + `agent-handoff` + `compress.*`
+`rtk-output-filtering` + `markitdown` + `agent-handoff` + `condense.*`
 under cognitive load at every decision point. Land a single consult
 surface — keyed by **intent** (verbose CLI / large doc / repeated
 tool-call / context near limit / cost-aware) — with citation links to
@@ -80,7 +80,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 ## Phase 1 — token-optimizer Phase-1 plate (READY)
 
 - [x] **P1.1 — `token-optimizer` skill (tree + catalog hybrid).**
-  Author new skill at `.agent-src.uncompressed/skills/token-optimizer/SKILL.md`.
+  Author new skill at `.agent-src.uncondensed/skills/token-optimizer/SKILL.md`.
   Frontmatter: `type: auto`, `tier: 2a`, hybrid trigger description.
   Body: ~30-line decision tree keyed by intent (verbose CLI → cite
   `cli-output-handling` + `rtk-output-filtering`; large doc → cite
@@ -92,11 +92,11 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
   body; never restate any rule. Lines budget: ≤300.
 
 - [x] **P1.2 — `token-optimizer-maintenance` rule.** Author new rule at
-  `.agent-src.uncompressed/rules/token-optimizer-maintenance.md`.
+  `.agent-src.uncondensed/rules/token-optimizer-maintenance.md`.
   `type: auto`, `tier: 2a`. Triggers when the agent intends to edit
   any of the tracked assets (`rtk-output-filtering`, `markitdown`,
   `cli-output-handling`, `token-efficiency`, `agent-handoff`,
-  `compress.*`, anything new added to the catalog). Rule body says:
+  `condense.*`, anything new added to the catalog). Rule body says:
   "If the edit changes trigger keywords or what the asset does, also
   update the corresponding citation in `token-optimizer.md`. The CI
   link validator (P1.3) is a backstop, not a substitute." Lines
@@ -197,7 +197,7 @@ governance cross-cut runs after Phase 1 has been live one full cycle.
 - Analysis: `agents/evidence/analysis/compare-token-optimizer-design.md`
 - Existing assets cross-checked: `direct-answers`, `token-efficiency`,
   `cli-output-handling`, `rtk-output-filtering`, `markitdown`,
-  `agent-handoff`, `compress.{sh,py}`, `check_compression.py`
+  `agent-handoff`, `condense.{sh,py}`, `check_condensation.py`
 - In-flight dependency: P1.2 of `road-to-ruflo-adoption.md`
   (`/cost:report` command) — Phase 2 reopens depend on this
 - Sunset Policy: `docs/contracts/STABILITY.md`

@@ -74,7 +74,7 @@ authoritative links resolve in CI).
 ## Phase 1 — Mobile-track Phase-1 plate (COMPLETE 2026-05-08)
 
 - [x] **P1.1 — `react-native-setup` skill.** Adopted 211-line skill
-  at `.agent-src.uncompressed/skills/react-native-setup/SKILL.md`.
+  at `.agent-src.uncondensed/skills/react-native-setup/SKILL.md`.
   SpecWeave-integration block stripped, "Assess current setup" section
   added to satisfy `missing_analysis_before_action`, description trimmed
   to ≤200 chars. `augment-portability` clean.
@@ -87,7 +87,7 @@ authoritative links resolve in CI).
   `conorluddy/ios-simulator-skill`.
 
 - [x] **P1.3 — `mobile-e2e-strategy` skill (NET-NEW).** Authored at
-  `.agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md`. Detox
+  `.agent-src.uncondensed/skills/mobile-e2e-strategy/SKILL.md`. Detox
   / Appium / Maestro / XCUITest / Espresso decision matrix, simulator
   prerequisites via authoritative links, integration touch-points with
   `playwright-testing` / `e2e-plan` / `e2e-heal`. No implementation
@@ -130,7 +130,7 @@ signal lands.
 ## Phase 3 — Governance cross-cut
 
 - [x] **P3.1 — `domain-adoption-policy` rule (NEW).** Authored at
-  `.agent-src.uncompressed/rules/domain-adoption-policy.md` (154 lines).
+  `.agent-src.uncondensed/rules/domain-adoption-policy.md` (154 lines).
   Three gates: demand-signal (≥2 consumer projects OR named user
   direction with target OR public-incident pull), named maintenance
   owner with refresh cadence, CI-tooling decision (validated or

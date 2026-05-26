@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Sync package-content counts (skills/rules/commands/guidelines) across docs.
 
-Source of truth: `.agent-src.uncompressed/`.
+Source of truth: `.agent-src.uncondensed/`.
 
 Target files have explicit regex patterns for each count mention — no
 fuzzy matching, no risk of touching unrelated numbers.

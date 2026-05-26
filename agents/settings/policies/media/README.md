@@ -41,7 +41,7 @@ Every file in this directory carries:
 
 ## Triggers integration
 
-The `.agent-src.uncompressed/rules/media-governance-routing.md` tier-2 rule auto-loads these policies into context when video / image / audio commands fire. Individual skills (`character-consistency`, `motion-choreographer`, `pixar-storyteller`, `scene-expander`, `video-director`) carry a `## Policies` see-also block that surfaces the relevant subset.
+The `.agent-src.uncondensed/rules/media-governance-routing.md` tier-2 rule auto-loads these policies into context when video / image / audio commands fire. Individual skills (`character-consistency`, `motion-choreographer`, `pixar-storyteller`, `scene-expander`, `video-director`) carry a `## Policies` see-also block that surfaces the relevant subset.
 
 ## Not in scope today
 
@@ -54,5 +54,5 @@ The `.agent-src.uncompressed/rules/media-governance-routing.md` tier-2 rule auto
 - [`agents/roadmaps/archive/universal-platform-refinement.md`](../../roadmaps/archive/universal-platform-refinement.md) — the roadmap that introduced this policy layer.
 - [`agents/council-responses/universal-platform-refinement.json/`](../../council-responses/) — the AI Council debate that anchored the agent-in-the-loop model.
 - [`docs/contracts/write-engine.md`](../../../docs/contracts/write-engine.md) — the prose disclosure precedent (`/ghostwriter:*` mandatory footer).
-- [`.agent-src.uncompressed/rules/media-governance-routing.md`](../../../.agent-src.uncompressed/rules/media-governance-routing.md) — the tier-2 routing rule that surfaces these policies into context.
+- [`.agent-src.uncondensed/rules/media-governance-routing.md`](../../../.agent-src.uncondensed/rules/media-governance-routing.md) — the tier-2 routing rule that surfaces these policies into context.
 - [`scripts/lint_media_policy_linkage.py`](../../../scripts/lint_media_policy_linkage.py) — the CI-enforced reachability check.

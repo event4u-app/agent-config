@@ -152,13 +152,13 @@ function in `absent` mode.
 
 ### Phase 2 — wire write-side producers
 
-- [x] `/bug-fix`, `/do-and-judge`, `/propose-memory`, incident role exit all drop signals via the abstraction *(2026-04-22: [`/bug-fix`](../../.agent-src.uncompressed/commands/bug-fix.md) step 7 + [`/do-and-judge`](../../.agent-src.uncompressed/commands/do-and-judge.md) step 6 + new [`/propose-memory`](../../.agent-src.uncompressed/commands/propose-memory.md) + [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md) incident-exit already mandates a write)*
+- [x] `/bug-fix`, `/do-and-judge`, `/propose-memory`, incident role exit all drop signals via the abstraction *(2026-04-22: [`/bug-fix`](../../.agent-src.uncondensed/commands/bug-fix.md) step 7 + [`/do-and-judge`](../../.agent-src.uncondensed/commands/do-and-judge.md) step 6 + new [`/propose-memory`](../../.agent-src.uncondensed/commands/propose-memory.md) + [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md) incident-exit already mandates a write)*
 - [x] When `absent`, signals become `/propose-memory` drafts locally — no operational store write attempted *(2026-04-22: [`scripts/memory_signal.py`](../../scripts/memory_signal.py) appends JSONL to `agents/memory/intake/signals-YYYY-MM.jsonl`; no CLI is invoked; package adapter is the Phase 3 boundary)*
 - [x] Rate-limit hook (per-user, per-path) in the producer helper *(2026-04-22: `memory_signal.emit()` deduplicates identical `(type, path, body)` within a rolling 7-day window; [`tests/test_memory_signal.py`](../../tests/test_memory_signal.py) covers the dedupe + expiry paths)*
 
 ### Phase 3 — promotion into repo files
 
-- [x] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file *(2026-04-22: [`/memory-promote`](../../.agent-src.uncompressed/commands/memory-promote.md) — runs the gate, hydrates the curated schema, appends a supersede line, opens the PR branch)*
+- [x] `/memory-promote <id>` command — drafts a PR moving a qualified entry into a shared repo file *(2026-04-22: [`/memory-promote`](../../.agent-src.uncondensed/commands/memory-promote.md) — runs the gate, hydrates the curated schema, appends a supersede line, opens the PR branch)*
 - [x] When `present`, the entry source is the operational store; when `absent`, the source is a `/propose-memory` draft file *(2026-04-22: `--intake-id` path reads from JSONL; `--proposal` path reads YAML; package-operational-store adapter is the future Phase 3b boundary and will reuse the same gate)*
 - [x] Gate script `scripts/check_memory_proposal.py` checks metadata + 3-future-decisions heuristic *(2026-04-22: [`scripts/check_memory_proposal.py`](../../scripts/check_memory_proposal.py) — required fields, valid type, `PATTERN_MIN_PATHS=2` OR `MIN_FUTURE_DECISIONS=3` discipline; 7 tests in [`tests/test_check_memory_proposal.py`](../../tests/test_check_memory_proposal.py))*
 

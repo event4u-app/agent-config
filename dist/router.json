@@ -82,15 +82,6 @@
       "routes_to": []
     },
     {
-      "id": "caveman-speak",
-      "triggers": [
-        {
-          "intent": "any reply"
-        }
-      ],
-      "routes_to": []
-    },
-    {
       "id": "command-suggestion-policy",
       "triggers": [
         {
@@ -257,6 +248,33 @@
       "routes_to": []
     },
     {
+      "id": "no-decorative-emojis-in-git-surfaces",
+      "triggers": [
+        {
+          "intent": "PR title"
+        },
+        {
+          "intent": "PR body"
+        },
+        {
+          "intent": "commit message"
+        },
+        {
+          "intent": "issue title"
+        },
+        {
+          "intent": "post PR comment"
+        },
+        {
+          "keyword": "gh pr create"
+        },
+        {
+          "keyword": "git commit"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "no-roadmap-references",
       "triggers": [
         {
@@ -338,7 +356,7 @@
       "id": "skill-quality",
       "triggers": [
         {
-          "path_prefix": ".agent-src.uncompressed/skills/"
+          "path_prefix": ".agent-src.uncondensed/skills/"
         }
       ],
       "routes_to": [
@@ -386,6 +404,15 @@
       ]
     },
     {
+      "id": "telegraph-speak",
+      "triggers": [
+        {
+          "intent": "any reply"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "user-interaction",
       "triggers": [
         {
@@ -427,7 +454,7 @@
           "path_prefix": ".augment/"
         },
         {
-          "path_prefix": ".agent-src.uncompressed/"
+          "path_prefix": ".agent-src.uncondensed/"
         },
         {
           "keyword": "portable"
@@ -506,7 +533,7 @@
           "keyword": "blockchain track"
         },
         {
-          "path_prefix": ".agent-src.uncompressed/skills/"
+          "path_prefix": ".agent-src.uncondensed/skills/"
         }
       ],
       "routes_to": []
@@ -926,13 +953,13 @@
       "id": "framework-neutrality-in-generic-skills",
       "triggers": [
         {
-          "path_prefix": ".agent-src.uncompressed/skills/"
+          "path_prefix": ".agent-src.uncondensed/skills/"
         },
         {
-          "path_prefix": ".agent-src.uncompressed/rules/"
+          "path_prefix": ".agent-src.uncondensed/rules/"
         },
         {
-          "path_prefix": ".agent-src.uncompressed/commands/"
+          "path_prefix": ".agent-src.uncondensed/commands/"
         },
         {
           "keyword": "FormRequest"
@@ -1220,7 +1247,7 @@
       "id": "persona-governance",
       "triggers": [
         {
-          "path_prefix": ".agent-src.uncompressed/personas/"
+          "path_prefix": ".agent-src.uncondensed/personas/"
         },
         {
           "path_prefix": ".agent-src/personas/"
@@ -1255,7 +1282,7 @@
           "intent": "merge skill"
         },
         {
-          "intent": "compress rule"
+          "intent": "condense rule"
         },
         {
           "intent": "refactor artifact"
@@ -1388,7 +1415,7 @@
       "id": "rule-type-governance",
       "triggers": [
         {
-          "path_prefix": ".agent-src.uncompressed/rules/"
+          "path_prefix": ".agent-src.uncondensed/rules/"
         }
       ],
       "routes_to": [

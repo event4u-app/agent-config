@@ -40,7 +40,7 @@ SEED_PROFILE_IDS: tuple[str, ...] = (
     "ops",
 )
 DEFAULT_PROFILE_ID = "developer"
-PROFILES_DIRNAME = ".agent-src.uncompressed/profiles"
+PROFILES_DIRNAME = ".agent-src.uncondensed/profiles"
 
 SOURCE_PACK = "pack"
 SOURCE_USER = "user-settings"

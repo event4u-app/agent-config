@@ -3,7 +3,7 @@
 
 Parses agents/settings/contexts/rule-trigger-matrix.md, emits tmp/tier-classification.md,
 and inserts a `tier:` frontmatter key into every rule under
-.agent-src.uncompressed/rules/. Idempotent — re-runs are a no-op when a rule
+.agent-src.uncondensed/rules/. Idempotent — re-runs are a no-op when a rule
 already declares the same tier value.
 
 Lifecycle: scripts/_one_off/2026-05/. Purge eligible after 2026-08-04 per
@@ -17,8 +17,8 @@ from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[3]
 MATRIX = REPO / "agents" / "contexts" / "rule-trigger-matrix.md"
-RULES_DIR = REPO / ".agent-src.uncompressed" / "rules"
-COMPRESSED_RULES_DIR = REPO / ".agent-src" / "rules"
+RULES_DIR = REPO / ".agent-src.uncondensed" / "rules"
+CONDENSED_RULES_DIR = REPO / ".agent-src" / "rules"
 SPREADSHEET = REPO / "tmp" / "tier-classification.md"
 
 VALID_TIERS = {"1", "2a", "2b", "3", "safety-floor", "mechanical-already"}
@@ -161,9 +161,9 @@ def main() -> int:
     for name, (tier, _) in classifications.items():
         result = apply_tier(RULES_DIR / name, tier)
         counts[result] += 1
-        compressed = COMPRESSED_RULES_DIR / name
-        if compressed.exists():
-            mirror_counts[apply_tier(compressed, tier)] += 1
+        condensed = CONDENSED_RULES_DIR / name
+        if condensed.exists():
+            mirror_counts[apply_tier(condensed, tier)] += 1
         else:
             mirror_counts["skipped"] += 1
     print(

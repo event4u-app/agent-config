@@ -64,21 +64,21 @@ Ship first because it requires no mode-switching mechanism.
 
 ### Phase 2 — explicit mode switching via .agent-settings
 
-- [x] `.agent-settings` gains `default_role` and `active_role` keys *(2026-04-22: [`agent-settings.md` template](../../.agent-src.uncompressed/templates/agent-settings.md) adds `roles:` section with `default_role` + `active_role`; Settings Reference table lists both keys; six modes allowed)*
-- [x] `/mode <name>` command prints the contract, default skills, and refuses work outside the contract *(2026-04-22: [`/mode`](../../.agent-src.uncompressed/commands/mode.md) — validates against H3 slugs in `role-contracts.md`, prints contract body, writes `roles.active_role`, refuses forbidden work with numbered prompt)*
-- [x] Rule `role-mode-adherence` (auto-triggered when `active_role` is set) — agent must close with the contract's output *(2026-04-22: [`role-mode-adherence`](../../.agent-src.uncompressed/rules/role-mode-adherence.md) — auto-type rule, closing outputs must use contract fields + emit the structured mode marker, three forbidden-work examples, inert when `active_role` is empty)*
+- [x] `.agent-settings` gains `default_role` and `active_role` keys *(2026-04-22: [`agent-settings.md` template](../../.agent-src.uncondensed/templates/agent-settings.md) adds `roles:` section with `default_role` + `active_role`; Settings Reference table lists both keys; six modes allowed)*
+- [x] `/mode <name>` command prints the contract, default skills, and refuses work outside the contract *(2026-04-22: [`/mode`](../../.agent-src.uncondensed/commands/mode.md) — validates against H3 slugs in `role-contracts.md`, prints contract body, writes `roles.active_role`, refuses forbidden work with numbered prompt)*
+- [x] Rule `role-mode-adherence` (auto-triggered when `active_role` is set) — agent must close with the contract's output *(2026-04-22: [`role-mode-adherence`](../../.agent-src.uncondensed/rules/role-mode-adherence.md) — auto-type rule, closing outputs must use contract fields + emit the structured mode marker, three forbidden-work examples, inert when `active_role` is empty)*
 
 ### Phase 3 — inferred mode switching with user acknowledgement
 
 - [x] Router guideline maps common entry signals → mode (see table above) *(2026-04-22: [`role-mode-router.md`](../../docs/guidelines/agent-infra/role-mode-router.md) — entry signal table, precedence order, "when NOT to infer" clauses, scratch list for candidate signals)*
 - [x] Inferred switch surfaces as `> entering {mode} mode — contract: …` before any work *(2026-04-22: [`role-mode-router.md` "Surfacing the inferred switch"](../../docs/guidelines/agent-infra/role-mode-router.md#surfacing-the-inferred-switch) — exactly one line, no reasoning narration, proceeds on silence)*
-- [x] User can veto with `/mode none` *(2026-04-22: [`role-mode-router.md` "Veto path"](../../docs/guidelines/agent-infra/role-mode-router.md#veto-path) — numbered prompt with switch/stay/clear options; `/mode none` path documented in [`/mode`](../../.agent-src.uncompressed/commands/mode.md) step 1)*
+- [x] User can veto with `/mode none` *(2026-04-22: [`role-mode-router.md` "Veto path"](../../docs/guidelines/agent-infra/role-mode-router.md#veto-path) — numbered prompt with switch/stay/clear options; `/mode none` path documented in [`/mode`](../../.agent-src.uncondensed/commands/mode.md) step 1)*
 
 ### Phase 4 — measurement hook (closes Q2 of master frame)
 
 - [x] Each contract output emits a structured header the consumer can grep *(2026-04-22: [`role-contracts.md` "Structured mode markers" section](../../docs/guidelines/agent-infra/role-contracts.md#structured-mode-markers) — HTML-comment marker `<!-- role-mode: <mode> | contract: <kebab-case-fields> -->` — invisible in render, greppable in session captures; six reserved mode values)*
 - [x] Session capture counts contract-conformant outputs per mode *(2026-04-22: [`memory_report._role_mode_stats`](../../scripts/memory_report.py) scans `agents/sessions/`, `agents/runtime/reports/`, `agents/handoffs/`, `agents/learnings/` for the structured mode marker, counts per mode, flags unknown slugs; 4 tests in `tests/test_memory_report.py`)*
-- [x] Feeds [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) success signal *(2026-04-22: `memory_report`'s role-mode block is printed alongside the quarterly block in the text output — consumed by the weekly [`proposal-drift.yml`](../../.agent-src.uncompressed/templates/github-workflows/proposal-drift.yml) job that already pipes `memory_report.py --quarterly`)*
+- [x] Feeds [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md) success signal *(2026-04-22: `memory_report`'s role-mode block is printed alongside the quarterly block in the text output — consumed by the weekly [`proposal-drift.yml`](../../.agent-src.uncondensed/templates/github-workflows/proposal-drift.yml) job that already pipes `memory_report.py --quarterly`)*
 
 ## Integration with existing artefacts
 

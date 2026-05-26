@@ -29,7 +29,7 @@ chat-driven onboarding code paths remain.
 
 ## Acceptance criteria
 
-1. **`/onboard` chat skill is gone.** `.agent-src.uncompressed/commands/onboard.md`
+1. **`/onboard` chat skill is gone.** `.agent-src.uncondensed/commands/onboard.md`
    deleted; `.agent-src/` and `.augment/` regenerate without it.
 2. **`onboard:finish` CLI subcommand removed.** No registry entry, no
    handler file, no references from `agent-config.ts`.
@@ -103,9 +103,9 @@ Captured per council 2026-05-20:
 
 - [x] **2.1** Inventory every reference to `/onboard`, `onboard.md`,
   `~/.claude/skills/onboard`, and `onboard:finish` across `src/`,
-  `tests/`, `docs/`, `.agent-src.uncompressed/`. Capture in a session
+  `tests/`, `docs/`, `.agent-src.uncondensed/`. Capture in a session
   note for verification at phase close.
-- [x] **2.2** Delete `.agent-src.uncompressed/commands/onboard.md`.
+- [x] **2.2** Delete `.agent-src.uncondensed/commands/onboard.md`.
 - [x] **2.3** Delete `src/cli/commands/onboardFinish.ts` and remove
   the registry entry plus the `.command('onboard:finish')` block in
   `src/cli/agent-config.ts`. Update the `native` allow-list.
@@ -121,7 +121,7 @@ Captured per council 2026-05-20:
 
 ## Phase 3 — Onboarding-gate pivot
 
-- [x] **3.1** Rewrite `.agent-src.uncompressed/rules/onboarding-gate.md`:
+- [x] **3.1** Rewrite `.agent-src.uncondensed/rules/onboarding-gate.md`:
   drop the `routes_to: command:onboard` line; body instructs the
   developer to run `agent-config setup` in their terminal; cloud
   surfaces stay inert (no settings file → rule doesn't fire).

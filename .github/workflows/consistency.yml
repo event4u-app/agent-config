@@ -3,12 +3,12 @@ name: Consistency
 on:
   pull_request:
     paths:
-      - ".agent-src.uncompressed/**"
+      - ".agent-src.uncondensed/**"
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "scripts/compress.py"
-      - "scripts/compress.sh"
+      - "scripts/condense.py"
+      - "scripts/condense.sh"
       - "scripts/check_references.py"
       - "scripts/build_cloud_bundle.py"
       - "scripts/build_linear_digest.py"
@@ -24,12 +24,12 @@ on:
       - main
       - master
     paths:
-      - ".agent-src.uncompressed/**"
+      - ".agent-src.uncondensed/**"
       - ".augment/**"
       - "agents/**"
       - ".claude-plugin/marketplace.json"
-      - "scripts/compress.py"
-      - "scripts/compress.sh"
+      - "scripts/condense.py"
+      - "scripts/condense.sh"
       - "scripts/check_references.py"
       - "scripts/build_cloud_bundle.py"
       - "scripts/build_linear_digest.py"
@@ -77,7 +77,7 @@ jobs:
       - name: Verify current sync state
         run: task sync-check
 
-      - name: Verify compression hashes
+      - name: Verify condensation hashes
         run: task sync-check-hashes
 
       - name: Regenerate .augment from source
@@ -92,8 +92,8 @@ jobs:
       - name: Check package portability
         run: python3 scripts/check_portability.py
 
-      - name: Check compression quality
-        run: python3 scripts/check_compression.py
+      - name: Check condensation quality
+        run: python3 scripts/check_condensation.py
 
       - name: Check Iron Law prominence
         run: python3 scripts/check_iron_law_prominence.py

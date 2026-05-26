@@ -12,7 +12,7 @@ keep-beta-until: 2026-08-12
 > - **Created:** 2026-04-22
 > - **Status:** Phase 1 shipped 2026-04-23 — `DeliveryState` +
 >   dispatcher live under
->   [`.agent-src.uncompressed/templates/scripts/implement_ticket/`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/).
+>   [`.agent-src.uncondensed/templates/scripts/implement_ticket/`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/).
 >   Step wiring (Phase 2) still open. Schema **v1** envelope
 >   (`work_engine.state` / `work_engine.migration.v0_to_v1`) shipped
 >   2026-04-27 as R1 Phase 2 — see [State schema v1](#state-schema-v1)
@@ -265,7 +265,7 @@ Bounded per the top-level roadmap rule:
 - **Four allowed types:** `domain-invariants`,
   `architecture-decisions`, `incident-learnings`,
   `historical-patterns`. All four exist in the
-  [templates directory](../../.agent-src.uncompressed/templates/agents/memory/).
+  [templates directory](../../.agent-src.uncondensed/templates/agents/memory/).
 - **Keys:** files touched by the plan, symbols referenced by the
   ticket.
 - **Decision-change rule:** a memory hit that did not change an
@@ -278,7 +278,7 @@ Bounded per the top-level roadmap rule:
 
 Read from `.agent-settings.yml` `roles.active_role` and resolved
 via `resolve_policy()` in
-[`persona_policy.py`](../../.agent-src.uncompressed/templates/scripts/implement_ticket/persona_policy.py).
+[`persona_policy.py`](../../.agent-src.uncondensed/templates/scripts/implement_ticket/persona_policy.py).
 Policies live alongside the dispatcher so the flow can consume
 them directly; the shared
 [`role-contracts`](../../docs/guidelines/agent-infra/role-contracts.md)
@@ -319,7 +319,7 @@ skill.
 When a step returns `blocked`, the orchestrator:
 
 1. Emits the numbered questions per
-   [`user-interaction`](../../.agent-src.uncompressed/rules/user-interaction.md).
+   [`user-interaction`](../../.agent-src.uncondensed/rules/user-interaction.md).
 2. Writes a partial report up to the last successful step.
 3. Exits with a `blocked` status — no guess, no fallback.
 
@@ -332,7 +332,7 @@ the context. V1 explicitly does **not** attempt resumable sessions.
 Every step declares — in code — the conditions under which it
 can return `blocked`. The declarations live as module-level
 `AMBIGUITIES` tuples (see
-[`directives/backend/__init__.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/__init__.py)
+[`directives/backend/__init__.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/__init__.py)
 `.all_ambiguities()`). The
 [`test_ambiguity_coverage.py`](../../tests/implement_ticket/test_ambiguity_coverage.py)
 suite locks the contract: adding a new `blocked` path without
@@ -377,7 +377,7 @@ empty, but all headings are present unless explicitly marked
    because nothing was changed.
 
 Implementation: see
-[`directives/backend/report.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/directives/backend/report.py).
+[`directives/backend/report.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/directives/backend/report.py).
 Section renderers are pure and deterministic; consumers can rely
 on the heading order and on each section either rendering with
 content or being omitted per the rules above.
@@ -621,6 +621,6 @@ are blocked by `freeze-guard.yml::manifest-integrity` at PR time.
 - [`../../.github/workflows/freeze-guard.yml`](../../.github/workflows/freeze-guard.yml) — manifest-integrity + live-replay gates
 - [`agent-memory-contract.md`](agent-memory-contract.md)
 - [`../../docs/guidelines/agent-infra/role-contracts.md`](../../docs/guidelines/agent-infra/role-contracts.md)
-- [`../../.agent-src.uncompressed/rules/user-interaction.md`](../../.agent-src.uncompressed/rules/user-interaction.md)
-- [`../../.agent-src.uncompressed/rules/scope-control.md`](../../.agent-src.uncompressed/rules/scope-control.md)
-- [`../../.agent-src.uncompressed/rules/minimal-safe-diff.md`](../../.agent-src.uncompressed/rules/minimal-safe-diff.md)
+- [`../../.agent-src.uncondensed/rules/user-interaction.md`](../../.agent-src.uncondensed/rules/user-interaction.md)
+- [`../../.agent-src.uncondensed/rules/scope-control.md`](../../.agent-src.uncondensed/rules/scope-control.md)
+- [`../../.agent-src.uncondensed/rules/minimal-safe-diff.md`](../../.agent-src.uncondensed/rules/minimal-safe-diff.md)

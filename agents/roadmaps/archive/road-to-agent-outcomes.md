@@ -48,8 +48,8 @@ artefact maps to exactly one:
 
 | Layer | What it contains | Existing anchors |
 |---|---|---|
-| **1. Governance** | Always-rules, confidence gating, evidence requirements, break-glass, scope control | `.agent-src.uncompressed/rules/*` |
-| **2. Capability** | Skills, commands, guidelines — the how-to-do layer | `.agent-src.uncompressed/skills/*`, `commands/*`, `guidelines/*` |
+| **1. Governance** | Always-rules, confidence gating, evidence requirements, break-glass, scope control | `.agent-src.uncondensed/rules/*` |
+| **2. Capability** | Skills, commands, guidelines — the how-to-do layer | `.agent-src.uncondensed/skills/*`, `commands/*`, `guidelines/*` |
 | **3. Memory** | Project-specific facts the agent consults: ownership, historical bugs, domain invariants, architecture decisions, incident learnings, product rules | `templates/agents/*.yml` (ownership-map, historical-bug-patterns today) |
 | **4. Execution** | CI gates, PR risk review, review routing, optional agent runtime hooks | `templates/github-workflows/*`, `templates/scripts/*` |
 
@@ -79,7 +79,7 @@ commands.
   "a review said so". Removal follows `preservation-guard`.
 - **No** bundled agent runtime. Execution layer hooks into the
   consumer's runtime; it does not ship one.
-- **No** project-specific content in `.agent-src.uncompressed/`. Memory
+- **No** project-specific content in `.agent-src.uncondensed/`. Memory
   layer ships *schemas and templates*, consumer projects own the data.
 
 ## Open questions — carried forward from the PR #17 stub

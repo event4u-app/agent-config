@@ -4,7 +4,7 @@ tier: "2a"
 description: "Creating/editing/proposing personas — enforce per-domain cap (≤ 2 specialists), ≥ 1 skill citation, deprecation path"
 source: package
 triggers:
-  - path_prefix: ".agent-src.uncompressed/personas/"
+  - path_prefix: ".agent-src.uncondensed/personas/"
   - path_prefix: ".agent-src/personas/"
   - keyword: "persona"
   - keyword: "personas"
@@ -22,8 +22,8 @@ validator_ignore:
     pattern: "../../docs/"
     reason: "Rule routes to docs/contracts/persona-schema.md and docs/personas.md — the canonical persona catalog and schema live there by design."
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
-    reason: "Rule documents the persona authoring tree (.agent-src.uncompressed/personas/) as the deprecation-path operand."
+    pattern: ".agent-src.uncondensed/"
+    reason: "Rule documents the persona authoring tree (.agent-src.uncondensed/personas/) as the deprecation-path operand."
 workspaces:
   - agent-config-maintainer
 packs:

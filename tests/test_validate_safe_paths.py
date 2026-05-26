@@ -72,12 +72,12 @@ SENSITIVE_FIXTURES = [
 
 NEGATIVE_FIXTURES = [
     "README.md",
-    "docs/contracts/caveman-speak.md",
+    "docs/contracts/telegraph-speak.md",
     "templates/AGENTS.md",
-    "scripts/compress.py",
+    "scripts/condense.py",
     "tests/test_validate_safe_paths.py",
     ".agent-src/rules/commit-policy.md",
-    "agents/roadmaps/step-16-caveman-substance.md",
+    "agents/roadmaps/step-16-telegraph-substance.md",
     "Taskfile.yml",
 ]
 

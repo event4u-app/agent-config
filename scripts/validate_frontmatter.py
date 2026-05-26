@@ -451,7 +451,7 @@ def _main() -> int:
         if not roots:
             print(
                 "error: no artefact roots found "
-                "(checked .agent-src.uncompressed/ and packages/*/.agent-src.uncompressed/)",
+                "(checked .agent-src.uncondensed/ and packages/*/.agent-src.uncondensed/)",
                 file=sys.stderr,
             )
             return 2

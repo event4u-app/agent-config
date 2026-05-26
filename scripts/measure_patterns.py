@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Iterable
 
 ROOT = Path(__file__).resolve().parent.parent
-SKILLS_DIR = ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_DIR = ROOT / ".agent-src.uncondensed" / "skills"
 
 # Tier assignments mirror agents/roadmaps/road-to-stronger-skills.md.
 # "compliant" = already meets the target patterns (the four Phase-3.1 judges).

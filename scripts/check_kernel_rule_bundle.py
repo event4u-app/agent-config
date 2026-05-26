@@ -2,7 +2,7 @@
 """check_kernel_rule_bundle — Phase 4.2 of road-to-always-budget-relief.
 
 Fails when a single PR (or commit range) modifies more than one
-kernel rule under `.agent-src.uncompressed/rules/`. Override via the
+kernel rule under `.agent-src.uncondensed/rules/`. Override via the
 PR label `bundled-always-rules-acknowledged`.
 
 Kernel set is the locked 9-rule list in
@@ -43,7 +43,7 @@ KERNEL_RULES = frozenset({
     "verify-before-complete.md",
 })
 
-KERNEL_DIR = ".agent-src.uncompressed/rules"
+KERNEL_DIR = ".agent-src.uncondensed/rules"
 DEFAULT_LABEL = "bundled-always-rules-acknowledged"
 
 

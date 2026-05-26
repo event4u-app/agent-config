@@ -49,14 +49,14 @@ task ci            # full pipeline — must be green before PR
 ```
 
 All checks must pass before a PR is merged:
-`sync-check`, `consistency`, `check-compression`, `check-refs`,
+`sync-check`, `consistency`, `check-condensation`, `check-refs`,
 `check-portability`, `lint-skills`, `test`, `lint-readme`.
 
 ## Source of truth
 
-- **Edit** `.agent-src.uncompressed/` — the authoring layer with verbose content.
-- **Do not edit** `.agent-src/` directly — it is the compressed output shipped
-  in the package, generated from the uncompressed layer by `task sync`.
+- **Edit** `.agent-src.uncondensed/` — the authoring layer with verbose content.
+- **Do not edit** `.agent-src/` directly — it is the condensed output shipped
+  in the package, generated from the uncondensed layer by `task sync`.
 - **Do not edit** `.augment/` directly either — it is a local projection of
   `.agent-src/` for Augment Code (gitignored), rebuilt by `task sync`.
 - **Do not edit** `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` —
@@ -65,7 +65,7 @@ All checks must pass before a PR is merged:
 Helper commands:
 
 ```bash
-task sync             # .agent-src.uncompressed/ → .agent-src/, then project → .augment/
+task sync             # .agent-src.uncondensed/ → .agent-src/, then project → .augment/
 task generate-tools   # Regenerate .claude/, .cursor/, .clinerules/, .windsurfrules
 task test             # pytest tests/ + installer integration tests
 task lint-skills      # python3 scripts/skill_linter.py --all
@@ -84,13 +84,13 @@ task lint-skills      # python3 scripts/skill_linter.py --all
 
 ## Adding or editing skills, rules, and commands
 
-- Skills, rules, and commands live in `.agent-src.uncompressed/`.
+- Skills, rules, and commands live in `.agent-src.uncondensed/`.
 - Each skill must pass `task lint-skills` — frontmatter, structure, size
   budgets, and self-containment are enforced by the linter.
 - Size budgets are enforced by the `size-enforcement` rule and the linter.
   See [`size-enforcement`](.agent-src/rules/size-enforcement.md)
   for the current limits.
-- After editing content under `.agent-src.uncompressed/`, run `task sync` so
+- After editing content under `.agent-src.uncondensed/`, run `task sync` so
   `.agent-src/`, `.augment/`, and the tool-specific projections stay in sync.
 - Skills must remain project-agnostic. Nothing in `.agent-src/` may reference a
   specific consumer project, domain, or stack. The
@@ -115,22 +115,22 @@ intent — *"a skill that validates JWT tokens"*, *"a rule banning
 silent fallbacks"* — and the agent:
 
 - picks the right artefact type (skill vs. rule vs. command vs. guideline);
-- places it in the correct directory under `.agent-src.uncompressed/`;
+- places it in the correct directory under `.agent-src.uncondensed/`;
 - writes frontmatter, trigger phrase (≤ 200 chars, multi-trigger coverage),
   required sections, and a size budget that fits the linter;
-- runs `task sync` so the compressed and projected copies stay aligned;
+- runs `task sync` so the condensed and projected copies stay aligned;
 - runs `task lint-skills` and `task ci` and proposes fixes for any
   failures.
 
 You do not need to memorise the directory layout, the kernel-rule budget,
-the size enforcement table, or the compression-hash registry. You do
+the size enforcement table, or the condensation-hash registry. You do
 need to know *what* you want, *why* it generalises beyond your project,
 and *when* the agent's draft is wrong.
 
 ### What CI catches and what it does not
 
 CI is structural, not semantic. `task ci` enforces frontmatter shape,
-description length, size budgets, compression-hash drift, broken
+description length, size budgets, condensation-hash drift, broken
 cross-references, missing language anchors, kernel-rule prominence, and
 roadmap-dashboard sync. It will reject a malformed skill before review.
 
@@ -228,7 +228,7 @@ the policy is interpreted as follows:
 
 | Bump | Triggers |
 |---|---|
-| **Major** (X.0.0) | Installer layout changes (files created/removed), breaking changes to `.agent-settings.yml` keys, removal of rules or skills that downstream projects relied on, breaking changes to the compressed content format. |
+| **Major** (X.0.0) | Installer layout changes (files created/removed), breaking changes to `.agent-settings.yml` keys, removal of rules or skills that downstream projects relied on, breaking changes to the condensed content format. |
 | **Minor** (x.X.0) | New skills, rules, commands, or guidelines. New tool support. New installer flags. New `.agent-settings.yml` keys with safe defaults. |
 | **Patch** (x.x.X) | Wording fixes and improvements in existing skills, linter fixes, CI changes, documentation updates, internal refactors with no user-visible effect. |
 

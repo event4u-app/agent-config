@@ -13,7 +13,7 @@ status: complete
 
 The "implicit-expertise loss" premise from the five external reviews was tested against the actual PR #34 diff:
 
-- **Numerical:** `git diff origin/main...HEAD -- .agent-src.uncompressed/rules/` shows 35 files, 202 ins / 204 del → **net -2 lines**. Largest delta `language-and-tone.md` 37 / 96 — but the 96 deleted lines were *extracted* to `docs/guidelines/language-and-tone-examples.md` (79 lines), not removed. ZERO rule files deleted outright.
+- **Numerical:** `git diff origin/main...HEAD -- .agent-src.uncondensed/rules/` shows 35 files, 202 ins / 204 del → **net -2 lines**. Largest delta `language-and-tone.md` 37 / 96 — but the 96 deleted lines were *extracted* to `docs/guidelines/language-and-tone-examples.md` (79 lines), not removed. ZERO rule files deleted outright.
 - **Semantic (obligation-keyword diff):** 14 lines containing MUST / SHALL / NEVER / ALWAYS / FORBIDDEN / REQUIRED / MANDATORY were deleted; **16 lines containing the same were added** → net **+2 obligation lines**. Of the 14 deletions, 10 were frontmatter rewrites (`description:` / `type:`) and 4 were prose. Each of the 4 prose deletions was traced:
   - "Every piece of text inside `.md` files in `.augment/` and `agents/` must be in English" → SURVIVES as a stronger section header in `language-and-tone.md` (line 84) with explicit enumeration ("headings, paragraphs, bullets, example option labels, template placeholders, ASCII-art labels, table headers and content").
   - "A standing 'arbeite selbstständig' never lifts the floor" → SURVIVES in `non-destructive-by-default.md` § Hard Floor and `agent-authority.md` § Index rules ("Hard Floor wins, always. No autonomy setting, roadmap step, or standing instruction lifts it.").

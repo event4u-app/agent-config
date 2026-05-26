@@ -57,7 +57,7 @@ A skill is `automated` **only** when ALL of these are true:
 - **Bounded scope** — affects only specific files, never external systems
 - **No destructive side effects** — no data loss, no external writes
 - **No content alignment needed** — no user judgment required for output quality
-- Examples: `compress`, `quality-fix`, `package-test`
+- Examples: `condense`, `quality-fix`, `package-test`
 
 ⚠️ **`commit` is NOT automated** — it creates git history that affects collaboration.
 Classify as `assisted` despite being CLI-based.
@@ -100,7 +100,7 @@ Apply the standard to all ~80 skills and tag the automated ones first.
 - Each gets: `execution: { type: automated, handler: shell|internal, safety_mode: strict, allowed_tools: [] }`
 
 **Acceptance:**
-- Every skill in `.agent-src.uncompressed/skills/` is classified in the matrix
+- Every skill in `.agent-src.uncondensed/skills/` is classified in the matrix
 - Rationale column references specific criteria from the standard
 - `task lint-skills` passes with 0 errors on modified skills
 - `task runtime-list` shows all tagged automated skills
@@ -133,8 +133,8 @@ Sharpen the boundary: rules declare constraints, skills describe procedures.
 - Run `task lint-skills --all` to verify 0 warnings
 
 **Files:**
-- Modified: `.agent-src.uncompressed/rules/runtime-safety.md`
-- Modified: `.augment/rules/runtime-safety.md` (compressed)
+- Modified: `.agent-src.uncondensed/rules/runtime-safety.md`
+- Modified: `.augment/rules/runtime-safety.md` (condensed)
 - Potentially other rules if `procedural_rule` warnings exist
 
 **Acceptance:**

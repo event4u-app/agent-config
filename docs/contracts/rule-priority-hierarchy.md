@@ -5,7 +5,7 @@ keep-beta-until: 2026-08-12
 
 # Rule Priority Hierarchy
 
-> **Audience:** anyone reading or editing `.agent-src.uncompressed/rules/*.md`,
+> **Audience:** anyone reading or editing `.agent-src.uncondensed/rules/*.md`,
 > or trying to predict which rule wins when several fire on the same turn.
 > **Machine-readable counterpart:** [`rule-interactions.yml`](rule-interactions.yml)
 > (linted by `scripts/lint_rule_interactions.py`).
@@ -32,15 +32,15 @@ fires — that band's canonical rule decides the turn.
 
 | Band | Rule | What it gates | Lifts under |
 |---|---|---|---|
-| 1 | [`non-destructive-by-default`](../../.agent-src.uncompressed/rules/non-destructive-by-default.md) | Prod-trunk merge · deploy · push · prod data/infra · whimsical bulk deletion · bulk-deletion or infra commit | **Never.** Explicit user confirmation *this turn* only. |
-| 2 | [`security-sensitive-stop`](../../.agent-src.uncompressed/rules/security-sensitive-stop.md) | Auth · billing · tenant boundaries · secrets · file uploads · webhooks · public endpoints | Threat-model pass completed and recorded *before* the edit. |
-| 3 | [`scope-control`](../../.agent-src.uncompressed/rules/scope-control.md) | Git ops (branch · PR · tag · push · merge · rebase) · architectural changes · new libraries · scope expansion | Explicit user permission *this turn* or unrevoked standing instruction. |
-| 4 | [`ask-when-uncertain`](../../.agent-src.uncompressed/rules/ask-when-uncertain.md) | Ambiguous requirements · vague-request triggers · fenced steps | Concrete evidence resolves the ambiguity, **or** user answers the single question. |
-| 5 | [`commit-policy`](../../.agent-src.uncompressed/rules/commit-policy.md) | Any `git commit` | Four exceptions only — explicit "commit now", standing instruction, `/commit*` invocation, roadmap authorization. |
-| 6 | [`verify-before-complete`](../../.agent-src.uncompressed/rules/verify-before-complete.md) | "Done" / "complete" claims · suggestions to commit, push, or PR | Fresh verification evidence in *this* message. |
-| 7 | [`autonomous-execution`](../../.agent-src.uncompressed/rules/autonomous-execution.md) | Trivial-vs-blocking classification · autonomy opt-in detection | Per-step decision; never above bands 1–6. |
-| 8 | [`command-suggestion-policy`](../../.agent-src.uncompressed/rules/command-suggestion-policy.md) | Surfacing slash-command matches as numbered options | User always picks; nothing auto-executes. |
-| 9 | [`language-and-tone`](../../.agent-src.uncompressed/rules/language-and-tone.md) | First-token language of every reply · `.md` always English | Mirror the user's last chat message — no momentum exception. |
+| 1 | [`non-destructive-by-default`](../../.agent-src.uncondensed/rules/non-destructive-by-default.md) | Prod-trunk merge · deploy · push · prod data/infra · whimsical bulk deletion · bulk-deletion or infra commit | **Never.** Explicit user confirmation *this turn* only. |
+| 2 | [`security-sensitive-stop`](../../.agent-src.uncondensed/rules/security-sensitive-stop.md) | Auth · billing · tenant boundaries · secrets · file uploads · webhooks · public endpoints | Threat-model pass completed and recorded *before* the edit. |
+| 3 | [`scope-control`](../../.agent-src.uncondensed/rules/scope-control.md) | Git ops (branch · PR · tag · push · merge · rebase) · architectural changes · new libraries · scope expansion | Explicit user permission *this turn* or unrevoked standing instruction. |
+| 4 | [`ask-when-uncertain`](../../.agent-src.uncondensed/rules/ask-when-uncertain.md) | Ambiguous requirements · vague-request triggers · fenced steps | Concrete evidence resolves the ambiguity, **or** user answers the single question. |
+| 5 | [`commit-policy`](../../.agent-src.uncondensed/rules/commit-policy.md) | Any `git commit` | Four exceptions only — explicit "commit now", standing instruction, `/commit*` invocation, roadmap authorization. |
+| 6 | [`verify-before-complete`](../../.agent-src.uncondensed/rules/verify-before-complete.md) | "Done" / "complete" claims · suggestions to commit, push, or PR | Fresh verification evidence in *this* message. |
+| 7 | [`autonomous-execution`](../../.agent-src.uncondensed/rules/autonomous-execution.md) | Trivial-vs-blocking classification · autonomy opt-in detection | Per-step decision; never above bands 1–6. |
+| 8 | [`command-suggestion-policy`](../../.agent-src.uncondensed/rules/command-suggestion-policy.md) | Surfacing slash-command matches as numbered options | User always picks; nothing auto-executes. |
+| 9 | [`language-and-tone`](../../.agent-src.uncondensed/rules/language-and-tone.md) | First-token language of every reply · `.md` always English | Mirror the user's last chat message — no momentum exception. |
 
 **Read direction:** top-to-bottom is *priority on conflict*, not chronology.
 A turn typically touches several bands at once; the hierarchy decides
@@ -55,9 +55,9 @@ which one's Iron Law gets the final say.
   canonical rule files. This hierarchy points; it does not paraphrase.
 - **Bands 1–2 are *Hard Floors*.** No autonomy setting, no roadmap step,
   no standing instruction lifts them. See
-  [`agent-authority`](../../.agent-src.uncompressed/rules/agent-authority.md)
+  [`agent-authority`](../../.agent-src.uncondensed/rules/agent-authority.md)
   § Index rules for the matching authority statement.
-- **Unsure → ask.** [`ask-when-uncertain`](../../.agent-src.uncompressed/rules/ask-when-uncertain.md)
+- **Unsure → ask.** [`ask-when-uncertain`](../../.agent-src.uncondensed/rules/ask-when-uncertain.md)
   is the universal escape hatch when the band is unclear.
 
 ## Worked examples
@@ -73,7 +73,7 @@ which one's Iron Law gets the final say.
 
 ## Cross-references
 
-- [`agent-authority`](../../.agent-src.uncompressed/rules/agent-authority.md) — the four-band authority router (bands 1–3 + 7 of this hierarchy).
+- [`agent-authority`](../../.agent-src.uncondensed/rules/agent-authority.md) — the four-band authority router (bands 1–3 + 7 of this hierarchy).
 - [`rule-interactions.md`](rule-interactions.md) — pairwise interaction narrative + Mermaid diagram.
 - [`rule-interactions.yml`](rule-interactions.yml) — machine-readable, CI-linted matrix.
 - [`STABILITY.md`](STABILITY.md) — what the `stability: beta` tag means for breaking changes.

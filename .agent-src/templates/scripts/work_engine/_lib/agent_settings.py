@@ -88,7 +88,7 @@ MERGEABLE_KEYS: tuple[str, ...] = (
     "cost_profile",
     "personal.bot_icon",
     "personal.autonomy",
-    "caveman.speak_scope",
+    "telegraph.speak_scope",
 )
 
 _DEFAULTS: dict[str, Any] = {}

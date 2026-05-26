@@ -65,7 +65,7 @@ target), via the combined path:
 Hard constraint (unchanged): **no kernel always-body edits.**
 ADR-rule-kernel-and-router (2026-05-06) locks the kernel membership
 and the slow-rollout guarantee. Lever C remains off the table; Opus'
-"compress kernel 20 %" suggestion is logged as a separate ADR-revisit
+"condense kernel 20 %" suggestion is logged as a separate ADR-revisit
 question, not part of this roadmap.
 
 ## Budget breakdown (2026-05-08 baseline)
@@ -94,7 +94,7 @@ Both members converged on:
 3. **Lever D/E** (consolidate / demote auto-rules). Per-removed-rule
    savings ~250 chars. Use only after A and B if headroom target not
    met.
-4. **Lever C** (compress kernel bodies). Off limits. ADR-locked.
+4. **Lever C** (condense kernel bodies). Off limits. ADR-locked.
 5. **CI guard** mandatory for the auto-stub pathway, currently
    unguarded.
 6. **No structurally different counter-proposal** raised
@@ -156,7 +156,7 @@ Opus' four points:
 3. **Telemetry-driven pruning** before architectural change —
    estimated savings 3,750–5,000 chars (15–20 rules × ~250 chars).
 4. **Kernel ADR revisit** — 26,322 chars / 9 rules / 53.2 % of
-   budget. Compressing each kernel rule by 20 % would recover
+   budget. Condenseing each kernel rule by 20 % would recover
    ~5,264 chars (4–6 quarters of runway *without* Thin-Root).
    Logged as separate ADR-revisit question; not in scope here.
 
@@ -184,13 +184,13 @@ guarded.
       <path>`). Emits per-component breakdown and total against
       49,512-char ceiling.
 - [x] **1.2** Audit the 51 auto-rule descriptions in
-      `.agent-src.uncompressed/rules/*.md`. Empirical distribution:
-      mean 141, max 200, 22 rules above 150. Compress descriptions
+      `.agent-src.uncondensed/rules/*.md`. Empirical distribution:
+      mean 141, max 200, 22 rules above 150. Condense descriptions
       > 150 to ≤ 150 chars **without** losing trigger keywords.
       Preserve all routing fidelity — descriptions are the routing
       hint Augment matches against the user prompt.
 - [x] **1.3** Write `scripts/check_augment_description_cap.py` — fails
-      CI if any auto-rule description in `.agent-src.uncompressed/rules/`
+      CI if any auto-rule description in `.agent-src.uncondensed/rules/`
       exceeds 150 chars. Wire into `taskfiles/ci-fast.yml` as
       `check-augment-description-cap` and into the consistency
       workflow.
@@ -233,9 +233,9 @@ anchors + outbound links.
       `docs/contracts/adr-command-suggestion.md` (already exists per
       `AGENTS.md` reference). Replace section in AGENTS.md with a
       one-line pointer.
-- [x] **2.5** Compress Multi-agent-tool-support table to a single
+- [x] **2.5** Condense Multi-agent-tool-support table to a single
       sentence + link to `docs/architecture.md`.
-- [x] **2.6** Compress Four-wings narrative to the table only (drop
+- [x] **2.6** Condense Four-wings narrative to the table only (drop
       the prose intro, keep the cluster table).
 - [x] **2.7** Verify all moved/linked context files exist and contain
       the moved content. Run `task check-refs` and `task
@@ -260,7 +260,7 @@ domains, eliminating redundant registry stubs. Targeted, not bulk.
       `agents/settings/contexts/` documenting the merge rationale, the merged
       rule's name, and the preserved trigger keywords. ADR-required
       per the "no silent feature loss" constraint.
-- [x] **3.3** Execute the merge in `.agent-src.uncompressed/rules/`.
+- [x] **3.3** Execute the merge in `.agent-src.uncondensed/rules/`.
       Merged rule keeps the broader scope; deprecated rule's body
       moves to a `### See also` block in the merged rule. Update
       cross-references via `task check-refs`.
@@ -326,7 +326,7 @@ any structural Thin-Root work. Expected savings if hypothesis holds:
 target without any AGENTS.md restructuring).
 
 - [x] **5.1** Write `scripts/audit_auto_rules.py` — for every auto-rule
-      under `.agent-src.uncompressed/rules/`, emit: file, frontmatter
+      under `.agent-src.uncondensed/rules/`, emit: file, frontmatter
       `description`, `triggers[].path_prefix`, `routes_to[]`, body
       char-count, full registry-stub char-count (description + path
       template). Output JSON to `agents/runtime/reports/auto-rules-audit.json`
@@ -361,7 +361,7 @@ target without any AGENTS.md restructuring).
       `manual` as a first-class frontmatter type (registry-stub-free,
       reference-document-preserved).
 - [x] **5.6** Demotions executed in
-      `.agent-src.uncompressed/rules/`. Schema + linter + router +
+      `.agent-src.uncondensed/rules/`. Schema + linter + router +
       frontmatter-contract all updated to support the new `manual`
       type. `task sync && task generate-tools && task lint-skills`
       green; `task check-refs` green after fixing a pre-existing bug
@@ -389,7 +389,7 @@ content step (6.4–6.5) is skipped when Phase 5 already cleared the
 (6.6) still ship.
 
 - [x] **6.1** Author
-      `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md`
+      `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md`
       per the `skill-quality` rule and `skill-writing` skill. Frontmatter
       `description` strictly under 150 chars, triggers cover
       AGENTS.md edits and consumer-template touches.
@@ -407,13 +407,13 @@ content step (6.4–6.5) is skipped when Phase 5 already cleared the
 - [x] **6.4** Applied Thin-Root to the package-root `AGENTS.md`:
       9,052 → 2,937 chars (-67.6 %). Outboarded self-orientation
       to `docs/contracts/package-self-orientation.md` and the
-      emergency block to `.agent-src.uncompressed/contexts/contracts/emergency-triage-block.md`.
+      emergency block to `.agent-src.uncondensed/contexts/contracts/emergency-triage-block.md`.
       Budget total 80.6 % (≥ 20 % headroom achieved).
 - [x] **6.5** Applied Thin-Root to
-      `.agent-src.uncompressed/templates/AGENTS.md` (consumer
+      `.agent-src.uncondensed/templates/AGENTS.md` (consumer
       template): 5,170 → 2,536 chars (-50.9 %). Outboarded
       placeholder sections + entry-flow + multi-agent matrix to
-      `.agent-src.uncompressed/contexts/contracts/consumer-agents-md-guide.md`.
+      `.agent-src.uncondensed/contexts/contracts/consumer-agents-md-guide.md`.
       `task generate-tools` re-run; projection updated.
 - [x] **6.6** Platform spot-check via AI council (proxy for the
       manual "Ship to Learn" pass — neutral external reviewers
@@ -508,7 +508,7 @@ Re-pick this roadmap (or open a successor) if:
 
 ## Out of scope (locked)
 
-- Compressing any of the 9 always-rule kernel bodies (Lever C).
+- Condenseing any of the 9 always-rule kernel bodies (Lever C).
   ADR-rule-kernel-and-router locks this; council Round 2 confirmed.
 - Removing auto-rules without a written merge ADR.
 - Reducing AGENTS.md below 7,000 chars (loses front-door function).

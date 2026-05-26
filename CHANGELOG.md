@@ -253,7 +253,7 @@ member, low-impact dispatch) under one roadmap. New surfaces:
   fail → banner `airgapped environment detected — defaulting to
   mode: api` and `defaults.member_mode: api` recommendation.
 - **Fast-path marker visibility Iron-Law rule**
-  (`.agent-src.uncompressed/rules/fast-path-marker-visibility.md`,
+  (`.agent-src.uncondensed/rules/fast-path-marker-visibility.md`,
   kernel-tier, always-active) — host agents MUST surface
   `Resolved via low-impact council fast-path: …` markers verbatim;
   swallowing them is a rule violation.
@@ -801,7 +801,7 @@ our recommendation order, not its support status.
 
 ### Bug Fixes
 
-* **ci:** repoint bench/ -> internal/bench/ in projected agent-status + compress-memory ([682040b](https://github.com/event4u-app/agent-config/commit/682040b230248bd054767ab10bd1e90ed3a1d0b7))
+* **ci:** repoint bench/ -> internal/bench/ in projected agent-status + condense-memory ([682040b](https://github.com/event4u-app/agent-config/commit/682040b230248bd054767ab10bd1e90ed3a1d0b7))
 
 ### Documentation
 
@@ -853,7 +853,7 @@ Tests: 4938 (+9 since 3.2.0)
 * **counts:** sync command count to 136 (analytics cluster added) ([1d56496](https://github.com/event4u-app/agent-config/commit/1d564962bd57aedc6d4ff2ae6b757e45e8a63e2c))
 * **release:** bump agent_config_version in templates to match package.json 3.1.1 ([4864332](https://github.com/event4u-app/agent-config/commit/4864332804fe9979a4f94cb053cdd13c7473ac40))
 * **sync:** regenerate index + catalog for analytics commands ([77cb4fa](https://github.com/event4u-app/agent-config/commit/77cb4fa41d8b2773e7f5ece27f385d7b42862f5f))
-* **sync:** regenerate compressed analytics commands + Claude skill stubs ([41728c4](https://github.com/event4u-app/agent-config/commit/41728c4400c8cabaa8966d2708fbb4f3cef64adb))
+* **sync:** regenerate condensed analytics commands + Claude skill stubs ([41728c4](https://github.com/event4u-app/agent-config/commit/41728c4400c8cabaa8966d2708fbb4f3cef64adb))
 * **knowledge:** regenerate projections + manifests for /knowledge cluster ([f4c5a26](https://github.com/event4u-app/agent-config/commit/f4c5a26bffef0a25918bdde42131354c9dd5295d))
 * **discovery:** add agent-skills and cinematic-ai-video to topics ([5c01d5e](https://github.com/event4u-app/agent-config/commit/5c01d5e152bda559aefd48fd8220f2a3cbd90249))
 

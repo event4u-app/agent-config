@@ -98,7 +98,7 @@ def test_allowed_in_analysis(tmp_path: Path) -> None:
 
 def test_allowed_in_rule_itself(tmp_path: Path) -> None:
     _write(
-        tmp_path / ".agent-src.uncompressed/rules/no-roadmap-references.md",
+        tmp_path / ".agent-src.uncondensed/rules/no-roadmap-references.md",
         "Forbidden: `agents/runtime/council/sessions/<file>.json`",
     )
     assert ccr.main() == 0
@@ -106,7 +106,7 @@ def test_allowed_in_rule_itself(tmp_path: Path) -> None:
 
 def test_allowed_in_ai_council_skill(tmp_path: Path) -> None:
     _write(
-        tmp_path / ".agent-src.uncompressed/skills/ai-council/SKILL.md",
+        tmp_path / ".agent-src.uncondensed/skills/ai-council/SKILL.md",
         "Output: agents/runtime/council/sessions/2026-05-06.json",
     )
     assert ccr.main() == 0

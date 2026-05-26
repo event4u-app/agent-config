@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-12
 > · **Schema:** `scripts/schemas/skill.schema.json` § `domain`
 
 Locks the canonical 6-domain taxonomy that classifies every skill in
-`.agent-src.uncompressed/skills/`. Each skill MUST declare exactly one
+`.agent-src.uncondensed/skills/`. Each skill MUST declare exactly one
 `domain:` value from the allow-list below in its `SKILL.md` frontmatter.
 
 ## § 1 — Allow-list
@@ -139,6 +139,6 @@ release notes.
 
 ## See also
 
-- [`skill-quality`](../../.agent-src.uncompressed/rules/skill-quality.md) — frontmatter contract for skills
+- [`skill-quality`](../../.agent-src.uncondensed/rules/skill-quality.md) — frontmatter contract for skills
 - [`rule-classification`](rule-classification.md) — sister taxonomy for rules (kernel vs auto)
 - `road-to-better-skills-and-profiles.md` — Block B (taxonomy lock + back-fill + folder reorg)

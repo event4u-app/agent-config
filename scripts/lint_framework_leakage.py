@@ -2,7 +2,7 @@
 """Lint generic skills/rules/commands for framework/language leakage.
 
 Exits 1 on hit; CI-blocking. Enforces
-`.agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md`.
+`.agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md`.
 
 Allowlist legitimate cross-stack docs in
 `scripts/lint_framework_leakage_allowlist.json`.
@@ -36,8 +36,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402
 
-# Post-ADR-017 source artefacts live under every packages/*/.agent-src.uncompressed/;
-# pre-move the flat .agent-src.uncompressed/ root still wins. The lint walks
+# Post-ADR-017 source artefacts live under every packages/*/.agent-src.uncondensed/;
+# pre-move the flat .agent-src.uncondensed/ root still wins. The lint walks
 # the three artefact subtrees (skills/, rules/, commands/) under each active root.
 _SUBDIRS = ("skills", "rules", "commands")
 
@@ -158,7 +158,7 @@ def is_inventory_file(path: Path) -> bool:
     Exempt scopes:
       - `<src>/contexts/**/*.md` — cross-reference tables, guideline
         catalogs, infrastructure maps.
-      - top-level `README.md` directly under `.agent-src.uncompressed/`
+      - top-level `README.md` directly under `.agent-src.uncondensed/`
         or `.agent-src/` — package surface inventory.
     """
     try:
@@ -169,7 +169,7 @@ def is_inventory_file(path: Path) -> bool:
     if "contexts" in parts:
         return True
     if rel.name == "README.md" and len(parts) == 2 and parts[0] in {
-        ".agent-src.uncompressed", ".agent-src",
+        ".agent-src.uncondensed", ".agent-src",
     }:
         return True
     return False
@@ -204,8 +204,8 @@ def _load_allowlist() -> dict:
 
 
 def _allowlisted(rel_path: str, line_no: int, allowlist: dict) -> bool:
-    # Allowlist entries cite paths under the legacy .agent-src.uncompressed/
-    # prefix; post-ADR-017 files live under packages/*/.agent-src.uncompressed/.
+    # Allowlist entries cite paths under the legacy .agent-src.uncondensed/
+    # prefix; post-ADR-017 files live under packages/*/.agent-src.uncondensed/.
     # Match either the literal repo-relative path or its logical id.
     from _lib.agent_src import strip_source_prefix  # noqa: E402
 

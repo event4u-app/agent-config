@@ -3,7 +3,7 @@
 Token-Optimizer freshness validator.
 
 Per `road-to-token-optimization.md` P1.3: parses the catalog table inside
-`.agent-src.uncompressed/skills/token-optimizer/SKILL.md`, verifies every
+`.agent-src.uncondensed/skills/token-optimizer/SKILL.md`, verifies every
 cited internal asset exists, and `grep`s the trigger keywords against
 each target file. Fails on missing target OR keyword mismatch.
 
@@ -27,7 +27,7 @@ from _lib.agent_src import resolve_logical  # noqa: E402
 # Post-ADR-017 the source-of-truth lives under whichever package owns
 # the skill; resolve_logical() walks every artefact root.
 SKILL = resolve_logical("skills/token-optimizer/SKILL.md") or (
-    REPO_ROOT / ".agent-src.uncompressed" / "skills" / "token-optimizer" / "SKILL.md"
+    REPO_ROOT / ".agent-src.uncondensed" / "skills" / "token-optimizer" / "SKILL.md"
 )
 
 from _lib.agent_src import strip_source_prefix  # noqa: E402
@@ -83,7 +83,7 @@ def resolve(path: str) -> Path | None:
         return None
     cleaned = path.strip().lstrip("`").rstrip("`")
     cleaned = cleaned.split(")")[0].lstrip("[(")
-    # Catalog rows still cite the legacy .agent-src.uncompressed/ prefix
+    # Catalog rows still cite the legacy .agent-src.uncondensed/ prefix
     # for compactness; resolve those across every packages/* root.
     logical = strip_source_prefix(cleaned)
     if logical is not None:

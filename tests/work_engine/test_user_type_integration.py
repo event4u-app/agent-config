@@ -4,7 +4,7 @@ User-types are CLI-only review lenses in v1 (no engine policy module —
 Phase 4 decision in step-6 roadmap; docs/contracts/user-type-schema.md
 § 1). The "integration" surface this test locks down is therefore:
 
-1. **Loading**: a user-type file in ``.agent-src.uncompressed/user-types/``
+1. **Loading**: a user-type file in ``.agent-src.uncondensed/user-types/``
    loads through the linter the same way a persona does.
 2. **`refine-ticket` invocation**: the CLI command markdown declares
    ``--user-type=<id>`` and the skill's procedure documents the
@@ -121,7 +121,7 @@ def test_user_type_file_loads_through_linter(tmp_path: Path) -> None:
     """A well-formed user-type file lints clean — no errors."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-lens.md",
+        ".agent-src.uncondensed/user-types/test-lens.md",
         USER_TYPE_BODY,
     )
     result = lint_file(path)
@@ -135,12 +135,12 @@ def test_user_type_and_persona_compose_without_cross_contamination(tmp_path: Pat
     rules."""
     ut = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-lens.md",
+        ".agent-src.uncondensed/user-types/test-lens.md",
         USER_TYPE_BODY,
     )
     pe = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-reviewer.md",
+        ".agent-src.uncondensed/personas/test-reviewer.md",
         PERSONA_BODY,
     )
     ut_result = lint_file(ut)

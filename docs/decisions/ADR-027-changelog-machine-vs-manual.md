@@ -57,7 +57,7 @@ of narrative + bullets in the current convention):
 |---|---:|---:|---:|
 | **Token budget per release** | ~2.8k (141 lines × ~80 chars) | ~1.1k (38 commits × ~120 chars) | ~2.6k (same as current; bullets generated, paragraph hand-written) |
 | **Maintainer minutes per release** | 5–15 (write narrative; auto-split runs in `task release`) | 0 direct + ~30/month policing commit messages | 5–10 (paragraph only) |
-| **Information density per line** | high — narrative compresses 5–10 bullets of context | low — every infrastructure commit becomes a line | high — same as current |
+| **Information density per line** | high — narrative condenses 5–10 bullets of context | low — every infrastructure commit becomes a line | high — same as current |
 | **Parseability for downstream agents** | high — `### Features` / `### Fixes` / `### BREAKING` are semantic anchors | medium — same headings, but no narrative anchor to disambiguate scope churn | high |
 | **Hands-off failure mode** | era over-cap → auto-split fires | commit-message drift pollutes the log → no recovery without rewriting commits | narrative drift → degrades to release-please equivalent |
 

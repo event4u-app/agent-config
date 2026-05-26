@@ -12,7 +12,7 @@ Classification of all skills based on the [Execution Classification Standard](ex
 
 | Skill | Source | Handler | allowed_tools | Rationale |
 |---|---|---|---|---|
-| `compress` | cmd | `shell` | `[]` | Deterministic file transform, reversible, local |
+| `condense` | cmd | `shell` | `[]` | Deterministic file transform, reversible, local |
 | `package-test` | cmd | `shell` | `[]` | Runs test suite, no side effects, exit code = result |
 | `package-reset` | cmd | `shell` | `[]` | Resets package state, reversible via git |
 | `optimize-rtk-filters` | cmd | `internal` | `[]` | Generates config from toolchain analysis |
@@ -86,7 +86,7 @@ Classification of all skills based on the [Execution Classification Standard](ex
 | `readme-reviewer` | pkg | `internal` | `[]` | Review + recommendations |
 | `rtk-output-filtering` | pkg | `shell` | `[]` | Wraps CLI, needs config decisions |
 | `skill-improvement-pipeline` | pkg | `internal` | `[]` | Multi-step improvement, needs approval |
-| `skill-management` | pkg | `internal` | `[]` | Compress/decompress/refactor, needs judgment |
+| `skill-management` | pkg | `internal` | `[]` | Condense/decondense/refactor, needs judgment |
 | `skill-reviewer` | pkg | `internal` | `[]` | Audit + recommendations |
 | `skill-writing` | pkg | `internal` | `[]` | Creates skills, needs judgment |
 | `upstream-contribute` | pkg | `internal` | `[github]` | Creates upstream PRs, needs consent |
@@ -107,7 +107,7 @@ Categories:
 - **Agent infra:** `agent-docs-writing`, `project-docs`, `copilot-config`, `mcp`, `sequential-thinking`
 - **Other:** `database`, `logging-monitoring`, `websocket`, `openapi`, `sql-writing`, etc.
 
-Full list: see `ls .agent-src.uncompressed/skills/` — any skill not listed in Automated
+Full list: see `ls .agent-src.uncondensed/skills/` — any skill not listed in Automated
 or Assisted tables above is Manual.
 
 ## Summary

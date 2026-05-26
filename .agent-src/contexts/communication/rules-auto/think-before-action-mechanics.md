@@ -89,8 +89,8 @@ The editor may report that the user has a file open. Background
 context only — does NOT mean the user's message is about that file.
 
 - The user's message determines intent — not which file is open.
-- A user can have `README.md` open and type `/compress` — intent is
-  to compress, not to discuss the README.
+- A user can have `README.md` open and type `/condense` — intent is
+  to condense, not to discuss the README.
 - A user can have `UserController.php` open and ask "how do tests
   work?" — intent is testing, not the controller.
 - Treat the open file as relevant only when the user's message

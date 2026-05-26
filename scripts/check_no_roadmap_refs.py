@@ -10,7 +10,7 @@ Allowed: directory mentions (`agents/roadmaps/`, `agents/roadmaps/archive/`,
 `agents/roadmaps/skipped/`). Forbidden: specific `*.md` files inside those
 directories.
 
-Contract: .agent-src.uncompressed/rules/no-roadmap-references.md
+Contract: .agent-src.uncondensed/rules/no-roadmap-references.md
 
 Exit codes: 0 = clean, 1 = violations, 3 = internal error.
 """
@@ -28,12 +28,12 @@ ROOT = Path(__file__).resolve().parent.parent
 # Stable artefact trees — every `*.md` below MUST be free of roadmap-file
 # citations. Directory mentions stay allowed (the regex below excludes them).
 STABLE_TREES = (
-    ".agent-src.uncompressed/rules",
-    ".agent-src.uncompressed/skills",
-    ".agent-src.uncompressed/commands",
-    ".agent-src.uncompressed/contexts",
-    ".agent-src.uncompressed/templates",
-    ".agent-src.uncompressed/personas",
+    ".agent-src.uncondensed/rules",
+    ".agent-src.uncondensed/skills",
+    ".agent-src.uncondensed/commands",
+    ".agent-src.uncondensed/contexts",
+    ".agent-src.uncondensed/templates",
+    ".agent-src.uncondensed/personas",
     "agents/settings/contexts",
     "docs/guidelines",
     "docs/contracts",
@@ -64,7 +64,7 @@ ROADMAP_FILE_RE = re.compile(
 # documentation purposes — the rule itself, the companion CI script docs,
 # and the contract doc that names the rule.
 SELF_DOCUMENTING_ALLOWLIST = frozenset({
-    ".agent-src.uncompressed/rules/no-roadmap-references.md",
+    ".agent-src.uncondensed/rules/no-roadmap-references.md",
     "docs/guidelines/agent-infra/no-roadmap-references.md",
 })
 
@@ -129,7 +129,7 @@ def format_text(violations: list[Violation]) -> str:
         lines.append(f"  🔴 {v.file}:{v.line}  →  {v.match}")
     lines.append(
         "\nPromote the durable conclusion to agents/settings/contexts/ and cite that "
-        "instead. See .agent-src.uncompressed/rules/no-roadmap-references.md."
+        "instead. See .agent-src.uncondensed/rules/no-roadmap-references.md."
     )
     return "\n".join(lines)
 

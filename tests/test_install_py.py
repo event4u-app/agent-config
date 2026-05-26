@@ -725,7 +725,7 @@ class TestEnsureAgentSettings(SilentTest):
         content = (self.project / ".agent-settings.yml").read_text(encoding="utf-8")
         self.assertIn("frequency: per_tool", content)
         self.assertIn("max_size_kb: 512", content)
-        self.assertIn("on_overflow: compress", content)
+        self.assertIn("on_overflow: condense", content)
 
     def test_no_placeholder_left_in_output(self) -> None:
         for profile in install.SUPPORTED_PROFILES:

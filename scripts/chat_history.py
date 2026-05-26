@@ -47,7 +47,7 @@ DEFAULT_SETTINGS_FILE = ".agent-settings.yml"
 SCHEMA_VERSION = 4
 DEFAULT_MAX_SESSIONS = 5
 VALID_FREQS = {"per_turn", "per_phase", "per_tool"}
-VALID_OVERFLOW = {"rotate", "compress"}
+VALID_OVERFLOW = {"rotate", "condense"}
 
 # Replay-mode signal — when set, every write to the on-disk transcript
 # is a no-op. Honoured per `docs/contracts/hook-architecture-v1.md`
@@ -905,7 +905,7 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
     """Enforce max_kb. Returns {'action', 'kept', 'dropped'}.
 
     Rotate: drop oldest entries (keep header) until file ≤ max_kb.
-    Compress: mark oldest 50% as stale and leave a `needs_compress`
+    Condense: mark oldest 50% as stale and leave a `needs_condense`
               marker entry for the agent to rewrite on next turn.
     """
     if mode not in VALID_OVERFLOW:
@@ -934,12 +934,12 @@ def overflow_handle(max_kb: int, mode: str = "rotate", *,
         _atomic_write_text(p, header_line + "".join(kept))
         return {"action": "rotate", "kept": len(kept), "dropped": dropped}
     marker = {
-        "t": "needs_compress",
+        "t": "needs_condense",
         "ts": _now(),
-        "reason": f"file exceeded {max_kb} KB, compress-mode requested",
+        "reason": f"file exceeded {max_kb} KB, condense-mode requested",
     }
     append(marker, path=p)
-    return {"action": "compress_marked", "kept": len(entries), "dropped": 0}
+    return {"action": "condense_marked", "kept": len(entries), "dropped": 0}
 
 
 def hook_append(event: str, *,

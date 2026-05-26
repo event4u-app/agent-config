@@ -15,7 +15,7 @@ routes_to:
   - "skill:ai-council"
 validator_ignore:
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
+    pattern: ".agent-src.uncondensed/"
     reason: "Rule contrasts the authoring tree with transient layers."
 workspaces:
   - agent-config-maintainer
@@ -71,7 +71,7 @@ These paths must not appear inside a stable artifact:
   `agents/runtime/council/responses/<file>.json`,
   `agents/runtime/council/sessions/<file>.json` or `<timestamp>/...`
 
-Stable artifact = any file under `.agent-src.uncompressed/{rules,
+Stable artifact = any file under `.agent-src.uncondensed/{rules,
 skills,commands,contexts,templates,personas}/`, `agents/settings/contexts/`,
 `docs/guidelines/`, `docs/contracts/`, `docs/architecture.md`,
 `docs/customization.md`, `docs/getting-started.md`, `docs/catalog.md`,
@@ -145,6 +145,6 @@ Failure modes:
 - [`roadmap-progress-sync`](roadmap-progress-sync.md) — sync dashboard
   on roadmap touch
 - [`augment-source-of-truth`](augment-source-of-truth.md) — edit
-  `.agent-src.uncompressed/`
+  `.agent-src.uncondensed/`
 - [`ai-council`](../skills/ai-council/SKILL.md) — output path
   convention and convergence-summary format

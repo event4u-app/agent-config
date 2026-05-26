@@ -73,7 +73,7 @@ the flag is set outside the package repo.
 - **Audit-visible.** Every install run logs whether the flag was set
   at the top of the transaction log.
 - **No silent fallback.** If `scripts/install.py` detects the
-  package repo signature (presence of `.agent-src.uncompressed/` plus
+  package repo signature (presence of `.agent-src.uncondensed/` plus
   `dist/router.json`) and the flag is **not** set, the install
   refuses with a one-line error pointing here.
 - **Not for consumers.** Setting the flag in a consumer project is

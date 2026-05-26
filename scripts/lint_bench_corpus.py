@@ -40,7 +40,7 @@ REPO = Path(__file__).resolve().parents[1]
 CORPUS_DIR = REPO / "tests" / "eval"
 
 # Live skill directories live under every artefact root post-monorepo
-# Phase 4 (legacy + packages/*/.agent-src.uncompressed/skills/).
+# Phase 4 (legacy + packages/*/.agent-src.uncondensed/skills/).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.agent_src import artefact_roots  # noqa: E402
 

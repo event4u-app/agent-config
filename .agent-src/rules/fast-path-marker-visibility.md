@@ -11,8 +11,8 @@ triggers:
   - intent: "low-impact council dispatch"
 validator_ignore:
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
-    reason: "Compressor injects a back-pointer to the uncompressed source for full failure-modes detail."
+    pattern: ".agent-src.uncondensed/"
+    reason: "Condenseor injects a back-pointer to the uncondensed source for full failure-modes detail."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -43,7 +43,7 @@ Markers (from `scripts/ai_council/low_impact.py`):
 - **Split** — `> Low-impact council split — escalating to user (<m1>: X / <m2>: Y):`
 - **Aborted** — `> Low-impact council aborted (token cap) — escalating to user:`
 
-Verbatim = first non-whitespace line, English (no translation), no emoji prefix, no merged numbered-options. Marker is the only audit signal that distinguishes fast-path from local deliberation. See `.agent-src.uncompressed/rules/fast-path-marker-visibility.md` for full failure modes.
+Verbatim = first non-whitespace line, English (no translation), no emoji prefix, no merged numbered-options. Marker is the only audit signal that distinguishes fast-path from local deliberation. See `.agent-src.uncondensed/rules/fast-path-marker-visibility.md` for full failure modes.
 
 ## Failure modes
 

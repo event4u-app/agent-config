@@ -5,7 +5,7 @@
  * away on each section.
  *
  * Path ownership: exact match against `step.paths` for form steps,
- * plus the cost step owns the `caveman.*` / `verbosity.*` bundles
+ * plus the cost step owns the `telegraph.*` / `verbosity.*` bundles
  * because `cost_profile` selection mutates those keys server-side.
  * The `userMd` step uses `userMdChanged` directly.
  */
@@ -79,7 +79,7 @@ export interface WizardReviewProps {
 function stepOwnsPath(step: WizardStep, path: string): boolean {
     if (step.kind !== 'form' || step.paths === undefined) return false;
     if (step.paths.includes(path)) return true;
-    if (step.id === 'cost' && (path.startsWith('caveman.') || path.startsWith('verbosity.'))) {
+    if (step.id === 'cost' && (path.startsWith('telegraph.') || path.startsWith('verbosity.'))) {
         return true;
     }
     return false;

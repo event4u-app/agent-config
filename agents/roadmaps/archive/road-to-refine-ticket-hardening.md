@@ -56,7 +56,7 @@ Observed: `threat-modeling` triggered on `1Password` via substring
 `password`.
 
 - [x] Switch keyword matching in
-      [`detection-map.yml`](../../.agent-src.uncompressed/skills/refine-ticket/detection-map.yml)
+      [`detection-map.yml`](../../.agent-src.uncondensed/skills/refine-ticket/detection-map.yml)
       + `scripts/refine_ticket_detect.py` to word-boundary regex
       (`\bpassword\b`, `\bapi\b`, …).
       *(2026-04-23: `_keyword_pattern()` in `refine_ticket_detect.py` wraps every keyword in `\b…\b` with `IGNORECASE`.)*
@@ -118,12 +118,12 @@ Observed: output language was derived correctly but the fallback
 hierarchy is undocumented.
 
 - [x] Add an explicit rule block to the skill procedure in
-      [`refine-ticket/SKILL.md`](../../.agent-src.uncompressed/skills/refine-ticket/SKILL.md):
+      [`refine-ticket/SKILL.md`](../../.agent-src.uncondensed/skills/refine-ticket/SKILL.md):
       *user-message language → ticket body language →
       `agent-settings.yml` default*.
       *(2026-04-23: new `## Language strategy` section after "When NOT to use".)*
 - [x] Mirror the rule in
-      [`commands/refine-ticket.md`](../../.agent-src.uncompressed/commands/refine-ticket.md)
+      [`commands/refine-ticket.md`](../../.agent-src.uncondensed/commands/refine-ticket.md)
       so the command invocation path documents it too.
       *(2026-04-23: new `### 2. Pick the output language` step; downstream steps renumbered 3-5.)*
 - [x] No code change required — this is a documentation-only phase.
@@ -176,7 +176,7 @@ Links: [F7 finding](../docs/refine-ticket-in-practice.md#f7--cross-repo-invocati
 - [~] All seven phases shipped as individual commits (no bulk).
       *(2026-04-23: deferred to user — git policy requires explicit permission to commit; the 7 phases are logically separable in the diff and can be split at commit time.)*
 - [~] `task ci` stays green across every phase.
-      *(2026-04-23: blocked only on `sync-check-hashes` — 4 `.md` files need recompression via `/compress`; all other CI legs (`sync-check`, `check-refs`, `check-portability`, `lint-skills`, `test`, `lint-readme`) stay green. Deferred to user — compression is itself a dedicated command and benefits from a fresh session per `/compress` guidance.)*
+      *(2026-04-23: blocked only on `sync-check-hashes` — 4 `.md` files need recondensation via `/condense`; all other CI legs (`sync-check`, `check-refs`, `check-portability`, `lint-skills`, `test`, `lint-readme`) stay green. Deferred to user — condensation is itself a dedicated command and benefits from a fresh session per `/condense` guidance.)*
 - [x] Each phase has a reproducible test fixture in
       `tests/fixtures/refine_ticket/` + matching assertions in
       `tests/test_refine_ticket_detect.py` (or a new test file

@@ -85,7 +85,7 @@ compat extensions and MUST NOT raise on them.
 | `phase` | Engine phase that produced the trace. One of the eight phases above. |
 | `confidence_band` | One of `low` / `medium` / `high`. Heuristic defined below — derived from memory hits + ambiguity flags + verify evidence count. |
 | `risk_class` | One of `low` / `medium` / `high`. Per [`rule-interactions.md`](rule-interactions.md) — drives reviewer routing. |
-| `rules[].rule_id` | Stable rule id, matches the filename under `.agent-src.uncompressed/rules/` minus `.md`. |
+| `rules[].rule_id` | Stable rule id, matches the filename under `.agent-src.uncondensed/rules/` minus `.md`. |
 | `rules[].applied` | True if the rule's Iron Law fired and changed engine behaviour this phase. |
 | `rules[].skipped` | True if the rule was checked but produced no effect (no trigger match). |
 | `rules[].conflicted_with` | List of rule_ids that fired against this one. Reduction handled per `rule-interactions.md`. |
@@ -163,7 +163,7 @@ majors.
 ## Cross-references
 
 - Personas (Architect, Risk-Officer) live in the package's persona
-  library under [`.agent-src.uncompressed/personas/`](../../.agent-src.uncompressed/personas/).
+  library under [`.agent-src.uncondensed/personas/`](../../.agent-src.uncondensed/personas/).
   This contract does not duplicate them — when a future trace consumer
   attributes a decision to one of those personas, the persona file is
   the source of truth, not this envelope.

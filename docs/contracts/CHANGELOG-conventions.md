@@ -82,7 +82,7 @@ A change is **breaking** (and MUST appear under `### BREAKING CHANGES`
    [`kernel-membership.md`](kernel-membership.md).
 
 Internal refactors, doc rewrites, test changes, and any change to
-files under `.agent-src.uncompressed/` that round-trip through
+files under `.agent-src.uncondensed/` that round-trip through
 `task sync` unchanged are **not** breaking.
 
 ## Era splits

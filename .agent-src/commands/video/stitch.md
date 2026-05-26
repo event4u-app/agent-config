@@ -43,7 +43,7 @@ with a precise diff — the operator must say `--skip-scene <id>` or
 ### 1. Validate dependencies
 
 ```bash
-scripts/ai-video/lib/validate-deps.sh .agent-src.uncompressed/commands/video/stitch.md
+scripts/ai-video/lib/validate-deps.sh .agent-src.uncondensed/commands/video/stitch.md
 ```
 
 (Lightweight here — only the `ai-video-technical-director` persona is

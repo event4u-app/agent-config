@@ -86,7 +86,7 @@ def test_safe_subprocess_no_shell_interpolation() -> None:
 
 def test_lint_file_emits_exit_code_3_on_malice(tmp_path: Path) -> None:
     """A skill that ships a remote-exec recipe must trip exit code 3."""
-    path = tmp_path / ".agent-src.uncompressed/skills/poisoned/SKILL.md"
+    path = tmp_path / ".agent-src.uncondensed/skills/poisoned/SKILL.md"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
         "---\n"

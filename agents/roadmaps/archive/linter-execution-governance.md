@@ -99,8 +99,8 @@ boundaries, and adding CI governance.
 
 ### Repo-wide checks ✅
 
-- [x] `compressed_variant_missing` — uncompressed exists but no compressed
-- [x] `uncompressed_variant_missing` — compressed exists but no source
+- [x] `condensed_variant_missing` — uncondensed exists but no condensed
+- [x] `uncondensed_variant_missing` — condensed exists but no source
 - [x] `invalid_location_for_type` — artifact type doesn't match directory
 - [x] 0 findings on current repo (clean)
 - [x] Tests: 2 new governance tests (orphan + paired rule)
@@ -125,7 +125,7 @@ boundaries, and adding CI governance.
 - [ ] PR mode (check only changed files)
 - [ ] Baseline / ratchet (prevent warning count increase)
 - [ ] JSON export for metrics
-- [ ] `compression_hash_stale` check
+- [ ] `condensation_hash_stale` check
 - [ ] `duplicate_skill_name` check
 
 ## Stats

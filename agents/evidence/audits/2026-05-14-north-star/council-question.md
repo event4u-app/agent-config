@@ -12,7 +12,7 @@ Cline). Version 2.10.0. Maintainer: solo. Goal: lift it to a
 - **Commands**: ~50 (slash-command files)
 - **Personas**: 11 review-lens cast (6 core + 5 specialist)
 - **Python scripts**: 217 in `scripts/`
-- **Multi-tool projection**: `.agent-src.uncompressed/` is source of truth;
+- **Multi-tool projection**: `.agent-src.uncondensed/` is source of truth;
   generated → `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`,
   `.clinerules/`, `.windsurfrules`
 - **Roadmaps active**: 5 (155 steps, 0 done)
@@ -25,7 +25,7 @@ Cline). Version 2.10.0. Maintainer: solo. Goal: lift it to a
 
 ## Comparable repos surveyed (objective patterns)
 
-1. **`JuliusBrussee/caveman`** — token-compression repo. Ships
+1. **`JuliusBrussee/caveman`** — token-condensation repo. Ships
    `benchmarks/run.py` with 10-prompt corpus + reproducible measurement.
    Six-level intensity ladder. Auto-clarity carve-outs on
    destructive / security / multi-step. Lifetime tokens-saved on
@@ -50,7 +50,7 @@ Cline). Version 2.10.0. Maintainer: solo. Goal: lift it to a
 
 13 verified findings, all `accept` or `accept-with-modification`. Headlines:
 
-- F2 / U1: "Compression" pipeline naming + wrong-boundary measurement.
+- F2 / U1: "Condensation" pipeline naming + wrong-boundary measurement.
 - F5 / D2: 6.3 % router coverage; selection-accuracy protocol locked
   but not implemented.
 - F6 / U3: 55 sequential CI tasks, no tiering, time-ratio metric.
@@ -90,11 +90,11 @@ selection-accuracy, cost surface) **before** **mechanical enforcement**
 (runtime stop-hooks, `AGENT: <slug>` marker, CI strict mode), or
 **alongside**, or **after**? Defend your sequencing.
 
-### Q3 — Compression default
+### Q3 — Condensation default
 
-Caveman ships token-compression default on, with carve-outs. Our
-`caveman.speak_scope` ships default off. Should the default flip to
-on (with caveman-style carve-outs for security / destructive /
+Telegraph ships token-condensation default on, with carve-outs. Our
+`telegraph.speak_scope` ships default off. Should the default flip to
+on (with telegraph-style carve-outs for security / destructive /
 multi-step), stay off until measured, or be removed entirely as a
 feature? What evidence would make the answer change?
 

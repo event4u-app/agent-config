@@ -34,10 +34,10 @@ the paths touched in the PR:
 
 | Tier | Globs that trigger | Script |
 |---|---|---|
-| kernel | `.agent-src.uncompressed/rules/**`, `.agent-src/rules/**`, `dist/router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
-| router | `dist/router.json`, `.agent-src.uncompressed/rules/**`, `.agent-src.uncompressed/skills/**`, `docs/contracts/**`, `docs/guidelines/**` | `scripts/smoke/router.sh` |
-| schema | `.agent-src.uncompressed/skills/**`, `.agent-src.uncompressed/rules/**`, `scripts/schemas/**`, `scripts/skill_linter.py`, `scripts/validate_frontmatter.py` | `scripts/smoke/schema.sh` |
-| skills | `.agent-src.uncompressed/skills/**` | `scripts/smoke/skills.sh` |
+| kernel | `.agent-src.uncondensed/rules/**`, `.agent-src/rules/**`, `dist/router.json`, `scripts/measure_rule_budget.py` | `scripts/smoke/kernel.sh` |
+| router | `dist/router.json`, `.agent-src.uncondensed/rules/**`, `.agent-src.uncondensed/skills/**`, `docs/contracts/**`, `docs/guidelines/**` | `scripts/smoke/router.sh` |
+| schema | `.agent-src.uncondensed/skills/**`, `.agent-src.uncondensed/rules/**`, `scripts/schemas/**`, `scripts/skill_linter.py`, `scripts/validate_frontmatter.py` | `scripts/smoke/schema.sh` |
+| skills | `.agent-src.uncondensed/skills/**` | `scripts/smoke/skills.sh` |
 
 `task smoke` runs all four locally regardless of paths.
 
@@ -107,7 +107,7 @@ constant in the script body and the row below.
 ```
 
 - **5 random skills** picked deterministically (seed = epoch day) from
-  `.agent-src.uncompressed/skills/*/SKILL.md` and re-validated via
+  `.agent-src.uncondensed/skills/*/SKILL.md` and re-validated via
   `scripts/validate_frontmatter.py`. `agent-config explain skill` is
   **not** invoked — `explain` only supports `{config,rule,route}` today
   ([`scripts/agent-config/cmd_explain.py`](../../scripts/agent-config/cmd_explain.py));
