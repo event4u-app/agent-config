@@ -45,7 +45,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 SOURCE_DIR = PROJECT_ROOT / ".agent-src.uncompressed"
 TARGET_DIR = PROJECT_ROOT / ".agent-src"
 AUGMENT_DIR = PROJECT_ROOT / ".augment"
-HASH_FILE = PROJECT_ROOT / ".compression-hashes.json"
+HASH_FILE = PROJECT_ROOT / "internal" / ".compression-hashes.json"
 SETTINGS_FILE = PROJECT_ROOT / ".agent-settings.yml"
 
 
@@ -69,7 +69,7 @@ def _any_source_root_exists() -> bool:
     """True if at least one artefact source root contains files."""
     return bool(artefact_roots())
 
-# Self-projection tool toggle — see .agent-tools.yml. When the file is
+# Self-projection tool toggle — see agents/.agent-tools.yml. When the file is
 # absent (e.g. tests run in tmp dirs, consumer projects), `_active_tools`
 # returns ``None`` which is treated as "emit every tool".
 _ALL_TOOLS = frozenset({
@@ -81,11 +81,11 @@ _ALL_TOOLS = frozenset({
 def _active_tools() -> frozenset[str] | None:
     """Return the set of active self-projection tools, or None for "all".
 
-    Reads `.agent-tools.yml` relative to the current `PROJECT_ROOT` so
-    test fixtures that monkey-patch `compress.PROJECT_ROOT` see their own
-    (empty) project root and get the default "all tools" behaviour.
+    Reads `agents/.agent-tools.yml` relative to the current `PROJECT_ROOT`
+    so test fixtures that monkey-patch `compress.PROJECT_ROOT` see their
+    own (empty) project root and get the default "all tools" behaviour.
     """
-    tools_file = PROJECT_ROOT / ".agent-tools.yml"
+    tools_file = PROJECT_ROOT / "agents" / ".agent-tools.yml"
     if not tools_file.exists():
         return None
     try:
@@ -402,7 +402,7 @@ USER_TYPE_TOOL_DIRS = {
 }
 
 # Map tool-projection directories to the canonical tool ID used by
-# `.agent-tools.yml`. Directories not in this map are always emitted.
+# `agents/.agent-tools.yml`. Directories not in this map are always emitted.
 _DIR_TOOL_ID = {
     ".claude/rules": "claude-code",
     ".cursor/rules": "cursor",
@@ -415,7 +415,7 @@ _DIR_TOOL_ID = {
 
 
 def _filter_tool_dirs(mapping: dict[str, str]) -> dict[str, str]:
-    """Drop entries whose tool ID is not active in `.agent-tools.yml`."""
+    """Drop entries whose tool ID is not active in `agents/.agent-tools.yml`."""
     return {
         d: p for d, p in mapping.items()
         if _tool_active(_DIR_TOOL_ID.get(d, "claude-code"))
@@ -1063,7 +1063,7 @@ def generate_user_type_symlinks() -> int:
 def generate_tools() -> None:
     """Generate all tool-specific directories and files.
 
-    `.agent-tools.yml` (top-level) gates per-tool emission. When the file
+    `agents/.agent-tools.yml` gates per-tool emission. When the file
     is missing, every tool is emitted (preserves test fixtures and
     pre-gating behaviour). See `_active_tools()` and `_tool_active()`.
     """

@@ -11,8 +11,8 @@ Usage:
     python3 scripts/measure_projection_bytes.py --json    # machine-readable
     python3 scripts/measure_projection_bytes.py --regenerate
         # runs `task clean-tools && task generate-tools` with *all* tools
-        # enabled (via temporary .agent-tools.yml override) before measuring,
-        # then restores the original `.agent-tools.yml`. Use this to produce
+        # enabled (via temporary agents/.agent-tools.yml override) before measuring,
+        # then restores the original `agents/.agent-tools.yml`. Use this to produce
         # a complete table when the local repo only enables a subset.
 
 Output is intentionally non-cached and read fresh from disk every run.
@@ -95,7 +95,7 @@ def collect() -> list[dict]:
 
 
 def _temporarily_enable_all_tools() -> str | None:
-    tools_file = PROJECT_ROOT / ".agent-tools.yml"
+    tools_file = PROJECT_ROOT / "agents" / ".agent-tools.yml"
     if not tools_file.exists():
         return None
     original = tools_file.read_text()
@@ -118,7 +118,7 @@ def regenerate_all() -> None:
         subprocess.run(["task", "generate-tools"], check=True, capture_output=True)
     finally:
         if backup is not None:
-            (PROJECT_ROOT / ".agent-tools.yml").write_text(backup)
+            (PROJECT_ROOT / "agents" / ".agent-tools.yml").write_text(backup)
 
 
 def render_table(rows: list[dict]) -> str:

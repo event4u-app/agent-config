@@ -135,7 +135,7 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 # Auto-sync agent-tool projections after pull / branch-switch ---------------
 #
 # When `.agent-src.uncompressed/`, `.agent-src/`, `scripts/compress.py`,
-# `.agent-tools.yml`, or `Taskfile.yml` change between the previous and
+# `agents/.agent-tools.yml`, or `Taskfile.yml` change between the previous and
 # new HEAD, the developer's working tree has stale `.claude/`,
 # `.augment/`, etc. projections until they remember to run `task sync`.
 # These hooks bridge that gap: fast idempotent re-projection.

@@ -6,7 +6,7 @@ Walks a list of artefacts in `.agent-src.uncompressed/` and:
      trust, install) before the closing `---`, deterministically.
   2. Mirrors the new keys into the matching `.agent-src/` counterpart so
      the compressed projection stays consistent (body preserved).
-  3. Refreshes `.compression-hashes.json` for each touched source path so
+  3. Refreshes `internal/.compression-hashes.json` for each touched source path so
      `task check-compression` stays green.
 
 Idempotent: re-runs leave already-annotated files untouched.
@@ -26,7 +26,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ".agent-src.uncompressed"
 DST = ROOT / ".agent-src"
-HASH_FILE = ROOT / ".compression-hashes.json"
+HASH_FILE = ROOT / "internal" / ".compression-hashes.json"
 
 # Pack → (workspace_id, trust_level, default_install, removable, lifecycle).
 PACK_DEFAULTS: dict[str, tuple[str, str, bool, bool, str]] = {
