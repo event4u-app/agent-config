@@ -235,6 +235,117 @@ describe('installRoute', () => {
         });
     });
 
+    describe('POST /api/v1/install/plan (wizard branch — Phase B2)', () => {
+        beforeEach(async () => {
+            boot = await bootApp();
+            // Seed a minimal `.agent-src/rules/` tree inside the project root
+            // so the wizard branch's `packageRoot` override has content the
+            // expander can resolve. Two files → assert filesByTool count.
+            mkdirSync(join(boot.projectRoot, '.agent-src', 'rules'), { recursive: true });
+            writeFileSync(join(boot.projectRoot, '.agent-src', 'rules', 'one.md'), 'rule-one\n');
+            writeFileSync(join(boot.projectRoot, '.agent-src', 'rules', 'two.md'), 'rule-two\n');
+        });
+
+        it('expands toolIds + home override into a plan with per-tool entries', async () => {
+            const fakeHome = mkdtempSync(join(tmpdir(), 'agent-config-home-'));
+            // Override the route's home so `~/.codeium/windsurf/rules/` lands
+            // under a tmp tree we can inspect.
+            await boot.app.close();
+            const port = await findFreePort();
+            const app = await createApp({
+                writeRoot: boot.projectRoot,
+                projectRoot: boot.projectRoot,
+                uiDistDir: join(boot.projectRoot, '..', 'ui'),
+                token: TOKEN,
+                expectedPort: port,
+                logLevel: 'fatal',
+                skipReplay: true,
+                installRouteOptions: {
+                    cwd: boot.projectRoot,
+                    logPath: boot.logPath,
+                    packageRoot: boot.projectRoot,
+                    home: fakeHome,
+                },
+            });
+            await app.listen({ host: '127.0.0.1', port });
+            const host = `127.0.0.1:${port}`;
+            try {
+                const res = await fetch(`http://${host}/api/v1/install/plan`, {
+                    method: 'POST',
+                    headers: { ...authHeaders(host), 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        target: 'global',
+                        root: fakeHome,
+                        toolIds: ['windsurf'],
+                        policy: {
+                            force: false,
+                            interactive: false,
+                            knownPaths: [],
+                            knownPointers: [],
+                            defaultStrategy: 'surface-to-ui',
+                        },
+                    }),
+                });
+                expect(res.status).toBe(200);
+                const plan = (await res.json()) as PlanWire;
+                expect(plan.version).toBe(2);
+                expect(plan.filesByTool.windsurf).toHaveLength(2);
+                // dest path lands under fakeHome → `.codeium/windsurf/rules/`
+                expect(plan.filesByTool.windsurf![0]!.path).toContain('windsurf');
+            } finally {
+                await app.close();
+                rmSync(fakeHome, { recursive: true, force: true });
+            }
+        });
+
+        it('returns an empty plan for unknown tool IDs', async () => {
+            const fakeHome = mkdtempSync(join(tmpdir(), 'agent-config-home-'));
+            await boot.app.close();
+            const port = await findFreePort();
+            const app = await createApp({
+                writeRoot: boot.projectRoot,
+                projectRoot: boot.projectRoot,
+                uiDistDir: join(boot.projectRoot, '..', 'ui'),
+                token: TOKEN,
+                expectedPort: port,
+                logLevel: 'fatal',
+                skipReplay: true,
+                installRouteOptions: {
+                    cwd: boot.projectRoot,
+                    logPath: boot.logPath,
+                    packageRoot: boot.projectRoot,
+                    home: fakeHome,
+                },
+            });
+            await app.listen({ host: '127.0.0.1', port });
+            const host = `127.0.0.1:${port}`;
+            try {
+                const res = await fetch(`http://${host}/api/v1/install/plan`, {
+                    method: 'POST',
+                    headers: { ...authHeaders(host), 'content-type': 'application/json' },
+                    body: JSON.stringify({
+                        target: 'global',
+                        root: fakeHome,
+                        toolIds: ['totally-unknown-tool'],
+                        policy: {
+                            force: false,
+                            interactive: false,
+                            knownPaths: [],
+                            knownPointers: [],
+                            defaultStrategy: 'surface-to-ui',
+                        },
+                    }),
+                });
+                expect(res.status).toBe(200);
+                const plan = (await res.json()) as PlanWire;
+                expect(Object.keys(plan.filesByTool)).toHaveLength(0);
+            } finally {
+                await app.close();
+                rmSync(fakeHome, { recursive: true, force: true });
+            }
+        });
+    });
+
     describe('POST /api/v1/install/apply', () => {
         beforeEach(async () => {
             boot = await bootApp({ seedFiles: 2 });

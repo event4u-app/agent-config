@@ -239,6 +239,49 @@ export const detectedPackIds = signal<string[]>([]);
 export const selectedTools = signal<Record<string, boolean>>({});
 export const selectedPacks = signal<Record<string, boolean>>({});
 
+/**
+ * Wire-shape of an InstallPlan returned by `POST /api/v1/install/plan`
+ * — mirrors `planToWire` in `src/server/routes/install.ts`. Carried
+ * client-side as `unknown`-ish on purpose: the wizard only needs the
+ * file counts per tool and the policy `defaultStrategy` to drive the
+ * Review summary + the upcoming conflict UI (Phase B3). Full structural
+ * checking happens on the server before it ships the response.
+ *
+ * road-to-unified-setup § Phase B2.
+ */
+export interface InstallPlanWire {
+    readonly version: 2;
+    readonly target: 'global' | 'project';
+    readonly root: string;
+    readonly filesByTool: Record<string, ReadonlyArray<{
+        readonly path: string;
+        readonly kind: 'deployed' | 'marker' | 'bridge';
+        readonly sha256: string | null;
+    }>>;
+    readonly mergedKeysByTool: Record<string, ReadonlyArray<{
+        readonly file: string;
+        readonly pointer: string;
+    }>>;
+    readonly policy: {
+        readonly force: boolean;
+        readonly interactive: boolean;
+        readonly knownPaths: ReadonlyArray<string>;
+        readonly knownPointers: ReadonlyArray<string>;
+        readonly defaultStrategy: 'skip' | 'overwrite' | 'surface-to-ui';
+    };
+}
+
+/**
+ * Loaded InstallPlan for the Review step — `null` until the wizard
+ * enters the Review step (or when the user has zero AI tools selected).
+ * The plan is re-fetched on every entry into Review so a back-edit on
+ * the AI-tools step is reflected in the summary without a manual
+ * refresh. road-to-unified-setup § Phase B2.
+ */
+export const installPlan = signal<InstallPlanWire | null>(null);
+export const installPlanLoading = signal(false);
+export const installPlanError = signal<string | null>(null);
+
 export function getActiveSteps(): readonly WizardStep[] {
     return getWizardSteps({ extended: extendedSteps.value });
 }

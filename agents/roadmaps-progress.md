@@ -6,7 +6,7 @@
 
 ## Overall
 
-**50 / 175 steps done · 29%**
+**51 / 175 steps done · 29%**
 
 ```text
 ████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░░   29%
@@ -21,7 +21,7 @@
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 4 | [road-to-frictionless-employee-workspace.md](roadmaps/road-to-frictionless-employee-workspace.md) | 4 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 5 | [road-to-optimized-ci-and-release-gates.md](roadmaps/road-to-optimized-ci-and-release-gates.md) | 4 | 21 | 21 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 6 | [road-to-unified-setup.md](roadmaps/road-to-unified-setup.md) | 5 | 21 | 13 | 8 | 0 | 0 | ████░░░░░░ 38% |
+| 6 | [road-to-unified-setup.md](roadmaps/road-to-unified-setup.md) | 5 | 21 | 12 | 9 | 0 | 0 | ████░░░░░░ 43% |
 
 ---
 
@@ -92,12 +92,12 @@
 
 ### [road-to-unified-setup.md](roadmaps/road-to-unified-setup.md)
 
-**Unified Setup — v4.0.0 hard-cut to a single TS install/setup engine** — 8 / 21 done (38%)
+**Unified Setup — v4.0.0 hard-cut to a single TS install/setup engine** — 9 / 21 done (43%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | A | TS engine port (~2 800 LOC, ~5–7 working days) | ✅ done | 0 | 6 | 0 | 0 | 100% |
-| B | Wire 10-step Preact wizard to the TS engine (~2–3 working days) | 🟡 in progress | 4 | 2 | 0 | 0 | 33% |
+| B | Wire 10-step Preact wizard to the TS engine (~2–3 working days) | 🟡 in progress | 3 | 3 | 0 | 0 | 50% |
 | C | Bash bootstrap (~0.5 working days) | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
 | D | Legacy deletion (~0.5 working days) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
 | E | v4.0.0 release (~0.5 working days) | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

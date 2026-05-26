@@ -41,6 +41,9 @@ import {
     extendedSteps,
     getActiveSteps,
     initialSettings,
+    installPlan,
+    installPlanError,
+    installPlanLoading,
     legacyHints,
     loaded,
     loadError,
@@ -72,6 +75,7 @@ import {
     wizardComplete,
     wizardScope,
     type DiscoveryPack,
+    type InstallPlanWire,
     type ModulesDetectResponse,
     type ProposedModulesBlock,
     type SettingsLegacyHints,
@@ -174,6 +178,7 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
+            void loadInstallPlan();
         }
     } catch (err) {
         if (err instanceof ApiCallError) {
@@ -378,6 +383,56 @@ async function refreshDiff(): Promise<void> {
     }
 }
 
+/**
+ * Fetch the install plan for the current AI-tool selection from the v4
+ * TypeScript engine (`POST /api/v1/install/plan`, wizard branch). Runs
+ * on every Review-step entry so a back-edit on the AI-tools step is
+ * reflected without a manual refresh. Empty `selectedTools` → skips
+ * the fetch and clears the plan so the Review screen renders the
+ * "nothing to install" line. road-to-unified-setup § Phase B2.
+ */
+async function loadInstallPlan(): Promise<void> {
+    const toolIds = Object.entries(selectedTools.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    if (toolIds.length === 0) {
+        installPlan.value = null;
+        installPlanError.value = null;
+        return;
+    }
+    installPlanLoading.value = true;
+    installPlanError.value = null;
+    try {
+        const res = await apiFetch<InstallPlanWire>(
+            '/api/v1/install/plan',
+            {
+                method: 'POST',
+                body: {
+                    target: 'global',
+                    root: '~',
+                    toolIds,
+                    policy: {
+                        force: false,
+                        interactive: true,
+                        knownPaths: [],
+                        knownPointers: [],
+                        defaultStrategy: 'surface-to-ui',
+                    },
+                },
+            },
+        );
+        installPlan.value = res;
+    } catch (err) {
+        installPlan.value = null;
+        const message = err instanceof ApiCallError
+            ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+            : err instanceof Error ? err.message : String(err);
+        installPlanError.value = message;
+    } finally {
+        installPlanLoading.value = false;
+    }
+}
+
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
     if (userMdBody.value === null || userMdInitial.value === null) {
@@ -406,6 +461,7 @@ async function goTo(nextIndex: number): Promise<void> {
     }
     if (next.kind === 'review') {
         void refreshDiff();
+        void loadInstallPlan();
     }
 }
 
@@ -890,8 +946,27 @@ function StepBody(): preact.JSX.Element | null {
             onScopeChange={(next): void => { wizardScope.value = next; }}
             selectedToolsCount={Object.values(selectedTools.value).filter(Boolean).length}
             selectedPacksCount={Object.values(selectedPacks.value).filter(Boolean).length}
+            installPlanByTool={extendedSteps.value ? installPlanByTool() : undefined}
+            installPlanReady={extendedSteps.value ? installPlan.value !== null : undefined}
+            installPlanError={extendedSteps.value && !installPlanLoading.value ? installPlanError.value : null}
         />
     );
+}
+
+/**
+ * Collapse the InstallPlan wire shape into the flat per-tool count map
+ * the Review panel consumes. Returns an empty map when the plan hasn't
+ * loaded yet (the panel renders the loading state in that branch).
+ * road-to-unified-setup § Phase B2.
+ */
+function installPlanByTool(): Record<string, number> {
+    const plan = installPlan.value;
+    if (plan === null) return {};
+    const out: Record<string, number> = {};
+    for (const [tool, files] of Object.entries(plan.filesByTool)) {
+        out[tool] = files.length;
+    }
+    return out;
 }
 
 export function WizardPage({ path: _path }: { path: string }): preact.JSX.Element {

@@ -32,6 +32,7 @@ import {
 import { getLogPath } from '../../install/paths.js';
 import { buildInstallPlan, type PlanSource } from '../../install/plan.js';
 import type { ApplyResult, FileEntry, FileKind, InstallPlan, InstallTarget } from '../../install/types.js';
+import { expandWizardSources } from '../../install/wizard-plan.js';
 
 /** Stable error codes surfaced over SSE (Finding #20). */
 export type ErrorCode = 'E_DISK_FULL' | 'E_PERM' | 'E_CONFLICT_UNRESOLVED' | 'E_CRASH' | 'E_WRITE';
@@ -54,12 +55,43 @@ const ConflictPolicyWireSchema = z.object({
     defaultStrategy: z.enum(['skip', 'overwrite', 'surface-to-ui']),
 });
 
-const PlanRequestSchema = z.object({
+/**
+ * Sources branch — caller has already expanded tool IDs into low-level
+ * `(srcDir, destDir, toolId, kind)` tuples. Used by the CLI and tests.
+ */
+const PlanSourcesBodySchema = z.object({
     target: InstallTargetSchema,
     root: z.string().min(1),
     sources: z.array(PlanSourceSchema),
     policy: ConflictPolicyWireSchema,
 });
+
+/**
+ * Wizard branch — caller passes the high-level UI selection (tool IDs)
+ * and the server expands them via {@link expandWizardSources}. The
+ * `packageRoot` falls back to {@link detectPackageRoot} on the install
+ * cwd; tests can pin it via `installRouteOptions.packageRoot`.
+ *
+ * Phase B2 — wires the wizard's `selectedTools` signal end-to-end so
+ * the Review step can POST without knowing filesystem paths.
+ */
+const PlanWizardBodySchema = z.object({
+    target: InstallTargetSchema,
+    root: z.string().min(1),
+    toolIds: z.array(z.string().min(1)),
+    policy: ConflictPolicyWireSchema,
+    /** Optional override for the resolved package root (tests only). */
+    packageRoot: z.string().min(1).optional(),
+});
+
+/**
+ * Top-level plan request — discriminated on the presence of `sources`
+ * vs `toolIds`. `z.union` is used (not `discriminatedUnion`) because
+ * the discriminator is structural — neither branch carries a literal
+ * `kind: "..."` field. Zod tries both schemas and returns the first
+ * match's data.
+ */
+const PlanRequestSchema = z.union([PlanSourcesBodySchema, PlanWizardBodySchema]);
 
 const FileEntrySchema: z.ZodType<FileEntry> = z.object({
     path: z.string().min(1),
@@ -161,6 +193,17 @@ export interface InstallRouteOptions {
     cwd?: string;
     /** Override the txlog path the apply route writes to (tests only). */
     logPath?: string;
+    /**
+     * Override the package root used by the wizard branch of `/plan`
+     * (tests only). When unset the route falls back to
+     * {@link detectPackageRoot} on the install cwd.
+     */
+    packageRoot?: string;
+    /**
+     * Override the user home directory used by {@link expandWizardSources}
+     * (tests only). When unset the helper falls back to `os.homedir()`.
+     */
+    home?: string;
 }
 
 /** Map a Node `fs` error code to the stable SSE error code (Finding #20). */
@@ -176,11 +219,36 @@ function writeFrame(reply: FastifyReply, payload: Record<string, unknown>): void
     reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`);
 }
 
-function planFromRequest(body: PlanRequest): InstallPlan {
+/**
+ * Resolve a {@link PlanRequest} into the low-level `PlanSource[]` array.
+ * Sources branch passes through unchanged; wizard branch runs the
+ * {@link expandWizardSources} expansion against the route's effective
+ * `packageRoot` (option override → `detectPackageRoot(cwd)` fallback).
+ *
+ * Throws when the wizard branch cannot resolve a package root — the
+ * caller maps that to a 400 with `code: 'E_NO_PACKAGE_ROOT'`.
+ */
+function resolveSources(body: PlanRequest, opts: InstallRouteOptions): PlanSource[] {
+    if ('sources' in body) return [...body.sources];
+    const packageRoot = body.packageRoot
+        ?? opts.packageRoot
+        ?? detectPackageRoot(opts.cwd ?? process.cwd());
+    if (!packageRoot) {
+        throw new Error('E_NO_PACKAGE_ROOT');
+    }
+    return expandWizardSources(
+        opts.home === undefined
+            ? { toolIds: body.toolIds, packageRoot }
+            : { toolIds: body.toolIds, packageRoot, home: opts.home },
+    );
+}
+
+function planFromRequest(body: PlanRequest, opts: InstallRouteOptions): InstallPlan {
+    const sources = resolveSources(body, opts);
     return buildInstallPlan({
         target: body.target,
         root: body.root,
-        sources: body.sources,
+        sources,
         policy: {
             force: body.policy.force,
             interactive: body.policy.interactive,
@@ -316,7 +384,19 @@ export function installRoute(opts: InstallRouteOptions = {}): FastifyPluginAsync
                 await reply.code(400).send({ error: 'invalid plan request', details: parsed.error.flatten() });
                 return;
             }
-            return planToWire(planFromRequest(parsed.data));
+            try {
+                return planToWire(planFromRequest(parsed.data, opts));
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                if (message === 'E_NO_PACKAGE_ROOT') {
+                    await reply.code(400).send({
+                        error: 'package root not found — pass `packageRoot` in the wizard payload or run the server with a discoverable cwd',
+                        code: 'E_NO_PACKAGE_ROOT',
+                    });
+                    return;
+                }
+                throw err;
+            }
         });
 
         app.post('/api/v1/install/apply', async (req, reply) => {

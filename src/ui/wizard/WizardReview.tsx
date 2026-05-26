@@ -46,6 +46,16 @@ export interface WizardReviewProps {
      */
     selectedToolsCount?: number;
     selectedPacksCount?: number;
+    /**
+     * Install plan summary — per-tool file counts plus a flag for
+     * "nothing to install". `undefined` keeps the panel hidden (legacy
+     * 7-step flow); `installPlanReady === false` shows a loading state;
+     * empty `installPlanByTool` shows the "nothing to install" line.
+     * road-to-unified-setup § Phase B2.
+     */
+    installPlanByTool?: Record<string, number>;
+    installPlanReady?: boolean;
+    installPlanError?: string | null;
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -172,6 +182,70 @@ export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
                     </label>
                 </fieldset>
             ) : null}
+            {props.installPlanByTool !== undefined ? (
+                <InstallPlanSummary
+                    byTool={props.installPlanByTool}
+                    ready={props.installPlanReady === true}
+                    error={props.installPlanError ?? null}
+                />
+            ) : null}
         </>
+    );
+}
+
+/**
+ * Renders the per-tool file-count summary returned by the v4 engine
+ * (`POST /api/v1/install/plan`). Three render states:
+ *   - loading  → "Calculating install plan…"
+ *   - error    → red banner with the server message
+ *   - ready    → list of tools + total, or "nothing to install" line
+ * road-to-unified-setup § Phase B2.
+ */
+function InstallPlanSummary(props: {
+    byTool: Record<string, number>;
+    ready: boolean;
+    error: string | null;
+}): preact.JSX.Element {
+    if (!props.ready && props.error === null) {
+        return (
+            <section class="ac-wizard__install-plan" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">Calculating install plan…</p>
+            </section>
+        );
+    }
+    if (props.error !== null) {
+        return (
+            <section class="ac-wizard__install-plan ac-wizard__install-plan--error" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">{props.error}</p>
+            </section>
+        );
+    }
+    const entries = Object.entries(props.byTool).filter(([, n]) => n > 0);
+    if (entries.length === 0) {
+        return (
+            <section class="ac-wizard__install-plan" aria-live="polite">
+                <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+                <p class="ac-wizard__install-plan-status">Nothing to install — no files match the selected tools.</p>
+            </section>
+        );
+    }
+    const total = entries.reduce((sum, [, n]) => sum + n, 0);
+    return (
+        <section class="ac-wizard__install-plan" aria-live="polite">
+            <h3 class="ac-wizard__install-plan-title">Install plan</h3>
+            <p class="ac-wizard__install-plan-status">
+                {total} file{total === 1 ? '' : 's'} across {entries.length} tool{entries.length === 1 ? '' : 's'}.
+            </p>
+            <ul class="ac-wizard__install-plan-list">
+                {entries.map(([tool, n]) => (
+                    <li key={tool} class="ac-wizard__install-plan-row">
+                        <span class="ac-wizard__install-plan-tool">{tool}</span>
+                        <span class="ac-wizard__install-plan-count">{n} file{n === 1 ? '' : 's'}</span>
+                    </li>
+                ))}
+            </ul>
+        </section>
     );
 }
