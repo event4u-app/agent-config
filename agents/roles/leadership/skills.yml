@@ -1,0 +1,22 @@
+# Team leader — skill shortlist
+# Priority-ordered. The launcher surfaces the first 5 in its default rail; the rest sit behind "more".
+
+skills:
+  - id: refine-prompt
+    why: "Tightens fuzzy weekly notes before any drafting so the summary stays honest."
+  - id: doc-coauthoring
+    why: "Section-by-section drafting for status / risk / decision memos."
+  - id: decision-record
+    why: "ADR-shaped output the team's record system already understands."
+  - id: adr-create
+    why: "When the decision is structural enough to warrant an architectural decision record."
+  - id: stakeholder-tradeoff
+    why: "When the call has product / ops / exec sponsor pulling in different directions."
+  - id: voice-and-tone-design
+    why: "Locks the leadership voice across status / risk / decision artefacts."
+  - id: messaging-architecture
+    why: "Builds the memo's argument — outcome plus evidence plus counter-case."
+  - id: scenario-modeling
+    why: "Best / base / downside frame when the risk memo demands a sweep."
+  - id: dcf-modeling
+    why: "When the decision crosses into capital-allocation territory (hire / buy / build)."

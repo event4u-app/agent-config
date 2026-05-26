@@ -22,7 +22,7 @@ You ship short-form video, marketing copy, or release announcements — solo, or
 2. **Voice-consistent post copy across three surfaces** — paste the announcement intent, get newsletter + LinkedIn + Twitter copy that reads as the same voice with the cadence each platform expects. Prompt: [`prompts/voice-consistent-copy.md`](prompts/voice-consistent-copy.md) *(scaffolded in follow-up impl PR)*.
 3. **Series consistency check before publishing** — paste the next episode's draft + a link to the existing series style guide, get a tone-drift audit before the post goes live. Prompt: [`prompts/series-consistency-audit.md`](prompts/series-consistency-audit.md) *(scaffolded in follow-up impl PR)*.
 
-## Recommended packs
+## Recommended ready-made setups
 
 - **`core`** — prompt refinement, voice locking, doc co-authoring. Always on.
 - **`content`** — voice-and-tone-design, messaging-architecture, editorial-calendar. The writing scaffolding around the video pipeline.
@@ -32,6 +32,6 @@ You ship short-form video, marketing copy, or release announcements — solo, or
 
 **MCP recommended.** Claude Desktop is the lowest-friction entry; no terminal required. See [`docs/mcp.md`](../../../docs/mcp.md). CLI is needed only when you build a custom adapter against a new video provider — `provider-lifecycle-discipline` (experimental → stable → deprecated) is the rule for that.
 
-> **What this is not:** the package does **not** host a video model. It orchestrates prompts against the provider you select (Veo, Kling, Sora, Runway, …). Trust level is the provider adapter's lifecycle tier. You pay the provider directly; the package never sees your API key.
+> **What this is not:** the package does **not** host a video model. It chains prompts against the provider you select (Veo, Kling, Sora, Runway, …). The reliability score is the provider adapter's lifecycle tier. You pay the provider directly; the package never sees your API key.
 
 > **Status:** `draft` — the three first tasks above are the maintainer's hypothesis. Recruit-session 02 will rank them against what creators actually reach for first. Prompts deferred to the follow-up impl PR.

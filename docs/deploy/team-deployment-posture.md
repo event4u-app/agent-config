@@ -58,6 +58,26 @@ them**. The cancellations stand:
 | **Team-shared overrides server** | Shared-overrides-via-git already works for the small-team case. Server only makes sense once the org-mode threshold is reached. | `road-to-team-context.md` |
 | **OAuth connectors (Google, Slack, M365)** | Per-connector OAuth flow is a permanent footprint we can't ship without an org user agreeing to scope it. | `road-to-internal-connectors.md` |
 
+### 2026-05 feedback citation — same three asks, same Hard-Floor
+
+The 9.3/10 feedback round (delivered in chat 2026-05-25) re-affirmed
+the same three P0 items the cancellations cover: OAuth knowledge
+connectors, IAM / org mode with admin roles + quotas + audit
+retention, and organization-shared memory. The verbatim asks land on
+the same Hard-Floor wall — no funded audit, no recruited team
+customer, no scope to adopt auth-adjacent code into the package.
+
+| 9.3/10 ask | Verbatim phrasing (2026-05-25) | Maps to cancellation |
+|---|---|---|
+| OAuth knowledge connectors | "GitHub / Jira / Confluence connectors so the team's docs join the agent's knowledge index" | `road-to-internal-connectors.md` |
+| IAM / org governance | "user accounts + admin roles + quotas + audit retention" | `road-to-team-sso.md` + `road-to-central-policy.md` |
+| Organization-shared memory | "team-wide memory so what one engineer answers, the next one inherits" | `road-to-team-context.md` |
+
+Each row carries the same three release gates: **recruited customer
++ funded audit + maintainer ADR**. Until all three are met, the
+cancellation stands. Feedback rounds 11+ that re-ask the same
+questions land on this row directly.
+
 Each successor roadmap is an empty-named stub today; activation
 requires a recruited team customer plus a human-reviewed security
 audit. Until then, the answer to "team SSO when?" is: **not on this

@@ -237,6 +237,8 @@ task mcp:cloud:secret-put    # opt in to bearer-auth (recommended for private de
 
 The Hard Floor on organization-mode features (SSO, central policy, OAuth connectors, team-context) is preserved by design — they stay cancelled until a real first customer + funded security audit lifts them. The small-team recipe is the supported path in the meantime.
 
+> *The 9.3/10 feedback round (2026-05-25) re-asked for OAuth knowledge connectors, IAM / org governance, and organization-shared memory. Each is a stable cancellation row in [`team-deployment-posture`](docs/deploy/team-deployment-posture.md) under the same three release gates — recruited team customer · funded audit · maintainer ADR.*
+
 ### Optional: persistent agent memory
 
 [`@event4u/agent-memory`](https://www.npmjs.com/package/@event4u/agent-memory) — MCP-based backend for cross-session learnings. **Strictly optional**; without it, skills fall back to file-based memory under `agents/memory/`.

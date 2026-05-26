@@ -29,6 +29,7 @@ import { schemaRoute } from './routes/schema.js';
 import { settingsRoute } from './routes/settings.js';
 import { userMdRoute } from './routes/userMd.js';
 import { wizardRoute } from './routes/wizard.js';
+import { workspaceRoute } from './routes/workspace.js';
 import { replayPendingCommits } from './io/atomicMultiWrite.js';
 import { PACKAGE_ROOT } from '../cli/paths.js';
 
@@ -213,6 +214,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     }));
+    await app.register(workspaceRoute({ writeRoot, packageRoot, dryRun }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that
     // crashed mid-rename. Idempotent; failures are logged and ignored so

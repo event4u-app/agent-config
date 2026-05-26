@@ -1,0 +1,20 @@
+# Support agent — skill shortlist
+# Priority-ordered. The launcher surfaces the first 5 in its default rail; the rest sit behind "more".
+
+skills:
+  - id: refine-prompt
+    why: "Tightens fuzzy ticket prompts before any drafting so the agent does not hallucinate."
+  - id: voice-and-tone-design
+    why: "Locks the support voice so every customer thread reads as one team."
+  - id: doc-coauthoring
+    why: "Section-by-section drafting for long replies that need scope + open + next-step."
+  - id: voc-extract
+    why: "Pulls verbatim customer language from threads for downstream triage."
+  - id: customer-research
+    why: "Surfaces the customer's likely concern when the ticket text is terse."
+  - id: messaging-architecture
+    why: "When the reply needs to land a hard message (price increase, deprecation)."
+  - id: churn-prevention
+    why: "When the escalation-risk analysis flags churn-signal language."
+  - id: stakeholder-tradeoff
+    why: "When the same ticket has admin, IT, and exec-sponsor demands."

@@ -531,6 +531,15 @@ tasks:
   # roadmap-ci-steps-policy). Wired into `task ci` below.
   # ---------------------------------------------------------------------------
 
+  lint-role-experiences:
+    silent: true
+    desc: |
+      Lint agents/roles/<slug>/ scaffolds — structural floor pinned in
+      docs/contracts/role-experience.md (≥ 5 prompts, ≥ 3 first tasks,
+      required frontmatter, every skill `id` resolves). Includes the
+      `--plain-language` jargon scan (docs/contracts/plain-language-surface.md).
+    cmd: python3 scripts/lint_role_experiences.py --plain-language
+
   lint-ts:
     silent: true
     desc: ESLint over src/**/*.ts (TS CLI shell — ADR-012)
