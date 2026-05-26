@@ -5,8 +5,9 @@ skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 disable-model-invocation: true
 suggestion:
-  eligible: false
-  rationale: "Explicit fresh-chat handoff — must be deliberate, never inferred from prose."
+  eligible: true
+  trigger_description: "user asks for an agent handoff, fresh-chat summary, or context-summary to paste into a new chat"
+  trigger_context: "explicit verbatim ask — phrases like 'agent handoff', 'agend handoff' (typo), 'fasse für neuen chat zusammen', 'handoff summary', 'context summary for fresh chat'. NEVER inferred from prose without a direct mention of handoff/summary-for-new-chat intent."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -70,6 +71,33 @@ Show the handoff prompt in a fenced code block and say:
 > Copy this into a new chat to continue where we left off.
 ```
 
+## Iron Law — output is ALWAYS a fenced code block
+
+```
+THE HANDOFF MUST BE WRAPPED IN A FENCED ```markdown CODE BLOCK
+SO THE USER CAN COPY IT IN ONE CLICK. NEVER RENDER IT AS LIVE
+MARKDOWN. NEVER SPLIT IT ACROSS MULTIPLE BLOCKS.
+```
+
+Use ` ```markdown ` as the fence so consumers get syntax highlighting
+and the inner content is preserved verbatim. Add one short prose line
+above the block (e.g. *"Copy this into a new chat:"*) and nothing
+after — no follow-up questions, no numbered options.
+
+## Detection — when natural-language triggers count as explicit
+
+The user does not need to type `/agent-handoff` literally. Treat as
+explicit invocation when the prompt contains a verbatim mention of:
+
+- `agent handoff` / `agend handoff` (typo) / `handoff`
+- `fresh chat`, `neuer chat`, `for a new chat`
+- `context summary for {fresh,new} chat`
+- `fasse … für … chat zusammen`
+
+A vague *"summarize this conversation"* without handoff/new-chat
+framing → NOT a trigger. Surface `/agent-handoff` as a numbered option,
+do not auto-execute.
+
 ## Rules
 
 - **Keep it concise** — the prompt should be <30 lines. More context = more input tokens in the new chat.
@@ -78,6 +106,7 @@ Show the handoff prompt in a fenced code block and say:
 - **Open tasks are critical** — the new chat needs to know what's left.
 - **Decisions are important** — prevents the new chat from re-asking settled questions.
 - **File list is optional** — only include if the new chat will need to edit specific files.
+- **NEVER render the handoff as live markdown** — see Iron Law above.
 
 ## When to use this vs. `agents/runtime/.agent-chat-history`
 
