@@ -52,3 +52,7 @@ crossing the Hard-Floor item on auth-adjacent shipping.
 - Recipe: [`docs/deploy/small-team-recipe.md`](../../../docs/deploy/small-team-recipe.md).
 - Posture: [`docs/deploy/team-deployment-posture.md`](../../../docs/deploy/team-deployment-posture.md).
 - Archived precursor: `agents/roadmaps/archive/road-to-internal-ai-os-deployment.md` (Phase 4).
+
+## 2026-05 feedback citation
+
+Feedback round 2026-05 (delivered in chat 2026-05-25 as the 9.3/10 review) re-affirmed this gap as a P0 item. The ask lands on the same three-criterion release gate: **recruited team customer + funded audit + maintainer ADR**. Until all three are met, the cancellation stands; this stub is the audit-trail entry so future review rounds do not re-derive the rationale.
