@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `4.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 366
+- **artefacts**: 367
 
 ## Commands (134)
 
@@ -191,7 +191,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (70)
+## Rules (71)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -234,6 +234,7 @@ Core framework-neutral artefacts.
 - **`model-recommendation`** — Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT)
 - **`no-attribution-footers`** — Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
+- **`no-decorative-emojis-in-git-surfaces`** — Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend
 - **`no-pr-progress-comments`** — Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true
 - **`no-roadmap-references`** — Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings
 - **`non-destructive-by-default`** — Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass

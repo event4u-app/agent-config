@@ -62,4 +62,5 @@ re-fetch to verify. Other writing commands SHOULD adopt the same pass.
 
 [`/create-pr`](../commands/create-pr.md) ·
 [`commit-conventions`](commit-conventions.md) ·
+[`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md) — sibling rule covering decorative emojis in the same surfaces ·
 [`scope-control`](scope-control.md).
