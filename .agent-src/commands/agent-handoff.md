@@ -7,7 +7,7 @@ disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "user asks for an agent handoff, fresh-chat summary, or context-summary to paste into a new chat"
-  trigger_context: "explicit verbatim ask — phrases like 'agent handoff', 'agend handoff' (typo), 'fasse für neuen chat zusammen', 'handoff summary', 'context summary for fresh chat'. NEVER inferred from prose without a direct mention of handoff/summary-for-new-chat intent."
+  trigger_context: "explicit verbatim ask — 'agent handoff', 'agend handoff' (typo), 'fasse für neuen chat zusammen', 'handoff summary', 'context summary for fresh chat'. Never inferred without a direct handoff / summary intent."
 workspaces:
   - agent-config-maintainer
 packs:
