@@ -18,9 +18,10 @@
         "paths": {
             "@cli/*": ["cli/*"],
             "@server/*": ["server/*"],
-            "@shared/*": ["shared/*"]
+            "@shared/*": ["shared/*"],
+            "@install/*": ["install/*"]
         }
     },
-    "include": ["src/cli/**/*", "src/server/**/*", "src/shared/**/*"],
+    "include": ["src/cli/**/*", "src/server/**/*", "src/shared/**/*", "src/install/**/*"],
     "exclude": ["src/ui/**/*", "node_modules", "dist", "tests"]
 }
