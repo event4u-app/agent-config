@@ -167,3 +167,8 @@ agents/reference/ai-video/*
 agents/state/
 /.claude/scheduled_tasks.lock
 /.claude/worktrees/
+
+# Package-impact A/B benchmark — materialised clones are scratch artefacts
+# (rebuilt by scripts/bench_ab_clone.py on demand). The fixture, README, and
+# scripts are tracked; only the clones tree is gitignored.
+/internal/bench/ab/clones/

@@ -1,0 +1,14 @@
+{
+  "name": "bench-ab-fixture",
+  "version": "0.1.0",
+  "description": "Neutral fixture project for the package-impact A/B benchmark. Not executed; serves as a plausible code surface for the task corpus.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "node --test tests/"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
