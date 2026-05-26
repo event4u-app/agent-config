@@ -51,6 +51,72 @@ code {
     text-transform: uppercase;
 }
 
+/*
+ * Global top navigation (road-to-unified-setup § Phase 1).
+ * Six surfaces preserved from the legacy installer GUI: Setup, Tasks,
+ * Council, Memory, Explain, Workspace. The Setup tab routes into the
+ * modern WizardPage so install + post-install share the same shell.
+ */
+.ac-topnav {
+    position: sticky;
+    top: 0;
+    z-index: 9;
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-border);
+}
+.ac-topnav__inner {
+    max-width: var(--layout-max-width);
+    margin: 0 auto;
+    padding: var(--space-3) var(--layout-side-padding);
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+}
+.ac-topnav__brand {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-right: var(--space-2);
+}
+.ac-topnav__title {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-bold);
+    margin: 0;
+    line-height: 1.2;
+}
+.ac-topnav__subtitle {
+    margin: 0;
+    color: var(--color-text-muted);
+    font-size: var(--font-size-xs);
+}
+.ac-topnav__tabs {
+    display: flex;
+    gap: var(--space-1);
+    flex: 1;
+    flex-wrap: wrap;
+}
+.ac-topnav__tab {
+    appearance: none;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--color-text-muted);
+    padding: var(--space-2) var(--space-3);
+    font: inherit;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-medium);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+}
+.ac-topnav__tab:hover {
+    background: var(--color-surface-alt);
+    color: var(--color-text);
+}
+.ac-topnav__tab--active {
+    background: var(--color-surface-alt);
+    color: var(--color-accent);
+    border-color: var(--color-border);
+}
+
 .ac-page {
     max-width: var(--layout-max-width);
     margin: 0 auto;
