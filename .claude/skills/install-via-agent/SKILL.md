@@ -1,1 +1,0 @@
-../../../.agent-src/commands/install-via-agent.md
