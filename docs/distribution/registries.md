@@ -20,6 +20,38 @@ Use this exact text for the awesome-list entry. Adjust the link anchor per direc
 - [event4u/agent-config](https://github.com/event4u-app/agent-config#readme) — Universal AI Agent OS. Audited skills, governance rules, commands, and templates for Claude Code, Cursor, Windsurf, Copilot. Bring your own provider.
 ```
 
+## PR body update — 3.2.0 reality
+
+When the maintainer opens the PR / posts the directory entry, the
+description block carries the concrete reality the 3.2.0 review
+named. Reviewer verbatim quote: *"deutlich mehr vorzuweisen als bei
+jedem vorherigen Erwähnungszeitpunkt."* The numbers below mirror the
+3.2.0 release notes and the `task adoption:status` snapshot from
+that release; refresh them before posting if a later release has
+shipped.
+
+```
+event4u/agent-config 3.2.0 ships:
+
+- 4929 tests across Python + TypeScript matrix (Linux + macOS).
+- /knowledge cluster — local-only document ingestion via markitdown;
+  per-namespace memory_retrieve with trust scoring.
+- Three role experiences (galabau / content-creator / consultant) +
+  daily workspace browser surface in the modern Preact shell.
+- Cinematic AI-video pipeline (/video:from-script, /video:scene,
+  /video:storyboard, /video:stitch) — provider-agnostic; dry-run
+  default; the package never sees API keys.
+- 9 Iron-Law rules + tier-1/2 routed kernel; ai-council
+  second-opinion loop for high-impact decisions.
+
+Bring your own provider (Anthropic / OpenAI / Google / Cloudflare).
+No SaaS; no remote sync; npx-quickstart installs in ~3 minutes.
+```
+
+Drop this block into the PR description once and reuse it across
+the three registries; it is the "deutlich mehr vorzuweisen" frame
+condensed to a half-screen.
+
 ## Submission checklist
 
 Before opening any submission PR:

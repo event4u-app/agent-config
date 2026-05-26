@@ -106,6 +106,49 @@ tasks:
       stays within the release-PR allowlist.
     cmd: python3 scripts/print_required_checks.py {{.CLI_ARGS}}
 
+  ci:status:
+    silent: true
+    desc: |
+      Assert the required-check set is green on the given branch (default
+      `main`). Wraps `gh run list`, filters phantom 0-job runs per
+      docs/contracts/ci-green-floor.md § Phantom 0-job runs, and exits
+      non-zero on any real red. Pass `--strict` to also fail on missing
+      checks (gate-mode for the freeze rule). Phase A Step 6 of
+      road-to-adoption-proof-and-ci-green.md.
+    cmd: python3 scripts/ci_status.py {{.CLI_ARGS}}
+
+  adoption:status:
+    silent: true
+    desc: |
+      One-screen adoption dashboard: registry-submission status counts
+      from docs/distribution/registry-submissions.md, recruit-session
+      report count under agents/recruit-sessions/, latest required-check
+      colour on `main`. Phase C Step 6 of
+      road-to-adoption-proof-and-ci-green.md. Pass `--json` for the
+      machine-readable shape.
+    cmd: python3 scripts/adoption_status.py {{.CLI_ARGS}}
+
+  adoption:snapshot:
+    silent: true
+    desc: |
+      Append one row to agents/runtime/metrics/adoption-snapshots.jsonl
+      with the four public adoption signals (npm installs / version
+      distribution / GitHub stars / topic-search rank). Phase D Step 2
+      of road-to-adoption-proof-and-ci-green.md. Contract:
+      docs/contracts/adoption-signal-floor.md (local-only by default;
+      no consumer telemetry). Pass `--no-network` for a CI-side dry run.
+    cmd: python3 scripts/adoption_snapshot.py {{.CLI_ARGS}}
+
+  adoption:report:
+    silent: true
+    desc: |
+      Roll up agents/runtime/metrics/adoption-snapshots.jsonl into
+      agents/runtime/metrics/adoption-report.md (rolling 8-week window
+      per signal). Phase D Step 3 of
+      road-to-adoption-proof-and-ci-green.md. Mirrors the shape of
+      `task skill-usage:report`.
+    cmd: python3 scripts/adoption_report.py {{.CLI_ARGS}}
+
   lint-bench:
     silent: true
     desc: |

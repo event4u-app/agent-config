@@ -23,9 +23,9 @@ task ci                # full pipeline — green before PR
 - **Content pipelines** — A→D source / Augment / multi-tool / Claude.ai-bundle: [`docs/architecture.md`](docs/architecture.md).
 - **Editing this repo** — Iron-Law rules + Thin-Root contract: [`augment-source-of-truth`](.agent-src/rules/augment-source-of-truth.md) + [`agents-md-thin-root`](.agent-src/skills/agents-md-thin-root/SKILL.md).
 - **Consumer story** — `npx` + `scripts/install.sh`, sandbox / offline paths: [`README.md`](README.md).
-- **Personas** — 11 review lenses (6 core · 5 specialist): [`docs/personas.md`](docs/personas.md).
-- **Discovery** — workspaces / packs / dist manifest: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md#workspaces--packs-discovery).
-- **Root layout** — maintainer-only items under [`internal/`](internal/README.md) per [`ADR-028`](docs/decisions/ADR-028-root-layout.md); per-tool toggle: `agents/.agent-tools.yml`.
+- **Personas** — 11 review lenses (6 + 5): [`docs/personas.md`](docs/personas.md).
+- **Discovery** — workspaces / packs manifest: [`ADR-013`](docs/decisions/ADR-013-discovery-frontmatter-contract.md) + [`customization`](docs/customization.md#workspaces--packs-discovery).
+- **Root layout** — maintainer items in [`internal/`](internal/README.md) per [`ADR-028`](docs/decisions/ADR-028-root-layout.md); per-tool toggle: `agents/.agent-tools.yml`.
 
 ## Emergency triage — read this when nothing else is reachable
 
@@ -34,4 +34,4 @@ task ci                # full pipeline — green before PR
 3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / 2 via `dist/router.json`).
-6. **CI checks?** — `task ci:required-checks` previews the required-check set per [`branch-protection-policy.md`](docs/contracts/branch-protection-policy.md); release gating: [`release-pr-gating.md`](docs/contracts/release-pr-gating.md).
+6. **CI checks?** — `task ci:required-checks` previews per [`branch-protection-policy.md`](docs/contracts/branch-protection-policy.md); merge floor [`ci-green-floor.md`](docs/contracts/ci-green-floor.md); release [`release-pr-gating.md`](docs/contracts/release-pr-gating.md).

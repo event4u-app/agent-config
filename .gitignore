@@ -166,6 +166,7 @@ agents/reference/ai-video/*
 # written 0600 by the GUI wizard. Never committed.
 agents/state/
 /.claude/scheduled_tasks.lock
+/.claude/worktrees/
 
 # Package-impact A/B benchmark — materialised clones are scratch artefacts
 # (rebuilt by scripts/bench_ab_clone.py on demand). The fixture, README, and
