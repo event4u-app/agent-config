@@ -78,6 +78,7 @@ Silent, before any numbered-options block. Any "yes" → don't ask:
 11. Cleanup of gitignored / auto-pruned / TTL-managed artefact? Self-managing — state inline, never offer.
 12. Numbered option contains a commit-message body, "message preview", or "Vorschlag falls Du committen willst"? Disguised commit ask — `commit-policy` violation, drop it.
 13. Commit authorized + asking "one commit or multiple?", "how should I split?", "which chunk first?"? Forbidden — `commit-policy § Always split into logical chunks`. Pick the split, state inline, execute.
+14. Artifact just landed (roadmap / ADR / plan / pitch / ticket / design doc) + offering "ready to start Phase 1?", "begin execution?", "sofort ausführen?", or a `/roadmap:process-*` menu? Forbidden — `scope-control § Authoring vs. implementation` + `scope-mechanics § Post-artifact hard stop`. Authoring verbs never inherit execution authorization. Emit the hand-back line, stop the turn.
 
 Pick dominant path, state inline assumption, hand back. Genuine ambiguity → [`ask-when-uncertain`](ask-when-uncertain.md).
 
