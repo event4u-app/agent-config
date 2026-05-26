@@ -49,10 +49,11 @@ interface BootResult {
     srcDir: string;
     destDir: string;
     logPath: string;
+    home: string;
     cleanup: () => Promise<void>;
 }
 
-async function bootApp(opts: { seedFiles?: number } = {}): Promise<BootResult> {
+async function bootApp(opts: { seedFiles?: number; home?: string } = {}): Promise<BootResult> {
     const tmp = mkdtempSync(join(tmpdir(), 'agent-config-install-'));
     const projectRoot = join(tmp, 'project');
     const writeRoot = join(tmp, 'write');
@@ -60,11 +61,13 @@ async function bootApp(opts: { seedFiles?: number } = {}): Promise<BootResult> {
     const srcDir = join(tmp, 'src');
     const destDir = join(tmp, 'dest');
     const logPath = join(tmp, 'install-log.jsonl');
+    const home = opts.home ?? join(tmp, 'home');
     mkdirSync(projectRoot, { recursive: true });
     mkdirSync(writeRoot, { recursive: true });
     mkdirSync(uiDir, { recursive: true });
     mkdirSync(srcDir, { recursive: true });
     mkdirSync(destDir, { recursive: true });
+    mkdirSync(home, { recursive: true });
     writeFileSync(join(uiDir, 'index.html'), '<!doctype html><html><body>ok</body></html>');
 
     // Fixture project shape signals: `package.json` + `.augment/` so
@@ -87,7 +90,7 @@ async function bootApp(opts: { seedFiles?: number } = {}): Promise<BootResult> {
         expectedPort: port,
         logLevel: 'fatal',
         skipReplay: true,
-        installRouteOptions: { cwd: projectRoot, logPath },
+        installRouteOptions: { cwd: projectRoot, logPath, home },
     });
     await app.listen({ host: '127.0.0.1', port });
 
@@ -105,6 +108,7 @@ async function bootApp(opts: { seedFiles?: number } = {}): Promise<BootResult> {
         srcDir,
         destDir,
         logPath,
+        home,
         cleanup,
     };
 }
@@ -411,7 +415,341 @@ describe('installRoute', () => {
             expect(aborts[0]!.note).toBe('client disconnect');
         });
     });
+
+    describe('POST /api/v1/install/plan — Phase B3 conflicts', () => {
+        beforeEach(async () => {
+            boot = await bootApp({ seedFiles: 2 });
+        });
+
+        it('returns conflicts for foreign files with byte mismatch', async () => {
+            // Pre-create one dest file with foreign content so the plan
+            // surfaces it as a conflict; the other dest stays missing so
+            // it lands as a clean write.
+            writeFileSync(join(boot.destDir, 'file-0.txt'), 'foreign-bytes\n');
+            const plan = await buildPlanForFixture(boot);
+            expect(plan.conflicts).toHaveLength(1);
+            expect(plan.conflicts[0]!.path).toBe(join(boot.destDir, 'file-0.txt'));
+            expect(plan.conflicts[0]!.mergeable).toBe(false);
+            expect(plan.conflicts[0]!.plannedSha256).toMatch(/^[a-f0-9]{64}$/);
+            expect(plan.conflicts[0]!.existingSha256).toMatch(/^[a-f0-9]{64}$/);
+        });
+
+        it('returns empty conflicts when policy.force is true', async () => {
+            writeFileSync(join(boot.destDir, 'file-0.txt'), 'foreign-bytes\n');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/plan`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    target: 'global',
+                    root: boot.destDir,
+                    sources: [
+                        { toolId: 'augment', srcDir: boot.srcDir, destDir: boot.destDir, kind: 'deployed' },
+                    ],
+                    policy: {
+                        force: true,
+                        interactive: false,
+                        knownPaths: [],
+                        knownPointers: [],
+                        defaultStrategy: 'overwrite',
+                    },
+                }),
+            });
+            const plan = (await res.json()) as PlanWire;
+            expect(plan.conflicts).toEqual([]);
+        });
+
+        it('returns empty conflicts when target is idempotent', async () => {
+            // Seed dest with the exact same bytes as source so SHA matches.
+            writeFileSync(join(boot.destDir, 'file-0.txt'), 'content-0\n');
+            const plan = await buildPlanForFixture(boot);
+            expect(plan.conflicts).toEqual([]);
+        });
+    });
+
+    describe('POST /api/v1/install/apply — Phase B3 resolutions', () => {
+        beforeEach(async () => {
+            boot = await bootApp({ seedFiles: 2 });
+            // Pre-seed both dest files with foreign bytes so both surface
+            // as conflicts; per-test resolutions drive the outcome.
+            writeFileSync(join(boot.destDir, 'file-0.txt'), 'foreign-0\n');
+            writeFileSync(join(boot.destDir, 'file-1.txt'), 'foreign-1\n');
+        });
+
+        it('per-path resolutions: skip leaves the file untouched', async () => {
+            const plan = await buildPlanForFixture(boot);
+            expect(plan.conflicts).toHaveLength(2);
+            const target0 = join(boot.destDir, 'file-0.txt');
+            const target1 = join(boot.destDir, 'file-1.txt');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
+                    resolutions: { [target0]: 'skip', [target1]: 'skip' },
+                }),
+            });
+            expect(res.status).toBe(200);
+            const frames = await readSseFrames(res);
+            const done = frames.find((f) => f.type === 'done');
+            expect((done as { summary: { skipped: number; written: number } }).summary)
+                .toMatchObject({ skipped: 2, written: 0 });
+            expect(readFileSync(target0, 'utf8')).toBe('foreign-0\n');
+            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
+        });
+
+        it('per-path resolutions: overwrite writes planned bytes', async () => {
+            const plan = await buildPlanForFixture(boot);
+            const target0 = join(boot.destDir, 'file-0.txt');
+            const target1 = join(boot.destDir, 'file-1.txt');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
+                    resolutions: { [target0]: 'overwrite', [target1]: 'overwrite' },
+                }),
+            });
+            expect(res.status).toBe(200);
+            const frames = await readSseFrames(res);
+            const done = frames.find((f) => f.type === 'done');
+            expect((done as { summary: { written: number; skipped: number } }).summary)
+                .toMatchObject({ written: 2, skipped: 0 });
+            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
+            expect(readFileSync(target1, 'utf8')).toBe('content-1\n');
+        });
+
+        it('batchChoice: skip-all expands to skip for every conflict', async () => {
+            const plan = await buildPlanForFixture(boot);
+            const target0 = join(boot.destDir, 'file-0.txt');
+            const target1 = join(boot.destDir, 'file-1.txt');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
+                    batchChoice: 'skip-all',
+                }),
+            });
+            expect(res.status).toBe(200);
+            const frames = await readSseFrames(res);
+            const done = frames.find((f) => f.type === 'done');
+            expect((done as { summary: { skipped: number } }).summary.skipped).toBe(2);
+            expect(readFileSync(target0, 'utf8')).toBe('foreign-0\n');
+            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
+        });
+
+        it('batchChoice: overwrite-all expands to overwrite for every conflict', async () => {
+            const plan = await buildPlanForFixture(boot);
+            const target0 = join(boot.destDir, 'file-0.txt');
+            const target1 = join(boot.destDir, 'file-1.txt');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
+                    batchChoice: 'overwrite-all',
+                }),
+            });
+            expect(res.status).toBe(200);
+            const frames = await readSseFrames(res);
+            const done = frames.find((f) => f.type === 'done');
+            expect((done as { summary: { written: number } }).summary.written).toBe(2);
+            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
+            expect(readFileSync(target1, 'utf8')).toBe('content-1\n');
+        });
+
+        it('per-path resolutions win over batchChoice for the same path', async () => {
+            const plan = await buildPlanForFixture(boot);
+            const target0 = join(boot.destDir, 'file-0.txt');
+            const target1 = join(boot.destDir, 'file-1.txt');
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    plan,
+                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
+                    // batch says skip-all, per-path overrides file-0 to overwrite
+                    batchChoice: 'skip-all',
+                    resolutions: { [target0]: 'overwrite' },
+                }),
+            });
+            expect(res.status).toBe(200);
+            const frames = await readSseFrames(res);
+            const done = frames.find((f) => f.type === 'done');
+            expect((done as { summary: { written: number; skipped: number } }).summary)
+                .toMatchObject({ written: 1, skipped: 1 });
+            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
+            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
+        });
+    });
+
+    describe('legacy v3 detection (Phase E2)', () => {
+        beforeEach(async () => {
+            boot = await bootApp();
+        });
+
+        it('GET /legacy-v3 reports present: false against an empty tmp home', async () => {
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/legacy-v3`, {
+                headers: authHeaders(boot.host),
+            });
+            expect(res.status).toBe(200);
+            const body = (await res.json()) as {
+                present: boolean;
+                path: string;
+                version: string | null;
+                backupTarget: string;
+            };
+            expect(body.present).toBe(false);
+            expect(body.backupTarget.endsWith('.v3.bak')).toBe(true);
+            expect(body.path.endsWith(join('.event4u', 'agent-config'))).toBe(true);
+        });
+
+        it('GET /legacy-v3 reports present: true when a v3.x VERSION file lives in the home', async () => {
+            const v3Dir = join(boot.home, '.event4u', 'agent-config');
+            mkdirSync(v3Dir, { recursive: true });
+            writeFileSync(join(v3Dir, 'VERSION'), '3.3.0\n', 'utf8');
+            writeFileSync(join(v3Dir, 'sample.txt'), 'old data', 'utf8');
+
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/legacy-v3`, {
+                headers: authHeaders(boot.host),
+            });
+            const body = (await res.json()) as { present: boolean; version: string | null };
+            expect(body.present).toBe(true);
+            expect(body.version).toBe('3.3.0');
+        });
+
+        it('POST /backup-v3 returns 409 E_NO_LEGACY_V3 when no v3 tree exists', async () => {
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/backup-v3`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            expect(res.status).toBe(409);
+            const body = (await res.json()) as { code?: string };
+            expect(body.code).toBe('E_NO_LEGACY_V3');
+        });
+
+        it('POST /backup-v3 copies the v3 tree to <home>/.event4u/agent-config.v3.bak/', async () => {
+            const v3Dir = join(boot.home, '.event4u', 'agent-config');
+            mkdirSync(v3Dir, { recursive: true });
+            writeFileSync(join(v3Dir, 'VERSION'), '3.3.0\n', 'utf8');
+            writeFileSync(join(v3Dir, 'sample.txt'), 'v3 sample', 'utf8');
+
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/backup-v3`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            expect(res.status).toBe(200);
+            const body = (await res.json()) as { ok: boolean; target: string; version: string };
+            expect(body.ok).toBe(true);
+            expect(body.version).toBe('3.3.0');
+            const backupSample = join(boot.home, '.event4u', 'agent-config.v3.bak', 'sample.txt');
+            expect(readFileSync(backupSample, 'utf8')).toBe('v3 sample');
+        });
+
+        it('POST /backup-v3 refuses to overwrite an existing backup target', async () => {
+            const v3Dir = join(boot.home, '.event4u', 'agent-config');
+            mkdirSync(v3Dir, { recursive: true });
+            writeFileSync(join(v3Dir, 'VERSION'), '3.0.0', 'utf8');
+            mkdirSync(join(boot.home, '.event4u', 'agent-config.v3.bak'), { recursive: true });
+
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/backup-v3`, {
+                method: 'POST',
+                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
+                body: JSON.stringify({}),
+            });
+            expect(res.status).toBe(409);
+            const body = (await res.json()) as { code?: string };
+            expect(body.code).toBe('E_BACKUP_EXISTS');
+        });
+    });
+
+    describe('GET /api/v1/install/recovery (Phase B4)', () => {
+        beforeEach(async () => {
+            boot = await bootApp();
+        });
+
+        it('reports `none` when the txlog does not exist', async () => {
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/recovery`, {
+                headers: authHeaders(boot.host),
+            });
+            expect(res.status).toBe(200);
+            const body = (await res.json()) as {
+                incomplete: boolean;
+                recommendation: string;
+                abortedAt: string | null;
+                lastEntries: unknown[];
+            };
+            expect(body.incomplete).toBe(false);
+            expect(body.recommendation).toBe('none');
+            expect(body.abortedAt).toBeNull();
+            expect(body.lastEntries).toEqual([]);
+        });
+
+        it('reports `resume` + abortedAt when an abort marker tails the log', async () => {
+            const abortTs = '2026-05-26T08:00:00.000Z';
+            const lines = [
+                JSON.stringify({ ts: '2026-05-26T07:59:58.000Z', kind: 'write', path: '/tmp/a', sha256: 'a' }),
+                JSON.stringify({ ts: '2026-05-26T07:59:59.000Z', kind: 'write', path: '/tmp/b', sha256: 'b' }),
+                JSON.stringify({ ts: abortTs, kind: 'abort', path: '/tmp/c', sha256: null, note: 'client disconnected' }),
+            ].join('\n') + '\n';
+            writeFileSync(boot.logPath, lines, 'utf8');
+
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/recovery`, {
+                headers: authHeaders(boot.host),
+            });
+            const body = (await res.json()) as {
+                incomplete: boolean;
+                recommendation: string;
+                abortedAt: string | null;
+                abortNote: string | null;
+                lastEntries: { kind: string }[];
+                writesSinceRollback: number;
+            };
+            expect(body.incomplete).toBe(true);
+            expect(body.recommendation).toBe('resume');
+            expect(body.abortedAt).toBe(abortTs);
+            expect(body.abortNote).toBe('client disconnected');
+            expect(body.lastEntries.length).toBe(3);
+            expect(body.lastEntries[body.lastEntries.length - 1]?.kind).toBe('abort');
+            expect(body.writesSinceRollback).toBe(2);
+        });
+
+        it('reports `none` when the newest entry is a clean rollback', async () => {
+            const lines = [
+                JSON.stringify({ ts: '2026-05-26T07:59:58.000Z', kind: 'write', path: '/tmp/a', sha256: 'a' }),
+                JSON.stringify({ ts: '2026-05-26T07:59:59.000Z', kind: 'rollback', path: '/tmp/a', sha256: null }),
+            ].join('\n') + '\n';
+            writeFileSync(boot.logPath, lines, 'utf8');
+
+            const res = await fetch(`${boot.baseUrl}/api/v1/install/recovery`, {
+                headers: authHeaders(boot.host),
+            });
+            const body = (await res.json()) as {
+                incomplete: boolean;
+                recommendation: string;
+                writesSinceRollback: number;
+            };
+            expect(body.incomplete).toBe(false);
+            expect(body.recommendation).toBe('none');
+            // Counter resets at the rollback marker.
+            expect(body.writesSinceRollback).toBe(0);
+        });
+    });
 });
+
+interface ConflictEntryWire {
+    path: string;
+    kind: 'deployed' | 'marker' | 'bridge';
+    plannedSha256: string | null;
+    existingSha256: string | null;
+    mergeable: boolean;
+}
 
 interface PlanWire {
     version: 2;
@@ -426,6 +764,7 @@ interface PlanWire {
         knownPointers: string[];
         defaultStrategy: 'skip' | 'overwrite' | 'surface-to-ui';
     };
+    conflicts: ConflictEntryWire[];
 }
 
 async function buildPlanForFixture(boot: BootResult): Promise<PlanWire> {

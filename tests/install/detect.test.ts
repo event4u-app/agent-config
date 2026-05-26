@@ -9,6 +9,7 @@ import {
     SCOPE_DETECT_AI_FILES,
     SCOPE_DETECT_MANIFESTS,
     SETTINGS_FILE,
+    detectLegacyV3,
     detectPackageRoot,
     detectPackageType,
     detectProjectShape,
@@ -152,5 +153,59 @@ describe('detect — filesystem behaviour', () => {
         expect(scopeToTarget('project')).toBe('project');
         expect(scopeToTarget('global')).toBe('global');
         expect(scopeToTarget('prompt')).toBeNull();
+    });
+});
+
+describe('detectLegacyV3 (Phase E2)', () => {
+    let home: string;
+
+    beforeEach(() => {
+        home = mkdtempSync(join(tmpdir(), 'detect-legacy-v3-'));
+    });
+
+    afterEach(() => {
+        rmSync(home, { recursive: true, force: true });
+    });
+
+    it('reports `present: false` when no .event4u/agent-config directory exists', () => {
+        const res = detectLegacyV3({ home });
+        expect(res.present).toBe(false);
+        expect(res.path).toBe(join(home, '.event4u', 'agent-config'));
+        expect(res.backupTarget).toBe(join(home, '.event4u', 'agent-config.v3.bak'));
+        expect(res.version).toBeNull();
+    });
+
+    it('reports `present: false` when VERSION is missing', () => {
+        mkdirSync(join(home, '.event4u', 'agent-config'), { recursive: true });
+        const res = detectLegacyV3({ home });
+        expect(res.present).toBe(false);
+        expect(res.version).toBeNull();
+    });
+
+    it('reports `present: true` for a v3.3.0 install', () => {
+        const dir = join(home, '.event4u', 'agent-config');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'VERSION'), '3.3.0\n', 'utf8');
+        const res = detectLegacyV3({ home });
+        expect(res.present).toBe(true);
+        expect(res.version).toBe('3.3.0');
+    });
+
+    it('reports `present: false` for v4 (current major) but surfaces the version string', () => {
+        const dir = join(home, '.event4u', 'agent-config');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'VERSION'), '4.0.0', 'utf8');
+        const res = detectLegacyV3({ home });
+        expect(res.present).toBe(false);
+        expect(res.version).toBe('4.0.0');
+    });
+
+    it('tolerates whitespace and multi-line VERSION files', () => {
+        const dir = join(home, '.event4u', 'agent-config');
+        mkdirSync(dir, { recursive: true });
+        writeFileSync(join(dir, 'VERSION'), '  3.7.1\nextra metadata\n', 'utf8');
+        const res = detectLegacyV3({ home });
+        expect(res.present).toBe(true);
+        expect(res.version).toBe('3.7.1');
     });
 });

@@ -29,7 +29,12 @@ import {
 } from './conflict.js';
 import { sha256File } from './plan.js';
 import { appendTxLog } from './txlog.js';
-import type { ApplyResult, FileEntry, InstallPlan } from './types.js';
+import type {
+    ApplyResult,
+    ConflictResolution,
+    FileEntry,
+    InstallPlan,
+} from './types.js';
 
 /** Per-file progress signal emitted by {@link applyPlan}. */
 export interface ApplyProgress {
@@ -50,6 +55,22 @@ export interface ApplyInputs {
     readonly logPath: string;
     /** Optional progress callback. */
     readonly onProgress?: (progress: ApplyProgress) => void;
+    /**
+     * Per-target conflict resolution chosen by the wizard (Phase B3).
+     *
+     * Keys are absolute target paths. When the policy would `surface` a
+     * file to the UI, the apply layer first checks this map:
+     *
+     * - `skip`      → push to {@link ApplyResult.skipped}, no write.
+     * - `overwrite` → write planned bytes verbatim.
+     * - `merge`     → JSON deep-merge planned bytes into the existing
+     *                 file (falls back to `overwrite` for non-JSON).
+     *
+     * Missing keys fall back to the policy's `surface` outcome, which
+     * the apply layer collapses to `skip` so a partial resolution map
+     * never silently overwrites unresolved entries.
+     */
+    readonly resolutions?: ReadonlyMap<string, ConflictResolution>;
 }
 
 /** Inputs accepted by {@link applyPlanStreaming}. */
@@ -76,14 +97,14 @@ export interface ApplyStreamingInputs extends ApplyInputs {
  * screen rather than crashing the install.
  */
 export function applyPlan(inputs: ApplyInputs): ApplyResult {
-    const { plan, sourceByTarget, logPath, onProgress } = inputs;
+    const { plan, sourceByTarget, logPath, onProgress, resolutions } = inputs;
     const all = flattenEntries(plan);
     const acc = newAccumulator();
 
     let index = 0;
     for (const entry of all) {
         index += 1;
-        processEntry(entry, plan, sourceByTarget, logPath, acc, index, all.length, onProgress);
+        processEntry(entry, plan, sourceByTarget, logPath, acc, index, all.length, onProgress, resolutions);
     }
 
     return { target: plan.target, ...acc };
@@ -101,7 +122,7 @@ export function applyPlan(inputs: ApplyInputs): ApplyResult {
  * surface a clean partial result instead of a zombie loop.
  */
 export async function applyPlanStreaming(inputs: ApplyStreamingInputs): Promise<ApplyResult> {
-    const { plan, sourceByTarget, logPath, onProgress, signal } = inputs;
+    const { plan, sourceByTarget, logPath, onProgress, signal, resolutions } = inputs;
     const all = flattenEntries(plan);
     const acc = newAccumulator();
 
@@ -118,7 +139,7 @@ export async function applyPlanStreaming(inputs: ApplyStreamingInputs): Promise<
             break;
         }
         index += 1;
-        processEntry(entry, plan, sourceByTarget, logPath, acc, index, all.length, onProgress);
+        processEntry(entry, plan, sourceByTarget, logPath, acc, index, all.length, onProgress, resolutions);
         // Yield to the event loop so the abort signal can fire and any
         // SSE write buffers can drain before the next entry.
         await new Promise<void>((resolve) => setImmediate(resolve));
@@ -163,6 +184,7 @@ function processEntry(
     index: number,
     total: number,
     onProgress: ((progress: ApplyProgress) => void) | undefined,
+    resolutions: ReadonlyMap<string, ConflictResolution> | undefined,
 ): void {
     try {
         if (entry.kind === 'bridge') {
@@ -206,8 +228,36 @@ function processEntry(
             return;
         }
         if (outcome === 'surface') {
-            acc.conflicts.push(entry);
-            onProgress?.({ file: entry, written: index, total, status: 'conflict' });
+            // Phase B3 — the wizard may have pre-resolved this conflict
+            // before the apply call. The `resolutions` map is keyed by
+            // absolute target path. Missing keys → unresolved conflict
+            // (acc.conflicts) so the wizard surfaces them again. An
+            // explicit `skip` resolution → acc.skipped: the user decided
+            // to leave the file alone, that is a settled outcome.
+            const resolution = resolutions?.get(entry.path);
+            if (resolution === undefined) {
+                acc.conflicts.push(entry);
+                onProgress?.({ file: entry, written: index, total, status: 'conflict' });
+                return;
+            }
+            if (resolution === 'skip') {
+                acc.skipped.push(entry);
+                onProgress?.({ file: entry, written: index, total, status: 'skipped' });
+                return;
+            }
+            const data = readFileSync(source);
+            const payload = resolution === 'merge' && isJsonTarget(entry) && exists
+                ? mergeJsonPayload(entry.path, data)
+                : data;
+            atomicWriteFile(entry.path, payload);
+            appendTxLog(logPath, {
+                ts: new Date().toISOString(),
+                kind: 'write',
+                path: entry.path,
+                sha256: entry.sha256,
+            });
+            acc.written.push(entry);
+            onProgress?.({ file: entry, written: index, total, status: 'written' });
             return;
         }
 

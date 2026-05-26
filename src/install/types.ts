@@ -125,6 +125,42 @@ export interface InstallPlan {
 }
 
 /**
+ * One foreign collision discovered at plan time.
+ *
+ * Phase B3 — surfaced by the `/api/v1/install/plan` route so the wizard's
+ * conflict screen can render single-pick / batch-resolution UI **before**
+ * the apply phase opens the transaction log. A `ConflictEntry` means the
+ * target exists, its bytes do not match the planned SHA, it is not in
+ * `policy.knownPaths`, and `policy.force` is false — i.e. the policy
+ * would surface this file to the UI during apply.
+ *
+ * `mergeable` is `true` only for `.json` deployed files; the wizard
+ * shows the per-row `merge` button only on those. `existingSha256` is
+ * the on-disk hash so the UI can render byte-equality hints when the
+ * user toggles overwrite-vs-merge.
+ */
+export interface ConflictEntry {
+    readonly path: string;
+    readonly kind: FileKind;
+    readonly plannedSha256: string | null;
+    readonly existingSha256: string | null;
+    readonly mergeable: boolean;
+}
+
+/**
+ * Per-file resolution chosen by the wizard's conflict screen.
+ *
+ * - `skip`      — leave the existing file untouched.
+ * - `overwrite` — replace the existing file with planned bytes verbatim.
+ * - `merge`     — JSON deep-merge planned bytes into the existing file.
+ *
+ * `merge` is only valid for entries with `mergeable: true`; the apply
+ * layer falls back to `overwrite` if the caller picks `merge` on a
+ * non-JSON target rather than failing the entire plan.
+ */
+export type ConflictResolution = 'skip' | 'overwrite' | 'merge';
+
+/**
  * Result of applying an {@link InstallPlan}.
  *
  * Surfaced to the wizard's progress bar (Phase B1) and recorded in the

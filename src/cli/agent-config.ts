@@ -149,6 +149,7 @@ async function main(argv: readonly string[]): Promise<number> {
                 initialRoute: '/wizard',
                 extendedSteps: true,
                 initialStep: 0,
+                wizardMode: 'install',
             };
             if (opts.port !== undefined) forwarded.port = opts.port;
             if (opts.open !== undefined) forwarded.open = opts.open;
@@ -193,6 +194,7 @@ async function main(argv: readonly string[]): Promise<number> {
                 // when the extended flow is active, jump to Identity (index 3).
                 // Non-extended mode starts at the canonical first step (0).
                 initialStep: extended ? 3 : 0,
+                wizardMode: 'setup',
             };
             if (opts.port !== undefined) forwarded.port = opts.port;
             if (opts.open !== undefined) forwarded.open = opts.open;

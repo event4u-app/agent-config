@@ -15,7 +15,16 @@
  * of byte-equality.
  */
 
-import type { ConflictPolicy, FileEntry } from './types.js';
+import { existsSync } from 'node:fs';
+
+import { sha256File } from './plan.js';
+import type {
+    ConflictEntry,
+    ConflictPolicy,
+    ConflictResolution,
+    FileEntry,
+    InstallPlan,
+} from './types.js';
 
 /** Outcome of {@link resolveFileConflict}. */
 export type ConflictOutcome = 'write' | 'skip' | 'surface';
@@ -128,6 +137,76 @@ export function parseJsonLenient(content: string): JsonObject {
 /** Heuristic for routing a {@link FileEntry} through JSON merge. */
 export function isJsonTarget(entry: FileEntry): boolean {
     return entry.kind === 'deployed' && entry.path.endsWith('.json');
+}
+
+/**
+ * Threshold at which the wizard switches the conflict screen from
+ * single-pick to batch-resolution mode (council Finding #19).
+ *
+ * Below the threshold the user picks a resolution per row; at or above
+ * it the screen renders a summary table + global CTAs to dodge the
+ * 50-click stale-tree problem.
+ */
+export const CONFLICT_BATCH_THRESHOLD = 5;
+
+/**
+ * Walk an {@link InstallPlan} and return one {@link ConflictEntry} per
+ * planned target the policy would `surface` to the UI.
+ *
+ * Pure-ish — reads from the filesystem only to compute idempotency
+ * (`existsSync` + `sha256File`). Skips bridges (`sha256 === null`) since
+ * bridge writers own a separate idempotency model. Skips entries whose
+ * `path` is in `policy.knownPaths`, and skips entries that are
+ * byte-equal to the planned content. Returns an empty array when
+ * `policy.force` is true — overwrite mode silences the screen.
+ */
+export function computeConflicts(plan: InstallPlan): readonly ConflictEntry[] {
+    if (plan.policy.force) return [];
+    const out: ConflictEntry[] = [];
+    for (const entries of Object.values(plan.filesByTool)) {
+        for (const entry of entries) {
+            if (entry.kind === 'bridge') continue;
+            if (entry.sha256 === null) continue;
+            if (!existsSync(entry.path)) continue;
+            if (plan.policy.knownPaths.has(entry.path)) continue;
+            const onDisk = sha256File(entry.path);
+            if (onDisk === entry.sha256) continue;
+            out.push({
+                path: entry.path,
+                kind: entry.kind,
+                plannedSha256: entry.sha256,
+                existingSha256: onDisk,
+                mergeable: isJsonTarget(entry),
+            });
+        }
+    }
+    return out;
+}
+
+/**
+ * Expand a batch choice into a per-path {@link ConflictResolution} map.
+ *
+ * The wizard sends either `resolutions` directly (single-pick mode) or
+ * a `batchChoice` (≥ 5 conflicts) that the server fans out across every
+ * surfaced entry. `merge-json` maps non-JSON entries to `skip` since
+ * deep-merge is JSON-only — the council picked skip over overwrite so a
+ * single non-JSON file in a batch never silently overwrites.
+ */
+export function expandBatchChoice(
+    conflicts: ReadonlyArray<ConflictEntry>,
+    choice: 'skip-all' | 'overwrite-all' | 'merge-json',
+): Record<string, ConflictResolution> {
+    const out: Record<string, ConflictResolution> = {};
+    for (const c of conflicts) {
+        if (choice === 'skip-all') {
+            out[c.path] = 'skip';
+        } else if (choice === 'overwrite-all') {
+            out[c.path] = 'overwrite';
+        } else {
+            out[c.path] = c.mergeable ? 'merge' : 'skip';
+        }
+    }
+    return out;
 }
 
 function isPlainObject(v: unknown): v is JsonObject {

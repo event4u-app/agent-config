@@ -18,6 +18,7 @@ interface StateBody {
     partial: Record<string, unknown>;
     startedAt: string | null;
     extendedSteps: boolean;
+    wizardMode?: 'install' | 'setup' | null;
 }
 
 describe('wizard initialStep (B0 dispatch)', () => {
@@ -90,6 +91,39 @@ describe('wizard initialStep (B0 dispatch)', () => {
         });
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
+    });
+
+    it('surfaces wizardMode=install when the install command boots the server (B5)', async () => {
+        ctx = await bootTestApp({ port: 41620, extendedSteps: true, initialStep: 0, wizardMode: 'install' });
+        const res = await ctx.app.inject({
+            method: 'GET',
+            url: '/api/v1/wizard/state',
+            headers: authHeaders(ctx.token, ctx.host),
+        });
+        const body = res.json() as StateBody;
+        expect(body.wizardMode).toBe('install');
+    });
+
+    it('surfaces wizardMode=setup when the setup command boots the server (B5)', async () => {
+        ctx = await bootTestApp({ port: 41621, extendedSteps: true, initialStep: 3, wizardMode: 'setup' });
+        const res = await ctx.app.inject({
+            method: 'GET',
+            url: '/api/v1/wizard/state',
+            headers: authHeaders(ctx.token, ctx.host),
+        });
+        const body = res.json() as StateBody;
+        expect(body.wizardMode).toBe('setup');
+    });
+
+    it('reports wizardMode=null when ui:serve boots without a mode (B5)', async () => {
+        ctx = await bootTestApp({ port: 41622, extendedSteps: true, initialStep: 0 });
+        const res = await ctx.app.inject({
+            method: 'GET',
+            url: '/api/v1/wizard/state',
+            headers: authHeaders(ctx.token, ctx.host),
+        });
+        const body = res.json() as StateBody;
+        expect(body.wizardMode).toBeNull();
     });
 
     it('persisted wizard-state overrides initialStep (resume wins)', async () => {

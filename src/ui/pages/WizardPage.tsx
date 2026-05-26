@@ -27,10 +27,16 @@ import { sliceSchema } from '../wizard/sliceSchema.js';
 import { StepHeader } from '../wizard/StepHeader.js';
 import { StepNav } from '../wizard/StepNav.js';
 import { WizardReview } from '../wizard/WizardReview.js';
+import { RecoveryBanner } from '../wizard/RecoveryBanner.js';
+import { ContinueScreen } from '../wizard/ContinueScreen.js';
+import { BackupScreen } from '../wizard/BackupScreen.js';
 import {
     activeTotalSteps,
     banner,
     clampStep,
+    conflictBatchChoice,
+    conflictResolutions,
+    continueAcknowledged,
     detectedPackIds,
     diffLoading,
     discoveryLoadError,
@@ -45,6 +51,10 @@ import {
     installPlanError,
     installPlanLoading,
     legacyHints,
+    legacyV3,
+    legacyV3Acknowledged,
+    legacyV3Busy,
+    legacyV3Error,
     loaded,
     loadError,
     moduleCandidates,
@@ -57,6 +67,8 @@ import {
     modulesNamespaceTemplate,
     modulesProjectRoot,
     modulesSkipped,
+    recoveryDismissed,
+    recoveryStatus,
     reviewChanges,
     saving,
     schema,
@@ -73,11 +85,16 @@ import {
     VALID_TOOLS,
     values,
     wizardComplete,
+    wizardMode,
     wizardScope,
+    type ConflictBatchChoice,
+    type ConflictResolutionWire,
     type DiscoveryPack,
     type InstallPlanWire,
+    type LegacyV3Status,
     type ModulesDetectResponse,
     type ProposedModulesBlock,
+    type RecoveryStatus,
     type SettingsLegacyHints,
     type WizardServerState,
 } from '../wizard/state.js';
@@ -133,9 +150,76 @@ async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
     }
 }
 
+/**
+ * Fetch the recovery status from `/api/v1/install/recovery` — road-to-unified-setup
+ * § Phase B4. Silent failure on transport errors so a missing endpoint
+ * (older server bundles) never blocks wizard boot; the banner just stays
+ * hidden. Aborts the result if the txlog reports a clean tail.
+ */
+async function loadRecovery(): Promise<void> {
+    try {
+        const res = await apiFetch<RecoveryStatus>('/api/v1/install/recovery');
+        recoveryStatus.value = res.incomplete ? res : null;
+    } catch {
+        recoveryStatus.value = null;
+    }
+}
+
+/**
+ * Probe the v3 legacy install state via `GET /api/v1/install/legacy-v3` —
+ * road-to-unified-setup § E2. Silent failure on transport errors so the
+ * wizard never blocks on an older server bundle.
+ */
+async function loadLegacyV3(): Promise<void> {
+    try {
+        const res = await apiFetch<LegacyV3Status>('/api/v1/install/legacy-v3');
+        legacyV3.value = res.present ? res : null;
+    } catch {
+        legacyV3.value = null;
+    }
+}
+
+async function runBackupV3(): Promise<void> {
+    legacyV3Busy.value = true;
+    legacyV3Error.value = null;
+    try {
+        await apiFetch('/api/v1/install/backup-v3', { method: 'POST' });
+        legacyV3Acknowledged.value = true;
+    } catch (err) {
+        legacyV3Error.value = err instanceof ApiCallError
+            ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+            : err instanceof Error ? err.message : String(err);
+    } finally {
+        legacyV3Busy.value = false;
+    }
+}
+
+async function dismissRecovery(reason: 'resume' | 'rollback' | 'ignore'): Promise<void> {
+    try {
+        await apiFetch('/api/v1/install/recovery/dismiss', {
+            method: 'POST',
+            body: { reason },
+        });
+    } catch (err) {
+        banner.value = {
+            message: err instanceof Error ? err.message : String(err),
+            tone: 'error',
+        };
+        return;
+    }
+    recoveryStatus.value = null;
+    recoveryDismissed.value = true;
+}
+
 async function loadAll(): Promise<void> {
     loadError.value = null;
     try {
+        // Phase B4 — fire recovery alongside the regular boot fetches so
+        // the banner is ready by the time the wizard renders Step 1.
+        void loadRecovery();
+        // Phase E2 — v3 legacy probe in parallel; the BackupScreen
+        // renders pre-Step-1 when `present: true`.
+        void loadLegacyV3();
         const [serverState, settingsRes] = await Promise.all([
             apiFetch<WizardServerState>('/api/v1/wizard/state'),
             fetchSettingsWithFallback(),
@@ -150,6 +234,9 @@ async function loadAll(): Promise<void> {
         // field; default to false to preserve the canonical 7-step
         // contract.
         extendedSteps.value = serverState.extendedSteps === true;
+        // road-to-unified-setup § B5 — adopt the wizardMode signal so the
+        // continue-screen renders on the right step transition.
+        wizardMode.value = serverState.wizardMode ?? null;
         // Resume from server partial when present; otherwise seed from disk values.
         const partialKeys = Object.keys(serverState.partial ?? {});
         values.value = partialKeys.length > 0
@@ -890,6 +977,30 @@ function PacksStepBody(): preact.JSX.Element {
 
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
+    // road-to-unified-setup § B5 — hard-stop continue-screen between the
+    // three install-only steps (ai-tools / packs / modules) and the
+    // settings section. The user just finished modules at index 2 and
+    // is now landing on Step 4 (identity, index 3). Render the handoff
+    // only when the install entry mode is active and the user has not
+    // already acknowledged the transition in this session.
+    const onContinueHandoff = extendedSteps.value
+        && wizardMode.value === 'install'
+        && stepIndex.value === 3
+        && !continueAcknowledged.value;
+    if (onContinueHandoff) {
+        return (
+            <ContinueScreen
+                busy={saving.value}
+                onContinue={(): void => {
+                    continueAcknowledged.value = true;
+                }}
+                onFinishHere={(): void => {
+                    continueAcknowledged.value = true;
+                    void goTo(activeTotalSteps() - 1);
+                }}
+            />
+        );
+    }
     if (step.kind === 'form') {
         const sliced = sliceSchema(schema.value!, step.paths ?? []);
         return (
@@ -949,6 +1060,19 @@ function StepBody(): preact.JSX.Element | null {
             installPlanByTool={extendedSteps.value ? installPlanByTool() : undefined}
             installPlanReady={extendedSteps.value ? installPlan.value !== null : undefined}
             installPlanError={extendedSteps.value && !installPlanLoading.value ? installPlanError.value : null}
+            conflicts={extendedSteps.value ? (installPlan.value?.conflicts ?? []) : undefined}
+            conflictResolutions={extendedSteps.value ? conflictResolutions.value : undefined}
+            conflictBatchChoice={extendedSteps.value ? conflictBatchChoice.value : undefined}
+            onConflictResolutionChange={extendedSteps.value
+                ? (path: string, choice: ConflictResolutionWire): void => {
+                    conflictResolutions.value = { ...conflictResolutions.value, [path]: choice };
+                }
+                : undefined}
+            onConflictBatchChoice={extendedSteps.value
+                ? (choice: ConflictBatchChoice | null): void => {
+                    conflictBatchChoice.value = choice;
+                }
+                : undefined}
         />
     );
 }
@@ -988,6 +1112,40 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     const step = stepAt(idx, { extended: extendedSteps.value });
     const isLast = idx === total - 1;
 
+    const rec = recoveryStatus.value;
+    const showRecovery = rec !== null && !recoveryDismissed.value;
+    const v3 = legacyV3.value;
+    const showBackup = v3 !== null && v3.present && !legacyV3Acknowledged.value;
+
+    // road-to-unified-setup § E2 — BackupScreen is a hard gate. Until
+    // the operator picks "Backup v3 and proceed" or "Abort", the rest
+    // of the wizard chrome stays hidden so a stale v3 tree cannot get
+    // silently overwritten by the v4 plan.
+    if (showBackup) {
+        return (
+            <div class="ac-page">
+                <BackupScreen
+                    sourcePath={v3.path}
+                    backupTarget={v3.backupTarget}
+                    version={v3.version}
+                    busy={legacyV3Busy.value}
+                    error={legacyV3Error.value}
+                    onBackupAndProceed={(): void => { void runBackupV3(); }}
+                    onAbort={(): void => {
+                        // Operator handles the cleanup manually — closing
+                        // the tab is the documented exit. We surface a
+                        // banner so they know the wizard is dismissed.
+                        banner.value = {
+                            tone: 'info',
+                            message: 'Aborted. Uninstall v3 manually, then re-run `agent-config install`.',
+                        };
+                        legacyV3Acknowledged.value = true;
+                    }}
+                />
+            </div>
+        );
+    }
+
     return (
         <div class="ac-page">
             <StepHeader
@@ -995,6 +1153,19 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                 index={idx}
                 total={total}
             />
+            {showRecovery
+                ? (
+                    <RecoveryBanner
+                        abortedAt={rec.abortedAt}
+                        abortNote={rec.abortNote}
+                        writesSinceRollback={rec.writesSinceRollback}
+                        busy={saving.value}
+                        onResume={(): void => { void dismissRecovery('resume'); }}
+                        onRollback={(): void => { void dismissRecovery('rollback'); }}
+                        onIgnore={(): void => { void dismissRecovery('ignore'); }}
+                    />
+                )
+                : null}
             {banner.value !== null
                 ? (
                     <p class={`ac-banner${banner.value.tone === 'error' ? ' ac-banner--error' : ''}`}>

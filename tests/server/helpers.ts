@@ -43,6 +43,8 @@ export interface BootOptions {
     extendedSteps?: boolean;
     /** Initial wizard step index reported when no `wizard-state.json` exists. */
     initialStep?: number;
+    /** Wizard entry mode — surfaces in `/api/v1/wizard/state.wizardMode`. */
+    wizardMode?: 'install' | 'setup' | null;
 }
 
 const PACKAGE_ROOT = resolve(process.cwd());
@@ -78,6 +80,7 @@ export async function bootTestApp(opts: BootOptions): Promise<TestApp> {
         dryRun: opts.dryRun === true,
         extendedSteps: opts.extendedSteps === true,
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
+        ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     });
     await app.ready();
 

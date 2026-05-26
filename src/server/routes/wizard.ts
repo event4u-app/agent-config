@@ -78,6 +78,14 @@ export interface WizardRouteOptions {
      */
     initialStep?: number;
     /**
+     * Wizard entry mode — road-to-unified-setup § B5. `install` runs the
+     * three install-only steps (ai-tools / packs / modules) then renders
+     * a hard-stop continue-screen before identity. `setup` skips the lead
+     * and lands on identity. `null` / undefined preserves the canonical
+     * navigation contract for legacy ui:serve callers.
+     */
+    wizardMode?: 'install' | 'setup' | null;
+    /**
      * Dry-run — POST /state writes to a per-server in-memory Map (initial
      * read still hits disk so an in-progress real run can be previewed);
      * POST /finish skips `commitMulti` and returns `{ ok, dryRun, preview }`
@@ -359,6 +367,7 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
     // stale `--initial-step=99` cannot shove the UI past the last screen.
     const rawInitial = opts.initialStep ?? 0;
     const initialStep = Math.max(0, Math.min(totalSteps - 1, Math.trunc(rawInitial)));
+    const wizardMode: 'install' | 'setup' | null = opts.wizardMode ?? null;
     const dryRun = opts.dryRun === true;
     const legacyReadRoot = opts.legacyReadRoot ?? null;
     const projectScopeRoot = opts.projectScopeRoot ?? null;
@@ -374,9 +383,21 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             // in-progress real run can be previewed.
             const existing = dryRun ? (memState ?? await readState(opts.writeRoot)) : await readState(opts.writeRoot);
             if (existing === null) {
-                return { step: initialStep, totalSteps, partial: {}, startedAt: null, extendedSteps: extended };
+                return {
+                    step: initialStep,
+                    totalSteps,
+                    partial: {},
+                    startedAt: null,
+                    extendedSteps: extended,
+                    wizardMode,
+                };
             }
-            return { ...existing, totalSteps: existing.totalSteps ?? totalSteps, extendedSteps: extended };
+            return {
+                ...existing,
+                totalSteps: existing.totalSteps ?? totalSteps,
+                extendedSteps: extended,
+                wizardMode,
+            };
         });
 
         // road-to-global-only-install § Phase 1.2 — Auto-detect endpoint.

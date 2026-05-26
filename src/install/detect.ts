@@ -17,7 +17,8 @@
  * monorepo `packages/` tree to enumerate available packs.
  */
 
-import { existsSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { join, resolve } from 'node:path';
 
 import type { InstallTarget } from './types.js';
@@ -228,4 +229,52 @@ function isDir(path: string): boolean {
     } catch {
         return false;
     }
+}
+
+/**
+ * Result of a v3-on-disk probe. road-to-unified-setup § Phase E2.
+ *
+ * The v4 wizard renders a backup-screen with two CTAs when a v3 install
+ * is detected — `path` reports where the legacy tree lives, `version`
+ * carries the first non-empty line of `<path>/VERSION` for the operator
+ * banner, `backupTarget` is the suggested destination for the rsync /
+ * cp copy. `present: false` short-circuits the banner.
+ */
+export interface LegacyV3Detection {
+    readonly present: boolean;
+    readonly path: string;
+    readonly version: string | null;
+    readonly backupTarget: string;
+}
+
+/**
+ * Detect a v3.x install at `~/.event4u/agent-config/` (or the override
+ * passed in). Returns `present: false` when the directory or the
+ * `VERSION` file is missing, or when the recorded major version is not
+ * `3.x`. The caller decides what to do with `present: true` — the wire
+ * route in `installRoute` exposes the structure 1:1.
+ */
+export function detectLegacyV3(opts: { home?: string } = {}): LegacyV3Detection {
+    const home = opts.home ?? homedir();
+    const path = join(home, '.event4u', 'agent-config');
+    const backupTarget = join(home, '.event4u', 'agent-config.v3.bak');
+    if (!isDir(path)) {
+        return { present: false, path, version: null, backupTarget };
+    }
+    const versionFile = join(path, 'VERSION');
+    if (!existsSync(versionFile)) {
+        return { present: false, path, version: null, backupTarget };
+    }
+    let raw = '';
+    try {
+        raw = readFileSync(versionFile, 'utf8').trim();
+    } catch {
+        return { present: false, path, version: null, backupTarget };
+    }
+    const firstLine = raw.split('\n', 1)[0]?.trim() ?? '';
+    const major = firstLine.split('.')[0]?.trim();
+    if (major !== '3') {
+        return { present: false, path, version: firstLine || null, backupTarget };
+    }
+    return { present: true, path, version: firstLine, backupTarget };
 }

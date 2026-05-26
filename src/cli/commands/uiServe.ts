@@ -58,6 +58,11 @@ export interface UiServeOptions {
      * passes 0 (AI tools); `setup` passes 3 (Identity).
      */
     initialStep?: number;
+    /**
+     * Wizard entry mode — `install` shows the hard-stop continue-screen
+     * after Step 3 (modules); `setup` skips it. road-to-unified-setup § B5.
+     */
+    wizardMode?: 'install' | 'setup';
 }
 
 function isHeadless(): boolean {
@@ -121,6 +126,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         dryRun,
         extendedSteps: opts.extendedSteps === true,
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
+        ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     });
 
     try {
@@ -134,6 +140,14 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         ? `#${opts.initialRoute.startsWith('/') ? opts.initialRoute : `/${opts.initialRoute}`}`
         : '';
     const url = `http://127.0.0.1:${port}/?token=${token}${hash}`;
+
+    // road-to-unified-setup § B4 — WIZARD_READY stdout contract.
+    // Emit the marker on stdout (plus the URL on the next line) so the
+    // bash bootstrap (`scripts/bootstrap.sh`) can detect "Fastify bound"
+    // without polling the port. The line is unconditional — headless
+    // CI relies on it too.
+    process.stdout.write(`WIZARD_READY ${url}\n`);
+
     logger.info(`agent-config UI on ${url}  (Ctrl-C to stop)`);
     if (tokenPath !== null) {
         logger.info(`token file: ${tokenPath}`);

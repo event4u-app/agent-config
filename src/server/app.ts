@@ -108,6 +108,11 @@ export interface CreateAppOptions {
      */
     initialStep?: number;
     /**
+     * Wizard entry mode — `install` triggers the hard-stop continue-screen
+     * after Step 3 (modules), `setup` skips it. road-to-unified-setup § B5.
+     */
+    wizardMode?: 'install' | 'setup' | null;
+    /**
      * Test-only overrides for the install route — `cwd` redirects the
      * `/detect` handler to a fixture project root, `logPath` redirects
      * the apply transaction log to a per-test temp file. Never set in
@@ -206,6 +211,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         dryRun,
         extendedSteps: opts.extendedSteps === true,
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
+        ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     }));
 
     // Boot-time 2PC replay — finishes or aborts any wizard commit that

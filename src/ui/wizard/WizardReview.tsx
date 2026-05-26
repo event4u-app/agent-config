@@ -12,6 +12,12 @@
 
 import type { JsonValue } from '../forms/schemaTypes.js';
 import type { WizardStep } from './steps.js';
+import { WizardConflicts } from './WizardConflicts.js';
+import type {
+    ConflictBatchChoice,
+    ConflictEntryWire,
+    ConflictResolutionWire,
+} from './state.js';
 
 export interface DiffRow {
     path: string;
@@ -56,6 +62,18 @@ export interface WizardReviewProps {
     installPlanByTool?: Record<string, number>;
     installPlanReady?: boolean;
     installPlanError?: string | null;
+    /**
+     * Filesystem-collision panel surfaced beneath the install summary
+     * (road-to-unified-setup § Phase B3). `undefined` keeps the panel
+     * hidden — used by the legacy 7-step flow and when the install plan
+     * hasn't loaded yet. Empty array still hides the panel because
+     * `WizardConflicts` short-circuits on zero entries.
+     */
+    conflicts?: ReadonlyArray<ConflictEntryWire>;
+    conflictResolutions?: Readonly<Record<string, ConflictResolutionWire>>;
+    conflictBatchChoice?: ConflictBatchChoice | null;
+    onConflictResolutionChange?: (path: string, choice: ConflictResolutionWire) => void;
+    onConflictBatchChoice?: (choice: ConflictBatchChoice | null) => void;
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -187,6 +205,18 @@ export function WizardReview(props: WizardReviewProps): preact.JSX.Element {
                     byTool={props.installPlanByTool}
                     ready={props.installPlanReady === true}
                     error={props.installPlanError ?? null}
+                />
+            ) : null}
+            {props.conflicts !== undefined
+                && props.conflictResolutions !== undefined
+                && props.onConflictResolutionChange !== undefined
+                && props.onConflictBatchChoice !== undefined ? (
+                <WizardConflicts
+                    conflicts={props.conflicts}
+                    resolutions={props.conflictResolutions}
+                    batchChoice={props.conflictBatchChoice ?? null}
+                    onResolutionChange={props.onConflictResolutionChange}
+                    onBatchChoice={props.onConflictBatchChoice}
                 />
             ) : null}
         </>

@@ -1,13 +1,26 @@
-import { describe, expect, it } from 'vitest';
+import { createHash } from 'node:crypto';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import {
+    CONFLICT_BATCH_THRESHOLD,
+    computeConflicts,
     deepMerge,
+    expandBatchChoice,
     isJsonTarget,
     mergeJsonContent,
     parseJsonLenient,
     resolveFileConflict,
 } from '../../src/install/conflict.js';
-import type { ConflictPolicy, FileEntry } from '../../src/install/types.js';
+import type {
+    ConflictEntry,
+    ConflictPolicy,
+    FileEntry,
+    InstallPlan,
+} from '../../src/install/types.js';
 
 function policy(overrides: Partial<ConflictPolicy> = {}): ConflictPolicy {
     return {
@@ -17,6 +30,25 @@ function policy(overrides: Partial<ConflictPolicy> = {}): ConflictPolicy {
         knownPointers: new Set(),
         defaultStrategy: 'skip',
         ...overrides,
+    };
+}
+
+function hex(content: string): string {
+    return createHash('sha256').update(content).digest('hex');
+}
+
+function plan(
+    filesByTool: Record<string, ReadonlyArray<FileEntry>>,
+    policyOverrides: Partial<ConflictPolicy> = {},
+    root = '/tmp',
+): InstallPlan {
+    return {
+        version: 2,
+        target: 'global',
+        root,
+        filesByTool,
+        mergedKeysByTool: {},
+        policy: policy(policyOverrides),
     };
 }
 
@@ -147,3 +179,137 @@ describe('conflict — isJsonTarget', () => {
         expect(isJsonTarget(entry('/x/b.json', 'bridge'))).toBe(false);
     });
 });
+
+describe('conflict — computeConflicts', () => {
+    let root: string;
+
+    beforeEach(() => {
+        root = mkdtempSync(join(tmpdir(), 'conflict-'));
+    });
+
+    afterEach(() => {
+        rmSync(root, { recursive: true, force: true });
+    });
+
+    function entry(
+        relPath: string,
+        plannedContent: string,
+        kind: FileEntry['kind'] = 'deployed',
+    ): FileEntry {
+        return {
+            path: join(root, relPath),
+            kind,
+            sha256: hex(plannedContent),
+        };
+    }
+
+    it('returns empty when policy.force is true', () => {
+        const e = entry('a.md', 'planned');
+        writeFileSync(e.path, 'on-disk');
+        const p = plan({ claude: [e] }, { force: true });
+        expect(computeConflicts(p)).toEqual([]);
+    });
+
+    it('returns empty when target does not exist', () => {
+        const e = entry('a.md', 'planned');
+        const p = plan({ claude: [e] });
+        expect(computeConflicts(p)).toEqual([]);
+    });
+
+    it('returns empty when on-disk bytes match planned sha', () => {
+        const e = entry('a.md', 'planned');
+        writeFileSync(e.path, 'planned');
+        const p = plan({ claude: [e] });
+        expect(computeConflicts(p)).toEqual([]);
+    });
+
+    it('returns empty when path is in policy.knownPaths', () => {
+        const e = entry('a.md', 'planned');
+        writeFileSync(e.path, 'on-disk');
+        const p = plan(
+            { claude: [e] },
+            { knownPaths: new Set([e.path]) },
+        );
+        expect(computeConflicts(p)).toEqual([]);
+    });
+
+    it('skips bridges (sha is null, never own bytes)', () => {
+        const bridgePath = join(root, '.cursorrules');
+        writeFileSync(bridgePath, 'foreign');
+        const e: FileEntry = { path: bridgePath, kind: 'bridge', sha256: null };
+        const p = plan({ cursor: [e] });
+        expect(computeConflicts(p)).toEqual([]);
+    });
+
+    it('surfaces foreign collision with byte mismatch', () => {
+        const e = entry('a.md', 'planned');
+        writeFileSync(e.path, 'on-disk');
+        const p = plan({ claude: [e] });
+        const conflicts = computeConflicts(p);
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts[0]).toEqual({
+            path: e.path,
+            kind: 'deployed',
+            plannedSha256: hex('planned'),
+            existingSha256: hex('on-disk'),
+            mergeable: false,
+        });
+    });
+
+    it('marks .json deployed targets as mergeable', () => {
+        const e = entry('settings.json', '{"a":1}');
+        writeFileSync(e.path, '{"b":2}');
+        const p = plan({ claude: [e] });
+        const conflicts = computeConflicts(p);
+        expect(conflicts).toHaveLength(1);
+        expect(conflicts[0]?.mergeable).toBe(true);
+    });
+
+    it('collects conflicts across multiple tools', () => {
+        const a = entry('a.md', 'p-a');
+        const b = entry('b.md', 'p-b');
+        writeFileSync(a.path, 'd-a');
+        writeFileSync(b.path, 'd-b');
+        const p = plan({ claude: [a], cursor: [b] });
+        const paths = computeConflicts(p).map((c) => c.path).sort();
+        expect(paths).toEqual([a.path, b.path].sort());
+    });
+});
+
+describe('conflict — expandBatchChoice', () => {
+    function ce(path: string, mergeable: boolean): ConflictEntry {
+        return {
+            path,
+            kind: 'deployed',
+            plannedSha256: 'p',
+            existingSha256: 'e',
+            mergeable,
+        };
+    }
+
+    it('skip-all maps every entry to skip', () => {
+        const out = expandBatchChoice([ce('/x/a', false), ce('/x/b.json', true)], 'skip-all');
+        expect(out).toEqual({ '/x/a': 'skip', '/x/b.json': 'skip' });
+    });
+
+    it('overwrite-all maps every entry to overwrite', () => {
+        const out = expandBatchChoice([ce('/x/a', false), ce('/x/b.json', true)], 'overwrite-all');
+        expect(out).toEqual({ '/x/a': 'overwrite', '/x/b.json': 'overwrite' });
+    });
+
+    it('merge-json maps mergeable to merge and non-mergeable to skip', () => {
+        const out = expandBatchChoice([ce('/x/a.md', false), ce('/x/b.json', true)], 'merge-json');
+        expect(out).toEqual({ '/x/a.md': 'skip', '/x/b.json': 'merge' });
+    });
+
+    it('returns empty map for empty conflict list', () => {
+        expect(expandBatchChoice([], 'skip-all')).toEqual({});
+    });
+});
+
+describe('conflict — CONFLICT_BATCH_THRESHOLD', () => {
+    it('exports the council Finding #19 threshold of 5', () => {
+        expect(CONFLICT_BATCH_THRESHOLD).toBe(5);
+    });
+});
+
