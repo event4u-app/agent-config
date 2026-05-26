@@ -2,12 +2,16 @@
  * Path mapping between manifest entries, source-tree files in the
  * shipped package, and destinations in the consumer project.
  *
- * The discovery manifest (ADR-015) records canonical paths rooted at
- * `.agent-src.uncompressed/` — those are the editable sources. The
- * installer materializes them into the consumer's `.augment/` tree so
- * Augment, Claude, Cursor, and the multi-tool layer can read a single
- * surface (matches the legacy `scripts/install.sh` payload sync, which
- * also writes into `.augment/`).
+ * The discovery manifest (ADR-015) records canonical paths anchored on
+ * the `.agent-src.uncompressed/` source root. Two layouts coexist:
+ *
+ *   - root layout (npm tarball):  `.agent-src.uncompressed/rules/foo.md`
+ *   - monorepo layout (dev mode): `packages/core/.agent-src.uncompressed/rules/foo.md`
+ *
+ * In both cases the segment **after** the marker is the artefact-relative
+ * path, which the installer materializes into the consumer's `.augment/`
+ * tree so Augment, Claude, Cursor, and the multi-tool layer read a
+ * single surface.
  *
  * Pure functions; no I/O. The caller passes `packageRoot` (where the
  * shipped source lives) and `projectRoot` (the consumer).
@@ -15,8 +19,17 @@
 
 import { join } from 'node:path';
 
-/** Manifest-recorded prefix for canonical source files (ADR-015). */
+/**
+ * Manifest-recorded prefix for canonical source files (ADR-015).
+ *
+ * Retained as the root-layout shape for downstream consumers that
+ * compose paths. The actual detection in this module uses
+ * {@link MANIFEST_SOURCE_MARKER} so both root and monorepo layouts work.
+ */
 export const MANIFEST_SOURCE_PREFIX = '.agent-src.uncompressed/';
+
+/** Marker that splits any manifest path into pack-prefix + artefact-rest. */
+export const MANIFEST_SOURCE_MARKER = '.agent-src.uncompressed/';
 
 /** Consumer-side destination root for materialized artefacts. */
 export const CONSUMER_DEST_PREFIX = '.augment/';
@@ -24,10 +37,28 @@ export const CONSUMER_DEST_PREFIX = '.augment/';
 export class UnknownManifestPathError extends Error {
     public readonly path: string;
     public constructor(path: string) {
-        super(`manifest path does not start with '${MANIFEST_SOURCE_PREFIX}': ${path}`);
+        super(`manifest path does not contain '${MANIFEST_SOURCE_MARKER}': ${path}`);
         this.name = 'UnknownManifestPathError';
         this.path = path;
     }
+}
+
+/**
+ * Extract the artefact-relative path (everything after the source
+ * marker). Accepts both root-layout and monorepo-layout manifest paths.
+ * Returns `null` when the marker is absent or appears mid-segment.
+ */
+function extractArtefactRest(manifestPath: string): string | null {
+    const idx = manifestPath.indexOf(MANIFEST_SOURCE_MARKER);
+    if (idx === -1) {
+        return null;
+    }
+    // The marker must either start the path or be preceded by '/', so
+    // an accidental substring inside an artefact name cannot match.
+    if (idx > 0 && manifestPath.charAt(idx - 1) !== '/') {
+        return null;
+    }
+    return manifestPath.slice(idx + MANIFEST_SOURCE_MARKER.length);
 }
 
 /**
@@ -36,10 +67,10 @@ export class UnknownManifestPathError extends Error {
  * `.augment/<rest>`.
  */
 export function manifestToConsumerRelative(manifestPath: string): string {
-    if (!manifestPath.startsWith(MANIFEST_SOURCE_PREFIX)) {
+    const rest = extractArtefactRest(manifestPath);
+    if (rest === null) {
         throw new UnknownManifestPathError(manifestPath);
     }
-    const rest = manifestPath.slice(MANIFEST_SOURCE_PREFIX.length);
     return `${CONSUMER_DEST_PREFIX}${rest}`;
 }
 
@@ -52,11 +83,13 @@ export function manifestToConsumerAbsolute(projectRoot: string, manifestPath: st
 
 /**
  * Absolute path inside the shipped package where the source file lives.
- * In the monorepo this is the working tree; in an installed npm tarball
- * it is `<node_modules>/@event4u/agent-config/.agent-src.uncompressed/...`.
+ * In the monorepo `packageRoot` is the repo root and the manifest path
+ * carries the `packages/<pack>/` prefix; in an installed npm tarball
+ * `packageRoot` is the tarball root and the manifest path starts with
+ * `.agent-src.uncompressed/` directly. `join` handles both shapes.
  */
 export function manifestToPackageSource(packageRoot: string, manifestPath: string): string {
-    if (!manifestPath.startsWith(MANIFEST_SOURCE_PREFIX)) {
+    if (extractArtefactRest(manifestPath) === null) {
         throw new UnknownManifestPathError(manifestPath);
     }
     return join(packageRoot, manifestPath);
