@@ -6,10 +6,10 @@
 
 ## Overall
 
-**42 / 116 steps done · 36%**
+**46 / 116 steps done · 40%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   36%
+████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
 ```
 
 ## Open roadmaps
@@ -18,7 +18,7 @@
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-adoption-proof-and-ci-green.md](roadmaps/road-to-adoption-proof-and-ci-green.md) | 4 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 3 | [road-to-package-impact-benchmark.md](roadmaps/road-to-package-impact-benchmark.md) | 5 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 3 | [road-to-package-impact-benchmark.md](roadmaps/road-to-package-impact-benchmark.md) | 5 | 28 | 24 | 4 | 0 | 0 | █░░░░░░░░░ 14% |
 
 ---
 
@@ -54,11 +54,11 @@
 
 ### [road-to-package-impact-benchmark.md](roadmaps/road-to-package-impact-benchmark.md)
 
-**Package-Impact Benchmark (with vs. without agent-config)** — 0 / 28 done (0%)
+**Package-Impact Benchmark (with vs. without agent-config)** — 4 / 28 done (14%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Variant target + clone scaffolding | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Variant target + clone scaffolding | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 2 | A/B runner + baseline cache | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 3 | Track A — behavioural eval A/B | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 4 | Track B — task corpus + execution runner | ⬜ not started | 4 | 0 | 0 | 0 | 0% |

@@ -30,12 +30,12 @@ This roadmap adds the missing **variant axis** — `with` vs. `without` agent-co
 
 Decide what "without the package" means physically, then build the scaffolding so both variants run on identical project state.
 
-- [ ] **Step 1: Decide target shape.** Two viable shapes — pick one, document in `internal/bench/ab/README.md`:
+- [x] **Step 1: Decide target shape.** Two viable shapes — pick one, document in `internal/bench/ab/README.md`:
   - **Shape A (recommended):** neutral fixture project (small Laravel / TS demo) under `internal/bench/ab/fixture/`. Variants differ only in whether `agent-config` is installed inside the fixture's `.claude/` + `.augment/` + `AGENTS.md`. Cleanest A/B; no risk of measuring "the package working on its own source".
   - **Shape B:** the package's own repo, cloned twice — `with` keeps `.claude/`, `without` strips it. Faster to bootstrap; risk that tasks have nowhere realistic to operate.
-- [ ] **Step 2:** Add `scripts/bench_ab_clone.py` — given a target shape, materialises `internal/bench/ab/clones/with/` and `internal/bench/ab/clones/without/`. Idempotent; `--refresh` flag forces rebuild. Gitignore the `clones/` subdir.
-- [ ] **Step 3:** Add `scripts/bench_ab_integrity.py` — diff the two clones, assert that the only difference is the agent-config surface (`.claude/`, `.augment/`, `CLAUDE.md`, top-level rule pointers). Fails loud if any task-target file diverges between variants.
-- [ ] **Step 4:** Wire `internal/bench/ab/` into `.gitignore` (artifacts only — `README.md` + structure tracked).
+- [x] **Step 2:** Add `scripts/bench_ab_clone.py` — given a target shape, materialises `internal/bench/ab/clones/with/` and `internal/bench/ab/clones/without/`. Idempotent; `--refresh` flag forces rebuild. Gitignore the `clones/` subdir.
+- [x] **Step 3:** Add `scripts/bench_ab_integrity.py` — diff the two clones, assert that the only difference is the agent-config surface (`.claude/`, `.augment/`, `CLAUDE.md`, top-level rule pointers). Fails loud if any task-target file diverges between variants.
+- [x] **Step 4:** Wire `internal/bench/ab/` into `.gitignore` (artifacts only — `README.md` + structure tracked).
 
 **Exit criteria:** `python3 scripts/bench_ab_clone.py` produces two clones; `python3 scripts/bench_ab_integrity.py` exits 0; the only structural delta is the agent-config surface.
 
