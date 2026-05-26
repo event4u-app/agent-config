@@ -63,6 +63,12 @@ concurrency:
 
 jobs:
   smoke:
+    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+    # PRs only touch package.json / CHANGELOG / marketplace / pack
+    # manifests and cannot regress the install paths this matrix
+    # exercises. push: main + the weekly cron + workflow_dispatch stay
+    # unconditional so drift the PR matrix can't see still surfaces.
+    if: ${{ github.event_name != 'pull_request' || !startsWith(github.head_ref, 'release/') }}
     name: ${{ matrix.os }} · node ${{ matrix.node }}
     runs-on: ${{ matrix.os }}
     strategy:

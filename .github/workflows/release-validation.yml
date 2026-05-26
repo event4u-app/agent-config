@@ -1,0 +1,166 @@
+name: Release Validation
+
+# Tight release-shape gate that runs ONLY on release PRs (head branch
+# matches `release/X.Y.Z`). Replaces the heavy install / test matrices
+# `tests.yml` + `smoke-public-install.yml` skip on the same condition
+# per docs/contracts/release-pr-gating.md.
+#
+# Three jobs, all targeting < 60s combined wall-clock:
+#   1. release-shape       — fail-closed shape detector via
+#                            scripts/check_release_pr_shape.py
+#   2. changelog-entry     — CHANGELOG.md must carry a non-empty section
+#                            matching the version on the head branch
+#   3. version-consistency — package.json / marketplace.json / every
+#                            packages/*/pack.yaml agree on the version
+#
+# Trigger:
+#   * `pull_request` against main, head matching `release/*`. push: main
+#     and tag triggers are owned by release-guard.yml — this workflow is
+#     PR-only by construction (it gates the PR before merge).
+
+on:
+  pull_request:
+    branches: [main, master]
+    # GitHub doesn't natively filter pull_request triggers by head branch
+    # pattern, only by base + paths. Every job below carries an inline
+    # `if:` guard so non-release PRs see the workflow as "skipped" rather
+    # than "failed".
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  release-shape:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: Release-PR shape detector
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need the full PR diff, not just the merge commit.
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Check release-PR shape
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          pr_num="${{ github.event.pull_request.number }}"
+          if [ -z "${pr_num:-}" ]; then
+            echo "::warning::No PR context — skipping shape check (workflow_dispatch)"
+            exit 0
+          fi
+          python3 scripts/check_release_pr_shape.py --pr "$pr_num"
+
+  changelog-entry:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: CHANGELOG entry exists for head version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert CHANGELOG.md has a non-empty section for the release
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          # Extract X.Y.Z from `release/X.Y.Z`. Fail closed on missing branch.
+          if [ -z "${HEAD_REF:-}" ]; then
+            echo "::warning::No head_ref — likely workflow_dispatch; skipping."
+            exit 0
+          fi
+          version="${HEAD_REF#release/}"
+          if ! [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::head_ref '$HEAD_REF' is not a release/X.Y.Z branch."
+            exit 1
+          fi
+          # Look for a CHANGELOG header line containing the exact version.
+          # The release.py-generated entries use `## X.Y.Z (...)` shape; we
+          # match the version anywhere in a heading line to stay tolerant
+          # of date suffixes, status labels, etc.
+          if ! grep -E "^#+ .*\b${version//./\\.}\b" CHANGELOG.md > /tmp/cl-match.txt; then
+            echo "::error::CHANGELOG.md has no heading for version $version."
+            echo "Run \`task release\` from main; do not hand-edit the changelog."
+            exit 1
+          fi
+          echo "Matched CHANGELOG headings:"
+          cat /tmp/cl-match.txt
+          # Assert the section under the first matching heading is non-empty.
+          python3 - "$version" <<'PY'
+          import re, sys, pathlib
+          version = sys.argv[1]
+          text = pathlib.Path("CHANGELOG.md").read_text()
+          # Find the first heading line containing the version as a whole word.
+          pat = re.compile(rf"^(#+) [^\n]*\b{re.escape(version)}\b[^\n]*$", re.MULTILINE)
+          m = pat.search(text)
+          if not m:
+              sys.exit(f"::error::Could not re-locate {version} heading in CHANGELOG.md")
+          # Body runs to the next heading at the same level or shallower.
+          level = len(m.group(1))
+          start = m.end()
+          tail = text[start:]
+          next_heading = re.search(rf"^#{{1,{level}}} ", tail, re.MULTILINE)
+          body = tail[: next_heading.start()] if next_heading else tail
+          if not body.strip():
+              sys.exit(f"::error::CHANGELOG section for {version} is empty.")
+          print(f"CHANGELOG section for {version} has {len(body.strip().splitlines())} line(s) of body.")
+          PY
+
+  version-consistency:
+    if: ${{ github.event_name == 'workflow_dispatch' || startsWith(github.head_ref, 'release/') }}
+    name: package.json / marketplace.json / pack manifests agree
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install yaml parser (stdlib doesn't ship one)
+        run: pip install PyYAML
+
+      - name: Re-run the version-consistency assertion against the PR ref
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          set -euo pipefail
+          pkg=$(jq -r '.version' package.json)
+          mp=$(jq -r '.metadata.version' .claude-plugin/marketplace.json)
+          target="${HEAD_REF#release/}"
+          echo "head_ref:            $HEAD_REF"
+          echo "package.json:        $pkg"
+          echo "marketplace.json:    $mp"
+          echo "release target:      $target"
+          fail=0
+          if [ -n "$HEAD_REF" ] && [ "$HEAD_REF" != "$target" ] && [ "$pkg" != "$target" ]; then
+            echo "::error::package.json version ($pkg) does not match release branch ($target)."
+            fail=1
+          fi
+          if [ -n "$HEAD_REF" ] && [ "$HEAD_REF" != "$target" ] && [ "$mp" != "$target" ]; then
+            echo "::error::.claude-plugin/marketplace.json metadata.version ($mp) does not match release branch ($target)."
+            fail=1
+          fi
+          if [ "$pkg" != "$mp" ]; then
+            echo "::error::package.json ($pkg) and marketplace.json ($mp) disagree."
+            fail=1
+          fi
+          # Each pack manifest declares its own version that release.py keeps in lockstep.
+          while IFS= read -r f; do
+            pack_ver=$(python3 -c "import yaml,sys; d=yaml.safe_load(open(sys.argv[1])); print(d.get('version','<missing>'))" "$f")
+            if [ "$pack_ver" != "$pkg" ]; then
+              echo "::error::$f version ($pack_ver) does not match package.json ($pkg)."
+              fail=1
+            fi
+          done < <(find packages -mindepth 2 -maxdepth 2 -name pack.yaml)
+          if [ "$fail" = "1" ]; then
+            echo "Run \`task release\` from main; do not hand-edit version pins."
+            exit 1
+          fi
+          echo "✅  Every version reference agrees on $pkg"

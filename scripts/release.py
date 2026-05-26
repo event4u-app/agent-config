@@ -623,6 +623,16 @@ def print_preview(plan: Plan) -> None:
     print(plan.changelog_entry.rstrip())
     print("─" * 72)
     print()
+    print("Release-PR CI shape (docs/contracts/release-pr-gating.md):")
+    print(
+        "  will run: Consistency · Smoke Contracts · Migration Dry-Run · "
+        "Release Validation · Release Guard (post-tag, ~30 s)"
+    )
+    print(
+        "  will skip: Tests (install / aux / python / node / windows-lockfile-export) · "
+        "Public Install Smoke — heavy install matrices cannot be regressed by a release-shape diff"
+    )
+    print()
 
 
 def confirm(prompt: str) -> bool:

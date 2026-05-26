@@ -63,6 +63,14 @@ jobs:
     # runners returns only 3, leaving cycles on the table; with only
     # 9 tests/shard the fs contention that hurt at the un-sharded
     # -P 8 setting is no longer a concern.
+    #
+    # Release-PR skip: docs/contracts/release-pr-gating.md — release
+    # PRs (head branch `release/X.Y.Z`) only touch package.json /
+    # CHANGELOG / marketplace / pack manifests and cannot regress the
+    # install script paths this job exercises. release-validation.yml
+    # is the kept surface for release PRs; push: main + workflow_dispatch
+    # stay unconditional.
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     name: Install Script Tests (${{ matrix.os }}, shard ${{ matrix.shard }}/4)
     runs-on: ${{ matrix.os }}
     strategy:
@@ -82,6 +90,10 @@ jobs:
     # Orchestrator + key-contract + one-liner smoke. Smaller suites
     # (orchestrator ~40 tests, keys <2s each, one-liner ~15s) so a
     # single job per OS hits the 1–2 min target without sharding.
+    #
+    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+    # PRs don't touch the orchestrator, key installers, or setup.sh.
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     name: Install Aux Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
@@ -112,18 +124,24 @@ jobs:
         run: bash tests/test_one_liner_entrypoints.sh
 
   python-tests:
+    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+    # PRs don't touch scripts/** or tests/** (only package.json,
+    # CHANGELOG, marketplace, pack manifests, pack READMEs).
+    #
+    # Baseline leg only: ubuntu + macOS × 3.12. The 3.10 / 3.11 / 3.13
+    # version sweep moved to .github/workflows/python-version-sweep.yml
+    # in road-to-optimized-ci-and-release-gates Phase C Step 2 — runs
+    # only on PRs whose diff touches Python paths. Minimum supported
+    # version is 3.10 (per AGENTS.md); the sweep workflow proves the
+    # range when relevant code changes.
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     name: Python Tests (${{ matrix.os }}, ${{ matrix.python-version }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        python-version: ['3.10', '3.11', '3.12', '3.13']
-        include:
-          # Minimum supported version is Python 3.10 (per AGENTS.md).
-          # macOS runs only the newest supported version to keep CI cost low.
-          - os: macos-latest
-            python-version: '3.12'
+        os: [ubuntu-latest, macos-latest]
+        python-version: ['3.12']
 
     steps:
       - uses: actions/checkout@v4
@@ -207,6 +225,11 @@ jobs:
     # duplicate; collapsed to a single build invocation.
     name: Node Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    # Release-PR skip per docs/contracts/release-pr-gating.md — release
+    # PRs don't touch src/**, tests/{cli,server,ui}/**, or
+    # packages/core/installer/**; ESLint, tsc, vitest, prepack-check
+    # have nothing new to prove.
+    if: ${{ !startsWith(github.head_ref, 'release/') }}
     strategy:
       fail-fast: false
       matrix:
@@ -254,36 +277,11 @@ jobs:
         working-directory: packages/core/installer
         run: npx vitest run --reporter=default
 
-  windows-lockfile-export:
-    # Phase 1.7 of road-to-global-first-install — guards the global-
-    # install lockfile lifecycle and the `agent-config export` path on
-    # Windows. Scoped narrowly to two test modules; the wider suite
-    # exercises POSIX-specific symlink paths that don't apply on
-    # Windows (per ADR-007 D5 "no symlink work to test" carve-out).
-    name: Windows lockfile + export tests
-    runs-on: windows-latest
-    # PYTHONIOENCODING forces stdout/stderr to UTF-8 so the ✅/❌
-    # markers compress.py prints survive Windows' default cp1252
-    # encoding (otherwise the bootstrap step crashes with
-    # UnicodeEncodeError on '\u2705').
-    env:
-      PYTHONIOENCODING: utf-8
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-          cache: 'pip'
-
-      - name: Install test deps
-        run: pip install pytest pyyaml
-
-      - name: Bootstrap generated projection (.augment/, .cursor/, …)
-        # Same reason as the python-tests job: install_global content
-        # tests need the projected `.augment/` etc. trees, which are
-        # git-ignored and rebuilt from `.agent-src/` by sync.
-        run: python scripts/compress.py --sync
-
-      - name: Run lockfile + export tests
-        run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v
+  # NOTE: windows-lockfile-export moved to
+  # .github/workflows/windows-lockfile-export.yml in
+  # road-to-optimized-ci-and-release-gates Phase C Step 1 — own
+  # workflow with a tight path-filter on scripts/install_global*.py,
+  # scripts/cmd_export.py, and the two test modules. Was previously
+  # firing on every PR touching scripts/**, even ones that never
+  # went near install_global (measured ~60-90 s wasted wall-clock
+  # on the Windows leg per such PR).
