@@ -31,6 +31,9 @@ includes:
   dev:
     taskfile: ./taskfiles/dev.yml
     flatten: true
+  bench-ab:
+    taskfile: ./taskfiles/bench-ab.yml
+    flatten: true
 
 tasks:
   _ci-start:

@@ -1,0 +1,111 @@
+version: '3'
+
+# Package-impact A/B benchmark — task entries.
+#
+# Phase 5 Step 2 of `agents/roadmaps/road-to-package-impact-benchmark.md`.
+#
+# Surfaces:
+#   task bench:ab                  — full run, dry-run mode (cheap, repeatable)
+#   task bench:ab:live             — full run, live mode (cost-bearing; per-task
+#                                    claude CLI invocation)
+#   task bench:ab:refresh-baseline — force-rebuild the `without` arm
+#   task bench:ab:track-a          — Track A behavioural eval only (no CLI)
+#   task bench:ab:track-b          — Track B task corpus (dry-run by default)
+#   task bench:ab:diff             — re-render docs/benchmark.md from latest reports
+#   task bench:ab:clones           — materialise the variant clones only
+
+vars:
+  QUIET_FLAG:
+    sh: '[ "$AGENT_SCRIPT_VERBOSITY" = "verbose" ] && echo "" || echo "--quiet"'
+
+tasks:
+  bench:ab:clones:
+    silent: true
+    desc: |
+      Materialise the `with` and `without` clones from the fixture
+      under internal/bench/ab/clones/. Idempotent — re-running without
+      --refresh leaves existing clones alone.
+    cmd: python3 scripts/bench_ab_clone.py {{.CLI_ARGS}}
+
+  bench:ab:refresh-baseline:
+    silent: true
+    desc: |
+      Force-rebuild the `without` clone and re-run Track A against it.
+      Use when the corpus has changed, the claude CLI version has
+      changed, or the target-shape hash drifted (per Phase 2 cache key).
+    cmds:
+      - python3 scripts/bench_ab_clone.py --variant without --refresh
+      - python3 scripts/bench_ab_tracka_run.py --variant without
+      - python3 scripts/bench_ab_task_runner.py --variant without --mode dry-run
+
+  bench:ab:track-a:
+    silent: true
+    desc: |
+      Track A — behavioural eval. For each prompt in
+      internal/bench/corpora/ab-tracka.yaml, verify the expected
+      rule/skill surface is present in the target clone. Cheap;
+      no Claude API spend. Phase 3.
+
+      Honours the Phase 2 cache: when the cached `without` report is
+      fresh against the current (corpus_hash, claude_cli_version,
+      target_shape_hash) triple, the `without` arm is skipped and
+      only the `with` arm re-runs. Use `bench:ab:refresh-baseline`
+      to force a `without` rebuild.
+    cmds:
+      - python3 scripts/bench_ab_clone.py --variant both
+      - python3 scripts/bench_ab_cache_dispatch.py tracka
+
+  bench:ab:track-b:
+    silent: true
+    desc: |
+      Track B — task corpus. Dry-run mode by default (stub transcript,
+      no CLI invocation — both variants score 0/13 honestly). Pass
+      `task bench:ab:track-b -- --mode live` to actually invoke the
+      claude CLI per task (cost-bearing). Phase 4.
+
+      Honours the Phase 2 cache for the without-arm (see track-a).
+    cmds:
+      - python3 scripts/bench_ab_clone.py --variant both
+      - python3 scripts/bench_ab_cache_dispatch.py trackb {{.CLI_ARGS}}
+
+  bench:ab:diff:
+    silent: true
+    desc: |
+      Re-render docs/benchmark.md from the latest paired reports
+      under internal/bench/reports/ab/. Does NOT re-run any benches.
+      Useful for tweaking the renderer without burning a fresh run.
+    cmd: python3 scripts/render_benchmark_md.py {{.QUIET_FLAG}}
+
+  bench:ab:
+    silent: true
+    desc: |
+      Full A/B run (Track A + Track B, dry-run). Renders docs/benchmark.md
+      from the resulting reports. The `without` baseline reuses the
+      Phase 2 cache when fresh — only the `with` arm re-runs on a
+      repeat invocation.
+    cmds:
+      - task: bench:ab:track-a
+      - task: bench:ab:track-b
+      - task: bench:ab:diff
+
+  bench:ab:live:
+    silent: true
+    desc: |
+      Full A/B run with Track B in live mode (each task invokes
+      `claude --print` against the variant clone). Cost-bearing —
+      use only when you want a real measurement. Set CLAUDE_CLI env
+      var to override the binary path.
+    cmds:
+      - task: bench:ab:track-a
+      - python3 scripts/bench_ab_clone.py --variant both
+      - python3 scripts/bench_ab_task_runner.py --variant both --mode live
+      - task: bench:ab:diff
+
+  lint-bench-ab:
+    silent: true
+    desc: |
+      Validate internal/bench/corpora/ab-tracka.yaml and ab-trackb.yaml
+      against their schemas, and verify docs/benchmark.md (if present)
+      carries every required section. Wires into the lint-bench
+      aggregate. Phase 5 Step 3.
+    cmd: python3 scripts/lint_bench_ab.py {{.QUIET_FLAG}}

@@ -110,12 +110,14 @@ tasks:
     silent: true
     desc: |
       Validate tests/eval/corpus-*.yaml against the contract in
-      docs/contracts/benchmark-corpus-spec.md. Enforces per-prompt
-      schema (id format, category enum, language enum, expected_skills
-      non-empty + referencing real skills, destructive prompts carry
-      expected_carve_outs). Composition gate (10/8/5/2) opt-in via
-      `--require-full`. Step-4 Phase 1 Step 3.
-    cmd: python3 scripts/lint_bench_corpus.py {{.QUIET_FLAG}}
+      docs/contracts/benchmark-corpus-spec.md (per-prompt schema,
+      composition gate). Then validate the A/B bench corpora
+      (ab-tracka.yaml, ab-trackb.yaml) and docs/benchmark.md shape
+      via scripts/lint_bench_ab.py. Step-4 Phase 1 Step 3 +
+      Phase 5 Step 3.
+    cmds:
+      - python3 scripts/lint_bench_corpus.py {{.QUIET_FLAG}}
+      - python3 scripts/lint_bench_ab.py {{.QUIET_FLAG}}
 
   lint-skills-regression:
     silent: true
