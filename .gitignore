@@ -166,3 +166,4 @@ agents/reference/ai-video/*
 # written 0600 by the GUI wizard. Never committed.
 agents/state/
 /.claude/scheduled_tasks.lock
+/.claude/worktrees/
