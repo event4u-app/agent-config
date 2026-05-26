@@ -7,6 +7,9 @@
 # Dependencies
 /vendor/
 /node_modules/
+# Unanchored — nested node_modules (workspaces, sub-packages) must
+# never enter the tree. Root /node_modules/ stays for clarity.
+node_modules/
 # pnpm — repo uses npm (package-lock.json). Stray pnpm-lock.yaml from
 # accidental `pnpm install` runs must never enter the tree.
 pnpm-lock.yaml
