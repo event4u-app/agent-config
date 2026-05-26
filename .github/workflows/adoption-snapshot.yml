@@ -1,0 +1,67 @@
+name: Adoption Snapshot (weekly + manual)
+
+# Pulls the four public adoption signals (npm installs / version
+# distribution / GitHub stars / topic-search rank) per
+# docs/contracts/adoption-signal-floor.md and appends a row to
+# agents/runtime/metrics/adoption-snapshots.jsonl. The JSONL is
+# gitignored — the workflow uploads the row as a job artifact so
+# the maintainer can pull it manually and rebuild
+# agents/runtime/metrics/adoption-report.md off-cron.
+#
+# Phase D Step 2 of road-to-adoption-proof-and-ci-green.md.
+# READ-ONLY: pulls four public API endpoints; never writes to npm /
+# GitHub / consumer machines. No consumer telemetry. No PII.
+
+on:
+  workflow_dispatch:
+    inputs:
+      no_network:
+        description: "Dry-run mode (skips the four HTTP calls)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+  schedule:
+    # Weekly snapshot — Sunday 06:00 UTC. Cron drift acceptable; the
+    # rolling-8-week report tolerates ±48h on each row.
+    - cron: "0 6 * * 0"
+
+permissions:
+  # Read-only — the snapshot only reads public endpoints. The GitHub
+  # API read uses GITHUB_TOKEN by default (avoids unauthenticated
+  # rate limits); no write scope needed.
+  contents: read
+
+jobs:
+  snapshot:
+    name: Append weekly adoption snapshot
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run adoption_snapshot.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ inputs.no_network }}" = "true" ]; then
+            python3 scripts/adoption_snapshot.py --no-network
+          else
+            python3 scripts/adoption_snapshot.py
+          fi
+
+      - name: Upload snapshot row as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: adoption-snapshot-${{ github.run_number }}
+          path: agents/runtime/metrics/adoption-snapshots.jsonl
+          if-no-files-found: warn
+          retention-days: 90
