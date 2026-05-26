@@ -5,12 +5,12 @@
 Core framework-neutral artefacts.
 
 - **id**: `core`
-- **version**: `3.3.0`
+- **version**: `4.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 366
+- **artefacts**: 365
 
-## Commands (135)
+## Commands (134)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -78,7 +78,6 @@ Core framework-neutral artefacts.
 - **`ghostwriter:write`** — Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
 - **`grill-me`** — Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 - **`implement-ticket`** — Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
-- **`install-via-agent`** — Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY.
 - **`jira-ticket`** — Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
 - **`judge`** — Judge orchestrator — routes to solo, steps, on-diff
 - **`judge:on-diff`** — Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
