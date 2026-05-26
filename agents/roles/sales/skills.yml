@@ -1,0 +1,21 @@
+# Sales rep — skill shortlist
+# Priority-ordered. The launcher surfaces the first 5 in its default rail; the rest sit behind "more".
+# Each id must resolve to an existing skill — verified by lint_role_experiences.py.
+
+skills:
+  - id: refine-prompt
+    why: "Tightens fuzzy buyer briefs before drafting so the agent does not invent scope."
+  - id: voice-and-tone-design
+    why: "Locks the deal voice across customer + procurement + exec sponsor."
+  - id: doc-coauthoring
+    why: "Section-by-section drafting flow for offers, MSAs, and discovery decks."
+  - id: messaging-architecture
+    why: "Builds the offer's value proof — outcome plus supporting evidence."
+  - id: competitive-positioning
+    why: "Surfaces the ours-vs-theirs delta when the buyer names a competitor."
+  - id: customer-research
+    why: "Frames the buyer's likely concern from LinkedIn / website / inbound context."
+  - id: funnel-analysis
+    why: "Stage discipline — what does this email move forward, what does it confirm."
+  - id: stakeholder-tradeoff
+    why: "When buyer / procurement / exec sponsor pull in different directions."

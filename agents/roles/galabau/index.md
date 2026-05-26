@@ -22,10 +22,10 @@ You run or co-run a small Garten-und-Landschaftsbau shop. You draft customer off
 2. **Customer-email reply with the right tone** — paste the customer's e-mail, tell the agent the desired tone (warm-but-firm, neutral, apology), get a reply that reads as if you wrote it on a good day. Prompt: [`prompts/customer-email-reply.md`](prompts/customer-email-reply.md) *(scaffolded in follow-up impl PR)*.
 3. **Project-brief refinement before the team meeting** — fuzzy customer notes in, structured project brief with assumptions + open questions out, ready to walk the on-site lead through. Prompt: [`prompts/project-brief-refine.md`](prompts/project-brief-refine.md) *(scaffolded in follow-up impl PR)*.
 
-## Recommended packs
+## Recommended ready-made setups
 
 - **`core`** — the always-on skill kernel: prompt refinement, voice locking, doc co-authoring. Everything below depends on it.
-- **`content`** — the editorial-craft pack: tone-by-context matrix, voice-and-tone-design, messaging-architecture. Galabau-relevant because the same offer goes to a private homeowner and to a property-management firm with very different voice expectations.
+- **`content`** — the editorial-craft setup: tone-by-context matrix, voice-and-tone-design, messaging-architecture. Galabau-relevant because the same offer goes to a private homeowner and to a property-management firm with very different voice expectations.
 
 ## Install path
 
