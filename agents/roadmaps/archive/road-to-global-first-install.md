@@ -241,7 +241,7 @@ imperative-first build, hybrid declarative only if validation gate trips.
   Desktop with new `📌 = informational marker` legend entry).
   Synchronised `packages/create-agent-config/src/install.js` `--tools`
   help text to include `roocode,continue`. Updated
-  `.agent-src.uncompressed/skills/readme-writing-package/SKILL.md` §
+  `.agent-src.uncondensed/skills/readme-writing-package/SKILL.md` §
   "Per-AI catalog pattern" with the flat-list pattern, when to use it
   vs. a capability matrix, and a deep link to the README example.
   Catalog reflects shipped reality (12 AIs); Phase 2.2 will append 4

@@ -1,6 +1,6 @@
 # Skills Audit Results
 
-> Generated from linter baseline. 111 unique uncompressed skills.
+> Generated from linter baseline. 111 unique uncondensed skills.
 > Baseline: 110 fail, 1 warn, 0 pass.
 
 ## Audit Table
@@ -98,8 +98,8 @@
 | 89 | `security` | fail | 3 | 5 | **SPLIT** | Mix of conventions (input validation, mass assignment, headers) and procedure; extract conventions → guideline `php/security.md`; keep auth/policy creation workflow |
 | 90 | `sentry-integration` | fail | 3 | 5 | **KEEP** | Upgrade to template — project-specific MCP tools, MonitoringHelper convention, investigation workflow |
 | 91 | `sequential-thinking` | fail | 3 | 4 | **KEEP** | Upgrade to template — clear reasoning framework with revision tracking and branch exploration; distinct meta-skill |
-| 92 | `skill-caveman-compression` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — compression is one step of skill lifecycle, not standalone workflow |
-| 93 | `skill-decompression` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — decompression is one step of skill lifecycle |
+| 92 | `skill-telegraph-condensation` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — condensation is one step of skill lifecycle, not standalone workflow |
+| 93 | `skill-decondensation` | fail | 1 | 0 | **MERGE** | Merge into single `skill-management` skill — decondensation is one step of skill lifecycle |
 | 94 | `skill-linter` | fail | 1 | 1 | **MERGE** | Merge into `skill-reviewer` — linting is a subset of skill review; heavy structural overlap |
 | 95 | `skill-refactor` | fail | 1 | 2 | **MERGE** | Merge into single `skill-management` skill — refactoring is one step of skill lifecycle |
 | 96 | `skill-reviewer` | fail | 5 | 6 | **KEEP** | Upgrade to template — 5 Killers checklist is unique and actionable; absorb `skill-linter` and `skill-validator` |
@@ -177,7 +177,7 @@
 | `learning-to-rule-or-skill` | `post-task-learning-capture` |
 | `universal-project-analysis` | `project-analysis-laravel` |
 | `skill-reviewer` | `skill-linter`, `skill-validator` |
-| `skill-management` (new) | `skill-caveman-compression`, `skill-decompression`, `skill-refactor` |
+| `skill-management` (new) | `skill-telegraph-condensation`, `skill-decondensation`, `skill-refactor` |
 | `pest-testing` | `test-generator` |
 | `markdown-safe-codeblocks` → rule | `markdown-template-generator` (partial) |
 

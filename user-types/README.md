@@ -14,7 +14,7 @@ discovery time the runtime intersects `recommended_for_user_types`
 frontmatter against the configured `personal.user_type` and surfaces
 the matching subset first.
 
-This axis is **distinct** from `.agent-src.uncompressed/user-types/`
+This axis is **distinct** from `.agent-src.uncondensed/user-types/`
 (refine-ticket review-lens axis, owned by `step-6-user-types-axis.md`).
 Same word, different layer:
 

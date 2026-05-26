@@ -172,7 +172,7 @@ Before shipping a senior skill that opts into the spine:
 
 ## See also
 
-- `.agent-src.uncompressed/rules/skill-quality.md` § Senior-Tier
+- `.agent-src.uncondensed/rules/skill-quality.md` § Senior-Tier
   Required Structure — the four blocks every `tier: senior` skill
   ships independently of spine opt-in.
 - `docs/contracts/cross-wing-handoff.md` — typed handoffs between

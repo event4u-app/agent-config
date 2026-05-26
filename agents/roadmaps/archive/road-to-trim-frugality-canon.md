@@ -17,7 +17,7 @@ produce empirical baseline before any Phase 1+ trim ships.
 **Reference inputs:**
 `agents/council-questions/trim-frugality-canon.md`,
 `agents/council-responses/trim-frugality-canon.json`,
-`.agent-src.uncompressed/contexts/contracts/frugality-charter.md`.
+`.agent-src.uncondensed/contexts/contracts/frugality-charter.md`.
 
 ## Purpose
 
@@ -41,7 +41,7 @@ against conversation logs." No trim ships until baseline exists.
 - [x] **0.2** Build a measurement harness in `scripts/measure_frugality_savings.py`:
       counts per-turn output tokens, counts avoided follow-up turns
       (heuristic: replies ending without a question that previously
-      had one), counts caveman-compression deltas.
+      had one), counts telegraph-condensation deltas.
 - [x] **0.3** Run harness against current canon → baseline JSON in
       `agents/.frugality-baseline.jsonl` (gitignored).
 - [x] **0.4** Lock the **expected savings floor** (e.g. ≥ 200 output
@@ -74,7 +74,7 @@ Phase 4 slow-rollout reactivation). Soak ≥ 24 h before next.
 measurement (Phase 0) re-run shows no regression below the locked
 savings floor.
 
-### Phase 2 — Iron-Law Compression (≤ 0.5 day each, sequential)
+### Phase 2 — Iron-Law Condensation (≤ 0.5 day each, sequential)
 
 High-bite, low-margin work. Each Iron-Law edit must keep the literal
 ALL-CAPS-fenced enforcement surface intact; only restatements are
@@ -145,7 +145,7 @@ writer skill — bloats writer flows.
 ## Out of scope
 
 - Merging frugality rules across abstraction layers (council
-  rejected: `direct-answers` ≠ `caveman-speak` ≠ `token-efficiency`).
+  rejected: `direct-answers` ≠ `telegraph-speak` ≠ `token-efficiency`).
 - New frugality rules. This roadmap shrinks the existing surface only.
 - Cross-host parity beyond Augment + Claude Code (sibling roadmap
   scope).

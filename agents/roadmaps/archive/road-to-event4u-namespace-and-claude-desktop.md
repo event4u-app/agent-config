@@ -216,7 +216,7 @@ user-scope surface (`scripts/install.py` user-global deploy path):
 - [x] **Step 1:** Run `task ci` end-to-end. PR-gating subset
       (`.github/workflows/consistency.yml`) is green: `sync-check`,
       `sync-check-hashes`, `sync`, `generate-tools`,
-      `check_references`, `check_portability`, `check_compression`,
+      `check_references`, `check_portability`, `check_condensation`,
       `check_iron_law_prominence`, `check-always-budget`,
       `lint-marketplace`, `lint-agents-md`, `ci-cloud-bundle`,
       `ci-linear-digest`, `readme_linter`, full pytest (56/56). Two

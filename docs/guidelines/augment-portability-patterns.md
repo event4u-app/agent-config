@@ -2,7 +2,7 @@
 
 > Editing or creating files inside .augment/ directory — skills, rules, commands, templates, contexts must be project-agnostic
 
-_Origin: migrated from `.agent-src.uncompressed/rules/augment-portability.md` per P4.2 of `road-to-kernel-and-router.md`._
+_Origin: migrated from `.agent-src.uncondensed/rules/augment-portability.md` per P4.2 of `road-to-kernel-and-router.md`._
 
 # Package Portability
 
@@ -39,8 +39,8 @@ content into any of them pollutes downstream projects or misleads agents.
 Skills, rules, commands, guidelines, personas, and context docs run in
 **consumer projects**, which may not have Task installed. **Never**
 reference a `task <something>` invocation inside any artefact file
-under `.agent-src.uncompressed/{skills,rules,commands,guidelines,personas,contexts}/`
-(and therefore also not in the compressed mirror under `.agent-src/`).
+under `.agent-src.uncondensed/{skills,rules,commands,guidelines,personas,contexts}/`
+(and therefore also not in the condensed mirror under `.agent-src/`).
 Use direct script invocations instead.
 
 ## Consumer CLI — `./agent-config`
@@ -61,7 +61,7 @@ invocation.
 
 ## Enforcement
 
-`scripts/check_portability.py` scans `.augment/`, `.agent-src.uncompressed/`,
+`scripts/check_portability.py` scans `.augment/`, `.agent-src.uncondensed/`,
 and the package repo's root `AGENTS.md` + `.github/copilot-instructions.md`
 for forbidden identifiers, for any `task <name>` invocation inside
 artefact files, and for direct script invocations that bypass the

@@ -85,7 +85,7 @@ Cluster locked in
   [`ghostwriter-schema § exclusions`](../docs/contracts/ghostwriter-schema.md).
 - **No commit / push / PR** unless the sub-command explicitly authorises
   it (none currently do).
-- **Edit `.agent-src.uncompressed/` only.** `.agent-src/` and `.augment/`
+- **Edit `.agent-src.uncondensed/` only.** `.agent-src/` and `.augment/`
   regenerate from source.
 
 ## Storage model (recap)
@@ -94,7 +94,7 @@ Cluster locked in
 |---|---|---|
 | `agents/reference/ghostwriter/<slug>.md` (consumer) | Real-person public-figure profiles | **No** — gitignored by default. `--shared` opt-in deferred to v2. |
 | `agents/reference/ghostwriter/README.md` (consumer) | Directory anchor + how-to | Yes |
-| `.agent-src.uncompressed/ghostwriter/*.md` (package) | `fictional: true` fixtures only | Yes — CI-enforced by `scripts/lint_ghostwriter_source.py` |
+| `.agent-src.uncondensed/ghostwriter/*.md` (package) | `fictional: true` fixtures only | Yes — CI-enforced by `scripts/lint_ghostwriter_source.py` |
 
 Slug = full-name kebab-case with optional `-<discriminator>` suffix
 (`alice-walker` vs `alice-walker-novelist`). The package never

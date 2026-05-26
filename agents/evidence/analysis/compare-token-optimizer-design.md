@@ -17,7 +17,7 @@ assets together as a decision tree, kept fresh as new tools/rules land.
 | CLI subcmds | `rtk-output-filtering` | skill | rtk catalog, install, project filters |
 | Document conv | `markitdown` | skill | PDF/Office/HTML → MD |
 | Context window | `agent-handoff` | skill | fresh-chat handoff |
-| Source compression | `compress.{sh,py}`, `check_compression.py` | scripts | `.agent-src.uncompressed/` → `.agent-src/` |
+| Source condensation | `condense.{sh,py}`, `check_condensation.py` | scripts | `.agent-src.uncondensed/` → `.agent-src/` |
 | Cost metering | `/cost:report` (in-flight P1.2 of `road-to-ruflo-adoption.md`) | command | per-session JSONL + alert ladder |
 
 **Gap:** no single consult point at the *moment of decision*. Today the

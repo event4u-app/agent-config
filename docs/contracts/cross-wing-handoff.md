@@ -54,15 +54,15 @@ linter rejects it.
 ## § 3 — Worktree boundary
 
 Each handoff MAY run in a fresh git worktree when invoked through
-[`subagent-orchestration`](../../.agent-src.uncompressed/skills/subagent-orchestration/SKILL.md)
+[`subagent-orchestration`](../../.agent-src.uncondensed/skills/subagent-orchestration/SKILL.md)
 mode 6 (`do-in-worktrees`). Mode 6 is the state-machine layer — it
 declares when worktree isolation is mandatory (multi-step cross-wing
 chain, each step ≥30 min, branch state would otherwise leak between
 steps) and what handoff shape each step emits / consumes. The
 executor lives in
-[`using-git-worktrees`](../../.agent-src.uncompressed/skills/using-git-worktrees/SKILL.md)
+[`using-git-worktrees`](../../.agent-src.uncondensed/skills/using-git-worktrees/SKILL.md)
 and
-[`finishing-a-development-branch`](../../.agent-src.uncompressed/skills/finishing-a-development-branch/SKILL.md);
+[`finishing-a-development-branch`](../../.agent-src.uncondensed/skills/finishing-a-development-branch/SKILL.md);
 this contract does not duplicate that runtime.
 
 The boundary is **advisory** for chains that do not opt into mode 6:
@@ -128,7 +128,7 @@ Three shipped chains across the suite illustrate the contract:
 
 ## See also
 
-- `.agent-src.uncompressed/rules/skill-quality.md` § Senior-Tier
+- `.agent-src.uncondensed/rules/skill-quality.md` § Senior-Tier
   Required Structure — defines the `## Related Skills` and `## Output`
   blocks the contract reads.
 - `scripts/lint_handoffs.py` — mechanical enforcement.

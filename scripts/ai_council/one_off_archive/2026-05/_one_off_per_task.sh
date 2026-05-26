@@ -1,6 +1,6 @@
 #!/bin/bash
 TASKS=(
-  check-compressed-paths
+  check-condensed-paths
   check-refs
   check-portability
   lint-roadmap-complexity

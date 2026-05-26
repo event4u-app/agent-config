@@ -57,7 +57,7 @@ One cross-reference cleaned: `php/naming.md` removed dead `naming` skill referen
 - [x] Linter: 0 FAIL / 164 total
 - [x] Orphaned references cleaned (naming.md)
 - [x] Symlinks regenerated via `task generate-tools`
-- [x] All changes compressed
+- [x] All changes condensed
 
 ## Acceptance Criteria
 

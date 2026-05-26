@@ -40,13 +40,13 @@ def _rule_path(slug: str) -> Path | None:
 
 
 def _evidence_path(citation: str) -> Path | None:
-    """Resolve a citation like ``.agent-src.uncompressed/rules/X.md#anchor``.
+    """Resolve a citation like ``.agent-src.uncondensed/rules/X.md#anchor``.
 
-    Strips the legacy ``.agent-src.uncompressed/`` prefix and routes to the
+    Strips the legacy ``.agent-src.uncondensed/`` prefix and routes to the
     multi-root resolver. Non-artefact citations (docs/, agents/) fall back
     to ``ROOT / citation``.
     """
-    legacy_prefix = ".agent-src.uncompressed/"
+    legacy_prefix = ".agent-src.uncondensed/"
     if citation.startswith(legacy_prefix):
         logical = citation[len(legacy_prefix):]
         return resolve_logical(logical)

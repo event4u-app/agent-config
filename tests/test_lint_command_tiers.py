@@ -23,7 +23,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from lint_command_tiers import lint  # noqa: E402
 
 REPO = Path(__file__).resolve().parent.parent
-REAL_COMMANDS_DIR = REPO / ".agent-src.uncompressed" / "commands"
+REAL_COMMANDS_DIR = REPO / ".agent-src.uncondensed" / "commands"
 
 
 def _write_cmd(

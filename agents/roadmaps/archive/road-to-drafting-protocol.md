@@ -73,7 +73,7 @@ Questions are **numbered** and include a "skip / I don't know yet" option.
 
 ### Phase B: Research (agent reads, reports findings)
 
-The agent searches `.agent-src.uncompressed/` for overlap **before** drafting:
+The agent searches `.agent-src.uncondensed/` for overlap **before** drafting:
 
 - Top 3-5 most-similar artifacts by name + description similarity
 - Reports: *"`laravel-validation` already covers form-request rules — you might
@@ -114,7 +114,7 @@ into `foo-basics` + `foo-advanced`."*
 
 ### 1.1 New rule: `artifact-drafting-protocol.md` ✅
 
-Location: `.agent-src.uncompressed/rules/artifact-drafting-protocol.md`.
+Location: `.agent-src.uncondensed/rules/artifact-drafting-protocol.md`.
 
 Trigger phrasing (examples; the rule doc itself holds the canonical list):
 
@@ -141,8 +141,8 @@ not once per edit.
 ### 1.3 Size budget for the rule itself ✅
 
 Target: ≤120 lines. Artifact-type-agnostic, no code, just protocol.
-Shipped: 121 lines uncompressed / 104 lines compressed. `long_rule` linter
-warning is acceptable — protocol content is not compressible without losing
+Shipped: 121 lines uncondensed / 104 lines condensed. `long_rule` linter
+warning is acceptable — protocol content is not condensable without losing
 the numbered trigger table.
 
 ### 1.4 Follow-ups (not in Phase 1 scope)
@@ -162,24 +162,24 @@ protocol rule is the single normative source.
 
 ### 2.2 Create a new skill: `rule-writing` ✅
 
-New skill at `.agent-src.uncompressed/skills/rule-writing/SKILL.md`. Mirrors
+New skill at `.agent-src.uncondensed/skills/rule-writing/SKILL.md`. Mirrors
 `skill-writing`'s structure: trigger wording conventions, `always` vs
 `auto` governance (cites `rule-type-governance`), size budget (cites
-`size-enforcement`), linter + CI validation gate. 143 lines uncompressed.
+`size-enforcement`), linter + CI validation gate. 143 lines uncondensed.
 
 ### 2.3 Create a new skill: `command-writing` ✅
 
-New skill at `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
+New skill at `.agent-src.uncondensed/skills/command-writing/SKILL.md`.
 Covers slash-command shape: `disable-model-invocation` frontmatter, numbered
 steps, safety gates (no auto-apply of destructive actions), size budget,
-Claude symlink verification. 142 lines uncompressed.
+Claude symlink verification. 142 lines uncondensed.
 
 ### 2.4 Create a new skill: `guideline-writing` ✅
 
-New skill at `.agent-src.uncompressed/skills/guideline-writing/SKILL.md`.
+New skill at `.agent-src.uncondensed/skills/guideline-writing/SKILL.md`.
 Covers guideline shape: minimal frontmatter (no `type`, no routing), topic
 folder selection, inbound-link requirement (cites `preservation-guard`),
-relaxed size budget. 145 lines uncompressed.
+relaxed size budget. 145 lines uncondensed.
 
 Total new code shipped: 430 lines of markdown across three skills + 21 lines
 extended in `skill-writing`. Skill count 100 → 103.
@@ -190,7 +190,7 @@ This is the **bounded** version of anthropic's `run_loop.py`: the agent
 participates in description iteration, but every change is an approval-gated
 proposal. No Claude API calls. No silent edits.
 
-**Shipped as:** `.agent-src.uncompressed/skills/description-assist/SKILL.md`
+**Shipped as:** `.agent-src.uncondensed/skills/description-assist/SKILL.md`
 (143 lines). Cross-linked from all four writing skills
 (`skill-writing`, `rule-writing`, `command-writing`, `guideline-writing`).
 Skill count 103 → 104.
@@ -240,7 +240,7 @@ committed without approval. Rules, commands, and guidelines skip this.
 ### 4.2 Description-assist informed by eval results ✅
 
 Shipped as `description-assist` § 2b and § 3. If
-`.agent-src.uncompressed/skills/{name}/evals/last-run.json` exists, the
+`.agent-src.uncondensed/skills/{name}/evals/last-run.json` exists, the
 assist extracts failure patterns and requires at least one variant in
 step 3 to address the dominant failure (labelled *"addresses eval
 failure: …"*). If no last-run exists, step 2b is silently skipped.

@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-12
 > command surfaces this package ships:
 >
 > - **CLI commands** rendered by `./agent-config --help`.
-> - **Slash commands** under `.agent-src.uncompressed/commands/**`.
+> - **Slash commands** under `.agent-src.uncondensed/commands/**`.
 >
 > Per Phase 4 of the distribution-maturity roadmap (see
 > `agents/roadmaps/` for current status).
@@ -147,7 +147,7 @@ the help text groups commands under `## Tier 0`, `## Tier 1`,
 
 `scripts/lint_command_tiers.py` enforces:
 
-1. Every file under `.agent-src.uncompressed/commands/**.md` has
+1. Every file under `.agent-src.uncondensed/commands/**.md` has
    a `tier:` frontmatter key whose value is `0`, `1`, or `2`.
 2. Every command listed under `## Tier 0` / `## Tier 1` /
    `## Tier 2` in this contract resolves to a real command file or

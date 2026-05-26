@@ -146,10 +146,10 @@ not a missed target.
 
 ### Phase 5 — Backlog confirmations
 
-- [x] P5.1 — Closed with rationale 2026-05-09. (a) `caveman-speak.md`
+- [x] P5.1 — Closed with rationale 2026-05-09. (a) `telegraph-speak.md`
   is a tier-1 always-active rule with `intent: "any reply"`; the
   compiled `router.json` correctly emits `routes_to: []`. Compile-time
-  gate via `scripts/compile_router.py` (`caveman.enabled` + `caveman.speak`).
+  gate via `scripts/compile_router.py` (`telegraph.enabled` + `telegraph.speak`).
   No `routes_to` field is required or appropriate in source frontmatter.
   (b) `verbosity.offer_council_in_delivery` is wired in the three
   chat-level delivery commands (`commands/roadmap/create.md`,

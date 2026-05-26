@@ -21,8 +21,8 @@ Phase 1 Step 3, addressing audit finding F3 / council finding C3 from
 |---|---|---|
 | [`_backfill_skill_domains.py`](_backfill_skill_domains.py) | B3 domain back-fill | Injected `domain:` frontmatter into every `SKILL.md`. Source of truth now lives in each skill's frontmatter directly. |
 | [`_bootstrap_tier_frontmatter.py`](_bootstrap_tier_frontmatter.py) | Tier-frontmatter bootstrap | Injected `tier: N` frontmatter into every slash command during the kernel / tier-1 / tier-2 routing introduction. |
-| [`_p43_bodies.py`](_p43_bodies.py) | Phase 4.3 — rule-body compression | Wrote compressed rule bodies after `_p43_compress.py` produced the manifest. Paired with `_p43_compress.py`. |
-| [`_p43_compress.py`](_p43_compress.py) | Phase 4.3 — rule-body compression | Surgical compression of 22 `compress-and-keep` auto-rules; produced the manifest consumed by `_p43_bodies.py`. |
+| [`_p43_bodies.py`](_p43_bodies.py) | Phase 4.3 — rule-body condensation | Wrote condensed rule bodies after `_p43_condense.py` produced the manifest. Paired with `_p43_condense.py`. |
+| [`_p43_condense.py`](_p43_condense.py) | Phase 4.3 — rule-body condensation | Surgical condensation of 22 `condense-and-keep` auto-rules; produced the manifest consumed by `_p43_bodies.py`. |
 | [`_p4_migrate.py`](_p4_migrate.py) | Phase 4.1 + 4.2 — rule reclassification | Migrated rules into the skill / guideline / command / contract-stub split that the package ships today. |
 | [`_phase2_shim_helper.py`](_phase2_shim_helper.py) | Phase 2 — deprecation shim | One-shot helper that injected `superseded_by:` + `deprecated_in:` + deprecation warning into rules retired during Phase 2. |
 | [`_pilot_council_question.py`](_pilot_council_question.py) | Phase 1 pilot — kernel-membership council prep | Built the Phase-1 council question file used for the kernel-membership R1/R2 cross-check. The resulting council artefacts live under `agents/runtime/council/sessions/20260506T*`. |

@@ -7,13 +7,13 @@
 This PR delivers the complete toolchain for restructuring:
 
 **✅ Completed:**
-- Meta-skill toolchain: `skill-writing`, `skill-validator`, `skill-refactor`, `skill-caveman-compression`, `skill-decompression`, `skill-linter`
+- Meta-skill toolchain: `skill-writing`, `skill-validator`, `skill-refactor`, `skill-telegraph-condensation`, `skill-decondensation`, `skill-linter`
 - Learning capture loop: `capture-learnings` rule + `learning-to-rule-or-skill` + `post-task-learning-capture`
-- Compress workflow with enrichment rules and quality gates
-- Source-of-truth rule (always edit `.agent-src.uncompressed/`, compress before commit)
+- Condense workflow with enrichment rules and quality gates
+- Source-of-truth rule (always edit `.agent-src.uncondensed/`, condense before commit)
 - Skill linter MVP script (`scripts/skill_linter.py`) with 5 passing tests
 - Taskfile commands: `task lint-skills`, `task lint-skills-strict`, `task lint-skills-changed`, `task test-linter`
-- 4 content skills re-compressed as proof of concept
+- 4 content skills re-condensed as proof of concept
 - **Baseline: 13 pass, 65 warn, 219 fail** (297 files scanned)
 
 **⏳ Remaining (this roadmap):**
@@ -29,8 +29,8 @@ This PR delivers the complete toolchain for restructuring:
 
 ## Prerequisites
 
-- [x] Meta-skills: `skill-writing`, `skill-validator`, `skill-caveman-compression`, `skill-refactor`
-- [x] Gold standard reference: `.agent-src.uncompressed/skills/skill-writing/SKILL.md`
+- [x] Meta-skills: `skill-writing`, `skill-validator`, `skill-telegraph-condensation`, `skill-refactor`
+- [x] Gold standard reference: `.agent-src.uncondensed/skills/skill-writing/SKILL.md`
 - [x] Learning loop: `capture-learnings` rule + skills
 - [x] Linter MVP: `scripts/skill_linter.py` + Taskfile commands
 - [x] Read linter baseline output: `task lint-skills` — 0 FAIL / 165 total after Output format fix
@@ -125,16 +125,16 @@ No new skills created — existing coverage is sufficient.
 
 ### Done (pre-merge)
 - [x] **Step 5:** AGENTS.md updated with linter + roadmaps references
-- [x] **Step 6:** `.augmentignore` created (symlinks, JSON dumps, uncompressed dupes)
-- [x] **Step 7:** All changed files compressed to `.augment/`
-- [x] Orphaned `agents-audit` skill removed (uncompressed deleted earlier, compressed now too)
+- [x] **Step 6:** `.augmentignore` created (symlinks, JSON dumps, uncondensed dupes)
+- [x] **Step 7:** All changed files condensed to `.augment/`
+- [x] Orphaned `agents-audit` skill removed (uncondensed deleted earlier, condensed now too)
 - [x] Aftercare from `compare-with-main.md` applied (guidelines boundary, routing gate, consistency checkpoints)
 - [x] Taxonomy decision matrix added to `skill-writing`, `learning-to-rule-or-skill`, `skill-reviewer`
 - [x] Linter: 0 FAIL / 166 total
 
 ### Verification (done pre-merge)
 - [x] **Step 1:** Linter: 0 FAIL / 166 total
-- [x] **Step 2:** Source-of-truth pairs verified (no orphans, no missing compressed)
+- [x] **Step 2:** Source-of-truth pairs verified (no orphans, no missing condensed)
 - [x] **Step 3:** `task generate-tools` — 91 skills + 48 commands symlinked
 
 ### Follow-up (separate roadmap)
@@ -147,7 +147,7 @@ No new skills created — existing coverage is sufficient.
 - [x] `task lint-skills`: 0 fail, minimal warnings
 - [x] Every skill has Procedure with validation (enforced by linter)
 - [x] Phase 4 tool-workflow skills evaluated — all covered by existing skills
-- [x] Source-of-truth workflow respected (uncompressed → compressed)
+- [x] Source-of-truth workflow respected (uncondensed → condensed)
 - [x] `task generate-tools` produces clean symlink set
 - [x] AGENTS.md and cross-references updated
 
@@ -160,15 +160,15 @@ No new skills created — existing coverage is sufficient.
 | Create new skill | `skill-writing` skill | Phase 4 |
 | Validate skill quality | `skill-validator` skill / `task lint-skills` | Phase 1-5 |
 | Refactor existing skill | `skill-refactor` skill | Phase 2-3 |
-| Compress for runtime | `skill-caveman-compression` skill | Phase 3-5 |
-| Expand for maintenance | `skill-decompression` skill | Any |
+| Condense for runtime | `skill-telegraph-condensation` skill | Phase 3-5 |
+| Expand for maintenance | `skill-decondensation` skill | Any |
 | Capture learning | `learning-to-rule-or-skill` skill | Any |
 | Generate tool symlinks | `task generate-tools` | Phase 2, 5 |
 
 ## Notes
 
-- **Always edit `.agent-src.uncompressed/`** — never edit `.augment/` directly
-- **Compress before commit/push** — not after every edit
+- **Always edit `.agent-src.uncondensed/`** — never edit `.augment/` directly
+- **Condense before commit/push** — not after every edit
 - **Linter is the primary audit tool** — use its output to prioritize work
 - **Process `fail` first, `warn` second, `pass` last** — highest impact first
 - **Do NOT change skill behavior** — only restructure and improve structure/format

@@ -13,7 +13,7 @@ This module owns:
 - `plan_advisor_swap()` — walks the enabled advisors, reads their
   persona files, and returns the per-provider plan map consumed by
   `orchestrator.consult()` / `estimate()` and by the CLI.
-- `resolve_persona_text()` — reads a persona file with compressed-tree
+- `resolve_persona_text()` — reads a persona file with condensed-tree
   preference and frontmatter strip.
 
 Cross-validation against the members block already ran at config load
@@ -75,14 +75,14 @@ def resolve_persona_text(
 ) -> tuple[str, dict]:
     """Read a persona file, returning ``(body, frontmatter)``.
 
-    Compressed tree (``.agent-src/``) wins so production runs match the
-    same projection the rest of the package consumes. Uncompressed tree
-    (``.agent-src.uncompressed/``) is the fallback for in-repo
+    Condensed tree (``.agent-src/``) wins so production runs match the
+    same projection the rest of the package consumes. Uncondensed tree
+    (``.agent-src.uncondensed/``) is the fallback for in-repo
     development before ``task sync`` has projected the file.
     """
     candidates = [
         repo_root / ".agent-src" / persona_path,
-        repo_root / ".agent-src.uncompressed" / persona_path,
+        repo_root / ".agent-src.uncondensed" / persona_path,
     ]
     for candidate in candidates:
         if candidate.exists():

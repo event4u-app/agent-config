@@ -29,7 +29,7 @@ except ImportError:
     sys.exit(2)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_DIR = REPO_ROOT / ".agent-src.uncondensed" / "skills"
 TARGET_REDUCTION = 0.40
 PHASE_3_USER_TYPES = ("consultant", "creator")
 

@@ -64,7 +64,7 @@ their own chart using this Compose as the reference until v2 ships.
 The GUI server (`packages/core/installer/src/gui/server.ts`) is the
 only long-running process. The Python install supervisor is spawned
 per-install, not a sidecar. The Compose image stays Node-only to keep
-the budget under 600 MB compressed and the surface area minimal.
+the budget under 600 MB condensed and the surface area minimal.
 
 If Phase 2+ needs a separate identity-broker process, it lands in a
 separate service in the same Compose; the agent-config container stays

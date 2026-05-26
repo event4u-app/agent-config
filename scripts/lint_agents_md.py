@@ -2,7 +2,7 @@
 """Thin-Root contract linter for AGENTS.md files (Phase 7).
 
 Enforces caps + pointer-ratio + pointer-anatomy + emergency-triage
-contract from `.agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md`:
+contract from `.agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md`:
 
   (a) total char-count under FAIL/WARN budgets per file class
   (b) substantive-pointer ratio >= 0.40
@@ -65,7 +65,7 @@ class Target:
 TARGETS = [
     Target(ROOT / "AGENTS.md", "package-root", 3000, 2800, template=False),
     Target(
-        ROOT / "packages" / "core" / ".agent-src.uncompressed" / "templates" / "AGENTS.md",
+        ROOT / "packages" / "core" / ".agent-src.uncondensed" / "templates" / "AGENTS.md",
         "consumer-template", 2500, 2300, template=True,
     ),
 ]
@@ -81,10 +81,10 @@ def _resolve(target_str: str, template: bool) -> bool:
         return True
     candidates = [ROOT / raw]
     if template and raw.startswith(".augment/"):
-        candidates.append(ROOT / raw.replace(".augment/", ".agent-src.uncompressed/", 1))
+        candidates.append(ROOT / raw.replace(".augment/", ".agent-src.uncondensed/", 1))
         candidates.append(ROOT / raw.replace(".augment/", ".agent-src/", 1))
     if raw.startswith(".agent-src/"):
-        candidates.append(ROOT / raw.replace(".agent-src/", ".agent-src.uncompressed/", 1))
+        candidates.append(ROOT / raw.replace(".agent-src/", ".agent-src.uncondensed/", 1))
     return any(c.exists() for c in candidates)
 
 

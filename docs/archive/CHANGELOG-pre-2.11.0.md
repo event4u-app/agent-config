@@ -108,7 +108,7 @@ Tests: 3603 (+26 since 2.8.0)
 * **index:** regenerate after positioning → positioning-strategy rename ([9f42d91](https://github.com/event4u-app/agent-config/commit/9f42d9148f196d30635ae8288e9bba0feda66067))
 * **changelog:** split era 2.2.x → pre-2.7.0 ([7158c30](https://github.com/event4u-app/agent-config/commit/7158c30db391f3464fd74f3c7e193698b869b82d))
 * **generated:** refresh agents/index.md and docs/catalog.md for GTM skills/personas ([649b86e](https://github.com/event4u-app/agent-config/commit/649b86e287ecef7d0d28ce23ed2b0cbf43f2adc6))
-* **generated:** regenerate .claude/ tool output + marketplace + compression hashes for GTM skills/personas ([bb7d56c](https://github.com/event4u-app/agent-config/commit/bb7d56cd8e7cafb9037a4e6ec0078e56154f9d5c))
+* **generated:** regenerate .claude/ tool output + marketplace + condensation hashes for GTM skills/personas ([bb7d56c](https://github.com/event4u-app/agent-config/commit/bb7d56cd8e7cafb9037a4e6ec0078e56154f9d5c))
 * **roadmap:** archive road-to-gtm-and-growth — G+H+I all shipped ([dc48cdd](https://github.com/event4u-app/agent-config/commit/dc48cdd29e236c745e98b5f5fb8b45fa716a4c07))
 
 Tests: 3577 (+11 since 2.7.0)
@@ -133,7 +133,7 @@ Tests: 3577 (+11 since 2.7.0)
 
 ### Chores
 
-* **ci:** refresh compression hashes after cc0102fe tiering pass ([ca06729](https://github.com/event4u-app/agent-config/commit/ca06729d03bb8bd8d1536b7aecef1d1b134d8333))
+* **ci:** refresh condensation hashes after cc0102fe tiering pass ([ca06729](https://github.com/event4u-app/agent-config/commit/ca06729d03bb8bd8d1536b7aecef1d1b134d8333))
 * finalize roadmaps ([bb156ea](https://github.com/event4u-app/agent-config/commit/bb156ea4f52741d511c3e54cd87e3bcab2fbf107))
 * **roadmap:** close road-to-distribution-maturity, archive ([d48e5d6](https://github.com/event4u-app/agent-config/commit/d48e5d64f9396f6b75b47bf336fd6ac129c8e254))
 * **changelog:** split into eras, archive pre-2.2.0 entries ([e54c5cb](https://github.com/event4u-app/agent-config/commit/e54c5cbf0222de7f0f4c84a379118f4ea30b5a07))

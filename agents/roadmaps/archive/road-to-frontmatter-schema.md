@@ -52,7 +52,7 @@ of this roadmap.
 
 - [x] Skill linter exists and runs in CI (`task lint-skills`).
 - [x] Four artefact types with frontmatter have stable shapes in
-      `.agent-src.uncompressed/`: skills, rules, commands, personas.
+      `.agent-src.uncondensed/`: skills, rules, commands, personas.
 - [x] Guidelines have no frontmatter — scope of this roadmap is
       explicitly skills / rules / commands / personas only.
 
@@ -61,7 +61,7 @@ of this roadmap.
 Produce the actual contract as data before writing any schema.
 
 - [x] For each artefact type, enumerate every frontmatter key that
-      appears in `.agent-src.uncompressed/**`. Count occurrences.
+      appears in `.agent-src.uncondensed/**`. Count occurrences.
 - [x] Mark each key as *required* (present in ≥ 95 % of files) vs.
       *optional*.
 - [x] For each required key, capture the value shape: string, list,
@@ -118,7 +118,7 @@ Produce the actual contract as data before writing any schema.
 To keep the roadmap small and the review feedback from sprawling:
 
 - **Runtime validation** of frontmatter inside a live agent session —
-  host tools consume the compressed files as given.
+  host tools consume the condensed files as given.
 - **Migration tooling** to auto-fix existing artefacts — J2 requires
   schemas to match reality, so no migration is needed.
 - **Web UI, dashboard, or cross-tool observability** — not a

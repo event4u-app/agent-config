@@ -76,16 +76,16 @@ Each item below is classified by its **mobility class** (from
   defines `internal/` as maintainer-only umbrella (not testing-tooling); (2) root `schemas/`
   user-facing check — verified clean, zero filesystem-path consumers, only docstring
   mentions; (3) `.agent-tools.yml` runtime-vs-maintainer — verified maintainer-only
-  (`scripts/compress.py:88`, `scripts/measure_projection_bytes.py:98`); (4) build-config
+  (`scripts/condense.py:88`, `scripts/measure_projection_bytes.py:98`); (4) build-config
   sweep (Taskfile/pyproject/vite/eslint/CI) — verified clean for all four moves;
-  (5) `.compression-hashes.json` flat-vs-nested — picked flat (`internal/.compression-hashes.json`)
-  since single file, no sibling compression artefacts.
+  (5) `.condensation-hashes.json` flat-vs-nested — picked flat (`internal/.condensation-hashes.json`)
+  since single file, no sibling condensation artefacts.
 - [-] If option C is chosen, write a successor ADR that supersedes ADR-012 / ADR-016 on the
   `src/` rootDir choice, with a migration plan for tsconfig + vite + vitest + eslint + bin.
   <!-- cancelled: Option A picked → Option C path is not taken. -->
 - [x] Update AGENTS.md with the chosen umbrella name (one-line pointer per ADR-028
   consequences §1). `AGENTS.md § Pointers § Root layout` now lists every umbrella
-  occupant (`bench`, `evals`, `workers`, `docker`, `schemas`, `.compression-hashes.json`)
+  occupant (`bench`, `evals`, `workers`, `docker`, `schemas`, `.condensation-hashes.json`)
   and points to `agents/.agent-tools.yml` for the per-tool projection toggle.
   `internal/README.md § Contents` table extended with the three new rows.
 
@@ -96,7 +96,7 @@ Each item below is classified by its **mobility class** (from
   `docs/setup/mcp-server-docker.md:3,11,15`). The other roadmap-listed files
   (`docs/contracts/file-ownership-matrix.json`, `docs/getting-started-laravel.md`,
   `docs/catalog.md`, `docs/skills-catalog.md`) carry `docker/` substring only for
-  the `docker` skill (`.agent-src.uncompressed/skills/docker/`) — a different
+  the `docker` skill (`.agent-src.uncondensed/skills/docker/`) — a different
   thing, untouched.
 - [x] **Move root `schemas/` → `internal/schemas/`.** Done via `git mv`. Updated
   all real consumers: 2 stable doc links (`docs/contracts/gui-wizard.md:138`,
@@ -105,28 +105,28 @@ Each item below is classified by its **mobility class** (from
   3 docstrings (`scripts/memory_lookup.py:519`, `scripts/memory_status.py:44,203`,
   `tests/conformance/retrieval/validator.py:3`), 1 help text
   (`scripts/install.py:3797`), plus the templated equivalents under
-  `packages/core/.agent-src.uncompressed/templates/scripts/` (refreshed via
-  `python3 scripts/compress.py --sync`). The schemas' `$id` URLs are unaffected
+  `packages/core/.agent-src.uncondensed/templates/scripts/` (refreshed via
+  `python3 scripts/condense.py --sync`). The schemas' `$id` URLs are unaffected
   (they're identifiers, not filesystem paths).
 - [x] Run `task ci` after each move. Each move = own commit on the chosen umbrella branch.
-  Replaced with focused verification (`scripts/compress.py --check-hashes` ✅ + 
+  Replaced with focused verification (`scripts/condense.py --check-hashes` ✅ + 
   `scripts/check_references.py` ✅); full `task ci` will run on the PR per
   `roadmap-ci-steps-policy`.
 
 ### Phase 2 — Movable-with-rewrite (🟡, internal hardcodes only)
 
-- [x] **Move `.compression-hashes.json` → `internal/.compression-hashes.json`**
-  (flat — single file, no sibling compression artefacts to namespace against).
-  Done via `git mv`. Rewrote `HASH_FILE` constant in `scripts/compress.py:48`
+- [x] **Move `.condensation-hashes.json` → `internal/.condensation-hashes.json`**
+  (flat — single file, no sibling condensation artefacts to namespace against).
+  Done via `git mv`. Rewrote `HASH_FILE` constant in `scripts/condense.py:48`
   and `scripts/annotate_discovery.py:29`. Verified via
-  `python3 scripts/compress.py --check-hashes` ✅.
+  `python3 scripts/condense.py --check-hashes` ✅.
 - [x] **Move `.agent-tools.yml` → `agents/.agent-tools.yml`** (per user proposal).
   Done via `git mv`. Rewrote 5 consumers / comments:
-  `scripts/compress.py:72,84,88,405,418,1066`,
+  `scripts/condense.py:72,84,88,405,418,1066`,
   `scripts/measure_projection_bytes.py:14,15,98,121`,
   `scripts/install-hooks.sh:138`,
   `docs/architecture/multi-tool-projection.md:71`. Verified via
-  `python3 scripts/compress.py --generate-tools` ✅ (228 rules, 219 skills,
+  `python3 scripts/condense.py --generate-tools` ✅ (228 rules, 219 skills,
   131 commands, 48 personas projected across all 8 tool IDs).
 
 ### Phase 3 — Frozen-at-root items: stay (🔒, no action this roadmap)
@@ -144,8 +144,8 @@ this trade in ADR-028 alternatives (option 2). Items: `scripts/`, `templates/`, 
   Verified: `internal/bench/`, `internal/workers/`, `internal/evals/` all present.
 - [x] **`router.json`** — already in `dist/router.json` per
   [ADR-019](../../docs/decisions/ADR-019-router-json-dist-location.md). Verified: file present.
-- [x] **`.agent-src.uncompressed/`** — already lives under
-  `packages/core/.agent-src.uncompressed/`. Verified: no root entry, package path populated.
+- [x] **`.agent-src.uncondensed/`** — already lives under
+  `packages/core/.agent-src.uncondensed/`. Verified: no root entry, package path populated.
 
 ### Phase 5 — `setup.sh` redirect strategy (🔒, write only if Phase 0 = C)
 
@@ -162,8 +162,8 @@ Phase 0 picked option C, draft a separate ADR proposing one of:
   `road-to-optimized-ci-and-release-gates.md` discipline; pre-existing
   `check-template-pin-drift` failure on main (3.3.0 vs 4.0.0) is unrelated to
   this roadmap. Local focused gates run green:
-  `task check-refs` ✅, `task check-compression` ✅, `task check-portability` ✅,
-  `task check-compressed-paths` ✅, `task check-token-optimizer-freshness` ✅,
+  `task check-refs` ✅, `task check-condensation` ✅, `task check-portability` ✅,
+  `task check-condensed-paths` ✅, `task check-token-optimizer-freshness` ✅,
   `task lint-roadmap-ci-steps` ✅, `task lint-roadmap-complexity` ✅,
   `task lint-skills` ✅ (452 pass / 5 pre-existing warn). -->
 - [x] AGENTS.md reflects the chosen umbrella in one line.

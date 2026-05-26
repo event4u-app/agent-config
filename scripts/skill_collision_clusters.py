@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Skill-collision cluster analysis (Phase 2.2 of step-1-v2-feedback-followup).
 
-Walks `.agent-src.uncompressed/skills/<id>/SKILL.md`, extracts the
+Walks `.agent-src.uncondensed/skills/<id>/SKILL.md`, extracts the
 `description` frontmatter, computes pairwise keyword overlap, and groups
 high-overlap skill pairs into clusters. The output drives the
 selection-accuracy fixture set defined by council file 05 (Round-3
@@ -37,7 +37,7 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_DIR = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_DIR = REPO_ROOT / ".agent-src.uncondensed" / "skills"
 OUT_JSON = REPO_ROOT / "agents" / "reports" / "skill-collision-clusters.json"
 
 KEYWORD_OVERLAP_THRESHOLD = 0.40

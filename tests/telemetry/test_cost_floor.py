@@ -147,7 +147,7 @@ def test_disabled_status_does_not_create_log(tmp_path: Path) -> None:
 @pytest.mark.parametrize(
     "rule_path",
     [
-        ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+        ".agent-src.uncondensed/rules/artifact-engagement-recording.md",
     ],
 )
 def test_engagement_rule_is_auto_not_always(rule_path: str) -> None:

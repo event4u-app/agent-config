@@ -8,11 +8,11 @@
 >   frontmatter and are out of scope.
 > - **Generated inventory:** run `python3 scripts/inventory_frontmatter.py`
 >   to re-derive key counts, percentages, and enum values from the live
->   `.agent-src.uncompressed/` tree.
+>   `.agent-src.uncondensed/` tree.
 > - **Definition of required:** a key is *required* if ≥ 95 % of files in
 >   the type declare it. Everything else is *optional*.
 
-## skills — `.agent-src.uncompressed/skills/*/SKILL.md`
+## skills — `.agent-src.uncondensed/skills/*/SKILL.md`
 
 **Inventory:** 124 files. All three required keys present in 100 %.
 
@@ -54,7 +54,7 @@ source: package
 domain: quality
 ```
 
-## rules — `.agent-src.uncompressed/rules/*.md`
+## rules — `.agent-src.uncondensed/rules/*.md`
 
 **Inventory:** 46 files.
 
@@ -87,7 +87,7 @@ source: package
 description: "Architecture rules for creating new files, classes, …"
 ```
 
-## commands — `.agent-src.uncompressed/commands/*.md`
+## commands — `.agent-src.uncondensed/commands/*.md`
 
 **Inventory:** 71 files.
 
@@ -115,7 +115,7 @@ disable-model-invocation: true
 skills: [git-workflow, create-pr-description]
 ```
 
-## personas — `.agent-src.uncompressed/personas/*.md`
+## personas — `.agent-src.uncondensed/personas/*.md`
 
 **Inventory:** 7 files (all required keys present in 100 %).
 

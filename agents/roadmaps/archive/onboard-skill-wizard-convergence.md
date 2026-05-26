@@ -25,7 +25,7 @@ status: completed
 
 - [x] `unified-setup-and-settings-gui.md` Phase 1 server-API merged on `feat/unified-setup-and-settings-gui` (PR #194). Provides `commitMulti`, `mergeIntoTemplate`, `settingsSchema`, `userMdSchema` — the shared substrate `onboard:finish` reuses in-process.
 - [x] Read [`docs/contracts/settings-api.md`](../../../docs/contracts/settings-api.md).
-- [x] Read `.agent-src.uncompressed/commands/onboard.md` — the chat-driven flow that today writes `.agent-settings.yml` and `.agent-user.md` directly.
+- [x] Read `.agent-src.uncondensed/commands/onboard.md` — the chat-driven flow that today writes `.agent-settings.yml` and `.agent-user.md` directly.
 
 ## Context
 
@@ -67,7 +67,7 @@ rewrite begins.
 
 - [x] **Create `src/cli/commands/onboardFinish.ts`** — reads JSON from stdin (`{ settings, userMd }`), merges into existing `.agent-settings.yml` via `mergeIntoTemplate`, validates `.agent-user.md` via `userMdSchema`, commits atomically via `commitMulti`.
 - [x] **Register `onboard:finish`** in `src/cli/registry.ts` + wire into `src/cli/agent-config.ts`.
-- [x] **Rewrite `.agent-src.uncompressed/commands/onboard.md` step 8** — accumulate answers in working memory across steps 3–7c, hand the assembled payload to `agent-config onboard:finish` on stdin in step 8.
+- [x] **Rewrite `.agent-src.uncondensed/commands/onboard.md` step 8** — accumulate answers in working memory across steps 3–7c, hand the assembled payload to `agent-config onboard:finish` on stdin in step 8.
 - [x] **Delete `scripts/_cli/cmd_onboard.py`** — never shipped in this form; replaced by the TS subcommand before merge.
 
 ## Phase 2: parity tests

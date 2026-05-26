@@ -2,7 +2,7 @@
 
 Hand-written validator (no jsonschema runtime dep, matching the project
 convention from `tests/conformance/retrieval/validator.py`). Mirrors
-`.agent-src.uncompressed/skills/subagent-orchestration/schemas/subagent-status.json`.
+`.agent-src.uncondensed/skills/subagent-orchestration/schemas/subagent-status.json`.
 """
 
 from __future__ import annotations

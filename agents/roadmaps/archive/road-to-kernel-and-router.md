@@ -42,7 +42,7 @@ The Kernel survives every fresh session. Everything else is on-demand.
 
 - **Kernel ceiling: 25k chars hard, 20k target.** Today's always-bucket =
   ~35k. Reduction split: ≈ 6k via cross-rule deduplication (one canonical
-  rule per Iron Law family), ≈ 4-6k via prose-to-imperative compression,
+  rule per Iron Law family), ≈ 4-6k via prose-to-imperative condensation,
   ≈ 0 via deletion (no Iron Law dies). Per-rule cap: 1.5k chars hard,
   1.2k target. Single-purpose rules only.
 - **Router shape: frontmatter, not a separate manifest.** Each rule declares
@@ -66,13 +66,13 @@ The Kernel survives every fresh session. Everything else is on-demand.
   is the authoring layer.
 - **Rollback is per-phase, baseline-tagged.** Before P2.2 ships, tag
   `pre-kernel-baseline` on `main`. Every later phase carries an explicit
-  revert path: P2.2 → `git revert` the compression commits + reset
+  revert path: P2.2 → `git revert` the condensation commits + reset
   always-bucket; P3 → drop `router.json` (agent falls back to current
   always-load); P4 → revert the migration commits (skill / guideline
   files stay, rule stubs reverted to full bodies). No phase introduces
   forward-only state.
-- **Iron-Law over budget = ADR exception, not auto-compress.** If a rule
-  is an Iron Law that cannot compress to ≤ 1.5k chars without losing
+- **Iron-Law over budget = ADR exception, not auto-condense.** If a rule
+  is an Iron Law that cannot condense to ≤ 1.5k chars without losing
   the law, P2.1 raises an `iron-law-override` exception requiring an
   ADR in `docs/decisions/` documenting why the cap is lifted for that
   rule (max 2.0k hard ceiling per override). Override expiry: revisit
@@ -96,7 +96,7 @@ subsequent phases bind to the amended values:
   `language-and-tone` remain as legitimate Iron-Law-density exceptions.
   Iron-Law-override ADRs may lift individual rules above 2.5k (max
   4.0k hard ceiling per override, was 2.0k).
-- **Compression rate locked at median, not mean.** `r = 0.712`
+- **Condensation rate locked at median, not mean.** `r = 0.712`
   (median) replaces `r = 0.742` (mean). Outlier skew from
   `agent-authority` (already-lean floor at `r = 0.838`) inflated
   the mean above the typical band. Risk asymmetry favours the
@@ -120,39 +120,39 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 - [x] **P1.1 — Baseline measurement script.** Author
   `scripts/measure_rule_budget.py` (≤ 120 LOC, stdlib-only). Reads
-  `.agent-src.uncompressed/rules/*.md`, strips frontmatter, reports per-rule
+  `.agent-src.uncondensed/rules/*.md`, strips frontmatter, reports per-rule
   char count, total always-bucket, total auto-bucket, top-5 oversize rules.
   Output: stdout table + JSON. Acceptance: re-runnable, deterministic, no
   network.
 - [x] **P1.2 — Classification pass.** For each of 56 source rules produce
   one row in `docs/contracts/rule-classification.md`: current type
   (always / auto), proposed disposition (`keep-in-kernel` /
-  `compress-and-keep` / `move-to-skill:<id>` / `move-to-guideline:<id>`),
+  `condense-and-keep` / `move-to-skill:<id>` / `move-to-guideline:<id>`),
   one-line rationale. No edits yet — this is the migration plan.
 - [x] **P1.3 — Kernel candidate list.** From P1.2 select 10-15 rules
-  marked `keep-in-kernel`. Project compressed char count using the
+  marked `keep-in-kernel`. Project condensed char count using the
   algorithm below; iterate until projected sum ≤ 25k or abort criterion
   fires.
 
-  **Algorithm.** (1) Run a 3-rule **compression pilot** on the
+  **Algorithm.** (1) Run a 3-rule **condensation pilot** on the
   shortest, median, and longest kernel candidates — rewrite each per
-  the P2.2 playbook to derive an empirical compression-rate constant
+  the P2.2 playbook to derive an empirical condensation-rate constant
   `r` (typically 0.6–0.75). (2) Project each remaining candidate's
-  post-compression size as `current_chars × r`. (3) Sum projections;
+  post-condensation size as `current_chars × r`. (3) Sum projections;
   if ≤ 25k, lock the list. (4) If > 25k, demote the largest projected
-  rule to `compress-and-keep` (auto-tier) and re-sum. (5) Abort
+  rule to `condense-and-keep` (auto-tier) and re-sum. (5) Abort
   criterion: after **3 demotion rounds** without convergence, halt
   and escalate to ADR — kernel budget is structurally insufficient,
   decide between raising the ceiling or splitting an Iron Law family.
 
   Result lands as `docs/contracts/kernel-membership.md` with explicit
   inclusion criteria (Iron Law floor, behaviour, safety, tone,
-  ask-policy) AND the pilot compression rate `r` AND the demotion log
+  ask-policy) AND the pilot condensation rate `r` AND the demotion log
   if any rounds fired.
 - [x] **P1.4 — Council cross-check.** Run the AI Council against the
   P1.2 + P1.3 deliverables (`rule-classification.md` +
   `kernel-membership.md` + pilot files) for an independent review
-  before P2 ships any compression. Output: a `agents/council-sessions/`
+  before P2 ships any condensation. Output: a `agents/council-sessions/`
   JSON log + a synthesis amendment-block in `kernel-membership.md`
   recording which Council findings were accepted, deferred, or
   rejected. Acceptance: at least one Council member returns a
@@ -186,8 +186,8 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
   (variant a = status quo through P2.2 + P3.1; re-evaluation trigger
   at P3.2 once router schema + compiler ship). No CI wiring yet —
   lands in P5.1.
-- [x] **P2.2 — Compress + dedupe the kernel rules.** For each rule on
-  the P1.3 list, apply the compression playbook in this order:
+- [x] **P2.2 — Condense + dedupe the kernel rules.** For each rule on
+  the P1.3 list, apply the condensation playbook in this order:
 
   1. **Imperative rewrite** — strip prose connectors, modal verbs,
      justifications. "Always validate X before Y" → "Validate X before Y."
@@ -203,7 +203,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
      Decide canonical owner by the rule with the broader scope.
   5. **Shared preamble extraction.** Repeating boilerplate (e.g. trigger
      headers, "Iron Law:" framing) moves to a shared snippet in
-     `.agent-src.uncompressed/shared/`, included by build step.
+     `.agent-src.uncondensed/shared/`, included by build step.
 
   **Equivalence definition (Acceptance).** Each rule passes:
   - `measure_rule_budget.py --kernel-budget-check` (size).
@@ -239,7 +239,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
   extension.
 - [x] **P3.2 — Router compiler.** Author
   `scripts/compile_router.py` (≤ 200 LOC, stdlib-only). Reads
-  rule frontmatter from `.agent-src.uncompressed/rules/`, emits the
+  rule frontmatter from `.agent-src.uncondensed/rules/`, emits the
   compiled `router.json` (deterministic key order, sorted). Wired into
   `task ci` via `task check-router` (drift gate) and into `task
   consistency` / `consistency-fix` (regen). New tasks
@@ -259,7 +259,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 ## Phase 4 — Migration (gated on P3)
 
 - [-] **P4.1 — Auto-rule → skill migrations.** *Cancelled — scope-cut.*
-  P4.3's compression pass alone hit the 60k auto-bucket target
+  P4.3's condensation pass alone hit the 60k auto-bucket target
   (57,658 chars / 60,000). Migrating 18 rule bodies into existing
   skills would be redundant work for the kernel-and-router goal.
   The 18 candidates remain documented in
@@ -269,18 +269,18 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
   scope-cut.* Same rationale as P4.1. The 7 candidates remain
   documented in `docs/contracts/rule-classification.md § 3.4` and
   can be reopened independently.
-- [x] **P4.3 — Compress remaining auto-rules.** For auto-rules marked
-  `compress-and-keep`, apply the same compression pass as P2.2 (imperative,
+- [x] **P4.3 — Condense remaining auto-rules.** For auto-rules marked
+  `condense-and-keep`, apply the same condensation pass as P2.2 (imperative,
   no examples, no rationale, single-purpose). **Done — auto-bucket at
   57,658 chars across 47 rules (target ≤ 60,000).** Verbose mechanics
-  relocated to `.agent-src.uncompressed/contexts/` per rule pointer.
+  relocated to `.agent-src.uncondensed/contexts/` per rule pointer.
 - [x] **P4.4 — Profile inclusion matrix.** Update `.agent-settings.yml`
   template + `docs/customization.md`: `minimal` profile loads kernel only;
   `balanced` loads kernel + tier-1; `full` loads everything. Default stays
   `balanced`. Profile selection compiled into `router.json` at build time,
   not resolved at runtime. **Done — see `docs/customization.md § Cost
   profiles`, `config/agent-settings.template.yml`, and
-  `.agent-src.uncompressed/templates/agent-settings.md`.**
+  `.agent-src.uncondensed/templates/agent-settings.md`.**
 
 ## Phase 5 — CI gates (gated on P4)
 
@@ -350,7 +350,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 | # | Risk | Mitigation |
 |---|---|---|
-| 1 | Kernel compression drops behaviour the agent silently relied on | P2.2 acceptance = golden-transcript pass; P8.2 full-suite gate |
+| 1 | Kernel condensation drops behaviour the agent silently relied on | P2.2 acceptance = golden-transcript pass; P8.2 full-suite gate |
 | 2 | Router lookup miss → behaviour rule never fires | P3.3 bidirectional back-ref check; tier-1 rules stay loaded under `balanced` |
 | 3 | Auto-rule → skill migration creates skill duplication | Cross-check against `road-to-package-optimization.md` P1.3 deletion-candidate scoring before P4.1 lands |
 | 4 | Profile mismatch in consumer projects breaks CI on install | P4.4 profile defaults to `balanced` (current behaviour superset); install script keeps user-set value |
@@ -362,7 +362,7 @@ siblings own their own Hard Cap accounting). Phase 8 = final validation.
 
 | # | Source | Date | Scope |
 |---|---|---|---|
-| 1 | User feedback round 1 (Hebel-Reihenfolge, audit + compress + skill-routing + stack-profiles) | 2026-05-06 | Methodology |
+| 1 | User feedback round 1 (Hebel-Reihenfolge, audit + condense + skill-routing + stack-profiles) | 2026-05-06 | Methodology |
 | 2 | User feedback round 2 (Kernel + Router architecture, ≤ 25k always-bucket, ≤ 1.5k per rule, profile-as-inclusion-matrix, 7-step Umbaupfad) | 2026-05-06 | Architecture |
 | 3 | Baseline measurement (this conversation): 9 always-rules @ ~35k, 47 auto-rules @ ~158k, 56 total source @ 193k chars | 2026-05-06 | Numbers |
 | 4 | Sibling roadmap `road-to-token-optimization.md` (3 phases / 9 steps) | 2026-05-06 | Prerequisite |

@@ -68,7 +68,7 @@ working path.
       for this repo's actual tooling: `lint-skills` (runs
       `scripts/skill_linter.py --all`) and `check-refs` (runs
       `scripts/check_references.py`). Both live in
-      `.agent-src.uncompressed/skills/`.
+      `.agent-src.uncondensed/skills/`.
 - [x] **1.2** Added `command` to `VALID_EXECUTION_FIELDS` with argv-form
       validation (list of strings, non-empty). Extended `SkillRuntime` with
       a `command` field and an `is_runnable` property. Dispatcher and
@@ -104,7 +104,7 @@ python3 scripts/runtime_dispatcher.py run --skill check-refs
 # → status=success, exit_code=0, duration_ms>0
 ```
 
-Full CI green (sync, compression, refs, portability, skill-lint,
+Full CI green (sync, condensation, refs, portability, skill-lint,
 marketplace, 345 pytests, readme).
 
 ## Phase 2: One killer end-to-end use case ❌ DEFERRED
@@ -248,7 +248,7 @@ dispatcher.
 
 **Acceptance met:** Every remaining layer has a named consumer.
 `scripts/check_references.py` is clean; `task ci` is green
-(sync, compression, refs, portability, skill-lint, runtime-e2e,
+(sync, condensation, refs, portability, skill-lint, runtime-e2e,
 239 pytests, readme).
 
 ## Phase 5: Narrow the vision in README and architecture ✅
@@ -296,13 +296,13 @@ after Phases 1–4. No product renaming, no logo changes — wording only.
       - Requirements section → matches `scripts/install` + `docs/installation.md`.
 
 **Follow-up (out of Phase 5 scope):**
-`.agent-src.uncompressed/templates/agent-settings.md` still documents
+`.agent-src.uncondensed/templates/agent-settings.md` still documents
 `runtime_auto_read_reports` and describes the `balanced` / `full` profiles
 with "reports auto-read, CI summaries, feedback in chat" — settings with
 no consumer after Phase 4. This template is shipped to consumer projects
 and needs a dedicated phase (profile matrix cleanup). Not touched here
 because it has ripple effects into `scripts/install.py` defaults, the
-`/config-agent-settings` command, and the compressed template copies.
+`/config-agent-settings` command, and the condensed template copies.
 
 **Acceptance:** README and architecture describe only what Phase 1–4
 actually delivered. The stack-fit table, experimental labels, and headline
@@ -316,7 +316,7 @@ shipped code.
 **Problem:** Phase 4 removed the observability / feedback / lifecycle
 layers, but the cost-profile *documentation* and the installer presets
 still advertise them. Concretely, the matrix in
-`.agent-src.uncompressed/templates/agent-settings.md` still lists eight
+`.agent-src.uncondensed/templates/agent-settings.md` still lists eight
 toggles (`runtime_enabled`, `observability_reports`, `feedback_collection`,
 `runtime_auto_read_reports`, `max_report_lines`, `minimal_runtime_context`,
 `ci_summary_enabled`, `feedback_suggestions_in_chat`) — **zero of which
@@ -331,11 +331,11 @@ No new profile system, no renames — just honest text and removing toggles
 that nothing reads.
 
 - [x] **6.1** Authoring template
-      `.agent-src.uncompressed/templates/agent-settings.md`: eight-key
+      `.agent-src.uncondensed/templates/agent-settings.md`: eight-key
       matrix table removed; profile descriptions rewritten to match
       `docs/customization.md` (minimal = rules+skills+commands, balanced
       = + runtime dispatcher, full = + tool adapters); "balanced with
-      CI summaries" example dropped; compressed copy at
+      CI summaries" example dropped; condensed copy at
       `.agent-src/templates/agent-settings.md` kept byte-identical
       (templates ship verbatim).
 - [x] **6.2** Installer presets `config/`:
@@ -354,15 +354,15 @@ that nothing reads.
         reality); `hint()` deleted too (no remaining caller); call site
         in `main()` removed.
 - [x] **6.4** Downstream cross-references: grep sweep across
-      `.agent-src.uncompressed/rules/docs-sync.md`,
-      `.agent-src.uncompressed/contexts/augment-infrastructure.md`,
+      `.agent-src.uncondensed/rules/docs-sync.md`,
+      `.agent-src.uncondensed/contexts/augment-infrastructure.md`,
       `agents/reference/docs/skill-classification.md`, and the rest of live
       authoring / docs / scripts found zero stale references. Only
       archived roadmaps (`agents/roadmaps/archive/*`) and the
       `ci_summary.py` script (live, real consumer) still mention related
       terms — archives stay untouched by design.
 - [x] **6.5** `task ci` green on HEAD of `feat/improve-agent-setup-5`
-      (sync, consistency, compression, refs, portability, skill-lint
+      (sync, consistency, condensation, refs, portability, skill-lint
       135/92/0, runtime-e2e, 232 pytests — 7 removed with
       `TestSuggestProfileUpgrade`, lint-readme).
       E2E regression: `python3 scripts/install.py --project

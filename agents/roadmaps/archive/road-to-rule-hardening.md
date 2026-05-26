@@ -74,7 +74,7 @@ before this roadmap's Phase 1 begins. Four tightly scoped items.
       `agents/settings/contexts/adr-always-rule-context-split-not-viable.md`
       summarising the Model (b) net-character-increase finding
       (`language-and-tone` split = +186 chars net). Cross-linked from
-      `.agent-src.uncompressed/contexts/budget/load-context-budget-model.md`.
+      `.agent-src.uncondensed/contexts/budget/load-context-budget-model.md`.
 - [x] **0a.4 Budget wording — drop "improved".** Audit pass complete.
       No remaining "budget improved" wording on README, AGENTS.md,
       `docs/architecture.md`, or the two roadmaps. The active surface
@@ -83,12 +83,12 @@ before this roadmap's Phase 1 begins. Four tightly scoped items.
 
 ### Phase 1 — Self-Check Rule Audit (≤ 1 day)
 
-Inventory every rule in `.agent-src.uncompressed/rules/` and classify
+Inventory every rule in `.agent-src.uncondensed/rules/` and classify
 trigger type. Output: a single matrix in `agents/settings/contexts/` with one
 row per rule.
 
 - [x] Enumerate all rules. Baseline: 58 rules total (9 always, 49 auto)
-      under `.agent-src.uncompressed/rules/`. Inventory in
+      under `.agent-src.uncondensed/rules/`. Inventory in
       `agents/settings/contexts/rule-trigger-matrix.md`, regenerated via
       `scripts/build_rule_trigger_matrix.py`.
 - [x] For each rule, record: trigger event, observability,
@@ -255,7 +255,7 @@ explicit disposition plus a re-audit clock.
 - [x] **Update rule schema** to declare a `tier:` frontmatter field
       (`scripts/schemas/rule.schema.json` — optional, recommended for
       new rules; bulk retrofit of existing rules is its own roadmap).
-- [x] **Update `.agent-src.uncompressed/rules/rule-type-governance.md`**
+- [x] **Update `.agent-src.uncondensed/rules/rule-type-governance.md`**
       to enforce Tier classification on every new or edited rule.
 - [x] Roadmap closure note: hardening is now a class with a known
       ceiling. Re-audit cadence: every 6 months, Tier 3 rules are

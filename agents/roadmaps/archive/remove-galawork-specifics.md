@@ -52,7 +52,7 @@ Config file locations:
 
 Files referencing `quality:phpstan`, `quality:rector`, `quality:ecs`, `quality:finalize`, `quality:refactor`:
 
-| # | File (in `.agent-src.uncompressed/`) | References |
+| # | File (in `.agent-src.uncondensed/`) | References |
 |---|---|---|
 | 1 | `skills/quality-tools/SKILL.md` | **Primary source** — full command reference, config paths |
 | 2 | `rules/quality-workflow.md` | Workflow steps, prerequisite, commands |
@@ -110,7 +110,7 @@ Files referencing `config-dev/php-quality/`:
 
 This is the central file — all other files should reference it instead of duplicating commands.
 
-Source: `.agent-src.uncompressed/skills/quality-tools/SKILL.md`
+Source: `.agent-src.uncondensed/skills/quality-tools/SKILL.md`
 
 ### Step 1.1: Replace prerequisite section
 
@@ -180,7 +180,7 @@ Current flags table is all consumer/php-quality specific. Split into:
 
 ## Phase 2: Update quality-workflow rule
 
-Source: `.agent-src.uncompressed/rules/quality-workflow.md`
+Source: `.agent-src.uncondensed/rules/quality-workflow.md`
 
 ### Step 2.1: Replace prerequisite
 
@@ -264,7 +264,7 @@ Pattern for all: replace `quality:*` commands with generic + skill reference.
 
 ## Phase 4: Multi-tenant migration
 
-Source: `.agent-src.uncompressed/skills/migration-creator/SKILL.md`
+Source: `.agent-src.uncondensed/skills/migration-creator/SKILL.md`
 
 ### Step 4.1: Generalize multi-tenant section
 
@@ -293,17 +293,17 @@ Read `AGENTS.md` or module docs for project-specific multi-tenant commands.
 
 ## Phase 5: Package name example
 
-Source: `.agent-src.uncompressed/commands/optimize-augmentignore.md`
+Source: `.agent-src.uncondensed/commands/optimize-augmentignore.md`
 
 - [x] Replace `consumer/consumer-api` with generic `your-org/project-name`
 
 ---
 
-## Phase 6: Compress and verify
+## Phase 6: Condense and verify
 
-### Step 6.1: Compress all modified files
+### Step 6.1: Condense all modified files
 
-20 files to compress after source edits:
+20 files to condense after source edits:
 
 - [x] `skills/quality-tools/SKILL.md`
 - [x] `rules/quality-workflow.md`
@@ -326,7 +326,7 @@ Source: `.agent-src.uncompressed/commands/optimize-augmentignore.md`
 
 ### Step 6.2: Update hashes
 
-- [x] `python3 scripts/compress.py --mark-all-done`
+- [x] `python3 scripts/condense.py --mark-all-done`
 
 ### Step 6.3: Verify no consumer references remain
 
@@ -362,7 +362,7 @@ Acceptable remaining: `consumer/php-quality` as ONE option in quality-tools dete
 | 1 | Quality tools skill + workflow rule | `refactor: replace project-specific quality commands with tool detection` |
 | 2 | All 14 referencing files | `refactor: update referencing files to use generic quality tool commands` |
 | 3 | Migration + package ref | `refactor: generalize multi-tenant migration and package name examples` |
-| 4 | Compression + hashes | `chore: compress all modified files and update hashes` |
+| 4 | Condensation + hashes | `chore: condense all modified files and update hashes` |
 
 ---
 
@@ -375,7 +375,7 @@ Acceptable remaining: `consumer/php-quality` as ONE option in quality-tools dete
 - [x] Config paths default to project root, `config-dev/php-quality/` as detected alternative
 - [x] `migrate:customers` and `local.consumer.de` replaced with generic guidance
 - [x] `consumer/consumer-api` example replaced
-- [x] All `.augment/` files compressed and hashes updated
+- [x] All `.augment/` files condensed and hashes updated
 - [x] Quality for consumer projects is identical (wrapper still documented and preferred)
 - [x] Quality for non-consumer projects is now fully supported
 

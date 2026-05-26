@@ -68,11 +68,11 @@
 
 * finalize chances ([ae94d29](https://github.com/event4u-app/agent-config/commit/ae94d29b86d21d912c5c6f6371960606c82d6a68))
 * sync .claude/ rules and skills projections ([ce84265](https://github.com/event4u-app/agent-config/commit/ce84265e916b1f6da68663a803f993f95a6bb2c6))
-* regenerate compressed mirror and hashes after framework-neutrality refactor ([534277a](https://github.com/event4u-app/agent-config/commit/534277a930b8c45b78d02c325600fdcc6d73c42e))
+* regenerate condensed mirror and hashes after framework-neutrality refactor ([534277a](https://github.com/event4u-app/agent-config/commit/534277a930b8c45b78d02c325600fdcc6d73c42e))
 * **smoke:** lift schema warns baseline 93 → 95 ([901625e](https://github.com/event4u-app/agent-config/commit/901625e9f9826b1c704381c3066d7f1bed17efdd))
-* **compress:** refresh hash for rule-refactor SKILL.md ([866b9af](https://github.com/event4u-app/agent-config/commit/866b9af4cc9d4607150aee27ce310cf56ae7210c))
+* **condense:** refresh hash for rule-refactor SKILL.md ([866b9af](https://github.com/event4u-app/agent-config/commit/866b9af4cc9d4607150aee27ce310cf56ae7210c))
 * **counts:** sync README + docs after rule consolidation ([1959123](https://github.com/event4u-app/agent-config/commit/19591234f38dad54f06451dc1f732838ebbf4bc7))
-* **compress:** update cross-refs and refresh projected layer ([43191ae](https://github.com/event4u-app/agent-config/commit/43191ae8928b8eeff099b22ab7d6c53b60f09f07))
+* **condense:** update cross-refs and refresh projected layer ([43191ae](https://github.com/event4u-app/agent-config/commit/43191ae8928b8eeff099b22ab7d6c53b60f09f07))
 * **index:** regenerate after phase-6 description trims ([12f6a2d](https://github.com/event4u-app/agent-config/commit/12f6a2d68d8ab33b8945988018aeeec930e8eddc))
 * **phase-6:** polish — trim descriptions, drop scope blocks, add rtk analyze step ([3b3f66c](https://github.com/event4u-app/agent-config/commit/3b3f66ced56252a1dda7279a9ec8b8c9f2e4c6c4))
 * **phase-6:** framework schema prop + linter inventory exemption ([91b7b0e](https://github.com/event4u-app/agent-config/commit/91b7b0e341d60a49d60af45728d69db627bac051))
@@ -120,7 +120,7 @@ Tests: 4645
 ### Chores
 
 * add claude rules ([744328d](https://github.com/event4u-app/agent-config/commit/744328d57b4ba3c502ab3b41ded10e25ba3db8cf))
-* compress 4 .md files into .agent-src/ ([96ef2f9](https://github.com/event4u-app/agent-config/commit/96ef2f94504661f71b86a3fb16762069c39caaa7))
+* condense 4 .md files into .agent-src/ ([96ef2f9](https://github.com/event4u-app/agent-config/commit/96ef2f94504661f71b86a3fb16762069c39caaa7))
 * regenerate compiled trees for new rule (82 to 83) ([8b8af6a](https://github.com/event4u-app/agent-config/commit/8b8af6a4a918e927dbaafaeadc4402e3a7220981))
 
 ### Other

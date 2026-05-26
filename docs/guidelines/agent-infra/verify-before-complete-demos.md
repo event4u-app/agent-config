@@ -13,7 +13,7 @@ prose_delta:
 > Wrong / right / why demos for the `verify-before-complete` Iron
 > Law (no completion claim without fresh evidence in this message).
 > Linked from
-> [`verify-before-complete`](../../.agent-src.uncompressed/rules/verify-before-complete.md)
+> [`verify-before-complete`](../../.agent-src.uncondensed/rules/verify-before-complete.md)
 > § Examples. Outcome baseline at
 > [`tests/golden/outcomes/verify_before_complete.json`](../../tests/golden/outcomes/verify_before_complete.json).
 

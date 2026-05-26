@@ -228,7 +228,7 @@ test_tools_combination_cursor_plus_windsurf() {
 # tree, and bypassable via AGENT_CONFIG_ALLOW_SELF_INSTALL=1 for self-tests.
 test_source_repo_guard_blocks_project_install() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    mkdir -p "$TMPDIR/.agent-src.uncondensed"
     local out exit_code
     out="$(bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
     assert_true "guard: exit 2 on project install into source tree" test "$exit_code" -eq 2
@@ -239,7 +239,7 @@ test_source_repo_guard_blocks_project_install() {
 
 test_source_repo_guard_allows_global_install() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    mkdir -p "$TMPDIR/.agent-src.uncondensed"
     # Sandbox HOME so user-scope deploys (~/.claude/, ~/.cursor/, …) land
     # under TMPDIR instead of the developer's real config dirs. Mirrors
     # the `isolated_lock` fixture in tests/test_installed_lock.py.
@@ -258,7 +258,7 @@ test_source_repo_guard_allows_global_install() {
 
 test_source_repo_guard_override_env_bypasses() {
     setup
-    mkdir -p "$TMPDIR/.agent-src.uncompressed"
+    mkdir -p "$TMPDIR/.agent-src.uncondensed"
     local out exit_code
     out="$(AGENT_CONFIG_ALLOW_SELF_INSTALL=1 \
         bash "$INSTALL" --target "$TMPDIR" --quiet 2>&1)"; exit_code=$?
@@ -269,7 +269,7 @@ test_source_repo_guard_override_env_bypasses() {
 
 test_source_repo_guard_package_json_marker() {
     setup
-    # No .agent-src.uncompressed/, but package.json declares the source name.
+    # No .agent-src.uncondensed/, but package.json declares the source name.
     cat >"$TMPDIR/package.json" <<'JSON'
 { "name": "@event4u/agent-config", "version": "0.0.0" }
 JSON

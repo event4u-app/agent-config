@@ -234,7 +234,7 @@ documentation rewrite for marginal additional savings.
   (Phase 5.4 R3 raw debate)
 - `docs/decisions/ADR-rule-kernel-and-router.md` (kernel-membership
   contract — Phase 5 changes leave kernel untouched per Lever C lock)
-- `.agent-src.uncompressed/rules/guidelines.md` (deprecated subject)
-- `.agent-src.uncompressed/rules/size-enforcement.md` (merged subject)
-- `.agent-src.uncompressed/rules/package-ci-checks.md` (demoted subject)
-- `.agent-src.uncompressed/rules/analysis-skill-routing.md` (demoted subject)
+- `.agent-src.uncondensed/rules/guidelines.md` (deprecated subject)
+- `.agent-src.uncondensed/rules/size-enforcement.md` (merged subject)
+- `.agent-src.uncondensed/rules/package-ci-checks.md` (demoted subject)
+- `.agent-src.uncondensed/rules/analysis-skill-routing.md` (demoted subject)

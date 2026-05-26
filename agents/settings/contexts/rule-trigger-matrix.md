@@ -11,7 +11,7 @@ table; size and context-chain columns are derived from the rule files.
 | Column | Meaning |
 |---|---|
 | `type` | Frontmatter `type` (`always` / `auto`) |
-| `raw` | Compressed rule size in chars (`.agent-src/rules/<name>`) |
+| `raw` | Condensed rule size in chars (`.agent-src/rules/<name>`) |
 | `ext` | Extended size under Model (b): raw + transitive `load_context` |
 | `trigger` | Observable event that should activate the rule |
 | `obs` | Where the trigger is observable: `hook` (platform hook), `settings` (`.agent-settings.yml` state), `agent-only` (in-head), `mechanical-already` (precedent — already enforced by a script) |
@@ -37,7 +37,7 @@ table; size and context-chain columns are derived from the rule files.
 | `agent-docs.md` | auto | 2745 | 2745 | file-edit on agents/reference/docs/, AGENTS.md | hook | tool-call | medium | 2a | no | Path-pattern based marker |
 | `analysis-skill-routing.md` | auto | 1486 | 1486 | analysis skill picker | agent-only | output | NA-soft | 3 | suspected | Skill-router; no observable surface today |
 | `architecture.md` | auto | 2712 | 2712 | new file/class/module creation | agent-only | output | NA-soft | 3 | no | Architectural decisions — judgment-bound |
-| `artifact-drafting-protocol.md` | auto | 3255 | 3255 | skill/rule create or major rewrite | hook | output | medium | 2a | no | Marker on file-create in .agent-src.uncompressed/{skills,rules,commands}/ |
+| `artifact-drafting-protocol.md` | auto | 3255 | 3255 | skill/rule create or major rewrite | hook | output | medium | 2a | no | Marker on file-create in .agent-src.uncondensed/{skills,rules,commands}/ |
 | `artifact-engagement-recording.md` | auto | 3870 | 6965 | phase-step / task end | mechanical-already | hook | NA-mechanical | mechanical-already | no | telemetry:record subprocess is already mechanical |
 | `ask-when-uncertain.md` | always | 3893 | 3893 | pre-send vague-detection | agent-only | output | NA-soft | 3 | no | One-question-per-turn — output-rewrite would be needed |
 | `augment-portability.md` | auto | 3256 | 7589 | file save on .agent-src/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/check_portability.py |
@@ -69,7 +69,7 @@ table; size and context-chain columns are derived from the rule files.
 | `onboarding-gate.md` | auto | 3792 | 3792 | first turn (settings.onboarded == false) | settings | state | low | 1 | no | Pilot candidate — frequency 100% on un-onboarded projects, binary verifiable |
 | `package-ci-checks.md` | auto | 1644 | 4264 | pre-push to remote | mechanical-already | hook | NA-mechanical | mechanical-already | no | task ci is the gate |
 | `php-coding.md` | auto | 3631 | 3631 | PHP file edit | agent-only | output | NA-soft | 3 | no | Topic-matched coding guideline |
-| `preservation-guard.md` | auto | 4065 | 4065 | skill/rule merge or compress | hook | tool-call | medium | 2b | no | Pre-merge structured check — diff-shape verifiable |
+| `preservation-guard.md` | auto | 4065 | 4065 | skill/rule merge or condense | hook | tool-call | medium | 2b | no | Pre-merge structured check — diff-shape verifiable |
 | `review-routing-awareness.md` | auto | 4580 | 7352 | PR-prep / risk flagging | hook | output | medium | 2a | no | Marker when /create-pr or risk-tagging keywords detected |
 | `reviewer-awareness.md` | auto | 3833 | 3833 | PR-prep | hook | output | medium | 2a | no | Reviewer-suggestion marker at PR creation |
 | `roadmap-progress-sync.md` | auto | 5827 | 10132 | file-edit on agents/roadmaps/** | hook | tool-call | low | 1 | no | Pilot 1 (smallest hook). PostToolUse path filter; already documented in mechanics context. |
@@ -78,7 +78,7 @@ table; size and context-chain columns are derived from the rule files.
 | `runtime-safety.md` | auto | 1304 | 1304 | skill metadata change | hook | tool-call | low | 2b | no | Linter-enforceable on skill frontmatter |
 | `scope-control.md` | always | 4636 | 8529 | git-op / refactor intent | agent-only | tool-call | NA-soft | safety-floor | no | Safety floor — permission gate |
 | `security-sensitive-stop.md` | auto | 3271 | 3271 | file-edit on auth/billing/secrets paths | hook | tool-call | low | 2a | no | Path-pattern based marker — strong candidate for low-cost hook |
-| `size-enforcement.md` | auto | 1073 | 1073 | file save on .agent-src.uncompressed/{skills,rules,commands}/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.py + check_always_budget.py |
+| `size-enforcement.md` | auto | 1073 | 1073 | file save on .agent-src.uncondensed/{skills,rules,commands}/** | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by skill_linter.py + check_always_budget.py |
 | `skill-improvement-trigger.md` | auto | 1809 | 1809 | task completion (settings.skill_improvement) | settings | state | low | 2a | no | Settings-flag observable; pipeline already exists |
 | `skill-quality.md` | auto | 3047 | 5675 | skill create/edit | mechanical-already | tool-call | NA-mechanical | mechanical-already | no | Enforced by scripts/skill_linter.py |
 | `slash-command-routing-policy.md` | auto | 1806 | 5351 | user msg starts with / | hook | tool-call | low | 1 | suspected | Pattern-detection; live-fire signal unverified |
@@ -93,30 +93,30 @@ table; size and context-chain columns are derived from the rule files.
 ## `load_context:` chains (CL Phase 1 inventory)
 
 Rules that load at least one context, with `rule → context → depth → chars`.
-Chars are measured on the compressed context file (Model (b) literal).
+Chars are measured on the condensed context file (Model (b) literal).
 
 | Rule | Context | Depth | Chars |
 |---|---|---:|---:|
-| `artifact-engagement-recording.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | 1 | 3095 |
-| `augment-portability.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-portability-mechanics.md` | 1 | 4333 |
-| `augment-source-of-truth.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | 1 | 4063 |
-| `autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-detection.md` | 1 | 2428 |
-| `autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md` | 1 | 1671 |
-| `autonomous-execution.md` | `.agent-src.uncompressed/contexts/execution/autonomy-examples.md` | 1 | 4354 |
-| `cli-output-handling.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | 1 | 3440 |
-| `command-suggestion-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | 1 | 2831 |
-| `commit-policy.md` | `.agent-src.uncompressed/contexts/authority/commit-mechanics.md` | 1 | 2472 |
-| `docs-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/docs-sync-mechanics.md` | 1 | 3860 |
-| `non-destructive-by-default.md` | `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md` | 1 | 3280 |
-| `package-ci-checks.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | 1 | 2620 |
-| `review-routing-awareness.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | 1 | 2772 |
-| `roadmap-progress-sync.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | 1 | 4305 |
-| `scope-control.md` | `.agent-src.uncompressed/contexts/authority/scope-mechanics.md` | 1 | 3893 |
-| `skill-quality.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/skill-quality-mechanics.md` | 1 | 2628 |
-| `slash-command-routing-policy.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md` | 1 | 3545 |
-| `ui-audit-gate.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | 1 | 2318 |
-| `user-interaction.md` | `.agent-src.uncompressed/contexts/communication/rules-auto/user-interaction-mechanics.md` | 1 | 2787 |
-| `verify-before-complete.md` | `.agent-src.uncompressed/contexts/execution/verification-mechanics.md` | 1 | 3285 |
+| `artifact-engagement-recording.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/artifact-engagement-recording-mechanics.md` | 1 | 3095 |
+| `augment-portability.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-portability-mechanics.md` | 1 | 4333 |
+| `augment-source-of-truth.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md` | 1 | 4063 |
+| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-detection.md` | 1 | 2428 |
+| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md` | 1 | 1671 |
+| `autonomous-execution.md` | `.agent-src.uncondensed/contexts/execution/autonomy-examples.md` | 1 | 4354 |
+| `cli-output-handling.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/cli-output-handling-mechanics.md` | 1 | 3440 |
+| `command-suggestion-policy.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/command-suggestion-policy-mechanics.md` | 1 | 2831 |
+| `commit-policy.md` | `.agent-src.uncondensed/contexts/authority/commit-mechanics.md` | 1 | 2472 |
+| `docs-sync.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/docs-sync-mechanics.md` | 1 | 3860 |
+| `non-destructive-by-default.md` | `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md` | 1 | 3280 |
+| `package-ci-checks.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/package-ci-checks-mechanics.md` | 1 | 2620 |
+| `review-routing-awareness.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/review-routing-awareness-mechanics.md` | 1 | 2772 |
+| `roadmap-progress-sync.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/roadmap-progress-sync-mechanics.md` | 1 | 4305 |
+| `scope-control.md` | `.agent-src.uncondensed/contexts/authority/scope-mechanics.md` | 1 | 3893 |
+| `skill-quality.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/skill-quality-mechanics.md` | 1 | 2628 |
+| `slash-command-routing-policy.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md` | 1 | 3545 |
+| `ui-audit-gate.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/ui-audit-gate-mechanics.md` | 1 | 2318 |
+| `user-interaction.md` | `.agent-src.uncondensed/contexts/communication/rules-auto/user-interaction-mechanics.md` | 1 | 2787 |
+| `verify-before-complete.md` | `.agent-src.uncondensed/contexts/execution/verification-mechanics.md` | 1 | 3285 |
 
 ## Dormant-suspected (per RH Phase 1)
 

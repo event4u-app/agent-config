@@ -2,7 +2,7 @@
 # Phase 10.7 baseline — runs only verbosity-aware patched-script tasks.
 # Skips broken-on-dirty-tree tasks (consistency, check-index, validate-schema).
 # This subset is what actually demonstrates the --quiet effect.
-TASKS="check-compressed-paths check-refs check-portability lint-roadmap-complexity check-public-catalog-links check-command-count check-cluster-patterns lint-rule-interactions lint-load-context check-context-paths check-no-roadmap-refs check-council-references lint-one-off-age check-reply-consistency check-iron-law-prominence check-always-budget check-one-off-location lint-rule-budget lint-skills lint-rule-tiers lint-handoffs lint-marketplace lint-examples"
+TASKS="check-condensed-paths check-refs check-portability lint-roadmap-complexity check-public-catalog-links check-command-count check-cluster-patterns lint-rule-interactions lint-load-context check-context-paths check-no-roadmap-refs check-council-references lint-one-off-age check-reply-consistency check-iron-law-prominence check-always-budget check-one-off-location lint-rule-budget lint-skills lint-rule-tiers lint-handoffs lint-marketplace lint-examples"
 
 run() {
   local label=$1

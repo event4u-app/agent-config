@@ -286,7 +286,7 @@ Without both, Phase 3 does not start.
       Driven by the 2026-05-14 P3.4 council round (claude-sonnet-4-5
       + gpt-4o, converged on rule refactor over escape-hatch overuse).
       Touches `scripts/check_council_references.py`,
-      `.agent-src.uncompressed/rules/no-roadmap-references.md`, and
+      `.agent-src.uncondensed/rules/no-roadmap-references.md`, and
       adds/updates test fixtures. Once shipped, the two
       `council-ref-allowed` suppressors landed in P3.4 are removed
       (rule now covers them structurally).

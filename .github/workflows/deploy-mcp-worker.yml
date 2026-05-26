@@ -9,7 +9,7 @@ name: deploy-mcp-worker
 #                             or re-deploy of a tag.
 #
 # A0-cloud invariants enforced here (not in the Worker):
-#   - Packer rejects empty content (exit 2) and > 5 MB uncompressed (exit 1).
+#   - Packer rejects empty content (exit 2) and > 5 MB uncondensed (exit 1).
 #   - R2 release prefix is treated immutable: pipeline refuses overwrite.
 #   - `latest.txt` is repointed only after post-deploy smoke passes.
 

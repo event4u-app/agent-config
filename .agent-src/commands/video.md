@@ -63,7 +63,7 @@ contract under [`scripts/ai-video/lib/adapter-contract.md`](../scripts/ai-video/
 - **Run `validate-deps.sh` first.** Every subcommand calls
   `scripts/ai-video/lib/validate-deps.sh` before any adapter; fails
   fast on missing personas / skills.
-- **Edit `.agent-src.uncompressed/` only.** Generated mirrors regenerate.
+- **Edit `.agent-src.uncondensed/` only.** Generated mirrors regenerate.
 
 ## See also
 

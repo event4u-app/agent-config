@@ -1,7 +1,7 @@
 # Ghostwriter fixture allowlist
 #
 # One file stem per line (without the .md extension).
-# Every file under .agent-src.uncompressed/ghostwriter/ whose stem is
+# Every file under .agent-src.uncondensed/ghostwriter/ whose stem is
 # NOT on this list will fail `task lint-ghostwriter-source`.
 #
 # Adding a new fixture requires:

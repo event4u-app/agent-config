@@ -100,7 +100,7 @@ def _resolve_regenerator(consumer_root: Path) -> Path | None:
     for candidate in (
         consumer_root / ".augment" / "scripts" / "update_roadmap_progress.py",
         consumer_root / ".agent-src" / "scripts" / "update_roadmap_progress.py",
-        consumer_root / ".agent-src.uncompressed" / "scripts" / "update_roadmap_progress.py",
+        consumer_root / ".agent-src.uncondensed" / "scripts" / "update_roadmap_progress.py",
     ):
         if candidate.is_file():
             return candidate

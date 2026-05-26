@@ -45,7 +45,7 @@ from _lib.agent_src import artefact_roots, resolve_logical  # noqa: E402
 # every package's catalogue, so the first hit is fine.
 COMMANDS_DIR = next(
     (r / "commands" for r in artefact_roots() if (r / "commands").is_dir()),
-    REPO_ROOT / ".agent-src.uncompressed" / "commands",
+    REPO_ROOT / ".agent-src.uncondensed" / "commands",
 )
 
 
@@ -797,7 +797,7 @@ def test_match_sanitize_off_exposes_raw_path(specs: list[CommandSpec]) -> None:
 # ---------------------------------------------------------------------------
 
 RULE_PATH = resolve_logical("rules/command-suggestion-policy.md") or (
-    REPO_ROOT / ".agent-src.uncompressed" / "rules" / "command-suggestion-policy.md"
+    REPO_ROOT / ".agent-src.uncondensed" / "rules" / "command-suggestion-policy.md"
 )
 
 

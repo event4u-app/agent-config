@@ -16,8 +16,8 @@ Asserts the structural floor pinned in
      required frontmatter keys (``name``, ``intent``, ``inputs``,
      ``output_shape``) plus ``skill_hint``.
   6. Every ``skills.yml`` skill ``id`` resolves to an existing skill
-     under ``.agent-src.uncompressed/skills/<id>/`` or
-     ``.agent-src/skills/<id>/`` (compressed projection counts).
+     under ``.agent-src.uncondensed/skills/<id>/`` or
+     ``.agent-src/skills/<id>/`` (condensed projection counts).
 
 The roadmap step is intentionally opt-in for CI — the existing
 ``task ci`` wiring is the caller's concern; this script is the
@@ -40,7 +40,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 ROLES_DIR = ROOT / "agents" / "roles"
 SKILL_SOURCES = [
-    ROOT / ".agent-src.uncompressed" / "skills",
+    ROOT / ".agent-src.uncondensed" / "skills",
     ROOT / ".agent-src" / "skills",
 ]
 

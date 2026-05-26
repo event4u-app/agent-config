@@ -128,7 +128,7 @@ A learning captured inside `agent-config` while developing
 - `/memory-promote <id>` drafts a PR against `agent-config` itself.
 - The draft lands as either a new entry in the content-addressed
   curated layout, or as a skill/rule/guideline change under
-  `.agent-src.uncompressed/` (if the learning pattern is
+  `.agent-src.uncondensed/` (if the learning pattern is
   "always do X" rather than "this fact is true").
 - Routing between "entry" and "skill/rule" is the existing five-stage
   pipeline in [`road-to-curated-self-improvement.md`](road-to-curated-self-improvement.md).
@@ -193,7 +193,7 @@ operational backend ships:
       *Blocker: `/memory-promote` targets the promotion flow defined in
       `agent-memory/road-to-promotion-flow.md`. Today: the absent-path
       equivalent is `learning-to-rule-or-skill` → PR against
-      `agents/memory/<type>/` or `.agent-src.uncompressed/`.*
+      `agents/memory/<type>/` or `.agent-src.uncondensed/`.*
       *(2026-04-22: `[-]` skipped until promotion flow ships in the
       agent-memory package — Q29.)*
 

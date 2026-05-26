@@ -89,7 +89,7 @@ UNCHECKED_TODO_PATTERN = re.compile(r'^\s*[-*+]\s+\[[ ~]\]\s')
 _SKIP_NAMES = {"the", "a", "an", "this", "that", "your", "my", "no", "any", "each", "one",
                "always", "auto", "fail", "vue", "guidelines", "naming",
                "orderBy", "no-commit", "skill-linter", "skill-validator",
-               "skill-refactor", "skill-caveman-compression", "skill-decompression",
+               "skill-refactor", "skill-telegraph-condensation", "skill-decondensation",
                "broad_scope", "composer"}
 
 # Paths that are clearly example/template placeholders (not real references)
@@ -119,7 +119,7 @@ EXAMPLE_PATH_PATTERNS = [
     re.compile(r"skills/[\w-]+\.md"),          # short skill refs in examples (not SKILL.md path)
     re.compile(r"skills/[\w-]+/SKILL\.md"),    # example skill paths in commands
     re.compile(r"\{"),                         # template placeholders like {module}
-    re.compile(r"\.compression-hashes\.json"), # JSON file, not .md
+    re.compile(r"\.condensation-hashes\.json"), # JSON file, not .md
     re.compile(r"-foo\.(md|json|yml|yaml)$"),  # `-foo.<ext>` placeholder examples
     re.compile(r"-bar\.(md|json|yml|yaml)$"),  # `-bar.<ext>` placeholder examples
     # Forward references inside in-flight planning docs (road-to-
@@ -212,7 +212,7 @@ def _extract_personas_frontmatter(text: str) -> list[tuple[int, str]]:
 
 def _find_suggestion(path: str, root: Path) -> str:
     name = Path(path).name
-    for d in [root / ".agent-src", root / ".agent-src.uncompressed", root / "agents"]:
+    for d in [root / ".agent-src", root / ".agent-src.uncondensed", root / "agents"]:
         if d.exists():
             for f in d.rglob(name):
                 return str(f.relative_to(root))
@@ -314,18 +314,18 @@ def check_file(filepath: Path, artifacts: dict[str, set[str]], root: Path) -> Li
             else:
                 # Strip leading ./ and try with prefixes
                 ref = raw_ref.lstrip("./")
-                for prefix in [root, root / ".agent-src", root / ".agent-src.uncompressed"]:
+                for prefix in [root, root / ".agent-src", root / ".agent-src.uncondensed"]:
                     if (prefix / ref).exists():
                         resolved = True
                         break
                 # `.augment/` is a local projection of `.agent-src/` (gitignored).
                 # In CI the projection doesn't exist, so resolve `.augment/X`
                 # against the canonical source at `.agent-src/X` (and the
-                # uncompressed authoring tree as a fallback). Note: `raw_ref`
+                # uncondensed authoring tree as a fallback). Note: `raw_ref`
                 # keeps the leading dot; `ref` above was stripped via lstrip.
                 if not resolved and raw_ref.startswith(".augment/"):
                     rel = raw_ref[len(".augment/") :]
-                    for prefix in [root / ".agent-src", root / ".agent-src.uncompressed"]:
+                    for prefix in [root / ".agent-src", root / ".agent-src.uncondensed"]:
                         if (prefix / rel).exists():
                             resolved = True
                             break

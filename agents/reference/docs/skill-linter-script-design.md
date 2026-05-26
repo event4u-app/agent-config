@@ -11,16 +11,16 @@ Goals:
 - Fail early on broken or weak skills
 - Detect structural issues
 - Detect duplication risk
-- Ensure compression safety
+- Ensure condensation safety
 - Actionable output for manual review
 
 ## Scope
 
 Lint targets:
-- Uncompressed skills (`.agent-src.uncompressed/skills/`)
-- Compressed skills (`.augment/skills/`)
-- Rules (`.agent-src.uncompressed/rules/`, `.augment/rules/`)
-- Optional: pair checks between uncompressed and compressed
+- Uncondensed skills (`.agent-src.uncondensed/skills/`)
+- Condensed skills (`.augment/skills/`)
+- Rules (`.agent-src.uncondensed/rules/`, `.augment/rules/`)
+- Optional: pair checks between uncondensed and condensed
 
 Supported modes:
 - Single file
@@ -38,8 +38,8 @@ Supported modes:
     # Changed files only
     skill-linter lint --changed
 
-    # Compare source and compressed pair
-    skill-linter lint --pair .agent-src.uncompressed/skills/x/SKILL.md .augment/skills/x/SKILL.md
+    # Compare source and condensed pair
+    skill-linter lint --pair .agent-src.uncondensed/skills/x/SKILL.md .augment/skills/x/SKILL.md
 
     # JSON output for CI
     skill-linter lint --all --format json
@@ -105,8 +105,8 @@ CI default: warnings do not block unless `--strict` enabled.
 - Warn on high overlap with existing file
 - Suggest: merge, update existing, or split scope
 
-### J. Compression safety checks (pair mode)
-- Compressed must preserve: trigger, validation, anti-failure, procedure skeleton
+### J. Condensation safety checks (pair mode)
+- Condensed must preserve: trigger, validation, anti-failure, procedure skeleton
 - Warn: examples removed but core preserved
 - Fail: validation lost, trigger broadened, critical warnings dropped
 
@@ -122,7 +122,7 @@ CI default: warnings do not block unless `--strict` enabled.
 
 ### Text output
 
-    [FAIL] .agent-src.uncompressed/skills/example/SKILL.md
+    [FAIL] .agent-src.uncondensed/skills/example/SKILL.md
     - [error] Missing section: Output format
     - [error] Validation vague: "check if it works"
     - [warn] Overlap risk: markdown-safe-codeblocks
@@ -157,8 +157,8 @@ CI default: warnings do not block unless `--strict` enabled.
         invalid_vague_validation.md
         valid_rule.md
         invalid_broad_skill.md
-        compressed_pair_ok/
-        compressed_pair_fail/
+        condensed_pair_ok/
+        condensed_pair_fail/
     config/
       skill_linter.yml          # optional
 
@@ -167,7 +167,7 @@ CI default: warnings do not block unless `--strict` enabled.
     task lint:skills              # lint all skills
     task lint:skills:changed      # lint changed only
     task lint:skills:strict       # strict mode (warnings = errors)
-    task lint:skills:pairs        # check uncompressed/compressed pairs
+    task lint:skills:pairs        # check uncondensed/condensed pairs
 
 ## Implementation Phases
 
@@ -181,7 +181,7 @@ CI default: warnings do not block unless `--strict` enabled.
 
 ### Phase 2
 - Duplication heuristics
-- Compression pair checks
+- Condensation pair checks
 - JSON output
 - Changed-files mode
 
@@ -234,7 +234,7 @@ artifact is touched for another reason. Do not open dedicated PRs.
 | Warning | Count | Fix |
 |---|---|---|
 | `missing_inspect_step` | 42 | Add an explicit inspect/check step to the procedure (usually `Read relevant file` or `Run grep/rg` before editing). |
-| `large_command` (6 commands) | 6 | Commands over ~1000 words (`agents-audit`, `compress`, `copilot-agents-optimize`, `optimize-augmentignore`, `project-analyze`, `rule-compliance-audit`). Split into sub-commands or move deep detail into a linked context doc. |
+| `large_command` (6 commands) | 6 | Commands over ~1000 words (`agents-audit`, `condense`, `copilot-agents-optimize`, `optimize-augmentignore`, `project-analyze`, `rule-compliance-audit`). Split into sub-commands or move deep detail into a linked context doc. |
 | `weak_output_format` | 6 | Output format section needs ≥2 ordered requirements. |
 | `missing_efficient_tooling_guidance` | 5 | Mention targeted filters (jq, rg, grep) in CLI-heavy artifacts. |
 | `missing_anti_bruteforce_guidance` | 4 | Add "max N retries, then stop and ask" language to execution guidance. |

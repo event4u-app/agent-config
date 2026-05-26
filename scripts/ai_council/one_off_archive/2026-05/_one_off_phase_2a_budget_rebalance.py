@@ -45,12 +45,12 @@ from scripts.ai_council.session import SessionManifest, save as save_session
 REPO_ROOT = Path(__file__).resolve().parents[2]
 ARTEFACTS = [
     REPO_ROOT / "docs/contracts/load-context-budget-model.md",
-    REPO_ROOT / ".agent-src.uncompressed/rules/language-and-tone.md",
-    REPO_ROOT / ".agent-src.uncompressed/rules/ask-when-uncertain.md",
-    REPO_ROOT / ".agent-src.uncompressed/rules/direct-answers.md",
-    REPO_ROOT / ".agent-src.uncompressed/contexts/communication/rules-always/language-and-tone-mechanics.md",
-    REPO_ROOT / ".agent-src.uncompressed/contexts/communication/rules-always/ask-when-uncertain-mechanics.md",
-    REPO_ROOT / ".agent-src.uncompressed/contexts/communication/rules-always/direct-answers-mechanics.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/language-and-tone.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/ask-when-uncertain.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/direct-answers.md",
+    REPO_ROOT / ".agent-src.uncondensed/contexts/communication/rules-always/language-and-tone-mechanics.md",
+    REPO_ROOT / ".agent-src.uncondensed/contexts/communication/rules-always/ask-when-uncertain-mechanics.md",
+    REPO_ROOT / ".agent-src.uncondensed/contexts/communication/rules-always/direct-answers-mechanics.md",
 ]
 
 ORIGINAL_ASK = (

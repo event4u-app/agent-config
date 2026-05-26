@@ -183,5 +183,5 @@ If a guideline prescribes a **unique, non-reinventable** output shape (e.g., a s
 
 - [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md) — parent, Problem 1 extends it (archived 2026-04-23)
 - [`archive/road-to-rule-quality-research.md`](../roadmaps/archive/road-to-rule-quality-research.md) — originating roadmap (archived)
-- [`rule-type-governance.md`](../../.agent-src.uncompressed/rules/rule-type-governance.md) — the auto/always classification this research depends on
+- [`rule-type-governance.md`](../../.agent-src.uncondensed/rules/rule-type-governance.md) — the auto/always classification this research depends on
 - [`archive/road-to-drafting-protocol.md`](../roadmaps/archive/road-to-drafting-protocol.md) — would benefit from Problem 1 data if both ship (archived 2026-04-21)

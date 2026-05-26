@@ -24,37 +24,37 @@ QUIET = "--quiet" in sys.argv
 ROOT = Path(__file__).resolve().parent.parent
 
 SCAN_DIRS = [
-    ROOT / ".agent-src.uncompressed" / "rules",
-    ROOT / ".agent-src.uncompressed" / "contexts",
+    ROOT / ".agent-src.uncondensed" / "rules",
+    ROOT / ".agent-src.uncondensed" / "contexts",
     ROOT / "agents" / "contexts",
 ]
 
 ALLOWED_PREFIXES = (
     "contexts/",                               # logical name (canonical — P1.1 / P5.3)
-    ".agent-src/contexts/",                    # projected (defensive — only seen in compressed inputs)
+    ".agent-src/contexts/",                    # projected (defensive — only seen in condensed inputs)
     "agents/settings/contexts/",                        # project-local
 )
 
-# `.agent-src.uncompressed/contexts/` was the legacy fully-qualified form
+# `.agent-src.uncondensed/contexts/` was the legacy fully-qualified form
 # (pre road-to-path-fixes.md P5.3). It is now a hard error: P2.1 migrated
 # all in-tree rules to logical names, the rewriter resolves them at
-# compress time, and the schema regex in `scripts/schemas/rule.schema.json`
+# condense time, and the schema regex in `scripts/schemas/rule.schema.json`
 # rejects the prefix at validate-schema time. Keeping a separate runtime
 # diagnostic so the failure points authors at the canonical
 # `contexts/<area>/<file>.md` form rather than a generic schema mismatch.
-LEGACY_PREFIX = ".agent-src.uncompressed/contexts/"
+LEGACY_PREFIX = ".agent-src.uncondensed/contexts/"
 
 # Logical names resolve against the source root.
-SOURCE_ROOT = ROOT / ".agent-src.uncompressed"
+SOURCE_ROOT = ROOT / ".agent-src.uncondensed"
 
-PUBLIC_RULE_PREFIX = ".agent-src.uncompressed/rules/"
+PUBLIC_RULE_PREFIX = ".agent-src.uncondensed/rules/"
 PROJECT_LOCAL_PREFIX = "agents/settings/contexts/"
 
 
 def resolve_entry(entry: str) -> Path:
     """Resolve a `load_context:` entry to an absolute path on disk.
 
-    Logical names (`contexts/...`) live under `.agent-src.uncompressed/`;
+    Logical names (`contexts/...`) live under `.agent-src.uncondensed/`;
     fully-qualified entries are repo-root-relative.
     """
     if entry.startswith("contexts/"):
@@ -152,9 +152,9 @@ def main() -> int:
                 errors.append(f"{rel(f)}: entry not str ending in .md → {entry!r}")
                 continue
             if entry.startswith(LEGACY_PREFIX):
-                logical = entry[len(".agent-src.uncompressed/"):]
+                logical = entry[len(".agent-src.uncondensed/"):]
                 errors.append(
-                    f"{rel(f)}: legacy `.agent-src.uncompressed/` prefix in load_context → {entry} "
+                    f"{rel(f)}: legacy `.agent-src.uncondensed/` prefix in load_context → {entry} "
                     f"— use logical name `{logical}` instead (road-to-path-fixes.md P5.3)"
                 )
                 continue

@@ -73,8 +73,8 @@ tasks:
       - task: counts-check
       - task: check-index
       - task: check-router
-      - task: check-compression
-      - task: check-compressed-paths
+      - task: check-condensation
+      - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
       - task: check-refs
@@ -172,8 +172,8 @@ tasks:
       - task: counts-check
       - task: check-index
       - task: check-router
-      - task: check-compression
-      - task: check-compressed-paths
+      - task: check-condensation
+      - task: check-condensed-paths
       - task: check-overlay-cascade-subdirs
       - task: check-template-pin-drift
       - task: check-refs

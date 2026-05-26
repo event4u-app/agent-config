@@ -10,7 +10,7 @@
 
 ## Surface
 
-`/onboard` lives at [`.agent-src.uncompressed/commands/onboard.md`](../../.agent-src.uncompressed/commands/onboard.md)
+`/onboard` lives at [`.agent-src.uncondensed/commands/onboard.md`](../../.agent-src.uncondensed/commands/onboard.md)
 (canonical source) and is triggered by the
 [`onboarding-gate`](../../.agent-src/rules/onboarding-gate.md) rule on
 the first turn when `onboarding.onboarded == false` in
@@ -75,7 +75,7 @@ onboarding:
 User-global file (step 9, opt-in): the six whitelisted keys in
 [`scripts/_lib/agent_settings.py`](../../scripts/_lib/agent_settings.py)
 — `name`, `ide`, `cost_profile`, `personal.bot_icon`,
-`personal.autonomy`, `caveman.speak_scope`.
+`personal.autonomy`, `telegraph.speak_scope`.
 
 ## Iron Laws today
 
@@ -119,7 +119,7 @@ The wizard MUST:
 
 ## See also
 
-- [`/onboard` command](../../.agent-src.uncompressed/commands/onboard.md) — canonical source.
+- [`/onboard` command](../../.agent-src.uncondensed/commands/onboard.md) — canonical source.
 - [`onboarding-gate`](../../.agent-src/rules/onboarding-gate.md) — trigger rule.
 - [`ADR-010`](../decisions/ADR-010-profile-pack-preset-boundary.md) — boundary the wizard must respect.
 - [`config-presets.md`](../contracts/config-presets.md) — preset axis the wizard writes.

@@ -138,6 +138,6 @@ majors.
 - Per-phase JSON the producer reads: [`decision-trace-v1.md`](decision-trace-v1.md).
 - Pattern-extraction consumer: [`extract_audit_patterns.py`](../../scripts/extract_audit_patterns.py).
 - Skill that consumes promoted patterns:
-  [`learning-to-rule-or-skill`](../../.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md).
+  [`learning-to-rule-or-skill`](../../.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md).
 - Append-only JSONL precedent:
   [`adr-chat-history-split.md`](adr-chat-history-split.md).

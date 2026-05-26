@@ -1,6 +1,6 @@
 """Pytest matrix for road-to-simplicity-and-everywhere Phase 5 (S25).
 
-Verifies that `scripts/compress.py --generate-tools` emits modern
+Verifies that `scripts/condense.py --generate-tools` emits modern
 editor formats with the expected frontmatter shape, and that the
 modern + legacy projections stay in parity (same source body).
 """
@@ -50,7 +50,7 @@ def _command_slug(source_file: Path) -> str:
 
 pytestmark = pytest.mark.skipif(
     not (CURSOR_RULES_DIR.exists() and WINDSURF_RULES_DIR.exists()),
-    reason="run `python3 scripts/compress.py --generate-tools` first",
+    reason="run `python3 scripts/condense.py --generate-tools` first",
 )
 
 

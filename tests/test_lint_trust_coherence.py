@@ -61,7 +61,7 @@ def fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             {
                 "category": "rule",
                 "name": None,
-                "path": "packages/core/.agent-src.uncompressed/rules/scope-control.md",
+                "path": "packages/core/.agent-src.uncondensed/rules/scope-control.md",
                 "packs": ["engineering-base"],
                 "trust": {
                     "level": "core",
@@ -72,7 +72,7 @@ def fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
             {
                 "category": "rule",
                 "name": None,
-                "path": "packages/pack-finance-basic/.agent-src.uncompressed/rules/finance-safety-floor.md",
+                "path": "packages/pack-finance-basic/.agent-src.uncondensed/rules/finance-safety-floor.md",
                 "packs": ["finance-basic"],
                 "trust": {
                     "level": "advisory",

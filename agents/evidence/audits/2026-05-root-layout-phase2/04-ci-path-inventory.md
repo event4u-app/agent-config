@@ -7,7 +7,7 @@
 1. Grep every `.github/workflows/*.yml` for `paths:`, `working-directory:`, `cache-dependency-path:`, and `run:` lines.
 2. Grep every `taskfiles/*.yml` and `Taskfile.yml` for path-bearing keys.
 3. Classify each hit by "movable" (referenced source/internal path) vs "frozen" (consumer surface).
-4. Count distinct edit points required to relocate `.agent-src/` or `.agent-src.uncompressed/` (the Phase 3 high-value moves).
+4. Count distinct edit points required to relocate `.agent-src/` or `.agent-src.uncondensed/` (the Phase 3 high-value moves).
 
 ## Findings — workflows
 
@@ -19,8 +19,8 @@
 | `check-visibility-drift.yml` | (sync-related, no root-dir reference) | n/a |
 | `consistency.yml` | (`.agent-src*/**`, scripts) | 🟡 source-relative |
 | `freeze-guard.yml` | (router/kernel paths) | n/a |
-| `migration-dry-run.yml` | (`.agent-src.uncompressed/rules/**`) | 🟡 source-relative |
-| `skill-lint.yml` | (`packages/<pack>/.agent-src.uncompressed/**`) | 🟡 source-relative |
+| `migration-dry-run.yml` | (`.agent-src.uncondensed/rules/**`) | 🟡 source-relative |
+| `skill-lint.yml` | (`packages/<pack>/.agent-src.uncondensed/**`) | 🟡 source-relative |
 | `smoke.yml`, `smoke-public-install.yml` | (consumer-install paths) | 🔒 contract |
 | `tests.yml` | (broad `.agent-src*/**`) | 🟡 source-relative |
 
@@ -34,7 +34,7 @@ cache-dependency-path: internal/workers/mcp/package-lock.json  # 1× (Phase 1 �
 ### Script invocations referencing source paths
 
 ```
-tests.yml:152          python3 scripts/compress.py --sync
+tests.yml:152          python3 scripts/condense.py --sync
 tests.yml:246/250      working-directory: packages/core/installer
 consistency.yml:90     python3 scripts/check_references.py
 consistency.yml:93     python3 scripts/check_portability.py
@@ -47,17 +47,17 @@ All invoke scripts under `scripts/` (🔒 frozen at root by ADR-028).
 
 ## Findings — taskfiles
 
-### `.agent-src.uncompressed/` references (source-of-truth)
+### `.agent-src.uncondensed/` references (source-of-truth)
 
 `taskfiles/ci-fast.yml`:
-- Line 58–59: `packages/{{.PACK}}/.agent-src.uncompressed/` (lint-pack)
-- Line 83: `.agent-src.uncompressed/skills/*/SKILL.md`
-- Line 93: `.agent-src.uncompressed/templates/skill-archive-note.md`
+- Line 58–59: `packages/{{.PACK}}/.agent-src.uncondensed/` (lint-pack)
+- Line 83: `.agent-src.uncondensed/skills/*/SKILL.md`
+- Line 93: `.agent-src.uncondensed/templates/skill-archive-note.md`
 - Line 117, 122, 137, 230, 240, 414, 465: various source-tree scans
 
 Total: **9+ source-path references** in `ci-fast.yml`.
 
-### `.agent-src/` references (compressed output)
+### `.agent-src/` references (condensed output)
 
 `taskfiles/content.yml`:
 - Line 6, 27, 42, 161, 230: sync/projection task references
@@ -75,11 +75,11 @@ Phase 1 already migrated these. ✅
 
 ## Phase 3 edit-point count (worst case)
 
-If Phase 3 relocates `.agent-src/` and/or `.agent-src.uncompressed/`:
+If Phase 3 relocates `.agent-src/` and/or `.agent-src.uncondensed/`:
 
 | Surface | Edit points | Notes |
 |---|---|---|
-| `scripts/compress.py` | ~3 constants | `TARGET_DIR`, `UNCOMPRESSED_DIR`, `HASH_FILE` |
+| `scripts/condense.py` | ~3 constants | `TARGET_DIR`, `UNCONDENSED_DIR`, `HASH_FILE` |
 | `scripts/install.py` | ~10 path tuples | `.agent-src/<sub>` mappings (lines 2174–2220) |
 | `scripts/annotate_discovery.py` | 2 constants | `ROOT`, `HASH_FILE` |
 | `scripts/check_references.py` | 1 regex | skip pattern |

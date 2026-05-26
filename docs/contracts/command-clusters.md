@@ -56,7 +56,7 @@ collapses 26 atomics → 11 sub-command clusters. Sub-commands use
 colon syntax (`/cluster:sub`) so Claude Code's command palette can
 autocomplete them. The standalone `/review` surface that mirrors
 `judge solo` lives at
-[`commands/review-changes.md`](../../.agent-src.uncompressed/commands/review-changes.md).
+[`commands/review-changes.md`](../../.agent-src.uncondensed/commands/review-changes.md).
 
 ## Cluster depth and sub-command naming
 
@@ -98,12 +98,12 @@ every new sub-command added to an existing cluster.
    `/<cluster> <sub>` is a first-class equivalent and routes to the
    same dispatcher; it must keep working. Autocompletion-aware UIs
    surface the colon form because it stays a single token. Full
-   semantics: [`slash-command-routing-policy-mechanics.md`](../../.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
+   semantics: [`slash-command-routing-policy-mechanics.md`](../../.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
    § Routing semantics.
 
 ## Frontmatter contract
 
-A new command file under `.agent-src.uncompressed/commands/` MUST
+A new command file under `.agent-src.uncondensed/commands/` MUST
 declare `cluster:` in its frontmatter, pointing to one of the locked
 clusters above:
 
@@ -133,7 +133,7 @@ here so future lens additions follow the same shape.
   (resolve target + capture `original_ask`), Step 2 (configure check +
   price-table freshness), Step 3 (cost confirmation), Step 4 (run CLI),
   Step 5 / 5a / 5b (render → critical-evaluation lens → user options),
-  Step 6 (hard floor). See [`commands/council.md` → `## Architecture`](../../.agent-src.uncompressed/commands/council.md).
+  Step 6 (hard floor). See [`commands/council.md` → `## Architecture`](../../.agent-src.uncondensed/commands/council.md).
 - **Wrappers:** `/council pr` · `/council design` · `/council optimize`
   resolve lens-specific input (PR target / design artefact / optimization
   target + metric), capture a wrapper-specific `original_ask`, then
@@ -182,7 +182,7 @@ has fewer findings.
 
 A shim is a one-file stub that:
 
-1. Keeps the old command slug in `.agent-src.uncompressed/commands/`.
+1. Keeps the old command slug in `.agent-src.uncondensed/commands/`.
 2. Declares `superseded_by:` in frontmatter pointing to the new
    cluster command (e.g. `superseded_by: fix ci`).
 3. Declares `deprecated_in:` with the release version (e.g.
@@ -299,4 +299,4 @@ A command that fails either floor drops to **Tier-1** at the next minor release;
 - [`docs/contracts/STABILITY.md`](STABILITY.md) — `beta` level rules apply.
 - [`docs/contracts/command-surface-tiers.md`](command-surface-tiers.md) — what each tier means and what `--help` surfaces.
 - [`docs/contracts/command-taxonomy.md`](command-taxonomy.md) — profile axis (discoverability) layered on top of this verb axis (invocation).
-- [`.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md`](../../.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md) — sibling telemetry surface; same privacy floor and four-layer enforcement model.
+- [`.agent-src.uncondensed/contexts/contracts/artifact-engagement-flow.md`](../../.agent-src.uncondensed/contexts/contracts/artifact-engagement-flow.md) — sibling telemetry surface; same privacy floor and four-layer enforcement model.

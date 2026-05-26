@@ -92,7 +92,7 @@ blocks — it does not hand a half-filled doc to the next stage.
   proposal doc as the PR body. Standard package CI runs.
   Frontmatter `stage: upstream` and `upstream_pr_url` set.
 - **Guardrails:** no `upstream-contribute` invocation ever edits
-  `.agent-src.uncompressed/` in the consumer repo. Writes happen
+  `.agent-src.uncondensed/` in the consumer repo. Writes happen
   in the fork / PR branch of the package repo only.
 
 ## Stage ownership
@@ -122,7 +122,7 @@ unreviewed upstream changes is not.
   need the evidence in one place.
 - **Do NOT** promote a learning with one piece of evidence. Two
   independent sources is the minimum; the gate enforces it.
-- **Do NOT** edit `.agent-src.uncompressed/` directly in a consumer
+- **Do NOT** edit `.agent-src.uncondensed/` directly in a consumer
   project "just to try it out". Drafts live in `agents/proposals/`.
 - **Do NOT** treat a `block` verdict as a personal rejection. The
   gate checks structural shape, not author intent.

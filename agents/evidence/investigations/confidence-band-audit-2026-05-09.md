@@ -8,7 +8,7 @@ but **not exposed** as a queryable signal to rules. P1.4b kill-switch fires.
 
 ```bash
 grep -rn "confidence_band" scripts/                            # 0 hits
-grep -rn "confidence_band" .agent-src.uncompressed/rules/      # 0 hits
+grep -rn "confidence_band" .agent-src.uncondensed/rules/      # 0 hits
 grep -rln "confidence_band" --include="*.py" --include="*.md"  # 16 paths
 ```
 
@@ -16,9 +16,9 @@ grep -rln "confidence_band" --include="*.py" --include="*.md"  # 16 paths
 
 | Path | Role |
 |---|---|
-| `.agent-src.uncompressed/templates/scripts/work_engine/scoring/decision_trace.py` | `derive_confidence_band()` — pure function, returns `low` / `medium` / `high` |
-| `.agent-src.uncompressed/templates/scripts/work_engine/hooks/builtin/decision_trace.py` | hook that emits `confidence_band` into a decision trace event |
-| `.agent-src.uncompressed/templates/scripts/work_engine/directives/ui/audit.py` | UI directive consuming it inside the work engine |
+| `.agent-src.uncondensed/templates/scripts/work_engine/scoring/decision_trace.py` | `derive_confidence_band()` — pure function, returns `low` / `medium` / `high` |
+| `.agent-src.uncondensed/templates/scripts/work_engine/hooks/builtin/decision_trace.py` | hook that emits `confidence_band` into a decision trace event |
+| `.agent-src.uncondensed/templates/scripts/work_engine/directives/ui/audit.py` | UI directive consuming it inside the work engine |
 | `docs/contracts/decision-trace-v1.md` | contract spec for the trace envelope |
 | `tests/work_engine/scoring/test_decision_trace_scoring.py` | tests against the function |
 
@@ -60,7 +60,7 @@ HARD-GATE wording lands.
 Reopen P1.4b when **any** of:
 
 1. A rule gains the ability to query `confidence_band` (helper added to
-   `scripts/` or `.agent-src.uncompressed/contexts/`).
+   `scripts/` or `.agent-src.uncondensed/contexts/`).
 2. The work_engine boundary is unified with the rule loader (e.g. via a
    shared session-state file).
 3. User explicitly requests a `confidence-band-rule-bridge` spike.

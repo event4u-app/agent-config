@@ -66,7 +66,7 @@ or `auto`-after-opt-in, act on them.
 - "Do you want a verification table or paragraph?" — pick whichever
   fits the conversation style; format is not a decision worth a turn.
 - "Show me a diff before regenerating output from a tracked source?"
-  — compression, code-gen, formatter passes, lock-file rebuilds — run
+  — condensation, code-gen, formatter passes, lock-file rebuilds — run
   it and report the result. Reversibility comes from the source, not
   from per-file confirmation. See [`non-destructive-by-default`](../../rules/non-destructive-by-default.md#not-in-scope--deterministic-regeneration)
   § Not in scope.

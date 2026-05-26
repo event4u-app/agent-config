@@ -4,7 +4,7 @@
 
 ## Source of truth
 
-Edit `packages/<pack>/.agent-src.uncompressed/` only. Generated trees regenerate from `task sync` + `task generate-tools`; never hand-edit.
+Edit `packages/<pack>/.agent-src.uncondensed/` only. Generated trees regenerate from `task sync` + `task generate-tools`; never hand-edit.
 
 ## Working on this repo
 
@@ -31,7 +31,7 @@ task ci                # full pipeline — green before PR
 
 1. **What is this repo?** — `event4u/agent-config`, a governed skill / rule / command suite for AI coding tools (no app runtime).
 2. **What language?** — All `.md` is English; agents mirror the user's language at runtime.
-3. **Where do I edit?** — `packages/<pack>/.agent-src.uncompressed/` only. Never the generated trees.
+3. **Where do I edit?** — `packages/<pack>/.agent-src.uncondensed/` only. Never the generated trees.
 4. **Lint / test / sync entry point?** — `task ci` (full pipeline). Subsets: `task sync`, `task generate-tools`, `task lint-skills`, `task test`.
 5. **Where do the always-active rules live?** — `.agent-src/rules/` (kernel = 9 Iron-Law rules; tier-1 / 2 via `dist/router.json`).
 6. **CI checks?** — `task ci:required-checks` previews per [`branch-protection-policy.md`](docs/contracts/branch-protection-policy.md); merge floor [`ci-green-floor.md`](docs/contracts/ci-green-floor.md); release [`release-pr-gating.md`](docs/contracts/release-pr-gating.md).

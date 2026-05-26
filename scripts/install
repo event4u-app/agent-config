@@ -274,8 +274,8 @@ fi
 # AGENT_CONFIG_ALLOW_SELF_INSTALL=1.
 if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
     self_marker=""
-    if [[ -d "$TARGET_DIR/.agent-src.uncompressed" ]]; then
-        self_marker=".agent-src.uncompressed/"
+    if [[ -d "$TARGET_DIR/.agent-src.uncondensed" ]]; then
+        self_marker=".agent-src.uncondensed/"
     elif [[ -f "$TARGET_DIR/package.json" ]] && \
          grep -qE '"name"[[:space:]]*:[[:space:]]*"@event4u/agent-config"' "$TARGET_DIR/package.json" 2>/dev/null; then
         self_marker='package.json::name === "@event4u/agent-config"'
@@ -285,7 +285,7 @@ if ! $GLOBAL && [[ "${AGENT_CONFIG_ALLOW_SELF_INSTALL:-0}" != "1" ]]; then
         echo "      Target:   $TARGET_DIR" >&2
         echo "      Detected: $self_marker" >&2
         echo "      Run \`task sync\` to regenerate .agent-src/ + .augment/ from" >&2
-        echo "      .agent-src.uncompressed/ instead. To force this anyway, set" >&2
+        echo "      .agent-src.uncondensed/ instead. To force this anyway, set" >&2
         echo "      AGENT_CONFIG_ALLOW_SELF_INSTALL=1." >&2
         exit 2
     fi

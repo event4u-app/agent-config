@@ -58,7 +58,7 @@ maintainer and passes a judge-agent review on first attempt.
 - [-] Read `mhattingpete/claude-skills-marketplace/execution-runtime` README + skill files *(Q34)*
 - [-] Sketch a minimal Node/TS port: FastMCP-compatible server + `bulk-edit` tool that accepts (pattern, replacement, glob) and returns diff summary *(Q34)*
 - [-] Benchmark against three representative bulk operations in this repo: *(Q34)*
-  - [-] Rename all occurrences of a frontmatter key across `.agent-src.uncompressed/skills/*.md`
+  - [-] Rename all occurrences of a frontmatter key across `.agent-src.uncondensed/skills/*.md`
   - [-] Replace a backtick-skill-reference pattern across 20+ analysis/roadmap docs
   - [-] Prepend a `## References` section to 5 target skills
 - [-] Measure token cost: session-only path vs spike-runtime path *(Q34)*
@@ -89,7 +89,7 @@ Do not inline the runtime build into this roadmap.
 - [x] Anti-rationalization table: re-express common skip-the-test excuses in our voice
 - [x] Examples: PHP/Pest + JS/Vitest snippets (all newly written)
 - [x] Frontmatter `description` uses imperative voice per `skill-quality` rule
-- [x] Linter passes: `python3 scripts/skill_linter.py .agent-src.uncompressed/skills/test-driven-development/SKILL.md`
+- [x] Linter passes: `python3 scripts/skill_linter.py .agent-src.uncondensed/skills/test-driven-development/SKILL.md`
 
 ### 1.2 `systematic-debugging`
 
@@ -125,11 +125,11 @@ Do not inline the runtime build into this roadmap.
 
 ### 1.5 Phase-1 acceptance
 
-- [x] All six skills (1.1 + 1.2 + 1.3 + 1.4) present in `.agent-src.uncompressed/skills/`
-- [x] Manual caveman compression of all six + rule update in `.agent-src/`
+- [x] All six skills (1.1 + 1.2 + 1.3 + 1.4) present in `.agent-src.uncondensed/skills/`
+- [x] Manual telegraph condensation of all six + rule update in `.agent-src/`
 - [x] `task sync` regenerates `.agent-src/` without diff drift
-- [x] `task lint-skills` green (no compression-missing warnings)
-- [x] `task test` + `task check-refs` + `task check-portability` + `task check-compression` green
+- [x] `task lint-skills` green (no condensation-missing warnings)
+- [x] `task test` + `task check-refs` + `task check-portability` + `task check-condensation` green
 - [-] One real ticket completed using the new TDD + review-discipline skills, recorded as evidence in the PR
   *(2026-04-22: deferred — this requires real ticket work on a
   consumer project, not the package itself. Tracked as Q34.)*
@@ -154,7 +154,7 @@ Do not inline the runtime build into this roadmap.
 - [x] Describe the five orchestration modes as reference material: do-and-judge, do-in-steps, do-in-parallel, do-competitively, judge-with-debate
 - [x] Each mode has a short decision-table: when to use, when not to use, model pairing
 - [x] Explicit link to `.agent-settings` keys above (via `subagent-configuration` context)
-- [x] Size budget: 190 lines uncompressed (target was ≤180; five-mode tables pushed it 10 over — accepted)
+- [x] Size budget: 190 lines uncondensed (target was ≤180; five-mode tables pushed it 10 over — accepted)
 
 ### 2.3 Minimum viable command set
 
@@ -166,9 +166,9 @@ Do not inline the runtime build into this roadmap.
 ### 2.4 Phase-2 acceptance
 
 - [x] `/commit` optionally wrappable in `/do-and-judge` — integration
-      block in [`commands/commit.md`](../../.agent-src.uncompressed/commands/commit.md)
+      block in [`commands/commit.md`](../../.agent-src.uncondensed/commands/commit.md)
       under "Optional: wrap in `/do-and-judge`"; cross-linked from
-      [`commands/do-and-judge.md`](../../.agent-src.uncompressed/commands/do-and-judge.md)
+      [`commands/do-and-judge.md`](../../.agent-src.uncondensed/commands/do-and-judge.md)
       "Wrappable commands" section
 - [x] `.agent-settings` migration tested on a fresh consumer install —
       `test_seeds_subagent_keys` (pytest, `tests/test_install_py.py`) +
@@ -187,7 +187,7 @@ Do not inline the runtime build into this roadmap.
 
 ### 3.1 Split `review-changes`
 
-- [x] Audit current `review-changes` command (location: `.agent-src.uncompressed/commands/review-changes.md`)
+- [x] Audit current `review-changes` command (location: `.agent-src.uncondensed/commands/review-changes.md`)
 - [x] Extract four judge roles as **sub-skills** (not standalone commands):
   - [x] `judge-bug-hunter` — functional correctness, edge cases, null-safety
   - [x] `judge-security-auditor` — authz, injection, secrets, unsafe deserialization
@@ -199,7 +199,7 @@ Do not inline the runtime build into this roadmap.
       independent reports)
 - [x] Each judge skill has a system-prompt-style opening under its top heading
       ("You are a judge specialized in …") — see e.g.
-      [`judge-bug-hunter/SKILL.md`](../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md)
+      [`judge-bug-hunter/SKILL.md`](../../.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md)
 
 ### 3.2 Phase-3 acceptance
 
@@ -306,13 +306,13 @@ real-task usage to validate. Tracked as Q34.)*
       Cursor working in parallel worktrees — dedicated section
 - [x] Include the "Do NOT use when" section (small fixes, linear branches,
       tiny repos, uncertain branch)
-- [x] Size budget: 148 lines uncompressed (target was ≤120; tables and
+- [x] Size budget: 148 lines uncondensed (target was ≤120; tables and
       numbered steps pushed it slightly over — still well below the
       200-line hard cap)
 
 ### 6.2 Phase-6 acceptance
 
-- [x] Skill linter passes (warnings only: minimal compression reduction —
+- [x] Skill linter passes (warnings only: minimal condensation reduction —
       source already tight)
 - [-] One real multi-worktree scenario documented in `agents/settings/contexts/`
       as case study — deferred; captured on first real parallel-agent
@@ -375,7 +375,7 @@ dedicated `artifact-drafting-protocol` session. Tracked as Q34.)*
 
 ### 9.1 Update consumer-facing template
 
-- [-] File: `.agent-src.uncompressed/templates/AGENTS.md` *(Q34)*
+- [-] File: `.agent-src.uncondensed/templates/AGENTS.md` *(Q34)*
 - [-] Add a new section "What this agent does for you" that lists the 10 north-star criteria in user-facing language *(Q34)*
 - [-] Link to this roadmap's North Star section *(Q34)*
 - [-] Keep the template line budget ≤220 lines total *(Q34)*

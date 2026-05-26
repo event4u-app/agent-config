@@ -65,8 +65,8 @@ is mostly a *pointer* to the real prior art:
 1. **Multi-tool projection** — 6 tools (Augment, Claude, Cursor, Cline,
    Windsurf, Gemini); superpowers ships 7, but most link-list skills support
    only one. NeoLab supports 4 via `vercel-labs/skills`.
-2. **Authoring pipeline** — `.agent-src.uncompressed/` → `.agent-src/` →
-   tool projections. None of the references have a compression layer or
+2. **Authoring pipeline** — `.agent-src.uncondensed/` → `.agent-src/` →
+   tool projections. None of the references have a condensation layer or
    portability linter.
 3. **Governance tooling** — `rule-type-governance`, `skill-quality`,
    `size-enforcement`, `check-portability`, `check-references`, 324+ tests.
@@ -165,10 +165,10 @@ sources (`sp` = superpowers, `ne` = NeoLab, `mh` = mhattingpete-marketplace,
    matching like superpowers/NeoLab.
 3. **Skill-creator equivalent** — `skill-writing` + `skill-quality` rule +
    `scripts/skill_linter.py` (stronger than Composio's `skill-creator`).
-4. **Progressive disclosure** — our compression layer + `.agent-src/` vs
-   `.agent-src.uncompressed/` already implements the three-level loading
+4. **Progressive disclosure** — our condensation layer + `.agent-src/` vs
+   `.agent-src.uncondensed/` already implements the three-level loading
    Composio describes.
-5. **Compression pipeline** — no reference has anything equivalent.
+5. **Condensation pipeline** — no reference has anything equivalent.
 6. **Portability governance** — `check-portability.py` + rules enforce
    project-agnosticism; no reference has this.
 
@@ -252,4 +252,4 @@ Cross-roadmap ties:
   [`archive/road-to-rule-quality-research.md`](../roadmaps/archive/road-to-rule-quality-research.md),
   [`archive/road-to-trigger-evals.md`](../roadmaps/archive/road-to-trigger-evals.md)
 - Command that produced this document:
-  [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
+  [`.agent-src.uncondensed/commands/analyze-reference-repo.md`](../../.agent-src.uncondensed/commands/analyze-reference-repo.md)

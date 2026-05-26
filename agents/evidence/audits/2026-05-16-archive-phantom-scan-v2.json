@@ -184,7 +184,7 @@
     "phantom_rate": 0.0
   },
   {
-    "roadmap": "caveman-compress-integration.md",
+    "roadmap": "telegraph-condense-integration.md",
     "has_closure": false,
     "block": "",
     "claims": [],
@@ -1160,9 +1160,9 @@
     "phantom_rate": 0.0
   },
   {
-    "roadmap": "step-10-caveman-parity.md",
+    "roadmap": "step-10-telegraph-parity.md",
     "has_closure": true,
-    "block": "## Closure decision (2026-05-16, maintainer override)\n\nThis roadmap is **sunset** under the closure mandate. The existing `compress`/`caveman-speak` mechanism (intensity off-by-default, runtime rule s",
+    "block": "## Closure decision (2026-05-16, maintainer override)\n\nThis roadmap is **sunset** under the closure mandate. The existing `condense`/`telegraph-speak` mechanism (intensity off-by-default, runtime rule s",
     "claims": [
       {
         "token": "step-99",
@@ -1172,7 +1172,7 @@
         "ever_in_git": false
       },
       {
-        "token": "caveman-speak",
+        "token": "telegraph-speak",
         "kind": "concept",
         "sentiment": "mixed",
         "exists": true,
@@ -1186,7 +1186,7 @@
         "ever_in_git": false
       },
       {
-        "token": "compress",
+        "token": "condense",
         "kind": "concept",
         "sentiment": "mixed",
         "exists": true,
@@ -1342,7 +1342,7 @@
         "ever_in_git": false
       },
       {
-        "token": ".agent-src.uncompressed/commands/",
+        "token": ".agent-src.uncondensed/commands/",
         "kind": "path",
         "sentiment": "mixed",
         "exists": true,
@@ -1409,7 +1409,7 @@
         "ever_in_git": false
       },
       {
-        "token": ".agent-src.uncompressed/templates/skill-archive-note.md",
+        "token": ".agent-src.uncondensed/templates/skill-archive-note.md",
         "kind": "path",
         "sentiment": "shipped",
         "exists": true,
@@ -1599,14 +1599,14 @@
         "ever_in_git": false
       },
       {
-        "token": "caveman-speak",
+        "token": "telegraph-speak",
         "kind": "concept",
         "sentiment": "mixed",
         "exists": true,
         "ever_in_git": false
       },
       {
-        "token": "compress",
+        "token": "condense",
         "kind": "concept",
         "sentiment": "mixed",
         "exists": true,

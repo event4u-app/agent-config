@@ -51,7 +51,7 @@ Frontend → Playwright, CLI → command execution, DB → query verification.
 
 ### Phase 5: Governance & Packaging Consistency
 
-Compressed/uncompressed pairs, hash consistency, duplicate detection,
+Condensed/uncondensed pairs, hash consistency, duplicate detection,
 cross-file dependency checks, baseline/ratchet mode for CI.
 
 ## Rollout Strategy

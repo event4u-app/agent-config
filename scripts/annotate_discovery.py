@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """R3 Phase 4 mass-annotator — discovery frontmatter helper.
 
-Walks a list of artefacts in `.agent-src.uncompressed/` and:
+Walks a list of artefacts in `.agent-src.uncondensed/` and:
   1. Inserts the 5 ADR-013 frontmatter keys (workspaces, packs, lifecycle,
      trust, install) before the closing `---`, deterministically.
   2. Mirrors the new keys into the matching `.agent-src/` counterpart so
-     the compressed projection stays consistent (body preserved).
-  3. Refreshes `internal/.compression-hashes.json` for each touched source path so
-     `task check-compression` stays green.
+     the condensed projection stays consistent (body preserved).
+  3. Refreshes `internal/.condensation-hashes.json` for each touched source path so
+     `task check-condensation` stays green.
 
 Idempotent: re-runs leave already-annotated files untouched.
 
@@ -24,9 +24,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 DST = ROOT / ".agent-src"
-HASH_FILE = ROOT / "internal" / ".compression-hashes.json"
+HASH_FILE = ROOT / "internal" / ".condensation-hashes.json"
 
 # Pack → (workspace_id, trust_level, default_install, removable, lifecycle).
 PACK_DEFAULTS: dict[str, tuple[str, str, bool, bool, str]] = {
@@ -92,11 +92,11 @@ def _annotate(path: Path, pack: str) -> bool:
     return True
 
 
-def _mirror_to_compressed(rel: Path, pack: str) -> None:
+def _mirror_to_condensed(rel: Path, pack: str) -> None:
     src = SRC / rel
     dst = DST / rel
     if not dst.exists():
-        return  # no compressed counterpart yet (e.g. new file)
+        return  # no condensed counterpart yet (e.g. new file)
     text = dst.read_text(encoding="utf-8")
     m = _FM_RE.match(text)
     if not m:
@@ -119,7 +119,7 @@ def _refresh_hash(rel: Path, hashes: dict) -> None:
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--pack", required=True, choices=sorted(PACK_DEFAULTS))
-    ap.add_argument("paths", nargs="+", help="repo-relative paths under .agent-src.uncompressed/")
+    ap.add_argument("paths", nargs="+", help="repo-relative paths under .agent-src.uncondensed/")
     args = ap.parse_args(argv)
 
     hashes: dict = json.loads(HASH_FILE.read_text()) if HASH_FILE.exists() else {}
@@ -128,17 +128,17 @@ def main(argv: list[str] | None = None) -> int:
         p = Path(raw)
         if p.is_absolute():
             p = p.relative_to(ROOT)
-        if not p.is_relative_to(Path(".agent-src.uncompressed")):
-            print(f"  skip (not under .agent-src.uncompressed/): {p}", file=sys.stderr)
+        if not p.is_relative_to(Path(".agent-src.uncondensed")):
+            print(f"  skip (not under .agent-src.uncondensed/): {p}", file=sys.stderr)
             continue
-        rel = p.relative_to(".agent-src.uncompressed")
+        rel = p.relative_to(".agent-src.uncondensed")
         src_file = SRC / rel
         if not src_file.is_file():
             print(f"  skip (missing): {p}", file=sys.stderr)
             continue
         if _annotate(src_file, args.pack):
             changed += 1
-        _mirror_to_compressed(rel, args.pack)
+        _mirror_to_condensed(rel, args.pack)
         _refresh_hash(rel, hashes)
     HASH_FILE.write_text(json.dumps(hashes, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     print(f"annotated {changed} files with pack={args.pack}")

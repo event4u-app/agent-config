@@ -1,454 +1,454 @@
-[PASS] .agent-src.uncompressed/commands/agent-handoff.md (command)
+[PASS] .agent-src.uncondensed/commands/agent-handoff.md (command)
   - INFO clarification_guard_missing: Contains action guidance but no explicit clarification behavior for incomplete requirements
 
-[WARN] .agent-src.uncompressed/commands/agents.md (command)
+[WARN] .agent-src.uncondensed/commands/agents.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/challenge-me.md (command)
+[WARN] .agent-src.uncondensed/commands/challenge-me.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/chat-history/show.md (command)
+[WARN] .agent-src.uncondensed/commands/chat-history/show.md (command)
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/chat-history.md (command)
+[WARN] .agent-src.uncondensed/commands/chat-history.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
 
-[WARN] .agent-src.uncompressed/commands/compress.md (command)
+[WARN] .agent-src.uncondensed/commands/condense.md (command)
   - WARNING large_command: Command has 1569 words, density 0.58 < 0.65, no delegation signal (frontmatter cluster:/routes_to: or ≥ 3 .md links); review for split or delegation (see linter-structural-model contract)
 
-[WARN] .agent-src.uncompressed/commands/context.md (command)
+[WARN] .agent-src.uncondensed/commands/context.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/copilot-agents.md (command)
+[WARN] .agent-src.uncondensed/commands/copilot-agents.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/council.md (command)
+[WARN] .agent-src.uncondensed/commands/council.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/feature/dev.md (command)
+[WARN] .agent-src.uncondensed/commands/feature/dev.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
 
-[WARN] .agent-src.uncompressed/commands/feature.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
-
-[WARN] .agent-src.uncompressed/commands/fix/portability.md (command)
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
-
-[WARN] .agent-src.uncompressed/commands/fix/pr.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/fix/refs.md (command)
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
-
-[WARN] .agent-src.uncompressed/commands/fix.md (command)
+[WARN] .agent-src.uncondensed/commands/feature.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/grill-me.md (command)
+[WARN] .agent-src.uncondensed/commands/fix/portability.md (command)
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/commands/fix/pr.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/fix/refs.md (command)
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/commands/fix.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/judge.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/memory.md (command)
+[WARN] .agent-src.uncondensed/commands/grill-me.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/module.md (command)
+[WARN] .agent-src.uncondensed/commands/judge.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/memory.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/optimize.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/override.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/project-analyze.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/research.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/roadmap/process-full.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/roadmap/process-phase.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/roadmap/process-step.md (command)
-  - WARNING no_steps: Command has no Steps section or numbered sub-headings
-
-[WARN] .agent-src.uncompressed/commands/roadmap.md (command)
+[WARN] .agent-src.uncondensed/commands/module.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/commands/rule-compliance-audit.md (command)
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+[WARN] .agent-src.uncondensed/commands/optimize.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
 
-[WARN] .agent-src.uncompressed/commands/sync-agent-settings.md (command)
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+[WARN] .agent-src.uncondensed/commands/override.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
 
-[WARN] .agent-src.uncompressed/commands/sync-gitignore.md (command)
-  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+[WARN] .agent-src.uncondensed/commands/project-analyze.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
 
-[WARN] .agent-src.uncompressed/commands/tests.md (command)
+[WARN] .agent-src.uncondensed/commands/research.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/roadmap/process-full.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/roadmap/process-phase.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/roadmap/process-step.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+
+[WARN] .agent-src.uncondensed/commands/roadmap.md (command)
   - WARNING no_steps: Command has no Steps section or numbered sub-headings
   - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
 
-[WARN] .agent-src.uncompressed/rules/agent-authority.md (rule)
+[WARN] .agent-src.uncondensed/commands/rule-compliance-audit.md (command)
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/commands/sync-agent-settings.md (command)
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/commands/sync-gitignore.md (command)
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/commands/tests.md (command)
+  - WARNING no_steps: Command has no Steps section or numbered sub-headings
+  - WARNING command_missing_skill_references: Command does not reference any skills — commands should orchestrate skills, not contain domain logic
+
+[WARN] .agent-src.uncondensed/rules/agent-authority.md (rule)
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
 
-[PASS] .agent-src.uncompressed/rules/architecture.md (rule)
+[PASS] .agent-src.uncondensed/rules/architecture.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/artifact-drafting-protocol.md (rule)
+[WARN] .agent-src.uncondensed/rules/artifact-drafting-protocol.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING long_rule: Rule has 65 non-empty lines, density 0.37 < 0.50, no Iron-Law block; rules should be concise (see linter-structural-model contract)
 
-[WARN] .agent-src.uncompressed/rules/augment-source-of-truth.md (rule)
+[WARN] .agent-src.uncondensed/rules/augment-source-of-truth.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
 
-[WARN] .agent-src.uncompressed/rules/autonomous-execution.md (rule)
+[WARN] .agent-src.uncondensed/rules/autonomous-execution.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
 
-[PASS] .agent-src.uncompressed/rules/caveman-speak.md (rule)
+[PASS] .agent-src.uncondensed/rules/telegraph-speak.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/context-hygiene.md (rule)
+[PASS] .agent-src.uncondensed/rules/context-hygiene.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/domain-adoption-policy.md (rule)
+[PASS] .agent-src.uncondensed/rules/domain-adoption-policy.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/downstream-changes.md (rule)
+[PASS] .agent-src.uncondensed/rules/downstream-changes.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/improve-before-implement.md (rule)
+[WARN] .agent-src.uncondensed/rules/improve-before-implement.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING missing_verification_tool_mapping: Verification is generic — does not reference concrete tools (Playwright, curl, Postman, Xdebug)
 
-[PASS] .agent-src.uncompressed/rules/invite-challenge.md (rule)
+[PASS] .agent-src.uncondensed/rules/invite-challenge.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/markdown-safe-codeblocks.md (rule)
+[PASS] .agent-src.uncondensed/rules/markdown-safe-codeblocks.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/minimal-safe-diff.md (rule)
+[WARN] .agent-src.uncondensed/rules/minimal-safe-diff.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING long_rule: Rule has 69 non-empty lines, density 0.41 < 0.50, no Iron-Law block; rules should be concise (see linter-structural-model contract)
 
-[PASS] .agent-src.uncompressed/rules/missing-tool-handling.md (rule)
+[PASS] .agent-src.uncondensed/rules/missing-tool-handling.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/model-recommendation.md (rule)
+[WARN] .agent-src.uncondensed/rules/model-recommendation.md (rule)
   - WARNING handoff_order_missing: Handoff/model-switch guidance does not specify asking handoff questions AFTER context/domain questions
 
-[PASS] .agent-src.uncompressed/rules/no-attribution-footers.md (rule)
+[PASS] .agent-src.uncondensed/rules/no-attribution-footers.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/no-unsolicited-rebase.md (rule)
+[PASS] .agent-src.uncondensed/rules/no-unsolicited-rebase.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/preservation-guard.md (rule)
+[WARN] .agent-src.uncondensed/rules/preservation-guard.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
 
-[PASS] .agent-src.uncompressed/rules/role-mode-adherence.md (rule)
+[PASS] .agent-src.uncondensed/rules/role-mode-adherence.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/runtime-safety.md (rule)
+[PASS] .agent-src.uncondensed/rules/runtime-safety.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/scope-control.md (rule)
+[WARN] .agent-src.uncondensed/rules/scope-control.md (rule)
   - WARNING question_strategy_missing: Interaction guidance does not distinguish simple grouped questions from complex sequential questions
   - WARNING handoff_order_missing: Handoff/model-switch guidance does not specify asking handoff questions AFTER context/domain questions
 
-[PASS] .agent-src.uncompressed/rules/security-sensitive-stop.md (rule)
+[PASS] .agent-src.uncondensed/rules/security-sensitive-stop.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/size-enforcement.md (rule)
+[WARN] .agent-src.uncondensed/rules/size-enforcement.md (rule)
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
 
-[WARN] .agent-src.uncompressed/rules/think-before-action.md (rule)
+[WARN] .agent-src.uncondensed/rules/think-before-action.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING procedural_rule: Rule looks procedural; consider a skill instead
   - WARNING missing_verification_tool_mapping: Verification is generic — does not reference concrete tools (Playwright, curl, Postman, Xdebug)
 
-[PASS] .agent-src.uncompressed/rules/token-efficiency.md (rule)
+[PASS] .agent-src.uncondensed/rules/token-efficiency.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[PASS] .agent-src.uncompressed/rules/tool-safety.md (rule)
+[PASS] .agent-src.uncondensed/rules/tool-safety.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
 
-[WARN] .agent-src.uncompressed/rules/user-interaction.md (rule)
+[WARN] .agent-src.uncondensed/rules/user-interaction.md (rule)
   - INFO router_routes_to_missing: Non-kernel rule has no routes_to: — body should migrate to skill / guideline in Phase 4
   - WARNING question_strategy_missing: Interaction guidance does not distinguish simple grouped questions from complex sequential questions
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
 
-[WARN] .agent-src.uncompressed/skills/adversarial-review/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/adversarial-review/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/ai-council/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/ai-council/SKILL.md (skill)
   - WARNING skill_too_large: Skill has 525 lines and density 0.37 < 0.60; review for split (see linter-structural-model contract)
 
-[WARN] .agent-src.uncompressed/skills/analysis-autonomous-mode/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/analysis-autonomous-mode/SKILL.md (skill)
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   - INFO clarification_guard_missing: Contains action guidance but no explicit clarification behavior for incomplete requirements
   Suggested fixes:
     - Add 2-4 ordered output requirements
 
-[PASS] .agent-src.uncompressed/skills/analysis-skill-router/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/analysis-skill-router/SKILL.md (skill)
   - INFO clarification_guard_missing: Contains action guidance but no explicit clarification behavior for incomplete requirements
 
-[WARN] .agent-src.uncompressed/skills/api-endpoint/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/api-endpoint/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/api-testing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/api-testing/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
   - WARNING missing_anti_bruteforce_guidance: Execution guidance lacks explicit anti-retry / anti-bruteforce behavior
   - WARNING missing_clarification_guard: Implementation guidance does not require clarification when requirements are incomplete
   - WARNING missing_frontend_verification_example: Skill covers frontend tasks but does not mention verification tools for that context (e.g. playwright, browser, screenshot)
 
-[WARN] .agent-src.uncompressed/skills/async-python-patterns/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/async-python-patterns/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/aws-infrastructure/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/aws-infrastructure/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/bug-analyzer/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/bug-analyzer/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_runtime_debug_guidance: Debugging/execution artifact does not mention runtime debug tools (Xdebug, debugger, breakpoints)
   - WARNING missing_backend_verification_example: Skill covers backend tasks but does not mention verification tools for that context (e.g. curl, postman, http::fake)
 
-[WARN] .agent-src.uncompressed/skills/code-refactoring/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/code-refactoring/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/code-review/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/code-review/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   Suggested fixes:
     - Add 2-4 ordered output requirements
 
-[WARN] .agent-src.uncompressed/skills/command-routing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/command-routing/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/composer-packages/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/composer-packages/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/copilot-config/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/copilot-config/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/dashboard-design/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/dashboard-design/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[PASS] .agent-src.uncompressed/skills/dcf-modeling/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/dcf-modeling/SKILL.md (skill)
   - No issues found
   Suggested fixes:
     - Add an Output format section with ordered response constraints
 
-[WARN] .agent-src.uncompressed/skills/design-review/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/design-review/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
 
-[WARN] .agent-src.uncompressed/skills/dto-creator/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/dto-creator/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/error-handling-patterns/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/error-handling-patterns/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/fe-design/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/fe-design/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/file-editor/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/file-editor/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[PASS] .agent-src.uncompressed/skills/funnel-analysis/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/funnel-analysis/SKILL.md (skill)
   - No issues found
   Suggested fixes:
     - Add an Output format section with ordered response constraints
 
-[WARN] .agent-src.uncompressed/skills/git-workflow/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/git-workflow/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING missing_validation_step: Assisted skill has no validation/challenge step in procedure
   Suggested fixes:
     - Add a requirement-checking or validation step before implementation
 
-[WARN] .agent-src.uncompressed/skills/github-ci/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/github-ci/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/grafana/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/grafana/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md (skill)
   - WARNING missing_frontend_verification_example: Skill covers frontend tasks but does not mention verification tools for that context (e.g. playwright, browser, screenshot)
 
-[WARN] .agent-src.uncompressed/skills/laravel-horizon/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-horizon/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-mail/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-mail/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-middleware/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-middleware/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-notifications/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-notifications/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-pennant/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-pennant/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-pulse/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-pulse/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-reverb/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-reverb/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-scheduling/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-scheduling/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/laravel-validation/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/laravel-validation/SKILL.md (skill)
   - WARNING missing_verification_tool_mapping: Verification is generic — does not reference concrete tools (Playwright, curl, Postman, Xdebug)
   - WARNING missing_anti_bruteforce_guidance: Execution guidance lacks explicit anti-retry / anti-bruteforce behavior
   - WARNING missing_clarification_guard: Implementation guidance does not require clarification when requirements are incomplete
   - WARNING missing_backend_verification_example: Skill covers backend tasks but does not mention verification tools for that context (e.g. curl, postman, http::fake)
 
-[WARN] .agent-src.uncompressed/skills/logging-monitoring/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/logging-monitoring/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/markitdown/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/markitdown/SKILL.md (skill)
   - WARNING bare_noun_name: Bare-noun skill name `markitdown` — consider adding a qualifier (e.g., `markitdown-management`)
 
-[WARN] .agent-src.uncompressed/skills/mcp/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/mcp/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
 
-[WARN] .agent-src.uncompressed/skills/mcp-builder/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/mcp-builder/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/merge-conflicts/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/merge-conflicts/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/migration-creator/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/migration-creator/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/mobile-e2e-strategy/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/mobile-e2e-strategy/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/module-management/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/module-management/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[PASS] .agent-src.uncompressed/skills/okr-tree-modeling/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/okr-tree-modeling/SKILL.md (skill)
   - No issues found
   Suggested fixes:
     - Add an Output format section with ordered response constraints
 
-[WARN] .agent-src.uncompressed/skills/openapi/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/openapi/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/performance-analysis/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/performance-analysis/SKILL.md (skill)
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   Suggested fixes:
     - Add 2-4 ordered output requirements
 
-[WARN] .agent-src.uncompressed/skills/pest-testing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/pest-testing/SKILL.md (skill)
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
 
-[WARN] .agent-src.uncompressed/skills/php-coder/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/php-coder/SKILL.md (skill)
   - WARNING missing_anti_bruteforce_guidance: Execution guidance lacks explicit anti-retry / anti-bruteforce behavior
   - WARNING missing_backend_verification_example: Skill covers backend tasks but does not mention verification tools for that context (e.g. curl, postman, http::fake)
   - WARNING missing_frontend_verification_example: Skill covers frontend tasks but does not mention verification tools for that context (e.g. playwright, browser, screenshot)
 
-[WARN] .agent-src.uncompressed/skills/php-debugging/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/php-debugging/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
   - WARNING missing_clarification_guard: Implementation guidance does not require clarification when requirements are incomplete
   - WARNING missing_cli_verification_example: Skill covers cli tasks but does not mention verification tools for that context (e.g. exit code, command output, artisan test)
 
-[WARN] .agent-src.uncompressed/skills/playwright-testing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/playwright-testing/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
   - WARNING missing_anti_bruteforce_guidance: Execution guidance lacks explicit anti-retry / anti-bruteforce behavior
 
-[WARN] .agent-src.uncompressed/skills/project-analysis-hypothesis-driven/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/project-analysis-hypothesis-driven/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/quality-tools/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/quality-tools/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/readme-reviewer/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/readme-reviewer/SKILL.md (skill)
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   Suggested fixes:
     - Add 2-4 ordered output requirements
 
-[WARN] .agent-src.uncompressed/skills/readme-writing-package/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/readme-writing-package/SKILL.md (skill)
   - WARNING missing_validation_step: Assisted skill has no validation/challenge step in procedure
   Suggested fixes:
     - Add a requirement-checking or validation step before implementation
 
-[WARN] .agent-src.uncompressed/skills/receiving-code-review/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/receiving-code-review/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/repomix/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/repomix/SKILL.md (skill)
   - WARNING bare_noun_name: Bare-noun skill name `repomix` — consider adding a qualifier (e.g., `repomix-management`)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
 
-[WARN] .agent-src.uncompressed/skills/requesting-code-review/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/requesting-code-review/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[PASS] .agent-src.uncompressed/skills/rice-prioritization/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/rice-prioritization/SKILL.md (skill)
   - No issues found
   Suggested fixes:
     - Add an Output format section with ordered response constraints
 
-[WARN] .agent-src.uncompressed/skills/rtk-output-filtering/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/rtk-output-filtering/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/script-writing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/script-writing/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/security-audit/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/security-audit/SKILL.md (skill)
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   Suggested fixes:
     - Add 2-4 ordered output requirements
 
-[WARN] .agent-src.uncompressed/skills/skill-improvement-pipeline/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/skill-improvement-pipeline/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/skill-reviewer/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/skill-reviewer/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - INFO clarification_guard_missing: Contains action guidance but no explicit clarification behavior for incomplete requirements
   - INFO feedback_learning_missing: Meta/reviewer artifact does not mention learning from negative feedback or converting failures into system improvements
 
-[WARN] .agent-src.uncompressed/skills/sql-writing/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/sql-writing/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/technical-specification/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/technical-specification/SKILL.md (skill)
   - WARNING short_procedure: Procedure has fewer than 3 ordered steps
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/terraform/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/terraform/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/terragrunt/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/terragrunt/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/testing-anti-patterns/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING missing_runtime_debug_guidance: Debugging/execution artifact does not mention runtime debug tools (Xdebug, debugger, breakpoints)
   - WARNING missing_efficient_tooling_guidance: Artifact does not encourage targeted filtering tools (jq, rg, grep) for reducing output
@@ -456,21 +456,21 @@
   - WARNING missing_backend_verification_example: Skill covers backend tasks but does not mention verification tools for that context (e.g. curl, postman, http::fake)
   - WARNING missing_frontend_verification_example: Skill covers frontend tasks but does not mention verification tools for that context (e.g. playwright, browser, screenshot)
 
-[WARN] .agent-src.uncompressed/skills/token-optimizer/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/token-optimizer/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[WARN] .agent-src.uncompressed/skills/traefik/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/traefik/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
 
-[PASS] .agent-src.uncompressed/skills/unit-economics-modeling/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/unit-economics-modeling/SKILL.md (skill)
   - No issues found
   Suggested fixes:
     - Add an Output format section with ordered response constraints
 
-[PASS] .agent-src.uncompressed/skills/universal-project-analysis/SKILL.md (skill)
+[PASS] .agent-src.uncondensed/skills/universal-project-analysis/SKILL.md (skill)
   - INFO clarification_guard_missing: Contains action guidance but no explicit clarification behavior for incomplete requirements
 
-[WARN] .agent-src.uncompressed/skills/validate-feature-fit/SKILL.md (skill)
+[WARN] .agent-src.uncondensed/skills/validate-feature-fit/SKILL.md (skill)
   - WARNING missing_inspect_step: Procedure has no explicit inspect/check step
   - WARNING weak_output_format: Output format should contain at least 2 ordered requirements
   Suggested fixes:

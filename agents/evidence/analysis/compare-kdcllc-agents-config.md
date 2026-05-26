@@ -89,7 +89,7 @@ problem. No strategic threat, no overlap to worry about.
 | **Skills library** | None (this is not their job) | 90+ curated | **ALREADY** | Different product. |
 | **Rules / governance** | None | `rule-type-governance`, `skill-quality`, portability linter, size enforcement | **ALREADY** | Reference doesn't need these. |
 | **Multi-tool projection** | Copilot only | Augment + Claude + Cursor + Cline + Windsurf + Gemini | **ALREADY** | Six targets vs. one. |
-| **Compression pipeline** | Not applicable | `.agent-src.uncompressed/` → `.agent-src/` | **ALREADY** | Reference has nothing content-like to compress. |
+| **Condensation pipeline** | Not applicable | `.agent-src.uncondensed/` → `.agent-src/` | **ALREADY** | Reference has nothing content-like to condense. |
 | **Test framework** | pytest + pytest-cov + mypy + flake8 + black + isort | pytest + shell tests | UNCLEAR | They run mypy strict; worth checking if we should on `scripts/`. |
 | **Copilot project hint** | README points to `.github/copilot-instructions.md` and chatmode files | Same | ALREADY | |
 
@@ -194,7 +194,7 @@ Fold into existing roadmaps — **no new roadmap needed**:
 - Surviving roadmap (shipped, archived 2026-04-21):
   [`agents/roadmaps/archive/road-to-mcp.md`](../roadmaps/archive/road-to-mcp.md)
 - Command that produced this document:
-  [`.agent-src.uncompressed/commands/analyze-reference-repo.md`](../../.agent-src.uncompressed/commands/analyze-reference-repo.md)
+  [`.agent-src.uncondensed/commands/analyze-reference-repo.md`](../../.agent-src.uncondensed/commands/analyze-reference-repo.md)
 
 ## Scope review (2026-04-20)
 

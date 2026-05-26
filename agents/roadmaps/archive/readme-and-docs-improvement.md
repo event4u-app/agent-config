@@ -334,7 +334,7 @@ one-line description. We should show the best ones.
     - `/create-pr` — Create PR with Jira-linked description
     - `/fix-ci` — Fetch and fix GitHub Actions failures
     - `/fix-pr-comments` — Fix and reply to review comments
-    - `/compress` — Compress skills for token efficiency
+    - `/condense` — Condense skills for token efficiency
     - `/quality-fix` — Run and fix all quality checks
     - `/review-changes` — Self-review before creating a PR
     - `/jira-ticket` — Read ticket from branch, implement feature
@@ -523,7 +523,7 @@ cross-linking improvements.
 - [x] Review docs/architecture.md — system layers, tool matrix (verified current)
 - [x] Review docs/development.md — Taskfile targets documented (verified current)
 - [x] Review docs/customization.md — override examples (verified current)
-- [x] Review docs/quality.md — linting, CI, compression system (verified current)
+- [x] Review docs/quality.md — linting, CI, condensation system (verified current)
 - [x] Add docs/skills-catalog.md (auto-generated via `scripts/generate_catalog.py`)
 - [x] Ensure every docs page has a "← Back to README" link (added to architecture, customization, development, installation, quality; getting-started already has `→ Full documentation`; skills-catalog and github-topics have the link)
 - [x] Cross-links: README links to all 7 docs pages + llms.txt; every doc page links back to README

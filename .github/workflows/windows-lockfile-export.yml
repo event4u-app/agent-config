@@ -41,7 +41,7 @@ jobs:
     name: Windows lockfile + export tests
     runs-on: windows-latest
     # PYTHONIOENCODING forces stdout/stderr to UTF-8 so the ✅/❌ markers
-    # compress.py prints survive Windows' default cp1252 encoding
+    # condense.py prints survive Windows' default cp1252 encoding
     # (otherwise the bootstrap step crashes with UnicodeEncodeError on
     # '✅').
     env:
@@ -61,7 +61,7 @@ jobs:
         # install_global content tests need the projected `.augment/` etc.
         # trees, which are git-ignored and rebuilt from `.agent-src/` by
         # sync.
-        run: python scripts/compress.py --sync
+        run: python scripts/condense.py --sync
 
       - name: Run lockfile + export tests
         run: python -m pytest tests/test_installed_lock.py tests/test_cmd_export.py -v

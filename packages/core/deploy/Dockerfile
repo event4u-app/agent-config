@@ -6,7 +6,7 @@
 # under a non-root user. Bare-metal Compose first; Helm deferred to a
 # v2 deployment roadmap (ADR-021).
 #
-# Image size budget: < 600 MB compressed. Stages:
+# Image size budget: < 600 MB condensed. Stages:
 #   1. node-builder  — install + tsc -p packages/core/installer
 #   2. runtime       — slim Node base; carry installer dist + node_modules.
 #                      Static GUI assets are inlined into

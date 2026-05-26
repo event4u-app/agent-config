@@ -17,14 +17,14 @@ restructure decision. Enumerates every artefact that names
 takes the < 30% branch and 6.2/6.3/6.4 are skipped.
 
 **Method.** `grep -rl --include="*.md" "<rule-id>"` across
-`.agent-src.uncompressed/`, `docs/`, `agents/`, with the rule's own
+`.agent-src.uncondensed/`, `docs/`, `agents/`, with the rule's own
 file excluded. Reproduce via:
 
 ```bash
 for r in chat-history-cadence chat-history-ownership chat-history-visibility; do
   echo "=== $r ==="
   grep -rl --include="*.md" "$r" \
-    .agent-src.uncompressed/ docs/ agents/ 2>/dev/null \
+    .agent-src.uncondensed/ docs/ agents/ 2>/dev/null \
     | grep -v "rules/$r.md"
 done
 ```
@@ -35,20 +35,20 @@ done
 
 | Consumer | Cites | Class |
 |---|---|---|
-| `.agent-src.uncompressed/rules/chat-history-cadence.md` | ownership, visibility | **sibling cross-ref** |
-| `.agent-src.uncompressed/rules/chat-history-ownership.md` | cadence, visibility | **sibling cross-ref** |
-| `.agent-src.uncompressed/rules/chat-history-visibility.md` | ownership, cadence | **sibling cross-ref** |
-| `.agent-src.uncompressed/rules/direct-answers.md` | visibility (`📒` whitelist) | **rule-to-rule cite** |
+| `.agent-src.uncondensed/rules/chat-history-cadence.md` | ownership, visibility | **sibling cross-ref** |
+| `.agent-src.uncondensed/rules/chat-history-ownership.md` | cadence, visibility | **sibling cross-ref** |
+| `.agent-src.uncondensed/rules/chat-history-visibility.md` | ownership, cadence | **sibling cross-ref** |
+| `.agent-src.uncondensed/rules/direct-answers.md` | visibility (`📒` whitelist) | **rule-to-rule cite** |
 
 ### Live command references
 
 | Consumer | Cites | Class |
 |---|---|---|
-| `.agent-src.uncompressed/commands/agent-handoff.md` | ownership | **command-to-rule cite** |
-| `.agent-src.uncompressed/commands/chat-history-checkpoint.md` | ownership | **command-to-rule cite** |
-| `.agent-src.uncompressed/commands/chat-history-clear.md` | ownership | **command-to-rule cite** |
-| `.agent-src.uncompressed/commands/chat-history-resume.md` | ownership | **command-to-rule cite** |
-| `.agent-src.uncompressed/commands/chat-history-show.md` | ownership | **command-to-rule cite** |
+| `.agent-src.uncondensed/commands/agent-handoff.md` | ownership | **command-to-rule cite** |
+| `.agent-src.uncondensed/commands/chat-history-checkpoint.md` | ownership | **command-to-rule cite** |
+| `.agent-src.uncondensed/commands/chat-history-clear.md` | ownership | **command-to-rule cite** |
+| `.agent-src.uncondensed/commands/chat-history-resume.md` | ownership | **command-to-rule cite** |
+| `.agent-src.uncondensed/commands/chat-history-show.md` | ownership | **command-to-rule cite** |
 
 ### Documentation references (contracts, catalog, getting-started)
 

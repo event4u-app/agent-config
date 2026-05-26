@@ -7,7 +7,7 @@ keep-beta-until: 2026-08-14
 
 > **Status:** active · **Stability:** beta · **Owner:** step-6-user-types-axis
 > · **Linter:** `scripts/skill_linter.py § lint_usertype`
-> · **Source-of-truth dir:** `.agent-src.uncompressed/user-types/`
+> · **Source-of-truth dir:** `.agent-src.uncondensed/user-types/`
 > · **Sibling axis (distinct):** install-time `user-types/` (package root) — see [`adr-install-user-type-axis`](adr-install-user-type-axis.md)
 > · **ADR:** [`adr-user-types-axis`](adr-user-types-axis.md)
 
@@ -127,7 +127,7 @@ The linter (`scripts/skill_linter.py § lint_usertype`) enforces:
 - description ≤ 160 chars
 
 Authors must use the template at
-`.agent-src.uncompressed/user-types/_template/user-type.md`.
+`.agent-src.uncondensed/user-types/_template/user-type.md`.
 
 ## § 7 — Versioning
 
@@ -142,5 +142,5 @@ version bump and a separate ADR.
 - [`persona-schema`](persona-schema.md) — sister axis (methodology vs end-user)
 - [`adr-user-types-axis`](adr-user-types-axis.md) — why the axis split exists
 - [`adr-install-user-type-axis`](adr-install-user-type-axis.md) — the install-time `user_type` axis (distinct layer, same vocabulary)
-- `.agent-src.uncompressed/user-types/README.md` — authoring entry point
-- `.agent-src.uncompressed/user-types/_template/user-type.md` — template starter
+- `.agent-src.uncondensed/user-types/README.md` — authoring entry point
+- `.agent-src.uncondensed/user-types/_template/user-type.md` — template starter

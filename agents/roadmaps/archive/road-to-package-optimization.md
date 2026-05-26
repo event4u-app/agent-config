@@ -67,7 +67,7 @@ unified design is premature and ships nothing.
 - [x] **P1.1 — Prototype gate: `scripts/prototype_lint_contradictions.py`.**
   *Shipped 2026-05-06. Ran in 0.034 s, scanned 317 artefacts, flagged
   0 contradictions. Null result documented above; closes roadmap.*
-  ≤200 LOC Python. Reads `.agent-src.uncompressed/{rules,skills,commands}/`
+  ≤200 LOC Python. Reads `.agent-src.uncondensed/{rules,skills,commands}/`
   + `agents/settings/contexts/`. For each artifact, extracts `description`
   frontmatter + section headings (`## When to use`, `## Procedure`,
   `## Steps`, `## Iron Law`). Builds an artifact-pair index keyed by

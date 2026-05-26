@@ -30,9 +30,9 @@ six entries, no role-detection guesswork.
 **Not sure which one?** Run `npx @event4u/agent-config init` then
 `agent-config setup` — the browser wizard asks a single 8-option role
 question and maps to the closest profile. Source-of-truth:
-[`packages/core/.agent-src.uncompressed/profiles/`](packages/core/.agent-src.uncompressed/profiles/) ·
+[`packages/core/.agent-src.uncondensed/profiles/`](packages/core/.agent-src.uncondensed/profiles/) ·
 schema: [`docs/contracts/profile-system.md`](docs/contracts/profile-system.md).
-Beyond software: [`user-types/`](packages/core/.agent-src.uncompressed/user-types/)
+Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types/)
 (galabau · metalworking · truck — see [Beyond software](#beyond-software).
 
 <p align="center">
@@ -72,7 +72,7 @@ Working on the package itself? [Development](#development) covers the
 `task ci` pipeline, [Requirements](#requirements) the toolchain,
 [Maintainer telemetry](#maintainer-telemetry-opt-in-default-off) the
 opt-in measurement loop. Source-of-truth tree is
-`packages/core/.agent-src.uncompressed/`; never hand-edit `.augment/` or `.agent-src/`.
+`packages/core/.agent-src.uncondensed/`; never hand-edit `.augment/` or `.agent-src/`.
 
 ---
 
@@ -112,7 +112,7 @@ It is **not** an agent runtime. The agent loop, the LLM dispatcher, and tool orc
 | In scope | Out of scope |
 |---|---|
 | Skills, rules, commands, guidelines, personas | Agent loop / LLM dispatcher |
-| Multi-tool projection + compression pipeline | Execution engine inside the package |
+| Multi-tool projection + condensation pipeline | Execution engine inside the package |
 | Memory helpers (`memory-add`, `memory-promote`) | Cross-tool observability dashboard |
 | Linters, CI, frontmatter validation against [JSON-Schema](scripts/schemas/) ([contract](agents/reference/docs/frontmatter-contract.md)) | Runtime GUI / web dashboard |
 | Skill orchestration via citations + deterministic helpers | Opinionated skill-resolver algorithm |
@@ -307,13 +307,13 @@ Stack-agnostic governance core (orchestration · role modes · command clusters 
 
 ### Beyond software
 
-The same orchestration core drives non-software trades via [`user-types/`](packages/core/.agent-src.uncompressed/user-types/): [`galabau-field-crew`](packages/core/.agent-src.uncompressed/user-types/galabau-field-crew.md) · [`metalworking-shop`](packages/core/.agent-src.uncompressed/user-types/metalworking-shop.md) · [`truck-driver`](packages/core/.agent-src.uncompressed/user-types/truck-driver.md). Contribute your own — [5-minute scaffold](packages/core/.agent-src.uncompressed/user-types/_template/).
+The same orchestration core drives non-software trades via [`user-types/`](packages/core/.agent-src.uncondensed/user-types/): [`galabau-field-crew`](packages/core/.agent-src.uncondensed/user-types/galabau-field-crew.md) · [`metalworking-shop`](packages/core/.agent-src.uncondensed/user-types/metalworking-shop.md) · [`truck-driver`](packages/core/.agent-src.uncondensed/user-types/truck-driver.md). Contribute your own — [5-minute scaffold](packages/core/.agent-src.uncondensed/user-types/_template/).
 
 ---
 
 ## Data governance & domain safety
 
-Three domain-safety rules ([`domain-safety-pii`](packages/core/.agent-src.uncompressed/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](packages/core/.agent-src.uncompressed/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](packages/core/.agent-src.uncompressed/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
+Three domain-safety rules ([`domain-safety-pii`](packages/core/.agent-src.uncondensed/rules/domain-safety-pii.md), [`domain-safety-disclaimer`](packages/core/.agent-src.uncondensed/rules/domain-safety-disclaimer.md), [`domain-safety-retention`](packages/core/.agent-src.uncondensed/rules/domain-safety-retention.md)) act as per-domain output floors across ~12 areas — PII redaction (support / finance / recruiting / marketing), advice disclaimers (legal / financial / medical / consulting), retention guidance (finance / support), ops floors (logging / export). Full surface → rule → floor matrix: [`docs/safety.md`](docs/safety.md). Beta contracts: [`memory-visibility-v1`](docs/contracts/memory-visibility-v1.md) · [`decision-trace-v1`](docs/contracts/decision-trace-v1.md).
 
 ### Maintainer telemetry (opt-in, default-off)
 
@@ -343,7 +343,7 @@ When a prompt matches a command's purpose ("setze ticket ABC-123 um" → `/imple
 | [**Installation**](docs/installation.md) | All install paths, Composer/npm, orchestrator details |
 | [**Architecture**](docs/architecture.md) | System layers, content pipeline, tool support matrix |
 | [**Customization**](docs/customization.md) | Overrides, AGENTS.md, agent settings, cost profiles |
-| [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, compression system |
+| [**Quality & CI**](docs/quality.md) | Linting, CI pipeline, condensation system |
 | [**Migration**](docs/MIGRATION.md) | Per-version upgrade steps |
 | [**Showcase**](docs/showcase.md) | More examples & expected behavior |
 
@@ -353,7 +353,7 @@ Browse content: [all 135 commands](.agent-src/commands/) · [skills catalog](doc
 
 ## Development
 
-Working on the package itself? Edit `packages/core/.agent-src.uncompressed/`, regenerate trees:
+Working on the package itself? Edit `packages/core/.agent-src.uncondensed/`, regenerate trees:
 
 ```bash
 task sync             # regenerate .agent-src/ and .augment/

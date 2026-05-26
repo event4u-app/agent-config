@@ -56,11 +56,11 @@ The check is deterministic and trivially re-runnable:
 import re
 from pathlib import Path
 
-rule_lines = Path('.agent-src.uncompressed/rules/autonomous-execution.md').read_text().splitlines()
+rule_lines = Path('.agent-src.uncondensed/rules/autonomous-execution.md').read_text().splitlines()
 ctxs = {
-    'detection': '.agent-src.uncompressed/contexts/execution/autonomy-detection.md',
-    'mechanics': '.agent-src.uncompressed/contexts/execution/autonomy-mechanics.md',
-    'examples':  '.agent-src.uncompressed/contexts/execution/autonomy-examples.md',
+    'detection': '.agent-src.uncondensed/contexts/execution/autonomy-detection.md',
+    'mechanics': '.agent-src.uncondensed/contexts/execution/autonomy-mechanics.md',
+    'examples':  '.agent-src.uncondensed/contexts/execution/autonomy-examples.md',
 }
 
 def keep(line):

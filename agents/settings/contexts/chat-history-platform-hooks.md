@@ -246,7 +246,7 @@ to `transcript_path` parsing using the Claude walker.
 ## Gemini CLI
 
 - **Hook surface:** lifecycle hooks shipped via `feat(hooks)` PR `#14307`; `SessionStart` context-injection completed in `#15746`.
-- **Lifecycle events:** `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent`, `BeforeModel`, `AfterModel`, `BeforeToolSelection`, `BeforeTool`, `AfterTool`, `PreCompress`, `Notification`.
+- **Lifecycle events:** `SessionStart`, `SessionEnd`, `BeforeAgent`, `AfterAgent`, `BeforeModel`, `AfterModel`, `BeforeToolSelection`, `BeforeTool`, `AfterTool`, `PreCondense`, `Notification`.
 - **Execution model:** subprocess; JSON in/out matching Claude's shape.
 - **Failure semantics:** `SessionStart` and `SessionEnd` are **advisory** — `continue` and `decision` ignored, startup never blocked. `BeforeAgent`, `BeforeModel`, `BeforeToolSelection` can block / mock.
 - **stdout reach:** `additionalContext` from `SessionStart` prepended to the user prompt; `systemMessage` shown in stderr.

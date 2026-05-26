@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Release-time discovery scanner — produces discovery-manifest.json.
 
-Walks the trusted-root tree (`.agent-src.uncompressed/`), extracts the
+Walks the trusted-root tree (`.agent-src.uncondensed/`), extracts the
 five Phase-4 frontmatter keys (`workspaces`, `packs`, `lifecycle`,
 `trust`, `install`), validates each value against the closed vocabulary
 in `config/discovery/*.yml`, and emits a deterministic JSON manifest
@@ -29,7 +29,7 @@ from validate_frontmatter import _FRONTMATTER_RE, parse_frontmatter  # noqa: E40
 from _lib.agent_src import artefact_roots, logical_relpath, resolve_logical, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 VOCAB_DIR = ROOT / "config" / "discovery"
 DEFAULT_OUT = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 DEFAULT_SUMMARY = ROOT / "dist" / "discovery" / "discovery-manifest.summary.md"
@@ -38,7 +38,7 @@ DEFAULT_TRUST_REPORT = ROOT / "dist" / "discovery" / "trust-report.md"
 DEFAULT_ORPHAN_REPORT = ROOT / "dist" / "discovery" / "orphan-report.md"
 DEFAULT_WORKSPACES_JSON = ROOT / "dist" / "discovery" / "workspaces.json"
 DEFAULT_PACKS_JSON = ROOT / "dist" / "discovery" / "packs.json"
-TRUST_ROOTS = (".agent-src.uncompressed", ".augment", ".claude", ".agent-src", "packages")
+TRUST_ROOTS = (".agent-src.uncondensed", ".augment", ".claude", ".agent-src", "packages")
 
 _FM_KEYS = ("workspaces", "packs", "lifecycle", "trust", "install")
 _TRUST_REQ = ("level", "confidence", "human_review_required")
@@ -55,8 +55,8 @@ def _load_yaml(path: Path) -> Any:
 def _vocab() -> tuple[list[dict[str, Any]], list[dict[str, Any]], dict[str, str]]:
     """Load discovery vocab. ``overrides`` keys are normalised to the
     *current* physical repo-relative path, regardless of whether the YAML
-    lists the legacy ``.agent-src.uncompressed/...`` prefix or a
-    ``packages/*/.agent-src.uncompressed/...`` prefix. The lookup site
+    lists the legacy ``.agent-src.uncondensed/...`` prefix or a
+    ``packages/*/.agent-src.uncondensed/...`` prefix. The lookup site
     (``_build``) compares against physical paths emitted by
     ``_iter_artefacts``.
     """
@@ -113,8 +113,8 @@ def _artefact_checksum(path: Path, fm: dict[str, Any] | None) -> str:
 def _iter_artefacts() -> Iterable[tuple[Path, str]]:
     """Deterministic order: skills → rules → commands → templates.
 
-    Walks every source root (legacy ``.agent-src.uncompressed/`` plus any
-    ``packages/*/.agent-src.uncompressed/``) so the manifest survives the
+    Walks every source root (legacy ``.agent-src.uncondensed/`` plus any
+    ``packages/*/.agent-src.uncondensed/``) so the manifest survives the
     physical move (ADR-017). Within each category, paths are sorted by
     their *logical* identity to keep ordering stable across moves.
     """

@@ -75,7 +75,7 @@ convergence, and the rationale for what we **do not** ship lives at
   to deprecate (new sub-command). Bump `lint_no_new_atomic_commands.py`
   expected-set if it caches the row.
 - [x] **A2 — `memory-consolidation` skill.** Author at
-  `.agent-src.uncompressed/skills/memory-consolidation/SKILL.md`,
+  `.agent-src.uncondensed/skills/memory-consolidation/SKILL.md`,
   senior-tier, Wing-1 engineering. Body documents the four phases
   (`ORIENT → GATHER SIGNAL → CONSOLIDATE → PRUNE & INDEX`) with the
   per-phase invariants from `compare-dream-skill.md` § Top-3 ADOPT,
@@ -87,7 +87,7 @@ convergence, and the rationale for what we **do not** ship lives at
   Frontmatter trigger covers "consolidate memory", "mine my
   sessions", "review intake signals".
 - [x] **A3 — `/memory:mine-session` sub-command.** Author at
-  `.agent-src.uncompressed/commands/memory/mine-session.md`,
+  `.agent-src.uncondensed/commands/memory/mine-session.md`,
   cluster `memory`, sub `mine-session`. Default behaviour
   `--preview`; explicit `--commit-intake` writes JSONL.
   `--confirm-transcript-access` flag required per invocation
@@ -98,7 +98,7 @@ convergence, and the rationale for what we **do not** ship lives at
   `~/.claude/projects/*/sessions/*.jsonl`; other hosts emit
   `not-supported-on-this-host` with manual `/memory:propose` fallback.
 - [x] **A4 — `/memory:load` inline-review hook.** Update
-  `.agent-src.uncompressed/commands/memory/load.md` so a load
+  `.agent-src.uncondensed/commands/memory/load.md` so a load
   action that finds > 10 unreviewed intake entries surfaces a
   numbered-options preview of the top-3 signals (highest-confidence
   first) with `[s]kip` as the default. Replaces the auto-trigger

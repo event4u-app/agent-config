@@ -287,7 +287,7 @@ File: `tests/AgentConfigPluginTest.php`
 - [x] `rules/php-coding.md` → returns `true` (copy)
 - [x] `rules/scope-control.md` → returns `true` (copy)
 - [x] `skills/coder/SKILL.md` → returns `false` (symlink)
-- [x] `commands/compress.md` → returns `false` (symlink)
+- [x] `commands/condense.md` → returns `false` (symlink)
 - [x] `guidelines/php/controllers.md` → returns `false` (symlink)
 - [x] `README.md` → returns `false` (symlink)
 - [x] `templates/roadmaps.md` → returns `false` (symlink)

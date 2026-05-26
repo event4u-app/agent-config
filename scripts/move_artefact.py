@@ -40,7 +40,7 @@ def _find_artefact(slug: str, kind: str | None) -> tuple[Path, str, str]:
     """Return (physical_path, detected_kind, current_pack_id)."""
     hits: list[tuple[Path, str, str]] = []
     for pkg in sorted(PACKAGES.iterdir()):
-        src = pkg / ".agent-src.uncompressed"
+        src = pkg / ".agent-src.uncondensed"
         if not src.is_dir():
             continue
         pid = "core" if pkg.name == "core" else pkg.name.removeprefix("pack-")
@@ -111,8 +111,8 @@ def main() -> int:
         return 0
 
     src_root = _move_root(src_md, kind)
-    dest_pkg_src = _pack_dir(args.to) / ".agent-src.uncompressed"
-    rel_under_pack = src_root.relative_to(_pack_dir(current_pack) / ".agent-src.uncompressed")
+    dest_pkg_src = _pack_dir(args.to) / ".agent-src.uncondensed"
+    rel_under_pack = src_root.relative_to(_pack_dir(current_pack) / ".agent-src.uncondensed")
     dest_root = dest_pkg_src / rel_under_pack
 
     print(f"plan: {kind} '{args.id}' : {current_pack} -> {args.to}")

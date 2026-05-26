@@ -77,13 +77,13 @@ at the sub-skill's findings by reference.
 
 Depends on: personas Phase 2 (Core-6 authored).
 
-- [x] `.agent-src.uncompressed/skills/refine-ticket/SKILL.md`
+- [x] `.agent-src.uncondensed/skills/refine-ticket/SKILL.md`
   drafted via `artifact-drafting-protocol`. Frontmatter declares
   `personas: [developer, senior-engineer, product-owner,
   stakeholder, critical-challenger, ai-agent]` as the default set.
   *(2026-04-22: skill shipped; orchestrates `validate-feature-fit`
   and `threat-modeling`; delegates input loading to `jira-ticket`.)*
-- [x] `.agent-src.uncompressed/commands/refine-ticket.md` drafted —
+- [x] `.agent-src.uncondensed/commands/refine-ticket.md` drafted —
   flags: `--personas=<list>` (override default), `--personas=+qa`
   (add specialist), `--fresh-eyes` (reweight toward first-time-
   reader confusion — cross-skill with Q23 review modes).
@@ -108,7 +108,7 @@ Depends on: personas Phase 2 (Core-6 authored).
 
 - [x] Skill reads a **detection map** declaring which sub-skills
   fire on which triggers (table above, externalized as data).
-  *(2026-04-22: `.agent-src.uncompressed/skills/refine-ticket/detection-map.yml`
+  *(2026-04-22: `.agent-src.uncondensed/skills/refine-ticket/detection-map.yml`
   + `scripts/refine_ticket_detect.py` helper; skill Step 2 cites the
   map and helper instead of carrying a prose copy.)*
 - [x] `validate-feature-fit` invocation path verified end-to-end
@@ -153,7 +153,7 @@ Same persona cast as refine-ticket. Separate skill + command so
 each stays focused. May be invoked via `/estimate-ticket` or
 chained after refine (`/refine-ticket --then-estimate`, TBD).
 
-- [x] `.agent-src.uncompressed/skills/estimate-ticket/SKILL.md`
+- [x] `.agent-src.uncondensed/skills/estimate-ticket/SKILL.md`
   drafted via `artifact-drafting-protocol`. Output: size (S/M/L/XL),
   risk (Low/Med/High), split recommendation (yes/no + split points),
   uncertainty (High-confidence / Needs-spike / Underspecified).
@@ -161,7 +161,7 @@ chained after refine (`/refine-ticket --then-estimate`, TBD).
   coordination / testing cost; Core-6 personas give one sizing-focused
   sentence each; Underspecified tickets get a single-line redirect to
   `/refine-ticket`.)*
-- [x] `.agent-src.uncompressed/commands/estimate-ticket.md`
+- [x] `.agent-src.uncondensed/commands/estimate-ticket.md`
   drafted.
   *(2026-04-22: same input paths as `/refine-ticket` via `jira-ticket`
   loader; flags `--personas=<list>`, `--personas=+qa`, `--scale=<map>`;
@@ -288,7 +288,7 @@ per user decision. Live-run findings are tracked in
 - [`../road-to-refine-ticket-hardening.md`](../road-to-refine-ticket-hardening.md) — v2 roadmap (F1–F7)
 - [`archive/road-to-personas.md`](archive/road-to-personas.md) — Core-6 persona primitive (shipped 2026-04-22)
 - [`road-to-stronger-skills.md`](road-to-stronger-skills.md) — pattern compliance for new skills
-- [`.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md`](../../.agent-src.uncompressed/skills/validate-feature-fit/SKILL.md) — orchestrated sub-skill
-- [`.agent-src.uncompressed/skills/threat-modeling/SKILL.md`](../../.agent-src.uncompressed/skills/threat-modeling/SKILL.md) — orchestrated sub-skill
-- [`.agent-src.uncompressed/skills/jira-ticket/SKILL.md`](../../.agent-src.uncompressed/skills/jira-ticket/SKILL.md) — ticket-loading helper
-- [`.agent-src.uncompressed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncompressed/rules/artifact-drafting-protocol.md) — mandatory per new artifact
+- [`.agent-src.uncondensed/skills/validate-feature-fit/SKILL.md`](../../.agent-src.uncondensed/skills/validate-feature-fit/SKILL.md) — orchestrated sub-skill
+- [`.agent-src.uncondensed/skills/threat-modeling/SKILL.md`](../../.agent-src.uncondensed/skills/threat-modeling/SKILL.md) — orchestrated sub-skill
+- [`.agent-src.uncondensed/skills/jira-ticket/SKILL.md`](../../.agent-src.uncondensed/skills/jira-ticket/SKILL.md) — ticket-loading helper
+- [`.agent-src.uncondensed/rules/artifact-drafting-protocol.md`](../../.agent-src.uncondensed/rules/artifact-drafting-protocol.md) — mandatory per new artifact

@@ -70,10 +70,10 @@ def _logical_path(rel: str) -> str:
     Non-source paths are returned unchanged.
     """
     posix = rel.replace("\\", "/")
-    if posix.startswith(".agent-src.uncompressed/"):
-        return posix[len(".agent-src.uncompressed/"):]
+    if posix.startswith(".agent-src.uncondensed/"):
+        return posix[len(".agent-src.uncondensed/"):]
     if posix.startswith("packages/"):
-        marker = "/.agent-src.uncompressed/"
+        marker = "/.agent-src.uncondensed/"
         idx = posix.find(marker)
         if idx != -1:
             return posix[idx + len(marker):]

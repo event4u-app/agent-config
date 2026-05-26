@@ -25,7 +25,7 @@ Plus `bin: { "agent-config": "dist/cli/agent-config.js" }`.
 
 ### Negative surface (`.npmignore`)
 
-`.agent-src.uncompressed/`, `agents/`, `.idea/`, `.vscode/`, `tmp/`, dev-only dirs.
+`.agent-src.uncondensed/`, `agents/`, `.idea/`, `.vscode/`, `tmp/`, dev-only dirs.
 
 ### Curl entrypoint (`setup.sh`)
 

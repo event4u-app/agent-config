@@ -136,7 +136,7 @@ Tests: 3173 (+32 since 1.40.0)
 * **contracts:** add orchestration-dsl-v1 + linter (roadmap G1) ([5cb2801](https://github.com/event4u-app/agent-config/commit/5cb2801f14a06d2dabe9f2dc57b7ca424d7e4d4d))
 * **contracts:** add audit-log-v1 schema (roadmap Q1) ([e0849b2](https://github.com/event4u-app/agent-config/commit/e0849b2305949ad5409ff9981970922ec702c68e))
 * **install:** one-liner setup.sh + npm wrapper refinements ([aee688f](https://github.com/event4u-app/agent-config/commit/aee688fcbf9bb18b0253bc7ce96192cc7e5afe2e))
-* **compress:** project Cursor .mdc + Windsurf .md rules + flatten commands ([486bafd](https://github.com/event4u-app/agent-config/commit/486bafd83c1f5224ee61b29b46cc827b21440623))
+* **condense:** project Cursor .mdc + Windsurf .md rules + flatten commands ([486bafd](https://github.com/event4u-app/agent-config/commit/486bafd83c1f5224ee61b29b46cc827b21440623))
 * **install:** multi-tool installer + global user-level install ([6113872](https://github.com/event4u-app/agent-config/commit/6113872b146321b784b01a428c5c2abcbad9e08d))
 
 ### Bug Fixes
@@ -192,7 +192,7 @@ Tests: 3141 (+442 since 1.39.0)
 
 ### Chores
 
-* **compress:** regenerate commands/onboard.md after onboard,docs source edit ([e676915](https://github.com/event4u-app/agent-config/commit/e67691564405f05fba033f29b0df696e25788dd0))
+* **condense:** regenerate commands/onboard.md after onboard,docs source edit ([e676915](https://github.com/event4u-app/agent-config/commit/e67691564405f05fba033f29b0df696e25788dd0))
 
 ### Other
 
@@ -340,11 +340,11 @@ Tests: 2621 (+15 since 1.35.0)
 
 ### Chores
 
-* **sync:** refresh compression hashes after main merge ([2689a99](https://github.com/event4u-app/agent-config/commit/2689a9959c0d8f5bb0b00a8b4cbc73485b81086d))
+* **sync:** refresh condensation hashes after main merge ([2689a99](https://github.com/event4u-app/agent-config/commit/2689a9959c0d8f5bb0b00a8b4cbc73485b81086d))
 * **generate-tools:** register new skills + personas in distribution layers ([1c8081d](https://github.com/event4u-app/agent-config/commit/1c8081d54b14214ac5163986784af1f4e505aa7d))
 * **roadmap:** archive road-to-unified-senior-roles, refresh dashboard ([0f7a203](https://github.com/event4u-app/agent-config/commit/0f7a203c9f3a6cb97837db52906fa7bd6ff9134a))
-* **sync:** refresh compression hash for customer-research ([5296bd1](https://github.com/event4u-app/agent-config/commit/5296bd13976e105ff128a90de05de78183745f67))
-* **sync:** refresh compression hashes after roadmap-plate removal ([75d06e1](https://github.com/event4u-app/agent-config/commit/75d06e1ec33d9472fd8ae4a08f5efd526b577905))
+* **sync:** refresh condensation hash for customer-research ([5296bd1](https://github.com/event4u-app/agent-config/commit/5296bd13976e105ff128a90de05de78183745f67))
+* **sync:** refresh condensation hashes after roadmap-plate removal ([75d06e1](https://github.com/event4u-app/agent-config/commit/75d06e1ec33d9472fd8ae4a08f5efd526b577905))
 * **roadmaps:** strip plate/horizon framing from 7 active roadmaps ([186f98e](https://github.com/event4u-app/agent-config/commit/186f98e8fa3405927e5543c41f4ce797b46eaedf))
 * **infra:** drop horizon-marker handling from process-loop and process-full ([9f9b968](https://github.com/event4u-app/agent-config/commit/9f9b9681f9b9d21305a69e3c413dc4b8ff7d5a9a))
 * **template:** forbid time-boxed plates in roadmap template (rule 16) ([12748c2](https://github.com/event4u-app/agent-config/commit/12748c2e3354e324b2d4b889ecda5655f3286738))
@@ -384,12 +384,12 @@ Tests: 2606 (+0 since 1.34.0)
 * **roadmap:** close road-to-better-skills-and-profiles (Block D pass, B4 deferred) ([f5d7170](https://github.com/event4u-app/agent-config/commit/f5d7170a8c5947be273089839f99aab6dc56a693))
 * **matrix:** regenerate file-ownership-matrix for block F skills ([83ad6a7](https://github.com/event4u-app/agent-config/commit/83ad6a777469ca0efe2da01a4d0173181356bbf1))
 * **catalog:** regenerate index + catalog for block F ([bd57d56](https://github.com/event4u-app/agent-config/commit/bd57d56d9226d2a60658dbac2b8d4b82bf48b519))
-* **sync:** refresh compression-hashes + marketplace for block F ([b45b8a9](https://github.com/event4u-app/agent-config/commit/b45b8a9cef1e74e1ee88f164f5f0cc6e92565fbc))
+* **sync:** refresh condensation-hashes + marketplace for block F ([b45b8a9](https://github.com/event4u-app/agent-config/commit/b45b8a9cef1e74e1ee88f164f5f0cc6e92565fbc))
 * **roadmap:** close block F — flip F1-F6 + F marker to done ([e4bd5cc](https://github.com/event4u-app/agent-config/commit/e4bd5cca56e2f30234bc7833ce3650ccbe1634d8))
 * **roadmap:** flip Block C marker to done — 8 skills + 5th judge integrated ([cfd3ede](https://github.com/event4u-app/agent-config/commit/cfd3ede2cf3846570e410209df1ae18b96db2d18))
 * **matrix:** regenerate file-ownership-matrix for Block C skills ([ad89c8f](https://github.com/event4u-app/agent-config/commit/ad89c8fbb50c7bfa7b7031a21e522d5dd582c2a8))
 * **catalog:** regenerate index + catalog for Block C skills ([cfe94a5](https://github.com/event4u-app/agent-config/commit/cfe94a54d1ec448eabc4afa0810beb81e52471f0))
-* **sync:** refresh compression-hashes for review-changes after Block C ([c56dbe2](https://github.com/event4u-app/agent-config/commit/c56dbe25085255a2fb8b5cd85f75d8e471792137))
+* **sync:** refresh condensation-hashes for review-changes after Block C ([c56dbe2](https://github.com/event4u-app/agent-config/commit/c56dbe25085255a2fb8b5cd85f75d8e471792137))
 * **roadmap:** close block C — flip C1-C8 to done, refresh counts ([954a2fd](https://github.com/event4u-app/agent-config/commit/954a2fd6205e493efd22619c73f8ff7f30b9121b))
 
 Tests: 2606 (+46 since 1.33.0)
@@ -459,7 +459,7 @@ Tests: 2560 (+74 since 1.31.0)
 
 * **readme:** drop stale deprecation-shim sub-line; trim to 500-line cap ([5f92841](https://github.com/event4u-app/agent-config/commit/5f9284177323585ebb8b5fbca870f853c5c34ee0))
 * **check-portability:** allowlist agents-md-anatomy.md for task-invocation detector ([3301d19](https://github.com/event4u-app/agent-config/commit/3301d193ba55e95cdab47d8e3288a524ce7b8b90))
-* **ci:** sync compression hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
+* **ci:** sync condensation hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
 * **skills:** close 4 linter warnings on Microck-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
 
 ### Documentation
@@ -484,7 +484,7 @@ Tests: 2560 (+74 since 1.31.0)
 * collapse editing-repo pointers in AGENTS.md to reclaim WARN headroom ([934800a](https://github.com/event4u-app/agent-config/commit/934800a6334e88494ffad37a3f5204e05bb60b1c))
 * archive completed road-to-agent-command-consolidation roadmap ([829704b](https://github.com/event4u-app/agent-config/commit/829704b797cd10b79ce0b70cc9d1b14cd3ce5664))
 * thin-root awareness for command-count gate; refresh doc counts ([6040c45](https://github.com/event4u-app/agent-config/commit/6040c4524ff84673adc8a403a2f6ab5e105b0af4))
-* regenerate compressed sources and tool projections ([0e83fb9](https://github.com/event4u-app/agent-config/commit/0e83fb9a008c6d083c8c2d1a53e645abe2b2541c))
+* regenerate condensed sources and tool projections ([0e83fb9](https://github.com/event4u-app/agent-config/commit/0e83fb9a008c6d083c8c2d1a53e645abe2b2541c))
 
 ### Other
 
@@ -505,7 +505,7 @@ Tests: 2486
 
 * **readme:** drop stale deprecation-shim sub-line; trim to 500-line cap ([5f92841](https://github.com/event4u-app/agent-config/commit/5f9284177323585ebb8b5fbca870f853c5c34ee0))
 * **check-portability:** allowlist agents-md-anatomy.md for task-invocation detector ([3301d19](https://github.com/event4u-app/agent-config/commit/3301d193ba55e95cdab47d8e3288a524ce7b8b90))
-* **ci:** sync compression hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
+* **ci:** sync condensation hashes for governance + projection sections ([0fe814d](https://github.com/event4u-app/agent-config/commit/0fe814d7304ce8363b7a19e408fbb005aac67f05))
 * **skills:** close 4 linter warnings on Microck-harvested skills ([dda7a81](https://github.com/event4u-app/agent-config/commit/dda7a8181aee3f20b4ce9910d66e45db51aff9ba))
 
 ### Documentation
@@ -527,7 +527,7 @@ Tests: 2486
 * collapse editing-repo pointers in AGENTS.md to reclaim WARN headroom ([934800a](https://github.com/event4u-app/agent-config/commit/934800a6334e88494ffad37a3f5204e05bb60b1c))
 * archive completed road-to-agent-command-consolidation roadmap ([829704b](https://github.com/event4u-app/agent-config/commit/829704b797cd10b79ce0b70cc9d1b14cd3ce5664))
 * thin-root awareness for command-count gate; refresh doc counts ([6040c45](https://github.com/event4u-app/agent-config/commit/6040c4524ff84673adc8a403a2f6ab5e105b0af4))
-* regenerate compressed sources and tool projections ([0e83fb9](https://github.com/event4u-app/agent-config/commit/0e83fb9a008c6d083c8c2d1a53e645abe2b2541c))
+* regenerate condensed sources and tool projections ([0e83fb9](https://github.com/event4u-app/agent-config/commit/0e83fb9a008c6d083c8c2d1a53e645abe2b2541c))
 
 Tests: 2471
 
@@ -599,7 +599,7 @@ Tests: 2471
 ### Bug Fixes
 
 * **governance:** set tier 2a on no-unsolicited-rebase rule ([284ced0](https://github.com/event4u-app/agent-config/commit/284ced0c7b53ec9a394234a37ee5b370d2278802))
-* **governance:** allowlist .agent-src.uncompressed/ substring in domain-adoption-policy ([e2091dc](https://github.com/event4u-app/agent-config/commit/e2091dc660ce4c437c1b5035aaa1179f469e7abe))
+* **governance:** allowlist .agent-src.uncondensed/ substring in domain-adoption-policy ([e2091dc](https://github.com/event4u-app/agent-config/commit/e2091dc660ce4c437c1b5035aaa1179f469e7abe))
 
 ### Chores
 
@@ -660,7 +660,7 @@ Tests: 2471
 ### Chores
 
 * **tools:** regen .windsurfrules for branch-base inventory ([a87641c](https://github.com/event4u-app/agent-config/commit/a87641cc0db84e705a9afe7aa36afbd451fb1467))
-* **rebase:** restore compression hashes for files inherited from PR #55 ([863ba1c](https://github.com/event4u-app/agent-config/commit/863ba1cd71dc00559db905eb0d11b96951a9c5bd))
+* **rebase:** restore condensation hashes for files inherited from PR #55 ([863ba1c](https://github.com/event4u-app/agent-config/commit/863ba1cd71dc00559db905eb0d11b96951a9c5bd))
 * regenerate .windsurfrules ([822b95e](https://github.com/event4u-app/agent-config/commit/822b95e1dcf48b05ec4e9bec0a4f481583ae6de7))
 * **roadmap:** close + archive road-to-always-budget-relief, regen index ([350bfb1](https://github.com/event4u-app/agent-config/commit/350bfb1e75602769f6a1cfa535ed5d30adcd5eba))
 
@@ -685,7 +685,7 @@ Tests: 2471
 ### Chores
 
 * **generate-tools:** refresh .windsurfrules after roadmap-progress-sync body expansion ([3fdba11](https://github.com/event4u-app/agent-config/commit/3fdba11cd4e91425a05ef9ad82b0e7c611180668))
-* **compress:** sync .agent-src/ with hardened roadmap-progress-sync rule ([30e7d1a](https://github.com/event4u-app/agent-config/commit/30e7d1ab455da823afbe7602f01d543d3fe91c5d))
+* **condense:** sync .agent-src/ with hardened roadmap-progress-sync rule ([30e7d1a](https://github.com/event4u-app/agent-config/commit/30e7d1ab455da823afbe7602f01d543d3fe91c5d))
 * **roadmap:** archive markitdown-adoption + refresh progress dashboard ([5481d90](https://github.com/event4u-app/agent-config/commit/5481d9025f4c85f33e11533099cf725eeb306455))
 * add skills-provenance registry for upstream attribution ([65c2eeb](https://github.com/event4u-app/agent-config/commit/65c2eeb3d1c9d0f86957757ce22221ed0e255292))
 * **roadmap:** harden process-full to ignore horizon markers ([36d0fa6](https://github.com/event4u-app/agent-config/commit/36d0fa6c263721618999b7fa27ddb9cb336dd6c2))
@@ -695,7 +695,7 @@ Tests: 2471
 ### Features
 
 * **skills:** add script-writing skill for scripts/ conventions ([1f8655d](https://github.com/event4u-app/agent-config/commit/1f8655d6cbf007410e3846ab502eea5745a7f66f))
-* **scripts:** Phase 10.7 --quiet flag + silent Taskfile + caveman compile-time toggle ([1d319e6](https://github.com/event4u-app/agent-config/commit/1d319e61a3c782eb5c86075f34275306a67c621c))
+* **scripts:** Phase 10.7 --quiet flag + silent Taskfile + telegraph compile-time toggle ([1d319e6](https://github.com/event4u-app/agent-config/commit/1d319e61a3c782eb5c86075f34275306a67c621c))
 * **linter:** frugality charter writer-cite validator + writer skill citations ([0e34709](https://github.com/event4u-app/agent-config/commit/0e3470965d5e2f4a8b11f27137d4ba43d2471be2))
 * **verbosity:** add verbosity toggles + gate routine outputs ([580d4cc](https://github.com/event4u-app/agent-config/commit/580d4cc2d1f4d4b091b6128f0a29d1f7e619895d))
 * **roadmap-sync:** pre-commit backstop blocks stale dashboard ([c577fc0](https://github.com/event4u-app/agent-config/commit/c577fc0aabc13faaae64c88d20d8ca66338ae5fc))
@@ -722,8 +722,8 @@ Tests: 2471
 
 * regenerate stale generated mirrors ([ea52e94](https://github.com/event4u-app/agent-config/commit/ea52e94415c4db5598e91d001e0fbeee10cae9be))
 * regenerate auto-generated artefacts ([fbe7d9e](https://github.com/event4u-app/agent-config/commit/fbe7d9ef137c9e584d7f88ce660afe29ab1a8d00))
-* bump skill/command/guideline counts and compression hashes ([18f4fad](https://github.com/event4u-app/agent-config/commit/18f4fad2372fd4347210199986909319c24ea0ec))
-* archive ruflo-adoption, move caveman-integration to skipped ([4c6c1eb](https://github.com/event4u-app/agent-config/commit/4c6c1eb1e00356421e0038704a82e1f10ac9a3e5))
+* bump skill/command/guideline counts and condensation hashes ([18f4fad](https://github.com/event4u-app/agent-config/commit/18f4fad2372fd4347210199986909319c24ea0ec))
+* archive ruflo-adoption, move telegraph-integration to skipped ([4c6c1eb](https://github.com/event4u-app/agent-config/commit/4c6c1eb1e00356421e0038704a82e1f10ac9a3e5))
 
 ## [1.22.0](https://github.com/event4u-app/agent-config/compare/1.21.0...1.22.0) (2026-05-07)
 
@@ -748,20 +748,20 @@ Tests: 2471
 
 * **roadmap:** drop council-response file links per no-council-references ([d792100](https://github.com/event4u-app/agent-config/commit/d792100ef6b2727cca1338c89fefc4c591513265))
 * **readme:** bump hero command count from 100 to 102 ([3212db4](https://github.com/event4u-app/agent-config/commit/3212db48fb1d62a70f9e87cf9307ee73059b7e4e))
-* **roadmap:** integrate R5 council verdict for caveman-insurance ([38b26e2](https://github.com/event4u-app/agent-config/commit/38b26e2f00504a7c6c821c356964cb0cabefd905))
-* **roadmap:** incorporate R4 verdict + structural findings into caveman integration ([c50f39b](https://github.com/event4u-app/agent-config/commit/c50f39bc9b08c8d59c4cf547aeec7fffbff38bc0))
-* **roadmap:** convert caveman integration Phase 2 to hard cutover ([fb459be](https://github.com/event4u-app/agent-config/commit/fb459be70a093eea1814a38a3b1fec9cf9261363))
+* **roadmap:** integrate R5 council verdict for telegraph-insurance ([38b26e2](https://github.com/event4u-app/agent-config/commit/38b26e2f00504a7c6c821c356964cb0cabefd905))
+* **roadmap:** incorporate R4 verdict + structural findings into telegraph integration ([c50f39b](https://github.com/event4u-app/agent-config/commit/c50f39bc9b08c8d59c4cf547aeec7fffbff38bc0))
+* **roadmap:** convert telegraph integration Phase 2 to hard cutover ([fb459be](https://github.com/event4u-app/agent-config/commit/fb459be70a093eea1814a38a3b1fec9cf9261363))
 * **harvest:** add Superpowers harvest roadmap, hardened by council R2 ([e559259](https://github.com/event4u-app/agent-config/commit/e559259f789014603067e87141d9feb815b480ab))
 * **harvest:** analyze obra/superpowers v5.1.0 for adoption candidates ([e89e0ee](https://github.com/event4u-app/agent-config/commit/e89e0eeadc4b76517b181c559422e88df5c8122a))
 * **council:** document council_depth frontmatter convention in templates ([ba56412](https://github.com/event4u-app/agent-config/commit/ba56412c76204bbe49366bbceb62e4d31c994fc2))
 
 ### Chores
 
-* **sync:** re-sync compressed mirror with create-pr preview-gate + agent-settings preview_description ([ceab79e](https://github.com/event4u-app/agent-config/commit/ceab79e23be2c1d4ba504b80426d1b91ffdaadd1))
-* bump artefact counts and refresh compression hashes ([2801342](https://github.com/event4u-app/agent-config/commit/28013424668177fc23df45cc56390faba6fd010e))
+* **sync:** re-sync condensed mirror with create-pr preview-gate + agent-settings preview_description ([ceab79e](https://github.com/event4u-app/agent-config/commit/ceab79e23be2c1d4ba504b80426d1b91ffdaadd1))
+* bump artefact counts and refresh condensation hashes ([2801342](https://github.com/event4u-app/agent-config/commit/28013424668177fc23df45cc56390faba6fd010e))
 * regenerate tool-dir symlinks for challenge-me and invite-challenge ([b3b0ada](https://github.com/event4u-app/agent-config/commit/b3b0ada9ce108b220289c9f044b3f3d0209f0a12))
-* bump artefact counts and refresh compression hashes ([4147de3](https://github.com/event4u-app/agent-config/commit/4147de3b4da24494128a847be194ac901e506df9))
-* sync compressed projection for challenge-me cluster ([9165762](https://github.com/event4u-app/agent-config/commit/91657620e6d822fbe28923e3b008e218f13e5cea))
+* bump artefact counts and refresh condensation hashes ([4147de3](https://github.com/event4u-app/agent-config/commit/4147de3b4da24494128a847be194ac901e506df9))
+* sync condensed projection for challenge-me cluster ([9165762](https://github.com/event4u-app/agent-config/commit/91657620e6d822fbe28923e3b008e218f13e5cea))
 
 ## [1.21.0](https://github.com/event4u-app/agent-config/compare/1.20.0...1.21.0) (2026-05-06)
 
@@ -771,7 +771,7 @@ Tests: 2471
 * **linter:** density-gated size warnings (council Option 2) ([281b9aa](https://github.com/event4u-app/agent-config/commit/281b9aa6f52640a93cf55c7b13678fbd2ea85077))
 * **skills:** add prompt-optimizer skill and /optimize-prompt command ([4f99e50](https://github.com/event4u-app/agent-config/commit/4f99e50ae46b19eab3eed2629bb94ac5d017151e))
 * **path-fixes:** finalize Phase 5-7 — checker, smoke, copilot review, contracts move ([3c5fc5d](https://github.com/event4u-app/agent-config/commit/3c5fc5d100ea7c542a48778e4e0669f551fad946))
-* **install:** rules_use_symlinks toggle for both compress.py and install.sh ([927adc3](https://github.com/event4u-app/agent-config/commit/927adc35002588eef4d24825c313e6a9511d6ca1))
+* **install:** rules_use_symlinks toggle for both condense.py and install.sh ([927adc3](https://github.com/event4u-app/agent-config/commit/927adc35002588eef4d24825c313e6a9511d6ca1))
 * **ai-council:** default rounds via ai_council.min_rounds (default 2) ([26da301](https://github.com/event4u-app/agent-config/commit/26da30125a0b5a2c74c9c48cf6a2f8e2e5d021dd))
 * **ai-council:** isolate council artefacts as gitignored, auto-pruned scratch ([ab0e245](https://github.com/event4u-app/agent-config/commit/ab0e245734c8560f6d93df927b8af6d105c1d8dc))
 * **rules:** enforce logical-name path conventions for load_context ([fd12ff6](https://github.com/event4u-app/agent-config/commit/fd12ff6b37cec7d2be8ea88d3ec055333fea13e2))
@@ -786,14 +786,14 @@ Tests: 2471
 ### Bug Fixes
 
 * **commands:** add cluster: optimize to optimize-prompt frontmatter ([bdc3907](https://github.com/event4u-app/agent-config/commit/bdc390772086fa4c13dba1142eb2b82ab133f5a7))
-* **compress:** protect rule examples with inline-code backticks ([c5ea62b](https://github.com/event4u-app/agent-config/commit/c5ea62ba8937d52651544b8509b955498e109579))
+* **condense:** protect rule examples with inline-code backticks ([c5ea62b](https://github.com/event4u-app/agent-config/commit/c5ea62ba8937d52651544b8509b955498e109579))
 * **schema:** accept rewritten ../contexts/ paths in load_context ([8101320](https://github.com/event4u-app/agent-config/commit/8101320c9a014e02bddfa60fb433b09bd3646b0a))
 * **linter:** support validator_ignore frontmatter + dual-location contracts ([031bd7d](https://github.com/event4u-app/agent-config/commit/031bd7df79deb35a53b8f1d49384056cfcea7711))
-* **templates:** compressed mirror of templates/rule.md + placeholder fix for check-refs ([c182723](https://github.com/event4u-app/agent-config/commit/c18272386d1c5f31efdd14f6d2cca8b8d8b876c8))
+* **templates:** condensed mirror of templates/rule.md + placeholder fix for check-refs ([c182723](https://github.com/event4u-app/agent-config/commit/c18272386d1c5f31efdd14f6d2cca8b8d8b876c8))
 * **skills:** portability — script paths in rule-writing, lower-case agent-config in copilot-agents-optimization ([7e5a86f](https://github.com/event4u-app/agent-config/commit/7e5a86f5dda9a095e3d887c19df718555f7f347c))
 * **tests:** align load_context tests with logical-name path format ([924e52e](https://github.com/event4u-app/agent-config/commit/924e52ed4005d2fb8d22167899058ed9eeb61449))
 * **commit-mechanics:** trim four-exceptions block to fit 6k extended-size cap ([0b6391f](https://github.com/event4u-app/agent-config/commit/0b6391f08d23af71f8945a7e685c7a979e229d61))
-* **contexts:** restore obligation-keyword baseline after P2.2 rule compression ([8996bcd](https://github.com/event4u-app/agent-config/commit/8996bcd83621670f175f93d73ee1c577695d3b34))
+* **contexts:** restore obligation-keyword baseline after P2.2 rule condensation ([8996bcd](https://github.com/event4u-app/agent-config/commit/8996bcd83621670f175f93d73ee1c577695d3b34))
 * **linear-digest:** update language-and-tone strip-section title after P2.2 rename ([9643a82](https://github.com/event4u-app/agent-config/commit/9643a82c15a9904ceefcc6a9f1b90a4ef2225b47))
 
 ### Documentation
@@ -804,9 +804,9 @@ Tests: 2471
 
 ### Refactoring
 
-* compression logic ([6701f9f](https://github.com/event4u-app/agent-config/commit/6701f9f12568ddc409ccad62a7690d64ba885122))
+* condensation logic ([6701f9f](https://github.com/event4u-app/agent-config/commit/6701f9f12568ddc409ccad62a7690d64ba885122))
 * **chat-history:** import emits summary + resume offer instead of verbatim entries ([dfafd9c](https://github.com/event4u-app/agent-config/commit/dfafd9cd62d740a7137f6a6e648acfb377f46b1b))
-* **kernel:** compress 8 kernel rules per P2.2 playbook + lock kernel (P2.3) ([4e771da](https://github.com/event4u-app/agent-config/commit/4e771da5c4ceea2e6d2e8935098f1cd231c80c30))
+* **kernel:** condense 8 kernel rules per P2.2 playbook + lock kernel (P2.3) ([4e771da](https://github.com/event4u-app/agent-config/commit/4e771da5c4ceea2e6d2e8935098f1cd231c80c30))
 
 ### Chores
 
@@ -817,17 +817,17 @@ Tests: 2471
 * **docs:** bump getting-started command count from 94 to 95 ([6751897](https://github.com/event4u-app/agent-config/commit/6751897cdf2744683731fc9230183a38834e9b9c))
 * **sync:** regenerate agents/index.md + docs/catalog.md after prompt-optimizer ([cfe2367](https://github.com/event4u-app/agent-config/commit/cfe236759671792a9b49ff10f664fbed10edc4c4))
 * **readme:** bump command count from 94 to 95 after prompt-optimizer addition ([62a59a4](https://github.com/event4u-app/agent-config/commit/62a59a427986ff428d1c1e729d311914ce3be0e5))
-* **sync:** regenerate .windsurfrules after caveman arrow update ([509ba00](https://github.com/event4u-app/agent-config/commit/509ba0061500a47129c77da5bae1f8384636a09c))
-* **compression:** apply caveman abbreviation and arrow rules to mirror ([34e5b1f](https://github.com/event4u-app/agent-config/commit/34e5b1f85da99de94ea8b5f932011583c844a0c8))
-* **sync:** regenerate compressed mirror + ownership matrix after Phase 5-7 ([b421e8e](https://github.com/event4u-app/agent-config/commit/b421e8e3aae6c1ee739bbdd35ed4f44cd78eed85))
+* **sync:** regenerate .windsurfrules after telegraph arrow update ([509ba00](https://github.com/event4u-app/agent-config/commit/509ba0061500a47129c77da5bae1f8384636a09c))
+* **condensation:** apply telegraph abbreviation and arrow rules to mirror ([34e5b1f](https://github.com/event4u-app/agent-config/commit/34e5b1f85da99de94ea8b5f932011583c844a0c8))
+* **sync:** regenerate condensed mirror + ownership matrix after Phase 5-7 ([b421e8e](https://github.com/event4u-app/agent-config/commit/b421e8e3aae6c1ee739bbdd35ed4f44cd78eed85))
 * **roadmap:** archive road-to-path-fixes after Phase 7 closure ([651fd3e](https://github.com/event4u-app/agent-config/commit/651fd3e6586e552dab6368be1853141b2b2fb0ff))
 * **portability:** replace 'Galawork'/'galawork' with 'Consumer'/'consumer' ([bac0433](https://github.com/event4u-app/agent-config/commit/bac0433c13e007910564e6b21b82ca6e6dcccdf9))
 * regenerate router, index, catalog, windsurf rules, tool symlinks ([93685bb](https://github.com/event4u-app/agent-config/commit/93685bb0fbe7c9f671f3a49672e693a8e4a44b85))
-* **commands:** sync compressed mirror of chat-history/import.md to summary+resume ([0063941](https://github.com/event4u-app/agent-config/commit/0063941c69d011a8935ddbcc7ea1266cd4d2c692))
+* **commands:** sync condensed mirror of chat-history/import.md to summary+resume ([0063941](https://github.com/event4u-app/agent-config/commit/0063941c69d011a8935ddbcc7ea1266cd4d2c692))
 * **roadmaps:** add road-to-path-fixes and refresh progress ([34f9c23](https://github.com/event4u-app/agent-config/commit/34f9c23ccf67f79758e7dd293c66bc4c443ccc29))
 * **roadmaps:** close kernel-router, package-opt, token-opt plates ([445ef25](https://github.com/event4u-app/agent-config/commit/445ef2574772358ca278ce2d334a08431e82ed68))
 * **roadmap:** close Phase 3 (Router contract) in kernel-and-router ([30b834f](https://github.com/event4u-app/agent-config/commit/30b834fceb9c1198ffae5f0d35d1c84e5bd44c24))
-* **ownership:** regenerate file-ownership matrix after P2.2 kernel compression ([0e82da1](https://github.com/event4u-app/agent-config/commit/0e82da18399cd1e9ecff57769116d7a3317c2949))
+* **ownership:** regenerate file-ownership matrix after P2.2 kernel condensation ([0e82da1](https://github.com/event4u-app/agent-config/commit/0e82da18399cd1e9ecff57769116d7a3317c2949))
 
 ## [1.20.0](https://github.com/event4u-app/agent-config/compare/1.19.0...1.20.0) (2026-05-06)
 
@@ -919,15 +919,15 @@ Tests: 2471
 * **ownership-matrix:** regenerate after suite-closure work ([0b7f992](https://github.com/event4u-app/agent-config/commit/0b7f9920702df1e8b5b7db47d596caec312e0c17))
 * **roadmaps:** tag wing roadmaps with complexity: structural ([1e0c9c6](https://github.com/event4u-app/agent-config/commit/1e0c9c6b32e5ba16f34e62efb56a5a563a42b11c))
 * **index:** regenerate agents/index and docs/catalog ([9a3c1cb](https://github.com/event4u-app/agent-config/commit/9a3c1cb5c6730e5d48c85b85cf055f6e0302a5a7))
-* **sync:** refresh compression hashes and gitignore ([5f91975](https://github.com/event4u-app/agent-config/commit/5f91975f81c2c1ba0bf079b8366750e2aec1e984))
+* **sync:** refresh condensation hashes and gitignore ([5f91975](https://github.com/event4u-app/agent-config/commit/5f91975f81c2c1ba0bf079b8366750e2aec1e984))
 * **roadmaps:** regenerate roadmaps-progress dashboard ([3d85dbd](https://github.com/event4u-app/agent-config/commit/3d85dbd854cbabc0c85c47685bdb96a22338a9fa))
 * **council:** remove unused playwright transport-mode scaffold ([672c512](https://github.com/event4u-app/agent-config/commit/672c5126e477ec43e4cc50d17e34f7ee3bca9a53))
 * **council:** default transport mode to manual instead of api ([4a41dfb](https://github.com/event4u-app/agent-config/commit/4a41dfbbaf879f5333ba5b665d5a0e32c4fac82d))
 * **roadmap:** regenerate roadmaps-progress dashboard ([6b01795](https://github.com/event4u-app/agent-config/commit/6b01795a267d5f69c5754ef7d59fbb125187be3a))
 * **ownership:** regenerate file-ownership matrix ([383d580](https://github.com/event4u-app/agent-config/commit/383d5808d5a0234149a69deb744625b1bc983b95))
-* **compress:** re-compress language-and-tone + user-interaction mirrors ([66a9f91](https://github.com/event4u-app/agent-config/commit/66a9f91520775f0097e33f688b2a2fa458c2d14b))
+* **condense:** re-condense language-and-tone + user-interaction mirrors ([66a9f91](https://github.com/event4u-app/agent-config/commit/66a9f91520775f0097e33f688b2a2fa458c2d14b))
 * **index:** regenerate index + catalog after command-count sync ([03cf603](https://github.com/event4u-app/agent-config/commit/03cf603e84feedb7eea1845f39f258dbf0225f3a))
-* **hashes:** refresh compression hashes for language-and-tone + user-interaction ([fc361b4](https://github.com/event4u-app/agent-config/commit/fc361b49f19c14ddc3e4b8aa33093d1f9fa4ca7c))
+* **hashes:** refresh condensation hashes for language-and-tone + user-interaction ([fc361b4](https://github.com/event4u-app/agent-config/commit/fc361b49f19c14ddc3e4b8aa33093d1f9fa4ca7c))
 * add chat history cross agend hardening ([b9b9adb](https://github.com/event4u-app/agent-config/commit/b9b9adb2fb14ca089e92070a57821762269517b6))
 * **rules:** tighten language-and-tone and user-interaction iron laws ([57fa47d](https://github.com/event4u-app/agent-config/commit/57fa47d4331f0c2043165d82a3cbb2941c6278f9))
 * **roadmap:** archive road-to-verified-chat-history-platforms ([b1881f0](https://github.com/event4u-app/agent-config/commit/b1881f084d2d2f9eba225d7144345163fcb0e1b3))
@@ -996,7 +996,7 @@ Tests: 2471
 ### Chores
 
 * **tools:** regenerate .windsurfrules with slash-command-routing-policy operator/target sections ([7825600](https://github.com/event4u-app/agent-config/commit/78256000a2da9cc313eb272059bb363acbc5290e))
-* **rules:** sync compressed slash-command-routing-policy with operator/target sections ([916357c](https://github.com/event4u-app/agent-config/commit/916357c7d185d717187845478e8318025330d3a9))
+* **rules:** sync condensed slash-command-routing-policy with operator/target sections ([916357c](https://github.com/event4u-app/agent-config/commit/916357c7d185d717187845478e8318025330d3a9))
 * **rules:** promote verify-before-complete and minimal-safe-diff to tier 2a ([d62fb84](https://github.com/event4u-app/agent-config/commit/d62fb845a14065706c46c4425b261b57ac155c27))
 * ignore .agent-chat-history.session sidecar ([42741c8](https://github.com/event4u-app/agent-config/commit/42741c87f83bf24416eb3916cbced865ae642688))
 * **infra:** wire lint-rule-tiers + lint-hook-manifest + lint-one-off-age tasks; pyproject pytest importlib; .windsurfrules Copilot fallback ([5b88093](https://github.com/event4u-app/agent-config/commit/5b8809398dd332a3ebad3478f7a38cf48ef119e1))
@@ -1011,13 +1011,13 @@ Tests: 2471
 * **rules:** enforce placement for agent-authored roadmaps ([1624ede](https://github.com/event4u-app/agent-config/commit/1624ede571bcdd28adb7d8dd4868a92b9dbde646))
 * roadmap complexity standard with shape and tier linters ([bd1bac6](https://github.com/event4u-app/agent-config/commit/bd1bac650013e449e7318c60586b7648dbcc144e))
 * **hardening:** tier-1 hooks for onboarding-gate and context-hygiene ([5d107cd](https://github.com/event4u-app/agent-config/commit/5d107cd6fa1352d609491df12604ae0ddb7d7113))
-* **always-budget:** hard-compress direct-answers and no-cheap-questions ([2cb9b0b](https://github.com/event4u-app/agent-config/commit/2cb9b0be7b3e6486c3689fec75e7672507ca97cb))
+* **always-budget:** hard-condense direct-answers and no-cheap-questions ([2cb9b0b](https://github.com/event4u-app/agent-config/commit/2cb9b0be7b3e6486c3689fec75e7672507ca97cb))
 * outcome baselines and pattern-memory demos for foundational rules ([f43ede7](https://github.com/event4u-app/agent-config/commit/f43ede70a59cb7460557e6d76b041562056e78ee))
 
 ### Bug Fixes
 
 * **check-refs:** treat .augment/state/*.json as runtime-only paths ([3d4c766](https://github.com/event4u-app/agent-config/commit/3d4c76695af38e764facc8630a97e553f5aac67f))
-* **rules:** sync compressed rules with hardening callouts ([89bd072](https://github.com/event4u-app/agent-config/commit/89bd07267d04d6346a1f36df92759c9208777a9a))
+* **rules:** sync condensed rules with hardening callouts ([89bd072](https://github.com/event4u-app/agent-config/commit/89bd07267d04d6346a1f36df92759c9208777a9a))
 
 ### Documentation
 
@@ -1065,7 +1065,7 @@ Tests: 2471
 * **ci:** install pyyaml in consistency workflow ([bbad5d0](https://github.com/event4u-app/agent-config/commit/bbad5d06009a3f204051ca3b01102827162fe2f3))
 * **check-refs:** skip references into SKIP_DIRS (gitignored audit trails) ([cd6fcce](https://github.com/event4u-app/agent-config/commit/cd6fcce5411c35baaf228dc3fe0a4202acab6eca))
 * **roadmaps:** mark example/spike/coupling docs as status: draft ([d84dcf4](https://github.com/event4u-app/agent-config/commit/d84dcf44a9f777d87ef273b700ef66389216157d))
-* **compress:** carry load_context into compressed slash-command-routing-policy ([8332fb0](https://github.com/event4u-app/agent-config/commit/8332fb06a4c61ec65e9e21a6a123ea10484477de))
+* **condense:** carry load_context into condensed slash-command-routing-policy ([8332fb0](https://github.com/event4u-app/agent-config/commit/8332fb06a4c61ec65e9e21a6a123ea10484477de))
 
 ### Documentation
 
@@ -1097,12 +1097,12 @@ Tests: 2471
 
 ### Chores
 
-* **generated:** regenerate compressed dispatchers + hash registry ([552ddfe](https://github.com/event4u-app/agent-config/commit/552ddfeef4837b9681fc3ee72a1a01cf6c230d1a))
+* **generated:** regenerate condensed dispatchers + hash registry ([552ddfe](https://github.com/event4u-app/agent-config/commit/552ddfeef4837b9681fc3ee72a1a01cf6c230d1a))
 * **commands:** drop ## Migration sections from cluster dispatchers ([02a03e7](https://github.com/event4u-app/agent-config/commit/02a03e7b7fbcc62c1203b7fedef38f0685e85321))
-* **generated:** regenerate compressed sources, tool projections, marketplace, ownership matrix ([f1dddd2](https://github.com/event4u-app/agent-config/commit/f1dddd2499625382b7f7902268bdd468426ce515))
+* **generated:** regenerate condensed sources, tool projections, marketplace, ownership matrix ([f1dddd2](https://github.com/event4u-app/agent-config/commit/f1dddd2499625382b7f7902268bdd468426ce515))
 * **test:** align command-suggester golden + count gate to colon naming ([e1aad41](https://github.com/event4u-app/agent-config/commit/e1aad41624b877e4cb066d6e5075326de79f3693))
 * **generated:** regenerate file-ownership-matrix after command nesting ([12dc0f3](https://github.com/event4u-app/agent-config/commit/12dc0f3b266d6cdec6a53c918fc86098103d0373))
-* **generated:** regenerate compressed sources, tool projections,                    marketplace, and ownership matrix ([6724878](https://github.com/event4u-app/agent-config/commit/67248786c7589a63c2dabc80b683ace602611ddf))
+* **generated:** regenerate condensed sources, tool projections,                    marketplace, and ownership matrix ([6724878](https://github.com/event4u-app/agent-config/commit/67248786c7589a63c2dabc80b683ace602611ddf))
 * **tooling:** teach scripts to walk nested command directories ([fe5913e](https://github.com/event4u-app/agent-config/commit/fe5913ef2ab6766a042d5e9470e0871d80804ddd))
 * **generated:** regenerate counts, hashes, windsurfrules ([5613b48](https://github.com/event4u-app/agent-config/commit/5613b4858da531a23aa27e23a2bda561152d3809))
 * **roadmaps:** archive 4 closed phase-evidence reports ([d5995c3](https://github.com/event4u-app/agent-config/commit/d5995c31febb3dad31df95d72970de1e1bcf3181))
@@ -1110,12 +1110,12 @@ Tests: 2471
 * **generated:** regenerate windsurfrules + counts + claude council-default ([02ad3e1](https://github.com/event4u-app/agent-config/commit/02ad3e1079f797f8a72c33f800f1d395499b951e))
 * add ai council scripts ([4cf513c](https://github.com/event4u-app/agent-config/commit/4cf513c90649292324579444f586becd78cfad96))
 * **roadmap:** close & archive road-to-structural-optimization ([3bfef51](https://github.com/event4u-app/agent-config/commit/3bfef5118cdb66db5809fddb3688bb22d3aa8aff))
-* **compression:** refresh compression hashes ([20717d7](https://github.com/event4u-app/agent-config/commit/20717d798c86dd99f17d4c851ea0a8754e249333))
+* **condensation:** refresh condensation hashes ([20717d7](https://github.com/event4u-app/agent-config/commit/20717d798c86dd99f17d4c851ea0a8754e249333))
 * regenerate ownership matrix after Phase 2B rule slimming ([17ac19c](https://github.com/event4u-app/agent-config/commit/17ac19cf1938c7fca945b4500c6232cfa4549f2c))
 * **structural:** regenerate file-ownership-matrix after Phase 1 clusters ([29aabb1](https://github.com/event4u-app/agent-config/commit/29aabb11351f9fe648644b508eb6d24a5870b160))
 * **sync:** regenerate agents/index.md + docs/catalog.md after Phase 1 clusters ([f07987a](https://github.com/event4u-app/agent-config/commit/f07987ac12aaa77cbc4c7584ac00607e5a438318))
-* **sync:** regenerate compressed outputs + tool projections for Phase 1 clusters ([99466c0](https://github.com/event4u-app/agent-config/commit/99466c0a77116c7ed70db38fd957d061ad18e307))
-* **sync:** compress contexts/judges/persona-voice-rubric.md into .agent-src/ ([4060d01](https://github.com/event4u-app/agent-config/commit/4060d01af0680c2a913295166b978b605b1453db))
+* **sync:** regenerate condensed outputs + tool projections for Phase 1 clusters ([99466c0](https://github.com/event4u-app/agent-config/commit/99466c0a77116c7ed70db38fd957d061ad18e307))
+* **sync:** condense contexts/judges/persona-voice-rubric.md into .agent-src/ ([4060d01](https://github.com/event4u-app/agent-config/commit/4060d01af0680c2a913295166b978b605b1453db))
 * **roadmap:** archive road-to-1-16-followups (100% done) + regen dashboard ([f78a9ad](https://github.com/event4u-app/agent-config/commit/f78a9ada649c01c03aa4e866e20bb32b547cd9d0))
 * **roadmap:** regenerate progress dashboard after 1.16 followups Phase 1+2 ([780db39](https://github.com/event4u-app/agent-config/commit/780db39b68230b68c51f158d8cc8b78e7937a40c))
 * **ai-council:** add multi-provider council scripts and openai sdk ([3c2360d](https://github.com/event4u-app/agent-config/commit/3c2360d137069287b7e2547a6132d36ebed09978))
@@ -1243,7 +1243,7 @@ Tests: 2471
 * **roadmap:** archive open-questions-3.md (all 13 closed) ([18ba9ba](https://github.com/event4u-app/agent-config/commit/18ba9ba789a9974e51258c2242c1bbb2dfbc5a52))
 * **roadmap:** regenerate progress dashboard after Q43 closure ([f027c55](https://github.com/event4u-app/agent-config/commit/f027c550c6a7fe66eb189440ce22a46990977c45))
 * **tools:** regenerate .windsurfrules after language-and-tone trim ([d9a6cf4](https://github.com/event4u-app/agent-config/commit/d9a6cf4921ca29787b4aaa46341eacd86493a8e8))
-* **ai-council:** recompress council.md (Q43) + refresh stale hash ([005ba1b](https://github.com/event4u-app/agent-config/commit/005ba1bcebcdf945df4023d720fe924471448d3d))
+* **ai-council:** recondense council.md (Q43) + refresh stale hash ([005ba1b](https://github.com/event4u-app/agent-config/commit/005ba1bcebcdf945df4023d720fe924471448d3d))
 * **ai-council:** post-install enable hint + close Phase-1 decisions ([595d475](https://github.com/event4u-app/agent-config/commit/595d475911f1621c84d846a2e10452611b7558f1))
 * **readme:** trim 'Who this is for' below 500-line linter budget ([e06237d](https://github.com/event4u-app/agent-config/commit/e06237dec5ae61f26cf9456c7584e500f4a36f0f))
 * **roadmap:** regenerate roadmaps-progress dashboard after F6 ([024916b](https://github.com/event4u-app/agent-config/commit/024916b2fe47deb4d77bc561ca9c8f82833c2da6))
@@ -1261,7 +1261,7 @@ Tests: 2471
 
 ### Bug Fixes
 
-* **rules:** restore Iron Law heading + code blocks in compressed roadmap-progress-sync ([96c633b](https://github.com/event4u-app/agent-config/commit/96c633b583fc17ea560fe1ddf7b915ab5a3be3f3))
+* **rules:** restore Iron Law heading + code blocks in condensed roadmap-progress-sync ([96c633b](https://github.com/event4u-app/agent-config/commit/96c633b583fc17ea560fe1ddf7b915ab5a3be3f3))
 * **ci:** clear check-refs regressions in roadmap files ([56b40f3](https://github.com/event4u-app/agent-config/commit/56b40f397e632337f5f69a507b13aa2b475453c3))
 
 ### Performance
@@ -1291,7 +1291,7 @@ Tests: 2471
 
 ### Chores
 
-* **generated:** sync compressed projections for chat-history split (P2.1) ([f53a44f](https://github.com/event4u-app/agent-config/commit/f53a44f31fd7d93c28122b945f8059bd112dc854))
+* **generated:** sync condensed projections for chat-history split (P2.1) ([f53a44f](https://github.com/event4u-app/agent-config/commit/f53a44f31fd7d93c28122b945f8059bd112dc854))
 * **generated:** regenerate .windsurfrules after rule edits ([0090392](https://github.com/event4u-app/agent-config/commit/00903924eaf1955ad2049dc03c3c57d9f4ff016e))
 * **roadmaps:** mark Phase 1 progress in road-to-post-pr29-optimize + dashboard ([a2160af](https://github.com/event4u-app/agent-config/commit/a2160afd6e7280bd3d4a71641fb4dba8234edf21))
 * **scripts:** whitelist scripts/mcp_server/ in portability check ([259745e](https://github.com/event4u-app/agent-config/commit/259745e9f52ea0a60e3e92a553a5938b15adc0ca))
@@ -1332,7 +1332,7 @@ Tests: 2471
 * **chat-history:** wire HOOK strategy for Claude Code and Augment CLI ([d280777](https://github.com/event4u-app/agent-config/commit/d2807770c5d8937e7cc4ba8a65c91de4503ccff0))
 * **chat-history:** add hook-append wrapper for platform hooks ([f936e57](https://github.com/event4u-app/agent-config/commit/f936e573bcc613ea7d7fc6bcd90113c5514821a2))
 * **roadmap-sync:** harden rule with Iron Law, pre-send self-check, failure modes ([208728f](https://github.com/event4u-app/agent-config/commit/208728f3e92a6343adca74f8ab8853e9558091b6))
-* **compress:** allow caveman style, enforce structural Iron Law preservation ([7bcbcae](https://github.com/event4u-app/agent-config/commit/7bcbcae1cd4e9341abbf90e67e20baee0f2902c4))
+* **condense:** allow telegraph style, enforce structural Iron Law preservation ([7bcbcae](https://github.com/event4u-app/agent-config/commit/7bcbcae1cd4e9341abbf90e67e20baee0f2902c4))
 * **skills:** add md-language-check skill and /check-current-md command ([0aaed82](https://github.com/event4u-app/agent-config/commit/0aaed829908bcb1e891d691db248a06667e9ee53))
 * **work-engine:** implement ui-trivial directive set ([59bb66d](https://github.com/event4u-app/agent-config/commit/59bb66de360c38b186e1462664795ccbddd7ce1e))
 * **rules:** extract Hard Floor into non-destructive-by-default ([dfc80a6](https://github.com/event4u-app/agent-config/commit/dfc80a6ec848d0a5fe7a8997d1e29dab3cf73fb0))
@@ -1389,7 +1389,7 @@ Tests: 2471
 * **work-engine:** heartbeat survives state sync; turn-check surfaces drift ([303d04e](https://github.com/event4u-app/agent-config/commit/303d04ebbb896fd82ba0cd5910089fa6079b9f1f))
 * **roadmap-sync:** replace hardcoded `task ci` with project-agnostic phrasing ([272b7b5](https://github.com/event4u-app/agent-config/commit/272b7b554f78a72cdeb4cf278bbdf065a895efa7))
 * **chat-history:** correct suggestion frontmatter to schema-compliant fields ([cf4849d](https://github.com/event4u-app/agent-config/commit/cf4849d4a9e5954d3ff7e10aa4712d7921b0f7c1))
-* **compress:** align compressed code blocks with uncompressed source ([4a495c9](https://github.com/event4u-app/agent-config/commit/4a495c91da13cd9ea858d06b3eabaef31897b5d8))
+* **condense:** align condensed code blocks with uncondensed source ([4a495c9](https://github.com/event4u-app/agent-config/commit/4a495c91da13cd9ea858d06b3eabaef31897b5d8))
 * **sync:** handle 3-level nested settings (commands.suggestion.*) and list values ([e8904cd](https://github.com/event4u-app/agent-config/commit/e8904cd35f309cc65807418429f9298af9743390))
 * **roadmap-progress:** Steps = total checkboxes, reorder Open before Done ([ec2c2e6](https://github.com/event4u-app/agent-config/commit/ec2c2e6bce8868fec605181fa35a32fa14a04640))
 * **marketplace:** sync manifest with disk + add reverse-drift linter ([98d5cb3](https://github.com/event4u-app/agent-config/commit/98d5cb3b46e3761e75258141b776d06749fba6f2))
@@ -1509,16 +1509,16 @@ Tests: 2471
 * **sync:** wire pre-commit marketplace lint into installer ([a163d64](https://github.com/event4u-app/agent-config/commit/a163d64443fe6574ade62be5d074c254b884c155))
 * **marketplace:** list react-shadcn-ui skill ([24788ec](https://github.com/event4u-app/agent-config/commit/24788ec6e02bfad824fe44272649229ccf2cb9de))
 * **roadmaps:** close work-engine-hooks roadmap + regenerate dashboard ([e841ba4](https://github.com/event4u-app/agent-config/commit/e841ba435fa27f35ae843fadf72a69b24ae6b478))
-* **compress:** regenerate compressed siblings + sync tool projections ([a62ba2b](https://github.com/event4u-app/agent-config/commit/a62ba2b61307b424077e08bd7125aa480d6807bc))
+* **condense:** regenerate condensed siblings + sync tool projections ([a62ba2b](https://github.com/event4u-app/agent-config/commit/a62ba2b61307b424077e08bd7125aa480d6807bc))
 * **docs:** bump skill count to 128 after react-shadcn-ui addition ([305fb28](https://github.com/event4u-app/agent-config/commit/305fb28e7abb7942210cae8599da64cfe0aee53b))
-* **compress:** catchup compressed siblings for work_engine UI + mixed directives ([746f5cc](https://github.com/event4u-app/agent-config/commit/746f5ccb667e067ad312e2a8ccc2025dc66c2c98))
+* **condense:** catchup condensed siblings for work_engine UI + mixed directives ([746f5cc](https://github.com/event4u-app/agent-config/commit/746f5ccb667e067ad312e2a8ccc2025dc66c2c98))
 * **marketplace:** register chat-history-checkpoint and three drifted skills ([505a84b](https://github.com/event4u-app/agent-config/commit/505a84b2f722b92b752eefb1cf8766c6fad27089))
 * **tools:** regenerate multi-agent tool projections ([18ddf84](https://github.com/event4u-app/agent-config/commit/18ddf84edd1e6b19341aa169bb12db40df43d7c1))
 * **rules:** harden language-and-tone Iron Law against momentum slip ([6d613c2](https://github.com/event4u-app/agent-config/commit/6d613c22ba74b34576909698f4ac732ccf882f7f))
 * **roadmap:** mark R3 Phase 1 done in road-to-product-ui-track ([c5dbaec](https://github.com/event4u-app/agent-config/commit/c5dbaec4b7413287f6d87e0c17e1b38050433d9c))
 * **goldens:** recapture baselines for R3 Phase 1 schema bump ([62d9331](https://github.com/event4u-app/agent-config/commit/62d9331ba33b88e0e8e8be305d46d9fbe3dc2e9b))
 * **roadmap:** archive context-aware-command-suggestion roadmap ([6c3dff1](https://github.com/event4u-app/agent-config/commit/6c3dff17cc570fafb865596b24c6845ea0a3d0a4))
-* **generate-tools:** regenerate .windsurfrules after compression alignment ([8b03959](https://github.com/event4u-app/agent-config/commit/8b03959a2668a15d7ba37610c498967663a9b73b))
+* **generate-tools:** regenerate .windsurfrules after condensation alignment ([8b03959](https://github.com/event4u-app/agent-config/commit/8b03959a2668a15d7ba37610c498967663a9b73b))
 * **roadmap:** regen tool projections + close command-suggestion roadmap ([9a58190](https://github.com/event4u-app/agent-config/commit/9a58190bf77db481f7103c91ad6e9dec4020d261))
 * **roadmap:** mark Phase 1+2 of context-aware command suggestion done ([e2adbff](https://github.com/event4u-app/agent-config/commit/e2adbffa54ed26cdb66456885a7915257b338b59))
 * **roadmap:** archive artefact-engagement-telemetry roadmap ([57d3db9](https://github.com/event4u-app/agent-config/commit/57d3db991a5108cdc5f6b8048afcdc366ce00b07))
@@ -1643,8 +1643,8 @@ Tests: 2471
 * **.github:** add issue templates ([7f3410f](https://github.com/event4u-app/agent-config/commit/7f3410f218aca19e50ddac8879aee02de8f938a4))
 * add /package-test and /package-reset commands ([b283ca0](https://github.com/event4u-app/agent-config/commit/b283ca0a191983fa614c72d0ab37a62a877dae7a))
 * add agent interaction quality guideline + extend 2 rules ([446c2d2](https://github.com/event4u-app/agent-config/commit/446c2d2fc5c7e4da84edf40b31a14c63e865c9bc))
-* add compression hash check to CI pipeline ([f32f1af](https://github.com/event4u-app/agent-config/commit/f32f1af678ca630f65e719b33eb2199ec9bd7597))
-* add compression quality checker ([ecea391](https://github.com/event4u-app/agent-config/commit/ecea391f5b35fe344e48fdb1092389531ca1e90f))
+* add condensation hash check to CI pipeline ([f32f1af](https://github.com/event4u-app/agent-config/commit/f32f1af678ca630f65e719b33eb2199ec9bd7597))
+* add condensation quality checker ([ecea391](https://github.com/event4u-app/agent-config/commit/ecea391f5b35fe344e48fdb1092389531ca1e90f))
 * add consistency CI workflow and Taskfile targets ([e833f1b](https://github.com/event4u-app/agent-config/commit/e833f1b5c6798483b0224c7be6611bff8edabf77))
 * add cross-reference checker script and Taskfile targets ([5f44a64](https://github.com/event4u-app/agent-config/commit/5f44a644c4185ee3476beeca6aada040771c1eee))
 * add developer-like-execution skill and think-before-action rule ([5296ecb](https://github.com/event4u-app/agent-config/commit/5296ecbef496cf8c250714540596593fd3642a1d))
@@ -1707,7 +1707,7 @@ Tests: 2471
 * **judgment:** improve-before-implement rule + validate-feature-fit skill ([1ebd22c](https://github.com/event4u-app/agent-config/commit/1ebd22c7ce687ec80e0fa9b98090d48120274e14))
 * **lifecycle:** add skill lifecycle management with health scoring ([098c06c](https://github.com/event4u-app/agent-config/commit/098c06cee7585cd96e7d6e4332d5eb0d838f0e91))
 * **linter:** add execution quality checks for developer workflow enforcement ([e9b73bc](https://github.com/event4u-app/agent-config/commit/e9b73bc783c024b795ec666b61ac3e0a82dd4df1))
-* **linter:** add quality report details, compression checks, and pointer-only tests ([836288a](https://github.com/event4u-app/agent-config/commit/836288ac46dace2f9197449127faed99a0151b3c))
+* **linter:** add quality report details, condensation checks, and pointer-only tests ([836288a](https://github.com/event4u-app/agent-config/commit/836288ac46dace2f9197449127faed99a0151b3c))
 * **linter:** add README quality linter with CI integration ([3a32739](https://github.com/event4u-app/agent-config/commit/3a32739b2eae710fc4e184c567e2418549ccc2b9))
 * **linter:** add regression detection between branches ([8163409](https://github.com/event4u-app/agent-config/commit/81634092a103908aeffb65ee51ec675717199462))
 * **linter:** Phase 2 — expand synonyms + fix 8 failing skills → 0 FAIL ([b691904](https://github.com/event4u-app/agent-config/commit/b691904b80c5dc9cb7612d56628a38941f2909ac))
@@ -1744,7 +1744,7 @@ Tests: 2471
 * **rules:** add artifact-drafting-protocol ([132307e](https://github.com/event4u-app/agent-config/commit/132307ecc90154691719a21b0230349159dd6a1b))
 * **rules:** add missing-tool-handling rule ([739cb24](https://github.com/event4u-app/agent-config/commit/739cb2498d7ae5f584ebaa2de3c2f5e463f9bce5))
 * **rules:** add package-ci-checks rule and optimize CI task order ([5315480](https://github.com/event4u-app/agent-config/commit/531548087e99173234d8e6bbd4b6b55f3014dd83))
-* **rules:** add preservation-guard rule for merges and compression ([100e577](https://github.com/event4u-app/agent-config/commit/100e577826cb491538931add5f91ee16f2f19102))
+* **rules:** add preservation-guard rule for merges and condensation ([100e577](https://github.com/event4u-app/agent-config/commit/100e577826cb491538931add5f91ee16f2f19102))
 * **rules:** add reviewer-awareness and review-routing-awareness ([66f5c58](https://github.com/event4u-app/agent-config/commit/66f5c585bb7ae343216ea757fd2172b494304c8c))
 * **rules:** add roadmap-progress-sync — dashboard must stay real-time ([cc16e41](https://github.com/event4u-app/agent-config/commit/cc16e41f4818b97a70ae1a1e007f2b37690ea794))
 * **rules:** enforce archive-on-completion in roadmap-progress-sync ([bc250bc](https://github.com/event4u-app/agent-config/commit/bc250bcda7204aada74a31071566eb3256a67dda))
@@ -1813,7 +1813,7 @@ Tests: 2471
 * **check-refs:** resolve .augment/X as alias for .agent-src/X ([ff3b094](https://github.com/event4u-app/agent-config/commit/ff3b09479a7fa266606467d862f8de9277ef1fc4))
 * **check-refs:** skip forward refs in unchecked TODO items ([1458a18](https://github.com/event4u-app/agent-config/commit/1458a181eb5bbe3189777b87bd9ad210b8cc00c5))
 * **check-refs:** validate paths inside memory YAML + exempt consumer dirs ([ec4e8aa](https://github.com/event4u-app/agent-config/commit/ec4e8aae2a0f8e7c489442441b8cfa7f9242be2f))
-* **ci:** add PR comment permissions, fix lint failure, sync compression hashes ([dee8c47](https://github.com/event4u-app/agent-config/commit/dee8c47d080176d49c94d63d33be7ada025b0a64))
+* **ci:** add PR comment permissions, fix lint failure, sync condensation hashes ([dee8c47](https://github.com/event4u-app/agent-config/commit/dee8c47d080176d49c94d63d33be7ada025b0a64))
 * **ci:** auto-discover ownership-map under .github/ and agents/ ([c9239d2](https://github.com/event4u-app/agent-config/commit/c9239d2795ccb75ca5fb49dc2f81054fd4cb64ab))
 * **ci:** collapsible PR comment sections, sticky comment update ([4b9b8c9](https://github.com/event4u-app/agent-config/commit/4b9b8c9ef4e28971073a8dcb436250ac2f81a421))
 * **ci:** fix all CI pipeline failures ([bed212f](https://github.com/event4u-app/agent-config/commit/bed212f9d9802dd318e4f297e53e54ecb1fa00c8))
@@ -1821,12 +1821,12 @@ Tests: 2471
 * **ci:** install pytest before running linter tests ([5e35f3d](https://github.com/event4u-app/agent-config/commit/5e35f3de991be1430bbd5d55692704ba57bf45a2))
 * **ci:** install pyyaml + migrate orchestrator tests to YAML settings ([77d0a95](https://github.com/event4u-app/agent-config/commit/77d0a95335dcf2e39636c6edbcab5752baf9833e))
 * **ci:** resolve 10 broken cross-references in roadmaps ([a564c43](https://github.com/event4u-app/agent-config/commit/a564c4353bf92b892c6b0f67434b0178e3ba67b0))
-* **commands:** add mandatory quality gate to compress command ([e66ef75](https://github.com/event4u-app/agent-config/commit/e66ef75209415099cc79bbddd9fecb4963e6b9a0))
-* **compression:** restore code block text in augment-source-of-truth rule ([f1be351](https://github.com/event4u-app/agent-config/commit/f1be35142dde5ae43245ed013a7035a7b16027f6))
-* **compression:** restore lost code blocks in 5 compressed files ([06e14fb](https://github.com/event4u-app/agent-config/commit/06e14fb05a33f3dc29de6ee4c84f949c879656d3))
+* **commands:** add mandatory quality gate to condense command ([e66ef75](https://github.com/event4u-app/agent-config/commit/e66ef75209415099cc79bbddd9fecb4963e6b9a0))
+* **condensation:** restore code block text in augment-source-of-truth rule ([f1be351](https://github.com/event4u-app/agent-config/commit/f1be35142dde5ae43245ed013a7035a7b16027f6))
+* **condensation:** restore lost code blocks in 5 condensed files ([06e14fb](https://github.com/event4u-app/agent-config/commit/06e14fb05a33f3dc29de6ee4c84f949c879656d3))
 * correct plugin install commands per Nicolai's feedback ([22279cc](https://github.com/event4u-app/agent-config/commit/22279cc371d616b9e993bb57c84e01bd426a2484))
 * **docs:** avoid false-positive skill/path refs in design docs ([2cd66a3](https://github.com/event4u-app/agent-config/commit/2cd66a3283e2d8ad13eaead140dda4a752bc86c6))
-* enforce /compress command as only way to write .augment/ files ([fad94a6](https://github.com/event4u-app/agent-config/commit/fad94a6475135c5a8f0945d950369f60e596a4f1))
+* enforce /condense command as only way to write .augment/ files ([fad94a6](https://github.com/event4u-app/agent-config/commit/fad94a6475135c5a8f0945d950369f60e596a4f1))
 * **evals:** read confirmation input from /dev/tty, not stdin ([eba6dde](https://github.com/event4u-app/agent-config/commit/eba6ddeff68f3c2c67285e7d94f7b4a54ae4b51b))
 * **evals:** reclassify eloquent 'UserService' Pest query as A-class ([5ffcdad](https://github.com/event4u-app/agent-config/commit/5ffcdaddd16c2c119fb6321cc5d0857d2d98a7a5))
 * handle realpath without --relative-to support (BusyBox/Alpine) ([5a79bf0](https://github.com/event4u-app/agent-config/commit/5a79bf06c629c00174f0752b8e1a851678ad352e))
@@ -1854,7 +1854,7 @@ Tests: 2471
 * **skills:** sharpen api + aws descriptions (batch 2b) ([b00d19d](https://github.com/event4u-app/agent-config/commit/b00d19d326ee5771aa7ea2fbfb0d6ba1886041d7))
 * **skills:** sharpen blade/command/composer descriptions (batch 2c) ([c61dca7](https://github.com/event4u-app/agent-config/commit/c61dca7eda0763353a7ad3ad3de2c87e9d1aaaa5))
 * **skills:** shorten 6 pilot descriptions under 200-char lint limit ([7ed3adb](https://github.com/event4u-app/agent-config/commit/7ed3adb9c1fcced9abf99d6b5f69465dc469f2e3))
-* sync diverged compressed files and update hashes ([3f51916](https://github.com/event4u-app/agent-config/commit/3f51916dcfdac3264163ff0575ff3742fbf0ce43))
+* sync diverged condensed files and update hashes ([3f51916](https://github.com/event4u-app/agent-config/commit/3f51916dcfdac3264163ff0575ff3742fbf0ce43))
 * sync package.json version to 1.3.3 and rename gitignore marker ([193a9e4](https://github.com/event4u-app/agent-config/commit/193a9e479adec742cb7ecda5b44a9564709aedf9))
 * sync tool directories and fix broken cross-references ([deeb9d3](https://github.com/event4u-app/agent-config/commit/deeb9d3c8316b29bff3a1bab33f8defb26a79d35))
 * **templates:** add missing settings to agent-settings template ([c75f461](https://github.com/event4u-app/agent-config/commit/c75f4619ba79d663a487561cedcbc34bee79a1ad))
@@ -1928,7 +1928,7 @@ Tests: 2471
 ## [1.4.0] — 2026-04-18
 
 ### Added
-- **`.agent-src/` replaces `.augment/` as the canonical compressed directory
+- **`.agent-src/` replaces `.augment/` as the canonical condensed directory
   shipped in the package.** The new name is tool-agnostic. The installer on
   the consumer side still writes into `.augment/`, unchanged.
 - `.augment/` is now a **local projection** of `.agent-src/` for Augment Code
@@ -1962,7 +1962,7 @@ Tests: 2471
   and an explicit `files` whitelist in `package.json`. Composer archives
   drop from 1221 to 433 files (4.45 MB → 1.79 MB); the npm tarball contains
   313 files (483 kB packed). Dev-only directories (`tests/`, `agents/`,
-  `.agent-src.uncompressed/`, tool mirrors) no longer ship to consumers.
+  `.agent-src.uncondensed/`, tool mirrors) no longer ship to consumers.
 - **Architecture docs restructured.** Layer 4–6 (observability, feedback,
   lifecycle) moved out of `docs/architecture.md` into a dedicated opt-in
   `docs/observability.md`. The main architecture page now focuses on the
@@ -2071,10 +2071,10 @@ Tests: 2471
 - `readme-reviewer`, `readme-writing`, and `readme-writing-package` skills.
 - README quality linter integrated into CI.
 - Skill improvement pipeline (all 5 phases).
-- Compression quality checker, cross-reference checker, portability checker.
+- Condensation quality checker, cross-reference checker, portability checker.
 - `size-and-scope` guideline, `size-enforcement` and `rule-type-governance`
   rules.
-- `preservation-guard` rule for merges and compression.
+- `preservation-guard` rule for merges and condensation.
 - Phase 3 observability work + feedback category tags.
 - `developer-like-execution` skill and `think-before-action` rule.
 

@@ -141,7 +141,7 @@ Re-open this ADR if:
   — parent roadmap (Phase 3).
 - [`adr-always-budget-relief-strategy`](adr-always-budget-relief-strategy.md)
   — superseded sibling roadmap; this ADR closes Phase 3.
-- [`reviewer-awareness`](../../.agent-src.uncompressed/rules/reviewer-awareness.md)
+- [`reviewer-awareness`](../../.agent-src.uncondensed/rules/reviewer-awareness.md)
   — Pair 1 merged rule.
-- [`no-roadmap-references`](../../.agent-src.uncompressed/rules/no-roadmap-references.md)
+- [`no-roadmap-references`](../../.agent-src.uncondensed/rules/no-roadmap-references.md)
   — Pair 2 merged rule (covers both transient layers).

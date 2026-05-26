@@ -50,7 +50,7 @@ PHASE2_SHIMS: list[tuple[str, str]] = [
 ]
 
 DEPRECATED_IN = "1.17.0"
-COMMANDS_DIR = Path(".agent-src.uncompressed/commands")
+COMMANDS_DIR = Path(".agent-src.uncondensed/commands")
 
 
 def patch_file(stem: str, target: str) -> str:

@@ -14,7 +14,7 @@
 - [-] Phase 3.2 live smoke-test of `/review-changes` — recommended before starting, so lessons-learned shape the backport *(Q35)*
 - [x] `preservation-guard` rule active — blocks quality-losing transformations
 - [x] Skill linter active — gates every batch
-- [x] `.agent-src.uncompressed/` is the source of truth; `.agent-src/` is regenerated
+- [x] `.agent-src.uncondensed/` is the source of truth; `.agent-src/` is regenerated
 
 ## Context
 
@@ -29,7 +29,7 @@ backport** so every skill becomes sharper at its own job.
 - **Jira:** none
 - **Related:** [`../archive/road-to-autonomous-agent.md`](../archive/road-to-autonomous-agent.md) Phase 3.1,
   [`../archive/road-to-defensive-agent.md`](../archive/road-to-defensive-agent.md) (parallel — new skills ship pattern-compliant, no backport debt),
-  [`.agent-src.uncompressed/rules/preservation-guard.md`](../../../.agent-src.uncompressed/rules/preservation-guard.md)
+  [`.agent-src.uncondensed/rules/preservation-guard.md`](../../../.agent-src.uncondensed/rules/preservation-guard.md)
 
 ## Definition of done
 
@@ -152,7 +152,7 @@ that are handled elsewhere. Reconciled during Phase 0.
 - **Word budget unchanged or +10% max.** Adding 8 lines of frame is fine;
   doubling a skill is not.
 - **Each batch is its own commit** so a bad batch can be reverted cleanly.
-- **Compression + tool regeneration** after every batch (`task sync`, then
+- **Condensation + tool regeneration** after every batch (`task sync`, then
   `task generate-tools`, then `task ci`).
 
 ## Phases
@@ -282,7 +282,7 @@ this roadmap's progress.
 | Risk | Mitigation |
 |---|---|
 | Blanket uniformity kills individual skill voice | Pattern tiers — not every pattern on every skill |
-| Compression drift during 100+ skill edits | `task sync` after every batch; `.compression-hashes.json` kept in sync per commit |
+| Condensation drift during 100+ skill edits | `task sync` after every batch; `.condensation-hashes.json` kept in sync per commit |
 | Judge review on every batch is slow | Parallel dispatch via `subagent_max_parallel >= 4` once Phase 3.2 acceptance lands |
 | Word budget explodes | Hard cap: +10% per skill, measured pre/post via linter metric added in Phase 0 |
 | A pattern turns out to be wrong in practice | Phase 3.2 smoke-test runs BEFORE this roadmap starts Phase 1 — lessons-learned fold in |
@@ -336,7 +336,7 @@ skills) — this roadmap addresses only the pre-existing catalogue.
 
 - [`open-questions-2.md`](../archive/open-questions-2.md) — Q35 sequencing
 - [`road-to-autonomous-agent.md`](road-to-autonomous-agent.md) — parent roadmap, Phase 3.1
-- [`.agent-src.uncompressed/rules/preservation-guard.md`](../../.agent-src.uncompressed/rules/preservation-guard.md) — quality gate
-- [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md) — minimum sharpness
+- [`.agent-src.uncondensed/rules/preservation-guard.md`](../../.agent-src.uncondensed/rules/preservation-guard.md) — quality gate
+- [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md) — minimum sharpness
 - [`docs/guidelines/agent-infra/size-and-scope.md`](../../docs/guidelines/agent-infra/size-and-scope.md) — word budgets
-- [`.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md`](../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md) — reference implementation of patterns 1-8
+- [`.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md`](../../.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md) — reference implementation of patterns 1-8

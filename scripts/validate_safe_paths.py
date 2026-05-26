@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """Sensitive-path denylist — refuses files that almost certainly hold secrets or PII.
 
-Phase 0 of step-16-caveman-substance. Gates Phase 2 (`scripts/compress_memory.py`):
+Phase 0 of step-16-telegraph-substance. Gates Phase 2 (`scripts/condense_memory.py`):
 any consumer-supplied path must pass `assert_safe()` before bytes are read or
 shipped to a third-party API.
 
-Ported from Caveman `plugins/caveman/skills/caveman-compress/scripts/compress.py`
+Ported from Telegraph `plugins/telegraph/skills/telegraph-condense/scripts/condense.py`
 (upstream `63a91ec`). Adapted to repo conventions: explicit `SensitivePathError`,
 CLI entry point, no `anthropic` import.
 
@@ -30,7 +30,7 @@ class SensitivePathError(ValueError):
 
 
 # Filenames that almost certainly hold secrets or PII. Matched against the
-# basename only (case-insensitive). Compressing or shipping these to an LLM API
+# basename only (case-insensitive). Condenseing or shipping these to an LLM API
 # is a third-party data boundary developers on sensitive codebases cannot cross.
 SENSITIVE_BASENAME_REGEX = re.compile(
     r"(?ix)^("

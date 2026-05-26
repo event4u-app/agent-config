@@ -2921,12 +2921,12 @@ def _detect_legacy_for_migration(project_root: Path) -> list[str]:
 
     - ``AGENT_CONFIG_DEV_MODE=1`` is set (maintainer dogfood loop),
     - the project root IS the agent-config source repo
-      (``.agent-src.uncompressed/`` present),
+      (``.agent-src.uncondensed/`` present),
     - the bridge marker already exists (project is already global-only).
     """
     if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
         return []
-    if (project_root / ".agent-src.uncompressed").is_dir():
+    if (project_root / ".agent-src.uncondensed").is_dir():
         return []
     if (project_root / CONSUMER_BRIDGE_MARKER_RELPATH).is_file():
         return []
@@ -3031,7 +3031,7 @@ def _write_consumer_bridge_marker(
     - ``AGENT_CONFIG_DEV_MODE=1`` (maintainer dev installs never lay the
       bridge into the source repo).
     - The project root is the agent-config source repo itself
-      (``.agent-src.uncompressed/`` present) — same rationale.
+      (``.agent-src.uncondensed/`` present) — same rationale.
 
     Atomic write: ``tempfile`` in the same dir + ``os.replace``. Same
     pattern the lockfile uses (see ``scripts/_lib/installed_lock.py``).
@@ -3042,7 +3042,7 @@ def _write_consumer_bridge_marker(
     env_map = env if env is not None else os.environ
     if env_map.get("AGENT_CONFIG_DEV_MODE") == "1":
         return None
-    if (project_root / ".agent-src.uncompressed").is_dir():
+    if (project_root / ".agent-src.uncondensed").is_dir():
         return None
 
     paths_mod = _load_user_global_paths_module()
@@ -3112,7 +3112,7 @@ def _write_per_tool_project_anchors(
 
     - Skipped under ``AGENT_CONFIG_DEV_MODE=1``.
     - Skipped inside the agent-config source repo
-      (``.agent-src.uncompressed/`` present).
+      (``.agent-src.uncondensed/`` present).
     - Skipped when the tool is not in ``tools``.
 
     Atomic write per file (temp file + ``os.replace``); ``0o644``
@@ -3124,7 +3124,7 @@ def _write_per_tool_project_anchors(
     env_map = env if env is not None else os.environ
     if env_map.get("AGENT_CONFIG_DEV_MODE") == "1":
         return []
-    if (project_root / ".agent-src.uncompressed").is_dir():
+    if (project_root / ".agent-src.uncondensed").is_dir():
         return []
 
     paths_mod = _load_user_global_paths_module()
@@ -3548,12 +3548,12 @@ def install_global(
     # (ADR-008 Phase 3.2). Outside a project (e.g. plain `~/`) there is no
     # manifest to write and the global lockfile alone is the source of truth.
     # Skipped inside the agent-config source repo (detected by
-    # `.agent-src.uncompressed/`) — maintainers dogfood with their own
+    # `.agent-src.uncondensed/`) — maintainers dogfood with their own
     # `.agent-settings.yml` and the manifest would be untracked noise.
     if (
         project_root is not None
         and (project_root / SETTINGS_FILE).exists()
-        and not (project_root / ".agent-src.uncompressed").is_dir()
+        and not (project_root / ".agent-src.uncondensed").is_dir()
     ):
         # Collect deployed/marker paths per tool so the manifest records
         # the v2 ``files[]`` inventory (P1.4).
@@ -3571,7 +3571,7 @@ def install_global(
         # ``agents/.event4u-bridge.yml`` lets per-tool adapters locate
         # the global root from inside the repo. Skipped in maintainer
         # dev mode and in the source repo (see contract § Writer
-        # contract; the surrounding ``.agent-src.uncompressed`` guard
+        # contract; the surrounding ``.agent-src.uncondensed`` guard
         # already covers the source-repo case, the dev-mode skip is
         # enforced inside the writer).
         marker_path = _write_consumer_bridge_marker(project_root, installed_version)
@@ -4072,7 +4072,7 @@ _INTERACTIVE_STACKS: tuple[tuple[str, str], ...] = (
 )
 
 _INTERACTIVE_VERBOSITIES: tuple[tuple[str, str], ...] = (
-    ("quiet", "Caveman / minimal output"),
+    ("quiet", "Telegraph / minimal output"),
     ("normal", "Default verbosity"),
     ("verbose", "Full intent announcements + play-by-play"),
 )

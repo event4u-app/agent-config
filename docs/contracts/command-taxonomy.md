@@ -33,7 +33,7 @@ single-source.
 ### Profile membership
 
 A command appears in a profile's `commands_hint` (in
-`.agent-src.uncompressed/profiles/<id>.yml`) iff **all** hold:
+`.agent-src.uncondensed/profiles/<id>.yml`) iff **all** hold:
 
 1. **First-week reach.** A user of that profile will reach for this
    command within their first five sessions without being told.
@@ -92,7 +92,7 @@ Three surfaces consume this contract:
 |---|---|---|
 | **README** | `README.md` § "Six entry paths" | Per-profile `commands_hint` (max 5) rendered as the first-commands list per profile block |
 | **Catalog** | `docs/catalog.md` | All commands grouped by verb-cluster (primary axis), with a per-command `profiles:` line listing which profiles surface it |
-| **Wizard** | `.agent-src.uncompressed/commands/onboard.md` | After role selection, prints the five-command starter list from the selected profile's `commands_hint` |
+| **Wizard** | `.agent-src.uncondensed/commands/onboard.md` | After role selection, prints the five-command starter list from the selected profile's `commands_hint` |
 
 The README and wizard surfaces are already wired. The catalog `profiles:`
 line is a Phase 2 deliverable.

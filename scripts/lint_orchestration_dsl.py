@@ -47,7 +47,7 @@ MAX_STEPS = 32
 MIN_STEPS = 1
 
 # Subagent-orchestration modes — kept in lock-step with
-# .agent-src.uncompressed/skills/subagent-orchestration/SKILL.md.
+# .agent-src.uncondensed/skills/subagent-orchestration/SKILL.md.
 SUBAGENT_MODES = {
     "do-and-judge", "do-and-judge-two-stage",
     "do-in-steps", "do-in-parallel", "do-in-worktrees",

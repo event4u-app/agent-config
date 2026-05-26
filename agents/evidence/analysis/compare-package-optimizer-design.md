@@ -11,7 +11,7 @@
 | `/optimize agents` | rules + AGENTS.md | token overhead, always→auto candidates, duplicate triggers | skills, commands, contexts; deletion ranking |
 | `/optimize augmentignore` · `/optimize rtk` | ignore/filter files | path scoping | not in audit scope at all |
 | `skill-reviewer` skill | single skill | 7 Skill Killers checklist | per-skill only; no cross-cut |
-| `skill-management` skill | single skill | compress/expand/refactor lifecycle | per-skill only |
+| `skill-management` skill | single skill | condense/expand/refactor lifecycle | per-skill only |
 | `rule-compliance-audit` skill | rules only | trigger quality, never-firing rules, overlaps | rule-only; doesn't see skills/commands |
 | `preservation-guard` rule | merge/refactor surface | Iron Laws stay, every passage stays | reactive — fires during transformation, not before |
 | `lint_rule_interactions.py` | `rule-interactions.yml` | pair-conflict matrix schema validation | only what's already in YAML |

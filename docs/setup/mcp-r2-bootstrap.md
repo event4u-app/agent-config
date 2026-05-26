@@ -20,7 +20,7 @@ agent-config-mcp/
 ├─ releases/
 │  ├─ v<X.Y.Z>-<sha>/
 │  │  ├─ content.json.gz    # gzipped content blob (R2 archival copy)
-│  │  └─ manifest.json      # uncompressed manifest sidecar
+│  │  └─ manifest.json      # uncondensed manifest sidecar
 │  └─ latest.txt            # one-line: v<X.Y.Z>-<sha>
 └─ (no other prefixes)
 ```

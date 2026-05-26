@@ -121,6 +121,6 @@ re-opens the slot-sprawl risk and needs a separate ADR.
   reference ADR this one composes against.
 - [`scripts/schemas/skill.schema.json`](../../scripts/schemas/skill.schema.json)
   — `context_spine.items.enum` extended in this ADR.
-- [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
+- [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   § Senior-Tier Required Structure — the four blocks every senior
   skill ships independently of spine opt-in.

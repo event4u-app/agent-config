@@ -14,9 +14,9 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - ".agent-src.uncompressed/rules/**"
+      - ".agent-src.uncondensed/rules/**"
       - ".agent-src/rules/**"
-      - ".agent-src.uncompressed/skills/**"
+      - ".agent-src.uncondensed/skills/**"
       - "router.json"
       - "scripts/smoke/**"
       - "scripts/measure_rule_budget.py"

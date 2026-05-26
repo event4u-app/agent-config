@@ -14,16 +14,16 @@ The hero badges in `README.md` (shields.io URLs near the top) must list:
 
 where the counts come from disk:
 
-  * Skills      = `.agent-src.uncompressed/skills/*` directory count
-  * Rules       = `.agent-src.uncompressed/rules/*.md` file count
-  * Commands    = `.agent-src.uncompressed/commands/*.md` minus files
+  * Skills      = `.agent-src.uncondensed/skills/*` directory count
+  * Rules       = `.agent-src.uncondensed/rules/*.md` file count
+  * Commands    = `.agent-src.uncondensed/commands/*.md` minus files
                   with frontmatter `deprecated_in:` (deprecation shims
                   are documented separately in AGENTS.md)
   * Guidelines  = `docs/guidelines/**/*.md` recursive count
-  * Personas    = `.agent-src.uncompressed/personas/*.md` top-level
+  * Personas    = `.agent-src.uncondensed/personas/*.md` top-level
                   files, excluding `README.md` and `_template-*` scaffolds
                   (the `advisors/` subdirectory is counted separately)
-  * Advisors    = `.agent-src.uncompressed/personas/advisors/*.md` count
+  * Advisors    = `.agent-src.uncondensed/personas/advisors/*.md` count
                   — distinct class (Council Replace-mode personas, see
                   step-1-ai-council-cli-transport Phase 7)
 

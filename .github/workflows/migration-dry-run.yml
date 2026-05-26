@@ -2,7 +2,7 @@ name: Migration Dry-Run (Phase 4 Physical Layout)
 
 # Monorepo Phase 4 (ADR-017) guard. Runs `scripts/plan_physical_move.py`
 # in dry-run mode against the current tree. While Phase 4 is in flight
-# (legacy `.agent-src.uncompressed/` still authoritative), this surfaces
+# (legacy `.agent-src.uncondensed/` still authoritative), this surfaces
 # any new artefact whose frontmatter `packs[]` / `primary_pack` cannot
 # be resolved deterministically — a conflict the operator must fix in
 # frontmatter, never by hand-editing the move plan.
@@ -21,7 +21,7 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - ".agent-src.uncompressed/**/*.md"
+      - ".agent-src.uncondensed/**/*.md"
       - "packages/**/*.md"
       - "scripts/plan_physical_move.py"
       - "scripts/_lib/agent_src.py"

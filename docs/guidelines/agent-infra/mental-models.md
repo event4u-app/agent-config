@@ -6,11 +6,11 @@ lens at a time. Adopted under the **Reference-Guideline Sunset Policy**
 (see frontmatter `upstream` / `refresh_trigger` keys) and cross-referenced
 from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
   — L3 Deep analysis depth.
-- [`refine-prompt`](../../../.agent-src.uncompressed/skills/refine-prompt/SKILL.md)
+- [`refine-prompt`](../../../.agent-src.uncondensed/skills/refine-prompt/SKILL.md)
   — multi-lens prompt refinement.
-- [`judge-bug-hunter`](../../../.agent-src.uncompressed/skills/judge-bug-hunter/SKILL.md)
+- [`judge-bug-hunter`](../../../.agent-src.uncondensed/skills/judge-bug-hunter/SKILL.md)
   — diff review through more than the bug-hunter lens.
 
 > **Core principle:** "To a man with only a hammer, every problem looks

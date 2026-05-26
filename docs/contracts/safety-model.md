@@ -34,7 +34,7 @@ listed there cannot be set to `allow` here.
 ## Schema
 
 ```yaml
-# .agent-src.uncompressed/profiles/<id>.yml — new top-level key
+# .agent-src.uncondensed/profiles/<id>.yml — new top-level key
 profile:
   id: <profile.id>
   # ... existing fields ...

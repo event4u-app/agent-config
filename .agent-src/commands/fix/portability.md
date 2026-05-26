@@ -88,7 +88,7 @@ Present a summary:
 
 ### 5. Apply fixes
 
-Edit files in `.agent-src.uncompressed/`, then run `bash scripts/compress.sh --sync` to regenerate `.agent-src/` and `.augment/`.
+Edit files in `.agent-src.uncondensed/`, then run `bash scripts/condense.sh --sync` to regenerate `.agent-src/` and `.augment/`.
 
 After all fixes, re-run:
 
@@ -101,12 +101,12 @@ python3 scripts/check_portability.py
 For each modified file:
 
 ```bash
-python3 scripts/compress.py --mark-done "{relative_path}"
+python3 scripts/condense.py --mark-done "{relative_path}"
 ```
 
 ## Rules
 
-- **Always fix in `.agent-src.uncompressed/`** — never edit `.augment/` directly.
+- **Always fix in `.agent-src.uncondensed/`** — never edit `.augment/` directly.
 - **Copy to `.augment/`** after fixing.
 - **Do NOT commit or push.**
 - **`agents/` directory is allowed** to have project-specific references — skip it.

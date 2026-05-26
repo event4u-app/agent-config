@@ -248,5 +248,5 @@ prompts:
     category: rule
     expected_target: .claude/rules/preservation-guard.md
     expected_keywords: ["Iron Law", "preserve"]
-    prompt: "compress this skill — drop the redundant parts"
+    prompt: "condense this skill — drop the redundant parts"
     notes: "preservation-guard."

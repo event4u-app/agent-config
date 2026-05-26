@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-12
 > · **Source of truth:** `docs/contracts/rule-classification.md` § 3.1
 > · **Pilot artifacts:** `docs/contracts/pilot/`
 
-Locks the kernel set and the empirical compression rate `r` derived
+Locks the kernel set and the empirical condensation rate `r` derived
 from the P1.3 pilot. Phase 2.2 executes against this contract.
 
 ## § 1 — Inclusion criteria (kernel-only)
@@ -37,7 +37,7 @@ A rule belongs in the kernel iff it satisfies **all** of:
    `no-cheap-questions` are first-class kernel members even though
    they fire during deliberation, not strictly pre-send.)*
 
-All other rules → `compress-and-keep` (auto-tier) or migrate to
+All other rules → `condense-and-keep` (auto-tier) or migrate to
 skill / guideline per `rule-classification.md`.
 
 > **Council amendment (P1.4).** Criterion #3 originally read "must be
@@ -49,12 +49,12 @@ skill / guideline per `rule-classification.md`.
 > existing 9-rule kernel set. See
 > `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: contract decision trace -->
 
-## § 2 — Empirical compression rate (pilot)
+## § 2 — Empirical condensation rate (pilot)
 
 Pilot picks (per P1.3 algorithm: shortest / median / longest of the 9
 always-rules in `rule-classification.md` § 3.1):
 
-| pilot | original | compressed | r | per-rule cap (2.5k) | Iron-Law SHA |
+| pilot | original | condensed | r | per-rule cap (2.5k) | Iron-Law SHA |
 |---|---:|---:|---:|---|---|
 | agent-authority   | 1217 | 1020 | 0.838 | OK        | match (`e3b0c442…`) |
 | direct-answers    | 3991 | 2841 | 0.712 | +341 over | match (`ef438530…`) |
@@ -65,21 +65,21 @@ always-rules in `rule-classification.md` § 3.1):
 | mean r (outlier-skewed by lean pilot) | 0.742 |
 | **median r** (locked for projection) | **0.712** |
 | max r (already-lean floor) | 0.838 |
-| min r (most compressible) | 0.677 |
+| min r (most condensable) | 0.677 |
 
 Locked `r = 0.712` (median) for P2.2 projection. Council amendment
 (P1.4) — the original lock was the **mean** (0.742), but Sonnet 4.5
 flagged outlier skew: `agent-authority` at 1217 chars pre-pilot was
-already near the compression floor (`r = 0.838`), pulling the mean
+already near the condensation floor (`r = 0.838`), pulling the mean
 above the typical band. Median (0.712) is robust to the lean
 outlier and sits inside the roadmap-stated 0.6–0.75 band. Risk
-asymmetry confirms the choice: under-estimating compressed size
+asymmetry confirms the choice: under-estimating condensed size
 blows the 25k cap mid-P2.2 (no abort path); over-estimating just
 yields headroom. GPT-4o concurred. Source:
 `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json`. <!-- council-ref-allowed: contract decision trace -->
 
 **Pilot caveat — already-lean floor.** `agent-authority` (1217 chars
-pre-pilot) yielded only `r = 0.838`. Pre-compressed rules give less
+pre-pilot) yielded only `r = 0.838`. Pre-condensed rules give less
 back; rules > 3k chars give more back. Future kernel additions
 ≤ 1.5k chars should not assume the median — they may already be at
 floor.
@@ -117,7 +117,7 @@ absorbs pilot variance for the 6 untested rules.
 
 ### § 4.1 — Post-P2.2 locked kernel (empirical, 2026-05-06)
 
-P2.2 applied compression (imperative rewrite, examples → guidelines,
+P2.2 applied condensation (imperative rewrite, examples → guidelines,
 rationale → contexts) + verified Iron-Law fence preservation.
 Empirical r=0.795 (vs 0.712 projected). Bucket cap raised 25k → 26k
 via `docs/decisions/ADR-002-kernel-bucket-overrides.md`. Six rules
@@ -164,7 +164,7 @@ until the next kernel re-measurement.
 
 † **agent-authority swap candidate (P1.4 ADR).** Sonnet 4.5 argues
 this is a routing index (zero Iron Law fences, dispatches to other
-kernel rules) and should be `compress-and-keep` (auto-tier-3),
+kernel rules) and should be `condense-and-keep` (auto-tier-3),
 freeing 867 projected chars. The Council also recommends promoting
 `autonomous-execution` (5631 → 4009 projected) into kernel as a
 mode-independent Band-4 authority. Net effect: 23071 − 867 + 4009 =
@@ -191,10 +191,10 @@ Both Council members concurred — the original 1.5k figure forced 8 of
 The 2.5k cap fits 7 of 9 rules without ADR; only the two largest
 remain as legitimate Iron-Law-density exceptions.
 
-Rules that land **above the 2.5k per-rule cap** even after compression
+Rules that land **above the 2.5k per-rule cap** even after condensation
 and Iron-Law preservation:
 
-| rule | post-compression chars | over-cap (2.5k) | reason cap cannot be hit |
+| rule | post-condensation chars | over-cap (2.5k) | reason cap cannot be hit |
 |---|---:|---:|---|
 | direct-answers    | 2842 | +342  | Three Iron-Law fences (≈ 470 chars) + severity-tiered claim table required for invented-facts gate |
 | language-and-tone | 3786 | +1286 | Iron-Law fence + exhaustive user-visible-prose catalog + pre-send gate are co-load-bearing |
@@ -204,12 +204,12 @@ and Iron-Law preservation:
 ADR (see § 5.2).
 
 Per roadmap § "Iron-Law over budget = ADR exception, not auto-
-compress" — these surface as `iron-law-override` exceptions for P2.1
+condense" — these surface as `iron-law-override` exceptions for P2.1
 to gate behind ADRs in `docs/decisions/`.
 
 The remaining 6 always-rules project to 1669–2916 chars post-
-compression — all under the 2.5k cap with no ADR needed. P2.2
-measures the real post-compression sizes; if any breach the cap, an
+condensation — all under the 2.5k cap with no ADR needed. P2.2
+measures the real post-condensation sizes; if any breach the cap, an
 ADR lands per-rule.
 
 ### § 5.2 — Kernel-set swap ADR (agent-authority ↔ autonomous-execution)
@@ -236,19 +236,19 @@ clearing the way for the swap under a fresh ADR.
 
 ## § 6 — Abort criteria for P2.2
 
-**Council amendment (P1.4).** Sonnet 4.5 flagged that P2.2 compresses
+**Council amendment (P1.4).** Sonnet 4.5 flagged that P2.2 condenses
 in place with no defined abort path. The following triggers force
 revert + re-projection rather than mid-phase scramble:
 
 - **Iron-Law drift.** Any kernel rule loses Iron-Law SHA equivalence
-  after compression (whitespace-normalised, case-folded fence-block
-  content). Single occurrence aborts the rule's compression.
-- **Bucket overflow.** Kernel sum post-compression > 27 500 chars
+  after condensation (whitespace-normalised, case-folded fence-block
+  content). Single occurrence aborts the rule's condensation.
+- **Bucket overflow.** Kernel sum post-condensation > 27 500 chars
   (10 % over hard cap). Aborts the entire P2.2 phase.
-- **Single-rule runaway.** Any kernel rule post-compression
-  > 4 000 chars. Aborts that rule's compression; flag for ADR.
+- **Single-rule runaway.** Any kernel rule post-condensation
+  > 4 000 chars. Aborts that rule's condensation; flag for ADR.
 - **Empirical r drift.** Median of measured r across the first 4
-  compressed rules deviates > 0.10 from the locked 0.712 (i.e.,
+  condensed rules deviates > 0.10 from the locked 0.712 (i.e.,
   measured median outside [0.612, 0.812]). P2.2 pauses, re-locks r,
   re-runs § 3 projection.
 
@@ -266,10 +266,10 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 
 ## § 8 — What this contract does NOT do
 
-- It does **not** edit any source rule. P2.2 ships compression to
-  `.agent-src.uncompressed/rules/`.
+- It does **not** edit any source rule. P2.2 ships condensation to
+  `.agent-src.uncondensed/rules/`.
 - It does **not** lock per-rule `chars` (only the bucket sum). Per-
-  rule values are projections; P2.2 measures real post-compression.
+  rule values are projections; P2.2 measures real post-condensation.
 - It does **not** decide kernel additions. Adding a rule to the
   kernel requires an ADR per roadmap § "Sequencing-drift time-box"
   and re-runs P1.3 with the new candidate.
@@ -288,4 +288,4 @@ with the trigger-relaxed parameter, lock new value, re-attempt.
 | 2026-05-06 | `agents/runtime/council/sessions/20260506T044821Z-phase1-cross-check.json` | Council R1 (truncated at 1024 tokens) | <!-- council-ref-allowed: contract decision trace -->
 | 2026-05-06 | `agents/runtime/council/sessions/20260506T044941Z-phase1-cross-check-r2.json` | Council R2 (3500 tokens) — locks median r, splits criterion #3, adds criterion #5, raises per-rule cap to 2.5k, defines abort criteria | <!-- council-ref-allowed: contract decision trace -->
 | 2026-05-06 | this file | kernel set locked: 9 rules, projected 23 071 chars (median r = 0.712) |
-| 2026-05-06 | P2.2 compression + `scripts/iron_law_sha.py --all-kernel` | empirical: 25 590 chars (r_actual = 0.795 across kernel; longer rules compress less than the pilot median) — see `docs/decisions/ADR-002-kernel-bucket-overrides.md` (KERNEL_HARD raised 25k → 26k, 6 per-rule overrides ≤ 4k ceiling, all Iron-Law SHAs preserved) |
+| 2026-05-06 | P2.2 condensation + `scripts/iron_law_sha.py --all-kernel` | empirical: 25 590 chars (r_actual = 0.795 across kernel; longer rules condense less than the pilot median) — see `docs/decisions/ADR-002-kernel-bucket-overrides.md` (KERNEL_HARD raised 25k → 26k, 6 per-rule overrides ≤ 4k ceiling, all Iron-Law SHAs preserved) |

@@ -23,8 +23,8 @@ status: completed
 
 - [x] `scripts/_cli/cmd_explain.py` v1 is in place (`explain config | rule | route`) — confirm with `python3 -m scripts._cli.cmd_explain --help`
 - [x] Read [`agents/tmp/feedback2.txt`](../tmp/feedback2.txt) §5 "Explainability noch nicht genug" and §749 "Explainability v2"
-- [x] Read [`.agent-src.uncompressed/templates/scripts/work_engine/state.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/state.py) — the v1 WorkState wire format is the primary input
-- [x] Read [`.agent-src.uncompressed/templates/scripts/work_engine/state_io.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/state_io.py) — the loader is reused, not duplicated
+- [x] Read [`.agent-src.uncondensed/templates/scripts/work_engine/state.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/state.py) — the v1 WorkState wire format is the primary input
+- [x] Read [`.agent-src.uncondensed/templates/scripts/work_engine/state_io.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/state_io.py) — the loader is reused, not duplicated
 - [x] Skim the council session shape under `agents/council-sessions/*/council-responses.json` (the format the council emitter writes)  <!-- council-ref-allowed: explainability v2 must consume council-session output; the wire-format path is the contract -->
 
 ## Context
@@ -223,7 +223,7 @@ displayed, not enforced. Enforcement is a separate roadmap
 
 ### Step 3.3: Provider why-slot for `/video:*`
 
-- [x] For runs where `state.directive_set == "video"`, read the provider-selection record from `state.video_provider` (already written by the video dispatcher in PR #176 — confirm by `git grep -n video_provider .agent-src.uncompressed/templates/scripts/work_engine/`); if absent, leave `trace.provider = null`. Do not invent the field. — `git grep` returned no hits (video dispatcher not yet shipped); builder reads `state.video_provider` defensively with `state.contract.video_provider` as a fallback shape, returns null when absent
+- [x] For runs where `state.directive_set == "video"`, read the provider-selection record from `state.video_provider` (already written by the video dispatcher in PR #176 — confirm by `git grep -n video_provider .agent-src.uncondensed/templates/scripts/work_engine/`); if absent, leave `trace.provider = null`. Do not invent the field. — `git grep` returned no hits (video dispatcher not yet shipped); builder reads `state.video_provider` defensively with `state.contract.video_provider` as a fallback shape, returns null when absent
 - [x] Renderer adds `## Why this provider?` section *only* when `trace.provider` is non-null. Empty-state path: section omitted entirely (not "(none)") — the section is video-specific and clutters non-video runs.
 
 ### Phase 3 exit gate
@@ -290,7 +290,7 @@ displayed, not enforced. Enforcement is a separate roadmap
 ### Council TODOs (filled by the council pass)
 
 > Pass executed in-session 2026-05-18 against the repo personas listed
-> in `.agent-src.uncompressed/personas/`. External `/council` (paid
+> in `.agent-src.uncondensed/personas/`. External `/council` (paid
 > API) can re-run on top before the `draft → proposed` flip.
 
 **`tech-writer` — format spec is the API; treat it as one**

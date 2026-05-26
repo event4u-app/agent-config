@@ -42,7 +42,7 @@ Key finding: `agent-authority` shipped as a clean priority-index router rather t
 
 P0 means **before PR #34 merges**. Three concrete items.
 
-- [x] **1.1 Public catalog link audit.** `docs/catalog.md` is the consumer-facing catalog but currently links into `.agent-src.uncompressed/`. That path is fine on GitHub, may break for consumers depending on package distribution config (npm / Composer / archive surfaces) if `.agent-src.uncompressed/` is not shipped. Audit every link in `docs/catalog.md` and re-target to shipped surfaces (`.agent-src/` or `docs/`). Add a CI check (`scripts/check_public_catalog_links.py` or extend `check_public_links.py`) so this regression cannot recur silently.
+- [x] **1.1 Public catalog link audit.** `docs/catalog.md` is the consumer-facing catalog but currently links into `.agent-src.uncondensed/`. That path is fine on GitHub, may break for consumers depending on package distribution config (npm / Composer / archive surfaces) if `.agent-src.uncondensed/` is not shipped. Audit every link in `docs/catalog.md` and re-target to shipped surfaces (`.agent-src/` or `docs/`). Add a CI check (`scripts/check_public_catalog_links.py` or extend `check_public_links.py`) so this regression cannot recur silently.
 - [x] **1.2 Command-count messaging fix.** README states "84 commands" while the collapse contract is in flight. Externally this reads as growth, not consolidation. Update the README hero / catalog headline to surface "84 command files (incl. N deprecation shims) — M active top-level/clustered commands". Source the active count from `scripts/lint_no_new_atomic_commands.py` cluster registry so the number stays accurate.
 - [x] **1.3 README "creates PRs" → "prepares PRs".** Hero text currently says "creates PRs"; later text correctly says `/commit` and `/create-pr` are suggestions, never auto. Align hero wording to "prepares PRs" (or "helps create PRs"). Same fix in the marketplace `description` if it carries the same phrase.
 
@@ -50,7 +50,7 @@ P0 means **before PR #34 merges**. Three concrete items.
 
 - All three items checked.
 - `task ci` green (incl. new public-catalog-links check).
-- Zero links in `docs/catalog.md` resolve to `.agent-src.uncompressed/` or other unshipped surfaces.
+- Zero links in `docs/catalog.md` resolve to `.agent-src.uncondensed/` or other unshipped surfaces.
 - Command-count number in README sourced from registry, not hardcoded.
 - PR description updated to call out the fixes.
 
@@ -71,7 +71,7 @@ contexts/execution/autonomy-examples.md                (EXAMPLES — anchors, tr
 
 - [x] **2.1 Inventory the current file.** Annotate every section of `autonomous-execution.md` as RULE / LOGIC / MECHANICS / EXAMPLE. → [`agents/runtime/reports/pr-34-phase-2-1-autonomous-execution-inventory.md`](../reports/pr-34-phase-2-1-autonomous-execution-inventory.md).
 - [x] **2.2 Extract LOGIC + MECHANICS to `contexts/`.** Use the `load_context:` schema shipped under `road-to-rebalancing` Phase 2.
-- [x] **2.3 Extract EXAMPLES into context-backed example files.** Keep examples under the allowed `load_context:` roots for this phase (e.g. `.agent-src.uncompressed/contexts/execution/autonomy-examples.md`). Do not extend the beta `load_context:` schema in the same commit. A future roadmap may introduce a dedicated `examples/` root once the first consumer has proven stable.
+- [x] **2.3 Extract EXAMPLES into context-backed example files.** Keep examples under the allowed `load_context:` roots for this phase (e.g. `.agent-src.uncondensed/contexts/execution/autonomy-examples.md`). Do not extend the beta `load_context:` schema in the same commit. A future roadmap may introduce a dedicated `examples/` root once the first consumer has proven stable.
 - [x] **2.4 Slim the rule.** Target ≤ 120 lines, RULE-only content, with `load_context:` references for the moved sections.
 - [x] **2.5 Verify no obligation regression.** Re-run the Phase-0 obligation-keyword diff against the pre-split file (MUST / SHALL / NEVER / ALWAYS / FORBIDDEN / REQUIRED / MANDATORY). Counts must not drop **or** a semantic equivalent must exist in the extracted contexts and be cited from the slim rule. Word-count stability is not the goal — semantic stability is. → [`agents/runtime/reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md`](../reports/pr-34-phase-2-5-autonomous-execution-obligation-check.md).
 

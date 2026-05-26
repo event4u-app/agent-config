@@ -1,6 +1,6 @@
 ---
 name: summarise-ticket-thread
-intent: "Compress a long ticket thread into a 5-line summary: who, what's agreed, what's open, last ask, emotional read."
+intent: "Condense a long ticket thread into a 5-line summary: who, what's agreed, what's open, last ask, emotional read."
 inputs:
   - name: thread
     required: true

@@ -150,8 +150,8 @@ Now that writes are tagged, reads can filter safely. Gated by
 
 ## Phase 5 — Selective learning command
 
-- [x] **Step 1:** New command file `.agent-src.uncompressed/commands/chat-history/learn.md`. Flow: agent runs `chat-history:sessions`, surfaces top N as numbered options (per `user-interaction`), user picks one, agent reads via `read_entries(session=<id>)` and presents the picked session's entries **verbatim** to the user (Council Round 2 / R2-2 — resolves the prior structured-vs-verbatim contradiction in favour of verbatim, the more honest v1 contract).
-- [x] **Step 2:** Update `.agent-src.uncompressed/commands/chat-history.md` orchestrator to route `show` (default) vs `learn` (new).
+- [x] **Step 1:** New command file `.agent-src.uncondensed/commands/chat-history/learn.md`. Flow: agent runs `chat-history:sessions`, surfaces top N as numbered options (per `user-interaction`), user picks one, agent reads via `read_entries(session=<id>)` and presents the picked session's entries **verbatim** to the user (Council Round 2 / R2-2 — resolves the prior structured-vs-verbatim contradiction in favour of verbatim, the more honest v1 contract).
+- [x] **Step 2:** Update `.agent-src.uncondensed/commands/chat-history.md` orchestrator to route `show` (default) vs `learn` (new).
 - [x] **Step 3:** Selection is always user-driven — no autonomous import. One session per `learn` invocation in v1 (multi-pick is v2). Document the constraint in the command file.
 - [x] **Step 4:** v1 scope explicit (Council R6): no fuzzy search, no full-text grep, no automatic summary heuristics, no rewriting of the user's context. The agent reads the picked session's entries verbatim; any subsequent extraction or summarisation happens in dialogue, user-directed.
 - [x] **Step 5:** Update `agents/settings/contexts/chat-history-platform-hooks.md` § Read contract with the new isolation default + the `learn` opt-in path.
@@ -165,7 +165,7 @@ revisions and reviews the final implementation.
 - [x] **Step 1:** Ran `/council roadmap:agents/roadmaps/road-to-chat-history-session-isolation.md` (post-implementation pass — see § Council notes — Round 3). Findings appended below.
 - [x] **Step 2:** Adjusted scope based on Round 3 notes, with explicit reasons for non-adoption per point.
 - [x] **Step 3:** Final docs pass — `agents/settings/contexts/chat-history-platform-hooks.md` § Read contract added; `AGENTS.md` unchanged (no user-facing surface in the package's own docs needs an update — the surface is shipped via the consumer-installed `commands/chat-history.md`).
-- [x] **Step 4:** `task lint-skills`, `task check-refs`, `task check-compression`, `task check-portability` green; `task test` green (2313 passed); `pytest tests/test_chat_history*` green (127 passed). `task ci` consistency-task fails on dirty working tree as expected mid-roadmap; clean run will follow Phase 7 commit.
+- [x] **Step 4:** `task lint-skills`, `task check-refs`, `task check-condensation`, `task check-portability` green; `task test` green (2313 passed); `pytest tests/test_chat_history*` green (127 passed). `task ci` consistency-task fails on dirty working tree as expected mid-roadmap; clean run will follow Phase 7 commit.
 
 ## Acceptance criteria
 
@@ -176,7 +176,7 @@ revisions and reviews the final implementation.
 - [x] v2 files keep working — legacy entries surface under `<legacy>` and are filterable.
 - [x] `current_session_id` resolves from `header.fp` (preferred) or `sidecar.fp` (equivalent — written together by `hook_append`'s `session_start` branch); both missing → `<unknown>`. No new sidecar key, no schema change to the sidecar.
 - [x] No change to fingerprinting, ownership rotation, or `former_fps` semantics. `former_fps[]` becomes the enumeration source for historical session ids in `list_sessions()`.
-- [x] All quality gates pass — `task lint-skills`, `task check-refs`, `task check-compression`, `task check-portability`, `task test` (2313 passed). Full `task ci` will go green after the working tree is committed (consistency-check requires a clean tree).
+- [x] All quality gates pass — `task lint-skills`, `task check-refs`, `task check-condensation`, `task check-portability`, `task test` (2313 passed). Full `task ci` will go green after the working tree is committed (consistency-check requires a clean tree).
 
 ## Phase 7 — Archive
 

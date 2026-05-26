@@ -1,7 +1,7 @@
 # Phase 2.1 — Inventory of `autonomous-execution.md`
 
 > **Roadmap step:** [`road-to-pr-34-followups.md`](../roadmaps/road-to-pr-34-followups.md) § Phase 2.1
-> **Source under inventory:** `.agent-src.uncompressed/rules/autonomous-execution.md` (192 lines, 9.4 kB)
+> **Source under inventory:** `.agent-src.uncondensed/rules/autonomous-execution.md` (192 lines, 9.4 kB)
 > **Goal of inventory:** classify every section so 2.2 (LOGIC + MECHANICS → contexts/) and 2.3 (EXAMPLES → examples/) can be executed without obligation regression.
 
 ## Classification scheme
@@ -9,8 +9,8 @@
 | Class | Definition | Target in 2.2–2.4 |
 |---|---|---|
 | **RULE** | Obligation, prohibition, or hard cross-reference to a canonical rule. The decision the agent acts on. | Stays in the rule file. |
-| **LOGIC** | Decision procedure, heuristic, disambiguation algorithm — *how* to recognize a trigger. | `.agent-src.uncompressed/contexts/autonomy-detection.md` (lazy `load_context:`). |
-| **MECHANICS** | Schema, config-value semantics, platform notes, cross-ref tables — supporting infra. | `.agent-src.uncompressed/contexts/autonomy-mechanics.md` (lazy). |
+| **LOGIC** | Decision procedure, heuristic, disambiguation algorithm — *how* to recognize a trigger. | `.agent-src.uncondensed/contexts/autonomy-detection.md` (lazy `load_context:`). |
+| **MECHANICS** | Schema, config-value semantics, platform notes, cross-ref tables — supporting infra. | `.agent-src.uncondensed/contexts/autonomy-mechanics.md` (lazy). |
 | **EXAMPLE** | Anchor lists, illustrative cases, failure-mode enumerations. Content the rule cites but does not need to obey. | **Schema-gap — see § Schema decision needed.** |
 
 ## Section-by-section inventory
@@ -47,8 +47,8 @@
 | Class | Lines (content, excl. blank) | Share | After split |
 |---|---|---|---|
 | RULE | ~62 | 40% | stays in rule |
-| LOGIC | ~22 | 14% | → `.agent-src.uncompressed/contexts/autonomy-detection.md` |
-| MECHANICS | ~28 | 18% | → `.agent-src.uncompressed/contexts/autonomy-mechanics.md` |
+| LOGIC | ~22 | 14% | → `.agent-src.uncondensed/contexts/autonomy-detection.md` |
+| MECHANICS | ~28 | 18% | → `.agent-src.uncondensed/contexts/autonomy-mechanics.md` |
 | EXAMPLE | ~43 | 28% | → see § Schema decision needed |
 | **Total content** | **~155** | **100%** | rule-only target ≤ 90–95 lines |
 
@@ -87,11 +87,11 @@ These ten obligations are the regression-test surface for 2.5.
 
 **Conflict:** Roadmap § Phase 2.3 says *"Extract EXAMPLES to `examples/rules/`."*
 Schema (`docs/contracts/load-context-schema.md` line 48) only allows
-`.agent-src.uncompressed/contexts/`, `agents/settings/contexts/`, `.agent-src/contexts/`.
+`.agent-src.uncondensed/contexts/`, `agents/settings/contexts/`, `.agent-src/contexts/`.
 
 Three resolutions, ranked by minimal-safe-diff:
 
-1. **Reuse `contexts/` for examples** — file e.g. `.agent-src.uncompressed/contexts/autonomy-examples.md`. Schema stays as-is, 2.3 just renames the target. Lowest blast radius.
+1. **Reuse `contexts/` for examples** — file e.g. `.agent-src.uncondensed/contexts/autonomy-examples.md`. Schema stays as-is, 2.3 just renames the target. Lowest blast radius.
 2. **Extend schema** — add `examples/` as a fourth allowed root, update linter, update STABILITY note. Larger change but matches the roadmap wording.
 3. **Inline examples in the LOGIC/MECHANICS context files** — no separate examples file at all; LOGIC context contains its own anchor lists. Smallest file count, highest coupling.
 

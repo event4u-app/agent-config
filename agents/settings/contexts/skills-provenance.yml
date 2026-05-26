@@ -100,7 +100,7 @@ error-handling-patterns:
   last_verified: 2026-05-08
   pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
   notes: |
-    Sunset Policy applied: 636-line source compressed to a ~150-line decision framework;
+    Sunset Policy applied: 636-line source condensed to a ~150-line decision framework;
     language catalogues externalized to Python, PHP, JS/TS, Go, Rust upstream docs plus
     Fowler/AWS resilience pattern references. refresh_trigger and sunset_criterion
     set in skill frontmatter. Adopted under road-to-microck-harvest § P1.5.
@@ -114,7 +114,7 @@ async-python-patterns:
   last_verified: 2026-05-09
   pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
   notes: |
-    Sunset Policy applied: 694-line cookbook source compressed to a ~140-line decision
+    Sunset Policy applied: 694-line cookbook source condensed to a ~140-line decision
     framework; gather/TaskGroup/wait_for/timeout/Semaphore primitives, sync↔async bridging,
     cancellation discipline, event-loop blocking audit. Pattern catalogues externalized
     to docs.python.org asyncio + anyio/trio + httpx/aiohttp + asyncpg/aiosqlite docs.
@@ -130,7 +130,7 @@ secrets-management:
   last_verified: 2026-05-09
   pinned_to: 8f5c83174f7aa683b4ddc7433150471983b93131
   notes: |
-    Sunset Policy applied: 346-line provider cookbook compressed to a ~140-line decision
+    Sunset Policy applied: 346-line provider cookbook condensed to a ~140-line decision
     framework covering store selection (Vault / AWS Secrets Manager / Azure Key Vault /
     GCP Secret Manager / GitHub-GitLab CI / External Secrets Operator), access patterns,
     rotation contract, scanning gates (gitleaks / TruffleHog / SCM push-protection), and

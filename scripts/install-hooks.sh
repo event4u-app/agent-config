@@ -12,7 +12,7 @@ mkdir -p "$HOOKS_DIR"
 
 cat > "$HOOKS_DIR/pre-push" << 'EOF'
 #!/usr/bin/env bash
-# Pre-push hook: verify .agent-src/ is in sync with .agent-src.uncompressed/
+# Pre-push hook: verify .agent-src/ is in sync with .agent-src.uncondensed/
 # and that the canonical command count matches README + getting-started docs.
 #
 # The command-count gate exists because three consecutive PRs landed
@@ -23,8 +23,8 @@ cat > "$HOOKS_DIR/pre-push" << 'EOF'
 fail=0
 
 echo "🔍 Checking .agent-src/ sync..."
-if ! python3 scripts/compress.py --check; then
-    echo "❌  .agent-src/ is out of sync. Run 'task sync' and compress changed .md files, then commit."
+if ! python3 scripts/condense.py --check; then
+    echo "❌  .agent-src/ is out of sync. Run 'task sync' and condense changed .md files, then commit."
     fail=1
 fi
 
@@ -134,7 +134,7 @@ write_chat_history_hook "post-rewrite"  "git:post-rewrite"
 
 # Auto-sync agent-tool projections after pull / branch-switch ---------------
 #
-# When `.agent-src.uncompressed/`, `.agent-src/`, `scripts/compress.py`,
+# When `.agent-src.uncondensed/`, `.agent-src/`, `scripts/condense.py`,
 # `agents/.agent-tools.yml`, or `Taskfile.yml` change between the previous and
 # new HEAD, the developer's working tree has stale `.claude/`,
 # `.augment/`, etc. projections until they remember to run `task sync`.
@@ -169,7 +169,7 @@ fi
 
 if [ -n "\$prev" ] && [ -n "\$new" ] && [ "\$prev" != "\$new" ]; then
     if git diff --name-only "\$prev" "\$new" 2>/dev/null | \\
-        grep -qE '^(\\.agent-src(\\.uncompressed)?/|scripts/compress\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
+        grep -qE '^(\\.agent-src(\\.uncondensed)?/|scripts/condense\\.py|\\.agent-tools\\.yml|Taskfile\\.yml)'; then
         if command -v task >/dev/null 2>&1; then
             task sync >/dev/null 2>&1 || true
             task generate-tools >/dev/null 2>&1 || true

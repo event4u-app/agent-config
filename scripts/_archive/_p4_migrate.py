@@ -10,7 +10,7 @@ from __future__ import annotations
 import re, sys, pathlib
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-RULES = ROOT / ".agent-src.uncompressed" / "rules"
+RULES = ROOT / ".agent-src.uncondensed" / "rules"
 GUIDELINES = ROOT / "docs" / "guidelines"
 
 # (rule_id, route, triggers, iron_law_one_liner)
@@ -35,7 +35,7 @@ SKILL_MIGRATIONS = [
      [("keyword", "docker"), ("keyword", "artisan"), ("keyword", "composer"), ("phrase", "inside the container")],
      "Run PHP / artisan / composer / phpstan / rector / ecs / phpunit inside the project container, never on the host."),
     ("docs-sync", "skill:agent-docs-writing",
-     [("path_prefix", ".agent-src.uncompressed/"), ("path_prefix", ".augment/"), ("keyword", "rename"), ("keyword", "delete")],
+     [("path_prefix", ".agent-src.uncondensed/"), ("path_prefix", ".augment/"), ("keyword", "rename"), ("keyword", "delete")],
      "On any add / rename / delete of skill / rule / command / guideline, update counts and cross-references in the same edit."),
     ("e2e-testing", "command:e2e-heal",
      [("keyword", "playwright"), ("keyword", "e2e"), ("phrase", "page object")],
@@ -77,8 +77,8 @@ GUIDELINE_MIGRATIONS = [
      [("phrase", "/implement-ticket"), ("phrase", "/work"), ("keyword", "telemetry")],
      "After a `/implement-ticket` or `/work` phase-step, emit one `telemetry:record` call with consulted + applied ids when telemetry is enabled."),
     ("augment-portability", "guideline:augment-portability-patterns",
-     [("path_prefix", ".augment/"), ("path_prefix", ".agent-src.uncompressed/"), ("keyword", "portable")],
-     "Files inside `.augment/` and `.agent-src.uncompressed/` MUST stay project-agnostic — no project names, domains, stacks."),
+     [("path_prefix", ".augment/"), ("path_prefix", ".agent-src.uncondensed/"), ("keyword", "portable")],
+     "Files inside `.augment/` and `.agent-src.uncondensed/` MUST stay project-agnostic — no project names, domains, stacks."),
     ("command-suggestion-policy", "contract:command-suggestion-flow",
      [("phrase", "free-form prompt"), ("phrase", "command suggestion")],
      "When a free-form prompt matches a command, surface matches as numbered options with as-is escape; never auto-execute."),
@@ -89,10 +89,10 @@ GUIDELINE_MIGRATIONS = [
      [("path_prefix", "agents/roadmaps/")],
      "Any touch to `agents/roadmaps/` regenerates the dashboard in the same response; archive the roadmap when 0 open items remain."),
     ("rule-type-governance", "guideline:agent-infra/rule-type-governance",
-     [("path_prefix", ".agent-src.uncompressed/rules/")],
+     [("path_prefix", ".agent-src.uncondensed/rules/")],
      "Choose `always` vs `auto` per the governance table; over-broad `always` rules degrade the kernel budget."),
     ("skill-quality", "guideline:agent-infra/skill-quality-checklist",
-     [("path_prefix", ".agent-src.uncompressed/skills/")],
+     [("path_prefix", ".agent-src.uncondensed/skills/")],
      "Every skill must be executable, validated, and self-contained — full checklist in the guideline."),
 ]
 
@@ -164,7 +164,7 @@ def write_guideline(rule_id: str, route: str, body: str, existing_fm: dict) -> p
     desc = existing_fm.get("description", "")
     header = (f"# {rule_id.replace('-', ' ').title()}\n\n"
               f"> {desc}\n\n"
-              f"_Origin: migrated from `.agent-src.uncompressed/rules/{rule_id}.md` "
+              f"_Origin: migrated from `.agent-src.uncondensed/rules/{rule_id}.md` "
               f"per P4.2 of `road-to-kernel-and-router.md`._\n\n")
     target.write_text(header + body.lstrip())
     return target

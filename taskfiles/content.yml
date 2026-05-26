@@ -3,9 +3,9 @@ version: '3'
 tasks:
   sync:
     silent: true
-    desc: Sync .agent-src.uncompressed/ → .agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
+    desc: Sync .agent-src.uncondensed/ → .agent-src/, then project → .augment/, then refresh doc counts and local agent-settings
     cmds:
-      - bash scripts/compress.sh --sync
+      - bash scripts/condense.sh --sync
       - python3 scripts/update_counts.py
       - python3 scripts/generate_pack_manifests.py
       - task: compile-corpus
@@ -25,47 +25,47 @@ tasks:
   project-augment:
     silent: true
     desc: Rebuild the .augment/ projection from .agent-src/ (copies rules, symlinks rest)
-    cmd: python3 scripts/compress.py --project-augment
+    cmd: python3 scripts/condense.py --project-augment
 
   sync-list:
     silent: true
     desc: List ALL .md files (regardless of change status)
-    cmd: bash scripts/compress.sh --list
+    cmd: bash scripts/condense.sh --list
 
   sync-changed:
     silent: true
-    desc: List .md files changed since last compression (hash-based)
-    cmd: bash scripts/compress.sh --changed
+    desc: List .md files changed since last condensation (hash-based)
+    cmd: bash scripts/condense.sh --changed
 
   sync-check:
     silent: true
-    desc: Check if .agent-src/ is in sync with .agent-src.uncompressed/ (for CI)
-    cmd: bash scripts/compress.sh --check
+    desc: Check if .agent-src/ is in sync with .agent-src.uncondensed/ (for CI)
+    cmd: bash scripts/condense.sh --check
 
   sync-check-hashes:
     silent: true
-    desc: Check if all compressed .md files match their source hashes (for CI)
-    cmd: bash scripts/compress.sh --check-hashes
+    desc: Check if all condensed .md files match their source hashes (for CI)
+    cmd: bash scripts/condense.sh --check-hashes
 
   sync-clean-hashes:
     silent: true
     desc: Remove stale hashes for deleted source files
-    cmd: bash scripts/compress.sh --clean-hashes
+    cmd: bash scripts/condense.sh --clean-hashes
 
   sync-mark-done:
     silent: true
-    desc: Mark a single file as compressed (updates hash)
-    cmd: bash scripts/compress.sh --mark-done {{.CLI_ARGS}}
+    desc: Mark a single file as condensed (updates hash)
+    cmd: bash scripts/condense.sh --mark-done {{.CLI_ARGS}}
 
   sync-mark-all-done:
     silent: true
-    desc: Mark ALL .md files as compressed (run after initial full compression)
-    cmd: bash scripts/compress.sh --mark-all-done
+    desc: Mark ALL .md files as condensed (run after initial full condensation)
+    cmd: bash scripts/condense.sh --mark-all-done
 
   generate-tools:
     silent: true
     desc: Generate tool-specific directories (.claude/, .cursor/, .clinerules/, .windsurfrules, GEMINI.md)
-    cmd: python3 scripts/compress.py --generate-tools
+    cmd: python3 scripts/condense.py --generate-tools
 
   probe:skills:
     silent: true
@@ -83,7 +83,7 @@ tasks:
   clean-tools:
     silent: true
     desc: Remove all generated tool directories and files
-    cmd: python3 scripts/compress.py --clean-tools
+    cmd: python3 scripts/condense.py --clean-tools
 
   generate-catalog:
     silent: true
@@ -156,15 +156,15 @@ tasks:
       - task: compile-router
       - task: compile-corpus
 
-  check-compression:
+  check-condensation:
     silent: true
-    desc: Check compression quality (headings, code blocks, frontmatter, word count)
-    cmd: python3 scripts/check_compression.py
+    desc: Check condensation quality (headings, code blocks, frontmatter, word count)
+    cmd: python3 scripts/check_condensation.py
 
-  check-compressed-paths:
+  check-condensed-paths:
     silent: true
-    desc: "Validate compressed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
-    cmd: python3 scripts/check_compressed_paths.py {{.QUIET_FLAG}}
+    desc: "Validate condensed-output paths in .agent-src/rules/*.md (road-to-path-fixes P5.2)"
+    cmd: python3 scripts/check_condensed_paths.py {{.QUIET_FLAG}}
 
   check-overlay-cascade-subdirs:
     silent: true

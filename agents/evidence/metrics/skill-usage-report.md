@@ -41,7 +41,7 @@
 | 29 | `commit-in-chunks` | dead | 0 | 0 | 0 | 0 | — |
 | 30 | `comp-banding` | dead | 0 | 0 | 0 | 0 | — |
 | 31 | `competitive-moat-analysis` | dead | 0 | 0 | 0 | 0 | — |
-| 32 | `compress` | dead | 0 | 0 | 0 | 0 | — |
+| 32 | `condense` | dead | 0 | 0 | 0 | 0 | — |
 | 33 | `content-funnel-design` | dead | 0 | 0 | 0 | 0 | — |
 | 34 | `context` | dead | 0 | 0 | 0 | 0 | — |
 | 35 | `context-create` | dead | 0 | 0 | 0 | 0 | — |

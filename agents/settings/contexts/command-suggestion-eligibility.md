@@ -2,7 +2,7 @@
 
 > Source-of-truth audit feeding Phase 2 (frontmatter migration) of the
 > `road-to-context-aware-command-suggestion` roadmap. Every command
-> under `.agent-src.uncompressed/commands/` is listed exactly once
+> under `.agent-src.uncondensed/commands/` is listed exactly once
 > with an explicit `eligible` decision.
 
 ## Rules
@@ -35,7 +35,7 @@
 | `/agents-cleanup` | Consumes prior audit output; only meaningful right after `/agents-audit`. |
 | `/agents-prepare` | One-shot project scaffolding; only run during initial setup. |
 | `/chat-history` | Status display only; no NL trigger distinct from "show status". |
-| `/compress` | Package-internal tooling; only the `event4u/agent-config` repo runs this. |
+| `/condense` | Package-internal tooling; only the `event4u/agent-config` repo runs this. |
 | `/copilot-agents-init` | Project init — only deliberately during onboarding. |
 | `/copilot-agents-optimize` | Maintenance refactor; only run when the maintainer chooses to. |
 | `/do-and-judge` | Subagent orchestration — overlap with `/work` and the judge skills; keep explicit. |

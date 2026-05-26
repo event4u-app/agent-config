@@ -136,7 +136,7 @@ call. File-drop is the always-works path.
   to pick the curated YAML target when a signal carries two tags
   (e.g. `[gotcha, invariant]` → primary `gotcha` JSONL, promote target
   resolved by the reviewer at promotion time). See
-  [`memory-consolidation`](../../.agent-src.uncompressed/skills/memory-consolidation/SKILL.md)
+  [`memory-consolidation`](../../.agent-src.uncondensed/skills/memory-consolidation/SKILL.md)
   § Phase 3 for the schema-routing table.
 - `confidence: low | medium | high` — producer-supplied estimate; the
   inline-review hook in `/memory load` ranks the top-3 by this field.
@@ -155,5 +155,5 @@ holds:
 ## See also
 
 - [`memory-access guideline`](../../docs/guidelines/agent-infra/memory-access.md)
-- [`scripts/memory_status.py`](../../.agent-src.uncompressed/templates/scripts/memory_status.py)
-- [`scripts/memory_lookup.py`](../../.agent-src.uncompressed/templates/scripts/memory_lookup.py)
+- [`scripts/memory_status.py`](../../.agent-src.uncondensed/templates/scripts/memory_status.py)
+- [`scripts/memory_lookup.py`](../../.agent-src.uncondensed/templates/scripts/memory_lookup.py)

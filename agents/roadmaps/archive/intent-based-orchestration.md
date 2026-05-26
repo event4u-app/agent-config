@@ -14,11 +14,11 @@
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and `.agent-src.uncompressed/templates/agent-settings.md`
-- [ ] Re-read `.agent-src.uncompressed/skills/fe-design/SKILL.md` (today: server-first / Blade-Livewire-Flux centric)
-- [ ] Re-read `.agent-src.uncompressed/skills/design-review/SKILL.md` (existing 7-phase review)
-- [ ] Re-read `.agent-src.uncompressed/skills/developer-like-execution/SKILL.md` (de-facto backend track)
-- [ ] Read `.agent-src.uncompressed/rules/rule-type-governance.md` and `size-enforcement.md`
+- [ ] Read `AGENTS.md` and `.agent-src.uncondensed/templates/agent-settings.md`
+- [ ] Re-read `.agent-src.uncondensed/skills/fe-design/SKILL.md` (today: server-first / Blade-Livewire-Flux centric)
+- [ ] Re-read `.agent-src.uncondensed/skills/design-review/SKILL.md` (existing 7-phase review)
+- [ ] Re-read `.agent-src.uncondensed/skills/developer-like-execution/SKILL.md` (de-facto backend track)
+- [ ] Read `.agent-src.uncondensed/rules/rule-type-governance.md` and `size-enforcement.md`
 
 ## Context (current state)
 
@@ -106,7 +106,7 @@ Future tracks (`infrastructure`, `security`, `performance`, `qa`, `docs`, `devop
 | `fe-design` scope | **Universal frontend-design architecture** | Removes Laravel-bias; implementation skills sit underneath |
 | Microcopy / responsive / a11y / visual-polish / **ui states** | **Steps inside `product-ui-orchestrator`** | Avoid skill inflation past 124 |
 | Auto-design-review | **Rule** `after-ui-change-run-design-review` (graded) | Meaningful UI changes → full review. Trivial text/class-only changes → lightweight checklist. |
-| Project UI context | **Templates** under `.agent-src.uncompressed/templates/contexts/` | When absent, proceed with detected conventions; only scaffold on explicit user request |
+| Project UI context | **Templates** under `.agent-src.uncondensed/templates/contexts/` | When absent, proceed with detected conventions; only scaffold on explicit user request |
 | `mixed` placement in settings | **`mixed_tasks` outside `tracks:`** | `mixed` is a coordination mode, not a domain track |
 | Settings block name | `orchestration:` (not `routing:`) | Describes the goal, not the mechanism |
 | Roadmap split | **Single file** | Per template "one task per file"; split later if it grows past 1000 lines |
@@ -115,14 +115,14 @@ Future tracks (`infrastructure`, `security`, `performance`, `qa`, `docs`, `devop
 
 The skeleton — router rule, three track entry points, settings, extension pattern. No UI-quality rules and no UI commands yet — those land in Phase 2.
 
-- [ ] **Step 1:** Add `orchestration:` block to `.agent-src.uncompressed/templates/agent-settings.md` with the agreed shape. Update installer template `config/agent-settings.template.yml`.
-- [ ] **Step 2:** Create rule `.agent-src.uncompressed/rules/route-by-task-intent.md` (always-on). Six intent classes: `backend-coding`, `frontend-product-ui`, `mixed-fullstack`, `analysis-only`, `review-only`, `docs-config`. Detection signals (verbs, nouns, paths, file extensions). One numbered-options question on ambiguity (per `ask-when-uncertain`).
-- [ ] **Step 3:** Create skill `.agent-src.uncompressed/skills/product-ui-orchestrator/SKILL.md` — **skeleton only**: pipeline contract (goal → existing-UI discovery → layout → components → states → responsive → a11y → implement → design-review → polish), stack-detection placeholder, project-context-load placeholder. Body is fleshed out in Phase 2.
-- [ ] **Step 4:** Create skill `.agent-src.uncompressed/skills/fullstack-feature-orchestrator/SKILL.md`. Splits a mixed task into backend-contract (data shape, API, errors) + UI-experience (screens, flows, states), runs them in order, validates integration at the seam.
-- [ ] **Step 5:** Reposition `.agent-src.uncompressed/skills/developer-like-execution/SKILL.md` as the **canonical backend track entry point**. Update its description and "When to use" to mention orchestration. No procedural rewrite.
+- [ ] **Step 1:** Add `orchestration:` block to `.agent-src.uncondensed/templates/agent-settings.md` with the agreed shape. Update installer template `config/agent-settings.template.yml`.
+- [ ] **Step 2:** Create rule `.agent-src.uncondensed/rules/route-by-task-intent.md` (always-on). Six intent classes: `backend-coding`, `frontend-product-ui`, `mixed-fullstack`, `analysis-only`, `review-only`, `docs-config`. Detection signals (verbs, nouns, paths, file extensions). One numbered-options question on ambiguity (per `ask-when-uncertain`).
+- [ ] **Step 3:** Create skill `.agent-src.uncondensed/skills/product-ui-orchestrator/SKILL.md` — **skeleton only**: pipeline contract (goal → existing-UI discovery → layout → components → states → responsive → a11y → implement → design-review → polish), stack-detection placeholder, project-context-load placeholder. Body is fleshed out in Phase 2.
+- [ ] **Step 4:** Create skill `.agent-src.uncondensed/skills/fullstack-feature-orchestrator/SKILL.md`. Splits a mixed task into backend-contract (data shape, API, errors) + UI-experience (screens, flows, states), runs them in order, validates integration at the seam.
+- [ ] **Step 5:** Reposition `.agent-src.uncondensed/skills/developer-like-execution/SKILL.md` as the **canonical backend track entry point**. Update its description and "When to use" to mention orchestration. No procedural rewrite.
 - [ ] **Step 6:** Create rule `backend-contract-before-impl.md` — when intent is `backend-coding`, design the request/response/error contract before implementation. Mirrors `layout-before-code` (Phase 2) for the backend track.
 - [ ] **Step 7:** Create guideline `docs/guidelines/agent-infra/orchestration-tracks.md`. Documents the track-extension recipe so future tracks plug in cleanly.
-- [ ] **Step 8:** Update `.agent-src.uncompressed/templates/AGENTS.md` to mention orchestration in the entry-flow section.
+- [ ] **Step 8:** Update `.agent-src.uncondensed/templates/AGENTS.md` to mention orchestration in the entry-flow section.
 - [ ] **Step 9:** Run `python3 scripts/skill_linter.py --all`, `python3 scripts/check_references.py`, `python3 scripts/check_portability.py`. Fix until clean.
 
 ## Phase 2: Product UI orchestration
@@ -141,7 +141,7 @@ Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, comm
 
   Each rule passes `rule-type-governance` (always vs auto) and `size-enforcement`.
 
-- [ ] **Step 3 (wave A):** Create the four core UI commands under `.agent-src.uncompressed/commands/`. Each declares `disable-model-invocation: true` and references `product-ui-orchestrator`:
+- [ ] **Step 3 (wave A):** Create the four core UI commands under `.agent-src.uncondensed/commands/`. Each declares `disable-model-invocation: true` and references `product-ui-orchestrator`:
   - `/build-screen` — full pipeline end-to-end.
   - `/improve-ui` — hierarchy / spacing / clarity / actions / empty states / mobile.
   - `/refactor-ui` — extract components, remove one-offs, preserve behavior, graded design-review at the end.
@@ -153,7 +153,7 @@ Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, comm
   - `/build-form-flow` — multi-step or single-page form with validation, a11y, confirmation.
   - `/ship-ui-feature` — full product-first loop in one command. Resolves overlap with `/implement-ticket` per Open decision 7 before shipping.
 
-- [ ] **Step 5:** Create project context templates under `.agent-src.uncompressed/templates/contexts/`:
+- [ ] **Step 5:** Create project context templates under `.agent-src.uncondensed/templates/contexts/`:
   - `product.md` — users, goals, tone, constraints.
   - `design-system.md` — visual style, primitives, color/spacing tokens.
   - `ui-patterns.md` — recurring screen patterns, shared components.
@@ -170,8 +170,8 @@ Fleshes out the UI track end-to-end: full pipeline body, behavioural rules, comm
 
 Universalises `fe-design` and adds the React stack as a peer of the Laravel stack.
 
-- [ ] **Step 1:** Refactor `.agent-src.uncompressed/skills/fe-design/SKILL.md` so the body is **framework-agnostic frontend-design architecture** — component architecture, layout planning, form/table patterns, responsive strategy, a11y, **and the universal UI-state catalog (loading / empty / error / success / disabled / validation)**. No Blade/Livewire/Flux assumptions in the main flow. Move stack-specific guidance into a "Specializations" section that points to the right implementation skill based on detected stack.
-- [ ] **Step 2:** Create skill `.agent-src.uncompressed/skills/react-shadcn-ui/SKILL.md`. React + TypeScript + Tailwind v4 + shadcn/ui. Next.js / Vite detection. App-shell / dashboard / form / table-filter-action / modal-sheet patterns. Composition over prop-heavy components.
+- [ ] **Step 1:** Refactor `.agent-src.uncondensed/skills/fe-design/SKILL.md` so the body is **framework-agnostic frontend-design architecture** — component architecture, layout planning, form/table patterns, responsive strategy, a11y, **and the universal UI-state catalog (loading / empty / error / success / disabled / validation)**. No Blade/Livewire/Flux assumptions in the main flow. Move stack-specific guidance into a "Specializations" section that points to the right implementation skill based on detected stack.
+- [ ] **Step 2:** Create skill `.agent-src.uncondensed/skills/react-shadcn-ui/SKILL.md`. React + TypeScript + Tailwind v4 + shadcn/ui. Next.js / Vite detection. App-shell / dashboard / form / table-filter-action / modal-sheet patterns. Composition over prop-heavy components.
 - [ ] **Step 3:** Reposition `blade-ui`, `livewire`, `flux` as **Laravel-stack implementation specializations** under universal `fe-design`. Update each skill's description and "When to use" to clarify they are invoked when the detected stack is Laravel/Blade. No procedural rewrite.
 - [ ] **Step 4:** Add a stack-detection step inside `product-ui-orchestrator` (Phase 2 step 1 reference). Inspect `package.json`, `composer.json`, `resources/views/`, `app/`, `pages/`, `components/ui/`. Choose `react-shadcn-ui` vs `blade-ui+livewire+flux` vs ask. Cache the result in conversation memory for the session.
 - [ ] **Step 5:** Update `analysis-skill-router` so it knows about `product-ui-orchestrator`, `fullstack-feature-orchestrator`, and `react-shadcn-ui`.
@@ -179,11 +179,11 @@ Universalises `fe-design` and adds the React stack as a peer of the Laravel stac
 
 ## Phase 4: Verification and docs
 
-Compress, sync, prove the system end-to-end.
+Condense, sync, prove the system end-to-end.
 
-- [ ] **Step 1:** Run `task sync` — compress `.agent-src.uncompressed/` → `.agent-src/` → `.augment/` projection.
+- [ ] **Step 1:** Run `task sync` — condense `.agent-src.uncondensed/` → `.agent-src/` → `.augment/` projection.
 - [ ] **Step 2:** Run `task generate-tools` — regenerate `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`, `GEMINI.md`.
-- [ ] **Step 3:** Run `task ci` (sync-check, consistency, check-compression, check-refs, check-portability, lint-skills, test, lint-readme). Must exit 0.
+- [ ] **Step 3:** Run `task ci` (sync-check, consistency, check-condensation, check-refs, check-portability, lint-skills, test, lint-readme). Must exit 0.
 - [ ] **Step 4:** Manual end-to-end scenarios — capture transcripts as evidence:
   - "Build a customer detail page" (no stack hint) → router classifies `frontend-product-ui` → orchestrator runs full pipeline → stack detection picks the right specialization → design-review runs at the end.
   - "Add an API endpoint for invoice export" → router classifies `backend-coding` → `developer-like-execution` runs → `backend-contract-before-impl` enforces contract first.
@@ -192,7 +192,7 @@ Compress, sync, prove the system end-to-end.
   - "Build a settings page" on a Next.js-only repo → stack detection picks `react-shadcn-ui` automatically.
   - "Build a settings page" on an empty repo → orchestrator asks one numbered-options question.
 - [ ] **Step 5:** Update root `README.md` and root `AGENTS.md` to mention intent-based orchestration as a first-class capability. Keep `README.md` user-facing and consumer-friendly; keep `AGENTS.md` project-agnostic.
-- [ ] **Step 6:** Update consumer-facing template `.agent-src.uncompressed/templates/AGENTS.md` to document the `orchestration:` block and the track-extension pattern.
+- [ ] **Step 6:** Update consumer-facing template `.agent-src.uncondensed/templates/AGENTS.md` to document the `orchestration:` block and the track-extension pattern.
 - [ ] **Step 7:** Add a changelog / release-notes draft entry — text only, no version number (per roadmap rule 13).
 
 ## Acceptance Criteria
@@ -205,7 +205,7 @@ Compress, sync, prove the system end-to-end.
 - [ ] `after-ui-change-run-design-review` enforces a **graded** review: meaningful UI changes → full `design-review`; trivial text/class-only changes → lightweight checklist.
 - [ ] At least 7 UI-quality rules ship and pass `rule-type-governance` and `size-enforcement`.
 - [ ] At least 8 UI commands ship (4 wave A core + 4 wave B specialised) and pass `command-writing` linting.
-- [ ] Six context-template files ship under `.agent-src.uncompressed/templates/contexts/`. Orchestrator auto-loads when present; when absent it proceeds with detected conventions and only scaffolds on explicit user request.
+- [ ] Six context-template files ship under `.agent-src.uncondensed/templates/contexts/`. Orchestrator auto-loads when present; when absent it proceeds with detected conventions and only scaffolds on explicit user request.
 - [ ] Backend-track parity: `developer-like-execution` is documented as the backend entry; `backend-contract-before-impl` mirrors `layout-before-code`.
 - [ ] Mixed-task split: `fullstack-feature-orchestrator` is a **slim coordinator** running `backend contract → ui experience → integration seam → verification`. It does **not** duplicate UI- or backend-quality rules.
 - [ ] **Over-orchestration guard:** backend-only tasks must not load `product-ui-orchestrator`. UI-only tasks must not require backend planning unless data/API changes are implied.
@@ -221,7 +221,7 @@ These need user input before or during implementation. Ask one at a time, per `a
 2. **Backend orchestrator skill** — keep `developer-like-execution` as the backend entry, or introduce a thin `backend-orchestrator` skill that wraps it for symmetry with `product-ui-orchestrator`? Default: keep existing, document the role.
 3. **Graded design-review thresholds** — what exactly counts as "meaningful UI change" vs "trivial"? Default: meaningful = new screen / changed layout / new or removed component / new state / changed flow. Trivial = text-only, single class swap, color/icon-only tweak. Settings opt-out: **no** (rule stays always-on; the grading itself is the relief valve).
 4. **Mixed orchestrator: skill or rule?** — skill that composes two tracks vs rule that delegates to both. Default: **skill** (`fullstack-feature-orchestrator`) — needs procedural body for the seam validation.
-5. **Context templates location** — `.agent-src.uncompressed/templates/contexts/` (new dir) or extend existing `.agent-src.uncompressed/contexts/`? Default: new `templates/contexts/` because they are scaffolds for consumers, not shared package contexts.
+5. **Context templates location** — `.agent-src.uncondensed/templates/contexts/` (new dir) or extend existing `.agent-src.uncondensed/contexts/`? Default: new `templates/contexts/` because they are scaffolds for consumers, not shared package contexts.
 6. **Stack-detection caching** — per-conversation only, or persisted to `.agent-settings.yml` on first detect? Default: per-conversation; persistence comes later if needed.
 7. **`/ship-ui-feature` overlap with `/implement-ticket`** — does the existing `/implement-ticket` already cover ship-style flows for UI work? Decide whether `/ship-ui-feature` is needed or whether `/implement-ticket` should learn UI orchestration via the router. Default: ship `/ship-ui-feature` as the UI-only fast path; long-term reconsider. **Must be resolved before Phase 2 step 4.**
 

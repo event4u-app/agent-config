@@ -8,7 +8,7 @@ through the hardened
 :func:`scripts.ai_council.low_impact_corpus.parse_corpus_strict`
 parser and writes a YAML lockfile that becomes the **runtime**
 source-of-truth. The pattern mirrors `.agent-src/` vs
-`.agent-src.uncompressed/`: human edits Markdown, `task consistency`
+`.agent-src.uncondensed/`: human edits Markdown, `task consistency`
 enforces lockfile parity via the same ``git diff --quiet`` gate.
 
 YAML schema (`schema_version: 1`)::

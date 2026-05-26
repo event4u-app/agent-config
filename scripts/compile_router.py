@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Compile rule frontmatter into ``router.json``.
 
-Reads ``.agent-src.uncompressed/rules/*.md``; produces deterministic JSON
+Reads ``.agent-src.uncondensed/rules/*.md``; produces deterministic JSON
 mapping kernel + tier-1 + tier-2 rules to their triggers and routed
 artifacts, per ``docs/contracts/rule-router.md``.
 
 Stdlib-only, deterministic (sorted keys + sorted lists), idempotent.
-Wired into ``task generate-tools`` after the compress step.
+Wired into ``task generate-tools`` after the condense step.
 """
 from __future__ import annotations
 
@@ -16,20 +16,20 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 # ADR-017: rules now live across multiple source roots. Legacy
-# .agent-src.uncompressed/rules/ is kept as a fallback for the
-# pure-compressed consumer projection.
-RULES_DIR = ROOT / ".agent-src.uncompressed" / "rules"
+# .agent-src.uncondensed/rules/ is kept as a fallback for the
+# pure-condensed consumer projection.
+RULES_DIR = ROOT / ".agent-src.uncondensed" / "rules"
 OUT_PATH = ROOT / "dist" / "router.json"
 SETTINGS_PATH = ROOT / ".agent-settings.yml"
 SCHEMA_VERSION = 1
 
 # Compile-time rule toggles. Maps rule-id → settings predicate.
 # Rule omitted from router.json when predicate returns False.
-# Per road-to-token-frugality § Phase 8.2 — caveman.speak compile-time toggle.
+# Per road-to-token-frugality § Phase 8.2 — telegraph.speak compile-time toggle.
 COMPILE_TIME_TOGGLES = {
-    "caveman-speak": lambda s: bool(
-        s.get("caveman", {}).get("enabled", True)
-    ) and bool(s.get("caveman", {}).get("speak", True)),
+    "telegraph-speak": lambda s: bool(
+        s.get("telegraph", {}).get("enabled", True)
+    ) and bool(s.get("telegraph", {}).get("speak", True)),
 }
 
 # Maps legacy tier values to the router-canonical names. See
@@ -132,7 +132,7 @@ def _iter_rule_files() -> list[Path]:
     seen: dict[str, Path] = {}
     roots = artefact_roots()
     if not roots:
-        # Pure-compressed fallback for consumer projections that vendor
+        # Pure-condensed fallback for consumer projections that vendor
         # the flat .agent-src/ tree without sources.
         if RULES_DIR.exists():
             for path in sorted(RULES_DIR.glob("*.md")):

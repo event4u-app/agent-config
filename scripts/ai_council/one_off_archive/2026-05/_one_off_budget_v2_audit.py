@@ -40,8 +40,8 @@ REPO_ROOT = Path(__file__).resolve().parents[4]
 ARTEFACTS = [
     REPO_ROOT / "docs/contracts/load-context-budget-model.md",
     REPO_ROOT / "agents/settings/contexts/budget-v2-matrix.md",
-    REPO_ROOT / ".agent-src.uncompressed/rules/direct-answers.md",
-    REPO_ROOT / ".agent-src.uncompressed/rules/no-cheap-questions.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/direct-answers.md",
+    REPO_ROOT / ".agent-src.uncondensed/rules/no-cheap-questions.md",
 ]
 
 ORIGINAL_ASK = (
@@ -60,7 +60,7 @@ REVIEW_PROMPT = """\
 Phase 4 selected two 4d-trim paths from a fixed option set documented
 in `budget-v2-matrix.md`. The matrix evaluated 4a (demote→auto), 4b
 (merge), 4c (shared-context, locked at 3a Model (b) literal — no-op),
-and 4d (compress prose) for every touchable always-rule. Safety-floor
+and 4d (condense prose) for every touchable always-rule. Safety-floor
 rules (scope-control, non-destructive-by-default, commit-policy,
 agent-authority) were untouchable. Outcome-untested rules were
 restricted to 4d only per the Phase 4.0 inputs gate.

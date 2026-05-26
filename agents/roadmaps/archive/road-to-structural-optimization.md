@@ -116,7 +116,7 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 
 ### 0.3 Phase 6 → 2B decoupling proof (CRITICAL) ✅ COMPLETE
 
-- [x] **0.3.1** Grep all 13 Phase-2B target rules for references to `chat-history-{cadence,ownership,visibility}` (rule names in `load_context:`, command names in body, frontmatter keywords). **Result: 0 rule-name hits, 0 `load_context:` hits, 0 body link/cite hits across all 13 targets** (uncompressed + compressed surfaces). Single hit (`docs-sync` line 88) references the CLI dispatcher subcommand `chat-history:hook` — excluded from the coupling probe by design.
+- [x] **0.3.1** Grep all 13 Phase-2B target rules for references to `chat-history-{cadence,ownership,visibility}` (rule names in `load_context:`, command names in body, frontmatter keywords). **Result: 0 rule-name hits, 0 `load_context:` hits, 0 body link/cite hits across all 13 targets** (uncondensed + condensed surfaces). Single hit (`docs-sync` line 88) references the CLI dispatcher subcommand `chat-history:hook` — excluded from the coupling probe by design.
 - [x] **0.3.2** Document findings at `agents/roadmaps/phase6-2b-coupling.md`. **Outcome: 0 hits → decouple confirmed; Phase 6 ↔ Phase 2B can run in either order.** The "must ship call-signature contract" alternative is dropped — no coupled rule exists.
 - [x] **0.3.3** Linter check: `scripts/check_phase_coupling.py` re-runs the grep on every Phase-2B PR; new coupling fails the build. Wired into `task ci` via `task check-phase-coupling`. Test suite at `tests/test_check_phase_coupling.py` (6 tests, all green).
 
@@ -129,7 +129,7 @@ The "Per-item independent" rollback note below is **scoped to council acceptance
 ### 0.5 Phase 3a spike scoring protocol + persona-voice rubric (HIGH)
 
 - [x] **0.5.1** Define 3-scorer protocol: author + 2 reviewers; average score must be ≥ 3.5/5; any individual score < 3.0 escalates to council. *(Locked at `agents/roadmaps/structural-optimization-3a-scoring-protocol.md`.)*
-- [x] **0.5.2** Write rubric at `.agent-src.uncompressed/contexts/judges/persona-voice-rubric.md` (locked path per § 0.6). Covers: tone, vocabulary, prompt-shape preservation, refusal patterns, evidence-citation style.
+- [x] **0.5.2** Write rubric at `.agent-src.uncondensed/contexts/judges/persona-voice-rubric.md` (locked path per § 0.6). Covers: tone, vocabulary, prompt-shape preservation, refusal patterns, evidence-citation style.
 - [x] **0.5.3** Lock 5-day decision deadline from spike start. If deadline passes without consensus, council decides; **default = A** (separate skills + shared context, per locked Q1=A). *(Schedule in scoring-protocol § 5-day decision deadline.)*
 - [x] **0.5.4** Spike scope confirmed against Q1-locked decision: Option A is the leading hypothesis; the spike still tests Option B-collision risk via the security-only diff probe (B-shape itself is **not** prototyped — Q1 rejected it). *(Scope locked in scoring-protocol § Spike scope confirmation.)*
 
@@ -165,7 +165,7 @@ Locked in `docs/contracts/command-clusters.md` since 1.15.0. Deprecation cycle e
 **Execution result:** 12 clusters generated (`agents`, `chat-history`, `context`, `copilot-agents`, `judge`, `memory`, `module`, `override`, `roadmap`, `tests`, plus the existing `commit`/`fix`/`optimize`/`feature` patterns); 12+ atomic commands converted to `superseded_by:` shims; `scripts/check_cluster_patterns.py` green; `slash-command-routing-policy.md` LOC unchanged with cluster names externalised to `contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md`.
 
 - [x] **1.1 Audit each cluster's atomic surface.** For each of the 12 clusters (`chat-history`, `agents`, `memory`, `roadmap`, `module`, `tests`, `context`, `override`, `copilot-agents`, `commit`, `judge`, `create-pr`), list current atomic commands and target sub-command names.
-- [x] **1.2 Generate cluster commands.** One file per cluster under `.agent-src.uncompressed/commands/<cluster>.md`, using `commands/fix.md`, `commands/optimize.md`, `commands/feature.md` as templates (copy structure: frontmatter `cluster: true`, dispatch table, mode arg parsing, fall-through to default sub-command).
+- [x] **1.2 Generate cluster commands.** One file per cluster under `.agent-src.uncondensed/commands/<cluster>.md`, using `commands/fix.md`, `commands/optimize.md`, `commands/feature.md` as templates (copy structure: frontmatter `cluster: true`, dispatch table, mode arg parsing, fall-through to default sub-command).
 - [x] **1.3 Convert atomics to deprecation shims.** Same shim contract as Phase 1: stub file, `superseded_by:` frontmatter, identical behavior for one release cycle.
 - [x] **1.4 Update cluster contract.** Move Phase-2 entries from "deferred" to "locked" (internal-locked, per Definitions). Update `docs/contracts/command-clusters.md`. Linter starts blocking new atomic commands matching these prefixes.
 - [x] **1.4.1 Cluster-pattern compliance check.** `scripts/check_cluster_patterns.py` compares each new Phase-2 cluster's dispatch table structure against Phase-1 reference (`commands/fix.md`, `commands/optimize.md`). Fails CI if new dispatch patterns are invented. Runs before 1.4 contract flip.
@@ -364,7 +364,7 @@ Three rules + three commands all touch the same surface. Q2=A locked: **one unif
 
 **Pre-conditions:** Phase 0.3 decoupling-proof committed (determines whether 6 must run before 2B or independently); Phase 0.6 path conventions in place.
 
-- [x] **6.0 Dependency surface scan.** Reproducible `grep -rl --include="*.md" "$rule"` across `.agent-src.uncompressed/`, `docs/`, `agents/`. Output committed at `agents/roadmaps/phase6-dependency-scan.md`. Migration target list = empty (Path B branch fired in 6.1). R1 ghost-reference risk closed by enumeration evidence.
+- [x] **6.0 Dependency surface scan.** Reproducible `grep -rl --include="*.md" "$rule"` across `.agent-src.uncondensed/`, `docs/`, `agents/`. Output committed at `agents/roadmaps/phase6-dependency-scan.md`. Migration target list = empty (Path B branch fired in 6.1). R1 ghost-reference risk closed by enumeration evidence.
 - [x] **6.1 Compared triggers — verdict: STOP (Path B).** Pairwise Jaccard on frontmatter `description:` tokens (script: `scripts/_one_off_phase6_trigger_jaccard.py`, log: `/tmp/phase6_trigger_jaccard.log`):
   - `cadence × ownership` = **0.061** (intersect: `ownership`, `turn`)
   - `cadence × visibility` = **0.057** (intersect: `handling`, `never`)

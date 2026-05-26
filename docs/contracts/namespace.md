@@ -59,10 +59,10 @@ skipped by the linter.
 
 | Type | Source path | Naming nuance |
 |---|---|---|
-| Skill | `.agent-src.uncompressed/skills/<name>/SKILL.md` | Directory name == frontmatter `name`. |
-| Rule | `.agent-src.uncompressed/rules/<name>.md` | Filename stem == frontmatter `id` (when present). |
-| Command | `.agent-src.uncompressed/commands/<name>.md` or `<group>/<verb>.md` | Slash-command invocation `<name>` or `<group>:<verb>`. |
-| Persona | `.agent-src.uncompressed/personas/<name>.md` | Cited from skill frontmatter `personas:` list. |
+| Skill | `.agent-src.uncondensed/skills/<name>/SKILL.md` | Directory name == frontmatter `name`. |
+| Rule | `.agent-src.uncondensed/rules/<name>.md` | Filename stem == frontmatter `id` (when present). |
+| Command | `.agent-src.uncondensed/commands/<name>.md` or `<group>/<verb>.md` | Slash-command invocation `<name>` or `<group>:<verb>`. |
+| Persona | `.agent-src.uncondensed/personas/<name>.md` | Cited from skill frontmatter `personas:` list. |
 
 Sub-namespacing (`commit/in-chunks.md` →  `/commit:in-chunks`) uses
 the same charset rules per segment; the joining colon is implicit.

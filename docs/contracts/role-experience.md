@@ -19,7 +19,7 @@ A folder at `agents/roles/<role>/` that contains:
 
 A role experience is **not**:
 
-- A new skill — the shortlist references existing skills under `packages/<pack>/.agent-src.uncompressed/skills/`. The role experience curates; it does not implement.
+- A new skill — the shortlist references existing skills under `packages/<pack>/.agent-src.uncondensed/skills/`. The role experience curates; it does not implement.
 - A documentation page — `docs/getting-started-by-role.md` is the prose surface and links **to** the role experience, never duplicates it.
 - A persona file under `personas/` — personas are review voices the AI Council uses; role experiences are end-user entry points.
 
@@ -92,7 +92,7 @@ skills:
     why: "Section-by-section drafting flow for longer offers."
 ```
 
-Every `id` must resolve to an existing skill under `packages/<pack>/.agent-src.uncompressed/skills/<id>/SKILL.md` — verified by the lint pass in Phase 3 Step 6.
+Every `id` must resolve to an existing skill under `packages/<pack>/.agent-src.uncondensed/skills/<id>/SKILL.md` — verified by the lint pass in Phase 3 Step 6.
 
 ## Versioning + status
 

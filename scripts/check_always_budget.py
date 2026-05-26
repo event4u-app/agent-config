@@ -32,7 +32,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
-SRC_PREFIX = ".agent-src.uncompressed/"
+SRC_PREFIX = ".agent-src.uncondensed/"
 COMP_PREFIX = ".agent-src/"
 
 TOTAL_CAP = 49_000
@@ -49,7 +49,7 @@ CONCENTRATION_TOP3_PCT = 0.30
 
 # Transitional concentration allowlist — non-safety-floor rules whose
 # extended share exceeds CONCENTRATION_SINGLE_PCT after the kernel-trim
-# refactor (commit 4e771da `refactor(kernel): compress 8 kernel rules
+# refactor (commit 4e771da `refactor(kernel): condense 8 kernel rules
 # per P2.2 playbook + lock kernel`). Trimming safety-floor rules shrank
 # the denominator, mechanically lifting non-floor rules' percentage
 # share even though their absolute size did not grow. Each entry pins
@@ -181,7 +181,7 @@ def _load_context_paths(path: Path) -> list[str]:
     return out
 
 
-def _src_to_compressed(entry: str) -> Path:
+def _src_to_condensed(entry: str) -> Path:
     if entry.startswith(SRC_PREFIX):
         return REPO_ROOT / (COMP_PREFIX + entry[len(SRC_PREFIX):])
     return REPO_ROOT / entry
@@ -195,7 +195,7 @@ def _walk_contexts(rule: Path) -> tuple[set[Path], list[tuple[str, str]]]:
     while stack:
         node, depth, chain = stack.pop()
         for entry in _load_context_paths(node):
-            comp = _src_to_compressed(entry)
+            comp = _src_to_condensed(entry)
             new_chain = f"{chain} → {entry}"
             if depth + 1 > MAX_DEPTH:
                 violations.append((rule.name, new_chain))

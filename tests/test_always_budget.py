@@ -23,7 +23,7 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
-SRC_PREFIX = ".agent-src.uncompressed/"
+SRC_PREFIX = ".agent-src.uncondensed/"
 COMP_PREFIX = ".agent-src/"
 
 TOTAL_CAP = 49_000
@@ -109,7 +109,7 @@ def _load_context_paths(p: Path) -> list[str]:
     return out
 
 
-def _src_to_compressed(entry: str) -> Path:
+def _src_to_condensed(entry: str) -> Path:
     if entry.startswith(SRC_PREFIX):
         return REPO_ROOT / (COMP_PREFIX + entry[len(SRC_PREFIX):])
     return REPO_ROOT / entry
@@ -122,7 +122,7 @@ def _walk_contexts(rule: Path) -> tuple[set[Path], list[tuple[str, str]]]:
     while stack:
         node, depth, chain = stack.pop()
         for entry in _load_context_paths(node):
-            comp = _src_to_compressed(entry)
+            comp = _src_to_condensed(entry)
             new_chain = f"{chain} → {entry}"
             if depth + 1 > MAX_DEPTH:
                 violations.append((rule.name, new_chain))

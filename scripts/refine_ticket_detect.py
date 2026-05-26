@@ -2,7 +2,7 @@
 """Deterministic detection helper for the refine-ticket skill.
 
 Reads the detection-map.yml from
-.agent-src.uncompressed/skills/refine-ticket/ (or the projected copy),
+.agent-src.uncondensed/skills/refine-ticket/ (or the projected copy),
 takes ticket body text, and returns a structured decision — which
 sub-skills should fire, which keywords matched, and an
 orchestration-notes line per sub-skill ready to fold into the skill
@@ -34,7 +34,7 @@ except ImportError as exc:
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # Post-monorepo Phase 4 the detection map lives under any package's
-# .agent-src.uncompressed/. Discover it via the shared helper; fall
+# .agent-src.uncondensed/. Discover it via the shared helper; fall
 # back to the legacy flat path so consumers and older sub-trees still
 # work.
 import sys as _sys  # noqa: E402
@@ -54,7 +54,7 @@ def _discover_default_map() -> Path:
                 return candidate
     return (
         REPO_ROOT
-        / ".agent-src.uncompressed"
+        / ".agent-src.uncondensed"
         / "skills"
         / "refine-ticket"
         / "detection-map.yml"

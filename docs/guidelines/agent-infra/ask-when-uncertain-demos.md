@@ -12,7 +12,7 @@ prose_delta:
 
 > Wrong / right / why demos for the `ask-when-uncertain` Iron Law
 > (one question per turn, vague-request must ask). Linked from
-> [`ask-when-uncertain`](../../.agent-src.uncompressed/rules/ask-when-uncertain.md)
+> [`ask-when-uncertain`](../../.agent-src.uncondensed/rules/ask-when-uncertain.md)
 > § Examples. Outcome baseline at
 > [`tests/golden/outcomes/ask_when_uncertain.json`](../../tests/golden/outcomes/ask_when_uncertain.json).
 

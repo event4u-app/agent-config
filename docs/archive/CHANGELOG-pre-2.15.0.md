@@ -58,11 +58,11 @@
 
 * **council:** allowlist audit-* dirs in layout linter ([09d6900](https://github.com/event4u-app/agent-config/commit/09d69003204c2a86a2cc9f1193b8c33145d856b4))
 * **rules:** align validator_ignore reason between source and projection ([89b7fac](https://github.com/event4u-app/agent-config/commit/89b7facf48d2a4fe39558028bdf15ff40d98c59a))
-* **rules:** allowlist .agent-src.uncompressed/ back-pointer in fast-path-marker ([e74383b](https://github.com/event4u-app/agent-config/commit/e74383b62253ab990e938d1dfdc631d20db94181))
+* **rules:** allowlist .agent-src.uncondensed/ back-pointer in fast-path-marker ([e74383b](https://github.com/event4u-app/agent-config/commit/e74383b62253ab990e938d1dfdc631d20db94181))
 * **ask-when-uncertain:** trim AI Council prose to clear 12% concentration cap ([59abb4a](https://github.com/event4u-app/agent-config/commit/59abb4a3f827b4f8ecb24b63568b057462ae7649))
 * **ai-council:** mark skill cloud-safe with degrade tier ([3c568e6](https://github.com/event4u-app/agent-config/commit/3c568e6eed6c50f8fee2c1685d25dc7aef9d82ec))
 * **low-impact-floor:** drop forbidden authoring-tree path from rule ([8962291](https://github.com/event4u-app/agent-config/commit/89622914c375d01629ed3795d37fd7adf7a07c60))
-* **ai-council:** restore Phase 11 sections in compressed SKILL.md ([52e4f14](https://github.com/event4u-app/agent-config/commit/52e4f14177acd90fd63b4c1c283b3dbda41a6437))
+* **ai-council:** restore Phase 11 sections in condensed SKILL.md ([52e4f14](https://github.com/event4u-app/agent-config/commit/52e4f14177acd90fd63b4c1c283b3dbda41a6437))
 
 ### Documentation
 
@@ -153,7 +153,7 @@ Tests: 4340 (+472 since 2.13.0)
 ### Documentation
 
 * **roadmap:** rename "rule" to "invariant" for deep_min_rounds reference ([758ea46](https://github.com/event4u-app/agent-config/commit/758ea46568c23ef5518ff61d80700f7559bc54a1))
-* **ai-council:** sync compressed SKILL.md with Phase 6 advisors section ([6d57034](https://github.com/event4u-app/agent-config/commit/6d57034c7b342abdd5d38ff300fa67c51deb3471))
+* **ai-council:** sync condensed SKILL.md with Phase 6 advisors section ([6d57034](https://github.com/event4u-app/agent-config/commit/6d57034c7b342abdd5d38ff300fa67c51deb3471))
 * **council:** document master/wrapper contract for the council cluster ([7346f34](https://github.com/event4u-app/agent-config/commit/7346f34376b48c02ced3ae939dfff6ea215025ba))
 
 ### Tests

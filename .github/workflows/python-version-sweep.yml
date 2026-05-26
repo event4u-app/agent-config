@@ -65,7 +65,7 @@ jobs:
         # install_global content tests need the projected `.augment/`
         # etc. trees, which are git-ignored and rebuilt from
         # `.agent-src/` by sync.
-        run: python3 scripts/compress.py --sync
+        run: python3 scripts/condense.py --sync
 
       - name: Run Python tests
         # Same scope as tests.yml; we deliberately do NOT split scope

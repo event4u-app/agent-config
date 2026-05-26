@@ -146,8 +146,8 @@ for the contract and the transitional allowlist.
 - The exact composition of the top-5 set. Rules may be split, merged,
   or relocated to `contexts/` between releases as long as the global
   and per-rule caps still hold.
-- The compressed-vs-uncompressed delta. The CI gate runs against the
-  shipped `.agent-src/` (compressed) directory; the uncompressed
+- The condensed-vs-uncondensed delta. The CI gate runs against the
+  shipped `.agent-src/` (condensed) directory; the uncondensed
   source size is informational only.
 
 ## See also

@@ -8,7 +8,7 @@
       "file_chars": 4816,
       "name": "architecture",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/architecture.md",
+      "src_path": ".agent-src.uncondensed/rules/architecture.md",
       "stub_chars": 233,
       "tier": "3",
       "trigger_count": 4,
@@ -31,7 +31,7 @@
       "file_chars": 3323,
       "name": "artifact-drafting-protocol",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/artifact-drafting-protocol.md",
+      "src_path": ".agent-src.uncondensed/rules/artifact-drafting-protocol.md",
       "stub_chars": 260,
       "tier": "2a",
       "trigger_count": 4,
@@ -55,7 +55,7 @@
       "routes_to": [
         "contract:artifact-engagement-flow"
       ],
-      "src_path": ".agent-src.uncompressed/rules/artifact-engagement-recording.md",
+      "src_path": ".agent-src.uncondensed/rules/artifact-engagement-recording.md",
       "stub_chars": 268,
       "tier": "mechanical-already",
       "trigger_count": 1,
@@ -69,7 +69,7 @@
     },
     {
       "body_chars": 565,
-      "description": "Editing inside .augment/ or .agent-src.uncompressed/ \u2014 files MUST stay project-agnostic AND any add/rename/delete syncs counts and cross-references in the same edit",
+      "description": "Editing inside .augment/ or .agent-src.uncondensed/ \u2014 files MUST stay project-agnostic AND any add/rename/delete syncs counts and cross-references in the same edit",
       "description_chars": 164,
       "file_chars": 1195,
       "name": "augment-edit-discipline",
@@ -77,7 +77,7 @@
         "guideline:augment-portability-patterns",
         "skill:agent-docs-writing"
       ],
-      "src_path": ".agent-src.uncompressed/rules/augment-edit-discipline.md",
+      "src_path": ".agent-src.uncondensed/rules/augment-edit-discipline.md",
       "stub_chars": 277,
       "tier": "2a",
       "trigger_count": 5,
@@ -90,18 +90,18 @@
         ],
         "path_prefixes": [
           ".augment/",
-          ".agent-src.uncompressed/"
+          ".agent-src.uncondensed/"
         ]
       }
     },
     {
       "body_chars": 2438,
-      "description": "Creating, editing, or modifying files in .agent-src/ or .augment/ \u2014 source of truth is .agent-src.uncompressed/, never edit generated dirs directly",
+      "description": "Creating, editing, or modifying files in .agent-src/ or .augment/ \u2014 source of truth is .agent-src.uncondensed/, never edit generated dirs directly",
       "description_chars": 147,
       "file_chars": 3039,
       "name": "augment-source-of-truth",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/augment-source-of-truth.md",
+      "src_path": ".agent-src.uncondensed/rules/augment-source-of-truth.md",
       "stub_chars": 260,
       "tier": "1",
       "trigger_count": 4,
@@ -123,7 +123,7 @@
       "file_chars": 7510,
       "name": "autonomous-execution",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/autonomous-execution.md",
+      "src_path": ".agent-src.uncondensed/rules/autonomous-execution.md",
       "stub_chars": 247,
       "tier": "3",
       "trigger_count": 3,
@@ -140,12 +140,12 @@
     },
     {
       "body_chars": 3307,
-      "description": "When caveman.speak_scope != off \u2014 compress reply prose to caveman grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers",
+      "description": "When telegraph.speak_scope != off \u2014 condense reply prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers",
       "description_chars": 148,
       "file_chars": 3553,
-      "name": "caveman-speak",
+      "name": "telegraph-speak",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/caveman-speak.md",
+      "src_path": ".agent-src.uncondensed/rules/telegraph-speak.md",
       "stub_chars": 251,
       "tier": "1",
       "trigger_count": 1,
@@ -166,7 +166,7 @@
       "routes_to": [
         "skill:rtk-output-filtering"
       ],
-      "src_path": ".agent-src.uncompressed/rules/cli-output-handling.md",
+      "src_path": ".agent-src.uncondensed/rules/cli-output-handling.md",
       "stub_chars": 259,
       "tier": "2a",
       "trigger_count": 5,
@@ -191,7 +191,7 @@
       "routes_to": [
         "contract:command-suggestion-flow"
       ],
-      "src_path": ".agent-src.uncompressed/rules/command-suggestion-policy.md",
+      "src_path": ".agent-src.uncondensed/rules/command-suggestion-policy.md",
       "stub_chars": 255,
       "tier": "mechanical-already",
       "trigger_count": 0,
@@ -210,7 +210,7 @@
       "routes_to": [
         "skill:conventional-commits-writing"
       ],
-      "src_path": ".agent-src.uncompressed/rules/commit-conventions.md",
+      "src_path": ".agent-src.uncondensed/rules/commit-conventions.md",
       "stub_chars": 218,
       "tier": "2a",
       "trigger_count": 2,
@@ -230,7 +230,7 @@
       "file_chars": 4152,
       "name": "context-hygiene",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/context-hygiene.md",
+      "src_path": ".agent-src.uncondensed/rules/context-hygiene.md",
       "stub_chars": 229,
       "tier": "1",
       "trigger_count": 4,
@@ -255,7 +255,7 @@
       "routes_to": [
         "skill:copilot-config"
       ],
-      "src_path": ".agent-src.uncompressed/rules/copilot-routing.md",
+      "src_path": ".agent-src.uncondensed/rules/copilot-routing.md",
       "stub_chars": 242,
       "tier": "3",
       "trigger_count": 1,
@@ -276,7 +276,7 @@
       "routes_to": [
         "skill:devcontainer"
       ],
-      "src_path": ".agent-src.uncompressed/rules/devcontainer-routing.md",
+      "src_path": ".agent-src.uncondensed/rules/devcontainer-routing.md",
       "stub_chars": 248,
       "tier": "3",
       "trigger_count": 3,
@@ -299,7 +299,7 @@
       "routes_to": [
         "skill:docker"
       ],
-      "src_path": ".agent-src.uncompressed/rules/docker-commands.md",
+      "src_path": ".agent-src.uncondensed/rules/docker-commands.md",
       "stub_chars": 248,
       "tier": "3",
       "trigger_count": 3,
@@ -320,7 +320,7 @@
       "file_chars": 7126,
       "name": "domain-adoption-policy",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/domain-adoption-policy.md",
+      "src_path": ".agent-src.uncondensed/rules/domain-adoption-policy.md",
       "stub_chars": 258,
       "tier": "2b",
       "trigger_count": 7,
@@ -336,7 +336,7 @@
           "blockchain track"
         ],
         "path_prefixes": [
-          ".agent-src.uncompressed/skills/"
+          ".agent-src.uncondensed/skills/"
         ]
       }
     },
@@ -354,7 +354,7 @@
         "skill:stakeholder-tradeoff",
         "skill:decision-record"
       ],
-      "src_path": ".agent-src.uncompressed/rules/domain-safety-disclaimer.md",
+      "src_path": ".agent-src.uncondensed/rules/domain-safety-disclaimer.md",
       "stub_chars": 279,
       "tier": "2a",
       "trigger_count": 15,
@@ -392,7 +392,7 @@
         "skill:logging-monitoring",
         "skill:secrets-management"
       ],
-      "src_path": ".agent-src.uncompressed/rules/domain-safety-pii.md",
+      "src_path": ".agent-src.uncondensed/rules/domain-safety-pii.md",
       "stub_chars": 266,
       "tier": "2a",
       "trigger_count": 25,
@@ -438,7 +438,7 @@
         "skill:data-handling-judgment",
         "skill:privacy-review"
       ],
-      "src_path": ".agent-src.uncompressed/rules/domain-safety-retention.md",
+      "src_path": ".agent-src.uncondensed/rules/domain-safety-retention.md",
       "stub_chars": 288,
       "tier": "2a",
       "trigger_count": 10,
@@ -466,7 +466,7 @@
       "file_chars": 3526,
       "name": "downstream-changes",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/downstream-changes.md",
+      "src_path": ".agent-src.uncondensed/rules/downstream-changes.md",
       "stub_chars": 244,
       "tier": "2b",
       "trigger_count": 4,
@@ -489,7 +489,7 @@
       "file_chars": 4833,
       "name": "external-reference-deep-dive",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/external-reference-deep-dive.md",
+      "src_path": ".agent-src.uncondensed/rules/external-reference-deep-dive.md",
       "stub_chars": 259,
       "tier": "2b",
       "trigger_count": 9,
@@ -517,7 +517,7 @@
       "file_chars": 3504,
       "name": "fast-path-marker-visibility",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/fast-path-marker-visibility.md",
+      "src_path": ".agent-src.uncondensed/rules/fast-path-marker-visibility.md",
       "stub_chars": 267,
       "tier": "1",
       "trigger_count": 5,
@@ -541,7 +541,7 @@
       "file_chars": 5547,
       "name": "framework-neutrality-in-generic-skills",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md",
+      "src_path": ".agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md",
       "stub_chars": 258,
       "tier": "2a",
       "trigger_count": 13,
@@ -560,9 +560,9 @@
           "Rector"
         ],
         "path_prefixes": [
-          ".agent-src.uncompressed/skills/",
-          ".agent-src.uncompressed/rules/",
-          ".agent-src.uncompressed/commands/"
+          ".agent-src.uncondensed/skills/",
+          ".agent-src.uncondensed/rules/",
+          ".agent-src.uncondensed/commands/"
         ]
       }
     },
@@ -575,7 +575,7 @@
       "routes_to": [
         "skill:git-workflow"
       ],
-      "src_path": ".agent-src.uncompressed/rules/git-history-discipline.md",
+      "src_path": ".agent-src.uncondensed/rules/git-history-discipline.md",
       "stub_chars": 256,
       "tier": "2a",
       "trigger_count": 11,
@@ -605,7 +605,7 @@
       "file_chars": 4352,
       "name": "improve-before-implement",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/improve-before-implement.md",
+      "src_path": ".agent-src.uncondensed/rules/improve-before-implement.md",
       "stub_chars": 263,
       "tier": "2b",
       "trigger_count": 3,
@@ -627,7 +627,7 @@
       "file_chars": 3002,
       "name": "invite-challenge",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/invite-challenge.md",
+      "src_path": ".agent-src.uncondensed/rules/invite-challenge.md",
       "stub_chars": 255,
       "tier": "2b",
       "trigger_count": 8,
@@ -656,7 +656,7 @@
       "routes_to": [
         "skill:laravel"
       ],
-      "src_path": ".agent-src.uncompressed/rules/laravel-routing.md",
+      "src_path": ".agent-src.uncondensed/rules/laravel-routing.md",
       "stub_chars": 229,
       "tier": "3",
       "trigger_count": 4,
@@ -680,7 +680,7 @@
       "routes_to": [
         "skill:laravel"
       ],
-      "src_path": ".agent-src.uncompressed/rules/laravel-translations.md",
+      "src_path": ".agent-src.uncondensed/rules/laravel-translations.md",
       "stub_chars": 216,
       "tier": "2a",
       "trigger_count": 4,
@@ -703,7 +703,7 @@
       "file_chars": 2734,
       "name": "low-impact-corpus-privacy-floor",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/low-impact-corpus-privacy-floor.md",
+      "src_path": ".agent-src.uncondensed/rules/low-impact-corpus-privacy-floor.md",
       "stub_chars": 253,
       "tier": "1",
       "trigger_count": 4,
@@ -726,7 +726,7 @@
       "file_chars": 946,
       "name": "markdown-safe-codeblocks",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/markdown-safe-codeblocks.md",
+      "src_path": ".agent-src.uncondensed/rules/markdown-safe-codeblocks.md",
       "stub_chars": 191,
       "tier": "2b",
       "trigger_count": 2,
@@ -747,7 +747,7 @@
       "file_chars": 5344,
       "name": "media-governance-routing",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/media-governance-routing.md",
+      "src_path": ".agent-src.uncondensed/rules/media-governance-routing.md",
       "stub_chars": 250,
       "tier": "2a",
       "trigger_count": 8,
@@ -773,7 +773,7 @@
       "file_chars": 3647,
       "name": "minimal-safe-diff",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/minimal-safe-diff.md",
+      "src_path": ".agent-src.uncondensed/rules/minimal-safe-diff.md",
       "stub_chars": 253,
       "tier": "2a",
       "trigger_count": 3,
@@ -795,7 +795,7 @@
       "file_chars": 2902,
       "name": "missing-tool-handling",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/missing-tool-handling.md",
+      "src_path": ".agent-src.uncondensed/rules/missing-tool-handling.md",
       "stub_chars": 219,
       "tier": "2a",
       "trigger_count": 3,
@@ -819,7 +819,7 @@
       "routes_to": [
         "command:set-cost-profile"
       ],
-      "src_path": ".agent-src.uncompressed/rules/model-recommendation.md",
+      "src_path": ".agent-src.uncondensed/rules/model-recommendation.md",
       "stub_chars": 251,
       "tier": "2a",
       "trigger_count": 0,
@@ -836,7 +836,7 @@
       "file_chars": 1802,
       "name": "no-attribution-footers",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/no-attribution-footers.md",
+      "src_path": ".agent-src.uncondensed/rules/no-attribution-footers.md",
       "stub_chars": 255,
       "tier": "3",
       "trigger_count": 4,
@@ -861,7 +861,7 @@
       "routes_to": [
         "skill:ai-council"
       ],
-      "src_path": ".agent-src.uncompressed/rules/no-roadmap-references.md",
+      "src_path": ".agent-src.uncondensed/rules/no-roadmap-references.md",
       "stub_chars": 234,
       "tier": "mechanical-already",
       "trigger_count": 6,
@@ -888,7 +888,7 @@
       "routes_to": [
         "command:onboard"
       ],
-      "src_path": ".agent-src.uncompressed/rules/onboarding-gate.md",
+      "src_path": ".agent-src.uncondensed/rules/onboarding-gate.md",
       "stub_chars": 253,
       "tier": "1",
       "trigger_count": 2,
@@ -911,7 +911,7 @@
       "routes_to": [
         "contract:persona-schema"
       ],
-      "src_path": ".agent-src.uncompressed/rules/persona-governance.md",
+      "src_path": ".agent-src.uncondensed/rules/persona-governance.md",
       "stub_chars": 242,
       "tier": "2a",
       "trigger_count": 4,
@@ -922,7 +922,7 @@
           "personas"
         ],
         "path_prefixes": [
-          ".agent-src.uncompressed/personas/",
+          ".agent-src.uncondensed/personas/",
           ".agent-src/personas/"
         ]
       }
@@ -936,7 +936,7 @@
       "routes_to": [
         "guideline:php/php-coding-patterns"
       ],
-      "src_path": ".agent-src.uncompressed/rules/php-coding.md",
+      "src_path": ".agent-src.uncondensed/rules/php-coding.md",
       "stub_chars": 202,
       "tier": "3",
       "trigger_count": 2,
@@ -951,19 +951,19 @@
     },
     {
       "body_chars": 3824,
-      "description": "When merging, refactoring, compressing, or restructuring skills, rules, commands, or guidelines \u2014 prevent quality loss",
+      "description": "When merging, refactoring, condensing, or restructuring skills, rules, commands, or guidelines \u2014 prevent quality loss",
       "description_chars": 118,
       "file_chars": 4319,
       "name": "preservation-guard",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/preservation-guard.md",
+      "src_path": ".agent-src.uncondensed/rules/preservation-guard.md",
       "stub_chars": 226,
       "tier": "2b",
       "trigger_count": 4,
       "triggers": {
         "intents": [
           "merge skill",
-          "compress rule",
+          "condense rule",
           "refactor artifact"
         ],
         "keywords": [
@@ -981,7 +981,7 @@
       "routes_to": [
         "contract:provider-lifecycle"
       ],
-      "src_path": ".agent-src.uncompressed/rules/provider-lifecycle-discipline.md",
+      "src_path": ".agent-src.uncondensed/rules/provider-lifecycle-discipline.md",
       "stub_chars": 266,
       "tier": "2a",
       "trigger_count": 10,
@@ -1012,7 +1012,7 @@
       "routes_to": [
         "skill:review-routing"
       ],
-      "src_path": ".agent-src.uncompressed/rules/reviewer-awareness.md",
+      "src_path": ".agent-src.uncondensed/rules/reviewer-awareness.md",
       "stub_chars": 252,
       "tier": "2a",
       "trigger_count": 1,
@@ -1031,7 +1031,7 @@
       "file_chars": 6359,
       "name": "roadmap-ci-steps-policy",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/roadmap-ci-steps-policy.md",
+      "src_path": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
       "stub_chars": 263,
       "tier": "2a",
       "trigger_count": 8,
@@ -1060,7 +1060,7 @@
       "routes_to": [
         "guideline:agent-infra/roadmap-progress-mechanics"
       ],
-      "src_path": ".agent-src.uncompressed/rules/roadmap-progress-sync.md",
+      "src_path": ".agent-src.uncondensed/rules/roadmap-progress-sync.md",
       "stub_chars": 259,
       "tier": "1",
       "trigger_count": 1,
@@ -1079,7 +1079,7 @@
       "file_chars": 1990,
       "name": "role-mode-adherence",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/role-mode-adherence.md",
+      "src_path": ".agent-src.uncondensed/rules/role-mode-adherence.md",
       "stub_chars": 246,
       "tier": "2a",
       "trigger_count": 3,
@@ -1103,7 +1103,7 @@
       "routes_to": [
         "guideline:agent-infra/rule-type-governance"
       ],
-      "src_path": ".agent-src.uncompressed/rules/rule-type-governance.md",
+      "src_path": ".agent-src.uncondensed/rules/rule-type-governance.md",
       "stub_chars": 206,
       "tier": "2a",
       "trigger_count": 1,
@@ -1111,7 +1111,7 @@
         "intents": [],
         "keywords": [],
         "path_prefixes": [
-          ".agent-src.uncompressed/rules/"
+          ".agent-src.uncondensed/rules/"
         ]
       }
     },
@@ -1122,7 +1122,7 @@
       "file_chars": 1414,
       "name": "runtime-safety",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/runtime-safety.md",
+      "src_path": ".agent-src.uncondensed/rules/runtime-safety.md",
       "stub_chars": 216,
       "tier": "2b",
       "trigger_count": 4,
@@ -1144,7 +1144,7 @@
       "file_chars": 3356,
       "name": "security-sensitive-stop",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/security-sensitive-stop.md",
+      "src_path": ".agent-src.uncondensed/rules/security-sensitive-stop.md",
       "stub_chars": 262,
       "tier": "2a",
       "trigger_count": 5,
@@ -1169,7 +1169,7 @@
       "routes_to": [
         "skill:skill-improvement-pipeline"
       ],
-      "src_path": ".agent-src.uncompressed/rules/skill-improvement-trigger.md",
+      "src_path": ".agent-src.uncondensed/rules/skill-improvement-trigger.md",
       "stub_chars": 228,
       "tier": "2a",
       "trigger_count": 2,
@@ -1191,7 +1191,7 @@
       "routes_to": [
         "guideline:agent-infra/skill-quality-checklist"
       ],
-      "src_path": ".agent-src.uncompressed/rules/skill-quality.md",
+      "src_path": ".agent-src.uncondensed/rules/skill-quality.md",
       "stub_chars": 231,
       "tier": "mechanical-already",
       "trigger_count": 1,
@@ -1199,7 +1199,7 @@
         "intents": [],
         "keywords": [],
         "path_prefixes": [
-          ".agent-src.uncompressed/skills/"
+          ".agent-src.uncondensed/skills/"
         ]
       }
     },
@@ -1212,7 +1212,7 @@
       "routes_to": [
         "skill:command-routing"
       ],
-      "src_path": ".agent-src.uncompressed/rules/slash-command-routing-policy.md",
+      "src_path": ".agent-src.uncondensed/rules/slash-command-routing-policy.md",
       "stub_chars": 206,
       "tier": "1",
       "trigger_count": 3,
@@ -1235,7 +1235,7 @@
       "routes_to": [
         "skill:symfony-workflow"
       ],
-      "src_path": ".agent-src.uncompressed/rules/symfony-routing.md",
+      "src_path": ".agent-src.uncondensed/rules/symfony-routing.md",
       "stub_chars": 246,
       "tier": "3",
       "trigger_count": 4,
@@ -1257,7 +1257,7 @@
       "file_chars": 2079,
       "name": "think-before-action",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/think-before-action.md",
+      "src_path": ".agent-src.uncondensed/rules/think-before-action.md",
       "stub_chars": 219,
       "tier": "2b",
       "trigger_count": 3,
@@ -1278,7 +1278,7 @@
       "file_chars": 1253,
       "name": "token-efficiency",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/token-efficiency.md",
+      "src_path": ".agent-src.uncondensed/rules/token-efficiency.md",
       "stub_chars": 234,
       "tier": "2a",
       "trigger_count": 3,
@@ -1302,7 +1302,7 @@
       "routes_to": [
         "skill:token-optimizer"
       ],
-      "src_path": ".agent-src.uncompressed/rules/token-optimizer-maintenance.md",
+      "src_path": ".agent-src.uncondensed/rules/token-optimizer-maintenance.md",
       "stub_chars": 255,
       "tier": "2a",
       "trigger_count": 6,
@@ -1326,7 +1326,7 @@
       "file_chars": 1503,
       "name": "tool-safety",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/tool-safety.md",
+      "src_path": ".agent-src.uncondensed/rules/tool-safety.md",
       "stub_chars": 205,
       "tier": "2b",
       "trigger_count": 3,
@@ -1350,7 +1350,7 @@
       "routes_to": [
         "skill:existing-ui-audit"
       ],
-      "src_path": ".agent-src.uncompressed/rules/ui-audit-gate.md",
+      "src_path": ".agent-src.uncondensed/rules/ui-audit-gate.md",
       "stub_chars": 246,
       "tier": "2b",
       "trigger_count": 4,
@@ -1375,7 +1375,7 @@
       "routes_to": [
         "skill:upstream-contribute"
       ],
-      "src_path": ".agent-src.uncompressed/rules/upstream-proposal.md",
+      "src_path": ".agent-src.uncondensed/rules/upstream-proposal.md",
       "stub_chars": 250,
       "tier": "2a",
       "trigger_count": 1,
@@ -1394,7 +1394,7 @@
       "file_chars": 2484,
       "name": "user-interaction",
       "routes_to": [],
-      "src_path": ".agent-src.uncompressed/rules/user-interaction.md",
+      "src_path": ".agent-src.uncondensed/rules/user-interaction.md",
       "stub_chars": 254,
       "tier": "3",
       "trigger_count": 3,

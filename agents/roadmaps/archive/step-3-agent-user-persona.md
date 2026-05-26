@@ -20,8 +20,8 @@ complexity: lightweight
 
 - [x] Re-validation gate (above) passes — verdict recorded; Phase 1 scope narrowed before execution
 - [x] Read [`agents/council-sessions/2026-05-14-agent-user-persona/prompt.md`](../council-sessions/2026-05-14-agent-user-persona/prompt.md) and [`responses.json`](../council-sessions/2026-05-14-agent-user-persona/responses.json) <!-- council-ref-allowed: re-validation-gate decision trace -->
-- [x] Read `.agent-src.uncompressed/commands/AGENTS.md` (the `/agents` cluster contract)
-- [x] Read `.agent-src.uncompressed/personas/README.md` to confirm review-lens personas stay untouched
+- [x] Read `.agent-src.uncondensed/commands/AGENTS.md` (the `/agents` cluster contract)
+- [x] Read `.agent-src.uncondensed/personas/README.md` to confirm review-lens personas stay untouched
 - [x] Confirm no commits / pushes happen without explicit per-step user approval (per [`commit-policy`](../../.augment/rules/commit-policy.md))
 
 ## Context
@@ -47,7 +47,7 @@ This roadmap is **work-only** — no version pins, no tag plans, no release date
 Minimal-viable user-persona file plus the interview command that creates it. External-enrichment sub-commands (`handoff`, `linkedin`) cancelled by the re-validation gate; re-evaluate after Phase 3 has been in active use for ≥1 week.
 
 - [x] **Step 1 — Lock the v1 schema:** Draft `docs/contracts/agent-user-schema.md` with the locked frontmatter (`version`, `identity.{name,nickname}`, `language`, `role`, `style.{formality,pace}`, `voice_sample`, `last_updated`) plus a single `# Notes` freeform section. Hard cap: 100 lines total file size. Explicit exclusions list (no credentials, no secrets, no health/financial/legal status, no third-party PII even with user consent, no demographics in v1 — deferred to v2 pending usage data per re-validation gate).
-- [x] **Step 2 — Add the `user` sub-command to `/agents`:** Update `.agent-src.uncompressed/commands/AGENTS.md` dispatch table to add `user` (routes to `commands/agents/user.md`). Create `commands/agents/user.md` as a mini-dispatcher for its sub-sub-commands (`init`, `update`, `show`, `review`, `accept`) — mirrors the master/wrapper pattern from `step-2-ai-council-consolidation.md` Phase 1.
+- [x] **Step 2 — Add the `user` sub-command to `/agents`:** Update `.agent-src.uncondensed/commands/AGENTS.md` dispatch table to add `user` (routes to `commands/agents/user.md`). Create `commands/agents/user.md` as a mini-dispatcher for its sub-sub-commands (`init`, `update`, `show`, `review`, `accept`) — mirrors the master/wrapper pattern from `step-2-ai-council-consolidation.md` Phase 1.
 - [x] **Step 3 — Implement `/agents user init`:** Create `commands/agents/user/init.md`. Question flow: (a) name/nickname (pre-fill from `personal.user_name` if present), (b) primary language, (c) paste one typical message → captured as `voice_sample`, (d) work style (pragmatic / thorough / rapid) → `style.pace`. Output: `.agent-user.md` at project root. Refuses to overwrite an existing file without `--force`.
 - [-] **Step 4 — Implement `/agents user handoff` (cancelled):** Re-validation gate verdict was rethink (Sonnet) / minor-edit (gpt-4o). Compounds the user-modeling surface in v1 before the primary init/show/review/accept loop has any usage signal. Re-evaluate after Phase 3 has been in active use for ≥1 week.
 - [-] **Step 5 — Implement `/agents user linkedin` (cancelled):** Re-validation gate verdict was unanimous reject. Host-agent-fetch model delegates network without solving determinism, privacy-field-floor, or test-surface; creates an untestable dependency on undocumented host capabilities. Re-evaluate only after a written host-agent fetch contract and a "what counts as a public profile field" privacy floor exist.

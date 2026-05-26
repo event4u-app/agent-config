@@ -18,51 +18,51 @@
 # /skill-management, /override:create, etc. They carry no runtime
 # frontmatter on purpose: the consuming command fills it in. Quarantined
 # from the discovery manifest so strict mode stays clean.
-- path: .agent-src.uncompressed/templates/AGENTS.md
+- path: .agent-src.uncondensed/templates/AGENTS.md
   reason: scaffold template for new project AGENTS.md; placeholders filled by /agents init
-- path: .agent-src.uncompressed/templates/agent-settings.md
+- path: .agent-src.uncondensed/templates/agent-settings.md
   reason: scaffold for project .agent-settings.yml
-- path: .agent-src.uncompressed/templates/command.md
+- path: .agent-src.uncondensed/templates/command.md
   reason: scaffold for new slash-command authoring
-- path: .agent-src.uncompressed/templates/contexts.md
+- path: .agent-src.uncondensed/templates/contexts.md
   reason: scaffold index for project contexts/
-- path: .agent-src.uncompressed/templates/contexts/auth-model.md
+- path: .agent-src.uncondensed/templates/contexts/auth-model.md
   reason: scaffold for project auth-model context
-- path: .agent-src.uncompressed/templates/contexts/data-sensitivity.md
+- path: .agent-src.uncondensed/templates/contexts/data-sensitivity.md
   reason: scaffold for project data-sensitivity context
-- path: .agent-src.uncompressed/templates/contexts/deployment-order.md
+- path: .agent-src.uncondensed/templates/contexts/deployment-order.md
   reason: scaffold for project deployment-order context
-- path: .agent-src.uncompressed/templates/contexts/observability.md
+- path: .agent-src.uncondensed/templates/contexts/observability.md
   reason: scaffold for project observability context
-- path: .agent-src.uncompressed/templates/contexts/tenant-boundaries.md
+- path: .agent-src.uncondensed/templates/contexts/tenant-boundaries.md
   reason: scaffold for project tenant-boundaries context
-- path: .agent-src.uncompressed/templates/copilot-instructions.md
+- path: .agent-src.uncondensed/templates/copilot-instructions.md
   reason: scaffold for project copilot-instructions.md
-- path: .agent-src.uncompressed/templates/features.md
+- path: .agent-src.uncondensed/templates/features.md
   reason: scaffold for project features.md catalogue
-- path: .agent-src.uncompressed/templates/overrides/command.md
+- path: .agent-src.uncondensed/templates/overrides/command.md
   reason: scaffold for project override of a shared command
-- path: .agent-src.uncompressed/templates/overrides/guideline.md
+- path: .agent-src.uncondensed/templates/overrides/guideline.md
   reason: scaffold for project override of a shared guideline
-- path: .agent-src.uncompressed/templates/overrides/rule.md
+- path: .agent-src.uncondensed/templates/overrides/rule.md
   reason: scaffold for project override of a shared rule
-- path: .agent-src.uncompressed/templates/overrides/skill.md
+- path: .agent-src.uncondensed/templates/overrides/skill.md
   reason: scaffold for project override of a shared skill
-- path: .agent-src.uncompressed/templates/overrides/template.md
+- path: .agent-src.uncondensed/templates/overrides/template.md
   reason: scaffold-of-scaffold for new override types
-- path: .agent-src.uncompressed/templates/persona.md
+- path: .agent-src.uncondensed/templates/persona.md
   reason: scaffold for new persona authoring
-- path: .agent-src.uncompressed/templates/roadmaps.md
+- path: .agent-src.uncondensed/templates/roadmaps.md
   reason: scaffold for new roadmap authoring
-- path: .agent-src.uncompressed/templates/rule.md
+- path: .agent-src.uncondensed/templates/rule.md
   reason: scaffold for new rule authoring
-- path: .agent-src.uncompressed/templates/scripts/.pytest_cache/README.md
+- path: .agent-src.uncondensed/templates/scripts/.pytest_cache/README.md
   reason: pytest cache artefact, not an agent-config artefact
-- path: .agent-src.uncompressed/templates/scripts/README.md
+- path: .agent-src.uncondensed/templates/scripts/README.md
   reason: scaffold README for project scripts/
-- path: .agent-src.uncompressed/templates/skill-archive-note.md
+- path: .agent-src.uncondensed/templates/skill-archive-note.md
   reason: scaffold for archive-note generation
-- path: .agent-src.uncompressed/templates/skill.md
+- path: .agent-src.uncondensed/templates/skill.md
   reason: scaffold for new SKILL.md authoring
-- path: .agent-src.uncompressed/README.md
+- path: .agent-src.uncondensed/README.md
   reason: package-root orientation; carries no artefact frontmatter — follows package core

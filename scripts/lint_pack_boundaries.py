@@ -2,7 +2,7 @@
 """Enforce cross-pack reference boundaries.
 
 Phase 4.4 of the monorepo migration (ADR-017). Walks every markdown
-link in every artefact under ``packages/*/.agent-src.uncompressed/``
+link in every artefact under ``packages/*/.agent-src.uncondensed/``
 and verifies the link target's pack is either the same pack, ``core``
 (always allowed), or listed in the source pack's ``requires``.
 
@@ -46,7 +46,7 @@ def _build_artefact_index() -> dict[str, str]:
     for pkg in sorted(PACKAGES.iterdir()):
         if not pkg.is_dir():
             continue
-        src_root = pkg / ".agent-src.uncompressed"
+        src_root = pkg / ".agent-src.uncondensed"
         if not src_root.is_dir():
             continue
         pid = _load_pack_meta(pkg).get("id") or pkg.name.removeprefix("pack-")

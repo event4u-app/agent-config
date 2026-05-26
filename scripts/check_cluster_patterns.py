@@ -2,7 +2,7 @@
 """Cluster-pattern compliance check.
 
 Compares each cluster dispatcher under
-`.agent-src.uncompressed/commands/<cluster>.md` against the Phase 1
+`.agent-src.uncondensed/commands/<cluster>.md` against the Phase 1
 reference patterns (`fix.md`, `optimize.md`, `feature.md`).
 
 Required structure:
@@ -49,7 +49,7 @@ def _resolve_command(cluster: str) -> Path:
     hit = resolve_logical(rel)
     if hit is not None:
         return hit
-    return ROOT / ".agent-src.uncompressed" / rel
+    return ROOT / ".agent-src.uncondensed" / rel
 
 REQUIRED_SECTIONS = ["## Sub-commands", "## Dispatch", "## Rules"]
 TABLE_HEADER_RE = re.compile(

@@ -29,9 +29,9 @@ import pytest
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_ROOT = REPO_ROOT / ".agent-src.uncompressed"
+SRC_ROOT = REPO_ROOT / ".agent-src.uncondensed"
 COMP_ROOT = REPO_ROOT / ".agent-src"
-SRC_PREFIX = ".agent-src.uncompressed/"
+SRC_PREFIX = ".agent-src.uncondensed/"
 COMP_PREFIX = ".agent-src/"
 
 # Q2 cap — mirrors `scripts/check_always_budget.py::MAX_CONTEXTS_PER_RULE`.
@@ -121,7 +121,7 @@ def test_rule_preserves_obligation_baseline(
     fm = _frontmatter(rule_path)
     declared = [str(p) for p in (fm.get("load_context") or [])]
     # Canonical form is the logical name (`contexts/<area>/<file>.md`);
-    # the `.agent-src.uncompressed/` prefix is rejected by the schema
+    # the `.agent-src.uncondensed/` prefix is rejected by the schema
     # since road-to-path-fixes.md P5.3. See
     # `docs/contracts/load-context-schema.md` § Logical names.
     expected_decl = f"contexts/{ctx_rel}"
@@ -199,18 +199,18 @@ def _all_rule_files() -> list[Path]:
 
 
 def _src_to_comp(entry: str) -> Path:
-    """Resolve a `load_context:` entry to its compressed-twin path.
+    """Resolve a `load_context:` entry to its condensed-twin path.
 
     Four input shapes are tolerated:
 
     1. Logical name (canonical, post-P5.3): ``contexts/<area>/<file>.md``
-       → ``.agent-src/contexts/<area>/<file>.md``. The compress rewriter
+       → ``.agent-src/contexts/<area>/<file>.md``. The condense rewriter
        resolves logical names to deployment-correct paths; the test
-       walks the compressed twin to mirror the agent's runtime view.
-    2. Rewritten relative path emitted by ``compress.py::_rewrite_paths``
-       in compressed rules: ``../contexts/<area>/<file>.md`` (relative
+       walks the condensed twin to mirror the agent's runtime view.
+    2. Rewritten relative path emitted by ``condense.py::_rewrite_paths``
+       in condensed rules: ``../contexts/<area>/<file>.md`` (relative
        to ``.agent-src/rules/``) → ``.agent-src/contexts/<area>/<file>.md``.
-    3. Legacy fully-qualified ``.agent-src.uncompressed/...`` (rejected
+    3. Legacy fully-qualified ``.agent-src.uncondensed/...`` (rejected
        by the schema; kept as a defensive branch so a stray entry
        fails loudly via the size assertion, not via a KeyError here).
     4. Anything else (e.g. ``agents/settings/contexts/...``) is repo-root-relative.
@@ -287,8 +287,8 @@ def _walk_transitive_contexts(rule: Path) -> set[Path]:
     """Walk `load_context:` + `load_context_eager:` to depth ``MAX_DEPTH``.
 
     Mirrors `scripts/check_always_budget.py::_walk_contexts`. Resolves
-    ``.agent-src.uncompressed/`` entries to their compressed twin under
-    ``.agent-src/`` so size accounting matches the linter's compressed-
+    ``.agent-src.uncondensed/`` entries to their condensed twin under
+    ``.agent-src/`` so size accounting matches the linter's condensed-
     artifact view (the surface the agent actually loads at runtime).
     """
     seen: set[Path] = set()

@@ -13,13 +13,13 @@ Goal: Consistent, precise, self-documenting names across all layers.
 
 ## Impact Assessment
 
-Renaming affects: folder names, SKILL.md `name:` field, compressed copies, symlinks (.claude/, .cursor/),
+Renaming affects: folder names, SKILL.md `name:` field, condensed copies, symlinks (.claude/, .cursor/),
 `.augmentignore`, cross-references in other skills/rules/commands, AGENTS.md, copilot-instructions.md.
 
 **Process per rename:**
-1. Rename folder in `.agent-src.uncompressed/`
+1. Rename folder in `.agent-src.uncondensed/`
 2. Update `name:` in frontmatter
-3. Run `/compress` for changed file
+3. Run `/condense` for changed file
 4. Run `task generate-tools` to regenerate symlinks
 5. Search all `.md` files for old name → update references
 6. Run `task sync-check` + linter

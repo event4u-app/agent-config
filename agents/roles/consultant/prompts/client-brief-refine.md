@@ -17,7 +17,7 @@ You are refining a client brief before the kickoff call. Produce:
 4. **Open questions.** What the brief does not answer; group by who answers (client / industry-context / your team).
 5. **Scope guess.** Honest pre-scoping based on what's known; mark as estimate.
 
-Never invent client intent. Never compress fuzziness into false specificity.
+Never invent client intent. Never condense fuzziness into false specificity.
 
 **Intake**
 

@@ -53,7 +53,7 @@ like Laravel/Symfony: developed together, distributed separately.
   improve-before-implement, validate-feature-fit, bug-analyzer, sequential-thinking,
   conventional-commits-writing, readme-writing
 - Core commands (~20 most-used): commit, create-pr, fix-ci, fix-pr-comments, quality-fix,
-  review-changes, jira-ticket, compress, tests-create, tests-execute, bug-investigate,
+  review-changes, jira-ticket, condense, tests-create, tests-execute, bug-investigate,
   bug-fix, module-explore, module-create, context-create, roadmap-create, roadmap-execute,
   feature-plan, feature-explore
 - All guidelines (`.augment/guidelines/`)
@@ -156,7 +156,7 @@ like Laravel/Symfony: developed together, distributed separately.
 - Lifecycle reports, health scoring → `observability`
 - Feedback collection and governance proposals → `observability`
 - Audit logging → `observability`
-- Heavy packaging/compression logic → stays in dev scripts at root
+- Heavy packaging/condensation logic → stays in dev scripts at root
 
 `core` must be **light, fast, clear**.
 
@@ -545,12 +545,12 @@ agent-config/                          ← Monorepo root (current repo)
 │           ├── balanced.profile.json
 │           └── full.profile.json
 │
-├── .agent-src.uncompressed/             ← Source of truth (stays at root)
-├── .augment/                          ← Compressed output (stays at root for dev)
+├── .agent-src.uncondensed/             ← Source of truth (stays at root)
+├── .augment/                          ← Condensed output (stays at root for dev)
 ├── plugin/
 │   └── agent-config/
 │       ├── plugin.json                ← Canonical plugin definition
-│       └── .augment/                  ← Symlink or copy of compressed output
+│       └── .augment/                  ← Symlink or copy of condensed output
 ├── templates/
 │   ├── consumer-settings/             ← .agent-settings templates per profile
 │   └── project-bridge/                ← Tool-specific bridge file templates
@@ -563,7 +563,7 @@ agent-config/                          ← Monorepo root (current repo)
 │   └── copilot/
 ├── docs/                              ← Package documentation
 ├── agents/                            ← Dev documentation
-├── scripts/                           ← Shared dev scripts (compress, lint, CI)
+├── scripts/                           ← Shared dev scripts (condense, lint, CI)
 ├── tests/                             ← All tests
 ├── Taskfile.yml                       ← Dev task runner
 └── README.md
@@ -571,8 +571,8 @@ agent-config/                          ← Monorepo root (current repo)
 
 ### Key decisions in this structure
 
-1. **Source of truth stays at root** — `.agent-src.uncompressed/` is NOT split.
-   Compression produces per-package outputs into `packages/*/`.
+1. **Source of truth stays at root** — `.agent-src.uncondensed/` is NOT split.
+   Condensation produces per-package outputs into `packages/*/`.
 2. **Rules are NOT split** — all rules go into `core`. Rules are the foundation.
 3. **Skills are split by package** — each package owns its domain-specific skills.
 4. **Guidelines, templates, contexts go into core** — they are reference material.
@@ -664,18 +664,18 @@ Rules:
 **Output:** Backwards-compatible full package.
 **Risk:** Low — just aggregation.
 
-### Phase 5: Adapt compression pipeline (medium risk)
+### Phase 5: Adapt condensation pipeline (medium risk)
 
-**Goal:** Compression produces per-package outputs from single source of truth.
+**Goal:** Condensation produces per-package outputs from single source of truth.
 
-- [ ] Extend compress.sh to output into `packages/*/` instead of single `.augment/`
-- [ ] Each package gets only its own compressed content
+- [ ] Extend condense.sh to output into `packages/*/` instead of single `.augment/`
+- [ ] Each package gets only its own condensed content
 - [ ] Skill linter validates per-package completeness
 - [ ] CI checks per-package integrity
-- [ ] Source of truth (`.agent-src.uncompressed/`) stays at root — never split
+- [ ] Source of truth (`.agent-src.uncondensed/`) stays at root — never split
 
-**Output:** Compression pipeline that feeds per-package distributions.
-**Risk:** Medium — compression scripts need significant changes.
+**Output:** Condensation pipeline that feeds per-package distributions.
+**Risk:** Medium — condensation scripts need significant changes.
 
 ### Phase 6: Adapt install.sh for multi-package (medium risk)
 
@@ -761,7 +761,7 @@ composer require --dev event4u/agent-config
 - **Don't create too many packages** — 4 + aggregator is enough. Resist the urge to go finer.
 - **Don't move to multi-repo** — monorepo is the right model for our team size and workflow.
 - **Don't break existing installs** — `event4u/agent-config` stays, becomes full aggregator.
-- **Don't duplicate content** — each file exists once in `.agent-src.uncompressed/`, compression distributes.
+- **Don't duplicate content** — each file exists once in `.agent-src.uncondensed/`, condensation distributes.
 - **Don't split lifecycle separately** — keep it in observability (not enough content for own package).
 
 ---
@@ -772,7 +772,7 @@ composer require --dev event4u/agent-config
 - [ ] Existing `agent-config` users have zero breaking changes
 - [ ] Each package has its own composer.json, package.json, and works standalone
 - [ ] install.sh handles any combination of packages correctly
-- [ ] Compression pipeline produces per-package outputs from single source
+- [ ] Condensation pipeline produces per-package outputs from single source
 - [ ] All tests pass for every package combination
 - [ ] README shows clear upgrade path: core → runtime → tools → full
 

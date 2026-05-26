@@ -1,7 +1,7 @@
 ---
 type: "auto"
 tier: "1"
-description: "Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncompressed/; never edit generated dirs directly"
+description: "Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly"
 source: package
 load_context:
   - ../contexts/communication/rules-auto/augment-source-of-truth-mechanics.md
@@ -12,7 +12,7 @@ triggers:
   - path_prefix: ".cursor/"
 validator_ignore:
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
+    pattern: ".agent-src.uncondensed/"
     reason: "Rule documents the source-of-truth boundary; mentioning the path is its purpose."
 workspaces:
   - agent-config-maintainer
@@ -30,14 +30,14 @@ install:
 
 # Source of Truth
 
-`.agent-src.uncompressed/` is the **single source of truth**. The compressed
+`.agent-src.uncondensed/` is the **single source of truth**. The condensed
 output ships as `.agent-src/`. In the package repo, `.augment/` is a local
 projection of `.agent-src/` for Augment Code (rules copied, rest symlinked).
 Consumer projects still see `.augment/` as the installed runtime tree.
 
 Never edit any of these generated layers directly:
 
-- `.agent-src/` — compressed output shipped in the package
+- `.agent-src/` — condensed output shipped in the package
 - `.augment/` — local projection (gitignored in the package repo; installer
   output in consumer projects)
 - `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` — tool projections
@@ -46,36 +46,36 @@ Never edit any of these generated layers directly:
 
 ```
 NEVER CREATE OR EDIT FILES IN .agent-src/ OR .augment/ DIRECTLY — NOT EVEN "JUST A SMALL FIX".
-ALWAYS WORK IN .agent-src.uncompressed/ — THEN COMPRESS VIA THE /compress COMMAND.
+ALWAYS WORK IN .agent-src.uncondensed/ — THEN CONDENSE VIA THE /condense COMMAND.
 ```
 
 **There are ZERO exceptions to this rule.** Even if:
 
-- You "know" the compressed content is correct
+- You "know" the condensed content is correct
 - It's "just adding a missing section"
-- It's "faster to edit the compressed file directly"
+- It's "faster to edit the condensed file directly"
 - The fix is "trivially obvious"
 
-**STOP. Edit `.agent-src.uncompressed/` first. Always.**
+**STOP. Edit `.agent-src.uncondensed/` first. Always.**
 
-Direct edits to `.agent-src/` break compression hashes, cause CI failures
-("Verify compression hashes" step), and create drift between source and output.
+Direct edits to `.agent-src/` break condensation hashes, cause CI failures
+("Verify condensation hashes" step), and create drift between source and output.
 
-**Compression is ONLY done via the `/compress` command.** The command handles
+**Condensation is ONLY done via the `/condense` command.** The command handles
 hashing, sync verification, and quality checks automatically.
 
 ## Pre-review consistency checkpoints
 
 Before asking for review or creating a PR, verify derived outputs are not stale:
 
-1. Run `bash scripts/compress.sh --changed` — check if `.agent-src.uncompressed/` has changes not yet compressed
-2. If stale files exist: run `/compress` before pushing
+1. Run `bash scripts/condense.sh --changed` — check if `.agent-src.uncondensed/` has changes not yet condensed
+2. If stale files exist: run `/condense` before pushing
 3. Before merge: verify derived outputs (`.agent-src/`, `.augment/`, `.claude/skills/`) are regenerated
 4. Do NOT leave `.agent-src/` stale across review cycles
 
-## Mechanics — workflow, compression rules, commands, symlinks, quick reference
+## Mechanics — workflow, condensation rules, commands, symlinks, quick reference
 
-The authoring workflow, what compression does (and never touches), the
+The authoring workflow, what condensation does (and never touches), the
 commands workflow with required frontmatter, the multi-agent symlink
 mapping, and the per-task quick-reference table live in
 [`contexts/communication/rules-auto/augment-source-of-truth-mechanics.md`](../contexts/communication/rules-auto/augment-source-of-truth-mechanics.md).

@@ -143,8 +143,8 @@ from _lib.agent_src import artefact_roots  # noqa: E402
 
 
 @pytest.mark.parametrize("subdir", ["rules", "commands", "skills"])
-def test_agent_src_uncompressed_clean(subdir: str):
-    """The shipped uncompressed sources must never reintroduce the legacy tag."""
+def test_agent_src_uncondensed_clean(subdir: str):
+    """The shipped uncondensed sources must never reintroduce the legacy tag."""
     scanned = 0
     for pack_root in artefact_roots():
         target = pack_root / subdir

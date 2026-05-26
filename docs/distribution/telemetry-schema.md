@@ -10,7 +10,7 @@
 This is **install-funnel** telemetry. It is distinct from
 `telemetry.artifact_engagement` (agent-runtime skill/rule/command usage,
 stored locally per consumer project — see
-[`artifact-engagement-flow`](../../packages/core/.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md)).
+[`artifact-engagement-flow`](../../packages/core/.agent-src.uncondensed/contexts/contracts/artifact-engagement-flow.md)).
 The two systems do not share storage, transport, or opt-in state.
 
 ## Goals

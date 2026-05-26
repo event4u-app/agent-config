@@ -60,7 +60,7 @@ May read external state, propose actions, and execute after user approval.
 
 **If ANY criterion fails → classify as `assisted`, not `automated`.**
 
-**Examples:** `compress`, `quality-fix` (ECS/Rector only), `package-test`
+**Examples:** `condense`, `quality-fix` (ECS/Rector only), `package-test`
 
 **Handler:** `shell` (CLI commands) or `internal` (file transforms)
 

@@ -25,9 +25,9 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - ".agent-src.uncompressed/templates/scripts/work_engine/**"
+      - ".agent-src.uncondensed/templates/scripts/work_engine/**"
       - ".agent-src/templates/scripts/work_engine/**"
-      - ".agent-src.uncompressed/templates/scripts/implement_ticket/**"
+      - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
       - ".agent-src/templates/scripts/implement_ticket/**"
       - "scripts/agent-config"
       - "tests/golden/**"
@@ -35,9 +35,9 @@ on:
   push:
     branches: [main, master]
     paths:
-      - ".agent-src.uncompressed/templates/scripts/work_engine/**"
+      - ".agent-src.uncondensed/templates/scripts/work_engine/**"
       - ".agent-src/templates/scripts/work_engine/**"
-      - ".agent-src.uncompressed/templates/scripts/implement_ticket/**"
+      - ".agent-src.uncondensed/templates/scripts/implement_ticket/**"
       - ".agent-src/templates/scripts/implement_ticket/**"
       - "scripts/agent-config"
       - "tests/golden/**"

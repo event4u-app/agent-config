@@ -9,12 +9,12 @@ everything else lives in a typed subdirectory (`runtime/`, `settings/`,
 
 Two layout tiers:
 
-  MAINTAINER (this source repo, identified by ``.agent-src.uncompressed/``)
+  MAINTAINER (this source repo, identified by ``.agent-src.uncondensed/``)
       Full `agents/` tree allowed — only the flat-file whitelist is
       enforced. Phase 4 of road-to-global-only-install keeps the
       maintainer surface unchanged.
 
-  CONSUMER (any repo without ``.agent-src.uncompressed/``)
+  CONSUMER (any repo without ``.agent-src.uncondensed/``)
       Global-only target shape: `agents/overrides/` + the bridge
       marker `agents/.event4u-bridge.yml` are the **only** expected
       artefacts. Anything else surfaces as a WARNING with a pointer
@@ -83,21 +83,21 @@ def is_source_repo(project_root: Path) -> bool:
     """True when running inside the agent-config source repo.
 
     The maintainer surface is identified by **any** of:
-      - ``.agent-src.uncompressed/`` at the workspace root (legacy / single-pack layout),
-      - ``packages/<pack>/.agent-src.uncompressed/`` (current monorepo layout — see ``AGENTS.md``),
-      - ``.agent-src/`` at the workspace root (compressed authoring tree).
+      - ``.agent-src.uncondensed/`` at the workspace root (legacy / single-pack layout),
+      - ``packages/<pack>/.agent-src.uncondensed/`` (current monorepo layout — see ``AGENTS.md``),
+      - ``.agent-src/`` at the workspace root (condensed authoring tree).
 
     Consumer repos ship none of these — they only carry the deployed
     `.augment/`, `.claude/`, etc. plus `agents/overrides/`.
     """
-    if (project_root / ".agent-src.uncompressed").is_dir():
+    if (project_root / ".agent-src.uncondensed").is_dir():
         return True
     if (project_root / ".agent-src").is_dir():
         return True
     packages = project_root / "packages"
     if packages.is_dir():
         for sub in packages.iterdir():
-            if (sub / ".agent-src.uncompressed").is_dir():
+            if (sub / ".agent-src.uncondensed").is_dir():
                 return True
     return False
 

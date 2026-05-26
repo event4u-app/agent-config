@@ -15,7 +15,7 @@ Customize → Skills). One ZIP per skill, sandbox-friendly.
 - Optional siblings: `references/`, `assets/`, `scripts/`, `evals/`
   (only the first three are bundled; `evals/` is local-tooling-only)
 - Tier classification from `audit_cloud_compatibility.py` (matched by
-  skill basename — uncompressed and compressed share names)
+  skill basename — uncondensed and condensed share names)
 
 ## Outputs
 
@@ -58,7 +58,7 @@ ships only the cloud-side instructions, not the full local rule.
 ## Sandbox path-swap
 
 Body text is preprocessed:
-- Literal `.agent-src.uncompressed/` and `.agent-src/` → `source/` note
+- Literal `.agent-src.uncondensed/` and `.agent-src/` → `source/` note
 - Literal `agents/` (path prefix only, not prose) → `(local-only)` note
 - Cloud header prepended explaining the constraint
 
@@ -114,13 +114,13 @@ MARKER_LINE_RE = re.compile(
 # Body preprocessing — sandbox path-swap.
 #
 # Scope: only package-internal prefixes that are unreachable from a cloud
-# sandbox (`.agent-src.uncompressed/`, `.agent-src/`). `agents/` is left
+# sandbox (`.agent-src.uncondensed/`, `.agent-src/`). `agents/` is left
 # unchanged — it lives in the user's repo, the SANDBOX_NOTE header
 # already tells the agent the host has no access.
 PATH_SWAP_PATTERNS = [
-    (re.compile(r"`\.agent-src\.uncompressed/"), "`<package-source>/"),
+    (re.compile(r"`\.agent-src\.uncondensed/"), "`<package-source>/"),
     (re.compile(r"`\.agent-src/"), "`<package-source>/"),
-    (re.compile(r"\(\.agent-src\.uncompressed/"), "(<package-source>/"),
+    (re.compile(r"\(\.agent-src\.uncondensed/"), "(<package-source>/"),
     (re.compile(r"\(\.agent-src/"), "(<package-source>/"),
 ]
 
@@ -158,7 +158,7 @@ def load_tier_map() -> dict[str, dict]:
     for row in audit.scan():
         if row["kind"] != "skills":
             continue
-        # row["path"] = .agent-src.uncompressed/skills/<name>/SKILL.md
+        # row["path"] = .agent-src.uncondensed/skills/<name>/SKILL.md
         parts = Path(row["path"]).parts
         if len(parts) >= 3:
             tier_map[parts[2]] = {

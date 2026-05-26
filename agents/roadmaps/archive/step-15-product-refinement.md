@@ -21,7 +21,7 @@ complexity: structural
 
 This roadmap is **closed via partial-completion + sunset of the remaining P1 / P2 cuts**:
 
-- **Phase 0 + P0 shipped.** Visibility/discovery wins landed (MCP Registry submission package at [`docs/setup/mcp-cloud-registry-listing.md`](../../../docs/setup/mcp-cloud-registry-listing.md), cross-audience README with 6 profile entry-points); profile system (`profile.id` in `.agent-settings.yml`, 6 profiles), `/onboard` wizard flow, and `cost_profile` presets (`minimal` / `balanced` / `research` / `custom`) are live in the consumer install path. Correction (2026-05-16 archive-audit): the original closure prose listed `/explain` as shipped — that command does not exist in `.agent-src.uncompressed/commands/` or `.claude/skills/`; the claim was phantom and is retracted here.
+- **Phase 0 + P0 shipped.** Visibility/discovery wins landed (MCP Registry submission package at [`docs/setup/mcp-cloud-registry-listing.md`](../../../docs/setup/mcp-cloud-registry-listing.md), cross-audience README with 6 profile entry-points); profile system (`profile.id` in `.agent-settings.yml`, 6 profiles), `/onboard` wizard flow, and `cost_profile` presets (`minimal` / `balanced` / `research` / `custom`) are live in the consumer install path. Correction (2026-05-16 archive-audit): the original closure prose listed `/explain` as shipped — that command does not exist in `.agent-src.uncondensed/commands/` or `.claude/skills/`; the claim was phantom and is retracted here.
 - **P1 + P2 sunset.** Taxonomy / packs / safety / cost governance (P1) and the strategic cuts (P2 domain packs, eval suites, control plane, marketplace, memory CLI) represent multi-month structural work against a measurement baseline that doesn't exist (step-4 sunset). Shipping more spine before measurement justifies the spine is mechanism without a consumer.
 - The shipped surface (profile/wizard/README/MCP-Registry) is the actual `2.19.0 → product` jump. Strategic cuts revive when measured friction surfaces from real installs.
 
@@ -225,7 +225,7 @@ Everything in this phase is user-facing surface area; no internal
 plumbing-only work belongs here.
 
 - [x] **1. Profile System** — landed 2026-05-16. Six seed YAMLs under
-  [`.agent-src.uncompressed/profiles/`](../../.agent-src.uncompressed/profiles/)
+  [`.agent-src.uncondensed/profiles/`](../../.agent-src.uncondensed/profiles/)
   (`founder`, `developer`, `content_creator`, `agency`, `finance`,
   `ops`). Loader at
   [`scripts/config/profiles.py`](../../scripts/config/profiles.py)
@@ -239,7 +239,7 @@ plumbing-only work belongs here.
     Consulting / Marketing / Finance / Handwerk / Self-configure)
     captures `personal.user_type` (stable audit label) and writes
     `profile.id` via the closest-audience mapping (six shipped profiles
-    at [`.agent-src.uncompressed/profiles/`](../../.agent-src.uncompressed/profiles/);
+    at [`.agent-src.uncondensed/profiles/`](../../.agent-src.uncondensed/profiles/);
     Marketing collapses into `content_creator`; Self-configure leaves
     `profile.id` unset for loader fallback).
   - **7b — stack**: offline file-existence probe (`composer.json` ·
@@ -251,7 +251,7 @@ plumbing-only work belongs here.
     loader. Balanced is the cloud / no-answer default.
   Wizard then verifies the resolution chain (`./agent-config explain
   config --json`) and only flips `onboarded: true` on zero exit. Spec
-  + flow at [`.agent-src.uncompressed/commands/onboard.md`](../../.agent-src.uncompressed/commands/onboard.md)
+  + flow at [`.agent-src.uncondensed/commands/onboard.md`](../../.agent-src.uncondensed/commands/onboard.md)
   §§ 7a · 7b · 7c · 8; baseline doc cited for the contract delta.
 - [x] **2a. Current autonomy model baseline** — landed 2026-05-16 as
   [`docs/architecture/current-safety-behavior.md`](../../docs/architecture/current-safety-behavior.md).
@@ -272,7 +272,7 @@ plumbing-only work belongs here.
   match · 2 invocation error. Skills / confidence-band tracing deferred
   until those surfaces exist in router metadata.
 - [x] **4. Config Presets** — landed 2026-05-16. Three seed YAMLs under
-  [`.agent-src.uncompressed/presets/`](../../.agent-src.uncompressed/presets/)
+  [`.agent-src.uncondensed/presets/`](../../.agent-src.uncondensed/presets/)
   (`fast`, `balanced`, `strict`). Loader at
   [`scripts/config/presets.py`](../../scripts/config/presets.py)
   with the resolution chain from
@@ -325,7 +325,7 @@ governance prevents bill-shock.
 - [x] **7. Workflow Packs** — landed 2026-05-16. Schema:
   `docs/contracts/workflow-packs.md` (composition contract; ≤ 12
   commands, ≤ 15 skills, ≤ 4 personas; cannot widen safety floors).
-  Three seed packs shipped under `.agent-src.uncompressed/packs/`:
+  Three seed packs shipped under `.agent-src.uncondensed/packs/`:
   `founder-mvp` (founder + fast), `content-engine` (content_creator
   + balanced), `agency-delivery` (agency + strict). Each carries a
   `rationale.*` block justifying profile / preset / command choices.

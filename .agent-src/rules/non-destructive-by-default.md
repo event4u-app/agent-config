@@ -47,7 +47,7 @@ Standing "just keep going" + next step crosses the floor → STOP, surface what'
 
 ## Not in scope — deterministic regeneration
 
-Output regenerated from a tracked source (compression, code-gen, formatter passes, lock-file rebuilds) is reversible from source — **not destructive**. Lives in [`autonomous-execution § Trivial`](autonomous-execution.md#trivial--just-act-do-not-ask). Per-file diff approval is theater.
+Output regenerated from a tracked source (condensation, code-gen, formatter passes, lock-file rebuilds) is reversible from source — **not destructive**. Lives in [`autonomous-execution § Trivial`](autonomous-execution.md#trivial--just-act-do-not-ask). Per-file diff approval is theater.
 
 ## Bulk deletions during WIP — allowed if task-connected
 

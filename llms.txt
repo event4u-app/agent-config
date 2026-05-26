@@ -34,12 +34,12 @@ churn-prevention: Use when designing churn defence — health-score signals, chu
 code-refactoring: Use when the user says 'refactor this', 'rename class', or 'move method'. Safely refactors code in any language — finds all callers, updates downstream dependencies, verifies via quality tools.
 code-review: Use when the user says "review this", "check my code", or wants feedback on changes. Reviews for correctness, quality, security, and coding standards.
 command-routing: Use when the user invokes a slash command like /create-pr, /commit, /fix-ci, or pastes command file content — routes to the right command with context inference and GitHub API patterns.
-command-writing: Use when creating or editing a slash command in .agent-src.uncompressed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
+command-writing: Use when creating or editing a slash command in .agent-src.uncondensed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'.
 comp-banding: Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'.
 competitive-moat-analysis: Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'.
 competitive-positioning: Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'.
 composer-packages: Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'.
-compress-memory: Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via caveman grammar — refuses sensitive paths, round-trips via .original.md backup.
+condense-memory: Use when shrinking always-loaded memory files (AGENTS.md, CLAUDE.md, .cursorrules) via telegraph grammar — refuses sensitive paths, round-trips via .original.md backup.
 content-funnel-design: Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'.
 context-authoring: Use when filling in knowledge-layer context files — auth-model, tenant-boundaries, data-sensitivity, deployment-order, observability — interactive walkthrough that turns templates into reviewer fuel.
 context-document: Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation.
@@ -124,7 +124,8 @@ merge-conflicts: Use when the user has merge conflicts or says "resolve conflict
 messaging-architecture: Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'.
 migration-architect: Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked.
 mobile-e2e-strategy: Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps.
-module-management: Use when the user says "create module", "explore module", or works within app/Modules/. Understands module structure, auto-loading, route registration, and namespace conventions.
+module-detect-on-the-fly: Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config.
+module-management: Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path.
 motion-choreographer: Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
 multi-tenancy: Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations.
 nextjs-patterns: Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture.
@@ -138,7 +139,7 @@ override-management: Creates and manages project-level overrides for shared skil
 perf-feedback-craft: Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'.
 performance: Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design.
 performance-analysis: ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work.
-persona-writing: Use when creating or editing a persona in .agent-src.uncompressed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
+persona-writing: Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'.
 pest-testing: Use when writing, generating, or improving Pest tests for Laravel — clear intent, good coverage, maintainable structure, and alignment with project testing conventions.
 php-coder: Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts.
 php-debugging: Use when debugging PHP with Xdebug — breakpoints, step-through, dual-container setup, IDE configuration, header-based routing — even when the user just says 'why does this blow up on request X'.
@@ -182,7 +183,7 @@ roadmap-management: Use when the user says "create roadmap", "show roadmap", or 
 roadmap-writing: Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
 rtk-output-filtering: Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
 rule-refactor: Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
-rule-writing: Use when creating or editing a rule in .agent-src.uncompressed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
+rule-writing: Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 runway-cognition: Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'.
 scenario-modeling: Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'.
 scene-expander: Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'.
@@ -193,7 +194,7 @@ security-audit: ONLY when user explicitly requests: security audit, vulnerabilit
 sentry-integration: Use when the user shares a Sentry URL, says "check Sentry", or wants to investigate production errors. Uses Sentry MCP tools for deep analysis.
 sequential-thinking: ONLY when user explicitly requests: step-by-step reasoning, structured problem decomposition, or iterative analysis. NOT for regular coding tasks.
 skill-improvement-pipeline: ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply.
-skill-management: Use when compressing, decompressing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
+skill-management: Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained.
 skill-reviewer: Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations.
 skill-writing: Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'.
 sql-writing: Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL.

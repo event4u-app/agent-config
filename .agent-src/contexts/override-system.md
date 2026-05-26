@@ -132,8 +132,8 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 2. **Create PR against upstream** — submit the improvement to the shared `agent-config` package repository.
    The PR must contain:
-   - **Uncompressed version** in `.agent-src.uncompressed/{type}/{name}`
-   - **Compressed version** in `.augment/{type}/{name}`
+   - **Uncondensed version** in `.agent-src.uncondensed/{type}/{name}`
+   - **Condensed version** in `.augment/{type}/{name}`
    - Both files must be the complete, updated file (not a diff or partial)
 
 3. **After PR is merged upstream** — remove the local override from `agents/overrides/`.
@@ -147,8 +147,8 @@ When a project using this package wants to **optimize** a shared rule or skill:
 
 ### Rules for upstream PRs
 
-- The PR must contain **both** uncompressed and compressed versions (complete files)
-- The compressed version must be derived from the uncompressed version
+- The PR must contain **both** uncondensed and condensed versions (complete files)
+- The condensed version must be derived from the uncondensed version
 - Changes must pass the skill linter (`python3 scripts/skill_linter.py --all`)
 - Changes must not be project-specific (no domain assumptions)
 - Changes must pass the promotion gate (see `controlled-self-optimization.md`)
@@ -156,7 +156,7 @@ When a project using this package wants to **optimize** a shared rule or skill:
 ### Anti-patterns
 
 - Keeping the override after upstream merge → → drift
-- Submitting only the compressed version → breaks source-of-truth workflow
+- Submitting only the condensed version → breaks source-of-truth workflow
 - Submitting project-specific behavior as universal improvement
 - Forgetting to create the PR → improvement stays siloed
 

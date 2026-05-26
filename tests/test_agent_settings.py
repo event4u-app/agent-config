@@ -210,7 +210,7 @@ def test_mergeable_keys_are_documented_exact_paths() -> None:
         "cost_profile",
         "personal.bot_icon",
         "personal.autonomy",
-        "caveman.speak_scope",
+        "telegraph.speak_scope",
     )
 
 

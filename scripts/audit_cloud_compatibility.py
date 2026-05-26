@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """audit_cloud_compatibility.py — tier each artefact for cloud distribution.
 
-Classifies every .md under .agent-src.uncompressed/{skills,rules,commands,
+Classifies every .md under .agent-src.uncondensed/{skills,rules,commands,
 guidelines} into a tier:
 
   T1  Universal       no script / no FS / pure guidance
@@ -30,7 +30,7 @@ from collections import Counter
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SOURCE = ROOT / ".agent-src.uncompressed"
+SOURCE = ROOT / ".agent-src.uncondensed"
 SCAN_DIRS = ["skills", "rules", "commands", "guidelines"]
 
 # patterns
@@ -47,7 +47,7 @@ HARD_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 FS_RE = re.compile(
-    r"(?:\.agent-src(?:\.uncompressed)?/|"
+    r"(?:\.agent-src(?:\.uncondensed)?/|"
     r"\.augment/|\.claude/|\.cursor/|\.clinerules/|"
     r"agents/|\.agent-settings\.yml|\.agent-chat-history)"
 )

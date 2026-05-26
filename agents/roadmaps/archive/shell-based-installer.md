@@ -6,7 +6,7 @@
 
 - [x] Read `src/AgentConfigPlugin.php` — current PHP implementation
 - [x] Read `agents/roadmaps/plugin-symlink-strategy.md` — hybrid sync logic
-- [x] Read existing `scripts/compress.py` — understand the generation pipeline
+- [x] Read existing `scripts/condense.py` — understand the generation pipeline
 
 ## Context
 
@@ -228,14 +228,14 @@ Port `ensureGitignoreEntries()`.
 - [x] `.gitignore` management works (marker block, idempotent)
 - [x] Migration from old PHP plugin is seamless (no manual steps)
 - [x] All 32 bash integration tests pass
-- [x] All 49 Python tests pass (compress.py unchanged)
+- [x] All 49 Python tests pass (condense.py unchanged)
 - [x] `--dry-run` shows actions without executing (no files created)
 - [x] Only bash + python3/realpath/perl for relative paths (available on all CI/dev machines)
 
 ## Notes
 
-- The `scripts/compress.py` pipeline stays as-is — it's a development tool for managing
-  the `.agent-src.uncompressed/` → `.augment/` compression. Only runs in this repo, not in target projects.
+- The `scripts/condense.py` pipeline stays as-is — it's a development tool for managing
+  the `.agent-src.uncondensed/` → `.augment/` condensation. Only runs in this repo, not in target projects.
 - `install.sh` is what runs in **target projects** — it syncs from the package to the project.
 - Composer `scripts` hooks run from project root with `vendor/` accessible — the script
   auto-detects its own location via `dirname "$0"` to find the package source.

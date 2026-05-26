@@ -19,7 +19,7 @@ This contract defines the **schema** of the file-ownership matrix: the
 machine-readable JSON at `docs/contracts/file-ownership-matrix.json` and
 the human-readable mirror at
 `agents/settings/contexts/structural/file-ownership-matrix.md`. Both are
-regenerated from `.agent-src.uncompressed/` by the generator and locked
+regenerated from `.agent-src.uncondensed/` by the generator and locked
 by CI.
 
 **Status:** internal-locked (`stability: beta`). Schema bumps require a
@@ -49,7 +49,7 @@ The JSON document is a single object:
 {
   "version": 1,
   "generated_by": "scripts/generate_ownership_matrix.py",
-  "source_of_truth": ".agent-src.uncompressed/",
+  "source_of_truth": ".agent-src.uncondensed/",
   "files": {
     "<repo-root-relative path>": {
       "kind": "rule | skill | command | context | persona",
@@ -111,7 +111,7 @@ backstop; the consistency gate fails if regeneration drifts.
 ## Scope notes (v1)
 
 - **Greppable surface:** `rules/`, `skills/`, `commands/`, `contexts/`,
-  `personas/` under `.agent-src.uncompressed/`. Generated tool
+  `personas/` under `.agent-src.uncondensed/`. Generated tool
   projections (`.augment/`, `.claude/`, `.cursor/`, …) are intentionally
   ignored — they are downstream of the source of truth.
 - **`skill:` frontmatter in rules** (named in roadmap 0.1.2) is reserved.

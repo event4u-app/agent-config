@@ -24,8 +24,8 @@ complexity: lightweight
   D3 (c) — author a tracking stub instead of burying L72 in an annotation
   (Reviewer-A precedent argument; pattern-consistency with step-9 / step-13).
 - **Parent roadmap:** [`archive/step-12-universal-os-reframe.md`](archive/step-12-universal-os-reframe.md) L72 *(archived on closure run #2)*.
-- **MCP context:** `.agent-src.uncompressed/skills/mcp/SKILL.md`,
-  `.agent-src.uncompressed/skills/mcp-builder/SKILL.md`.
+- **MCP context:** `.agent-src.uncondensed/skills/mcp/SKILL.md`,
+  `.agent-src.uncondensed/skills/mcp-builder/SKILL.md`.
 
 ## Prerequisites
 

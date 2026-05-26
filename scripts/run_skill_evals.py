@@ -11,7 +11,7 @@ writes JSON files in `runs/`.
 
 Layout per skill:
 
-    .agent-src.uncompressed/skills/{name}/evals/
+    .agent-src.uncondensed/skills/{name}/evals/
         evals.json
         runs/                              # gitignored
             {timestamp}-baseline/{scenario_id}/output.txt
@@ -31,7 +31,7 @@ from pathlib import Path
 from typing import Any
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SKILLS_ROOT = REPO_ROOT / ".agent-src.uncompressed" / "skills"
+SKILLS_ROOT = REPO_ROOT / ".agent-src.uncondensed" / "skills"
 
 
 def _skill_dir(skill: str) -> Path:

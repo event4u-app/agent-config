@@ -3,7 +3,7 @@
 
 Phase 4.5 of the monorepo migration (ADR-017). Asks for pack, type,
 name, workspaces, and description, then drops a templated artefact
-into ``packages/<pack-dir>/.agent-src.uncompressed/<type>s/<name>/SKILL.md``.
+into ``packages/<pack-dir>/.agent-src.uncondensed/<type>s/<name>/SKILL.md``.
 
 Type → directory mapping:
   - skill    → skills/<name>/SKILL.md
@@ -130,7 +130,7 @@ def main() -> int:
     workspaces = args.workspace or vocab.get(pack, {}).get("workspaces") or ["engineering"]
 
     rel = TEMPLATES[kind].format(name=name)
-    out = _pack_dir(pack) / ".agent-src.uncompressed" / rel
+    out = _pack_dir(pack) / ".agent-src.uncondensed" / rel
     if out.exists() and not args.force:
         print(f"error: {out.relative_to(ROOT)} exists (use --force)", file=sys.stderr)
         return 1

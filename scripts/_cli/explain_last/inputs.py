@@ -85,7 +85,7 @@ def build(project_root: Path) -> dict[str, Any] | None:
 def _pack_marker(project_root: Path) -> Path | None:
     for candidate in (
         project_root / ".agent-pack.yml",
-        project_root / ".agent-src.uncompressed" / ".agent-pack.yml",
+        project_root / ".agent-src.uncondensed" / ".agent-pack.yml",
     ):
         if candidate.exists():
             return candidate

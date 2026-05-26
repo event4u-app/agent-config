@@ -22,7 +22,7 @@ Baseline counts at audit time:
 | D1 | Skill set is too large to learn | 208 SKILL.md files; many overlapping (triad `project-analysis-*` / `universal-project-analysis` / `analysis-skill-router`; council session orchestrators; persona writers); no map of "which 30 are essential" | A senior on day-1 cannot tell which skills the agent will actually pick. Onboarding mode = read everything. We're a library, not a curated kit. |
 | D2 | Frontmatter contract not enforced semantically | `lint-skills` checks fields exist, not whether description triggers fire; trigger overlap exists (`auto-rules-overlap.json` produces 30+ collision pairs we don't act on) | Adding a new skill = guessing about trigger neighborhood. No `distinguishes_from` to encode the disambiguation. |
 | D3 | `.agent-src/` / `.augment/` / `.claude/` / `.cursor/` / `.clinerules/` regeneration is opaque | `task sync` + `task generate-tools` work, but the diff is huge and unreviewable when something goes wrong | A bisect across 4 generated trees is hostile. We need per-tool diff fixtures. |
-| D4 | Iron Law surface is large for kernel | 9 always-loaded rules + tier-1 + tier-2 routing; agent-portability test passes but token cost of "always loaded" is not measured anywhere | We assume the kernel is small enough. Caveman measured. Harmonist split with `## Deep Reference`. We do neither. |
+| D4 | Iron Law surface is large for kernel | 9 always-loaded rules + tier-1 + tier-2 routing; agent-portability test passes but token cost of "always loaded" is not measured anywhere | We assume the kernel is small enough. Telegraph measured. Harmonist split with `## Deep Reference`. We do neither. |
 | D5 | No `CONTRIBUTING.md` flow for outside PR | Council F1: single-author; D3: CONTRIBUTING references a council pattern not yet codified | An external contributor cannot land a skill without a private chat. Bus factor 1 is structural. |
 | D6 | 217 Python scripts | Many one-off; no `scripts/_lib` discipline that would survive author rotation | `script-writing` skill exists but enforcement is by review, not test. |
 
@@ -67,10 +67,10 @@ improved month-over-month."
 
 | # | Pain | Evidence | Brutal verdict |
 |---|---|---|---|
-| S1 | One-liner missing | `event4u/agent-config — shared skill / rule / command suite for AI coding tools` is accurate, not differentiating | Caveman: "why use many token when few do trick". Harmonist: "186 specialist agents, schema-routed". Ruflo: "30+ plugins, swarm + cost". Ours: feature list. |
+| S1 | One-liner missing | `event4u/agent-config — shared skill / rule / command suite for AI coding tools` is accurate, not differentiating | Telegraph: "why use many token when few do trick". Harmonist: "186 specialist agents, schema-routed". Ruflo: "30+ plugins, swarm + cost". Ours: feature list. |
 | S2 | TAM ambiguous | We project to 4 tools (Augment / Claude / Cursor / Windsurf+Cline). README does not state which is the primary support tier. | A new user on Cursor cannot tell if they are first-class or fallback. |
 | S3 | Moat = Iron Law + persona depth, undermarketed | Strongest differentiators are buried in `.augment/rules/` and `docs/personas.md` | Public README leads with install, not with "this is the rule-discipline framework". |
-| S4 | No competitive table | We've never written "ours vs caveman vs ruflo vs harmonist". Internal `competitive-positioning` skill exists; no produced output | We compete on multi-tool reach, mechanical Iron Law, and persona depth. None of that is on the README. |
+| S4 | No competitive table | We've never written "ours vs telegraph vs ruflo vs harmonist". Internal `competitive-positioning` skill exists; no produced output | We compete on multi-tool reach, mechanical Iron Law, and persona depth. None of that is on the README. |
 | S5 | Adoption story trails KW-plugins | One-install + role bundle (engineering / PM / design) is a 30-second on-ramp. We require onboarding wizard + `.agent-settings.yml`. | Defensible for sophisticated users; loses to KW-plugins for the first 10 minutes. |
 | S6 | Marketing surface = README + repo | No release note format, no changelog post template, no "what shipped this month" | `release-comms` skill exists; never invoked. Tooling without the practice. |
 
@@ -83,17 +83,17 @@ and famous for none of them."
 
 | # | Pain | Evidence | Brutal verdict |
 |---|---|---|---|
-| A1 | Skills loaded whole | Even with `## Deep Reference` available as a discipline (we cite harmonist), no skill uses it. The 25 largest skills are 300–500 lines, loaded fully when matched. | Caveman compresses output. Harmonist compresses essentials-vs-deep. We compress neither at the skill body level. |
+| A1 | Skills loaded whole | Even with `## Deep Reference` available as a discipline (we cite harmonist), no skill uses it. The 25 largest skills are 300–500 lines, loaded fully when matched. | Telegraph condenses output. Harmonist condenses essentials-vs-deep. We condense neither at the skill body level. |
 | A2 | No model-tier hint per skill | `subagent-orchestration` reads `.agent-settings.yml.subagent_models`; the skill itself does not declare its cost class | Routing decisions are global, not per-skill. A `quality-tools` lint check and a `risk-officer` cross-cut analysis pick the same model class. |
 | A3 | Iron Law enforcement is agent-side | Rules say "ALWAYS / NEVER"; the runtime relies on the agent reading them. No stop-hook equivalent of harmonist's `.cursor/hooks/stop.json`. | Iron Laws are as strong as the worst agent that reads them. |
 | A4 | Mechanical post-write gate missing | `verify-before-complete` rule defines the gate; `verify-completion-evidence` skill defines the procedure; no runtime hook blocks the "done" token without evidence | Compliance proven by golden outcomes (test-time), not runtime (user-time). |
-| A5 | `caveman.speak_scope` is opt-in `off` by default | The token-economy practice we cite as best-in-class is shipped behind a flag most users never flip | We have the skill (`caveman-speak` rule) and don't dogfood it. Caveman ships it default-on. |
+| A5 | `telegraph.speak_scope` is opt-in `off` by default | The token-economy practice we cite as best-in-class is shipped behind a flag most users never flip | We have the skill (`telegraph-speak` rule) and don't dogfood it. Telegraph ships it default-on. |
 | A6 | No PROJECT PRECEDENCE preamble for subagents | Skills like `subagent-orchestration` invoke subagents; no required first-line `AGENT: <slug>` marker; no injected project-rule preamble | A subagent runs on generic Augment defaults and may violate the host project's invariants without noticing. |
 | A7 | Memory system asymmetric | MCP memory has trust score / contradictions / dedup — strong; no CLI fallback (cf. harmonist `python3 memory.py append`); offline users cannot write | A subset of users (offline, pre-MCP, package-only) have no memory write path. |
 | A8 | No correlation-id mechanism | Memory entries have IDs; no session-level join key linking decision + pattern + telemetry across one task | Cross-cut analysis ("which sessions invoked persona X and finished with negative outcome") is impossible. |
 
 **Sharpest AI specialist complaint:** "Our Iron Laws are advisory, our
-compression is opt-in, our gates run at release-time not user-time."
+condensation is opt-in, our gates run at release-time not user-time."
 
 ---
 

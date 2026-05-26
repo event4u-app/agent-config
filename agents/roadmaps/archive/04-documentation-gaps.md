@@ -104,7 +104,7 @@ Die Realität ist: "Cursor bekommt Rules und einen Hinweis-Text."
 **Behauptung 3:** "No Task, no Make, no build tools required"
 
 Das stimmt für die Installation. Für die Entwicklung des Pakets ist Task zwingend
-erforderlich (`task ci`, `task sync`, `task compress`). Das sollte klarer getrennt
+erforderlich (`task ci`, `task sync`, `task condense`). Das sollte klarer getrennt
 werden: "für Consumer: kein Build-Tool nötig" vs. "für Contributors: Task erforderlich".
 
 **Behauptung 4:** Die "How it works"-Tabelle im README
@@ -170,9 +170,9 @@ External contributions are [welcome / not accepted at this time].
 
 ## Editing Skills
 
-Skills live in `.agent-src.uncompressed/skills/`. Edit there, then:
+Skills live in `.agent-src.uncondensed/skills/`. Edit there, then:
 ```bash
-task compress   # Compress to .augment/
+task condense   # Condense to .augment/
 task ci         # Verify everything passes
 ```
 

@@ -84,14 +84,14 @@ Phase-1 verification: real Anthropic round-trip on `road-to-council-modes.md` (3
 
 ### A6 — `/council` command
 
-- [x] **A6.1** `.agent-src.uncompressed/commands/council.md` with frontmatter, four input modes:
+- [x] **A6.1** `.agent-src.uncondensed/commands/council.md` with frontmatter, four input modes:
       `prompt:"…"`, `roadmap:agents/roadmaps/foo.md`, `diff:base..head`, `files:path,path`.
 - [x] **A6.2** Step list: load settings → check at least one member enabled (else exit gracefully with the install instructions) → bundle context → call orchestrator → render comparison report (per-member columns: agreements, divergences, suggested actions) → ask user how to act.
 - [x] **A6.3** Hard Floor restated in command frontmatter: command produces text only, never edits or pushes.
 
 ### A7 — Supporting skill
 
-- [x] **A7.1** `.agent-src.uncompressed/skills/ai-council/SKILL.md`: when to invoke, neutrality guidelines, anti-patterns (e.g. "do NOT paste the host agent's analysis into the system prompt"), redaction expectations, cost awareness.
+- [x] **A7.1** `.agent-src.uncondensed/skills/ai-council/SKILL.md`: when to invoke, neutrality guidelines, anti-patterns (e.g. "do NOT paste the host agent's analysis into the system prompt"), redaction expectations, cost awareness.
 - [x] **A7.2** Cross-link from `subagent-orchestration` skill ("for the external/networked variant, see `ai-council`").
 
 ### A8 — Tests + CI
@@ -111,9 +111,9 @@ Phase-1 verification: real Anthropic round-trip on `road-to-council-modes.md` (3
 
 ## Phase 3 — Specialised council modes
 
-- [x] **C1** `/council-pr <number>` — pulls PR via gh CLI, runs council with PR-specific neutrality prompt, posts a comment summary (read-only by default; user opts in to post). Shipped as `.agent-src.uncompressed/commands/council-pr.md`.
-- [x] **C2** `/council-design <doc>` — design-pattern critique with architecture-focused system prompt. Shipped as `.agent-src.uncompressed/commands/council-design.md`.
-- [x] **C3** `/council-optimize <target>` — brainstorming mode (lower temperature constraint, broader prompt). Shipped as `.agent-src.uncompressed/commands/council-optimize.md`.
+- [x] **C1** `/council-pr <number>` — pulls PR via gh CLI, runs council with PR-specific neutrality prompt, posts a comment summary (read-only by default; user opts in to post). Shipped as `.agent-src.uncondensed/commands/council-pr.md`.
+- [x] **C2** `/council-design <doc>` — design-pattern critique with architecture-focused system prompt. Shipped as `.agent-src.uncondensed/commands/council-design.md`.
+- [x] **C3** `/council-optimize <target>` — brainstorming mode (lower temperature constraint, broader prompt). Shipped as `.agent-src.uncondensed/commands/council-optimize.md`.
 - [x] **C4** Library of neutrality system prompts — flat `scripts/ai_council/prompts.py` + `_MODE_TABLE` already satisfies the versioned/testable contract. No `prompts/` package split needed; the per-mode entries are addressable, unit-tested in `tests/ai_council/test_prompts.py`, and identity-leak-guarded. Closed as design-equivalent.
 
 ## Phase 4 — Advanced

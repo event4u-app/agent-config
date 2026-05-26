@@ -14,7 +14,7 @@
 
 ## Prerequisites
 
-- [x] Phase 1 toolchain: meta-skills, learning loop, compress workflow
+- [x] Phase 1 toolchain: meta-skills, learning loop, condense workflow
 - [x] Linter MVP: script + tests + Taskfile
 - [x] Phase 1 audit complete (skills-rules-restructuring)
 - [x] Taxonomy audit complete (taxonomy-audit)
@@ -41,7 +41,7 @@ A learning may be promoted to rule/skill ONLY if it passes these criteria:
 - [x] **Step 1:** Promotion gate added to existing `capture-learnings` rule (no separate rule needed)
 - [x] **Step 2:** `learning-to-rule-or-skill` skill — Step 0 (mandatory) with gate table
 - [x] ~~Step 3: `post-task-learning-capture` — does not exist, covered by capture-learnings rule~~
-- [x] **Step 4:** Compressed all updated files
+- [x] **Step 4:** Condensed all updated files
 
 ## Phase 2.2: Skill/Rule Linter CI Integration
 
@@ -57,7 +57,7 @@ Extend the existing linter script (`scripts/skill_linter.py`) with CI enforcemen
 - [x] 5 passing tests
 
 ### Still needed — ✅ COMPLETE
-- [x] **Step 1:** `--pairs` mode: checks uncompressed/compressed pair consistency
+- [x] **Step 1:** `--pairs` mode: checks uncondensed/condensed pair consistency
 - [x] **Step 2:** `--duplicates` mode: cross-skill description similarity (>70% word overlap)
 - [x] **Step 3:** GitHub Actions workflow `.github/workflows/skill-lint.yml`
 - [x] **Step 4:** Consistency check `.github/workflows/consistency.yml`
@@ -99,14 +99,14 @@ An improvement may be submitted upstream ONLY if ALL of these pass:
 | 3 | Universality | No project-specific assumptions | Contains domain logic, local paths, or FQDN-specific behavior |
 | 4 | Local proof | Applied locally AND validated in real usage | Only theoretical, never tested |
 | 5 | Package benefit | Improves behavior for ALL consumers | Only benefits one project |
-| 6 | Completeness | Both uncompressed + compressed versions present | Missing either file |
+| 6 | Completeness | Both uncondensed + condensed versions present | Missing either file |
 | 7 | Non-regression | Does not break or weaken existing guidance | Removes constraints without replacement |
 
 **Reject immediately if:**
 - Learning occurred only once and is not clearly generalizable
 - Similar rule/skill already exists (update instead)
 - Contains project-specific conventions, domain terms, or local paths
-- Compressed version drops validation, gotchas, or trigger clarity
+- Condensed version drops validation, gotchas, or trigger clarity
 
 ### Implementation — ✅ COMPLETE
 - [x] **Step 1:** Upstream checklist documented in PR template
@@ -147,7 +147,7 @@ Controlled self-optimizing when:
 - Capturing every small learning
 - Creating new instead of updating existing
 - Skipping validation
-- Compressing away critical logic
+- Condenseing away critical logic
 - Keeping outdated or redundant skills
 - Over-automating without control gates
 

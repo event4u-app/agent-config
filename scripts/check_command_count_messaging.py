@@ -6,11 +6,11 @@ Public surfaces (README.md, AGENTS.md, docs/getting-started.md) advertise
 the size of the command catalog. PR #34 collapses atomic commands into
 clusters via deprecation shims — the externally meaningful number is the
 **active** command count (non-shim files), not the raw file count. This
-gate sources canonical counts from `.agent-src.uncompressed/commands/`
+gate sources canonical counts from `.agent-src.uncondensed/commands/`
 frontmatter and fails when any documented number drifts from those.
 
 Canonical counts:
-    total   = number of *.md files under .agent-src.uncompressed/commands/
+    total   = number of *.md files under .agent-src.uncondensed/commands/
     shims   = files whose frontmatter declares `superseded_by:`
     active  = total - shims
 
@@ -56,7 +56,7 @@ def _command_files() -> list[Path]:
     """Every command ``*.md`` file across all source roots (legacy + packages/*).
 
     Multi-root aware per ADR-017: post-move the commands live under
-    ``packages/<pack>/.agent-src.uncompressed/commands/``, and the
+    ``packages/<pack>/.agent-src.uncondensed/commands/``, and the
     canonical count is the union across packs (deduped by logical path).
     """
     seen: dict[str, Path] = {}

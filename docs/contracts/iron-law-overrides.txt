@@ -15,7 +15,7 @@
 # ADR-002 (2026-05-06) — kernel-bucket cap raise + per-rule overrides.
 # Source: docs/decisions/ADR-002-kernel-bucket-overrides.md
 # Empirical r_actual=0.795 vs r_projected=0.712. The 6 rules below carry
-# Iron-Law fences + non-externalisable enumerations; further compression
+# Iron-Law fences + non-externalisable enumerations; further condensation
 # would force semantic loss. All sit ≤ 4 000-char override ceiling.
 ask-when-uncertain
 direct-answers

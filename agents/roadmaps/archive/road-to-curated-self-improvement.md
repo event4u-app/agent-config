@@ -108,28 +108,28 @@ carrying the proposal doc as the PR body. Standard package CI
 
 ### Phase 1 — proposal template + gate
 
-- [x] New proposal template under `templates/agents/` (name: `proposal`) *(2026-04-22: [`proposal.example.md`](../../.agent-src.uncompressed/templates/agents/proposal.example.md))*
+- [x] New proposal template under `templates/agents/` (name: `proposal`) *(2026-04-22: [`proposal.example.md`](../../.agent-src.uncondensed/templates/agents/proposal.example.md))*
 - [x] `scripts/check_proposal.py` implementing the Stage 4 checks *(2026-04-22: [`scripts/check_proposal.py`](../../scripts/check_proposal.py) — frontmatter + sections + evidence-count + no-TODO markers + success-signal checks; verdict PASS/BLOCK; exit 1 on block)*
 - [x] New agent-infra guideline `self-improvement-pipeline` documenting the five stages *(2026-04-22: [`self-improvement-pipeline.md`](../../docs/guidelines/agent-infra/self-improvement-pipeline.md))*
 
 ### Phase 2 — wire existing skills into stages
 
-- [x] `capture-learnings` rule writes to `agents/learnings/` *(2026-04-22: [`capture-learnings`](../../.agent-src.uncompressed/rules/capture-learnings.md#where-learnings-are-written) gained a "Where learnings are written" section — `agents/learnings/<YYYY-MM-DD>-<kebab-slug>.md`, frontmatter schema, consumer-owned directory)*
-- [x] `learning-to-rule-or-skill` skill consumes a learning note and emits a proposal doc draft *(2026-04-22: [step 8 "Write the proposal"](../../.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md) — output is `agents/proposals/<id>.md` matching `proposal.example.md`; mandatory fields enumerated; `check_proposal.py` is the hard gate before handoff to `upstream-contribute`)*
-- [x] `upstream-contribute` skill refuses to open a PR unless the proposal doc passes `check_proposal.py` *(2026-04-22: [step 6b in `upstream-contribute`](../../.agent-src.uncompressed/skills/upstream-contribute/SKILL.md) runs `check_proposal.py` when `agents/proposals/{slug}.md` exists; non-zero exit → hard refusal, no branch/PR)*
+- [x] `capture-learnings` rule writes to `agents/learnings/` *(2026-04-22: [`capture-learnings`](../../.agent-src.uncondensed/rules/capture-learnings.md#where-learnings-are-written) gained a "Where learnings are written" section — `agents/learnings/<YYYY-MM-DD>-<kebab-slug>.md`, frontmatter schema, consumer-owned directory)*
+- [x] `learning-to-rule-or-skill` skill consumes a learning note and emits a proposal doc draft *(2026-04-22: [step 8 "Write the proposal"](../../.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md) — output is `agents/proposals/<id>.md` matching `proposal.example.md`; mandatory fields enumerated; `check_proposal.py` is the hard gate before handoff to `upstream-contribute`)*
+- [x] `upstream-contribute` skill refuses to open a PR unless the proposal doc passes `check_proposal.py` *(2026-04-22: [step 6b in `upstream-contribute`](../../.agent-src.uncondensed/skills/upstream-contribute/SKILL.md) runs `check_proposal.py` when `agents/proposals/{slug}.md` exists; non-zero exit → hard refusal, no branch/PR)*
 
 ### Phase 3 — success signal
 
 - [x] Merged upstream proposals are tagged with the originating
-  project (metadata only, no identifiers in the package) *(2026-04-22: [`check_proposal.py`](../../scripts/check_proposal.py) enforces `Originating project: <slug>` in Section 10 once `stage: upstream` — empty or `<placeholder>` slot blocks the gate; template placeholder in [`proposal.example.md`](../../.agent-src.uncompressed/templates/agents/proposal.example.md))*
+  project (metadata only, no identifiers in the package) *(2026-04-22: [`check_proposal.py`](../../scripts/check_proposal.py) enforces `Originating project: <slug>` in Section 10 once `stage: upstream` — empty or `<placeholder>` slot blocks the gate; template placeholder in [`proposal.example.md`](../../.agent-src.uncondensed/templates/agents/proposal.example.md))*
 - [x] Tag feeds Q2 outcome measurement (per master frame) *(2026-04-22: [`memory_report.py --quarterly`](../../scripts/memory_report.py) buckets entries into ISO quarters using `created`/`superseded_at`; output consumed by the weekly drift workflow)*
 - [x] Retired proposals (rule/skill removed later) are linked from
-  the original proposal for learning *(2026-04-22: Section 10 of [`proposal.example.md`](../../.agent-src.uncompressed/templates/agents/proposal.example.md) documents the `Retired:` / `Superseded-by:` link; retirement PRs update the original proposal in-place — no new file)*
+  the original proposal for learning *(2026-04-22: Section 10 of [`proposal.example.md`](../../.agent-src.uncondensed/templates/agents/proposal.example.md) documents the `Retired:` / `Superseded-by:` link; retirement PRs update the original proposal in-place — no new file)*
 
 ### Phase 4 — drift prevention
 
 - [x] Weekly CI job in the package repo: list proposals accepted in the
-  last quarter vs. rules/skills retired. Flag imbalance. *(2026-04-22: [`proposal-drift.yml`](../../.agent-src.uncompressed/templates/github-workflows/proposal-drift.yml) — Monday 07:00 UTC, quarterly counts from `memory_report.py`, open proposals by stage, opens/updates a single `proposal-drift` tracking issue; never blocks a PR)*
+  last quarter vs. rules/skills retired. Flag imbalance. *(2026-04-22: [`proposal-drift.yml`](../../.agent-src.uncondensed/templates/github-workflows/proposal-drift.yml) — Monday 07:00 UTC, quarterly counts from `memory_report.py`, open proposals by stage, opens/updates a single `proposal-drift` tracking issue; never blocks a PR)*
 - [x] Proposal rate per consumer project capped — soft limit surfaces
   in `check_proposal.py` to prevent one project over-fitting the package *(2026-04-22: [`_proposal_rate_warning`](../../scripts/check_proposal.py) in `check_proposal.py` — warns when ≥6 proposals authored in the last 90 days in the same directory; warning only, never blocks)*
 

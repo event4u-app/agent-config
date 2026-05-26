@@ -4,12 +4,12 @@ Public-catalog link checker (regression guard for road-to-pr-34-followups 1.1).
 
 `docs/catalog.md` is the consumer-facing catalog rendered by
 `scripts/generate_index.py`. Consumers receive the package via npm /
-Composer / archive surfaces — `.agent-src.uncompressed/` is **not**
+Composer / archive surfaces — `.agent-src.uncondensed/` is **not**
 shipped (see `package.json#files`). Every link in the public catalog
 must therefore resolve to a shipped surface.
 
 Checks:
-  1. No link href contains `.agent-src.uncompressed/`.
+  1. No link href contains `.agent-src.uncondensed/`.
   2. Every link href resolves on disk.
   3. Every link href starts with a path declared in `package.json#files`
      (or one of the always-shipped root files).
@@ -34,7 +34,7 @@ CATALOG = ROOT / "docs" / "catalog.md"
 PACKAGE_JSON = ROOT / "package.json"
 
 LINK_RE = re.compile(r"\]\((?P<href>[^)\s]+)(?:\s+\"[^\"]*\")?\)")
-FORBIDDEN_PREFIX = ".agent-src.uncompressed/"
+FORBIDDEN_PREFIX = ".agent-src.uncondensed/"
 
 
 def _shipped_roots() -> tuple[set[str], set[str]]:
@@ -103,7 +103,7 @@ def main() -> int:
 
     print(f"❌  docs/catalog.md — {total_violations} violation(s):")
     if forbidden:
-        print(f"\n  {len(forbidden)} link(s) point at unshipped `.agent-src.uncompressed/`:")
+        print(f"\n  {len(forbidden)} link(s) point at unshipped `.agent-src.uncondensed/`:")
         for ln, href in forbidden[:10]:
             print(f"    line {ln}: {href}")
         if len(forbidden) > 10:

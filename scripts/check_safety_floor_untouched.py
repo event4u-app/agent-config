@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-RULES_DIR_REL = ".agent-src.uncompressed/rules"
+RULES_DIR_REL = ".agent-src.uncondensed/rules"
 SAFETY_FLOOR = (
     "non-destructive-by-default.md",
     "commit-policy.md",

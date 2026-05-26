@@ -34,7 +34,7 @@ logger = logging.getLogger(__name__)
 PRESET_ID_ENV = "AGENT_CONFIG_PRESET_ID"
 SEED_PRESET_IDS: tuple[str, ...] = ("fast", "balanced", "strict")
 DEFAULT_PRESET_ID = "balanced"
-PRESETS_DIRNAME = ".agent-src.uncompressed/presets"
+PRESETS_DIRNAME = ".agent-src.uncondensed/presets"
 
 SOURCE_PACK = "pack"
 SOURCE_PROFILE = "profile"
@@ -94,7 +94,7 @@ def _load_yaml(path: Path) -> dict[str, Any]:
 
 def _preset_file(project_root: Path, preset_id: str) -> Path:
     # Legacy single-root layout — honor when present so tests that mock a
-    # ``.agent-src.uncompressed/`` sub-tree under ``project_root`` keep working.
+    # ``.agent-src.uncondensed/`` sub-tree under ``project_root`` keep working.
     legacy = project_root / PRESETS_DIRNAME / f"{preset_id}.yml"
     if legacy.exists():
         return legacy

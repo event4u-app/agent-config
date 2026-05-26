@@ -62,7 +62,7 @@ def classify(sha: str) -> str:
     if not files:
         return "empty"
     doc = sum(1 for f in files if f.startswith("docs/") or f.endswith(".md"))
-    skill = sum(1 for f in files if "/skills/" in f or f.startswith(".agent-src.uncompressed/skills/"))
+    skill = sum(1 for f in files if "/skills/" in f or f.startswith(".agent-src.uncondensed/skills/"))
     test = sum(1 for f in files if f.startswith("tests/") or "/tests/" in f)
     meta = sum(1 for f in files if f.startswith(("Taskfile", "scripts/", ".github/", "pyproject", "package")))
     total = len(files)

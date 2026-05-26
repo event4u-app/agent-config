@@ -71,9 +71,9 @@ resolves to the target file under:
 
 | kind | path |
 |---|---|
-| `skill` | `.agent-src.uncompressed/skills/<id>/SKILL.md` |
+| `skill` | `.agent-src.uncondensed/skills/<id>/SKILL.md` |
 | `guideline` | `docs/guidelines/<id>.md` |
-| `command` | `.agent-src.uncompressed/commands/<id>.md` |
+| `command` | `.agent-src.uncondensed/commands/<id>.md` |
 | `contract` | `docs/contracts/<id>.md` |
 
 Linter checks each target exists. `command` is for procedural rules

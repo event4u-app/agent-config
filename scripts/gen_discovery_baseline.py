@@ -9,7 +9,7 @@ import sys
 from collections import Counter
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 
 
 def _frontmatter(path: pathlib.Path) -> dict[str, str]:
@@ -56,10 +56,10 @@ def main() -> int:
     out.append("## Counts by category\n")
     out.append("| Category | Path | Count |")
     out.append("|---|---|---|")
-    out.append(f"| Skills | `.agent-src.uncompressed/skills/*/SKILL.md` | {len(skills)} |")
-    out.append(f"| Rules | `.agent-src.uncompressed/rules/**/*.md` | {len(rules)} |")
-    out.append(f"| Commands | `.agent-src.uncompressed/commands/**/*.md` | {len(commands)} |")
-    out.append(f"| Templates | `.agent-src.uncompressed/templates/**/*` | {len(templates)} |")
+    out.append(f"| Skills | `.agent-src.uncondensed/skills/*/SKILL.md` | {len(skills)} |")
+    out.append(f"| Rules | `.agent-src.uncondensed/rules/**/*.md` | {len(rules)} |")
+    out.append(f"| Commands | `.agent-src.uncondensed/commands/**/*.md` | {len(commands)} |")
+    out.append(f"| Templates | `.agent-src.uncondensed/templates/**/*` | {len(templates)} |")
     out.append("")
 
     out.append("## Distinct `domain:` values (skills)\n")

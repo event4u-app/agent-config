@@ -13,7 +13,7 @@ Covers the four cases called out in roadmap Phase 6 Step 6:
 Plus persona resolution edges — frontmatter `role` wins the display
 name, missing frontmatter falls back to titleized advisor key, missing
 file is a `CouncilConfigError`. Tests stage their own persona files
-under `tmp_path/.agent-src.uncompressed/personas/advisors/` so the suite
+under `tmp_path/.agent-src.uncondensed/personas/advisors/` so the suite
 stays hermetic from the real package tree.
 """
 
@@ -46,7 +46,7 @@ from scripts.ai_council.config import (  # noqa: E402
 
 def _write_persona(root: Path, name: str, *, role: str | None = None,
                    body: str = "Persona body text.") -> Path:
-    target = root / ".agent-src.uncompressed" / "personas" / "advisors" / f"{name}.md"
+    target = root / ".agent-src.uncondensed" / "personas" / "advisors" / f"{name}.md"
     target.parent.mkdir(parents=True, exist_ok=True)
     if role is None:
         target.write_text(body, encoding="utf-8")

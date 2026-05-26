@@ -28,7 +28,7 @@ Create a stable execution event format.
 
 - `scripts/observability_events.py`
 - `tests/test_observability_events.py`
-- `.agent-src.uncompressed/guidelines/observability.md`
+- `.agent-src.uncondensed/guidelines/observability.md`
 
 ## Event fields
 

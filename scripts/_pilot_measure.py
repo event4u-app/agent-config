@@ -1,4 +1,4 @@
-"""Pilot compression ratio + Iron-Law checksum verification (one-off, not CI)."""
+"""Pilot condensation ratio + Iron-Law checksum verification (one-off, not CI)."""
 import sys, re, hashlib, statistics
 from pathlib import Path
 
@@ -15,9 +15,9 @@ def iron_law_sha(body: str) -> str:
 
 
 pairs = [
-    ("agent-authority",   ".agent-src.uncompressed/rules/agent-authority.md",   "docs/contracts/pilot/agent-authority.md"),
-    ("direct-answers",    ".agent-src.uncompressed/rules/direct-answers.md",    "docs/contracts/pilot/direct-answers.md"),
-    ("language-and-tone", ".agent-src.uncompressed/rules/language-and-tone.md", "docs/contracts/pilot/language-and-tone.md"),
+    ("agent-authority",   ".agent-src.uncondensed/rules/agent-authority.md",   "docs/contracts/pilot/agent-authority.md"),
+    ("direct-answers",    ".agent-src.uncondensed/rules/direct-answers.md",    "docs/contracts/pilot/direct-answers.md"),
+    ("language-and-tone", ".agent-src.uncondensed/rules/language-and-tone.md", "docs/contracts/pilot/language-and-tone.md"),
 ]
 
 header = f"{'rule':25s} {'orig':>6s}  {'pilot':>6s}  {'r':>6s}  {'budget':>7s}  {'sha-orig':>16s}  {'sha-pilot':>16s}  {'IL':>3s}"

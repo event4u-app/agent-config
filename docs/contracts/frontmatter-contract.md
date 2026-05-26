@@ -10,7 +10,7 @@ keep-beta-until: 2026-08-19
 > ADR is the decision; this file is the worked-example reference linters,
 > installer, and contributors cite at runtime.
 
-Every `.md` artefact under `.agent-src.uncompressed/` MUST declare the five
+Every `.md` artefact under `.agent-src.uncondensed/` MUST declare the five
 ADR-013 discovery keys. The release-time manifest builder
 (`scripts/build_discovery_manifest.py`) derives all workspace/pack assignment
 from these alone — **no manual workspace or pack list is ever maintained**.
@@ -118,7 +118,7 @@ the linter rejects that collision.
 | Surface | What runs | When |
 |---|---|---|
 | Local | `task lint-artefact-frontmatter` | manual / pre-commit |
-| Pre-commit | `pre-commit-roadmap-progress` template | when `.agent-src.uncompressed/*.md`, `config/discovery/*.yml`, or the linter itself is staged |
+| Pre-commit | `pre-commit-roadmap-progress` template | when `.agent-src.uncondensed/*.md`, `config/discovery/*.yml`, or the linter itself is staged |
 | CI | `task ci` → `lint-artefact-frontmatter` | every push / PR |
 
 Install the pre-commit hook with:
@@ -133,8 +133,8 @@ are staged.
 
 ## Roundtrip invariant
 
-Frontmatter survives the `task sync` compression pipeline. Path-bearing
+Frontmatter survives the `task sync` condensation pipeline. Path-bearing
 keys (`load_context`) may be rewritten relative to the projected location,
 but the five Phase-1 keys above are byte-stable between
-`.agent-src.uncompressed/`, `.agent-src/`, and `.augment/`. Enforced by
+`.agent-src.uncondensed/`, `.agent-src/`, and `.augment/`. Enforced by
 `tests/test_frontmatter_roundtrip.py`.

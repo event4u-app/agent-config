@@ -8,7 +8,7 @@
 # Schema:
 #   version: integer
 #   rules: list of rule slugs that participate in any interaction (each
-#     must exist as `.agent-src.uncompressed/rules/<slug>.md`)
+#     must exist as `.agent-src.uncondensed/rules/<slug>.md`)
 #   pairs: list of pairwise interactions
 #     - id:        kebab-case stable identifier
 #       rules:     [senior, junior] — `senior` wins on conflict
@@ -49,8 +49,8 @@ pairs:
       numbered-options block, wait for explicit user confirmation on
       this turn before proceeding.
     evidence:
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
-      - .agent-src.uncompressed/rules/autonomous-execution.md#hard-floor--see-non-destructive-by-default
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/autonomous-execution.md#hard-floor--see-non-destructive-by-default
 
   - id: ndd-x-scope-control
     rules: [non-destructive-by-default, scope-control]
@@ -64,9 +64,9 @@ pairs:
       cannot be weakened by future scope-control edits. On any conflict,
       the floor wins.
     evidence:
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
-      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
-      - .agent-src.uncompressed/rules/scope-control.md#production-infrastructure-bulk-destructive--hard-floor
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncondensed/rules/scope-control.md#production-infrastructure-bulk-destructive--hard-floor
 
   - id: ndd-x-commit-policy
     rules: [non-destructive-by-default, commit-policy]
@@ -82,8 +82,8 @@ pairs:
       then commit. The four exceptions cover *whether* commits happen;
       the floor covers *which diffs* still need a separate confirmation.
     evidence:
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
-      - .agent-src.uncompressed/rules/commit-policy.md#hard-floor-still-applies--bulk-deletions-and-infra-changes
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/commit-policy.md#hard-floor-still-applies--bulk-deletions-and-infra-changes
 
   - id: ndd-x-ask-when-uncertain
     rules: [non-destructive-by-default, ask-when-uncertain]
@@ -97,8 +97,8 @@ pairs:
       provides the question shape (one numbered-options block, blocking).
       No conflict; both fire harmoniously.
     evidence:
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#failure-modes
-      - .agent-src.uncompressed/rules/ask-when-uncertain.md#vague-request-triggers--must-ask
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#failure-modes
+      - .agent-src.uncondensed/rules/ask-when-uncertain.md#vague-request-triggers--must-ask
 
   - id: ndd-x-verify-before-complete
     rules: [non-destructive-by-default, verify-before-complete]
@@ -112,8 +112,8 @@ pairs:
       verification evidence in the same message. Skipping either is a
       rule violation.
     evidence:
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
-      - .agent-src.uncompressed/rules/verify-before-complete.md#the-iron-law
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/verify-before-complete.md#the-iron-law
 
   - id: autonomy-x-scope-control
     rules: [scope-control, autonomous-execution]
@@ -127,8 +127,8 @@ pairs:
       suppresses *trivial* questions only; git-shape decisions are
       blocking. Stop and ask.
     evidence:
-      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
-      - .agent-src.uncompressed/rules/autonomous-execution.md#blocking--still-ask-regardless-of-personalautonomy
+      - .agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncondensed/rules/autonomous-execution.md#blocking--still-ask-regardless-of-personalautonomy
 
   - id: autonomy-x-commit-policy
     rules: [commit-policy, autonomous-execution]
@@ -141,8 +141,8 @@ pairs:
       committing unless one of the four exceptions applies. Autonomy
       does not add a fifth exception.
     evidence:
-      - .agent-src.uncompressed/rules/commit-policy.md#the-iron-law
-      - .agent-src.uncompressed/rules/autonomous-execution.md#commit-policy--see-commit-policy
+      - .agent-src.uncondensed/rules/commit-policy.md#the-iron-law
+      - .agent-src.uncondensed/rules/autonomous-execution.md#commit-policy--see-commit-policy
 
   - id: authority-x-ndd
     rules: [agent-authority, non-destructive-by-default]
@@ -155,8 +155,8 @@ pairs:
       Floor's Iron Law lives verbatim in `non-destructive-by-default`
       and wins every conflict. The index points; it never restates.
     evidence:
-      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
-      - .agent-src.uncompressed/rules/non-destructive-by-default.md#the-iron-law
+      - .agent-src.uncondensed/rules/agent-authority.md#index-rules
+      - .agent-src.uncondensed/rules/non-destructive-by-default.md#the-iron-law
 
   - id: authority-x-scope-control
     rules: [agent-authority, scope-control]
@@ -169,8 +169,8 @@ pairs:
       scope-expansion decisions. Index never narrows or weakens the
       gate; canonical rule wins on any wording divergence.
     evidence:
-      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
-      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncondensed/rules/agent-authority.md#index-rules
+      - .agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated
 
   - id: authority-x-commit-policy
     rules: [agent-authority, commit-policy]
@@ -184,8 +184,8 @@ pairs:
       edits to commit-policy do not require Index updates unless the
       band ordering changes.
     evidence:
-      - .agent-src.uncompressed/rules/agent-authority.md#index-rules
-      - .agent-src.uncompressed/rules/commit-policy.md#exceptions--when-committing-is-allowed
+      - .agent-src.uncondensed/rules/agent-authority.md#index-rules
+      - .agent-src.uncondensed/rules/commit-policy.md#exceptions--when-committing-is-allowed
 
   - id: scope-x-commit-policy
     rules: [scope-control, commit-policy]
@@ -201,8 +201,8 @@ pairs:
       tag operations. On commit specifics, defer to `commit-policy`;
       on other git ops, defer to `scope-control`.
     evidence:
-      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
-      - .agent-src.uncompressed/rules/commit-policy.md#the-iron-law
+      - .agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncondensed/rules/commit-policy.md#the-iron-law
 
   - id: ask-x-direct-answers
     rules: [ask-when-uncertain, direct-answers]
@@ -218,8 +218,8 @@ pairs:
       `direct-answers` shapes *how* the question reads — no flattery,
       no padding, shortest form that fully states the choice.
     evidence:
-      - .agent-src.uncompressed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
-      - .agent-src.uncompressed/rules/direct-answers.md#iron-law-3--brevity-by-default
+      - .agent-src.uncondensed/rules/ask-when-uncertain.md#iron-law--one-question-per-turn-always
+      - .agent-src.uncondensed/rules/direct-answers.md#iron-law-3--brevity-by-default
 
   - id: scope-x-verify-before-complete
     rules: [verify-before-complete, scope-control]
@@ -240,8 +240,8 @@ pairs:
       Skipping either is a rule violation; satisfying one does not
       satisfy the other.
     evidence:
-      - .agent-src.uncompressed/rules/verify-before-complete.md#the-iron-law
-      - .agent-src.uncompressed/rules/scope-control.md#git-operations--permission-gated
+      - .agent-src.uncondensed/rules/verify-before-complete.md#the-iron-law
+      - .agent-src.uncondensed/rules/scope-control.md#git-operations--permission-gated
 
   - id: language-x-direct-answers
     rules: [language-and-tone, direct-answers]
@@ -256,5 +256,5 @@ pairs:
       flattery-free reply in the user's language. Neither weakens the
       other.
     evidence:
-      - .agent-src.uncompressed/rules/language-and-tone.md#iron-law--mirror-the-users-language-always
-      - .agent-src.uncompressed/rules/direct-answers.md#iron-law-1--no-flattery
+      - .agent-src.uncondensed/rules/language-and-tone.md#iron-law--mirror-the-users-language-always
+      - .agent-src.uncondensed/rules/direct-answers.md#iron-law-1--no-flattery

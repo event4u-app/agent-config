@@ -1,7 +1,7 @@
 """Phase 2 — CLI tests for telemetry:record and telemetry:status.
 
 These import the CLI scripts as modules. The conftest already adds
-``.agent-src.uncompressed/templates/scripts/`` to ``sys.path``, so
+``.agent-src.uncondensed/templates/scripts/`` to ``sys.path``, so
 ``import telemetry_record`` and ``import telemetry_status`` work
 directly.
 """

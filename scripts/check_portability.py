@@ -2,7 +2,7 @@
 """
 Portability checker for agent-config packages.
 
-Scans .agent-src/ and .agent-src.uncompressed/ for project-specific references
+Scans .agent-src/ and .agent-src.uncondensed/ for project-specific references
 that violate package portability (the package must work in ANY project).
 
 Allowed: references to packages/libraries (laravel, pest, phpstan, etc.)
@@ -162,7 +162,7 @@ ALLOWLIST = [
 ]
 
 # Directories to scan (only package files, not project-specific agents/)
-SCAN_DIRS = [".agent-src", ".agent-src.uncompressed"]
+SCAN_DIRS = [".agent-src", ".agent-src.uncondensed"]
 
 # Additional root-level files shipped by the package that must also stay
 # portable. These are read by agents working on the package itself and —
@@ -478,7 +478,7 @@ def scan_all(root: Path) -> tuple[List[Violation], list[str]]:
 
     Scanning has four layers:
     1. Auto-detected identifiers — applied to `.agent-src/` and
-       `.agent-src.uncompressed/` only. The package's own root AGENTS.md and
+       `.agent-src.uncondensed/` only. The package's own root AGENTS.md and
        copilot-instructions.md are meta docs ABOUT the package, so the
        detector's own hits (e.g. "event4u", "agent-config") are expected.
     2. Optional FORBIDDEN_IDENTIFIERS from AGENT_CONFIG_BLOCKLIST —

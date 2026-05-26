@@ -33,7 +33,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_SKILLS_DIR = ROOT / ".agent-src.uncompressed" / "skills"
+DEFAULT_SKILLS_DIR = ROOT / ".agent-src.uncondensed" / "skills"
 TOKEN_RE = re.compile(r"[a-z][a-z0-9]+")
 STOPWORDS = frozenset({
     "the", "a", "an", "and", "or", "but", "of", "for", "with", "to", "in",

@@ -22,14 +22,14 @@
 | **Cost tracking** | #2 priority, reads session jsonl, per-model pricing | #3 priority, session-level reporting | **Strong** |
 | **Linter gate** | #3, staged (critical → high → medium) | #2, quick S-effort win | **Strong** |
 | **Schema rigor — minimal** | 2 fields now (`model_tier`, `## Deep Reference`), defer rest | minimal split, defer harmonist-full to contributor demand | **Strong** |
-| **Compression default** | Remove until measured ≥35 % saving + <3 % quality loss | Keep off until measured ≥30–40 % saving | Strong, with severity diff |
+| **Condensation default** | Remove until measured ≥35 % saving + <3 % quality loss | Keep off until measured ≥30–40 % saving | Strong, with severity diff |
 | **Behavioural projection fidelity** | (not specifically) | #5, behaviour-diff not byte-diff | Medium |
 
 ## 2. Divergence
 
 | Topic | Opus position | o1 position | Tie-breaker |
 |---|---|---|---|
-| Compression future | **Remove entirely** until proven | **Keep flag, measure**, then decide | Lean Opus — wrong-boundary measurement (F2/U1) + opt-in default = feature currently has zero proven value. Removal pending proof is cheaper than maintaining unproven feature. |
+| Condensation future | **Remove entirely** until proven | **Keep flag, measure**, then decide | Lean Opus — wrong-boundary measurement (F2/U1) + opt-in default = feature currently has zero proven value. Removal pending proof is cheaper than maintaining unproven feature. |
 | Skill testing | Benchmark covers behaviour, no per-skill unit tests | 20 % critical-skill unit tests | Lean Opus — benchmark corpus is the behavioural test; per-skill unit tests duplicate the surface. |
 
 ## 3. New finding (not in audits, raised by council)
@@ -84,18 +84,18 @@ benchmark unmaintainable surface, you measure noise).
 
 Three new roadmap files. Six renames. Zero deletions.
 
-## 7. Compression decision — host verdict
+## 7. Condensation decision — host verdict
 
 Council split is real (Opus = remove, o1 = measure-then-decide). Host
 verdict: **measure-then-decide**, but with an explicit kill-criterion.
 
-- Until `task bench` produces a number, `caveman.speak_scope` stays
+- Until `task bench` produces a number, `telegraph.speak_scope` stays
   default off; carve-outs documented but feature non-promoted.
 - After 60-day baseline: if measured saving < 30 %, **deprecate**
   per Opus reasoning (wrong-boundary + unproven).
 - After 60-day baseline: if measured saving ≥ 30 % with <5 %
   quality regression on the corpus, **flip default on** with
-  caveman-style carve-outs (security / destructive / multi-step).
+  telegraph-style carve-outs (security / destructive / multi-step).
 
 This is decision-deferred-with-criterion, not decision-skipped.
 

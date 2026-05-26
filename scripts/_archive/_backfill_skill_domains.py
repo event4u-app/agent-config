@@ -93,10 +93,10 @@ VALID_DOMAINS = {"engineering", "product", "quality", "devops", "process", "disc
 
 
 def main() -> int:
-    # Default: source-of-truth tree. Pass --target=compressed to mirror into .agent-src/.
-    target = ".agent-src.uncompressed/skills"
+    # Default: source-of-truth tree. Pass --target=condensed to mirror into .agent-src/.
+    target = ".agent-src.uncondensed/skills"
     for arg in sys.argv[1:]:
-        if arg == "--target=compressed":
+        if arg == "--target=condensed":
             target = ".agent-src/skills"
     skills_root = Path(target)
     on_disk = sorted(p.name for p in skills_root.iterdir() if p.is_dir())

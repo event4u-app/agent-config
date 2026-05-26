@@ -46,7 +46,7 @@ outside is **out-of-horizon**.
 **Inside the plate (this 6-week window):**
 
 - **Phase 1 (A1–A6) — Ship the skill + smoke test.** Author
-  `.agent-src.uncompressed/skills/markitdown/SKILL.md` (senior-
+  `.agent-src.uncondensed/skills/markitdown/SKILL.md` (senior-
   tier, all four security layers in `Procedure`), add a smoke-test
   recipe with one tiny PDF + PPTX + DOCX fixture, verify
   `lint-skills` + `check-portability` + `check-references` pass,
@@ -72,7 +72,7 @@ outside is **out-of-horizon**.
 ## Phase 1 — Ship the skill + smoke test (READY)
 
 - [x] **A1 — Skill location.** Author at
-  `.agent-src.uncompressed/skills/markitdown/SKILL.md`, senior-tier,
+  `.agent-src.uncondensed/skills/markitdown/SKILL.md`, senior-tier,
   Wing-1 engineering, dispatched by `analyze-reference-repo` plus
   future ingestion skills.
 - [x] **A2 — Frontmatter pin + triggers.** Pin

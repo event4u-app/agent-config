@@ -59,7 +59,7 @@ edit on a remote UI.
 
 ### Critical reading of the AI feedback
 
-The feedback compresses four very different actions into one
+The feedback condenses four very different actions into one
 "adoption hebel" list:
 
 1. *main-branch-Sync* — a one-shot ops fix; if `main` lags `develop`,
@@ -322,7 +322,7 @@ The feedback compresses four very different actions into one
 ### Council TODOs (filled by the council pass)
 
 > Pass executed in-session 2026-05-18 against the repo personas listed
-> in `.agent-src.uncompressed/personas/`. External `/council` (paid
+> in `.agent-src.uncondensed/personas/`. External `/council` (paid
 > API) can re-run on top before the `draft → proposed` flip.
 
 **`strategist` — cost / yield and non-goal discipline**

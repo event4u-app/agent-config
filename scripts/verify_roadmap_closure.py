@@ -42,7 +42,7 @@ HEADING_PAT = re.compile(r"^##+\s+(.+)$")
 
 PATH_HINT = re.compile(
     r"^(scripts/|docs/|agents/|templates/|"
-    r"\.agent-src\.uncompressed/|\.agent-src/|\.augment/|\.claude/|\.cursor/|"
+    r"\.agent-src\.uncondensed/|\.agent-src/|\.augment/|\.claude/|\.cursor/|"
     r"taskfiles/|Taskfile)"
 )
 PATH_SHAPED = re.compile(r"^[\w.-]+/.+|\.[a-z]{1,5}$")
@@ -191,9 +191,9 @@ def verify_task(target: str) -> bool:
 def verify_slash_cmd(name: str) -> bool:
     base = name.split(":")[0]
     candidates = [
-        REPO / ".agent-src.uncompressed" / "commands" / f"{base}.md",
-        REPO / ".agent-src.uncompressed" / "commands" / base,
-        REPO / ".agent-src.uncompressed" / "skills" / base,
+        REPO / ".agent-src.uncondensed" / "commands" / f"{base}.md",
+        REPO / ".agent-src.uncondensed" / "commands" / base,
+        REPO / ".agent-src.uncondensed" / "skills" / base,
         REPO / ".claude" / "skills" / base,
     ]
     return any(c.exists() for c in candidates)
@@ -202,7 +202,7 @@ def verify_slash_cmd(name: str) -> bool:
 def verify_heading(heading: str) -> bool:
     # Look for the heading text in skills/rules/contexts as evidence of pattern adoption
     pattern = re.compile(rf"^##+\s+{re.escape(heading)}\b", re.MULTILINE)
-    for root in (REPO / ".agent-src.uncompressed", REPO / "agents", REPO / "docs"):
+    for root in (REPO / ".agent-src.uncondensed", REPO / "agents", REPO / "docs"):
         if not root.exists():
             continue
         for f in root.rglob("*.md"):
@@ -219,7 +219,7 @@ def verify_concept(name: str) -> bool:
     try:
         r = subprocess.run(
             ["git", "grep", "-l", "-w", name, "--",
-             ".agent-src.uncompressed/", "docs/", "scripts/", "agents/settings/contexts/"],
+             ".agent-src.uncondensed/", "docs/", "scripts/", "agents/settings/contexts/"],
             cwd=REPO, capture_output=True, text=True, timeout=15,
         )
         return bool(r.stdout.strip())

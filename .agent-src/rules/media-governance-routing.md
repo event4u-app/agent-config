@@ -25,8 +25,8 @@ validator_ignore:
     pattern: "../../agents/"
     reason: "Routing rule whose subject matter is the project-local agents/settings/policies/media/ tree; every body link points there by design."
   - type: "substring"
-    pattern: ".agent-src.uncompressed/"
-    reason: "Rule contrasts project-local placement with the .agent-src.uncompressed/rules/ alternative — mentioning the path is the argument."
+    pattern: ".agent-src.uncondensed/"
+    reason: "Rule contrasts project-local placement with the .agent-src.uncondensed/rules/ alternative — mentioning the path is the argument."
 workspaces:
   - agent-config-maintainer
 packs:
@@ -67,12 +67,12 @@ Any trigger match → agent loads into context:
 
 Each policy carries own trigger block → within active context agent narrows from superset to policies whose specific patterns actually fired (e.g. prompt naming public figure → `public-figures.md` + `disclosure.md`; `--no-disclosure` → `disclosure.md` standalone).
 
-## Why project-local, not `.agent-src.uncompressed/rules/`
+## Why project-local, not `.agent-src.uncondensed/rules/`
 
-Seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncompressed/rules/domain-safety-media-*.md`, for three reasons:
+Seven media policies live under [`agents/settings/policies/media/`](../../agents/settings/policies/media/), not as `.agent-src.uncondensed/rules/domain-safety-media-*.md`, for three reasons:
 
 1. **Consumed by skills + adapters**, not surfaced as standalone always-loaded prose. Cost non-trivial (7 × ~80 lines = ~560 lines always-context if hoisted to rules), and most sessions never touch video / image / voice surface.
-2. **Enforcement model project-local** — working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) + audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncompressed/` are tool-portable governance; these policies are domain-specific bindings.
+2. **Enforcement model project-local** — working precedent (`/ghostwriter:*` mandatory footer in `write-engine.md`) + audit log (session transcripts) are project artifacts. Rules under `.agent-src.uncondensed/` are tool-portable governance; these policies are domain-specific bindings.
 3. **Extraction to reusable domain pack explicitly deferred** until second non-video domain (audio, image, docs, exports) lands with overlapping execution surfaces. Until then, one-domain abstraction structurally premature — policies stay project-local, routing rule on-demand bridge.
 
 This routing rule is the bridge: sits in always-loaded rule set so trigger keywords surface project-local policies into context on demand, without paying full always-loaded cost.

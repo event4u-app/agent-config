@@ -38,7 +38,7 @@
     "framework": {
       "type": "string",
       "pattern": "^[a-z][a-z0-9-]*$",
-      "description": "Framework carve-out marker. Set on skills that are 100% coupled to one stack (e.g. `framework: laravel` on laravel-* skills). Generic, multi-stack skills MUST omit this key. Routed by .agent-src.uncompressed/rules/framework-neutrality-in-generic-skills.md (Tier 2)."
+      "description": "Framework carve-out marker. Set on skills that are 100% coupled to one stack (e.g. `framework: laravel` on laravel-* skills). Generic, multi-stack skills MUST omit this key. Routed by .agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md (Tier 2)."
     },
     "personas": {
       "type": "array",
@@ -50,7 +50,7 @@
     "tier": {
       "type": "string",
       "enum": ["senior"],
-      "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncompressed/rules/skill-quality.md."
+      "description": "Optional tier marker. `senior` opts the skill into the Senior-Tier Required Structure check (Context-First lead, Related Skills, Proactive Triggers, Output Artifacts) per .agent-src.uncondensed/rules/skill-quality.md."
     },
     "meta_skill": {
       "type": "boolean",
@@ -74,7 +74,7 @@
     "council_depth": {
       "type": "string",
       "enum": ["deep"],
-      "description": "Optional reasoning-depth marker for AI Council invocations triggered by this skill. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis skills. See .agent-src.uncompressed/skills/ai-council/SKILL.md."
+      "description": "Optional reasoning-depth marker for AI Council invocations triggered by this skill. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis skills. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
     "context_spine": {
       "type": "array",

@@ -31,7 +31,7 @@ from skill_tools.score_skill_relevance import (  # type: ignore
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-DEFAULT_PERSONAS = ROOT / ".agent-src.uncompressed" / "personas"
+DEFAULT_PERSONAS = ROOT / ".agent-src.uncondensed" / "personas"
 
 
 def _persona_status(rows: List[Dict[str, object]]) -> Dict[str, str]:

@@ -21,7 +21,7 @@ gates.
 ## Schema
 
 ```yaml
-# .agent-src.uncompressed/packs/<pack-id>.yml
+# .agent-src.uncondensed/packs/<pack-id>.yml
 pack:
   id: <pack-id>                      # kebab-case, file name without .yml
   audience:
@@ -52,7 +52,7 @@ pack:
 | `composition.preset_id` | string | yes | Override applied to the chain documented in [`config-presets`](config-presets.md). Same opt-in semantics. |
 | `surface.commands_allowed` | list[string] | yes | Cap = **12**. Items must appear in [`command-clusters`](command-clusters.md). The pack does **not** disable other commands — the cap is for the wizard's first-screen rendering, not enforcement. |
 | `surface.skills_allowed` | list[string] | yes | Cap = **15**. Items must appear in `docs/skills-catalog.md`. Same render-only semantics. |
-| `surface.personas` | list[string] | yes | Cap = **4**. Items must appear in `.agent-src.uncompressed/personas/`. |
+| `surface.personas` | list[string] | yes | Cap = **4**. Items must appear in `.agent-src.uncondensed/personas/`. |
 | `rationale.*` | string | yes | Forces every pack to justify its composition in plain prose; reviewed at PR time, not at runtime. |
 
 ## Resolution chain
@@ -95,7 +95,7 @@ this schema.
 - **Do not** declare new commands. Use [`command-clusters`](command-clusters.md).
 - **Do not** modify rules. Use the kernel-rule edit process.
 - **Do not** override safety floors. Domain-safety rules
-  (`.agent-src.uncompressed/rules/domain-safety-*.md`) apply
+  (`.agent-src.uncondensed/rules/domain-safety-*.md`) apply
   unconditionally — packs cannot widen the deny-list.
 - **Do not** ship telemetry or usage hints. Packs are pure composition.
 
@@ -109,7 +109,7 @@ Three packs ship at Phase 2 Item 7 close:
 | `content-engine` | `content_creator` | `balanced` | Editorial calendar, brand voice, and ghostwriter on one loop. |
 | `agency-delivery` | `agency` | `strict` | Multi-client refine → estimate → deliver with audit-grade trace. |
 
-Each pack lives at `.agent-src.uncompressed/packs/<id>.yml` and is
+Each pack lives at `.agent-src.uncondensed/packs/<id>.yml` and is
 covered by the validation rules above.
 
 ## See also

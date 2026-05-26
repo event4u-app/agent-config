@@ -40,7 +40,7 @@ auto-loaded guardrail rules.
       artefact
 - [x] Every artefact with `human_review_required: true` carries a
       visible HUMAN_REVIEW banner at the top of its compiled output,
-      auto-injected by the compressor
+      auto-injected by the condenseor
 - [x] Per-domain guardrail rules ship with each domain pack and
       auto-activate when the pack is installed
 - [x] `task lint-trust-coherence` catches drift between declared
@@ -68,28 +68,28 @@ auto-loaded guardrail rules.
 
 ## Phase 2 — Runtime guardrails per domain
 
-- [x] `packages/pack-finance-basic/.agent-src.uncompressed/rules/finance-safety-floor.md` —
+- [x] `packages/pack-finance-basic/.agent-src.uncondensed/rules/finance-safety-floor.md` —
       no final investment recommendation, sensitivity required,
       assumptions explicit, human review on high-impact decisions
 - [~] `packages/pack-governance/rules/legal-tax-safety-floor.md` —
       deferred: `pack-governance` does not yet exist; will ship with
       that pack via a follow-on ADR (anticipated `regulated` trust
       level)
-- [x] `packages/pack-founder-strategy/.agent-src.uncompressed/rules/strategy-safety-floor.md` —
+- [x] `packages/pack-founder-strategy/.agent-src.uncondensed/rules/strategy-safety-floor.md` —
       alternatives presented, assumptions visible, risks listed,
       confidence level named
-- [x] `packages/core/.agent-src.uncompressed/rules/engineering-safety-floor.md`
+- [x] `packages/core/.agent-src.uncondensed/rules/engineering-safety-floor.md`
       — references existing minimal-safe-diff, scope-control,
       verify-before-complete; no new mandates, just the routing rule
 
-## Phase 3 — Compressor banner injection
+## Phase 3 — Condenseor banner injection
 
-- [x] Extend the caveman compressor to scan frontmatter and inject
+- [x] Extend the telegraph condenseor to scan frontmatter and inject
       a HUMAN_REVIEW banner block at the top of any artefact where
       `human_review_required: true`
 - [x] Banner format is short and parser-stable (Iron-Law style):
       `> HUMAN REVIEW REQUIRED · trust: advisory · owner: finance`
-- [x] Roundtrip test: compress → decompress → re-compress yields
+- [x] Roundtrip test: condense → decondense → re-condense yields
       identical banner placement
 
 ## Phase 4 — Coherence lint

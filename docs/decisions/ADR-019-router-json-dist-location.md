@@ -101,8 +101,8 @@ Rationale:
   `docs/contracts/explain-trace.schema.json`,
   `docs/adrs/router/0001-three-tier-routing.md`,
   `docs/adrs/smoke/0001-per-tier-smoke-scripts.md`.
-- **Source rules.** Uncompressed rule sources referencing the path
-  (`caveman-speak.md`, `git-history-discipline.md`) updated and
+- **Source rules.** Uncondensed rule sources referencing the path
+  (`telegraph-speak.md`, `git-history-discipline.md`) updated and
   re-projected.
 
 ## Reversal cost

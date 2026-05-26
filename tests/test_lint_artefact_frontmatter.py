@@ -6,7 +6,7 @@ closed-vocabulary enforcement, enum + bool typing, and the
 ``unassigned-artefacts.yml`` quarantine collision rule.
 
 Strategy: build a self-contained fixture tree under ``tmp_path``
-(`.agent-src.uncompressed/{skills,rules,commands,templates}` plus
+(`.agent-src.uncondensed/{skills,rules,commands,templates}` plus
 `config/discovery/{workspaces,packs,unassigned-artefacts}.yml`) and
 monkeypatch the module-level ``ROOT``, ``SRC``, ``VOCAB_DIR`` so the
 linter walks the fixture instead of the live repo.
@@ -63,7 +63,7 @@ def _make_repo(tmp_path: Path, skill_body: str = VALID_FRONTMATTER) -> Path:
     )
     (vocab / "unassigned-artefacts.yml").write_text("[]\n", encoding="utf-8")
 
-    src = tmp_path / ".agent-src.uncompressed"
+    src = tmp_path / ".agent-src.uncondensed"
     skill_dir = src / "skills" / "sample-skill"
     skill_dir.mkdir(parents=True)
     (skill_dir / "SKILL.md").write_text(skill_body, encoding="utf-8")
@@ -74,13 +74,13 @@ def _make_repo(tmp_path: Path, skill_body: str = VALID_FRONTMATTER) -> Path:
 def repo(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     root = _make_repo(tmp_path)
     monkeypatch.setattr(mod, "ROOT", root)
-    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncompressed")
+    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncondensed")
     monkeypatch.setattr(mod, "VOCAB_DIR", root / "config" / "discovery")
     return root
 
 
 def _skill_path(repo: Path) -> Path:
-    return repo / ".agent-src.uncompressed" / "skills" / "sample-skill" / "SKILL.md"
+    return repo / ".agent-src.uncondensed" / "skills" / "sample-skill" / "SKILL.md"
 
 
 def test_valid_frontmatter_clean(repo, capsys):
@@ -139,12 +139,12 @@ def test_missing_frontmatter_block_fails(repo, capsys):
 def test_quarantine_path_skipped_when_clean(tmp_path, monkeypatch, capsys):
     root = _make_repo(tmp_path, skill_body="# no frontmatter\n")
     (root / "config" / "discovery" / "unassigned-artefacts.yml").write_text(
-        "- path: .agent-src.uncompressed/skills/sample-skill/SKILL.md\n"
+        "- path: .agent-src.uncondensed/skills/sample-skill/SKILL.md\n"
         "  reason: scaffold under construction\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(mod, "ROOT", root)
-    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncompressed")
+    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncondensed")
     monkeypatch.setattr(mod, "VOCAB_DIR", root / "config" / "discovery")
     assert mod.main(["--quiet"]) == 0
 
@@ -152,12 +152,12 @@ def test_quarantine_path_skipped_when_clean(tmp_path, monkeypatch, capsys):
 def test_quarantine_collision_with_frontmatter_fails(tmp_path, monkeypatch, capsys):
     root = _make_repo(tmp_path)
     (root / "config" / "discovery" / "unassigned-artefacts.yml").write_text(
-        "- path: .agent-src.uncompressed/skills/sample-skill/SKILL.md\n"
+        "- path: .agent-src.uncondensed/skills/sample-skill/SKILL.md\n"
         "  reason: should not also carry frontmatter\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(mod, "ROOT", root)
-    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncompressed")
+    monkeypatch.setattr(mod, "SRC", root / ".agent-src.uncondensed")
     monkeypatch.setattr(mod, "VOCAB_DIR", root / "config" / "discovery")
     assert mod.main(["--quiet"]) == 1
     assert "quarantined" in capsys.readouterr().err

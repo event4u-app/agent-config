@@ -13,7 +13,7 @@
 
 | File | Change |
 |---|---|
-| `.agent-src.uncompressed/...` | ... |
+| `.agent-src.uncondensed/...` | ... |
 | `.augment/...` | ... |
 
 ## Verification

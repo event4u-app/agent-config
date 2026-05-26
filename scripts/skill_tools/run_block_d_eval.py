@@ -33,7 +33,7 @@ from skill_tools.suggest_skill_for_task import suggest  # type: ignore
 
 ROOT = Path(__file__).resolve().parents[2]
 CORPUS_DIR = ROOT / "agents" / "eval-corpora" / "block-d"
-PERSONAS_DIR = ROOT / ".agent-src.uncompressed" / "personas"
+PERSONAS_DIR = ROOT / ".agent-src.uncondensed" / "personas"
 
 
 def _eval_d2(corpus: Path, skills_dir: Path) -> Dict[str, object]:

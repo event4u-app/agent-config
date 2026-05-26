@@ -12,10 +12,10 @@ Next.js, etc.).
 
 ## ✅ What this repo contains
 
-- **Bash** scripts under `scripts/install.sh` and `scripts/compress.sh`.
-- **Python 3.10+** tooling under `scripts/` — compression driver, linters
+- **Bash** scripts under `scripts/install.sh` and `scripts/condense.sh`.
+- **Python 3.10+** tooling under `scripts/` — condensation driver, linters
   (skills, references, portability, readme), installer bridge.
-- **Markdown** content under `.agent-src.uncompressed/` (authoring layer) and
+- **Markdown** content under `.agent-src.uncondensed/` (authoring layer) and
   `.augment/` (generated output). Edit the former, never the latter.
 - **pytest** test suite under `tests/`.
 
@@ -33,7 +33,7 @@ suggestions in a PR touching this repo, they are wrong.
 ## ✅ Portability rules for this package
 
 - **Never reference a specific consumer project** (project names, domains,
-  internal tools, customers) in `.augment/`, `.agent-src.uncompressed/`, root
+  internal tools, customers) in `.augment/`, `.agent-src.uncondensed/`, root
   `AGENTS.md`, or `.github/copilot-instructions.md`. Everything here must work
   in **any** consumer project.
 - Project-specific behavior belongs in a consumer's own `.agent-settings.yml`,
@@ -43,7 +43,7 @@ suggestions in a PR touching this repo, they are wrong.
 ## ✅ Editing `.augment/` — source-of-truth rule
 
 - **Never edit files under `.augment/` directly.** It is generated output.
-- Edit `.agent-src.uncompressed/` and run `task sync` (or `task ci`).
+- Edit `.agent-src.uncondensed/` and run `task sync` (or `task ci`).
 - Never edit generated tool outputs: `.claude/`, `.cursor/`, `.clinerules/`,
   `.windsurfrules`, `GEMINI.md`.
 
@@ -68,7 +68,7 @@ suggestions in a PR touching this repo, they are wrong.
 
 ## ✅ Markdown / content standards
 
-- Every `.md` file under `.agent-src.uncompressed/` authoring layer.
+- Every `.md` file under `.agent-src.uncondensed/` authoring layer.
 - Skills must declare YAML frontmatter (`name`, `description`, optionally
   `source`, `disable-model-invocation`, `skills`).
 - Size budgets enforced by linter: skills compact, rules focused, commands
@@ -87,7 +87,7 @@ suggestions in a PR touching this repo, they are wrong.
 ## ✅ CI checks (must all pass)
 
 `task ci` runs: sync-check, sync-check-hashes, sync, generate-tools, consistency
-(git clean), check-compression, check-refs, check-portability, lint-skills, test
+(git clean), check-condensation, check-refs, check-portability, lint-skills, test
 (bash + pytest), lint-readme.
 
 If Copilot reviews a PR that fails any of these, reference the specific task.
@@ -116,13 +116,13 @@ If Copilot reviews a PR that fails any of these, reference the specific task.
 
 - Code comments: English.
 - Commit messages: English, Conventional Commits.
-- User-facing prose in `.agent-src.uncompressed/` `.md` files: English.
+- User-facing prose in `.agent-src.uncondensed/` `.md` files: English.
 - PR comments: English.
 
 ## ✅ Known False Positives — Do NOT Flag
 
 The repo ships agent-config rules and skills under `.augment/`,
-`.agent-src/`, and (during authoring) `.agent-src.uncompressed/`.
+`.agent-src/`, and (during authoring) `.agent-src.uncondensed/`.
 Cross-references inside those trees resolve via the **delivered**
 `.augment/` layout — not via raw git checkout. Copilot's static
 checker walks the git tree, so it sees broken paths where there are
@@ -135,7 +135,7 @@ design:
   delivered location (e.g. `.augment/rules/<rule>.md`) — these paths
   are valid via the `.augment/` tree, even when the file is symlinked
   into `.claude/rules/`, `.cursor/rules/`, or `.clinerules/`.
-- **`path_prefix:` triggers containing `.agent-src.uncompressed/`**
+- **`path_prefix:` triggers containing `.agent-src.uncondensed/`**
   in YAML frontmatter. This is a literal match pattern for the
   host's router, **not** a file reference — source-of-truth meta-rules
   (`augment-source-of-truth`, `augment-portability`, `skill-quality`,
@@ -146,17 +146,17 @@ design:
   `.augment/skills/`, `.augment/commands/` via installer-managed
   symlinks. Missing-file reports here are renderer artifacts.
 - **Body-link forms `../docs/guidelines/...`** (single-up). This is
-  the post-rewrite shape produced by `scripts/compress.py`. The
-  compressed `.agent-src/rules/` tree is one level deeper than the
-  source `.agent-src.uncompressed/rules/`, so the rewriter collapses
+  the post-rewrite shape produced by `scripts/condense.py`. The
+  condensed `.agent-src/rules/` tree is one level deeper than the
+  source `.agent-src.uncondensed/rules/`, so the rewriter collapses
   `../../docs/...` to `../docs/...`. Both forms are expected — one in
-  source, one in compressed output.
+  source, one in condensed output.
 - **`source: package` in skill frontmatter** — required marker, do
   not remove.
 - **`disable-model-invocation: true` on commands** — required marker,
   do not remove.
 
 **What TO flag:** code defects, security issues, broken tests, type
-errors, and any new `.agent-src.uncompressed/` substring introduced
-into `.agent-src/rules/` body content (the `check-compressed-paths`
+errors, and any new `.agent-src.uncondensed/` substring introduced
+into `.agent-src/rules/` body content (the `check-condensed-paths`
 task gates this — flag it as a regression if it slips through).

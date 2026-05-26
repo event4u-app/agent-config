@@ -6,11 +6,11 @@ OUT.parent.mkdir(parents=True, exist_ok=True)
 
 framing = """# Cross-check request — Phase 1 of "Road to Rule Kernel and Router"
 
-We are about to compress a 56-rule "always-active" set down to a small
+We are about to condense a 56-rule "always-active" set down to a small
 hard-capped kernel + a router-loaded auto bucket. Phase 1 is purely
 classification + projection — no source rules edited yet. Two contracts
 were produced. We want a neutral second opinion BEFORE Phase 2 ships
-compression to the actual rule files.
+condensation to the actual rule files.
 
 ## What we want from you
 
@@ -23,13 +23,13 @@ compression to the actual rule files.
    lists 4 criteria (Iron-Law floor / mode-independent / pre-action
    gate / cross-cutting). Are these the right gates? Is anything
    missing or redundant?
-3. **Compression-rate r = 0.742.** Three pilots gave r-values 0.677 /
+3. **Condensation-rate r = 0.742.** Three pilots gave r-values 0.677 /
    0.712 / 0.838. We locked the **mean**. Reasonable, or should we use
    median (0.712) / max (0.838) as a more conservative budget cushion?
    Note: pilot range straddles the typical 0.6-0.75 band; max came
    from the shortest rule (already-lean floor effect).
 4. **The 1.5k per-rule cap with ADR-override.** Two of the three pilots
-   land >1.5k post-compression and would need an `iron-law-override`
+   land >1.5k post-condensation and would need an `iron-law-override`
    ADR. Is the per-rule cap realistic, or should we raise the per-rule
    ceiling (e.g. 2.5k or 3.5k) and lower the bucket cap (e.g. from 25k
    to 20k)? What's the failure mode you'd be most worried about?
@@ -49,7 +49,7 @@ with OUT.open("a") as fh:
     fh.write(Path("docs/contracts/rule-classification.md").read_text())
     fh.write("\n\n---\n\n## Contract 2 — docs/contracts/kernel-membership.md\n\n")
     fh.write(Path("docs/contracts/kernel-membership.md").read_text())
-    fh.write("\n\n---\n\n## Pilot inputs (compressed bodies, for reference)\n")
+    fh.write("\n\n---\n\n## Pilot inputs (condensed bodies, for reference)\n")
     for rid in ("agent-authority", "direct-answers", "language-and-tone"):
         fh.write(f"\n### Pilot — {rid}\n\n")
         fh.write(Path(f"docs/contracts/pilot/{rid}.md").read_text())

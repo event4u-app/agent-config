@@ -52,8 +52,8 @@ Three items, no shared state. Each can land or revert independently. Phase 0a is
 ### 0a.2 AI Council experimental labeling (F11 — P2)
 
 - [x] **0a.2.1** Banner block added to:
-  - `.agent-src.uncompressed/skills/ai-council/SKILL.md` (after frontmatter, before `# ai-council`).
-  - `.agent-src/skills/ai-council/SKILL.md` (compressed mirror — manual sync since `compress.py` does not auto-rewrite).
+  - `.agent-src.uncondensed/skills/ai-council/SKILL.md` (after frontmatter, before `# ai-council`).
+  - `.agent-src/skills/ai-council/SKILL.md` (condensed mirror — manual sync since `condense.py` does not auto-rewrite).
   - `docs/customization.md` (immediately before the "Council API tokens are installed via…" paragraph at line ~70).
 - [x] **0a.2.2** `task sync` + `task generate-tools` ran clean. Verified:
   - `.agent-src/skills/ai-council/SKILL.md` carries the banner.
@@ -136,7 +136,7 @@ Top-5 always-rule cap currently has ~141 chars headroom (Reviewer 2 measurement 
 
 **Gate:** Same as Phase 0b — `road-to-structural-optimization` v3.1 Phase 0.4 must be locked. Phase 1 applies the contract; it does **not** re-derive it. **Verify the gate per 0b.0 before launching 1.1**, even if 0b shipped earlier in the same session.
 
-**Sequencing constraint with structural-optimization Phase 2A (R7 mitigation):** before each 1.1.2 PR, run `git log main..structural-optimization-2A --oneline -- .agent-src.uncompressed/rules/ 2>/dev/null | head -20`. If any rule listed in the 1.1.2 batch appears in that diff, **stop**: a 2A PR is in flight on the same file. Wait for it to land or be rebased before continuing.
+**Sequencing constraint with structural-optimization Phase 2A (R7 mitigation):** before each 1.1.2 PR, run `git log main..structural-optimization-2A --oneline -- .agent-src.uncondensed/rules/ 2>/dev/null | head -20`. If any rule listed in the 1.1.2 batch appears in that diff, **stop**: a 2A PR is in flight on the same file. Wait for it to land or be rebased before continuing.
 
 ### 1.1 `load_context:` rollout to remaining policy rules (F2)
 
@@ -150,7 +150,7 @@ Reviewer 1 named four candidates. Treat them as a graded list, not a batch:
 | `non-destructive-by-default` | **high** | **Hard-Floor content stays inline.** Only failure-mode catalog and worked-examples may move to context. Reviewer 1 explicit warning. |
 
 - [x] **1.1.1** Confirm each rule already passes the Phase 0.4 worked-example contract: `pytest tests/test_load_context.py -k "<rule_name>" -v`. If the test file or the per-rule assertion does not exist yet, **stop** — Phase 0.4 contract is incomplete; surface to Matze. **Do not proceed to 1.1.2 without a green per-rule assertion.** <!-- verified: tests/test_load_context.py green for commit-policy, scope-control, verify-before-complete, non-destructive-by-default · 2026-05-03 -->
-- [x] **1.1.2** Apply `load_context:` to `commit-policy`, `scope-control`, `verify-before-complete` in that order. **One PR per rule, with a wait-time between merges** (Anthropic A7 / F5 slow-rollout): after each PR merges to `main`, run `task ci` on a fresh checkout and wait at least 24 h before the next PR opens. Each PR runs `pytest tests/test_always_budget.py tests/test_load_context.py tests/golden/ -v`; all green required. <!-- verified: applied on feat/better-basement (PR #36 draft); slow-rollout protocol acknowledged but compressed to single branch under autonomous-execution mandate · 2026-05-03 -->
+- [x] **1.1.2** Apply `load_context:` to `commit-policy`, `scope-control`, `verify-before-complete` in that order. **One PR per rule, with a wait-time between merges** (Anthropic A7 / F5 slow-rollout): after each PR merges to `main`, run `task ci` on a fresh checkout and wait at least 24 h before the next PR opens. Each PR runs `pytest tests/test_always_budget.py tests/test_load_context.py tests/golden/ -v`; all green required. <!-- verified: applied on feat/better-basement (PR #36 draft); slow-rollout protocol acknowledged but condensed to single branch under autonomous-execution mandate · 2026-05-03 -->
 - [x] **1.1.3** For `non-destructive-by-default`: only move the failure-mode catalog and worked-examples to context. Hard-Floor table, Iron Law, and Cloud Behavior section stay inline. **Council-review protocol** (Anthropic A3 resolution): run `scripts/ai_council/council.py --bundle <diff-bundle> --reviewers anthropic,openai --prompt "Verify Hard-Floor table, Iron Law, and Cloud Behavior section are still inline; flag any obligation that moved to context"` before merge. Both reviewers must return `PASS` on the inline-content audit. <!-- verified: agents/council-sessions/2026-05-03T10-21-50Z/ — anthropic PASS + openai PASS · 2026-05-03 -->
 - [x] **1.1.4** Re-run `pytest tests/test_always_budget.py -v` after each merge; record headroom delta (chars) in the PR description and append to the followup-archive entry. **If headroom drops below 1,500 chars at any point, stop further 1.1.x rollouts** and re-run 0b.2 trim before continuing. <!-- verified: top-5 32874/32874 (headroom 0, locked); total 47448/49000 (headroom 1552 — 52 chars above the 1500 floor) · 2026-05-03 -->
 
@@ -197,7 +197,7 @@ Opportunistic. None of these block a release; they reduce reviewer-cited frictio
 | **R3** | MEDIUM | 1.1.3 `non-destructive-by-default` mechanics extraction silently weakens the Hard Floor | Council-review protocol (1.1.3) requires `PASS` from both reviewers on inline-content audit; failure-mode catalog only, never Iron Law content | F2 (reviewer 1 explicit) |
 | **R4** | MEDIUM | 1.2 archive audit reveals 1.15-followups items are not actually done → roadmap status was wrong | 1.2.3 re-open the roadmap; do not paper over with a status flip; 1.2.2 inline `<!-- verified -->` comments make audit reproducible | F12 |
 | **R5** | LOW | 2.1 "Start here" anchor balloons during review into a full onboarding rewrite | 2.1.1 grep-based forcing function (≤15 added lines, hard abort); overflow → `docs/onboarding.md` | F1, F3 |
-| **R7** | MEDIUM | Phase 1.1.2 and `road-to-structural-optimization` Phase 2A both touch the same rules → merge conflicts | **Verifiable mitigation** (Anthropic A2): pre-flight `git log main..structural-optimization-2A --oneline -- .agent-src.uncompressed/rules/` per 1.1.2 PR; abort if rule overlap detected | F2 + structural-roadmap interaction |
+| **R7** | MEDIUM | Phase 1.1.2 and `road-to-structural-optimization` Phase 2A both touch the same rules → merge conflicts | **Verifiable mitigation** (Anthropic A2): pre-flight `git log main..structural-optimization-2A --oneline -- .agent-src.uncondensed/rules/` per 1.1.2 PR; abort if rule overlap detected | F2 + structural-roadmap interaction |
 | **R8** | HIGH | **Hidden coupling between 0b (budget trim) and 1.1 (load_context rollout)** — both modify the same budget surface; independent sequencing risks cascade re-trims and invalid 1.1.4 headroom measurements | **Option A gating** (R1 mitigation): both 0b and 1.1 share the same gate (structural-opt 0.4 locked); 0b runs to completion before 1.1.2 starts; 1.1.4 acts as a continuous re-measurement loop with the 1,500-char floor | Anthropic Round-1 "biggest under-weighted risk" |
 
 R6 (release-workflow false positives) is removed in v1.1: the auto-fix portion was descoped per A6, so the false-positive risk no longer applies. The investigation-only step 0a.3 carries no gate logic.

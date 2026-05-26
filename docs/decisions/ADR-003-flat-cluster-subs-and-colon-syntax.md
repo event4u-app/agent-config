@@ -120,7 +120,7 @@ ceiling.
 
 - [`docs/contracts/command-clusters.md`](../contracts/command-clusters.md)
   — locked cluster set + sub-command naming contract.
-- [`.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md`](../../.agent-src.uncompressed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
+- [`.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md`](../../.agent-src.uncondensed/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md)
   — runtime routing semantics and the colon-canonical rule.
-- [`.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md`](../../.agent-src.uncompressed/contexts/execution/roadmap-process-loop.md)
+- [`.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md`](../../.agent-src.uncondensed/contexts/execution/roadmap-process-loop.md)
   — the shared mechanics that motivated the cluster shape.

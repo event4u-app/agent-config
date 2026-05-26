@@ -4,9 +4,9 @@
 Every policy file under `agents/settings/policies/media/` (except README) must
 be linked from at least one of:
 
-  * a skill SKILL.md (any .agent-src.uncompressed/skills/*/SKILL.md
+  * a skill SKILL.md (any .agent-src.uncondensed/skills/*/SKILL.md
     or .claude/skills/*/SKILL.md),
-  * a routing rule under .agent-src.uncompressed/rules/, or
+  * a routing rule under .agent-src.uncondensed/rules/, or
   * a sibling policy file under agents/settings/policies/media/.
 
 A policy that no surface references is a silent policy and a silent
@@ -31,9 +31,9 @@ EXEMPT_STEMS = frozenset({"README"})
 
 # Surfaces scanned for inbound references to policy files.
 SCAN_ROOTS: tuple[Path, ...] = (
-    REPO / ".agent-src.uncompressed" / "skills",
-    REPO / ".agent-src.uncompressed" / "rules",
-    REPO / ".agent-src.uncompressed" / "commands",
+    REPO / ".agent-src.uncondensed" / "skills",
+    REPO / ".agent-src.uncondensed" / "rules",
+    REPO / ".agent-src.uncondensed" / "commands",
     REPO / ".claude" / "skills",
     REPO / "agents" / "policies" / "media",
 )

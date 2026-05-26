@@ -181,12 +181,12 @@ siblings carry their own scope). Phase 8 = final validation.
   covering Symfony console + bundle + DI patterns at the same depth
   as `laravel`. SKILL.md ≤ 10 KB; calls existing
   `project-analysis-symfony` for analysis surface. **Done 2026-05-14:**
-  [`.agent-src.uncompressed/skills/symfony-workflow/SKILL.md`](../../.agent-src.uncompressed/skills/symfony-workflow/SKILL.md)
+  [`.agent-src.uncondensed/skills/symfony-workflow/SKILL.md`](../../.agent-src.uncondensed/skills/symfony-workflow/SKILL.md)
   (8.6 KB; covers DI, Doctrine, Messenger, voters, Twig, console).
 - [x] **P4.2 — `nextjs-patterns` skill.** Workflow-grade skill
   covering App Router, Server Actions, RSC boundaries at `react-shadcn-
   ui` depth. Calls existing `project-analysis-nextjs`. **Done 2026-05-14:**
-  [`.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md`](../../.agent-src.uncompressed/skills/nextjs-patterns/SKILL.md)
+  [`.agent-src.uncondensed/skills/nextjs-patterns/SKILL.md`](../../.agent-src.uncondensed/skills/nextjs-patterns/SKILL.md)
   (~9.9 KB; covers RSC boundaries, Server Actions, caching, route handlers,
   14.x↔15.x deltas).
 - [x] **P4.3 — README multi-stack line.** Update the "Deepest reference
@@ -206,7 +206,7 @@ siblings carry their own scope). Phase 8 = final validation.
   ≤ 1.5k chars; linter green; behaviour unchanged. **Done 2026-05-14:**
   both rules already refactored to trigger + Iron Law + pointer shape
   (3420 / 3659 chars; under kernel-override ceiling 4000). Mechanics
-  live in `.agent-src.uncompressed/contexts/authority/destructive-mechanics.md`
+  live in `.agent-src.uncondensed/contexts/authority/destructive-mechanics.md`
   and `scope-mechanics.md`. `task lint-rule-budget` green (kernel
   bucket 24884 / 26000). Note: the original 1.5k aspirational target
   was set before kernel-budget linter shipped; the 4k override ceiling
@@ -276,7 +276,7 @@ siblings carry their own scope). Phase 8 = final validation.
   "leave alone". Pass-A surfaced 106 × 2 test-name-suffix
   collisions in `tests/test_modern_editor_formats.py` —
   parametrise candidate. **No tests deleted** per
-  [`non-destructive-by-default`](../../.agent-src.uncompressed/rules/non-destructive-by-default.md).
+  [`non-destructive-by-default`](../../.agent-src.uncondensed/rules/non-destructive-by-default.md).
 
 ## Phase 6 — Sibling: `road-to-proof-not-features.md` 100 % (BLOCKER)
 

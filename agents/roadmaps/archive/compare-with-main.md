@@ -16,7 +16,7 @@ What got weaker or riskier:
 
 * some of the old strictness around execution quality moved from “enforced” to “advised”
 * the new guideline layer is strong, but can accidentally make skills too dependent on guidelines
-* the new source-of-truth workflow is safer during editing, but weaker at keeping compressed output continuously up to date
+* the new source-of-truth workflow is safer during editing, but weaker at keeping condensed output continuously up to date
 * the system is now better structured, but easier to make “clean but weaker” if the linter stays too flexible
 
 ---
@@ -90,7 +90,7 @@ Keep the rule.
 But add one small safeguard:
 
 * routing must still verify that the chosen specialist skill is actually sharp enough
-* do not let this rule send requests into weak, over-compressed target skills
+* do not let this rule send requests into weak, over-condensed target skills
 
 Suggested addition:
 
@@ -171,18 +171,18 @@ That boundary is implied in `main` and PR #3, but it should become explicit now 
 
 On `main`, the workflow says:
 
-1. edit in `.agent-src.uncompressed/`
-2. compress into `.augment/`
+1. edit in `.agent-src.uncondensed/`
+2. condense into `.augment/`
 3. mark done
 
-That means compression is expected immediately after the edit. ([GitHub][6])
+That means condensation is expected immediately after the edit. ([GitHub][6])
 
 In PR #3, the workflow changes to:
 
-1. edit in `.agent-src.uncompressed/`
-2. **do not auto-compress**
-3. before commit/push, check if compression is needed
-4. run `/compress` only then
+1. edit in `.agent-src.uncondensed/`
+2. **do not auto-condense**
+3. before commit/push, check if condensation is needed
+4. run `/condense` only then
 
 That is a real workflow improvement for active editing. ([GitHub][7])
 
@@ -190,20 +190,20 @@ That is a real workflow improvement for active editing. ([GitHub][7])
 
 Because it avoids:
 
-* compressing half-finished work
+* condensing half-finished work
 * constant interruption
 * repeatedly mutating `.augment/` during active drafting
 
-That is especially important now that compression itself is more opinionated.
+That is especially important now that condensation itself is more opinionated.
 
 ### How to preserve this quality
 
-Keep the new “compress before commit/push” model.
+Keep the new “condense before commit/push” model.
 
 But add an explicit checkpoint rule:
 
 * after any meaningful milestone, run `task sync-changed`
-* before asking for review, verify whether compressed outputs are stale
+* before asking for review, verify whether condensed outputs are stale
 
 That preserves the flexibility of PR #3 without losing situational awareness.
 
@@ -215,13 +215,13 @@ That preserves the flexibility of PR #3 without losing situational awareness.
 
 This is the main place where `main` was actually stronger.
 
-`main` effectively forces quick re-alignment because compression happens right after editing. PR #3 intentionally delays compression until commit/push. ([GitHub][6])
+`main` effectively forces quick re-alignment because condensation happens right after editing. PR #3 intentionally delays condensation until commit/push. ([GitHub][6])
 
 ### What exactly was better on `main`
 
 * derived output stayed closer to source edits during the whole work session
-* less chance of forgetting compression for a long-lived branch
-* easier to compare source and compressed versions early
+* less chance of forgetting condensation for a long-lived branch
+* easier to compare source and condensed versions early
 
 ### Why it was better in that narrow sense
 
@@ -229,17 +229,17 @@ Because consistency was enforced earlier, not only at the end.
 
 ### Why PR #3 is still directionally right
 
-Because immediate compression is too disruptive for real editing.
+Because immediate condensation is too disruptive for real editing.
 
 ### How to keep PR #3 quality without regressing
 
-Do **not** go back to auto-compress-after-every-edit.
+Do **not** go back to auto-condense-after-every-edit.
 
 Instead add:
 
 * a required `task sync-changed` check before review
 * a CI consistency workflow
-* a linter / reviewer note when `.agent-src.uncompressed/` changed but derived outputs were not regenerated
+* a linter / reviewer note when `.agent-src.uncondensed/` changed but derived outputs were not regenerated
 
 That preserves the better editing workflow while restoring the alignment guarantee that `main` enforced more aggressively.
 
@@ -340,7 +340,7 @@ Restore these enforcement points:
 
 * `Procedure` required again for skills
 * `missing_validation` back to error
-* compressed skill fails if it loses:
+* condensed skill fails if it loses:
 
     * concrete validation
     * concrete example
@@ -369,7 +369,7 @@ Restore:
 
 * `Procedure` required
 * `missing_validation` = error
-* compression-preservation checks
+* condensation-preservation checks
 * explicit “guidelines do not replace skills” rule. ([GitHub][1])
 
 ### C. Strengthen three rules/files directly
@@ -422,7 +422,7 @@ The rule layer is more formal, more complete, and more useful than on `main`. ([
 
 `main` was better mainly in two narrow ways:
 
-* tighter day-to-day alignment between source and compressed output
+* tighter day-to-day alignment between source and condensed output
 * lower risk that guidelines overshadow skills because the guideline surface was smaller. ([GitHub][6])
 
 ### What exactly must be corrected now?
@@ -441,9 +441,9 @@ What must be corrected is the **system around them**:
 PR #3 made the **rule layer better than `main`**, but to keep that gain, you now need to restore the **execution-quality guardrails** that stop stronger rules from being undermined by weaker skills. ([GitHub][1])
 
 [1]: https://github.com/event4u-app/agent-config/pull/3 "docs: add skills audit baseline and results template by matze4u · Pull Request #3 · event4u-app/agent-config · GitHub"
-[2]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/analysis-skill-routing.md "raw.githubusercontent.com"
-[3]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/markdown-safe-codeblocks.md "raw.githubusercontent.com"
-[4]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
-[5]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/guidelines.md "raw.githubusercontent.com"
-[6]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
-[7]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncompressed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
+[2]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncondensed/rules/analysis-skill-routing.md "raw.githubusercontent.com"
+[3]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncondensed/rules/markdown-safe-codeblocks.md "raw.githubusercontent.com"
+[4]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncondensed/rules/guidelines.md "raw.githubusercontent.com"
+[5]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncondensed/rules/guidelines.md "raw.githubusercontent.com"
+[6]: https://raw.githubusercontent.com/event4u-app/agent-config/main/.agent-src.uncondensed/rules/augment-source-of-truth.md "raw.githubusercontent.com"
+[7]: https://raw.githubusercontent.com/event4u-app/agent-config/refs/pull/3/head/.agent-src.uncondensed/rules/augment-source-of-truth.md "raw.githubusercontent.com"

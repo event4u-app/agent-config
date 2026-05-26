@@ -11,7 +11,7 @@ verdict: do_not_consolidate
 # Phase 3b/3c — Feasibility audit
 
 **Verdict: DO NOT CONSOLIDATE.** Same shape as Phase 3a (locked at
-`.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md`):
+`.agent-src.uncondensed/contexts/judges/no-consolidate-rationale.md`):
 the procedural skeleton across both families is too thin for
 extraction to clear the 30 % per-skill LOC reduction threshold.
 
@@ -104,7 +104,7 @@ Same root cause as Phase 3a:
   exists to extract.
 
 The locked Phase-3a decision rationale at
-[`.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md`](../../.agent-src.uncompressed/contexts/judges/no-consolidate-rationale.md)
+[`.agent-src.uncondensed/contexts/judges/no-consolidate-rationale.md`](../../.agent-src.uncondensed/contexts/judges/no-consolidate-rationale.md)
 already anticipated this outcome:
 
 > "The same argument applies to procedural duplication in any small
@@ -156,7 +156,7 @@ def analyze(paths):
         pct = in_shared / len(lines) * 100 if lines else 0
         print(f"  {name:50s}  {in_shared:3d}/{len(lines):3d}  ({pct:.0f}%)")
 
-ROOT = Path(".agent-src.uncompressed/skills")
+ROOT = Path(".agent-src.uncondensed/skills")
 print("3b:"); analyze(sorted(ROOT.glob("project-analysis-*/SKILL.md")))
 print("3c:"); analyze(sorted(ROOT.glob("skill-*/SKILL.md")))
 ```

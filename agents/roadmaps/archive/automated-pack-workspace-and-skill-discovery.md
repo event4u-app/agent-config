@@ -25,8 +25,8 @@ status: completed
 - [x] Read [`docs/decisions/ADR-007-agent-discovery-scopes.md`](../../docs/decisions/ADR-007-agent-discovery-scopes.md) — global vs. project scope. Manifest paths MUST resolve against the **active scope**, not against `cwd` alone
 - [x] Read [`docs/decisions/ADR-010-profile-pack-preset-boundary.md`](../../docs/decisions/ADR-010-profile-pack-preset-boundary.md) — the four-axes model (profile / preset / pack / cost_profile). This roadmap touches **the pack axis only**; it MUST NOT add a knob to any other axis
 - [x] Read [`docs/decisions/ADR-011-domain-pack-readiness.md`](../../docs/decisions/ADR-011-domain-pack-readiness.md) — the **non-extraction stance** is binding. Packs are **labels on in-repo artefacts**, not separately-installable npm packages, until ADR-011's design + confirmation gates flip
-- [x] Read [`AGENTS.md`](../../AGENTS.md) and the existing skill/rule frontmatter shape under `.agent-src.uncompressed/skills/`
-- [x] Confirm the current artefact inventory: `find .agent-src.uncompressed -name SKILL.md | wc -l`, `find .agent-src.uncompressed/rules -name '*.md' | wc -l`, `find .agent-src.uncompressed/commands -name '*.md' | wc -l`. Recorded in `agents/evidence/notes/discovery-baseline.md` (Phase 0.1): skills 218 · rules 72 · commands 129 · templates 141
+- [x] Read [`AGENTS.md`](../../AGENTS.md) and the existing skill/rule frontmatter shape under `.agent-src.uncondensed/skills/`
+- [x] Confirm the current artefact inventory: `find .agent-src.uncondensed -name SKILL.md | wc -l`, `find .agent-src.uncondensed/rules -name '*.md' | wc -l`, `find .agent-src.uncondensed/commands -name '*.md' | wc -l`. Recorded in `agents/evidence/notes/discovery-baseline.md` (Phase 0.1): skills 218 · rules 72 · commands 129 · templates 141
 
 ## Context
 
@@ -73,7 +73,7 @@ The fix is a single source of truth:
 ### What this roadmap is NOT
 
 - **Not** the start of monorepo extraction. The artefacts stay where
-  they are under `.agent-src.uncompressed/`. Compare ADR-011: pack
+  they are under `.agent-src.uncondensed/`. Compare ADR-011: pack
   extraction needs two independent heavyweight domains with
   overlapping execution surfaces; the trigger is not met.
 - **Not** a renaming pass. `domain:` (existing, free-form) and
@@ -96,7 +96,7 @@ The fix is a single source of truth:
 
 ## Acceptance criteria (whole roadmap)
 
-- [x] Every artefact under `.agent-src.uncompressed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set *(443 artefacts annotated in Phase 4; `unassigned[]` audited in `agents/evidence/notes/discovery-manifest-diff-phase4.md`)*
+- [x] Every artefact under `.agent-src.uncondensed/{skills,rules,commands,templates}` either (a) declares `workspaces: […]` and `packs: […]` in its frontmatter, or (b) is listed in `config/discovery/unassigned-artefacts.yml` with a one-line reason; the scanner's "unassigned" warning lists the same set *(443 artefacts annotated in Phase 4; `unassigned[]` audited in `agents/evidence/notes/discovery-manifest-diff-phase4.md`)*
 - [x] `python3 scripts/build_discovery_manifest.py --write` produces `dist/discovery/discovery-manifest.json` and `dist/discovery/discovery-manifest.summary.md` from the trees above; running it twice in a row is a no-op (byte-identical output) *(`task check-discovery-determinism` enforces this in CI; sidecar `discovery-manifest.json.sha256` added Phase 7)*
 - [x] The manifest validates against `docs/contracts/discovery-manifest.schema.json` (JSON Schema 2020-12); `python3 scripts/lint_discovery_manifest.py --quiet` exits 0 *(`task lint-discovery-manifest` green in CI)*
 - [x] `agent-config workspaces ls` and `agent-config packs ls` (both new TS subcommands) print the workspace / pack lists straight from the manifest; no other source of truth exists in the TS code *(`src/cli/commands/{workspaces,packs}.ts` shipped in R1 `2.26.0`; both call `loadManifest()` from `src/cli/discovery/loadManifest.ts`)*
@@ -208,7 +208,7 @@ The fix is a single source of truth:
 - [x] `docs/decisions/ADR-013-discovery-frontmatter-contract.md` exists, lists every vocabulary value, and the ADR index regenerated via `.venv/bin/python scripts/adr/regenerate_index.py --dir docs/decisions` (13 numbered + 1 legacy ADRs; `--check` exits 0)
 - [x] `docs/contracts/discovery-manifest.schema.json` validates against itself with a JSON Schema validator: `.venv/bin/python -c "import json,jsonschema;s=json.load(open('docs/contracts/discovery-manifest.schema.json'));jsonschema.Draft202012Validator.check_schema(s)"` exits 0
 - [x] `agents/evidence/notes/discovery-baseline.md` exists and has the inventory numbers (80 lines)
-- [x] **No artefact bodies are modified in Phase 0.** A `git diff --stat .agent-src.uncompressed/` reports 0 lines changed
+- [x] **No artefact bodies are modified in Phase 0.** A `git diff --stat .agent-src.uncondensed/` reports 0 lines changed
 
 ## Phase 1: Workspace & pack vocabulary as YAML, schema-checked
 
@@ -288,7 +288,7 @@ The fix is a single source of truth:
       [--strict]                  # treat 'unassigned' as failure (Phase 4 turns this on by default)
       [--quiet]
   ```
-- [x] Scan order is deterministic: `.agent-src.uncompressed/skills/*/SKILL.md`, then `rules/**/*.md`, then `commands/**/*.md`, then `templates/**/*.md`. The same input set MUST produce byte-identical output.
+- [x] Scan order is deterministic: `.agent-src.uncondensed/skills/*/SKILL.md`, then `rules/**/*.md`, then `commands/**/*.md`, then `templates/**/*.md`. The same input set MUST produce byte-identical output.
 - [x] For each artefact:
   1. Parse YAML frontmatter (existing `_load_frontmatter()` helper exists somewhere under `scripts/_lib/`; reuse it — do not inline a new parser)
   2. Read `workspaces:` (array), `packs:` (array), `lifecycle:`, `trust:`, `install:`
@@ -368,7 +368,7 @@ The fix is a single source of truth:
 
 ### Step 4.1: Annotate skills
 
-- [x] For every `SKILL.md` under `.agent-src.uncompressed/skills/`, add the four new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) to the frontmatter. Use the closed vocabularies only.
+- [x] For every `SKILL.md` under `.agent-src.uncondensed/skills/`, add the four new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) to the frontmatter. Use the closed vocabularies only.
 - [x] Mapping rule (default; override with judgement):
   - `domain: engineering` → `workspaces: [engineering]`
   - `domain: product` → `workspaces: [product]` (and `[product, engineering]` when the skill is engineering-adjacent like `api-design`)
@@ -380,9 +380,9 @@ The fix is a single source of truth:
 
 ### Step 4.2: Annotate rules, commands, templates
 
-- [x] Same exercise for every rule under `.agent-src.uncompressed/rules/` — most map to `workspaces: [engineering]`, `packs: [engineering-base]`, with a long tail of pack-specific rules (`php`, `laravel`, `react`, …).
-- [x] Same exercise for every command under `.agent-src.uncompressed/commands/`. `/work`, `/implement-ticket`, `/refine-ticket`, etc. → `workspaces: [engineering]`. `/video:*` cluster → `workspaces: [product, small-business]`, `packs: [ai-video]`. `/founder:*` (if present) → `workspaces: [founder]`.
-- [x] Same exercise for templates under `.agent-src.uncompressed/templates/`.
+- [x] Same exercise for every rule under `.agent-src.uncondensed/rules/` — most map to `workspaces: [engineering]`, `packs: [engineering-base]`, with a long tail of pack-specific rules (`php`, `laravel`, `react`, …).
+- [x] Same exercise for every command under `.agent-src.uncondensed/commands/`. `/work`, `/implement-ticket`, `/refine-ticket`, etc. → `workspaces: [engineering]`. `/video:*` cluster → `workspaces: [product, small-business]`, `packs: [ai-video]`. `/founder:*` (if present) → `workspaces: [founder]`.
+- [x] Same exercise for templates under `.agent-src.uncondensed/templates/`.
 
 ### Step 4.3: Quarantine genuinely-cross-cutting artefacts
 
@@ -396,7 +396,7 @@ The fix is a single source of truth:
 
 ### Step 4.5: Phase 4 acceptance
 
-- [x] `grep -L 'workspaces:' .agent-src.uncompressed/skills/*/SKILL.md` returns nothing (every skill annotated)
+- [x] `grep -L 'workspaces:' .agent-src.uncondensed/skills/*/SKILL.md` returns nothing (every skill annotated)
 - [x] `python3 scripts/build_discovery_manifest.py --write --strict --quiet` exits 0
 - [x] `dist/discovery/discovery-manifest.json` `.unassigned` array is short (≤ 10 entries) and every entry has a `reason:`
 - [x] One mass-edit commit per artefact category (skills / rules / commands / templates) — four commits in the implementing PR, not one giant blob. Each commit's diff stat is auditable
@@ -498,17 +498,17 @@ The fix is a single source of truth:
 ### Council TODOs (filled by the council pass)
 
 > Pass executed in-session 2026-05-18 against the repo personas listed
-> in `.agent-src.uncompressed/personas/`. External `/council` (paid
+> in `.agent-src.uncondensed/personas/`. External `/council` (paid
 > API) can re-run on top before the `draft → proposed` flip.
 
 **`backend-architect` — ADR-011 alignment and frontmatter collision risk**
 
 - [x] The "virtual pack" emitter in Phase 4 sits close to the ADR-011 line. Add an explicit non-goal: the discovery manifest may NOT generate per-pack `node_modules` entries, sub-`package.json` files, or any artefact that would survive `git clean -fx` and look like an extracted pack. Otherwise future contributors see the manifest and start authoring against it as if packs were extracted — exactly the failure ADR-011 was written to prevent. *Folded: Non-goals section (this file, lines 131-136) explicitly forbids per-pack `node_modules`, sub-`package.json`, and any `git clean -fx`-surviving extracted-pack artefacts.*
-- [x] The new frontmatter fields (`workspaces:`, `packs:`) widen the contributor API for every SKILL.md / RULE.md author. Add a Phase 1 step: enumerate all existing frontmatter keys across `.agent-src.uncompressed/skills/`, `.augment/rules/`, `.claude/skills/` and check the new keys do not collide. Lint enforces the collision check at PR time. *Folded: the five new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) are additive per ADR-013 §"Why additive, not renaming"; Phase 4 mass-annotated 443 artefacts with zero collision against the pre-existing keys (`name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`). `scripts/lint_artefact_frontmatter.py` enforces shape per PR; `scripts/schemas/{skill,command,rule}.schema.json` declare the five keys as part of the contract, so any future collision attempt fails at schema validation.*
+- [x] The new frontmatter fields (`workspaces:`, `packs:`) widen the contributor API for every SKILL.md / RULE.md author. Add a Phase 1 step: enumerate all existing frontmatter keys across `.agent-src.uncondensed/skills/`, `.augment/rules/`, `.claude/skills/` and check the new keys do not collide. Lint enforces the collision check at PR time. *Folded: the five new keys (`workspaces`, `packs`, `lifecycle`, `trust`, `install`) are additive per ADR-013 §"Why additive, not renaming"; Phase 4 mass-annotated 443 artefacts with zero collision against the pre-existing keys (`name`, `description`, `source`, `domain`, `status`, `tier`, `recommended_for_user_types`). `scripts/lint_artefact_frontmatter.py` enforces shape per PR; `scripts/schemas/{skill,command,rule}.schema.json` declare the five keys as part of the contract, so any future collision attempt fails at schema validation.*
 
 **`security-engineer` — frontmatter is untrusted input at scan time**
 
-- [x] A skill file from a forked or fed-in source could declare ownership of the `core` workspace and inject itself into every consumer that reads the manifest. **Mandate**: the scanner only honours frontmatter on files under the trusted roots (`.augment/`, `.claude/`, `.agent-src.uncompressed/`, `.agent-src/`) and refuses ownership claims on files under `agents/`, `tmp/`, or any consumer-writable path. Add the trust-root allow-list to Phase 2. *Folded: `scripts/build_discovery_manifest.py:4` walks the trusted-root tree (`.agent-src.uncompressed/`); files outside the allow-list land in `unassigned[]` with `reason: "outside trusted-root allow-list"` (line 159) instead of being honoured.*
+- [x] A skill file from a forked or fed-in source could declare ownership of the `core` workspace and inject itself into every consumer that reads the manifest. **Mandate**: the scanner only honours frontmatter on files under the trusted roots (`.augment/`, `.claude/`, `.agent-src.uncondensed/`, `.agent-src/`) and refuses ownership claims on files under `agents/`, `tmp/`, or any consumer-writable path. Add the trust-root allow-list to Phase 2. *Folded: `scripts/build_discovery_manifest.py:4` walks the trusted-root tree (`.agent-src.uncondensed/`); files outside the allow-list land in `unassigned[]` with `reason: "outside trusted-root allow-list"` (line 159) instead of being honoured.*
 - [x] The release-time manifest ships in the npm tarball. An unsigned manifest is a supply-chain risk for downstream consumers. Add to Phase 6: emit `discovery-manifest.json.sha256` at build time alongside the manifest; the CLI verifies on first read; verification failure aborts before any discovery-driven action. *Folded: `scripts/build_discovery_manifest.py` now writes a sidecar `dist/discovery/discovery-manifest.json.sha256` next to the manifest on every `--write`. The embedded `checksum` field covers structural content; the sidecar covers the on-disk bytes. CLI verification on first read is a separate follow-up (`trust-tier-runtime-enforcement` roadmap) — the supply-chain primitive is in place.*
 
 **`critical-challenger` — activation-surface audit**

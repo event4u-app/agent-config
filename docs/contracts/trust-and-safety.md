@@ -11,7 +11,7 @@ keep-beta-until: 2026-08-21
 Phase 1 stamped every artefact with `trust.level`,
 `trust.confidence`, and `trust.human_review_required`. Phase 5
 **enforces** those fields: the installer surfaces them at selection
-time, the compressor injects banners into compiled output, the
+time, the condenseor injects banners into compiled output, the
 runtime gates `human_review_required: true` artefacts before final
 output, and a lint catches drift. This contract is what those four
 consumers depend on.
@@ -37,7 +37,7 @@ demand review on its specific surface.
 
 ## § 2 — HRR banner
 
-The compressor (`scripts/compress.py`) prepends every artefact whose
+The condenseor (`scripts/condense.py`) prepends every artefact whose
 frontmatter declares `trust.human_review_required: true` with:
 
 ```text
@@ -48,9 +48,9 @@ frontmatter declares `trust.human_review_required: true` with:
 ```
 
 - The HTML comment is the parser-stable marker
-  (`_HRR_BANNER_MARKER` in `scripts/compress.py`). Runtime detection
+  (`_HRR_BANNER_MARKER` in `scripts/condense.py`). Runtime detection
   greps for this string, never the prose line.
-- Idempotent: re-compressing a file that already carries the marker
+- Idempotent: re-condensing a file that already carries the marker
   leaves it unchanged.
 - `<domain>` is the first pack id that ships the artefact (e.g.
   `finance-basic`, `founder-strategy`); falls back to `core` for
@@ -135,7 +135,7 @@ Exits 0 clean, 1 on any violation. Tests in
 ## § 7 — References
 
 - ADR: [`ADR-018 — Trust & Safety Layer`](../decisions/ADR-018-trust-and-safety-layer.md)
-- Compressor implementation: [`scripts/compress.py`](../../scripts/compress.py)
+- Condenseor implementation: [`scripts/condense.py`](../../scripts/condense.py)
   (`_inject_hrr_banner`, `_HRR_BANNER_MARKER`)
 - Installer implementation: [`packages/core/installer/src/trust-escalation.ts`](../../packages/core/installer/src/trust-escalation.ts)
 - Lint implementation: [`scripts/lint_trust_coherence.py`](../../scripts/lint_trust_coherence.py)

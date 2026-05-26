@@ -43,9 +43,9 @@ expected char delta, breakage risk, and reviewability cost.
 - [x] **1.2 Merge.** Inventoried in ADR § S2; vocabulary-overlap
       replaced by trigger-condition orthogonality matrix per Council
       Round 2; candidate pairs flagged hazard / candidate.
-- [x] **1.3 Hard-compress.** Inventoried in ADR § S3 with three
-      compression tiers (safe / risky / unsafe); Iron-Law motivational
-      framing forbidden from compression.
+- [x] **1.3 Hard-condense.** Inventoried in ADR § S3 with three
+      condensation tiers (safe / risky / unsafe); Iron-Law motivational
+      framing forbidden from condensation.
 - [x] **1.4 Top-rule rewrite.** Inventoried in ADR § S4; #1 by chars
       = `language-and-tone` at 3,988 raw chars; Iron-Law-to-prose
       ratio recorded; rewrite breakage-prone (kernel-membership
@@ -59,7 +59,7 @@ expected char delta, breakage risk, and reviewability cost.
 - [x] **2.1** 5-axis scoring matrix recorded in ADR § Picked strategy
       (char delta · breakage risk · effort · reversibility · downstream
       coupling). S3 = 10, S5 = 11, S1 = 15, S2 = 19, S4 = 20 (lower wins).
-- [x] **2.2** Primary = S3 (Hard-compress, Tier-1 + Tier-2 only).
+- [x] **2.2** Primary = S3 (Hard-condense, Tier-1 + Tier-2 only).
       Fallback = S5 (N-rule sharing on `asking-and-brevity-examples`).
       Locked in [`agents/settings/contexts/adr-always-budget-relief-strategy.md`](../contexts/adr-always-budget-relief-strategy.md)
       with 6-month expiry (2026-11-08).
@@ -83,13 +83,13 @@ expected char delta, breakage risk, and reviewability cost.
 
 ### Phase 4 — Slow-Rollout Reactivation (≤ 0.25 day)
 
-Document the lesson from PR #36's compression of the rollout
+Document the lesson from PR #36's condensation of the rollout
 schedule under autonomous mandate.
 
 - [x] **4.1** Slow-rollout note added to
-      `.agent-src.uncompressed/rules/scope-control.md` § "Kernel-rule
+      `.agent-src.uncondensed/rules/scope-control.md` § "Kernel-rule
       edits — slow-rollout guarantee" with detail in
-      `.agent-src.uncompressed/contexts/authority/kernel-rule-edits.md`.
+      `.agent-src.uncondensed/contexts/authority/kernel-rule-edits.md`.
       One PR per kernel-rule edit, ≥ 24 h between merges; autonomous
       mandate does not lift the soak window.
 - [x] **4.2** CI guard `scripts/check_kernel_rule_bundle.py` added to

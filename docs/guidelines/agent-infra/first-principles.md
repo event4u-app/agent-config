@@ -8,11 +8,11 @@ verified primitives and reconstruct it without inherited convention.
 Adopted under the **Reference-Guideline Sunset Policy** and
 cross-referenced from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
   — L3 Deep analysis depth.
 - [`mental-models`](mental-models.md) — Munger's lattice; first
   principles is the foundational physics-style lens.
-- [`improve-before-implement`](../../../.agent-src.uncompressed/rules/improve-before-implement.md)
+- [`improve-before-implement`](../../../.agent-src.uncondensed/rules/improve-before-implement.md)
   — challenge the framing of a request before coding it.
 - [`inversion-thinking`](inversion-thinking.md) — pair: first
   principles rebuilds; inversion stress-tests the rebuild.

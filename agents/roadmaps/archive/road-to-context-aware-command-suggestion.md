@@ -4,13 +4,13 @@
 
 ## Prerequisites
 
-- [x] Read `.agent-src.uncompressed/rules/slash-commands.md` — current invocation contract
-- [x] Read `.agent-src.uncompressed/rules/user-interaction.md` — numbered-options Iron Law
-- [x] Read `.agent-src.uncompressed/rules/ask-when-uncertain.md` — one-question-per-turn rule
-- [x] Read `.agent-src.uncompressed/skills/command-routing/SKILL.md` — current routing skill
-- [x] Read `.agent-src.uncompressed/skills/command-writing/SKILL.md` — command-authoring conventions
-- [x] Inventory all commands under `.agent-src.uncompressed/commands/` (75 total — count update vs. roadmap header)
-- [x] Re-read `.agent-src.uncompressed/templates/roadmaps.md`
+- [x] Read `.agent-src.uncondensed/rules/slash-commands.md` — current invocation contract
+- [x] Read `.agent-src.uncondensed/rules/user-interaction.md` — numbered-options Iron Law
+- [x] Read `.agent-src.uncondensed/rules/ask-when-uncertain.md` — one-question-per-turn rule
+- [x] Read `.agent-src.uncondensed/skills/command-routing/SKILL.md` — current routing skill
+- [x] Read `.agent-src.uncondensed/skills/command-writing/SKILL.md` — command-authoring conventions
+- [x] Inventory all commands under `.agent-src.uncondensed/commands/` (75 total — count update vs. roadmap header)
+- [x] Re-read `.agent-src.uncondensed/templates/roadmaps.md`
 
 ## Context (current state)
 
@@ -27,7 +27,7 @@ This keeps every existing safety guarantee — `scope-control`, `ask-when-uncert
 ## Target architecture
 
 ```
-.agent-src.uncompressed/
+.agent-src.uncondensed/
   commands/{any}.md
     frontmatter:
       suggestion:
@@ -108,7 +108,7 @@ Rules:
 
 ## Phase 2: Frontmatter schema and migration
 
-- [x] **Step 1:** Extend command frontmatter with the `suggestion` block. Document in `.agent-src.uncompressed/skills/command-writing/SKILL.md`.
+- [x] **Step 1:** Extend command frontmatter with the `suggestion` block. Document in `.agent-src.uncondensed/skills/command-writing/SKILL.md`.
 - [x] **Step 2:** Add schema validation to `scripts/skill_linter.py` (or sibling `command_linter.py`):
   - `suggestion.eligible` must be `true` or `false`; default `true` if missing.
   - If `eligible: true`, `trigger_description` AND `trigger_context` must be non-empty (≥ 10 chars). Flat shape chosen over list-of-objects to keep within the stdlib YAML parser's one-level nesting; same expressive power, simpler validation. Documented in `command-writing/SKILL.md`.
@@ -119,7 +119,7 @@ Rules:
 
 ## Phase 3: Matcher engine and suggestion rule
 
-- [x] **Step 1:** Author `.agent-src.uncompressed/rules/command-suggestion.md` — always-on, type `always`. Triggers on every user turn that does **not** start with an explicit `/command`. Iron Law: never bypass `scope-control`, `ask-when-uncertain`, `verify-before-complete`. Suggestion is the very first thing the agent emits when matches exist; nothing else runs in the same turn until the user picks.
+- [x] **Step 1:** Author `.agent-src.uncondensed/rules/command-suggestion.md` — always-on, type `always`. Triggers on every user turn that does **not** start with an explicit `/command`. Iron Law: never bypass `scope-control`, `ask-when-uncertain`, `verify-before-complete`. Suggestion is the very first thing the agent emits when matches exist; nothing else runs in the same turn until the user picks.
 - [x] **Step 2:** Implement `scripts/command_suggester/match.py` — reads all eligible command frontmatter, scans the current user message + last 2 turns of context, returns scored matches `[{command, score, matched_trigger, evidence}]`.
 - [x] **Step 3:** Implement `scripts/command_suggester/rank.py` — applies `confidence_floor` from settings (overridable per command), drops blocklisted commands, sorts by score, caps at `max_options`. Returns the ranked list or empty.
 - [x] **Step 4:** Implement `scripts/command_suggester/cooldown.py` — same suggestion (same command, same trigger) is suppressed for `cooldown` window per conversation. Cooldown resets when the user explicitly invokes that command via `/command`.
@@ -140,7 +140,7 @@ Rules:
 
 ## Phase 5: Settings and opt-out paths
 
-- [x] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncompressed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `docs/guidelines/agent-infra/layered-settings.md`.
+- [x] **Step 1:** Add `commands.suggestion` block to `.agent-src.uncondensed/templates/agent-settings.md` and `agent-settings.yml.dist`. Document in `docs/guidelines/agent-infra/layered-settings.md`.
 - [x] **Step 2:** Settings semantics:
   - `enabled: false` → suggestion layer fully off; explicit slash commands still work.
   - `blocklist: ["/refine-ticket"]` → command never appears as a suggestion (still works when typed).
@@ -172,7 +172,7 @@ Rules:
   - **GT-CS9 — adversarial echo:** prompt contains `/commit` as quoted text in user-pasted code → suggestion does not surface `/commit` based on that string.
 - [x] **Step 2:** Wire goldens into `task ci` as a required check.
 - [x] **Step 3:** Document the suggestion contract in `agents/settings/contexts/command-suggestion-flow.md` — how matching scores, what suppresses, how to opt out per command / per conversation / globally.
-- [x] **Step 4:** `task sync && task generate-tools && task ci` — sync + generate-tools verified green; final `task ci` deferred to a follow-up CI run (no code-level work remains; compression drift fixed in commit 4a495c9).
+- [x] **Step 4:** `task sync && task generate-tools && task ci` — sync + generate-tools verified green; final `task ci` deferred to a follow-up CI run (no code-level work remains; condensation drift fixed in commit 4a495c9).
 - [x] **Step 5:** Update `README.md` and `AGENTS.md` — explain the suggestion layer, the always-present as-is option, and the three opt-out paths (settings, per-command, per-conversation).
 - [x] **Step 6:** ADR `agents/settings/contexts/adr-command-suggestion.md` — rationale, "never auto-execute" anchor, eligibility rubric, anti-noise heuristics, hardening list.
 - [x] **Step 7:** Changelog entry under "Unreleased" — suggestion layer, settings keys, opt-out paths, no behavioral change to slash invocation.

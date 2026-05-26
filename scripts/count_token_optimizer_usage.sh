@@ -10,7 +10,7 @@
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-SKILL="$REPO_ROOT/.agent-src.uncompressed/skills/token-optimizer/SKILL.md"
+SKILL="$REPO_ROOT/.agent-src.uncondensed/skills/token-optimizer/SKILL.md"
 
 if [[ ! -f "$SKILL" ]]; then
     echo "ERROR: $SKILL not found" >&2

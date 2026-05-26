@@ -312,7 +312,7 @@ formats whether they want them or not.
       global install.
 - [x] **S25** — Per-format Pytest matrix: assert frontmatter shape,
       assert legacy + modern parity (same content, two formats).
-- [x] **S26** — Update `.augment/scripts/check_compressed_paths.py`
+- [x] **S26** — Update `.augment/scripts/check_condensed_paths.py`
       to include the new directories. (Script validates `.agent-src/rules/`
       `load_context:` resolution — the new `.mdc`/`.windsurf` projections
       have no `load_context:` entries; covered by the S25 pytest matrix

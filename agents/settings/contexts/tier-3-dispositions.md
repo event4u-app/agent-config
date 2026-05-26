@@ -64,7 +64,7 @@ the centralised path instead:
 
 - All 13 dispositions are uniform (`accept-as-soft`) — no per-rule
   variation to record in the rule body.
-- Editing 13 rule frontmatters triggers 13 recompressions plus 13
+- Editing 13 rule frontmatters triggers 13 recondensations plus 13
   cross-platform regenerations (Augment, Claude, Cursor, Cline,
   Windsurf, Gemini), most expensive part of Phase 6 with the least
   information gain.

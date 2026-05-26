@@ -3,7 +3,7 @@
 
 Validates:
   - Schema (required fields per pair)
-  - All rule slugs in `rules:` exist as `.agent-src.uncompressed/rules/<slug>.md`
+  - All rule slugs in `rules:` exist as `.agent-src.uncondensed/rules/<slug>.md`
   - Every pair references rules listed in the top-level `rules:` block
   - `relation` is one of the allowed values
   - All `evidence:` entries point at real files (anchors are advisory, not checked)
@@ -38,7 +38,7 @@ def _rule_exists(slug: str) -> bool:
 def _evidence_exists(file_part: str) -> bool:
     """Return True if the evidence path resolves under any source root.
 
-    Accepts legacy ``.agent-src.uncompressed/...`` citations and resolves
+    Accepts legacy ``.agent-src.uncondensed/...`` citations and resolves
     them through the multi-root layout; falls back to a literal repo
     path check for non-source citations (docs/, agents/, ...).
     """

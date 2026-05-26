@@ -93,5 +93,5 @@ without tripping CI.
 - Runner — [`scripts/bench_runner.py`](../../scripts/bench_runner.py)
 - Linter — `scripts/lint_bench_corpus.py` (Phase 1 Step 3)
 - Existing non-dev corpus — [`tests/eval/corpus-non-dev.yaml`](../../tests/eval/corpus-non-dev.yaml)
-- Language gate — [`language-and-tone`](../../.agent-src.uncompressed/rules/language-and-tone.md)
+- Language gate — [`language-and-tone`](../../.agent-src.uncondensed/rules/language-and-tone.md)
 - Report schema — `docs/contracts/benchmark-report-schema.md` (Phase 2 Step 4)

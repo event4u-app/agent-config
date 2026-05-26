@@ -25,7 +25,7 @@ explicit `accept` step on `/ghostwriter:fetch` re-runs.
   profiles live here. **Gitignored by default** via the package-managed
   `.gitignore` block. A `--shared` opt-in to commit profiles is
   deferred to v2; only the doc note lands in v1.
-- **Package source** — `.agent-src.uncompressed/ghostwriter/` ships
+- **Package source** — `.agent-src.uncondensed/ghostwriter/` ships
   the README, this schema doc, and `fictional: true` fixtures only.
   **Zero real-person profiles ever ship with the OSS package.** A CI
   lint (`task lint-ghostwriter-source`) enforces this rule by failing
@@ -181,7 +181,7 @@ attribution stays deterministic.
 fixtures are schema examples for a single canonical name; aliases are a
 consumer-only deployment feature. The package-source lint
 (`task lint-ghostwriter-source`) fails on `aliases:` in
-`.agent-src.uncompressed/ghostwriter/`.
+`.agent-src.uncondensed/ghostwriter/`.
 
 ### Settings toggle (consumer-only)
 
@@ -293,7 +293,7 @@ instead of merging.
 
 The lint runs in `task ci` and fails on:
 
-1. Any file under `.agent-src.uncompressed/ghostwriter/` whose stem is
+1. Any file under `.agent-src.uncondensed/ghostwriter/` whose stem is
    **not** on the fixture allowlist (`scripts/ghostwriter_fixture_allowlist.txt`).
 2. Any allowlisted file missing `fictional: true` in frontmatter.
 3. Any package-source file (`fictional: true`) carrying an `aliases:`

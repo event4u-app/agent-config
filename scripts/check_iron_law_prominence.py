@@ -107,8 +107,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "paths", nargs="*",
-        default=[".agent-src.uncompressed/rules"],
-        help="Files or directories to scan (default: .agent-src.uncompressed/rules)",
+        default=[".agent-src.uncondensed/rules"],
+        help="Files or directories to scan (default: .agent-src.uncondensed/rules)",
     )
     parser.add_argument("--format", choices=["text", "json"], default="text")
     parser.add_argument("--quiet", action="store_true", help="Only print on failure")

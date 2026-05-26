@@ -36,7 +36,7 @@ Four wings compose via [`cross-wing-handoff.md`](cross-wing-handoff.md)
 
 ## Tech stack
 
-Bash (install scripts) · Python 3.10+ (linters, compression, pytest) ·
+Bash (install scripts) · Python 3.10+ (linters, condensation, pytest) ·
 Markdown (all content) · Taskfile (`task ci/sync/test`) · GitHub
 Actions (`.github/workflows/`). Non-text inputs (PDF, DOCX, XLSX,
 images, audio) route through the
@@ -49,20 +49,20 @@ mechanics deep-dive: [`agents-md-tech-stack.md`](agents-md-tech-stack.md) (beta)
 
 | Directory | Purpose | Editable? |
 |---|---|---|
-| `.agent-src.uncompressed/` | Authoring layer — full verbose content | ✅ Yes — edit here |
-| `.agent-src/` | Compressed output — shipped in the package, consumed by agents | ❌ No — regenerated |
+| `.agent-src.uncondensed/` | Authoring layer — full verbose content | ✅ Yes — edit here |
+| `.agent-src/` | Condensed output — shipped in the package, consumed by agents | ❌ No — regenerated |
 | `.augment/` | Local projection of `.agent-src/` for Augment Code (gitignored) | ❌ No — regenerated |
 | `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules` | Tool-specific projections | ❌ No — regenerated |
 | `agents/` | Package's own roadmaps, contexts, sessions | ✅ Yes |
 
 **Never edit `.agent-src/` or `.augment/` directly.** Edit
-`.agent-src.uncompressed/` and run `task sync` (or `task ci`) to
-compress + regenerate the tool directories.
+`.agent-src.uncondensed/` and run `task sync` (or `task ci`) to
+condense + regenerate the tool directories.
 
 ## Repository layout
 
 ```
-.agent-src.uncompressed/      ← edit here
+.agent-src.uncondensed/      ← edit here
   skills/       (150 skills)
   rules/        (58 rules)
   commands/     (103 commands)
@@ -73,10 +73,10 @@ compress + regenerate the tool directories.
 docs/guidelines/            (47 guidelines — reference material, not packaged)
 docs/contracts/             (kernel-membership, rule-router, rule-classification, …)
 docs/decisions/             (ADRs — kernel overrides, scope decisions)
-.agent-src/                 ← compressed output shipped in the package
+.agent-src/                 ← condensed output shipped in the package
 .agent-src/router.json      ← compiled router manifest (consumed at runtime)
 .augment/                   ← local projection for Augment Code (gitignored)
-scripts/                    ← install.sh, install.py, compress.py, linters
+scripts/                    ← install.sh, install.py, condense.py, linters
 tests/                      ← pytest (324 tests) + test_install.sh
 agents/                     ← this package's own roadmaps / sessions / contexts
 .github/workflows/          ← CI
@@ -88,7 +88,7 @@ agents/                     ← this package's own roadmaps / sessions / context
 |---|---|
 | `.agent-src/` must stay project-agnostic — no project names, domains, stacks | [`augment-portability`](../../.agent-src/rules/augment-portability.md) |
 | Root AGENTS.md + copilot-instructions.md must stay project-agnostic too | [`augment-portability`](../../.agent-src/rules/augment-portability.md) |
-| Edit `.agent-src.uncompressed/`, never `.agent-src/` or `.augment/` | [`augment-source-of-truth`](../../.agent-src/rules/augment-source-of-truth.md) |
+| Edit `.agent-src.uncondensed/`, never `.agent-src/` or `.augment/` | [`augment-source-of-truth`](../../.agent-src/rules/augment-source-of-truth.md) |
 | Skills must declare frontmatter, be self-contained, pass the linter | [`skill-quality`](../../.agent-src/rules/skill-quality.md) |
 | Size budgets for skills, rules, commands | [`size-enforcement`](../../.agent-src/rules/size-enforcement.md) |
 | Keep `.agent-src/` / `agents/` cross-refs in sync on add/rename/delete | [`docs-sync`](../../.agent-src/rules/docs-sync.md) |
@@ -99,7 +99,7 @@ agents/                     ← this package's own roadmaps / sessions / context
 Default-off. `telemetry.artifact_engagement.enabled: true` in
 `.agent-settings.yml` enables local-only JSONL logging. Redaction
 floor + pipeline:
-[`artifact-engagement-flow.md`](../../.agent-src.uncompressed/contexts/contracts/artifact-engagement-flow.md)
+[`artifact-engagement-flow.md`](../../.agent-src.uncondensed/contexts/contracts/artifact-engagement-flow.md)
 (beta). Rule:
 [`artifact-engagement-recording`](../../.agent-src/rules/artifact-engagement-recording.md).
 
@@ -111,7 +111,7 @@ surfaces matches as numbered options with a "run as-is" escape;
 Rule: [`command-suggestion-policy`](../../.agent-src/rules/command-suggestion-policy.md).
 Eligibility + scoring + hardening:
 [`adr-command-suggestion.md`](adr-command-suggestion.md) and
-[`command-suggestion-flow.md`](../../.agent-src.uncompressed/contexts/contracts/command-suggestion-flow.md)
+[`command-suggestion-flow.md`](../../.agent-src.uncondensed/contexts/contracts/command-suggestion-flow.md)
 (beta).
 
 ## Multi-agent tool support
@@ -126,7 +126,7 @@ layout + cloud-bundle pipeline:
 
 ## Contributing
 
-1. Edit inside `.agent-src.uncompressed/` or `scripts/` or `tests/` —
+1. Edit inside `.agent-src.uncondensed/` or `scripts/` or `tests/` —
    never in `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, etc.
 2. Run `task ci` locally. It must exit 0.
 3. Commit in logical chunks with Conventional Commits.

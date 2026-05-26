@@ -2,7 +2,7 @@
 
 Nine cases mirror the `road-to-context-aware-command-suggestion`
 acceptance criteria. Each runs `load_commands → match → rank →
-apply_cooldown → render` against the real `.agent-src.uncompressed/
+apply_cooldown → render` against the real `.agent-src.uncondensed/
 commands/` directory and asserts the structural invariants the rule
 contract promises.
 

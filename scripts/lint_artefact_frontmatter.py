@@ -2,7 +2,7 @@
 """Lint Phase-4 discovery frontmatter on every artefact.
 
 Walks the same trees as `scripts/build_discovery_manifest.py` (skills,
-rules, commands, templates under `.agent-src.uncompressed/`) and asserts
+rules, commands, templates under `.agent-src.uncondensed/`) and asserts
 per-file that the five ADR-013 keys (`workspaces`, `packs`, `lifecycle`,
 `trust`, `install`) are present and well-formed:
 
@@ -31,7 +31,7 @@ except ImportError:  # pragma: no cover
     sys.exit(2)
 
 ROOT = Path(__file__).resolve().parents[1]
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 VOCAB_DIR = ROOT / "config" / "discovery"
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))

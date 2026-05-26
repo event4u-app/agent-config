@@ -28,7 +28,7 @@ for MCP servers, a UI, a secret vault — are not.
 ## Prerequisites
 
 - [x] [`archive/road-to-9.md`](archive/road-to-9.md) Phase 1 landed (real minimal runtime, shipped in PR #11, 1.5.0).
-- [ ] Read [`.agent-src.uncompressed/skills/mcp/SKILL.md`](../../.agent-src.uncompressed/skills/mcp/SKILL.md) — current MCP surface.
+- [ ] Read [`.agent-src.uncondensed/skills/mcp/SKILL.md`](../../.agent-src.uncondensed/skills/mcp/SKILL.md) — current MCP surface.
 - [ ] Branch off `main` after 1.6.0.
 
 ## Problem

@@ -105,7 +105,7 @@ Net: 16 atomic commands collapsed into 3 cluster commands. Old atomic command fi
 
 Linter status: `task lint-no-new-atomic-commands` is green. The shim mechanism (existing files declare `cluster:`) avoids needing a temporary allowlist.
 
-- [x] **Shipped** — orchestrators + shims + locked contract in place (2026-05-02 verification). <!-- verified: 5db2d1a (clusters) · 84283cb (shims) · 5f1ebb7 (contract+linter) · .agent-src.uncompressed/commands/{fix,feature,optimize}.md, docs/contracts/command-clusters.md · 2026-05-02 -->
+- [x] **Shipped** — orchestrators + shims + locked contract in place (2026-05-02 verification). <!-- verified: 5db2d1a (clusters) · 84283cb (shims) · 5f1ebb7 (contract+linter) · .agent-src.uncondensed/commands/{fix,feature,optimize}.md, docs/contracts/command-clusters.md · 2026-05-02 -->
 
 ### Phase 4 — Token-overhead wording fix (P0 #4)
 
@@ -142,7 +142,7 @@ Split shipped. `templates/scripts/work_engine/` is already broken into focused m
 
 Plus sub-packages: `directives/`, `hooks/`, `intent/`, `migration/`, `resolvers/`, `scoring/`, `stack/`. The naming divergence (`dispatcher.py` for `runner.py`) is intentional — the file dispatches to phase-step handlers, "dispatcher" reads more accurately than "runner".
 
-- [x] **Shipped** — modular split in place; future extension surfaces (memory, telemetry, council integration) hook into the dispatcher cleanly (2026-05-02 verification). <!-- verified: ad92366 · .agent-src.uncompressed/templates/scripts/work_engine/ · 2026-05-02 -->
+- [x] **Shipped** — modular split in place; future extension surfaces (memory, telemetry, council integration) hook into the dispatcher cleanly (2026-05-02 verification). <!-- verified: ad92366 · .agent-src.uncondensed/templates/scripts/work_engine/ · 2026-05-02 -->
 
 ### Phase 6 — Public artefact catalog (P1 #6)
 

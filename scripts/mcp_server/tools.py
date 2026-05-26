@@ -132,7 +132,7 @@ async def _lint_skills_handler(
 
     Arguments:
         paths: optional list of repo-relative paths to lint. Empty /
-            missing → lint the full ``.agent-src.uncompressed/`` tree
+            missing → lint the full ``.agent-src.uncondensed/`` tree
             via ``gather_all_candidate_files``.
 
     Never spawns ``git`` (no ``--changed`` mode); never writes; mirrors

@@ -76,17 +76,17 @@ this — they are a single execution surface.
 
 ## Consequences
 
-### (i) What stays under `.agent-src.uncompressed/` today
+### (i) What stays under `.agent-src.uncondensed/` today
 
 The complete video capability stays in the existing flat layout —
 no path changes, no symlink relocation, no namespace prefix:
 
-- `.agent-src.uncompressed/skills/{character-consistency,motion-choreographer,pixar-storyteller,scene-expander,video-director}/`
-- `.agent-src.uncompressed/personas/{ai-video-technical-director,hollywood-director}.md`
+- `.agent-src.uncondensed/skills/{character-consistency,motion-choreographer,pixar-storyteller,scene-expander,video-director}/`
+- `.agent-src.uncondensed/personas/{ai-video-technical-director,hollywood-director}.md`
   (the third video persona, `pixar-storyboard-artist`, was folded
   into `skills/pixar-storyteller/` per the persona-cap council pass
   recorded in `persona-governance`)
-- `.agent-src.uncompressed/commands/video/{from-script,scene,storyboard,stitch}.md`
+- `.agent-src.uncondensed/commands/video/{from-script,scene,storyboard,stitch}.md`
 - `scripts/ai-video/` (the 5 adapter scripts + `lib/`)
 - `agents/settings/policies/media/` (Phase 2 output — already structured as
   a project-local policy directory, *not* a pack)
@@ -146,8 +146,8 @@ for ambiguity:
 
 - The five video adapters (`gemini-veo`, `kling`, `openai-images`,
   `higgsfield`, `sora`) — stay in `scripts/ai-video/`.
-- The two remaining video personas — stay in `.agent-src.uncompressed/personas/`.
-- The `/video:*` command cluster — stays in `.agent-src.uncompressed/commands/video/`.
+- The two remaining video personas — stay in `.agent-src.uncondensed/personas/`.
+- The `/video:*` command cluster — stays in `.agent-src.uncondensed/commands/video/`.
 - The `media-governance-routing` rule + `agents/settings/policies/media/`
   policy files — stay where Phase 2 placed them.
 - The provider-lifecycle contract + the `provider-lifecycle-discipline`

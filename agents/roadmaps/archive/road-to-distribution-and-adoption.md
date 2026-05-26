@@ -114,7 +114,7 @@ otherwise each new tool re-implements the projection logic.
       OpenCode, Codex (one script per target). **Deferred 2026-05-11**:
       sibling-roadmap Block B (projection-layer review) is not
       present in this branch; without the abstraction each new tool
-      re-implements emitter logic in `scripts/compress.py`.
+      re-implements emitter logic in `scripts/condense.py`.
 - [~] **I2** — Integration tests against each tool's loader.
       **Deferred 2026-05-11**: gates on I1.
 - [~] **I3** — Installation docs in `docs/installation.md` under
@@ -145,8 +145,8 @@ compose → becomes a prettier `/work`.
       **Scope note**: own PR; multi-week design + implementation
       surface. Pair with G1 for review.
       *Shipped 2026-05-11 in
-      [`.agent-src.uncompressed/commands/orchestrate.md`](../../.agent-src.uncompressed/commands/orchestrate.md)
-      + [`work_engine/orchestration.py`](../../.agent-src.uncompressed/templates/scripts/work_engine/orchestration.py)
+      [`.agent-src.uncondensed/commands/orchestrate.md`](../../.agent-src.uncondensed/commands/orchestrate.md)
+      + [`work_engine/orchestration.py`](../../.agent-src.uncondensed/templates/scripts/work_engine/orchestration.py)
       + 9-case pytest suite. State machine: lazy step iteration,
       two-namespace interpolation, `when` guards (`success` / `failure` /
       equality), halt-on-failure.*
@@ -191,7 +191,7 @@ patterns to mine.
 - [x] **Q3** — Integration with `learning-to-rule-or-skill` skill.
       **Scope note**: own PR; gates on Q1.
       *Shipped 2026-05-11 in
-      [`learning-to-rule-or-skill/SKILL.md`](../../.agent-src.uncompressed/skills/learning-to-rule-or-skill/SKILL.md).
+      [`learning-to-rule-or-skill/SKILL.md`](../../.agent-src.uncondensed/skills/learning-to-rule-or-skill/SKILL.md).
       New "Audit-derived learnings" section: maps audit-log line
       ids to `evidence:` and `source_learning:`, repetition gate
       auto-satisfied for `count ≥ 2`, independence floor enforced
@@ -244,7 +244,7 @@ produced `DISTRIBUTION_CHECKLIST.md`. Half of this roadmap's steps
 referenced sibling roadmaps that don't exist in this branch
 (`road-to-better-skills-and-profiles.md`, `road-to-post-pr29-optimize.md`)
 — a pre-flight ref check should be added to
-[`/roadmap:process-full`](../../.agent-src.uncompressed/commands/roadmap/process-full.md).
+[`/roadmap:process-full`](../../.agent-src.uncondensed/commands/roadmap/process-full.md).
 
 **Active scope after audit:** G1, G2 (own PR, paired review), Q1, Q2,
 Q3 (own PR, Q-phase cluster). Five `[ ]` steps remain; the rest are

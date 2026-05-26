@@ -2,7 +2,7 @@
 
 > Creating, editing, or reviewing skills — minimum quality standard, every skill must be executable, validated, and self-contained
 
-_Origin: migrated from `.agent-src.uncompressed/rules/skill-quality.md` per P4.2 of `road-to-kernel-and-router.md`._
+_Origin: migrated from `.agent-src.uncondensed/rules/skill-quality.md` per P4.2 of `road-to-kernel-and-router.md`._
 
 # Skill Quality
 
@@ -50,14 +50,14 @@ If a skill is not executable without opening a guideline, it is broken.
 **Litmus test:** Cover all guideline references in the Procedure. Is it still executable?
 If not → the skill needs more own steps, decisions, and validation — not more guideline links.
 
-## Merge & Compression Preservation
+## Merge & Condensation Preservation
 
-When merging or compressing skills, the result MUST preserve the
+When merging or condensing skills, the result MUST preserve the
 strongest validation, strongest examples, all anti-patterns, all
 decision criteria, and trigger quality. Full preservation invariants
-and "merge is invalid if …" / "compression may remove …" lists in
+and "merge is invalid if …" / "condensation may remove …" lists in
 [`contexts/communication/rules-auto/skill-quality-mechanics.md`](../contexts/communication/rules-auto/skill-quality-mechanics.md)
-§ Merge Preservation and § Compression Preservation.
+§ Merge Preservation and § Condensation Preservation.
 
 ## Refactor Safety
 

@@ -2,13 +2,13 @@
 """Lint archive notes under agents/evidence/archived-skills/.
 
 Enforces the contract from
-.agent-src.uncompressed/templates/skill-archive-note.md:
+.agent-src.uncondensed/templates/skill-archive-note.md:
 
   1. Every <slug>.md under agents/evidence/archived-skills/ has the six required
      frontmatter fields with valid values.
   2. `reason` is one of {unused, merged, superseded, deprecated}.
   3. When `reason ∈ {merged, superseded}` the `replacement` slug exists
-     under .agent-src.uncompressed/skills/.
+     under .agent-src.uncondensed/skills/.
   4. No archived slug still has a live SKILL.md (no zombies).
   5. No live SKILL.md cites an archived slug as a router target in
      its frontmatter `replaced_by:` field.
@@ -34,7 +34,7 @@ REPO = Path(__file__).resolve().parents[1]
 ARCHIVE_DIR = REPO / "agents" / "evidence" / "archived-skills"
 
 # Live skill directories live under every artefact root post-monorepo
-# Phase 4 (legacy + packages/*/.agent-src.uncompressed/skills/).
+# Phase 4 (legacy + packages/*/.agent-src.uncondensed/skills/).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.agent_src import artefact_roots  # noqa: E402
 

@@ -89,7 +89,7 @@ def _body(*, id: str = "test-user-type", kind: str = "user-type", extra: str = "
 def test_valid_user_type_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         _body(),
     )
     result = lint_file(path)
@@ -102,7 +102,7 @@ def test_missing_section_fails(tmp_path: Path) -> None:
     body = _body().replace("## Anti-Patterns", "## Notes")
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         body,
     )
     result = lint_file(path)
@@ -116,7 +116,7 @@ def test_too_few_unique_questions_warns(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         body,
     )
     result = lint_file(path)
@@ -126,7 +126,7 @@ def test_too_few_unique_questions_warns(tmp_path: Path) -> None:
 def test_invalid_kind_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         _body(kind="persona"),
     )
     result = lint_file(path)
@@ -136,7 +136,7 @@ def test_invalid_kind_fails(tmp_path: Path) -> None:
 def test_id_must_match_filename(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         _body(id="other-id"),
     )
     result = lint_file(path)
@@ -147,7 +147,7 @@ def test_size_budget_warns_above_120(tmp_path: Path) -> None:
     body = _body() + ("\n<!-- pad -->" * 100)
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/user-types/test-user-type.md",
+        ".agent-src.uncondensed/user-types/test-user-type.md",
         body,
     )
     result = lint_file(path)

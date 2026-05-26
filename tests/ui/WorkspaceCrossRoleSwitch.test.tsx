@@ -40,7 +40,7 @@ function installMock(): { restore: () => void } {
                         status: 'draft',
                         recommended_packs: ['core'],
                         first_tasks: [
-                            { name: 'Summarise a ticket', intent: 'Compress thread.', prompt: 'summarise-ticket-thread.md' },
+                            { name: 'Summarise a ticket', intent: 'Condense thread.', prompt: 'summarise-ticket-thread.md' },
                         ],
                         skills: [{ id: 'voc-extract', why: 'Pulls verbatim language.' }],
                     },

@@ -10,7 +10,7 @@ WHEN MISSING, ASK ONE QUESTION; DO NOT RENDER.
 
 A "public figure" is a person whose identity is widely recognised in the relevant jurisdiction: heads of state, named CEOs of public companies, celebrities, named athletes, named artists. Recognition is jurisdiction-dependent — the agent treats this as load-bearing and surfaces the policy on every named reference.
 
-Working precedent: the `/ghostwriter:*` and `/post-as:ghostwriter` cluster already enforces a **mandatory, non-removable disclosure footer** when writing in a public figure's voice (see [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncompressed/commands/post-as/ghostwriter.md) and [`disclosure.md`](disclosure.md)). This policy extends that contract from prose to image / video / voice.
+Working precedent: the `/ghostwriter:*` and `/post-as:ghostwriter` cluster already enforces a **mandatory, non-removable disclosure footer** when writing in a public figure's voice (see [`commands/post-as/ghostwriter.md`](../../../.agent-src.uncondensed/commands/post-as/ghostwriter.md) and [`disclosure.md`](disclosure.md)). This policy extends that contract from prose to image / video / voice.
 
 ## Triggers
 

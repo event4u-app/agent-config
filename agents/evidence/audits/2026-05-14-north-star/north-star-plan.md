@@ -34,7 +34,7 @@ Current state (numbered prefix order):
 
 | Slot | File | Pillar fit |
 |---|---|---|
-| step-1 | `step-1-v2-feedback-followup.md` | Mostly **P2** (linter gate, archive dead scripts) + **P1** (rename "compression") |
+| step-1 | `step-1-v2-feedback-followup.md` | Mostly **P2** (linter gate, archive dead scripts) + **P1** (rename "condensation") |
 | step-2 | `step-2-ai-council-consolidation.md` | **P2** (Master/Wrapper enforcement) |
 | step-3 | `step-3-agent-user-persona.md` | **P4** (role-bundle on-ramp) |
 | step-4 | `step-4-ghostwriter.md` | **P4** (LinkedIn-derived persona injection) |
@@ -139,7 +139,7 @@ After renames: regenerate `agents/roadmaps-progress.md`. Verify with
 The North Star plan above answers nothing about three deliberate
 choices. Park for a council round before locking:
 
-1. **Default-on caveman**? Caveman ships `speak_scope` default on for
+1. **Default-on telegraph**? Telegraph ships `speak_scope` default on for
    output tokens. We ship default off (carve-outs for security /
    destructive / multi-step). The senior-dev bar wants telemetry
    first, then a data-driven default flip. **Decision needed in

@@ -66,7 +66,7 @@ ide
 cost_profile
 personal.bot_icon
 personal.autonomy
-caveman.speak_scope
+telegraph.speak_scope
 ```
 
 **Merge order** (lowest → highest precedence; every layer optional):
@@ -179,7 +179,7 @@ is recovered on the next server boot.
 | `chat_history.enabled` | `true` | Persistent JSONL log at `agents/runtime/.agent-chat-history` for crash recovery. |
 | `chat_history.frequency` | per profile | Logging granularity: `per_turn`, `per_phase`, or `per_tool` (see matrix below). |
 | `chat_history.max_size_kb` | per profile | Max file size before overflow handling (see matrix below). |
-| `chat_history.on_overflow` | per profile | `rotate` drops oldest, `compress` marks for summarization (see matrix below). |
+| `chat_history.on_overflow` | per profile | `rotate` drops oldest, `condense` marks for summarization (see matrix below). |
 | `onboarding.onboarded` | `false` | Whether the setup wizard has run. The `onboarding-gate` rule prompts for `agent-config setup` while this is `false`. |
 | `ai_council.enabled` | `false` | Master switch for the `/council` command. Even when enabled, every consultation asks before spending tokens. |
 | `ai_council.members.<provider>.enabled` | `false` | Per-provider opt-in (`anthropic`, `openai`). Tokens live in `~/.event4u/agent-config/<provider>.key` (mode 0600), never in this file. Legacy `~/.config/agent-config/<provider>.key` is read as a fallback. |
@@ -226,7 +226,7 @@ to `false` in `.agent-settings.yml` to silence post-task analysis without
 changing the profile.
 
 The authoritative matrix of all matrix-controlled settings lives in
-[`.agent-src.uncompressed/templates/agent-settings.md`](../.agent-src.uncompressed/templates/agent-settings.md).
+[`.agent-src.uncondensed/templates/agent-settings.md`](../.agent-src.uncondensed/templates/agent-settings.md).
 
 ### Chat-history defaults per profile
 
@@ -240,13 +240,13 @@ behavior — the per-profile table is just the initial default.
 | `chat_history.enabled` | `true` | `true` | `true` |
 | `chat_history.frequency` | `per_turn` | `per_phase` | `per_tool` |
 | `chat_history.max_size_kb` | `128` | `256` | `512` |
-| `chat_history.on_overflow` | `rotate` | `rotate` | `compress` |
+| `chat_history.on_overflow` | `rotate` | `rotate` | `condense` |
 
 `custom` ignores these defaults — set every value explicitly.
 
 ### Verbosity
 
-The `verbosity:` block and `caveman.speak_scope` control how much narration
+The `verbosity:` block and `telegraph.speak_scope` control how much narration
 the agent emits around routine actions. Defaults are tuned for token
 frugality — flip values to `true` (or higher tier) to restore legacy verbose
 output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
@@ -261,10 +261,10 @@ output. Iron-Law gates (`commit-policy`, `scope-control` git-ops,
 | `verbosity.intent_announcements` | `true`, `false` | `false` | Intent announcements ("Let me check…", "Now I will…", "Found it") in skill bodies. `false` = act and emit the result. |
 | `verbosity.script_output` | `silent`, `minimal`, `verbose` | `minimal` | Stdout chatter from `scripts/*.py`, `scripts/*.sh`, and `.augment/scripts/`. `silent` = stderr only; `minimal` = one summary line per script; `verbose` = pre-Phase-10 per-step prints. Iron-Law surfaces (release confirms, install secrets prompts, error markers) ignore this key. |
 | `verbosity.taskfile_command_echo` | `true`, `false` | `false` | Suppress the `task: [name] cmd...` echo Taskfile prints before each task body. `true` = echoes preserved (legacy behaviour); `false` = `silent: true` is set on every Phase-10 safe task. |
-| `caveman.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely caveman-speak grammar applies in chat. `off` = no caveman; `prose_only` = caveman in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = caveman everywhere except Iron-Law literals. |
+| `telegraph.speak_scope` | `off`, `prose_only`, `aggressive` | `prose_only` | How widely telegraph-speak grammar applies in chat. `off` = no telegraph; `prose_only` = telegraph in body prose, numbered options + Iron-Law-literal blocks stay full prose; `aggressive` = telegraph everywhere except Iron-Law literals. |
 
 The cross-rule index for these defaults lives in
-[`.agent-src.uncompressed/contexts/contracts/frugality-charter.md`](../.agent-src.uncompressed/contexts/contracts/frugality-charter.md).
+[`.agent-src.uncondensed/contexts/contracts/frugality-charter.md`](../.agent-src.uncondensed/contexts/contracts/frugality-charter.md).
 Writer skills (`skill-writing`, `rule-writing`, `command-writing`,
 `guideline-writing`, `roadmap-writing`, `persona-writing`,
 `agent-docs-writing`, `context-authoring`, `conventional-commits-writing`,
@@ -394,7 +394,7 @@ tarball and is the source of truth consumed by:
 > When you read "the Laravel pack", picture a filter over the shared
 > artefact tree — not a separate npm package. The day ADR-011's
 > extraction trigger flips, the same scan output drives the split;
-> until then, every artefact lives under `.agent-src.uncompressed/`.
+> until then, every artefact lives under `.agent-src.uncondensed/`.
 
 Alongside the JSON manifest, the scanner writes
 `dist/discovery/discovery-manifest.json.sha256` — a sidecar hash that

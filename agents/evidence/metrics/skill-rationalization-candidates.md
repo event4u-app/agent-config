@@ -3,7 +3,7 @@
 > Combines [`skill-usage-report.md`](skill-usage-report.md) (activation
 > baseline) and [`skill-overlap.md`](skill-overlap.md) (structural
 > overlap) into per-skill recommendations. Authored per
-> [`skill-management`](../../.agent-src.uncompressed/skills/skill-management/SKILL.md).
+> [`skill-management`](../../.agent-src.uncondensed/skills/skill-management/SKILL.md).
 > See [`step-2-skill-inventory-rationalization.md`](../roadmaps/step-2-skill-inventory-rationalization.md)
 > Phase 2 Step 3.
 

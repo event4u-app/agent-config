@@ -6,7 +6,7 @@
 
 ## Prerequisites
 
-- [ ] Read `AGENTS.md` and `.agent-src.uncompressed/rules/chat-history.md`
+- [ ] Read `AGENTS.md` and `.agent-src.uncondensed/rules/chat-history.md`
 - [ ] Familiarize with `scripts/chat_history.py` (turn-check, append, heartbeat,
       ownership-state, foreign/returning/missing flow)
 - [ ] Confirm `task test` is green on `tests/test_chat_history*` before any change
@@ -123,8 +123,8 @@ Phase 2 of the Product UI Track: significant work and many commits between
 
 - [x] **Step 1:** Build `/chat-history-checkpoint` command — minimal, single
       purpose: read context, call append, emit one-line confirmation. Goes
-      under `.agent-src.uncompressed/commands/`.
-      → **Implementation:** `.agent-src.uncompressed/commands/chat-history-checkpoint.md`
+      under `.agent-src.uncondensed/commands/`.
+      → **Implementation:** `.agent-src.uncondensed/commands/chat-history-checkpoint.md`
       ships the command. Master CLI `chat-history:checkpoint` subcommand
       delegates to `scripts/chat_history.py hook-append --event checkpoint`.
 - [x] **Step 2:** Document in `rules/chat-history.md` that on platforms
@@ -139,7 +139,7 @@ Phase 2 of the Product UI Track: significant work and many commits between
 > Only after Phase 2 hooks are dogfooded for at least one full development
 > session each on Augment Code and Claude Code.
 
-- [x] **Step 1:** Rewrite `.agent-src.uncompressed/rules/chat-history.md` so
+- [x] **Step 1:** Rewrite `.agent-src.uncondensed/rules/chat-history.md` so
       the Iron Law is **conditional**: HOOK platforms get a one-liner
       ("hooks handle it; rule is documentation only"); CHECKPOINT/MANUAL
       platforms keep a slimmer version of the current gates.
@@ -153,7 +153,7 @@ Phase 2 of the Product UI Track: significant work and many commits between
       not assert on the Iron Law block structure.
 - [x] **Step 3:** Run `task ci` and fix any drift in `.agent-src/`,
       `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`, `.windsurfrules`
-      that comes from the compressed projection of the rewritten rule.
+      that comes from the condensed projection of the rewritten rule.
       → **Resolved:** rule slimmed under the 200-line limit by
       extracting handshake mechanics to `agents/settings/contexts/chat-history-handshake.md`.
       Schema fix on `/chat-history-checkpoint` frontmatter

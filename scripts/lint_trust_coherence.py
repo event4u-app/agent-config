@@ -33,7 +33,7 @@ COMPILED_SRC = ROOT / ".agent-src"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib.agent_src import strip_source_prefix  # noqa: E402
 
-# Imported lazily inside _banner_marker() to keep the cap loose if compress.py
+# Imported lazily inside _banner_marker() to keep the cap loose if condense.py
 # grows additional top-level side effects.
 _BANNER_MARKER = "<!-- agent-config:human-review-banner -->"
 
@@ -118,7 +118,7 @@ def _check_human_review_banners(
             errs.append(
                 f"{rel}: human_review_required=true but compiled output"
                 f" `{compiled.relative_to(ROOT)}` is missing the HRR banner"
-                f" (`{_BANNER_MARKER}`) — re-run `task compress`."
+                f" (`{_BANNER_MARKER}`) — re-run `task condense`."
             )
     return errs
 

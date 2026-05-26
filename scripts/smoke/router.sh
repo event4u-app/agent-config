@@ -49,17 +49,17 @@ def resolve(ref):
         # Legacy projected path first (fast path), then multi-root source.
         for p in (
             f".agent-src/skills/{rest}/SKILL.md",
-            f".agent-src.uncompressed/skills/{rest}/SKILL.md",
+            f".agent-src.uncondensed/skills/{rest}/SKILL.md",
         ):
             if os.path.exists(p):
                 return p, "skill"
         hit = resolve_logical(f"skills/{rest}/SKILL.md")
-        return (str(hit) if hit else f".agent-src.uncompressed/skills/{rest}/SKILL.md"), "skill"
+        return (str(hit) if hit else f".agent-src.uncondensed/skills/{rest}/SKILL.md"), "skill"
     if kind == "command":
         for p in (
             f".agent-src/commands/{rest}.md",
-            f".agent-src.uncompressed/commands/{rest}.md",
-            f".agent-src.uncompressed/commands/{rest}/INDEX.md",
+            f".agent-src.uncondensed/commands/{rest}.md",
+            f".agent-src.uncondensed/commands/{rest}/INDEX.md",
         ):
             if os.path.exists(p):
                 return p, "command"
@@ -67,7 +67,7 @@ def resolve(ref):
             hit = resolve_logical(logical)
             if hit:
                 return str(hit), "command"
-        return f".agent-src.uncompressed/commands/{rest}.md", "command"
+        return f".agent-src.uncondensed/commands/{rest}.md", "command"
     if kind == "guideline":
         return f"docs/guidelines/{rest}.md", "guideline"
     if kind == "contract":

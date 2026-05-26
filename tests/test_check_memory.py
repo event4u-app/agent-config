@@ -27,7 +27,7 @@ def _write(tmp_path: Path, name: str, body: str) -> Path:
 
 
 def test_example_templates_are_valid():
-    result = _run(Path(".agent-src.uncompressed/templates/agents/memory"))
+    result = _run(Path(".agent-src.uncondensed/templates/agents/memory"))
     assert result.returncode == 0, result.stdout + result.stderr
 
 

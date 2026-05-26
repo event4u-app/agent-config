@@ -142,14 +142,14 @@ flip to `[x]` only after every sub-step under them ships.
 - [x] **B1** — Lock 6-domain taxonomy in `docs/contracts/skill-domains.md` (council iter-1 B-OQ1 verdict (b)): `engineering` (app/framework — artisan, composer, eloquent, laravel-*, php-*) · `product` (discovery/refinement — po-discovery, refine-ticket, refine-prompt, estimate-ticket) · `quality` (test/review — pest-testing, playwright-testing, judge-*, review-*) · `devops` (infra/deploy — aws-*, docker, terraform, terragrunt, github-ci) · `process` (workflow/orchestration — git-workflow, command-routing, subagent-orchestration) · `discovery` (audit/diagnostic — bug-analyzer, blast-radius-analyzer, data-flow-mapper, project-analysis-*). Each domain ships a 1-paragraph scope statement + 3 example skills.
 - [x] **B2** — `domain:` frontmatter field added to `lint-skills`; CI fails on missing or unknown value (allow-list = the 6 domains from B1).
 - [x] **B3** — Existing 153 skills back-filled with `domain:` (mass edit + lint-green; count drift from 129 → 153 between roadmap-author and execution). No file moves yet. Output `docs/contracts/skill-domains.md` § "Skill assignment by domain" table.
-- [~] **B4** — *(Deferred to Plate+1, target 2026-05-19 after 2-week `domain:` frontmatter stability — council iter-1 B-OQ2 REFINE)* Skill folders reorganised into domain folders under `.agent-src.uncompressed/skills/<domain>/`; symlinks + tool projections regenerated (`task generate-tools`); cloud-bundle paths updated; `check-refs.py` validates all 129 skills; `task ci` green; rollback procedure documented.
+- [~] **B4** — *(Deferred to Plate+1, target 2026-05-19 after 2-week `domain:` frontmatter stability — council iter-1 B-OQ2 REFINE)* Skill folders reorganised into domain folders under `.agent-src.uncondensed/skills/<domain>/`; symlinks + tool projections regenerated (`task generate-tools`); cloud-bundle paths updated; `check-refs.py` validates all 129 skills; `task ci` green; rollback procedure documented.
 
 ### Block A — Personas (2–3 weeks · schema-lock + extension, not greenfield)
 
 - [x] **A** — Personas shipped (block marker; flips when A1–A7 are all done). A1–A7 landed: schema locked, linter extended, 4 specialists drafted (backend-architect, eloquent-tamer, security-engineer, frontend-engineer) + qa migrated to specialist spine, citation back-fill across 9 skills, AGENTS.md pointer, `docs/personas.md` catalog, `do-in-worktrees` competitive variant + ADR-005.
-- [x] **A1** — Lock persona schema in `docs/contracts/persona-schema.md` (council iter-1 A-OQ1 verdict (c) — hybrid). **Core-tier** (developer, senior-engineer, product-owner, stakeholder, critical-challenger, ai-agent): 5 sections (Focus · Mindset · Unique Questions · Output Expectations · Anti-Patterns), ≤ 120 lines, **no migration**. **Specialist-tier** (qa + new specialists from A3): 7 sections = Core-5 + **Critical Rules** + **Workflows** (borrowed from claude-skills' 9-section spine), ≤ 100 lines. Frontmatter uniform across tiers: `id · role · description · tier · mode · version · source`. Publish specialist template under `.agent-src.uncompressed/personas/_template-specialist/`.
+- [x] **A1** — Lock persona schema in `docs/contracts/persona-schema.md` (council iter-1 A-OQ1 verdict (c) — hybrid). **Core-tier** (developer, senior-engineer, product-owner, stakeholder, critical-challenger, ai-agent): 5 sections (Focus · Mindset · Unique Questions · Output Expectations · Anti-Patterns), ≤ 120 lines, **no migration**. **Specialist-tier** (qa + new specialists from A3): 7 sections = Core-5 + **Critical Rules** + **Workflows** (borrowed from claude-skills' 9-section spine), ≤ 100 lines. Frontmatter uniform across tiers: `id · role · description · tier · mode · version · source`. Publish specialist template under `.agent-src.uncondensed/personas/_template-specialist/`.
 - [x] **A2** — `lint-skills` extended with persona-specific checks: required sections per tier (5 for core, 7 for specialist), frontmatter shape (above), tier enum (`core` | `specialist`), specialist size cap ≤ 100, core size cap ≤ 120. Existing `qa.md` migrated to the 7-section spine in the same step. 6 new tests in `tests/test_skill_linter.py`.
-- [x] **A3** — 4 specialist personas drafted using the 7-section spine (council iter-1 A-OQ2 verdict — named picks): `backend-architect` (97 lines) · `eloquent-tamer` (96 lines) · `security-engineer` (100 lines) · `frontend-engineer` (100 lines). All within ≤ 100 line specialist budget; linter passes (only `compressed_variant_missing` warnings, resolved by `task compress`).
+- [x] **A3** — 4 specialist personas drafted using the 7-section spine (council iter-1 A-OQ2 verdict — named picks): `backend-architect` (97 lines) · `eloquent-tamer` (96 lines) · `security-engineer` (100 lines) · `frontend-engineer` (100 lines). All within ≤ 100 line specialist budget; linter passes (only `condensed_variant_missing` warnings, resolved by `task condense`).
 - [x] **A4** — *(Re-purposed per A-OQ2 verdict.)* Citation back-fill complete: every A3 persona cited by ≥ 1 existing skill via `personas:` frontmatter. **security-engineer**: `judge-security-auditor`, `threat-modeling`, `authz-review`. **backend-architect**: `authz-review`, `api-design`, `blast-radius-analyzer`. **eloquent-tamer**: `eloquent`, `database`. **frontend-engineer**: `existing-ui-audit`, `fe-design`. 9 skills touched; no linter regressions.
 - [x] **A5** — Persona discovery surface (A-OQ3 verdict (b)): single Thin-Root pointer added to `AGENTS.md` § Pointers → `docs/personas.md` (catalog) + `docs/contracts/persona-schema.md` (schema). No new `/persona` command per verdict (avoids `/mode` collision).
 - [x] **A6** — `docs/personas.md` shipped: catalog of all 11 personas (id · role · tier · lens summary), `personas:` vs `/mode` axis-comparison table, skill-citation map, override pattern (frontmatter merge vs body replace), anti-patterns ("personas as agents", "personas as modes", specialist sprawl).
@@ -224,7 +224,7 @@ this phase.
 
 ### Strengths called out for agent-config
 
-- Compression pipeline (verbose ↔ token-optimized).
+- Condensation pipeline (verbose ↔ token-optimized).
 - Override system (project-level customization of shared skills).
 - 4-gate promotion pipeline (quality, universality, completeness, promotion).
 - Behavioural-regression testing via Golden Transcripts (PR #29).
@@ -265,7 +265,7 @@ this phase.
 
 Acknowledged weaknesses:
 - No quality gate.
-- No compression.
+- No condensation.
 - Maintenance risk: 235 skills with effectively one author.
 
 ## Raw feedback — AI #2
@@ -280,7 +280,7 @@ Acknowledged weaknesses:
 | Skills | 93 | 235+ |
 | Personas | 0 | 3 + templates |
 | Domain breadth | Laravel/PHP-tight | 9 domains |
-| Compression pipeline | ✅ | ❌ |
+| Condensation pipeline | ✅ | ❌ |
 | Override system | ✅ | ❌ |
 | Quality gates / linter | ✅ FAIL=0 | ⚠️ yamllint only |
 | Test count | 794 (PR #29) | informal |
@@ -288,7 +288,7 @@ Acknowledged weaknesses:
 
 ### Strengths emphasized (agent-config)
 
-- Compression pipeline judged "rare engineering discipline" (`.augment.uncompressed/` →
+- Condensation pipeline judged "rare engineering discipline" (`.augment.uncondensed/` →
   compiled → 7 tool projections).
 - Governance gates are "real, not cosmetic": Promotion / Quality / Universality / Completeness.
 - Override system framed as "multi-tenancy for agent config" — uncommon in industry.
@@ -341,7 +341,7 @@ Acknowledged weaknesses:
 ### claude-skills weaknesses (AI #2)
 
 - "40% time savings, 30% quality lift" is marketing language, not measurable engineering.
-- No compression — token cost scales with breadth.
+- No condensation — token cost scales with breadth.
 - No quality / promotion / universality gates.
 - Skills often generic (`senior-architect` is shallow vs. agent-config's `eloquent`).
 - Maintenance risk: 235 skills, effectively one author.
@@ -377,7 +377,7 @@ Acknowledged weaknesses:
 
 ### AI #2 (continued) — pro/contra summary
 
-**agent-config wins:** engineering discipline (compression, linter, promotion gate,
+**agent-config wins:** engineering discipline (condensation, linter, promotion gate,
 override, freeze-guard), Laravel/PHP depth, reproducibility (PR #29 GTs),
 token-efficiency, multi-tenant via overrides, single source of truth, Docker/Pest/
 PHPStan workflows, workflow commands.
@@ -394,7 +394,7 @@ skills (agent-config has *state* schema v0→v1, but skills themselves have no v
 ### AI #2 (continued) — strategic decisions to settle BEFORE any block executes
 
 1. **Identity:** Consumer-internal · OSS product · OSS-light ("governed alternative").
-   AI #2 recommends OSS-light: less skills, higher quality, compression magic,
+   AI #2 recommends OSS-light: less skills, higher quality, condensation magic,
    override-system as the moat.
 2. **Audience:** solo devs · teams with own stack (Consumer pattern) · enterprise+
    compliance · agencies. AI #2 recommends *teams with own stack* primary, *agencies*
@@ -414,7 +414,7 @@ skills (agent-config has *state* schema v0→v1, but skills themselves have no v
 | **D — Python tools per skill** | At least one stdlib-only tool per skill, `--help` + `--json`. Standardised folder layout, linter extension, `tool-registry.json`, marketplace listing. | 6-8 weeks | 60-80 of 93 skills have a useful tool in 6 months. |
 | **E — Engine R1 phases 3-7 + GT-6** | Module lift, directive sets (ui, ui-trivial, mixed), wrapper writes v1, GT verify, legacy removal. Each phase tied to user-visible value. GT-6 = real SIGTERM kill. | 6-10 weeks | Phase 7 done with no behavioural drift, UI tickets functional. |
 | **F — UI/frontend skills (NEW)** | `livewire-developer`, `tailwind-engineer`, `accessibility-auditor`, `playwright-engineer`, `ui-component-architect`, `form-handler`. Pre-condition for Block E phase 4. | 4-5 weeks | UI tickets in `/implement-ticket` work. |
-| **G — Orchestration DSL** | YAML pipelines in `.agent-src.uncompressed/orchestrations/<name>.yml` chaining persona+skills with structured hand-off (Markdown + JSON sidecar) and `/orchestrate <name>` slash. Audit-trail in `.work-state.json`. | 3-4 weeks | 3-5 documented orchestrations, ≥1 in regular Consumer use. |
+| **G — Orchestration DSL** | YAML pipelines in `.agent-src.uncondensed/orchestrations/<name>.yml` chaining persona+skills with structured hand-off (Markdown + JSON sidecar) and `/orchestrate <name>` slash. Audit-trail in `.work-state.json`. | 3-4 weeks | 3-5 documented orchestrations, ≥1 in regular Consumer use. |
 | **H — Marketing & reach** | README restructure (5-line pitch, diff vs claude-skills, 2-min Quick Win, architecture diagram), plugin-marketplace listings + bundles (`backend-engineering`, `product-discovery`, `quality-eng`), 1 Medium article per quarter, Laracon talk submission, comparison page (SEO), 3-5 showcase consumers. | ~1 day/week over 6 months | 200 stars in 6 months · 5+ external consumers · 1 talk accepted. |
 | **I — Multi-tool expansion** | Add Aider (`CONVENTIONS.md`), Kilo Code (`.kilocode/rules/`), OpenCode (`.opencode/skills/`), Codex (`.codex/skills/`) as projections from the existing single source via `task generate-tools`. | 2 weeks | ≥10 tools, all projected from one source. |
 | **Q — Audit-as-Memory** | Persistent audit log `agents/audit/<date>/<session-id>.json` + `audit:search` CLI; per-skill `memory:lookup` returning relevant decisions from last 30 days; promotion gate that proposes a rule when 2+ audits show the same pattern (manual maintainer promotion); `task audit:dashboard` static HTML output. | 4-6 weeks | 1-3 rules per month emerge from audit log; per-module skill-hit-rate measurable. |
@@ -471,7 +471,7 @@ the *top* layer absent entirely:
 |---|---|---|
 | **Top — Personas** ("who is thinking") | `agents/personas/<name>.md` — 3 personas + template, 9-section spine | absent (only `role-mode-adherence` + role contracts as primitives) |
 | **Middle — Orchestration** ("how layers compose") | `orchestration/ORCHESTRATION.md` — 4 named patterns + handoff format | implicit in `/work` and `/implement-ticket`; no named patterns; handoff via state envelope |
-| **Bottom — Skills** ("how to execute") | `SKILL-AUTHORING-STANDARD.md` — 10 patterns, ≤10KB cap, references/ split | strong: linter, FAIL=0 gate, compression, override system, promotion gate |
+| **Bottom — Skills** ("how to execute") | `SKILL-AUTHORING-STANDARD.md` — 10 patterns, ≤10KB cap, references/ split | strong: linter, FAIL=0 gate, condensation, override system, promotion gate |
 
 ### Persona spine — 9 sections, identical across all 3 reference personas
 
@@ -595,7 +595,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | **Per-tool install** | `./scripts/install.sh --tool <name> --target <dir>` (with `--force`) | `bash scripts/install.sh` (payload sync) + `python scripts/install.py` (bridge files) |
 | **Bridges** (tool-side hooks/configs) | None documented (skills only) | `.claude/settings.json` with chat-history hooks, `.github/copilot-instructions.md`, `.agent-settings.yml` from template |
 | **Cloud surface** | Marketplace listing (`/plugin marketplace add`) | Cloud bundles (`task build-cloud-bundles-all` → ZIPs for Claude.ai Web / Skills API, T3-H gated) |
-| **Install verifiability** | `find .cursor/rules -name "*.mdc" \| wc -l` spot-check | `task ci` (sync-check, consistency, check-compression, lint-skills, tests) |
+| **Install verifiability** | `find .cursor/rules -name "*.mdc" \| wc -l` spot-check | `task ci` (sync-check, consistency, check-condensation, lint-skills, tests) |
 | **Per-skill executable tools** | 305 stdlib-only Python scripts ship with skills | Engine + linters at package level; no per-skill scripts |
 
 **Read:** claude-skills wins on **breadth** (per-platform native targets + universal `npx` entry) and **per-skill executability** (305 tools — separately tracked under "Per-skill executable tools" theme). agent-config wins on **architecture** (single source, no per-tool drift), **CI rigor** (FAIL=0 gate), and **bridge depth** (chat-history hooks, settings template, cost profiles, two-stage installer with idempotent migration). Convergent verdict: **add targets via projection layer, do not adopt the hand-rolled per-tool installer model**.
@@ -710,7 +710,7 @@ agent-config today (`task generate-tools` + `scripts/install.sh|.py`):
 | 178-step roadmap demotivates | High | Medium | Cap visible roadmap to 6 weeks, label rest as "out-of-horizon" |
 | Override system bloats because everyone wants own personas | Medium | Medium | Whitelist fields only; strict schema validation |
 | 0 stars stays 0 despite Block H | Low | Medium | Accept — Block H is not make-or-break, A+C+D are |
-| claude-skills copies compression | Low | High | Speed: agent-config is 1+ year ahead |
+| claude-skills copies condensation | Low | High | Speed: agent-config is 1+ year ahead |
 
 ### AI #2 — final answer to "is PR #29 still improvable via claude-skills?"
 
@@ -761,7 +761,7 @@ governed alternative to claude-skills that engineering teams actually want.*
 
 ### Architecture decision (locked)
 
-Add new targets to **`scripts/compress.py`'s `generate_tools()` projection
+Add new targets to **`scripts/condense.py`'s `generate_tools()` projection
 engine**, not via per-tool hand-rolled installer scripts. claude-skills'
 hand-rolled approach is what we'd be importing for breadth — but it's
 exactly the drift surface our single-source model was built to avoid.
@@ -845,7 +845,7 @@ by sub-step working notes and post-mortems.
 | R9 | **Sub-step inflation** — Phase 1 grew from 5 block-steps to ~30 sub-steps; future blocks tempted to follow the same density and the dashboard becomes noise again | Phase 1 | M | M | Sub-steps in this roadmap reflect actual deliverables (one persona, one skill, one tool); future blocks expand similarly **only** when each sub-step maps to a shippable artefact, not a planning checkpoint | (template) |
 | R10 | **Phase 1 unlock criteria slip** — Block B starts before `road-to-post-pr29-optimize.md` Phase 1 ships green CI | B | L | H | Block B row carries an explicit gating note; PR opening Block B work requires a cite-line to a green-CI sha on `main` for the post-pr29 plate | B |
 | R11 | **Marketing pull on Block A** — distribution roadmap (sibling) starts pulling persona work into Block H demos before A6 ships | A · sibling H | M | M | Sibling roadmap H phases gated on "Thinking Layer Blocks A + C ≥80% shipped"; A6 is the explicit unlock for marketing reuse | A6 |
-| R12 | **Copy-by-claude-skills** — claude-skills picks up the OSS-light governed alternative framing and ships a thinner copy under their brand | identity | L | M | Identity locked in `road-to-governance-cleanup.md` F1 (OSS-light governed alternative); differentiator is governance + override + compression, not skill count; `agent-config` ships discipline, not breadth | (identity) |
+| R12 | **Copy-by-claude-skills** — claude-skills picks up the OSS-light governed alternative framing and ships a thinner copy under their brand | identity | L | M | Identity locked in `road-to-governance-cleanup.md` F1 (OSS-light governed alternative); differentiator is governance + override + condensation, not skill count; `agent-config` ships discipline, not breadth | (identity) |
 
 ## Next step
 

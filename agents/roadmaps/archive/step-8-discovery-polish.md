@@ -40,7 +40,7 @@ Make the Step-7 discovery layer **debuggable, overridable, and predictable** wit
 - [x] Add global `--root <path>` to `scripts/agent-config` dispatcher; propagate via `AGENT_CONFIG_ROOT_OVERRIDE=1` + `AGENT_CONFIG_PROJECT_ROOT` so `cmd_*.py` resolve through `resolve_project_root()`.
 - [x] Extend `scripts/_lib/agent_settings.py:resolve_project_root()` precedence chain: `--root` > `--project` > `AGENT_CONFIG_PROJECT_ROOT` > anchor walk > CWD. Invalid `--root` / invalid env-pin / invalid `--project` → raise `ProjectRootError` mapped to exit 2; no fall-through.
 - [~] Wrapper-coupling guard: dispatcher emits stderr warning on `--root` ↔ wrapper-pin mismatch. Regenerate flow + `--no-regenerate-wrapper` deferred (see A3-coupling).
-- [x] Mirror into `.agent-src.uncompressed/templates/scripts/work_engine/_lib/agent_settings.py`. Parity test green.
+- [x] Mirror into `.agent-src.uncondensed/templates/scripts/work_engine/_lib/agent_settings.py`. Parity test green.
 - [x] Tests: `tests/test_root_override.py` (precedence + invalid-path + end-to-end CLI exit-2).
 
 ### Phase 2 — Diagnostic surface (A1, A2)

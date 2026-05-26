@@ -125,9 +125,9 @@ sequence, just across three files.
 
 ## Implementation plan (this PR)
 
-1. Create the three new rules under `.agent-src.uncompressed/rules/`.
-2. Delete `.agent-src.uncompressed/rules/chat-history.md`.
-3. Run `bash scripts/compress.sh --sync` to project the change into
+1. Create the three new rules under `.agent-src.uncondensed/rules/`.
+2. Delete `.agent-src.uncondensed/rules/chat-history.md`.
+3. Run `bash scripts/condense.sh --sync` to project the change into
    `.agent-src/`, `.augment/`, `.claude/`, `.cursor/`, `.clinerules/`,
    `.windsurfrules`.
 4. Update every cross-reference (~30 files) — `check-refs` is the
@@ -136,5 +136,5 @@ sequence, just across three files.
    under a new "Rule splits" section.
 6. Regenerate `agents/roadmaps-progress.md`.
 7. Verify: `task ci` (lint-skills, check-refs, check-public-links,
-   check-compression, counts-check, lint-readme, runtime-e2e,
+   check-condensation, counts-check, lint-readme, runtime-e2e,
    roadmap-progress-check, lint-readme).

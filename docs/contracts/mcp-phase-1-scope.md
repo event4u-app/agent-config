@@ -26,8 +26,8 @@ phase with its own design-call gate.
 - Transport: **stdio**. No SSE, no HTTP, no WebSocket.
 - MCP primitives: **`prompts/list`** + **`prompts/get`** — read-only.
 - Source data: **`.agent-src/skills/<name>/SKILL.md`** and
-  **`.agent-src/commands/**/*.md`** (compressed projections, never the
-  uncompressed source-of-truth tree).
+  **`.agent-src/commands/**/*.md`** (condensed projections, never the
+  uncondensed source-of-truth tree).
 - Loaded set (Phase 2): every well-formed skill + command under
   `.agent-src/` (Phase 1 hand-picked set retained as a smoke fixture
   in `prompts.py::PHASE_1_SKILLS`).

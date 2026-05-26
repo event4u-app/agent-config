@@ -1,7 +1,7 @@
 # ADR-002 — Kernel-Bucket Cap Raise (25k → 26k) and Per-Rule Iron-Law Overrides
 
 - **Status:** Accepted (2026-05-06)
-- **Phase:** Road to Rule Kernel and Router · P2.2 (Heavy Compression)
+- **Phase:** Road to Rule Kernel and Router · P2.2 (Heavy Condensation)
 - **Supersedes:** none — extends the Council R2 amendments locked in
   `docs/contracts/kernel-membership.md` § 5.1 (median r=0.712, per-rule cap 2.5k,
   kernel-bucket 25k).
@@ -10,27 +10,27 @@
 
 ## Context
 
-P1.3 projected the post-compression kernel bucket at **23 071 chars** using
+P1.3 projected the post-condensation kernel bucket at **23 071 chars** using
 the median pilot ratio r=0.712 (3 pilots: agent-authority, direct-answers,
 language-and-tone). Pilot rules were **short to medium** (1.0k–2.5k baseline).
 
-P2.2 applied the same compression discipline to the remaining 6 kernel rules
+P2.2 applied the same condensation discipline to the remaining 6 kernel rules
 (ask-when-uncertain, commit-policy, no-cheap-questions,
 non-destructive-by-default, scope-control, plus the verify-before-complete
 auto-tier rule kept by ADR-001). Iron-Law SHA preservation verified for
 all 8 rules with Iron-Law fences (`scripts/iron_law_sha.py`).
 
-**Empirical post-compression measurements (2026-05-06):**
+**Empirical post-condensation measurements (2026-05-06):**
 
 | metric | projected | actual |
 |---|---:|---:|
 | kernel bucket sum | 23 071 | **25 590** |
-| compression ratio r (kernel-wide) | 0.712 (median pilot) | **0.795** |
+| condensation ratio r (kernel-wide) | 0.712 (median pilot) | **0.795** |
 | rules > 2.5k cap | 2 (pilots) | 6 |
 | rules > 4.0k ceiling | 0 | 0 |
 
 The actual ratio (0.795) is worse than the pilot median (0.712) because
-**longer rules compress less efficiently than short ones**: each Iron-Law
+**longer rules condense less efficiently than short ones**: each Iron-Law
 rule has a fixed payload of frontmatter, Iron-Law fence, exception
 enumeration, see-also list — shrinkage is bounded by what cannot leave
 the rule without breaking the rule's contract. The 5 longest source rules
@@ -61,7 +61,7 @@ enumeration + pre-send self-check + decline/fence semantics).
    | `direct-answers` | 2 841 | +341 | ✓ |
 
 3. **Cap stays sticky.** Future kernel additions or rule-body growth must
-   either (a) compress within the 26k bucket, (b) externalise to a
+   either (a) condense within the 26k bucket, (b) externalise to a
    `contexts/authority/*` companion, or (c) require a follow-up ADR.
 
 ## Rationale
@@ -92,23 +92,23 @@ place.
 The `commit-policy` rule was trimmed below 2.5k (2 354 chars) by removing
 a redundant cross-reference line, demonstrating that aggressive trimming
 is possible where the rule does not carry an enumeration. The 6 overrides
-are the rules where further compression would force semantic loss.
+are the rules where further condensation would force semantic loss.
 
 ## Consequences
 
 - **Pro:** Iron-Law fidelity preserved — every fence still byte-identical
   to baseline (verified by `iron_law_sha.py --all-kernel`).
-- **Pro:** Empirical compression r=0.795 documented; future kernel work
+- **Pro:** Empirical condensation r=0.795 documented; future kernel work
   uses this as the realistic ratio (not 0.712, which was a pilot-skewed
   optimum).
 - **Pro:** Override ceiling (4 000) untouched — no rule grows
   unboundedly; the 4k cap remains the next checkpoint.
 - **Con:** 25 590 / 26 000 = 98.4 % bucket utilisation. Adding any
-  10th kernel rule would require either compression of an existing rule
+  10th kernel rule would require either condensation of an existing rule
   or a further cap raise.
 - **Con:** ratio 0.795 means future "always" promotions cost more than
   Phase 1 estimated. Phase 4 token-budget measurements should treat
-  0.795 as the reference compression rate.
+  0.795 as the reference condensation rate.
 
 ## Rollback
 

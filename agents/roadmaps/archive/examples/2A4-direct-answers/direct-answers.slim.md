@@ -4,7 +4,7 @@ description: "Always — direct, unembellished answers. No flattery, no invented
 alwaysApply: true
 source: package
 load_context:
-  - .agent-src.uncompressed/contexts/communication/rules-always/direct-answers-mechanics.md
+  - .agent-src.uncondensed/contexts/communication/rules-always/direct-answers-mechanics.md
 status: draft
 ---
 

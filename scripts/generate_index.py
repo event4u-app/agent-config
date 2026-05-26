@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Generate `agents/index.md` (internal) and `docs/catalog.md` (public).
 
-Scans `.agent-src.uncompressed/{skills,rules,commands}/` plus `docs/guidelines/`
+Scans `.agent-src.uncondensed/{skills,rules,commands}/` plus `docs/guidelines/`
 and renders two artefact tables — one for maintainers, one for consumers.
 
 Both files are sync-checked in CI via `--check`; drift = build break.
@@ -22,10 +22,10 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from _lib.agent_src import artefact_roots  # noqa: E402
 
-# Legacy single-root anchor — kept as fallback for pure-compressed
+# Legacy single-root anchor — kept as fallback for pure-condensed
 # consumer projections. Multi-root discovery uses artefact_roots() so
 # generate_index works across packages/* per ADR-017.
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 GUIDELINES = ROOT / "docs" / "guidelines"
 INDEX_PATH = ROOT / "agents" / "index.md"
 CATALOG_PATH = ROOT / "docs" / "catalog.md"
@@ -161,9 +161,9 @@ def _collect_guidelines() -> list[Entry]:
 
 
 # Path rewriter for the public catalog: link to the shipped surface
-# (`.agent-src/`) instead of the source-of-truth (`.agent-src.uncompressed/`),
+# (`.agent-src/`) instead of the source-of-truth (`.agent-src.uncondensed/`),
 # which is excluded from `package.json#files` and `composer.json` archives.
-# Post-ADR-017 the source-of-truth lives at packages/*/.agent-src.uncompressed/,
+# Post-ADR-017 the source-of-truth lives at packages/*/.agent-src.uncondensed/,
 # so we strip whichever prefix matches and pin to the flat .agent-src/ output.
 def _to_shipped_path(path: str) -> str:
     from _lib.agent_src import strip_source_prefix
@@ -195,7 +195,7 @@ def _render_index(skills, rules, commands, guidelines) -> str:
         "# Agent-Config Internal Index",
         "",
         f"Maintainer-facing index of all **{total} artefacts** in this package.",
-        "Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.",
+        "Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.",
         "",
         "> **Regenerate:** `python3 scripts/generate_index.py`",
         "> **Drift check:** `python3 scripts/generate_index.py --check` (runs in `task ci`)",

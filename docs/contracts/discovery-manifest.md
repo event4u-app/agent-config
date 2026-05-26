@@ -15,7 +15,7 @@ keep-beta-until: 2026-08-19
 
 The generator
 [`scripts/build_discovery_manifest.py`](../../scripts/build_discovery_manifest.py)
-walks `.agent-src.uncompressed/` and emits the manifest to
+walks `.agent-src.uncondensed/` and emits the manifest to
 `dist/discovery/discovery-manifest.json` plus a sidecar
 `discovery-manifest.json.sha256` for tamper detection.
 
@@ -58,7 +58,7 @@ per-artefact checksum drift all fail CI (Phase-6 invariants).
 
 ```jsonc
 {
-  "path": ".agent-src.uncompressed/skills/laravel/SKILL.md",
+  "path": ".agent-src.uncondensed/skills/laravel/SKILL.md",
   "category": "skill",
   "name": "laravel",
   "workspaces": ["engineering"],
@@ -156,7 +156,7 @@ there is no `id` field.
       "optional_packs": ["symfony"],
       "artefact_count": 124,
       "packs": [
-        { "id": "engineering-base", "artefact_count": 83, "artefacts": [".agent-src.uncompressed/skills/…/SKILL.md", "…"] }
+        { "id": "engineering-base", "artefact_count": 83, "artefacts": [".agent-src.uncondensed/skills/…/SKILL.md", "…"] }
       ]
     }
   ]
@@ -178,7 +178,7 @@ there is no `id` field.
       "requires_hint": [],
       "trust_level_default": "core",
       "artefact_count": 83,
-      "artefacts": [".agent-src.uncompressed/skills/…/SKILL.md", "…"],
+      "artefacts": [".agent-src.uncondensed/skills/…/SKILL.md", "…"],
       "by_lifecycle":   { "active": 82, "experimental": 1, "deprecated": 0, "archived": 0 },
       "by_trust_level": { "core": 83, "professional": 0, "experimental": 0, "advisory": 0, "restricted": 0 }
     }

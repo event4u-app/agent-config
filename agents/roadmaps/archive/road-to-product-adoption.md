@@ -81,7 +81,7 @@ Replace the current "we have no idea where consumers drop" blind spot.
 
 Remove the speculative architecture overhang before it accumulates more carrying cost.
 
-- [x] **Step 1:** Inventory zombie paths — anything in `packages/` or `.agent-src.uncompressed/` shipped for "future third-party packs" / "future marketplace" that has zero consumer today. Output: `agents/evidence/architectural-drift/inventory.md` (new).
+- [x] **Step 1:** Inventory zombie paths — anything in `packages/` or `.agent-src.uncondensed/` shipped for "future third-party packs" / "future marketplace" that has zero consumer today. Output: `agents/evidence/architectural-drift/inventory.md` (new).
 - [x] **Step 2:** Classify each finding: `keep` (load-bearing today), `park` (sunset under flag), `remove` (no consumer, no near plan).
 - [x] **Step 3:** Surface the `remove` set to council via `/council:default`. Decision recorded under `agents/evidence/architectural-drift/inventory.md` § Council Review.
 - [x] **Step 4:** Execute removals as a separate PR per cluster (no drive-by deletions; bulk deletions surface diff per `non-destructive-by-default`). F-1 (ADR-017 addendum) and F-5 (discovery-manifest comment) executed on this branch; F-2 and F-3 parked with 90-day review-by per Council Round 2.

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Lint rule frontmatter for the `tier:` key.
 
-Hard-fails CI if any rule under .agent-src.uncompressed/rules/ lacks a
+Hard-fails CI if any rule under .agent-src.uncondensed/rules/ lacks a
 `tier:` declaration or uses an unknown tier value. The valid tier set is
 locked by agents/settings/contexts/hardening-pattern.md and the matrix in
 agents/settings/contexts/rule-trigger-matrix.md.

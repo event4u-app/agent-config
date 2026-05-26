@@ -27,8 +27,8 @@
     "projection_fidelity_windsurf": "not_applicable"
   },
   "decisions_pending": {
-    "compression_default": {
-      "kill_criterion": "docs/contracts/compression-default-kill-criterion.md",
+    "condensation_default": {
+      "kill_criterion": "docs/contracts/condensation-default-kill-criterion.md",
       "verdict": "deferred_until_baseline_closes",
       "decision_owner": "step-4 closeout phase"
     }
@@ -36,6 +36,6 @@
   "downstream_consumers": [
     "agents/roadmaps/step-99-north-star-restructure.md#G1",
     "agents/roadmaps/step-2-skill-inventory-rationalization.md#G0",
-    "docs/contracts/compression-default-kill-criterion.md"
+    "docs/contracts/condensation-default-kill-criterion.md"
   ]
 }

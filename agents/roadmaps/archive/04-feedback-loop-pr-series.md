@@ -25,7 +25,7 @@ Define what kinds of feedback the system understands.
 
 ## Files to create
 
-- `.agent-src.uncompressed/guidelines/feedback-loop.md`
+- `.agent-src.uncondensed/guidelines/feedback-loop.md`
 - `docs/feedback-taxonomy.md`
 - `schemas/feedback.schema.json` (optional)
 - `scripts/feedback_store.py`
@@ -114,7 +114,7 @@ Control when feedback turns into roadmap / implementation work.
 
 ## Files to create/update
 
-- `.agent-src.uncompressed/rules/capture-learnings.md`
+- `.agent-src.uncondensed/rules/capture-learnings.md`
 - `learning-to-rule-or-skill`
 - `docs/promotion-thresholds.md`
 

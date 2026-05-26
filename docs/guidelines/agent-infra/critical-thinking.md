@@ -8,13 +8,13 @@ rebuilds from primitives) and `inversion-thinking` (which negates the
 goal). Adopted under the **Reference-Guideline Sunset Policy** and
 cross-referenced from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
   — L2 Standard / L3 Deep evaluation depth.
-- [`receiving-code-review`](../../../.agent-src.uncompressed/skills/receiving-code-review/SKILL.md)
+- [`receiving-code-review`](../../../.agent-src.uncondensed/skills/receiving-code-review/SKILL.md)
   — steelman bot / human review feedback before changing code.
-- [`improve-before-implement`](../../../.agent-src.uncompressed/rules/improve-before-implement.md)
+- [`improve-before-implement`](../../../.agent-src.uncondensed/rules/improve-before-implement.md)
   — challenge weak requirements with evidence-grade analysis.
-- [`adversarial-review`](../../../.agent-src.uncompressed/skills/adversarial-review/SKILL.md)
+- [`adversarial-review`](../../../.agent-src.uncondensed/skills/adversarial-review/SKILL.md)
   — paired stress-test on a diff after critique.
 
 > **Core principle:** "Steelman first, criticize second." — attacking

@@ -88,7 +88,7 @@ procedure → no warning under the new model. ✓ roadmap success criterion.
 success criterion.
 
 Of 13 commands ≥ 1000 words, only **2** lack a delegation signal —
-both are candidates for Phase 4.1 review (`compress.md`,
+both are candidates for Phase 4.1 review (`condense.md`,
 `project-analyze.md`; the latter has density 0.86, exempt under the
 density-AND-delegation gate).
 
@@ -115,7 +115,7 @@ Calibration sweep on the 2026-05-08 corpus (310 artifacts):
 Pass rate: 186 → 209 (`pass`); 124 → 101 (`pass_with_warnings`); 0
 errors. Each remaining warning is a genuine structural defect:
 
-- `compress.md` (1569 words, density 0.58, no delegation signal) —
+- `condense.md` (1569 words, density 0.58, no delegation signal) —
   inlined logic in a non-orchestrator command.
 - `artifact-drafting-protocol.md` rule (65 lines, density 0.37, no
   Iron-Law block) — prose-dominant long rule.

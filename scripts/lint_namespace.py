@@ -10,7 +10,7 @@ import argparse, re, sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 
 # Source-of-truth regex; mirrored in docs/contracts/namespace.md § 1.
 NAME_RE = re.compile(r"^[a-z][a-z0-9]*(-[a-z0-9]+)*$")

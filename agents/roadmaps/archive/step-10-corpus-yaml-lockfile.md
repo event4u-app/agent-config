@@ -4,7 +4,7 @@ complexity: lightweight
 
 # Roadmap: Low-Impact Corpus — YAML Lockfile as Runtime Source-of-Truth
 
-> Pfad C from the PR #151 follow-up discussion (Punkt 4 of the GPT review): turn the human-edited `agents/low-impact-decisions.md` into a **build-time** source. A generated lockfile `agents/low-impact-decisions.lock.yaml` becomes the **runtime** source-of-truth. The Markdown parser stays — but moves from a runtime risk to a build tool. `task consistency` enforces `.md` ↔ `.yaml` parity via the same `git diff --quiet` gate that already polices `.agent-src/` vs `.agent-src.uncompressed/`.
+> Pfad C from the PR #151 follow-up discussion (Punkt 4 of the GPT review): turn the human-edited `agents/low-impact-decisions.md` into a **build-time** source. A generated lockfile `agents/low-impact-decisions.lock.yaml` becomes the **runtime** source-of-truth. The Markdown parser stays — but moves from a runtime risk to a build tool. `task consistency` enforces `.md` ↔ `.yaml` parity via the same `git diff --quiet` gate that already polices `.agent-src/` vs `.agent-src.uncondensed/`.
 
 ## Prerequisites
 
@@ -18,7 +18,7 @@ complexity: lightweight
 
 The Markdown corpus parser was hardened in PR #150 (typed `CorpusParseError`, 7 fixtures, lenient + strict modes). That removed the **acute** breakage risk but kept the **structural** risk: a human-authored Markdown format with machine-semantic bullets means every authoring variation (em-dash vs hyphen, bullet style, heading rename, whitespace drift) is a potential parser bomb. The classifier degrades to `()` on parse failure, which is safer than crashing but worse than enforcing a schema.
 
-This roadmap flips the **runtime** source to YAML while keeping the **authoring** surface in Markdown. Reviewers still see the `.md` diff for human review; the runtime classifier and redactor read only the generated `.yaml`. The pattern is identical to `.agent-src/` ↔ `.agent-src.uncompressed/`: `task sync` regenerates, `task consistency` enforces parity via `git diff --quiet`.
+This roadmap flips the **runtime** source to YAML while keeping the **authoring** surface in Markdown. Reviewers still see the `.md` diff for human review; the runtime classifier and redactor read only the generated `.yaml`. The pattern is identical to `.agent-src/` ↔ `.agent-src.uncondensed/`: `task sync` regenerates, `task consistency` enforces parity via `git diff --quiet`.
 
 **Decisions locked from the PR #151 follow-up conversation:**
 - Lockfile is **committed** (`agents/low-impact-decisions.lock.yaml`), not gitignored — reviewers see drift in the PR diff

@@ -89,7 +89,7 @@ def _check_decision_engine_block(settings: Path) -> int:
     from _lib.agent_src import resolve_logical  # noqa: E402
 
     template_scripts = resolve_logical("templates/scripts") or (
-        ROOT / ".agent-src.uncompressed" / "templates" / "scripts"
+        ROOT / ".agent-src.uncondensed" / "templates" / "scripts"
     )
     sys.path.insert(0, str(template_scripts))
     try:

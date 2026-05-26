@@ -7,7 +7,7 @@ from pathlib import Path
 # Scripts that accept --quiet (verified: 20 total = 3 pre-existing + 17 patched).
 QUIET_AWARE = {
     "check_always_budget", "check_one_off_location", "check_safety_floor_untouched",
-    "check_augmentignore", "check_command_count_messaging", "check_compressed_paths",
+    "check_augmentignore", "check_command_count_messaging", "check_condensed_paths",
     "check_council_layout", "check_council_references", "check_iron_law_prominence",
     "check_md_language", "check_memory_proposal", "check_public_catalog_links",
     "check_reply_consistency", "check_roadmap_trackable",

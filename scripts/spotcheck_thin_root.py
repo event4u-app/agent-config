@@ -56,7 +56,7 @@ file alone, set `"pointer_used": null` and lower confidence.
 def main() -> int:
     package_root = (ROOT / "AGENTS.md").read_text(encoding="utf-8")
     consumer_template = (
-        ROOT / ".agent-src.uncompressed" / "templates" / "AGENTS.md"
+        ROOT / ".agent-src.uncondensed" / "templates" / "AGENTS.md"
     ).read_text(encoding="utf-8")
 
     artefact = (

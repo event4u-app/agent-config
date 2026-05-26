@@ -69,7 +69,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
 ## Phase 1 — Five-skill adoption plate (READY)
 
 - [x] **P1.1 — `defense-in-depth` skill.** Port the 130-line four-layer
-  validation pattern as `.agent-src.uncompressed/skills/defense-in-depth/`.
+  validation pattern as `.agent-src.uncondensed/skills/defense-in-depth/`.
   Strip Microck-specific refs, add ADOPT citation
   (Microck commit SHA + path), pass `lint-skills` + `check-portability`.
   Effort: 0.5 day.
@@ -91,7 +91,7 @@ Phase 1 is the visible plate. Phase 2 + 3 are **out-of-horizon**.
   Python docs, MDN). Define refresh trigger + sunset criterion in
   frontmatter. Effort: 1.5 days.
 - [x] **P1.6 — Suite integration.** Add the 5 new skills to the index
-  (`AGENTS.md` skill counts), regenerate compressed output (`task sync`),
+  (`AGENTS.md` skill counts), regenerate condensed output (`task sync`),
   regenerate tool projections (`task generate-tools`), run full CI
   (`task ci`). No PR until evidence is captured.
 

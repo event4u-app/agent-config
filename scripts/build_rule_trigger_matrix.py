@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build agents/settings/contexts/rule-trigger-matrix.md.
 
-Emits a single matrix mapping every rule in `.agent-src.uncompressed/rules/`
+Emits a single matrix mapping every rule in `.agent-src.uncondensed/rules/`
 to its trigger event, observability, enforcement surface, hook-cost
 estimate, and Tier classification. Sourced from the Phase 1 inventory of
 `road-to-rule-hardening.md` plus `road-to-context-layer-maturity.md`
@@ -18,9 +18,9 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SRC_RULES = REPO_ROOT / ".agent-src.uncompressed" / "rules"
+SRC_RULES = REPO_ROOT / ".agent-src.uncondensed" / "rules"
 COMP_RULES = REPO_ROOT / ".agent-src" / "rules"
-SRC_PREFIX = ".agent-src.uncompressed/"
+SRC_PREFIX = ".agent-src.uncondensed/"
 COMP_PREFIX = ".agent-src/"
 OUT = REPO_ROOT / "agents" / "contexts" / "rule-trigger-matrix.md"
 
@@ -80,7 +80,7 @@ add("roadmap-progress-sync.md", "file-edit on agents/roadmaps/**", "hook",
 add("context-hygiene.md", "turn counter / tool-loop / topic shift", "hook",
     "state", "medium", "1",
     notes="Per-turn counter + tool-call repetition detector. Cross-platform persistence is the cost driver.")
-add("size-enforcement.md", "file save on .agent-src.uncompressed/{skills,rules,commands}/**",
+add("size-enforcement.md", "file save on .agent-src.uncondensed/{skills,rules,commands}/**",
     "mechanical-already", "tool-call", "NA-mechanical", "mechanical-already",
     notes="Enforced by skill_linter.py + check_always_budget.py")
 add("no-roadmap-references.md", "file save on stable artifacts", "mechanical-already",
@@ -127,7 +127,7 @@ add("cli-output-handling.md", "tool-call (verbose CLI)", "hook", "tool-call",
     "low", "2a", notes="Pre-tool-call marker on git/test/lint invocations")
 add("artifact-drafting-protocol.md", "skill/rule create or major rewrite",
     "hook", "output", "medium", "2a",
-    notes="Marker on file-create in .agent-src.uncompressed/{skills,rules,commands}/")
+    notes="Marker on file-create in .agent-src.uncondensed/{skills,rules,commands}/")
 add("missing-tool-handling.md", "tool failure (command not found)", "hook",
     "output", "low", "2a", notes="Post-tool-failure marker — strong fit")
 add("token-efficiency.md", "every reply / verbose-tool invocation", "hook",
@@ -144,7 +144,7 @@ add("downstream-changes.md", "post-edit (callsite check)", "hook",
 add("ui-audit-gate.md", "pre-edit on UI files (settings.state.ui_audit empty)",
     "settings", "tool-call", "medium", "2b",
     notes="Block edit until state.ui_audit populated")
-add("preservation-guard.md", "skill/rule merge or compress", "hook",
+add("preservation-guard.md", "skill/rule merge or condense", "hook",
     "tool-call", "medium", "2b",
     notes="Pre-merge structured check — diff-shape verifiable")
 add("minimal-safe-diff.md", "every diff", "hook", "tool-call",
@@ -258,7 +258,7 @@ def emit():
     lines.append("| Column | Meaning |")
     lines.append("|---|---|")
     lines.append("| `type` | Frontmatter `type` (`always` / `auto`) |")
-    lines.append("| `raw` | Compressed rule size in chars (`.agent-src/rules/<name>`) |")
+    lines.append("| `raw` | Condensed rule size in chars (`.agent-src/rules/<name>`) |")
     lines.append("| `ext` | Extended size under Model (b): raw + transitive `load_context` |")
     lines.append("| `trigger` | Observable event that should activate the rule |")
     lines.append("| `obs` | Where the trigger is observable: `hook` (platform hook), `settings` (`.agent-settings.yml` state), `agent-only` (in-head), `mechanical-already` (precedent — already enforced by a script) |")
@@ -295,7 +295,7 @@ def emit():
     lines.append("## `load_context:` chains (CL Phase 1 inventory)")
     lines.append("")
     lines.append("Rules that load at least one context, with `rule → context → depth → chars`.")
-    lines.append("Chars are measured on the compressed context file (Model (b) literal).")
+    lines.append("Chars are measured on the condensed context file (Model (b) literal).")
     lines.append("")
     lines.append("| Rule | Context | Depth | Chars |")
     lines.append("|---|---|---:|---:|")

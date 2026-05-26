@@ -19,7 +19,7 @@ def write_file(tmp_path: Path, relative: str, content: str) -> Path:
 def test_valid_skill_passes(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing a concrete workflow."
@@ -63,7 +63,7 @@ def test_complete_skill_passes(tmp_path: Path) -> None:
     """A skill with all required and recommended sections should pass cleanly."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -107,7 +107,7 @@ domain: process
 def test_vague_validation_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         """---
 name: example
 description: "Use when testing."
@@ -432,7 +432,7 @@ def test_pointer_only_skill_warns(tmp_path: Path) -> None:
     """A skill that delegates most work to guidelines should trigger pointer_only_skill warning."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/delegator/SKILL.md",
+        ".agent-src.uncondensed/skills/delegator/SKILL.md",
         """---
 name: delegator
 description: "Use when delegating to guidelines."
@@ -473,7 +473,7 @@ def test_guideline_dependent_skill_errors(tmp_path: Path) -> None:
     """A skill that is effectively just pointers should trigger guideline_dependent_skill error."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/pure-pointer/SKILL.md",
+        ".agent-src.uncondensed/skills/pure-pointer/SKILL.md",
         """---
 name: pure-pointer
 description: "Use when pointing to docs."
@@ -516,7 +516,7 @@ def test_strong_self_contained_skill_no_pointer_warning(tmp_path: Path) -> None:
     """A skill with concrete actions should NOT trigger pointer warnings."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/concrete-worker/SKILL.md",
+        ".agent-src.uncondensed/skills/concrete-worker/SKILL.md",
         """---
 name: concrete-worker
 description: "Use when running a concrete analysis workflow."
@@ -563,7 +563,7 @@ def test_guideline_heavy_but_acceptable_skill(tmp_path: Path) -> None:
     """A skill that references guidelines but has enough own actions should not warn."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/mixed-worker/SKILL.md",
+        ".agent-src.uncondensed/skills/mixed-worker/SKILL.md",
         """---
 name: mixed-worker
 description: "Use when reviewing code with guideline references."
@@ -805,7 +805,7 @@ def test_cluster_head_command_exempt_from_no_steps(tmp_path: Path) -> None:
     even without explicit Step sections — road-to-feedback-followups P2.1."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/commands/research.md",
+        ".agent-src.uncondensed/commands/research.md",
         """\
 ---
 name: research
@@ -836,7 +836,7 @@ def test_non_cluster_command_without_steps_still_warns(tmp_path: Path) -> None:
     STILL fires no_steps — exemption is narrow (cluster heads only)."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/commands/leaf-cmd.md",
+        ".agent-src.uncondensed/commands/leaf-cmd.md",
         """\
 ---
 name: leaf-cmd
@@ -864,7 +864,7 @@ def test_command_with_step_n_subheadings_passes_no_steps(tmp_path: Path) -> None
     the linter recognizes both ``### N.`` and ``### Step N`` patterns."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/commands/has-steps.md",
+        ".agent-src.uncondensed/commands/has-steps.md",
         """\
 ---
 name: has-steps
@@ -1125,11 +1125,11 @@ When working with API endpoints and controllers.
 # --- Governance checks ---
 
 
-def test_uncompressed_without_compressed_warns(tmp_path: Path) -> None:
-    """Uncompressed file without compressed variant → warning."""
+def test_uncondensed_without_condensed_warns(tmp_path: Path) -> None:
+    """Uncondensed file without condensed variant → warning."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/rules/orphan-rule.md",
+        ".agent-src.uncondensed/rules/orphan-rule.md",
         """\
 ---
 description: "When orphan behavior occurs"
@@ -1142,11 +1142,11 @@ description: "When orphan behavior occurs"
     )
 
     result = lint_file(path, repo_root=tmp_path)
-    assert any(issue.code == "compressed_variant_missing" for issue in result.issues)
+    assert any(issue.code == "condensed_variant_missing" for issue in result.issues)
 
 
-def test_uncompressed_with_compressed_passes(tmp_path: Path) -> None:
-    """Uncompressed file with matching compressed variant → no warning."""
+def test_uncondensed_with_condensed_passes(tmp_path: Path) -> None:
+    """Uncondensed file with matching condensed variant → no warning."""
     content = """\
 ---
 description: "When paired behavior occurs"
@@ -1156,12 +1156,12 @@ description: "When paired behavior occurs"
 
 - Always have a pair
 """
-    write_file(tmp_path, ".agent-src.uncompressed/rules/paired-rule.md", content)
+    write_file(tmp_path, ".agent-src.uncondensed/rules/paired-rule.md", content)
     write_file(tmp_path, ".agent-src/rules/paired-rule.md", content)
 
-    path = tmp_path / ".agent-src.uncompressed" / "rules" / "paired-rule.md"
+    path = tmp_path / ".agent-src.uncondensed" / "rules" / "paired-rule.md"
     result = lint_file(path, repo_root=tmp_path)
-    assert not any(issue.code == "compressed_variant_missing" for issue in result.issues)
+    assert not any(issue.code == "condensed_variant_missing" for issue in result.issues)
 
 
 # --- Runtime execution metadata tests ---
@@ -1200,7 +1200,7 @@ source: project
 
 * Do NOT skip validation
 """
-    return write_file(tmp_path, ".agent-src.uncompressed/skills/test-runtime/SKILL.md", content)
+    return write_file(tmp_path, ".agent-src.uncondensed/skills/test-runtime/SKILL.md", content)
 
 
 def test_execution_manual_type_passes(tmp_path: Path) -> None:
@@ -1309,7 +1309,7 @@ def test_role_contract_ref_unknown_slug_warns(tmp_path: Path) -> None:
     _reset_role_contract_cache()
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/commands/bogus-ref.md",
+        ".agent-src.uncondensed/commands/bogus-ref.md",
         """---
 name: bogus-ref
 description: test
@@ -1334,7 +1334,7 @@ def test_role_contract_ref_known_slug_passes(tmp_path: Path) -> None:
     _reset_role_contract_cache()
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/commands/good-ref.md",
+        ".agent-src.uncondensed/commands/good-ref.md",
         """---
 name: good-ref
 description: test
@@ -1414,12 +1414,12 @@ def _write_skill_with_schema(
 ) -> Path:
     skill_path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/frozen-skill/SKILL.md",
+        ".agent-src.uncondensed/skills/frozen-skill/SKILL.md",
         skill_text,
     )
     write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/frozen-skill/evals/output-schema.yml",
+        ".agent-src.uncondensed/skills/frozen-skill/evals/output-schema.yml",
         schema_text,
     )
     return skill_path
@@ -1429,7 +1429,7 @@ def test_output_schema_absent_is_noop(tmp_path: Path) -> None:
     """Skills without the sibling schema must not trigger the check."""
     skill_path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/frozen-skill/SKILL.md",
+        ".agent-src.uncondensed/skills/frozen-skill/SKILL.md",
         _OUTPUT_TEMPLATE_SKILL,
     )
     result = lint_file(skill_path)
@@ -1508,13 +1508,13 @@ def test_lint_output_schema_requires_skill_md(tmp_path: Path) -> None:
     """Non-SKILL.md files must not trigger the sibling lookup."""
     other = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/frozen-skill/NOTES.md",
+        ".agent-src.uncondensed/skills/frozen-skill/NOTES.md",
         "# notes",
     )
     # Also create a schema that WOULD match if the lookup misfired
     write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/frozen-skill/evals/output-schema.yml",
+        ".agent-src.uncondensed/skills/frozen-skill/evals/output-schema.yml",
         'version: 1\nrequired_headers:\n  - "Never appears"\n',
     )
     assert lint_output_schema(other, "# notes") == []
@@ -1524,7 +1524,7 @@ def test_output_schema_repo_refine_ticket_passes() -> None:
     """Regression guard: the real refine-ticket schema must stay green."""
     repo_root = Path(__file__).resolve().parent.parent
     skill_path = (
-        repo_root / ".agent-src.uncompressed" / "skills"
+        repo_root / ".agent-src.uncondensed" / "skills"
         / "refine-ticket" / "SKILL.md"
     )
     if not skill_path.exists():
@@ -1537,7 +1537,7 @@ def test_output_schema_repo_estimate_ticket_passes() -> None:
     """Regression guard: the real estimate-ticket schema must stay green."""
     repo_root = Path(__file__).resolve().parent.parent
     skill_path = (
-        repo_root / ".agent-src.uncompressed" / "skills"
+        repo_root / ".agent-src.uncondensed" / "skills"
         / "estimate-ticket" / "SKILL.md"
     )
     if not skill_path.exists():
@@ -1617,7 +1617,7 @@ def test_senior_skill_with_all_blocks_passes(tmp_path: Path) -> None:
     extra = SENIOR_RELATED_BLOCK + SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
     )
     result = lint_file(path)
@@ -1635,7 +1635,7 @@ def test_senior_skill_missing_related_skills_fails(tmp_path: Path) -> None:
     extra = SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
     )
     result = lint_file(path)
@@ -1655,7 +1655,7 @@ def test_senior_skill_missing_when_not_list_fails(tmp_path: Path) -> None:
     extra = truncated_related + SENIOR_PROACTIVE_BLOCK + SENIOR_OUTPUT_BLOCK
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
     )
     result = lint_file(path)
@@ -1669,7 +1669,7 @@ def test_senior_skill_missing_proactive_triggers_fails(tmp_path: Path) -> None:
     extra = SENIOR_RELATED_BLOCK + SENIOR_OUTPUT_BLOCK
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
     )
     result = lint_file(path)
@@ -1684,7 +1684,7 @@ def test_senior_skill_missing_output_artifacts_fails(tmp_path: Path) -> None:
     extra = SENIOR_RELATED_BLOCK + SENIOR_PROACTIVE_BLOCK
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.format(extra_blocks=extra),
     )
     result = lint_file(path)
@@ -1698,7 +1698,7 @@ def test_non_senior_skill_skips_senior_checks(tmp_path: Path) -> None:
     """Mid-tier / untiered skills are exempt from senior-tier block checks (forward-only)."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/example/SKILL.md",
+        ".agent-src.uncondensed/skills/example/SKILL.md",
         SENIOR_SKILL_TEMPLATE.replace("tier: senior\n", "").format(extra_blocks=""),
     )
     result = lint_file(path)
@@ -1770,7 +1770,7 @@ SPECIALIST_EXTRA = """
 def test_core_persona_passes_with_5_sections(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-core.md",
+        ".agent-src.uncondensed/personas/test-core.md",
         CORE_PERSONA_TEMPLATE.format(id="test-core", tier="core", extra=""),
     )
     result = lint_file(path)
@@ -1780,7 +1780,7 @@ def test_core_persona_passes_with_5_sections(tmp_path: Path) -> None:
 def test_specialist_persona_requires_critical_rules_and_workflows(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-spec.md",
+        ".agent-src.uncondensed/personas/test-spec.md",
         CORE_PERSONA_TEMPLATE.format(id="test-spec", tier="specialist", extra=""),
     )
     result = lint_file(path)
@@ -1792,7 +1792,7 @@ def test_specialist_persona_requires_critical_rules_and_workflows(tmp_path: Path
 def test_specialist_persona_passes_with_7_sections(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-spec.md",
+        ".agent-src.uncondensed/personas/test-spec.md",
         CORE_PERSONA_TEMPLATE.format(id="test-spec", tier="specialist", extra=SPECIALIST_EXTRA),
     )
     result = lint_file(path)
@@ -1805,7 +1805,7 @@ def test_specialist_size_budget_warns_above_100(tmp_path: Path) -> None:
     body = body + ("\n<!-- pad -->" * 80)
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-spec.md",
+        ".agent-src.uncondensed/personas/test-spec.md",
         body,
     )
     result = lint_file(path)
@@ -1815,7 +1815,7 @@ def test_specialist_size_budget_warns_above_100(tmp_path: Path) -> None:
 def test_persona_invalid_tier_fails(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-bad.md",
+        ".agent-src.uncondensed/personas/test-bad.md",
         CORE_PERSONA_TEMPLATE.format(id="test-bad", tier="reviewer", extra=""),
     )
     result = lint_file(path)
@@ -1825,7 +1825,7 @@ def test_persona_invalid_tier_fails(tmp_path: Path) -> None:
 def test_persona_id_must_match_filename(tmp_path: Path) -> None:
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/personas/test-core.md",
+        ".agent-src.uncondensed/personas/test-core.md",
         CORE_PERSONA_TEMPLATE.format(id="other-id", tier="core", extra=""),
     )
     result = lint_file(path)
@@ -1910,7 +1910,7 @@ def test_wing3_spine_slots_all_three_pass(tmp_path: Path) -> None:
     """Senior skill declaring all three Wing-3 slots lints clean (adr-gtm-context-spine.md)."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        ".agent-src.uncondensed/skills/spine-test/SKILL.md",
         _WING3_SPINE_TEMPLATE.format(
             slots="channel-stage, funnel-stage, customer-segment"
         ),
@@ -1927,7 +1927,7 @@ def test_wing3_spine_mixed_with_cross_wing_passes(tmp_path: Path) -> None:
     """Mixed cross-wing (product) + Wing-3 (channel-stage) declaration is valid."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        ".agent-src.uncondensed/skills/spine-test/SKILL.md",
         _WING3_SPINE_TEMPLATE.format(slots="product, channel-stage"),
     )
     result = lint_file(path)
@@ -1942,7 +1942,7 @@ def test_unknown_spine_slot_rejected(tmp_path: Path) -> None:
     """Unknown slot value fails schema validation — guard against slot-sprawl."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/spine-test/SKILL.md",
+        ".agent-src.uncondensed/skills/spine-test/SKILL.md",
         _WING3_SPINE_TEMPLATE.format(slots="product, made-up-slot"),
     )
     result = lint_file(path)
@@ -2019,7 +2019,7 @@ def test_wing3_vendor_in_body_fires(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("channel-stage, product", procedure),
     )
     result = lint_file(path)
@@ -2036,7 +2036,7 @@ def test_wing3_vendor_in_do_not_carved_out(tmp_path: Path) -> None:
     do_not = "- Do NOT route to Salesforce-specific configuration flows"
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("channel-stage", procedure, do_not=do_not),
     )
     result = lint_file(path)
@@ -2056,7 +2056,7 @@ def test_wing3_vendor_in_when_not_carved_out(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("funnel-stage", procedure, related=related),
     )
     result = lint_file(path)
@@ -2072,7 +2072,7 @@ def test_wing3_saas_url_fires_agent_operability(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("customer-segment", procedure),
     )
     result = lint_file(path)
@@ -2088,7 +2088,7 @@ def test_wing3_channel_tactic_fires_channel_agnosticism(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("channel-stage", procedure),
     )
     result = lint_file(path)
@@ -2104,7 +2104,7 @@ def test_wing3_stack_locked_fires_transferability(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("customer-segment", procedure),
     )
     result = lint_file(path)
@@ -2120,7 +2120,7 @@ def test_wing3_clean_cognition_skill_passes_boundaries(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing3-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing3-test/SKILL.md",
         _wing3_skill("channel-stage, funnel-stage, customer-segment", procedure),
     )
     result = lint_file(path)
@@ -2169,7 +2169,7 @@ domain: process
 """
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/off-wing-test/SKILL.md",
+        ".agent-src.uncondensed/skills/off-wing-test/SKILL.md",
         body,
     )
     result = lint_file(path)
@@ -2245,7 +2245,7 @@ def test_wing4_vendor_in_body_fires(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("fiscal-period, product", procedure),
     )
     result = lint_file(path)
@@ -2262,7 +2262,7 @@ def test_wing4_vendor_in_do_not_carved_out(tmp_path: Path) -> None:
     do_not = "- Do NOT route to QuickBooks-specific configuration flows"
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("fiscal-period", procedure, do_not=do_not),
     )
     result = lint_file(path)
@@ -2278,7 +2278,7 @@ def test_wing4_saas_url_fires_agent_operability(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("org-stage", procedure),
     )
     result = lint_file(path)
@@ -2294,7 +2294,7 @@ def test_wing4_stage_threshold_fires_stage_agnosticism(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("org-stage", procedure),
     )
     result = lint_file(path)
@@ -2310,7 +2310,7 @@ def test_wing4_stack_locked_fires_transferability(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("fiscal-period", procedure),
     )
     result = lint_file(path)
@@ -2327,7 +2327,7 @@ def test_wing4_regulatory_regime_passes(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("regulatory-regime", procedure),
     )
     result = lint_file(path)
@@ -2347,7 +2347,7 @@ def test_wing4_clean_cognition_skill_passes_boundaries(tmp_path: Path) -> None:
     )
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/wing4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/wing4-test/SKILL.md",
         _wing4_skill("fiscal-period, org-stage, regulatory-regime", procedure),
     )
     result = lint_file(path)
@@ -2396,7 +2396,7 @@ domain: process
 """
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/off-wing-w4-test/SKILL.md",
+        ".agent-src.uncondensed/skills/off-wing-w4-test/SKILL.md",
         body,
     )
     result = lint_file(path)
@@ -2519,7 +2519,7 @@ def test_inspect_step_accepts_read_verb(tmp_path: Path) -> None:
     """`Read existing X` is a legitimate inspect step."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/read-verb/SKILL.md",
+        ".agent-src.uncondensed/skills/read-verb/SKILL.md",
         """---
 name: read-verb
 description: "Use when reading existing code before mutating."
@@ -2552,7 +2552,7 @@ def test_inspect_step_accepts_examine_verb(tmp_path: Path) -> None:
     """`Examine X` is a legitimate inspect step."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/examine-verb/SKILL.md",
+        ".agent-src.uncondensed/skills/examine-verb/SKILL.md",
         """---
 name: examine-verb
 description: "Use when examining the current setup."
@@ -2585,7 +2585,7 @@ def test_inspect_step_still_fires_when_no_orientation_verb(tmp_path: Path) -> No
     """A procedure that jumps straight to mutation must still be flagged."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/skills/no-inspect/SKILL.md",
+        ".agent-src.uncondensed/skills/no-inspect/SKILL.md",
         """---
 name: no-inspect
 description: "Use when there is no inspection step."
@@ -2624,7 +2624,7 @@ def test_router_routes_to_missing_skipped_for_trust_core(tmp_path: Path) -> None
     """
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/rules/trust-core-rule.md",
+        ".agent-src.uncondensed/rules/trust-core-rule.md",
         """---
 type: auto
 description: "Use when something specific happens — core-trust authoritative rule"
@@ -2655,7 +2655,7 @@ def test_router_routes_to_missing_still_fires_without_trust_core(tmp_path: Path)
     """Non-core rules still get the Phase 4 migration hint when routes_to: is absent."""
     path = write_file(
         tmp_path,
-        ".agent-src.uncompressed/rules/regular-auto-rule.md",
+        ".agent-src.uncondensed/rules/regular-auto-rule.md",
         """---
 type: auto
 description: "Use when something specific happens — regular auto rule"

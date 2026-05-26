@@ -34,7 +34,7 @@ ide
 cost_profile
 personal.bot_icon
 personal.autonomy
-caveman.speak_scope
+telegraph.speak_scope
 ```
 
 Six keys, three namespaces. Documented as exact paths in the loader — a developer adding `personal.theme` to user-global will see silent ignore (verbose flag surfaces the ignored keys for debugging).
@@ -57,7 +57,7 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 **Pre-conditions:** Phase 1 shipped.
 
 - [x] **P2.1** — `/onboard` detects whether `~/.config/agent-config/agent-settings.yml` exists. If absent **and** the user is doing first-time setup on this machine (heuristic: no `.agent-settings.yml` in any sibling project), offer to create user-global with the six whitelisted keys. User confirms explicitly; never auto-create.
-- [x] **P2.2** — Document the user-global path in `docs/customization.md` and the onboarding completion message. Cross-link from `.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml`.
+- [x] **P2.2** — Document the user-global path in `docs/customization.md` and the onboarding completion message. Cross-link from `.agent-src.uncondensed/templates/agents/agent-project-settings.example.yml`.
 
 ## Phase 3: Atomic loader migration
 
@@ -65,7 +65,7 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 **Pre-conditions:** Phase 1 shipped and merged. Phase 2 not required (loader works without `/onboard` changes).
 
-- [x] **P3.1** — Inventory all current direct readers (≈15 scripts surfaced by `grep -rln "agent-settings.yml\|agent_settings" scripts/ .agent-src.uncompressed/templates/`). Tag each as `keep` (pure project-scoped, no DX-comfort keys) or `migrate` (touches at least one whitelisted key).
+- [x] **P3.1** — Inventory all current direct readers (≈15 scripts surfaced by `grep -rln "agent-settings.yml\|agent_settings" scripts/ .agent-src.uncondensed/templates/`). Tag each as `keep` (pure project-scoped, no DX-comfort keys) or `migrate` (touches at least one whitelisted key).
 - [x] **P3.2** — Migrate every `migrate`-tagged loader to the centralized helper in a single PR. Existing per-script settings dataclasses can wrap the merged dict — no API breakage required.
 - [x] **P3.3** — Regression test pass: golden replays for `work_engine`, telemetry recorder, chat-history hook, onboarding gate, council CLI, sync-agent-settings.
 
@@ -83,8 +83,8 @@ Six keys, three namespaces. Documented as exact paths in the loader — a develo
 
 - Council session: `agents/council-responses/portable-dev-preferences.json` (gitignored, retention 7d). <!-- council-ref-allowed: provenance pointer to gitignored convergence record; never resolves on disk for new readers -->
 - Council convergence: GPT-5 + Claude Opus 4.5 + Gemini 2.5 Pro agreed on the read-only loader pattern with explicit `.augment/` exclusion (2025-05-08).
-- Existing pattern: `.agent-src.uncompressed/templates/scripts/work_engine/hooks/settings.py`.
-- Settings template: `.agent-src.uncompressed/templates/agents/agent-project-settings.example.yml`.
+- Existing pattern: `.agent-src.uncondensed/templates/scripts/work_engine/hooks/settings.py`.
+- Settings template: `.agent-src.uncondensed/templates/agents/agent-project-settings.example.yml`.
 
 ## Next step
 

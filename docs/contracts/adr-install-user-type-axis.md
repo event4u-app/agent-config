@@ -14,7 +14,7 @@ keep-beta-until: 2026-08-13
 ## Decision
 
 Install-time skill filtering uses a dedicated axis seeded under
-`user-types/` (package root, not `.agent-src.uncompressed/`). The
+`user-types/` (package root, not `.agent-src.uncondensed/`). The
 selection lands in the consumer's `.agent-settings.yml` under
 `personal.user_type: <id>` via `agent-config install --user-type=<id>`.
 Runtime skill discovery intersects each skill's

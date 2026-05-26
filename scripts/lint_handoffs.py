@@ -27,7 +27,7 @@ from typing import Iterable
 QUIET = "--quiet" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
-SKILLS_DIR = REPO / ".agent-src.uncompressed" / "skills"
+SKILLS_DIR = REPO / ".agent-src.uncondensed" / "skills"
 
 LINK_RE = re.compile(r"\[`?([a-z0-9][a-z0-9-]*)`?\]\(([^)]+SKILL\.md)\)")
 RELATED_HEADING_RE = re.compile(r"^##\s+Related\s+Skills\s*$", re.IGNORECASE)

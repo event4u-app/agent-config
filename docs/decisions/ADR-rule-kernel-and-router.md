@@ -40,13 +40,13 @@ size budgets.
 - **Budget gates:** `task lint-rule-budget` enforces kernel ≤ 26k chars
   and per-rule ≤ 2.5k (Iron-Law overrides up to 4.0k via ADR-002).
   Daily snapshots in `agents/runtime/.rule-budget-history.jsonl`.
-- **Compression discipline:** P4.3 brought the auto-bucket from
+- **Condensation discipline:** P4.3 brought the auto-bucket from
   ~75k → 59 220 chars (under the 60k target) without behaviour drift.
 
 ### What we cut
 
 - **P4.1 / P4.2** — auto-rule → skill / guideline migrations.
-  Cancelled as scope-cut after P4.3 compression alone landed the
+  Cancelled as scope-cut after P4.3 condensation alone landed the
   auto-bucket under target. The migrations were a means, not an end.
 - **road-to-package-optimization Phase 1.2 / 1.3 / Phase 2 / Phase 3**
   — cancelled per P1.1's binary acceptance gate. The prototype
@@ -61,9 +61,9 @@ size budgets.
 ### What stayed
 
 - All Iron-Law fences. SHA-verified preserved by
-  `scripts/iron_law_sha.py` across the kernel compression pass.
+  `scripts/iron_law_sha.py` across the kernel condensation pass.
 - Behaviour parity. Golden transcripts pass under all three profiles.
-- The pre-existing `auto`-tier rules; only their compressed bodies
+- The pre-existing `auto`-tier rules; only their condensed bodies
   changed, never their obligation surface.
 
 ## Profile semantics
@@ -89,7 +89,7 @@ If the Kernel + Router model needs unwinding:
    running `compile_router.py --no-router` returns the always-loaded
    model.
 
-No data migration, no irreversible compression. Iron-Law SHA fences
+No data migration, no irreversible condensation. Iron-Law SHA fences
 mean Iron Laws can be diffed against the pre-roadmap baseline at any
 point.
 

@@ -192,7 +192,7 @@ The agent repeats the call with each answer until the CLI returns
       return `status: error` with explanation on bad input
 - [x] Document the protocol in `docs/contracts/installer-agent-mode.md`
 - [x] Add an example consumed by a Claude / Cursor command file under
-      `.agent-src.uncompressed/commands/install-via-agent.md`
+      `.agent-src.uncondensed/commands/install-via-agent.md`
 
 ## Phase 5 — `sync`, `validate`, `prune`
 

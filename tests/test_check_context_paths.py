@@ -19,24 +19,24 @@ SPEC.loader.exec_module(ccp)
 def _make_fake_root(tmp_path: Path) -> Path:
     """Build a minimal fake repo with the four scan dirs."""
     for d in (
-        ".agent-src.uncompressed/contexts",
-        ".agent-src.uncompressed/rules",
-        ".agent-src.uncompressed/skills",
-        ".agent-src.uncompressed/commands",
+        ".agent-src.uncondensed/contexts",
+        ".agent-src.uncondensed/rules",
+        ".agent-src.uncondensed/skills",
+        ".agent-src.uncondensed/commands",
     ):
         (tmp_path / d).mkdir(parents=True, exist_ok=True)
     return tmp_path
 
 
 def _ctx(root: Path, rel: str, body: str = "stub") -> Path:
-    p = root / ".agent-src.uncompressed" / "contexts" / rel
+    p = root / ".agent-src.uncondensed" / "contexts" / rel
     p.parent.mkdir(parents=True, exist_ok=True)
     p.write_text(body, encoding="utf-8")
     return p
 
 
 def _rule(root: Path, name: str, body: str) -> Path:
-    p = root / ".agent-src.uncompressed" / "rules" / f"{name}.md"
+    p = root / ".agent-src.uncondensed" / "rules" / f"{name}.md"
     p.write_text(body, encoding="utf-8")
     return p
 
@@ -123,7 +123,7 @@ def test_reference_from_another_context_satisfies(tmp_path):
 def test_full_path_reference_form_satisfies(tmp_path):
     root = _make_fake_root(tmp_path)
     _ctx(root, "judges/foo.md")
-    _rule(root, "demo", "load_context:\n  - .agent-src.uncompressed/contexts/judges/foo.md\n")
+    _rule(root, "demo", "load_context:\n  - .agent-src.uncondensed/contexts/judges/foo.md\n")
     assert ccp.scan(root) == []
 
 

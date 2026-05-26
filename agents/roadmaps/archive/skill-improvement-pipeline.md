@@ -10,7 +10,7 @@
 - `skill-writing` — create new skills to standard
 - `skill-validator` — validate quality
 - `skill-refactor` — improve existing skills
-- `skill-caveman-compression` — compress for runtime
+- `skill-telegraph-condensation` — condense for runtime
 - `skill-linter` — structural validation (agent-side + script)
 - `capture-learnings` rule — always-apply reflex
 
@@ -46,7 +46,7 @@
     3. If user picks 1 → continue to pipeline skill
   - When `false` → silent
   - Never trigger on trivial tasks (config, typos, docs-only)
-- [x] **Step 2:** Compress rule
+- [x] **Step 2:** Condense rule
 
 ## Phase 3: Pipeline Orchestration Skill
 
@@ -72,7 +72,7 @@
     3. **Classify** — `learning-to-rule-or-skill` (rule vs skill vs update vs skip)
     4. **Create/Update** — `skill-writing` or `skill-refactor`
     5. **Validate** — `skill-validator` / `task lint-skills`
-    6. **Compress** — `skill-caveman-compression`
+    6. **Condense** — `skill-telegraph-condensation`
     7. **Decide scope** — ask user:
        ```
        > 📦 Improvement ready: {description}
@@ -82,17 +82,17 @@
        > 3. Review first — show me the changes before deciding
        ```
     8. **Apply locally** — dual-write workflow (see `override-system.md`):
-       - **New content**: write to `.agent-src.uncompressed/` + `.augment/`
+       - **New content**: write to `.agent-src.uncondensed/` + `.augment/`
        - **Improving existing shared rule/skill**: create override in `agents/overrides/{type}/{name}.md` (mode `replace`, full version) for immediate local benefit
     9. **PR upstream** (if universal — must pass upstream contribution guard):
-       - PR must contain **both** complete uncompressed + compressed versions
+       - PR must contain **both** complete uncondensed + condensed versions
        - Create branch `{prefix}{learning-slug}` from `main`
-       - Commit changes to `.agent-src.uncompressed/` AND `.augment/`
+       - Commit changes to `.agent-src.uncondensed/` AND `.augment/`
        - Create PR against `upstream_repo`
        - Must pass `task lint-skills`
     10. **After upstream merge** — remove local override from `agents/overrides/`
         (package update delivers the improvement to all projects)
-- [x] **Step 2:** Compress skill
+- [x] **Step 2:** Condense skill
 
 ## Phase 4: PR Template & Automation
 
@@ -133,7 +133,7 @@ Create / Update / Skip
     ↓
 Validate (skill-validator / task lint-skills)
     ↓
-Compress (skill-caveman-compression)
+Condense (skill-telegraph-condensation)
     ↓
 Universal or Project-specific?
     ↓                    ↓

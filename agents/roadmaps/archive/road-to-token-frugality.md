@@ -23,8 +23,8 @@ waste that the inventory pass found:
 4. **Intent announcements** in skills ("Let me check…", "Now I will…")
    that buy nothing.
 
-Plus a fifth, opt-in lever: a global **caveman-speak** output mode
-that compresses prose to telegram grammar everywhere except numbered
+Plus a fifth, opt-in lever: a global **telegraph-speak** output mode
+that condenses prose to telegram grammar everywhere except numbered
 options and Iron-Law-literal blocks (carve-outs preserve safety
 contracts).
 
@@ -34,13 +34,13 @@ behavior. Users who want the old verbose behavior flip the toggle.
 ## Acceptance Criteria
 
 - [x] Frugality charter exists at
-      `.agent-src.uncompressed/contexts/contracts/frugality-charter.md`;
+      `.agent-src.uncondensed/contexts/contracts/frugality-charter.md`;
       every writer skill (existing + the two new ones,
       `persona-writing` and `roadmap-writing`) cites it via the
       regex-checked link; `task lint-skills` hard-fails on a writer
       missing the cite or the `## Frugality Standards` section.
 - [x] `.agent-settings.yml` carries five new keys under `verbosity.*`
-      and one new key under `caveman.*` (`speak_scope`), plus two
+      and one new key under `telegraph.*` (`speak_scope`), plus two
       Phase 10 keys (`verbosity.script_output`,
       `verbosity.taskfile_command_echo`), all template-documented
       and default to the terse value.
@@ -57,7 +57,7 @@ behavior. Users who want the old verbose behavior flip the toggle.
       semantic trade-off exists are removed (per `no-cheap-questions`).
 - [x] Skills with intent-announcement patterns ("Let me…", "Now I
       will…", "Found it") are rewritten to act-and-output style.
-- [x] `caveman-speak` rule is rewritten to honor `caveman.speak_scope`
+- [x] `telegraph-speak` rule is rewritten to honor `telegraph.speak_scope`
       (`off | prose_only | aggressive`), default `prose_only`.
 - [x] `task ci` at `verbosity.script_output: minimal` (default)
       produces ≥40% fewer lines on a green run than the same
@@ -73,10 +73,10 @@ behavior. Users who want the old verbose behavior flip the toggle.
 ## Quality Gates
 
 ```bash
-task sync                 # propagate uncompressed → compressed
+task sync                 # propagate uncondensed → condensed
 task lint-skills          # frontmatter / sections / metadata
 task check-refs           # cross-reference integrity
-task sync-check           # compressed/uncompressed parity
+task sync-check           # condensed/uncondensed parity
 task lint-roadmap-complexity
 python3 -m pytest tests/ -x
 ```
@@ -131,7 +131,7 @@ taxonomy — no Iron-Law gate is touched.
 
 **0.0 (locked architecture decision)** — Frugality Charter is a
 **context** AND uses **Form B (charter-as-index, no restatement)**.
-Path: `.agent-src.uncompressed/contexts/contracts/frugality-charter.md`.
+Path: `.agent-src.uncondensed/contexts/contracts/frugality-charter.md`.
 Rationale (Council Pass #4, 2026-05-07, finding C-A): a charter that
 restates `direct-answers § Iron Law 3` / `user-interaction § Iron
 Law 1` / `no-cheap-questions` / `token-efficiency` introduces
@@ -146,7 +146,7 @@ pattern (7 mechanics pairs) which has run drift-free without
 build-time transclusion.
 
 - [x] **0.1** Create
-      `.agent-src.uncompressed/contexts/contracts/frugality-charter.md`
+      `.agent-src.uncondensed/contexts/contracts/frugality-charter.md`
       (~30 lines, **no restatement**):
   - **One-paragraph intro** explaining what the charter is (a
     cross-rule index for writers, plus two net-new sections).
@@ -167,7 +167,7 @@ build-time transclusion.
     Roadmap's in-line `## Confirmation taxonomy` section (do NOT
     duplicate the table; charter is index-only).
   - **§ Settings hooks (net-new content)** — list the keys
-    (`verbosity.*`, `caveman.speak_scope`, `verbosity.script_output`,
+    (`verbosity.*`, `telegraph.speak_scope`, `verbosity.script_output`,
     `verbosity.taskfile_command_echo`) with one-line semantics each.
     Marked `<!-- placeholder until Phase 1.1 lands schema -->`;
     Phase 1.1 closes the placeholder via 0.7.
@@ -210,13 +210,13 @@ build-time transclusion.
       `python3 scripts/check_references.py` on a clean checkout +
       after the section retrofit. Diff must be empty (no new lint
       failures, no broken refs from the new section). Document any
-      header-parser change in `description-assist` or `compress.py`
+      header-parser change in `description-assist` or `condense.py`
       output before continuing.
 - [x] **0.3** Create two missing writer skills, each with the
       `## Frugality Standards` section pre-baked:
   - [x] **0.3a** `persona-writing` — frontmatter, voice/POV
         guidance, links existing personas in
-        `.agent-src.uncompressed/personas/` as exemplars.
+        `.agent-src.uncondensed/personas/` as exemplars.
   - [x] **0.3b** `roadmap-writing` — extracts the **prose authoring**
         part from `agent-docs-writing` + `roadmap-management`
         (phases, acceptance criteria, exit criteria, rollback,
@@ -241,11 +241,11 @@ build-time transclusion.
   - Failure mode: `task lint-skills` exits non-zero with an explicit
     message naming the missing element AND the affected file.
 - [x] **0.5** Update artifact templates that writers reference:
-  - `.agent-src.uncompressed/templates/skill.md` — terse procedure
+  - `.agent-src.uncondensed/templates/skill.md` — terse procedure
     shape, drop any narrative-intro example;
-  - `.agent-src.uncompressed/templates/command.md` — drop
+  - `.agent-src.uncondensed/templates/command.md` — drop
     preview-then-confirm example pair from the model section;
-  - `.agent-src.uncompressed/templates/rule.md` (if present) —
+  - `.agent-src.uncondensed/templates/rule.md` (if present) —
     same default-terse adjustment.
 - [x] **0.6** Smoke-test (council finding 0.C — concrete spec
       replacing "if warranted" circularity):
@@ -269,7 +269,7 @@ build-time transclusion.
       run; charter no longer carries `<!-- placeholder -->`."
 
 **Phase 0 dependencies (council Pass #4 finding C-D):** Phase 7
-(intent-announcement sweep) and Phase 8 (caveman-speak) presume the
+(intent-announcement sweep) and Phase 8 (telegraph-speak) presume the
 charter exists as the canonical pointer for "what does default-terse
 mean?". Phase 7 / 8 MUST NOT start before Phase 0 exit-criteria
 green. Phases 1–6, 9, 10 have no charter dependency.
@@ -278,7 +278,7 @@ green. Phases 1–6, 9, 10 have no charter dependency.
 testable gates):
 
 1. **File parses.** Charter renders as valid markdown via the
-   `markdown-it` pass already used by `compress.py`; no broken
+   `markdown-it` pass already used by `condense.py`; no broken
    inline syntax.
 2. **All four cited rule sections resolve.** For each row in
    `§ Frugality canon`, the linked anchor exists in the target
@@ -294,10 +294,10 @@ testable gates):
 
 ```bash
 # Negative — synthetic break must be caught
-cp .agent-src.uncompressed/skills/rule-writing/SKILL.md /tmp/rule-writing.bak
-sed -i.tmp 's/## Frugality Standards/## Frugality REMOVED/' .agent-src.uncompressed/skills/rule-writing/SKILL.md
+cp .agent-src.uncondensed/skills/rule-writing/SKILL.md /tmp/rule-writing.bak
+sed -i.tmp 's/## Frugality Standards/## Frugality REMOVED/' .agent-src.uncondensed/skills/rule-writing/SKILL.md
 task lint-skills 2>&1 | grep -q "Frugality Standards" && echo "VALIDATOR_OK" || echo "VALIDATOR_FAIL"
-mv /tmp/rule-writing.bak .agent-src.uncompressed/skills/rule-writing/SKILL.md
+mv /tmp/rule-writing.bak .agent-src.uncondensed/skills/rule-writing/SKILL.md
 # Positive — clean tree green
 task lint-skills
 ```
@@ -322,7 +322,7 @@ Land all new keys before touching any command. Order matters: every
 later phase reads these keys.
 
 - [x] **1.1** Add `verbosity:` block to
-      `.agent-src.uncompressed/templates/agent-settings.md` (template
+      `.agent-src.uncondensed/templates/agent-settings.md` (template
       consumed by `scripts/install.py` and `sync-agent-settings`):
       ```yaml
       # --- Verbosity (token frugality) ---
@@ -354,18 +354,18 @@ later phase reads these keys.
         # it") in skill bodies. false = act and emit the result.
         intent_announcements: false
       ```
-- [x] **1.2** Extend the existing `caveman:` block with `speak_scope`:
+- [x] **1.2** Extend the existing `telegraph:` block with `speak_scope`:
       ```yaml
-      # speak_scope = how widely caveman-speak grammar applies in chat
-      #   off          = no caveman grammar in output (compile-time still
-      #                  governed by caveman.speak)
-      #   prose_only   = caveman in body prose; numbered options +
+      # speak_scope = how widely telegraph-speak grammar applies in chat
+      #   off          = no telegraph grammar in output (compile-time still
+      #                  governed by telegraph.speak)
+      #   prose_only   = telegraph in body prose; numbered options +
       #                  Iron-Law-literal blocks stay full prose
-      #   aggressive   = caveman everywhere except Iron-Law literals
-      caveman:
+      #   aggressive   = telegraph everywhere except Iron-Law literals
+      telegraph:
         speak_scope: prose_only
       ```
-- [x] **1.3** Update `.agent-src.uncompressed/templates/agent-settings.md`
+- [x] **1.3** Update `.agent-src.uncondensed/templates/agent-settings.md`
       reference table (lines ~340–410) with all six new keys.
 - [x] **1.4a** Run `python3 scripts/sync_agent_settings.py`
       (or the equivalent skill) against this repo's own
@@ -377,7 +377,7 @@ later phase reads these keys.
       'verbosity' in s and all(k in s['verbosity'] for k in
       ['preview_artifacts','routine_confirmations',
       'offer_council_in_delivery','post_action_reports',
-      'intent_announcements']) and 'speak_scope' in s.get('caveman',{}),
+      'intent_announcements']) and 'speak_scope' in s.get('telegraph',{}),
       'missing keys'"`. Failure blocks Phase 2.
 - [x] **1.4c** Run `task sync-check` and `task lint-skills`; both
       must exit 0. This is the hard gate before Phase 2 reads any of
@@ -391,7 +391,7 @@ later phase reads these keys.
 section live.
 
 **Phase 1 rollback:** delete the `verbosity:` block and the
-`caveman.speak_scope` key from `.agent-settings.yml` and from
+`telegraph.speak_scope` key from `.agent-settings.yml` and from
 `templates/agent-settings.md`. No command logic depends on the keys
 yet, so rollback is single-commit safe.
 
@@ -411,7 +411,7 @@ confirmations (bulk deletions, infra changes per
 - [x] **2.0** Precondition: assertion 1.4b passed in this session
       (six keys present, `task sync-check` green). If absent, stop
       and re-run Phase 1.4a–c.
-- [x] **2.1** `.agent-src.uncompressed/commands/commit.md` step 5
+- [x] **2.1** `.agent-src.uncondensed/commands/commit.md` step 5
       ("Present the commit plan"): wrap the preview block in a
       settings check **with `preview-on-error` fallback**.
       - When `verbosity.preview_artifacts: false` AND
@@ -435,16 +435,16 @@ confirmations (bulk deletions, infra changes per
         tokens; flip either flag to `true` to restore the gate.
         Malformed conventional-commits prefix or Hard-Floor diffs
         force the preview regardless of flags."*
-- [x] **2.2** `.agent-src.uncompressed/commands/commit.md` step 7
+- [x] **2.2** `.agent-src.uncondensed/commands/commit.md` step 7
       ("Report"): replace the multi-line summary with a single line
       `→ N commits created` when `verbosity.post_action_reports: minimal`.
       Full bullet list only when `full`; nothing when `off`.
-- [x] **2.3** `.agent-src.uncompressed/commands/commit/in-chunks.md`:
+- [x] **2.3** `.agent-src.uncondensed/commands/commit/in-chunks.md`:
       already skips confirmation; make sure the post-commit report
       honours `verbosity.post_action_reports` the same way as 2.2.
       Apply the same `preview-on-error` validator before the auto-
       split commits run.
-- [x] **2.4** Compress mirrors: `cp` to `.agent-src/commands/commit.md`
+- [x] **2.4** Condense mirrors: `cp` to `.agent-src/commands/commit.md`
       and `commit/in-chunks.md`, run `task sync-mark-done`.
 - [x] **2.5** Verify: `task sync-check`, `task lint-skills`,
       `task check-refs` all green; smoke-test `/commit` against a
@@ -472,7 +472,7 @@ unread).
 PRs). Default-suppress + one-line postscript with explicit override
 flag is the safety net. URL/Jira post-action lines = **Routine**.
 
-- [x] **3.1** `.agent-src.uncompressed/commands/create-pr.md` step 3
+- [x] **3.1** `.agent-src.uncondensed/commands/create-pr.md` step 3
       ("Create the PR"): the draft-vs-ready numbered question fires
       every time. When `verbosity.routine_confirmations: false`,
       default to **draft** silently and surface a one-line postscript
@@ -483,17 +483,17 @@ flag is the safety net. URL/Jira post-action lines = **Routine**.
       `/create-pr` command body: explicit "behavior change vs. legacy"
       callout. Blocking: 3.1 cannot ship without 3.1b in the same
       commit (workflow-affecting changes need findable docs).
-- [x] **3.2** `.agent-src.uncompressed/commands/create-pr.md` step 4b
+- [x] **3.2** `.agent-src.uncondensed/commands/create-pr.md` step 4b
       ("Show the PR URL"): collapse the multi-line block to a single
       `→ #N opened: <url>` when `verbosity.post_action_reports: minimal`.
-- [x] **3.3** `.agent-src.uncompressed/commands/create-pr.md` step 4c
+- [x] **3.3** `.agent-src.uncondensed/commands/create-pr.md` step 4c
       ("Jira transition"): only print the transition line when an
       actual transition happened; skip silently otherwise.
-- [x] **3.4** `.agent-src.uncompressed/commands/create-pr/description-only.md`:
+- [x] **3.4** `.agent-src.uncondensed/commands/create-pr/description-only.md`:
       this command's *purpose* is the preview, so it ignores
       `preview_artifacts`. Add an explicit comment documenting that
       carve-out so future readers do not "fix" it.
-- [x] **3.5** Compress mirrors + `task sync-mark-done`.
+- [x] **3.5** Condense mirrors + `task sync-mark-done`.
 - [x] **3.6** Verify: `task ci` green; smoke-test `/create-pr` with
       defaults (draft + minimal report) and with
       `verbosity.routine_confirmations: true` (full numbered prompt).
@@ -518,20 +518,20 @@ three delivery commands so the user can re-enable per project.
 (cosmetic — the user can always invoke `/council` directly).
 Settings-gated suppression is safe; no safety net required.
 
-- [x] **4.1** `.agent-src.uncompressed/commands/feature/plan.md`:
+- [x] **4.1** `.agent-src.uncondensed/commands/feature/plan.md`:
       wrap the council-prompt step in a check on
       `verbosity.offer_council_in_delivery`. Default behavior: skip
       the prompt; emit a single line `→ council skipped (set
       verbosity.offer_council_in_delivery: true to enable)` only when
       `ai_council.enabled: true`.
-- [x] **4.2** `.agent-src.uncompressed/commands/review-changes.md`:
+- [x] **4.2** `.agent-src.uncondensed/commands/review-changes.md`:
       same treatment as 4.1.
-- [x] **4.3** `.agent-src.uncompressed/commands/roadmap/create.md`:
+- [x] **4.3** `.agent-src.uncondensed/commands/roadmap/create.md`:
       same treatment as 4.1.
 - [x] **4.4** `/council`, `/council/*` sub-commands, and
       `/roadmap:ai-council` are out of scope — these commands *are*
       the council; their prompts stay.
-- [x] **4.5** Compress mirrors + verify: `task ci` green; smoke-test
+- [x] **4.5** Condense mirrors + verify: `task ci` green; smoke-test
       one of the three commands with `offer_council_in_delivery:
       false` (skip-line emitted) and `: true` (full prompt restored).
       *Logical smoke-test only — runtime verification deferred. All
@@ -636,7 +636,7 @@ the rationale stay verbose by design.
       (project-analyze ×3, review-changes ×1, commands/agents/cleanup ×1).
       Note: review-changes was already gated in 4.2 for council; the
       quality-tools follow-up gate is the 5.22 addition.
-- [x] **5.23** Compress mirrors + verify: `task ci` green; logical
+- [x] **5.23** Condense mirrors + verify: `task ci` green; logical
       smoke-test only — runtime verification deferred along with
       Phase 4. All five touched files lint clean.
 
@@ -656,7 +656,7 @@ summary` section. Collapse to a single status line by default.
 - [x] **6.1** Of the 14 inventory candidates, 8 had genuine post-
       action report blocks → **gated** with the three-state pattern
       (`off` / `minimal` / `full`):
-      - `commit.md` · `commit/in-chunks.md` · `compress.md` ·
+      - `commit.md` · `commit/in-chunks.md` · `condense.md` ·
         `optimize/rtk.md` · `commands/agents/cleanup.md` ·
         `memory/add.md` · `memory/promote.md` ·
         `prepare-for-review.md`
@@ -675,7 +675,7 @@ summary` section. Collapse to a single status line by default.
 - [x] **6.2** `judge/*.md` final-report blocks stay verbose by
       default — judging *is* the report; carve-out documented in 6.1
       (same shape: display-as-deliverable).
-- [x] **6.3** Compress mirrors + verify: `task ci` green
+- [x] **6.3** Condense mirrors + verify: `task ci` green
       (186 pass · 0 fail). Smoke-test deferred along with Phase 4 /
       Phase 5 runtime verification — the three-state pattern matches
       the already-shipped `commit.md` template byte-for-byte.
@@ -711,7 +711,7 @@ Affected files (inventory):
       `verbosity.intent_announcements: false` (template line 344,
       `.agent-settings.yml` line 341). Both flags must be `true` for
       narration to return; either `false` suppresses.
-- [x] **7.3** Compress mirrors + verify: `task ci` green
+- [x] **7.3** Condense mirrors + verify: `task ci` green
       (186 pass · 0 fail), `task lint-rule-budget` pass.
       `direct-answers.md` 1.7 KB / 2.5 KB tier-3 budget (OK).
       Smoke-test deferred along with Phase 4 / 5 / 6.
@@ -722,19 +722,19 @@ carve-out paragraph live, two-state smoke-test passed.
 **Phase 7 rollback:** revert the touched SKILL.md files and the
 `direct-answers.md` carve-out paragraph.
 
-### Phase 8 — Caveman-speak global toggle
+### Phase 8 — Telegraph-speak global toggle
 
-Make caveman-speak the chat-output default with safety carve-outs.
+Make telegraph-speak the chat-output default with safety carve-outs.
 The infrastructure is half-built (settings exist, rule does not).
 
-**Taxonomy classification:** caveman grammar = **Routine** for prose
+**Taxonomy classification:** telegraph grammar = **Routine** for prose
 body; **Iron-Law** for the carve-out surfaces (numbered-options,
 Iron-Law literal blocks, error messages, code/path identifiers).
 Mangling a numbered-options block breaks `user-interaction` Iron Law
 1 — non-negotiable. Enforcement is mechanical, not advisory.
 
-- [x] **8.1** Author `.agent-src.uncompressed/rules/caveman-speak.md`
-      as a tier-1 auto rule keyed on the new `caveman.speak_scope`
+- [x] **8.1** Author `.agent-src.uncondensed/rules/telegraph-speak.md`
+      as a tier-1 auto rule keyed on the new `telegraph.speak_scope`
       key. Carve-outs (stay full prose, NO grammar rewrite):
       - Triple-backtick ALL-CAPS blocks in any rule (Iron-Law literal).
       - Numbered-options blocks (lines matching `^>?\s*\d+\.\s` or
@@ -759,23 +759,23 @@ Mangling a numbered-options block breaks `user-interaction` Iron Law
 - [x] **8.4** Add golden fixtures in `tests/golden/outcomes/` — one
       per carve-out class (numbered-options, Iron-Law literal, code
       block, error message). Each fixture: input prose +
-      `speak_scope: prose_only` → caveman body, carve-out region byte-
+      `speak_scope: prose_only` → telegraph body, carve-out region byte-
       for-byte preserved.
 - [x] **8.4b** Add a fuzz fixture: 20 randomly-generated prose +
       numbered-options + code-block combinations. Pytest assertion:
       every carve-out region survives unchanged across all 20 inputs.
       Failure = rule blocks merge.
-- [x] **8.5** Compress mirrors + verify: `task ci` green;
+- [x] **8.5** Condense mirrors + verify: `task ci` green;
       `task lint-rule-budget` confirms kernel cap intact; manual
-      smoke: flip `speak_scope: aggressive`, confirm prose is caveman
+      smoke: flip `speak_scope: aggressive`, confirm prose is telegraph
       AND numbered-options block in the same reply stays full prose.
 
-**Phase 8 exit criteria:** caveman rule live, validator documented,
+**Phase 8 exit criteria:** telegraph rule live, validator documented,
 5 golden fixtures + 1 fuzz fixture green, kernel-budget gate passed,
 manual smoke confirms carve-out preservation.
 
-**Phase 8 rollback:** delete `caveman-speak.md`, regenerate
-`router.json`, set `caveman.speak_scope: off` in
+**Phase 8 rollback:** delete `telegraph-speak.md`, regenerate
+`router.json`, set `telegraph.speak_scope: off` in
 `.agent-settings.yml`. Carve-out tests are independent and stay as
 regression evidence even after rollback.
 
@@ -793,7 +793,7 @@ the package's user-facing docs reflect the new defaults.
       `### Verbosity` section in `docs/customization.md`.
 - [x] **9.4b** Add a `CHANGELOG.md` entry under the unreleased /
       next-version section describing the new defaults
-      (terse-by-default verbosity, caveman-speak prose-only) and
+      (terse-by-default verbosity, telegraph-speak prose-only) and
       pointing to `docs/customization.md` § Verbosity for revert
       instructions. Existing-user discoverability gate.
 - [x] **9.5** Regenerate `agents/roadmaps-progress.md` via
@@ -826,7 +826,7 @@ Goal: cut chatter without losing the diagnostic signal that lets the
 agent recover from a failure.
 
 **Inventory (2026-05-07):** 141 Python + 20 Bash. Top emitters
-`compress.py` (71 prints), `install.py` (38), `release.py` (34),
+`condense.py` (71 prints), `install.py` (38), `release.py` (34),
 `build_cloud_bundle.py` (27), `runtime_dispatcher.py` (23),
 `first-run.sh` (53 echoes). Baseline `task ci` on a stop-at-first-fail
 run = 189 lines, ~120 of which are not load-bearing. Existing
@@ -854,11 +854,11 @@ under `minimal`, restored at `verbose`**.
       `SCRIPT_OUTPUT_VERBOSE=1` (alias) — both override the
       settings file for the current process tree. Required for
       incident debugging when the user can't or won't edit
-      settings. Mirrors the Phase 8 caveman kill-switch shape.
+      settings. Mirrors the Phase 8 telegraph kill-switch shape.
       Council finding #3 (mandatory, not optional).
 - [x] **10.1c** Script-to-script verbosity inheritance contract:
       parent script invocations propagate the resolved level via
-      env var so `compress.py → generate_tools → write_symlinks`
+      env var so `condense.py → generate_tools → write_symlinks`
       doesn't print 7 summaries instead of 1. Explicit `--quiet`
       flag on the child still wins (per-call override > inherited
       level). Council finding #1.
@@ -880,7 +880,7 @@ under `minimal`, restored at `verbose`**.
       `council-prune`. Council finding #4.
 - [x] **10.4** Sweep top-emitter scripts to use the helper. One
       checkbox per script:
-  - [x] **10.4a** `compress.py` — collapse 6 per-tool-dir success
+  - [x] **10.4a** `condense.py` — collapse 6 per-tool-dir success
         lines into one summary `✅  generate-tools — rules=N
         skills=N commands=N personas=N`. Sub-script summaries
         propagate via 10.1c inheritance.
@@ -942,7 +942,7 @@ secret-installer prompts) verified untouched at every level.
 ```bash
 # parent verbose, child --quiet → child still wins
 AGENT_SCRIPT_VERBOSITY=verbose task generate-tools 2>&1 | wc -l
-AGENT_SCRIPT_VERBOSITY=verbose python3 scripts/compress.py --quiet --generate-tools 2>&1 | wc -l
+AGENT_SCRIPT_VERBOSITY=verbose python3 scripts/condense.py --quiet --generate-tools 2>&1 | wc -l
 # minimal cascades through nested calls
 AGENT_SCRIPT_VERBOSITY=minimal task generate-tools 2>&1 | wc -l   # ≤ 5 lines
 ```
@@ -969,7 +969,7 @@ section stays as evidence even after rollback.
 | `runtime_dispatcher.py` JSON output consumed by `ci_summary.py` | Structured contract, not chatter |
 | `measure_*.py`, `lint_showcase_sessions.py` | Output IS the deliverable |
 | `council_cli.py`, `scripts/ai_council/*` | The council *is* the command |
-| Runtime intra-agent text (sub-agent prompts, council briefings, judge dispatch, agent handoffs, error messages) | Council Pass #5 rejected — `language-and-tone § Iron Law` already binds inter-tool narration; F/G have unquantified LLM-comprehension degradation; double-compression hazard with Phase 8 authoring caveman |
+| Runtime intra-agent text (sub-agent prompts, council briefings, judge dispatch, agent handoffs, error messages) | Council Pass #5 rejected — `language-and-tone § Iron Law` already binds inter-tool narration; F/G have unquantified LLM-comprehension degradation; double-condensation hazard with Phase 8 authoring telegraph |
 
 ## Risks
 
@@ -978,7 +978,7 @@ section stays as evidence even after rollback.
    keep `verbosity.preview_artifacts: true` available; document the
    trade-off in the setting comment; the user can `git commit --amend`
    afterwards.
-2. **Caveman grammar in numbered-options** would break
+2. **Telegraph grammar in numbered-options** would break
    `user-interaction` Iron Law. Mitigation: explicit carve-out in
    Phase 8.1 + golden test in 8.4.
 3. **Settings drift** between `.agent-settings.yml` and
@@ -1013,10 +1013,10 @@ applied, two rejects, one partial-reject. Raw transcript:
 |---|---|---|---|
 | 1 | Phase 1↔2 coupling — settings mutate state, Phase 2 reads keys, no gate | accept | 1.4a / 1.4b / 1.4c split + 2.0 precondition |
 | 2 | Per-phase exit criteria missing — generic "verify gates" repeated | accept-w/-mod | Per-phase exit-criteria + smoke-test paragraphs |
-| 3 | Missing rollback / kill-switch | accept-w/-mod | Per-phase rollback paragraphs (env-var override rejected — settings already provide `caveman.speak_scope: off`) |
+| 3 | Missing rollback / kill-switch | accept-w/-mod | Per-phase rollback paragraphs (env-var override rejected — settings already provide `telegraph.speak_scope: off`) |
 | 4 | "Routine" framing risks demoting Iron-Law gates | accept | New § Confirmation taxonomy + 2.1 `preview-on-error` + 3.1b doc gate |
 | 5 | Phase 5 audit hides 20-block work in one bullet | accept | Per-file checkboxes 5.1–5.20 |
-| 6 | Caveman + numbered-options needs enforcement mechanism | accept | 8.1b validator spec + 8.4 / 8.4b carve-out fixtures + fuzz |
+| 6 | Telegraph + numbered-options needs enforcement mechanism | accept | 8.1b validator spec + 8.4 / 8.4b carve-out fixtures + fuzz |
 | 7 | User communication / CHANGELOG | accept-w/-mod | 9.4b CHANGELOG entry |
 | 8 | UAT post-Phase 9 as separate stage | reject | 9.6 baseline measurement covers it |
 | 9 | Separate testing phase instead of inline verify | reject | Inline verify-per-phase catches earlier than end-stage |
@@ -1051,7 +1051,7 @@ Raw transcript: `agents/council-responses/writer-frugality-phase-0.json`.
 | 0.D | Charter carve-out list under-specified ("security-sensitive" subjective) | accept | 0.1 lists **decidable predicates** for each carve-out (link-back to `kernel-membership`, `no-cheap-questions`, `security-sensitive-stop`, downstream-parser presence) |
 | 0.E | Sequencing — new writers shouldn't cite phantom Phase 1 keys | accept-w/-mod | New writers ship in Phase 0; charter carries `<!-- placeholder -->` until 0.7 stitches the real key list once Phase 1.1 lands |
 | 0.F | Rollback criteria missing (consistency with Phases 1–10) | accept | Three-commit rollback paragraph (retrofits, new writers, validator+templates) |
-| 0.G | Backwards-compat regression for `lint-skills` / `description-assist` / `compress.py` parsers (GPT-4o) | accept | 0.2b dedicated step — clean-checkout vs. post-retrofit diff must be empty before continuing |
+| 0.G | Backwards-compat regression for `lint-skills` / `description-assist` / `condense.py` parsers (GPT-4o) | accept | 0.2b dedicated step — clean-checkout vs. post-retrofit diff must be empty before continuing |
 | 0.H | Pilot validation against existing artifacts (GPT-4o) | partial-accept | Covered by 0.6 smoke-test broadening; full pilot is scope creep |
 | 0.I | 0.4 validator implementability (Reviewer A: ambiguous; Reviewer B: implementable) | accept (B wins) | Locked spec — H2 literal `## Frugality Standards` + regex `\[…\]\(…frugality-charter\.md…\)` in body |
 
@@ -1072,26 +1072,26 @@ Raw transcript: `agents/council-responses/charter-overlap-audit.json`.
 | C-D | Phase 7 / 8 dependency on charter implicit, not explicit-DAG | accept | "Phase 0 dependencies" paragraph added — Phase 7 / 8 cannot start before Phase 0 exit-green; Phases 1–6, 9, 10 unaffected |
 | C-E | "Slimming candidates" list — no rule shrinks (audit answer) | accept (no-op) | Iron-Laws stay in rule bodies; rules-auto mechanics already correctly split; `language-and-tone § no-English-filler` stays in language scope, not migrated |
 
-#### Phase 0 council pass #5 — runtime intra-agent caveman feasibility (2026-05-07, Sonnet 4.5 + GPT-4o)
+#### Phase 0 council pass #5 — runtime intra-agent telegraph feasibility (2026-05-07, Sonnet 4.5 + GPT-4o)
 
-Fifth pass after the user asked: "can we force caveman style on
+Fifth pass after the user asked: "can we force telegraph style on
 intermediate agent-to-agent text (sub-agent prompts, council
 briefings, internal scratch) without breaking user-facing replies?"
 Audit answer: **viable scope is empty / near-empty — no new phase, no
 work-item, considered-and-rejected**. Total cost $0.0400 actual.
 Both reviewers converge on rejection. Raw transcript:
-`agents/council-responses/runtime-caveman-intra-agent.json`.
+`agents/council-responses/runtime-telegraph-intra-agent.json`.
 
 | # | Finding | Verdict | Landing site |
 |---|---|---|---|
-| D-A | Class C (inter-tool narration) is user-visible — `language-and-tone § Iron Law` already binds it to the user's language, no caveman possible | accept (no-op) | Already enforced by language-and-tone; no charter / roadmap change |
-| D-B | Class K (error / warning messages) missing from briefing taxonomy — must stay clear and user-facing | accept | Added to carve-out row; never compressed |
+| D-A | Class C (inter-tool narration) is user-visible — `language-and-tone § Iron Law` already binds it to the user's language, no telegraph possible | accept (no-op) | Already enforced by language-and-tone; no charter / roadmap change |
+| D-B | Class K (error / warning messages) missing from briefing taxonomy — must stay clear and user-facing | accept | Added to carve-out row; never condensed |
 | D-C | Class L (agent handoff context) missing — context-loss compounds across handoffs; `/agent-handoff` command needs full prose for next session bootstrap | accept | Added to carve-out row alongside K |
 | D-D | Class E (extended-thinking blocks) — Constitutional-AI / CoT degradation risk; not enforceable without host-specific instrumentation | accept (reject E) | Out of scope; rejected as research question, not engineering task |
 | D-E | Class F (sub-agent / judge dispatch prompts) — unquantified LLM-comprehension degradation; needs A/B test set + ambiguity instrumentation; "auth logic" example shows false-negative risk in judge findings | accept (reject F) | Out of scope; would be a phase-within-a-phase |
-| D-F | Class G (council briefings) — uncontrollable external dependencies (OpenAI / Anthropic API model updates can re-parse compressed prompts differently); council verdicts are binding | accept (reject G) | Out of scope; cannot A/B test external endpoints |
-| D-G | Phase 8 ↔ runtime caveman double-compression hazard — runtime-style prompts that *generate* `.md` files would feed Phase 8's authoring caveman pass twice | accept | Codified — runtime caveman explicitly out of scope; Phase 8 stays authoring-only |
-| D-H | Output contamination — compressed Class G input could leak into user-visible council rejection prose (Class A) | accept | Risk noted; reinforces carve-out scope |
+| D-F | Class G (council briefings) — uncontrollable external dependencies (OpenAI / Anthropic API model updates can re-parse condensed prompts differently); council verdicts are binding | accept (reject G) | Out of scope; cannot A/B test external endpoints |
+| D-G | Phase 8 ↔ runtime telegraph double-condensation hazard — runtime-style prompts that *generate* `.md` files would feed Phase 8's authoring telegraph pass twice | accept | Codified — runtime telegraph explicitly out of scope; Phase 8 stays authoring-only |
+| D-H | Output contamination — condensed Class G input could leak into user-visible council rejection prose (Class A) | accept | Risk noted; reinforces carve-out scope |
 | D-I | Working hypothesis "net target surface may be zero" was the actual conclusion buried in the briefing | accept | Conclusion: no roadmap item; recorded here as Pass #5 closure |
 
 **Net effect on roadmap:** zero phases added, zero phases changed.
@@ -1101,8 +1101,8 @@ and provide empirical degradation data for F or G before re-opening.
 
 ## Predecessors
 
-- `agents/roadmaps/skipped/road-to-caveman-integration.md` — earlier
-  caveman rollout with broader scope; this roadmap reuses its
+- `agents/roadmaps/skipped/road-to-telegraph-integration.md` — earlier
+  telegraph rollout with broader scope; this roadmap reuses its
   three-switch toggle and adds `speak_scope` plus the wider
   verbosity layer.
 - PR #50 commit `e694811` — `/create-pr` council-prompt removal;

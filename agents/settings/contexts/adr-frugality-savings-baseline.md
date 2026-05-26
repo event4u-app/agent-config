@@ -2,7 +2,7 @@
 
 > **Status:** Decided · Phase 0 of `road-to-trim-frugality-canon` · 2026-05-08
 > **Context:** [`road-to-trim-frugality-canon.md`](../roadmaps/road-to-trim-frugality-canon.md) ·
-> [`frugality-charter.md`](../../.agent-src.uncompressed/contexts/contracts/frugality-charter.md)
+> [`frugality-charter.md`](../../.agent-src.uncondensed/contexts/contracts/frugality-charter.md)
 > **Harness:** [`scripts/measure_frugality_savings.py`](../../scripts/measure_frugality_savings.py)
 > **Local log:** `agents/.frugality-baseline.jsonl` (gitignored — running record)
 
@@ -33,7 +33,7 @@ revert if a trim regresses below the floor.
 | `no-cheap-questions` | kernel | 3 479 | **13.38 %** ⚠️ above 12 % limit |
 | `ask-when-uncertain` | kernel | 3 255 | **12.52 %** ⚠️ above 12 % limit |
 | `user-interaction` | tier-1 | 2 487 | — |
-| `caveman-speak` | tier-1 | 3 130 | — |
+| `telegraph-speak` | tier-1 | 3 130 | — |
 | `token-efficiency` | tier-2 | 1 770 | — |
 
 All three kernel rules sit **above the 12 % single-rule concentration
@@ -42,7 +42,7 @@ therefore a budget hygiene fix, not just a polish pass.
 
 ### C — Cross-ref redundancy
 
-`agent-src.uncompressed` "Interactions / See also / Related" tail
+`agent-src.uncondensed` "Interactions / See also / Related" tail
 blocks across the six canon rules: **840 chars total**. Phase 1
 target: ≥ 75 % removal (≥ 630 chars), with retained references
 folded into `frugality-charter.md` index.
@@ -66,7 +66,7 @@ numbers above pass and bank toward the canon goal.
 | Phase | Scope | Floor (chars) | % of kernel |
 |---|---|---:|---:|
 | 1 — Low-Risk Trims | Severity table, cheap-Q catalog, vague triggers, all "Interactions" tails | **≥ 1 500** | **≥ 5.77 %** |
-| 2 — Iron-Law Compression | Restatement-line collapse | **≥ 320** | **≥ 1.23 %** |
+| 2 — Iron-Law Condensation | Restatement-line collapse | **≥ 320** | **≥ 1.23 %** |
 | 3 — Tier-2 Tightening | `token-efficiency` anti-loop block | **≥ 400** (tier-2) | n/a |
 | 4 — Charter Decoupling | Carve-out predicates relocation | **≥ 460** (context) | n/a |
 | **Cumulative kernel** | Phases 1+2 | **≥ 1 820** | **≥ 7.0 %** |
@@ -82,8 +82,8 @@ A merged trim PR is **reverted** when a re-run of the harness shows
 any of:
 
 1. Phase floor missed for that PR's scope (table above).
-2. **Per-rule compression ratio drops > 10 %** below baseline
-   (metric C). Indicates a rule got *longer* on the uncompressed
+2. **Per-rule condensation ratio drops > 10 %** below baseline
+   (metric C). Indicates a rule got *longer* on the uncondensed
    side, defeating the purpose.
 3. **Filler prevalence rises above 0.05 hits/turn** when measured
    against any post-trim corpus ≥ 50 turns of full-transcript
@@ -106,7 +106,7 @@ any of:
   minimum Phase 1 reclaim (1 500 chars) drags `no-cheap-questions`
   back under 12 % when distributed across the three kernel rules.
 - **Council convergence preserved.** Phases 1–4 mirror the council
-  consensus (low-risk trims, Iron-Law compression, no rule mergers).
+  consensus (low-risk trims, Iron-Law condensation, no rule mergers).
   No phase introduces new design moves the council didn't bless.
 
 ## Re-running the harness

@@ -25,10 +25,10 @@ declaration as its last stdout line.** Scripts live under
 
 | Tier | Script | Validates | Path-trigger globs |
 |---|---|---|---|
-| Kernel | [`kernel.sh`](../../../scripts/smoke/kernel.sh) | 9 kernel rules present, char-budget respected | `.agent-src.uncompressed/rules/**`, `docs/contracts/kernel-membership.md` |
-| Router | [`router.sh`](../../../scripts/smoke/router.sh) | `dist/router.json` compiles, all `routes_to:` resolve | `dist/router.json`, `.agent-src.uncompressed/rules/**` |
-| Schema | [`schema.sh`](../../../scripts/smoke/schema.sh) | Random skill / rule sample validates against JSON Schema | `scripts/schemas/**`, `.agent-src.uncompressed/{rules,skills}/**` |
-| Skills | [`skills.sh`](../../../scripts/smoke/skills.sh) | 5 random skills pass frontmatter + `name == dir` | `.agent-src.uncompressed/skills/**` |
+| Kernel | [`kernel.sh`](../../../scripts/smoke/kernel.sh) | 9 kernel rules present, char-budget respected | `.agent-src.uncondensed/rules/**`, `docs/contracts/kernel-membership.md` |
+| Router | [`router.sh`](../../../scripts/smoke/router.sh) | `dist/router.json` compiles, all `routes_to:` resolve | `dist/router.json`, `.agent-src.uncondensed/rules/**` |
+| Schema | [`schema.sh`](../../../scripts/smoke/schema.sh) | Random skill / rule sample validates against JSON Schema | `scripts/schemas/**`, `.agent-src.uncondensed/{rules,skills}/**` |
+| Skills | [`skills.sh`](../../../scripts/smoke/skills.sh) | 5 random skills pass frontmatter + `name == dir` | `.agent-src.uncondensed/skills/**` |
 
 ### Runtime contract
 

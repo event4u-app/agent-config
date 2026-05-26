@@ -6,12 +6,12 @@ that drive the local stdio kernel, emits one JSON blob and a sidecar
 manifest for `internal/workers/mcp/`.
 
 Outputs (relative to repo root):
-- `internal/workers/mcp/content.json`      — uncompressed, bundled by `wrangler deploy`.
+- `internal/workers/mcp/content.json`      — uncondensed, bundled by `wrangler deploy`.
 - `internal/workers/mcp/content.json.gz`   — gzipped archival copy for R2.
 - `internal/workers/mcp/manifest.json`     — manifest only (RCA / R2 sidecar).
 
 Hard-fail thresholds (Phase 2-5 council verdict D2):
-- Uncompressed JSON > 2 MB         → SystemExit(1).
+- Uncondensed JSON > 2 MB         → SystemExit(1).
 - Empty content (zero URIs)        → SystemExit(2). Catches a broken
                                      `.agent-src/` tree before deploy.
 
@@ -48,10 +48,10 @@ from mcp_server.resources import scan_contexts, scan_guidelines, scan_rules  # n
 SCHEMA_VERSION = 1
 PACKER_VERSION = "1.0.0"
 # Worker bundle is the compact JSON; gzipped copy lives in R2. Cloudflare's
-# compressed-bundle limit is 3 MB (free) / 10 MB (paid); 778 KB gz today
-# (438 entries) leaves ample headroom. Hard-fail at 5 MB uncompressed so
+# condensed-bundle limit is 3 MB (free) / 10 MB (paid); 778 KB gz today
+# (438 entries) leaves ample headroom. Hard-fail at 5 MB uncondensed so
 # the build dies before the Worker upload does.
-MAX_UNCOMPRESSED_BYTES = 5 * 1024 * 1024
+MAX_UNCONDENSED_BYTES = 5 * 1024 * 1024
 
 
 def _repo_root() -> Path:
@@ -224,10 +224,10 @@ def pack(root: Path, out_dir: Path) -> dict[str, Any]:
     payload = json.dumps(blob, ensure_ascii=False, sort_keys=True)
     payload_bytes = payload.encode("utf-8")
 
-    if len(payload_bytes) > MAX_UNCOMPRESSED_BYTES:
+    if len(payload_bytes) > MAX_UNCONDENSED_BYTES:
         sys.stderr.write(
-            f"pack: uncompressed content {len(payload_bytes)} bytes "
-            f"exceeds limit {MAX_UNCOMPRESSED_BYTES}\n"
+            f"pack: uncondensed content {len(payload_bytes)} bytes "
+            f"exceeds limit {MAX_UNCONDENSED_BYTES}\n"
         )
         raise SystemExit(1)
 
@@ -237,7 +237,7 @@ def pack(root: Path, out_dir: Path) -> dict[str, Any]:
     # R2 archival copy hashes deterministically.
     with open(out_dir / "content.json.gz", "wb") as raw:
         with gzip.GzipFile(
-            fileobj=raw, mode="wb", compresslevel=9, mtime=0
+            fileobj=raw, mode="wb", condenselevel=9, mtime=0
         ) as gz:
             gz.write(payload_bytes)
     (out_dir / "manifest.json").write_text(

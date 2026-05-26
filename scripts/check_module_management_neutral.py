@@ -27,7 +27,7 @@ SKILL_PATH = (
     REPO_ROOT
     / "packages"
     / "core"
-    / ".agent-src.uncompressed"
+    / ".agent-src.uncondensed"
     / "skills"
     / "module-management"
     / "SKILL.md"

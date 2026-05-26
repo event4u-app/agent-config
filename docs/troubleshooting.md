@@ -121,7 +121,7 @@ The bridge installer is Python-based and needs Python 3.8+ on PATH.
   or from the Microsoft Store; ensure "Add python.exe to PATH" is
   checked.
 
-The portability check, compression pipeline, and test suite also depend
+The portability check, condensation pipeline, and test suite also depend
 on Python 3 — it is required for contributors, not just consumers.
 
 ---

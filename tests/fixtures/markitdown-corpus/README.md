@@ -28,5 +28,5 @@ The script prints a per-fixture row with raw byte size, raw-byte token estimate 
 ## Provenance
 
 - Generator: `_generate.py` in this folder (stdlib-only)
-- Skill: `.agent-src.uncompressed/skills/markitdown/SKILL.md`
+- Skill: `.agent-src.uncondensed/skills/markitdown/SKILL.md`
 - Roadmap: `agents/roadmaps/road-to-markitdown-adoption.md` § Phase 2 B2

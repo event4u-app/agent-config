@@ -17,7 +17,7 @@ Contract:
 - Command bundles wrap a single ``.agent-src/commands/<path>.md`` file
   as ``SKILL.md`` inside the ZIP. Nested commands flatten to
   ``<cluster>-<leaf>`` slugs (e.g. ``council/default.md`` →
-  ``council-default.zip``) to mirror ``compress.py``.
+  ``council-default.zip``) to mirror ``condense.py``.
 - Exclusions: ``.git*``, ``__pycache__``, ``*.pyc`` — matched on the
   basename of any path component.
 - A skill folder without a ``SKILL.md`` is skipped (defensive: avoids
@@ -26,7 +26,7 @@ Contract:
 - Command files named ``AGENTS.md`` are skipped (cluster authoring docs,
   not invocable commands).
 - A command slug that collides with an existing skill name is skipped —
-  the real skill bundle wins, matching ``compress.generate_claude_commands``.
+  the real skill bundle wins, matching ``condense.generate_claude_commands``.
 - Writes are atomic via tempfile → ``os.replace``.
 - Idempotent: each ZIP gets a sibling ``<slug>.sha256`` recording
   the manifest digest. If the recomputed digest matches the recorded
@@ -165,7 +165,7 @@ def build_skill_bundles(
 def _command_slug(source_file: Path, commands_root: Path) -> str:
     """Return the flat slug for a command source file.
 
-    Mirrors ``scripts/compress.py::_command_slug``: top-level commands
+    Mirrors ``scripts/condense.py::_command_slug``: top-level commands
     keep their stem (``commit.md`` → ``commit``); nested commands flatten
     the relative path with ``-`` (``council/default.md`` →
     ``council-default``).
@@ -178,7 +178,7 @@ def _iter_command_files(commands_root: Path) -> Iterable[Path]:
     """Yield every command ``.md`` file under ``commands_root`` (recursive).
 
     Skips ``AGENTS.md`` cluster authoring docs, matching
-    ``scripts/compress.py::_iter_commands``.
+    ``scripts/condense.py::_iter_commands``.
     """
     for source_file in sorted(commands_root.rglob("*.md")):
         if source_file.name == "AGENTS.md":
@@ -196,7 +196,7 @@ def build_command_bundles(
 
     Each ZIP contains a single ``SKILL.md`` whose bytes are the source
     command ``.md`` file — same wrapping pattern that
-    ``compress.generate_claude_commands`` uses for Claude Code via
+    ``condense.generate_claude_commands`` uses for Claude Code via
     ``.claude/skills/<slug>/SKILL.md`` symlinks.
 
     Slugs that collide with an existing skill folder under

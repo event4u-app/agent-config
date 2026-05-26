@@ -111,6 +111,6 @@ Three signals that this decision is wrong and the ADR needs revisiting:
   — `context_spine.items.enum` extended in this ADR.
 - `agents/roadmaps/` § Block G — the authorising roadmap (archived
   after merge; this ADR is the durable record).
-- [`.agent-src.uncompressed/rules/skill-quality.md`](../../.agent-src.uncompressed/rules/skill-quality.md)
+- [`.agent-src.uncondensed/rules/skill-quality.md`](../../.agent-src.uncondensed/rules/skill-quality.md)
   § Senior-Tier Required Structure — the four blocks every senior
   skill ships independently of spine opt-in.

@@ -37,7 +37,7 @@ Rebalancing means restoring intelligence without re-inflating Always-rules.
 
 ## Actual numbers from the PR #34 diff
 
-Scope: git diff origin/main...HEAD, path .agent-src.uncompressed/rules/
+Scope: git diff origin/main...HEAD, path .agent-src.uncondensed/rules/
 
 - 35 files changed: 202 insertions, 204 deletions => net -2 lines total.
 - Largest delta: language-and-tone.md 37 ins / 96 del. The 96 lines were

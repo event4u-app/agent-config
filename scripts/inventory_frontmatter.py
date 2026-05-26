@@ -2,7 +2,7 @@
 """
 Inventory frontmatter keys across all agent artefacts.
 
-Reads .agent-src.uncompressed/{skills,rules,commands,personas}, parses the
+Reads .agent-src.uncondensed/{skills,rules,commands,personas}, parses the
 YAML frontmatter of every file, and prints per-type:
 
 - total file count
@@ -26,7 +26,7 @@ from collections import Counter, defaultdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / ".agent-src.uncompressed"
+SRC = ROOT / ".agent-src.uncondensed"
 
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
 

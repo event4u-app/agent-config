@@ -17,16 +17,16 @@ refresh trigger.
 
 Cross-referenced from:
 
-- [`deep-reading-analyst`](../../../.agent-src.uncompressed/skills/deep-reading-analyst/SKILL.md)
+- [`deep-reading-analyst`](../../../.agent-src.uncondensed/skills/deep-reading-analyst/SKILL.md)
   — Step 2B structural decomposition (always run, all depths).
-- [`agent-docs-writing`](../../../.agent-src.uncompressed/skills/agent-docs-writing/SKILL.md)
+- [`agent-docs-writing`](../../../.agent-src.uncondensed/skills/agent-docs-writing/SKILL.md)
   — narrative structure for module docs and AGENTS.md.
-- [`requesting-code-review`](../../../.agent-src.uncompressed/skills/requesting-code-review/SKILL.md)
+- [`requesting-code-review`](../../../.agent-src.uncondensed/skills/requesting-code-review/SKILL.md)
   — PR description structure (S = current state, C = pain point,
   Q = scope, A = the diff).
-- [`refine-prompt`](../../../.agent-src.uncompressed/skills/refine-prompt/SKILL.md)
+- [`refine-prompt`](../../../.agent-src.uncondensed/skills/refine-prompt/SKILL.md)
   — reconstruct a free-form prompt into S-C-Q-A acceptance criteria.
-- [`refine-ticket`](../../../.agent-src.uncompressed/skills/refine-ticket/SKILL.md)
+- [`refine-ticket`](../../../.agent-src.uncondensed/skills/refine-ticket/SKILL.md)
   — Jira / Linear ticket clarification through the four-element lens.
 
 > **The 4 elements:** S (Situation) · C (Complication) · Q (Question)

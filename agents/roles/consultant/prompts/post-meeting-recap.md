@@ -1,6 +1,6 @@
 ---
 name: post-meeting-recap
-intent: "Compress a client meeting into a recap — agreed, open, owners, next call's working agenda."
+intent: "Condense a client meeting into a recap — agreed, open, owners, next call's working agenda."
 inputs:
   - name: meeting_notes
     required: true

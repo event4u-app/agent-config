@@ -46,17 +46,17 @@ tasks:
 
   lint-skills-pairs:
     silent: true
-    desc: Check compression quality between uncompressed and compressed pairs
-    cmd: python3 scripts/skill_linter.py --all --pairs --compression-quality
+    desc: Check condensation quality between uncondensed and condensed pairs
+    cmd: python3 scripts/skill_linter.py --all --pairs --condensation-quality
 
   lint-pack:
     silent: true
     desc: |
-      Phase 4.4 (ADR-017) — lint a single package's uncompressed source
+      Phase 4.4 (ADR-017) — lint a single package's uncondensed source
       tree. Used by the per-pack CI matrix (.github/workflows/skill-lint.yml).
       Pass the pack id via `-- PACK=<name>` (e.g. `task lint-pack -- PACK=pack-laravel`)
-      or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncompressed/`.
-    cmd: python3 scripts/skill_linter.py "packages/{{.PACK}}/.agent-src.uncompressed/" {{.QUIET_FLAG}}
+      or set the env var directly. Resolves to `packages/<PACK>/.agent-src.uncondensed/`.
+    cmd: python3 scripts/skill_linter.py "packages/{{.PACK}}/.agent-src.uncondensed/" {{.QUIET_FLAG}}
     requires:
       vars: [PACK]
 
@@ -80,7 +80,7 @@ tasks:
   skill-overlap:
     silent: true
     desc: |
-      Scan .agent-src.uncompressed/skills/*/SKILL.md frontmatter and body
+      Scan .agent-src.uncondensed/skills/*/SKILL.md frontmatter and body
       symbol references; emit agents/runtime/metrics/skill-overlap.md with
       strong (≥ 0.6) and candidate (≥ 0.30 token / ≥ 0.50 symbol) tiers.
       Feeds step-2-skill-inventory-rationalization Phase 2 Step 3.
@@ -90,7 +90,7 @@ tasks:
     silent: true
     desc: |
       Validate agents/evidence/archived-skills/ archive notes against the
-      contract in .agent-src.uncompressed/templates/skill-archive-note.md.
+      contract in .agent-src.uncondensed/templates/skill-archive-note.md.
       Fails if a note is missing required fields, a replacement slug
       doesn't exist, an archived slug still has a live SKILL.md, or a
       live skill cites an archived slug as replaced_by. Step-2 Phase 3.
@@ -169,12 +169,12 @@ tasks:
 
   lint-rule-tiers:
     silent: true
-    desc: Validate that every rule under .agent-src.uncompressed/rules/ declares a `tier:` frontmatter key with a known value
+    desc: Validate that every rule under .agent-src.uncondensed/rules/ declares a `tier:` frontmatter key with a known value
     cmd: python3 scripts/lint_rule_tiers.py {{.QUIET_FLAG}}
 
   lint-command-tiers:
     silent: true
-    desc: Validate that every slash command under .agent-src.uncompressed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
+    desc: Validate that every slash command under .agent-src.uncondensed/commands/ declares a `tier:` frontmatter key (0/1/2) — see docs/contracts/command-surface-tiers.md
     cmd: python3 scripts/lint_command_tiers.py {{.QUIET_FLAG}}
 
   lint-ghostwriter-source:
@@ -189,7 +189,7 @@ tasks:
 
   lint-persona-governance:
     silent: true
-    desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncompressed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
+    desc: "Enforce per-domain specialist cap (≤ 2) from .agent-src.uncondensed/rules/persona-governance.md; citation floor surfaced as warning (see scripts/lint_persona_governance.py)"
     cmd: python3 scripts/lint_persona_governance.py {{.QUIET_FLAG}}
 
   lint-rule-budget:
@@ -292,7 +292,7 @@ tasks:
 
   lint-agents-md:
     silent: true
-    desc: Enforce the Thin-Root contract on AGENTS.md + templates/AGENTS.md (size caps, ≥40% pointer ratio, why-clause length, target resolution, emergency-triage block) — see .agent-src.uncompressed/skills/agents-md-thin-root/SKILL.md
+    desc: Enforce the Thin-Root contract on AGENTS.md + templates/AGENTS.md (size caps, ≥40% pointer ratio, why-clause length, target resolution, emergency-triage block) — see .agent-src.uncondensed/skills/agents-md-thin-root/SKILL.md
     cmd: python3 scripts/lint_agents_md.py {{.QUIET_FLAG}}
 
   check-refs:
@@ -471,7 +471,7 @@ tasks:
 
   check-public-catalog-links:
     silent: true
-    desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncompressed/, all paths under package.json#files)
+    desc: Verify docs/catalog.md links resolve to shipped surfaces (no .agent-src.uncondensed/, all paths under package.json#files)
     cmd: python3 scripts/check_public_catalog_links.py {{.QUIET_FLAG}}
 
   check-command-count:
@@ -522,7 +522,7 @@ tasks:
   check-reply-consistency:
     silent: true
     desc: Scan shipped sources for legacy (recommended) inline tags on numbered options
-    cmd: python3 scripts/check_reply_consistency.py {{.QUIET_FLAG}} --scan-dir .agent-src.uncompressed
+    cmd: python3 scripts/check_reply_consistency.py {{.QUIET_FLAG}} --scan-dir .agent-src.uncondensed
 
   check-iron-law-prominence:
     silent: true

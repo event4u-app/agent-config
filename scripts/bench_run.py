@@ -34,8 +34,8 @@ from _lib.bench_report import (  # noqa: E402
     write_json,
     write_markdown,
 )
-from _lib import bench_caveman  # noqa: E402
-from _lib.bench_caveman_report import build_caveman_report, render_caveman_markdown  # noqa: E402
+from _lib import bench_telegraph  # noqa: E402
+from _lib.bench_telegraph_report import build_telegraph_report, render_telegraph_markdown  # noqa: E402
 from _lib.bench_cost import load_pricing  # noqa: E402
 from bench_runner import run_corpus  # noqa: E402
 
@@ -50,7 +50,7 @@ PRICING_PATH = REPO_ROOT / "internal" / "bench" / "pricing.yaml"
 SESSIONS_JSONL = REPO_ROOT / "agents" / "cost-tracking" / "sessions.jsonl"
 REPORTS_DIR = REPO_ROOT / "internal" / "bench" / "reports"
 CORPUS_DIR = REPO_ROOT / "tests" / "eval"
-CAVEMAN_CORPUS = REPO_ROOT / "internal" / "bench" / "corpora" / "caveman" / "prompts.yaml"
+TELEGRAPH_CORPUS = REPO_ROOT / "internal" / "bench" / "corpora" / "telegraph" / "prompts.yaml"
 BASELINE_COLLECTOR = REPO_ROOT / "scripts" / "bench_runner.py"
 
 
@@ -115,20 +115,20 @@ def main(argv: list[str] | None = None) -> int:
                     help="Override timestamp (test hook); defaults to UTC now")
     ap.add_argument("--no-write", action="store_true",
                     help="Compute the report but do not write files (dry run)")
-    ap.add_argument("--caveman", action="store_true",
-                    help="Run the caveman three-arm compression bench instead of the "
+    ap.add_argument("--telegraph", action="store_true",
+                    help="Run the telegraph three-arm condensation bench instead of the "
                          "selection-accuracy bench (step-16 Phase 1).")
-    ap.add_argument("--caveman-max-prompts", type=int, default=None,
-                    help="Cap prompts in the caveman bench (smoke test).")
-    ap.add_argument("--caveman-dry-run", action="store_true",
-                    help="Caveman: skip live API calls; emit a stub report with "
+    ap.add_argument("--telegraph-max-prompts", type=int, default=None,
+                    help="Cap prompts in the telegraph bench (smoke test).")
+    ap.add_argument("--telegraph-dry-run", action="store_true",
+                    help="Telegraph: skip live API calls; emit a stub report with "
                          "zero tokens (wiring check only).")
-    ap.add_argument("--caveman-report-tag", default="caveman-v1",
-                    help="Filename tag for the caveman report (default: caveman-v1).")
+    ap.add_argument("--telegraph-report-tag", default="telegraph-v1",
+                    help="Filename tag for the telegraph report (default: telegraph-v1).")
     args = ap.parse_args(argv)
 
-    if args.caveman:
-        return _run_caveman(args)
+    if args.telegraph:
+        return _run_telegraph(args)
 
     corpus_path = CORPUS_DIR / f"corpus-{args.corpus}.yaml"
     if not corpus_path.is_file():
@@ -170,7 +170,7 @@ def main(argv: list[str] | None = None) -> int:
 
 
 class _DryRunClient:
-    """Stub client for --caveman-dry-run. Returns empty CouncilResponse-shaped objects."""
+    """Stub client for --telegraph-dry-run. Returns empty CouncilResponse-shaped objects."""
 
     def ask(self, system_prompt: str, user_prompt: str, max_tokens: int = 1024):
         from ai_council.clients import CouncilResponse
@@ -185,12 +185,12 @@ def _build_anthropic_client():
     return AnthropicClient(api_key=load_anthropic_key())
 
 
-def _run_caveman(args: argparse.Namespace) -> int:
-    if not CAVEMAN_CORPUS.is_file():
-        script_output.error(f"error: caveman corpus not found: {CAVEMAN_CORPUS}")
+def _run_telegraph(args: argparse.Namespace) -> int:
+    if not TELEGRAPH_CORPUS.is_file():
+        script_output.error(f"error: telegraph corpus not found: {TELEGRAPH_CORPUS}")
         return 2
 
-    if args.caveman_dry_run:
+    if args.telegraph_dry_run:
         client = _DryRunClient()
         transport = "dry-run"
         model = "stub"
@@ -211,18 +211,18 @@ def _run_caveman(args: argparse.Namespace) -> int:
               f"in={ar.input_tokens:>4} out={ar.output_tokens:>4} "
               f"{ar.latency_ms:>5}ms{err}", file=sys.stderr)
 
-    results = bench_caveman.run_caveman_bench(
-        client, CAVEMAN_CORPUS,
-        max_prompts=args.caveman_max_prompts,
+    results = bench_telegraph.run_telegraph_bench(
+        client, TELEGRAPH_CORPUS,
+        max_prompts=args.telegraph_max_prompts,
         on_progress=_progress,
     )
 
     rates, sourced_on = load_pricing(PRICING_PATH)
     sonnet_rates = rates.get("sonnet", {"input": 0.0, "output": 0.0})
 
-    report = build_caveman_report(
+    report = build_telegraph_report(
         results=results,
-        corpus_path_rel=str(CAVEMAN_CORPUS.relative_to(REPO_ROOT)),
+        corpus_path_rel=str(TELEGRAPH_CORPUS.relative_to(REPO_ROOT)),
         generated_at=utc_now_iso(),
         bench_run_version=BENCH_RUN_VERSION,
         model=model,
@@ -232,27 +232,27 @@ def _run_caveman(args: argparse.Namespace) -> int:
     )
 
     stamp = args.stamp or utc_now_filename_stamp()
-    json_path, md_path = report_paths(REPORTS_DIR, args.caveman_report_tag, stamp)
-    # Override: caveman roadmap pins the filename to `caveman-v1.{json,md}` (no stamp).
-    fixed_json = REPORTS_DIR / f"{args.caveman_report_tag}.json"
-    fixed_md = REPORTS_DIR / f"{args.caveman_report_tag}.md"
+    json_path, md_path = report_paths(REPORTS_DIR, args.telegraph_report_tag, stamp)
+    # Override: telegraph roadmap pins the filename to `telegraph-v1.{json,md}` (no stamp).
+    fixed_json = REPORTS_DIR / f"{args.telegraph_report_tag}.json"
+    fixed_md = REPORTS_DIR / f"{args.telegraph_report_tag}.md"
 
     if not args.no_write:
         write_json(fixed_json, report)
         fixed_md.parent.mkdir(parents=True, exist_ok=True)
-        fixed_md.write_text(render_caveman_markdown(report), encoding="utf-8")
+        fixed_md.write_text(render_telegraph_markdown(report), encoding="utf-8")
         # Also drop a timestamped copy for the cadence trail.
         write_json(json_path, report)
         json_path.with_suffix(".md").write_text(
-            render_caveman_markdown(report), encoding="utf-8"
+            render_telegraph_markdown(report), encoding="utf-8"
         )
 
     cost = report["cost"]
     headline = (
-        f"caveman · prompts {report['corpus']['prompt_count']} · "
+        f"telegraph · prompts {report['corpus']['prompt_count']} · "
         f"calls {cost['totals']['calls']} · errors {cost['totals']['errors']} · "
-        f"vs_raw med {report['caveman']['aggregate']['savings_vs_raw']['median']:.2%} · "
-        f"vs_terse med {report['caveman']['aggregate']['savings_vs_terse']['median']:.2%} · "
+        f"vs_raw med {report['telegraph']['aggregate']['savings_vs_raw']['median']:.2%} · "
+        f"vs_terse med {report['telegraph']['aggregate']['savings_vs_terse']['median']:.2%} · "
         f"cost ${cost['totals']['total_cost_usd']:.6f}"
     )
     if args.quiet:
@@ -260,7 +260,7 @@ def _run_caveman(args: argparse.Namespace) -> int:
         if not args.no_write:
             print(f"report: {fixed_md.relative_to(REPO_ROOT)}")
     else:
-        print(render_caveman_markdown(report))
+        print(render_telegraph_markdown(report))
         if not args.no_write:
             print(f"\n→ json:     {fixed_json.relative_to(REPO_ROOT)}")
             print(f"→ markdown: {fixed_md.relative_to(REPO_ROOT)}")
