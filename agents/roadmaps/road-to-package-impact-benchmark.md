@@ -45,13 +45,13 @@ Decide what "without the package" means physically, then build the scaffolding s
 
 Extend the existing bench runner with a `--variant {with,without}` axis and the cache logic that makes daily runs cheap.
 
-- [ ] **Step 1:** Extend `scripts/bench_run.py` (or wrap it in `scripts/bench_ab_run.py` — pick whichever keeps `bench_run.py` clean) with `--variant with|without` and `--corpus ab-{tracka,trackb}`. Variant is recorded in the report header.
-- [ ] **Step 2:** Implement baseline-cache lookup in `scripts/_lib/bench_ab_cache.py`:
+- [x] **Step 1:** Extend `scripts/bench_run.py` (or wrap it in `scripts/bench_ab_run.py` — pick whichever keeps `bench_run.py` clean) with `--variant with|without` and `--corpus ab-{tracka,trackb}`. Variant is recorded in the report header.
+- [x] **Step 2:** Implement baseline-cache lookup in `scripts/_lib/bench_ab_cache.py`:
   - Cache key: `(corpus_hash, claude_cli_version, target_shape_hash)`.
   - On a `bench:ab` run, look up the latest `variant=without` report matching the key.
   - **Found + fresh:** reuse without re-running. **Found + stale (corpus changed) OR missing:** prompt the user — numbered options: `(1) refresh baseline now`, `(2) reuse stale baseline (mark report as stale)`, `(3) abort`. Default suggestion: `1` if `--non-interactive` is off; `2` if it is on.
-- [ ] **Step 3:** Persist A/B reports under `internal/bench/reports/ab/{stamp}-{corpus}-{variant}.json` + matching `.md`. Reuse the existing JSON schema from `docs/contracts/benchmark-report-schema.md` (if missing, add a variant-axis section in that contract — separate ADR, NOT this roadmap).
-- [ ] **Step 4:** Add `scripts/bench_ab_diff.py` — given two reports (one per variant), produce the comparison artefact consumed by Phase 5.
+- [x] **Step 3:** Persist A/B reports under `internal/bench/reports/ab/{stamp}-{corpus}-{variant}.json` + matching `.md`. Reuse the existing JSON schema from `docs/contracts/benchmark-report-schema.md` (if missing, add a variant-axis section in that contract — separate ADR, NOT this roadmap).
+- [x] **Step 4:** Add `scripts/bench_ab_diff.py` — given two reports (one per variant), produce the comparison artefact consumed by Phase 5.
 
 **Exit criteria:** Running `bench:ab` twice on the same corpus in a row reuses the cached `without` baseline on the second run and only re-runs `with`. Manual cache invalidation works.
 
