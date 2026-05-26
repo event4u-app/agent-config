@@ -165,6 +165,80 @@ export const modulesAgentFolder = signal('agents');
 export const modulesSkipped = signal(false);
 export const modulesProjectRoot = signal<string | null>(null);
 
+/**
+ * Discovery state for the extended-mode `ai-tools` + `packs` steps
+ * (road-to-global-only-install § Phase 2). The wizard fetches both
+ * `/api/v1/wizard/manifest` (ADR-015 packs list) and
+ * `/api/v1/wizard/auto-detect` (project signals — `pack-php`, `pack-js`,
+ * …) once per session and caches under `discoveryLoaded`.
+ *
+ * Detection signals carry a `pack-` prefix on the wire; the loader
+ * strips it so `detectedPackIds` joins 1:1 to manifest `id`s. The
+ * `pack-` ↔ manifest-id mapping is intentionally trivial — if the
+ * server adds richer detection metadata later, only the loader
+ * changes.
+ */
+export interface DiscoveryPack {
+    id: string;
+    label: string;
+    description: string;
+    /** Other pack ids this pack hints at as prerequisites. */
+    requires_hint?: string[];
+}
+
+/**
+ * Valid AI tool IDs accepted by `scripts/install.py --tools`. Mirrors
+ * `_VALID_TOOLS` in install.py (source of truth). The wizard hard-codes
+ * the list because tools are NOT in the discovery manifest — they are
+ * a substrate-level concept (which AI client the user runs), not a
+ * package artefact. Bump in lockstep with install.py.
+ */
+export interface ToolDescriptor {
+    id: string;
+    label: string;
+}
+
+export const VALID_TOOLS: readonly ToolDescriptor[] = [
+    { id: 'claude-code', label: 'Claude Code' },
+    { id: 'claude-desktop', label: 'Claude Desktop' },
+    { id: 'cursor', label: 'Cursor' },
+    { id: 'windsurf', label: 'Windsurf' },
+    { id: 'cline', label: 'Cline' },
+    { id: 'gemini-cli', label: 'Gemini CLI' },
+    { id: 'copilot', label: 'GitHub Copilot' },
+    { id: 'augment', label: 'Augment' },
+    { id: 'aider', label: 'Aider' },
+    { id: 'codex', label: 'Codex' },
+    { id: 'roocode', label: 'Roo Code' },
+    { id: 'continue', label: 'Continue' },
+    { id: 'kilocode', label: 'Kilo Code' },
+    { id: 'zed', label: 'Zed' },
+    { id: 'jetbrains', label: 'JetBrains' },
+    { id: 'kiro', label: 'Kiro' },
+    { id: 'qoder', label: 'Qoder' },
+    { id: 'opencode', label: 'OpenCode' },
+    { id: 'trae', label: 'Trae' },
+    { id: 'antigravity', label: 'Antigravity' },
+    { id: 'codebuddy', label: 'CodeBuddy' },
+    { id: 'droid', label: 'Droid' },
+    { id: 'warp', label: 'Warp' },
+];
+
+export const discoveryLoaded = signal(false);
+export const discoveryLoading = signal(false);
+export const discoveryLoadError = signal<string | null>(null);
+export const discoveryPacks = signal<DiscoveryPack[]>([]);
+export const detectedPackIds = signal<string[]>([]);
+
+/**
+ * Tool + pack selection — keyed by id for O(1) toggle. The on-wire
+ * payload is the list of truthy keys; falsy/missing means "unchecked".
+ * Both seed empty so the user makes an explicit choice; the loader
+ * pre-selects detected packs once the manifest + signals land.
+ */
+export const selectedTools = signal<Record<string, boolean>>({});
+export const selectedPacks = signal<Record<string, boolean>>({});
+
 export function getActiveSteps(): readonly WizardStep[] {
     return getWizardSteps({ extended: extendedSteps.value });
 }

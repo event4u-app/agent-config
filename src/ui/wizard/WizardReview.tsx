@@ -38,6 +38,14 @@ export interface WizardReviewProps {
     scope: 'global' | 'project';
     scopeAvailable: boolean;
     onScopeChange: (next: 'global' | 'project') => void;
+    /**
+     * Selection counts surfaced on the aiTools / packs rows of the
+     * jump-back nav (road-to-unified-setup § Phase 2). `undefined` keeps
+     * the row in its idle state — used in the legacy 7-step flow where
+     * neither step is present.
+     */
+    selectedToolsCount?: number;
+    selectedPacksCount?: number;
 }
 
 function stepOwnsPath(step: WizardStep, path: string): boolean {
@@ -86,6 +94,16 @@ function stepStatus(
         const count = props.changes.filter((c) => stepOwnsPath(step, c.path)).length;
         if (count === 0) return { label: '', tone: 'idle' };
         return { label: `${count} change${count === 1 ? '' : 's'}`, tone: 'changed' };
+    }
+    if (step.kind === 'aiTools') {
+        const count = props.selectedToolsCount ?? 0;
+        if (count === 0) return { label: '', tone: 'idle' };
+        return { label: `${count} tool${count === 1 ? '' : 's'}`, tone: 'changed' };
+    }
+    if (step.kind === 'packs') {
+        const count = props.selectedPacksCount ?? 0;
+        if (count === 0) return { label: '', tone: 'idle' };
+        return { label: `${count} pack${count === 1 ? '' : 's'}`, tone: 'changed' };
     }
     return { label: '', tone: 'idle' };
 }

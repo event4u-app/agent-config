@@ -31,7 +31,12 @@ import {
     activeTotalSteps,
     banner,
     clampStep,
+    detectedPackIds,
     diffLoading,
+    discoveryLoadError,
+    discoveryLoaded,
+    discoveryLoading,
+    discoveryPacks,
     errors,
     extendedSteps,
     getActiveSteps,
@@ -52,6 +57,8 @@ import {
     reviewChanges,
     saving,
     schema,
+    selectedPacks,
+    selectedTools,
     settingsLastModified,
     startedAtNow,
     stepIndex,
@@ -60,9 +67,11 @@ import {
     userMdInitial,
     userMdLoaded,
     userMdSkipped,
+    VALID_TOOLS,
     values,
     wizardComplete,
     wizardScope,
+    type DiscoveryPack,
     type ModulesDetectResponse,
     type ProposedModulesBlock,
     type SettingsLegacyHints,
@@ -160,6 +169,9 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'modules') {
             void loadModulesOnce();
         }
+        if (resumed.kind === 'aiTools' || resumed.kind === 'packs') {
+            void loadDiscoveryOnce();
+        }
         if (resumed.kind === 'review') {
             void refreshDiff();
         }
@@ -255,6 +267,75 @@ async function loadModulesOnce(): Promise<void> {
     }
 }
 
+interface ManifestResponse {
+    packs?: Array<{
+        id: string;
+        label?: string;
+        description?: string;
+        requires_hint?: string[];
+    }>;
+}
+
+interface AutoDetectResponse {
+    root: string;
+    signals: Array<{ id: string; reason: string; evidence: string }>;
+}
+
+/**
+ * Fetch the discovery manifest + auto-detect signals once per session
+ * (road-to-global-only-install § Phase 2). Both endpoints are gated on
+ * extended-mode (HTTP 404 in legacy 7-step bundles); the loader stays
+ * silent in that case so older servers don't break the step navigation.
+ *
+ * Detection signals arrive with a `pack-` prefix (`pack-php`, `pack-js`,
+ * …); the loader strips it so the ids join 1:1 to the manifest's pack
+ * ids. Detected packs are pre-selected on first load — declining is one
+ * click per row.
+ */
+async function loadDiscoveryOnce(): Promise<void> {
+    if (discoveryLoaded.value || discoveryLoading.value) return;
+    discoveryLoading.value = true;
+    discoveryLoadError.value = null;
+    try {
+        const [manifest, autoDetect] = await Promise.all([
+            apiFetch<ManifestResponse>('/api/v1/wizard/manifest'),
+            apiFetch<AutoDetectResponse>('/api/v1/wizard/auto-detect'),
+        ]);
+        const packs: DiscoveryPack[] = (manifest.packs ?? []).map((p) => ({
+            id: p.id,
+            label: p.label ?? p.id,
+            description: p.description ?? '',
+            requires_hint: p.requires_hint,
+        }));
+        discoveryPacks.value = packs;
+        // Strip the `pack-` prefix so ids match the manifest. Unknown
+        // signals (e.g. future detector additions not yet in the
+        // manifest) are dropped silently rather than rendering as
+        // orphan checkboxes.
+        const knownIds = new Set(packs.map((p) => p.id));
+        const detected = autoDetect.signals
+            .map((s) => s.id.startsWith('pack-') ? s.id.slice(5) : s.id)
+            .filter((id) => knownIds.has(id));
+        detectedPackIds.value = detected;
+        // Pre-select detected packs only when the user hasn't already
+        // touched the selection (e.g. resume from server partial).
+        if (Object.keys(selectedPacks.value).length === 0) {
+            const seed: Record<string, boolean> = {};
+            for (const id of detected) seed[id] = true;
+            selectedPacks.value = seed;
+        }
+    } catch (err) {
+        if (err instanceof ApiCallError) {
+            discoveryLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
+        } else {
+            discoveryLoadError.value = err instanceof Error ? err.message : String(err);
+        }
+    } finally {
+        discoveryLoading.value = false;
+        discoveryLoaded.value = true;
+    }
+}
+
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -320,6 +401,9 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'modules') {
         void loadModulesOnce();
     }
+    if (next.kind === 'aiTools' || next.kind === 'packs') {
+        void loadDiscoveryOnce();
+    }
     if (next.kind === 'review') {
         void refreshDiff();
     }
@@ -336,6 +420,51 @@ interface FinishResponse {
         identity: UserIdentity | null;
         userIdentityYaml: string | null;
     };
+}
+
+interface ApplyResponse {
+    ok: boolean;
+    dryRun: boolean;
+    schemaVersion: 'wizard-v2' | 'installer-v1';
+    preview?: string;
+}
+
+/**
+ * Build the wizard-v2 apply payload from the current selection signals.
+ * Returns `null` when no AI tool is checked — the server schema requires
+ * `tools.min(1)`, and an empty selection means there is nothing for the
+ * installer bridge to do. Packs default to `[]` when unset.
+ */
+function buildApplyPayload(): {
+    schema_version: 'wizard-v2';
+    tools: string[];
+    packs: string[];
+    settings: Record<string, JsonValue>;
+    scope_to_project_only?: boolean;
+} | null {
+    const tools = Object.entries(selectedTools.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    if (tools.length === 0) return null;
+    const packs = Object.entries(selectedPacks.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    const payload: {
+        schema_version: 'wizard-v2';
+        tools: string[];
+        packs: string[];
+        settings: Record<string, JsonValue>;
+        scope_to_project_only?: boolean;
+    } = {
+        schema_version: 'wizard-v2',
+        tools,
+        packs,
+        settings: values.value,
+    };
+    if (serverStatus.value?.projectScopeAvailable === true && wizardScope.value === 'project') {
+        payload.scope_to_project_only = true;
+    }
+    return payload;
 }
 
 async function finish(): Promise<void> {
@@ -384,13 +513,44 @@ async function finish(): Promise<void> {
         // is cleared and userMdInitial is realigned below) and re-enables
         // automatically once a new edit makes canFinish true again.
         const closeHint = 'You can close this browser window now.';
-        if (res.dryRun === true) {
-            banner.value = { message: `Dry-run complete — no files written. Settings would be saved. ${closeHint}`, tone: 'success' };
-        } else if (Array.isArray(res.writtenPaths)) {
-            banner.value = { message: `Saved (${res.writtenPaths.join(', ')}). Wizard complete. ${closeHint}`, tone: 'success' };
-        } else {
-            banner.value = { message: `Wizard complete. ${closeHint}`, tone: 'success' };
+        const finishCopy = res.dryRun === true
+            ? `Dry-run complete — no files written. Settings would be saved.`
+            : Array.isArray(res.writtenPaths)
+                ? `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`
+                : `Wizard complete.`;
+        // road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
+        // After the 2PC settings commit lands, hand the AI-tool + pack
+        // selection to `/api/v1/wizard/apply` so `scripts/install.py`
+        // can dry-run the install plan. The server forces `dry_run:true`
+        // until Phase 1.9 — the preview text comes back as
+        // installer-side stdout. Skipped when no tool is selected
+        // (schema requires `tools.min(1)`) or when extended-mode is off
+        // (endpoint returns 404). Apply failures are soft: settings are
+        // already persisted, so we surface the error as a warning
+        // instead of rolling the banner back to red.
+        const applyPayload = extendedSteps.value ? buildApplyPayload() : null;
+        let applyCopy = '';
+        if (applyPayload !== null) {
+            try {
+                const applyRes = await apiFetch<ApplyResponse>(
+                    '/api/v1/wizard/apply',
+                    { method: 'POST', body: applyPayload },
+                );
+                const toolCount = applyPayload.tools.length;
+                const packCount = applyPayload.packs.length;
+                applyCopy = applyRes.dryRun
+                    ? ` Installer dry-run planned ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
+                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.')
+                    : ` Installer applied ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
+                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.');
+            } catch (err) {
+                const message = err instanceof ApiCallError
+                    ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+                    : err instanceof Error ? err.message : String(err);
+                applyCopy = ` Installer bridge failed: ${message}. Settings were saved; re-run the wizard to retry the install plan.`;
+            }
         }
+        banner.value = { message: `${finishCopy}${applyCopy} ${closeHint}`, tone: 'success' };
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -553,6 +713,125 @@ function buildModulesConfig(): ProposedModulesBlock | null {
     };
 }
 
+/**
+ * Renderer for the extended-mode `ai-tools` step. The list is static
+ * (mirrors `_VALID_TOOLS` in `scripts/install.py`) because tools are a
+ * substrate-level concept — which AI client the user runs — not a
+ * package artefact discovered from the manifest.
+ *
+ * Selection is stored in `selectedTools` and consumed by the eventual
+ * Wizard Apply bridge (road-to-global-only-install § Phase 1.5). The
+ * current finish endpoint accepts only settings + identity, so the
+ * selection is captured but not yet persisted — the apply bridge is
+ * gated until the merged path ships end-to-end.
+ */
+function AiToolsStepBody(): preact.JSX.Element {
+    const sel = selectedTools.value;
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the AI tools you use. The installer wires each selected
+                tool's surface (skills, rules, commands) on apply. You can
+                change this list later by re-running the wizard.
+            </p>
+            <ul style="list-style: none; padding-left: 0;">
+                {VALID_TOOLS.map((tool) => (
+                    <li key={tool.id}>
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={sel[tool.id] ?? false}
+                                onChange={(e): void => {
+                                    const checked = (e.currentTarget as HTMLInputElement).checked;
+                                    selectedTools.value = { ...sel, [tool.id]: checked };
+                                }}
+                            />
+                            {' '}{tool.label} <small><code>{tool.id}</code></small>
+                        </label>
+                    </li>
+                ))}
+            </ul>
+        </div>
+    );
+}
+
+/**
+ * Renderer for the extended-mode `packs` step. Reads the live discovery
+ * manifest (ADR-015) so the available packs always match the bundle on
+ * disk. Auto-detected packs (e.g. `pack-php` when `composer.json` is
+ * present) are pre-selected by `loadDiscoveryOnce`.
+ *
+ * `requires_hint` is surfaced as informational copy under each pack —
+ * the installer resolves dependencies at apply time, so the wizard
+ * does not force the user to tick the hinted parents.
+ */
+function PacksStepBody(): preact.JSX.Element {
+    if (discoveryLoading.value) {
+        return <p>Loading discovery manifest…</p>;
+    }
+    if (discoveryLoadError.value !== null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner ac-banner--error">
+                    Discovery failed: {discoveryLoadError.value}
+                </p>
+                <p>
+                    The manifest endpoint is gated on extended-mode. Re-run the
+                    server with extended steps enabled to populate this list.
+                </p>
+            </div>
+        );
+    }
+    const packs = discoveryPacks.value;
+    const sel = selectedPacks.value;
+    const detected = new Set(detectedPackIds.value);
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the capability packs to install. Auto-detected packs are
+                pre-selected based on files in your project root.
+            </p>
+            {packs.length === 0
+                ? <p><em>No packs available in the manifest.</em></p>
+                : (
+                    <ul style="list-style: none; padding-left: 0;">
+                        {packs.map((pack) => (
+                            <li key={pack.id}>
+                                <label>
+                                    <input
+                                        type="checkbox"
+                                        checked={sel[pack.id] ?? false}
+                                        onChange={(e): void => {
+                                            const checked = (e.currentTarget as HTMLInputElement).checked;
+                                            selectedPacks.value = { ...sel, [pack.id]: checked };
+                                        }}
+                                    />
+                                    {' '}<strong>{pack.label}</strong>{' '}
+                                    <small><code>{pack.id}</code></small>
+                                    {detected.has(pack.id)
+                                        ? <small> — <em>auto-detected</em></small>
+                                        : null}
+                                    {pack.description !== ''
+                                        ? <div><small>{pack.description}</small></div>
+                                        : null}
+                                    {pack.requires_hint && pack.requires_hint.length > 0
+                                        ? (
+                                            <div>
+                                                <small>
+                                                    Requires: {pack.requires_hint.map((r) => <code key={r}>{r}</code>).reduce<preact.JSX.Element[]>((acc, el, i) => i === 0 ? [el] : [...acc, <>, </>, el], [])}
+                                                </small>
+                                            </div>
+                                        )
+                                        : null}
+                                </label>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+        </div>
+    );
+}
+
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     if (step.kind === 'form') {
@@ -585,35 +864,11 @@ function StepBody(): preact.JSX.Element | null {
             />
         );
     }
-    // road-to-global-only-install § Phase 1.4 — placeholder renderers for
-    // the extended-mode lead steps. The full picker UI ships in the
-    // follow-up phase that wires discovery state into the wizard store;
-    // these stubs keep the step navigation walkable today so the 9-step
-    // flow is testable end-to-end while the deeper UX is in flight.
     if (step.kind === 'aiTools') {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p>
-                    Auto-detected AI tools will appear here. The wizard reads
-                    <code> /api/v1/wizard/auto-detect</code> and lets you toggle each
-                    discovered tool on or off. Pick-list UI lands in the follow-up
-                    extended-mode phase; the endpoint is already live so you can
-                    inspect raw output via <code>curl</code> in the meantime.
-                </p>
-            </div>
-        );
+        return <AiToolsStepBody />;
     }
     if (step.kind === 'packs') {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p>
-                    Capability packs (founder-strategy, finance-basic, gtm-sales,
-                    ops-people, ai-video) will appear here. The wizard reads
-                    <code> /api/v1/wizard/manifest</code> and lets you toggle each
-                    pack on or off. Selection UI lands in the follow-up phase.
-                </p>
-            </div>
-        );
+        return <PacksStepBody />;
     }
     if (step.kind === 'modules') {
         return <ModulesStepBody />;
@@ -633,6 +888,8 @@ function StepBody(): preact.JSX.Element | null {
             scope={wizardScope.value}
             scopeAvailable={serverStatus.value?.projectScopeAvailable === true}
             onScopeChange={(next): void => { wizardScope.value = next; }}
+            selectedToolsCount={Object.values(selectedTools.value).filter(Boolean).length}
+            selectedPacksCount={Object.values(selectedPacks.value).filter(Boolean).length}
         />
     );
 }
