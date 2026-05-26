@@ -55,6 +55,13 @@ ALLOWED_FLAT_FILES: frozenset[str] = frozenset(
         # Consumer bridge marker (Phase 4 of road-to-global-only-install).
         # Spec: docs/contracts/consumer-bridge.md (event4u-bridge/v1).
         ".event4u-bridge.yml",
+        # Per-tool projection toggle — which generated trees
+        # `task generate-tools` writes (`.claude/`, `.cursor/`,
+        # `.clinerules/`, `.windsurfrules`). Lives at agents/ root
+        # because both the package and the consumer generators read
+        # it before any subdirectory is touched (ADR-028 § Root layout
+        # toggle).
+        ".agent-tools.yml",
     }
 )
 
