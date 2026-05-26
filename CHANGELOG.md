@@ -16,6 +16,61 @@ Entry-shape contract: [`docs/contracts/CHANGELOG-conventions.md`](docs/contracts
 
 ## [Unreleased]
 
+### Breaking — v4.0.0 unified setup (`road-to-unified-setup`)
+
+`v4.0.0` is a **hard-cut** release. The legacy Python installer at
+`scripts/install.py` and the standalone TypeScript installer workspace
+at `packages/core/installer/{src,tests}` are no longer the canonical
+install path; the wizard now boots a single Fastify process at
+`agent-config install` / `agent-config setup` and drives the whole
+plan + apply through the TypeScript engine under `src/install/`.
+
+**Migrating from v3.x**
+
+1. The first `agent-config install` run detects an existing v3 tree at
+   `~/.event4u/agent-config/` and renders a **backup screen** before
+   any write. Pick **"Backup v3 and proceed"** — the wizard copies the
+   v3 layout to `~/.event4u/agent-config.v3.bak/` atomically and runs
+   the v4 install against a clean slate.
+2. No auto-migration runs. Rolling back is a single rename:
+   `mv ~/.event4u/agent-config.v3.bak ~/.event4u/agent-config`.
+3. Re-running `npx @event4u/agent-config install` against an active v3
+   layout (without backup) is refused — silent overwrite is gone.
+
+**Removed / retired**
+
+- `packages/core/installer/{src,tests,package.json,tsconfig.json,
+  vitest.config.ts}` (the standalone `@event4u/installer` workspace)
+  and its workspaces declaration in the root `package.json`.
+- `/install-via-agent` command — its JSON agent-mode protocol shipped
+  with the removed installer.
+- `task installer-typecheck` / `task installer-test` gates in
+  `taskfiles/ci-fast.yml`.
+
+**Kept for one release**
+
+- `scripts/install.py` remains so the `curl | bash setup.sh` CURL
+  fallback + `smoke-public-install.yml` CI matrix keep working. It is
+  **not** invoked from the modern npx flow. Full removal is scheduled
+  for v5.
+
+**New features (Phase B / C / E)**
+
+- Hard-stop **continue-screen** after Step 3 (modules) when entering
+  via `agent-config install`; `setup` lands directly at Step 4
+  (identity) via `?mode=setup`. (B5)
+- `WIZARD_READY <url>` line on stdout once Fastify is bound; the new
+  `scripts/bootstrap.sh` watches for it so a Node bootstrap does not
+  poll the port. (B4 + C1)
+- **Recovery-pre-step** — `GET /api/v1/install/recovery` surfaces an
+  abort marker (Resume / Rollback / Ignore) when the previous run
+  closed mid-apply. (B4 + Council Finding #24)
+- **v3 backup screen** — `GET /api/v1/install/legacy-v3` +
+  `POST /api/v1/install/backup-v3` drive the migration. (E2 +
+  Council Finding #21)
+- **Batch-conflict resolution** at ≥ 5 conflicts (B3 + Council
+  Finding #19).
+
 **TypeScript CLI shell + local server foundation (`typescript-cli-and-local-gui-foundation`)** —
 Phase-5 cutover of the `agent-config` binary from a 955-line Bash
 dispatcher to a compiled TypeScript entry point. The shell handles
