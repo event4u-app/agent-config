@@ -211,21 +211,6 @@ roadmap:
   # is mandatory before any "roadmap complete" claim regardless of cadence.
   quality_cadence: end_of_roadmap
 
-  # Skip the pre-run confirmation gate when /roadmap:process-step|phase|full
-  # is invoked.
-  #   true  = default. The command name itself names the scope; if a
-  #           single active roadmap is discoverable, the loop starts
-  #           immediately. The resolved roadmap / cadence / council
-  #           setting are still surfaced inline at the top of the run
-  #           so you can abort if it picked the wrong file.
-  #   false = legacy behavior. The loop shows the pre-run summary with
-  #           numbered options (Go / Different roadmap / Different
-  #           scope / Toggle council / Abort) and waits for input.
-  # The gate is still shown — regardless of this flag — when the
-  # roadmap is ambiguous (multiple active roadmaps and none named) or
-  # when an unresolvable cadence / scope conflict is detected.
-  skip_pre_run_gate: true
-
   # Dashboard regen cadence inside autonomous runs (process-step /
   # process-phase / process-full). Controls how often
   # `./agent-config roadmap:progress` runs **between** steps in a
