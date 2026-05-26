@@ -1196,6 +1196,27 @@
       ]
     },
     {
+      "id": "no-pr-progress-comments",
+      "triggers": [
+        {
+          "intent": "post PR comment"
+        },
+        {
+          "intent": "PR status update"
+        },
+        {
+          "intent": "CI fix progress"
+        },
+        {
+          "keyword": "gh pr comment"
+        },
+        {
+          "keyword": "PullRequestComment"
+        }
+      ],
+      "routes_to": []
+    },
+    {
       "id": "persona-governance",
       "triggers": [
         {

@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **502 artefacts** in this package.
+Maintainer-facing index of all **503 artefacts** in this package.
 Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -231,7 +231,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../packages/pack-product-discovery/.agent-src.uncompressed/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../packages/pack-gtm-marketing/.agent-src.uncompressed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (75)
+## Rules (76)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -279,6 +279,7 @@ Auto-generated from `.agent-src.uncompressed/` and `docs/guidelines/`.
 | rule | [`model-recommendation`](../packages/core/.agent-src.uncompressed/rules/model-recommendation.md) | auto | Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT) |
 | rule | [`no-attribution-footers`](../packages/core/.agent-src.uncompressed/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../packages/core/.agent-src.uncompressed/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-pr-progress-comments`](../packages/core/.agent-src.uncompressed/rules/no-pr-progress-comments.md) | auto | Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true |
 | rule | [`no-roadmap-references`](../packages/core/.agent-src.uncompressed/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings |
 | rule | [`non-destructive-by-default`](../packages/core/.agent-src.uncompressed/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../packages/core/.agent-src.uncompressed/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |

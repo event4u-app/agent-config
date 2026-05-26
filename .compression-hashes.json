@@ -243,6 +243,7 @@
   "rules/model-recommendation.md": "67c3d62d6c7b61aa1c7d85831bf4c4cb3651da732f01ae97d522051fbb163212",
   "rules/no-attribution-footers.md": "af894f3c796832c9f0ed081907650649bff8bc71904ee57092dbd43457b8d826",
   "rules/no-cheap-questions.md": "376207de4467a82f866fe8cb695d49c21fb5da932cd152bc2ce907695be38c5b",
+  "rules/no-pr-progress-comments.md": "859e79ea8f3402f4247d91c4f3c23adde009995aab09d57924ac1be7c820794d",
   "rules/no-roadmap-references.md": "96a89946739d2f431ec90bb882c204f1155257a6b94f50871a5e61fad5ad7375",
   "rules/non-destructive-by-default.md": "bb45c9ccd552ead24034971872cd3f2a92fbd199891d4c61a81a2e7c2e77378a",
   "rules/onboarding-gate.md": "fb44fe163a1f37ff54ae4d62c5385cb5260f02622cbb5a0af6550208961682b9",

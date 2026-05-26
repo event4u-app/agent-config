@@ -70,6 +70,9 @@ export const settingsSchema = z.object({
         pr_comment_bot_icon: z.boolean().default(false).describe(
             'Prefix every PR review-comment reply with 🤖 so humans can tell agent-authored comments apart from teammate comments at a glance. Cosmetic only; the comment body itself never changes.',
         ),
+        pr_progress_comments: z.boolean().default(false).describe(
+            'Permit the agent to post unsolicited progress / status comments on an open PR (e.g. "CI fix iteration #2", "still blocked on workflow scope"). Default off — most teammates find them noisy. User-invoked flows (/fix:pr-comments, /create-pr, /code-review, explicit "post a comment that …") are NOT gated by this setting. See rules/no-pr-progress-comments.md.',
+        ),
         autonomy: autonomyMode.default('auto').describe(
             'How aggressively the agent suppresses trivial workflow questions ("commit now?", "open PR?"). on = silently pick the sensible default. off = always ask. auto (default) = decide per project, on for solo / off when collaborators are involved. The Hard Floor (prod, deploys, bulk deletes) ignores this setting and always asks.',
         ),

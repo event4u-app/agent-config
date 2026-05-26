@@ -79,6 +79,15 @@ personal:
   # Personal preference — each developer decides for themselves.
   pr_comment_bot_icon: false
 
+  # Allow the agent to post unsolicited progress / status comments on
+  # an open PR (e.g. "CI fix iteration #2", "blocked on workflow scope").
+  # true  = agent may narrate work on the PR via `gh pr comment` etc.
+  # false = default; agent never auto-comments. User-invoked flows
+  #         (/fix:pr-comments, /create-pr, /code-review, explicit
+  #         "post a comment that …") are NOT gated by this setting.
+  # See rules/no-pr-progress-comments.md.
+  pr_progress_comments: false
+
   # Autonomous execution — suppress trivial workflow questions (on, off, auto)
   # on   = act on the obvious next step; never ask "Step 2 or 3?", "should I commit?", etc.
   # off  = ask trivial workflow questions (legacy behavior)

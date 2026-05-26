@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **501 public artefacts** shipped by
+Consumer-facing catalog of all **502 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -231,7 +231,7 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (74)
+## Rules (75)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -278,6 +278,7 @@ are excluded.
 | rule | [`model-recommendation`](../.agent-src/rules/model-recommendation.md) | auto | Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT) |
 | rule | [`no-attribution-footers`](../.agent-src/rules/no-attribution-footers.md) | auto | Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers |
 | rule | [`no-cheap-questions`](../.agent-src/rules/no-cheap-questions.md) | always | No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on) |
+| rule | [`no-pr-progress-comments`](../.agent-src/rules/no-pr-progress-comments.md) | auto | Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true |
 | rule | [`no-roadmap-references`](../.agent-src/rules/no-roadmap-references.md) | auto | Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings |
 | rule | [`non-destructive-by-default`](../.agent-src/rules/non-destructive-by-default.md) | always | Agent is never destructive — Hard Floor always asks for prod-trunk merges, deploys, pushes, prod data/infra, bulk deletions, and bulk-deletion/infra commits; no autonomy or roadmap bypass |
 | rule | [`onboarding-gate`](../.agent-src/rules/onboarding-gate.md) | auto | First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request |
