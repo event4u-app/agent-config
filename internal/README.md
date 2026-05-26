@@ -17,6 +17,9 @@ Nothing under this directory is part of the public contract:
 | [`bench/`](bench/) | Unified bench orchestrator — corpora, pricing, reports |
 | [`evals/`](evals/) | Skill-trigger evaluation runs (gitignored runtime output) |
 | [`workers/`](workers/) | Cloudflare MCP worker source (`internal/workers/mcp/`) |
+| [`docker/`](docker/) | Maintainer-only Dockerfiles (e.g. `internal/docker/mcp-server/Dockerfile`) |
+| [`schemas/`](schemas/) | Maintainer-only JSON Schemas (`retrieval-v1.schema.json`, `wizard-apply-payload.schema.json`); `scripts/schemas/` is the published artefact-schema tree |
+| `.compression-hashes.json` | Hash ledger for `scripts/compress.py` (rewritten on every sync) |
 
 ## Placement rule
 
