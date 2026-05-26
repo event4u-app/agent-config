@@ -203,19 +203,18 @@ The setting flip is the easy part. Before enabling it, confirm:
 
 ### npm workspaces — scope discipline
 
-The root `package.json` declares `workspaces: ["packages/core/installer"]`
-**only** so `task dev:install:gui*` can invoke the installer build with
-`npm run --workspace @event4u/installer …`. This is the single justified
-use case. The published tarball (`files` allowlist) does **not** ship
-`packages/`; workspaces are a local-dev convenience, not a publish
-contract.
-
-Do **not** add `npm test --workspaces`, `npm run build --workspaces`,
-or monorepo-style fan-out scripts without architectural review. Do
-**not** add new packages to `workspaces` unless they need root-level
+The root `package.json` declares no workspaces as of v4.0.0
+(road-to-unified-setup § D1). The `@event4u/installer` workspace was
+removed when the TypeScript installer at `packages/core/installer/{src,
+tests}` was retired in favour of the unified setup engine at
+`src/install/`. Subsequent maintainers should avoid re-introducing
+workspaces unless a published sub-package genuinely needs root-level
 script orchestration — `packages/cloud/telemetry-worker` deliberately
 stays out because it is deployed via `wrangler`, not built through
 the root.
+
+Do **not** add `npm test --workspaces`, `npm run build --workspaces`,
+or monorepo-style fan-out scripts without architectural review.
 
 If the only need is "run an npm script inside a sub-package", prefer
 `npm run <script> --prefix packages/<pack>` — it works without any

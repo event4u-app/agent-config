@@ -7,7 +7,7 @@ are excluded.
 > **Regenerate:** `python3 scripts/generate_index.py`
 > Auto-generated — do not edit manually.
 
-## Skills (218)
+## Skills (219)
 
 | kind | name | extra | description |
 |---|---|---|---|
@@ -129,6 +129,7 @@ are excluded.
 | skill | [`messaging-architecture`](../.agent-src/skills/messaging-architecture/SKILL.md) |  | Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'. |
 | skill | [`migration-architect`](../.agent-src/skills/migration-architect/SKILL.md) |  | Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked. |
 | skill | [`mobile-e2e-strategy`](../.agent-src/skills/mobile-e2e-strategy/SKILL.md) |  | Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps. |
+| skill | [`module-detect-on-the-fly`](../.agent-src/skills/module-detect-on-the-fly/SKILL.md) |  | Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config. |
 | skill | [`module-management`](../.agent-src/skills/module-management/SKILL.md) |  | Use when working within any module under `modules.root_paths` from `.agent-project-settings.yml` — Laravel HMVC, Symfony DDD-lite, Node monorepo, Python src/, Go internal/, or a custom path. |
 | skill | [`motion-choreographer`](../.agent-src/skills/motion-choreographer/SKILL.md) |  | Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'. |
 | skill | [`multi-tenancy`](../.agent-src/skills/multi-tenancy/SKILL.md) |  | Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations. |
@@ -309,7 +310,7 @@ are excluded.
 | rule | [`user-interrupt-priority`](../.agent-src/rules/user-interrupt-priority.md) | always | User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work |
 | rule | [`verify-before-complete`](../.agent-src/rules/verify-before-complete.md) | always | Verify before completion — run tests and quality tools before claiming done |
 
-## Commands (136)
+## Commands (135)
 
 | kind | name | cluster | description |
 |---|---|---|---|
@@ -380,7 +381,6 @@ are excluded.
 | command | [`ghostwriter:write`](../.agent-src/commands/ghostwriter/write.md) | cluster: ghostwriter | Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer. |
 | command | [`grill-me`](../.agent-src/commands/grill-me.md) | cluster: challenge-me | Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch |
 | command | [`implement-ticket`](../.agent-src/commands/implement-ticket.md) |  | Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git. |
-| command | [`install-via-agent`](../.agent-src/commands/install-via-agent.md) |  | Drive `@event4u/agent-config` installer through its JSON agent-mode protocol — turn-by-turn workspace + pack selection without TTY. |
 | command | [`jira-ticket`](../.agent-src/commands/jira-ticket.md) |  | Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug |
 | command | [`judge`](../.agent-src/commands/judge.md) | cluster: judge | Judge orchestrator — routes to solo, steps, on-diff |
 | command | [`judge:on-diff`](../.agent-src/commands/judge/on-diff.md) | cluster: judge | Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user |

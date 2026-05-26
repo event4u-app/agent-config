@@ -9,12 +9,16 @@ tasks:
   dev:install-global:
     desc: |
       Refresh the user-scope install (~/.claude/, ~/.cursor/, ~/.augment/, …)
-      from this working tree. Force-overwrites existing files so dev
-      changes land immediately. Equivalent to a global install of the
-      published package, but sourced from the local repo.
+      from this working tree. Routes through the v4 TypeScript install
+      engine (`agent-config install`) so the local install path matches
+      what consumers see. v3 used `python3 scripts/install.py`; the
+      legacy script was renamed to `bin/install.legacy.py.bak` in v4
+      (road-to-unified-setup § D1) and is no longer invoked.
       Usage:
       task dev:install-global
-    cmd: python3 scripts/install.py --global --tools all --force
+    cmds:
+      - npm run build
+      - node dist/cli/agent-config.js install --allow-headless
 
   dev:link:
     desc: |
@@ -64,27 +68,23 @@ tasks:
 
   dev:install:gui:
     desc: |
-      Boot the Installer-GUI (`packages/core/installer` CLI `gui`
-      subcommand) against the working tree. Used during the unified
-      Setup-Wizard rollout (road-to-global-only-install Phase 0.1) to
-      iterate the AI-tool + Pack selection flow before it is merged
-      into the onboarding wizard. Maintainer-only — requires
-      AGENT_CONFIG_DEV_MODE=1 once Phase 3 ships.
+      Boot the v4 unified install wizard (`agent-config install`)
+      against the working tree. Replaces the v3 `packages/core/installer`
+      CLI which was removed in road-to-unified-setup § D1.
       Usage:
       task dev:install:gui
     cmds:
-      - npm run --workspace @event4u/installer build
-      - node packages/core/installer/dist/cli.js gui
+      - npm run build
+      - node dist/cli/agent-config.js install
 
   dev:install:gui:dry-run:
     desc: |
-      Boot the Installer-GUI in dry-run mode. /api/apply receives
-      --dry-run so no filesystem writes occur. Pairs with the
-      Playwright spec tests/e2e/installer-gui-dry-run.spec.ts.
+      Boot the v4 install wizard in dry-run mode (`agent-config install
+      --dry-run`). No filesystem writes occur.
       Usage:
       task dev:install:gui:dry-run
     cmds:
-      - npm run --workspace @event4u/installer build
-      - node packages/core/installer/dist/cli.js gui --dry-run
+      - npm run build
+      - node dist/cli/agent-config.js install --dry-run
 
 
