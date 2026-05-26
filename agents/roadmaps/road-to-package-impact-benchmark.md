@@ -61,13 +61,13 @@ Extend the existing bench runner with a `--variant {with,without}` axis and the 
 
 Re-use the existing skill-trigger eval surface and run it twice — once with package, once without. The metric: does the right skill / rule fire when expected?
 
-- [ ] **Step 1:** Author `internal/bench/corpora/ab-tracka.yaml` — 30-50 short prompts mapped to the rule or skill that should fire. Seed from existing `evals/triggers.json` should-trigger / should-not-trigger sets across the kernel rules (commit-policy, scope-control, verify-before-complete, ask-when-uncertain, non-destructive-by-default) and the 8-10 most-loaded skills.
-- [ ] **Step 2:** Extend `scripts/run_skill_evals.py` (or sibling wrapper) to take `--variant` and `--target-clone` so it runs against the materialised clone instead of the package repo.
-- [ ] **Step 3:** Compute the Track-A diff metrics in `bench_ab_diff.py`:
+- [x] **Step 1:** Author `internal/bench/corpora/ab-tracka.yaml` — 30-50 short prompts mapped to the rule or skill that should fire. Seed from existing `evals/triggers.json` should-trigger / should-not-trigger sets across the kernel rules (commit-policy, scope-control, verify-before-complete, ask-when-uncertain, non-destructive-by-default) and the 8-10 most-loaded skills.
+- [x] **Step 2:** Extend `scripts/run_skill_evals.py` (or sibling wrapper) to take `--variant` and `--target-clone` so it runs against the materialised clone instead of the package repo.
+- [x] **Step 3:** Compute the Track-A diff metrics in `bench_ab_diff.py`:
   - `with`: trigger-accuracy %, false-positive count
   - `without`: trigger-accuracy % (expected ≈ baseline floor — no rules loaded)
   - **Delta:** percentage-point lift attributable to the package
-- [ ] **Step 4:** Add a structural check that `without` cannot accidentally fire skills — if it does, integrity is broken, fail the run.
+- [x] **Step 4:** Add a structural check that `without` cannot accidentally fire skills — if it does, integrity is broken, fail the run.
 
 **Exit criteria:** `task bench:ab:track-a` produces a Track-A section with non-zero delta on at least 5 distinct rules / skills.
 

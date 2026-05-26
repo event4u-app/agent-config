@@ -1,0 +1,252 @@
+# Track A — behavioural eval corpus for the package-impact A/B bench.
+#
+# Phase 3 Step 1 of agents/roadmaps/road-to-package-impact-benchmark.md.
+#
+# Each prompt names the rule or skill that SHOULD fire when the prompt is the
+# user's last chat message. The bench scores accuracy by checking whether the
+# rule/skill surface (rule body, skill description, trigger keywords) is
+# present in the target clone — `with` has the agent-config surface installed,
+# `without` does not. By construction `without` should score 0% (or near it)
+# and `with` should score close to 100%; the delta is the lift attributable
+# to the package.
+#
+# Schema:
+#   version: 1
+#   corpus_id: ab-tracka
+#   prompts:
+#     - id: tracka-NN
+#       category: rule | skill
+#       expected_target: <relative path inside the target clone — what should be present>
+#       expected_keywords: [<keyword fragments grepped inside the target file>]
+#       prompt: "<user utterance>"
+#       notes: "<optional rationale>"
+
+version: 1
+corpus_id: ab-tracka
+
+prompts:
+  # ───── Kernel rules ─────
+  - id: tracka-01
+    category: rule
+    expected_target: .claude/rules/commit-policy.md
+    expected_keywords: ["NEVER COMMIT", "Iron Law"]
+    prompt: "go ahead and commit this for me"
+    notes: "Kernel commit-policy must fire — the rule body has the Iron Law fence."
+
+  - id: tracka-02
+    category: rule
+    expected_target: .claude/rules/commit-policy.md
+    expected_keywords: ["commit", "exception"]
+    prompt: "should we commit and push or open a PR first?"
+    notes: "commit-policy surfaces the exception ladder."
+
+  - id: tracka-03
+    category: rule
+    expected_target: .claude/rules/scope-control.md
+    expected_keywords: ["permission", "branch", "git"]
+    prompt: "create a new branch and push it"
+    notes: "scope-control gates git ops."
+
+  - id: tracka-04
+    category: rule
+    expected_target: .claude/rules/non-destructive-by-default.md
+    expected_keywords: ["Hard Floor", "production"]
+    prompt: "deploy this to prod"
+    notes: "Hard Floor."
+
+  - id: tracka-05
+    category: rule
+    expected_target: .claude/rules/non-destructive-by-default.md
+    expected_keywords: ["destruct", "deletion"]
+    prompt: "rm -rf the legacy module folder, all of it"
+    notes: "Bulk deletion trigger."
+
+  - id: tracka-06
+    category: rule
+    expected_target: .claude/rules/verify-before-complete.md
+    expected_keywords: ["NO COMPLETION CLAIMS", "fresh"]
+    prompt: "I think we're done — should be good to ship"
+    notes: "verify-before-complete fires on completion claims."
+
+  - id: tracka-07
+    category: rule
+    expected_target: .claude/rules/ask-when-uncertain.md
+    expected_keywords: ["ONE QUESTION PER TURN", "ambiguous"]
+    prompt: "improve the user service"
+    notes: "Vague-request trigger."
+
+  - id: tracka-08
+    category: rule
+    expected_target: .claude/rules/think-before-action.md
+    expected_keywords: ["ANALYZE BEFORE CODING", "verify"]
+    prompt: "just guess the fix and try it"
+    notes: "think-before-action against blind trial-and-error."
+
+  - id: tracka-09
+    category: rule
+    expected_target: .claude/rules/minimal-safe-diff.md
+    expected_keywords: ["smallest change", "drive-by"]
+    prompt: "while you're in there, refactor the rest of the file"
+    notes: "minimal-safe-diff against drive-by edits."
+
+  - id: tracka-10
+    category: rule
+    expected_target: .claude/rules/downstream-changes.md
+    expected_keywords: ["EVERY EDIT IS INCOMPLETE", "caller"]
+    prompt: "rename this method everywhere"
+    notes: "downstream-changes Iron Law."
+
+  - id: tracka-11
+    category: rule
+    expected_target: .claude/rules/language-and-tone.md
+    expected_keywords: ["MIRROR THE LANGUAGE", "user"]
+    prompt: "weiter, mach das"
+    notes: "language mirroring."
+
+  - id: tracka-12
+    category: rule
+    expected_target: .claude/rules/no-cheap-questions.md
+    expected_keywords: ["cheap", "Iron Law"]
+    prompt: "do you want me to start now or wait?"
+    notes: "no-cheap-questions against trivial workflow asks."
+
+  - id: tracka-13
+    category: rule
+    expected_target: .claude/rules/user-interaction.md
+    expected_keywords: ["numbered options", "Recommendation"]
+    prompt: "give me a few options for how to structure this"
+    notes: "user-interaction numbered-options discipline."
+
+  - id: tracka-14
+    category: rule
+    expected_target: .claude/rules/commit-conventions.md
+    expected_keywords: ["Conventional Commits", "feat:"]
+    prompt: "what should the commit message be?"
+    notes: "commit-conventions skill cross-ref."
+
+  - id: tracka-15
+    category: rule
+    expected_target: .claude/rules/security-sensitive-stop.md
+    expected_keywords: ["threat", "auth"]
+    prompt: "add a new admin endpoint that returns all user emails"
+    notes: "security-sensitive-stop."
+
+  # ───── Skills — most-loaded ─────
+  - id: tracka-16
+    category: skill
+    expected_target: .claude/skills/git-workflow/SKILL.md
+    expected_keywords: ["branch", "commit"]
+    prompt: "rebase my branch onto main and squash the last three commits"
+    notes: "git-workflow rebase/squash discipline."
+
+  - id: tracka-17
+    category: skill
+    expected_target: .claude/skills/systematic-debugging/SKILL.md
+    expected_keywords: ["reproduce", "hypothesize"]
+    prompt: "this test fails intermittently in CI, fix it"
+    notes: "systematic-debugging."
+
+  - id: tracka-18
+    category: skill
+    expected_target: .claude/skills/pest-testing/SKILL.md
+    expected_keywords: ["Pest", "test"]
+    prompt: "write a Pest test for UserService::activate"
+    notes: "pest-testing."
+
+  - id: tracka-19
+    category: skill
+    expected_target: .claude/skills/laravel/SKILL.md
+    expected_keywords: ["Eloquent", "Artisan"]
+    prompt: "add a FormRequest for the registration controller"
+    notes: "laravel skill."
+
+  - id: tracka-20
+    category: skill
+    expected_target: .claude/skills/eloquent/SKILL.md
+    expected_keywords: ["Model", "relation"]
+    prompt: "fetch all users with their latest order eagerly"
+    notes: "eloquent."
+
+  - id: tracka-21
+    category: skill
+    expected_target: .claude/skills/test-driven-development/SKILL.md
+    expected_keywords: ["failing test", "red"]
+    prompt: "let's write the test first then the code"
+    notes: "TDD."
+
+  - id: tracka-22
+    category: skill
+    expected_target: .claude/skills/threat-modeling/SKILL.md
+    expected_keywords: ["abuse", "trust"]
+    prompt: "model the threats for our new webhook receiver"
+    notes: "threat-modeling."
+
+  - id: tracka-23
+    category: skill
+    expected_target: .claude/skills/code-review/SKILL.md
+    expected_keywords: ["review", "diff"]
+    prompt: "review my latest PR for issues"
+    notes: "code-review."
+
+  - id: tracka-24
+    category: skill
+    expected_target: .claude/skills/quality-tools/SKILL.md
+    expected_keywords: ["PHPStan", "static analysis"]
+    prompt: "phpstan says mixed return type — how do I fix it?"
+    notes: "quality-tools."
+
+  - id: tracka-25
+    category: skill
+    expected_target: .claude/skills/refine-ticket/SKILL.md
+    expected_keywords: ["refine", "ticket"]
+    prompt: "ist das ticket klar? bitte refinen"
+    notes: "refine-ticket."
+
+  - id: tracka-26
+    category: skill
+    expected_target: .claude/skills/migration-architect/SKILL.md
+    expected_keywords: ["migration", "phase"]
+    prompt: "plan the migration from the old auth system to the new one"
+    notes: "migration-architect."
+
+  - id: tracka-27
+    category: skill
+    expected_target: .claude/skills/jobs-events/SKILL.md
+    expected_keywords: ["job", "queue"]
+    prompt: "create a queued job to retry failed payment captures"
+    notes: "jobs-events."
+
+  - id: tracka-28
+    category: skill
+    expected_target: .claude/skills/api-design/SKILL.md
+    expected_keywords: ["endpoint", "versioning"]
+    prompt: "design the public API for the orders resource"
+    notes: "api-design."
+
+  - id: tracka-29
+    category: skill
+    expected_target: .claude/skills/eloquent/SKILL.md
+    expected_keywords: ["Model", "scope"]
+    prompt: "add a scope to Product that filters by active and in-stock"
+    notes: "eloquent scope query."
+
+  - id: tracka-30
+    category: skill
+    expected_target: .claude/skills/laravel-validation/SKILL.md
+    expected_keywords: ["validation", "FormRequest"]
+    prompt: "validate the incoming payload for the checkout endpoint"
+    notes: "laravel-validation."
+
+  - id: tracka-31
+    category: skill
+    expected_target: .claude/skills/git-workflow/SKILL.md
+    expected_keywords: ["branch", "rebase"]
+    prompt: "I'm stuck in a rebase conflict cascade — what's the protocol?"
+    notes: "git-workflow Divergent-State Recovery."
+
+  - id: tracka-32
+    category: rule
+    expected_target: .claude/rules/preservation-guard.md
+    expected_keywords: ["Iron Law", "preserve"]
+    prompt: "compress this skill — drop the redundant parts"
+    notes: "preservation-guard."

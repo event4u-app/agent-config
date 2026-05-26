@@ -45,10 +45,17 @@ def die(msg: str) -> None:
 
 
 def copytree_preserve(src: Path, dst: Path) -> None:
-    """Copy tree, preserving symlinks (Don't dereference)."""
+    """Copy tree, dereferencing symlinks.
+
+    The package installs the `.claude/` surface as a tree of symlinks into
+    `.agent-src/`. Cloning the surface as symlinks would carry pointers that
+    resolve against the package root, not the clone — meaning a Claude Code
+    session inside the clone could not actually read the rule bodies. Deref
+    at copy time produces standalone files inside the clone.
+    """
     if dst.exists():
         shutil.rmtree(dst)
-    shutil.copytree(src, dst, symlinks=True)
+    shutil.copytree(src, dst, symlinks=False)
 
 
 def materialise_clone(variant: str, target: Path) -> None:
