@@ -113,5 +113,6 @@ notes do **not** clear this carve-out.
 - [`/create-pr`](../commands/create-pr.md) — PR body / description path (not gated).
 - [`/fix:pr-comments`](../commands/fix/pr-comments.md) — review-reply path (not gated).
 - [`no-attribution-footers`](no-attribution-footers.md) — sibling rule on PR-comment hygiene.
+- [`no-decorative-emojis-in-git-surfaces`](no-decorative-emojis-in-git-surfaces.md) — sibling rule gating decorative emojis in any comment that does get posted.
 - [`scope-control`](scope-control.md) — git-ops permission gate (PR creation).
 - `personal.pr_progress_comments` in `config/agent-settings.template.yml`.
