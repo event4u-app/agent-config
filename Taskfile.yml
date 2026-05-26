@@ -115,6 +115,7 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: lint-skills
+      - task: lint-role-experiences
       - task: lint-namespace
       - task: lint-mcp-inventory
       - task: lint-adr-coverage
@@ -213,6 +214,7 @@ tasks:
       - task: validate-schema
       - task: lint-rule-budget
       - task: lint-skills-strict
+      - task: lint-role-experiences
       - task: lint-namespace
       - task: lint-mcp-inventory
       - task: lint-adr-coverage

@@ -4,7 +4,7 @@
 
 `agent-config` ships ~210 skills, ~67 rules, and ~124 commands. You do not need all of them. Each role below filters to the slice that pays back in week one; the rest stays available and shows up on demand when a task references it.
 
-> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, pack, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). The wizard writes `.agent-settings.yml`, `.augment/`, and `.claude/` atomically; nothing leaves your disk.
+> **Quickstart for every role.** Run `npx -y @event4u/agent-config init` — the browser wizard auto-launches and walks you through role, ready-made setup, and identity. Headless install path lives at [`docs/wizard.md`](wizard.md#headless--ci--no-browser). The wizard writes `.agent-settings.yml`, `.augment/`, and `.claude/` atomically; nothing leaves your disk.
 
 > **Eval-gated messaging note.** Until `task bench --corpus non-dev` reports `selection_accuracy >= 0.60` (step-12 Phase 1 exit), this page is documentation, not marketing. The skills listed below are the candidates the corpus tests against; their description quality is what the eval validates.
 
@@ -59,7 +59,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 **Try the first win →** [`pack-founder-strategy/FIRST_WIN.md`](../packages/pack-founder-strategy/FIRST_WIN.md) — investor question reshaped into a defensible memo in ~10 minutes.
 
-**Install path:** **MCP for advisory work, CLI when you touch code.** Claude Desktop covers strategy / finance / narrative; CLI is needed only when you sit in the repo with the dev team.
+**Install path:** **MCP for advisor work, CLI when you touch code.** Claude Desktop covers strategy / finance / narrative; CLI is needed only when you sit in the repo with the dev team.
 
 ---
 
@@ -75,7 +75,7 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 
 ---
 
-## Consultant (advisory, freelance, fractional)
+## Consultant (advisor, freelance, fractional)
 
 > **Tailored role experience available →** [`agents/roles/consultant/`](../agents/roles/consultant/index.md) — three first tasks (client-brief refinement, investor memo, deck outline), priority-ordered skill shortlist. Status `draft` until recruit-session 03 lands.
 
@@ -86,6 +86,48 @@ Cinematic-blueprint approach: the agent expands your script into a 12-block scen
 - [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) — per-lens framing, trade-off matrix with cost per choice.
 
 **Install path:** **MCP recommended.** Most consulting work is doc + slide drafting; the terminal adds friction without payback. Switch to CLI only if you also write code for the client.
+
+---
+
+## Sales rep (B2B individual contributor)
+
+> **Tailored role experience available →** [`agents/roles/sales/`](../agents/roles/sales/index.md) — three first tasks (answer customer · draft offer · prep discovery call), 5 named prompts, priority-ordered skill shortlist. Status `draft` until a sales-shaped recruit-session lands.
+
+**You want this if:** you sell — usually with the deal half in your head and half in scattered notes from the last three meetings. You spend your day answering customer questions, drafting offers, and prepping discovery calls under time pressure.
+
+- [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) — lock the deal voice across buyer / procurement / exec sponsor.
+- [`customer-research`](../.agent-src/skills/customer-research/SKILL.md) — frame the buyer's likely concern from LinkedIn / website / inbound context.
+- [`competitive-positioning`](../.agent-src/skills/competitive-positioning/SKILL.md) — surface the ours-vs-theirs delta when the buyer names a competitor.
+
+**Install path:** **MCP recommended.** Claude Desktop opens, the package shows up as a tool, no terminal. See [`docs/mcp.md`](mcp.md).
+
+---
+
+## Support agent (customer success / technical support)
+
+> **Tailored role experience available →** [`agents/roles/support/`](../agents/roles/support/index.md) — three first tasks (summarise ticket · draft reply · escalation analysis), 5 named prompts, priority-ordered skill shortlist. Status `draft` until a support-shaped recruit-session lands.
+
+**You want this if:** you answer tickets — usually under SLA, often as the only person on a thread that turned into eight back-and-forth messages over two weeks. You want an assistant that summarises threads before you reply and flags escalation risks early.
+
+- [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) — pulls verbatim customer language from threads for downstream triage.
+- [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) — lock the support voice so every customer thread reads as one team.
+- [`churn-prevention`](../.agent-src/skills/churn-prevention/SKILL.md) — when the escalation-risk analysis flags churn-signal language.
+
+**Install path:** **MCP recommended.** Support workflows live in the ticketing tool + chat; Claude Desktop is the natural home.
+
+---
+
+## Team leader (engineering manager, function lead, fractional)
+
+> **Tailored role experience available →** [`agents/roles/leadership/`](../agents/roles/leadership/index.md) — three first tasks (weekly status · risk-analysis memo · decision record), 5 named prompts, priority-ordered skill shortlist. Status `draft` until a leadership-shaped recruit-session lands.
+
+**You want this if:** you run a team or a function. Each week you write the same three things: a status summary, a risk memo before a decision, and a decision record after. You want an assistant that turns fuzzy notes into structured documents — without inventing certainty you do not have.
+
+- [`decision-record`](../.agent-src/skills/decision-record/SKILL.md) — ADR-shaped output the team's record system already understands.
+- [`scenario-modeling`](../.agent-src/skills/scenario-modeling/SKILL.md) — best / base / downside frame when the risk memo demands a sweep.
+- [`stakeholder-tradeoff`](../.agent-src/skills/stakeholder-tradeoff/SKILL.md) — when the call has product / ops / exec sponsor pulling in different directions.
+
+**Install path:** **MCP recommended.** Leadership writing is doc-heavy; Claude Desktop is the natural home.
 
 ---
 
