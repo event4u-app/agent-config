@@ -3,57 +3,70 @@
 # Source of truth: docs/decisions/ADR-013-discovery-frontmatter-contract.md §workspaces
 # Amendments require an ADR-013 amendment in the same PR.
 # Lint: scripts/lint_discovery_vocabulary.py
+#
+# `example_roles` is advisory UI copy only (NOT a closed vocabulary): the
+# wizard shows it under each area as illustrative job titles. The stored
+# `.agent-user.yml` role is the workspace id, not these examples.
 
 - id: engineering
   label: Engineering
   description: Code, tests, CI, reviews, architecture.
+  example_roles: [Developer, CTO, Tech Lead]
   default_packs: [engineering-base]
   optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python]
 
 - id: product
   label: Product
   description: Discovery, roadmaps, prioritisation, AC tightening.
+  example_roles: [Product Manager, CPO]
   default_packs: [product-basic]
   optional_packs: [product-discovery]
 
 - id: finance
-  label: Finance / CFO
+  label: Finance
   description: Cashflow, forecasting, DCF, board reporting.
+  example_roles: [CFO, Controller, Finance Lead]
   default_packs: [finance-basic]
   optional_packs: [finance-advanced]
 
 - id: founder
   label: Founder
   description: Strategy, fundraising, vision, board narrative.
+  example_roles: [CEO, Co-Founder]
   default_packs: [founder-strategy]
   optional_packs: [finance-basic, gtm-marketing]
 
 - id: gtm
   label: Go-to-Market
   description: Sales pipeline, marketing, positioning, launch.
+  example_roles: [Head of Sales, CMO, Growth Lead]
   default_packs: [gtm-sales, gtm-marketing]
   optional_packs: []
 
 - id: ops
   label: Operations
   description: Hiring, comp, perf, org design, runbooks.
+  example_roles: [COO, Head of People, Ops Lead]
   default_packs: [ops-people]
   optional_packs: []
 
 - id: small-business
   label: Small Business
   description: Self-employed / SMB-shaped owner workflows.
+  example_roles: [Owner, Freelancer]
   default_packs: [small-business]
   optional_packs: [ai-video]
 
 - id: construction
   label: Construction
   description: Trade-business workflows (planning, quotes).
+  example_roles: [Contractor, Site Manager]
   default_packs: [construction]
   optional_packs: []
 
 - id: agent-config-maintainer
   label: Maintainer
   description: Skills/rules/commands that maintain this package.
+  example_roles: [Maintainer]
   default_packs: [meta]
   optional_packs: []

@@ -233,6 +233,19 @@ and emitted into the discovery manifest. Additive, no vocabulary rename.
 
 Driven by [`agents/roadmaps/road-to-wizard-ux-improvements.md`](../../agents/roadmaps/road-to-wizard-ux-improvements.md) § Phase 4 (AI-council-resolved: reuse `packs.yml` as the single source of truth rather than a second mapping file).
 
+### 2026-05-27 — Additive advisory `example_roles:` key on workspaces
+
+Workspace entries in [`config/discovery/workspaces.yml`](../../config/discovery/workspaces.yml)
+may carry an optional `example_roles: [<title>, …]` list of illustrative job
+titles (e.g. `engineering: [Developer, CTO]`, `finance: [CFO]`). The wizard's
+roles step shows the workspace as the *area* and these titles as examples under
+it. **Advisory and free-form** — NOT a closed vocabulary: the stored
+`.agent-user.yml` `role[]` is the workspace id, never these examples; nothing
+acts on the strings beyond display. Emitted into the discovery manifest;
+allowed by [`discovery-manifest.schema.json`](../contracts/discovery-manifest.schema.json).
+Additive, no vocabulary rename. (Same change cleaned the `finance` label from
+"Finance / CFO" to "Finance".)
+
 ## Cross-references
 
 - [ADR-007 — Agent Discovery Scopes](ADR-007-agent-discovery-scopes.md):

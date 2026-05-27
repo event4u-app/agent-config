@@ -53,6 +53,11 @@ export interface UserMdFormProps {
      * collected on the dedicated roles step and injected at finish.
      */
     hideRole?: boolean;
+    /**
+     * Hide the name + language fields — set in the install wizard, where they
+     * are collected on the dedicated welcome step (Step 1) instead.
+     */
+    hideIdentityBasics?: boolean;
 }
 
 function todayIso(): string {
@@ -63,7 +68,7 @@ function err(errors: Record<string, string> | undefined, path: string): string |
     return errors?.[path];
 }
 
-export function UserMdForm({ value, onChange, errors, hideRole }: UserMdFormProps): preact.JSX.Element {
+export function UserMdForm({ value, onChange, errors, hideRole, hideIdentityBasics }: UserMdFormProps): preact.JSX.Element {
     const [pendingRole, setPendingRole] = useState('');
     const roleListId = 'umd-role-suggestions';
 
@@ -110,6 +115,7 @@ export function UserMdForm({ value, onChange, errors, hideRole }: UserMdFormProp
 
     return (
         <div class="ac-user-md-form">
+            {hideIdentityBasics ? null : (
             <TextInput
                 id="umd-name" name="identity.name" label="Name"
                 description="How the agent addresses you in chat (e.g. &quot;Matze&quot;, &quot;Sarah&quot;). Required."
@@ -117,6 +123,8 @@ export function UserMdForm({ value, onChange, errors, hideRole }: UserMdFormProp
                 error={err(errors, 'identity.name')}
                 onChange={(v): void => patch({ identity: { ...value.identity, name: v } })}
             />
+            )}
+            {hideIdentityBasics ? null : (
             <Autocomplete
                 id="umd-language" name="language" label="Language"
                 description="BCP-47 tag the agent mirrors in replies (e.g. 'de', 'en', 'en-US')."
@@ -125,6 +133,7 @@ export function UserMdForm({ value, onChange, errors, hideRole }: UserMdFormProp
                 error={err(errors, 'language')}
                 onChange={(v): void => patch({ language: v })}
             />
+            )}
             {hideRole ? null : (
             <Field
                 id="umd-role-input"

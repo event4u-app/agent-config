@@ -284,6 +284,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
             "description": w["description"],
             "default_packs": list(w.get("default_packs") or []),
             **({"optional_packs": list(w["optional_packs"])} if w.get("optional_packs") else {}),
+            **({"example_roles": list(w["example_roles"])} if w.get("example_roles") else {}),
         }
         for w in workspaces
     ]
