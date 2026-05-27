@@ -1,69 +1,35 @@
 /**
- * ContinueScreen unit tests — road-to-unified-setup § Phase B5.
+ * ContinueScreen unit tests — road-to-wizard-ux-improvements § Phase 6.
  *
- * Verifies the two CTAs map to the right callback, the busy flag
- * disables both, and the copy mentions the next 6 steps. The actual
- * gating (only renders when wizardMode === 'install' && stepIndex === 3
- * && !continueAcknowledged) is asserted in WizardPage.continueScreen
- * integration tests.
+ * The screen is now presentational: the in-body "Continue with setup" /
+ * "Finish install here" buttons were removed (the wizard footer's Next +
+ * "Finish install here" skip action drive the handoff). These tests assert the
+ * copy and that no action buttons render. The footer wiring + gating (only when
+ * wizardMode === 'install' && stepIndex === 3 && !continueAcknowledged) is
+ * covered by the WizardPage flow tests + StepNav tests.
  */
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render } from '@testing-library/preact';
+import { afterEach, describe, expect, it } from 'vitest';
+import { cleanup, render } from '@testing-library/preact';
 
 import { ContinueScreen } from '../../src/ui/wizard/ContinueScreen.js';
 
 afterEach(() => { cleanup(); });
 
-function renderScreen(overrides: Partial<{ busy: boolean }>): {
-    onContinue: ReturnType<typeof vi.fn>;
-    onFinishHere: ReturnType<typeof vi.fn>;
-    container: HTMLElement;
-} {
-    const onContinue = vi.fn();
-    const onFinishHere = vi.fn();
-    const { container } = render(
-        <ContinueScreen
-            busy={overrides.busy ?? false}
-            onContinue={onContinue}
-            onFinishHere={onFinishHere}
-        />,
-    );
-    return { onContinue, onFinishHere, container };
-}
-
 describe('ContinueScreen', () => {
-    it('renders the install-handoff copy mentioning the 6 follow-up steps', () => {
-        const { container } = renderScreen({});
+    it('renders the install-handoff heading', () => {
+        const { container } = render(<ContinueScreen />);
         expect(container.textContent).toContain('Install complete');
-        expect(container.textContent).toContain('6 more steps');
     });
 
-    it('Continue with setup invokes onContinue only', () => {
-        const { onContinue, onFinishHere, container } = renderScreen({});
-        const btn = Array.from(container.querySelectorAll('button'))
-            .find((b) => (b.textContent ?? '').toLowerCase().includes('continue'));
-        expect(btn).toBeDefined();
-        fireEvent.click(btn!);
-        expect(onContinue).toHaveBeenCalledTimes(1);
-        expect(onFinishHere).not.toHaveBeenCalled();
+    it('documents Next and Finish install here as the footer actions', () => {
+        const { container } = render(<ContinueScreen />);
+        const text = container.textContent ?? '';
+        expect(text).toContain('Next');
+        expect(text).toContain('Finish install here');
     });
 
-    it('Finish install here invokes onFinishHere only', () => {
-        const { onContinue, onFinishHere, container } = renderScreen({});
-        const btn = Array.from(container.querySelectorAll('button'))
-            .find((b) => (b.textContent ?? '').toLowerCase().includes('finish'));
-        expect(btn).toBeDefined();
-        fireEvent.click(btn!);
-        expect(onFinishHere).toHaveBeenCalledTimes(1);
-        expect(onContinue).not.toHaveBeenCalled();
-    });
-
-    it('busy=true disables both CTAs', () => {
-        const { container } = renderScreen({ busy: true });
-        const buttons = container.querySelectorAll('button');
-        expect(buttons.length).toBe(2);
-        for (const b of buttons) {
-            expect((b as HTMLButtonElement).disabled).toBe(true);
-        }
+    it('renders no in-body action buttons (the footer owns the actions)', () => {
+        const { container } = render(<ContinueScreen />);
+        expect(container.querySelectorAll('button').length).toBe(0);
     });
 });
