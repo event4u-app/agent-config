@@ -793,6 +793,49 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.4.0](https://github.com/event4u-app/agent-config/compare/4.3.0...4.4.0) (2026-05-27)
+
+### Features
+
+* optimize autonomy-mechanics ([615c368](https://github.com/event4u-app/agent-config/commit/615c368a6f07394468247b9a2b281114c29f290f))
+* **wizard:** add roles step (Step 2) + drop the formality setting ([7331651](https://github.com/event4u-app/agent-config/commit/7331651e2d7915b13a9a639414884cffea277a19))
+* **wizard-ui:** smarter Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([8de1e0e](https://github.com/event4u-app/agent-config/commit/8de1e0e6f50408d82b4d3f3ee3b35296aefb472f))
+* **wizard:** surface prior tool selection from the install lockfile ([cdacbe0](https://github.com/event4u-app/agent-config/commit/cdacbe0292b60a447966ee976e18382da274756f))
+* **init:** kill a stale wizard server before launching a fresh one ([dd57b7f](https://github.com/event4u-app/agent-config/commit/dd57b7f5ec121dc3abc2815fdcfcf26dc10c930a))
+* **wizard:** auto-shut the server down after 30 min of inactivity ([5f9514f](https://github.com/event4u-app/agent-config/commit/5f9514fb869df901fb184b7ff7b8c4f0e14ddf91))
+* **wizard:** shut the local server down when the browser window closes ([77d3c4f](https://github.com/event4u-app/agent-config/commit/77d3c4fcdd3e35f43daeb1a39e27e9e48653ef98))
+* **wizard-ui:** first-run detection, pack tiles, styled inputs, handoff, rtk + AI-council steps ([f1755ed](https://github.com/event4u-app/agent-config/commit/f1755ed23687c6b6013480c1e743eabf0a53807a))
+* **packs:** advisory `cluster:` field for wizard language→framework grouping ([b2a2ed9](https://github.com/event4u-app/agent-config/commit/b2a2ed979666b9f20686c30a3529b5ee9c8004fb))
+* **wizard-server:** fresh-start state + tool/rtk/council detect & config endpoints ([c32d87c](https://github.com/event4u-app/agent-config/commit/c32d87c020006e3759f5a3aec362450650bb6de1))
+
+### Bug Fixes
+
+* **wizard:** pre-select the user's prior tool selection, not every deployed tool ([afe38a3](https://github.com/event4u-app/agent-config/commit/afe38a3458818ab532f01266b7e17708bfb1702b))
+* **packs:** allow `cluster` in the discovery-manifest schema ([9014e95](https://github.com/event4u-app/agent-config/commit/9014e95983bff5e3b7acd96bd249ffced11a109c))
+* **template:** bump agent-project-settings pin to 4.3.0 ([c2648ce](https://github.com/event4u-app/agent-config/commit/c2648cef51a8b587e1e3c7be536c3b46fbdd7410))
+
+### Documentation
+
+* **wizard:** roles step + remove formality from schema docs and user commands ([06f890e](https://github.com/event4u-app/agent-config/commit/06f890e2e259016417b0a808f4e8c92e53c0ebea))
+* **gui-wizard:** document Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([ca273de](https://github.com/event4u-app/agent-config/commit/ca273de6e3e8b182fa98ddaff985cf4acb31eb91))
+* **gui-wizard:** document 30-min idle shutdown + init kill-stale-server ([dfcdc40](https://github.com/event4u-app/agent-config/commit/dfcdc4054b85edab426abcb0bb4f2672d373c554))
+* **gui-wizard:** document the browser-close shutdown beacon + idle backstop ([4eccc51](https://github.com/event4u-app/agent-config/commit/4eccc5117a802c1a0d57b7a98d7eea7a36d0078a))
+* **roadmap:** complete + archive road-to-wizard-ux-improvements ([e02d514](https://github.com/event4u-app/agent-config/commit/e02d5145c9343126a2aa049811fc8094de8fa542))
+* **gui-wizard:** step layout 8/11 + ai-council step + new wizard endpoints ([fdbcd9c](https://github.com/event4u-app/agent-config/commit/fdbcd9c494ec2785375ed1d3f1e130e3a4cb99ba))
+
+### Tests
+
+* **wizard:** roles step coverage + formality removal + step-count shifts ([5f8ec3e](https://github.com/event4u-app/agent-config/commit/5f8ec3ee4a1f135ee00e60ca612a2b4f09dbd7ba))
+* **wizard:** cover detection, packs cluster, handoff, rtk, AI-council + step-count shifts ([5b6b758](https://github.com/event4u-app/agent-config/commit/5b6b7581e784bf5b219d30981f614e3778ccaaad))
+
+### Chores
+
+* refresh condensation hashes for the autonomy/cheap-question contexts ([843f065](https://github.com/event4u-app/agent-config/commit/843f0658e1ac965c1dc44aebce26cec29744a0a7))
+* add new roadmaps ([76ec1e3](https://github.com/event4u-app/agent-config/commit/76ec1e392b656c2177b7b9e1f75d5c6a1d1976e4))
+* **docs:** repoint council-question links + ignore agents/tmp.old/ ([984512e](https://github.com/event4u-app/agent-config/commit/984512e623f25e9d336647d5190d3cfc2969d9b5))
+
+Tests: 5055 (+3 since 4.3.0)
+
 ## [4.3.0](https://github.com/event4u-app/agent-config/compare/4.2.0...4.3.0) (2026-05-27)
 
 ### Features
