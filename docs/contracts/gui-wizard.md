@@ -237,6 +237,26 @@ is the single resolver; the UI consumes the active list via
 `getActiveSteps()` / `activeTotalSteps()` so a server toggle takes
 effect on the next reload without a code change.
 
+### Step 1 (AI tools) and Step 2 (packs) selection rules
+
+- **Step 1 pre-selection.** `detect-tools` returns `tools` (installed on the
+  machine) and `configured` (the prior selection, read from
+  `~/.event4u/agent-config/installed.lock`). On a repeat run the wizard
+  pre-selects exactly the `configured` tools; only on a genuine first run
+  (empty lockfile) does it fall back to pre-selecting every installed tool.
+- **Step 2 framework persistence.** A language tile (`cluster`, e.g. PHP)
+  gates its framework children in the UI but never destroys their stored
+  selection. Turning a language off disables — but keeps checked — its
+  children, so a PHP off→on round-trip restores the exact Laravel-on /
+  Symfony-off choice. `resolveSelectedPacks()` filters disabled children at
+  submit time, so a remembered-but-gated framework is not installed.
+- **No-autodetect packs.** Some packs are never pre-selected from project
+  signals (`python` — a non-engineer may have python installed but not need
+  it). The pack stays available to tick manually.
+- **Empty-selection gate.** Both lead steps block Next until at least one
+  effective selection exists (≥ 1 tool on Step 1; ≥ 1 installable pack on
+  Step 2).
+
 ### `GET /api/v1/wizard/state` payload
 
 ```jsonc
