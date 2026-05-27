@@ -26,7 +26,7 @@ install:
 
 Short interactive interview that creates **`.agent-user.md`** at the
 project root from the locked v1 schema in
-[`docs/contracts/agent-user-schema.md`](../../../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../../../../../../../docs/contracts/agent-user-schema.md).
 
 Use when:
 
@@ -81,20 +81,15 @@ Ask in this order. Each answer drives one frontmatter field.
    `Kurze Rollenbeschreibung (z. B. "founder/engineer", "product manager", "designer")` /
    `Short role label`
 
-5. **Style — formality**.
-   ```
-   > 1. informal — Du / first-name (default)
-   > 2. formal   — Sie / full name
-   ```
-
-6. **Style — pace**.
+5. **Style — pace**. (Formality is not asked — the agent always uses
+   informal "Du".)
    ```
    > 1. pragmatic — balanced (default)
    > 2. thorough  — more verification, longer replies
    > 3. rapid     — shorter replies, fewer caveats
    ```
 
-7. **Voice sample** — required.
+6. **Voice sample** — required.
    `Paste eine typische Nachricht von dir (1–3 Sätze, im normalen Schreibstil)` /
    `Paste one typical message of yours (1–3 sentences, your normal style)`
 
@@ -108,7 +103,7 @@ Before writing, scan the collected `voice_sample` and `role` for:
 - Health/legal status keywords.
 
 Hit → surface the line and ask the user to redact before proceeding.
-Per [`agent-user-schema § Explicit exclusions`](../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
+Per [`agent-user-schema § Explicit exclusions`](../../../../../../../../docs/contracts/agent-user-schema.md#explicit-exclusions).
 
 ### 5. Render and write
 
@@ -124,7 +119,6 @@ identity:
 language: "..."
 role: "..."
 style:
-  formality: "..."
   pace: "...""
 voice_sample: |
   ...
@@ -155,7 +149,7 @@ Print the file path and a one-line summary:
 
 ```
 ✅  .agent-user.md written ({n} lines).
-   identity: {nickname or name} · language: {lang} · role: {role} · style: {formality}/{pace}
+   identity: {nickname or name} · language: {lang} · role: {role} · style: {pace}
 ```
 
 Do NOT commit. Do NOT run any other `/agents user` sub-sub-command.
@@ -171,5 +165,5 @@ Do NOT commit. Do NOT run any other `/agents user` sub-sub-command.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).

@@ -29,7 +29,6 @@ role:                      # required — unordered list of role labels; ≥ 1 e
   - founder
   - engineer
 style:
-  formality: "informal"    # informal | formal
   pace: "pragmatic"        # pragmatic | thorough | rapid
 voice_sample: |            # required — one paste of the user's typical writing
   Mach das einfach. Wenn unklar, frag im Council.
@@ -57,7 +56,6 @@ enforced by `/agents user accept` and `/agents user update`.
 | `identity.name` | yes | How the agent addresses the user (full name or shorthand — user's choice). |
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
 | `role` | yes | Unordered list of role labels (≥ 1). Drives reviewer-voice selection and persona pairing. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted. |
-| `style.formality` | yes | `informal` (Du / first-name) or `formal` (Sie / full name). |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
 | `voice_sample` | yes | One representative paste — anchors mirror-back and tone calibration. |
 | `last_updated` | yes | ISO date, bumped on every accept. |
@@ -141,7 +139,7 @@ Each line is a single JSON object:
 ```
 
 Allowed `field` values mirror the schema (`identity.name`,
-`language`, `role`, `style.formality`, `style.pace`, `voice_sample`,
+`language`, `role`, `style.pace`, `voice_sample`,
 `notes`). Anything outside that set is dropped on read.
 
 Privacy floor applies on write — never buffer credentials, third-party

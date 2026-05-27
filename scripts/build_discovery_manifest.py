@@ -302,6 +302,8 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         }
         if p.get("requires_hint"):
             item["requires_hint"] = list(p["requires_hint"])
+        if p.get("cluster"):
+            item["cluster"] = p["cluster"]
         pk_out.append(item)
 
     if strict and unassigned:
@@ -546,6 +548,7 @@ def _packs_view(manifest: dict[str, Any]) -> dict[str, Any]:
                 "description": p["description"],
                 "workspaces": list(p.get("workspaces", [])),
                 "requires_hint": list(p.get("requires_hint", [])),
+                "cluster": p.get("cluster"),
                 "trust_level_default": p.get("trust_level_default"),
                 "artefact_count": len(ids),
                 "artefacts": ids,

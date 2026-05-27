@@ -34,7 +34,8 @@ export const userIdentitySchema = z.object({
         .array(z.string().trim().min(1, 'role entries must be non-empty'))
         .min(1, 'role must list at least one entry'),
     style: z.object({
-        formality: z.enum(['informal', 'formal']),
+        // Formality is not configurable — the agent always addresses the user
+        // informally ("Du"). Only `pace` remains tunable.
         pace: z.enum(['rapid', 'pragmatic', 'thorough']),
     }),
     voice_sample: z

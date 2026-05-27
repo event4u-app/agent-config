@@ -25,7 +25,7 @@ Companion artefacts:
 - Roadmap: [`agents/roadmaps/road-to-internal-ai-os-deployment.md`](../../agents/roadmaps/road-to-internal-ai-os-deployment.md)
 - Artefacts: [`packages/core/deploy/`](../../packages/core/deploy/)
 - Env contract: [`docs/deploy/env-vars.md`](../deploy/env-vars.md)
-- Council question (drafted, not invoked — no keys): [`agents/tmp/council-question-deployment-shape.md`](../../agents/tmp/old/council-question-deployment-shape.md)
+- Council question (drafted, not invoked — no keys): [`agents/tmp/council-question-deployment-shape.md`](../../agents/old/council-question-deployment-shape.md)
 - Predecessor ADR: [`ADR-016`](ADR-016-installer-architecture.md) — installer architecture (agent-mode protocol the GUI server wraps).
 
 ## Context
@@ -141,7 +141,7 @@ orchestrator-agnostic.
 ## Open questions (council-deferred)
 
 The accompanying council question file
-[`agents/tmp/council-question-deployment-shape.md`](../../agents/tmp/old/council-question-deployment-shape.md)
+[`agents/tmp/council-question-deployment-shape.md`](../../agents/old/council-question-deployment-shape.md)
 has not yet been run (no provider keys configured). A maintainer with
 keys should run it and either ratify or supersede this ADR.
 

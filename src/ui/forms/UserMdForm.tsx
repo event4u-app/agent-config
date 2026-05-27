@@ -9,13 +9,17 @@
  * Fields mirror the v1 contract:
  *   - identity.name (required)
  *   - language (BCP-47, autocomplete)
- *   - role[] (≥1, free-form; non-binding seed suggestions via SEED_ROLE_IDS)
- *   - style.formality, style.pace (enums)
+ *   - role[] (≥1, free-form; hidden when `hideRole` — roles come from the
+ *     dedicated wizard step in extended mode)
+ *   - style.pace (enum)
  *   - voice_sample (required, multiline)
  *   - notes (optional, multiline)
  *   - last_updated (auto-bumped to today on every edit; not exposed)
  *
- * Errors are keyed by dotted Zod path (`identity.name`, `style.formality`,
+ * The agent always addresses the user informally ("Du") — formality is not
+ * configurable.
+ *
+ * Errors are keyed by dotted Zod path (`identity.name`, `style.pace`,
  * …) so server-side issues bind to fields with no transformation.
  */
 
@@ -44,6 +48,11 @@ export interface UserMdFormProps {
     value: UserIdentity;
     onChange: (next: UserIdentity) => void;
     errors?: Record<string, string> | undefined;
+    /**
+     * Hide the role chip-list — set in the extended wizard, where roles are
+     * collected on the dedicated roles step and injected at finish.
+     */
+    hideRole?: boolean;
 }
 
 function todayIso(): string {
@@ -54,7 +63,7 @@ function err(errors: Record<string, string> | undefined, path: string): string |
     return errors?.[path];
 }
 
-export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact.JSX.Element {
+export function UserMdForm({ value, onChange, errors, hideRole }: UserMdFormProps): preact.JSX.Element {
     const [pendingRole, setPendingRole] = useState('');
     const roleListId = 'umd-role-suggestions';
 
@@ -116,6 +125,7 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
                 error={err(errors, 'language')}
                 onChange={(v): void => patch({ language: v })}
             />
+            {hideRole ? null : (
             <Field
                 id="umd-role-input"
                 label="Roles"
@@ -167,16 +177,7 @@ export function UserMdForm({ value, onChange, errors }: UserMdFormProps): preact
                     </button>
                 </div>
             </Field>
-            <Radio
-                id="umd-formality" name="style.formality" label="Formality"
-                value={value.style.formality}
-                error={err(errors, 'style.formality')}
-                options={[
-                    { value: 'informal', label: 'Informal (Du / first-name)' },
-                    { value: 'formal', label: 'Formal (Sie / surname)' },
-                ]}
-                onChange={(v): void => patch({ style: { ...value.style, formality: v as 'informal' | 'formal' } })}
-            />
+            )}
             <Radio
                 id="umd-pace" name="style.pace" label="Pace"
                 value={value.style.pace}

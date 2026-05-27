@@ -22,6 +22,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pickFreePort, DEFAULT_PORT_RANGE } from '../../server/port.js';
 import { mintToken } from '../../server/token.js';
+import { writeServerInfo, clearServerInfo } from '../../server/serverInfo.js';
 import { createApp } from '../../server/app.js';
 import { resolveWriteRoot, ensureWriteRoot } from '../../server/writeRoot.js';
 import { PACKAGE_ROOT } from '../paths.js';
@@ -115,6 +116,19 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         logger.info(`legacy-read fallback: ${legacyReadRoot}`);
     }
 
+    let shuttingDown = false;
+    const gracefulExit = async (reason: string): Promise<void> => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        logger.info(`${reason} — shutting down`);
+        if (!dryRun) clearServerInfo();
+        try {
+            await app.close();
+        } finally {
+            process.exit(0);
+        }
+    };
+
     const app = await createApp({
         writeRoot,
         legacyReadRoot,
@@ -125,6 +139,10 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         expectedPort: port,
         dryRun,
         extendedSteps: opts.extendedSteps === true,
+        // Shut the server down when the browser that drives it goes away.
+        // The SPA's pagehide beacon hits POST /api/v1/shutdown for a prompt
+        // exit; the idle backstop covers crashes where the beacon is lost.
+        idleShutdown: { onIdle: () => { void gracefulExit('browser closed'); } },
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     });
@@ -140,6 +158,12 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         ? `#${opts.initialRoute.startsWith('/') ? opts.initialRoute : `/${opts.initialRoute}`}`
         : '';
     const url = `http://127.0.0.1:${port}/?token=${token}${hash}`;
+
+    // Record this instance so a later `init` can terminate it before
+    // starting fresh (browser-lifecycle § kill-stale). Skipped in dry-run.
+    if (!dryRun) {
+        writeServerInfo({ pid: process.pid, port, url, startedAt: new Date().toISOString() });
+    }
 
     // road-to-unified-setup § B4 — WIZARD_READY stdout contract.
     // Emit the marker on stdout (plus the URL on the next line) so the
@@ -159,16 +183,8 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         await openBrowser(url);
     }
 
-    const stop = async (signal: NodeJS.Signals): Promise<void> => {
-        logger.info(`received ${signal} — shutting down`);
-        try {
-            await app.close();
-        } finally {
-            process.exit(0);
-        }
-    };
-    process.on('SIGINT', () => { void stop('SIGINT'); });
-    process.on('SIGTERM', () => { void stop('SIGTERM'); });
+    process.on('SIGINT', () => { void gracefulExit('received SIGINT'); });
+    process.on('SIGTERM', () => { void gracefulExit('received SIGTERM'); });
 
     return new Promise<number>(() => {
         // Resolves when the process exits via signal handler above.

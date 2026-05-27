@@ -122,7 +122,7 @@ export function authHeaders(token: string, host: string): Record<string, string>
  * test. Pass `overlay` to flip individual fields.
  */
 export function fixtureUserIdentity(
-    overlay: { name?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+    overlay: { name?: string; language?: string; role?: string[]; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
 ): Record<string, unknown> {
     const obj: Record<string, unknown> = {
         version: 1,
@@ -130,7 +130,6 @@ export function fixtureUserIdentity(
         language: overlay.language ?? 'de',
         role: overlay.role ?? ['founder'],
         style: {
-            formality: overlay.formality ?? 'informal',
             pace: overlay.pace ?? 'pragmatic',
         },
         voice_sample: overlay.voiceSample ?? 'Mach das einfach.',
@@ -149,12 +148,11 @@ export function fixtureUserIdentity(
  * defaults to a sane Matze-shaped fixture.
  */
 export function fixtureUserMd(
-    overlay: { name?: string; language?: string; role?: string[]; formality?: 'informal' | 'formal'; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
+    overlay: { name?: string; language?: string; role?: string[]; pace?: 'pragmatic' | 'thorough' | 'rapid'; voiceSample?: string; lastUpdated?: string; notes?: string } = {},
 ): string {
     const name = overlay.name ?? 'Matze';
     const language = overlay.language ?? 'de';
     const role = overlay.role ?? ['founder'];
-    const formality = overlay.formality ?? 'informal';
     const pace = overlay.pace ?? 'pragmatic';
     const voiceSample = overlay.voiceSample ?? 'Mach das einfach.';
     const lastUpdated = overlay.lastUpdated ?? '2026-05-19';
@@ -169,7 +167,6 @@ export function fixtureUserMd(
         'role:',
         roleBlock,
         'style:',
-        `  formality: "${formality}"`,
         `  pace: "${pace}"`,
         'voice_sample: |',
         `  ${voiceSample}`,

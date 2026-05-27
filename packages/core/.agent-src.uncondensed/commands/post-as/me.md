@@ -60,13 +60,13 @@ Read the frontmatter:
   decisions (default-to-nickname when set), **not** appended to the
   output.
 - `language` — language of the draft.
-- `style.formality`, `style.pace` — mapped into the engine's
-  fingerprint slot:
+- `style.pace` — mapped into the engine's fingerprint slot. Register is
+  always `casual` (the agent addresses the user informally — "Du" — and
+  formality is not configurable):
 
   | `.agent-user.md` field | Engine fingerprint slot |
   |---|---|
-  | `style.formality: informal` | `vocab_register: casual` |
-  | `style.formality: formal` | `vocab_register: professional` |
+  | (always) | `vocab_register: casual` |
   | `style.pace: rapid` | `sentence_length_avg: 12` |
   | `style.pace: pragmatic` | `sentence_length_avg: 18` |
   | `style.pace: thorough` | `sentence_length_avg: 28` |
@@ -85,7 +85,7 @@ Flag form: `--tone=<formal|casual|neutral>`,
 `--audience=<text>`. Missing flags → interactive prompt, **one
 question per turn**, in the order Topic → Tone → Length → Channel →
 Audience. Defaults inherit from the engine's per-channel table and
-the formality / pace mapping above.
+the pace mapping above.
 
 ### 4. Negative-constraint pass (skipped)
 
@@ -96,7 +96,7 @@ the formality / pace mapping above.
 
 Generate the body as a single fenced markdown block per
 [`write-engine § 4`](../../../docs/contracts/write-engine.md). Honour
-the loaded fingerprint (sentence-length ±25 %, formality, pace),
+the loaded fingerprint (sentence-length ±25 %, pace),
 ±15 % length tolerance, write in `language`.
 
 ### 6. Disclosure footer (omitted — user is the author)

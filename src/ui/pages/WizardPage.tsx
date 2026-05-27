@@ -32,6 +32,14 @@ import { ContinueScreen } from '../wizard/ContinueScreen.js';
 import { BackupScreen } from '../wizard/BackupScreen.js';
 import {
     activeTotalSteps,
+    aiCouncilConfig,
+    aiCouncilKeyInstall,
+    aiCouncilKeyPresence,
+    aiCouncilLoaded,
+    aiCouncilProviders,
+    type AiCouncilClassMode,
+    type AiCouncilMode,
+    type AiCouncilState,
     banner,
     clampStep,
     conflictBatchChoice,
@@ -43,6 +51,7 @@ import {
     discoveryLoaded,
     discoveryLoading,
     discoveryPacks,
+    discoveryWorkspaces,
     errors,
     extendedSteps,
     getActiveSteps,
@@ -70,13 +79,22 @@ import {
     recoveryDismissed,
     recoveryStatus,
     reviewChanges,
+    rtkDetectionLoaded,
+    rtkInstallCommand,
+    rtkInstalled,
+    rtkRepo,
+    packsTouched,
     saving,
     schema,
     selectedPacks,
+    selectedRoles,
     selectedTools,
     settingsLastModified,
     startedAtNow,
     stepIndex,
+    toolPresence,
+    toolsDetectionLoaded,
+    toolsDetectionLoading,
     userMdBody,
     userMdExists,
     userMdInitial,
@@ -90,6 +108,7 @@ import {
     type ConflictBatchChoice,
     type ConflictResolutionWire,
     type DiscoveryPack,
+    type DiscoveryWorkspace,
     type InstallPlanWire,
     type LegacyV3Status,
     type ModulesDetectResponse,
@@ -260,8 +279,17 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'modules') {
             void loadModulesOnce();
         }
-        if (resumed.kind === 'aiTools' || resumed.kind === 'packs') {
+        if (resumed.kind === 'roles' || resumed.kind === 'aiTools' || resumed.kind === 'packs') {
             void loadDiscoveryOnce();
+        }
+        if (resumed.kind === 'aiTools') {
+            void loadToolDetectionOnce();
+        }
+        if (resumed.id === 'identity') {
+            void loadRtkDetectionOnce();
+        }
+        if (resumed.kind === 'aiCouncil') {
+            void loadAiCouncilOnce();
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
@@ -365,6 +393,15 @@ interface ManifestResponse {
         label?: string;
         description?: string;
         requires_hint?: string[];
+        cluster?: string | null;
+        workspaces?: string[];
+    }>;
+    workspaces?: Array<{
+        id: string;
+        label?: string;
+        description?: string;
+        default_packs?: string[];
+        optional_packs?: string[];
     }>;
 }
 
@@ -384,6 +421,14 @@ interface AutoDetectResponse {
  * ids. Detected packs are pre-selected on first load — declining is one
  * click per row.
  */
+/**
+ * Packs whose presence in the project is NOT a signal that the user wants
+ * the pack installed (road-to-wizard-ux-improvements follow-up). Python is
+ * the canonical case: a non-engineer may have python on the machine but not
+ * need its agent skills.
+ */
+const NO_AUTODETECT_PACK_IDS = new Set<string>(['python']);
+
 async function loadDiscoveryOnce(): Promise<void> {
     if (discoveryLoaded.value || discoveryLoading.value) return;
     discoveryLoading.value = true;
@@ -398,8 +443,21 @@ async function loadDiscoveryOnce(): Promise<void> {
             label: p.label ?? p.id,
             description: p.description ?? '',
             requires_hint: p.requires_hint,
+            cluster: p.cluster ?? undefined,
+            workspaces: p.workspaces,
         }));
         discoveryPacks.value = packs;
+        // Role/domain workspaces drive Step 2. The maintainer-only workspace is
+        // not a user-facing role, so it never appears as a checkbox.
+        discoveryWorkspaces.value = (manifest.workspaces ?? [])
+            .filter((w) => w.id !== 'agent-config-maintainer')
+            .map((w) => ({
+                id: w.id,
+                label: w.label ?? w.id,
+                description: w.description ?? '',
+                default_packs: w.default_packs ?? [],
+                optional_packs: w.optional_packs ?? [],
+            }));
         // Strip the `pack-` prefix so ids match the manifest. Unknown
         // signals (e.g. future detector additions not yet in the
         // manifest) are dropped silently rather than rendering as
@@ -407,15 +465,14 @@ async function loadDiscoveryOnce(): Promise<void> {
         const knownIds = new Set(packs.map((p) => p.id));
         const detected = autoDetect.signals
             .map((s) => s.id.startsWith('pack-') ? s.id.slice(5) : s.id)
-            .filter((id) => knownIds.has(id));
+            .filter((id) => knownIds.has(id))
+            // Presence of a language toolchain is not a request for its pack.
+            // Python especially: a PO may have python installed but not need
+            // the pack — never auto-detect / pre-select it.
+            .filter((id) => !NO_AUTODETECT_PACK_IDS.has(id));
         detectedPackIds.value = detected;
-        // Pre-select detected packs only when the user hasn't already
-        // touched the selection (e.g. resume from server partial).
-        if (Object.keys(selectedPacks.value).length === 0) {
-            const seed: Record<string, boolean> = {};
-            for (const id of detected) seed[id] = true;
-            selectedPacks.value = seed;
-        }
+        // Pack pre-selection is driven by the role step (seedPacksFromRoles),
+        // not auto-detect alone — see the packs step-entry trigger.
     } catch (err) {
         if (err instanceof ApiCallError) {
             discoveryLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -425,6 +482,106 @@ async function loadDiscoveryOnce(): Promise<void> {
     } finally {
         discoveryLoading.value = false;
         discoveryLoaded.value = true;
+    }
+}
+
+interface DetectToolsResponse {
+    tools?: Record<string, boolean>;
+    /** Tools recorded in the install lockfile — the user's prior selection. */
+    configured?: string[];
+}
+
+/**
+ * Fetch native AI-tool presence once per session (road-to-wizard-ux-improvements
+ * § Phase 2) and pre-select detected tools on first run. Gated on extended-mode
+ * (HTTP 404 on legacy bundles) — failure leaves `toolPresence` empty so badges
+ * render "not installed" and nothing is pre-selected.
+ */
+async function loadToolDetectionOnce(): Promise<void> {
+    if (toolsDetectionLoaded.value || toolsDetectionLoading.value) return;
+    toolsDetectionLoading.value = true;
+    try {
+        const res = await apiFetch<DetectToolsResponse>('/api/v1/wizard/detect-tools');
+        const presence = res.tools ?? {};
+        const configured = res.configured ?? [];
+        toolPresence.value = presence;
+        // Only seed when the user hasn't touched the selection yet (and isn't
+        // resuming a server partial). Then:
+        //   - repeat run (the lockfile records a prior selection) → pre-select
+        //     exactly those tools, regardless of what is installed now;
+        //   - first run (no prior selection) → pre-select every installed tool
+        //     to make zero-state onboarding easier.
+        if (Object.keys(selectedTools.value).length === 0) {
+            const seed: Record<string, boolean> = {};
+            if (configured.length > 0) {
+                for (const id of configured) seed[id] = true;
+            } else {
+                for (const [id, installed] of Object.entries(presence)) {
+                    if (installed) seed[id] = true;
+                }
+            }
+            selectedTools.value = seed;
+        }
+    } catch {
+        // Leave toolPresence empty; the badge falls back to "not installed".
+    } finally {
+        toolsDetectionLoading.value = false;
+        toolsDetectionLoaded.value = true;
+    }
+}
+
+interface DetectRtkResponse {
+    installed?: boolean;
+    installCommand?: string | null;
+    repo?: string;
+}
+
+/**
+ * Detect rtk presence once per session (road-to-wizard-ux-improvements § Phase
+ * 7). Detection is the only source of truth — the result is written into
+ * `personal.rtk_installed` so the saved setting always matches reality, never
+ * a stale manual toggle. When missing, capture the per-OS install command.
+ */
+async function loadRtkDetectionOnce(): Promise<void> {
+    if (rtkDetectionLoaded.value) return;
+    rtkDetectionLoaded.value = true;
+    try {
+        const res = await apiFetch<DetectRtkResponse>('/api/v1/wizard/detect-rtk');
+        const installed = res.installed === true;
+        rtkInstalled.value = installed;
+        rtkInstallCommand.value = res.installCommand ?? null;
+        if (typeof res.repo === 'string') rtkRepo.value = res.repo;
+        // Detection wins over whatever was loaded: overwrite the setting.
+        values.value = { ...values.value, 'personal.rtk_installed': installed };
+    } catch {
+        // Extended-mode 404 / failure → leave rtkInstalled null (widget shows
+        // an "unknown" state and does not touch the setting).
+    }
+}
+
+interface AiCouncilGetResponse {
+    config: AiCouncilState;
+    providers?: string[];
+    keyPresence?: Record<string, boolean>;
+    keyInstall?: Record<string, string>;
+}
+
+/**
+ * Load the AI-council config subset once per session (Phase 8). On failure
+ * (extended-mode 404 / read error) the config stays null and the step renders
+ * an explanatory note instead of controls.
+ */
+async function loadAiCouncilOnce(): Promise<void> {
+    if (aiCouncilLoaded.value) return;
+    aiCouncilLoaded.value = true;
+    try {
+        const res = await apiFetch<AiCouncilGetResponse>('/api/v1/wizard/ai-council');
+        aiCouncilConfig.value = res.config;
+        aiCouncilProviders.value = res.providers ?? [];
+        aiCouncilKeyPresence.value = res.keyPresence ?? {};
+        aiCouncilKeyInstall.value = res.keyInstall ?? {};
+    } catch {
+        // Leave aiCouncilConfig null; the step shows a "config unavailable" note.
     }
 }
 
@@ -543,8 +700,20 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'modules') {
         void loadModulesOnce();
     }
-    if (next.kind === 'aiTools' || next.kind === 'packs') {
+    if (next.kind === 'roles' || next.kind === 'aiTools' || next.kind === 'packs') {
         void loadDiscoveryOnce();
+    }
+    if (next.kind === 'packs') {
+        seedPacksFromRoles();
+    }
+    if (next.kind === 'aiTools') {
+        void loadToolDetectionOnce();
+    }
+    if (next.id === 'identity') {
+        void loadRtkDetectionOnce();
+    }
+    if (next.kind === 'aiCouncil') {
+        void loadAiCouncilOnce();
     }
     if (next.kind === 'review') {
         void refreshDiff();
@@ -566,6 +735,59 @@ interface FinishResponse {
 }
 
 /**
+ * Resolve the final pack set submitted to the installer
+ * (road-to-wizard-ux-improvements § Phase 4). Starts from the user's truthy
+ * selection, drops framework packs whose language (`cluster`) is not selected,
+ * then adds the transitive `requires_hint` closure — which pulls
+ * `engineering-base` (auto-included whenever needed) plus any language a
+ * framework depends on. The installer treats `packs` as an opaque list, so
+ * dependency resolution happens here in the wizard.
+ */
+function resolveSelectedPacks(): string[] {
+    const sel = selectedPacks.value;
+    const byId = new Map(discoveryPacks.value.map((p) => [p.id, p]));
+    const seed = Object.entries(sel)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id)
+        // A framework child counts only when its language tile is on.
+        .filter((id) => {
+            const cluster = byId.get(id)?.cluster;
+            return cluster === undefined || sel[cluster] === true;
+        });
+    const out = new Set<string>();
+    const visit = (id: string): void => {
+        if (out.has(id)) return;
+        out.add(id);
+        for (const dep of byId.get(id)?.requires_hint ?? []) visit(dep);
+    };
+    for (const id of seed) visit(id);
+    return [...out].sort();
+}
+
+/**
+ * Recommend packs from the selected roles (Step 2 → Step 3). Each chosen
+ * workspace contributes its `default_packs`; the union is the recommendation.
+ * Auto-detected project packs are folded in too. No-op once the user has
+ * manually edited the pack selection, so the recommendation never clobbers a
+ * deliberate choice. Re-runs on every packs-step entry while untouched, so
+ * changing roles updates the recommendation.
+ */
+function seedPacksFromRoles(): void {
+    if (packsTouched.value) return;
+    const roleIds = Object.entries(selectedRoles.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    const byWorkspace = new Map(discoveryWorkspaces.value.map((w) => [w.id, w]));
+    const recommended: Record<string, boolean> = {};
+    for (const role of roleIds) {
+        for (const pack of byWorkspace.get(role)?.default_packs ?? []) recommended[pack] = true;
+    }
+    // Fold in auto-detected project packs (python already filtered upstream).
+    for (const id of detectedPackIds.value) recommended[id] = true;
+    selectedPacks.value = recommended;
+}
+
+/**
  * Build the wizard-v2 apply payload from the current selection signals.
  * Returns `null` when no AI tool is checked — the server schema requires
  * `tools.min(1)`, and an empty selection means there is nothing for the
@@ -582,9 +804,7 @@ function buildApplyPayload(): {
         .filter(([, v]) => v === true)
         .map(([id]) => id);
     if (tools.length === 0) return null;
-    const packs = Object.entries(selectedPacks.value)
-        .filter(([, v]) => v === true)
-        .map(([id]) => id);
+    const packs = resolveSelectedPacks();
     const payload: {
         schema_version: 'wizard-v2';
         tools: string[];
@@ -615,11 +835,21 @@ async function finish(): Promise<void> {
         } = {
             settings: values.value,
         };
-        // Send the identity object only when the user actually edited or
-        // created it. Skipped / untouched → omit so the server leaves any
-        // existing `.agent-user.yml` alone.
-        if (userMdChanged() && userMdBody.value !== null) {
-            body.identity = userMdBody.value;
+        // Roles come from Step 2 (extended mode) and override the identity's
+        // `role[]` — the user-md form no longer asks for them there.
+        const roleIds = Object.entries(selectedRoles.value)
+            .filter(([, v]) => v === true)
+            .map(([id]) => id);
+        const hasName = userMdBody.value !== null
+            && typeof userMdBody.value.identity?.name === 'string'
+            && userMdBody.value.identity.name.trim().length > 0;
+        // Send the identity object when the user edited it OR selected roles —
+        // but only when a name exists (the schema requires it). Otherwise omit
+        // so the server leaves any existing `.agent-user.yml` alone.
+        if (userMdBody.value !== null && hasName && (userMdChanged() || roleIds.length > 0)) {
+            body.identity = roleIds.length > 0
+                ? { ...userMdBody.value, role: roleIds }
+                : userMdBody.value;
         }
         // road-to-global-only-install § Phase 2.3 — include the scope
         // selection only when the server advertised the opt-in. Older
@@ -688,7 +918,22 @@ async function finish(): Promise<void> {
                 applyCopy = ` Installer bridge failed: ${message}. Settings were saved; re-run the wizard to retry the install plan.`;
             }
         }
-        banner.value = { message: `${finishCopy}${applyCopy} ${closeHint}`, tone: 'success' };
+        // road-to-wizard-ux-improvements § Phase 8 — persist the AI-council
+        // config (scalar subset) into .ai-council.yml. Best-effort: settings
+        // are already committed, so a failure surfaces as a soft warning.
+        let councilCopy = '';
+        if (extendedSteps.value && aiCouncilConfig.value !== null) {
+            try {
+                await apiFetch('/api/v1/wizard/ai-council', { method: 'POST', body: aiCouncilConfig.value });
+                councilCopy = ' AI Council saved.';
+            } catch (err) {
+                const message = err instanceof ApiCallError
+                    ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
+                    : err instanceof Error ? err.message : String(err);
+                councilCopy = ` AI Council save failed: ${message}.`;
+            }
+        }
+        banner.value = { message: `${finishCopy}${applyCopy}${councilCopy} ${closeHint}`, tone: 'success' };
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -802,30 +1047,42 @@ function ModulesStepBody(): preact.JSX.Element {
                         ))}
                     </ul>
                 )}
-            <label>
-                Namespace template:{' '}
-                <input
-                    type="text"
-                    value={modulesNamespaceTemplate.value}
-                    placeholder="e.g. App\\Modules\\{ModuleName}\\App"
-                    onInput={(e): void => {
-                        modulesNamespaceTemplate.value = (e.currentTarget as HTMLInputElement).value;
-                        modulesSkipped.value = false;
-                    }}
-                />
-            </label>
-            <label>
-                Agent folder:{' '}
-                <input
-                    type="text"
-                    value={modulesAgentFolder.value}
-                    placeholder="agents"
-                    onInput={(e): void => {
-                        modulesAgentFolder.value = (e.currentTarget as HTMLInputElement).value;
-                        modulesSkipped.value = false;
-                    }}
-                />
-            </label>
+            <div class="ac-wizard__module-fields">
+                <div class="ac-field">
+                    <label class="ac-field__label" for="ac-modules-namespace">Namespace template</label>
+                    <input
+                        id="ac-modules-namespace"
+                        class="ac-input"
+                        type="text"
+                        value={modulesNamespaceTemplate.value}
+                        placeholder="e.g. App\\Modules\\{ModuleName}\\App"
+                        onInput={(e): void => {
+                            modulesNamespaceTemplate.value = (e.currentTarget as HTMLInputElement).value;
+                            modulesSkipped.value = false;
+                        }}
+                    />
+                    <span class="ac-field__description">
+                        How a module path maps to its namespace. Leave blank to skip namespacing.
+                    </span>
+                </div>
+                <div class="ac-field">
+                    <label class="ac-field__label" for="ac-modules-agent-folder">Agent folder</label>
+                    <input
+                        id="ac-modules-agent-folder"
+                        class="ac-input"
+                        type="text"
+                        value={modulesAgentFolder.value}
+                        placeholder="agents"
+                        onInput={(e): void => {
+                            modulesAgentFolder.value = (e.currentTarget as HTMLInputElement).value;
+                            modulesSkipped.value = false;
+                        }}
+                    />
+                    <span class="ac-field__description">
+                        Folder name that holds per-module agent docs (default <code>agents</code>).
+                    </span>
+                </div>
+            </div>
         </div>
     );
 }
@@ -865,39 +1122,107 @@ function buildModulesConfig(): ProposedModulesBlock | null {
  */
 function AiToolsStepBody(): preact.JSX.Element {
     const sel = selectedTools.value;
+    const presence = toolPresence.value;
     return (
         <div class="ac-wizard-step-stub">
             <p>
-                Pick the AI tools you use. The installer wires each selected
-                tool's surface (skills, rules, commands) on apply. You can
+                Pick the AI tools you use. Tools detected on this machine are
+                pre-selected on first run. The installer wires each selected
+                tool's surface (skills, rules, commands) on apply; you can
                 change this list later by re-running the wizard.
             </p>
-            <ul style="list-style: none; padding-left: 0;">
-                {VALID_TOOLS.map((tool) => (
-                    <li key={tool.id}>
-                        <label>
-                            <input
-                                type="checkbox"
-                                checked={sel[tool.id] ?? false}
-                                onChange={(e): void => {
-                                    const checked = (e.currentTarget as HTMLInputElement).checked;
-                                    selectedTools.value = { ...sel, [tool.id]: checked };
-                                }}
-                            />
-                            {' '}{tool.label} <small><code>{tool.id}</code></small>
-                        </label>
-                    </li>
-                ))}
+            <ul class="ac-wizard__tool-list">
+                {VALID_TOOLS.map((tool) => {
+                    const installed = presence[tool.id] === true;
+                    return (
+                        <li key={tool.id} class="ac-wizard__tool-row">
+                            <label class="ac-wizard__tool-label">
+                                <input
+                                    type="checkbox"
+                                    checked={sel[tool.id] ?? false}
+                                    onChange={(e): void => {
+                                        const checked = (e.currentTarget as HTMLInputElement).checked;
+                                        selectedTools.value = { ...sel, [tool.id]: checked };
+                                    }}
+                                />
+                                {' '}{tool.label}
+                            </label>
+                            <span
+                                class={`ac-badge ${installed ? 'ac-badge--installed' : 'ac-badge--missing'}`}
+                                title={installed ? 'Detected on this machine' : 'Not detected on this machine'}
+                            >
+                                {installed ? 'installed' : 'not installed'}
+                            </span>
+                        </li>
+                    );
+                })}
             </ul>
         </div>
     );
 }
 
 /**
- * Renderer for the extended-mode `packs` step. Reads the live discovery
- * manifest (ADR-015) so the available packs always match the bundle on
- * disk. Auto-detected packs (e.g. `pack-php` when `composer.json` is
- * present) are pre-selected by `loadDiscoveryOnce`.
+ * Renderer for the extended-mode `roles` step (Step 2). The discovery
+ * workspaces are the role/domain checkboxes; the chosen ids become
+ * `.agent-user.yml` `role[]` and recommend each domain's `default_packs` on
+ * the packs step (Step 3) via `seedPacksFromRoles`.
+ */
+function RolesStepBody(): preact.JSX.Element {
+    if (discoveryLoading.value) {
+        return <p>Loading roles…</p>;
+    }
+    if (discoveryLoadError.value !== null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner ac-banner--error">Discovery failed: {discoveryLoadError.value}</p>
+            </div>
+        );
+    }
+    const sel = selectedRoles.value;
+    const workspaces = discoveryWorkspaces.value;
+    const setRole = (id: string, checked: boolean): void => {
+        selectedRoles.value = { ...selectedRoles.value, [id]: checked };
+        // Roles changed → refresh the pack recommendation (no-op once the user
+        // has manually edited packs on Step 3).
+        seedPacksFromRoles();
+    };
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the areas you work in. We use them to recommend capability
+                packs on the next step, and they become your roles in
+                <code> .agent-user.yml</code>.
+            </p>
+            {workspaces.length === 0
+                ? <p><em>No roles available in the manifest.</em></p>
+                : (
+                    <div class="ac-wizard__pack-grid">
+                        {workspaces.map((ws: DiscoveryWorkspace) => (
+                            <section key={ws.id} class="ac-pack-tile">
+                                <label class="ac-pack-tile__head">
+                                    <input
+                                        type="checkbox"
+                                        checked={sel[ws.id] ?? false}
+                                        onChange={(e): void => { setRole(ws.id, (e.currentTarget as HTMLInputElement).checked); }}
+                                    />
+                                    <span class="ac-pack-tile__title">{ws.label}</span>
+                                </label>
+                                {ws.description !== ''
+                                    ? <p class="ac-pack-tile__desc">{ws.description}</p>
+                                    : null}
+                            </section>
+                        ))}
+                    </div>
+                )}
+        </div>
+    );
+}
+
+/**
+ * Renderer for the extended-mode `packs` step (Step 3). Reads the live
+ * discovery manifest (ADR-015) so the available packs always match the bundle
+ * on disk. Pre-selection is recommended from the Step-2 roles
+ * (`seedPacksFromRoles`); the user can override any tile.
  *
  * `requires_hint` is surfaced as informational copy under each pack —
  * the installer resolves dependencies at apply time, so the wizard
@@ -920,52 +1245,283 @@ function PacksStepBody(): preact.JSX.Element {
             </div>
         );
     }
-    const packs = discoveryPacks.value;
     const sel = selectedPacks.value;
     const detected = new Set(detectedPackIds.value);
+    // engineering-base is an auto-included dependency — never shown as a tile
+    // (road-to-wizard-ux-improvements § Phase 4).
+    const visible = discoveryPacks.value.filter((p) => p.id !== 'engineering-base');
+    // Group framework packs under their language tile via `cluster`.
+    const childrenOf = new Map<string, DiscoveryPack[]>();
+    for (const p of visible) {
+        if (p.cluster !== undefined) {
+            const arr = childrenOf.get(p.cluster) ?? [];
+            arr.push(p);
+            childrenOf.set(p.cluster, arr);
+        }
+    }
+    const childIds = new Set(visible.filter((p) => p.cluster !== undefined).map((p) => p.id));
+    const topLevel = visible.filter((p) => !childIds.has(p.id));
+
+    const setPack = (id: string, checked: boolean): void => {
+        packsTouched.value = true;
+        selectedPacks.value = { ...selectedPacks.value, [id]: checked };
+    };
+    // A language tile gates its frameworks without destroying their stored
+    // selection. First time it is enabled, children with no explicit choice
+    // default ON (deselectable). Turning the language off only disables the
+    // children in the UI — their checked state is preserved, so toggling the
+    // language back on restores the exact prior selection (Laravel on /
+    // Symfony off survives a php off→on round-trip).
+    const setLanguage = (id: string, checked: boolean): void => {
+        packsTouched.value = true;
+        const next = { ...selectedPacks.value, [id]: checked };
+        if (checked) {
+            for (const child of childrenOf.get(id) ?? []) {
+                if (next[child.id] === undefined) next[child.id] = true;
+            }
+        }
+        selectedPacks.value = next;
+    };
+
     return (
         <div class="ac-wizard-step-stub">
             <p>
                 Pick the capability packs to install. Auto-detected packs are
-                pre-selected based on files in your project root.
+                pre-selected; engineering hygiene is included automatically when
+                a pack needs it. A language tile expands to its frameworks —
+                turn the language off to skip them all.
             </p>
-            {packs.length === 0
+            {topLevel.length === 0
                 ? <p><em>No packs available in the manifest.</em></p>
                 : (
-                    <ul style="list-style: none; padding-left: 0;">
-                        {packs.map((pack) => (
-                            <li key={pack.id}>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={sel[pack.id] ?? false}
-                                        onChange={(e): void => {
-                                            const checked = (e.currentTarget as HTMLInputElement).checked;
-                                            selectedPacks.value = { ...sel, [pack.id]: checked };
-                                        }}
-                                    />
-                                    {' '}<strong>{pack.label}</strong>{' '}
-                                    <small><code>{pack.id}</code></small>
-                                    {detected.has(pack.id)
-                                        ? <small> — <em>auto-detected</em></small>
-                                        : null}
+                    <div class="ac-wizard__pack-grid">
+                        {topLevel.map((pack) => {
+                            const kids = childrenOf.get(pack.id) ?? [];
+                            const isLanguage = kids.length > 0;
+                            const checked = sel[pack.id] ?? false;
+                            return (
+                                <section key={pack.id} class="ac-pack-tile">
+                                    <label class="ac-pack-tile__head">
+                                        <input
+                                            type="checkbox"
+                                            checked={checked}
+                                            onChange={(e): void => {
+                                                const next = (e.currentTarget as HTMLInputElement).checked;
+                                                if (isLanguage) setLanguage(pack.id, next);
+                                                else setPack(pack.id, next);
+                                            }}
+                                        />
+                                        <span class="ac-pack-tile__title">{pack.label}</span>
+                                        {detected.has(pack.id)
+                                            ? <span class="ac-badge ac-badge--installed">auto-detected</span>
+                                            : null}
+                                    </label>
                                     {pack.description !== ''
-                                        ? <div><small>{pack.description}</small></div>
+                                        ? <p class="ac-pack-tile__desc">{pack.description}</p>
                                         : null}
-                                    {pack.requires_hint && pack.requires_hint.length > 0
+                                    {isLanguage
                                         ? (
-                                            <div>
-                                                <small>
-                                                    Requires: {pack.requires_hint.map((r) => <code key={r}>{r}</code>).reduce<preact.JSX.Element[]>((acc, el, i) => i === 0 ? [el] : [...acc, <>, </>, el], [])}
-                                                </small>
-                                            </div>
+                                            <fieldset class="ac-pack-tile__children" disabled={!checked}>
+                                                {kids.map((child) => (
+                                                    <label key={child.id} class="ac-pack-tile__child">
+                                                        <input
+                                                            type="checkbox"
+                                                            checked={sel[child.id] ?? false}
+                                                            disabled={!checked}
+                                                            onChange={(e): void => {
+                                                                setPack(child.id, (e.currentTarget as HTMLInputElement).checked);
+                                                            }}
+                                                        />
+                                                        <span>{child.label}</span>
+                                                    </label>
+                                                ))}
+                                            </fieldset>
                                         )
                                         : null}
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
+                                </section>
+                            );
+                        })}
+                    </div>
                 )}
+        </div>
+    );
+}
+
+/**
+ * rtk presence row on the Editor-and-tooling step (Phase 7). Detection-driven,
+ * read-only — when missing, surfaces the per-OS install command + repo link.
+ */
+function RtkRow(): preact.JSX.Element {
+    const installed = rtkInstalled.value;
+    const cmd = rtkInstallCommand.value;
+    return (
+        <div class="ac-rtk-row">
+            <div class="ac-rtk-row__head">
+                <span class="ac-rtk-row__label">rtk <small>(Rust Token Killer)</small></span>
+                {installed === null
+                    ? <span class="ac-badge ac-badge--missing">detecting…</span>
+                    : installed
+                        ? <span class="ac-badge ac-badge--installed">installed</span>
+                        : <span class="ac-badge ac-badge--missing">not installed</span>}
+            </div>
+            {installed === false
+                ? (
+                    <div class="ac-rtk-row__install">
+                        <p class="ac-field__description">
+                            rtk wraps verbose CLI output for ~60–90% token
+                            savings. Install it, then re-open the wizard to
+                            pick up detection:
+                        </p>
+                        {cmd !== null ? <code class="ac-rtk-row__cmd">{cmd}</code> : null}
+                        <a class="ac-button" href={rtkRepo.value} target="_blank" rel="noreferrer noopener">
+                            Open rtk repo
+                        </a>
+                    </div>
+                )
+                : null}
+        </div>
+    );
+}
+
+/**
+ * AI Council step (Phase 8). Edits the wizard-controlled scalar subset of
+ * `.ai-council.yml` held in `aiCouncilConfig`; finish() persists it via POST.
+ * Deep/locked knobs (advisors, model_ladder, high_impact/user_required classes)
+ * are intentionally not editable here.
+ */
+function AiCouncilStepBody(): preact.JSX.Element {
+    const cfg = aiCouncilConfig.value;
+    if (cfg === null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner">
+                    AI Council config is unavailable (extended-mode only, or
+                    <code> .ai-council.yml </code> could not be read). Configure
+                    it later by editing <code>agents/settings/.ai-council.yml</code>.
+                </p>
+            </div>
+        );
+    }
+    const providers = aiCouncilProviders.value;
+    const keyPresence = aiCouncilKeyPresence.value;
+    const keyInstall = aiCouncilKeyInstall.value;
+    const update = (patch: Partial<AiCouncilState>): void => {
+        aiCouncilConfig.value = { ...cfg, ...patch };
+    };
+    const updateMember = (p: string, patch: Partial<{ enabled: boolean; participateLowImpact: boolean }>): void => {
+        const cur = cfg.members[p] ?? { enabled: false, participateLowImpact: false };
+        aiCouncilConfig.value = { ...cfg, members: { ...cfg.members, [p]: { ...cur, ...patch } } };
+    };
+    return (
+        <div class="ac-wizard-step-stub ac-council">
+            <label class="ac-council__master">
+                <input
+                    type="checkbox"
+                    checked={cfg.enabled}
+                    onChange={(e): void => { update({ enabled: (e.currentTarget as HTMLInputElement).checked }); }}
+                />
+                {' '}Enable the AI Council (external second-opinion network)
+            </label>
+            <fieldset class="ac-council__section" disabled={!cfg.enabled}>
+                <div class="ac-field">
+                    <label class="ac-field__label">Transport mode (default for all members)</label>
+                    <select
+                        class="ac-input"
+                        value={cfg.defaultMode}
+                        onChange={(e): void => { update({ defaultMode: (e.currentTarget as HTMLSelectElement).value as AiCouncilMode }); }}
+                    >
+                        <option value="manual">manual — copy &amp; paste (free, no key)</option>
+                        <option value="api">api — stored key, per-token billing</option>
+                        <option value="cli">cli — subscription auth (flat-rate)</option>
+                    </select>
+                </div>
+                <div class="ac-field">
+                    <label class="ac-field__label">Debate rounds (minimum)</label>
+                    <input
+                        class="ac-input"
+                        type="number"
+                        min="1"
+                        value={cfg.minRounds}
+                        onInput={(e): void => { update({ minRounds: Math.max(1, Number.parseInt((e.currentTarget as HTMLInputElement).value, 10) || 1) }); }}
+                    />
+                </div>
+                <div class="ac-field">
+                    <label class="ac-field__label">Cost budget — max total USD per invocation</label>
+                    <input
+                        class="ac-input"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        value={cfg.maxTotalUsd}
+                        onInput={(e): void => { update({ maxTotalUsd: Math.max(0, Number.parseFloat((e.currentTarget as HTMLInputElement).value) || 0) }); }}
+                    />
+                </div>
+                <h3 class="ac-council__h">Members</h3>
+                <ul class="ac-wizard__tool-list">
+                    {providers.map((p) => {
+                        const m = cfg.members[p] ?? { enabled: false, participateLowImpact: false };
+                        const hasKey = keyPresence[p] === true;
+                        const installCmd = keyInstall[p];
+                        return (
+                            <li key={p} class="ac-pack-tile">
+                                <div class="ac-pack-tile__head">
+                                    <label class="ac-pack-tile__head" style="flex:1;">
+                                        <input
+                                            type="checkbox"
+                                            checked={m.enabled}
+                                            onChange={(e): void => { updateMember(p, { enabled: (e.currentTarget as HTMLInputElement).checked }); }}
+                                        />
+                                        <span class="ac-pack-tile__title">{p}</span>
+                                    </label>
+                                    <span class={`ac-badge ${hasKey ? 'ac-badge--installed' : 'ac-badge--missing'}`}>
+                                        {hasKey ? 'key present' : 'no key'}
+                                    </span>
+                                </div>
+                                <label class="ac-pack-tile__child">
+                                    <input
+                                        type="checkbox"
+                                        checked={m.participateLowImpact}
+                                        disabled={!m.enabled}
+                                        onChange={(e): void => { updateMember(p, { participateLowImpact: (e.currentTarget as HTMLInputElement).checked }); }}
+                                    />
+                                    <span>low-impact fast-path</span>
+                                </label>
+                                {!hasKey
+                                    ? (
+                                        <p class="ac-field__description">
+                                            {installCmd !== undefined
+                                                ? <>Add a key — run in a terminal: <code>{installCmd}</code></>
+                                                : <>No installer; set <code>api_key_ref: env:{p.toUpperCase()}_API_KEY</code> and export that variable.</>}
+                                        </p>
+                                    )
+                                    : null}
+                            </li>
+                        );
+                    })}
+                </ul>
+                <h3 class="ac-council__h">Impact routing</h3>
+                {(['trivial', 'low_impact', 'medium_impact'] as const).map((cls) => (
+                    <div class="ac-field" key={cls}>
+                        <label class="ac-field__label">{cls}</label>
+                        <select
+                            class="ac-input"
+                            value={cfg.decision[cls] ?? 'agent'}
+                            onChange={(e): void => {
+                                const mode = (e.currentTarget as HTMLSelectElement).value as AiCouncilClassMode;
+                                aiCouncilConfig.value = { ...cfg, decision: { ...cfg.decision, [cls]: mode } };
+                            }}
+                        >
+                            <option value="agent">agent — the agent decides</option>
+                            <option value="council">council — poll the council</option>
+                            <option value="user">user — always ask you</option>
+                        </select>
+                    </div>
+                ))}
+                <p class="ac-field__description">
+                    <code>high_impact</code> and <code>user_required</code> are
+                    locked to “user” (Iron Law) and not editable here.
+                </p>
+            </fieldset>
         </div>
     );
 }
@@ -973,38 +1529,30 @@ function PacksStepBody(): preact.JSX.Element {
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
-    // three install-only steps (ai-tools / packs / modules) and the
-    // settings section. The user just finished modules at index 2 and
-    // is now landing on Step 4 (identity, index 3). Render the handoff
-    // only when the install entry mode is active and the user has not
-    // already acknowledged the transition in this session.
+    // four install-only steps (ai-tools / roles / packs / modules) and the
+    // settings section. The user just finished modules at index 3 and
+    // is now landing on the first settings step (identity, index 4). Render
+    // the handoff only when the install entry mode is active and the user
+    // has not already acknowledged the transition in this session.
     const onContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && stepIndex.value === 3
+        && stepIndex.value === 4
         && !continueAcknowledged.value;
     if (onContinueHandoff) {
-        return (
-            <ContinueScreen
-                busy={saving.value}
-                onContinue={(): void => {
-                    continueAcknowledged.value = true;
-                }}
-                onFinishHere={(): void => {
-                    continueAcknowledged.value = true;
-                    void goTo(activeTotalSteps() - 1);
-                }}
-            />
-        );
+        return <ContinueScreen />;
     }
     if (step.kind === 'form') {
         const sliced = sliceSchema(schema.value!, step.paths ?? []);
         return (
-            <SchemaForm
-                schema={sliced}
-                values={values.value}
-                errors={errors.value}
-                onChange={(next): void => { values.value = next; }}
-            />
+            <>
+                {step.id === 'identity' ? <RtkRow /> : null}
+                <SchemaForm
+                    schema={sliced}
+                    values={values.value}
+                    errors={errors.value}
+                    onChange={(next): void => { values.value = next; }}
+                />
+            </>
         );
     }
     if (step.kind === 'userMd') {
@@ -1012,13 +1560,14 @@ function StepBody(): preact.JSX.Element | null {
             return <p>Loading .agent-user.yml…</p>;
         }
         // Server validates `body.identity` against `userIdentitySchema`,
-        // so Zod paths come back as `identity.name`, `style.formality`,
+        // so Zod paths come back as `identity.name`, `style.pace`,
         // … with no wire-level wrapper to strip — they bind 1:1 to the
         // form's field keys.
         return (
             <UserMdForm
                 value={userMdBody.value}
                 errors={errors.value}
+                hideRole={extendedSteps.value && wizardMode.value === 'install'}
                 onChange={(next): void => {
                     userMdBody.value = next;
                     userMdSkipped.value = false;
@@ -1029,11 +1578,17 @@ function StepBody(): preact.JSX.Element | null {
     if (step.kind === 'aiTools') {
         return <AiToolsStepBody />;
     }
+    if (step.kind === 'roles') {
+        return <RolesStepBody />;
+    }
     if (step.kind === 'packs') {
         return <PacksStepBody />;
     }
     if (step.kind === 'modules') {
         return <ModulesStepBody />;
+    }
+    if (step.kind === 'aiCouncil') {
+        return <AiCouncilStepBody />;
     }
 
     // review
@@ -1106,6 +1661,22 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     const total = activeTotalSteps();
     const step = stepAt(idx, { extended: extendedSteps.value });
     const isLast = idx === total - 1;
+    // AI-tools (Step 1) and packs (Step 2) require at least one effective
+    // selection before Next is allowed (road-to-wizard-ux-improvements
+    // follow-up). For packs, "effective" excludes framework boxes whose
+    // language is off, mirroring what actually gets installed.
+    const blockedByEmptySelection =
+        (step.kind === 'aiTools' && Object.values(selectedTools.value).filter(Boolean).length === 0)
+        || (step.kind === 'roles' && Object.values(selectedRoles.value).filter(Boolean).length === 0)
+        || (step.kind === 'packs' && resolveSelectedPacks().length === 0);
+    // Install→setup hand-off (road-to-wizard-ux-improvements § Phase 6): a
+    // "Step 3.5" intermediate. Next acknowledges + reveals "Editor and tooling"
+    // (the identity form at the same index); "Finish install here" sits in the
+    // nav like Skip and jumps to Review.
+    const isContinueHandoff = extendedSteps.value
+        && wizardMode.value === 'install'
+        && idx === 4
+        && !continueAcknowledged.value;
 
     const rec = recoveryStatus.value;
     const showRecovery = rec !== null && !recoveryDismissed.value;
@@ -1171,17 +1742,42 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
             <div class="ac-wizard__step">
                 <StepBody />
             </div>
+            {blockedByEmptySelection
+                ? (
+                    <p class="ac-wizard__hint">
+                        {step.kind === 'aiTools'
+                            ? 'Select at least one AI tool to continue.'
+                            : step.kind === 'roles'
+                                ? 'Select at least one role to continue.'
+                                : 'Select at least one capability pack to continue.'}
+                    </p>
+                )
+                : null}
             <StepNav
                 canGoPrev={idx > 0}
-                canGoNext={!isLast}
-                canSkip={step.kind === 'userMd' || step.kind === 'modules'}
+                canGoNext={!isLast && !blockedByEmptySelection}
+                canSkip={isContinueHandoff || step.kind === 'userMd' || step.kind === 'modules'}
+                skipLabel={isContinueHandoff ? 'Finish install here' : 'Skip'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
                 canFinish={reviewChanges.value.length > 0 || userMdChanged()}
                 completed={wizardComplete.value}
                 onPrev={(): void => { void goTo(idx - 1); }}
-                onNext={(): void => { void goTo(idx + 1); }}
+                onNext={(): void => {
+                    if (isContinueHandoff) {
+                        // Reveal "Editor and tooling" at this same index — do
+                        // not advance past it.
+                        continueAcknowledged.value = true;
+                        return;
+                    }
+                    void goTo(idx + 1);
+                }}
                 onSkip={(): void => {
+                    if (isContinueHandoff) {
+                        continueAcknowledged.value = true;
+                        void goTo(activeTotalSteps() - 1);
+                        return;
+                    }
                     if (step.kind === 'modules') {
                         modulesSkipped.value = true;
                     } else {

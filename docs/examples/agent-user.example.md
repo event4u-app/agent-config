@@ -8,7 +8,6 @@ role:
   - founder
   - engineer
 style:
-  formality: "informal"
   pace: "pragmatic"
 voice_sample: |
   Mach das einfach. Wenn unklar, frag im Council. Tokenverbrauch ist ok,

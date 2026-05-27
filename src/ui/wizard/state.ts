@@ -191,6 +191,28 @@ export interface DiscoveryPack {
     description: string;
     /** Other pack ids this pack hints at as prerequisites. */
     requires_hint?: string[];
+    /**
+     * Advisory wizard grouping (road-to-wizard-ux-improvements § Phase 4):
+     * the language pack id this framework pack collapses under in Step 2
+     * (e.g. `react` → `typescript`). Absent on language/standalone packs.
+     */
+    cluster?: string;
+    /** Workspace/role domains this pack belongs to (e.g. `engineering`, `founder`). */
+    workspaces?: string[];
+}
+
+/**
+ * A discovery workspace = a role/domain the user works in (Engineering,
+ * Product, Finance, Founder, …). Surfaced as Step-2 checkboxes; the selected
+ * ids become `.agent-user.yml` `role[]` and recommend each domain's
+ * `default_packs` on the packs step.
+ */
+export interface DiscoveryWorkspace {
+    id: string;
+    label: string;
+    description: string;
+    default_packs: string[];
+    optional_packs?: string[];
 }
 
 /**
@@ -236,6 +258,59 @@ export const discoveryLoading = signal(false);
 export const discoveryLoadError = signal<string | null>(null);
 export const discoveryPacks = signal<DiscoveryPack[]>([]);
 export const detectedPackIds = signal<string[]>([]);
+/** Role/domain workspaces from the manifest, rendered as Step-2 checkboxes. */
+export const discoveryWorkspaces = signal<DiscoveryWorkspace[]>([]);
+
+/**
+ * Selected role/domain ids (Step 2) — keyed for O(1) toggle. Truthy keys
+ * become `.agent-user.yml` `role[]` and drive pack recommendations on Step 3.
+ * `agent-config-maintainer` is intentionally excluded from the UI list.
+ */
+export const selectedRoles = signal<Record<string, boolean>>({});
+
+/**
+ * AI-tool native presence on the machine (road-to-wizard-ux-improvements
+ * § Phase 2). `{ <toolId>: installed }` from `GET /api/v1/wizard/detect-tools`.
+ * Drives the Step-1 per-tool badge and first-run pre-selection. Loaded once
+ * per session; `{}` until the probe lands (badges render "not installed").
+ */
+export const toolsDetectionLoaded = signal(false);
+export const toolsDetectionLoading = signal(false);
+export const toolPresence = signal<Record<string, boolean>>({});
+
+/**
+ * rtk (Rust Token Killer) presence on the Editor-and-tooling step
+ * (road-to-wizard-ux-improvements § Phase 7). Always detected at runtime via
+ * `GET /api/v1/wizard/detect-rtk` — never read from settings. `null` = not yet
+ * probed. When missing, `rtkInstallCommand` carries the per-OS install hint.
+ */
+export const rtkDetectionLoaded = signal(false);
+export const rtkInstalled = signal<boolean | null>(null);
+export const rtkInstallCommand = signal<string | null>(null);
+export const rtkRepo = signal<string>('https://github.com/event4u-app/rtk');
+
+/**
+ * AI Council step (road-to-wizard-ux-improvements § Phase 8). The
+ * wizard-controlled scalar subset of `.ai-council.yml`, loaded from
+ * `GET /api/v1/wizard/ai-council` and persisted on finish via POST. Only the
+ * safe scalar leaves are editable; deep/locked knobs stay hand-edited.
+ */
+export type AiCouncilMode = 'manual' | 'api' | 'cli';
+export type AiCouncilClassMode = 'agent' | 'council' | 'user';
+export interface AiCouncilMemberState { enabled: boolean; participateLowImpact: boolean }
+export interface AiCouncilState {
+    enabled: boolean;
+    defaultMode: AiCouncilMode;
+    minRounds: number;
+    maxTotalUsd: number;
+    members: Record<string, AiCouncilMemberState>;
+    decision: Record<string, AiCouncilClassMode>;
+}
+export const aiCouncilLoaded = signal(false);
+export const aiCouncilConfig = signal<AiCouncilState | null>(null);
+export const aiCouncilProviders = signal<readonly string[]>([]);
+export const aiCouncilKeyPresence = signal<Record<string, boolean>>({});
+export const aiCouncilKeyInstall = signal<Record<string, string>>({});
 
 /**
  * Tool + pack selection — keyed by id for O(1) toggle. The on-wire
@@ -245,6 +320,12 @@ export const detectedPackIds = signal<string[]>([]);
  */
 export const selectedTools = signal<Record<string, boolean>>({});
 export const selectedPacks = signal<Record<string, boolean>>({});
+/**
+ * True once the user has manually toggled a pack on Step 3. Until then the
+ * packs step re-seeds from the selected roles' recommended packs on entry;
+ * after a manual edit the role-driven seeding stops clobbering the choice.
+ */
+export const packsTouched = signal(false);
 
 /**
  * Wire-shape of an InstallPlan returned by `POST /api/v1/install/plan`

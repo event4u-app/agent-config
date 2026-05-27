@@ -219,6 +219,20 @@ examples instead. No ADR-014 issued.
 
 Driven by [`agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md`](../../agents/roadmaps/monorepo-phase-1-frontmatter-metadata.md).
 
+### 2026-05-27 — Additive advisory `cluster:` key on packs
+
+Pack entries in [`config/discovery/packs.yml`](../../config/discovery/packs.yml)
+may carry an optional `cluster: <language-id>` field. It groups a framework
+pack under a programming-language tile in the setup wizard's capability-packs
+step (e.g. `laravel: cluster: php`, `react: cluster: typescript`). Like
+`requires_hint`, it is **advisory only** — the installer does not act on it; it
+drives the wizard UI's collapsible language→framework grouping. The value must
+be a known pack id (and not self-referential), enforced by
+[`scripts/lint_discovery_vocabulary.py`](../../scripts/lint_discovery_vocabulary.py)
+and emitted into the discovery manifest. Additive, no vocabulary rename.
+
+Driven by [`agents/roadmaps/road-to-wizard-ux-improvements.md`](../../agents/roadmaps/road-to-wizard-ux-improvements.md) § Phase 4 (AI-council-resolved: reuse `packs.yml` as the single source of truth rather than a second mapping file).
+
 ## Cross-references
 
 - [ADR-007 — Agent Discovery Scopes](ADR-007-agent-discovery-scopes.md):

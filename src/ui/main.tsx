@@ -12,6 +12,7 @@
 import { render } from 'preact';
 import { App } from './App.js';
 import { setAuthToken } from './api.js';
+import { startServerLifecycle } from './serverLifecycle.js';
 import './tokens.css';
 import './app.css';
 
@@ -29,6 +30,8 @@ function bootstrap(): void {
         return;
     }
     setAuthToken(token);
+    // Keep the server alive while open; ask it to exit when the window closes.
+    startServerLifecycle(token);
     target.textContent = '';
     render(<App />, target);
 }
