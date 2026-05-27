@@ -793,6 +793,41 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.2.0](https://github.com/event4u-app/agent-config/compare/4.1.0...4.2.0) (2026-05-27)
+
+### Features
+
+* **wizard:** GUI apply streams the real install.py bridge (SSE) ([7d8963d](https://github.com/event4u-app/agent-config/commit/7d8963d7108671a359153c1360cca79b77a1ca5b))
+* **install:** wire --apply-payload real-apply + NDJSON; fix GUI-launch drift ([7f1159a](https://github.com/event4u-app/agent-config/commit/7f1159a77b0de6cdafae7e913aae4e3795c2abf0))
+
+### Bug Fixes
+
+* **install:** validate /plan output via InstallPlanWireSchema ([4548ffe](https://github.com/event4u-app/agent-config/commit/4548ffe2275e79b7d901a5a11183f0ff7023b9bd))
+* **lint:** allowlist cross-stack noise-segment doc in module-detect-on-the-fly ([49ee5c3](https://github.com/event4u-app/agent-config/commit/49ee5c36cdea06e7b7614b8b84ab5d7560e0d0ec))
+* **template:** bump agent-project-settings.example pin to 4.1.0 ([7b918be](https://github.com/event4u-app/agent-config/commit/7b918be7f187c7cb2f597622fcd7a9bf3209fbe2))
+* **settings:** add roadmap.skip_pre_run_gate to the settings schema ([2221757](https://github.com/event4u-app/agent-config/commit/2221757d7860c23b6ddd264371ff5e8f56293e67))
+
+### Documentation
+
+* **roadmap:** refresh dashboard after archiving single-install roadmap ([38a6c89](https://github.com/event4u-app/agent-config/commit/38a6c89971429c42823a3a60eff6f595a1010f43))
+* **roadmap:** complete + archive road-to-single-install-source-of-truth ([ff06721](https://github.com/event4u-app/agent-config/commit/ff06721390eb09e55d4474b1e9dfd37be8b91cd8))
+* **roadmap:** track + complete road-to-single-install-source-of-truth ([2ee7162](https://github.com/event4u-app/agent-config/commit/2ee7162b4a4040eac72096b7cda3fb3f76966561))
+* align gui-wizard contract + README init story with the real GUI ([a2864a1](https://github.com/event4u-app/agent-config/commit/a2864a1c337d2e14f6e206e12d002d9793eb360d))
+
+### Refactoring
+
+* **install:** retire the parallel TypeScript apply mirror ([f4a5702](https://github.com/event4u-app/agent-config/commit/f4a5702d7919e95d7c641fe9e2788cfecef48e2c))
+
+### Tests
+
+* **install:** parity, headless, and WIZARD_READY handshake coverage ([ef048c9](https://github.com/event4u-app/agent-config/commit/ef048c935c33f8b63f57d4c70af5af137759c831))
+
+### Chores
+
+* commit leftovers ([c4e3ef1](https://github.com/event4u-app/agent-config/commit/c4e3ef1b727918ff8baf9cf3e8d014148d5182b3))
+
+Tests: 5052 (+9 since 4.1.0)
+
 ## [4.1.0](https://github.com/event4u-app/agent-config/compare/3.3.0...4.1.0) (2026-05-27)
 
 ### Features
