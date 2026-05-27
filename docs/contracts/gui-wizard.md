@@ -90,7 +90,12 @@ Versioned under `/api/v1/`. Selected routes:
 | POST   | `/api/v1/wizard/state`        | Persist state between steps                                             |
 | GET    | `/api/v1/wizard/manifest`     | Locked discovery-manifest (extended mode)                               |
 | GET    | `/api/v1/wizard/auto-detect`  | Project-signal evidence for the `ai-tools` step (extended mode)         |
+| GET    | `/api/v1/wizard/detect-tools` | Native AI-tool presence (home/app/`$PATH`) for Step-1 pre-select + badge |
+| GET    | `/api/v1/wizard/detect-rtk`   | rtk presence + per-OS install hint (Editor-and-tooling step)            |
+| GET    | `/api/v1/wizard/ai-council`   | AI-council scalar subset + provider key presence (extended mode)        |
+| POST   | `/api/v1/wizard/ai-council`   | Comment-preserving scalar merge into `.ai-council.yml`                  |
 | POST   | `/api/v1/wizard/finish`       | 2PC commit of settings + user-identity                                  |
+| POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
 | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `scripts/install.py --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
 | POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
@@ -106,6 +111,36 @@ Every request passes three `onRequest` hooks in
 an `Origin` allow-list (browser-issued requests), and a per-server bearer
 token (`Authorization: Bearer <token>`, minted at boot, surfaced in the
 `?token=` URL). A bad token / Host / Origin returns `403`.
+
+### Browser-lifecycle shutdown
+
+In real-serve (`runUiServe`), the server stops itself when the browser that
+drives it goes away — the local process should not outlive its only client:
+
+- The SPA ([`src/ui/serverLifecycle.ts`](../../src/ui/serverLifecycle.ts))
+  heartbeats `GET /api/v1/ping` every 30s while the tab is visible and the
+  user has interacted within the last 30 min. On `pagehide` (window/tab
+  close) it fires `navigator.sendBeacon('/api/v1/shutdown?token=…')` (the
+  token rides as a query param because `sendBeacon` cannot set headers); and
+  once the user has been idle for 30 min it fires the same beacon instead of
+  a ping, so the server stops even with the tab still open.
+- The server (`createApp` `idleShutdown` option, passed only by `runUiServe`)
+  exits on that beacon, and — as a backstop for crashes where neither beacon
+  is delivered — via an idle timer that **arms only after the first authed
+  request** (so headless / `--allow-headless` manual-connect servers are
+  never killed before the operator attaches) and fires after 30 min of
+  silence.
+
+On boot, `runUiServe` records `{pid, port, url}` to
+`~/.event4u/agent-config/local-server.json`
+([`src/server/serverInfo.ts`](../../src/server/serverInfo.ts)) and removes it
+on graceful exit. A fresh `agent-config init` (via `scripts/install.py`
+`_kill_stale_wizard_server`) reads that record, terminates a still-running
+prior instance, and starts a new server — so init always lands on step 1.
+
+`createApp` is inert (no watchdog, no `/api/v1/shutdown` route) unless
+`idleShutdown` is supplied, so the in-process test harness
+([`tests/server/helpers.ts`](../../tests/server/helpers.ts)) is unaffected.
 
 ## Real apply — single source of truth
 
@@ -185,16 +220,69 @@ effect):
 
 | `extendedSteps` | Steps | Layout |
 |---|---|---|
-| `false` | 7 | `editor → personality → cost → roadmap-quality → memory → user-md → review` |
-| `true`  | 9 | `ai-tools → packs → editor → personality → cost → roadmap-quality → memory → user-md → review` |
+| `false` | 9 | `welcome → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `true`  | 13 | `welcome → ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+
+The `welcome` step (Step 1, both modes) collects **name + language** up front —
+pulled out of the user-md step so the agent knows who it's talking to before
+anything else. Name pre-fills from the OS account (`GET /api/v1/ping`
+`systemUser`) when empty; language pre-fills from the browser locale
+(`navigator.language`) when no `.agent-user.yml` exists yet. In install mode
+the user-md step hides its name + language fields (collected here); setup mode
+skips the welcome step (it lands on the first settings step) and keeps those
+fields in the user-md form.
+
+The `roles` step presents the discovery **workspaces** as the *area*
+(Engineering, Product, Finance, Founder, GTM, Ops, …; the maintainer workspace
+is hidden) — each tile shows the area label, then advisory `example_roles`
+(e.g. Engineering → "Developer, CTO"; Finance → "CFO") and the description. The
+selected workspace ids become `.agent-user.yml` `role[]` (the example roles are
+UI hints, not the stored value) and recommend each domain's `default_packs` on
+the packs step. In install mode the user-md
+step therefore hides its role field (collected here instead); setup mode keeps
+the role field since it skips the roles step.
+
+The `ai-council` step (road-to-wizard-ux-improvements § Phase 8) configures the
+wizard-controlled scalar subset of `.ai-council.yml` (enable, per-member
+enable + low-impact, global transport mode, debate rounds, cost budget, the
+non-locked `decision_resolution` classes) via `GET`/`POST /api/v1/wizard/ai-council`;
+the file is written with comment-preserving `replaceScalar` edits.
 
 The step shapes themselves are declared in
-[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the two
-prepended lead steps (`ai-tools`, `packs`) carry no `paths` and use
-dedicated renderers in `WizardPage.tsx`. `getWizardSteps({ extended })`
-is the single resolver; the UI consumes the active list via
-`getActiveSteps()` / `activeTotalSteps()` so a server toggle takes
-effect on the next reload without a code change.
+[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the always-first
+`welcome` step plus the four extended-only lead steps (`ai-tools`, `roles`,
+`packs`, `modules`) carry no `paths` and use dedicated renderers in
+`WizardPage.tsx`.
+`getWizardSteps({ extended })` is the single resolver; the UI consumes the
+active list via `getActiveSteps()` / `activeTotalSteps()` so a server toggle
+takes effect on the next reload without a code change.
+
+### AI-tools / roles / packs selection rules (Steps 2-4)
+
+- **AI-tools pre-selection.** `detect-tools` returns `tools` (installed on the
+  machine) and `configured` (the user's prior selection, persisted to
+  `~/.event4u/agent-config/wizard-tools.json` on each real apply). On a repeat
+  run the wizard pre-selects exactly the `configured` tools; only on a genuine
+  first run (no prior selection) does it fall back to pre-selecting every
+  installed tool.
+- **Roles → packs recommendation.** Each selected role contributes its
+  workspace `default_packs`; the union pre-selects packs on Step 3 (plus
+  auto-detected project packs). The recommendation stops clobbering the
+  selection once the user manually edits a pack. Each pack tile also badges
+  the workspace(s) it belongs to (from the pack's `workspaces`), highlighting
+  the badges that match a role the user picked on Step 2.
+- **Step 2 framework persistence.** A language tile (`cluster`, e.g. PHP)
+  gates its framework children in the UI but never destroys their stored
+  selection. Turning a language off disables — but keeps checked — its
+  children, so a PHP off→on round-trip restores the exact Laravel-on /
+  Symfony-off choice. `resolveSelectedPacks()` filters disabled children at
+  submit time, so a remembered-but-gated framework is not installed.
+- **No-autodetect packs.** Some packs are never pre-selected from project
+  signals (`python` — a non-engineer may have python installed but not need
+  it). The pack stays available to tick manually.
+- **Empty-selection gate.** The AI-tools, roles, and packs steps each block
+  Next until at least one effective selection exists (≥ 1 tool, ≥ 1 role, and
+  ≥ 1 installable pack respectively).
 
 ### `GET /api/v1/wizard/state` payload
 

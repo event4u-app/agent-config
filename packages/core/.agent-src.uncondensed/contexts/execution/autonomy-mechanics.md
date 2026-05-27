@@ -8,7 +8,7 @@ relevant. Detection logic lives in [`autonomy-detection.md`](autonomy-detection.
 
 | Value | Behavior |
 |---|---|
-| `on` | Suppress trivial questions. Act on the obvious next step. Still ask on blocking / critical decisions, and ALWAYS ask on Hard-Floor triggers. |
+| `on` | Suppress trivial questions. Act on the obvious next step. **Never ask "weiter? / shall I continue? / soll ich fortfahren?" between clean batches** — a continuation prompt under `on` is a cheap question, forbidden by [`no-cheap-questions` Iron Law 4](../../rules/no-cheap-questions.md); the persistent setting alone arms that law (see [`cheap-question-mechanics § Iron Law 4`](cheap-question-mechanics.md#iron-law-4--halt-conditions-under-autonomous-mandate)). Still ask on blocking / critical decisions, and ALWAYS ask on Hard-Floor triggers. |
 | `off` | Ask trivial questions too. Use this if you want the agent to check in on each workflow step. |
 | `auto` (default) | Same as `off` by default. Flips to `on` for the rest of the conversation as soon as the user expresses the intent "stop asking, just work". See [detection logic](autonomy-detection.md) — match by **intent**, not exact string. The flip never lifts the Hard Floor. |
 

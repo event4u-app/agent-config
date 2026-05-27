@@ -9,7 +9,7 @@
  *                                  successful commit.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { bootTestApp, authHeaders, fixtureSettings, fixtureUserIdentity, type TestApp } from './helpers.js';
 
@@ -32,9 +32,28 @@ describe('wizard state + finish', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(7);
+        expect(body.totalSteps).toBe(9);
         expect(body.partial).toEqual({});
         expect(body.startedAt).toBeNull();
+    });
+
+    it('GET /state ignores a stale on-disk wizard-state.json (server boot = fresh)', async () => {
+        // road-to-wizard-ux-improvements § Phase 1: a brand-new launch must
+        // start fresh, never resume a step left on disk by a previous run.
+        const stateDir = join(ctx.projectRoot, 'state');
+        mkdirSync(stateDir, { recursive: true });
+        writeFileSync(
+            join(stateDir, 'wizard-state.json'),
+            JSON.stringify({ step: 5, totalSteps: 7, partial: { cost_profile: 'balanced' }, startedAt: new Date().toISOString() }),
+        );
+        // This app booted with empty in-memory session state; the disk file
+        // must be ignored.
+        const res = await ctx.app.inject({
+            method: 'GET', url: '/api/v1/wizard/state', headers: authHeaders(ctx.token, ctx.host),
+        });
+        const body = res.json() as StateBody;
+        expect(body.step).toBe(0);
+        expect(body.partial).toEqual({});
     });
 
     it('POST /state persists the partial and GET resumes it', async () => {

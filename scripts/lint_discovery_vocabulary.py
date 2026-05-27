@@ -101,6 +101,14 @@ def lint(quiet: bool) -> int:
         for hint in pk.get("requires_hint", []) or []:
             if hint not in pack_ids:
                 errors.append(f"packs.yml '{pid}'.requires_hint → unknown pack '{hint}'")
+        # cluster (road-to-wizard-ux-improvements § Phase 4): advisory wizard
+        # grouping; the value must be a known pack id and not self-referential.
+        cluster = pk.get("cluster")
+        if cluster is not None:
+            if cluster not in pack_ids:
+                errors.append(f"packs.yml '{pid}'.cluster → unknown pack '{cluster}'")
+            elif cluster == pid:
+                errors.append(f"packs.yml '{pid}'.cluster → must not reference itself")
 
     # 4. Bidirectional integrity (council HIGH fold-in).
     pack_by_id = {pk.get("id"): pk for pk in packs}

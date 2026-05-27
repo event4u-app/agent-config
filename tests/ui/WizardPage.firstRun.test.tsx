@@ -30,8 +30,8 @@ function resetSignals(): void {
     initialSettings.value = {};
     settingsLastModified.value = 0;
     errors.value = {};
-    userMdBody.value = '';
-    userMdInitial.value = '';
+    userMdBody.value = null;
+    userMdInitial.value = null;
     userMdExists.value = false;
     userMdLoaded.value = false;
     userMdSkipped.value = false;

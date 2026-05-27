@@ -269,7 +269,48 @@ code {
 .ac-wizard__nav { justify-content: space-between; }
 .ac-wizard__nav .ac-button:first-child { margin-right: auto; }
 .ac-wizard__skip { color: var(--color-text-muted); }
+.ac-wizard__hint { margin: var(--space-3) 0 0; color: var(--color-warning, #b45309); font-size: 0.875rem; }
 .ac-wizard__review { display: flex; flex-direction: column; gap: var(--space-4); }
+
+/* AI-tools step (Step 1) — rows with an installed/not-installed badge. */
+.ac-wizard__tool-list { list-style: none; padding-left: 0; margin: 0; display: flex; flex-direction: column; gap: var(--space-1); }
+.ac-wizard__tool-row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.ac-wizard__tool-label { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; }
+.ac-badge { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); padding: 0.1rem var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; }
+.ac-badge--installed { background: var(--color-success-soft); color: var(--color-success); }
+.ac-badge--missing { background: var(--color-surface-alt); color: var(--color-text-muted); }
+.ac-badge--ws { font-size: 0.6875rem; padding: 0.05rem 0.4rem; background: var(--color-surface-alt); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+.ac-badge--ws-active { background: var(--color-accent); color: var(--color-accent-fg); border-color: var(--color-accent); }
+
+/* Capability-packs step (Step 2) — one tile per pack; languages expand to frameworks. */
+.ac-wizard__pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
+.ac-pack-tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.ac-pack-tile__head { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-weight: var(--font-weight-medium); }
+.ac-pack-tile__title { flex: 1; }
+.ac-pack-tile__role { margin: 0; font-size: var(--font-size-xs); color: var(--color-text); }
+.ac-pack-tile__role code { font-size: var(--font-size-xs); }
+.ac-pack-tile__desc { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.ac-pack-tile__ws { display: flex; flex-wrap: wrap; gap: var(--space-1); }
+.ac-pack-tile__children { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: var(--space-2) 0 0 var(--space-4); border: 0; border-top: 1px solid var(--color-border); }
+.ac-pack-tile__children:disabled { opacity: 0.5; }
+.ac-pack-tile__child { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); cursor: pointer; }
+
+/* Module-roots step (Step 3) — styled, stacked input fields. */
+.ac-wizard__module-fields { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-4); }
+
+/* rtk row (Editor-and-tooling step) — detection-driven, with install hint. */
+.ac-rtk-row { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); margin-bottom: var(--space-4); border: 1px solid var(--color-border); border-radius: var(--radius-md); }
+.ac-rtk-row__head { display: flex; align-items: center; gap: var(--space-2); }
+.ac-rtk-row__label { font-weight: var(--font-weight-medium); }
+.ac-rtk-row__install { display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-2); }
+.ac-rtk-row__cmd { display: block; width: 100%; padding: var(--space-2) var(--space-3); background: var(--color-surface-alt); border-radius: var(--radius-sm); font-family: var(--font-mono); font-size: var(--font-size-xs); user-select: all; }
+
+/* AI Council step (Phase 8). */
+.ac-council { display: flex; flex-direction: column; gap: var(--space-4); }
+.ac-council__master { display: flex; align-items: center; gap: var(--space-2); font-weight: var(--font-weight-medium); }
+.ac-council__section { display: flex; flex-direction: column; gap: var(--space-4); border: 0; padding: 0; margin: 0; }
+.ac-council__section:disabled { opacity: 0.55; }
+.ac-council__h { margin: var(--space-2) 0 0; font-size: var(--font-size-sm); color: var(--color-text-muted); }
 
 .ac-wizard__review-nav { display: flex; flex-direction: column; gap: var(--space-2); }
 .ac-wizard__review-nav-label { color: var(--color-text-muted); font-size: var(--font-size-sm); margin: 0; }

@@ -10,7 +10,17 @@
 import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { readFileSync } from 'node:fs';
+import { userInfo } from 'node:os';
 import { PACKAGE_JSON } from '../../cli/paths.js';
+
+function systemUserName(): string {
+    try {
+        const name = userInfo().username;
+        return typeof name === 'string' ? name : '';
+    } catch {
+        return '';
+    }
+}
 
 export const PingResponseSchema = z.object({
     ok: z.literal(true),
@@ -30,6 +40,12 @@ export const PingResponseSchema = z.object({
      * operator pinned `writeRoot` via `--project`.
      */
     projectScopeAvailable: z.boolean(),
+    /**
+     * Best-effort OS account name (e.g. `matze`), used to pre-fill the
+     * welcome step's name field on a fresh wizard. Empty string when the
+     * platform does not expose it.
+     */
+    systemUser: z.string(),
 });
 
 export type PingResponse = z.infer<typeof PingResponseSchema>;
@@ -66,6 +82,7 @@ export function pingRoute(opts: PingRouteOptions): FastifyPluginAsync {
                 mode: opts.mode,
                 dryRun: opts.dryRun === true,
                 projectScopeAvailable: opts.projectScopeRoot !== undefined && opts.projectScopeRoot !== null,
+                systemUser: systemUserName(),
             };
             return response;
         });

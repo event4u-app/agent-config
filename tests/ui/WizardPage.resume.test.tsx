@@ -27,8 +27,8 @@ function resetSignals(): void {
     initialSettings.value = {};
     settingsLastModified.value = 0;
     errors.value = {};
-    userMdBody.value = '';
-    userMdInitial.value = '';
+    userMdBody.value = null;
+    userMdInitial.value = null;
     userMdExists.value = false;
     userMdLoaded.value = false;
     userMdSkipped.value = false;
@@ -100,15 +100,16 @@ describe('WizardPage resume', () => {
     });
 
     it('triggers loadUserMdOnce when resuming directly on the userMd step (no Loading hang)', async () => {
-        // Resume on step 5 (user-md). Without the post-loadAll dispatch the
-        // body fetch would never fire and the form would stay stuck on
-        // "Loading .agent-user.md…".
-        const restore = installFetchMock(5, {});
+        // Resume on step 7 (user-md). Non-extended order: welcome(0), editor(1),
+        // personality(2), cost(3), roadmap-quality(4), memory(5), ai-council(6),
+        // user-md(7). Without the post-loadAll dispatch the body fetch would
+        // never fire and the form would stay stuck on "Loading .agent-user.md…".
+        const restore = installFetchMock(7, {});
         try {
             render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             await waitFor(() => expect(userMdLoaded.value).toBe(true));
-            expect(stepIndex.value).toBe(5);
+            expect(stepIndex.value).toBe(7);
         } finally {
             restore();
         }

@@ -6,7 +6,7 @@
 > and Phase 3 (central policy) shipping first.
 >
 > Open design questions live in
-> [`agents/tmp/council-question-connector-scope.md`](../../agents/tmp/old/council-question-connector-scope.md).
+> [`agents/tmp/council-question-connector-scope.md`](../../agents/old/council-question-connector-scope.md).
 
 ## Audience
 
@@ -124,6 +124,6 @@ All of the above land in Phase 5, contingent on Phases 2 + 3.
 ## Cross-references
 
 - 🚧 Reserved ADR slot: `docs/decisions/ADR-025-connector-scope.md`.
-- Council question: [`agents/tmp/council-question-connector-scope.md`](../../agents/tmp/old/council-question-connector-scope.md).
+- Council question: [`agents/tmp/council-question-connector-scope.md`](../../agents/old/council-question-connector-scope.md).
 - Quickstart: [`quickstart.md`](quickstart.md).
 - Policy cookbook: [`policy-cookbook.md`](policy-cookbook.md).

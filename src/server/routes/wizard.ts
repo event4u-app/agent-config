@@ -18,7 +18,7 @@
  */
 import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { promises as fs, existsSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { tmpdir, homedir } from 'node:os';
 import { join, dirname } from 'node:path';
 import { spawn } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
@@ -26,9 +26,11 @@ import { z } from 'zod';
 import { settingsSchema } from '../schemas/settings.js';
 import { userIdentitySchema } from '../../shared/userMd/schema.js';
 import { composeUserIdentity } from '../../shared/userMd/utils.js';
-import { mergeIntoTemplate } from '../io/yamlIO.js';
+import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
+import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
+import { readSelectedTools, writeSelectedTools } from '../../install/selectedTools.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -99,15 +101,27 @@ export interface WizardRouteOptions {
 const STATE_REL = join('state', 'wizard-state.json');
 const SETTINGS_REL = join('settings', '.agent-settings.yml');
 const USER_IDENTITY_REL = join('settings', '.agent-user.yml');
+// road-to-wizard-ux-improvements § Phase 8 — AI Council config file. Lives
+// beside the other settings under <writeRoot>/settings/; seeded from the
+// package's hand-tuned reference when the target is absent (first run).
+const AI_COUNCIL_REL = join('settings', '.ai-council.yml');
+const PACKAGE_AI_COUNCIL_REL = join('agents', 'settings', '.ai-council.yml');
+const AI_COUNCIL_PROVIDERS = ['anthropic', 'openai', 'gemini', 'xai', 'perplexity'] as const;
+// Only these two ship an interactive 0600-key installer; the rest use env vars.
+const AI_COUNCIL_KEY_INSTALL: Readonly<Record<string, string>> = {
+    anthropic: 'bash scripts/install_anthropic_key.sh',
+    openai: 'bash scripts/install_openai_key.sh',
+};
 /** Legacy flat-root files — read for migration, deleted on successful finish. */
 const LEGACY_USER_MD_REL = '.agent-user.md';
 const LEGACY_SETTINGS_REL = '.agent-settings.yml';
-// Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`
-// and the chat-side `~/.claude/skills/onboard/SKILL.md`. Bump in lockstep.
-// Extended mode (road-to-global-only-install § Phase 1) prepends three
-// steps (ai-tools + packs + modules) to ship the unified 10-step flow.
-const DEFAULT_TOTAL_STEPS = 7;
-const EXTENDED_TOTAL_STEPS = 10;
+// Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`.
+// Bump in lockstep. Core flow = 8 steps (editor, personality, cost,
+// roadmap-quality, memory, ai-council, user-md, review —
+// road-to-wizard-ux-improvements § Phase 8 added ai-council). Extended mode
+// prepends three install-only steps (ai-tools + packs + modules) → 11.
+const DEFAULT_TOTAL_STEPS = 9;
+const EXTENDED_TOTAL_STEPS = 13;
 
 /**
  * Discovery-manifest path. Resolved from the package root the server
@@ -155,17 +169,6 @@ function statePath(root: string): string {
     return join(root, STATE_REL);
 }
 
-async function readState(root: string): Promise<WizardState | null> {
-    try {
-        const raw = await fs.readFile(statePath(root), 'utf8');
-        const parsed = wizardStateSchema.safeParse(JSON.parse(raw));
-        return parsed.success ? parsed.data : null;
-    } catch (err) {
-        if ((err as NodeJS.ErrnoException).code === 'ENOENT') return null;
-        return null;
-    }
-}
-
 async function writeState(root: string, state: WizardState): Promise<void> {
     const path = statePath(root);
     await fs.mkdir(dirname(path), { recursive: true });
@@ -174,6 +177,81 @@ async function writeState(root: string, state: WizardState): Promise<void> {
 
 async function readTemplate(packageRoot: string): Promise<string> {
     return fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
+}
+
+/**
+ * Read the AI-council YAML body for editing (road-to-wizard-ux-improvements
+ * § Phase 8): prefer the target under `<writeRoot>/settings/.ai-council.yml`;
+ * fall back to the package's hand-tuned reference so a first-run consumer edits
+ * a fully-commented file rather than a synthesised stub.
+ */
+async function readCouncilBody(writeRoot: string, packageRoot: string): Promise<string> {
+    try {
+        return await fs.readFile(join(writeRoot, AI_COUNCIL_REL), 'utf8');
+    } catch (err) {
+        if ((err as NodeJS.ErrnoException).code !== 'ENOENT') throw err;
+    }
+    return fs.readFile(join(packageRoot, PACKAGE_AI_COUNCIL_REL), 'utf8');
+}
+
+/** Which provider key files exist on disk (`~/.event4u/agent-config/<p>.key`). */
+function councilKeyPresence(): Record<string, boolean> {
+    const roots = [
+        join(homedir(), '.event4u', 'agent-config'),
+        join(homedir(), '.config', 'agent-config'),
+    ];
+    const out: Record<string, boolean> = {};
+    for (const p of AI_COUNCIL_PROVIDERS) {
+        out[p] = roots.some((r) => existsSync(join(r, `${p}.key`)));
+    }
+    return out;
+}
+
+interface CouncilMemberView { enabled: boolean; participate_low_impact: boolean }
+interface CouncilConfigView {
+    enabled: boolean;
+    defaults: { mode: string; min_rounds: number };
+    cost_budget: { max_total_usd: number };
+    members: Record<string, CouncilMemberView>;
+    // Mode per decision class (trivial/low_impact/medium_impact); matches the
+    // SPA `AiCouncilState.decision` + the POST payload `decision` field.
+    decision: Record<string, string>;
+}
+
+/** Pull the wizard-controlled scalar subset out of a parsed council config. */
+function extractCouncilConfig(body: string): CouncilConfigView {
+    const doc = parseYaml(body) as Record<string, unknown>;
+    const obj = (v: unknown): Record<string, unknown> => (typeof v === 'object' && v !== null ? v as Record<string, unknown> : {});
+    const defaults = obj(doc['defaults']);
+    const costBudget = obj(doc['cost_budget']);
+    const membersRaw = obj(doc['members']);
+    const dr = obj(doc['decision_resolution']);
+    const classes = obj(dr['classes']);
+    const members: Record<string, CouncilMemberView> = {};
+    for (const p of AI_COUNCIL_PROVIDERS) {
+        const m = obj(membersRaw[p]);
+        members[p] = {
+            enabled: m['enabled'] === true,
+            participate_low_impact: m['participate_low_impact'] === true,
+        };
+    }
+    const decision: Record<string, string> = {};
+    for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
+        const c = obj(classes[cls]);
+        if (typeof c['mode'] === 'string') decision[cls] = c['mode'];
+    }
+    return {
+        enabled: doc['enabled'] === true,
+        defaults: {
+            mode: typeof defaults['mode'] === 'string' ? defaults['mode'] as string : 'api',
+            min_rounds: typeof defaults['min_rounds'] === 'number' ? defaults['min_rounds'] as number : 2,
+        },
+        cost_budget: {
+            max_total_usd: typeof costBudget['max_total_usd'] === 'number' ? costBudget['max_total_usd'] as number : 0,
+        },
+        members,
+        decision,
+    };
 }
 
 /**
@@ -431,6 +509,23 @@ const modulesConfigSchema = z.object({
     skip_dirs: z.array(z.string()).optional(),
 }).strict();
 
+// road-to-wizard-ux-improvements § Phase 8 — wizard-controlled scalar subset of
+// `.ai-council.yml`. Scalar leaves only (safe for `replaceScalar`); the LOCKED
+// decision classes (high_impact / user_required) and deep knobs (advisors,
+// model_ladder, …) are intentionally NOT writable here — hand-edit only.
+const aiCouncilPayloadSchema = z.object({
+    enabled: z.boolean().optional(),
+    defaultMode: z.enum(['manual', 'api', 'cli']).optional(),
+    minRounds: z.number().int().min(1).optional(),
+    maxTotalUsd: z.number().min(0).optional(),
+    members: z.record(z.object({
+        enabled: z.boolean().optional(),
+        participateLowImpact: z.boolean().optional(),
+    })).optional(),
+    // keys ∈ {trivial, low_impact, medium_impact} — others ignored.
+    decision: z.record(z.enum(['agent', 'council', 'user'])).optional(),
+}).strict();
+
 export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }): FastifyPluginAsync {
     const extended = opts.extendedSteps === true;
     const totalSteps = opts.totalSteps ?? (extended ? EXTENDED_TOTAL_STEPS : DEFAULT_TOTAL_STEPS);
@@ -442,17 +537,20 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
     const dryRun = opts.dryRun === true;
     const legacyReadRoot = opts.legacyReadRoot ?? null;
     const projectScopeRoot = opts.projectScopeRoot ?? null;
-    // Per-process in-memory state for dry-run. One CLI invocation = one
-    // server = one Map; cross-session leakage is impossible because each
-    // `agent-config setup --dry-run` mints a fresh server. See § Dry-run
-    // state contract in the roadmap.
+    // Per-server-session in-memory wizard state (road-to-wizard-ux-improvements
+    // § Phase 1 — "server-boot = fresh"). Each `init`/`setup`/`--dry-run`
+    // launch mints a fresh server, so a brand-new launch ALWAYS starts at
+    // `initialStep`. Resume happens only within the same running server
+    // lifetime (e.g. a browser refresh while the server is up), driven by this
+    // in-memory state — never from the on-disk `wizard-state.json`, which is a
+    // crash breadcrumb, not a cross-launch resume source.
     let memState: WizardState | null = null;
 
     const plugin: FastifyPluginAsync = async (app: FastifyInstance) => {
         app.get('/api/v1/wizard/state', async () => {
-            // Dry-run: in-memory write wins; fall back to disk so an
-            // in-progress real run can be previewed.
-            const existing = dryRun ? (memState ?? await readState(opts.writeRoot)) : await readState(opts.writeRoot);
+            // Resume from the in-memory session only — a fresh server boot has
+            // no session state and therefore starts fresh at `initialStep`.
+            const existing = memState;
             if (existing === null) {
                 return {
                     step: initialStep,
@@ -483,6 +581,124 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             const root = legacyReadRoot ?? process.cwd();
             const signals = detectProjectSignals(root);
             return { root, signals };
+        });
+
+        // road-to-wizard-ux-improvements § Phase 2 — AI-tool presence on the
+        // machine running the wizard. Probes the user's home dir + app bundles
+        // + $PATH (NOT the project) so Step 1 can pre-select installed tools on
+        // first run and badge each tool. Read-only; extended-mode only.
+        app.get('/api/v1/wizard/detect-tools', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            // `configured` = the tools the user selected in a prior wizard run
+            // (wizard-tools.json), NOT every deployed tool. Step 1 pre-selects
+            // these on a repeat run; only when none are recorded does it fall
+            // back to pre-selecting every installed tool (first-run convenience).
+            return {
+                tools: detectInstalledTools(),
+                configured: readSelectedTools(new Set(knownToolIds())),
+            };
+        });
+
+        // road-to-wizard-ux-improvements § Phase 7 — rtk presence on the
+        // Editor-and-tooling step. Detection is the ONLY source of truth (the
+        // value is never loaded from `.agent-settings.yml`). When rtk is
+        // missing, return the suggested per-OS install command + repo so the
+        // UI can offer a copy-and-run button (we surface the command rather
+        // than shelling out an unverified package install — non-destructive
+        // by default). Read-only; extended-mode only.
+        app.get('/api/v1/wizard/detect-rtk', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const installed = isBinaryOnPath('rtk');
+            // Per-OS install hint (maintainer-tunable). `cargo install --git`
+            // is the portable fallback for the Rust tool when no packaged
+            // formula is known.
+            const repo = 'https://github.com/event4u-app/rtk';
+            const installCommandByOs: Record<string, string> = {
+                darwin: 'brew install rtk',
+                linux: `cargo install --git ${repo}`,
+                win32: `cargo install --git ${repo}`,
+            };
+            return {
+                installed,
+                platform: process.platform,
+                repo,
+                installCommand: installed ? null : (installCommandByOs[process.platform] ?? `cargo install --git ${repo}`),
+            };
+        });
+
+        // road-to-wizard-ux-improvements § Phase 8 — AI Council config.
+        // GET returns the wizard-controlled scalar subset (read from the write
+        // root, or seeded from the package's hand-tuned reference), plus which
+        // provider keys exist + the install-command affordance. Extended only.
+        app.get('/api/v1/wizard/ai-council', async (_request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            try {
+                const body = await readCouncilBody(opts.writeRoot, opts.packageRoot);
+                return {
+                    config: extractCouncilConfig(body),
+                    providers: AI_COUNCIL_PROVIDERS,
+                    keyPresence: councilKeyPresence(),
+                    keyInstall: AI_COUNCIL_KEY_INSTALL,
+                };
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'failed to read .ai-council.yml';
+                await reply.code(500).send({ error: { code: 'COUNCIL_READ_FAILED', message } });
+                return reply;
+            }
+        });
+
+        // POST applies the scalar subset into `.ai-council.yml` via
+        // comment-preserving `replaceScalar` edits (never a full dump), then
+        // atomic-writes <writeRoot>/settings/.ai-council.yml.
+        app.post('/api/v1/wizard/ai-council', async (request, reply) => {
+            if (!extended) {
+                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
+                return reply;
+            }
+            const parsed = aiCouncilPayloadSchema.safeParse(request.body ?? {});
+            if (!parsed.success) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'invalid ai-council payload', fields: zodIssuesToFields(parsed.error.issues) },
+                });
+                return reply;
+            }
+            const p = parsed.data;
+            try {
+                let body = await readCouncilBody(opts.writeRoot, opts.packageRoot);
+                const set = (path: string[], value: unknown): void => {
+                    if (value !== undefined) body = replaceScalar(body, path, value);
+                };
+                set(['enabled'], p.enabled);
+                set(['defaults', 'mode'], p.defaultMode);
+                set(['defaults', 'min_rounds'], p.minRounds);
+                set(['cost_budget', 'max_total_usd'], p.maxTotalUsd);
+                for (const provider of AI_COUNCIL_PROVIDERS) {
+                    const m = p.members?.[provider];
+                    if (m === undefined) continue;
+                    set(['members', provider, 'enabled'], m.enabled);
+                    set(['members', provider, 'participate_low_impact'], m.participateLowImpact);
+                }
+                for (const cls of ['trivial', 'low_impact', 'medium_impact']) {
+                    set(['decision_resolution', 'classes', cls, 'mode'], p.decision?.[cls]);
+                }
+                const target = join(opts.writeRoot, AI_COUNCIL_REL);
+                await fs.mkdir(dirname(target), { recursive: true });
+                await writeAtomic(target, body, { mode: 0o600 });
+                return { ok: true, written: target };
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'failed to write .ai-council.yml';
+                await reply.code(500).send({ error: { code: 'COUNCIL_WRITE_FAILED', message } });
+                return reply;
+            }
         });
 
         // road-to-configurable-modules § Phase E — Modules detect endpoint.
@@ -672,10 +888,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
+            // Always update the in-memory session state (the resume source).
+            memState = parsed.data;
             if (dryRun) {
-                memState = parsed.data;
                 return { ok: true, dryRun: true };
             }
+            // Disk write is a crash breadcrumb only (not read back for resume);
+            // the finish handler clears it on a successful commit.
             await writeState(opts.writeRoot, parsed.data);
             return { ok: true };
         });
@@ -748,6 +967,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 if (!reply.raw.writableEnded) controller.abort();
             };
             reply.raw.on('close', onClose);
+
+            // Record the user's tool selection so the next wizard run
+            // pre-selects exactly these (detect-tools `configured`). Written
+            // on the real-apply path only — a dry-run preview must not.
+            if (payload.schema_version === 'wizard-v2') {
+                writeSelectedTools(payload.tools);
+            }
 
             let written = 0;
             let total = 0;

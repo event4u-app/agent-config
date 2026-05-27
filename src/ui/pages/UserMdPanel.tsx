@@ -10,7 +10,7 @@
  *
  * Wire format is `{ identity }` — the server owns YAML serialization,
  * the UI never touches `js-yaml.dump`. Server-side Zod errors arrive
- * keyed by the dotted field path (`identity.name`, `style.formality`,
+ * keyed by the dotted field path (`identity.name`, `style.pace`,
  * …) which binds 1:1 to UserMdForm field keys; no transformation.
  */
 
@@ -90,7 +90,7 @@ async function save(): Promise<void> {
             // Zod paths bind directly to UserMdForm field keys — the
             // server validates `body.identity` against
             // `userIdentitySchema`, so paths come back as `identity.name`,
-            // `style.formality`, … with no wire-level wrapper to strip.
+            // `style.pace`, … with no wire-level wrapper to strip.
             errors.value = fieldErrorMap(errBody);
             banner.value = topLevelCopy(errBody);
         } else {

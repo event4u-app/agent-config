@@ -58,6 +58,32 @@ def test_preserves_backtick_spans():
     assert "`the/path.md`" in out
 
 
+def test_preserves_markdown_link_target():
+    # Link TARGET must survive byte-for-byte even when a path segment
+    # collides with a drop-token (`is`, `the`, `a`).
+    out = condense_text("See [the guide](docs/what-is-this.md) for the details.\n")
+    assert "docs/what-is-this.md" in out
+
+
+def test_preserves_bare_url():
+    out = condense_text("Read the doc at https://example.com/the/answer/is-here now.\n")
+    assert "https://example.com/the/answer/is-here" in out
+
+
+def test_preserves_bare_path_with_slashes():
+    out = condense_text(
+        "The path docs/is-the-thing/a-file.md is the target that we use.\n"
+    )
+    assert "docs/is-the-thing/a-file.md" in out
+
+
+def test_condenses_link_text_but_not_target():
+    # Prose link text still loses articles; only the slash-bearing target is frozen.
+    out = condense_text("See [the guide](docs/the-guide.md) here.\n")
+    assert "docs/the-guide.md" in out
+    assert "[ guide]" in out  # "the" dropped from link text
+
+
 def test_idempotent_on_clean_condensed_text():
     once = condense_text("The agent is a helper.\n")
     twice = condense_text(once)

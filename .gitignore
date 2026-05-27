@@ -44,6 +44,7 @@ __pycache__/
 /tmp/
 /.tmp/
 /agents/tmp/
+/agents/tmp.old/
 
 # Playwright
 /.playwright-mcp/*

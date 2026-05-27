@@ -84,7 +84,8 @@
         "label": { "type": "string", "minLength": 1 },
         "description": { "type": "string", "minLength": 1 },
         "default_packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
-        "optional_packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } }
+        "optional_packs": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
+        "example_roles": { "type": "array", "items": { "type": "string", "minLength": 1 } }
       }
     },
     "pack": {
@@ -97,6 +98,7 @@
         "description": { "type": "string", "minLength": 1 },
         "workspaces": { "type": "array", "items": { "$ref": "#/$defs/workspace_id" }, "minItems": 1 },
         "requires_hint": { "type": "array", "items": { "$ref": "#/$defs/pack_id" } },
+        "cluster": { "$ref": "#/$defs/pack_id" },
         "trust_level_default": { "$ref": "#/$defs/trust_level" },
         "artefact_count": { "type": "integer", "minimum": 0 },
         "human_review_required": {

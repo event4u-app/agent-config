@@ -3,6 +3,10 @@
 # Source of truth: docs/decisions/ADR-013-discovery-frontmatter-contract.md §packs
 # Amendments require an ADR-013 amendment in the same PR.
 # `requires_hint` is advisory metadata only; runtime does NOT act on it.
+# `cluster: <language-id>` is advisory too (road-to-wizard-ux-improvements
+#   § Phase 4): it groups a framework pack under a language tile in the setup
+#   wizard's pack step (e.g. laravel → php, react → typescript). The value must
+#   be a known pack id. Like `requires_hint`, the installer does NOT act on it.
 # Lint: scripts/lint_discovery_vocabulary.py
 
 - id: engineering-base
@@ -23,6 +27,7 @@
   description: Laravel framework patterns; depends on PHP at the artefact level.
   workspaces: [engineering]
   requires_hint: [php, engineering-base]
+  cluster: php
   trust_level_default: professional
 
 - id: symfony
@@ -30,6 +35,7 @@
   description: Symfony framework patterns; depends on PHP at the artefact level.
   workspaces: [engineering]
   requires_hint: [php, engineering-base]
+  cluster: php
   trust_level_default: professional
 
 - id: javascript
@@ -51,6 +57,7 @@
   description: React framework patterns.
   workspaces: [engineering]
   requires_hint: [javascript, engineering-base]
+  cluster: typescript
   trust_level_default: professional
 
 - id: nextjs
@@ -58,6 +65,7 @@
   description: Next.js framework patterns.
   workspaces: [engineering]
   requires_hint: [react, typescript, engineering-base]
+  cluster: typescript
   trust_level_default: professional
 
 - id: python
@@ -147,7 +155,7 @@
 
 - id: ai-video
   label: AI Video
-  description: AI video pipeline (per ADR-011, the only heavyweight domain).
+  description: AI video pipeline.
   workspaces: [small-business]
   trust_level_default: experimental
   onboarding:

@@ -65,7 +65,7 @@ describe('composeUserIdentity', () => {
             identity: { name: 'Matze' },
             language: 'de',
             role: ['founder', 'engineer'],
-            style: { formality: 'informal', pace: 'pragmatic' },
+            style: { pace: 'pragmatic' },
             voice_sample: 'Mach das einfach.',
             last_updated: '2026-05-19',
         };

@@ -26,7 +26,7 @@ install:
 # /agents user show
 
 Read-only render of the project-root `.agent-user.md` per
-[`docs/contracts/agent-user-schema.md`](../../../../../docs/contracts/agent-user-schema.md).
+[`docs/contracts/agent-user-schema.md`](../../../../../../../docs/contracts/agent-user-schema.md).
 
 Use when:
 
@@ -55,7 +55,7 @@ Parse the YAML frontmatter and the body (everything after the second
 `---`). Validate against the locked v1 schema:
 
 - `version` is `1`.
-- `identity.name`, `language`, `role`, `style.formality`, `style.pace`,
+- `identity.name`, `language`, `role`, `style.pace`,
   `voice_sample`, `last_updated` are all present.
 - File is ≤100 lines total.
 
@@ -73,7 +73,7 @@ Print the persona in this exact shape:
   Identity   : {nickname or name}  ({name} if nickname is set)
   Language   : {language}
   Role       : {role}
-  Style      : {formality} · {pace}
+  Style      : {pace}
 
   Voice sample
   ─────────────
@@ -116,6 +116,6 @@ Do NOT chain to other `/agents user *` commands. Do NOT commit.
 
 ## See also
 
-- Schema: [`agent-user-schema`](../../../../../docs/contracts/agent-user-schema.md).
+- Schema: [`agent-user-schema`](../../../../../../../docs/contracts/agent-user-schema.md).
 - Parent: [`/agents user`](../user.md).
 - Sibling: [`/agents user init`](init.md), [`/agents user update`](update.md).

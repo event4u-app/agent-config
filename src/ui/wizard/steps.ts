@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs' | 'modules';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs' | 'modules' | 'aiCouncil';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -36,6 +36,20 @@ export interface WizardStep {
  * canonical 7-step contract for v2.x users until the merged flow ships
  * end-to-end (Phase 1.9 — npm-version kill-switch, no dual code paths).
  */
+/**
+ * Always-first step (both modes): name + language. Pulled out of the user-md
+ * step so the agent knows who it's talking to before anything else. Language
+ * is pre-filled from the browser locale and the name from the system user
+ * when not already set (see WizardPage).
+ */
+const WELCOME_STEP: WizardStep = {
+    id: 'welcome',
+    title: 'Welcome — who are you?',
+    navLabel: 'You',
+    subtitle: 'Your name and language. Stored in .agent-user.yml; we pre-fill what we can detect.',
+    kind: 'welcome',
+};
+
 const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
     {
         id: 'ai-tools',
@@ -43,6 +57,13 @@ const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
         navLabel: 'AI tools',
         subtitle: 'Pick the editors and CLIs that should pick up this config. Auto-detect runs first; you can override.',
         kind: 'aiTools',
+    },
+    {
+        id: 'roles',
+        title: 'What do you work on?',
+        navLabel: 'Roles',
+        subtitle: 'Pick the areas you work in. We use them to recommend capability packs on the next step, and they become your roles in .agent-user.yml.',
+        kind: 'roles',
     },
     {
         id: 'packs',
@@ -65,12 +86,14 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         id: 'identity',
         title: 'Editor and tooling',
         navLabel: 'Editor',
-        subtitle: 'IDE and rtk go into .agent-settings.yml so the agent opens files in the right tool. Your name lives in .agent-user.yml (later step).',
+        subtitle: 'IDE goes into .agent-settings.yml so the agent opens files in the right tool. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
         kind: 'form',
+        // `personal.rtk_installed` is NOT a form field — it is auto-detected at
+        // runtime (road-to-wizard-ux-improvements § Phase 7) and rendered by a
+        // dedicated rtk widget above the form, never a manual toggle.
         paths: [
             'personal.ide',
             'personal.open_edited_files',
-            'personal.rtk_installed',
         ],
     },
     {
@@ -125,6 +148,13 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         ],
     },
     {
+        id: 'ai-council',
+        title: 'AI Council',
+        navLabel: 'AI Council',
+        subtitle: 'External second-opinion network. Enable members, pick transport + rounds + budget + impact routing, add provider keys. Writes .ai-council.yml.',
+        kind: 'aiCouncil',
+    },
+    {
         id: 'user-md',
         title: 'Your .agent-user.yml',
         navLabel: 'User profile',
@@ -148,7 +178,8 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
  */
 export const WIZARD_STEPS = CORE_WIZARD_STEPS;
 
-export const WIZARD_TOTAL_STEPS = WIZARD_STEPS.length;
+/** Non-extended flow length — the welcome step (Step 1) plus the core steps. */
+export const WIZARD_TOTAL_STEPS = CORE_WIZARD_STEPS.length + 1;
 
 export interface GetWizardStepsOptions {
     /** Prepend ai-tools + packs to ship the 9-step flow (D9). */
@@ -157,9 +188,9 @@ export interface GetWizardStepsOptions {
 
 export function getWizardSteps(opts: GetWizardStepsOptions = {}): readonly WizardStep[] {
     if (opts.extended === true) {
-        return [...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
+        return [WELCOME_STEP, ...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
     }
-    return CORE_WIZARD_STEPS;
+    return [WELCOME_STEP, ...CORE_WIZARD_STEPS];
 }
 
 export function stepAt(index: number, opts: GetWizardStepsOptions = {}): WizardStep {

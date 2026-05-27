@@ -37,6 +37,11 @@ RE_NUMBERED = re.compile(r"^>?\s*\d+\.\s")
 RE_STATUS = re.compile(r"^\s*(?:❌|⚠️|✅)")
 RE_IRONLAW = re.compile(r"^[A-Z][A-Z0-9 ,.\-_/']{3,}$")
 RE_BACKTICK_SPAN = re.compile(r"`[^`\n]+`")
+# Spans frozen byte-for-byte inside prose lines. Backtick spans first so a
+# slash-bearing span inside backticks is captured whole; then any non-whitespace
+# run containing `/` or `\` — bare URLs, markdown link/image targets, and file
+# paths whose segments (`is`, `the`, `a`) would otherwise be eaten as drop-tokens.
+RE_PRESERVE_SPAN = re.compile(r"`[^`\n]+`|\S*[/\\]\S*")
 RE_FRONTMATTER = re.compile(r"^---\s*$")
 WORD_RE = re.compile(r"\b[A-Za-z]+\b")
 DROP_TOKENS = {"the", "a", "an", "is", "are", "was", "were", "be", "been",
@@ -50,10 +55,11 @@ def _condense_words(text: str) -> str:
 
 
 def _condense_prose_line(line: str) -> str:
-    """Condense a prose line; preserve backtick-spans byte-for-byte."""
+    """Condense a prose line; preserve backtick spans, URLs, link targets, and
+    slash-bearing paths byte-for-byte (see ``RE_PRESERVE_SPAN``)."""
     parts: list[str] = []
     last = 0
-    for span in RE_BACKTICK_SPAN.finditer(line):
+    for span in RE_PRESERVE_SPAN.finditer(line):
         parts.append(_condense_words(line[last:span.start()]))
         parts.append(span.group(0))
         last = span.end()

@@ -56,7 +56,7 @@ Parse the YAML frontmatter and the body (everything after the second
 `---`). Validate against the locked v1 schema:
 
 - `version` is `1`.
-- `identity.name`, `language`, `role`, `style.formality`, `style.pace`,
+- `identity.name`, `language`, `role`, `style.pace`,
   `voice_sample`, `last_updated` are all present.
 - File is ≤100 lines total.
 
@@ -74,7 +74,7 @@ Print the persona in this exact shape:
   Identity   : {nickname or name}  ({name} if nickname is set)
   Language   : {language}
   Role       : {role}
-  Style      : {formality} · {pace}
+  Style      : {pace}
 
   Voice sample
   ─────────────

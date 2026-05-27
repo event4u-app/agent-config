@@ -786,12 +786,55 @@ our recommendation order, not its support status.
   users" tension without removing any path that an existing user
   might rely on.
 
-# Era: 3.2.x — current
+# Era: 4.1.x — current
 
-> Started at `3.2.0` (2026-05-25). Full entries live inline below.
+> Started at `4.1.0` (2026-05-27). Full entries live inline below.
 > The drift test caps this era at 250 lines of entry body; growth past
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
+
+## [4.4.0](https://github.com/event4u-app/agent-config/compare/4.3.0...4.4.0) (2026-05-27)
+
+### Features
+
+* optimize autonomy-mechanics ([615c368](https://github.com/event4u-app/agent-config/commit/615c368a6f07394468247b9a2b281114c29f290f))
+* **wizard:** add roles step (Step 2) + drop the formality setting ([7331651](https://github.com/event4u-app/agent-config/commit/7331651e2d7915b13a9a639414884cffea277a19))
+* **wizard-ui:** smarter Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([8de1e0e](https://github.com/event4u-app/agent-config/commit/8de1e0e6f50408d82b4d3f3ee3b35296aefb472f))
+* **wizard:** surface prior tool selection from the install lockfile ([cdacbe0](https://github.com/event4u-app/agent-config/commit/cdacbe0292b60a447966ee976e18382da274756f))
+* **init:** kill a stale wizard server before launching a fresh one ([dd57b7f](https://github.com/event4u-app/agent-config/commit/dd57b7f5ec121dc3abc2815fdcfcf26dc10c930a))
+* **wizard:** auto-shut the server down after 30 min of inactivity ([5f9514f](https://github.com/event4u-app/agent-config/commit/5f9514fb869df901fb184b7ff7b8c4f0e14ddf91))
+* **wizard:** shut the local server down when the browser window closes ([77d3c4f](https://github.com/event4u-app/agent-config/commit/77d3c4fcdd3e35f43daeb1a39e27e9e48653ef98))
+* **wizard-ui:** first-run detection, pack tiles, styled inputs, handoff, rtk + AI-council steps ([f1755ed](https://github.com/event4u-app/agent-config/commit/f1755ed23687c6b6013480c1e743eabf0a53807a))
+* **packs:** advisory `cluster:` field for wizard language→framework grouping ([b2a2ed9](https://github.com/event4u-app/agent-config/commit/b2a2ed979666b9f20686c30a3529b5ee9c8004fb))
+* **wizard-server:** fresh-start state + tool/rtk/council detect & config endpoints ([c32d87c](https://github.com/event4u-app/agent-config/commit/c32d87c020006e3759f5a3aec362450650bb6de1))
+
+### Bug Fixes
+
+* **wizard:** pre-select the user's prior tool selection, not every deployed tool ([afe38a3](https://github.com/event4u-app/agent-config/commit/afe38a3458818ab532f01266b7e17708bfb1702b))
+* **packs:** allow `cluster` in the discovery-manifest schema ([9014e95](https://github.com/event4u-app/agent-config/commit/9014e95983bff5e3b7acd96bd249ffced11a109c))
+* **template:** bump agent-project-settings pin to 4.3.0 ([c2648ce](https://github.com/event4u-app/agent-config/commit/c2648cef51a8b587e1e3c7be536c3b46fbdd7410))
+
+### Documentation
+
+* **wizard:** roles step + remove formality from schema docs and user commands ([06f890e](https://github.com/event4u-app/agent-config/commit/06f890e2e259016417b0a808f4e8c92e53c0ebea))
+* **gui-wizard:** document Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([ca273de](https://github.com/event4u-app/agent-config/commit/ca273de6e3e8b182fa98ddaff985cf4acb31eb91))
+* **gui-wizard:** document 30-min idle shutdown + init kill-stale-server ([dfcdc40](https://github.com/event4u-app/agent-config/commit/dfcdc4054b85edab426abcb0bb4f2672d373c554))
+* **gui-wizard:** document the browser-close shutdown beacon + idle backstop ([4eccc51](https://github.com/event4u-app/agent-config/commit/4eccc5117a802c1a0d57b7a98d7eea7a36d0078a))
+* **roadmap:** complete + archive road-to-wizard-ux-improvements ([e02d514](https://github.com/event4u-app/agent-config/commit/e02d5145c9343126a2aa049811fc8094de8fa542))
+* **gui-wizard:** step layout 8/11 + ai-council step + new wizard endpoints ([fdbcd9c](https://github.com/event4u-app/agent-config/commit/fdbcd9c494ec2785375ed1d3f1e130e3a4cb99ba))
+
+### Tests
+
+* **wizard:** roles step coverage + formality removal + step-count shifts ([5f8ec3e](https://github.com/event4u-app/agent-config/commit/5f8ec3ee4a1f135ee00e60ca612a2b4f09dbd7ba))
+* **wizard:** cover detection, packs cluster, handoff, rtk, AI-council + step-count shifts ([5b6b758](https://github.com/event4u-app/agent-config/commit/5b6b7581e784bf5b219d30981f614e3778ccaaad))
+
+### Chores
+
+* refresh condensation hashes for the autonomy/cheap-question contexts ([843f065](https://github.com/event4u-app/agent-config/commit/843f0658e1ac965c1dc44aebce26cec29744a0a7))
+* add new roadmaps ([76ec1e3](https://github.com/event4u-app/agent-config/commit/76ec1e392b656c2177b7b9e1f75d5c6a1d1976e4))
+* **docs:** repoint council-question links + ignore agents/tmp.old/ ([984512e](https://github.com/event4u-app/agent-config/commit/984512e623f25e9d336647d5190d3cfc2969d9b5))
+
+Tests: 5055 (+3 since 4.3.0)
 
 ## [4.3.0](https://github.com/event4u-app/agent-config/compare/4.2.0...4.3.0) (2026-05-27)
 
@@ -967,71 +1010,14 @@ Tests: 5052 (+9 since 4.1.0)
 
 Tests: 5043 (+105 since 3.3.0)
 
-## [3.3.0](https://github.com/event4u-app/agent-config/compare/3.2.0...3.3.0) (2026-05-25)
+# Era: pre-4.0.0 — archived
 
-### Features
-
-* **scripts:** point bench / eval / mcp tooling at internal/ (ADR-028 phase 1) ([c20b515](https://github.com/event4u-app/agent-config/commit/c20b515dfc80d03244e54af7b50e07d562647799))
-
-### Bug Fixes
-
-* **ci:** repoint bench/ -> internal/bench/ in projected agent-status + condense-memory ([682040b](https://github.com/event4u-app/agent-config/commit/682040b230248bd054767ab10bd1e90ed3a1d0b7))
-
-### Documentation
-
-* **roadmap:** archive road-to-root-layout-cleanup at 100% complete ([948f1a8](https://github.com/event4u-app/agent-config/commit/948f1a8cd9ec63fa831d5abab25aeb3657a0a7d4))
-* **adr:** land Phase 2 audit evidence + ADR-029 multi-workspace deferral ([c4dabf1](https://github.com/event4u-app/agent-config/commit/c4dabf1f718fee0d4709d727d1e3eb781f8db62f))
-* **adr:** land ADR-028 + root-layout-cleanup roadmap ([7b0fd28](https://github.com/event4u-app/agent-config/commit/7b0fd281288a87f9c218d9fa9d73f01a48a56626))
-* repoint bench / mcp-worker paths to internal/ (ADR-028 phase 1) ([85278dd](https://github.com/event4u-app/agent-config/commit/85278dd831d44a187dcfe7684e895bac0ca97ae4))
-
-### Chores
-
-* **root:** move bench/ and workers/ under internal/ (ADR-028 phase 1) ([2a1dd1e](https://github.com/event4u-app/agent-config/commit/2a1dd1e363f9aabb59b6eebf35f64a47609abebb))
-* **roadmap:** close changelog-era-auto-split (Phase 4 → ADR-027) ([b10b326](https://github.com/event4u-app/agent-config/commit/b10b32623b42739f0eba12a52173b810169929b6))
-
-Tests: 4938 (+9 since 3.2.0)
-
-## [3.2.0](https://github.com/event4u-app/agent-config/compare/3.1.1...3.2.0) (2026-05-25)
-
-### Features
-
-* **workspace:** GUI bridge + Workspace tab for Phases 4-8 backends ([6911b56](https://github.com/event4u-app/agent-config/commit/6911b56d1e474dace4a250d077ed93f628b029be))
-* **workspace:** backend Python modules for Phases 5/6/7/8 ([c890fde](https://github.com/event4u-app/agent-config/commit/c890fde556b24e6b69409a4f0f647cace3779320))
-* **memory:** wire knowledge namespace into hybrid retrieval ([a65ae2c](https://github.com/event4u-app/agent-config/commit/a65ae2c117ac10aff78ac711316b441d2ee2f42c))
-* **knowledge:** implement local knowledge ingestion module ([d842ba3](https://github.com/event4u-app/agent-config/commit/d842ba350f325293f0faafe4698b8bbbe77033f8))
-* **knowledge:** add /knowledge command cluster source files ([9023c17](https://github.com/event4u-app/agent-config/commit/9023c17049ea42769537919df5ca10db1cc785e7))
-* **roadmap:** land road-to-employee-product-and-external-proof + consumer docs ([b2901ad](https://github.com/event4u-app/agent-config/commit/b2901ad516a6bb209b7fadae884563025a090e4d))
-* **roles:** scaffold consultant, content-creator, galabau experiences ([55384df](https://github.com/event4u-app/agent-config/commit/55384df486cba24288f38275435d151c5c7b8762))
-
-### Bug Fixes
-
-* **knowledge:** use agent-config-maintainer workspace per discovery vocabulary ([75f78ab](https://github.com/event4u-app/agent-config/commit/75f78ab2999ed5fbc261aecf9fadd692588a2498))
-* **check-refs:** mark forward-refs to recruit-sessions with ref-ignore ([147909b](https://github.com/event4u-app/agent-config/commit/147909b4428492ad8332959635573a1ab419d865))
-
-### Documentation
-
-* **roadmap:** mark Phases 4-8 backend complete + regen progress dashboard ([38b82f9](https://github.com/event4u-app/agent-config/commit/38b82f9928d57c9c7cfabd0b75f3c1284b6e2dcb))
-* **roadmap:** mark Phase 2 done + sync command counts ([4089810](https://github.com/event4u-app/agent-config/commit/4089810f2123a0838e318fb442e975f6f60faf00))
-* **knowledge:** add user guide and update contract for impl reality ([9fbea43](https://github.com/event4u-app/agent-config/commit/9fbea43033471e2daf2ef91342212a3480e24f93))
-* **deploy:** add team-deployment-posture + small-team-recipe + stubs ([0892317](https://github.com/event4u-app/agent-config/commit/08923177dbd62346456a4992b8ab06e0442fb0cf))
-* **contracts:** add 8 contracts for Daily Workspace + role experience ([34f882c](https://github.com/event4u-app/agent-config/commit/34f882c815fa2366956f2f454534bd9f18f79e04))
-* **adr:** add ADR-022..026 for Daily Workspace architecture ([034eb99](https://github.com/event4u-app/agent-config/commit/034eb99569fcf388099b059ae5e8fb0537d902e3))
-
-### CI
-
-* **visibility:** drop push-trigger ghost-runs from drift workflows ([1704683](https://github.com/event4u-app/agent-config/commit/1704683ff0f08985e750b7cb6c8555812f349914))
-
-### Chores
-
-* **gitignore:** ignore pnpm-lock.yaml (repo uses npm) ([088fae6](https://github.com/event4u-app/agent-config/commit/088fae6ef8377200185826c31ea8adc0b97573f4))
-* **counts:** sync command count to 136 (analytics cluster added) ([1d56496](https://github.com/event4u-app/agent-config/commit/1d564962bd57aedc6d4ff2ae6b757e45e8a63e2c))
-* **release:** bump agent_config_version in templates to match package.json 3.1.1 ([4864332](https://github.com/event4u-app/agent-config/commit/4864332804fe9979a4f94cb053cdd13c7473ac40))
-* **sync:** regenerate index + catalog for analytics commands ([77cb4fa](https://github.com/event4u-app/agent-config/commit/77cb4fa41d8b2773e7f5ece27f385d7b42862f5f))
-* **sync:** regenerate condensed analytics commands + Claude skill stubs ([41728c4](https://github.com/event4u-app/agent-config/commit/41728c4400c8cabaa8966d2708fbb4f3cef64adb))
-* **knowledge:** regenerate projections + manifests for /knowledge cluster ([f4c5a26](https://github.com/event4u-app/agent-config/commit/f4c5a26bffef0a25918bdde42131354c9dd5295d))
-* **discovery:** add agent-skills and cinematic-ai-video to topics ([5c01d5e](https://github.com/event4u-app/agent-config/commit/5c01d5e152bda559aefd48fd8220f2a3cbd90249))
-
-Tests: 4929 (+90 since 3.1.1)
+> All entries from `3.2.0` and `3.3.0` live in
+> [`docs/archive/CHANGELOG-pre-4.0.0.md`](docs/archive/CHANGELOG-pre-4.0.0.md).
+> The archive is read-only; git tags `3.2.0` and `3.3.0` remain the
+> canonical source for what shipped. Splitting them out of the main
+> file keeps the active era under the 250-line drift cap enforced by
+> `tests/test_changelog_eras.py`.
 
 # Era: pre-3.2.0 — archived
 
