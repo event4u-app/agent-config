@@ -8,7 +8,7 @@
   label: Engineering
   description: Code, tests, CI, reviews, architecture.
   default_packs: [engineering-base]
-  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python]
+  optional_packs: [php, laravel, symfony, javascript, typescript, react, nextjs, python, ruflo-bridge]
 
 - id: product
   label: Product

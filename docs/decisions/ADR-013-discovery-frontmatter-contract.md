@@ -121,6 +121,7 @@ Amendments to the workspace list require an ADR-013 amendment.
 | `small-business` | SMB-shaped owner workflows. |
 | `construction` | Trade-business workflows. |
 | `ai-video` | AI video pipeline (per ADR-011, the only heavyweight domain). |
+| `ruflo-bridge` | Coexistence + delegation for projects running `ruvnet/ruflo` (external multi-agent orchestration runtime). Inert unless ruflo is detected. |
 | `meta` | Artefacts that maintain *this* package (`agent-config` itself). |
 
 Amendments to the pack list require an ADR-013 amendment and the

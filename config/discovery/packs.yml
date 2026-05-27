@@ -155,6 +155,12 @@
     example_workflow: scene-expander
     time_to_first_value_minutes: 12
 
+- id: ruflo-bridge
+  label: Ruflo Bridge
+  description: Coexistence + delegation for projects running ruvnet/ruflo (external multi-agent orchestration runtime). Inert unless ruflo is detected.
+  workspaces: [engineering]
+  trust_level_default: experimental
+
 - id: meta
   label: Meta
   description: Artefacts that maintain this package (agent-config itself).

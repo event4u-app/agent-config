@@ -41,7 +41,7 @@ ADR_PACKS: frozenset[str] = frozenset({
     "typescript", "react", "nextjs", "python", "product-basic",
     "product-discovery", "finance-basic", "finance-advanced",
     "gtm-sales", "gtm-marketing", "ops-people", "founder-strategy", "small-business",
-    "construction", "ai-video", "meta",
+    "construction", "ai-video", "ruflo-bridge", "meta",
 })
 
 # ADR-010 non-overlap reservations.
