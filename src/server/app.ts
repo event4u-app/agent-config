@@ -137,7 +137,7 @@ export interface CreateAppOptions {
      */
     idleShutdown?: {
         onIdle: () => void | Promise<void>;
-        /** Idle backstop after a client has connected. Default 300_000ms. */
+        /** Idle backstop after a client has connected. Default 1_800_000ms (30 min). */
         timeoutMs?: number;
         /** How often the backstop checks for idleness. Default 30_000ms. */
         intervalMs?: number;
@@ -204,7 +204,7 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
     // Browser-lifecycle watchdog (real-serve only — see CreateAppOptions).
     if (opts.idleShutdown !== undefined) {
         const { onIdle } = opts.idleShutdown;
-        const timeoutMs = opts.idleShutdown.timeoutMs ?? 300_000;
+        const timeoutMs = opts.idleShutdown.timeoutMs ?? 1_800_000;
         const intervalMs = opts.idleShutdown.intervalMs ?? 30_000;
         let lastActivity = 0; // 0 = disarmed: no client has connected yet.
         let fired = false;
