@@ -221,7 +221,14 @@ effect):
 | `extendedSteps` | Steps | Layout |
 |---|---|---|
 | `false` | 8 | `editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
-| `true`  | 11 | `ai-tools → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `true`  | 12 | `ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+
+The `roles` step (Step 2) presents the discovery **workspaces** (Engineering,
+Product, Finance, Founder, GTM, Ops, …; the maintainer workspace is hidden) as
+checkboxes. The selected ids become `.agent-user.yml` `role[]` and recommend
+each domain's `default_packs` on the packs step. In install mode the user-md
+step therefore hides its role field (collected here instead); setup mode keeps
+the role field since it skips the roles step.
 
 The `ai-council` step (road-to-wizard-ux-improvements § Phase 8) configures the
 wizard-controlled scalar subset of `.ai-council.yml` (enable, per-member
@@ -230,20 +237,25 @@ non-locked `decision_resolution` classes) via `GET`/`POST /api/v1/wizard/ai-coun
 the file is written with comment-preserving `replaceScalar` edits.
 
 The step shapes themselves are declared in
-[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the two
-prepended lead steps (`ai-tools`, `packs`) carry no `paths` and use
-dedicated renderers in `WizardPage.tsx`. `getWizardSteps({ extended })`
-is the single resolver; the UI consumes the active list via
-`getActiveSteps()` / `activeTotalSteps()` so a server toggle takes
-effect on the next reload without a code change.
+[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the four
+prepended lead steps (`ai-tools`, `roles`, `packs`, `modules`) carry no
+`paths` and use dedicated renderers in `WizardPage.tsx`.
+`getWizardSteps({ extended })` is the single resolver; the UI consumes the
+active list via `getActiveSteps()` / `activeTotalSteps()` so a server toggle
+takes effect on the next reload without a code change.
 
-### Step 1 (AI tools) and Step 2 (packs) selection rules
+### Step 1 (AI tools) / Step 2 (roles) / Step 3 (packs) selection rules
 
 - **Step 1 pre-selection.** `detect-tools` returns `tools` (installed on the
-  machine) and `configured` (the prior selection, read from
-  `~/.event4u/agent-config/installed.lock`). On a repeat run the wizard
-  pre-selects exactly the `configured` tools; only on a genuine first run
-  (empty lockfile) does it fall back to pre-selecting every installed tool.
+  machine) and `configured` (the user's prior selection, persisted to
+  `~/.event4u/agent-config/wizard-tools.json` on each real apply). On a repeat
+  run the wizard pre-selects exactly the `configured` tools; only on a genuine
+  first run (no prior selection) does it fall back to pre-selecting every
+  installed tool.
+- **Step 2 → Step 3 recommendation.** Each selected role contributes its
+  workspace `default_packs`; the union pre-selects packs on Step 3 (plus
+  auto-detected project packs). The recommendation stops clobbering the
+  selection once the user manually edits a pack.
 - **Step 2 framework persistence.** A language tile (`cluster`, e.g. PHP)
   gates its framework children in the UI but never destroys their stored
   selection. Turning a language off disables — but keeps checked — its
