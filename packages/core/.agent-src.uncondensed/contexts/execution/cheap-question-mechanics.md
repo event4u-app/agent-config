@@ -20,9 +20,13 @@ THE USER DECIDES WHEN TO STOP.
 
 A standing autonomous mandate is active when any of these fire:
 
+- `personal.autonomy: on` in `.agent-settings.yml` — the **persistent** opt-in. No per-turn phrasing and no roadmap command is required; the durable setting alone arms this Iron Law. Missing key defaults to `on`, so the cloud/headless default arms it too.
+- `auto` mode after the user opted in via a standing "just work" directive (per [`autonomous-execution § opt-in detection`](../../rules/autonomous-execution.md#opt-in-detection--match-by-intent-not-exact-string)).
 - `/roadmap:process-full` invocation.
 - `/roadmap:process-phase` invocation.
 - Explicit "entscheide selbst / decide and don't ask" in the current or a recent un-revoked turn.
+
+The first two are the common case the persistent setting is *for*: a user who set `autonomy: on` never wants a "weiter? / shall I continue? / soll ich fortfahren?" prompt between clean batches. Treating those as cheap (IL 4) is not optional — it is the contract the setting promises.
 
 ### Halt conditions
 
