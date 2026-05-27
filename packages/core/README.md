@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `4.5.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 367
+- **artefacts**: 369
 
 ## Commands (134)
 
@@ -191,7 +191,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (71)
+## Rules (72)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -246,6 +246,7 @@ Core framework-neutral artefacts.
 - **`roadmap-ci-steps-policy`** — Authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline
 - **`roadmap-progress-sync`** — Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open
 - **`role-mode-adherence`** — When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker
+- **`ruflo-routing`** — Orchestration/swarm/multi-agent work in a ruflo-equipped project — route to the ruflo-orchestration skill, not an in-session fan-out
 - **`rule-type-governance`** — Creating/editing rules, or auditing rule types — decides when a rule should be always vs auto
 - **`runtime-safety`** — Skill declares execution metadata — enforce safety constraints for assisted/automated execution types
 - **`scope-control`** — Scope control — no unsolicited architectural changes, refactors, or library replacements
@@ -265,7 +266,7 @@ Core framework-neutral artefacts.
 - **`user-interrupt-priority`** — User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work
 - **`verify-before-complete`** — Verify before completion — run tests and quality tools before claiming done
 
-## Skills (122)
+## Skills (123)
 
 - **`accessibility-auditor`** — Use when reviewing UI for accessibility — WCAG 2.2 AA, keyboard nav, focus, ARIA, contrast, screen-reader semantics — even on 'is this a11y-OK?' or 'mach das barrierefrei'.
 - **`adr-create`** — Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'.
@@ -359,6 +360,7 @@ Core framework-neutral artefacts.
 - **`risk-officer`** — Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'.
 - **`roadmap-writing`** — Use when authoring or rewriting a roadmap in agents/roadmaps/ — phase prose, goal sentence, acceptance criteria, council notes — even when the user just says 'write a plan for X' or 'draft a roadmap'.
 - **`rtk-output-filtering`** — Use when running verbose CLI commands — wraps them with rtk (Rust Token Killer) for 60-90% token savings. Covers installation, configuration, and usage patterns.
+- **`ruflo-orchestration`** — Use when ruflo (ruvnet/ruflo) is installed and a task needs multi-agent orchestration, swarms, or its MCP tools/memory — delegate to ruflo. NOT for in-session fan-out (use subagent-orchestration).
 - **`rule-refactor`** — Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule.
 - **`rule-writing`** — Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'.
 - **`script-writing`** — Use when adding or editing any script under `scripts/` — `--quiet` flag, `_lib/script_output` helpers, silent Taskfile wiring, Iron-Law carve-outs — even when you just say 'add a check script for X'.
