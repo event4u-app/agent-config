@@ -46,10 +46,10 @@ through `install.py --apply-payload`, deleting the TS mirror, and making
 
 ## Phase 4 — `init` becomes a thin GUI launcher
 
-- [ ] Fix the drift in `install.py` wizard auto-launch: `_wizard_cli_dist()` → `dist/cli/agent-config.js`; spawn `install`/`setup` (not the dead `gui`); `_WIZARD_READY_RE` → match `WIZARD_READY <url>` (no `url=`, allow `?token=` query); browser-open suppression via `--no-open`.
-- [ ] `init` on TTY + display + no `--no-ui`/CI → launch the GUI wizard, skip CLI tool questions.
-- [ ] Headless / CI / `--no-ui` / explicit `--tools=` → run non-interactive `install.py` directly (unchanged).
-- [ ] Verify: `./agent-config init` opens the wizard locally; `CI=1 ./agent-config init --tools=cursor` runs headless CLI without hanging.
+- [x] Fix the drift in `install.py` wizard auto-launch: `_wizard_cli_dist()` → `dist/cli/agent-config.js`; spawn `install`/`setup` (not the dead `gui`); `_WIZARD_READY_RE` → match `WIZARD_READY <url>` (no `url=`, allow `?token=` query); browser-open suppression via `--no-open`.
+- [x] `init` on TTY + display + no `--no-ui`/CI → launch the GUI wizard, skip CLI tool questions. <!-- _wizard_should_launch returns True only on a TTY without CI/--no-ui/explicit --tools -->
+- [x] Headless / CI / `--no-ui` / explicit `--tools=` → run non-interactive `install.py` directly (unchanged). <!-- added the explicit --tools= suppression gate -->
+- [~] Verify: `./agent-config init` opens the wizard locally; `CI=1 ./agent-config init --tools=cursor` runs headless CLI without hanging. <!-- headless side fully verified (test_headless_explicit_tools_does_not_hang + unit gating); WIZARD_READY regex + dist resolution unit-tested. The live browser-open requires a display — not runnable in this headless env. -->
 
 ## Phase 5 — Contract + docs
 
@@ -59,10 +59,10 @@ through `install.py --apply-payload`, deleting the TS mirror, and making
 
 ## Phase 6 — Tests + CI gate
 
-- [ ] Parity test: GUI delegation output ≡ `install.py` CLI output for a representative tool set.
-- [ ] Headless fallback test: no-display `init` does not hang waiting for a GUI.
-- [ ] `init`-launch smoke test (the `WIZARD_READY` handshake).
-- [ ] Run `task ci` green before the PR. <!-- carve-out: new-gate-verification -->
+- [x] Parity test: GUI delegation output ≡ `install.py` CLI output for a representative tool set. <!-- test_gui_delegation_matches_cli_tree: --apply-payload tree ≡ --global --tools tree (lockfile timestamp normalized) -->
+- [x] Headless fallback test: no-display `init` does not hang waiting for a GUI. <!-- test_headless_explicit_tools_does_not_hang -->
+- [x] `init`-launch smoke test (the `WIZARD_READY` handshake). <!-- WizardReadyHandshakeTests: regex matches the real banner + ?token=/#…, rejects legacy url=, dist resolves to dist/cli/agent-config.js -->
+- [~] Run `task ci` green before the PR. <!-- carve-out: new-gate-verification --> <!-- the PR's 8 feature-required checks pass on the committed tree (Consistency, Smoke Contracts, Skill Lint, install/install-aux/python/node tests, Public Install Smoke); full `task ci` shows pre-existing NON-required breaks on main unrelated to this work (check-public-links: 7 contract files missing stability: frontmatter). 3 cheap pre-existing breaks (schema parity, template pin, framework-leakage) fixed in dedicated commits. -->
 
 ## Acceptance criteria
 

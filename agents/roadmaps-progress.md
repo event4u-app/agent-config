@@ -6,10 +6,10 @@
 
 ## Overall
 
-**56 / 82 steps done · 68%**
+**62 / 80 steps done · 78%**
 
 ```text
-███████████████████████████░░░░░░░░░░░░░   68%
+███████████████████████████████░░░░░░░░░   78%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-single-install-source-of-truth.md](roadmaps/road-to-single-install-source-of-truth.md) | 6 | 24 | 8 | 14 | 2 | 0 | ██████░░░░ 64% |
+| 2 | [road-to-single-install-source-of-truth.md](roadmaps/road-to-single-install-source-of-truth.md) | 6 | 24 | 0 | 20 | 4 | 0 | ██████████ 100% |
 
 ---
 
@@ -42,14 +42,14 @@
 
 ### [road-to-single-install-source-of-truth.md](roadmaps/road-to-single-install-source-of-truth.md)
 
-**Single Install Source-of-Truth — finish the `--apply-payload` bridge** — 14 / 22 done (64%)
+**Single Install Source-of-Truth — finish the `--apply-payload` bridge** — 20 / 20 done (100%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | `install.py --apply-payload` real-apply | ✅ done | 0 | 5 | 0 | 0 | 100% |
 | 2 | GUI apply uses the real bridge | ✅ done | 0 | 2 | 1 | 0 | 100% |
 | 3 | Retire the parallel TS apply mirror | ✅ done | 0 | 4 | 1 | 0 | 100% |
-| 4 | `init` becomes a thin GUI launcher | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 4 | `init` becomes a thin GUI launcher | ✅ done | 0 | 3 | 1 | 0 | 100% |
 | 5 | Contract + docs | ✅ done | 0 | 3 | 0 | 0 | 100% |
-| 6 | Tests + CI gate | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 6 | Tests + CI gate | ✅ done | 0 | 3 | 1 | 0 | 100% |
 
