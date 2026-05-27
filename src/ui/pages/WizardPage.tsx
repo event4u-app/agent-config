@@ -13,7 +13,7 @@
  */
 
 import { useEffect } from 'preact/hooks';
-import { apiFetch, ApiCallError } from '../api.js';
+import { apiFetch, apiStream, ApiCallError } from '../api.js';
 import { serverStatus } from '../serverStatus.js';
 import { topLevelCopy, fieldErrorMap } from '../copyErrors.js';
 import { SchemaForm } from '../forms/SchemaForm.js';
@@ -565,13 +565,6 @@ interface FinishResponse {
     };
 }
 
-interface ApplyResponse {
-    ok: boolean;
-    dryRun: boolean;
-    schemaVersion: 'wizard-v2' | 'installer-v1';
-    preview?: string;
-}
-
 /**
  * Build the wizard-v2 apply payload from the current selection signals.
  * Returns `null` when no AI tool is checked — the server schema requires
@@ -661,29 +654,31 @@ async function finish(): Promise<void> {
             : Array.isArray(res.writtenPaths)
                 ? `Saved (${res.writtenPaths.join(', ')}). Wizard complete.`
                 : `Wizard complete.`;
-        // road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
+        // road-to-single-install-source-of-truth § Phase 2 — Wizard Apply bridge.
         // After the 2PC settings commit lands, hand the AI-tool + pack
-        // selection to `/api/v1/wizard/apply` so `scripts/install.py`
-        // can dry-run the install plan. The server forces `dry_run:true`
-        // until Phase 1.9 — the preview text comes back as
-        // installer-side stdout. Skipped when no tool is selected
-        // (schema requires `tools.min(1)`) or when extended-mode is off
-        // (endpoint returns 404). Apply failures are soft: settings are
-        // already persisted, so we surface the error as a warning
-        // instead of rolling the banner back to red.
+        // selection to `/api/v1/wizard/apply` so `scripts/install.py` runs the
+        // REAL install (single source of truth, D12). The endpoint streams SSE
+        // progress (`progress`/`done`/`error`); we consume it and surface the
+        // terminal outcome in the Finish banner. Skipped when no tool is
+        // selected (schema requires `tools.min(1)`) or extended-mode is off
+        // (endpoint 404s). Apply failures are soft: settings are already
+        // persisted, so the error surfaces as a warning, not a red rollback.
         const applyPayload = extendedSteps.value ? buildApplyPayload() : null;
         let applyCopy = '';
         if (applyPayload !== null) {
             try {
-                const applyRes = await apiFetch<ApplyResponse>(
-                    '/api/v1/wizard/apply',
-                    { method: 'POST', body: applyPayload },
-                );
+                let streamError: string | null = null;
+                await apiStream('/api/v1/wizard/apply', applyPayload, (frame) => {
+                    if (frame.type === 'error') {
+                        streamError = typeof frame.message === 'string' ? frame.message : 'install failed';
+                    }
+                    // 'progress' / 'done' frames could drive a live progress
+                    // bar; the Finish banner only needs the terminal outcome.
+                });
                 const toolCount = applyPayload.tools.length;
                 const packCount = applyPayload.packs.length;
-                applyCopy = applyRes.dryRun
-                    ? ` Installer dry-run planned ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
-                      (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.')
+                applyCopy = streamError !== null
+                    ? ` Installer failed: ${streamError}. Settings were saved; re-run the wizard to retry.`
                     : ` Installer applied ${toolCount} tool${toolCount === 1 ? '' : 's'}` +
                       (packCount > 0 ? ` and ${packCount} pack${packCount === 1 ? '' : 's'}.` : '.');
             } catch (err) {

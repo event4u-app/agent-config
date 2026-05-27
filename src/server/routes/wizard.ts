@@ -16,7 +16,7 @@
  * handles the 2PC marker dance described in the council HIGH 2026-05-18
  * finding. A crash mid-commit is replayed at the next server boot.
  */
-import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync, FastifyReply } from 'fastify';
 import { promises as fs, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname } from 'node:path';
@@ -269,6 +269,77 @@ async function spawnInstaller(scriptPath: string, args: readonly string[]): Prom
                 stdout: Buffer.concat(stdoutChunks).toString('utf8'),
                 stderr: Buffer.concat(stderrChunks).toString('utf8'),
             });
+        });
+    });
+}
+
+/**
+ * Spawn `install.py --apply-payload` and stream its NDJSON stdout line by
+ * line (road-to-single-install-source-of-truth § Phase 2). Each parsed line
+ * is handed to `onLine`; malformed lines are forwarded as raw strings so the
+ * caller can decide whether to ignore or surface them. stderr is buffered and
+ * returned for error surfacing. `signal` aborts the run (abort-on-disconnect,
+ * Finding #24) by killing the child.
+ */
+interface StreamResult {
+    readonly exitCode: number;
+    readonly stderr: string;
+}
+
+/** SSE frame writer — one event per `data:` line, blank-line terminator. */
+function writeFrame(reply: FastifyReply, payload: Record<string, unknown>): void {
+    reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`);
+}
+
+function streamInstaller(
+    scriptPath: string,
+    args: readonly string[],
+    onLine: (obj: Record<string, unknown>) => void,
+    signal?: AbortSignal,
+): Promise<StreamResult> {
+    return new Promise<StreamResult>((resolve, reject) => {
+        const child = spawn('python3', [scriptPath, ...args], {
+            stdio: ['ignore', 'pipe', 'pipe'],
+            env: { ...process.env, AGENT_CONFIG_NO_UPDATE_CHECK: '1' },
+        });
+        const onAbort = (): void => {
+            child.kill('SIGTERM');
+        };
+        if (signal !== undefined) {
+            if (signal.aborted) onAbort();
+            else signal.addEventListener('abort', onAbort, { once: true });
+        }
+        const stderrChunks: Buffer[] = [];
+        let buf = '';
+        const handleLine = (line: string): void => {
+            const trimmed = line.trim();
+            if (trimmed.length === 0) return;
+            try {
+                onLine(JSON.parse(trimmed) as Record<string, unknown>);
+            } catch {
+                // Non-JSON stdout (defensive — real-apply runs with QUIET so
+                // only NDJSON reaches stdout). Drop it rather than corrupt the
+                // SSE stream.
+            }
+        };
+        child.stdout?.on('data', (chunk: Buffer) => {
+            buf += chunk.toString('utf8');
+            let nl = buf.indexOf('\n');
+            while (nl !== -1) {
+                handleLine(buf.slice(0, nl));
+                buf = buf.slice(nl + 1);
+                nl = buf.indexOf('\n');
+            }
+        });
+        child.stderr?.on('data', (chunk: Buffer) => stderrChunks.push(chunk));
+        child.once('error', (err) => {
+            if (signal !== undefined) signal.removeEventListener('abort', onAbort);
+            reject(err);
+        });
+        child.once('close', (code) => {
+            if (buf.trim().length > 0) handleLine(buf);
+            if (signal !== undefined) signal.removeEventListener('abort', onAbort);
+            resolve({ exitCode: code ?? 1, stderr: Buffer.concat(stderrChunks).toString('utf8') });
         });
     });
 }
@@ -609,13 +680,17 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
             return { ok: true };
         });
 
-        // road-to-global-only-install § Phase 1.5 — Wizard Apply bridge.
-        // Validates the WizardApplyPayload envelope, spills it to a temp
-        // file, and spawns `python3 scripts/install.py --apply-payload
-        // <tmp> --dry-run`. Returns the installer's plan-summary stdout
-        // so the UI can render the preview before the maintainer commits.
-        // Real-apply (non-dry-run) is gated until Phase 1.9 minor release
-        // (kill-switch per D7 — no dual code paths).
+        // road-to-single-install-source-of-truth § Phase 2 — Wizard Apply bridge.
+        // Validates the WizardApplyPayload envelope and spills it to a temp file,
+        // then dispatches `scripts/install.py --apply-payload <tmp>` — the single
+        // installer (D12 / ADR-020). Two modes on the SAME endpoint:
+        //   • dry_run:true  → buffered plan-summary preview (JSON), used by the
+        //     Review step. Adds `--dry-run`.
+        //   • dry_run:false → REAL apply, streamed as SSE. install.py emits NDJSON
+        //     (`{type:"file"|"done"|"error"}`); we map each line to the SSE frame
+        //     vocabulary the UI consumes (`progress`/`done`/`error`) and abort the
+        //     child on client disconnect (Finding #24). CSRF + Host/Origin
+        //     allow-list are enforced by the app-level onRequest hooks.
         app.post('/api/v1/wizard/apply', async (request, reply) => {
             if (!extended) {
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
@@ -628,33 +703,114 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 });
                 return reply;
             }
-            // Force dry-run on the bridge until Phase 1.9 — protects
-            // against accidental real writes during the rollout window.
-            const payload = { ...parsed.data, dry_run: true };
+            const isDryRun = parsed.data.dry_run === true;
+            const payload = parsed.data;
             const tmpPath = join(tmpdir(), `agent-config-apply-${randomBytes(8).toString('hex')}.json`);
+            const scriptPath = join(opts.packageRoot, 'scripts', 'install.py');
+
+            if (isDryRun) {
+                // Plan-summary preview — buffered JSON (Review step).
+                try {
+                    await fs.writeFile(tmpPath, JSON.stringify(payload), { mode: 0o600 });
+                    const result = await spawnInstaller(scriptPath, ['--apply-payload', tmpPath, '--dry-run']);
+                    if (result.exitCode !== 0) {
+                        await reply.code(500).send({
+                            error: { code: 'BRIDGE_FAILED', message: result.stderr || 'installer bridge exited non-zero', exitCode: result.exitCode },
+                        });
+                        return reply;
+                    }
+                    return {
+                        ok: true,
+                        dryRun: true,
+                        schemaVersion: payload.schema_version,
+                        preview: result.stdout,
+                    };
+                } catch (err) {
+                    const message = err instanceof Error ? err.message : 'apply bridge failed';
+                    await reply.code(500).send({ error: { code: 'BRIDGE_FAILED', message } });
+                    return reply;
+                } finally {
+                    await fs.unlink(tmpPath).catch(() => undefined);
+                }
+            }
+
+            // Real apply — SSE stream. Flush headers so the browser opens the
+            // channel immediately.
+            reply.raw.writeHead(200, {
+                'Content-Type': 'text/event-stream',
+                'Cache-Control': 'no-cache, no-transform',
+                Connection: 'keep-alive',
+                'X-Accel-Buffering': 'no',
+            });
+            reply.raw.flushHeaders?.();
+            const controller = new AbortController();
+            const onClose = (): void => {
+                if (!reply.raw.writableEnded) controller.abort();
+            };
+            reply.raw.on('close', onClose);
+
+            let written = 0;
+            let total = 0;
+            let sawTerminal = false;
             try {
                 await fs.writeFile(tmpPath, JSON.stringify(payload), { mode: 0o600 });
-                const scriptPath = join(opts.packageRoot, 'scripts', 'install.py');
-                const result = await spawnInstaller(scriptPath, ['--apply-payload', tmpPath, '--dry-run']);
-                if (result.exitCode !== 0) {
-                    await reply.code(500).send({
-                        error: { code: 'BRIDGE_FAILED', message: result.stderr || 'installer bridge exited non-zero', exitCode: result.exitCode },
-                    });
-                    return reply;
+                const result = await streamInstaller(
+                    scriptPath,
+                    ['--apply-payload', tmpPath],
+                    (obj) => {
+                        const t = obj.type;
+                        if (t === 'file') {
+                            written = typeof obj.written === 'number' ? obj.written : written;
+                            total = typeof obj.total === 'number' ? obj.total : total;
+                            writeFrame(reply, {
+                                type: 'progress',
+                                file: obj.file,
+                                status: obj.status,
+                                written,
+                                total,
+                            });
+                        } else if (t === 'done') {
+                            sawTerminal = true;
+                            writeFrame(reply, { type: 'done', summary: { written, total } });
+                        } else if (t === 'error') {
+                            sawTerminal = true;
+                            writeFrame(reply, {
+                                type: 'error',
+                                code: typeof obj.code === 'string' ? obj.code : 'E_INSTALL',
+                                message: typeof obj.message === 'string' ? obj.message : 'install failed',
+                                recoverable: false,
+                            });
+                        }
+                    },
+                    controller.signal,
+                );
+                // install.py exited without a terminal frame (crash / kill): emit
+                // one so the UI never hangs waiting for `done`/`error`.
+                if (!sawTerminal) {
+                    if (result.exitCode === 0) {
+                        writeFrame(reply, { type: 'done', summary: { written, total } });
+                    } else {
+                        writeFrame(reply, {
+                            type: 'error',
+                            code: 'BRIDGE_FAILED',
+                            message: result.stderr.trim() || `installer exited ${result.exitCode}`,
+                            recoverable: false,
+                        });
+                    }
                 }
-                return {
-                    ok: true,
-                    dryRun: true,
-                    schemaVersion: payload.schema_version,
-                    preview: result.stdout,
-                };
             } catch (err) {
-                const message = err instanceof Error ? err.message : 'apply bridge failed';
-                await reply.code(500).send({ error: { code: 'BRIDGE_FAILED', message } });
-                return reply;
+                writeFrame(reply, {
+                    type: 'error',
+                    code: 'E_CRASH',
+                    message: err instanceof Error ? err.message : String(err),
+                    recoverable: false,
+                });
             } finally {
+                reply.raw.off('close', onClose);
+                reply.raw.end();
                 await fs.unlink(tmpPath).catch(() => undefined);
             }
+            return reply;
         });
 
         app.post('/api/v1/wizard/finish', async (request, reply) => {
