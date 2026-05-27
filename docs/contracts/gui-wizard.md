@@ -8,20 +8,27 @@ keep-beta-until: 2026-08-19
 > Companion to the agent-mode protocol
 > ([`installer-agent-mode.md`](installer-agent-mode.md)) and the
 > trust-and-safety layer ([`trust-and-safety.md`](trust-and-safety.md)).
-> The wizard is a thin HTTP wrapper around the same install plan, the
-> same lockfile, and the same atomic-write semantics as the CLI/TUI
-> paths. It is **optional by design** — the CLI is the canonical entry
-> point; the wizard exists for non-technical users who want a visual
-> picker.
+> The wizard is a thin HTTP wrapper: it is a **selection front-end**, and
+> every real write goes through the single installer
+> `scripts/install.py --apply-payload` (D12 / ADR-020). It is **optional by
+> design** — the CLI is the canonical entry point; the wizard exists for
+> non-technical users who want a visual picker.
 
 ## Source of truth
 
-- Server: [`packages/core/installer/src/gui/server.ts`](../../packages/core/installer/src/gui/server.ts)
-- Handlers: [`packages/core/installer/src/gui/handlers.ts`](../../packages/core/installer/src/gui/handlers.ts)
-- Security primitives: [`packages/core/installer/src/gui/security.ts`](../../packages/core/installer/src/gui/security.ts)
-- Inlined SPA: [`packages/core/installer/src/gui/static-assets.ts`](../../packages/core/installer/src/gui/static-assets.ts)
-- Transaction log: [`packages/core/installer/src/gui/transaction-log.ts`](../../packages/core/installer/src/gui/transaction-log.ts)
-- Tests: [`packages/core/installer/tests/gui-*.test.ts`](../../packages/core/installer/tests/)
+The GUI is a Fastify server (`src/server/`) serving a Preact SPA
+(`src/ui/`), booted by the `install` / `setup` / `ui:serve` CLI
+subcommands. The legacy `packages/core/installer/src/gui/*` tree was
+retired; the single real installer is `scripts/install.py`.
+
+- Server app + security hooks: [`src/server/app.ts`](../../src/server/app.ts) (Host allow-list, Origin allow-list, CSRF token — `onRequest` hooks)
+- Wizard routes (incl. the real-apply bridge): [`src/server/routes/wizard.ts`](../../src/server/routes/wizard.ts)
+- Read-only install routes (detect / plan-preview / recovery / legacy-v3): [`src/server/routes/install.ts`](../../src/server/routes/install.ts)
+- Atomic / 2PC writes: [`src/server/io/atomicWrite.ts`](../../src/server/io/atomicWrite.ts), [`atomicMultiWrite.ts`](../../src/server/io/atomicMultiWrite.ts)
+- SPA: [`src/ui/`](../../src/ui/) (entry `src/ui/pages/WizardPage.tsx`)
+- CLI boot + `WIZARD_READY` contract: [`src/cli/commands/uiServe.ts`](../../src/cli/commands/uiServe.ts)
+- The single installer (all real writes): [`scripts/install.py`](../../scripts/install.py)
+- Tests: [`tests/server/`](../../tests/server/) + [`tests/e2e/`](../../tests/e2e/)
 
 ## Local-only invariant
 
@@ -34,106 +41,111 @@ no cross-origin asset, no remote endpoint — CSP
 ## Boot sequence
 
 ```
-npx @event4u/agent-config init --gui [--gui-port=<n>] [--no-open] [--gui-idle=<s>]
+agent-config install   (or `setup`, or `init` → scripts/install.py → spawns
+                        `node dist/cli/agent-config.js install --no-open`)
   │
-  ├─► inspect agents/runtime/gui/server.pid → abort if live
-  ├─► load dist/discovery/discovery-manifest.json (walks up from CWD)
-  ├─► generate per-server CSRF token (64-hex)
-  ├─► http.createServer + listen({ host: '127.0.0.1', port: 0 })
-  ├─► write agents/runtime/gui/server.pid (POSIX pid, single line)
-  ├─► default-spawn the OS browser opener (skipped with --no-open)
-  └─► return GuiServerHandle { url, port, csrfToken, pidFile, close }
+  ├─► pick a free loopback port; mint a per-server bearer/CSRF token
+  ├─► Fastify listen({ host: '127.0.0.1', port })
+  ├─► print `WIZARD_READY <url>` on stdout (url carries `?token=…` + `#/…`)
+  ├─► open the OS browser at <url>   (skipped with --no-open / headless)
+  └─► serve until Ctrl-C
 ```
 
-Idle timeout (default 600 s, configurable via `--gui-idle`) is keyed on
-the **last HTTP request timestamp**, not on SSE event activity.
+`init` is the consumer entry point: it delegates to `scripts/install.py`,
+which — on a TTY with a display and no `--no-ui` / `CI` / explicit
+`--tools=` — spawns the `install` subcommand with `--no-open` and waits for
+the `WIZARD_READY <url>` handshake (progressive 10/20/40/80 s budget) before
+printing the URL banner. Headless / CI / `--no-ui` / explicit `--tools=`
+installs run the non-interactive `install.py` path directly and never boot
+the GUI.
+
+### `WIZARD_READY` stdout contract
+
+The server emits exactly one line on stdout when it has bound:
+
+```
+WIZARD_READY http://127.0.0.1:<port>/?token=<token>#/<route>
+```
+
+The supervisor matches `^WIZARD_READY (http://(127.0.0.1|localhost):\d+/\S*)$`
+(no `url=` prefix; the query/hash are part of the captured URL). The line is
+unconditional so headless CI can detect "Fastify bound" without polling the
+port.
 
 ## Endpoints
 
-| Method | Path             | Purpose                                              |
-|--------|------------------|------------------------------------------------------|
-| GET    | `/`              | SPA shell with CSRF token injected via `<meta>`      |
-| GET    | `/app.css`       | Static stylesheet                                    |
-| GET    | `/app.js`        | Inlined SPA logic                                    |
-| GET    | `/api/manifest`  | `{ manifest, sha256 }` — bytes-identical to disk     |
-| GET    | `/api/auto-detect` | `{ signals: { composer, package, pyproject } }`    |
-| POST   | `/api/preview`   | `{ plan, lockfileSha256 }` for current selection     |
-| POST   | `/api/apply`     | SSE: `plan-file`, `progress`, `done`, `error`        |
-| POST   | `/api/cancel`    | Flush in-flight transaction log, close SSE stream    |
+Versioned under `/api/v1/`. Selected routes:
 
-All POSTs require:
+| Method | Path                          | Purpose                                                                 |
+|--------|-------------------------------|-------------------------------------------------------------------------|
+| GET    | `/`                           | SPA shell (token passed via the `?token=` query)                        |
+| GET    | `/api/v1/wizard/state`        | Resumable partial wizard state                                          |
+| POST   | `/api/v1/wizard/state`        | Persist state between steps                                             |
+| GET    | `/api/v1/wizard/manifest`     | Locked discovery-manifest (extended mode)                               |
+| GET    | `/api/v1/wizard/auto-detect`  | Project-signal evidence for the `ai-tools` step (extended mode)         |
+| POST   | `/api/v1/wizard/finish`       | 2PC commit of settings + user-identity                                  |
+| POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `scripts/install.py --apply-payload` |
+| GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
+| POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
+| GET    | `/api/v1/install/recovery`    | Interrupted-run recovery state                                          |
+| GET    | `/api/v1/install/legacy-v3`   | v3-install detection (backup screen)                                    |
 
-1. `Origin` header matching `http://127.0.0.1:<port>` or
-   `http://localhost:<port>`.
-2. Body field `csrf` matching the per-server token (timing-safe
-   compare in `security.ts`).
+The TypeScript apply engine and its `POST /api/v1/install/apply` SSE route
+were removed (road-to-single-install-source-of-truth § Phase 3). All real
+writes now flow through `POST /api/v1/wizard/apply` → `scripts/install.py`.
 
-A bad CSRF returns `403` with no body. A bad Origin or Host returns
-`403` with a short plaintext reason.
+Every request passes three `onRequest` hooks in
+[`src/server/app.ts`](../../src/server/app.ts): a `Host`-header allow-list,
+an `Origin` allow-list (browser-issued requests), and a per-server bearer
+token (`Authorization: Bearer <token>`, minted at boot, surfaced in the
+`?token=` URL). A bad token / Host / Origin returns `403`.
 
-## Transaction log + rollback
+## Real apply — single source of truth
 
-Every `POST /api/apply` writes append-only JSONL entries to
-`<projectRoot>/agents/runtime/gui/install-<ts>.log`. Shapes are
-declared in
-[`types.ts § TransactionLogEntry`](../../packages/core/installer/src/gui/types.ts):
+`POST /api/v1/wizard/apply` is the only write path:
 
-- `start` — workspaces + packs selected
-- `plan` — one entry per planned write (`path`, `pack`)
-- `commit` — `filesWritten`, `lockfileSha256`
-- `cancel` — explicit `POST /api/cancel`
-- `error` — terminating failure with `message`
-
-The next `--gui` boot inspects the most recent log and offers to roll
-back if it ended on `start`/`plan`/`error` without a matching
-`commit`/`cancel`. The CLI path consumes the same log, so a mid-install
-crash can be undone from either entry point.
+- `dry_run: true` → spawns `install.py --apply-payload <tmp> --dry-run` and
+  returns the buffered plan-summary text (used by the Review preview).
+- otherwise → spawns `install.py --apply-payload <tmp>` (real apply) and
+  **streams** the installer's NDJSON stdout
+  (`{type:"file",…}` / `{type:"done"|"error"}`) mapped to the SSE frames the
+  SPA consumes. The child is killed if the client disconnects
+  (abort-on-disconnect, Finding #24). The installer owns its own
+  transactional state (the user-scope lockfile + project manifest), so the
+  GUI does not maintain a parallel transaction log.
 
 ## SSE event framing
 
-Every `POST /api/apply` event is `data: <json>\n\n`. The terminal event
-is one of:
+Each real-apply event is `data: <json>\n\n`. Frames:
 
 ```jsonc
-{ "type": "done", "filesWritten": 12, "lockfileSha256": "<64-hex>" }
-{ "type": "error", "message": "<reason>" }
+{ "type": "progress", "file": "<tool>", "status": "deployed", "written": 1, "total": 3 }
+{ "type": "done", "summary": { "written": 3, "total": 3 } }
+{ "type": "error", "code": "<code>", "message": "<reason>", "recoverable": false }
 ```
 
-The browser closes the EventSource on either; the server flushes the
-transaction log and unblocks the idle timer.
-
-## Tarball budget
-
-GUI assets under `packages/core/installer/src/gui/` (inlined HTML +
-CSS + JS in `static-assets.ts`) must stay **≤ 200 KB compiled**. The
-constraint is enforced by reviewer judgment for now; a CI check is
-tracked under the Phase 6 follow-ups.
+The browser stops reading on `done` / `error`; the server ends the stream.
 
 ## Security failure modes covered
 
-- **Remote exploitation** — loopback bind, Host allowlist, Origin
-  allowlist, CSRF token, CSP `default-src 'self'`.
-- **DNS rebinding** — Host header check covers POSTs that omit
-  `Origin` (form posts).
-- **Zombie servers** — ephemeral port + PID file + last-request idle
-  timer. Stale PIDs (process gone) are silently overwritten on next
-  boot; live PIDs block boot with a helpful message.
-- **Mid-install crash** — transaction log + boot-time rollback prompt.
-- **Hidden state** — closing the tab triggers idle timeout; no
-  cross-tab session.
+- **Remote exploitation** — loopback bind, Host allow-list, Origin
+  allow-list, per-server bearer token.
+- **DNS rebinding** — Host header check covers POSTs that omit `Origin`.
+- **Mid-install crash** — `scripts/install.py` owns the user-scope
+  lockfile + project manifest; the recovery routes
+  (`/api/v1/install/recovery`) surface an interrupted run on next boot.
 
 ## Non-goals (documented contract)
 
-- Not a hosted SaaS — no auth, no account model, no telemetry.
-- Not a settings editor — read-only on the lockfile; writes go
-  through the same install plan as the CLI.
-- Not a CI surface — every operation is reachable via `--gui-port=0
-  --no-open` is supported for headless smoke tests, but the canonical
-  CI path is the flag-driven non-interactive CLI.
+- Not a hosted SaaS — no auth account model, no telemetry.
+- Not a parallel installer — the GUI is a selection front-end; every
+  real write goes through `scripts/install.py --apply-payload`.
+- Not a CI surface — `--no-open` headless boots are supported for smoke
+  tests, but the canonical CI path is the flag-driven non-interactive CLI.
 
 ## Apply payload — versioning handshake (road-to-global-only-install Phase 0.4 · D12)
 
-`/api/apply` accepts a discriminated-union body keyed on
+`POST /api/v1/wizard/apply` accepts a discriminated-union body keyed on
 `schema_version`. The full JSON Schema lives at
 [`internal/schemas/wizard-apply-payload.schema.json`](../../internal/schemas/wizard-apply-payload.schema.json).
 
@@ -142,18 +154,19 @@ tracked under the Phase 6 follow-ups.
 | `"installer-v1"` | `InstallerPayloadV1` | `{ ai_tools[], configs{}, dry_run? }` — legacy Installer-GUI, AI tools only. |
 | `"wizard-v2"` | `WizardPayloadV2` | `{ tools[], packs[], settings{}, scope_to_project_only?, dry_run? }` — unified 9-step wizard. |
 
-**D12 (locked).** Single `/api/apply` endpoint with a `schema_version`
+**D12 (locked).** Single apply endpoint with a `schema_version`
 discriminator — **not** two endpoints with a shared Python backend.
-Reasoning: one bind, one CSRF token, one transaction log; the
+Reasoning: one bind, one token, one installer; the
 Python `scripts/install.py` payload-router branches on
 `schema_version` before any disk write. The dual-endpoint variant was
-considered and rejected for doubling the CSRF + idle-timer surface
-with no observability gain.
+considered and rejected for doubling the surface with no gain.
 
 `schema_version` is **required**. Servers MUST reject any body that
-lacks it (HTTP 400, single-line error pointing at the schema). This
-locks the contract before Phase 1 implementation so no implicit fork
-can sneak in at Phase 1.5.
+lacks it (HTTP 4xx, single-line error pointing at the schema). The
+real-apply path is now wired end-to-end
+(road-to-single-install-source-of-truth § Phases 1–2): `install.py`
+translates the payload into the canonical install and streams NDJSON
+progress back to the GUI.
 
 ## Unified 9-step flow (road-to-global-only-install § Phase 1.6)
 

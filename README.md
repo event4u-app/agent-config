@@ -81,7 +81,8 @@ opt-in measurement loop. Source-of-truth tree is
 **Three steps. Five minutes. Browser wizard, no YAML by hand.**
 
 ```bash
-# 1. Install — wizard auto-launches on first run.
+# 1. Install — on a terminal with a display, the browser wizard launches
+#    automatically; the same install.py runs the real install behind it.
 npx -y @event4u/agent-config init
 
 # 2. Pick your profile + tools in the wizard, click Finish.
@@ -91,7 +92,7 @@ npx -y @event4u/agent-config init
 /work "your first real task"
 ```
 
-**Headless / CI:** add `--no-ui` and pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. Reference: [`docs/wizard.md`](docs/wizard.md).
+**Headless / CI:** `init` skips the GUI automatically when `CI` is set, stdout is not a TTY, `--no-ui` is passed, **or** an explicit `--tools=` selection is given — it then runs the non-interactive installer directly. Pass flags (`--profile=developer --tools=claude-code,cursor`); add `--dry-run` to preview writes. The GUI and the CLI share one installer (`scripts/install.py`), so both produce identical results. Reference: [`docs/wizard.md`](docs/wizard.md).
 
 **Pick specific AIs:** `--tools=claude-code,cursor,augment,windsurf,cline,gemini-cli,copilot,roocode,aider,codex,claude-desktop,continue` (any subset). Visual picker: add `--gui` (loopback-bound, CSRF-gated; contract [`gui-wizard`](docs/contracts/gui-wizard.md)).
 
