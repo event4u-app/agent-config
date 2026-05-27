@@ -285,8 +285,6 @@ code {
 .ac-pack-tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
 .ac-pack-tile__head { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-weight: var(--font-weight-medium); }
 .ac-pack-tile__title { flex: 1; }
-.ac-pack-tile__role { margin: 0; font-size: var(--font-size-xs); color: var(--color-text); }
-.ac-pack-tile__role code { font-size: var(--font-size-xs); }
 .ac-pack-tile__desc { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-xs); }
 .ac-pack-tile__children { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: var(--space-2) 0 0 var(--space-4); border: 0; border-top: 1px solid var(--color-border); }
 .ac-pack-tile__children:disabled { opacity: 0.5; }
