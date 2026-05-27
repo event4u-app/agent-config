@@ -29,7 +29,7 @@ export function defaultIdentity(): UserIdentity {
         identity: { name: '' },
         language: 'en',
         role: [''],
-        style: { formality: 'informal', pace: 'pragmatic' },
+        style: { pace: 'pragmatic' },
         voice_sample: '',
         last_updated: '1970-01-01',
     };
@@ -41,10 +41,6 @@ function isObject(v: unknown): v is Record<string, unknown> {
 
 function pickString(value: unknown, fallback: string): string {
     return typeof value === 'string' ? value : fallback;
-}
-
-function pickFormality(value: unknown): UserIdentity['style']['formality'] {
-    return value === 'formal' ? 'formal' : 'informal';
 }
 
 function pickPace(value: unknown): UserIdentity['style']['pace'] {
@@ -78,7 +74,6 @@ export function mergeIdentity(parsed: Record<string, unknown>): UserIdentity {
         language: pickString(parsed.language, def.language),
         role: pickRoles(parsed.role),
         style: {
-            formality: pickFormality(styleRaw.formality),
             pace: pickPace(styleRaw.pace),
         },
         voice_sample: pickString(parsed.voice_sample, def.voice_sample),

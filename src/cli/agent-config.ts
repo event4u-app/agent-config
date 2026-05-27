@@ -191,10 +191,10 @@ async function main(argv: readonly string[]): Promise<number> {
             const forwarded: Parameters<typeof runUiServe>[0] = {
                 initialRoute: '/wizard',
                 extendedSteps: extended,
-                // Setup skips the install-only lead (ai-tools/packs/modules) —
-                // when the extended flow is active, jump to Identity (index 3).
+                // Setup skips the install-only lead (ai-tools/roles/packs/modules)
+                // — when the extended flow is active, jump to Identity (index 4).
                 // Non-extended mode starts at the canonical first step (0).
-                initialStep: extended ? 3 : 0,
+                initialStep: extended ? 4 : 0,
                 wizardMode: 'setup',
             };
             if (opts.port !== undefined) forwarded.port = opts.port;

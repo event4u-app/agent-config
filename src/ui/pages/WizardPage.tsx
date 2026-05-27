@@ -51,6 +51,7 @@ import {
     discoveryLoaded,
     discoveryLoading,
     discoveryPacks,
+    discoveryWorkspaces,
     errors,
     extendedSteps,
     getActiveSteps,
@@ -82,9 +83,11 @@ import {
     rtkInstallCommand,
     rtkInstalled,
     rtkRepo,
+    packsTouched,
     saving,
     schema,
     selectedPacks,
+    selectedRoles,
     selectedTools,
     settingsLastModified,
     startedAtNow,
@@ -105,6 +108,7 @@ import {
     type ConflictBatchChoice,
     type ConflictResolutionWire,
     type DiscoveryPack,
+    type DiscoveryWorkspace,
     type InstallPlanWire,
     type LegacyV3Status,
     type ModulesDetectResponse,
@@ -275,7 +279,7 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'modules') {
             void loadModulesOnce();
         }
-        if (resumed.kind === 'aiTools' || resumed.kind === 'packs') {
+        if (resumed.kind === 'roles' || resumed.kind === 'aiTools' || resumed.kind === 'packs') {
             void loadDiscoveryOnce();
         }
         if (resumed.kind === 'aiTools') {
@@ -390,6 +394,14 @@ interface ManifestResponse {
         description?: string;
         requires_hint?: string[];
         cluster?: string | null;
+        workspaces?: string[];
+    }>;
+    workspaces?: Array<{
+        id: string;
+        label?: string;
+        description?: string;
+        default_packs?: string[];
+        optional_packs?: string[];
     }>;
 }
 
@@ -432,8 +444,20 @@ async function loadDiscoveryOnce(): Promise<void> {
             description: p.description ?? '',
             requires_hint: p.requires_hint,
             cluster: p.cluster ?? undefined,
+            workspaces: p.workspaces,
         }));
         discoveryPacks.value = packs;
+        // Role/domain workspaces drive Step 2. The maintainer-only workspace is
+        // not a user-facing role, so it never appears as a checkbox.
+        discoveryWorkspaces.value = (manifest.workspaces ?? [])
+            .filter((w) => w.id !== 'agent-config-maintainer')
+            .map((w) => ({
+                id: w.id,
+                label: w.label ?? w.id,
+                description: w.description ?? '',
+                default_packs: w.default_packs ?? [],
+                optional_packs: w.optional_packs ?? [],
+            }));
         // Strip the `pack-` prefix so ids match the manifest. Unknown
         // signals (e.g. future detector additions not yet in the
         // manifest) are dropped silently rather than rendering as
@@ -447,13 +471,8 @@ async function loadDiscoveryOnce(): Promise<void> {
             // the pack — never auto-detect / pre-select it.
             .filter((id) => !NO_AUTODETECT_PACK_IDS.has(id));
         detectedPackIds.value = detected;
-        // Pre-select detected packs only when the user hasn't already
-        // touched the selection (e.g. resume from server partial).
-        if (Object.keys(selectedPacks.value).length === 0) {
-            const seed: Record<string, boolean> = {};
-            for (const id of detected) seed[id] = true;
-            selectedPacks.value = seed;
-        }
+        // Pack pre-selection is driven by the role step (seedPacksFromRoles),
+        // not auto-detect alone — see the packs step-entry trigger.
     } catch (err) {
         if (err instanceof ApiCallError) {
             discoveryLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
@@ -681,8 +700,11 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'modules') {
         void loadModulesOnce();
     }
-    if (next.kind === 'aiTools' || next.kind === 'packs') {
+    if (next.kind === 'roles' || next.kind === 'aiTools' || next.kind === 'packs') {
         void loadDiscoveryOnce();
+    }
+    if (next.kind === 'packs') {
+        seedPacksFromRoles();
     }
     if (next.kind === 'aiTools') {
         void loadToolDetectionOnce();
@@ -743,6 +765,29 @@ function resolveSelectedPacks(): string[] {
 }
 
 /**
+ * Recommend packs from the selected roles (Step 2 → Step 3). Each chosen
+ * workspace contributes its `default_packs`; the union is the recommendation.
+ * Auto-detected project packs are folded in too. No-op once the user has
+ * manually edited the pack selection, so the recommendation never clobbers a
+ * deliberate choice. Re-runs on every packs-step entry while untouched, so
+ * changing roles updates the recommendation.
+ */
+function seedPacksFromRoles(): void {
+    if (packsTouched.value) return;
+    const roleIds = Object.entries(selectedRoles.value)
+        .filter(([, v]) => v === true)
+        .map(([id]) => id);
+    const byWorkspace = new Map(discoveryWorkspaces.value.map((w) => [w.id, w]));
+    const recommended: Record<string, boolean> = {};
+    for (const role of roleIds) {
+        for (const pack of byWorkspace.get(role)?.default_packs ?? []) recommended[pack] = true;
+    }
+    // Fold in auto-detected project packs (python already filtered upstream).
+    for (const id of detectedPackIds.value) recommended[id] = true;
+    selectedPacks.value = recommended;
+}
+
+/**
  * Build the wizard-v2 apply payload from the current selection signals.
  * Returns `null` when no AI tool is checked — the server schema requires
  * `tools.min(1)`, and an empty selection means there is nothing for the
@@ -790,11 +835,21 @@ async function finish(): Promise<void> {
         } = {
             settings: values.value,
         };
-        // Send the identity object only when the user actually edited or
-        // created it. Skipped / untouched → omit so the server leaves any
-        // existing `.agent-user.yml` alone.
-        if (userMdChanged() && userMdBody.value !== null) {
-            body.identity = userMdBody.value;
+        // Roles come from Step 2 (extended mode) and override the identity's
+        // `role[]` — the user-md form no longer asks for them there.
+        const roleIds = Object.entries(selectedRoles.value)
+            .filter(([, v]) => v === true)
+            .map(([id]) => id);
+        const hasName = userMdBody.value !== null
+            && typeof userMdBody.value.identity?.name === 'string'
+            && userMdBody.value.identity.name.trim().length > 0;
+        // Send the identity object when the user edited it OR selected roles —
+        // but only when a name exists (the schema requires it). Otherwise omit
+        // so the server leaves any existing `.agent-user.yml` alone.
+        if (userMdBody.value !== null && hasName && (userMdChanged() || roleIds.length > 0)) {
+            body.identity = roleIds.length > 0
+                ? { ...userMdBody.value, role: roleIds }
+                : userMdBody.value;
         }
         // road-to-global-only-install § Phase 2.3 — include the scope
         // selection only when the server advertised the opt-in. Older
@@ -1107,10 +1162,67 @@ function AiToolsStepBody(): preact.JSX.Element {
 }
 
 /**
- * Renderer for the extended-mode `packs` step. Reads the live discovery
- * manifest (ADR-015) so the available packs always match the bundle on
- * disk. Auto-detected packs (e.g. `pack-php` when `composer.json` is
- * present) are pre-selected by `loadDiscoveryOnce`.
+ * Renderer for the extended-mode `roles` step (Step 2). The discovery
+ * workspaces are the role/domain checkboxes; the chosen ids become
+ * `.agent-user.yml` `role[]` and recommend each domain's `default_packs` on
+ * the packs step (Step 3) via `seedPacksFromRoles`.
+ */
+function RolesStepBody(): preact.JSX.Element {
+    if (discoveryLoading.value) {
+        return <p>Loading roles…</p>;
+    }
+    if (discoveryLoadError.value !== null) {
+        return (
+            <div class="ac-wizard-step-stub">
+                <p class="ac-banner ac-banner--error">Discovery failed: {discoveryLoadError.value}</p>
+            </div>
+        );
+    }
+    const sel = selectedRoles.value;
+    const workspaces = discoveryWorkspaces.value;
+    const setRole = (id: string, checked: boolean): void => {
+        selectedRoles.value = { ...selectedRoles.value, [id]: checked };
+        // Roles changed → refresh the pack recommendation (no-op once the user
+        // has manually edited packs on Step 3).
+        seedPacksFromRoles();
+    };
+    return (
+        <div class="ac-wizard-step-stub">
+            <p>
+                Pick the areas you work in. We use them to recommend capability
+                packs on the next step, and they become your roles in
+                <code> .agent-user.yml</code>.
+            </p>
+            {workspaces.length === 0
+                ? <p><em>No roles available in the manifest.</em></p>
+                : (
+                    <div class="ac-wizard__pack-grid">
+                        {workspaces.map((ws: DiscoveryWorkspace) => (
+                            <section key={ws.id} class="ac-pack-tile">
+                                <label class="ac-pack-tile__head">
+                                    <input
+                                        type="checkbox"
+                                        checked={sel[ws.id] ?? false}
+                                        onChange={(e): void => { setRole(ws.id, (e.currentTarget as HTMLInputElement).checked); }}
+                                    />
+                                    <span class="ac-pack-tile__title">{ws.label}</span>
+                                </label>
+                                {ws.description !== ''
+                                    ? <p class="ac-pack-tile__desc">{ws.description}</p>
+                                    : null}
+                            </section>
+                        ))}
+                    </div>
+                )}
+        </div>
+    );
+}
+
+/**
+ * Renderer for the extended-mode `packs` step (Step 3). Reads the live
+ * discovery manifest (ADR-015) so the available packs always match the bundle
+ * on disk. Pre-selection is recommended from the Step-2 roles
+ * (`seedPacksFromRoles`); the user can override any tile.
  *
  * `requires_hint` is surfaced as informational copy under each pack —
  * the installer resolves dependencies at apply time, so the wizard
@@ -1151,6 +1263,7 @@ function PacksStepBody(): preact.JSX.Element {
     const topLevel = visible.filter((p) => !childIds.has(p.id));
 
     const setPack = (id: string, checked: boolean): void => {
+        packsTouched.value = true;
         selectedPacks.value = { ...selectedPacks.value, [id]: checked };
     };
     // A language tile gates its frameworks without destroying their stored
@@ -1160,6 +1273,7 @@ function PacksStepBody(): preact.JSX.Element {
     // language back on restores the exact prior selection (Laravel on /
     // Symfony off survives a php off→on round-trip).
     const setLanguage = (id: string, checked: boolean): void => {
+        packsTouched.value = true;
         const next = { ...selectedPacks.value, [id]: checked };
         if (checked) {
             for (const child of childrenOf.get(id) ?? []) {
@@ -1415,14 +1529,14 @@ function AiCouncilStepBody(): preact.JSX.Element {
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
-    // three install-only steps (ai-tools / packs / modules) and the
-    // settings section. The user just finished modules at index 2 and
-    // is now landing on Step 4 (identity, index 3). Render the handoff
-    // only when the install entry mode is active and the user has not
-    // already acknowledged the transition in this session.
+    // four install-only steps (ai-tools / roles / packs / modules) and the
+    // settings section. The user just finished modules at index 3 and
+    // is now landing on the first settings step (identity, index 4). Render
+    // the handoff only when the install entry mode is active and the user
+    // has not already acknowledged the transition in this session.
     const onContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && stepIndex.value === 3
+        && stepIndex.value === 4
         && !continueAcknowledged.value;
     if (onContinueHandoff) {
         return <ContinueScreen />;
@@ -1446,13 +1560,14 @@ function StepBody(): preact.JSX.Element | null {
             return <p>Loading .agent-user.yml…</p>;
         }
         // Server validates `body.identity` against `userIdentitySchema`,
-        // so Zod paths come back as `identity.name`, `style.formality`,
+        // so Zod paths come back as `identity.name`, `style.pace`,
         // … with no wire-level wrapper to strip — they bind 1:1 to the
         // form's field keys.
         return (
             <UserMdForm
                 value={userMdBody.value}
                 errors={errors.value}
+                hideRole={extendedSteps.value && wizardMode.value === 'install'}
                 onChange={(next): void => {
                     userMdBody.value = next;
                     userMdSkipped.value = false;
@@ -1462,6 +1577,9 @@ function StepBody(): preact.JSX.Element | null {
     }
     if (step.kind === 'aiTools') {
         return <AiToolsStepBody />;
+    }
+    if (step.kind === 'roles') {
+        return <RolesStepBody />;
     }
     if (step.kind === 'packs') {
         return <PacksStepBody />;
@@ -1549,6 +1667,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     // language is off, mirroring what actually gets installed.
     const blockedByEmptySelection =
         (step.kind === 'aiTools' && Object.values(selectedTools.value).filter(Boolean).length === 0)
+        || (step.kind === 'roles' && Object.values(selectedRoles.value).filter(Boolean).length === 0)
         || (step.kind === 'packs' && resolveSelectedPacks().length === 0);
     // Install→setup hand-off (road-to-wizard-ux-improvements § Phase 6): a
     // "Step 3.5" intermediate. Next acknowledges + reveals "Editor and tooling"
@@ -1556,7 +1675,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     // nav like Skip and jumps to Review.
     const isContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && idx === 3
+        && idx === 4
         && !continueAcknowledged.value;
 
     const rec = recoveryStatus.value;
@@ -1628,7 +1747,9 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                     <p class="ac-wizard__hint">
                         {step.kind === 'aiTools'
                             ? 'Select at least one AI tool to continue.'
-                            : 'Select at least one capability pack to continue.'}
+                            : step.kind === 'roles'
+                                ? 'Select at least one role to continue.'
+                                : 'Select at least one capability pack to continue.'}
                     </p>
                 )
                 : null}

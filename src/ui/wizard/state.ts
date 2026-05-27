@@ -197,6 +197,22 @@ export interface DiscoveryPack {
      * (e.g. `react` → `typescript`). Absent on language/standalone packs.
      */
     cluster?: string;
+    /** Workspace/role domains this pack belongs to (e.g. `engineering`, `founder`). */
+    workspaces?: string[];
+}
+
+/**
+ * A discovery workspace = a role/domain the user works in (Engineering,
+ * Product, Finance, Founder, …). Surfaced as Step-2 checkboxes; the selected
+ * ids become `.agent-user.yml` `role[]` and recommend each domain's
+ * `default_packs` on the packs step.
+ */
+export interface DiscoveryWorkspace {
+    id: string;
+    label: string;
+    description: string;
+    default_packs: string[];
+    optional_packs?: string[];
 }
 
 /**
@@ -242,6 +258,15 @@ export const discoveryLoading = signal(false);
 export const discoveryLoadError = signal<string | null>(null);
 export const discoveryPacks = signal<DiscoveryPack[]>([]);
 export const detectedPackIds = signal<string[]>([]);
+/** Role/domain workspaces from the manifest, rendered as Step-2 checkboxes. */
+export const discoveryWorkspaces = signal<DiscoveryWorkspace[]>([]);
+
+/**
+ * Selected role/domain ids (Step 2) — keyed for O(1) toggle. Truthy keys
+ * become `.agent-user.yml` `role[]` and drive pack recommendations on Step 3.
+ * `agent-config-maintainer` is intentionally excluded from the UI list.
+ */
+export const selectedRoles = signal<Record<string, boolean>>({});
 
 /**
  * AI-tool native presence on the machine (road-to-wizard-ux-improvements
@@ -295,6 +320,12 @@ export const aiCouncilKeyInstall = signal<Record<string, string>>({});
  */
 export const selectedTools = signal<Record<string, boolean>>({});
 export const selectedPacks = signal<Record<string, boolean>>({});
+/**
+ * True once the user has manually toggled a pack on Step 3. Until then the
+ * packs step re-seeds from the selected roles' recommended packs on entry;
+ * after a manual edit the role-driven seeding stops clobbering the choice.
+ */
+export const packsTouched = signal(false);
 
 /**
  * Wire-shape of an InstallPlan returned by `POST /api/v1/install/plan`
