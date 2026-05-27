@@ -793,6 +793,64 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.5.0](https://github.com/event4u-app/agent-config/compare/4.3.0...4.5.0) (2026-05-27)
+
+### Features
+
+* **wizard:** move name + language to a welcome step (Step 1) with smart pre-fill ([98fc74d](https://github.com/event4u-app/agent-config/commit/98fc74d3da2337c811d59e22bbcde75daa1ae623))
+* **wizard:** badge packs with their workspace areas on the packs step ([0c16a81](https://github.com/event4u-app/agent-config/commit/0c16a81c9479f66e5b66a666eef39d7555fca6e2))
+* **wizard:** show example roles per area instead of the raw workspace id ([b60e08d](https://github.com/event4u-app/agent-config/commit/b60e08d56dffe5151b25cec7ddb0394d47123e5a))
+* **wizard-ui:** show the role id under each workspace on the roles step ([5556afa](https://github.com/event4u-app/agent-config/commit/5556afa7b410d9963eef4abcd1e1f4cb72bcd6cf))
+* **wizard-ui:** show the role id under each workspace on the roles step ([8dd4611](https://github.com/event4u-app/agent-config/commit/8dd46113f856b1c8bb0c7bf12d8594ee1b898b97))
+* optimize autonomy-mechanics ([615c368](https://github.com/event4u-app/agent-config/commit/615c368a6f07394468247b9a2b281114c29f290f))
+* **wizard:** add roles step (Step 2) + drop the formality setting ([7331651](https://github.com/event4u-app/agent-config/commit/7331651e2d7915b13a9a639414884cffea277a19))
+* **wizard-ui:** smarter Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([8de1e0e](https://github.com/event4u-app/agent-config/commit/8de1e0e6f50408d82b4d3f3ee3b35296aefb472f))
+* **wizard:** surface prior tool selection from the install lockfile ([cdacbe0](https://github.com/event4u-app/agent-config/commit/cdacbe0292b60a447966ee976e18382da274756f))
+* **init:** kill a stale wizard server before launching a fresh one ([dd57b7f](https://github.com/event4u-app/agent-config/commit/dd57b7f5ec121dc3abc2815fdcfcf26dc10c930a))
+* **wizard:** auto-shut the server down after 30 min of inactivity ([5f9514f](https://github.com/event4u-app/agent-config/commit/5f9514fb869df901fb184b7ff7b8c4f0e14ddf91))
+* **wizard:** shut the local server down when the browser window closes ([77d3c4f](https://github.com/event4u-app/agent-config/commit/77d3c4fcdd3e35f43daeb1a39e27e9e48653ef98))
+* **wizard-ui:** first-run detection, pack tiles, styled inputs, handoff, rtk + AI-council steps ([f1755ed](https://github.com/event4u-app/agent-config/commit/f1755ed23687c6b6013480c1e743eabf0a53807a))
+* **packs:** advisory `cluster:` field for wizard language→framework grouping ([b2a2ed9](https://github.com/event4u-app/agent-config/commit/b2a2ed979666b9f20686c30a3529b5ee9c8004fb))
+* **wizard-server:** fresh-start state + tool/rtk/council detect & config endpoints ([c32d87c](https://github.com/event4u-app/agent-config/commit/c32d87c020006e3759f5a3aec362450650bb6de1))
+
+### Bug Fixes
+
+* **ci:** regenerate pack-ai-video for the description change + fix userMd test resets ([cd4509d](https://github.com/event4u-app/agent-config/commit/cd4509d6a5601b5d6ca8d4bd4adef53a3e9468bb))
+* **condense-memory:** preserve URLs, link targets, and paths in prose ([aac6de1](https://github.com/event4u-app/agent-config/commit/aac6de1710a06f29be43c732aeb1c0e707bdfc69))
+* **wizard:** pre-select the user's prior tool selection, not every deployed tool ([afe38a3](https://github.com/event4u-app/agent-config/commit/afe38a3458818ab532f01266b7e17708bfb1702b))
+* **packs:** allow `cluster` in the discovery-manifest schema ([9014e95](https://github.com/event4u-app/agent-config/commit/9014e95983bff5e3b7acd96bd249ffced11a109c))
+* **template:** bump agent-project-settings pin to 4.3.0 ([c2648ce](https://github.com/event4u-app/agent-config/commit/c2648cef51a8b587e1e3c7be536c3b46fbdd7410))
+
+### Documentation
+
+* **adr-013:** record the advisory example_roles key on workspaces ([ebcc661](https://github.com/event4u-app/agent-config/commit/ebcc66164bc6ce0201695bf293515f309d8efcf4))
+* **wizard:** roles step + remove formality from schema docs and user commands ([06f890e](https://github.com/event4u-app/agent-config/commit/06f890e2e259016417b0a808f4e8c92e53c0ebea))
+* **gui-wizard:** document Step-1/2 pre-selection, sticky frameworks, empty-selection gate ([ca273de](https://github.com/event4u-app/agent-config/commit/ca273de6e3e8b182fa98ddaff985cf4acb31eb91))
+* **gui-wizard:** document 30-min idle shutdown + init kill-stale-server ([dfcdc40](https://github.com/event4u-app/agent-config/commit/dfcdc4054b85edab426abcb0bb4f2672d373c554))
+* **gui-wizard:** document the browser-close shutdown beacon + idle backstop ([4eccc51](https://github.com/event4u-app/agent-config/commit/4eccc5117a802c1a0d57b7a98d7eea7a36d0078a))
+* **roadmap:** complete + archive road-to-wizard-ux-improvements ([e02d514](https://github.com/event4u-app/agent-config/commit/e02d5145c9343126a2aa049811fc8094de8fa542))
+* **gui-wizard:** step layout 8/11 + ai-council step + new wizard endpoints ([fdbcd9c](https://github.com/event4u-app/agent-config/commit/fdbcd9c494ec2785375ed1d3f1e130e3a4cb99ba))
+
+### Tests
+
+* **wizard:** roles step coverage + formality removal + step-count shifts ([5f8ec3e](https://github.com/event4u-app/agent-config/commit/5f8ec3ee4a1f135ee00e60ca612a2b4f09dbd7ba))
+* **wizard:** cover detection, packs cluster, handoff, rtk, AI-council + step-count shifts ([5b6b758](https://github.com/event4u-app/agent-config/commit/5b6b7581e784bf5b219d30981f614e3778ccaaad))
+
+### Chores
+
+* **changelog:** split era 3.2.x → pre-4.0.0 ([10a6dd4](https://github.com/event4u-app/agent-config/commit/10a6dd415e5e8f3a60714898ad9157484b6a29e2))
+* refresh condensation hashes for the autonomy/cheap-question contexts ([843f065](https://github.com/event4u-app/agent-config/commit/843f0658e1ac965c1dc44aebce26cec29744a0a7))
+* add new roadmaps ([76ec1e3](https://github.com/event4u-app/agent-config/commit/76ec1e392b656c2177b7b9e1f75d5c6a1d1976e4))
+* **docs:** repoint council-question links + ignore agents/tmp.old/ ([984512e](https://github.com/event4u-app/agent-config/commit/984512e623f25e9d336647d5190d3cfc2969d9b5))
+
+### Other
+
+* **wizard:** shrink the workspace badges on the packs step ([9af0d1e](https://github.com/event4u-app/agent-config/commit/9af0d1ea68302e3d3ef22b4a62955dfe2c54074b))
+* Revert "feat(wizard-ui): show the role id under each workspace on the roles step" ([a22120c](https://github.com/event4u-app/agent-config/commit/a22120c3625c2535b85c05b9c7dcbfc2f3849d1f))
+* 4.4.0 ([e2d7c13](https://github.com/event4u-app/agent-config/commit/e2d7c139a910f0539cece0ce0645259fc8d778fd))
+
+Tests: 5059 (+7 since 4.3.0)
+
 ## [4.4.0](https://github.com/event4u-app/agent-config/compare/4.3.0...4.4.0) (2026-05-27)
 
 ### Features
