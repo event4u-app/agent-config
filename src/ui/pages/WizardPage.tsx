@@ -1207,6 +1207,9 @@ function RolesStepBody(): preact.JSX.Element {
                                     />
                                     <span class="ac-pack-tile__title">{ws.label}</span>
                                 </label>
+                                <p class="ac-pack-tile__role">
+                                    Role: <code>{ws.id}</code>
+                                </p>
                                 {ws.description !== ''
                                     ? <p class="ac-pack-tile__desc">{ws.description}</p>
                                     : null}
