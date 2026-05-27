@@ -6,10 +6,10 @@
 
 ## Overall
 
-**42 / 115 steps done · 37%**
+**50 / 115 steps done · 43%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   43%
 ```
 
 ## Open roadmaps
@@ -20,7 +20,7 @@
 | 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 4 | [road-to-readable-value-dashboard.md](roadmaps/road-to-readable-value-dashboard.md) | 6 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 5 | [road-to-wizard-sse-hardening.md](roadmaps/road-to-wizard-sse-hardening.md) | 2 | 9 | 9 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 5 | [road-to-wizard-sse-hardening.md](roadmaps/road-to-wizard-sse-hardening.md) | 2 | 9 | 1 | 8 | 0 | 0 | █████████░ 89% |
 
 ---
 
@@ -77,10 +77,10 @@
 
 ### [road-to-wizard-sse-hardening.md](roadmaps/road-to-wizard-sse-hardening.md)
 
-**Wizard SSE hardening — edge-case test coverage, severity-phased** — 0 / 9 done (0%)
+**Wizard SSE hardening — edge-case test coverage, severity-phased** — 8 / 9 done (89%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | P0 — resource-leak + security paths | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | P2 — stream-robustness polish | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | P0 — resource-leak + security paths | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 2 | P2 — stream-robustness polish | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 
