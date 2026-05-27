@@ -155,7 +155,7 @@
 
 - id: ai-video
   label: AI Video
-  description: AI video pipeline (per ADR-011, the only heavyweight domain).
+  description: AI video pipeline.
   workspaces: [small-business]
   trust_level_default: experimental
   onboarding:

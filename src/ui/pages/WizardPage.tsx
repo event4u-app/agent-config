@@ -1256,6 +1256,28 @@ function PacksStepBody(): preact.JSX.Element {
     }
     const sel = selectedPacks.value;
     const detected = new Set(detectedPackIds.value);
+    // Workspace id → label, and the user's selected roles, so each pack tile
+    // can badge the areas it belongs to (and highlight the ones the user picked
+    // on Step 2 — "this pack matches your role").
+    const wsLabel = new Map(discoveryWorkspaces.value.map((w) => [w.id, w.label]));
+    const pickedRoles = selectedRoles.value;
+    const renderWorkspaceBadges = (ids: string[] | undefined): preact.JSX.Element | null => {
+        const list = (ids ?? []).filter((id) => id !== 'agent-config-maintainer');
+        if (list.length === 0) return null;
+        return (
+            <span class="ac-pack-tile__ws">
+                {list.map((id) => (
+                    <span
+                        key={id}
+                        class={`ac-badge ac-badge--ws${pickedRoles[id] === true ? ' ac-badge--ws-active' : ''}`}
+                        title={pickedRoles[id] === true ? 'Matches a role you picked' : 'Workspace / area'}
+                    >
+                        {wsLabel.get(id) ?? id}
+                    </span>
+                ))}
+            </span>
+        );
+    };
     // engineering-base is an auto-included dependency — never shown as a tile
     // (road-to-wizard-ux-improvements § Phase 4).
     const visible = discoveryPacks.value.filter((p) => p.id !== 'engineering-base');
@@ -1325,6 +1347,7 @@ function PacksStepBody(): preact.JSX.Element {
                                             ? <span class="ac-badge ac-badge--installed">auto-detected</span>
                                             : null}
                                     </label>
+                                    {renderWorkspaceBadges(pack.workspaces)}
                                     {pack.description !== ''
                                         ? <p class="ac-pack-tile__desc">{pack.description}</p>
                                         : null}

@@ -258,7 +258,9 @@ takes effect on the next reload without a code change.
 - **Step 2 → Step 3 recommendation.** Each selected role contributes its
   workspace `default_packs`; the union pre-selects packs on Step 3 (plus
   auto-detected project packs). The recommendation stops clobbering the
-  selection once the user manually edits a pack.
+  selection once the user manually edits a pack. Each pack tile also badges
+  the workspace(s) it belongs to (from the pack's `workspaces`), highlighting
+  the badges that match a role the user picked on Step 2.
 - **Step 2 framework persistence.** A language tile (`cluster`, e.g. PHP)
   gates its framework children in the UI but never destroys their stored
   selection. Turning a language off disables — but keeps checked — its
