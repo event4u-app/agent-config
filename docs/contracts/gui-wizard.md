@@ -118,18 +118,29 @@ In real-serve (`runUiServe`), the server stops itself when the browser that
 drives it goes away — the local process should not outlive its only client:
 
 - The SPA ([`src/ui/serverLifecycle.ts`](../../src/ui/serverLifecycle.ts))
-  heartbeats `GET /api/v1/ping` every 10s and, on `pagehide`, fires
-  `navigator.sendBeacon('/api/v1/shutdown?token=…')` (the token rides as a
-  query param because `sendBeacon` cannot set headers).
+  heartbeats `GET /api/v1/ping` every 30s while the tab is visible and the
+  user has interacted within the last 30 min. On `pagehide` (window/tab
+  close) it fires `navigator.sendBeacon('/api/v1/shutdown?token=…')` (the
+  token rides as a query param because `sendBeacon` cannot set headers); and
+  once the user has been idle for 30 min it fires the same beacon instead of
+  a ping, so the server stops even with the tab still open.
 - The server (`createApp` `idleShutdown` option, passed only by `runUiServe`)
-  exits on that beacon, and — as a backstop for crashes where the beacon is
-  lost — via an idle timer that **arms only after the first authed request**
-  (so headless / `--allow-headless` manual-connect servers are never killed
-  before the operator attaches) and fires after ~5 min of silence.
+  exits on that beacon, and — as a backstop for crashes where neither beacon
+  is delivered — via an idle timer that **arms only after the first authed
+  request** (so headless / `--allow-headless` manual-connect servers are
+  never killed before the operator attaches) and fires after 30 min of
+  silence.
 
-`createApp` is inert here unless `idleShutdown` is supplied, so the in-process
-test harness ([`tests/server/helpers.ts`](../../tests/server/helpers.ts)) is
-unaffected.
+On boot, `runUiServe` records `{pid, port, url}` to
+`~/.event4u/agent-config/local-server.json`
+([`src/server/serverInfo.ts`](../../src/server/serverInfo.ts)) and removes it
+on graceful exit. A fresh `agent-config init` (via `scripts/install.py`
+`_kill_stale_wizard_server`) reads that record, terminates a still-running
+prior instance, and starts a new server — so init always lands on step 1.
+
+`createApp` is inert (no watchdog, no `/api/v1/shutdown` route) unless
+`idleShutdown` is supplied, so the in-process test harness
+([`tests/server/helpers.ts`](../../tests/server/helpers.ts)) is unaffected.
 
 ## Real apply — single source of truth
 
