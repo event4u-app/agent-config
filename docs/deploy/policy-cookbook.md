@@ -7,7 +7,7 @@
 > before code lands. Every section below is normative-once-shipped.
 >
 > Open design questions live in
-> [`agents/tmp/council-question-central-policy.md`](../../agents/tmp/council-question-central-policy.md).
+> [`agents/tmp/council-question-central-policy.md`](../../agents/tmp/old/council-question-central-policy.md).
 
 ## Audience
 
@@ -125,6 +125,6 @@ All of the above land in Phase 3. Until then, per-user
 ## Cross-references
 
 - 🚧 Reserved ADR slot: `docs/decisions/ADR-023-central-policy.md`.
-- Council question: [`agents/tmp/council-question-central-policy.md`](../../agents/tmp/council-question-central-policy.md).
+- Council question: [`agents/tmp/council-question-central-policy.md`](../../agents/tmp/old/council-question-central-policy.md).
 - Env contract: [`env-vars.md`](env-vars.md) (`POLICY_PATH`).
 - Quickstart: [`quickstart.md`](quickstart.md).

@@ -88,6 +88,43 @@ LEGACY_RENAME_MAP = {
 
 QUIET = False
 
+# Machine-readable progress stream for the wizard `--apply-payload` real-apply
+# bridge (road-to-single-install-source-of-truth § Phase 1). When True,
+# `_emit_progress` writes NDJSON lines to stdout so the GUI can stream install
+# progress; human-readable `info`/`success` output is suppressed via QUIET so
+# the two never interleave (`warn`/`fail` still surface on stderr). Off for
+# every normal CLI install.
+PROGRESS_NDJSON = False
+
+
+def _emit_progress(obj: "dict[str, Any]") -> None:
+    """Write one NDJSON progress line to stdout when PROGRESS_NDJSON is on.
+
+    No-op for normal CLI installs. The line shapes mirror the wizard SSE
+    frames the GUI already consumes: per-unit
+    ``{"type":"file","file":...,"status":...,"written":N,"total":M}`` and the
+    terminal ``{"type":"done"|"error",...}``.
+    """
+    if not PROGRESS_NDJSON:
+        return
+    sys.stdout.write(json.dumps(obj, separators=(",", ":")) + "\n")
+    sys.stdout.flush()
+
+
+def _emit_progress_terminal(rc: int) -> None:
+    """Emit the terminal NDJSON frame for a real-apply run.
+
+    rc == 0 → ``{"type":"done"}``; otherwise ``{"type":"error",...}``. No-op
+    unless PROGRESS_NDJSON is on, so it is safe to call from every install
+    return path.
+    """
+    if not PROGRESS_NDJSON:
+        return
+    if rc == 0:
+        _emit_progress({"type": "done"})
+    else:
+        _emit_progress({"type": "error", "code": "E_INSTALL", "exitCode": rc})
+
 
 def info(msg: str) -> None:
     if not QUIET:
@@ -817,12 +854,42 @@ def _validate_user_type(package_root: Path, value: str) -> str:
     return cleaned
 
 
+def _inject_packs(body: str, packs: "list[str]") -> str:
+    """Insert a top-level ``packs:`` block into a rendered settings body.
+
+    Inserted directly after the ``cost_profile:`` line so the active pack
+    selection sits beside the other install-time knobs. No-op when ``packs``
+    is empty — non-pack installs stay byte-identical to the template render.
+    """
+    if not packs:
+        return body
+    block = "packs:\n" + "".join(f"  - {p}\n" for p in packs)
+    lines = body.splitlines(keepends=True)
+    out: list[str] = []
+    inserted = False
+    for line in lines:
+        out.append(line)
+        if not inserted and line.startswith("cost_profile:"):
+            if not line.endswith("\n"):
+                out[-1] = line + "\n"
+            out.append(block)
+            inserted = True
+    if not inserted:
+        # No cost_profile anchor (unexpected) — append at the end so the
+        # selection is still recorded rather than silently dropped.
+        if out and not out[-1].endswith("\n"):
+            out[-1] = out[-1] + "\n"
+        out.append(block)
+    return "".join(out)
+
+
 def ensure_agent_settings(
     project_root: Path,
     package_root: Path,
     profile: str,
     force: bool,
     user_type: str = "",
+    packs: "list[str] | None" = None,
 ) -> None:
     target = project_root / SETTINGS_FILE
     profile_source = package_root / "config" / "profiles" / f"{profile}.ini"
@@ -847,6 +914,7 @@ def ensure_agent_settings(
     # Inject runtime-only values (not part of the .ini profile presets).
     profile_values["user_type"] = _validate_user_type(package_root, user_type)
     template_body = _render_template(template, profile_values)
+    template_body = _inject_packs(template_body, packs or [])
 
     legacy_target = project_root / LEGACY_SETTINGS_FILE
     if legacy_target.is_file() and target.exists():
@@ -3524,6 +3592,24 @@ def install_global(
     package_root = _resolve_package_root_for_global()
     deploy_results = _deploy_global_content(tools, force, package_root, written)
 
+    # NDJSON progress for the wizard --apply-payload real-apply bridge. One
+    # `file` frame per deployed tool unit (coarse, per AI-council 2026-05-27);
+    # the GUI maps these to its SSE progress frames. No-op under normal CLI
+    # installs (PROGRESS_NDJSON off). Emitted independent of QUIET because the
+    # real-apply path sets QUIET=True to silence the human stream.
+    if PROGRESS_NDJSON:
+        ordered = sorted(deploy_results)
+        total = len(ordered)
+        for idx, tool_id in enumerate(ordered, start=1):
+            w, _s, status, _ = deploy_results[tool_id]
+            _emit_progress({
+                "type": "file",
+                "file": tool_id,
+                "status": status,
+                "written": idx,
+                "total": total,
+            })
+
     if not QUIET:
         print()
         info("Deployed per-tool content:")
@@ -3698,6 +3784,17 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--packs",
+        default=None,
+        help=(
+            "comma-separated pack IDs to record as the active selection in "
+            ".agent-settings.yml (project scope). Packs are a "
+            "frontmatter/condense-time concept — recording the selection "
+            "lets downstream condense/runtime honor it; install.py does not "
+            "materialize packs. Default: none (base package only)."
+        ),
+    )
+    parser.add_argument(
         "--no-smoke",
         action="store_true",
         help="skip the post-install hook smoke test (default: dry-fire dispatch:hook against every installed bridge)",
@@ -3805,6 +3902,13 @@ def parse_options(argv: list[str]) -> argparse.Namespace:
     )
     opts = parser.parse_args(argv)
     opts.tools = _merge_tools_aliases(opts.tools, opts.ai)
+    # Normalize --packs (comma-separated string | None) to a list so the CLI
+    # and the --apply-payload bridge agree on opts.packs being list[str].
+    opts.packs = (
+        [p.strip() for p in opts.packs.split(",") if p.strip()]
+        if isinstance(opts.packs, str)
+        else []
+    )
     if opts.scope == "global" and opts.custom_path:
         fail("--custom-path is incompatible with --scope=global")
     if opts.global_install and opts.custom_path:
@@ -4167,16 +4271,17 @@ def run_interactive_init(project_root: Path, force: bool) -> int:
 # --- Wizard auto-launch (Phase 6 follow-up) ---
 #
 # Auto-launches the browser configuration wizard at the tail of a
-# successful install. The TS side ships a `gui` subcommand on the
-# installer CLI; this Python parent acts as a supervisor that:
+# successful install. The unified CLI ships an `install` subcommand
+# (`dist/cli/agent-config.js`); this Python parent acts as a supervisor that:
 #
 #   1. evaluates gate conditions (TTY, CI, --no-ui, env override),
 #   2. validates the dist exists,
-#   3. spawns `node <cli> gui --project-root <root>` via subprocess.Popen,
+#   3. spawns `node <cli> install --no-open --project-root <root>` via subprocess.Popen,
 #   4. captures stderr on a background thread (for failure surfacing),
 #   5. reads stdout line-by-line with a progressive timeout
 #      (10s → 20s → 40s → 80s) and matches the strict readiness regex
-#      `^WIZARD_READY url=(http://(?:127.0.0.1|localhost):\d+/)\r?$`,
+#      `^WIZARD_READY (http://(?:127.0.0.1|localhost):\d+/\S*)\r?$`
+#      (the CLI prints `WIZARD_READY <url>` where url carries `?token=…`),
 #   6. on success: prints the URL banner and waits for the child to
 #      exit (Ctrl-C in the parent terminal propagates to the child),
 #   7. on timeout: kills the child, prints captured stderr tail, falls
@@ -4186,7 +4291,7 @@ def run_interactive_init(project_root: Path, force: bool) -> int:
 # Roadmap: agents/roadmaps/wizard-install-py-wiring.md Step 3.
 
 _WIZARD_READY_RE = re.compile(
-    r"^WIZARD_READY url=(http://(?:127\.0\.0\.1|localhost):\d+/)\r?$"
+    r"^WIZARD_READY (http://(?:127\.0\.0\.1|localhost):\d+/\S*)\r?$"
 )
 _WIZARD_TIMEOUTS = (10.0, 20.0, 40.0, 80.0)  # cumulative budget 150s.
 
@@ -4195,8 +4300,8 @@ def _wizard_should_launch(opts: argparse.Namespace) -> tuple[bool, str]:
     """Evaluate gate conditions for the post-install wizard auto-launch.
 
     Returns (decision, reason). When decision is False the reason
-    string explains why (CI / no-tty / --no-ui / env override) and is
-    suitable for the pre-install banner Council Tier 2 § 8.
+    string explains why (CI / no-tty / --no-ui / env override / explicit
+    --tools) and is suitable for the pre-install banner Council Tier 2 § 8.
     """
     if getattr(opts, "no_ui", False):
         return (False, "--no-ui flag set")
@@ -4207,18 +4312,26 @@ def _wizard_should_launch(opts: argparse.Namespace) -> tuple[bool, str]:
         return (False, "CI environment detected")
     if not sys.stdout.isatty():
         return (False, "stdout is not a TTY")
+    # Explicit `--tools=<list>` means the caller already knows what to
+    # install — run the non-interactive CLI install, don't open the GUI
+    # (road-to-single-install-source-of-truth § Phase 4). The implicit/
+    # explicit `all` default does NOT suppress the wizard.
+    tools_raw = getattr(opts, "tools", None)
+    if tools_raw and not _tools_was_all(tools_raw):
+        return (False, "explicit --tools= selection (headless install)")
     return (True, "")
 
 
 def _wizard_cli_dist(project_root: Path) -> Path | None:
-    """Resolve the installer dist path. Returns None if not built.
+    """Resolve the unified CLI dist path. Returns None if not built.
 
-    Walks up from this file (scripts/install.py is at <pkg>/scripts/)
-    to <pkg>/packages/core/installer/dist/cli.js. That's the layout
-    the monorepo ships; consumer installs run `node <pkg>/.../cli.js`.
+    Walks up from this file (scripts/install.py is at <pkg>/scripts/) to
+    <pkg>/dist/cli/agent-config.js — the published bin entry (package.json
+    `bin`). The dead `packages/core/installer/dist/cli.js` layout was
+    retired in road-to-single-install-source-of-truth § Phase 4.
     """
     package_root = Path(__file__).resolve().parent.parent
-    cli = package_root / "packages" / "core" / "installer" / "dist" / "cli.js"
+    cli = package_root / "dist" / "cli" / "agent-config.js"
     return cli if cli.exists() else None
 
 
@@ -4233,17 +4346,18 @@ def _wizard_spawn(project_root: Path) -> int:
     cli = _wizard_cli_dist(project_root)
     if cli is None:
         print(
-            "(Wizard not available — installer package not built. "
-            "Run 'npm run build' inside packages/core/installer/.)"
+            "(Wizard not available — CLI bundle not built. "
+            "Run 'npm run build' at the package root to produce dist/cli/.)"
         )
         return 0
 
-    cmd = ["node", str(cli), "gui", "--project-root", str(project_root)]
+    # Spawn the unified CLI's `install` subcommand (boots the UI server,
+    # lands on Step 1 / AI tools). `--no-open` keeps the Python parent in
+    # charge of the user-facing URL print (Tier 2 § 8 ordering) — the dead
+    # `gui` subcommand + AGENT_CONFIG_GUI_NO_OPEN env were retired in
+    # road-to-single-install-source-of-truth § Phase 4.
+    cmd = ["node", str(cli), "install", "--no-open", "--project-root", str(project_root)]
     env = os.environ.copy()
-    # The Node child writes its own readiness banner; suppress the
-    # browser-open inside the child so the Python parent stays in
-    # charge of the user-facing URL print (Tier 2 § 8 ordering).
-    env.setdefault("AGENT_CONFIG_GUI_NO_OPEN", "1")
 
     try:
         child = subprocess.Popen(  # noqa: S603 - cmd is locally-built, not user input
@@ -4255,7 +4369,7 @@ def _wizard_spawn(project_root: Path) -> int:
             bufsize=1,  # line-buffered
         )
     except OSError as exc:
-        print(f"(Wizard failed to start: {exc}; run 'node {cli} gui' manually.)")
+        print(f"(Wizard failed to start: {exc}; run 'node {cli} install --no-open' manually.)")
         return 0
 
     # Drain stderr on a background thread so a chatty child can't
@@ -4327,7 +4441,7 @@ def _wizard_await_ready(
         tail = "\n  ".join(stderr_tail[-20:]) if stderr_tail else "(no stderr captured)"
         print(
             f"(Wizard server boot timed out after {int(sum(_WIZARD_TIMEOUTS))}s; "
-            f"run 'node {cli} gui' manually.)\n"
+            f"run 'node {cli} install --no-open' manually.)\n"
             f"  Last stderr:\n  {tail}"
         )
         return 0
@@ -4445,10 +4559,9 @@ def main(argv: list[str]) -> int:
                 f"--apply-payload schema_version must be 'wizard-v2' or "
                 f"'installer-v1', got {schema_version!r}"
             )
-        # Translate payload → opts so the dry-run / real-install path
-        # downstream sees the same shape it would from CLI flags. Only
-        # dry-run preview is wired in Phase 1.5; real apply lands in a
-        # follow-up minor (kill-switch via package version per D7).
+        # Translate payload → opts so the SAME canonical install path
+        # downstream sees the shape it would from CLI flags — no second
+        # code path (road-to-single-install-source-of-truth § Phase 1).
         if schema_version == "wizard-v2":
             tools = payload.get("tools") or []
             if isinstance(tools, list) and tools:
@@ -4457,6 +4570,36 @@ def main(argv: list[str]) -> int:
                 opts.scope = "project"
             else:
                 opts.scope = "global"
+            # settings{} → --profile / --user-type. `settings` is the
+            # merged .agent-settings.yml body; pull the two install-time
+            # knobs the canonical installer consumes. Everything else in
+            # the settings body is written by the wizard `/finish` 2PC
+            # commit, not by install.py.
+            settings = payload.get("settings") or {}
+            if isinstance(settings, dict):
+                cost_profile = settings.get("cost_profile")
+                if isinstance(cost_profile, str) and cost_profile:
+                    opts.profile = cost_profile
+                personal = settings.get("personal")
+                if isinstance(personal, dict):
+                    user_type = personal.get("user_type")
+                    if isinstance(user_type, str) and user_type:
+                        opts.user_type = user_type
+            # packs[] → declarative selection persisted into
+            # .agent-settings.yml on the project path (ensure_agent_settings).
+            # Packs are a frontmatter/condense-time concept; there is no
+            # install-time materialization — the selection is recorded so
+            # downstream condense/runtime honors it (AI-council 2026-05-27).
+            packs = payload.get("packs") or []
+            if isinstance(packs, list):
+                opts.packs = [p for p in packs if isinstance(p, str)]
+            # Per-tool user-hook opts → ensure_*_hook flags: deliberately
+            # NOT wired. The wizard-v2 payload carries no hook fields, and
+            # auto-enabling user-scope hooks (which write to the global
+            # user config) on tool selection would silently widen install
+            # scope — a non-destructive-by-default violation. Maps only
+            # once the schema grows an explicit hooks field (AI-council
+            # 2026-05-27, Gemini + Codex converged).
         elif schema_version == "installer-v1":
             ai_tools = payload.get("ai_tools") or []
             if isinstance(ai_tools, list) and ai_tools:
@@ -4466,13 +4609,13 @@ def main(argv: list[str]) -> int:
             opts.dry_run = True
         if opts.dry_run:
             return _apply_payload_preview(payload, opts)
-        # Real-apply path through the payload bridge is gated by the
-        # follow-up minor (Phase 1.9). Until then, fail loudly so the
-        # caller knows they need --dry-run.
-        fail(
-            "--apply-payload without --dry-run is not yet wired "
-            "(road-to-global-only-install § Phase 1.5 ships dry-run only)."
-        )
+        # Real apply: stream machine-readable NDJSON progress on stdout and
+        # silence human output so the GUI gets a clean stream. Then fall
+        # through to the canonical install path below — no separate apply
+        # implementation.
+        global PROGRESS_NDJSON
+        PROGRESS_NDJSON = True
+        QUIET = True
 
     # --offline: propagate via env so child subprocesses (versions /
     # update / check_update_banner) honor the air-gap guarantee
@@ -4561,7 +4704,9 @@ def main(argv: list[str]) -> int:
                     return rc
             # Pass detect_root so the manifest refresh runs when --global is
             # invoked from within a project tree (ADR-008 Phase 3.2).
-            return install_global(parsed_tools, opts.force, project_root=detect_root)
+            rc = install_global(parsed_tools, opts.force, project_root=detect_root)
+            _emit_progress_terminal(rc)
+            return rc
 
         project_root = custom_path or Path(opts.project or os.environ.get("PROJECT_ROOT") or os.getcwd()).resolve()
         is_first_run = not (project_root / SETTINGS_FILE).exists()
@@ -4571,9 +4716,11 @@ def main(argv: list[str]) -> int:
         # never ships ahead of the bridge files it parameterizes.
         if rc == 0 and getattr(opts, "interactive", False):
             run_interactive_init(project_root, opts.force)
+        _emit_progress_terminal(rc)
         return rc
     except ConflictAbort as exc:
         warn(exc.message)
+        _emit_progress({"type": "error", "code": "E_CONFLICT_UNRESOLVED", "message": exc.message})
         return 1
     finally:
         _set_conflict_policy(None)
@@ -4670,7 +4817,8 @@ def _main_project_install(
         print()
 
     ensure_agent_settings(
-        project_root, package_root, opts.profile, opts.force, opts.user_type
+        project_root, package_root, opts.profile, opts.force, opts.user_type,
+        packs=getattr(opts, "packs", None),
     )
 
     # Install-mode marker (Step 8 A5) — full path flips any prior
@@ -4744,6 +4892,21 @@ def _main_project_install(
         merged_keys_by_tool.setdefault("gemini-cli", []).extend(
             ensure_gemini_user_hooks(package_root, opts.force),
         )
+
+    # NDJSON progress for the wizard --apply-payload real-apply bridge on the
+    # project scope (scope_to_project_only=true). One `file` frame per enabled
+    # tool unit, coarse per AI-council 2026-05-27. No-op under normal CLI.
+    if PROGRESS_NDJSON and not opts.skip_bridges:
+        ordered = sorted(tools)
+        total = len(ordered)
+        for idx, tool_id in enumerate(ordered, start=1):
+            _emit_progress({
+                "type": "file",
+                "file": tool_id,
+                "status": "deployed",
+                "written": idx,
+                "total": total,
+            })
 
     if not opts.skip_bridges and not opts.no_smoke:
         if not QUIET:

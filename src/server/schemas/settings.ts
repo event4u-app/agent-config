@@ -140,6 +140,9 @@ export const settingsSchema = z.object({
         ),
     }),
     roadmap: z.object({
+        skip_pre_run_gate: z.boolean().default(true).describe(
+            'Skip the /roadmap:process-* pre-run confirmation gate. true (default) starts processing immediately and surfaces the resolved config inline; false shows the numbered-options gate and waits. A genuine "which roadmap?" ambiguity always prompts regardless.',
+        ),
         quality_cadence: qualityCadence.default('end_of_roadmap').describe(
             'When the agent runs the full quality / test suite during /roadmap:process-* runs. end_of_roadmap = once, after the last step (fastest, default). per_phase = after each phase boundary. per_step = after every single step (slowest, highest confidence).',
         ),

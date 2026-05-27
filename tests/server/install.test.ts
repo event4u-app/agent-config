@@ -6,10 +6,12 @@
  *     presence at the fixture project root.
  *   - `POST /api/v1/install/plan` returns a wire-formatted `InstallPlan`
  *     where `knownPaths` / `knownPointers` are JSON arrays (not Sets).
- *   - `POST /api/v1/install/apply` streams SSE frames matching the locked
- *     schema (`progress` / `done`) and writes the files end-to-end.
- *   - Abort-on-disconnect (Finding #24): when the client closes the SSE
- *     channel mid-apply, an `abort` marker lands in the txlog.
+ *
+ * The `POST /api/v1/install/apply` SSE route + its TypeScript apply engine
+ * were removed in road-to-single-install-source-of-truth § Phase 3 (real
+ * apply is owned by `scripts/install.py --apply-payload`, surfaced via
+ * `POST /api/v1/wizard/apply`). This file now only exercises the read-only
+ * detect / plan-preview / recovery / legacy-v3 routes.
  */
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createServer } from 'node:net';
@@ -117,34 +119,6 @@ function authHeaders(host: string): Record<string, string> {
     return { host, authorization: `Bearer ${TOKEN}` };
 }
 
-
-interface SseFrame {
-    readonly type: string;
-    readonly [key: string]: unknown;
-}
-
-/**
- * Consume an SSE response body and return the parsed frames.
- *
- * Splits on the SSE `\n\n` event terminator, strips the `data: ` prefix,
- * parses JSON. Used by the apply tests to assert against the locked
- * frame schema (Finding #20).
- */
-async function readSseFrames(res: Response): Promise<SseFrame[]> {
-    const text = await res.text();
-    const frames: SseFrame[] = [];
-    for (const block of text.split('\n\n')) {
-        const trimmed = block.trim();
-        if (trimmed.length === 0) continue;
-        const payload = trimmed.replace(/^data:\s*/, '');
-        try {
-            frames.push(JSON.parse(payload) as SseFrame);
-        } catch {
-            /* tolerate malformed tails — keep happy-path assertions clean */
-        }
-    }
-    return frames;
-}
 
 describe('installRoute', () => {
     let boot: BootResult;
@@ -350,72 +324,6 @@ describe('installRoute', () => {
         });
     });
 
-    describe('POST /api/v1/install/apply', () => {
-        beforeEach(async () => {
-            boot = await bootApp({ seedFiles: 2 });
-        });
-
-        it('streams progress + done SSE frames and writes files', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                }),
-            });
-            expect(res.status).toBe(200);
-            expect(res.headers.get('content-type')).toMatch(/text\/event-stream/);
-            const frames = await readSseFrames(res);
-            const progress = frames.filter((f) => f.type === 'progress');
-            const done = frames.filter((f) => f.type === 'done');
-            expect(progress.length).toBeGreaterThanOrEqual(1);
-            expect(done).toHaveLength(1);
-            const summary = (done[0] as {
-                summary: { written: number; skipped: number; conflicts: number; errors: number };
-            }).summary;
-            expect(summary).toMatchObject({ written: 2, errors: 0, skipped: 0, conflicts: 0 });
-        });
-    });
-
-    describe('apply abort-on-disconnect (Finding #24)', () => {
-        beforeEach(async () => {
-            // Enough entries to give the abort signal time to land between
-            // `processEntry` calls — the streaming loop yields via
-            // setImmediate so any aborted=true read after the first write
-            // bails out and appends a single `abort` marker.
-            boot = await bootApp({ seedFiles: 20 });
-        });
-
-        it('appends an `abort` marker to the txlog when the client disconnects', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const controller = new AbortController();
-            const fetchPromise = fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                signal: controller.signal,
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                }),
-            });
-            // Give the server one tick to start streaming, then disconnect.
-            await new Promise((r) => setTimeout(r, 10));
-            controller.abort();
-            await fetchPromise.catch(() => {
-                /* expected: AbortError on the client side */
-            });
-            // Allow the server-side `req.raw.on('close')` handler to fire
-            // and the streaming loop to write the abort marker.
-            await new Promise((r) => setTimeout(r, 100));
-            const entries = readRecentEntries(boot.logPath);
-            const aborts = entries.filter((e) => e.kind === 'abort');
-            expect(aborts.length).toBeGreaterThanOrEqual(1);
-            expect(aborts[0]!.note).toBe('client disconnect');
-        });
-    });
-
     describe('POST /api/v1/install/plan — Phase B3 conflicts', () => {
         beforeEach(async () => {
             boot = await bootApp({ seedFiles: 2 });
@@ -463,127 +371,6 @@ describe('installRoute', () => {
             writeFileSync(join(boot.destDir, 'file-0.txt'), 'content-0\n');
             const plan = await buildPlanForFixture(boot);
             expect(plan.conflicts).toEqual([]);
-        });
-    });
-
-    describe('POST /api/v1/install/apply — Phase B3 resolutions', () => {
-        beforeEach(async () => {
-            boot = await bootApp({ seedFiles: 2 });
-            // Pre-seed both dest files with foreign bytes so both surface
-            // as conflicts; per-test resolutions drive the outcome.
-            writeFileSync(join(boot.destDir, 'file-0.txt'), 'foreign-0\n');
-            writeFileSync(join(boot.destDir, 'file-1.txt'), 'foreign-1\n');
-        });
-
-        it('per-path resolutions: skip leaves the file untouched', async () => {
-            const plan = await buildPlanForFixture(boot);
-            expect(plan.conflicts).toHaveLength(2);
-            const target0 = join(boot.destDir, 'file-0.txt');
-            const target1 = join(boot.destDir, 'file-1.txt');
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                    resolutions: { [target0]: 'skip', [target1]: 'skip' },
-                }),
-            });
-            expect(res.status).toBe(200);
-            const frames = await readSseFrames(res);
-            const done = frames.find((f) => f.type === 'done');
-            expect((done as { summary: { skipped: number; written: number } }).summary)
-                .toMatchObject({ skipped: 2, written: 0 });
-            expect(readFileSync(target0, 'utf8')).toBe('foreign-0\n');
-            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
-        });
-
-        it('per-path resolutions: overwrite writes planned bytes', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const target0 = join(boot.destDir, 'file-0.txt');
-            const target1 = join(boot.destDir, 'file-1.txt');
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                    resolutions: { [target0]: 'overwrite', [target1]: 'overwrite' },
-                }),
-            });
-            expect(res.status).toBe(200);
-            const frames = await readSseFrames(res);
-            const done = frames.find((f) => f.type === 'done');
-            expect((done as { summary: { written: number; skipped: number } }).summary)
-                .toMatchObject({ written: 2, skipped: 0 });
-            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
-            expect(readFileSync(target1, 'utf8')).toBe('content-1\n');
-        });
-
-        it('batchChoice: skip-all expands to skip for every conflict', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const target0 = join(boot.destDir, 'file-0.txt');
-            const target1 = join(boot.destDir, 'file-1.txt');
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                    batchChoice: 'skip-all',
-                }),
-            });
-            expect(res.status).toBe(200);
-            const frames = await readSseFrames(res);
-            const done = frames.find((f) => f.type === 'done');
-            expect((done as { summary: { skipped: number } }).summary.skipped).toBe(2);
-            expect(readFileSync(target0, 'utf8')).toBe('foreign-0\n');
-            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
-        });
-
-        it('batchChoice: overwrite-all expands to overwrite for every conflict', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const target0 = join(boot.destDir, 'file-0.txt');
-            const target1 = join(boot.destDir, 'file-1.txt');
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                    batchChoice: 'overwrite-all',
-                }),
-            });
-            expect(res.status).toBe(200);
-            const frames = await readSseFrames(res);
-            const done = frames.find((f) => f.type === 'done');
-            expect((done as { summary: { written: number } }).summary.written).toBe(2);
-            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
-            expect(readFileSync(target1, 'utf8')).toBe('content-1\n');
-        });
-
-        it('per-path resolutions win over batchChoice for the same path', async () => {
-            const plan = await buildPlanForFixture(boot);
-            const target0 = join(boot.destDir, 'file-0.txt');
-            const target1 = join(boot.destDir, 'file-1.txt');
-            const res = await fetch(`${boot.baseUrl}/api/v1/install/apply`, {
-                method: 'POST',
-                headers: { ...authHeaders(boot.host), 'content-type': 'application/json' },
-                body: JSON.stringify({
-                    plan,
-                    sourceByTarget: planSourceByTarget(plan, boot.srcDir),
-                    // batch says skip-all, per-path overrides file-0 to overwrite
-                    batchChoice: 'skip-all',
-                    resolutions: { [target0]: 'overwrite' },
-                }),
-            });
-            expect(res.status).toBe(200);
-            const frames = await readSseFrames(res);
-            const done = frames.find((f) => f.type === 'done');
-            expect((done as { summary: { written: number; skipped: number } }).summary)
-                .toMatchObject({ written: 1, skipped: 1 });
-            expect(readFileSync(target0, 'utf8')).toBe('content-0\n');
-            expect(readFileSync(target1, 'utf8')).toBe('foreign-1\n');
         });
     });
 
@@ -787,21 +574,5 @@ async function buildPlanForFixture(boot: BootResult): Promise<PlanWire> {
         }),
     });
     return (await res.json()) as PlanWire;
-}
-
-/**
- * Build the `target → source` map the apply route expects. The plan
- * records target paths under `destDir`; the source files live under
- * `srcDir` with the same relative name.
- */
-function planSourceByTarget(plan: PlanWire, srcDir: string): Record<string, string> {
-    const map: Record<string, string> = {};
-    for (const entries of Object.values(plan.filesByTool)) {
-        for (const e of entries) {
-            const name = e.path.split('/').pop()!;
-            map[e.path] = join(srcDir, name);
-        }
-    }
-    return map;
 }
 

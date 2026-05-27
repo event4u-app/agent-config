@@ -4,29 +4,19 @@
  *   GET  /api/v1/install/detect — scope + tool presence at `cwd`.
  *   POST /api/v1/install/plan   — build an {@link InstallPlan} from a
  *                                 declarative {@link PlanSource}[] body.
- *   POST /api/v1/install/apply  — execute the plan; streams SSE frames
- *                                 (`progress` / `conflict` / `error` / `done`).
  *
- * **Error schema (Finding #20):** every SSE frame carries a stable
- * `type` discriminator and errors carry a `code` from
- * {@link ErrorCode} so the UI maps them to localized copy without
- * parsing free-form messages.
- *
- * **Abort-on-disconnect (Finding #24):** the apply handler subscribes
- * to `req.raw.on("close")` and fires an `AbortController`; the engine
- * appends an `abort` marker to the transaction log and resolves the
- * partial {@link ApplyResult}. Next boot's recovery surfaces the marker
- * as `Resume` / `Rollback` / `Ignore`.
+ * The real *apply* path is owned by `scripts/install.py --apply-payload`
+ * (single source of truth, D12 / ADR-020) and surfaced to the GUI via
+ * `POST /api/v1/wizard/apply` (see `wizard.ts`). The legacy TypeScript
+ * apply engine + its `POST /api/v1/install/apply` SSE route were removed in
+ * road-to-single-install-source-of-truth § Phase 3 — this module now only
+ * serves the read-only detect / plan-preview / recovery / legacy-v3 routes.
  */
 
-import type { FastifyInstance, FastifyPluginAsync, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 
-import { applyPlanStreaming, type ApplyProgress } from '../../install/apply.js';
-import {
-    computeConflicts,
-    expandBatchChoice,
-} from '../../install/conflict.js';
+import { computeConflicts } from '../../install/conflict.js';
 import { cpSync, existsSync, mkdirSync } from 'node:fs';
 import {
     detectLegacyV3,
@@ -40,18 +30,13 @@ import { getLogPath } from '../../install/paths.js';
 import { buildInstallPlan, type PlanSource } from '../../install/plan.js';
 import { appendTxLog, readRecentEntries, type TxLogEntry } from '../../install/txlog.js';
 import type {
-    ApplyResult,
     ConflictEntry,
-    ConflictResolution,
     FileEntry,
     FileKind,
     InstallPlan,
     InstallTarget,
 } from '../../install/types.js';
 import { expandWizardSources } from '../../install/wizard-plan.js';
-
-/** Stable error codes surfaced over SSE (Finding #20). */
-export type ErrorCode = 'E_DISK_FULL' | 'E_PERM' | 'E_CONFLICT_UNRESOLVED' | 'E_CRASH' | 'E_WRITE';
 
 const FileKindSchema: z.ZodType<FileKind> = z.enum(['deployed', 'marker', 'bridge']);
 const InstallTargetSchema: z.ZodType<InstallTarget> = z.enum(['global', 'project']);
@@ -123,8 +108,6 @@ const ConflictEntrySchema: z.ZodType<ConflictEntry> = z.object({
     mergeable: z.boolean(),
 });
 
-const ConflictResolutionSchema: z.ZodType<ConflictResolution> = z.enum(['skip', 'overwrite', 'merge']);
-
 /**
  * Wire-shape of {@link InstallPlan} — Sets serialise as arrays over JSON,
  * so the apply request carries `knownPaths` / `knownPointers` as string
@@ -155,23 +138,6 @@ const InstallPlanWireSchema = z.object({
 
 type InstallPlanWire = z.infer<typeof InstallPlanWireSchema>;
 
-function wireToPlan(w: InstallPlanWire): InstallPlan {
-    return {
-        version: 2,
-        target: w.target,
-        root: w.root,
-        filesByTool: w.filesByTool,
-        mergedKeysByTool: w.mergedKeysByTool,
-        policy: {
-            force: w.policy.force,
-            interactive: w.policy.interactive,
-            knownPaths: new Set(w.policy.knownPaths),
-            knownPointers: new Set(w.policy.knownPointers),
-            defaultStrategy: w.policy.defaultStrategy,
-        },
-    };
-}
-
 function planToWire(p: InstallPlan): InstallPlanWire {
     return {
         version: 2,
@@ -190,37 +156,7 @@ function planToWire(p: InstallPlan): InstallPlanWire {
     };
 }
 
-/**
- * Batch-resolution choice — sent in lieu of an exhaustive `resolutions`
- * map when the wizard is in batch mode (≥ {@link CONFLICT_BATCH_THRESHOLD}
- * conflicts). The server fans the choice out via {@link expandBatchChoice}
- * so the apply layer always sees a per-path map regardless of UI mode.
- */
-const BatchChoiceSchema = z.enum(['skip-all', 'overwrite-all', 'merge-json']);
-
-const ApplyRequestSchema = z.object({
-    plan: InstallPlanWireSchema,
-    sourceByTarget: z.record(z.string(), z.string()),
-    /** Optional override for the transaction-log path (tests only). */
-    logPath: z.string().optional(),
-    /**
-     * Per-path conflict resolutions chosen by the wizard. Keys are
-     * absolute target paths (matching `plan.conflicts[i].path`).
-     * Paths missing from the map fall back to the policy default
-     * (`surface` → `skip` at the apply layer).
-     */
-    resolutions: z.record(z.string(), ConflictResolutionSchema).optional(),
-    /**
-     * Optional batch choice — expanded server-side into `resolutions`
-     * using the plan's conflict list. When both `resolutions` and
-     * `batchChoice` are present, `resolutions` wins per path; the
-     * batch choice fills the gaps.
-     */
-    batchChoice: BatchChoiceSchema.optional(),
-});
-
 export type PlanRequest = z.infer<typeof PlanRequestSchema>;
-export type ApplyRequest = z.infer<typeof ApplyRequestSchema>;
 
 export const DetectResponseSchema = z.object({
     cwd: z.string(),
@@ -261,19 +197,6 @@ export interface InstallRouteOptions {
     home?: string;
 }
 
-/** Map a Node `fs` error code to the stable SSE error code (Finding #20). */
-function mapErrorCode(code: string): ErrorCode {
-    if (code === 'ENOSPC') return 'E_DISK_FULL';
-    if (code === 'EACCES' || code === 'EPERM') return 'E_PERM';
-    if (code === 'E_CONFLICT_UNRESOLVED') return 'E_CONFLICT_UNRESOLVED';
-    return 'E_WRITE';
-}
-
-/** SSE frame writer — one event per `data:` line, blank line terminator. */
-function writeFrame(reply: FastifyReply, payload: Record<string, unknown>): void {
-    reply.raw.write(`data: ${JSON.stringify(payload)}\n\n`);
-}
-
 /**
  * Resolve a {@link PlanRequest} into the low-level `PlanSource[]` array.
  * Sources branch passes through unchanged; wizard branch runs the
@@ -312,147 +235,6 @@ function planFromRequest(body: PlanRequest, opts: InstallRouteOptions): InstallP
             defaultStrategy: body.policy.defaultStrategy,
         },
     });
-}
-
-/**
- * Merge a batch choice with per-path resolutions into the map the engine
- * consumes. Per-path entries always win; the batch choice fills the gaps
- * for paths the wizard did not address individually (Finding #19).
- *
- * Returns `undefined` when neither input is present so the engine keeps
- * its surface-to-skip default behaviour without an empty-map allocation.
- */
-function buildResolutionMap(
-    conflicts: ConflictEntry[],
-    resolutions: Record<string, ConflictResolution> | undefined,
-    batchChoice: 'skip-all' | 'overwrite-all' | 'merge-json' | undefined,
-): ReadonlyMap<string, ConflictResolution> | undefined {
-    if (resolutions === undefined && batchChoice === undefined) return undefined;
-    const map = new Map<string, ConflictResolution>();
-    if (batchChoice !== undefined) {
-        const expanded = expandBatchChoice(conflicts, batchChoice);
-        for (const [path, res] of Object.entries(expanded)) {
-            map.set(path, res);
-        }
-    }
-    if (resolutions !== undefined) {
-        for (const [path, res] of Object.entries(resolutions)) {
-            map.set(path, res);
-        }
-    }
-    return map;
-}
-
-function mapApplyProgressToFrame(p: ApplyProgress): Record<string, unknown> {
-    if (p.status === 'written' || p.status === 'skipped') {
-        return {
-            type: 'progress',
-            file: p.file.path,
-            status: p.status,
-            written: p.written,
-            total: p.total,
-        };
-    }
-    if (p.status === 'conflict') {
-        return {
-            type: 'conflict',
-            entries: [{ path: p.file.path, kind: p.file.kind }],
-        };
-    }
-    const code: ErrorCode = p.error ? mapErrorCode(p.error.code) : 'E_WRITE';
-    return {
-        type: 'error',
-        code,
-        message: p.error?.message ?? 'unknown error',
-        recoverable: code !== 'E_DISK_FULL' && code !== 'E_CRASH',
-        file: p.file.path,
-    };
-}
-
-function summaryFrame(result: ApplyResult): Record<string, unknown> {
-    return {
-        type: 'done',
-        summary: {
-            target: result.target,
-            written: result.written.length,
-            skipped: result.skipped.length,
-            conflicts: result.conflicts.length,
-            errors: result.errors.length,
-        },
-    };
-}
-
-async function applyHandler(
-    req: FastifyRequest,
-    reply: FastifyReply,
-    opts: InstallRouteOptions,
-): Promise<void> {
-    const parsed = ApplyRequestSchema.safeParse(req.body);
-    if (!parsed.success) {
-        await reply.code(400).send({ error: 'invalid apply request', details: parsed.error.flatten() });
-        return;
-    }
-
-    // SSE headers — flush immediately so the browser opens the channel.
-    reply.raw.writeHead(200, {
-        'Content-Type': 'text/event-stream',
-        'Cache-Control': 'no-cache, no-transform',
-        Connection: 'keep-alive',
-        'X-Accel-Buffering': 'no',
-    });
-    reply.raw.flushHeaders?.();
-
-    const controller = new AbortController();
-    // Council Finding #24: tear down the apply loop when the client
-    // disconnects so half-applied installs surface a clean partial result
-    // instead of a zombie loop. The transaction log records an `abort`
-    // marker so the next boot can offer Resume / Rollback / Ignore.
-    //
-    // Listen on `reply.raw` (ServerResponse), not `req.raw` (IncomingMessage):
-    // the request stream emits `close` as soon as the body is fully
-    // consumed (undici / fetch send-then-half-close), which would fire
-    // mid-stream on every healthy request. The response stream only
-    // emits `close` on actual client teardown. Guard with `writableEnded`
-    // so the server's own `reply.raw.end()` (in `finally`) does not
-    // trigger the abort.
-    const onClose = (): void => {
-        if (!reply.raw.writableEnded) {
-            controller.abort();
-        }
-    };
-    reply.raw.on('close', onClose);
-
-    const sourceByTarget = new Map(Object.entries(parsed.data.sourceByTarget));
-    const logPath = parsed.data.logPath ?? opts.logPath ?? getLogPath();
-    const plan = wireToPlan(parsed.data.plan);
-    const resolutions = buildResolutionMap(
-        parsed.data.plan.conflicts,
-        parsed.data.resolutions,
-        parsed.data.batchChoice,
-    );
-
-    try {
-        const result = await applyPlanStreaming({
-            plan,
-            sourceByTarget,
-            logPath,
-            signal: controller.signal,
-            onProgress: (p) => writeFrame(reply, mapApplyProgressToFrame(p)),
-            ...(resolutions !== undefined ? { resolutions } : {}),
-        });
-        writeFrame(reply, summaryFrame(result));
-    } catch (err) {
-        const code: ErrorCode = 'E_CRASH';
-        writeFrame(reply, {
-            type: 'error',
-            code,
-            message: err instanceof Error ? err.message : String(err),
-            recoverable: false,
-        });
-    } finally {
-        reply.raw.off('close', onClose);
-        reply.raw.end();
-    }
 }
 
 /** Recovery recommendation surfaced to the wizard (Phase B4). */
@@ -551,7 +333,10 @@ export function installRoute(opts: InstallRouteOptions = {}): FastifyPluginAsync
                 return;
             }
             try {
-                return planToWire(planFromRequest(parsed.data, opts));
+                // Validate the wire shape on the way out so the response
+                // contract stays enforced now that the schema is no longer
+                // referenced by the (removed) apply route.
+                return InstallPlanWireSchema.parse(planToWire(planFromRequest(parsed.data, opts)));
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 if (message === 'E_NO_PACKAGE_ROOT') {
@@ -563,10 +348,6 @@ export function installRoute(opts: InstallRouteOptions = {}): FastifyPluginAsync
                 }
                 throw err;
             }
-        });
-
-        app.post('/api/v1/install/apply', async (req, reply) => {
-            await applyHandler(req, reply, opts);
         });
 
         // Phase B4 — recovery-pre-step: read the txlog tail and surface

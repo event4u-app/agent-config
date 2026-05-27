@@ -3,6 +3,14 @@
   "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
   "entries": [
     {
+      "file": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
+      "lines": [
+        42,
+        104
+      ],
+      "reason": "Cross-stack noise-segment enumeration (vendor + node_modules + dist/Modules) documenting the module-detection path filter"
+    },
+    {
       "file": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
       "lines": [
         142,
