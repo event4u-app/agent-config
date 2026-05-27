@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs' | 'modules';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'packs' | 'modules' | 'aiCouncil';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -65,12 +65,14 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         id: 'identity',
         title: 'Editor and tooling',
         navLabel: 'Editor',
-        subtitle: 'IDE and rtk go into .agent-settings.yml so the agent opens files in the right tool. Your name lives in .agent-user.yml (later step).',
+        subtitle: 'IDE goes into .agent-settings.yml so the agent opens files in the right tool. rtk presence is auto-detected (see the rtk row). Your name lives in .agent-user.yml (later step).',
         kind: 'form',
+        // `personal.rtk_installed` is NOT a form field — it is auto-detected at
+        // runtime (road-to-wizard-ux-improvements § Phase 7) and rendered by a
+        // dedicated rtk widget above the form, never a manual toggle.
         paths: [
             'personal.ide',
             'personal.open_edited_files',
-            'personal.rtk_installed',
         ],
     },
     {
@@ -123,6 +125,13 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'memory.review_threshold',
             'memory.redact_patterns',
         ],
+    },
+    {
+        id: 'ai-council',
+        title: 'AI Council',
+        navLabel: 'AI Council',
+        subtitle: 'External second-opinion network. Enable members, pick transport + rounds + budget + impact routing, add provider keys. Writes .ai-council.yml.',
+        kind: 'aiCouncil',
     },
     {
         id: 'user-md',

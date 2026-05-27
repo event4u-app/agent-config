@@ -29,6 +29,8 @@ export interface StepNavProps {
     onSkip?: () => void;
     onFinish: () => void;
     nextLabel?: string;
+    /** Label for the skip/secondary action (defaults to "Skip"). */
+    skipLabel?: string;
 }
 
 export function StepNav(props: StepNavProps): preact.JSX.Element {
@@ -51,7 +53,7 @@ export function StepNav(props: StepNavProps): preact.JSX.Element {
                     disabled={props.busy}
                     onClick={props.onSkip}
                 >
-                    Skip
+                    {props.skipLabel ?? 'Skip'}
                 </button>
             ) : null}
             {props.isLast ? (
