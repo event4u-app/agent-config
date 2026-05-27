@@ -793,6 +793,22 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 3.3.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.3.0](https://github.com/event4u-app/agent-config/compare/4.2.0...4.3.0) (2026-05-27)
+
+### Features
+
+* **init:** open the browser wizard directly when the GUI is usable ([aef9c0f](https://github.com/event4u-app/agent-config/commit/aef9c0ff10a06ab1e057bb93dbb8ec908398673e))
+
+### Documentation
+
+* **gui-wizard:** init opens the GUI in the TS CLI, not via install.py ([7a2a29d](https://github.com/event4u-app/agent-config/commit/7a2a29d5878f6177aea0d710bed11e89d4c35c36))
+
+### Tests
+
+* **init:** cover GUI-vs-CLI routing for the install front-end ([2f593a6](https://github.com/event4u-app/agent-config/commit/2f593a6bc52996ebc189aeeb595ca4d513a332e5))
+
+Tests: 5052 (+0 since 4.2.0)
+
 ## [4.2.0](https://github.com/event4u-app/agent-config/compare/4.1.0...4.2.0) (2026-05-27)
 
 ### Features
