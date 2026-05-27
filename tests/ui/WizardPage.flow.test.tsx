@@ -82,7 +82,6 @@ function installFetchMock(): { calls: Call[]; restore: () => void } {
                 'role:',
                 '    - ""',
                 'style:',
-                '    formality: "informal"',
                 '    pace: "pragmatic"',
                 'voice_sample: ""',
                 'last_updated: "1970-01-01"',

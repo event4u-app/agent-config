@@ -1,28 +1,26 @@
 /**
- * WizardPage packs-step behaviour — road-to-wizard-ux-improvements follow-up.
+ * WizardPage roles-step behaviour — role/domain checkboxes that recommend
+ * packs on the next step.
  *
- *   - B2: a language tile gates its frameworks without destroying their
- *     stored selection. Laravel on / Symfony off survives a PHP off→on
- *     round-trip, and the child checkboxes stay checked (disabled) while the
- *     language is off.
- *   - C:  the packs step blocks Next until at least one effective pack is
- *     selected.
+ *   - Gate: Next is blocked until at least one role is selected.
+ *   - Recommendation: selecting a role pre-selects its `default_packs` on the
+ *     packs step (seedPacksFromRoles), until the user edits packs manually.
  *
- * Resumes directly on the packs step (index 1 in extended mode) with a small
- * php→{laravel,symfony} manifest and no auto-detect signals.
+ * Resumes directly on the roles step (index 1 in extended mode) with a small
+ * workspaces + packs manifest.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, fireEvent, cleanup, waitFor } from '@testing-library/preact';
 import { WizardPage } from '../../src/ui/pages/WizardPage.js';
 import {
     banner, diffLoading, discoveryLoaded, discoveryLoading, discoveryLoadError,
-    discoveryPacks, detectedPackIds, errors, extendedSteps, initialSettings,
-    loaded, loadError, saving, schema, selectedPacks, selectedTools,
-    settingsLastModified, stepIndex, userMdBody, userMdExists, userMdInitial,
-    userMdLoaded, userMdSkipped, values, wizardComplete,
+    discoveryPacks, discoveryWorkspaces, detectedPackIds, errors, extendedSteps,
+    initialSettings, loaded, loadError, packsTouched, saving, schema, selectedPacks,
+    selectedRoles, selectedTools, settingsLastModified, stepIndex, userMdBody,
+    userMdExists, userMdInitial, userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const PACKS_STEP_INDEX = 2;
+const ROLES_STEP_INDEX = 1;
 const EXTENDED_TOTAL = 12;
 
 const SETTINGS_SCHEMA = {
@@ -33,9 +31,13 @@ const SETTINGS_SCHEMA = {
 const MANIFEST = {
     packs: [
         { id: 'engineering-base', label: 'Engineering Base' },
-        { id: 'php', label: 'PHP', requires_hint: ['engineering-base'] },
-        { id: 'laravel', label: 'Laravel', requires_hint: ['php', 'engineering-base'], cluster: 'php' },
-        { id: 'symfony', label: 'Symfony', requires_hint: ['php', 'engineering-base'], cluster: 'php' },
+        { id: 'founder-strategy', label: 'Founder Strategy', workspaces: ['founder'] },
+        { id: 'product-basic', label: 'Product Basic', workspaces: ['product'] },
+    ],
+    workspaces: [
+        { id: 'founder', label: 'Founder', description: 'Strategy, fundraising.', default_packs: ['founder-strategy'], optional_packs: [] },
+        { id: 'product', label: 'Product', description: 'Discovery, roadmaps.', default_packs: ['product-basic'], optional_packs: [] },
+        { id: 'agent-config-maintainer', label: 'Maintainer', description: 'Internal.', default_packs: ['meta'], optional_packs: [] },
     ],
 };
 
@@ -47,8 +49,9 @@ function resetSignals(): void {
     userMdLoaded.value = false; userMdSkipped.value = false; wizardComplete.value = false;
     extendedSteps.value = false;
     discoveryLoaded.value = false; discoveryLoading.value = false; discoveryLoadError.value = null;
-    discoveryPacks.value = []; detectedPackIds.value = [];
-    selectedPacks.value = {}; selectedTools.value = {};
+    discoveryPacks.value = []; discoveryWorkspaces.value = []; detectedPackIds.value = [];
+    selectedPacks.value = {}; selectedRoles.value = {}; selectedTools.value = {};
+    packsTouched.value = false;
 }
 
 function installFetchMock(): { restore: () => void } {
@@ -57,7 +60,7 @@ function installFetchMock(): { restore: () => void } {
         const path = typeof url === 'string' ? url : url.toString();
         const method = init?.method ?? 'GET';
         if (path === '/api/v1/wizard/state' && method === 'GET') {
-            return new Response(JSON.stringify({ step: PACKS_STEP_INDEX, totalSteps: EXTENDED_TOTAL, partial: {}, startedAt: null, extendedSteps: true }), { status: 200 });
+            return new Response(JSON.stringify({ step: ROLES_STEP_INDEX, totalSteps: EXTENDED_TOTAL, partial: {}, startedAt: null, extendedSteps: true }), { status: 200 });
         }
         if (path === '/api/v1/settings' && method === 'GET') {
             return new Response(JSON.stringify({ values: {}, lastModified: 1, path: '.agent-settings.yml', schema: SETTINGS_SCHEMA }), { status: 200 });
@@ -75,56 +78,48 @@ function installFetchMock(): { restore: () => void } {
 beforeEach(() => { resetSignals(); });
 afterEach(() => { cleanup(); });
 
-function checkboxByLabel(container: HTMLElement, label: string): HTMLInputElement {
+function roleCheckbox(container: HTMLElement, label: string): HTMLInputElement {
     const lab = [...container.querySelectorAll('label')].find((l) => l.textContent?.includes(label));
-    if (!lab) throw new Error(`label not found: ${label}`);
+    if (!lab) throw new Error(`role not found: ${label}`);
     return lab.querySelector('input[type="checkbox"]') as HTMLInputElement;
 }
 
-describe('WizardPage packs step', () => {
-    it('blocks Next until at least one pack is selected (C)', async () => {
+describe('WizardPage roles step', () => {
+    it('hides the maintainer workspace and blocks Next until a role is picked', async () => {
         const mock = installFetchMock();
         try {
             const { getByRole, container } = render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             await waitFor(() => expect(discoveryLoaded.value).toBe(true));
 
-            const next = getByRole('button', { name: 'Next' }) as HTMLButtonElement;
-            expect(next.disabled).toBe(true); // nothing selected
+            // Maintainer workspace is excluded from the role list.
+            expect(discoveryWorkspaces.value.some((w) => w.id === 'agent-config-maintainer')).toBe(false);
 
-            fireEvent.click(checkboxByLabel(container, 'PHP'));
+            const next = getByRole('button', { name: 'Next' }) as HTMLButtonElement;
+            expect(next.disabled).toBe(true);
+
+            fireEvent.click(roleCheckbox(container, 'Founder'));
             await waitFor(() => expect(next.disabled).toBe(false));
         } finally {
             mock.restore();
         }
     });
 
-    it('preserves child selection across a language off→on round-trip (B2)', async () => {
+    it('recommends the role default_packs on the packs step', async () => {
         const mock = installFetchMock();
         try {
-            const { container } = render(<WizardPage path="/wizard" />);
+            const { getByRole, container } = render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             await waitFor(() => expect(discoveryLoaded.value).toBe(true));
 
-            // Enable PHP → laravel + symfony default on.
-            fireEvent.click(checkboxByLabel(container, 'PHP'));
-            await waitFor(() => expect(selectedPacks.value['laravel']).toBe(true));
-            expect(selectedPacks.value['symfony']).toBe(true);
+            fireEvent.click(roleCheckbox(container, 'Founder'));
+            await waitFor(() => expect(selectedRoles.value['founder']).toBe(true));
 
-            // Turn Symfony off.
-            fireEvent.click(checkboxByLabel(container, 'Symfony'));
-            await waitFor(() => expect(selectedPacks.value['symfony']).toBe(false));
-
-            // Disable PHP, then re-enable — laravel on / symfony off must survive.
-            fireEvent.click(checkboxByLabel(container, 'PHP'));
-            await waitFor(() => expect(selectedPacks.value['php']).toBe(false));
-            expect(selectedPacks.value['laravel']).toBe(true); // preserved while disabled
-            expect(selectedPacks.value['symfony']).toBe(false);
-
-            fireEvent.click(checkboxByLabel(container, 'PHP'));
-            await waitFor(() => expect(selectedPacks.value['php']).toBe(true));
-            expect(selectedPacks.value['laravel']).toBe(true);
-            expect(selectedPacks.value['symfony']).toBe(false);
+            // Advance to the packs step (index 2) — seedPacksFromRoles runs.
+            fireEvent.click(getByRole('button', { name: 'Next' }));
+            await waitFor(() => expect(stepIndex.value).toBe(2));
+            await waitFor(() => expect(selectedPacks.value['founder-strategy']).toBe(true));
+            expect(selectedPacks.value['product-basic']).toBeFalsy();
         } finally {
             mock.restore();
         }

@@ -30,7 +30,7 @@ const FIXTURE_IDENTITY: Record<string, unknown> = {
     identity: { name: 'Original' },
     language: 'en',
     role: ['engineer'],
-    style: { formality: 'informal', pace: 'pragmatic' },
+    style: { pace: 'pragmatic' },
     voice_sample: 'Keep it crisp.',
     last_updated: '2026-05-19',
 };
@@ -43,7 +43,6 @@ const TEMPLATE_BODY = [
     'role:',
     '    - ""',
     'style:',
-    '    formality: "informal"',
     '    pace: "pragmatic"',
     'voice_sample: ""',
     'last_updated: "1970-01-01"',

@@ -21,7 +21,7 @@ function validIdentity(over: Partial<{
     identity: { name: string };
     language: string;
     role: string[];
-    style: { formality: 'informal' | 'formal'; pace: 'rapid' | 'pragmatic' | 'thorough' };
+    style: { pace: 'rapid' | 'pragmatic' | 'thorough' };
     voice_sample: string;
     last_updated: string;
     notes: string;
@@ -31,7 +31,7 @@ function validIdentity(over: Partial<{
         identity: { name: 'Matze' },
         language: 'de',
         role: ['founder'],
-        style: { formality: 'informal', pace: 'pragmatic' },
+        style: { pace: 'pragmatic' },
         voice_sample: 'Mach das einfach.',
         last_updated: '2026-05-19',
         ...over,
@@ -114,23 +114,10 @@ describe('userIdentitySchema — required-field enforcement', () => {
         expect(result.success).toBe(true);
     });
 
-    it('rejects invalid style.formality enum', () => {
-        const result = userIdentitySchema.safeParse(
-            validIdentity({
-                style: { formality: 'casual' as 'informal', pace: 'pragmatic' },
-            }),
-        );
-        expect(result.success).toBe(false);
-        if (!result.success) {
-            const paths = result.error.issues.map((i) => i.path.join('.'));
-            expect(paths.some((p) => p.includes('style.formality'))).toBe(true);
-        }
-    });
-
     it('rejects invalid style.pace enum', () => {
         const result = userIdentitySchema.safeParse(
             validIdentity({
-                style: { formality: 'informal', pace: 'zen' as 'pragmatic' },
+                style: { pace: 'zen' as 'pragmatic' },
             }),
         );
         expect(result.success).toBe(false);
