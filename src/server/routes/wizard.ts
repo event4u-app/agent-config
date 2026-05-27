@@ -29,7 +29,8 @@ import { composeUserIdentity } from '../../shared/userMd/utils.js';
 import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
-import { detectInstalledTools, isBinaryOnPath } from '../../install/toolDetection.js';
+import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
+import { readConfiguredTools } from '../../install/installedLock.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -591,7 +592,14 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
                 return reply;
             }
-            return { tools: detectInstalledTools() };
+            // `configured` = tools recorded in the global install lockfile
+            // (the user's prior selection). Step 1 pre-selects these on a
+            // repeat run; only when none are recorded does it fall back to
+            // pre-selecting every installed tool (first-run convenience).
+            return {
+                tools: detectInstalledTools(),
+                configured: readConfiguredTools(new Set(knownToolIds())),
+            };
         });
 
         // road-to-wizard-ux-improvements § Phase 7 — rtk presence on the
