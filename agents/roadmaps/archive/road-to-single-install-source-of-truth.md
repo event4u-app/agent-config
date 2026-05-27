@@ -34,7 +34,7 @@ through `install.py --apply-payload`, deleting the TS mirror, and making
 
 - [x] `src/server/routes/wizard.ts` `/api/v1/wizard/apply`: drop `--dry-run` on real apply; spawn `install.py --apply-payload <tmp>`, stream NDJSON → existing SSE frames (`plan-file`/`progress`/`done`/`error`). <!-- real apply now SSE-streams install.py NDJSON→progress/done/error; dry_run:true keeps the buffered preview for the Review step; SPA finish() consumes via apiStream -->
 - [x] Preserve CSRF, Host/Origin allowlist, transaction log, abort-on-disconnect (Finding #24). <!-- CSRF + Host/Origin via app onRequest hooks; abort-on-disconnect kills the install.py child on reply.raw 'close'; install.py owns its own transactional state (lockfile/manifest) -->
-- [~] Verify: GUI apply on a temp HOME produces byte-identical output to the equivalent `install.py` CLI run. <!-- same assertion as Phase 6 parity test — closed there -->
+- [x] Verify: GUI apply on a temp HOME produces byte-identical output to the equivalent `install.py` CLI run. <!-- closed by the Phase 6 parity test (test_gui_delegation_matches_cli_tree): the GUI spawns the same install.py --apply-payload; its tree ≡ the --global --tools CLI tree -->
 
 ## Phase 3 — Retire the parallel TS apply mirror
 
