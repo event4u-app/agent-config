@@ -409,6 +409,14 @@ interface AutoDetectResponse {
  * ids. Detected packs are pre-selected on first load — declining is one
  * click per row.
  */
+/**
+ * Packs whose presence in the project is NOT a signal that the user wants
+ * the pack installed (road-to-wizard-ux-improvements follow-up). Python is
+ * the canonical case: a non-engineer may have python on the machine but not
+ * need its agent skills.
+ */
+const NO_AUTODETECT_PACK_IDS = new Set<string>(['python']);
+
 async function loadDiscoveryOnce(): Promise<void> {
     if (discoveryLoaded.value || discoveryLoading.value) return;
     discoveryLoading.value = true;
@@ -433,7 +441,11 @@ async function loadDiscoveryOnce(): Promise<void> {
         const knownIds = new Set(packs.map((p) => p.id));
         const detected = autoDetect.signals
             .map((s) => s.id.startsWith('pack-') ? s.id.slice(5) : s.id)
-            .filter((id) => knownIds.has(id));
+            .filter((id) => knownIds.has(id))
+            // Presence of a language toolchain is not a request for its pack.
+            // Python especially: a PO may have python installed but not need
+            // the pack — never auto-detect / pre-select it.
+            .filter((id) => !NO_AUTODETECT_PACK_IDS.has(id));
         detectedPackIds.value = detected;
         // Pre-select detected packs only when the user hasn't already
         // touched the selection (e.g. resume from server partial).
@@ -456,6 +468,8 @@ async function loadDiscoveryOnce(): Promise<void> {
 
 interface DetectToolsResponse {
     tools?: Record<string, boolean>;
+    /** Tools recorded in the install lockfile — the user's prior selection. */
+    configured?: string[];
 }
 
 /**
@@ -470,13 +484,22 @@ async function loadToolDetectionOnce(): Promise<void> {
     try {
         const res = await apiFetch<DetectToolsResponse>('/api/v1/wizard/detect-tools');
         const presence = res.tools ?? {};
+        const configured = res.configured ?? [];
         toolPresence.value = presence;
-        // First run only: pre-select detected tools when the user hasn't
-        // touched the selection yet (and isn't resuming a server partial).
+        // Only seed when the user hasn't touched the selection yet (and isn't
+        // resuming a server partial). Then:
+        //   - repeat run (the lockfile records a prior selection) → pre-select
+        //     exactly those tools, regardless of what is installed now;
+        //   - first run (no prior selection) → pre-select every installed tool
+        //     to make zero-state onboarding easier.
         if (Object.keys(selectedTools.value).length === 0) {
             const seed: Record<string, boolean> = {};
-            for (const [id, installed] of Object.entries(presence)) {
-                if (installed) seed[id] = true;
+            if (configured.length > 0) {
+                for (const id of configured) seed[id] = true;
+            } else {
+                for (const [id, installed] of Object.entries(presence)) {
+                    if (installed) seed[id] = true;
+                }
             }
             selectedTools.value = seed;
         }
@@ -1130,11 +1153,19 @@ function PacksStepBody(): preact.JSX.Element {
     const setPack = (id: string, checked: boolean): void => {
         selectedPacks.value = { ...selectedPacks.value, [id]: checked };
     };
-    // A language tile cascades to its frameworks: turning it on activates all
-    // children by default (deselectable); turning it off clears + disables them.
+    // A language tile gates its frameworks without destroying their stored
+    // selection. First time it is enabled, children with no explicit choice
+    // default ON (deselectable). Turning the language off only disables the
+    // children in the UI — their checked state is preserved, so toggling the
+    // language back on restores the exact prior selection (Laravel on /
+    // Symfony off survives a php off→on round-trip).
     const setLanguage = (id: string, checked: boolean): void => {
         const next = { ...selectedPacks.value, [id]: checked };
-        for (const child of childrenOf.get(id) ?? []) next[child.id] = checked;
+        if (checked) {
+            for (const child of childrenOf.get(id) ?? []) {
+                if (next[child.id] === undefined) next[child.id] = true;
+            }
+        }
         selectedPacks.value = next;
     };
 
@@ -1181,7 +1212,7 @@ function PacksStepBody(): preact.JSX.Element {
                                                     <label key={child.id} class="ac-pack-tile__child">
                                                         <input
                                                             type="checkbox"
-                                                            checked={(sel[child.id] ?? false) && checked}
+                                                            checked={sel[child.id] ?? false}
                                                             disabled={!checked}
                                                             onChange={(e): void => {
                                                                 setPack(child.id, (e.currentTarget as HTMLInputElement).checked);
@@ -1512,6 +1543,13 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     const total = activeTotalSteps();
     const step = stepAt(idx, { extended: extendedSteps.value });
     const isLast = idx === total - 1;
+    // AI-tools (Step 1) and packs (Step 2) require at least one effective
+    // selection before Next is allowed (road-to-wizard-ux-improvements
+    // follow-up). For packs, "effective" excludes framework boxes whose
+    // language is off, mirroring what actually gets installed.
+    const blockedByEmptySelection =
+        (step.kind === 'aiTools' && Object.values(selectedTools.value).filter(Boolean).length === 0)
+        || (step.kind === 'packs' && resolveSelectedPacks().length === 0);
     // Install→setup hand-off (road-to-wizard-ux-improvements § Phase 6): a
     // "Step 3.5" intermediate. Next acknowledges + reveals "Editor and tooling"
     // (the identity form at the same index); "Finish install here" sits in the
@@ -1585,9 +1623,18 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
             <div class="ac-wizard__step">
                 <StepBody />
             </div>
+            {blockedByEmptySelection
+                ? (
+                    <p class="ac-wizard__hint">
+                        {step.kind === 'aiTools'
+                            ? 'Select at least one AI tool to continue.'
+                            : 'Select at least one capability pack to continue.'}
+                    </p>
+                )
+                : null}
             <StepNav
                 canGoPrev={idx > 0}
-                canGoNext={!isLast}
+                canGoNext={!isLast && !blockedByEmptySelection}
                 canSkip={isContinueHandoff || step.kind === 'userMd' || step.kind === 'modules'}
                 skipLabel={isContinueHandoff ? 'Finish install here' : 'Skip'}
                 isLast={isLast}
