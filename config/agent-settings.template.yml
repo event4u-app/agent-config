@@ -519,3 +519,22 @@ update_check:
 # tenants that disable diagnostics surface-wide).
 explain:
   enable_last: true
+
+# ─── integrations ───────────────────────────────────────────────────────────
+# Coexistence with external tools detected in the project.
+#
+# ruflo (ruvnet/ruflo) is a multi-agent orchestration runtime that also writes
+# .claude/ hooks. agent-config delivers its own Claude hooks via plugin scope
+# (hooks/hooks.json), so the two never share a settings.json hooks array — they
+# coexist natively. `mode` is the developer's one-time choice, written by the
+# installer when ruflo is detected:
+#   coexist (default) — agent-config's plugin hooks run alongside ruflo's.
+#   skip              — the agent-config hook dispatcher no-ops (opt out of
+#                       agent-config's observability hooks under ruflo).
+# Governance (scope-control, non-destructive-by-default, …) is rule-context and
+# always applies to the main agent regardless of this mode; it cannot bind
+# ruflo's autonomously spawned swarm subagents. See
+# docs/contracts/ruflo-coexistence.md.
+integrations:
+  ruflo:
+    mode: coexist

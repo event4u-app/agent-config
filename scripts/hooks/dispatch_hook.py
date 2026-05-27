@@ -314,6 +314,24 @@ def _write_feedback(envelope: dict, session_id: str, entries: list[dict],
         sys.stderr.write(f"dispatch_hook: summary write failed: {exc}\n")
 
 
+def _ruflo_skip_active() -> bool:
+    """True when ``integrations.ruflo.mode == 'skip'`` in the project settings.
+
+    Best-effort and fail-open: any read/parse problem → False (hooks run).
+    The setting is written only when ruflo was detected at install time, so
+    ``skip`` implies a deliberate opt-out (road-to-ruflo-bridge Phase 3).
+    """
+    settings_path = Path.cwd() / ".agent-settings.yml"
+    if not settings_path.exists():
+        return False
+    try:
+        data = _load_yaml(settings_path)
+        mode = ((data.get("integrations") or {}).get("ruflo") or {}).get("mode")
+    except Exception:  # noqa: BLE001 — never let a settings read block the dispatcher
+        return False
+    return mode == "skip"
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", required=True)
@@ -347,6 +365,11 @@ def main(argv: list[str] | None = None) -> int:
 
     if not concerns:
         return EXIT_ALLOW  # platform unsupported / fallback-only / empty slot
+
+    if _ruflo_skip_active():
+        # ruflo coexistence: the developer opted out of agent-config's hooks
+        # in this project (integrations.ruflo.mode: skip). No-op, fail-open.
+        return EXIT_ALLOW
 
     envelope = _build_envelope(args, payload_text)
     session_id = _resolve_session_id(envelope)

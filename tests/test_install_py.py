@@ -909,6 +909,86 @@ class TestBridges(SilentTest):
         data = json.loads(target.read_text())
         self.assertEqual(data["marketplace"]["name"], "custom")
 
+    def test_claude_bridge_is_plugin_enablement_only(self) -> None:
+        # Phase 1 of road-to-ruflo-bridge: Claude lifecycle hooks ship via
+        # plugin scope (hooks/hooks.json), NOT the shared settings.json hooks
+        # array — so the bridge must write only enabledPlugins, no `hooks`
+        # key, and use the canonical plugin id (plugin@marketplace).
+        install.ensure_claude_bridge(self.project, force=False)
+        data = json.loads((self.project / ".claude" / "settings.json").read_text())
+        self.assertTrue(
+            data["enabledPlugins"]["agent-config@event4u-agent-config"])
+        self.assertNotIn(
+            "hooks", data,
+            "Claude bridge must not write a settings.json hooks array — "
+            "hooks are delivered via plugin scope to avoid the shared-array "
+            "collision with neighbour tools (ruflo) and settings.local.json",
+        )
+
+    def test_claude_bridge_coexists_with_neighbour_hooks(self) -> None:
+        # A neighbour tool (ruflo fixture) owns settings.json hooks; the
+        # bridge must leave them untouched and only add its plugin key.
+        fixture = Path(__file__).resolve().parent / "fixtures" / "ruflo" / "settings.json"
+        target = self.project / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        ruflo = json.loads(fixture.read_text())
+        target.write_text(json.dumps({"hooks": ruflo["hooks"]}), encoding="utf-8")
+        install.ensure_claude_bridge(self.project, force=True)
+        data = json.loads(target.read_text())
+        # ruflo's hooks survive untouched …
+        self.assertEqual(data["hooks"], ruflo["hooks"])
+        # … and our plugin enablement is added alongside.
+        self.assertTrue(
+            data["enabledPlugins"]["agent-config@event4u-agent-config"])
+
+    def test_detect_ruflo_absent(self) -> None:
+        found, reason = install.detect_ruflo(self.project)
+        self.assertFalse(found)
+        self.assertEqual(reason, "")
+
+    def test_detect_ruflo_via_fixture_settings(self) -> None:
+        fixture = Path(__file__).resolve().parent / "fixtures" / "ruflo" / "settings.json"
+        target = self.project / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(fixture.read_text(), encoding="utf-8")
+        found, reason = install.detect_ruflo(self.project)
+        self.assertTrue(found)
+        self.assertIn("claude-flow", reason)
+
+    def test_detect_ruflo_via_config_marker(self) -> None:
+        (self.project / "claude-flow.config.json").write_text("{}", encoding="utf-8")
+        found, reason = install.detect_ruflo(self.project)
+        self.assertTrue(found)
+        self.assertIn("claude-flow.config.json", reason)
+
+    def test_detect_ruflo_via_helper_script(self) -> None:
+        helpers = self.project / ".claude" / "helpers"
+        helpers.mkdir(parents=True, exist_ok=True)
+        (helpers / "auto-memory-hook.mjs").write_text("// ruflo", encoding="utf-8")
+        found, reason = install.detect_ruflo(self.project)
+        self.assertTrue(found)
+        self.assertIn("auto-memory-hook.mjs", reason)
+
+    def test_resolve_ruflo_mode_absent(self) -> None:
+        self.assertEqual(
+            install.resolve_ruflo_mode(self.project, interactive=False), "")
+
+    def test_resolve_ruflo_mode_defaults_coexist_and_persists(self) -> None:
+        (self.project / "claude-flow.config.json").write_text("{}", encoding="utf-8")
+        mode = install.resolve_ruflo_mode(self.project, interactive=False)
+        self.assertEqual(mode, "coexist")
+        # Persisted so the dispatcher can read it back.
+        self.assertEqual(install._read_ruflo_mode(self.project), "coexist")
+
+    def test_resolve_ruflo_mode_honors_existing_without_prompt(self) -> None:
+        (self.project / "claude-flow.config.json").write_text("{}", encoding="utf-8")
+        (self.project / install.SETTINGS_FILE).write_text(
+            "integrations:\n  ruflo:\n    mode: skip\n", encoding="utf-8")
+        # interactive=True would prompt; the persisted choice must short-circuit
+        # before any prompt (decline = silence per scope-control).
+        mode = install.resolve_ruflo_mode(self.project, interactive=True)
+        self.assertEqual(mode, "skip")
+
     def test_cursor_bridge_writes_dispatcher_hooks(self) -> None:
         # Phase 7.5 — `.cursor/hooks.json` must wire all five lifecycle
         # events (sessionStart/End, stop, beforeSubmitPrompt, postToolUse)

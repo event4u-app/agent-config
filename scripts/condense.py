@@ -1060,6 +1060,61 @@ def generate_user_type_symlinks() -> int:
     return total
 
 
+def generate_plugin_hooks() -> int:
+    """Generate ``hooks/hooks.json`` at the plugin root from the hook manifest.
+
+    Claude Code plugins auto-discover hooks at ``<plugin-root>/hooks/hooks.json``
+    (Plugins reference). The agent-config plugin's source is the repo root
+    (``.claude-plugin/marketplace.json``), so the file lands at
+    ``PROJECT_ROOT/hooks/hooks.json``.
+
+    Delivering the Claude lifecycle hooks via **plugin scope** — instead of
+    writing them into the shared ``.claude/settings.json`` ``hooks`` array —
+    is the coexistence root-fix: no shared ``hooks`` array in any settings
+    file means no collision with a neighbour tool (e.g. ruflo) or with a
+    developer's ``settings.local.json``. Claude Code merges plugin-scope and
+    settings-scope hooks and dedups by command string. See
+    ``docs/contracts/ruflo-coexistence.md`` and
+    ``agents/roadmaps/road-to-ruflo-bridge.md`` (Phase 1).
+
+    The command is rooted at ``$CLAUDE_PROJECT_DIR`` so it resolves from
+    plugin scope regardless of cwd; the universal dispatcher then reads
+    ``scripts/hook_manifest.yaml`` at runtime to fan out to the active
+    concerns (each a no-op when its feature is disabled).
+    """
+    manifest_path = PROJECT_ROOT / "scripts" / "hook_manifest.yaml"
+    if not manifest_path.exists():
+        print("  ⚠️  scripts/hook_manifest.yaml not found — skipping plugin hooks",
+              file=sys.stderr)
+        return 0
+
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    claude_events = manifest.get("platforms", {}).get("claude", {}) or {}
+    aliases = manifest.get("native_event_aliases", {}).get("claude", {}) or {}
+    # Reverse the native→agent-config map so we can emit native event names.
+    ac_to_native = {ac: native for native, ac in aliases.items()}
+
+    hooks: dict[str, list] = {}
+    for ac_event, concerns in claude_events.items():
+        if not concerns:
+            continue
+        native = ac_to_native.get(ac_event)
+        if native is None:
+            continue
+        command = (
+            '"$CLAUDE_PROJECT_DIR"/agent-config dispatch:hook '
+            f"--platform claude --event {ac_event} --native-event {native}"
+        )
+        hooks[native] = [{"hooks": [{"type": "command", "command": command}]}]
+
+    hooks_dir = PROJECT_ROOT / "hooks"
+    hooks_dir.mkdir(parents=True, exist_ok=True)
+    out = hooks_dir / "hooks.json"
+    out.write_text(json.dumps({"hooks": hooks}, indent=2) + "\n", encoding="utf-8")
+    info(f"  ✅  Generated hooks/hooks.json ({len(hooks)} Claude plugin hooks)")
+    return len(hooks)
+
+
 def generate_tools() -> None:
     """Generate all tool-specific directories and files.
 
@@ -1074,6 +1129,7 @@ def generate_tools() -> None:
         generate_gemini_md()
     skills = generate_claude_skills() if _tool_active("claude-code") else 0
     commands = generate_claude_commands() if _tool_active("claude-code") else 0
+    plugin_hooks = generate_plugin_hooks() if _tool_active("claude-code") else 0
     personas = generate_persona_symlinks()
     user_types = generate_user_type_symlinks()
     cursor_mdc = generate_cursor_mdc_rules() if _tool_active("cursor") else 0
@@ -1082,7 +1138,8 @@ def generate_tools() -> None:
     windsurf_wf = generate_windsurf_workflows() if _tool_active("windsurf") else 0
     summary = (
         f"✅  generate-tools — rules={rules} skills={skills} "
-        f"commands={commands} personas={personas} user_types={user_types} "
+        f"commands={commands} plugin_hooks={plugin_hooks} "
+        f"personas={personas} user_types={user_types} "
         f"cursor_mdc={cursor_mdc} windsurf_rules={windsurf_modern} "
         f"cursor_commands={cursor_cmds} windsurf_workflows={windsurf_wf} "
         f"windsurfrules={windsurfrules}"
