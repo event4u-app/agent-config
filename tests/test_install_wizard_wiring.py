@@ -8,6 +8,7 @@ Run: ``python3 -m unittest tests.test_install_wizard_wiring -v``
 """
 
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -309,6 +310,50 @@ class ApplyPayloadParityTests(unittest.TestCase):
             )
             self.assertEqual(proc.returncode, 0, msg=proc.stderr)
             self.assertNotIn("WIZARD_READY", proc.stdout)
+
+
+class KillStaleWizardServerTests(unittest.TestCase):
+    """`_kill_stale_wizard_server` — fresh-start guard for `init`."""
+
+    def _patch_info_path(self, path: Path) -> None:
+        from unittest import mock
+        patcher = mock.patch.object(install, "_server_info_path", return_value=path)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_missing_file_is_a_noop(self):
+        with tempfile.TemporaryDirectory() as d:
+            info = Path(d) / "local-server.json"
+            self._patch_info_path(info)
+            install._kill_stale_wizard_server()  # no file → nothing to do
+            self.assertFalse(info.exists())
+
+    def test_dead_pid_clears_the_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            info = Path(d) / "local-server.json"
+            self._patch_info_path(info)
+            # Spawn then reap a process so its pid is reliably dead.
+            proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])  # noqa: S603
+            proc.terminate()
+            proc.wait(timeout=10)
+            info.write_text(json.dumps({"pid": proc.pid, "port": 41000, "url": "x"}), encoding="utf-8")
+            install._kill_stale_wizard_server()
+            self.assertFalse(info.exists())  # stale record removed
+
+    def test_live_unrelated_pid_is_left_untouched(self):
+        with tempfile.TemporaryDirectory() as d:
+            info = Path(d) / "local-server.json"
+            self._patch_info_path(info)
+            proc = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])  # noqa: S603
+            try:
+                info.write_text(json.dumps({"pid": proc.pid, "port": 41000, "url": "x"}), encoding="utf-8")
+                install._kill_stale_wizard_server()
+                # Command lacks "agent-config" → not our server → not killed.
+                self.assertIsNone(proc.poll(), "unrelated process must not be killed")
+                self.assertTrue(info.exists())
+            finally:
+                proc.terminate()
+                proc.wait(timeout=10)
 
 
 if __name__ == "__main__":

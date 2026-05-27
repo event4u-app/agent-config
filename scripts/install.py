@@ -32,6 +32,7 @@ import os
 import re
 import shlex
 import shutil
+import signal
 import subprocess
 import sys
 import threading
@@ -4335,6 +4336,75 @@ def _wizard_cli_dist(project_root: Path) -> Path | None:
     return cli if cli.exists() else None
 
 
+def _server_info_path() -> Path:
+    """Path of the running-server record written by `ui:serve`."""
+    return Path.home() / ".event4u" / "agent-config" / "local-server.json"
+
+
+def _pid_is_agent_config(pid: int) -> bool:
+    """Best-effort check that `pid` is one of our wizard servers.
+
+    Guards against signalling an unrelated process that recycled the pid.
+    Uses `ps` (POSIX); on platforms without it we conservatively return
+    False so we never kill the wrong process.
+    """
+    try:
+        out = subprocess.run(  # noqa: S603,S607 - fixed argv, pid is an int
+            ["ps", "-p", str(pid), "-o", "command="],
+            capture_output=True,
+            text=True,
+            timeout=5,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return "agent-config" in out.stdout.lower()
+
+
+def _kill_stale_wizard_server() -> None:
+    """Terminate a previously-launched wizard server, if one is recorded.
+
+    `agent-config init` should always start fresh: a stale server (left
+    from an earlier run) is stopped so the new instance owns the port and
+    the wizard re-enters at step 1. Best-effort — every failure is ignored.
+    """
+    path = _server_info_path()
+    try:
+        info = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return
+    pid = info.get("pid")
+    if not isinstance(pid, int):
+        path.unlink(missing_ok=True)
+        return
+    try:
+        os.kill(pid, 0)  # liveness probe
+    except OSError:
+        path.unlink(missing_ok=True)  # already gone
+        return
+    if not _pid_is_agent_config(pid):
+        return  # pid reused by an unrelated process — leave it alone
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except OSError:
+        path.unlink(missing_ok=True)
+        return
+    # Wait up to ~3s for a graceful exit, then force-kill.
+    for _ in range(30):
+        try:
+            os.kill(pid, 0)
+        except OSError:
+            break
+        time.sleep(0.1)
+    else:
+        try:
+            os.kill(pid, getattr(signal, "SIGKILL", signal.SIGTERM))
+        except OSError:
+            pass
+    path.unlink(missing_ok=True)
+    print("(Stopped the previous wizard server.)")
+
+
 def _wizard_spawn(project_root: Path) -> int:
     """Spawn the wizard, await readiness, hand off to the child.
 
@@ -4343,6 +4413,9 @@ def _wizard_spawn(project_root: Path) -> int:
     Never raises into the parent — every error surfaces as a printed
     fallback line and a 0 return.
     """
+    # Always start fresh: stop any server left running by a prior init.
+    _kill_stale_wizard_server()
+
     cli = _wizard_cli_dist(project_root)
     if cli is None:
         print(

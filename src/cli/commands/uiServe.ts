@@ -22,6 +22,7 @@ import { existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { pickFreePort, DEFAULT_PORT_RANGE } from '../../server/port.js';
 import { mintToken } from '../../server/token.js';
+import { writeServerInfo, clearServerInfo } from '../../server/serverInfo.js';
 import { createApp } from '../../server/app.js';
 import { resolveWriteRoot, ensureWriteRoot } from '../../server/writeRoot.js';
 import { PACKAGE_ROOT } from '../paths.js';
@@ -120,6 +121,7 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         if (shuttingDown) return;
         shuttingDown = true;
         logger.info(`${reason} — shutting down`);
+        if (!dryRun) clearServerInfo();
         try {
             await app.close();
         } finally {
@@ -156,6 +158,12 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         ? `#${opts.initialRoute.startsWith('/') ? opts.initialRoute : `/${opts.initialRoute}`}`
         : '';
     const url = `http://127.0.0.1:${port}/?token=${token}${hash}`;
+
+    // Record this instance so a later `init` can terminate it before
+    // starting fresh (browser-lifecycle § kill-stale). Skipped in dry-run.
+    if (!dryRun) {
+        writeServerInfo({ pid: process.pid, port, url, startedAt: new Date().toISOString() });
+    }
 
     // road-to-unified-setup § B4 — WIZARD_READY stdout contract.
     // Emit the marker on stdout (plus the URL on the next line) so the
