@@ -20,6 +20,7 @@ import { delegateToBash } from './bash/runBash.js';
 import { runVersions } from './commands/versions.js';
 import { runDoctorShell } from './commands/doctorShell.js';
 import { runUiServe } from './commands/uiServe.js';
+import { shouldInitLaunchGui, buildInitGuiOptions } from './initRouting.js';
 import { runSettings } from './commands/settings.js';
 import { runWorkspacesLs } from './commands/workspaces.js';
 import { runPacksLs } from './commands/packs.js';
@@ -266,6 +267,15 @@ async function main(argv: readonly string[]): Promise<number> {
     if (head !== undefined && native.includes(head)) {
         await program.parseAsync(['node', 'agent-config', ...argv]);
         return 0;
+    }
+
+    // `init` is the install front-end: when the browser wizard can actually be
+    // used (interactive TTY, display, no CLI-mode flags), open it and let it
+    // drive the install via /api/v1/wizard/apply → install.py --apply-payload —
+    // no CLI tool-picker, one installer. Otherwise fall through to the bash CLI
+    // install (road-to-single-install-source-of-truth § Phase 4 follow-up).
+    if (head === 'init' && shouldInitLaunchGui(argv.slice(1))) {
+        return runUiServe(buildInitGuiOptions(argv.slice(1)));
     }
 
     // Everything else forwards to the Bash dispatcher verbatim.
