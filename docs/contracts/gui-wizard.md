@@ -41,23 +41,30 @@ no cross-origin asset, no remote endpoint — CSP
 ## Boot sequence
 
 ```
-agent-config install   (or `setup`, or `init` → scripts/install.py → spawns
-                        `node dist/cli/agent-config.js install --no-open`)
+agent-config install   (or `setup`, or `init` when the GUI is usable)
   │
   ├─► pick a free loopback port; mint a per-server bearer/CSRF token
   ├─► Fastify listen({ host: '127.0.0.1', port })
   ├─► print `WIZARD_READY <url>` on stdout (url carries `?token=…` + `#/…`)
   ├─► open the OS browser at <url>   (skipped with --no-open / headless)
-  └─► serve until Ctrl-C
+  └─► serve until the user finishes (Finish → install) or Ctrl-C
 ```
 
-`init` is the consumer entry point: it delegates to `scripts/install.py`,
-which — on a TTY with a display and no `--no-ui` / `CI` / explicit
-`--tools=` — spawns the `install` subcommand with `--no-open` and waits for
-the `WIZARD_READY <url>` handshake (progressive 10/20/40/80 s budget) before
-printing the URL banner. Headless / CI / `--no-ui` / explicit `--tools=`
-installs run the non-interactive `install.py` path directly and never boot
-the GUI.
+`init` is the consumer entry point and the install **front-end**: the TS CLI
+(`src/cli/initRouting.ts → shouldInitLaunchGui`) opens the browser wizard
+directly (via `runUiServe`, install mode) whenever it can actually be used —
+interactive TTY, a display, and no CLI-mode flag. There is no CLI tool-picker
+in that path; the wizard collects the tool/pack/settings selection and its
+Finish drives the **whole** install through `POST /api/v1/wizard/apply` →
+`scripts/install.py --apply-payload` (one installer).
+
+`init` falls back to the non-interactive bash CLI install (`scripts/install` →
+`install.py`) — and never boots the GUI — when any of these hold: `CI` set,
+`AGENT_CONFIG_NO_UI` set, stdin/stdout not a TTY, a headless host (SSH / Linux
+without `DISPLAY`), or a CLI-mode flag (`--no-ui` / `--tools` / `--ai` /
+`--yes` / `--quiet` / `--dry-run` / `--minimal` / `--settings-only` /
+`--list-tools`). `install.py`'s own tail-launch (`_wizard_spawn`, matching the
+`WIZARD_READY <url>` handshake) remains for direct `python3 install.py` runs.
 
 ### `WIZARD_READY` stdout contract
 
