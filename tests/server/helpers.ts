@@ -106,7 +106,7 @@ export function fixtureSettings(overlay: Record<string, unknown> = {}): Record<s
         quality: {}, subagents: {}, worktrees: {}, onboarding: {},
         commands: { suggestion: {}, create_pr: {} }, memory: {},
         hooks: { concern_budget: {} }, decision_engine: {},
-        update_check: {}, explain: {},
+        update_check: {}, explain: {}, integrations: { ruflo: {} },
     });
     return { ...base, ...overlay };
 }

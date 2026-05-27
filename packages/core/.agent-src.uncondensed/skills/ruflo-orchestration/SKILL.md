@@ -1,6 +1,6 @@
 ---
 name: ruflo-orchestration
-description: "Use when a project has ruflo (ruvnet/ruflo) installed and the task needs multi-agent orchestration, swarms, background agents, or ruflo's MCP tools / memory — delegate to ruflo's runtime instead of improvising in-session. NOT for in-session implementer/judge fan-out (use subagent-orchestration)."
+description: "Use when ruflo (ruvnet/ruflo) is installed and a task needs multi-agent orchestration, swarms, or its MCP tools/memory — delegate to ruflo. NOT for in-session fan-out (use subagent-orchestration)."
 source: package
 domain: devops
 workspaces:
@@ -94,8 +94,12 @@ with ruflo before assuming a type exists.
 
 ## Procedure
 
-1. **Confirm detection.** If ruflo is not detected, stop and use
-   `subagent-orchestration` instead.
+1. **Analyze the existing ruflo setup before spawning anything.** Read
+   `claude-flow.config.json` (topology, max agents, strategy) and probe the
+   live swarm/memory state (`memory_bridge_status`) — never assume a topology
+   or `subagent_type` exists. If ruflo is not detected at all, stop and use
+   `subagent-orchestration` instead. Do not delegate to a runtime you have not
+   inspected.
 2. **Check the mode.** If `integrations.ruflo.mode: skip` is set, the developer
    opted out of agent-config's hooks — orchestration still routes to ruflo, but
    do not assume agent-config observability is running.
@@ -119,15 +123,31 @@ that writes to the repo, say so plainly: the main-agent gates do not cover the
 swarm. For enforcement that survives this gap, a git-layer pre-commit gate is
 the option under evaluation (road-to-ruflo-bridge Phase 7, gated).
 
+## Output format
+
+When delegating to ruflo, the response MUST, in order:
+
+1. Name the **detection signal** that confirmed ruflo (so the user can audit why coexistence engaged).
+2. Name the **ruflo MCP tool(s)** called and the **agent type(s)** spawned (per the map above).
+3. State which work **Claude Code performs** vs. what **ruflo coordinates**.
+4. Surface the **governance-scope caveat** whenever the swarm will act autonomously on the repo.
+
+Never claim the swarm ran without naming the coordination tool that launched it.
+
+## Gotchas
+
+- **Assuming an agent type exists.** ruflo's roster is version-dependent; `agent_spawn` with an unknown `subagent_type` mis-routes or fails silently. Confirm the type against the live setup before spawning.
+- **Hard-coding tool/agent counts.** The docs claim differing numbers per version; baking a stale count into a plan breaks on upgrade. Read `claude-flow.config.json` / the live MCP surface instead.
+- **Governance theatre.** Believing agent-config's safety floors gate the swarm — they gate the **main** agent only; swarm subagents run uninstrumented. Say so before authorizing autonomous repo writes.
+- **Improvising in-session despite ruflo present.** Reaching for `subagent-orchestration` when ruflo is installed wastes the runtime and splits memory across two systems.
+- **Writing hooks into `.claude/settings.json` to "coordinate".** Re-introduces the shared-array collision; agent-config hooks ship via plugin scope (see `ruflo-coexistence`).
+
 ## Do NOT
 
-- Do NOT improvise an in-session swarm when ruflo is present — that defeats the
-  point of the installed runtime.
-- Do NOT claim agent-config governs ruflo's swarm agents. It governs the main
-  agent only.
-- Do NOT hard-code ruflo's tool/agent counts — they are version-dependent.
-- Do NOT write agent-config hooks into `.claude/settings.json` to "coordinate"
-  with ruflo — hooks ship via plugin scope; see `ruflo-coexistence`.
+- Do NOT delegate to ruflo without first inspecting its config (Procedure step 1).
+- Do NOT claim agent-config governs ruflo's swarm subagents — it governs the **main** agent only.
+- Do NOT write agent-config hooks into `.claude/settings.json` — they ship via plugin scope.
+- Do NOT use this skill when ruflo is absent — use `subagent-orchestration` instead.
 
 ## See also
 

@@ -260,6 +260,13 @@ export const settingsSchema = z.object({
             'Enable the `agent-config explain last` command, which prints the reasoning behind the agent\'s most recent decision (last tool call, last suggestion). Disable if you never use it and want a smaller CLI surface.',
         ),
     }),
+    integrations: z.object({
+        ruflo: z.object({
+            mode: z.enum(['coexist', 'skip']).default('coexist').describe(
+                'Coexistence mode when ruflo (ruvnet/ruflo) is detected in the project. `coexist` (default): agent-config\'s plugin-scope hooks run alongside ruflo\'s. `skip`: the agent-config hook dispatcher no-ops (opt out of agent-config\'s observability hooks under ruflo). Governance (scope-control, non-destructive) is rule-context and always applies to the main agent regardless of this mode.',
+            ),
+        }),
+    }),
 });
 
 export type Settings = z.infer<typeof settingsSchema>;

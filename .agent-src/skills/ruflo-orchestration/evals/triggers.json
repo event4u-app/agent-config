@@ -1,0 +1,16 @@
+{
+  "skill": "ruflo-orchestration",
+  "description": "5 should-trigger + 5 should-not-trigger queries. Should-trigger imply a ruflo-equipped project needing swarm/orchestration delegation. Near-misses route to subagent-orchestration (in-session, no ruflo), mcp (generic), or a plain implementation skill.",
+  "queries": [
+    {"q": "spin up a swarm to refactor this module — we have ruflo installed", "trigger": true},
+    {"q": "use the ruflo swarm memory to find how we solved this before", "trigger": true},
+    {"q": "coordinate several agents in parallel via claude-flow", "trigger": true},
+    {"q": "delegate this multi-agent build to the orchestration runtime", "trigger": true},
+    {"q": "spawn a coder and a reviewer agent through ruflo", "trigger": true},
+    {"q": "run an implementer/judge pass on this diff in-session", "trigger": false},
+    {"q": "add an MCP server to my project", "trigger": false},
+    {"q": "fix this failing test", "trigger": false},
+    {"q": "how do I register a hook in settings.json?", "trigger": false},
+    {"q": "review this PR for security issues", "trigger": false}
+  ]
+}
