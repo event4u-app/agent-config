@@ -333,7 +333,10 @@ export function installRoute(opts: InstallRouteOptions = {}): FastifyPluginAsync
                 return;
             }
             try {
-                return planToWire(planFromRequest(parsed.data, opts));
+                // Validate the wire shape on the way out so the response
+                // contract stays enforced now that the schema is no longer
+                // referenced by the (removed) apply route.
+                return InstallPlanWireSchema.parse(planToWire(planFromRequest(parsed.data, opts)));
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 if (message === 'E_NO_PACKAGE_ROOT') {
