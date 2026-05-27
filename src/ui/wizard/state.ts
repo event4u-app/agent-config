@@ -213,6 +213,8 @@ export interface DiscoveryWorkspace {
     description: string;
     default_packs: string[];
     optional_packs?: string[];
+    /** Advisory example job titles for this area (UI hint, not the stored role). */
+    example_roles?: string[];
 }
 
 /**

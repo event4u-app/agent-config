@@ -402,6 +402,7 @@ interface ManifestResponse {
         description?: string;
         default_packs?: string[];
         optional_packs?: string[];
+        example_roles?: string[];
     }>;
 }
 
@@ -457,6 +458,7 @@ async function loadDiscoveryOnce(): Promise<void> {
                 description: w.description ?? '',
                 default_packs: w.default_packs ?? [],
                 optional_packs: w.optional_packs ?? [],
+                ...(w.example_roles !== undefined ? { example_roles: w.example_roles } : {}),
             }));
         // Strip the `pack-` prefix so ids match the manifest. Unknown
         // signals (e.g. future detector additions not yet in the
@@ -1207,9 +1209,13 @@ function RolesStepBody(): preact.JSX.Element {
                                     />
                                     <span class="ac-pack-tile__title">{ws.label}</span>
                                 </label>
-                                <p class="ac-pack-tile__role">
-                                    Role: <code>{ws.id}</code>
-                                </p>
+                                {(ws.example_roles ?? []).length > 0
+                                    ? (
+                                        <p class="ac-pack-tile__role">
+                                            e.g. {(ws.example_roles ?? []).join(', ')}
+                                        </p>
+                                    )
+                                    : null}
                                 {ws.description !== ''
                                     ? <p class="ac-pack-tile__desc">{ws.description}</p>
                                     : null}

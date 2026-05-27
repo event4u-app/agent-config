@@ -223,10 +223,13 @@ effect):
 | `false` | 8 | `editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
 | `true`  | 12 | `ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
 
-The `roles` step (Step 2) presents the discovery **workspaces** (Engineering,
-Product, Finance, Founder, GTM, Ops, …; the maintainer workspace is hidden) as
-checkboxes. The selected ids become `.agent-user.yml` `role[]` and recommend
-each domain's `default_packs` on the packs step. In install mode the user-md
+The `roles` step (Step 2) presents the discovery **workspaces** as the *area*
+(Engineering, Product, Finance, Founder, GTM, Ops, …; the maintainer workspace
+is hidden) — each tile shows the area label, then advisory `example_roles`
+(e.g. Engineering → "Developer, CTO"; Finance → "CFO") and the description. The
+selected workspace ids become `.agent-user.yml` `role[]` (the example roles are
+UI hints, not the stored value) and recommend each domain's `default_packs` on
+the packs step. In install mode the user-md
 step therefore hides its role field (collected here instead); setup mode keeps
 the role field since it skips the roles step.
 

@@ -35,8 +35,8 @@ const MANIFEST = {
         { id: 'product-basic', label: 'Product Basic', workspaces: ['product'] },
     ],
     workspaces: [
-        { id: 'founder', label: 'Founder', description: 'Strategy, fundraising.', default_packs: ['founder-strategy'], optional_packs: [] },
-        { id: 'product', label: 'Product', description: 'Discovery, roadmaps.', default_packs: ['product-basic'], optional_packs: [] },
+        { id: 'founder', label: 'Founder', description: 'Strategy, fundraising.', example_roles: ['CEO', 'Co-Founder'], default_packs: ['founder-strategy'], optional_packs: [] },
+        { id: 'product', label: 'Product', description: 'Discovery, roadmaps.', example_roles: ['Product Manager'], default_packs: ['product-basic'], optional_packs: [] },
         { id: 'agent-config-maintainer', label: 'Maintainer', description: 'Internal.', default_packs: ['meta'], optional_packs: [] },
     ],
 };
@@ -94,6 +94,9 @@ describe('WizardPage roles step', () => {
 
             // Maintainer workspace is excluded from the role list.
             expect(discoveryWorkspaces.value.some((w) => w.id === 'agent-config-maintainer')).toBe(false);
+            // Example roles are surfaced under the area (not the raw workspace id).
+            expect(container.textContent).toContain('e.g. CEO, Co-Founder');
+            expect(container.textContent).not.toContain('Role: founder');
 
             const next = getByRole('button', { name: 'Next' }) as HTMLButtonElement;
             expect(next.disabled).toBe(true);
