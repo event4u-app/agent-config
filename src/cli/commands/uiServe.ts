@@ -65,7 +65,7 @@ export interface UiServeOptions {
     wizardMode?: 'install' | 'setup';
 }
 
-function isHeadless(): boolean {
+export function isHeadless(): boolean {
     if (process.env['SSH_CONNECTION']) return true;
     if (process.platform === 'linux' && !process.env['DISPLAY']) return true;
     return false;
