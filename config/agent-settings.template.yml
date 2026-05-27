@@ -201,6 +201,17 @@ pipelines:
 # in the same response — that cadence is governed by `roadmap-progress-sync`
 # and is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
+  # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
+  #   true  = default. The command name names the scope; a discoverable
+  #           single active roadmap (or a named one) starts the loop
+  #           immediately, resolved config surfaced inline so a wrong
+  #           pick can still be aborted mid-stream.
+  #   false = legacy. Shows the pre-run summary with numbered options
+  #           and waits. The gate is still shown regardless when the
+  #           roadmap is ambiguous or a scope / cadence conflict has no
+  #           sensible default. See rules/autonomous-execution.md.
+  skip_pre_run_gate: true
+
   # When to run quality tools during /roadmap execute.
   #   end_of_roadmap = once, before archiving the completed roadmap (default — fastest, fewest tokens)
   #   per_phase      = once after every completed phase

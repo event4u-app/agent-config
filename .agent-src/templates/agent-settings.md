@@ -209,6 +209,16 @@ pipelines:
 # response — that cadence is governed by `roadmap-progress-sync` and
 # is non-negotiable. This setting only governs *quality tool runs*.
 roadmap:
+  # Skip the /roadmap:process-* pre-run confirmation gate (true, false).
+  #   true  = default. Command name names the scope; a discoverable single
+  #           active roadmap (or a named one) starts the loop immediately,
+  #           resolved config surfaced inline so a wrong pick can still be
+  #           aborted mid-stream.
+  #   false = legacy. Shows the pre-run summary with numbered options and
+  #           waits. Gate is still shown regardless when the roadmap is
+  #           ambiguous or a scope / cadence conflict has no default.
+  skip_pre_run_gate: true
+
   # When to run quality tools during /roadmap:process-step|phase|full.
   #   end_of_roadmap = once, before archiving (default — fastest, fewest tokens)
   #   per_phase      = once after every completed phase
@@ -463,6 +473,7 @@ the canonical narrative lives in
 | `hooks.chat_history.enabled` | `true`, `false` | `true` | Register the chat-history hooks (`append` on `after_step`, `halt_append` on `on_halt`). Gated by **both** this flag AND `chat_history.enabled`; either off → no chat-history hook registers. Schema v4: every entry self-identifies via a 16-char session fingerprint, no ownership/sidecar layer. |
 | `hooks.chat_history.script` | path | `scripts/chat_history.py` | Override path to the chat-history CLI. Set only when the script lives outside the standard location. |
 | `pipelines.skill_improvement` | `true`, `false` | `true` | When `true`: propose learning capture after meaningful tasks. When `false`: silent. Included in every profile except `custom`. |
+| `roadmap.skip_pre_run_gate` | `true`, `false` | `true` | When `true` (default): `/roadmap:process-step\|phase\|full` skips the interactive pre-run summary and starts immediately — resolved roadmap / cadence / council surfaced inline so an unwanted pick can still be aborted. When `false`: shows the pre-run summary with numbered options and waits. Gate is always shown — regardless of this flag — when the roadmap is ambiguous (multiple active, none named) or a scope / cadence conflict has no default. |
 | `roadmap.quality_cadence` | `end_of_roadmap`, `per_phase`, `per_step` | `end_of_roadmap` | When `/roadmap:process-step|phase|full` runs the project's quality pipeline. Default skips per-step / per-phase runs and gates only the final archival. `per_phase` runs once after every phase; `per_step` is the legacy verbose mode. Step checkboxes and the dashboard are always updated regardless. `verify-before-complete` still requires fresh output before any "roadmap complete" claim. |
 | `quality.local_auto_run` | `true`, `false` | `true` | When `true`: agent runs the project's quality pipeline (`task ci`, `make test`, `npm run check`, PHPStan, ECS, Rector, test suites) autonomously when work is ready for verification. When `false`: agent asks before running locally. **Carve-out**: NEW CI gates / smoke tests / test files MUST run locally regardless of this flag — without execution the new gate is unverified evidence. Iron Law `verify-before-complete` still applies; suppressed runs require the agent to surface the gap before claiming completion. |
 | `quality.wait_for_remote_ci` | `true`, `false` | `false` | When `true`: after `git push`, the agent polls GitHub check-runs / pipeline status on the PR and reports green / red before handing back. When `false`: agent pushes and hands back immediately; the user inspects CI themselves (default — saves agent runtime and tokens). |
