@@ -95,6 +95,7 @@ Versioned under `/api/v1/`. Selected routes:
 | GET    | `/api/v1/wizard/ai-council`   | AI-council scalar subset + provider key presence (extended mode)        |
 | POST   | `/api/v1/wizard/ai-council`   | Comment-preserving scalar merge into `.ai-council.yml`                  |
 | POST   | `/api/v1/wizard/finish`       | 2PC commit of settings + user-identity                                  |
+| POST   | `/api/v1/shutdown`            | Browser-close shutdown beacon (`navigator.sendBeacon` target; real-serve only) |
 | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `scripts/install.py --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
 | POST   | `/api/v1/install/plan`        | Plan preview (per-tool file counts + conflicts) for the Review step     |
@@ -110,6 +111,25 @@ Every request passes three `onRequest` hooks in
 an `Origin` allow-list (browser-issued requests), and a per-server bearer
 token (`Authorization: Bearer <token>`, minted at boot, surfaced in the
 `?token=` URL). A bad token / Host / Origin returns `403`.
+
+### Browser-lifecycle shutdown
+
+In real-serve (`runUiServe`), the server stops itself when the browser that
+drives it goes away — the local process should not outlive its only client:
+
+- The SPA ([`src/ui/serverLifecycle.ts`](../../src/ui/serverLifecycle.ts))
+  heartbeats `GET /api/v1/ping` every 10s and, on `pagehide`, fires
+  `navigator.sendBeacon('/api/v1/shutdown?token=…')` (the token rides as a
+  query param because `sendBeacon` cannot set headers).
+- The server (`createApp` `idleShutdown` option, passed only by `runUiServe`)
+  exits on that beacon, and — as a backstop for crashes where the beacon is
+  lost — via an idle timer that **arms only after the first authed request**
+  (so headless / `--allow-headless` manual-connect servers are never killed
+  before the operator attaches) and fires after ~5 min of silence.
+
+`createApp` is inert here unless `idleShutdown` is supplied, so the in-process
+test harness ([`tests/server/helpers.ts`](../../tests/server/helpers.ts)) is
+unaffected.
 
 ## Real apply — single source of truth
 
