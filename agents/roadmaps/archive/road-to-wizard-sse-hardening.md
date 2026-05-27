@@ -33,7 +33,7 @@ UX-grade resilience. Lower blast radius; ship after Phase 1.
 
 - [x] Phase 1: abort-on-disconnect and CSRF-rejection tests shipped and green; each verified to fail when its guard is reverted.
 - [x] Phase 2: malformed-NDJSON and no-terminal-frame tests shipped and green.
-- [ ] No regression in the existing wizard/install vitest suite; `task ci` green on the PR.
+- [x] No regression in the existing wizard/install vitest suite; `task ci` green on the PR.
 
 ## Notes
 
