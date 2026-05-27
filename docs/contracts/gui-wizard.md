@@ -90,6 +90,10 @@ Versioned under `/api/v1/`. Selected routes:
 | POST   | `/api/v1/wizard/state`        | Persist state between steps                                             |
 | GET    | `/api/v1/wizard/manifest`     | Locked discovery-manifest (extended mode)                               |
 | GET    | `/api/v1/wizard/auto-detect`  | Project-signal evidence for the `ai-tools` step (extended mode)         |
+| GET    | `/api/v1/wizard/detect-tools` | Native AI-tool presence (home/app/`$PATH`) for Step-1 pre-select + badge |
+| GET    | `/api/v1/wizard/detect-rtk`   | rtk presence + per-OS install hint (Editor-and-tooling step)            |
+| GET    | `/api/v1/wizard/ai-council`   | AI-council scalar subset + provider key presence (extended mode)        |
+| POST   | `/api/v1/wizard/ai-council`   | Comment-preserving scalar merge into `.ai-council.yml`                  |
 | POST   | `/api/v1/wizard/finish`       | 2PC commit of settings + user-identity                                  |
 | POST   | `/api/v1/wizard/apply`        | **Single real-apply route.** `dry_run:true` → buffered plan preview; otherwise SSE-streams `scripts/install.py --apply-payload` |
 | GET    | `/api/v1/install/detect`      | Scope + project shape + tool presence                                   |
@@ -185,8 +189,14 @@ effect):
 
 | `extendedSteps` | Steps | Layout |
 |---|---|---|
-| `false` | 7 | `editor → personality → cost → roadmap-quality → memory → user-md → review` |
-| `true`  | 9 | `ai-tools → packs → editor → personality → cost → roadmap-quality → memory → user-md → review` |
+| `false` | 8 | `editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `true`  | 11 | `ai-tools → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+
+The `ai-council` step (road-to-wizard-ux-improvements § Phase 8) configures the
+wizard-controlled scalar subset of `.ai-council.yml` (enable, per-member
+enable + low-impact, global transport mode, debate rounds, cost budget, the
+non-locked `decision_resolution` classes) via `GET`/`POST /api/v1/wizard/ai-council`;
+the file is written with comment-preserving `replaceScalar` edits.
 
 The step shapes themselves are declared in
 [`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the two
