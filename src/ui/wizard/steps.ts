@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'aiTools' | 'roles' | 'packs' | 'modules' | 'aiCouncil';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs' | 'modules' | 'aiCouncil';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -36,6 +36,20 @@ export interface WizardStep {
  * canonical 7-step contract for v2.x users until the merged flow ships
  * end-to-end (Phase 1.9 — npm-version kill-switch, no dual code paths).
  */
+/**
+ * Always-first step (both modes): name + language. Pulled out of the user-md
+ * step so the agent knows who it's talking to before anything else. Language
+ * is pre-filled from the browser locale and the name from the system user
+ * when not already set (see WizardPage).
+ */
+const WELCOME_STEP: WizardStep = {
+    id: 'welcome',
+    title: 'Welcome — who are you?',
+    navLabel: 'You',
+    subtitle: 'Your name and language. Stored in .agent-user.yml; we pre-fill what we can detect.',
+    kind: 'welcome',
+};
+
 const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
     {
         id: 'ai-tools',
@@ -164,7 +178,8 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
  */
 export const WIZARD_STEPS = CORE_WIZARD_STEPS;
 
-export const WIZARD_TOTAL_STEPS = WIZARD_STEPS.length;
+/** Non-extended flow length — the welcome step (Step 1) plus the core steps. */
+export const WIZARD_TOTAL_STEPS = CORE_WIZARD_STEPS.length + 1;
 
 export interface GetWizardStepsOptions {
     /** Prepend ai-tools + packs to ship the 9-step flow (D9). */
@@ -173,9 +188,9 @@ export interface GetWizardStepsOptions {
 
 export function getWizardSteps(opts: GetWizardStepsOptions = {}): readonly WizardStep[] {
     if (opts.extended === true) {
-        return [...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
+        return [WELCOME_STEP, ...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
     }
-    return CORE_WIZARD_STEPS;
+    return [WELCOME_STEP, ...CORE_WIZARD_STEPS];
 }
 
 export function stepAt(index: number, opts: GetWizardStepsOptions = {}): WizardStep {

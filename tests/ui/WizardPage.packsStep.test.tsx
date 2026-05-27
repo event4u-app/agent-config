@@ -16,14 +16,14 @@ import { render, fireEvent, cleanup, waitFor } from '@testing-library/preact';
 import { WizardPage } from '../../src/ui/pages/WizardPage.js';
 import {
     banner, diffLoading, discoveryLoaded, discoveryLoading, discoveryLoadError,
-    discoveryPacks, detectedPackIds, errors, extendedSteps, initialSettings,
-    loaded, loadError, saving, schema, selectedPacks, selectedTools,
+    discoveryPacks, discoveryWorkspaces, detectedPackIds, errors, extendedSteps, initialSettings,
+    loaded, loadError, saving, schema, selectedPacks, selectedRoles, selectedTools,
     settingsLastModified, stepIndex, userMdBody, userMdExists, userMdInitial,
     userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const PACKS_STEP_INDEX = 2;
-const EXTENDED_TOTAL = 12;
+const PACKS_STEP_INDEX = 3;
+const EXTENDED_TOTAL = 13;
 
 const SETTINGS_SCHEMA = {
     type: 'object',
@@ -32,10 +32,13 @@ const SETTINGS_SCHEMA = {
 
 const MANIFEST = {
     packs: [
-        { id: 'engineering-base', label: 'Engineering Base' },
-        { id: 'php', label: 'PHP', requires_hint: ['engineering-base'] },
-        { id: 'laravel', label: 'Laravel', requires_hint: ['php', 'engineering-base'], cluster: 'php' },
-        { id: 'symfony', label: 'Symfony', requires_hint: ['php', 'engineering-base'], cluster: 'php' },
+        { id: 'engineering-base', label: 'Engineering Base', workspaces: ['engineering'] },
+        { id: 'php', label: 'PHP', requires_hint: ['engineering-base'], workspaces: ['engineering'] },
+        { id: 'laravel', label: 'Laravel', requires_hint: ['php', 'engineering-base'], cluster: 'php', workspaces: ['engineering'] },
+        { id: 'symfony', label: 'Symfony', requires_hint: ['php', 'engineering-base'], cluster: 'php', workspaces: ['engineering'] },
+    ],
+    workspaces: [
+        { id: 'engineering', label: 'Engineering', description: 'Code.', default_packs: ['engineering-base'], optional_packs: ['php'] },
     ],
 };
 
@@ -47,8 +50,8 @@ function resetSignals(): void {
     userMdLoaded.value = false; userMdSkipped.value = false; wizardComplete.value = false;
     extendedSteps.value = false;
     discoveryLoaded.value = false; discoveryLoading.value = false; discoveryLoadError.value = null;
-    discoveryPacks.value = []; detectedPackIds.value = [];
-    selectedPacks.value = {}; selectedTools.value = {};
+    discoveryPacks.value = []; discoveryWorkspaces.value = []; detectedPackIds.value = [];
+    selectedPacks.value = {}; selectedRoles.value = {}; selectedTools.value = {};
 }
 
 function installFetchMock(): { restore: () => void } {
@@ -125,6 +128,27 @@ describe('WizardPage packs step', () => {
             await waitFor(() => expect(selectedPacks.value['php']).toBe(true));
             expect(selectedPacks.value['laravel']).toBe(true);
             expect(selectedPacks.value['symfony']).toBe(false);
+        } finally {
+            mock.restore();
+        }
+    });
+
+    it('badges each pack with its workspace, highlighting picked roles', async () => {
+        const mock = installFetchMock();
+        try {
+            const { container } = render(<WizardPage path="/wizard" />);
+            await waitFor(() => expect(loaded.value).toBe(true));
+            await waitFor(() => expect(discoveryLoaded.value).toBe(true));
+
+            // The PHP tile carries an Engineering workspace badge.
+            const badges = [...container.querySelectorAll('.ac-badge--ws')];
+            expect(badges.some((b) => b.textContent === 'Engineering')).toBe(true);
+            // Not active until the matching role is picked.
+            expect(container.querySelector('.ac-badge--ws-active')).toBeNull();
+
+            // Pick the engineering role → its badges highlight.
+            selectedRoles.value = { engineering: true };
+            await waitFor(() => expect(container.querySelector('.ac-badge--ws-active')).not.toBeNull());
         } finally {
             mock.restore();
         }

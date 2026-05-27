@@ -2,7 +2,7 @@
 
 # AI Video
 
-AI video pipeline (per ADR-011, the only heavyweight domain).
+AI video pipeline.
 
 - **id**: `ai-video`
 - **version**: `4.4.0`

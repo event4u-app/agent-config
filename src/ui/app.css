@@ -279,13 +279,18 @@ code {
 .ac-badge { font-size: var(--font-size-xs); font-weight: var(--font-weight-medium); padding: 0.1rem var(--space-2); border-radius: var(--radius-sm); white-space: nowrap; }
 .ac-badge--installed { background: var(--color-success-soft); color: var(--color-success); }
 .ac-badge--missing { background: var(--color-surface-alt); color: var(--color-text-muted); }
+.ac-badge--ws { font-size: 0.6875rem; padding: 0.05rem 0.4rem; background: var(--color-surface-alt); color: var(--color-text-muted); border: 1px solid var(--color-border); }
+.ac-badge--ws-active { background: var(--color-accent); color: var(--color-accent-fg); border-color: var(--color-accent); }
 
 /* Capability-packs step (Step 2) — one tile per pack; languages expand to frameworks. */
 .ac-wizard__pack-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: var(--space-3); }
 .ac-pack-tile { display: flex; flex-direction: column; gap: var(--space-2); padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
 .ac-pack-tile__head { display: flex; align-items: center; gap: var(--space-2); cursor: pointer; font-weight: var(--font-weight-medium); }
 .ac-pack-tile__title { flex: 1; }
+.ac-pack-tile__role { margin: 0; font-size: var(--font-size-xs); color: var(--color-text); }
+.ac-pack-tile__role code { font-size: var(--font-size-xs); }
 .ac-pack-tile__desc { margin: 0; color: var(--color-text-muted); font-size: var(--font-size-xs); }
+.ac-pack-tile__ws { display: flex; flex-wrap: wrap; gap: var(--space-1); }
 .ac-pack-tile__children { display: flex; flex-direction: column; gap: var(--space-1); margin: 0; padding: var(--space-2) 0 0 var(--space-4); border: 0; border-top: 1px solid var(--color-border); }
 .ac-pack-tile__children:disabled { opacity: 0.5; }
 .ac-pack-tile__child { display: flex; align-items: center; gap: var(--space-2); font-size: var(--font-size-sm); cursor: pointer; }

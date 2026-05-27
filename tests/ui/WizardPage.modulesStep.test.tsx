@@ -82,8 +82,8 @@ const DETECT_RESPONSE = {
 interface Call { method: string; path: string; body: unknown }
 
 // Total = 4 (extended lead: ai-tools, roles, packs, modules) + 8 core = 12. Step index 3 lands on modules.
-const EXTENDED_TOTAL = 12;
-const MODULES_STEP_INDEX = 3;
+const EXTENDED_TOTAL = 13;
+const MODULES_STEP_INDEX = 4;
 
 function installFetchMock(overrides: { detect?: unknown; detectStatus?: number } = {}): { calls: Call[]; restore: () => void } {
     const calls: Call[] = [];

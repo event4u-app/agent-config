@@ -86,6 +86,7 @@ import {
     packsTouched,
     saving,
     schema,
+    welcomePrefilled,
     selectedPacks,
     selectedRoles,
     selectedTools,
@@ -273,7 +274,7 @@ async function loadAll(): Promise<void> {
         // the step body would hang on "Loading .agent-user.yml…" or render
         // an empty review list.
         const resumed = stepAt(stepIndex.value, { extended: extendedSteps.value });
-        if (resumed.kind === 'userMd' || resumed.kind === 'review') {
+        if (resumed.kind === 'welcome' || resumed.kind === 'userMd' || resumed.kind === 'review') {
             void loadUserMdOnce();
         }
         if (resumed.kind === 'modules') {
@@ -402,6 +403,7 @@ interface ManifestResponse {
         description?: string;
         default_packs?: string[];
         optional_packs?: string[];
+        example_roles?: string[];
     }>;
 }
 
@@ -457,6 +459,7 @@ async function loadDiscoveryOnce(): Promise<void> {
                 description: w.description ?? '',
                 default_packs: w.default_packs ?? [],
                 optional_packs: w.optional_packs ?? [],
+                ...(w.example_roles !== undefined ? { example_roles: w.example_roles } : {}),
             }));
         // Strip the `pack-` prefix so ids match the manifest. Unknown
         // signals (e.g. future detector additions not yet in the
@@ -694,7 +697,7 @@ async function goTo(nextIndex: number): Promise<void> {
     stepIndex.value = target;
     banner.value = null;
     const next = stepAt(target, { extended: extendedSteps.value });
-    if (next.kind === 'userMd') {
+    if (next.kind === 'welcome' || next.kind === 'userMd') {
         void loadUserMdOnce();
     }
     if (next.kind === 'modules') {
@@ -1108,6 +1111,81 @@ function buildModulesConfig(): ProposedModulesBlock | null {
     };
 }
 
+const WELCOME_LANGUAGES = ['de', 'en', 'en-US', 'en-GB', 'fr', 'es', 'it', 'nl', 'pt', 'pt-BR'];
+
+/**
+ * Pre-fill the welcome step once: the name from the OS account (when the
+ * field is still empty) and the language from the browser locale (only when
+ * no `.agent-user.yml` already exists). Never overwrites a value the user
+ * already has on disk.
+ */
+function prefillWelcomeOnce(): void {
+    if (welcomePrefilled.value) return;
+    const cur = userMdBody.value;
+    // Body not loaded yet — retry on the next render rather than burning the
+    // guard (loadUserMdOnce populates it asynchronously).
+    if (cur === null) return;
+    welcomePrefilled.value = true;
+    let next = cur;
+    if (cur.identity.name.trim() === '') {
+        const sys = serverStatus.value?.systemUser;
+        if (sys !== undefined && sys.trim() !== '') {
+            next = { ...next, identity: { ...next.identity, name: sys } };
+        }
+    }
+    if (!userMdExists.value && typeof navigator !== 'undefined') {
+        const code = (navigator.language || '').split('-')[0];
+        if (code.length >= 2) next = { ...next, language: code };
+    }
+    if (next !== cur) userMdBody.value = next;
+}
+
+/**
+ * Welcome step (Step 1, both modes in install): name + language, pulled out
+ * of the user-md step so the agent has them up front. Pre-filled from the OS
+ * account + browser locale via {@link prefillWelcomeOnce}.
+ */
+function WelcomeStepBody(): preact.JSX.Element {
+    const body = userMdBody.value;
+    // Re-run once the user-md body is loaded (loadUserMdOnce is async, so the
+    // body is usually null on first mount).
+    useEffect(() => { prefillWelcomeOnce(); }, [body]);
+    if (body === null) return <p>Loading…</p>;
+    const patch = (next: UserIdentity): void => {
+        userMdBody.value = { ...next, last_updated: new Date().toISOString().slice(0, 10) };
+        userMdSkipped.value = false;
+    };
+    return (
+        <div class="ac-wizard-step-stub ac-wizard__module-fields">
+            <p>
+                Tell the agent who you are. We pre-filled what we could detect —
+                adjust freely. Stored in <code>.agent-user.yml</code>.
+            </p>
+            <div class="ac-field">
+                <label class="ac-field__label" for="welcome-name">Name</label>
+                <input
+                    class="ac-input" id="welcome-name" type="text"
+                    placeholder="How should the agent address you?"
+                    value={body.identity.name}
+                    onInput={(e): void => patch({ ...body, identity: { ...body.identity, name: (e.currentTarget as HTMLInputElement).value } })}
+                />
+            </div>
+            <div class="ac-field">
+                <label class="ac-field__label" for="welcome-lang">Language</label>
+                <input
+                    class="ac-input" id="welcome-lang" type="text" list="welcome-lang-list"
+                    placeholder="BCP-47 code, e.g. de, en, en-US"
+                    value={body.language}
+                    onInput={(e): void => patch({ ...body, language: (e.currentTarget as HTMLInputElement).value })}
+                />
+                <datalist id="welcome-lang-list">
+                    {WELCOME_LANGUAGES.map((l) => <option key={l} value={l} />)}
+                </datalist>
+            </div>
+        </div>
+    );
+}
+
 /**
  * Renderer for the extended-mode `ai-tools` step. The list is static
  * (mirrors `_VALID_TOOLS` in `scripts/install.py`) because tools are a
@@ -1207,6 +1285,13 @@ function RolesStepBody(): preact.JSX.Element {
                                     />
                                     <span class="ac-pack-tile__title">{ws.label}</span>
                                 </label>
+                                {(ws.example_roles ?? []).length > 0
+                                    ? (
+                                        <p class="ac-pack-tile__role">
+                                            e.g. {(ws.example_roles ?? []).join(', ')}
+                                        </p>
+                                    )
+                                    : null}
                                 {ws.description !== ''
                                     ? <p class="ac-pack-tile__desc">{ws.description}</p>
                                     : null}
@@ -1247,6 +1332,28 @@ function PacksStepBody(): preact.JSX.Element {
     }
     const sel = selectedPacks.value;
     const detected = new Set(detectedPackIds.value);
+    // Workspace id → label, and the user's selected roles, so each pack tile
+    // can badge the areas it belongs to (and highlight the ones the user picked
+    // on Step 2 — "this pack matches your role").
+    const wsLabel = new Map(discoveryWorkspaces.value.map((w) => [w.id, w.label]));
+    const pickedRoles = selectedRoles.value;
+    const renderWorkspaceBadges = (ids: string[] | undefined): preact.JSX.Element | null => {
+        const list = (ids ?? []).filter((id) => id !== 'agent-config-maintainer');
+        if (list.length === 0) return null;
+        return (
+            <span class="ac-pack-tile__ws">
+                {list.map((id) => (
+                    <span
+                        key={id}
+                        class={`ac-badge ac-badge--ws${pickedRoles[id] === true ? ' ac-badge--ws-active' : ''}`}
+                        title={pickedRoles[id] === true ? 'Matches a role you picked' : 'Workspace / area'}
+                    >
+                        {wsLabel.get(id) ?? id}
+                    </span>
+                ))}
+            </span>
+        );
+    };
     // engineering-base is an auto-included dependency — never shown as a tile
     // (road-to-wizard-ux-improvements § Phase 4).
     const visible = discoveryPacks.value.filter((p) => p.id !== 'engineering-base');
@@ -1316,6 +1423,7 @@ function PacksStepBody(): preact.JSX.Element {
                                             ? <span class="ac-badge ac-badge--installed">auto-detected</span>
                                             : null}
                                     </label>
+                                    {renderWorkspaceBadges(pack.workspaces)}
                                     {pack.description !== ''
                                         ? <p class="ac-pack-tile__desc">{pack.description}</p>
                                         : null}
@@ -1530,13 +1638,14 @@ function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
     // four install-only steps (ai-tools / roles / packs / modules) and the
-    // settings section. The user just finished modules at index 3 and
-    // is now landing on the first settings step (identity, index 4). Render
-    // the handoff only when the install entry mode is active and the user
-    // has not already acknowledged the transition in this session.
+    // settings section. With the welcome step at index 0 the install-only
+    // lead is ai-tools(1)/roles(2)/packs(3)/modules(4); the user just finished
+    // modules and is landing on the first settings step (identity, index 5).
+    // Render the handoff only when the install entry mode is active and the
+    // user has not already acknowledged the transition in this session.
     const onContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && stepIndex.value === 4
+        && stepIndex.value === 5
         && !continueAcknowledged.value;
     if (onContinueHandoff) {
         return <ContinueScreen />;
@@ -1568,12 +1677,16 @@ function StepBody(): preact.JSX.Element | null {
                 value={userMdBody.value}
                 errors={errors.value}
                 hideRole={extendedSteps.value && wizardMode.value === 'install'}
+                hideIdentityBasics={extendedSteps.value && wizardMode.value === 'install'}
                 onChange={(next): void => {
                     userMdBody.value = next;
                     userMdSkipped.value = false;
                 }}
             />
         );
+    }
+    if (step.kind === 'welcome') {
+        return <WelcomeStepBody />;
     }
     if (step.kind === 'aiTools') {
         return <AiToolsStepBody />;
@@ -1675,7 +1788,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
     // nav like Skip and jumps to Review.
     const isContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && idx === 4
+        && idx === 5
         && !continueAcknowledged.value;
 
     const rec = recoveryStatus.value;

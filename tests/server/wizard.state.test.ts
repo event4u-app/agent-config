@@ -32,7 +32,7 @@ describe('wizard state + finish', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(8);
+        expect(body.totalSteps).toBe(9);
         expect(body.partial).toEqual({});
         expect(body.startedAt).toBeNull();
     });
