@@ -121,6 +121,27 @@ export interface CreateAppOptions {
      * the only legitimate caller.
      */
     installRouteOptions?: InstallRouteOptions;
+    /**
+     * Browser-lifecycle watchdog. When set (only by `runUiServe` in
+     * real-serve mode — never by tests), the server shuts itself down
+     * once the browser that drives it goes away:
+     *
+     *   - The SPA fires `navigator.sendBeacon('/api/v1/shutdown')` on
+     *     `pagehide`, which calls `onIdle` immediately (prompt path).
+     *   - As a backstop for crashes / OS-kills where the beacon never
+     *     fires, an idle timer arms on the FIRST authed `/api/*` request
+     *     (proving a client connected) and calls `onIdle` after
+     *     `timeoutMs` with no further activity. It never arms while no
+     *     client has connected, so headless / manual-connect servers are
+     *     not killed before the operator attaches.
+     */
+    idleShutdown?: {
+        onIdle: () => void | Promise<void>;
+        /** Idle backstop after a client has connected. Default 300_000ms. */
+        timeoutMs?: number;
+        /** How often the backstop checks for idleness. Default 30_000ms. */
+        intervalMs?: number;
+    };
 }
 
 const ALLOWED_HOSTS = (port: number): ReadonlySet<string> =>
@@ -179,6 +200,39 @@ export async function createApp(opts: CreateAppOptions): Promise<FastifyInstance
         }
         return undefined;
     });
+
+    // Browser-lifecycle watchdog (real-serve only — see CreateAppOptions).
+    if (opts.idleShutdown !== undefined) {
+        const { onIdle } = opts.idleShutdown;
+        const timeoutMs = opts.idleShutdown.timeoutMs ?? 300_000;
+        const intervalMs = opts.idleShutdown.intervalMs ?? 30_000;
+        let lastActivity = 0; // 0 = disarmed: no client has connected yet.
+        let fired = false;
+        const timer: ReturnType<typeof setInterval> = setInterval(() => {
+            if (lastActivity === 0) return; // not yet armed
+            if (Date.now() - lastActivity > timeoutMs) fire();
+        }, intervalMs);
+        function fire(): void {
+            if (fired) return;
+            fired = true;
+            clearInterval(timer);
+            void onIdle();
+        }
+        // Never let the watchdog alone keep the process alive.
+        if (typeof timer.unref === 'function') timer.unref();
+        app.addHook('onClose', async () => { clearInterval(timer); });
+
+        // Any authed /api/* request marks the client alive and arms the
+        // backstop. The dedicated shutdown beacon fires immediately.
+        app.addHook('onRequest', async (request) => {
+            if (request.url.startsWith('/api/')) lastActivity = Date.now();
+            return undefined;
+        });
+        app.post('/api/v1/shutdown', async () => {
+            fire();
+            return { ok: true };
+        });
+    }
 
     await app.register(fastifyStatic, {
         root: opts.uiDistDir,

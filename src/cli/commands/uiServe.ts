@@ -115,6 +115,18 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         logger.info(`legacy-read fallback: ${legacyReadRoot}`);
     }
 
+    let shuttingDown = false;
+    const gracefulExit = async (reason: string): Promise<void> => {
+        if (shuttingDown) return;
+        shuttingDown = true;
+        logger.info(`${reason} — shutting down`);
+        try {
+            await app.close();
+        } finally {
+            process.exit(0);
+        }
+    };
+
     const app = await createApp({
         writeRoot,
         legacyReadRoot,
@@ -125,6 +137,10 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         expectedPort: port,
         dryRun,
         extendedSteps: opts.extendedSteps === true,
+        // Shut the server down when the browser that drives it goes away.
+        // The SPA's pagehide beacon hits POST /api/v1/shutdown for a prompt
+        // exit; the idle backstop covers crashes where the beacon is lost.
+        idleShutdown: { onIdle: () => { void gracefulExit('browser closed'); } },
         ...(opts.initialStep !== undefined ? { initialStep: opts.initialStep } : {}),
         ...(opts.wizardMode !== undefined ? { wizardMode: opts.wizardMode } : {}),
     });
@@ -159,16 +175,8 @@ export async function runUiServe(opts: UiServeOptions): Promise<number> {
         await openBrowser(url);
     }
 
-    const stop = async (signal: NodeJS.Signals): Promise<void> => {
-        logger.info(`received ${signal} — shutting down`);
-        try {
-            await app.close();
-        } finally {
-            process.exit(0);
-        }
-    };
-    process.on('SIGINT', () => { void stop('SIGINT'); });
-    process.on('SIGTERM', () => { void stop('SIGTERM'); });
+    process.on('SIGINT', () => { void gracefulExit('received SIGINT'); });
+    process.on('SIGTERM', () => { void gracefulExit('received SIGTERM'); });
 
     return new Promise<number>(() => {
         // Resolves when the process exits via signal handler above.
