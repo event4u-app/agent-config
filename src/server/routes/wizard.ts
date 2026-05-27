@@ -30,7 +30,7 @@ import { mergeIntoTemplate, parseYaml, replaceScalar } from '../io/yamlIO.js';
 import { commitMulti, type CommitPayload } from '../io/atomicMultiWrite.js';
 import { writeAtomic } from '../io/atomicWrite.js';
 import { detectInstalledTools, isBinaryOnPath, knownToolIds } from '../../install/toolDetection.js';
-import { readConfiguredTools } from '../../install/installedLock.js';
+import { readSelectedTools, writeSelectedTools } from '../../install/selectedTools.js';
 
 export interface WizardRouteOptions {
     /** Write root — every on-disk artefact (state, settings, user-md) resolves under this. */
@@ -592,13 +592,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
                 return reply;
             }
-            // `configured` = tools recorded in the global install lockfile
-            // (the user's prior selection). Step 1 pre-selects these on a
-            // repeat run; only when none are recorded does it fall back to
-            // pre-selecting every installed tool (first-run convenience).
+            // `configured` = the tools the user selected in a prior wizard run
+            // (wizard-tools.json), NOT every deployed tool. Step 1 pre-selects
+            // these on a repeat run; only when none are recorded does it fall
+            // back to pre-selecting every installed tool (first-run convenience).
             return {
                 tools: detectInstalledTools(),
-                configured: readConfiguredTools(new Set(knownToolIds())),
+                configured: readSelectedTools(new Set(knownToolIds())),
             };
         });
 
@@ -967,6 +967,13 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 if (!reply.raw.writableEnded) controller.abort();
             };
             reply.raw.on('close', onClose);
+
+            // Record the user's tool selection so the next wizard run
+            // pre-selects exactly these (detect-tools `configured`). Written
+            // on the real-apply path only — a dry-run preview must not.
+            if (payload.schema_version === 'wizard-v2') {
+                writeSelectedTools(payload.tools);
+            }
 
             let written = 0;
             let total = 0;
