@@ -328,6 +328,8 @@ export const selectedPacks = signal<Record<string, boolean>>({});
  * after a manual edit the role-driven seeding stops clobbering the choice.
  */
 export const packsTouched = signal(false);
+/** Guard so the welcome step's name/language pre-fill runs at most once. */
+export const welcomePrefilled = signal(false);
 
 /**
  * Wire-shape of an InstallPlan returned by `POST /api/v1/install/plan`

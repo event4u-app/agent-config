@@ -20,8 +20,8 @@ import {
     userMdExists, userMdInitial, userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const ROLES_STEP_INDEX = 1;
-const EXTENDED_TOTAL = 12;
+const ROLES_STEP_INDEX = 2;
+const EXTENDED_TOTAL = 13;
 
 const SETTINGS_SCHEMA = {
     type: 'object',
@@ -118,9 +118,9 @@ describe('WizardPage roles step', () => {
             fireEvent.click(roleCheckbox(container, 'Founder'));
             await waitFor(() => expect(selectedRoles.value['founder']).toBe(true));
 
-            // Advance to the packs step (index 2) — seedPacksFromRoles runs.
+            // Advance to the packs step (index 3) — seedPacksFromRoles runs.
             fireEvent.click(getByRole('button', { name: 'Next' }));
-            await waitFor(() => expect(stepIndex.value).toBe(2));
+            await waitFor(() => expect(stepIndex.value).toBe(3));
             await waitFor(() => expect(selectedPacks.value['founder-strategy']).toBe(true));
             expect(selectedPacks.value['product-basic']).toBeFalsy();
         } finally {

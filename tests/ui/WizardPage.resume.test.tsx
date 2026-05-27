@@ -100,15 +100,16 @@ describe('WizardPage resume', () => {
     });
 
     it('triggers loadUserMdOnce when resuming directly on the userMd step (no Loading hang)', async () => {
-        // Resume on step 6 (user-md — shifted +1 by the ai-council step at
-        // index 5). Without the post-loadAll dispatch the body fetch would
+        // Resume on step 7 (user-md). Non-extended order: welcome(0), editor(1),
+        // personality(2), cost(3), roadmap-quality(4), memory(5), ai-council(6),
+        // user-md(7). Without the post-loadAll dispatch the body fetch would
         // never fire and the form would stay stuck on "Loading .agent-user.md…".
-        const restore = installFetchMock(6, {});
+        const restore = installFetchMock(7, {});
         try {
             render(<WizardPage path="/wizard" />);
             await waitFor(() => expect(loaded.value).toBe(true));
             await waitFor(() => expect(userMdLoaded.value).toBe(true));
-            expect(stepIndex.value).toBe(6);
+            expect(stepIndex.value).toBe(7);
         } finally {
             restore();
         }

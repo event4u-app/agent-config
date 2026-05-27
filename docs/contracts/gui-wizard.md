@@ -220,10 +220,19 @@ effect):
 
 | `extendedSteps` | Steps | Layout |
 |---|---|---|
-| `false` | 8 | `editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
-| `true`  | 12 | `ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `false` | 9 | `welcome → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `true`  | 13 | `welcome → ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
 
-The `roles` step (Step 2) presents the discovery **workspaces** as the *area*
+The `welcome` step (Step 1, both modes) collects **name + language** up front —
+pulled out of the user-md step so the agent knows who it's talking to before
+anything else. Name pre-fills from the OS account (`GET /api/v1/ping`
+`systemUser`) when empty; language pre-fills from the browser locale
+(`navigator.language`) when no `.agent-user.yml` exists yet. In install mode
+the user-md step hides its name + language fields (collected here); setup mode
+skips the welcome step (it lands on the first settings step) and keeps those
+fields in the user-md form.
+
+The `roles` step presents the discovery **workspaces** as the *area*
 (Engineering, Product, Finance, Founder, GTM, Ops, …; the maintainer workspace
 is hidden) — each tile shows the area label, then advisory `example_roles`
 (e.g. Engineering → "Developer, CTO"; Finance → "CFO") and the description. The
@@ -240,22 +249,23 @@ non-locked `decision_resolution` classes) via `GET`/`POST /api/v1/wizard/ai-coun
 the file is written with comment-preserving `replaceScalar` edits.
 
 The step shapes themselves are declared in
-[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the four
-prepended lead steps (`ai-tools`, `roles`, `packs`, `modules`) carry no
-`paths` and use dedicated renderers in `WizardPage.tsx`.
+[`src/ui/wizard/steps.ts`](../../src/ui/wizard/steps.ts) — the always-first
+`welcome` step plus the four extended-only lead steps (`ai-tools`, `roles`,
+`packs`, `modules`) carry no `paths` and use dedicated renderers in
+`WizardPage.tsx`.
 `getWizardSteps({ extended })` is the single resolver; the UI consumes the
 active list via `getActiveSteps()` / `activeTotalSteps()` so a server toggle
 takes effect on the next reload without a code change.
 
-### Step 1 (AI tools) / Step 2 (roles) / Step 3 (packs) selection rules
+### AI-tools / roles / packs selection rules (Steps 2-4)
 
-- **Step 1 pre-selection.** `detect-tools` returns `tools` (installed on the
+- **AI-tools pre-selection.** `detect-tools` returns `tools` (installed on the
   machine) and `configured` (the user's prior selection, persisted to
   `~/.event4u/agent-config/wizard-tools.json` on each real apply). On a repeat
   run the wizard pre-selects exactly the `configured` tools; only on a genuine
   first run (no prior selection) does it fall back to pre-selecting every
   installed tool.
-- **Step 2 → Step 3 recommendation.** Each selected role contributes its
+- **Roles → packs recommendation.** Each selected role contributes its
   workspace `default_packs`; the union pre-selects packs on Step 3 (plus
   auto-detected project packs). The recommendation stops clobbering the
   selection once the user manually edits a pack. Each pack tile also badges
@@ -270,9 +280,9 @@ takes effect on the next reload without a code change.
 - **No-autodetect packs.** Some packs are never pre-selected from project
   signals (`python` — a non-engineer may have python installed but not need
   it). The pack stays available to tick manually.
-- **Empty-selection gate.** Both lead steps block Next until at least one
-  effective selection exists (≥ 1 tool on Step 1; ≥ 1 installable pack on
-  Step 2).
+- **Empty-selection gate.** The AI-tools, roles, and packs steps each block
+  Next until at least one effective selection exists (≥ 1 tool, ≥ 1 role, and
+  ≥ 1 installable pack respectively).
 
 ### `GET /api/v1/wizard/state` payload
 

@@ -120,8 +120,8 @@ const LEGACY_SETTINGS_REL = '.agent-settings.yml';
 // roadmap-quality, memory, ai-council, user-md, review —
 // road-to-wizard-ux-improvements § Phase 8 added ai-council). Extended mode
 // prepends three install-only steps (ai-tools + packs + modules) → 11.
-const DEFAULT_TOTAL_STEPS = 8;
-const EXTENDED_TOTAL_STEPS = 12;
+const DEFAULT_TOTAL_STEPS = 9;
+const EXTENDED_TOTAL_STEPS = 13;
 
 /**
  * Discovery-manifest path. Resolved from the package root the server

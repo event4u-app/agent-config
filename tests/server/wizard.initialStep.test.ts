@@ -26,7 +26,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
 
     afterEach(async () => { await ctx.cleanup(); });
 
-    it('install mode lands on Step 1 (index 0) with 12 total steps', async () => {
+    it('install mode lands on Step 1 (index 0) with 13 total steps', async () => {
         ctx = await bootTestApp({ port: 41610, extendedSteps: true, initialStep: 0 });
         const res = await ctx.app.inject({
             method: 'GET',
@@ -36,13 +36,13 @@ describe('wizard initialStep (B0 dispatch)', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(12);
+        expect(body.totalSteps).toBe(13);
         expect(body.extendedSteps).toBe(true);
         expect(body.startedAt).toBeNull();
     });
 
-    it('setup mode lands on Step 5 (index 4) with 12 total steps', async () => {
-        ctx = await bootTestApp({ port: 41611, extendedSteps: true, initialStep: 4 });
+    it('setup mode lands on the first settings step (index 5) with 13 total steps', async () => {
+        ctx = await bootTestApp({ port: 41611, extendedSteps: true, initialStep: 5 });
         const res = await ctx.app.inject({
             method: 'GET',
             url: '/api/v1/wizard/state',
@@ -50,8 +50,8 @@ describe('wizard initialStep (B0 dispatch)', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
-        expect(body.step).toBe(4);
-        expect(body.totalSteps).toBe(12);
+        expect(body.step).toBe(5);
+        expect(body.totalSteps).toBe(13);
         expect(body.extendedSteps).toBe(true);
         expect(body.startedAt).toBeNull();
     });
@@ -66,7 +66,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(8);
+        expect(body.totalSteps).toBe(9);
         expect(body.extendedSteps).toBe(false);
     });
 
@@ -78,8 +78,8 @@ describe('wizard initialStep (B0 dispatch)', () => {
             headers: authHeaders(ctx.token, ctx.host),
         });
         const body = res.json() as StateBody;
-        expect(body.step).toBe(11);
-        expect(body.totalSteps).toBe(12);
+        expect(body.step).toBe(12);
+        expect(body.totalSteps).toBe(13);
     });
 
     it('clamps a negative initialStep to 0', async () => {

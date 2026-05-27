@@ -26,6 +26,8 @@ export interface ServerStatus {
      * safe by hiding the toggle.
      */
     projectScopeAvailable: boolean;
+    /** Best-effort OS account name, used to pre-fill the welcome step. */
+    systemUser?: string;
 }
 
 export const serverStatus = signal<ServerStatus | null>(null);

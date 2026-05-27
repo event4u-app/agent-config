@@ -22,8 +22,8 @@ import {
     userMdLoaded, userMdSkipped, values, wizardComplete,
 } from '../../src/ui/wizard/state.js';
 
-const PACKS_STEP_INDEX = 2;
-const EXTENDED_TOTAL = 12;
+const PACKS_STEP_INDEX = 3;
+const EXTENDED_TOTAL = 13;
 
 const SETTINGS_SCHEMA = {
     type: 'object',
