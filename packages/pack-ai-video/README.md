@@ -5,7 +5,7 @@
 AI video pipeline (per ADR-011, the only heavyweight domain).
 
 - **id**: `ai-video`
-- **version**: `4.2.0`
+- **version**: `4.3.0`
 - **owner**: small-business
 - **requires**: —
 - **artefacts**: 6
