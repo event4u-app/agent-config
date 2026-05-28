@@ -39,7 +39,7 @@ export interface BootOptions {
     replay?: boolean;
     /** Boot in dry-run mode (every write returns a `preview` payload). */
     dryRun?: boolean;
-    /** Enable the extended 10-step wizard (ai-tools + packs + modules lead). */
+    /** Enable the extended 13-step wizard (ai-tools/roles/packs lead, modules step at the end). */
     extendedSteps?: boolean;
     /** Initial wizard step index reported when no `wizard-state.json` exists. */
     initialStep?: number;

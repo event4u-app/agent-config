@@ -47,21 +47,23 @@ export interface UiServeOptions {
      */
     dryRun?: boolean;
     /**
-     * Enable the extended 10-step wizard (ai-tools + packs + modules
-     * ahead of the canonical 7 settings steps). road-to-global-only-install
-     * § Phase 1.5. Default off for `ui:serve`; `setup` flips this on so
-     * the unified onboarding flow is the default landing.
+     * Enable the extended 13-step wizard (install-only lead ai-tools +
+     * roles + packs ahead of the settings steps, project modules step at
+     * the end before review). road-to-global-only-install § Phase 1.5.
+     * Default off for `ui:serve`; `setup` flips this on so the unified
+     * onboarding flow is the default landing.
      */
     extendedSteps?: boolean;
     /**
      * Initial wizard step index forwarded to the server when no
      * persisted state exists. road-to-unified-setup § B0 — `install`
-     * passes 0 (AI tools); `setup` passes 3 (Identity).
+     * passes 0 (AI tools); `setup` passes 4 (Identity).
      */
     initialStep?: number;
     /**
      * Wizard entry mode — `install` shows the hard-stop continue-screen
-     * after Step 3 (modules); `setup` skips it. road-to-unified-setup § B5.
+     * at identity (after the ai-tools/roles/packs lead); `setup` skips it.
+     * road-to-unified-setup § B5.
      */
     wizardMode?: 'install' | 'setup';
 }

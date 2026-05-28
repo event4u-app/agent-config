@@ -148,6 +148,7 @@ code {
     border-radius: var(--radius-md);
 }
 .ac-banner--error { border-left-color: var(--color-danger); }
+.ac-banner--success { border-left-color: var(--color-success); }
 
 .ac-section {
     background: var(--color-surface);

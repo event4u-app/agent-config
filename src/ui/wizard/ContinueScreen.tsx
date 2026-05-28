@@ -1,6 +1,8 @@
 /**
- * ContinueScreen — hard-stop handoff after the three install-only steps
- * (ai-tools / packs / modules), before "Editor and tooling".
+ * ContinueScreen — hard-stop handoff after the install-only lead
+ * (ai-tools / roles / packs), before "Editor and tooling". The project
+ * `modules` step is no longer part of this lead; it sits at the end of
+ * the flow (before Review), so it is reached after the settings section.
  *
  * road-to-wizard-ux-improvements § Phase 6: this is a presentational "Step 3.5"
  * screen. The wizard footer drives the actions — **Next** acknowledges and
@@ -19,15 +21,16 @@ export function ContinueScreen(): preact.JSX.Element {
         <section class="ac-continue-screen" aria-labelledby="ac-continue-title">
             <h2 id="ac-continue-title">Install complete — continue with setup?</h2>
             <p>
-                The three install steps (AI tools, capability packs, module
-                roots) are captured. Use the footer to continue:
+                Your install selections (AI tools, roles, capability packs)
+                are captured. Use the footer to continue:
             </p>
             <ul>
                 <li>
                     <strong>Next</strong> — go through the remaining
                     personalisation steps: editor + tooling, personality, cost
                     profile, roadmap &amp; quality, memory, your
-                    <code> .agent-user.yml</code>.
+                    <code> .agent-user.yml</code>, and finally the project
+                    module roots.
                 </li>
                 <li>
                     <strong>Finish install here</strong> — skip the rest and

@@ -74,17 +74,18 @@ export interface WizardRouteOptions {
      * Initial step index reported by `GET /api/v1/wizard/state` when no
      * `wizard-state.json` is present. road-to-unified-setup § B0 — the
      * `install` subcommand lands at index 0 (AI tools) and `setup` lands
-     * at index 3 (Identity / first settings step), both off the same
-     * 10-step extended flow. Ignored when state has been persisted: a
+     * at index 4 (Identity / first settings step), both off the same
+     * 13-step extended flow. Ignored when state has been persisted: a
      * resumed wizard always picks up where the user left off.
      */
     initialStep?: number;
     /**
      * Wizard entry mode — road-to-unified-setup § B5. `install` runs the
-     * three install-only steps (ai-tools / packs / modules) then renders
-     * a hard-stop continue-screen before identity. `setup` skips the lead
-     * and lands on identity. `null` / undefined preserves the canonical
-     * navigation contract for legacy ui:serve callers.
+     * install-only lead (ai-tools / roles / packs) then renders a
+     * hard-stop continue-screen at identity. `setup` skips the lead and
+     * lands on identity. The project `modules` step sits at the end of the
+     * flow (before review) in both modes. `null` / undefined preserves the
+     * canonical navigation contract for legacy ui:serve callers.
      */
     wizardMode?: 'install' | 'setup' | null;
     /**
@@ -115,11 +116,11 @@ const AI_COUNCIL_KEY_INSTALL: Readonly<Record<string, string>> = {
 /** Legacy flat-root files — read for migration, deleted on successful finish. */
 const LEGACY_USER_MD_REL = '.agent-user.md';
 const LEGACY_SETTINGS_REL = '.agent-settings.yml';
-// Step count mirrors the UI's `WIZARD_STEPS` array in `src/ui/wizard/steps.ts`.
-// Bump in lockstep. Core flow = 8 steps (editor, personality, cost,
-// roadmap-quality, memory, ai-council, user-md, review —
-// road-to-wizard-ux-improvements § Phase 8 added ai-council). Extended mode
-// prepends three install-only steps (ai-tools + packs + modules) → 11.
+// Step count mirrors the UI's `getWizardSteps` plan in `src/ui/wizard/steps.ts`.
+// Bump in lockstep. Default flow = welcome + 8 core steps (editor, personality,
+// cost, roadmap-quality, memory, ai-council, user-md, review) → 9. Extended
+// mode adds the install-only lead (ai-tools + roles + packs) and appends the
+// project `modules` step just before review → 13.
 const DEFAULT_TOTAL_STEPS = 9;
 const EXTENDED_TOTAL_STEPS = 13;
 
@@ -707,13 +708,9 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
         // surface candidate root_paths + a prefilled `modules:` block.
         // Same root-resolution rule as `/auto-detect` (legacyReadRoot ??
         // cwd) — the consumer repo the maintainer is running the wizard
-        // against. Gated by extended-mode so the canonical 7-step flow
-        // stays clean.
+        // against. Available on every surface: module configuration is now
+        // its own top-level "Projekt" page, not a wizard-only step.
         app.get('/api/v1/modules/detect', async (_request, reply) => {
-            if (!extended) {
-                await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'extended-mode endpoint disabled' } });
-                return reply;
-            }
             const root = legacyReadRoot ?? process.cwd();
             const scriptPath = join(opts.packageRoot, 'scripts', 'propose_modules_config.py');
             try {
@@ -735,6 +732,43 @@ export function wizardRoute(opts: WizardRouteOptions & { packageRoot: string }):
                 const message = err instanceof Error ? err.message : 'module detect bridge failed';
                 await reply.code(500).send({ error: { code: 'DETECT_FAILED', message } });
                 return reply;
+            }
+        });
+
+        // Modules apply endpoint — persists the `modules:` block to the
+        // consumer project's `.agent-project-settings.yml` via
+        // `apply_modules_config.py`. Standalone counterpart to the modules
+        // payload the wizard finish used to carry: module configuration is
+        // now its own "Projekt" surface, so it saves independently of the
+        // global-settings wizard. Project-scoped by construction (writes the
+        // team file under `legacyReadRoot ?? cwd`).
+        app.post('/api/v1/modules/apply', async (request, reply) => {
+            const parsed = modulesConfigSchema.safeParse(request.body ?? {});
+            if (!parsed.success) {
+                await reply.code(422).send({
+                    error: { code: 'VALIDATION', message: 'invalid modulesConfig', fields: zodIssuesToFields(parsed.error.issues) },
+                });
+                return reply;
+            }
+            const projectRoot = legacyReadRoot ?? process.cwd();
+            const scriptPath = join(opts.packageRoot, 'scripts', 'apply_modules_config.py');
+            const tmpPath = join(tmpdir(), `agent-config-modules-${randomBytes(8).toString('hex')}.json`);
+            try {
+                await fs.writeFile(tmpPath, JSON.stringify(parsed.data), { mode: 0o600 });
+                const result = await spawnInstaller(scriptPath, ['--project', projectRoot, '--input-file', tmpPath]);
+                if (result.exitCode !== 0) {
+                    await reply.code(500).send({
+                        error: { code: 'MODULES_APPLY_FAILED', message: result.stderr || 'modules apply bridge exited non-zero', exitCode: result.exitCode },
+                    });
+                    return reply;
+                }
+                return { ok: true, appliedTo: result.stdout.trim() || null, projectRoot };
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'modules apply bridge failed';
+                await reply.code(500).send({ error: { code: 'MODULES_APPLY_FAILED', message } });
+                return reply;
+            } finally {
+                await fs.unlink(tmpPath).catch(() => undefined);
             }
         });
 

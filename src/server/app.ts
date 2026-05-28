@@ -97,7 +97,7 @@ export interface CreateAppOptions {
      */
     dryRun?: boolean;
     /**
-     * Enable the extended 10-step wizard endpoints (auto-detect, manifest,
+     * Enable the extended 13-step wizard endpoints (auto-detect, manifest,
      * apply). road-to-global-only-install § Phase 1.5.
      */
     extendedSteps?: boolean;
@@ -105,12 +105,13 @@ export interface CreateAppOptions {
      * Initial wizard step index reported by `GET /api/v1/wizard/state`
      * when no `wizard-state.json` is persisted. road-to-unified-setup
      * § B0 — `install` mode lands at 0 (AI tools); `setup` mode lands
-     * at 3 (Identity). Ignored once a partial run is on disk.
+     * at 4 (Identity). Ignored once a partial run is on disk.
      */
     initialStep?: number;
     /**
      * Wizard entry mode — `install` triggers the hard-stop continue-screen
-     * after Step 3 (modules), `setup` skips it. road-to-unified-setup § B5.
+     * at identity (after the ai-tools/roles/packs lead), `setup` skips it.
+     * road-to-unified-setup § B5.
      */
     wizardMode?: 'install' | 'setup' | null;
     /**

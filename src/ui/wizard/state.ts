@@ -27,9 +27,10 @@ export interface WizardServerState {
     extendedSteps?: boolean;
     /**
      * Wizard entry mode — `install` triggers the hard-stop continue-screen
-     * after Step 3 (modules); `setup` skips it. Older server bundles omit
-     * the field; the UI treats `null` / undefined as "no special mode" and
-     * never renders the continue-screen. road-to-unified-setup § B5.
+     * at identity (after the ai-tools/roles/packs lead); `setup` skips it.
+     * Older server bundles omit the field; the UI treats `null` / undefined
+     * as "no special mode" and never renders the continue-screen.
+     * road-to-unified-setup § B5.
      */
     wizardMode?: 'install' | 'setup' | null;
 }
@@ -463,9 +464,9 @@ export const legacyV3Error = signal<string | null>(null);
 
 /**
  * Wizard entry mode — set on load from `/api/v1/wizard/state.wizardMode`.
- * Drives the hard-stop continue-screen between Step 3 (modules) and Step 4
- * (identity) when in `install` mode. `setup` and `null` bypass it.
- * road-to-unified-setup § B5.
+ * Drives the hard-stop continue-screen at the first settings step (identity),
+ * after the ai-tools/roles/packs lead, when in `install` mode. `setup` and
+ * `null` bypass it. road-to-unified-setup § B5.
  */
 export const wizardMode = signal<'install' | 'setup' | null>(null);
 

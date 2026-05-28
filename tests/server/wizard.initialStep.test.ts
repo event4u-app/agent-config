@@ -4,7 +4,7 @@
  * `GET /api/v1/wizard/state` when no `wizard-state.json` is persisted.
  *
  *   install mode → extendedSteps=true, initialStep=0  (AI tools)
- *   setup   mode → extendedSteps=true, initialStep=3  (Identity)
+ *   setup   mode → extendedSteps=true, initialStep=4  (Identity)
  *
  * A persisted wizard state must override `initialStep` so a partial run
  * is never thrown away by a mode switch.
@@ -41,8 +41,8 @@ describe('wizard initialStep (B0 dispatch)', () => {
         expect(body.startedAt).toBeNull();
     });
 
-    it('setup mode lands on the first settings step (index 5) with 13 total steps', async () => {
-        ctx = await bootTestApp({ port: 41611, extendedSteps: true, initialStep: 5 });
+    it('setup mode lands on the first settings step (index 4) with 13 total steps', async () => {
+        ctx = await bootTestApp({ port: 41611, extendedSteps: true, initialStep: 4 });
         const res = await ctx.app.inject({
             method: 'GET',
             url: '/api/v1/wizard/state',
@@ -50,7 +50,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
         });
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
-        expect(body.step).toBe(5);
+        expect(body.step).toBe(4);
         expect(body.totalSteps).toBe(13);
         expect(body.extendedSteps).toBe(true);
         expect(body.startedAt).toBeNull();
@@ -105,7 +105,7 @@ describe('wizard initialStep (B0 dispatch)', () => {
     });
 
     it('surfaces wizardMode=setup when the setup command boots the server (B5)', async () => {
-        ctx = await bootTestApp({ port: 41621, extendedSteps: true, initialStep: 3, wizardMode: 'setup' });
+        ctx = await bootTestApp({ port: 41621, extendedSteps: true, initialStep: 4, wizardMode: 'setup' });
         const res = await ctx.app.inject({
             method: 'GET',
             url: '/api/v1/wizard/state',
