@@ -802,6 +802,29 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.6.0](https://github.com/event4u-app/agent-config/compare/4.5.0...4.6.0) (2026-05-28)
+
+### Features
+
+* **wizard:** global-only settings + dedicated Projekt surface ([dc229a9](https://github.com/event4u-app/agent-config/commit/dc229a9a61f0a14527b5c85f0cb7db03fbbc72f8))
+* **install:** deliver Claude hooks via plugin scope ([f76a7d1](https://github.com/event4u-app/agent-config/commit/f76a7d16e09369dacc466fb838463e5f04616480))
+
+### Documentation
+
+* **roadmap:** archive road-to-wizard-sse-hardening (complete) ([e565624](https://github.com/event4u-app/agent-config/commit/e5656240cca738acc5ba2aa3804d9d067820d071))
+* **roadmap:** mark wizard-sse-hardening Phase 1+2 done, sync dashboard ([6df030b](https://github.com/event4u-app/agent-config/commit/6df030b87cb6980c0118168af4e0140551b4678f))
+
+### Tests
+
+* **wizard:** cover SSE apply endpoint failure paths ([9ffa068](https://github.com/event4u-app/agent-config/commit/9ffa068a898038f2e880f1a28ceb979cb5bb56cf))
+
+### Chores
+
+* **changelog:** split era 4.1.x → pre-4.5.0 ([44f40d6](https://github.com/event4u-app/agent-config/commit/44f40d6b166ed259b274fd91f63b01369f986346))
+* **changelog:** split era 4.1.x → pre-4.5.0 ([69df8cf](https://github.com/event4u-app/agent-config/commit/69df8cf306763dff55c5639ac018e57c7596b461))
+
+Tests: 5064
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
