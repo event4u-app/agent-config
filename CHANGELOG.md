@@ -802,6 +802,18 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.7.2](https://github.com/event4u-app/agent-config/compare/4.7.1...4.7.2) (2026-05-28)
+
+### Bug Fixes
+
+* **wizard:** first-run setup writes a schema-valid settings file ([e3ca97f](https://github.com/event4u-app/agent-config/commit/e3ca97f1dc9701eddc6fea274d4d38c2cfd831ae))
+
+### CI
+
+* **workflows:** authenticate arduino/setup-task to dodge API rate limit ([090bcfa](https://github.com/event4u-app/agent-config/commit/090bcfa57d35eb19783e1fcfd40934e7b3266d91))
+
+Tests: 5064 (+0 since 4.7.1)
+
 ## [4.7.1](https://github.com/event4u-app/agent-config/compare/4.7.0...4.7.1) (2026-05-28)
 
 ### Bug Fixes
