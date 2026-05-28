@@ -30,9 +30,12 @@ export const userIdentitySchema = z.object({
         name: z.string().trim().min(1, 'identity.name is required'),
     }),
     language: z.string().trim().min(2, 'language must be a non-empty code'),
+    // Optional — picking ≥1 role sharpens reviewer-voice selection and
+    // persona pairing, but the setup wizard must not block a save on it.
+    // Empty array is allowed; each present entry must be non-empty.
     role: z
         .array(z.string().trim().min(1, 'role entries must be non-empty'))
-        .min(1, 'role must list at least one entry'),
+        .default([]),
     style: z.object({
         // Formality is not configurable — the agent always addresses the user
         // informally ("Du"). Only `pace` remains tunable.

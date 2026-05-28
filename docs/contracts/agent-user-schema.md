@@ -25,7 +25,7 @@ version: 1
 identity:
   name: "Matze"            # required — how the user wants to be addressed (full name or shorthand)
 language: "de"             # required — BCP-47-ish primary language ("de", "en", "fr", ...)
-role:                      # required — unordered list of role labels; ≥ 1 entry
+role:                      # optional — unordered list of role labels (may be empty)
   - founder
   - engineer
 style:
@@ -55,7 +55,7 @@ enforced by `/agents user accept` and `/agents user update`.
 | `version` | yes | Schema version. v1 is the only valid value today. |
 | `identity.name` | yes | How the agent addresses the user (full name or shorthand — user's choice). |
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
-| `role` | yes | Unordered list of role labels (≥ 1). Drives reviewer-voice selection and persona pairing. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted. |
+| `role` | no | Unordered list of role labels (may be empty). Drives reviewer-voice selection and persona pairing when populated. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted; each present entry must be non-empty. The setup wizard never blocks a save on it. |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
 | `voice_sample` | no | Optional representative paste — sharpens mirror-back and tone calibration when present; may be empty. The setup wizard never blocks a save on it. |
 | `last_updated` | yes | ISO date, bumped on every accept. |
