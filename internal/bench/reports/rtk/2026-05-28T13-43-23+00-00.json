@@ -1,0 +1,233 @@
+{
+  "schema_version": 1,
+  "schema_id": "rtk-v1",
+  "generated_at": "2026-05-28T13:43:23+00:00",
+  "corpus": {
+    "id": "rtk-commands",
+    "path": "internal/bench/corpora/rtk/commands.yaml",
+    "command_count": 8
+  },
+  "commands": [
+    {
+      "id": "git-status",
+      "description": "git status — common pre-commit check",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 741,
+        "stderr_bytes": 0,
+        "chars": 741,
+        "tokens_approx": 185,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 421,
+        "stderr_bytes": 0,
+        "chars": 421,
+        "tokens_approx": 105,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 320,
+        "tokens_saved": 80,
+        "pct_saved": 43.185
+      }
+    },
+    {
+      "id": "git-diff",
+      "description": "git diff (working tree)",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 198,
+        "stderr_bytes": 0,
+        "chars": 198,
+        "tokens_approx": 49,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 197,
+        "stderr_bytes": 0,
+        "chars": 197,
+        "tokens_approx": 49,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 1,
+        "tokens_saved": 0,
+        "pct_saved": 0.505
+      }
+    },
+    {
+      "id": "git-log",
+      "description": "git log -10 — recent history",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 6124,
+        "stderr_bytes": 0,
+        "chars": 6124,
+        "tokens_approx": 1531,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 2587,
+        "stderr_bytes": 0,
+        "chars": 2587,
+        "tokens_approx": 646,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 3537,
+        "tokens_saved": 884,
+        "pct_saved": 57.756
+      }
+    },
+    {
+      "id": "git-show-head",
+      "description": "git show HEAD — last commit summary",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 2311,
+        "stderr_bytes": 0,
+        "chars": 2311,
+        "tokens_approx": 577,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 2311,
+        "stderr_bytes": 0,
+        "chars": 2311,
+        "tokens_approx": 577,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 0,
+        "tokens_saved": 0,
+        "pct_saved": 0.0
+      }
+    },
+    {
+      "id": "ls-la",
+      "description": "ls -la in repo root",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 4329,
+        "stderr_bytes": 0,
+        "chars": 4329,
+        "tokens_approx": 1082,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 936,
+        "stderr_bytes": 0,
+        "chars": 936,
+        "tokens_approx": 234,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 3393,
+        "tokens_saved": 848,
+        "pct_saved": 78.378
+      }
+    },
+    {
+      "id": "find-md",
+      "description": "find *.md under docs/",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 12830,
+        "stderr_bytes": 0,
+        "chars": 12830,
+        "tokens_approx": 3207,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 1095,
+        "stderr_bytes": 0,
+        "chars": 1095,
+        "tokens_approx": 273,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 11735,
+        "tokens_saved": 2933,
+        "pct_saved": 91.465
+      }
+    },
+    {
+      "id": "grep-iron-law",
+      "description": "grep 'Iron Law' across rules",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 13228,
+        "stderr_bytes": 0,
+        "chars": 13228,
+        "tokens_approx": 3307,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 13228,
+        "stderr_bytes": 0,
+        "chars": 13228,
+        "tokens_approx": 3307,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 0,
+        "tokens_saved": 0,
+        "pct_saved": 0.0
+      }
+    },
+    {
+      "id": "wc-readme",
+      "description": "wc README.md",
+      "skipped": null,
+      "raw": {
+        "error": null,
+        "stdout_bytes": 35,
+        "stderr_bytes": 0,
+        "chars": 35,
+        "tokens_approx": 8,
+        "returncode": 0
+      },
+      "rtk": {
+        "error": null,
+        "stdout_bytes": 18,
+        "stderr_bytes": 0,
+        "chars": 18,
+        "tokens_approx": 4,
+        "returncode": 0
+      },
+      "delta": {
+        "chars_saved": 17,
+        "tokens_saved": 4,
+        "pct_saved": 48.571
+      }
+    }
+  ],
+  "aggregate": {
+    "commands_measured": 8,
+    "commands_skipped": 0,
+    "total_chars_saved": 19003,
+    "total_tokens_saved": 4749,
+    "median_pct_saved": 48.571,
+    "tokens_saved_per_request": 593
+  },
+  "notes": [
+    "Tokens approximated at 4 chars / token.",
+    "tokens_saved_per_request is the per-command mean across measured entries; assumes one CLI invocation per request.",
+    "Skipped commands carry a 'skipped' reason and are excluded from the aggregate."
+  ]
+}
