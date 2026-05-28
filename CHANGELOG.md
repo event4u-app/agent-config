@@ -802,6 +802,19 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.9.0](https://github.com/event4u-app/agent-config/compare/4.8.0...4.9.0) (2026-05-28)
+
+### Features
+
+* **scripts:** inventory abstraction-budget classes via grep-backed audit ([bf4de06](https://github.com/event4u-app/agent-config/commit/bf4de06d12908281e7a657cab8783c3cdae39a2e))
+
+### Documentation
+
+* **roadmaps:** close discovery, charter scoped reduction follow-up ([f749c77](https://github.com/event4u-app/agent-config/commit/f749c778ae02f6718c9d499213c8781392e95b3e))
+* **evidence:** abstraction-budget Phase-1 inventory + frontmatter audit ([178c0b6](https://github.com/event4u-app/agent-config/commit/178c0b605085801282c7f61c2b01d6d8dc83396e))
+
+Tests: 5078 (+0 since 4.8.0)
+
 ## [4.8.0](https://github.com/event4u-app/agent-config/compare/4.7.2...4.8.0) (2026-05-28)
 
 ### Features

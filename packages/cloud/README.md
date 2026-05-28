@@ -3,7 +3,7 @@
 # cloud
 
 - **id**: `cloud`
-- **version**: `4.8.0`
+- **version**: `4.9.0`
 - **owner**: —
 - **requires**: —
 - **artefacts**: 0
