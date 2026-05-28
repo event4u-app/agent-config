@@ -5,6 +5,7 @@ Tests for scripts/condense.py
 Run: python3 -m unittest tests.test_condense -v
 """
 
+import json
 import shutil
 import sys
 import tempfile
@@ -764,6 +765,64 @@ class TestCleanTools(unittest.TestCase):
         self.assertFalse((self.project_root / ".clinerules").exists())
         self.assertFalse((self.project_root / ".windsurfrules").exists())
         self.assertFalse((self.project_root / "GEMINI.md").exists())
+
+
+class TestGeneratePluginHooks(unittest.TestCase):
+    """generate_plugin_hooks() emits hooks/hooks.json from the manifest."""
+
+    def setUp(self):
+        self.tmpdir = Path(tempfile.mkdtemp())
+        (self.tmpdir / "scripts").mkdir()
+        (self.tmpdir / "scripts" / "hook_manifest.yaml").write_text(
+            "platforms:\n"
+            "  claude:\n"
+            "    session_start: [chat-history]\n"
+            "    session_end: [chat-history]\n"
+            "    stop: [chat-history]\n"
+            "    user_prompt_submit: [chat-history]\n"
+            "    post_tool_use: [chat-history, roadmap-progress]\n"
+            "  copilot:\n"
+            "    fallback_only: true\n"
+            "native_event_aliases:\n"
+            "  claude:\n"
+            "    SessionStart: session_start\n"
+            "    SessionEnd: session_end\n"
+            "    Stop: stop\n"
+            "    UserPromptSubmit: user_prompt_submit\n"
+            "    PostToolUse: post_tool_use\n"
+            "    PreToolUse: pre_tool_use\n",
+            encoding="utf-8",
+        )
+        self._orig = condense.PROJECT_ROOT
+        condense.PROJECT_ROOT = self.tmpdir
+
+    def tearDown(self):
+        condense.PROJECT_ROOT = self._orig
+        shutil.rmtree(self.tmpdir)
+
+    def test_emits_five_claude_bindings(self):
+        count = condense.generate_plugin_hooks()
+        self.assertEqual(count, 5)
+        data = json.loads((self.tmpdir / "hooks" / "hooks.json").read_text())
+        self.assertEqual(
+            set(data["hooks"]),
+            {"SessionStart", "SessionEnd", "Stop", "UserPromptSubmit", "PostToolUse"},
+        )
+
+    def test_commands_are_project_dir_rooted(self):
+        condense.generate_plugin_hooks()
+        data = json.loads((self.tmpdir / "hooks" / "hooks.json").read_text())
+        for native, groups in data["hooks"].items():
+            cmd = groups[0]["hooks"][0]["command"]
+            self.assertIn('"$CLAUDE_PROJECT_DIR"/agent-config dispatch:hook', cmd)
+            self.assertIn("--platform claude", cmd)
+            self.assertIn(f"--native-event {native}", cmd)
+
+    def test_skips_events_without_bindings(self):
+        # PreToolUse is aliased but not bound under platforms.claude → omitted.
+        condense.generate_plugin_hooks()
+        data = json.loads((self.tmpdir / "hooks" / "hooks.json").read_text())
+        self.assertNotIn("PreToolUse", data["hooks"])
 
 
 if __name__ == "__main__":

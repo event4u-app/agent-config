@@ -909,6 +909,41 @@ class TestBridges(SilentTest):
         data = json.loads(target.read_text())
         self.assertEqual(data["marketplace"]["name"], "custom")
 
+    def test_claude_bridge_is_plugin_enablement_only(self) -> None:
+        # Claude lifecycle hooks ship via plugin scope (hooks/hooks.json), NOT
+        # the shared settings.json hooks array — so the bridge writes only
+        # enabledPlugins, no `hooks` key, and the canonical plugin id.
+        install.ensure_claude_bridge(self.project, force=False)
+        data = json.loads((self.project / ".claude" / "settings.json").read_text())
+        self.assertTrue(
+            data["enabledPlugins"]["agent-config@event4u-agent-config"])
+        self.assertNotIn(
+            "hooks", data,
+            "Claude bridge must not write a settings.json hooks array — hooks "
+            "are delivered via plugin scope to avoid monopolising the shared "
+            "array and colliding with neighbour tools / settings.local.json",
+        )
+
+    def test_claude_bridge_coexists_with_neighbour_hooks(self) -> None:
+        # A neighbour tool owns settings.json hooks; the bridge must leave
+        # them untouched and only add its plugin key alongside.
+        target = self.project / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        neighbour = {
+            "hooks": {
+                "PostToolUse": [
+                    {"matcher": "Write|Edit",
+                     "hooks": [{"type": "command", "command": "neighbour-handler"}]},
+                ],
+            },
+        }
+        target.write_text(json.dumps(neighbour), encoding="utf-8")
+        install.ensure_claude_bridge(self.project, force=True)
+        data = json.loads(target.read_text())
+        self.assertEqual(data["hooks"], neighbour["hooks"])  # neighbour survives
+        self.assertTrue(
+            data["enabledPlugins"]["agent-config@event4u-agent-config"])
+
     def test_cursor_bridge_writes_dispatcher_hooks(self) -> None:
         # Phase 7.5 — `.cursor/hooks.json` must wire all five lifecycle
         # events (sessionStart/End, stop, beforeSubmitPrompt, postToolUse)
