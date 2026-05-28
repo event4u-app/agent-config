@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "schema_id": "router-telemetry-v1",
+  "generated_at": "2026-05-28T21:28:28+00:00",
+  "config": {
+    "router": "dist/router.json",
+    "profile": "full",
+    "sample_cap_per_corpus": 200,
+    "corpora": [
+      "internal/bench/corpora/ab-trackb.yaml",
+      "tests/eval/corpus-dev.yaml",
+      "tests/eval/corpus-non-dev.yaml"
+    ]
+  },
+  "per_trigger_hits": {
+    "model-recommendation::{\"phrase\": \"new task\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"log\"}": 2,
+    "downstream-changes::{\"keyword\": \"imports\"}": 1,
+    "architecture::{\"keyword\": \"controller\"}": 1,
+    "laravel-routing::{\"keyword\": \"laravel\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"invoice\"}": 2,
+    "architecture::{\"keyword\": \"service\"}": 2,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"Pest\"}": 1,
+    "php-coding::{\"keyword\": \"phpstan\"}": 1,
+    "cli-output-handling::{\"keyword\": \"phpstan\"}": 1,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"PHPStan\"}": 1,
+    "provider-lifecycle-discipline::{\"phrase\": \"lifecycle\"}": 1,
+    "strategy-safety-floor::{\"keyword\": \"vision\"}": 1,
+    "commit-conventions::{\"keyword\": \"commit\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"Sentry\"}": 1,
+    "strategy-safety-floor::{\"keyword\": \"moat\"}": 1,
+    "strategy-safety-floor::{\"keyword\": \"positioning\"}": 1,
+    "cli-output-handling::{\"keyword\": \"git\"}": 1,
+    "invite-challenge::{\"keyword\": \"plan\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"runway\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"burn\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"LTV\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"CAC\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"payback\"}": 1,
+    "finance-safety-floor::{\"keyword\": \"sensitivity\"}": 1,
+    "skill-improvement-trigger::{\"keyword\": \"pipeline\"}": 1,
+    "domain-safety-pii::{\"keyword\": \"support macro\"}": 1
+  },
+  "per_rule_activations": {
+    "tier_2": {
+      "model-recommendation": 1,
+      "domain-safety-pii": 6,
+      "downstream-changes": 1,
+      "framework-neutrality-in-generic-skills": 2,
+      "cli-output-handling": 2,
+      "provider-lifecycle-discipline": 1,
+      "strategy-safety-floor": 3,
+      "commit-conventions": 1,
+      "invite-challenge": 1,
+      "finance-safety-floor": 3,
+      "skill-improvement-trigger": 1
+    },
+    "tier_1": {
+      "laravel-routing": 1,
+      "architecture": 3,
+      "php-coding": 1
+    }
+  },
+  "panel_b_untouchable_rules": [],
+  "per_corpus_summary": [
+    {
+      "corpus": "ab-trackb",
+      "prompts_replayed": 13,
+      "unique_rules_activated": 3,
+      "top_rules": [
+        [
+          "model-recommendation",
+          1
+        ],
+        [
+          "domain-safety-pii",
+          1
+        ],
+        [
+          "downstream-changes",
+          1
+        ]
+      ]
+    },
+    {
+      "corpus": "dev",
+      "prompts_replayed": 10,
+      "unique_rules_activated": 9,
+      "top_rules": [
+        [
+          "domain-safety-pii",
+          3
+        ],
+        [
+          "architecture",
+          3
+        ],
+        [
+          "framework-neutrality-in-generic-skills",
+          2
+        ],
+        [
+          "laravel-routing",
+          1
+        ],
+        [
+          "cli-output-handling",
+          1
+        ],
+        [
+          "php-coding",
+          1
+        ],
+        [
+          "provider-lifecycle-discipline",
+          1
+        ],
+        [
+          "strategy-safety-floor",
+          1
+        ],
+        [
+          "commit-conventions",
+          1
+        ]
+      ]
+    },
+    {
+      "corpus": "non-dev",
+      "prompts_replayed": 16,
+      "unique_rules_activated": 6,
+      "top_rules": [
+        [
+          "finance-safety-floor",
+          3
+        ],
+        [
+          "strategy-safety-floor",
+          2
+        ],
+        [
+          "domain-safety-pii",
+          2
+        ],
+        [
+          "cli-output-handling",
+          1
+        ],
+        [
+          "invite-challenge",
+          1
+        ],
+        [
+          "skill-improvement-trigger",
+          1
+        ]
+      ]
+    }
+  ],
+  "never_matched_tier1": [
+    "artifact-engagement-recording",
+    "augment-source-of-truth",
+    "autonomous-execution",
+    "command-suggestion-policy",
+    "context-hygiene",
+    "copilot-routing",
+    "devcontainer-routing",
+    "docker-commands",
+    "fast-path-marker-visibility",
+    "low-impact-corpus-privacy-floor",
+    "no-attribution-footers",
+    "no-decorative-emojis-in-git-surfaces",
+    "no-roadmap-references",
+    "onboarding-gate",
+    "roadmap-progress-sync",
+    "skill-quality",
+    "slash-command-routing-policy",
+    "symfony-routing",
+    "telegraph-speak",
+    "user-interaction"
+  ]
+}
