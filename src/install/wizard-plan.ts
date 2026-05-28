@@ -67,6 +67,14 @@ export const USER_SCOPE_PATHS: Readonly<Record<string, string>> = {
 const CLAUDE_SKILL_BUNDLE: ReadonlyArray<readonly [string, string]> = [
     ['.agent-src/rules',    'rules'],
     ['.agent-src/skills',   'skills'],
+    // Commands ship to ~/.claude/commands/ — native Claude Code slash-
+    // command surface. Verified empirically 2026-05-28: rich frontmatter
+    // (disable-model-invocation, custom fields) tolerated; nested
+    // subdirs route as `/<cluster>:<sub>`. Council session 2026-05-28
+    // converged on Option B (native slash-only) — see
+    // agents/runtime/council/responses/claude-code-distribution.json
+    // and scripts/install.py:_CLAUDE_SKILL_BUNDLE for the Python mirror.
+    ['.agent-src/commands', 'commands'],
     ['.agent-src/personas', 'personas'],
 ];
 

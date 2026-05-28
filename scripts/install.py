@@ -1083,6 +1083,49 @@ def ensure_augment_user_hooks(package_root: Path, force: bool) -> list[dict[str,
 # concern fires on the same logical surface across platforms — the
 # contract from agents/settings/contexts/hardening-pattern.md § Cross-platform
 # parity.
+# Canonical Claude Code plugin id — must match `.claude-plugin/marketplace.json`
+# (`<plugin>@<marketplace>` = `agent-config` + `event4u-agent-config`) and the
+# install command documented in `docs/installation.md`.
+CLAUDE_PLUGIN_ID = "agent-config@event4u-agent-config"
+
+# Stale plugin ids written by pre-4.x installer versions. The bridge removes
+# any of these from `enabledPlugins` on rerun so the canonical id alone
+# survives. Claude Code silently ignores unresolvable ids (no marketplace
+# match), so a stale entry leaves the plugin inactive without an error path
+# the user can see — the heal is the only feedback loop.
+CLAUDE_LEGACY_PLUGIN_IDS: tuple[str, ...] = (
+    "agent-conf@event4u",      # abbreviated form — never matched a real marketplace
+    "agent-config@event4u",    # pre-marketplace-rename form (missing `-agent-config` suffix)
+)
+
+
+def _heal_legacy_claude_plugin_ids(path: Path) -> list[str]:
+    """Remove known-stale plugin ids from `.claude/settings.json` in place.
+
+    Reads the existing settings file, drops any `enabledPlugins` key whose
+    id appears in `CLAUDE_LEGACY_PLUGIN_IDS`, and writes the file back
+    when anything changed. Returns the list of removed ids so the caller
+    can surface a `success(...)` per heal and treat the operation as a
+    forced refresh for the subsequent `merge_json_file` call.
+
+    No-ops when the file is absent, malformed, or carries no stale ids.
+    The canonical id is left untouched.
+    """
+    if not path.exists():
+        return []
+    data = read_json_file(path)
+    enabled = data.get("enabledPlugins")
+    if not isinstance(enabled, dict):
+        return []
+    removed = [pid for pid in CLAUDE_LEGACY_PLUGIN_IDS if pid in enabled]
+    if not removed:
+        return []
+    for pid in removed:
+        del enabled[pid]
+    write_json_file(path, data)
+    return removed
+
+
 def ensure_claude_bridge(project_root: Path, force: bool) -> list[dict[str, Any]]:
     """Deploy .claude/settings.json with plugin enablement only.
 
@@ -1099,12 +1142,22 @@ def ensure_claude_bridge(project_root: Path, force: bool) -> list[dict[str, Any]
     documented install command in docs/installation.md. Idempotent:
     `enabledPlugins` is a dict-merge, so the key coexists with any other
     plugin a neighbour tool enabled.
+
+    Stale-id heal: before the merge, any pre-4.x ids listed in
+    `CLAUDE_LEGACY_PLUGIN_IDS` are removed from `enabledPlugins`. A heal
+    self-authorises the corrective merge — the merge runs with effective
+    force so the canonical id lands in the same install, even without
+    `--force` on the CLI.
     """
+    target = project_root / ".claude" / "settings.json"
+    healed = _heal_legacy_claude_plugin_ids(target)
+    for pid in healed:
+        success(f".claude/settings.json: removed stale plugin id `{pid}`")
     bridge = {
-        "enabledPlugins": {"agent-config@event4u-agent-config": True},
+        "enabledPlugins": {CLAUDE_PLUGIN_ID: True},
     }
     return merge_json_file(
-        project_root / ".claude" / "settings.json", bridge, force, ".claude/settings.json",
+        target, bridge, force or bool(healed), ".claude/settings.json",
     )
 
 
@@ -2215,6 +2268,17 @@ PROJECT_BRIDGE_MARKERS = {
 _CLAUDE_SKILL_BUNDLE: list[tuple[str, str]] = [
     (".agent-src/rules",    "rules"),
     (".agent-src/skills",   "skills"),
+    # Commands ship to the native Claude Code user-scope slash-command
+    # surface: `~/.claude/commands/<cluster>/<sub>.md` resolves as
+    # `/<cluster>:<sub>` per Claude Code's filesystem-channel convention
+    # (verified empirically 2026-05-28: top-level + nested + rich
+    # frontmatter all route; heavyweight commands carrying
+    # `disable-model-invocation: true` stay invokable when typed but are
+    # hidden from auto-complete — desired UX). Council session
+    # 2026-05-28 (claude-sonnet-4-5 + gpt-4o, design mode) verdict
+    # Option B (native slash-only). See
+    # `agents/runtime/council/responses/claude-code-distribution.json`.
+    (".agent-src/commands", "commands"),
     (".agent-src/personas", "personas"),
 ]
 GLOBAL_DEPLOY_SOURCES: dict[str, list[tuple[str, str]]] = {
@@ -2956,20 +3020,94 @@ MIGRATE_LEGACY_YAML_FILES = (".agent-settings.yml", ".agent-user.yml")
 MIGRATE_LEGACY_TOOL_DIRS = (".augment", ".claude", ".cursor")
 
 
+# Package identity used by the maintainer auto-detect. Matches the npm
+# package name declared in ``package.json`` at the agent-config source
+# repo root. Refreshing this value requires a coordinated rename
+# (package.json + this constant + the publish pipeline).
+AGENT_CONFIG_PACKAGE_NAME = "@event4u/agent-config"
+
+
+def _is_agent_config_source_repo(project_root: Path) -> tuple[bool, str]:
+    """Return ``(is_source_repo, signature)`` for the maintainer auto-detect.
+
+    Phase Q1 of road-to-claude-code-global-distribution (council Option D —
+    Hybrid auto-detect): treat any of these high-specificity signatures as
+    proof that ``project_root`` is the agent-config source repo, not a
+    consumer project. Hits skip the ADR-020 migration prompt automatically
+    so a maintainer running the wizard does not get their working tree
+    moved into ``.legacy-pre-global-only/``.
+
+    Signatures, in order of cost (cheap-first short-circuit):
+
+    1. ``package.json`` declares ``"name": "@event4u/agent-config"``.
+       Strongest signal — the npm-published identity of this repo.
+    2. ``.agent-src.uncondensed/`` exists at ``project_root`` (legacy
+       layout) OR under ``packages/*/`` (current layout). Both shapes
+       are unique to the source repo.
+    3. ``scripts/install.py`` exists at ``project_root`` AND the file
+       name matches this module (``__file__``). Self-referential — if
+       the installer code path is reading itself, the cwd is the repo
+       that owns the installer.
+
+    The user can force consumer behaviour via ``AGENT_CONFIG_CONSUMER_MODE=1``
+    when testing the wizard's consumer flow from inside the maintainer
+    checkout (end-to-end QA path).
+    """
+    if os.environ.get("AGENT_CONFIG_CONSUMER_MODE") == "1":
+        return False, "consumer-mode-override"
+
+    pkg_json = project_root / "package.json"
+    if pkg_json.is_file():
+        try:
+            data = json.loads(pkg_json.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            data = {}
+        if isinstance(data, dict) and data.get("name") == AGENT_CONFIG_PACKAGE_NAME:
+            return True, "package.json:name"
+
+    if (project_root / ".agent-src.uncondensed").is_dir():
+        return True, ".agent-src.uncondensed/"
+    packages_dir = project_root / "packages"
+    if packages_dir.is_dir():
+        for child in packages_dir.iterdir():
+            if (child / ".agent-src.uncondensed").is_dir():
+                return True, f"packages/{child.name}/.agent-src.uncondensed/"
+
+    installer_self = project_root / "scripts" / "install.py"
+    try:
+        if installer_self.is_file() and installer_self.resolve() == Path(__file__).resolve():
+            return True, "scripts/install.py (self)"
+    except OSError:
+        pass
+
+    return False, ""
+
+
 def _detect_legacy_for_migration(project_root: Path) -> list[str]:
     """Return a sorted list of legacy artefact relpaths present in ``project_root``.
 
     Skipped (returns ``[]``) when:
 
     - ``AGENT_CONFIG_DEV_MODE=1`` is set (maintainer dogfood loop),
-    - the project root IS the agent-config source repo
-      (``.agent-src.uncondensed/`` present),
+    - ``project_root`` IS the agent-config source repo per
+      :func:`_is_agent_config_source_repo` (council Option D auto-detect),
     - the bridge marker already exists (project is already global-only).
     """
     if os.environ.get("AGENT_CONFIG_DEV_MODE") == "1":
         return []
-    if (project_root / ".agent-src.uncondensed").is_dir():
+
+    is_source, signature = _is_agent_config_source_repo(project_root)
+    if is_source:
+        if not QUIET:
+            warn(
+                "Maintainer mode auto-detected — agent-config source repo "
+                f"(signature: {signature}). Skipping ADR-020 migration "
+                "prompt; the working tree stays intact. Set "
+                "AGENT_CONFIG_CONSUMER_MODE=1 to override for end-to-end "
+                "consumer-flow testing."
+            )
         return []
+
     if (project_root / CONSUMER_BRIDGE_MARKER_RELPATH).is_file():
         return []
 
@@ -3478,8 +3616,63 @@ def _deploy_global_content(
             written_total += w
             skipped_total += s
             written_paths.extend(paths)
+        # Phase 5 (road-to-claude-code-global-distribution): postcheck.
+        # Every entry in the deploy plan must end with the destination
+        # subpath populated — directory exists AND is non-empty. A
+        # silent partial deploy (no exception raised, no files written
+        # for one of the bundle entries) is the silent-failure class
+        # this phase exists to surface.
+        missing_targets = _verify_deploy_targets(anchor, plan)
+        if missing_targets:
+            if not QUIET:
+                warn(
+                    f"{tool_id}: deploy postcheck failed — "
+                    f"missing/empty: {', '.join(missing_targets)}"
+                )
+            _emit_progress({
+                "type": "verify_failed",
+                "tool": tool_id,
+                "missing": missing_targets,
+            })
+            results[tool_id] = (
+                written_total, skipped_total, "deploy_failed", written_paths,
+            )
+            continue
+        _emit_progress({"type": "verified", "tool": tool_id})
         results[tool_id] = (written_total, skipped_total, "deployed", written_paths)
     return results
+
+
+def _verify_deploy_targets(
+    anchor: Path, plan: list[tuple[str, str]],
+) -> list[str]:
+    """Return the deploy-plan destination subpaths that did NOT materialise.
+
+    A deploy plan entry ``(src_rel, dest_sub)`` is verified by checking
+    that ``anchor / dest_sub`` (or ``anchor`` when ``dest_sub`` is empty)
+    exists as a directory AND contains at least one entry. An empty
+    directory counts as a failure — the agent-config bundle never
+    legitimately ships an empty subtree, so "empty after deploy" means
+    the copy step silently produced nothing.
+
+    Returns the list of failing ``dest_sub`` values (empty string
+    rewritten to ``"."`` for log clarity). An empty return list means
+    every expected target is populated.
+    """
+    missing: list[str] = []
+    for _, dest_sub in plan:
+        target = anchor / dest_sub if dest_sub else anchor
+        label = dest_sub or "."
+        if not target.is_dir():
+            missing.append(label)
+            continue
+        try:
+            next(target.iterdir())
+        except StopIteration:
+            missing.append(label)
+        except OSError:
+            missing.append(label)
+    return missing
 
 
 def install_global(
@@ -3525,19 +3718,33 @@ def install_global(
     installed_version = lock_mod.current_package_version()
     read_path = lock_mod.lockfile_path()
     write_path = lock_mod.lockfile_write_path()
-    ok, recorded = lock_mod.check_version(installed_version, path=read_path)
+    _, recorded = lock_mod.check_version(installed_version, path=read_path)
+    classification = lock_mod.classify_mismatch(installed_version, recorded)
 
-    if not ok and not force:
+    # Phase 2 (roadmap road-to-claude-code-global-distribution.md): a stale
+    # lockfile recording a *lower* (or unparseable legacy) version is the
+    # upgrade path — auto-heal by claiming the new version slot and
+    # continuing the install. Only a recorded version *higher* than the
+    # running package is treated as a downgrade and still requires --force.
+    # This kills the silent-refusal trap where users on pre-2.x (recorded:
+    # 1.42.0) installs hit `install.py:3530` and exit 1 without ever
+    # touching `~/.claude/`.
+    if classification == "downgrade" and not force:
         if not QUIET:
             print()
-            warn("Refusing global install: lockfile version mismatch.")
+            warn("Refusing global install: lockfile records a newer version.")
             info(f"  Lockfile:           {read_path}")
             info(f"  Recorded version:   {recorded}")
             info(f"  Current package:    {installed_version}")
-            info("  Fix:                run `agent-config update`")
-            info("  Override:           re-run with `--force` (replaces the lockfile)")
+            info("  Fix:                upgrade the package, or re-run with `--force`")
             print()
         return 1
+
+    if classification in ("upgrade", "unparseable") and not QUIET:
+        info(
+            f"🔄 Upgrading lockfile from {recorded} to {installed_version}, "
+            "redeploying tools"
+        )
 
     if not QUIET:
         print()
@@ -3549,6 +3756,13 @@ def install_global(
                 continue
             print(f"      {tool_id:<15} → {anchor}")
 
+    # Claim the version slot BEFORE the deploy (Phase 2 Step 2 of the
+    # road-to-claude-code-global-distribution roadmap). The deploy can
+    # fail mid-way; the lockfile must stay on the new version regardless
+    # so subsequent re-runs do not relitigate the upgrade refusal. A
+    # partial deploy retries cleanly on the next invocation — the
+    # lockfile staying stuck on an ancient version is the worse failure
+    # mode this Phase exists to eliminate.
     existing = lock_mod.read_lockfile(path=read_path) or {}
     existing_tools = list(existing.get("tools", []))
     merged_tools = sorted(set(existing_tools) | set(tools))
@@ -3565,6 +3779,28 @@ def install_global(
     # caller's CWD); destinations are `USER_SCOPE_PATHS[tool_id]` (expanded).
     package_root = _resolve_package_root_for_global()
     deploy_results = _deploy_global_content(tools, force, package_root, written)
+
+    # Phase 5 (road-to-claude-code-global-distribution): postcheck-driven
+    # lockfile correction. A tool whose deploy postcheck failed
+    # (status="deploy_failed") MUST NOT remain in the lockfile's tools
+    # list — claiming "tool X is installed" without the content on disk
+    # is the silent-failure class this phase exists to surface. Tools
+    # already recorded by a prior successful install stay (the
+    # `failed_tools` set only filters this run's newly-attempted tools).
+    failed_tools = {
+        tool_id
+        for tool_id, (_, _, status, _) in deploy_results.items()
+        if status == "deploy_failed"
+    }
+    if failed_tools:
+        corrected_tools = sorted(set(merged_tools) - failed_tools)
+        if corrected_tools != merged_tools:
+            lock_mod.write_lockfile(installed_version, corrected_tools, path=write_path)
+            if not QUIET:
+                warn(
+                    "Lockfile corrected after deploy postcheck — dropped "
+                    f"{', '.join(sorted(failed_tools))} (verification failed)."
+                )
 
     # NDJSON progress for the wizard --apply-payload real-apply bridge. One
     # `file` frame per deployed tool unit (coarse, per AI-council 2026-05-27);

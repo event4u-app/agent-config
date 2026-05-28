@@ -198,6 +198,50 @@ def check_version(
     return (recorded == installed_version, recorded)
 
 
+_SEMVER_RE = re.compile(r"^\s*v?(\d+)\.(\d+)\.(\d+)")
+
+
+def _parse_semver(version: str) -> Optional[tuple[int, int, int]]:
+    """Parse ``X.Y.Z[-suffix]`` into a ``(major, minor, patch)`` tuple.
+
+    Returns ``None`` when the leading three numeric segments cannot be
+    extracted. Suffixes (``-rc1``, ``+build.5``) are ignored: the
+    classification only needs the numeric prefix to decide upgrade vs
+    downgrade.
+    """
+    match = _SEMVER_RE.match(version)
+    if not match:
+        return None
+    return int(match.group(1)), int(match.group(2)), int(match.group(3))
+
+
+def classify_mismatch(
+    installed_version: str, recorded: Optional[str],
+) -> str:
+    """Classify the relationship between recorded and installed versions.
+
+    Returns one of:
+      * ``"none"``        — no lockfile yet; install proceeds clean.
+      * ``"match"``       — recorded equals installed.
+      * ``"upgrade"``     — recorded < installed; auto-heal allowed.
+      * ``"downgrade"``   — recorded > installed; refuse without ``--force``.
+      * ``"unparseable"`` — recorded shape unrecognizable (pre-1.0, 1.x
+        legacy formats from the namespace migration); treated as
+        upgrade by the install path.
+    """
+    if recorded is None:
+        return "none"
+    if recorded == installed_version:
+        return "match"
+    rec = _parse_semver(recorded)
+    inst = _parse_semver(installed_version)
+    if rec is None or inst is None:
+        return "unparseable"
+    if rec < inst:
+        return "upgrade"
+    return "downgrade"
+
+
 def current_package_version(repo_root: Optional[Path] = None) -> str:
     """Read ``version`` from the package's own ``package.json``."""
     if repo_root is None:
