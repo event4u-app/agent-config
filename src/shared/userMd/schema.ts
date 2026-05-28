@@ -38,11 +38,14 @@ export const userIdentitySchema = z.object({
         // informally ("Du"). Only `pace` remains tunable.
         pace: z.enum(['rapid', 'pragmatic', 'thorough']),
     }),
+    // Optional — a writing sample sharpens tone mirroring but is not
+    // required to save an identity (the setup wizard must not block on it).
+    // Empty string is allowed; the hard cap still applies when present.
     voice_sample: z
         .string()
         .trim()
-        .min(1, 'voice_sample is required')
-        .max(USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS, 'voice_sample exceeds hard cap'),
+        .max(USER_IDENTITY_VOICE_SAMPLE_MAX_CHARS, 'voice_sample exceeds hard cap')
+        .default(''),
     last_updated: isoDate,
     notes: z
         .string()
