@@ -6,17 +6,17 @@
 
 ## Overall
 
-**42 / 106 steps done · 40%**
+**42 / 120 steps done · 35%**
 
 ```text
-████████████████░░░░░░░░░░░░░░░░░░░░░░░░   40%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-abstraction-budget-discovery.md](roadmaps/road-to-abstraction-budget-discovery.md) | 2 | 8 | 8 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 4 | [road-to-readable-value-dashboard.md](roadmaps/road-to-readable-value-dashboard.md) | 6 | 27 | 27 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -25,14 +25,16 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-abstraction-budget-discovery.md](roadmaps/road-to-abstraction-budget-discovery.md)
+### [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md)
 
-**Abstraction-budget discovery — measure before you cut** — 0 / 8 done (0%)
+**Abstraction reduction — factor frontmatter boilerplate into contract defaults** — 0 / 22 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Inventory — count, don't judge | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 2 | The go/no-go gate | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 0 | Schema-stability pre-flight | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Contract-level defaults in schemas | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Migrate artefacts to omit defaulted fields | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 3 | Lint that prevents the boilerplate from coming back | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 
 ### [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md)
 
