@@ -32,14 +32,6 @@ import { ContinueScreen } from '../wizard/ContinueScreen.js';
 import { BackupScreen } from '../wizard/BackupScreen.js';
 import {
     activeTotalSteps,
-    aiCouncilConfig,
-    aiCouncilKeyInstall,
-    aiCouncilKeyPresence,
-    aiCouncilLoaded,
-    aiCouncilProviders,
-    type AiCouncilClassMode,
-    type AiCouncilMode,
-    type AiCouncilState,
     banner,
     clampStep,
     continueAcknowledged,
@@ -264,9 +256,6 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.id === 'identity') {
             void loadRtkDetectionOnce();
-        }
-        if (resumed.kind === 'aiCouncil') {
-            void loadAiCouncilOnce();
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
@@ -499,32 +488,6 @@ async function loadRtkDetectionOnce(): Promise<void> {
     }
 }
 
-interface AiCouncilGetResponse {
-    config: AiCouncilState;
-    providers?: string[];
-    keyPresence?: Record<string, boolean>;
-    keyInstall?: Record<string, string>;
-}
-
-/**
- * Load the AI-council config subset once per session (Phase 8). On failure
- * (extended-mode 404 / read error) the config stays null and the step renders
- * an explanatory note instead of controls.
- */
-async function loadAiCouncilOnce(): Promise<void> {
-    if (aiCouncilLoaded.value) return;
-    aiCouncilLoaded.value = true;
-    try {
-        const res = await apiFetch<AiCouncilGetResponse>('/api/v1/wizard/ai-council');
-        aiCouncilConfig.value = res.config;
-        aiCouncilProviders.value = res.providers ?? [];
-        aiCouncilKeyPresence.value = res.keyPresence ?? {};
-        aiCouncilKeyInstall.value = res.keyInstall ?? {};
-    } catch {
-        // Leave aiCouncilConfig null; the step shows a "config unavailable" note.
-    }
-}
-
 
 async function persistStep(nextIndex: number, partial: Record<string, JsonValue>): Promise<void> {
     try {
@@ -598,9 +561,6 @@ async function goTo(nextIndex: number): Promise<void> {
     }
     if (next.id === 'identity') {
         void loadRtkDetectionOnce();
-    }
-    if (next.kind === 'aiCouncil') {
-        void loadAiCouncilOnce();
     }
     if (next.kind === 'review') {
         void refreshDiff();
@@ -791,22 +751,7 @@ async function finish(): Promise<void> {
                 applyCopy = ` Installer bridge failed: ${message}. Settings were saved; re-run the wizard to retry the install plan.`;
             }
         }
-        // road-to-wizard-ux-improvements § Phase 8 — persist the AI-council
-        // config (scalar subset) into .ai-council.yml. Best-effort: settings
-        // are already committed, so a failure surfaces as a soft warning.
-        let councilCopy = '';
-        if (extendedSteps.value && aiCouncilConfig.value !== null) {
-            try {
-                await apiFetch('/api/v1/wizard/ai-council', { method: 'POST', body: aiCouncilConfig.value });
-                councilCopy = ' AI Council saved.';
-            } catch (err) {
-                const message = err instanceof ApiCallError
-                    ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
-                    : err instanceof Error ? err.message : String(err);
-                councilCopy = ` AI Council save failed: ${message}.`;
-            }
-        }
-        banner.value = { message: `${finishCopy}${applyCopy}${councilCopy} ${closeHint}`, tone: 'success' };
+        banner.value = { message: `${finishCopy}${applyCopy} ${closeHint}`, tone: 'success' };
         // Drop wizard state on success — server unlinks; mirror locally.
         stepIndex.value = clampStep(activeTotalSteps() - 1);
         // Refresh initialSettings to match the just-written state so a
@@ -1207,149 +1152,6 @@ function RtkRow(): preact.JSX.Element {
     );
 }
 
-/**
- * AI Council step (Phase 8). Edits the wizard-controlled scalar subset of
- * `.ai-council.yml` held in `aiCouncilConfig`; finish() persists it via POST.
- * Deep/locked knobs (advisors, model_ladder, high_impact/user_required classes)
- * are intentionally not editable here.
- */
-function AiCouncilStepBody(): preact.JSX.Element {
-    const cfg = aiCouncilConfig.value;
-    if (cfg === null) {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p class="ac-banner">
-                    AI Council config is unavailable (extended-mode only, or
-                    <code> .ai-council.yml </code> could not be read). Configure
-                    it later by editing <code>agents/settings/.ai-council.yml</code>.
-                </p>
-            </div>
-        );
-    }
-    const providers = aiCouncilProviders.value;
-    const keyPresence = aiCouncilKeyPresence.value;
-    const keyInstall = aiCouncilKeyInstall.value;
-    const update = (patch: Partial<AiCouncilState>): void => {
-        aiCouncilConfig.value = { ...cfg, ...patch };
-    };
-    const updateMember = (p: string, patch: Partial<{ enabled: boolean; participateLowImpact: boolean }>): void => {
-        const cur = cfg.members[p] ?? { enabled: false, participateLowImpact: false };
-        aiCouncilConfig.value = { ...cfg, members: { ...cfg.members, [p]: { ...cur, ...patch } } };
-    };
-    return (
-        <div class="ac-wizard-step-stub ac-council">
-            <label class="ac-council__master">
-                <input
-                    type="checkbox"
-                    checked={cfg.enabled}
-                    onChange={(e): void => { update({ enabled: (e.currentTarget as HTMLInputElement).checked }); }}
-                />
-                {' '}Enable the AI Council (external second-opinion network)
-            </label>
-            <fieldset class="ac-council__section" disabled={!cfg.enabled}>
-                <div class="ac-field">
-                    <label class="ac-field__label">Transport mode (default for all members)</label>
-                    <select
-                        class="ac-input"
-                        value={cfg.defaultMode}
-                        onChange={(e): void => { update({ defaultMode: (e.currentTarget as HTMLSelectElement).value as AiCouncilMode }); }}
-                    >
-                        <option value="manual">manual — copy &amp; paste (free, no key)</option>
-                        <option value="api">api — stored key, per-token billing</option>
-                        <option value="cli">cli — subscription auth (flat-rate)</option>
-                    </select>
-                </div>
-                <div class="ac-field">
-                    <label class="ac-field__label">Debate rounds (minimum)</label>
-                    <input
-                        class="ac-input"
-                        type="number"
-                        min="1"
-                        value={cfg.minRounds}
-                        onInput={(e): void => { update({ minRounds: Math.max(1, Number.parseInt((e.currentTarget as HTMLInputElement).value, 10) || 1) }); }}
-                    />
-                </div>
-                <div class="ac-field">
-                    <label class="ac-field__label">Cost budget — max total USD per invocation</label>
-                    <input
-                        class="ac-input"
-                        type="number"
-                        min="0"
-                        step="0.5"
-                        value={cfg.maxTotalUsd}
-                        onInput={(e): void => { update({ maxTotalUsd: Math.max(0, Number.parseFloat((e.currentTarget as HTMLInputElement).value) || 0) }); }}
-                    />
-                </div>
-                <h3 class="ac-council__h">Members</h3>
-                <ul class="ac-wizard__tool-list">
-                    {providers.map((p) => {
-                        const m = cfg.members[p] ?? { enabled: false, participateLowImpact: false };
-                        const hasKey = keyPresence[p] === true;
-                        const installCmd = keyInstall[p];
-                        return (
-                            <li key={p} class="ac-pack-tile">
-                                <div class="ac-pack-tile__head">
-                                    <label class="ac-pack-tile__head" style="flex:1;">
-                                        <input
-                                            type="checkbox"
-                                            checked={m.enabled}
-                                            onChange={(e): void => { updateMember(p, { enabled: (e.currentTarget as HTMLInputElement).checked }); }}
-                                        />
-                                        <span class="ac-pack-tile__title">{p}</span>
-                                    </label>
-                                    <span class={`ac-badge ${hasKey ? 'ac-badge--installed' : 'ac-badge--missing'}`}>
-                                        {hasKey ? 'key present' : 'no key'}
-                                    </span>
-                                </div>
-                                <label class="ac-pack-tile__child">
-                                    <input
-                                        type="checkbox"
-                                        checked={m.participateLowImpact}
-                                        disabled={!m.enabled}
-                                        onChange={(e): void => { updateMember(p, { participateLowImpact: (e.currentTarget as HTMLInputElement).checked }); }}
-                                    />
-                                    <span>low-impact fast-path</span>
-                                </label>
-                                {!hasKey
-                                    ? (
-                                        <p class="ac-field__description">
-                                            {installCmd !== undefined
-                                                ? <>Add a key — run in a terminal: <code>{installCmd}</code></>
-                                                : <>No installer; set <code>api_key_ref: env:{p.toUpperCase()}_API_KEY</code> and export that variable.</>}
-                                        </p>
-                                    )
-                                    : null}
-                            </li>
-                        );
-                    })}
-                </ul>
-                <h3 class="ac-council__h">Impact routing</h3>
-                {(['trivial', 'low_impact', 'medium_impact'] as const).map((cls) => (
-                    <div class="ac-field" key={cls}>
-                        <label class="ac-field__label">{cls}</label>
-                        <select
-                            class="ac-input"
-                            value={cfg.decision[cls] ?? 'agent'}
-                            onChange={(e): void => {
-                                const mode = (e.currentTarget as HTMLSelectElement).value as AiCouncilClassMode;
-                                aiCouncilConfig.value = { ...cfg, decision: { ...cfg.decision, [cls]: mode } };
-                            }}
-                        >
-                            <option value="agent">agent — the agent decides</option>
-                            <option value="council">council — poll the council</option>
-                            <option value="user">user — always ask you</option>
-                        </select>
-                    </div>
-                ))}
-                <p class="ac-field__description">
-                    <code>high_impact</code> and <code>user_required</code> are
-                    locked to “user” (Iron Law) and not editable here.
-                </p>
-            </fieldset>
-        </div>
-    );
-}
-
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
@@ -1412,9 +1214,6 @@ function StepBody(): preact.JSX.Element | null {
     }
     if (step.kind === 'packs') {
         return <PacksStepBody />;
-    }
-    if (step.kind === 'aiCouncil') {
-        return <AiCouncilStepBody />;
     }
 
     // review

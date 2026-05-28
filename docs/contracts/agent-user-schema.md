@@ -30,7 +30,7 @@ role:                      # required — unordered list of role labels; ≥ 1 e
   - engineer
 style:
   pace: "pragmatic"        # pragmatic | thorough | rapid
-voice_sample: |            # required — one paste of the user's typical writing
+voice_sample: |            # optional — one paste of the user's typical writing
   Mach das einfach. Wenn unklar, frag im Council.
 last_updated: "2026-05-15" # YYYY-MM-DD — bumped on every accepted change
 ---
@@ -57,7 +57,7 @@ enforced by `/agents user accept` and `/agents user update`.
 | `language` | yes | Primary language; the agent mirrors per [`language-and-tone`](../../.agent-src/rules/language-and-tone.md). |
 | `role` | yes | Unordered list of role labels (≥ 1). Drives reviewer-voice selection and persona pairing. Seeded enum mirrors `SEED_PROFILE_IDS`; additional free-form entries accepted. |
 | `style.pace` | yes | `pragmatic` (default), `thorough` (more verification), or `rapid` (shorter replies). |
-| `voice_sample` | yes | One representative paste — anchors mirror-back and tone calibration. |
+| `voice_sample` | no | Optional representative paste — sharpens mirror-back and tone calibration when present; may be empty. The setup wizard never blocks a save on it. |
 | `last_updated` | yes | ISO date, bumped on every accept. |
 
 ## Explicit exclusions

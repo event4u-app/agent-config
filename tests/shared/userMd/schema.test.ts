@@ -74,6 +74,21 @@ describe('userIdentitySchema — strict v1 contract', () => {
             expect(messages).toMatch(/voice_sample/);
         }
     });
+
+    // voice_sample is optional (the setup wizard must not block a save on a
+    // missing writing sample). Empty or omitted both resolve to `''`.
+    it('accepts an empty voice_sample', () => {
+        const result = userIdentitySchema.safeParse(validIdentity({ voice_sample: '' }));
+        expect(result.success).toBe(true);
+    });
+
+    it('defaults a missing voice_sample to empty string', () => {
+        const obj = validIdentity();
+        delete (obj as Record<string, unknown>).voice_sample;
+        const result = userIdentitySchema.safeParse(obj);
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.voice_sample).toBe('');
+    });
 });
 
 describe('userIdentitySchema — required-field enforcement', () => {

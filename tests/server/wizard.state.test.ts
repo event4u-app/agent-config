@@ -1,7 +1,7 @@
 /**
  * Phase 1.6 acceptance: wizard state + finish routes.
  *
- *   GET  /api/v1/wizard/state    → starts at step 0, totalSteps default 7,
+ *   GET  /api/v1/wizard/state    → starts at step 0, totalSteps default 8,
  *                                  resumes prior partial after POST.
  *   POST /api/v1/wizard/state    → validates step; rejects negative.
  *   POST /api/v1/wizard/finish   → 2PC dual-write of settings + user-md;
@@ -32,7 +32,7 @@ describe('wizard state + finish', () => {
         expect(res.statusCode).toBe(200);
         const body = res.json() as StateBody;
         expect(body.step).toBe(0);
-        expect(body.totalSteps).toBe(9);
+        expect(body.totalSteps).toBe(8);
         expect(body.partial).toEqual({});
         expect(body.startedAt).toBeNull();
     });
