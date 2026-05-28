@@ -46,10 +46,10 @@ The chosen target (decided in chat 2026-05-27) is a single **Value Dashboard** w
 
 Lock the vocabulary and the single output target before touching any measurement.
 
-- [ ] **Step 1:** Author `docs/contracts/value-dashboard-spec.md` — the one contract that defines: the two panels, the ladder-rung data model (`{id, label, what_it_does, token_delta, eur_delta, cumulative_pct}`), the behaviour-metric set, the reference scale (default **1,000 requests** + the assumed avg request shape), and the "derived view, not a new measurement" relationship to the raw reports. This is the source of truth the renderer and tests bind to.
-- [ ] **Step 2:** Author the plain-language **glossary** block (lives in the spec, rendered into `docs/value.md`): one sentence each for Token, Input vs. Output, condense, rtk, terse/telegraph, "Ohne/Mit Paket", €-per-1k-requests. Written for a non-developer (the owner's "für Dumme" bar).
-- [ ] **Step 3:** Decide and document the canonical output path. Recommendation: **new `docs/value.md`** as the human dashboard; keep `docs/benchmark.md` as the A/B-technical appendix it already is (link the two). Record the decision + rationale in the spec.
-- [ ] **Step 4:** Write a one-page "current honest baseline" note in the spec appendix: the real numbers measured today (A/B tautology, condense +3.52%/−4.84%, telegraph `vs_terse` −9.27%, rtk = unmeasured, Track B = empty) so the gap each later phase closes is explicit.
+- [x] **Step 1:** Author `docs/contracts/value-dashboard-spec.md` — the one contract that defines: the two panels, the ladder-rung data model (`{id, label, what_it_does, token_delta, eur_delta, cumulative_pct}`), the behaviour-metric set, the reference scale (default **1,000 requests** + the assumed avg request shape), and the "derived view, not a new measurement" relationship to the raw reports. This is the source of truth the renderer and tests bind to.
+- [x] **Step 2:** Author the plain-language **glossary** block (lives in the spec, rendered into `docs/value.md`): one sentence each for Token, Input vs. Output, condense, rtk, terse/telegraph, "Ohne/Mit Paket", €-per-1k-requests. Written for a non-developer (the owner's "für Dumme" bar).
+- [x] **Step 3:** Decide and document the canonical output path. Recommendation: **new `docs/value.md`** as the human dashboard; keep `docs/benchmark.md` as the A/B-technical appendix it already is (link the two). Record the decision + rationale in the spec.
+- [x] **Step 4:** Write a one-page "current honest baseline" note in the spec appendix: the real numbers measured today (A/B tautology, condense +3.52%/−4.84%, telegraph `vs_terse` −9.27%, rtk = unmeasured, Track B = empty) so the gap each later phase closes is explicit.
 
 **Exit criteria:** `value-dashboard-spec.md` exists with the rung data model, behaviour-metric set, glossary, canonical-path decision, and honest-baseline appendix. No code changed yet.
 
@@ -59,10 +59,10 @@ Lock the vocabulary and the single output target before touching any measurement
 
 One JSON schema that both panels serialise into, so the renderer has a single input.
 
-- [ ] **Step 1:** Add `docs/contracts/value-report-schema.md` (sibling to `benchmark-report-schema.md`) — defines `value-v1`: a `cost_ladder` array of rungs and a `behaviour` block, each rung carrying `token_delta`, `eur_delta`, `cumulative_pct`, `source_report` (which raw report it was derived from), and a `confidence` field (`measured` | `estimated` | `vendor-claim`).
-- [ ] **Step 2:** Add `scripts/_lib/value_ladder.py` — pure functions that take raw report dicts (telegraph, frugality, rtk, A/B) and emit normalised rung objects. No I/O, fully unit-testable. Token→€ conversion reuses `internal/bench/pricing.yaml`.
-- [ ] **Step 3:** Add `scripts/_lib/value_report.py` — assembles the `value-v1` JSON from the available raw reports; missing inputs degrade gracefully (rung marked `pending`, never crashes — mirror `render_benchmark_md.py`'s placeholder discipline).
-- [ ] **Step 4:** Unit tests `tests/test_value_ladder.py` — fixed raw-report fixtures in → expected rung objects out, including the negative-saving and missing-input cases.
+- [x] **Step 1:** Add `docs/contracts/value-report-schema.md` (sibling to `benchmark-report-schema.md`) — defines `value-v1`: a `cost_ladder` array of rungs and a `behaviour` block, each rung carrying `token_delta`, `eur_delta`, `cumulative_pct`, `source_report` (which raw report it was derived from), and a `confidence` field (`measured` | `estimated` | `vendor-claim`).
+- [x] **Step 2:** Add `scripts/_lib/value_ladder.py` — pure functions that take raw report dicts (telegraph, frugality, rtk, A/B) and emit normalised rung objects. No I/O, fully unit-testable. Token→€ conversion reuses `internal/bench/pricing.yaml`.
+- [x] **Step 3:** Add `scripts/_lib/value_report.py` — assembles the `value-v1` JSON from the available raw reports; missing inputs degrade gracefully (rung marked `pending`, never crashes — mirror `render_benchmark_md.py`'s placeholder discipline).
+- [x] **Step 4:** Unit tests `tests/test_value_ladder.py` — fixed raw-report fixtures in → expected rung objects out, including the negative-saving and missing-input cases.
 
 **Exit criteria:** `python3 -m pytest tests/test_value_ladder.py` green; `value_report.py` emits a valid `value-v1` JSON from the current on-disk reports (with `pending` rungs where data is missing).
 
@@ -72,11 +72,11 @@ One JSON schema that both panels serialise into, so the renderer has a single in
 
 Each rung is a measurement, sourced from a raw report. Build them bottom-up.
 
-- [ ] **Step 1 — Paket-load rung (the honest up-front cost).** Reuse `measure_frugality_savings.py` Metric A (always-loaded kernel + router footprint in chars→tokens). Emit a positive `token_delta` rung labelled "Mit Paket (Regeln laden)". This is the rung that makes the dashboard honest — the package costs before it saves.
-- [ ] **Step 2 — condense rung.** Reuse the `telegraph-v2` input-side report. Aggregate to a single rung, **excluding Thin-Root files** (they net negative — the spec's rule-of-thumb). Mark `confidence: measured`. Surface the Thin-Root caveat as a footnote, not a hidden exclusion.
-- [ ] **Step 3 — rtk rung (NEW measurement, the big gap).** Add `scripts/bench_rtk_savings.py` + corpus `internal/bench/corpora/rtk/commands.yaml` — a fixed set of representative verbose CLI invocations (`git status`, `git diff`, test-runner output, `npm ls`, lint output). For each: capture raw output bytes, capture `rtk`-filtered output bytes, compute token delta via the same chars→tokens basis. If `rtk gain --history` exposes a machine-readable total, cross-check against it. Emit the rtk rung with `confidence: measured`; if `rtk` is not installed, rung = `pending` with the install hint (per `missing-tool-handling`, surface — do not silently substitute).
-- [ ] **Step 4 — terse/telegraph output rung.** Reuse `telegraph-v1` output-side (`vs_terse`). **Be honest:** the measured median is negative vs a plain "be concise" control. Either (a) render it as a rung with its real (possibly negative) value and a one-line "why" note, or (b) move it to Panel B as a quality lever, not a cost saver — decide in the spec, record the rationale. Do not present a negative number as a saving.
-- [ ] **Step 5 — assemble the cumulative ladder.** Wire all rungs through `value_ladder.py` into the running cumulative + net line. Verify the net matches a hand-computed example at the 1,000-request reference scale.
+- [x] **Step 1 — Paket-load rung (the honest up-front cost).** Reuse `measure_frugality_savings.py` Metric A (always-loaded kernel + router footprint in chars→tokens). Emit a positive `token_delta` rung labelled "Mit Paket (Regeln laden)". This is the rung that makes the dashboard honest — the package costs before it saves.
+- [x] **Step 2 — condense rung.** Reuse the `telegraph-v2` input-side report. Aggregate to a single rung, **excluding Thin-Root files** (they net negative — the spec's rule-of-thumb). Mark `confidence: measured`. Surface the Thin-Root caveat as a footnote, not a hidden exclusion.
+- [x] **Step 3 — rtk rung (NEW measurement, the big gap).** Add `scripts/bench_rtk_savings.py` + corpus `internal/bench/corpora/rtk/commands.yaml` — a fixed set of representative verbose CLI invocations (`git status`, `git diff`, test-runner output, `npm ls`, lint output). For each: capture raw output bytes, capture `rtk`-filtered output bytes, compute token delta via the same chars→tokens basis. If `rtk gain --history` exposes a machine-readable total, cross-check against it. Emit the rtk rung with `confidence: measured`; if `rtk` is not installed, rung = `pending` with the install hint (per `missing-tool-handling`, surface — do not silently substitute).
+- [x] **Step 4 — terse/telegraph output rung.** Reuse `telegraph-v1` output-side (`vs_terse`). **Be honest:** the measured median is negative vs a plain "be concise" control. Either (a) render it as a rung with its real (possibly negative) value and a one-line "why" note, or (b) move it to Panel B as a quality lever, not a cost saver — decide in the spec, record the rationale. Do not present a negative number as a saving.
+- [x] **Step 5 — assemble the cumulative ladder.** Wire all rungs through `value_ladder.py` into the running cumulative + net line. Verify the net matches a hand-computed example at the 1,000-request reference scale.
 
 **Exit criteria:** `value-v1` JSON contains four measured/marked rungs + a cumulative net; the rtk bench runs and produces a real number (or a clean `pending` with install hint); the Thin-Root and negative-terse caveats are present, not hidden.
 
@@ -86,10 +86,10 @@ Each rung is a measurement, sourced from a raw report. Build them bottom-up.
 
 Panel B is the package's strongest value and is currently empty. Populate it with real runs.
 
-- [ ] **Step 1 — Track B live.** Run `task bench:ab:live` (real `claude --print` per task) and capture a real completion-rate + ask-vs-act + mean wall-time for with vs. without. Record the report under `internal/bench/reports/ab/`. (Cost-bearing — needs `ANTHROPIC_API_KEY`; a `--samples 1` daily-read is the default per the A/B contract.)
-- [ ] **Step 2 — right-skill selection.** Surface the existing selection-accuracy bench (`dev` corpus, top-K hit rate) as a behaviour metric with vs. without. Reuse the existing runner; do not re-implement.
-- [ ] **Step 3 — destructive-op stops.** Use the 5 destructive/security prompts already defined in `benchmark-corpus-spec.md`. Measure, with vs. without, whether the agent refuses / stops / asks before the destructive action. Emit a `stops: N/5 vs M/5` metric. This is the safety value the Hard-Floor rules deliver — currently unquantified.
-- [ ] **Step 4 — normalise into the `behaviour` block** of `value-v1` via `value_report.py`. Each metric carries its `with`, `without`, and `delta`, plus the run `mode` (`live` | `dry-run`) so a dry-run number can never masquerade as evidence.
+- [x] **Step 1 — Track B live.** Run `task bench:ab:live` (real `claude --print` per task) and capture a real completion-rate + ask-vs-act + mean wall-time for with vs. without. Record the report under `internal/bench/reports/ab/`. (Cost-bearing — needs `ANTHROPIC_API_KEY`; a `--samples 1` daily-read is the default per the A/B contract.)
+- [x] **Step 2 — right-skill selection.** Surface the existing selection-accuracy bench (`dev` corpus, top-K hit rate) as a behaviour metric with vs. without. Reuse the existing runner; do not re-implement.
+- [x] **Step 3 — destructive-op stops.** Use the 5 destructive/security prompts already defined in `benchmark-corpus-spec.md`. Measure, with vs. without, whether the agent refuses / stops / asks before the destructive action. Emit a `stops: N/5 vs M/5` metric. This is the safety value the Hard-Floor rules deliver — currently unquantified.
+- [x] **Step 4 — normalise into the `behaviour` block** of `value-v1` via `value_report.py`. Each metric carries its `with`, `without`, and `delta`, plus the run `mode` (`live` | `dry-run`) so a dry-run number can never masquerade as evidence.
 
 **Exit criteria:** the `behaviour` block carries four real with-vs-without metrics from at least one `live` run; dry-run runs are clearly badged and excluded from the headline.
 
@@ -99,12 +99,12 @@ Panel B is the package's strongest value and is currently empty. Populate it wit
 
 One renderer, two panels, plain language, honest callouts.
 
-- [ ] **Step 1:** Add `scripts/render_value_md.py` — deterministic, no bench execution (mirror `render_benchmark_md.py`). Reads the latest `value-v1` JSON, writes `docs/value.md`. Placeholder document when data is missing — never errors.
-- [ ] **Step 2:** Render **Panel A** as the ladder a layperson reads: each rung = label · what-it-does (one phrase) · Δ% · €-at-1k-requests · cumulative. End with a bold **NETTO** line and the min→max framing. Include the "⚠️ erst teurer" honesty note on the Paket-load rung.
-- [ ] **Step 3:** Render **Panel B** as a plain with-vs-without table (right-skill selection, destructive stops, ask-vs-act, task completion), each with a one-line "what this means" caption.
-- [ ] **Step 4:** Render the **glossary** (from Phase 0) and a **"how to read this page"** intro paragraph at the top. Render the `mode` badge (live/dry-run) and `confidence` markers (measured/estimated/vendor-claim) inline.
-- [ ] **Step 5:** Reframe the misleading `docs/benchmark.md` headline — replace the Track A `100% vs 0%` tautology row with a one-line note ("Track A confirms surface availability — a precondition, not an impact metric; see `docs/value.md` for impact") and link to `docs/value.md`. Minimal edit to the existing renderer; do not delete Track A.
-- [ ] **Step 6:** Golden-output test `tests/test_render_value_md.py` — fixed `value-v1` JSON in → byte-stable `docs/value.md` out; asserts every panel + glossary + net line present (mirror the `REQUIRED_SECTIONS` pattern in `render_benchmark_md.py`).
+- [x] **Step 1:** Add `scripts/render_value_md.py` — deterministic, no bench execution (mirror `render_benchmark_md.py`). Reads the latest `value-v1` JSON, writes `docs/value.md`. Placeholder document when data is missing — never errors.
+- [x] **Step 2:** Render **Panel A** as the ladder a layperson reads: each rung = label · what-it-does (one phrase) · Δ% · €-at-1k-requests · cumulative. End with a bold **NETTO** line and the min→max framing. Include the "⚠️ erst teurer" honesty note on the Paket-load rung.
+- [x] **Step 3:** Render **Panel B** as a plain with-vs-without table (right-skill selection, destructive stops, ask-vs-act, task completion), each with a one-line "what this means" caption.
+- [x] **Step 4:** Render the **glossary** (from Phase 0) and a **"how to read this page"** intro paragraph at the top. Render the `mode` badge (live/dry-run) and `confidence` markers (measured/estimated/vendor-claim) inline.
+- [x] **Step 5:** Reframe the misleading `docs/benchmark.md` headline — replace the Track A `100% vs 0%` tautology row with a one-line note ("Track A confirms surface availability — a precondition, not an impact metric; see `docs/value.md` for impact") and link to `docs/value.md`. Minimal edit to the existing renderer; do not delete Track A.
+- [x] **Step 6:** Golden-output test `tests/test_render_value_md.py` — fixed `value-v1` JSON in → byte-stable `docs/value.md` out; asserts every panel + glossary + net line present (mirror the `REQUIRED_SECTIONS` pattern in `render_benchmark_md.py`).
 
 **Exit criteria:** `docs/value.md` renders both panels + glossary + net line + honesty callouts from real data; `pytest tests/test_render_value_md.py` green; `docs/benchmark.md` Track A row no longer reads as an impact claim.
 
@@ -114,10 +114,10 @@ One renderer, two panels, plain language, honest callouts.
 
 Make it runnable, documented, and CI-checked.
 
-- [ ] **Step 1:** Add task targets in `taskfiles/` — `task value` (assemble JSON + render `docs/value.md` from existing reports, cheap, no API), `task value:refresh` (re-run the cost-axis benches: frugality + telegraph + rtk), `task value:behaviour` (the cost-bearing live Track-B + behaviour run). Mirror the `bench:ab*` naming.
-- [ ] **Step 2:** Update `docs/benchmarks.md` cadence table — add the `value` corpus/dashboard row, its refresh triggers (edit to any rung source → re-render), and the rtk-corpus cost envelope.
-- [ ] **Step 3:** Add `scripts/lint_value_dashboard.py` — assert `docs/value.md` carries all required sections, every rung cites a `source_report`, no rung claims `measured` without one, and no negative number is labelled "saving". Wire into the lint cadence.
-- [ ] **Step 4:** Run `task ci` and confirm green (allowed — `quality.local_auto_run: true`). Capture fresh output as the completion evidence per `verify-before-complete`.
+- [x] **Step 1:** Add task targets in `taskfiles/` — `task value` (assemble JSON + render `docs/value.md` from existing reports, cheap, no API), `task value:refresh` (re-run the cost-axis benches: frugality + telegraph + rtk), `task value:behaviour` (the cost-bearing live Track-B + behaviour run). Mirror the `bench:ab*` naming.
+- [x] **Step 2:** Update `docs/benchmarks.md` cadence table — add the `value` corpus/dashboard row, its refresh triggers (edit to any rung source → re-render), and the rtk-corpus cost envelope.
+- [x] **Step 3:** Add `scripts/lint_value_dashboard.py` — assert `docs/value.md` carries all required sections, every rung cites a `source_report`, no rung claims `measured` without one, and no negative number is labelled "saving". Wire into the lint cadence.
+- [x] **Step 4:** Run `task ci` and confirm green (allowed — `quality.local_auto_run: true`). Capture fresh output as the completion evidence per `verify-before-complete`.
 
 **Exit criteria:** `task value` produces `docs/value.md` in one command; `task ci` green with the new lint + tests included; cadence documented.
 
