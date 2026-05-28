@@ -173,3 +173,21 @@ agents/state/
 # (rebuilt by scripts/bench_ab_clone.py on demand). The fixture, README, and
 # scripts are tracked; only the clones tree is gitignored.
 /internal/bench/ab/clones/
+
+# Install-time artefacts written by scripts/install.py inside the
+# project tree. Per-user / per-install state — never source-of-truth.
+#
+# - .legacy-pre-global-only/<stamp>/ — ADR-020 migration audit-trail
+#   snapshot. Used by `agent-config migrate-to-global rollback`;
+#   regenerated on demand. Maintainer repo gets one auto-created when
+#   the consumer-mode auto-detect is bypassed; safe to delete after the
+#   rollback window closes.
+# - agents/.event4u-bridge.yml — consumer-bridge marker (ADR-020). Tells
+#   downstream tooling the project is global-only. Legit in consumer
+#   projects; never in the maintainer source repo. The Q1 auto-detect
+#   (_is_agent_config_source_repo) prevents future re-creation here.
+# - agents/installed-tools.lock — global-scope tool inventory with
+#   absolute user paths. Per-user state, leaks the maintainer's $HOME.
+/.legacy-pre-global-only/
+/agents/.event4u-bridge.yml
+/agents/installed-tools.lock
