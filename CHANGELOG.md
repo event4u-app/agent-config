@@ -802,6 +802,18 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.7.0](https://github.com/event4u-app/agent-config/compare/4.6.0...4.7.0) (2026-05-28)
+
+### Features
+
+* **wizard:** drop the AI Council step from setup ([868853d](https://github.com/event4u-app/agent-config/commit/868853de2a7b973a0d9953422e914e6eef80bdfd))
+
+### Bug Fixes
+
+* **wizard:** make voice_sample optional so setup can save ([cfeeb93](https://github.com/event4u-app/agent-config/commit/cfeeb932344f3c0586d6baacbd30186deac377b9))
+
+Tests: 5064 (+0 since 4.6.0)
+
 ## [4.6.0](https://github.com/event4u-app/agent-config/compare/4.5.0...4.6.0) (2026-05-28)
 
 ### Features
