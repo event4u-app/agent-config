@@ -802,6 +802,30 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.8.0](https://github.com/event4u-app/agent-config/compare/4.7.2...4.8.0) (2026-05-28)
+
+### Features
+
+* **install:** close Claude Code global distribution gap ([aa15db9](https://github.com/event4u-app/agent-config/commit/aa15db9651c4fd21f8bd30ef88e3aeeb1eb31e22))
+
+### Bug Fixes
+
+* **maintainer:** align .claude/settings.json plugin id ([b59e080](https://github.com/event4u-app/agent-config/commit/b59e0804e874e9c7c95cfc821a31746e4241f61c))
+
+### Documentation
+
+* **adr:** record claude-code command-projection strategy (ADR-030) ([706dedb](https://github.com/event4u-app/agent-config/commit/706dedb54f5792a2cf5b7c2401054b30490edeec))
+
+### Tests
+
+* **install:** regression coverage for global distribution heal ([bfdbc90](https://github.com/event4u-app/agent-config/commit/bfdbc9053d9032ffd10248835ba03f276631c7b3))
+
+### Chores
+
+* gitignore install-time artefacts in maintainer repo ([d75aeac](https://github.com/event4u-app/agent-config/commit/d75aeac4ed8858d2cddc7e3534eeff6bfb1ab036))
+
+Tests: 5078 (+14 since 4.7.2)
+
 ## [4.7.2](https://github.com/event4u-app/agent-config/compare/4.7.1...4.7.2) (2026-05-28)
 
 ### Bug Fixes
