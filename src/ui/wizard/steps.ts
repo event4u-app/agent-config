@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs' | 'aiCouncil';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -141,13 +141,6 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'memory.review_threshold',
             'memory.redact_patterns',
         ],
-    },
-    {
-        id: 'ai-council',
-        title: 'AI Council',
-        navLabel: 'AI Council',
-        subtitle: 'External second-opinion network. Enable members, pick transport + rounds + budget + impact routing, add provider keys. Writes .ai-council.yml.',
-        kind: 'aiCouncil',
     },
     {
         id: 'user-md',
