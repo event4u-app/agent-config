@@ -28,7 +28,7 @@ export function defaultIdentity(): UserIdentity {
         version: 1,
         identity: { name: '' },
         language: 'en',
-        role: [''],
+        role: [],
         style: { pace: 'pragmatic' },
         voice_sample: '',
         last_updated: '1970-01-01',
@@ -48,9 +48,11 @@ function pickPace(value: unknown): UserIdentity['style']['pace'] {
 }
 
 function pickRoles(value: unknown): string[] {
-    if (!Array.isArray(value)) return [''];
-    const filtered = value.filter((v): v is string => typeof v === 'string');
-    return filtered.length === 0 ? [''] : filtered;
+    if (!Array.isArray(value)) return [];
+    // Drop empty-string entries — an empty role entry is meaningless and
+    // would fail the schema's per-entry min(1). Returning `[]` is allowed
+    // (role is optional; the wizard must not block setup on a role pick).
+    return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '');
 }
 
 function pickNotes(value: unknown): string | undefined {

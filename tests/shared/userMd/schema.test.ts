@@ -89,6 +89,30 @@ describe('userIdentitySchema — strict v1 contract', () => {
         expect(result.success).toBe(true);
         if (result.success) expect(result.data.voice_sample).toBe('');
     });
+
+    // role is optional (the setup wizard must not block a save on a role pick).
+    // Empty array is allowed; each present entry must be non-empty.
+    it('accepts an empty role array', () => {
+        const result = userIdentitySchema.safeParse(validIdentity({ role: [] }));
+        expect(result.success).toBe(true);
+    });
+
+    it('defaults a missing role to empty array', () => {
+        const obj = validIdentity();
+        delete (obj as Record<string, unknown>).role;
+        const result = userIdentitySchema.safeParse(obj);
+        expect(result.success).toBe(true);
+        if (result.success) expect(result.data.role).toEqual([]);
+    });
+
+    it('still rejects role entries that are empty strings', () => {
+        const result = userIdentitySchema.safeParse(validIdentity({ role: [''] }));
+        expect(result.success).toBe(false);
+        if (!result.success) {
+            const messages = result.error.issues.map((i) => i.message).join(' | ');
+            expect(messages).toMatch(/role entries must be non-empty/);
+        }
+    });
 });
 
 describe('userIdentitySchema — required-field enforcement', () => {
@@ -110,15 +134,6 @@ describe('userIdentitySchema — required-field enforcement', () => {
         if (!result.success) {
             const paths = result.error.issues.map((i) => i.path.join('.'));
             expect(paths.some((p) => p.includes('identity.name'))).toBe(true);
-        }
-    });
-
-    it('rejects empty role list', () => {
-        const result = userIdentitySchema.safeParse(validIdentity({ role: [] }));
-        expect(result.success).toBe(false);
-        if (!result.success) {
-            const messages = result.error.issues.map((i) => i.message).join(' | ');
-            expect(messages).toMatch(/role/);
         }
     });
 

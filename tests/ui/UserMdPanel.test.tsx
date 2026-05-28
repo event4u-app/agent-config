@@ -133,7 +133,7 @@ describe('UserMdPanel', () => {
             expect(putIdentity.version).toBe(1);
             expect((putIdentity.identity as { name: string }).name).toBe('');
             expect(putIdentity.language).toBe('en');
-            expect(putIdentity.role).toEqual(['']);
+            expect(putIdentity.role).toEqual([]);
             expect(putIdentity.last_updated).toBe('1970-01-01');
         } finally {
             mock.restore();
