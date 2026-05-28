@@ -1,6 +1,6 @@
 {
   "enabledPlugins": {
-    "agent-conf@event4u": true
+    "agent-config@event4u-agent-config": true
   },
   "hooks": {
     "SessionStart": [

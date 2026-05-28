@@ -91,6 +91,36 @@ class DetectionTests(_Base):
         (self.project / ".agent-src.uncondensed").mkdir()
         self.assertEqual(install._detect_legacy_for_migration(self.project), [])
 
+    def test_source_repo_bypasses_via_nested_package_layout(self) -> None:
+        # Current layout: `.agent-src.uncondensed/` lives under
+        # `packages/<name>/.agent-src.uncondensed/`. The auto-detect must
+        # still classify the cwd as the source repo (Q1 of the
+        # road-to-claude-code-global-distribution roadmap, council
+        # Option D — Hybrid auto-detect).
+        (self.project / "packages" / "core" / ".agent-src.uncondensed").mkdir(parents=True)
+        self.assertEqual(install._detect_legacy_for_migration(self.project), [])
+
+    def test_source_repo_bypasses_via_package_json_name(self) -> None:
+        # Strongest signature: package.json declares the agent-config
+        # npm identity. Maintainer clones / forks named differently
+        # still match as long as the package.json name is preserved.
+        (self.project / "package.json").write_text(
+            '{"name": "@event4u/agent-config", "version": "9.9.9"}\n',
+            encoding="utf-8",
+        )
+        self.assertEqual(install._detect_legacy_for_migration(self.project), [])
+
+    def test_consumer_mode_override_re_enables_migration(self) -> None:
+        # AGENT_CONFIG_CONSUMER_MODE=1 forces the consumer flow even
+        # when the maintainer signatures match — the end-to-end
+        # consumer-flow QA path needs this escape hatch.
+        (self.project / ".agent-src.uncondensed").mkdir()
+        with mock.patch.dict(
+            os.environ, {"AGENT_CONFIG_CONSUMER_MODE": "1"}
+        ):
+            found = install._detect_legacy_for_migration(self.project)
+        self.assertIn(".agent-settings.yml", found)
+
     def test_bridge_marker_bypasses_detection(self) -> None:
         marker = self.project / install.CONSUMER_BRIDGE_MARKER_RELPATH
         marker.parent.mkdir(parents=True, exist_ok=True)

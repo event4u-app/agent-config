@@ -944,6 +944,55 @@ class TestBridges(SilentTest):
         self.assertTrue(
             data["enabledPlugins"]["agent-config@event4u-agent-config"])
 
+    def test_claude_bridge_heals_legacy_plugin_id(self) -> None:
+        # Pre-4.x installer versions wrote abbreviated / pre-rename plugin
+        # ids that Claude Code cannot resolve to a real marketplace + plugin
+        # pair (silent fail — plugin stays inactive). The bridge MUST remove
+        # those stale ids on rerun AND add the canonical id alongside, even
+        # when called with force=False (the heal self-authorises the merge).
+        target = self.project / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        seeded = {
+            "enabledPlugins": {
+                "agent-conf@event4u": True,        # abbreviated stale form
+                "agent-config@event4u": True,      # pre-rename stale form
+                "neighbour@neighbour-mkt": True,   # foreign id — must survive
+            },
+        }
+        target.write_text(json.dumps(seeded), encoding="utf-8")
+
+        install.ensure_claude_bridge(self.project, force=False)
+
+        data = json.loads(target.read_text())
+        self.assertNotIn("agent-conf@event4u", data["enabledPlugins"])
+        self.assertNotIn("agent-config@event4u", data["enabledPlugins"])
+        self.assertTrue(
+            data["enabledPlugins"]["agent-config@event4u-agent-config"])
+        self.assertTrue(
+            data["enabledPlugins"]["neighbour@neighbour-mkt"],
+            "Foreign plugin ids owned by other packages must survive the heal.",
+        )
+
+    def test_claude_bridge_no_heal_when_clean(self) -> None:
+        # When the settings file already carries only the canonical id (no
+        # stale ids), the heal helper must be a no-op and the regular
+        # merge path applies — needs force=True to overwrite, per the
+        # existing merge_json_file contract.
+        target = self.project / ".claude" / "settings.json"
+        target.parent.mkdir(parents=True, exist_ok=True)
+        seeded = {
+            "enabledPlugins": {"agent-config@event4u-agent-config": True},
+        }
+        target.write_text(json.dumps(seeded), encoding="utf-8")
+
+        # No force, no heal needed → file untouched, no error.
+        install.ensure_claude_bridge(self.project, force=False)
+        data = json.loads(target.read_text())
+        self.assertEqual(
+            set(data["enabledPlugins"].keys()),
+            {"agent-config@event4u-agent-config"},
+        )
+
     def test_cursor_bridge_writes_dispatcher_hooks(self) -> None:
         # Phase 7.5 — `.cursor/hooks.json` must wire all five lifecycle
         # events (sessionStart/End, stop, beforeSubmitPrompt, postToolUse)
