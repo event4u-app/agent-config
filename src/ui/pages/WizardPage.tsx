@@ -42,8 +42,6 @@ import {
     type AiCouncilState,
     banner,
     clampStep,
-    conflictBatchChoice,
-    conflictResolutions,
     continueAcknowledged,
     detectedPackIds,
     diffLoading,
@@ -56,9 +54,6 @@ import {
     extendedSteps,
     getActiveSteps,
     initialSettings,
-    installPlan,
-    installPlanError,
-    installPlanLoading,
     legacyHints,
     legacyV3,
     legacyV3Acknowledged,
@@ -66,16 +61,6 @@ import {
     legacyV3Error,
     loaded,
     loadError,
-    moduleCandidates,
-    moduleSelection,
-    modulesAgentFolder,
-    modulesEnabled,
-    modulesLoadError,
-    modulesLoaded,
-    modulesLoading,
-    modulesNamespaceTemplate,
-    modulesProjectRoot,
-    modulesSkipped,
     recoveryDismissed,
     recoveryStatus,
     reviewChanges,
@@ -105,15 +90,9 @@ import {
     values,
     wizardComplete,
     wizardMode,
-    wizardScope,
-    type ConflictBatchChoice,
-    type ConflictResolutionWire,
     type DiscoveryPack,
     type DiscoveryWorkspace,
-    type InstallPlanWire,
     type LegacyV3Status,
-    type ModulesDetectResponse,
-    type ProposedModulesBlock,
     type RecoveryStatus,
     type SettingsLegacyHints,
     type WizardServerState,
@@ -277,9 +256,6 @@ async function loadAll(): Promise<void> {
         if (resumed.kind === 'welcome' || resumed.kind === 'userMd' || resumed.kind === 'review') {
             void loadUserMdOnce();
         }
-        if (resumed.kind === 'modules') {
-            void loadModulesOnce();
-        }
         if (resumed.kind === 'roles' || resumed.kind === 'aiTools' || resumed.kind === 'packs') {
             void loadDiscoveryOnce();
         }
@@ -294,7 +270,6 @@ async function loadAll(): Promise<void> {
         }
         if (resumed.kind === 'review') {
             void refreshDiff();
-            void loadInstallPlan();
         }
     } catch (err) {
         if (err instanceof ApiCallError) {
@@ -347,44 +322,6 @@ async function loadUserMdOnce(): Promise<void> {
         banner.value = { message: err instanceof Error ? err.message : String(err), tone: 'error' };
     } finally {
         userMdLoaded.value = true;
-    }
-}
-
-/**
- * Fetch `/api/v1/modules/detect` once per wizard session. The endpoint
- * shells out to `scripts/propose_modules_config.py --json` which can be
- * slow on large repos, so we cache the result behind `modulesLoaded`
- * and only re-fetch on an explicit page reload.
- *
- * On error we surface the message on `modulesLoadError` and leave the
- * candidates list empty — the renderer falls back to the "no roots
- * detected" branch which still lets the user skip the step.
- */
-async function loadModulesOnce(): Promise<void> {
-    if (modulesLoaded.value || modulesLoading.value) return;
-    modulesLoading.value = true;
-    modulesLoadError.value = null;
-    try {
-        const res = await apiFetch<ModulesDetectResponse>('/api/v1/modules/detect');
-        moduleCandidates.value = res.candidates;
-        modulesProjectRoot.value = res.project_root;
-        // Pre-select every detected candidate — the most common path is
-        // "yes, all of them"; declining is one click per row.
-        const sel: Record<string, boolean> = {};
-        for (const c of res.candidates) sel[c.path] = true;
-        moduleSelection.value = sel;
-        modulesEnabled.value = res.proposed_block.enabled;
-        modulesNamespaceTemplate.value = res.proposed_block.namespace_template ?? '';
-        modulesAgentFolder.value = res.proposed_block.agent_folder ?? 'agents';
-    } catch (err) {
-        if (err instanceof ApiCallError) {
-            modulesLoadError.value = topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message });
-        } else {
-            modulesLoadError.value = err instanceof Error ? err.message : String(err);
-        }
-    } finally {
-        modulesLoading.value = false;
-        modulesLoaded.value = true;
     }
 }
 
@@ -630,56 +567,6 @@ async function refreshDiff(): Promise<void> {
     }
 }
 
-/**
- * Fetch the install plan for the current AI-tool selection from the v4
- * TypeScript engine (`POST /api/v1/install/plan`, wizard branch). Runs
- * on every Review-step entry so a back-edit on the AI-tools step is
- * reflected without a manual refresh. Empty `selectedTools` → skips
- * the fetch and clears the plan so the Review screen renders the
- * "nothing to install" line. road-to-unified-setup § Phase B2.
- */
-async function loadInstallPlan(): Promise<void> {
-    const toolIds = Object.entries(selectedTools.value)
-        .filter(([, v]) => v === true)
-        .map(([id]) => id);
-    if (toolIds.length === 0) {
-        installPlan.value = null;
-        installPlanError.value = null;
-        return;
-    }
-    installPlanLoading.value = true;
-    installPlanError.value = null;
-    try {
-        const res = await apiFetch<InstallPlanWire>(
-            '/api/v1/install/plan',
-            {
-                method: 'POST',
-                body: {
-                    target: 'global',
-                    root: '~',
-                    toolIds,
-                    policy: {
-                        force: false,
-                        interactive: true,
-                        knownPaths: [],
-                        knownPointers: [],
-                        defaultStrategy: 'surface-to-ui',
-                    },
-                },
-            },
-        );
-        installPlan.value = res;
-    } catch (err) {
-        installPlan.value = null;
-        const message = err instanceof ApiCallError
-            ? topLevelCopy(err.body.error ?? { code: 'UNKNOWN', message: err.message })
-            : err instanceof Error ? err.message : String(err);
-        installPlanError.value = message;
-    } finally {
-        installPlanLoading.value = false;
-    }
-}
-
 function userMdChanged(): boolean {
     if (userMdSkipped.value) return false;
     if (userMdBody.value === null || userMdInitial.value === null) {
@@ -700,9 +587,6 @@ async function goTo(nextIndex: number): Promise<void> {
     if (next.kind === 'welcome' || next.kind === 'userMd') {
         void loadUserMdOnce();
     }
-    if (next.kind === 'modules') {
-        void loadModulesOnce();
-    }
     if (next.kind === 'roles' || next.kind === 'aiTools' || next.kind === 'packs') {
         void loadDiscoveryOnce();
     }
@@ -720,7 +604,6 @@ async function goTo(nextIndex: number): Promise<void> {
     }
     if (next.kind === 'review') {
         void refreshDiff();
-        void loadInstallPlan();
     }
 }
 
@@ -820,9 +703,9 @@ function buildApplyPayload(): {
         packs,
         settings: values.value,
     };
-    if (serverStatus.value?.projectScopeAvailable === true && wizardScope.value === 'project') {
-        payload.scope_to_project_only = true;
-    }
+    // Global-only install: tool files always land in the global tree. The
+    // project-scoped surface (modules) is handled by the dedicated Projekt
+    // page, not the wizard apply.
     return payload;
 }
 
@@ -833,8 +716,6 @@ async function finish(): Promise<void> {
         const body: {
             settings: Record<string, JsonValue>;
             identity?: UserIdentity;
-            scope?: 'global' | 'project';
-            modulesConfig?: ProposedModulesBlock;
         } = {
             settings: values.value,
         };
@@ -854,21 +735,10 @@ async function finish(): Promise<void> {
                 ? { ...userMdBody.value, role: roleIds }
                 : userMdBody.value;
         }
-        // road-to-global-only-install § Phase 2.3 — include the scope
-        // selection only when the server advertised the opt-in. Older
-        // server bundles ignore unknown fields, but omitting it on
-        // unavailable surfaces keeps the wire shape minimal.
-        if (serverStatus.value?.projectScopeAvailable === true) {
-            body.scope = wizardScope.value;
-        }
-        // road-to-configurable-modules § Phase E — include the modules
-        // payload only when the maintainer reached the modules step and
-        // didn't explicitly skip. Omitted on skip / decline so the team
-        // file (`.agent-project-settings.yml`) stays untouched.
-        const modulesConfig = buildModulesConfig();
-        if (modulesConfig !== null) {
-            body.modulesConfig = modulesConfig;
-        }
+        // Global-only install: settings always land in the global tree, so
+        // no `scope` field is sent (the server defaults to 'global'). The
+        // project-scoped surface (modules) lives on the dedicated Projekt
+        // page and saves via `/api/v1/modules/apply`, not the wizard finish.
         const res = await apiFetch<FinishResponse>(
             '/api/v1/wizard/finish',
             { method: 'POST', body },
@@ -955,160 +825,6 @@ async function finish(): Promise<void> {
     } finally {
         saving.value = false;
     }
-}
-
-/**
- * Renderer for the extended-mode `modules` step. Bespoke (not driven by
- * `SchemaForm`) because the data source is the live `/modules/detect`
- * scan, not the static settings schema — candidates change per project,
- * per branch, even per commit. road-to-configurable-modules § Phase E.
- *
- * UI shape:
- *   - Loading spinner while detection runs.
- *   - Error banner with retry copy when the bridge fails.
- *   - "No roots detected" branch with a skip hint when the scan finds
- *     nothing — the user can still click Skip on the StepNav to leave
- *     `.agent-project-settings.yml` untouched.
- *   - One checkbox per detected candidate; pre-selected on first load.
- *   - Two text inputs for `namespace_template` and `agent_folder`
- *     (default `agents`) so a maintainer can tighten the proposal
- *     before persisting.
- *   - Master enable/disable toggle — turning it off writes
- *     `modules.enabled: false` so the team file stays explicit.
- */
-function ModulesStepBody(): preact.JSX.Element {
-    if (modulesLoading.value) {
-        return <p>Detecting module roots…</p>;
-    }
-    if (modulesLoadError.value !== null) {
-        return (
-            <div class="ac-wizard-step-stub">
-                <p class="ac-banner ac-banner--error">
-                    Module detection failed: {modulesLoadError.value}
-                </p>
-                <p>
-                    You can skip this step — `.agent-project-settings.yml` will be
-                    left as-is. Re-run the wizard after fixing the underlying
-                    bridge to populate `modules:` automatically.
-                </p>
-            </div>
-        );
-    }
-    const candidates = moduleCandidates.value;
-    const sel = moduleSelection.value;
-    const root = modulesProjectRoot.value;
-    return (
-        <div class="ac-wizard-step-stub">
-            {root !== null
-                ? (
-                    <p>
-                        Scanning <code>{root}</code>. Pick which detected roots the
-                        agent should treat as modules. Skip leaves
-                        <code> .agent-project-settings.yml</code> untouched.
-                    </p>
-                )
-                : null}
-            <label>
-                <input
-                    type="checkbox"
-                    checked={modulesEnabled.value}
-                    onChange={(e): void => {
-                        modulesEnabled.value = (e.currentTarget as HTMLInputElement).checked;
-                        modulesSkipped.value = false;
-                    }}
-                />
-                {' '}Enable module discovery (writes <code>modules.enabled</code>)
-            </label>
-            {candidates.length === 0
-                ? (
-                    <p>
-                        <em>No module roots detected.</em> The wizard found no
-                        common module layouts (Laravel <code>app/Modules/</code>,
-                        Symfony <code>src/Module/</code>, Node <code>packages/</code>,
-                        Python <code>src/</code>, Go <code>internal/</code>). Skip to
-                        leave <code>modules:</code> blank.
-                    </p>
-                )
-                : (
-                    <ul style="list-style: none; padding-left: 0;">
-                        {candidates.map((cand) => (
-                            <li key={cand.path}>
-                                <label>
-                                    <input
-                                        type="checkbox"
-                                        checked={sel[cand.path] ?? false}
-                                        onChange={(e): void => {
-                                            const checked = (e.currentTarget as HTMLInputElement).checked;
-                                            moduleSelection.value = { ...sel, [cand.path]: checked };
-                                            modulesSkipped.value = false;
-                                        }}
-                                    />
-                                    {' '}<code>{cand.path}</code> — {cand.stack}{' '}
-                                    <small>({cand.confidence} confidence)</small>
-                                </label>
-                            </li>
-                        ))}
-                    </ul>
-                )}
-            <div class="ac-wizard__module-fields">
-                <div class="ac-field">
-                    <label class="ac-field__label" for="ac-modules-namespace">Namespace template</label>
-                    <input
-                        id="ac-modules-namespace"
-                        class="ac-input"
-                        type="text"
-                        value={modulesNamespaceTemplate.value}
-                        placeholder="e.g. App\\Modules\\{ModuleName}\\App"
-                        onInput={(e): void => {
-                            modulesNamespaceTemplate.value = (e.currentTarget as HTMLInputElement).value;
-                            modulesSkipped.value = false;
-                        }}
-                    />
-                    <span class="ac-field__description">
-                        How a module path maps to its namespace. Leave blank to skip namespacing.
-                    </span>
-                </div>
-                <div class="ac-field">
-                    <label class="ac-field__label" for="ac-modules-agent-folder">Agent folder</label>
-                    <input
-                        id="ac-modules-agent-folder"
-                        class="ac-input"
-                        type="text"
-                        value={modulesAgentFolder.value}
-                        placeholder="agents"
-                        onInput={(e): void => {
-                            modulesAgentFolder.value = (e.currentTarget as HTMLInputElement).value;
-                            modulesSkipped.value = false;
-                        }}
-                    />
-                    <span class="ac-field__description">
-                        Folder name that holds per-module agent docs (default <code>agents</code>).
-                    </span>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-/**
- * Build the `modulesConfig` body sent to `/api/v1/wizard/finish` when
- * the user didn't skip the modules step. Filters `moduleSelection` to
- * the keys that are still in the candidates list (defends against a
- * stale selection if the candidates were refreshed) and intersects
- * with truthy values. Returns `null` when nothing should be persisted.
- */
-function buildModulesConfig(): ProposedModulesBlock | null {
-    if (modulesSkipped.value) return null;
-    if (!modulesLoaded.value) return null;
-    const knownPaths = new Set(moduleCandidates.value.map((c) => c.path));
-    const sel = moduleSelection.value;
-    const root_paths = Object.keys(sel).filter((p) => sel[p] === true && knownPaths.has(p));
-    return {
-        enabled: modulesEnabled.value,
-        root_paths,
-        namespace_template: modulesNamespaceTemplate.value,
-        agent_folder: modulesAgentFolder.value || 'agents',
-    };
 }
 
 const WELCOME_LANGUAGES = ['de', 'en', 'en-US', 'en-GB', 'fr', 'es', 'it', 'nl', 'pt', 'pt-BR'];
@@ -1637,15 +1353,15 @@ function AiCouncilStepBody(): preact.JSX.Element {
 function StepBody(): preact.JSX.Element | null {
     const step = stepAt(stepIndex.value, { extended: extendedSteps.value });
     // road-to-unified-setup § B5 — hard-stop continue-screen between the
-    // four install-only steps (ai-tools / roles / packs / modules) and the
-    // settings section. With the welcome step at index 0 the install-only
-    // lead is ai-tools(1)/roles(2)/packs(3)/modules(4); the user just finished
-    // modules and is landing on the first settings step (identity, index 5).
+    // install-only lead (ai-tools / roles / packs) and the settings section.
+    // The handoff renders AT the first settings step (`identity`); keying it
+    // off the step id keeps it correct regardless of the step's index (the
+    // project `modules` step now sits at the end of the flow, before review).
     // Render the handoff only when the install entry mode is active and the
     // user has not already acknowledged the transition in this session.
     const onContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && stepIndex.value === 5
+        && step.id === 'identity'
         && !continueAcknowledged.value;
     if (onContinueHandoff) {
         return <ContinueScreen />;
@@ -1697,9 +1413,6 @@ function StepBody(): preact.JSX.Element | null {
     if (step.kind === 'packs') {
         return <PacksStepBody />;
     }
-    if (step.kind === 'modules') {
-        return <ModulesStepBody />;
-    }
     if (step.kind === 'aiCouncil') {
         return <AiCouncilStepBody />;
     }
@@ -1715,45 +1428,10 @@ function StepBody(): preact.JSX.Element | null {
             userMdAction={userMdExists.value ? 'replace' : 'create'}
             loading={diffLoading.value}
             onJump={(i): void => { void goTo(i); }}
-            scope={wizardScope.value}
-            scopeAvailable={serverStatus.value?.projectScopeAvailable === true}
-            onScopeChange={(next): void => { wizardScope.value = next; }}
             selectedToolsCount={Object.values(selectedTools.value).filter(Boolean).length}
             selectedPacksCount={Object.values(selectedPacks.value).filter(Boolean).length}
-            installPlanByTool={extendedSteps.value ? installPlanByTool() : undefined}
-            installPlanReady={extendedSteps.value ? installPlan.value !== null : undefined}
-            installPlanError={extendedSteps.value && !installPlanLoading.value ? installPlanError.value : null}
-            conflicts={extendedSteps.value ? (installPlan.value?.conflicts ?? []) : undefined}
-            conflictResolutions={extendedSteps.value ? conflictResolutions.value : undefined}
-            conflictBatchChoice={extendedSteps.value ? conflictBatchChoice.value : undefined}
-            onConflictResolutionChange={extendedSteps.value
-                ? (path: string, choice: ConflictResolutionWire): void => {
-                    conflictResolutions.value = { ...conflictResolutions.value, [path]: choice };
-                }
-                : undefined}
-            onConflictBatchChoice={extendedSteps.value
-                ? (choice: ConflictBatchChoice | null): void => {
-                    conflictBatchChoice.value = choice;
-                }
-                : undefined}
         />
     );
-}
-
-/**
- * Collapse the InstallPlan wire shape into the flat per-tool count map
- * the Review panel consumes. Returns an empty map when the plan hasn't
- * loaded yet (the panel renders the loading state in that branch).
- * road-to-unified-setup § Phase B2.
- */
-function installPlanByTool(): Record<string, number> {
-    const plan = installPlan.value;
-    if (plan === null) return {};
-    const out: Record<string, number> = {};
-    for (const [tool, files] of Object.entries(plan.filesByTool)) {
-        out[tool] = files.length;
-    }
-    return out;
 }
 
 export function WizardPage({ path: _path }: { path: string }): preact.JSX.Element {
@@ -1782,13 +1460,14 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
         (step.kind === 'aiTools' && Object.values(selectedTools.value).filter(Boolean).length === 0)
         || (step.kind === 'roles' && Object.values(selectedRoles.value).filter(Boolean).length === 0)
         || (step.kind === 'packs' && resolveSelectedPacks().length === 0);
-    // Install→setup hand-off (road-to-wizard-ux-improvements § Phase 6): a
-    // "Step 3.5" intermediate. Next acknowledges + reveals "Editor and tooling"
-    // (the identity form at the same index); "Finish install here" sits in the
-    // nav like Skip and jumps to Review.
+    // Install→setup hand-off (road-to-wizard-ux-improvements § Phase 6): an
+    // intermediate shown AT the first settings step (`identity`). Next
+    // acknowledges + reveals "Editor and tooling" (the identity form at the
+    // same index); "Finish install here" sits in the nav like Skip and jumps
+    // to Review. Keyed off the step id so it survives step reordering.
     const isContinueHandoff = extendedSteps.value
         && wizardMode.value === 'install'
-        && idx === 5
+        && step.id === 'identity'
         && !continueAcknowledged.value;
 
     const rec = recoveryStatus.value;
@@ -1869,7 +1548,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
             <StepNav
                 canGoPrev={idx > 0}
                 canGoNext={!isLast && !blockedByEmptySelection}
-                canSkip={isContinueHandoff || step.kind === 'userMd' || step.kind === 'modules'}
+                canSkip={isContinueHandoff || step.kind === 'userMd'}
                 skipLabel={isContinueHandoff ? 'Finish install here' : 'Skip'}
                 isLast={isLast}
                 busy={saving.value || diffLoading.value}
@@ -1891,11 +1570,7 @@ export function WizardPage({ path: _path }: { path: string }): preact.JSX.Elemen
                         void goTo(activeTotalSteps() - 1);
                         return;
                     }
-                    if (step.kind === 'modules') {
-                        modulesSkipped.value = true;
-                    } else {
-                        userMdSkipped.value = true;
-                    }
+                    userMdSkipped.value = true;
                     void goTo(idx + 1);
                 }}
                 onFinish={(): void => { void finish(); }}

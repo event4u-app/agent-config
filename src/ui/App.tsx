@@ -26,11 +26,12 @@
 import { useEffect } from 'preact/hooks';
 import { route, initRouter, navigate } from './router.js';
 import { WizardPage } from './pages/WizardPage.js';
+import { ProjectSettingsPage } from './pages/ProjectSettingsPage.js';
 import { WorkspacePage } from './pages/WorkspacePage.js';
 import { serverStatus, fetchServerStatus } from './serverStatus.js';
 
 interface Surface {
-    readonly id: 'setup' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
+    readonly id: 'setup' | 'project' | 'tasks' | 'council' | 'memory' | 'explain' | 'workspace';
     readonly label: string;
     readonly hashPath: string;
     /** Hash-path prefixes that should mark this surface active. */
@@ -39,6 +40,7 @@ interface Surface {
 
 const SURFACES: readonly Surface[] = [
     { id: 'setup',     label: 'Setup',     hashPath: '/setup',     matches: ['/setup', '/wizard'] },
+    { id: 'project',   label: 'Projekt',   hashPath: '/project',   matches: ['/project'] },
     { id: 'tasks',     label: 'Tasks',     hashPath: '/tasks',     matches: ['/tasks'] },
     { id: 'council',   label: 'Council',   hashPath: '/council',   matches: ['/council'] },
     { id: 'memory',    label: 'Memory',    hashPath: '/memory',    matches: ['/memory'] },
@@ -133,6 +135,7 @@ function dispatch(path: string): preact.JSX.Element {
     // Legacy `/settings*` deep links resolve through the Wizard — Settings
     // ist ein Bereich des Setup-Flows, kein eigenständiger Surface.
     if (path === '/settings' || path.startsWith('/settings/')) return <WizardPage path="/setup" />;
+    if (path === '/project' || path.startsWith('/project/')) return <ProjectSettingsPage />;
     if (path === '/tasks')     return <ComingSoon name="Tasks" />;
     if (path === '/council')   return <ComingSoon name="Council" />;
     if (path === '/memory')    return <ComingSoon name="Memory" />;

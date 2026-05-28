@@ -17,23 +17,23 @@ complexity: lightweight
 
 The two cases with real production blast radius. Ship before Phase 2.
 
-- [ ] **Step 1:** Test — **abort-on-disconnect kills the child.** Simulate a client that drops the SSE connection mid-stream; assert the spawned installer process receives `SIGTERM` (no orphaned `install.py`). Cite `Finding #24` (the council finding the abort handler was built for) in the test docstring so the regression intent is traceable.
-- [ ] **Step 2:** Test — **CSRF rejection on the apply endpoint.** Assert a POST to the real-install (`dry_run: false`) endpoint without a valid CSRF token is rejected before any installer process spawns. This is the security floor for the loopback GUI substrate.
-- [ ] **Step 3:** Exit gate — both tests run green locally (`vitest` on the touched files), and a deliberate revert of the abort handler / CSRF guard turns each test red (proves the test actually pins the behaviour, not the happy path).
+- [x] **Step 1:** Test — **abort-on-disconnect kills the child.** Simulate a client that drops the SSE connection mid-stream; assert the spawned installer process receives `SIGTERM` (no orphaned `install.py`). Cite `Finding #24` (the council finding the abort handler was built for) in the test docstring so the regression intent is traceable.
+- [x] **Step 2:** Test — **CSRF rejection on the apply endpoint.** Assert a POST to the real-install (`dry_run: false`) endpoint without a valid CSRF token is rejected before any installer process spawns. This is the security floor for the loopback GUI substrate.
+- [x] **Step 3:** Exit gate — both tests run green locally (`vitest` on the touched files), and a deliberate revert of the abort handler / CSRF guard turns each test red (proves the test actually pins the behaviour, not the happy path).
 
 ## Phase 2: P2 — stream-robustness polish
 
 UX-grade resilience. Lower blast radius; ship after Phase 1.
 
-- [ ] **Step 1:** Test — **malformed NDJSON does not break the stream.** Inject a malformed line into the installer's NDJSON output; assert the SSE connection survives and surfaces a structured error frame rather than tearing down.
-- [ ] **Step 2:** Test — **no-terminal-frame emits a synthetic done.** Installer exits 0 without emitting a `done` frame; assert the `sawTerminal` guard fires a synthetic terminal frame so the SPA does not hang waiting.
-- [ ] **Step 3:** Exit gate — both tests green locally; the SSE handler's error-frame and `sawTerminal` branches are covered.
+- [x] **Step 1:** Test — **malformed NDJSON does not break the stream.** Inject a malformed line into the installer's NDJSON output; assert the SSE connection survives and surfaces a structured error frame rather than tearing down.
+- [x] **Step 2:** Test — **no-terminal-frame emits a synthetic done.** Installer exits 0 without emitting a `done` frame; assert the `sawTerminal` guard fires a synthetic terminal frame so the SPA does not hang waiting.
+- [x] **Step 3:** Exit gate — both tests green locally; the SSE handler's error-frame and `sawTerminal` branches are covered.
 
 ## Acceptance criteria
 
-- [ ] Phase 1: abort-on-disconnect and CSRF-rejection tests shipped and green; each verified to fail when its guard is reverted.
-- [ ] Phase 2: malformed-NDJSON and no-terminal-frame tests shipped and green.
-- [ ] No regression in the existing wizard/install vitest suite; `task ci` green on the PR.
+- [x] Phase 1: abort-on-disconnect and CSRF-rejection tests shipped and green; each verified to fail when its guard is reverted.
+- [x] Phase 2: malformed-NDJSON and no-terminal-frame tests shipped and green.
+- [x] No regression in the existing wizard/install vitest suite; `task ci` green on the PR.
 
 ## Notes
 

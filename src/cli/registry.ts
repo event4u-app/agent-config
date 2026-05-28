@@ -39,7 +39,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'ui:serve', disposition: 'native', synopsis: 'Start the local UI server.' },
     { name: 'settings', disposition: 'native', synopsis: 'Open the local Settings GUI.' },
     { name: 'install', disposition: 'native', synopsis: 'Open the install wizard (UI server, lands on Step 1 / AI tools).' },
-    { name: 'setup', disposition: 'native', synopsis: 'Open the onboarding wizard (UI server, lands on Step 4 / Identity).' },
+    { name: 'setup', disposition: 'native', synopsis: 'Open the onboarding wizard (UI server, lands on Identity).' },
     { name: 'workspaces', disposition: 'native', synopsis: 'List workspaces from the discovery manifest (ls subcommand).' },
     { name: 'packs', disposition: 'native', synopsis: 'List packs from the discovery manifest (ls subcommand).' },
     { name: 'help', disposition: 'native', synopsis: 'Show TS-shell help; delegates --tier=N to Bash.' },

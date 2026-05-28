@@ -10,7 +10,7 @@
  * `/onboard` chat skill was removed in the wizard-takeover pivot.
  */
 
-export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs' | 'modules' | 'aiCouncil';
+export type WizardStepKind = 'form' | 'userMd' | 'review' | 'welcome' | 'aiTools' | 'roles' | 'packs' | 'aiCouncil';
 
 export interface WizardStep {
     /** Stable id used for state-machine routing and tests. */
@@ -28,13 +28,15 @@ export interface WizardStep {
 }
 
 /**
- * Feature-flagged extended step set — prepends `ai-tools` + `packs` ahead
- * of the canonical 7 settings steps so a single `agent-config setup` run
- * covers KI → Packs → Settings end-to-end (road-to-global-only-install §
- * Phase 1, D9). Enabled when `AGENT_CONFIG_DEV_MODE=1` or when the server
- * advertises `extendedSteps: true` via /api/v1/wizard/state — keeps the
- * canonical 7-step contract for v2.x users until the merged flow ships
- * end-to-end (Phase 1.9 — npm-version kill-switch, no dual code paths).
+ * Feature-flagged extended step set — prepends the install-only lead
+ * (`ai-tools` → `roles` → `packs`) ahead of the canonical settings steps
+ * so a single `agent-config setup` run covers KI → Roles → Packs →
+ * Settings end-to-end (road-to-global-only-install § Phase 1, D9). The
+ * project-specific `modules` step is NOT part of this lead — it is
+ * appended at the end of the flow (just before `review`) by
+ * `getWizardSteps`, so global/user settings come first and the project
+ * step comes last. Enabled when `AGENT_CONFIG_DEV_MODE=1` or when the
+ * server advertises `extendedSteps: true` via /api/v1/wizard/state.
  */
 /**
  * Always-first step (both modes): name + language. Pulled out of the user-md
@@ -71,13 +73,6 @@ const EXTENDED_STEPS_LEAD: readonly WizardStep[] = [
         navLabel: 'Packs',
         subtitle: 'Founder-strategy, finance-basic, gtm-sales, ops-people, ai-video — pick zero or more. You can change this later.',
         kind: 'packs',
-    },
-    {
-        id: 'modules',
-        title: 'Module roots for this project',
-        navLabel: 'Modules',
-        subtitle: 'Auto-detected source roots from the project. Pick which ones the agent should treat as modules, or skip to leave .agent-project-settings.yml as-is.',
-        kind: 'modules',
     },
 ];
 
@@ -171,8 +166,9 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
 ] as const;
 
 /**
- * Canonical 7-step wizard — preserved verbatim for v2.x users. The
- * 9-step flow (ai-tools + packs prepended) is exposed via
+ * Canonical settings-only wizard — preserved verbatim for v2.x users.
+ * The extended flow (install-only lead prepended + the project `modules`
+ * step appended before `review`) is exposed via
  * `getWizardSteps({ extended: true })`. See road-to-global-only-install
  * Phase 1.9 — no dual code paths, the npm version is the kill-switch.
  */
@@ -182,12 +178,15 @@ export const WIZARD_STEPS = CORE_WIZARD_STEPS;
 export const WIZARD_TOTAL_STEPS = CORE_WIZARD_STEPS.length + 1;
 
 export interface GetWizardStepsOptions {
-    /** Prepend ai-tools + packs to ship the 9-step flow (D9). */
+    /** Prepend the install-only lead + append the project modules step (D9). */
     extended?: boolean;
 }
 
 export function getWizardSteps(opts: GetWizardStepsOptions = {}): readonly WizardStep[] {
     if (opts.extended === true) {
+        // Welcome + install-only lead (ai-tools / roles / packs), then the
+        // global/user settings. Project-scoped configuration (modules) is not
+        // a wizard step — it lives on its own "Projekt" surface.
         return [WELCOME_STEP, ...EXTENDED_STEPS_LEAD, ...CORE_WIZARD_STEPS];
     }
     return [WELCOME_STEP, ...CORE_WIZARD_STEPS];

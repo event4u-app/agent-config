@@ -221,7 +221,14 @@ effect):
 | `extendedSteps` | Steps | Layout |
 |---|---|---|
 | `false` | 9 | `welcome → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
-| `true`  | 13 | `welcome → ai-tools → roles → packs → modules → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → review` |
+| `true`  | 13 | `welcome → ai-tools → roles → packs → editor → personality → cost → roadmap-quality → memory → ai-council → user-md → modules → review` |
+
+The project-specific `modules` step (writes `.agent-project-settings.yml`, not
+the global `.agent-settings.yml`) sits at the **end** of the extended flow,
+just before `review` — global/user settings come first, the project step
+comes last. Because it is no longer part of the install-only lead,
+`setup` mode now walks it too (the lead it skips is `ai-tools → roles →
+packs`).
 
 The `welcome` step (Step 1, both modes) collects **name + language** up front —
 pulled out of the user-md step so the agent knows who it's talking to before

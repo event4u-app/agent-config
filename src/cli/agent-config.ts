@@ -126,7 +126,7 @@ async function main(argv: readonly string[]): Promise<number> {
         });
 
     // `install` — install-flow alias for `ui:serve` that lands on Step 1
-    // (AI tools, index 0) of the extended 10-step wizard. road-to-unified-setup
+    // (AI tools, index 0) of the extended 13-step wizard. road-to-unified-setup
     // § B0 — same Fastify server, same bundle, only the initial step
     // differs from `setup`.
     program
@@ -165,19 +165,21 @@ async function main(argv: readonly string[]): Promise<number> {
     // `setup` — onboarding-only alias for `ui:serve` that lands on the
     // `#/wizard` route. Replaces the deprecated `/onboard` chat skill.
     // road-to-unified-setup § B0: `setup` defaults to the extended
-    // 10-step flow and lands on Step 4 (Identity, index 3) so install-only
-    // prep steps (ai-tools + packs + modules) are skipped. Pass
-    // `--no-extended` to fall back to the 7-step settings-only wizard.
+    // 13-step flow and lands on Identity (index 4) so the install-only lead
+    // (ai-tools + roles + packs) is skipped. The project `modules` step is
+    // NOT skipped — it sits at the end of the flow, so setup still walks it
+    // (before review). Pass `--no-extended` to fall back to the
+    // settings-only wizard.
     program
         .command('setup')
-        .description('Open the onboarding wizard (boots the UI server and lands on Step 4 / Identity)')
+        .description('Open the onboarding wizard (boots the UI server and lands on Identity)')
         .option('--port <n>', 'Override the auto-picked port', (v) => Number.parseInt(v, 10))
         .option('--no-open', 'Do not launch the browser')
         .option('--ui-dist <path>', 'Override the dist/ui directory')
         .option('--allow-headless', 'Start even when SSH/no-DISPLAY is detected')
         .option('--project-root <path>', 'Override the project root used to resolve .agent-config/')
         .option('--dry-run', 'Boot with all writes suppressed (preview-only)')
-        .option('--no-extended', 'Use the 7-step settings-only wizard (skip ai-tools, packs, modules)')
+        .option('--no-extended', 'Use the settings-only wizard (skip ai-tools, roles, packs, modules)')
         .action(async (opts: {
             port?: number;
             open?: boolean;
@@ -192,10 +194,12 @@ async function main(argv: readonly string[]): Promise<number> {
                 initialRoute: '/wizard',
                 extendedSteps: extended,
                 // Setup skips the welcome step (it keeps name/language in the
-                // user-md form) and the install-only lead (ai-tools/roles/packs/
-                // modules). Extended → jump to Identity/editor (index 5);
+                // user-md form) and the install-only lead (ai-tools/roles/
+                // packs). Extended → jump to Identity/editor (index 4);
                 // non-extended → skip welcome to the first settings step (1).
-                initialStep: extended ? 5 : 1,
+                // The project `modules` step is reached later (end of the
+                // flow), not skipped.
+                initialStep: extended ? 4 : 1,
                 wizardMode: 'setup',
             };
             if (opts.port !== undefined) forwarded.port = opts.port;
