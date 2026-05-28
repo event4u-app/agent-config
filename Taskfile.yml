@@ -34,6 +34,9 @@ includes:
   bench-ab:
     taskfile: ./taskfiles/bench-ab.yml
     flatten: true
+  value:
+    taskfile: ./taskfiles/value.yml
+    flatten: true
 
 tasks:
   _ci-start:
