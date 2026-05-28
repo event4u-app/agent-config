@@ -121,12 +121,72 @@ def baseline_rung(reference_scale: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
+def load_rung_from_router(
+    router: Optional[Dict[str, Any]],
+    rule_chars: Optional[Dict[str, int]],
+    charter_chars: int,
+    reference_scale: Dict[str, Any],
+    pricing_row: Dict[str, Any],
+) -> Dict[str, Any]:
+    """Build the Paket-load rung from the canonical kernel list.
+
+    Phase 1 of road-to-value-dashboard-netto-cuts: the previous
+    `load_rung_from_frugality` reads a hardcoded 6-rule canon
+    (`scripts/measure_frugality_savings.py::CANON_RULES`), NOT the
+    actual always-loaded kernel. The real kernel lives in
+    `dist/router.json::kernel` and has 10 rules. This function reads
+    that list and sums per-file char counts to compute the real
+    always-loaded footprint.
+
+    `router` is the decoded `dist/router.json` dict.
+    `rule_chars` is a `{rule_id: char_count}` mapping (typically built
+    by walking `.agent-src/rules/<id>.md`).
+    `charter_chars` is the always-loaded charter footprint.
+
+    Returns a `pending` rung when the router is missing or has no
+    kernel entry; the rung's `source_report` cites the missing input.
+    """
+    if not router or "kernel" not in router:
+        return pending_rung(
+            "load",
+            "Mit Paket (Regeln laden) / With package (rule load)",
+            "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+            "dist/router.json",
+            footnote="Run scripts/compile_router.py to generate the router.",
+        )
+    rule_chars = rule_chars or {}
+    kernel_ids = list(router.get("kernel", []))
+    kernel_total = sum(int(rule_chars.get(rid, 0)) for rid in kernel_ids)
+    total_chars = kernel_total + int(charter_chars)
+    # 4 chars/token approximation, consistent with measure_frugality_savings.py.
+    token_delta = total_chars // 4
+    return {
+        "id": "load",
+        "label": "Mit Paket (Regeln laden) / With package (rule load)",
+        "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
+        "token_delta": token_delta,
+        "eur_delta": price_input_delta_eur(token_delta, reference_scale, pricing_row),
+        "cumulative_pct": 0.0,
+        "confidence": "measured",
+        "source_report": "dist/router.json",
+        "footnote": (
+            f"Kernel = {len(kernel_ids)} rules ({kernel_total} chars) "
+            f"+ charter ({int(charter_chars)} chars); tokens ≈ chars / 4."
+        ),
+    }
+
+
 def load_rung_from_frugality(
     frugality_record: Optional[Dict[str, Any]],
     reference_scale: Dict[str, Any],
     pricing_row: Dict[str, Any],
 ) -> Dict[str, Any]:
     """Build the Paket-load rung from a frugality baseline.jsonl record.
+
+    **Deprecated** as of road-to-value-dashboard-netto-cuts Phase 1:
+    measures a hardcoded 6-rule canon, not the actual always-loaded
+    kernel. Kept as a back-compat fallback when `dist/router.json` is
+    missing. New callers should prefer `load_rung_from_router()`.
 
     `frugality_record` is one decoded line from
     `agents/runtime/frugality/baseline.jsonl` (the latest record is the

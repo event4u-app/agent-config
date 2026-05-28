@@ -43,6 +43,7 @@ try:
         condense_rung_from_telegraph_v2,
         destructive_stops_metric,
         load_rung_from_frugality,
+        load_rung_from_router,
         rtk_rung_from_report,
         selection_metric_from_dev_reports,
         terse_rung_from_telegraph_v1,
@@ -58,6 +59,7 @@ except ImportError:
         condense_rung_from_telegraph_v2,
         destructive_stops_metric,
         load_rung_from_frugality,
+        load_rung_from_router,
         rtk_rung_from_report,
         selection_metric_from_dev_reports,
         terse_rung_from_telegraph_v1,
@@ -65,6 +67,9 @@ except ImportError:
 
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
+ROUTER_JSON = REPO_ROOT / "dist" / "router.json"
+RULES_DIR = REPO_ROOT / ".agent-src" / "rules"
+CHARTER_PATH = REPO_ROOT / ".agent-src" / "contexts" / "contracts" / "frugality-charter.md"
 FRUGALITY_BASELINE = REPO_ROOT / "agents" / "runtime" / "frugality" / "baseline.jsonl"
 TELEGRAPH_V2 = REPO_ROOT / "internal" / "bench" / "reports" / "telegraph-v2.json"
 TELEGRAPH_V1 = REPO_ROOT / "internal" / "bench" / "reports" / "telegraph-v1.json"
@@ -232,13 +237,31 @@ def assemble_value_v1(
     baseline_input_tokens = int(ref.get("avg_input_tokens", 8000))
 
     # Cost ladder rungs.
-    frugality = latest_frugality_record()
+    # Load rung — prefer the canonical kernel list from dist/router.json
+    # (real always-loaded footprint), fall back to the frugality canon
+    # baseline only when the router is missing on disk.
+    router = safe_load_json(ROUTER_JSON)
+    if router and "kernel" in router:
+        rule_chars = {
+            p.stem: len(p.read_text())
+            for p in RULES_DIR.glob("*.md")
+        } if RULES_DIR.exists() else {}
+        charter_chars = (
+            len(CHARTER_PATH.read_text()) if CHARTER_PATH.exists() else 0
+        )
+        load_rung = load_rung_from_router(
+            router, rule_chars, charter_chars, ref, pricing_row
+        )
+    else:
+        load_rung = load_rung_from_frugality(
+            latest_frugality_record(), ref, pricing_row
+        )
     t2 = safe_load_json(TELEGRAPH_V2)
     t1 = safe_load_json(TELEGRAPH_V1)
     rtk = safe_load_json(RTK_LATEST)
     ladder: List[Dict[str, Any]] = [
         baseline_rung(ref),
-        load_rung_from_frugality(frugality, ref, pricing_row),
+        load_rung,
         condense_rung_from_telegraph_v2(t2, baseline_input_tokens, ref, pricing_row),
         rtk_rung_from_report(rtk, ref, pricing_row),
         terse_rung_from_telegraph_v1(t1, ref, pricing_row),
