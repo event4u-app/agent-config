@@ -1,0 +1,80 @@
+class,field,total,distinct,dominant_value,dominant_share,bloat_candidate
+command,disable-model-invocation,135,1,true,100.00%,Y
+command,lifecycle,135,1,active,100.00%,Y
+command,trust.level,135,1,core,100.00%,Y
+command,trust.confidence,135,1,high,100.00%,Y
+command,trust.human_review_required,135,1,false,100.00%,Y
+command,install.default,135,1,true,100.00%,Y
+command,install.removable,135,1,false,100.00%,Y
+command,type,21,1,orchestrator,100.00%,Y
+command,council_depth,4,1,deep,100.00%,N
+command,framework,4,1,laravel,100.00%,N
+command,suggestion.eligible,135,2,true,81.48%,N
+command,tier,135,3,2,74.81%,N
+command,personas,4,3,"[hollywood-director, ai-video-technical-director]",50.00%,N
+command,suggestion.rationale,25,20,"""Package-internal — only the event4u/agent-config repo runs …",16.00%,N
+command,cluster,105,24,agents,9.52%,N
+command,skills,106,60,[file-editor],9.43%,N
+command,sub,79,64,user,7.59%,N
+command,suggestion.trigger_context,110,109,"""user has a fuzzy plan/idea/feature draft and wants it sharp…",1.82%,N
+command,suggestion.trigger_description,110,110,"""check this session's token cost, see budget utilization, su…",0.91%,N
+command,name,135,135,cost-report,0.74%,N
+command,description,135,135,"Capture token cost from the active Claude Code session, appe…",0.74%,N
+persona,source,30,1,package,100.00%,Y
+persona,council_advisor,5,1,true,100.00%,N
+persona,version,30,2,"""1.0""",96.67%,Y
+persona,tier,30,2,specialist,83.33%,N
+persona,wing,8,2,3,50.00%,N
+persona,mode,30,5,reviewer,40.00%,N
+persona,id,30,30,backend-architect,3.33%,N
+persona,role,30,30,Backend Architect,3.33%,N
+persona,description,30,30,"""The voice that watches service-layer boundaries — module se…",3.33%,N
+rule,source,71,1,package,100.00%,Y
+rule,lifecycle,71,1,active,100.00%,Y
+rule,trust.level,71,1,core,100.00%,Y
+rule,trust.confidence,71,1,high,100.00%,Y
+rule,trust.human_review_required,71,1,false,100.00%,Y
+rule,install.default,71,1,true,100.00%,Y
+rule,install.removable,71,1,false,100.00%,Y
+rule,validator_ignore.- type,13,1,"""substring""",100.00%,Y
+rule,"routes_to.- ""command",1,1,"set-cost-profile""",100.00%,N
+rule,triggers.- file_pattern,1,1,"""*.md""",100.00%,N
+rule,council_depth,2,1,deep,100.00%,N
+rule,triggers.- command,1,1,"""/roadmap:process-full""",100.00%,N
+rule,validator_ignore.- type.pattern,13,3,""".agent-src.uncondensed/""",84.62%,N
+rule,type,71,4,"""auto""",76.06%,N
+rule,alwaysApply,36,2,false,72.22%,N
+rule,tier,71,6,"""2a""",38.03%,N
+rule,"routes_to.- ""guideline",4,4,"agent-infra/skill-quality-checklist""",25.00%,N
+rule,"routes_to.- ""contract",4,4,"command-suggestion-flow""",25.00%,N
+rule,triggers.- path_prefix,14,13,""".agent-src.uncondensed/skills/""",14.29%,N
+rule,validator_ignore.- type.reason,13,13,"""Rule documents the source-of-truth boundary; mentioning the…",7.69%,N
+rule,"routes_to.- ""skill",20,20,"existing-ui-audit""",5.00%,N
+rule,triggers.- keyword,48,47,"""composer""",4.17%,N
+rule,triggers.- phrase,25,25,"""after completing""",4.00%,N
+rule,triggers.- intent,27,27,"""mode marker""",3.70%,N
+rule,description,71,71,"""When roles.active_role is set — closing outputs must match …",1.41%,N
+skill,lifecycle,129,1,active,100.00%,Y
+skill,trust.level,129,1,core,100.00%,Y
+skill,trust.confidence,129,1,high,100.00%,Y
+skill,trust.human_review_required,129,1,false,100.00%,Y
+skill,install.default,129,1,true,100.00%,Y
+skill,install.removable,129,1,false,100.00%,Y
+skill,execution.type,26,1,assisted,100.00%,Y
+skill,status,9,1,active,100.00%,N
+skill,tier,5,1,senior,100.00%,N
+skill,framework,3,1,laravel,100.00%,N
+skill,council_depth,4,1,deep,100.00%,N
+skill,meta_skill,2,1,true,100.00%,N
+skill,external_source,1,1,"""https://github.com/ginobefun/deep-reading-analyst-skill/tre…",100.00%,N
+skill,source,129,2,package,97.67%,Y
+skill,execution.allowed_tools,26,3,[],88.46%,N
+skill,execution.handler,26,2,internal,69.23%,N
+skill,execution.timeout_seconds,4,3,30,50.00%,N
+skill,context_spine,4,3,"[regulatory-regime, customer-segment, product]",50.00%,N
+skill,domain,129,6,process,44.96%,N
+skill,refresh_trigger,3,3,"""≥30% of cited upstream pattern catalogues become deprecated…",33.33%,N
+skill,sunset_criterion,3,3,"""When the upstream framework docs (Laravel, FastAPI, Express…",33.33%,N
+skill,recommended_for_user_types,10,7,[developer],20.00%,N
+skill,name,129,129,copilot-config,0.78%,N
+skill,description,129,129,"""Tune the GitHub Copilot AI — `copilot-instructions.md`, PR-…",0.78%,N
