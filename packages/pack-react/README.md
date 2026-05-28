@@ -5,7 +5,7 @@
 React framework patterns.
 
 - **id**: `react`
-- **version**: `4.7.1`
+- **version**: `4.7.2`
 - **owner**: engineering
 - **requires**: javascript, engineering-base
 - **artefacts**: 3

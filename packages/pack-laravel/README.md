@@ -5,7 +5,7 @@
 Laravel framework patterns; depends on PHP at the artefact level.
 
 - **id**: `laravel`
-- **version**: `4.7.1`
+- **version**: `4.7.2`
 - **owner**: engineering
 - **requires**: php, engineering-base
 - **artefacts**: 25
