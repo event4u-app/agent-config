@@ -41,6 +41,8 @@ jobs:
           cache: 'pip'
 
       - uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install bench deps
         run: pip install pyyaml
