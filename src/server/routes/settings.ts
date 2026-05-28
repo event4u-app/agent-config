@@ -26,14 +26,19 @@ import { parseYaml, mergeIntoTemplate, diffValues, deepMerge } from '../io/yamlI
 import { writeAtomic } from '../io/atomicWrite.js';
 import { PACKAGE_ROOT } from '../../cli/paths.js';
 
-/**
- * Cost-profile placeholder default. Mirrors `scripts/install.py::DEFAULT_PROFILE`
- * so the TypeScript defaults layer renders the same `cost_profile: 'balanced'`
- * scalar the Python installer would substitute.
- */
-const COST_PROFILE_PLACEHOLDER = '__COST_PROFILE__';
-const USER_TYPE_PLACEHOLDER = '__USER_TYPE__';
-const DEFAULT_COST_PROFILE = 'balanced';
+// Installer placeholders in `config/agent-settings.template.yml` that
+// `scripts/install.py` substitutes per-user. The TypeScript defaults layer
+// renders the same scalars so the wizard's first-run form is schema-valid.
+// Keep this map in lockstep with the template — any new `__*__` placeholder
+// added there must get its default here, or `settingsSchema.safeParse` on
+// the merged defaults will reject the first save.
+const TEMPLATE_PLACEHOLDER_DEFAULTS: Readonly<Record<string, string>> = {
+    __COST_PROFILE__: 'balanced',
+    __USER_TYPE__: '',
+    __CHAT_HISTORY_FREQUENCY__: 'per_turn',
+    __CHAT_HISTORY_MAX_SIZE_KB__: '2048',
+    __CHAT_HISTORY_ON_OVERFLOW__: 'rotate',
+};
 
 // Computed once — Zod → JSON Schema conversion is pure and the schema is static.
 const SETTINGS_JSON_SCHEMA = zodToJsonSchema(settingsSchema, {
@@ -121,9 +126,10 @@ interface LayeredState {
 async function loadDefaultSettings(packageRoot: string): Promise<Record<string, unknown>> {
     try {
         const text = await fs.readFile(join(packageRoot, 'config', 'agent-settings.template.yml'), 'utf8');
-        const rendered = text
-            .replaceAll(COST_PROFILE_PLACEHOLDER, DEFAULT_COST_PROFILE)
-            .replaceAll(USER_TYPE_PLACEHOLDER, '');
+        let rendered = text;
+        for (const [placeholder, value] of Object.entries(TEMPLATE_PLACEHOLDER_DEFAULTS)) {
+            rendered = rendered.replaceAll(placeholder, value);
+        }
         const parsed = parseYaml(rendered);
         return parsed ?? {};
     } catch {
@@ -239,7 +245,18 @@ export function settingsRoute(opts: SettingsRouteOptions): FastifyPluginAsync {
             try {
                 const state = await readLayeredSettings(packageRoot, opts.writeRoot, opts.legacyReadRoot);
                 if (!state.hasRealFile) {
-                    await reply.code(404).send({ error: { code: 'NOT_FOUND', message: 'settings file missing' } });
+                    // No on-disk file yet — the wizard creates it. Surface the
+                    // template-defaults values + schema + path in the body so
+                    // the SPA's fetchSettingsWithFallback can seed the form
+                    // with a fully-defaulted shape (otherwise it falls back to
+                    // `{}` and the user's first save fails schema validation).
+                    await reply.code(404).send({
+                        error: { code: 'NOT_FOUND', message: 'settings file missing' },
+                        defaults: state.values,
+                        lastModified: 0,
+                        path: SETTINGS_RELATIVE,
+                        schema: SETTINGS_JSON_SCHEMA,
+                    });
                     return reply;
                 }
                 const legacyHints = extractLegacyHints(state.values);

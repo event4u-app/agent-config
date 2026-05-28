@@ -114,11 +114,16 @@ function unwrapSchema(raw: SettingsGetResponse['schema']): JsonSchemaLeaf {
 }
 
 /**
- * Fetch `/api/v1/settings`, falling back to `/api/v1/schema` + empty values
- * on the first-run NOT_FOUND. The wizard is the tool for creating
- * `.agent-settings.yml`, so a missing file is the expected empty state, not
- * an error — surfacing it as `loadError` would render the contradictory
- * "Use the wizard to create it" banner inside the wizard itself.
+ * Fetch `/api/v1/settings`, falling back to the template defaults on the
+ * first-run NOT_FOUND. The wizard is the tool for creating
+ * `.agent-settings.yml`, so a missing file is the expected empty state —
+ * but the form needs a fully-defaulted starting shape, not an empty object,
+ * or the user's first save fails schema validation on every required
+ * top-level group they did not touch. The server's 404 body carries the
+ * merged template defaults + schema for exactly this reason; we use them
+ * directly. Pre-server-fix bundles only return `{ error }`, so a final
+ * `/api/v1/schema` lookup keeps backwards-compatibility even though `values`
+ * stays empty in that legacy path (better defaults are not available).
  */
 async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
     try {
@@ -129,6 +134,22 @@ async function fetchSettingsWithFallback(): Promise<SettingsGetResponse> {
             && err.status === 404
             && err.body.error?.code === 'NOT_FOUND'
         ) {
+            const body = err.body as {
+                defaults?: Record<string, JsonValue>;
+                schema?: SettingsGetResponse['schema'];
+                lastModified?: number;
+                path?: string;
+            };
+            if (body.defaults !== undefined && body.schema !== undefined) {
+                return {
+                    values: body.defaults,
+                    lastModified: body.lastModified ?? 0,
+                    path: body.path ?? '.agent-settings.yml',
+                    schema: body.schema,
+                };
+            }
+            // Legacy 404 body without defaults/schema — fetch schema separately
+            // and start empty (older server bundles).
             const schemaRes = await apiFetch<{ settings: JsonSchemaLeaf }>('/api/v1/schema');
             return {
                 values: {},
@@ -480,8 +501,11 @@ async function loadRtkDetectionOnce(): Promise<void> {
         rtkInstalled.value = installed;
         rtkInstallCommand.value = res.installCommand ?? null;
         if (typeof res.repo === 'string') rtkRepo.value = res.repo;
-        // Detection wins over whatever was loaded: overwrite the setting.
-        values.value = { ...values.value, 'personal.rtk_installed': installed };
+        // Detection wins over whatever was loaded: overwrite the setting via
+        // a proper nested update (a flat `'personal.rtk_installed'` key would
+        // pollute the wire body and never round-trip through the schema).
+        const personal = (values.value.personal ?? {}) as Record<string, JsonValue>;
+        values.value = { ...values.value, personal: { ...personal, rtk_installed: installed } };
     } catch {
         // Extended-mode 404 / failure → leave rtkInstalled null (widget shows
         // an "unknown" state and does not touch the setting).

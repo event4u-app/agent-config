@@ -63,6 +63,8 @@ jobs:
 
       - name: Set up Task
         uses: arduino/setup-task@v2
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install Python dependencies
         # pyyaml:     required by check_always_budget.py (parses rule frontmatter).

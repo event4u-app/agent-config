@@ -56,6 +56,38 @@ describe('GET /api/v1/settings', () => {
         expect(body.error.code).toBe('NOT_FOUND');
     });
 
+    // Regression: the 404 body must carry template-defaults + schema so the
+    // wizard's first-run form has a fully-defaulted starting shape. Without
+    // this, the SPA fell back to `values: {}`, the user's first save sent a
+    // partial settings object, and `POST /settings/diff` (and `wizard/finish`)
+    // rejected it with 422 on every untouched top-level group.
+    it('first-run 404 body carries schema-valid defaults', async () => {
+        const { settingsSchema } = await import('../../src/server/schemas/settings.js');
+        unlinkSync(join(ctx.projectRoot, 'settings', '.agent-settings.yml'));
+        const res = await ctx.app.inject({
+            method: 'GET',
+            url: '/api/v1/settings',
+            headers: authHeaders(ctx.token, ctx.host),
+        });
+        expect(res.statusCode).toBe(404);
+        const body = res.json() as {
+            error: { code: string };
+            defaults?: Record<string, unknown>;
+            schema?: unknown;
+            path?: string;
+            lastModified?: number;
+        };
+        expect(body.error.code).toBe('NOT_FOUND');
+        expect(body.defaults).toBeDefined();
+        expect(body.schema).toBeDefined();
+        expect(body.path).toMatch(/\.agent-settings\.yml$/);
+        expect(body.lastModified).toBe(0);
+        // The defaults must pass settingsSchema — otherwise the first save
+        // still 422s.
+        const parsed = settingsSchema.safeParse(body.defaults);
+        expect(parsed.success).toBe(true);
+    });
+
     it('returns 500 with YAML_PARSE when the file is corrupt', async () => {
         writeFileSync(
             join(ctx.projectRoot, 'settings', '.agent-settings.yml'),
