@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "value-v1",
-  "generated_at": "2026-05-28T21:40:52+00:00",
+  "generated_at": "2026-05-28T21:25:52+00:00",
   "reference_scale": {
     "requests": 1000,
     "avg_input_tokens": 8000,
