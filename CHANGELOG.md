@@ -802,6 +802,14 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [4.7.1](https://github.com/event4u-app/agent-config/compare/4.7.0...4.7.1) (2026-05-28)
+
+### Bug Fixes
+
+* **wizard:** make role optional so setup can save without a role pick ([dd0bc16](https://github.com/event4u-app/agent-config/commit/dd0bc168268fa9f9fe2b95ae5ef7cec76d66bdbe))
+
+Tests: 5064 (+0 since 4.7.0)
+
 ## [4.7.0](https://github.com/event4u-app/agent-config/compare/4.6.0...4.7.0) (2026-05-28)
 
 ### Features
