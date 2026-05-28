@@ -103,10 +103,14 @@ def render_headline(track_a: dict, track_b: dict) -> str:
     lines = [
         "## Headline",
         "",
+        "> **Track A confirms surface availability** — a precondition, not an impact metric. "
+        "For the impact view (cost-ladder + behaviour with vs. without), see "
+        "[`docs/value.md`](value.md).",
+        "",
         "| Metric | with | without | delta |",
         "|---|---|---|---|",
-        f"| Track A trigger-accuracy | {fmt_pct(a_with_acc)} | {fmt_pct(a_wo_acc)} | "
-        f"{fmt_pct((a_with_acc or 0) - (a_wo_acc or 0))} |",
+        f"| Track A surface-availability | {fmt_pct(a_with_acc)} | {fmt_pct(a_wo_acc)} | "
+        f"{fmt_pct((a_with_acc or 0) - (a_wo_acc or 0))} _(structural — files present)_ |",
         f"| Track B completion-rate  | {fmt_pct(b_with_comp)} | {fmt_pct(b_wo_comp)} | "
         f"{fmt_pct((b_with_comp or 0) - (b_wo_comp or 0))} |",
         f"| Track B mean wall-time   | {fmt_num(b_results.get('mean_wall_time'))}s "

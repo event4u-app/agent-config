@@ -19,6 +19,8 @@ discipline (upstream `5b71c7a`).
 |---|---|---|
 | `dev` | `tests/eval/corpus-dev.yaml` | router / engine selection |
 | `telegraph` | `internal/bench/corpora/telegraph/prompts.yaml` | condensation dialect (`vs_raw` + `vs_terse`) |
+| `rtk` | `internal/bench/corpora/rtk/commands.yaml` | rtk CLI-output filtering savings (Phase 2 of `road-to-readable-value-dashboard.md`) |
+| `value` | _derived_ | aggregated dashboard — no own corpus, reads from the others |
 
 ## Reports — naming and trail
 
@@ -39,10 +41,18 @@ one without the other.
 | Edit to `scripts/bench_run.py` `--telegraph` arm | `telegraph` | report refreshed in same PR |
 | Edit to `internal/bench/corpora/telegraph/prompts.yaml` | `telegraph` | report refreshed, version bumped (`telegraph-vN+1`) |
 | Edit to `scripts/_lib/bench_telegraph*.py` | `telegraph` | report refreshed in same PR |
+| Edit to any rung source (frugality / telegraph / rtk / A/B) | `value` | `task value` re-renders `docs/value.md` in same PR |
+| Edit to `internal/bench/corpora/rtk/commands.yaml` | `rtk` | `scripts/bench_rtk_savings.py` refreshed in same PR |
 
 A PR that touches any of the cadence triggers without refreshing the
 corresponding report is rejected by reviewer convention (no CI gate yet
 — the trigger surface is too small to warrant one).
+
+## Cost envelope (`rtk` corpus)
+
+8 commands × 2 arms (raw vs. rtk-filtered) = 16 local shell invocations
+per run. Zero API spend — pure local measurement. Wall-time ≈ 5–10 s on
+the maintainer's repo (`scripts/bench_rtk_savings.py --quiet`).
 
 ## Cost envelope (`telegraph` corpus)
 

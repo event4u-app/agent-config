@@ -4,12 +4,14 @@
 
 ## Headline
 
+> **Track A confirms surface availability** — a precondition, not an impact metric. For the impact view (cost-ladder + behaviour with vs. without), see [`docs/value.md`](value.md).
+
 | Metric | with | without | delta |
 |---|---|---|---|
-| Track A trigger-accuracy | 100.0% | 0.0% | 100.0% |
-| Track B completion-rate  | — | — | 0.0% |
-| Track B mean wall-time   | —s | —s | 0.00s |
-| Track B ask-vs-act ratio | — | — | — |
+| Track A surface-availability | 100.0% | 0.0% | 100.0% _(structural — files present)_ |
+| Track B completion-rate  | 0.0% | 0.0% | 0.0% |
+| Track B mean wall-time   | 0.00s | 0.00s | 0.00s |
+| Track B ask-vs-act ratio | 0.000 | 0.000 | — |
 
 ## Track A — Behavioural eval
 
@@ -33,9 +35,19 @@ Per-target presence (sample):
 
 ## Track B — Task completion
 
-- Mode: `—`
+- Mode: `dry-run`
+- with → **0.0%** (0/13)
+- without → **0.0%** (0/13)
 
-_No Track B reports yet. Run `task bench:ab:track-b`._
+Per-category:
+
+| Category | with | without | delta |
+|---|---|---|---|
+| bugfix | 0.0% | 0.0% | 0.0% |
+| feature | 0.0% | 0.0% | 0.0% |
+| refactor | 0.0% | 0.0% | 0.0% |
+| testadd | 0.0% | 0.0% | 0.0% |
+| uiaudit | 0.0% | 0.0% | 0.0% |
 
 ## Methodology
 
@@ -50,7 +62,7 @@ Cache key for the latest run:
 - `claude_cli_version`: `2.1.150 (Claude Code)`
 - `target_shape_hash`: `3f2f67cebfbb5fff`
 
-- **Last rendered:** `2026-05-26T15:33:46+00:00`
+- **Last rendered:** `2026-05-28T13:55:30+00:00`
 
 ## History
 
@@ -62,4 +74,4 @@ Last 5 runs (per corpus):
 
 ### `ab-trackb`
 
-_no runs yet_
+- `2026-05-28T13-47-41Z` → 0.0%

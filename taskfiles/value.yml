@@ -1,0 +1,58 @@
+version: '3'
+
+# Value Dashboard — task entries.
+#
+# Phase 5 Step 1 of `agents/roadmaps/road-to-readable-value-dashboard.md`.
+#
+# Surfaces:
+#   task value             — assemble JSON + render docs/value.md from
+#                            existing reports (cheap, no API).
+#   task value:refresh     — re-run the cost-axis benches (frugality +
+#                            telegraph + rtk), then assemble + render.
+#   task value:behaviour   — run the cost-bearing live Track-B + behaviour
+#                            run, then assemble + render.
+#   task value:lint        — structural check on docs/value.md +
+#                            internal/bench/reports/value/latest.json.
+
+vars:
+  QUIET_FLAG:
+    sh: '[ "$AGENT_SCRIPT_VERBOSITY" = "verbose" ] && echo "" || echo "--quiet"'
+
+tasks:
+  value:
+    silent: true
+    desc: |
+      Assemble the value-v1 JSON from existing bench reports and render
+      docs/value.md. Cheap, no API spend. Use after any rung-source
+      bench refresh, or as a daily-quick-read.
+    cmds:
+      - python3 -c "import sys; sys.path.insert(0, 'scripts'); from _lib.value_report import assemble_value_v1, write_value_report, write_md_dump; r = assemble_value_v1(); write_value_report(r); write_md_dump(r); print('value-v1 assembled')"
+      - python3 scripts/render_value_md.py {{.QUIET_FLAG}}
+      - python3 scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
+
+  value:refresh:
+    silent: true
+    desc: |
+      Re-run the cost-axis benches (frugality, telegraph, rtk), then
+      assemble + render. No claude API spend (rtk is local; telegraph +
+      frugality reuse the existing surfaces).
+    cmds:
+      - python3 scripts/measure_frugality_savings.py
+      - python3 scripts/bench_rtk_savings.py {{.QUIET_FLAG}}
+      - task: value
+
+  value:behaviour:
+    silent: true
+    desc: |
+      Run the cost-bearing live Track-B + behaviour run (uses the
+      `claude --print` CLI per task — needs ANTHROPIC_API_KEY), then
+      assemble + render. Cost-bearing.
+    cmds:
+      - python3 scripts/bench_ab_task_runner.py --variant both --mode live
+      - task: value
+
+  value:lint:
+    silent: true
+    desc: |
+      Structural lint on docs/value.md and the latest value-v1 JSON.
+    cmd: python3 scripts/lint_value_dashboard.py {{.QUIET_FLAG}}

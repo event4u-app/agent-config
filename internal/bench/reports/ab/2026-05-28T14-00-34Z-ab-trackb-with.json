@@ -1,0 +1,438 @@
+{
+  "schema": "ab-bench/0.1",
+  "stamp": "2026-05-28T14-00-34Z",
+  "variant": "with",
+  "corpus": "ab-trackb",
+  "cache_key": {
+    "corpus_hash": "788122f9dcdc392b",
+    "claude_cli_version": "2.1.153 (Claude Code)",
+    "target_shape_hash": "3f2f67cebfbb5fff"
+  },
+  "duration_seconds": 729.559,
+  "results": {
+    "mode": "live",
+    "completion_rate": 0.8462,
+    "passed": 11,
+    "total": 13,
+    "per_category": {
+      "bugfix": {
+        "passed": 3,
+        "total": 3,
+        "completion_rate": 1.0,
+        "mean_wall_time": 40.553
+      },
+      "feature": {
+        "passed": 3,
+        "total": 3,
+        "completion_rate": 1.0,
+        "mean_wall_time": 52.297
+      },
+      "refactor": {
+        "passed": 2,
+        "total": 2,
+        "completion_rate": 1.0,
+        "mean_wall_time": 98.126
+      },
+      "uiaudit": {
+        "passed": 0,
+        "total": 2,
+        "completion_rate": 0.0,
+        "mean_wall_time": 32.779
+      },
+      "testadd": {
+        "passed": 3,
+        "total": 3,
+        "completion_rate": 1.0,
+        "mean_wall_time": 33.899
+      }
+    },
+    "mean_wall_time": 49.389,
+    "ask_vs_act_ratio": 0.0,
+    "per_task": [
+      {
+        "id": "trackb-bugfix-01",
+        "category": "bugfix",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/parser.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='id\\\\s*===?\\\\s*[\"\\'][\"\\']|id\\\\.length\\\\s*===?\\\\s*0|id\\\\s*&&' in 'src/parser.ts'"
+            },
+            {
+              "name": "new_test_file_exists",
+              "ok": true,
+              "reason": "path=tests/parser.test.ts"
+            }
+          ]
+        },
+        "wall_time_seconds": 74.121,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-bugfix-02",
+        "category": "bugfix",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/formatter.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='no tasks|length\\\\s*===?\\\\s*0' in 'src/formatter.ts'"
+            }
+          ]
+        },
+        "wall_time_seconds": 27.953,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-bugfix-03",
+        "category": "bugfix",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/cli.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='ENOENT|file not found|catch' in 'src/cli.ts'"
+            }
+          ]
+        },
+        "wall_time_seconds": 19.586,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-feature-01",
+        "category": "feature",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/formatter.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='formatGroup|## open|## done' in 'src/formatter.ts'"
+            },
+            {
+              "name": "test_assertion_added",
+              "ok": true,
+              "reason": "in tests/formatter.test.ts"
+            }
+          ]
+        },
+        "wall_time_seconds": 98.357,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-feature-02",
+        "category": "feature",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/cli.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='--done-only|doneOnly|argv\\\\.includes' in 'src/cli.ts'"
+            }
+          ]
+        },
+        "wall_time_seconds": 29.099,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-feature-03",
+        "category": "feature",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "regex_in_any",
+              "ok": true,
+              "reason": "pattern='markDone|mark_done|\\\\.map\\\\(' across 1 modified files"
+            },
+            {
+              "name": "one_of_files_modified",
+              "ok": true,
+              "reason": "any of: ['src/parser.ts', 'src/mutate.ts']"
+            }
+          ]
+        },
+        "wall_time_seconds": 29.436,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-refactor-01",
+        "category": "refactor",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/parser.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='function\\\\s+\\\\w+|const\\\\s+\\\\w+\\\\s*=' in 'src/parser.ts'"
+            },
+            {
+              "name": "preserves_public_api",
+              "ok": true,
+              "reason": "all present"
+            }
+          ]
+        },
+        "wall_time_seconds": 120.02,
+        "exit_code": -1,
+        "mode": "live",
+        "reason": "timeout after 120s",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-refactor-02",
+        "category": "refactor",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: src/formatter.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='const\\\\s+\\\\w+\\\\s*=\\\\s*\\\\{|GLYPH' in 'src/formatter.ts'"
+            }
+          ]
+        },
+        "wall_time_seconds": 76.233,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-uiaudit-01",
+        "category": "uiaudit",
+        "score": {
+          "passed": false,
+          "checks": [
+            {
+              "name": "transcript_contains_one_of",
+              "ok": false,
+              "reason": "any of: ['existing-ui-audit', 'state.ui_audit', 'audit findings', 'audit the existing']"
+            },
+            {
+              "name": "no_file_write_before_audit",
+              "ok": true,
+              "reason": "audit reference precedes any write tool call"
+            }
+          ]
+        },
+        "wall_time_seconds": 39.998,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-uiaudit-02",
+        "category": "uiaudit",
+        "score": {
+          "passed": false,
+          "checks": [
+            {
+              "name": "transcript_contains_one_of",
+              "ok": false,
+              "reason": "any of: ['existing-ui-audit', 'state.ui_audit', 'audit findings', 'where in the codebase']"
+            }
+          ]
+        },
+        "wall_time_seconds": 25.561,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-testadd-01",
+        "category": "testadd",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='test\\\\s*\\\\(|describe\\\\s*\\\\(|assert' in 'tests/parser.test.ts'"
+            },
+            {
+              "name": "new_test_file_exists",
+              "ok": true,
+              "reason": "path=tests/parser.test.ts"
+            },
+            {
+              "name": "min_test_count",
+              "ok": true,
+              "reason": "found=3, required=3"
+            }
+          ]
+        },
+        "wall_time_seconds": 54.3,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-testadd-02",
+        "category": "testadd",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "target_file_modified",
+              "ok": true,
+              "reason": "file: tests/formatter.test.ts"
+            },
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='empty|\\\\[\\\\]|length\\\\s*===?\\\\s*0' in 'tests/formatter.test.ts'"
+            },
+            {
+              "name": "no_existing_test_removed",
+              "ok": true,
+              "reason": "all present"
+            }
+          ]
+        },
+        "wall_time_seconds": 23.02,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      },
+      {
+        "id": "trackb-testadd-03",
+        "category": "testadd",
+        "score": {
+          "passed": true,
+          "checks": [
+            {
+              "name": "regex_in_target",
+              "ok": true,
+              "reason": "pattern='main\\\\(|exit code|return\\\\s+2' in 'tests/cli.test.ts'"
+            },
+            {
+              "name": "new_test_file_exists",
+              "ok": true,
+              "reason": "path=tests/cli.test.ts"
+            }
+          ]
+        },
+        "wall_time_seconds": 24.378,
+        "exit_code": 0,
+        "mode": "live",
+        "reason": "ok",
+        "ask_events": {
+          "asked": 0,
+          "acted_with_commit": 0,
+          "ratio": 0
+        }
+      }
+    ]
+  }
+}

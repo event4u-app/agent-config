@@ -1,0 +1,61 @@
+# rtk savings corpus — `bench_rtk_savings.py`
+#
+# Phase 2 Step 3 of road-to-readable-value-dashboard.md.
+#
+# Each entry pairs a *raw* shell command (the one the agent would otherwise
+# invoke directly) with the *rtk-filtered* equivalent. The bench captures
+# both outputs (stdout + stderr), computes char + token deltas (chars/4),
+# and writes an aggregate to internal/bench/reports/rtk/latest.json.
+#
+# Constraints:
+#   - Commands MUST be read-only in the maintainer's working tree (no
+#     git fetch/pull/commit, no DDL, no destructive ops).
+#   - Output MUST be stable enough across runs that the delta is signal,
+#     not noise (`git log -10`, `ls -la`, etc. — not `top` or `ping`).
+#   - Skip an entry if the raw command is not available locally
+#     (e.g. `gh status` when `gh` isn't installed); the bench marks it
+#     `skipped` and excludes it from the aggregate.
+
+version: 1
+corpus_id: rtk-commands
+
+commands:
+  - id: git-status
+    description: "git status — common pre-commit check"
+    raw: ["git", "status"]
+    rtk: ["rtk", "git", "status"]
+
+  - id: git-diff
+    description: "git diff (working tree)"
+    raw: ["git", "diff", "--stat"]
+    rtk: ["rtk", "git", "diff", "--stat"]
+
+  - id: git-log
+    description: "git log -10 — recent history"
+    raw: ["git", "log", "-10"]
+    rtk: ["rtk", "git", "log", "-10"]
+
+  - id: git-show-head
+    description: "git show HEAD — last commit summary"
+    raw: ["git", "show", "HEAD", "--stat"]
+    rtk: ["rtk", "git", "show", "HEAD", "--stat"]
+
+  - id: ls-la
+    description: "ls -la in repo root"
+    raw: ["ls", "-la"]
+    rtk: ["rtk", "ls", "-la"]
+
+  - id: find-md
+    description: "find *.md under docs/"
+    raw: ["find", "docs", "-name", "*.md", "-type", "f"]
+    rtk: ["rtk", "find", "docs", "-name", "*.md", "-type", "f"]
+
+  - id: grep-iron-law
+    description: "grep 'Iron Law' across rules"
+    raw: ["grep", "-rn", "Iron Law", ".agent-src/rules"]
+    rtk: ["rtk", "grep", "-rn", "Iron Law", ".agent-src/rules"]
+
+  - id: wc-readme
+    description: "wc README.md"
+    raw: ["wc", "README.md"]
+    rtk: ["rtk", "wc", "README.md"]
