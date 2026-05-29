@@ -238,45 +238,145 @@ After the last step of a roadmap is done, check completion status:
    - `[-]` = cancelled (individual item dropped)
 
 3. **Decision rule — `count_open == 0` means the roadmap has no active
-   work left. `[x]`, `[~]`, `[-]` are all finalized states; only `[ ]`
-   blocks closure. "Fertig ist fertig" — deferred and cancelled items
-   don't hold a finished roadmap in the active set.**
+   work left. `[x]`, `[-]` are final states. `[~]` deferred items
+   block silent closure — they carry plans user has not consented to drop
+   (enforced by [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+   Iron Law 3).**
 
-   | count_x | count_open | count_deferred / cancelled | Action |
-   |---|---|---|---|
-   | ≥ 1 | 0 | 0 | **Auto-archive** (silent) — pure completion |
-   | ≥ 1 | 0 | ≥ 1 | **Auto-archive** (silent) — done with intentional skips |
-   | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work happened, scope dropped |
-   | ≥ 0 | ≥ 1 | ≥ 0 | **Ask the user** — open work remains |
+   | count_x | count_open | count_deferred | count_cancelled | Action |
+   |---|---|---|---|---|
+   | ≥ 1 | 0 | 0 | 0 | **Auto-archive** (silent) — pure completion |
+   | ≥ 1 | 0 | 0 | ≥ 1 | **Auto-archive** (silent) — done with explicit drops |
+   | ≥ 1 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Surface deferred items, present follow-up options, wait. Step 4b. |
+   | 0 | 0 | ≥ 1 | ≥ 0 | **STOP — Iron Law 3 flow.** Scope-drop or deferred-to-later? Same options as 4b. |
+   | 0 | 0 | 0 | ≥ 1 | **Auto-skip** (silent) — no work, all cancelled |
+   | ≥ 0 | ≥ 1 | ≥ 0 | ≥ 0 | **Ask the user** — open work remains (step 4a) |
 
    Show on auto-move:
 
    - Archive: `✅  Roadmap archived → agents/roadmaps/archive/{filename}`
    - Skip:    `⏭️  Roadmap skipped → agents/roadmaps/skipped/{filename}`
 
-   The deferred/cancelled items remain searchable inside the archived file
-   (grep for `- [~]` / `- [-]` across `archive/`); a future revival opens a
-   new roadmap that cites the archived one.
+   `[-]` cancelled items remain searchable in archived file — they were
+   explicit drops. `[~]` deferred items, by contrast, may not silently
+   follow file into archive: they represent work user planned and would
+   lose track of. Step 4b is the gate.
 
-4. **If any items are `[ ]`:** → **Ask the user.** Show what's incomplete:
+4a. **Open items remain (`count_open ≥ 1`)** → **Ask the user.** Show what's incomplete:
 
    ```
    📋 Roadmap completion check:
 
      ✅  Completed: {count_x}
      ⬜  Open:      {count_open}  — {list of open items, 1 line each}
-     ⏭️  Deferred:  {count_skip}  — {list of deferred items, 1 line each}
-     ❌  Cancelled: {count_cancel} — {list of cancelled items, 1 line each}
+     ⏭️  Deferred:  {count_deferred}  — {list of deferred items, 1 line each}
+     ❌  Cancelled: {count_cancelled} — {list of cancelled items, 1 line each}
 
    > 1. Archive — mark open items as cancelled [-] and archive now
    > 2. Keep active — I want to finish the open items
-   > 3. Mark open items as deferred [~] and archive
+   > 3. Mark open items as deferred [~] and archive (triggers Iron Law 3 flow)
    > 4. Skip — move to skipped/ (no meaningful work done, not pursuing)
    ```
 
-   Option 4 is only appropriate when `count_x == 0` or the completed items were
-   trivial (e.g. prerequisites only). If the user picks 4 despite meaningful work
-   being done, confirm once — archive is usually the right choice.
+   Option 4 only appropriate when `count_x == 0` or completed items were
+   trivial (e.g. prerequisites). If user picks 4 despite meaningful work
+   done, confirm once — archive usually right. Picking option 3 does
+   NOT archive immediately — converts open → deferred, re-enters the
+   `count_deferred > 0` branch, which runs step 4b.
+
+4b. **Deferred items present (`count_deferred ≥ 1`, `count_open == 0`)** — Iron Law 3 flow.
+   Archive **blocked** until user resolves deferrals. Surface plan and ask:
+
+   ```
+   📋 Roadmap closure check — deferred items must resolve before archive:
+
+     ✅  Completed: {count_x}
+     ⏭️  Deferred:  {count_deferred}
+     {for each deferred item:}
+       - Phase {N}: {step text}  {<!-- deferred: <annotation> --> if present}
+
+   These items carry plans you would lose to a silent archive.
+
+   > 1. Spawn follow-up roadmap as DRAFT
+   >    → agents/roadmaps/road-to-{auto-slug}.md, status: draft,
+   >      parent_roadmap: {this-slug}. Hidden from dashboard until you
+   >      flip status to "ready".
+   > 2. Spawn follow-up roadmap as READY (with blocked-until note)
+   >    → status: ready (default), parent_roadmap: {this-slug}, plus
+   >      `> Blocked until <condition>` line in body. Visible in
+   >      dashboard; execution waits on condition.
+   > 3. Keep deferred items in this archive — confirm "no follow-up"
+   >    intentional drop. Items stay searchable in archive/.
+   > 4. Restore selected items to [ ] — finish them here before archive.
+   > 5. Convert selected items to [-] cancelled — drop with rationale.
+   ```
+
+   Picks 1 or 2 → see "Spawn follow-up from deferred items" below.
+   Picks 3, 4, or 5 → apply the change in this roadmap; re-evaluate
+   the decision table; archive when gate clears.
+
+### Spawn follow-up from deferred items (procedure)
+
+When user picks option 1 or 2 in step 4b:
+
+1. **Derive slug.** Default `<parent-slug>-followup` (e.g. `road-to-x.md`
+   → `road-to-x-followup.md`). User-supplied slug in picker → use that.
+   Avoid collisions with `agents/roadmaps/` (active + `archive/` + `skipped/`).
+
+2. **Write new file** at `agents/roadmaps/<slug>.md`:
+
+   ```markdown
+   ---
+   complexity: lightweight            # bump if parent was structural
+   status: draft                      # option 1; omit for option 2 (= ready)
+   parent_roadmap: <parent-slug>      # back-link to source
+   ---
+
+   # Roadmap: Follow-up to <parent-title>
+
+   > <One sentence stating carried-over outcome.>
+
+   ## Context
+
+   This roadmap collects items deferred from
+   [`agents/roadmaps/archive/<parent-slug>.md`](archive/<parent-slug>.md).
+   See parent's archive entry for original rationale.
+
+   ## Prerequisites
+
+   - [ ] Read `AGENTS.md` and parent archive entry.
+   {parent prerequisites still relevant, copied verbatim}
+
+   <!-- Option 2 only — body note, NOT a frontmatter key: -->
+   > Blocked until <condition>. Execution starts when condition clears.
+
+   ## Phase 1: <name carried from parent>
+
+   - [ ] {deferred step text, copied verbatim with parent-phase pointer}
+   {repeat per deferred item, regrouped by parent phase}
+
+   ## Acceptance Criteria
+
+   - [ ] {restate or adjust per deferred scope}
+   - [ ] All quality gates pass — see `quality-tools`.
+   ```
+
+3. **In parent roadmap** (still in working tree), append a line at
+   bottom (above any final `---`):
+
+   ```
+   <!-- Deferred items migrated to agents/roadmaps/<followup-slug>.md on YYYY-MM-DD -->
+   ```
+
+   Do **not** delete `[~]` lines — keep visible in archived parent so
+   trail stays grep-able. Follow-up carries forward executable copy.
+
+4. **Regenerate dashboard.** Follow-up appears (draft hidden, ready
+   visible) and parent — once moved — drops off.
+
+5. **Archive parent** (`git mv` → `archive/`) and regen one more time
+   per [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)
+   Iron Laws 1 + 3.
 
 5. **Move the file** with `git mv` so history is preserved:
 
@@ -351,7 +451,7 @@ The dashboard is a **read-only snapshot**. Do not edit it by hand — regenerate
 - Roadmap files go in `agents/roadmaps/` — don't create them in other directories.
 - Don't mark phases complete without running verification (tests, quality checks) — the verify-before-complete rule applies.
 - The model tends to skip phases it deems "simple" — every phase must be explicitly completed.
-- Auto-archive only when ALL checkboxes are `[x]`. Even one `[~]` or `[-]` requires user confirmation.
+- Auto-archive is allowed when `count_open == 0` AND `count_deferred == 0`. `[-]` cancelled items archive silently (explicit drops). `[~]` deferred items **block** silent archive — they trigger the Iron Law 3 flow (see step 4b).
 - `archive/` and `skipped/` are distinct — `archive/` = work happened, `skipped/` = no meaningful work, not pursuing. Create either directory if it doesn't exist.
 - Use `git mv` (not `mv`) so history follows the file.
 

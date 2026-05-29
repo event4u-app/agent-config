@@ -232,10 +232,36 @@ execution either way.
   consultations count (if on), steps remaining, halts.
 - Final dashboard regen.
 - **If the entire roadmap reached `count_open == 0`** → run the full
-  project quality pipeline. On green → archival via the
-  [`roadmap-management`](../../skills/roadmap-management/SKILL.md) skill
-  (`git mv` to `agents/roadmaps/archive/`, regenerate dashboard). On
-  red → stop, surface failures, do **not** archive.
+  project quality pipeline. On red → stop, surface failures, do **not**
+  archive. On green → run the **deferred-resolution gate** below before
+  archival.
+
+### 6a. Deferred-resolution gate — Iron Law 3
+
+Before any `git mv` to `archive/`, count `[~]` items in the closing
+roadmap. If `count_deferred > 0`, archival is **blocked** per
+[`roadmap-progress-sync § Iron Law 3`](../../rules/roadmap-progress-sync.md).
+The loop MUST:
+
+1. Enumerate every `[~]` step (phase + text + optional
+   `<!-- deferred: ... -->` annotation).
+2. Surface the numbered-options block from
+   [`roadmap-management § 4b`](../../skills/roadmap-management/SKILL.md) —
+   five choices: follow-up (draft), follow-up (ready + blocked),
+   keep-in-archive (intentional drop), restore to `[ ]`, convert
+   to `[-]` cancelled.
+3. Wait for the user. The autonomous mandate (`/work`,
+   `/roadmap:process-full`, "decide for me") does **not** lift this
+   gate — Iron Law 3 calls it "the canonical lost-information failure
+   mode this rule exists to prevent."
+4. On picks 1 / 2 → run the "Spawn follow-up from deferred items"
+   procedure in [`roadmap-management`](../../skills/roadmap-management/SKILL.md).
+   On picks 3 / 4 / 5 → apply the change, re-evaluate the decision
+   table, archive when the gate clears.
+
+`count_deferred == 0` → archive proceeds via the
+[`roadmap-management`](../../skills/roadmap-management/SKILL.md) skill
+(`git mv`, regen).
 
 ## Scope deltas — what each wrapper binds
 

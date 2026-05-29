@@ -16,6 +16,13 @@ Checkbox states:
 Percentage = done / (done + open). Deferred and cancelled do not count towards
 "open" (they are explicit decisions).
 
+`[~]` deferred items carry plans the user intends to revisit later. They
+block silent auto-archive per `roadmap-progress-sync` Iron Law 3: a
+roadmap with `count_open == 0` and `count_deferred > 0` is reported
+separately (`pending_iron_law_3`) and the user must resolve the
+deferrals (spawn follow-up roadmap, restore, or convert to cancelled)
+before the file moves to `archive/`.
+
 Roadmap visibility is binary:
 
   - No `status:` frontmatter (or `status: ready`) → executable, listed.
@@ -245,18 +252,38 @@ def collect(roadmap_root: Path) -> list[RoadmapStats]:
 
 
 def unarchived_complete(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
-    # A roadmap is complete when every active checkbox is done and at least
-    # one active checkbox exists. The `roadmap-progress-sync` rule mandates
-    # that such a roadmap be moved to `agents/roadmaps/archive/` in the
-    # same response that closes its last open item; `collect()` already
-    # excludes that directory, so anything left here is unarchived.
-    return [r for r in roadmaps if r.total_active > 0 and r.open_ == 0]
+    # A roadmap is complete-and-clean when every active checkbox is done,
+    # at least one active checkbox exists, AND no `[~]` deferred items
+    # remain. The `roadmap-progress-sync` rule mandates that such a
+    # roadmap be moved to `agents/roadmaps/archive/` in the same response
+    # that closes its last open item; `collect()` already excludes that
+    # directory, so anything left here is unarchived.
+    #
+    # Deferred items are intentionally excluded — they block silent
+    # archive per Iron Law 3 (see `pending_iron_law_3` below).
+    return [
+        r for r in roadmaps
+        if r.total_active > 0 and r.open_ == 0 and r.deferred == 0
+    ]
+
+
+def pending_iron_law_3(roadmaps: list[RoadmapStats]) -> list[RoadmapStats]:
+    # Roadmaps with no open work but unresolved `[~]` deferred items.
+    # Per `roadmap-progress-sync` Iron Law 3 the agent must NOT auto-
+    # archive these — surface the deferred items and ask the user
+    # (spawn follow-up, restore, or convert). The dashboard merely
+    # reports the state; the obligation lives in the rule.
+    return [
+        r for r in roadmaps
+        if r.total_active > 0 and r.open_ == 0 and r.deferred > 0
+    ]
 
 
 def render(roadmaps: list[RoadmapStats]) -> str:
     total_done = sum(r.done for r in roadmaps)
     total_active = sum(r.total_active for r in roadmaps)
     overall_pct = round(total_done * 100 / total_active) if total_active else 0
+    pending = pending_iron_law_3(roadmaps)
     lines: list[str] = []
     lines.append("# Roadmap Progress\n")
     header_meta = (
@@ -274,6 +301,21 @@ def render(roadmaps: list[RoadmapStats]) -> str:
     lines.append("## Overall\n")
     lines.append(f"**{total_done} / {total_active} steps done · {overall_pct}%**\n")
     lines.append("```text\n" + bar(overall_pct, 40) + f"   {overall_pct}%\n```\n")
+    if pending:
+        lines.append("## ⚠️ Iron Law 3 — unresolved deferred items\n")
+        lines.append(
+            "These roadmaps have `count_open == 0` but carry `[~]` deferred "
+            "items. Per `roadmap-progress-sync` Iron Law 3 they do NOT "
+            "auto-archive — the user must resolve the deferrals first "
+            "(spawn follow-up, restore, or cancel). See "
+            "[`roadmap-management § 4b`](../packages/core/.agent-src.uncondensed/skills/roadmap-management/SKILL.md).\n"
+        )
+        lines.append("| Roadmap | Done | Deferred | Cancelled |")
+        lines.append("|---|---:|---:|---:|")
+        for r in pending:
+            lines.append(f"| [{r.rel}](roadmaps/{r.rel}) | {r.done} | "
+                         f"{r.deferred} | {r.cancelled} |")
+        lines.append("")
     if not roadmaps:
         lines.append("_No open roadmaps._\n")
         return "\n".join(lines) + "\n"
@@ -326,6 +368,7 @@ def main() -> int:
     new_text = render(roadmaps)
     current = target.read_text(encoding="utf-8") if target.exists() else ""
     complete = unarchived_complete(roadmaps)
+    pending = pending_iron_law_3(roadmaps)
     if args.check:
         stale = current != new_text
         if stale:
@@ -340,7 +383,14 @@ def main() -> int:
             for r in complete:
                 print(f"      - {r.rel}  ({r.done}/{r.total_active} done)",
                       file=sys.stderr)
-        if stale or complete:
+        if pending:
+            print("❌  Iron Law 3 — roadmaps with unresolved `[~]` deferred "
+                  "items must NOT auto-archive. Resolve via `roadmap-management § 4b` "
+                  "(spawn follow-up, restore, or cancel):", file=sys.stderr)
+            for r in pending:
+                print(f"      - {r.rel}  ({r.done}/{r.total_active} done · "
+                      f"{r.deferred} deferred)", file=sys.stderr)
+        if stale or complete or pending:
             return 1
         print(f"✅  {target.relative_to(args.repo_root)} is up to date.")
         return 0
@@ -353,6 +403,12 @@ def main() -> int:
               "`agents/roadmaps/archive/`:", file=sys.stderr)
         for r in complete:
             print(f"      - {r.rel}", file=sys.stderr)
+    if pending:
+        print("⚠️   Iron Law 3 — roadmaps with unresolved `[~]` deferred items. "
+              "Surface them and ask the user (`roadmap-management § 4b`) "
+              "before any archive:", file=sys.stderr)
+        for r in pending:
+            print(f"      - {r.rel}  ({r.deferred} deferred)", file=sys.stderr)
     return 0
 
 

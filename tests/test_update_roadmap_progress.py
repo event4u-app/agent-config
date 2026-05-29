@@ -310,6 +310,98 @@ def test_write_mode_warns_but_does_not_fail(
 
 
 # ---------------------------------------------------------------------------
+# Iron Law 3 — a roadmap with `count_open == 0` AND `count_deferred > 0`
+# carries planned-for-later work that must not auto-archive. The dashboard
+# generator separates this case from clean completion: `unarchived_complete`
+# excludes it, `pending_iron_law_3` flags it.
+# ---------------------------------------------------------------------------
+
+DONE_WITH_DEFERRED_FIXTURE = """\
+# Roadmap — Closed with deferred work
+
+## Phase 1 — Done
+- [x] finished thing
+- [x] another finished thing
+
+## Phase 2 — Pushed out
+- [~] migrate bulk-import job to chunked dispatch
+- [~] wire DLQ
+"""
+
+
+def test_unarchived_complete_excludes_roadmaps_with_deferred(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "with-deferred.md").write_text(DONE_WITH_DEFERRED_FIXTURE,
+                                           encoding="utf-8")
+    roadmaps = urp.collect(root)
+    # Iron Law 3 — a roadmap that's "closed but deferred" must NOT be
+    # surfaced as ready-to-archive. The archive gate is the deferred-
+    # resolution flow in roadmap-management § 4b, not the dashboard.
+    assert urp.unarchived_complete(roadmaps) == []
+
+
+def test_pending_iron_law_3_flags_roadmaps_with_deferred(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "with-deferred.md").write_text(DONE_WITH_DEFERRED_FIXTURE,
+                                           encoding="utf-8")
+    (root / "clean.md").write_text(COMPLETE_FIXTURE, encoding="utf-8")
+    roadmaps = urp.collect(root)
+    pending = urp.pending_iron_law_3(roadmaps)
+    rels = sorted(r.rel for r in pending)
+    # Only the roadmap that has both `[x]` and `[~]` items is pending.
+    # The clean COMPLETE_FIXTURE (all `[x]`) does NOT enter this list —
+    # `unarchived_complete` handles it as before.
+    assert rels == ["with-deferred.md"]
+    deferred_counts = {r.rel: r.deferred for r in pending}
+    assert deferred_counts["with-deferred.md"] == 2
+
+
+def test_check_mode_fails_on_pending_iron_law_3(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "with-deferred.md").write_text(DONE_WITH_DEFERRED_FIXTURE,
+                                           encoding="utf-8")
+    rc = _run_main(monkeypatch, tmp_path)
+    assert rc == 0
+    rc = _run_main(monkeypatch, tmp_path, "--check")
+    captured = capsys.readouterr()
+    assert rc == 1
+    assert "Iron Law 3" in captured.err
+    assert "with-deferred.md" in captured.err
+    # The clean "completed-not-archived" path uses a different message.
+    assert "Completed roadmaps are still in" not in captured.err
+
+
+def test_write_mode_warns_on_pending_iron_law_3(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture
+):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "with-deferred.md").write_text(DONE_WITH_DEFERRED_FIXTURE,
+                                           encoding="utf-8")
+    rc = _run_main(monkeypatch, tmp_path)
+    captured = capsys.readouterr()
+    assert rc == 0  # warn-only on write path
+    assert "Iron Law 3" in captured.err
+    assert "with-deferred.md" in captured.err
+
+
+def test_render_surfaces_iron_law_3_block(tmp_path: Path):
+    root = tmp_path / "agents" / "roadmaps"
+    root.mkdir(parents=True)
+    (root / "with-deferred.md").write_text(DONE_WITH_DEFERRED_FIXTURE,
+                                           encoding="utf-8")
+    roadmaps = urp.collect(root)
+    rendered = urp.render(roadmaps)
+    assert "Iron Law 3" in rendered
+    assert "with-deferred.md" in rendered
+
+
+# ---------------------------------------------------------------------------
 # Column semantics — `Steps` must include deferred + cancelled, and the
 # overall-table column order must be `Steps | Open | Done | Deferred |
 # Cancelled` so each row's arithmetic adds up:
