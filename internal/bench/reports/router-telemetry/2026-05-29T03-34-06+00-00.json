@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "router-telemetry-v1",
-  "generated_at": "2026-05-29T03:38:48+00:00",
+  "generated_at": "2026-05-29T03:34:06+00:00",
   "config": {
     "router": "dist/router.json",
     "profile": "full",
@@ -19,19 +19,19 @@
   },
   "per_trigger_hits": {
     "model-recommendation::{\"phrase\": \"new task\"}": 1,
-    "domain-safety-pii::{\"keyword\": \"log\"}": 3,
+    "domain-safety-pii::{\"keyword\": \"log\"}": 2,
     "downstream-changes::{\"keyword\": \"imports\"}": 1,
     "architecture::{\"keyword\": \"controller\"}": 1,
     "laravel-routing::{\"keyword\": \"laravel\"}": 3,
     "domain-safety-pii::{\"keyword\": \"invoice\"}": 2,
     "architecture::{\"keyword\": \"service\"}": 2,
     "framework-neutrality-in-generic-skills::{\"keyword\": \"Pest\"}": 1,
-    "php-coding::{\"keyword\": \"phpstan\"}": 1,
-    "cli-output-handling::{\"keyword\": \"phpstan\"}": 1,
-    "framework-neutrality-in-generic-skills::{\"keyword\": \"PHPStan\"}": 1,
+    "php-coding::{\"keyword\": \"phpstan\"}": 2,
+    "cli-output-handling::{\"keyword\": \"phpstan\"}": 2,
+    "framework-neutrality-in-generic-skills::{\"keyword\": \"PHPStan\"}": 2,
     "provider-lifecycle-discipline::{\"phrase\": \"lifecycle\"}": 1,
     "strategy-safety-floor::{\"keyword\": \"vision\"}": 1,
-    "commit-conventions::{\"keyword\": \"commit\"}": 4,
+    "commit-conventions::{\"keyword\": \"commit\"}": 3,
     "domain-safety-pii::{\"keyword\": \"Sentry\"}": 1,
     "strategy-safety-floor::{\"keyword\": \"moat\"}": 1,
     "strategy-safety-floor::{\"keyword\": \"positioning\"}": 1,
@@ -45,15 +45,7 @@
     "finance-safety-floor::{\"keyword\": \"sensitivity\"}": 1,
     "skill-improvement-trigger::{\"keyword\": \"pipeline\"}": 1,
     "domain-safety-pii::{\"keyword\": \"support macro\"}": 1,
-    "augment-source-of-truth::{\"path_prefix\": \".agent-src/\"}": 2,
-    "markdown-safe-codeblocks::{\"file_pattern\": \"*.md\"}": 8,
     "security-sensitive-stop::{\"keyword\": \"webhook\"}": 1,
-    "skill-quality::{\"path_prefix\": \".agent-src.uncondensed/skills/\"}": 1,
-    "augment-edit-discipline::{\"path_prefix\": \".agent-src.uncondensed/\"}": 3,
-    "domain-adoption-policy::{\"path_prefix\": \".agent-src.uncondensed/skills/\"}": 1,
-    "framework-neutrality-in-generic-skills::{\"path_prefix\": \".agent-src.uncondensed/skills/\"}": 1,
-    "framework-neutrality-in-generic-skills::{\"path_prefix\": \".agent-src.uncondensed/rules/\"}": 2,
-    "rule-type-governance::{\"path_prefix\": \".agent-src.uncondensed/rules/\"}": 2,
     "improve-before-implement::{\"keyword\": \"refactor\"}": 1,
     "invite-challenge::{\"keyword\": \"approach\"}": 2,
     "copilot-routing::{\"keyword\": \"copilot\"}": 1,
@@ -64,60 +56,37 @@
     "symfony-routing::{\"keyword\": \"doctrine\"}": 2,
     "symfony-routing::{\"keyword\": \"messenger\"}": 1,
     "runtime-safety::{\"keyword\": \"handler\"}": 1,
-    "docker-commands::{\"keyword\": \"artisan\"}": 1,
-    "docker-commands::{\"keyword\": \"composer\"}": 1,
-    "laravel-routing::{\"keyword\": \"artisan\"}": 1,
-    "cli-output-handling::{\"keyword\": \"composer\"}": 1,
-    "engineering-safety-floor::{\"keyword\": \"migration\"}": 1,
-    "framework-neutrality-in-generic-skills::{\"keyword\": \"php artisan\"}": 1,
-    "framework-neutrality-in-generic-skills::{\"keyword\": \"Artisan\"}": 1,
+    "architecture::{\"keyword\": \"module\"}": 2,
+    "security-sensitive-stop::{\"keyword\": \"billing\"}": 1,
     "security-sensitive-stop::{\"keyword\": \"tenant\"}": 1,
-    "commit-conventions::{\"keyword\": \"branch\"}": 2,
-    "architecture::{\"keyword\": \"module\"}": 1,
-    "no-roadmap-references::{\"path_prefix\": \"agents/roadmaps/\"}": 4,
-    "roadmap-progress-sync::{\"path_prefix\": \"agents/roadmaps/\"}": 4,
-    "roadmap-ci-steps-policy::{\"path_prefix\": \"agents/roadmaps/\"}": 4,
-    "roadmap-progress-sync::{\"command\": \"/roadmap:process-step\"}": 1,
-    "slash-command-routing-policy::{\"keyword\": \"/create-pr\"}": 1,
-    "slash-command-routing-policy::{\"keyword\": \"/commit\"}": 1,
-    "slash-command-routing-policy::{\"keyword\": \"/fix-ci\"}": 1
+    "commit-conventions::{\"keyword\": \"branch\"}": 1,
+    "artifact-engagement-recording::{\"phrase\": \"/implement-ticket\"}": 1
   },
   "per_rule_activations": {
     "tier_2": {
       "model-recommendation": 1,
-      "domain-safety-pii": 7,
+      "domain-safety-pii": 6,
       "downstream-changes": 1,
-      "framework-neutrality-in-generic-skills": 6,
+      "framework-neutrality-in-generic-skills": 3,
       "cli-output-handling": 3,
       "strategy-safety-floor": 3,
       "provider-lifecycle-discipline": 1,
-      "commit-conventions": 6,
+      "commit-conventions": 4,
       "invite-challenge": 3,
       "finance-safety-floor": 4,
       "skill-improvement-trigger": 1,
-      "security-sensitive-stop": 2,
-      "markdown-safe-codeblocks": 8,
-      "augment-edit-discipline": 3,
-      "domain-adoption-policy": 1,
-      "rule-type-governance": 2,
+      "security-sensitive-stop": 3,
       "improve-before-implement": 1,
-      "runtime-safety": 1,
-      "engineering-safety-floor": 1,
-      "roadmap-ci-steps-policy": 4
+      "runtime-safety": 1
     },
     "tier_1": {
       "laravel-routing": 3,
-      "architecture": 4,
-      "php-coding": 1,
-      "augment-source-of-truth": 2,
-      "skill-quality": 1,
+      "architecture": 5,
+      "php-coding": 2,
       "copilot-routing": 1,
       "devcontainer-routing": 2,
       "symfony-routing": 2,
-      "docker-commands": 1,
-      "no-roadmap-references": 4,
-      "roadmap-progress-sync": 4,
-      "slash-command-routing-policy": 3
+      "artifact-engagement-recording": 1
     }
   },
   "panel_b_untouchable_rules": [],
@@ -152,11 +121,11 @@
       "unique_rules_activated": 9,
       "top_rules": [
         [
-          "domain-safety-pii",
+          "architecture",
           3
         ],
         [
-          "architecture",
+          "domain-safety-pii",
           3
         ],
         [
@@ -168,11 +137,11 @@
           1
         ],
         [
-          "php-coding",
+          "cli-output-handling",
           1
         ],
         [
-          "cli-output-handling",
+          "php-coding",
           1
         ],
         [
@@ -223,24 +192,8 @@
     {
       "corpus": "router-coverage:agent-docs-edits",
       "prompts_replayed": 6,
-      "unique_rules_activated": 11,
+      "unique_rules_activated": 4,
       "top_rules": [
-        [
-          "markdown-safe-codeblocks",
-          4
-        ],
-        [
-          "augment-source-of-truth",
-          2
-        ],
-        [
-          "augment-edit-discipline",
-          2
-        ],
-        [
-          "framework-neutrality-in-generic-skills",
-          2
-        ],
         [
           "invite-challenge",
           2
@@ -250,19 +203,11 @@
           1
         ],
         [
-          "skill-quality",
-          1
-        ],
-        [
-          "domain-adoption-policy",
-          1
-        ],
-        [
-          "rule-type-governance",
-          1
-        ],
-        [
           "improve-before-implement",
+          1
+        ],
+        [
+          "finance-safety-floor",
           1
         ]
       ]
@@ -281,6 +226,10 @@
           2
         ],
         [
+          "security-sensitive-stop",
+          2
+        ],
+        [
           "laravel-routing",
           2
         ],
@@ -293,23 +242,19 @@
           1
         ],
         [
-          "cli-output-handling",
-          1
-        ],
-        [
           "framework-neutrality-in-generic-skills",
           1
         ],
         [
-          "engineering-safety-floor",
+          "php-coding",
           1
         ],
         [
-          "docker-commands",
+          "cli-output-handling",
           1
         ],
         [
-          "security-sensitive-stop",
+          "architecture",
           1
         ]
       ]
@@ -332,53 +277,16 @@
     {
       "corpus": "router-coverage:roadmap-ops",
       "prompts_replayed": 4,
-      "unique_rules_activated": 7,
-      "top_rules": [
-        [
-          "roadmap-ci-steps-policy",
-          4
-        ],
-        [
-          "no-roadmap-references",
-          4
-        ],
-        [
-          "roadmap-progress-sync",
-          4
-        ],
-        [
-          "markdown-safe-codeblocks",
-          4
-        ],
-        [
-          "augment-edit-discipline",
-          1
-        ],
-        [
-          "framework-neutrality-in-generic-skills",
-          1
-        ],
-        [
-          "rule-type-governance",
-          1
-        ]
-      ]
+      "unique_rules_activated": 0,
+      "top_rules": []
     },
     {
       "corpus": "router-coverage:slash-commands",
       "prompts_replayed": 4,
-      "unique_rules_activated": 3,
+      "unique_rules_activated": 1,
       "top_rules": [
         [
-          "slash-command-routing-policy",
-          3
-        ],
-        [
-          "commit-conventions",
-          2
-        ],
-        [
-          "domain-safety-pii",
+          "artifact-engagement-recording",
           1
         ]
       ]
@@ -391,12 +299,11 @@
       "intended": [
         "augment-source-of-truth"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "augment-source-of-truth"
       ],
-      "missed_intended": [],
       "unintended_activations": [
-        "markdown-safe-codeblocks",
         "security-sensitive-stop"
       ]
     },
@@ -407,18 +314,12 @@
         "augment-source-of-truth",
         "skill-quality"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
+        "augment-source-of-truth",
         "skill-quality"
       ],
-      "missed_intended": [
-        "augment-source-of-truth"
-      ],
-      "unintended_activations": [
-        "augment-edit-discipline",
-        "domain-adoption-policy",
-        "framework-neutrality-in-generic-skills",
-        "markdown-safe-codeblocks"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:agent-docs-edits",
@@ -430,12 +331,7 @@
       "missed_intended": [
         "telegraph-speak"
       ],
-      "unintended_activations": [
-        "augment-edit-discipline",
-        "framework-neutrality-in-generic-skills",
-        "markdown-safe-codeblocks",
-        "rule-type-governance"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:agent-docs-edits",
@@ -460,13 +356,11 @@
       "intended": [
         "augment-source-of-truth"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "augment-source-of-truth"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "markdown-safe-codeblocks"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:agent-docs-edits",
@@ -531,16 +425,17 @@
         "php-coding"
       ],
       "hit": [
-        "docker-commands"
-      ],
-      "missed_intended": [
         "php-coding"
       ],
+      "missed_intended": [
+        "docker-commands"
+      ],
       "unintended_activations": [
+        "architecture",
         "cli-output-handling",
-        "engineering-safety-floor",
         "framework-neutrality-in-generic-skills",
-        "laravel-routing"
+        "laravel-routing",
+        "security-sensitive-stop"
       ]
     },
     {
@@ -634,15 +529,11 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "roadmap-progress-sync"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "markdown-safe-codeblocks",
-        "no-roadmap-references",
-        "roadmap-ci-steps-policy"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:roadmap-ops",
@@ -650,15 +541,11 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "roadmap-progress-sync"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "markdown-safe-codeblocks",
-        "no-roadmap-references",
-        "roadmap-ci-steps-policy"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:roadmap-ops",
@@ -667,20 +554,12 @@
         "augment-source-of-truth",
         "no-roadmap-references"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
+        "augment-source-of-truth",
         "no-roadmap-references"
       ],
-      "missed_intended": [
-        "augment-source-of-truth"
-      ],
-      "unintended_activations": [
-        "augment-edit-discipline",
-        "framework-neutrality-in-generic-skills",
-        "markdown-safe-codeblocks",
-        "roadmap-ci-steps-policy",
-        "roadmap-progress-sync",
-        "rule-type-governance"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:roadmap-ops",
@@ -688,15 +567,11 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "roadmap-progress-sync"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "markdown-safe-codeblocks",
-        "no-roadmap-references",
-        "roadmap-ci-steps-policy"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:slash-commands",
@@ -716,86 +591,60 @@
       "intended": [
         "slash-command-routing-policy"
       ],
-      "hit": [
+      "hit": [],
+      "missed_intended": [
         "slash-command-routing-policy"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "commit-conventions"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:slash-commands",
       "task": "slash-commands-03",
       "intended": [
+        "artifact-engagement-recording",
         "slash-command-routing-policy"
       ],
       "hit": [
+        "artifact-engagement-recording"
+      ],
+      "missed_intended": [
         "slash-command-routing-policy"
       ],
-      "missed_intended": [],
-      "unintended_activations": [
-        "commit-conventions",
-        "domain-safety-pii"
-      ]
+      "unintended_activations": []
     },
     {
       "corpus": "router-coverage:slash-commands",
       "task": "slash-commands-04",
       "intended": [
-        "slash-command-routing-policy"
+        "command-suggestion-policy"
       ],
-      "hit": [
-        "slash-command-routing-policy"
+      "hit": [],
+      "missed_intended": [
+        "command-suggestion-policy"
       ],
-      "missed_intended": [],
       "unintended_activations": []
     }
   ],
   "unintended_activation_histogram": [
     [
-      "markdown-safe-codeblocks",
-      8
+      "security-sensitive-stop",
+      3
     ],
     [
       "commit-conventions",
-      5
-    ],
-    [
-      "framework-neutrality-in-generic-skills",
-      4
-    ],
-    [
-      "roadmap-ci-steps-policy",
-      4
-    ],
-    [
-      "augment-edit-discipline",
       3
-    ],
-    [
-      "no-roadmap-references",
-      3
-    ],
-    [
-      "security-sensitive-stop",
-      2
-    ],
-    [
-      "rule-type-governance",
-      2
     ],
     [
       "invite-challenge",
       2
     ],
     [
-      "laravel-routing",
+      "architecture",
       2
     ],
     [
-      "domain-adoption-policy",
-      1
+      "laravel-routing",
+      2
     ],
     [
       "improve-before-implement",
@@ -814,32 +663,25 @@
       1
     ],
     [
-      "engineering-safety-floor",
-      1
-    ],
-    [
-      "architecture",
-      1
-    ],
-    [
-      "roadmap-progress-sync",
-      1
-    ],
-    [
-      "domain-safety-pii",
+      "framework-neutrality-in-generic-skills",
       1
     ]
   ],
   "never_matched_tier1": [
-    "artifact-engagement-recording",
+    "augment-source-of-truth",
     "autonomous-execution",
     "command-suggestion-policy",
     "context-hygiene",
+    "docker-commands",
     "fast-path-marker-visibility",
     "low-impact-corpus-privacy-floor",
     "no-attribution-footers",
     "no-decorative-emojis-in-git-surfaces",
+    "no-roadmap-references",
     "onboarding-gate",
+    "roadmap-progress-sync",
+    "skill-quality",
+    "slash-command-routing-policy",
     "telegraph-speak",
     "user-interaction"
   ]
