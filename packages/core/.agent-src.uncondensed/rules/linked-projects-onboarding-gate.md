@@ -48,7 +48,7 @@ attaching the repo in their IDE (zero-knowledge). See the cross-repo guide
 ## When this fires
 
 First substantive turn of a session (and on a new IDE attachment), when a
-detected sibling is absent from `linked_projects` in `.agent-settings.local.yml`.
+detected sibling is absent from `linked_projects` in `agents/settings/.agent-settings.local.yml`.
 Inert when no sibling is attached, or when every detected sibling already has a
 recorded decision (opted-in or declined).
 
@@ -70,7 +70,7 @@ carries `"large": true` — surfaced as awareness only, never excluded.
 
 For each detected sibling **not** already in `linked_projects`, ask once
 (numbered options per `user-interaction`): include it / decline it / always /
-never-ask. Persist to `.agent-settings.local.yml` (the gitignored per-machine
+never-ask. Persist to `agents/settings/.agent-settings.local.yml` (the gitignored per-machine
 layer — never the committed `.agent-settings.yml`):
 
 ```yaml

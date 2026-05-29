@@ -39,7 +39,7 @@ Closes the **proactivity gap**: agent can already read/write a sibling, but does
 
 ## When this fires
 
-First substantive turn (and on new IDE attachment), when a detected sibling is absent from `linked_projects` in `.agent-settings.local.yml`. Inert when no sibling attached or every detected sibling already decided (opted-in or declined).
+First substantive turn (and on new IDE attachment), when a detected sibling is absent from `linked_projects` in `agents/settings/.agent-settings.local.yml`. Inert when no sibling attached or every detected sibling already decided (opted-in or declined).
 
 ## Detection
 
@@ -54,7 +54,7 @@ Returns config-attached siblings only (PhpStorm `.idea/modules.xml` + `vcs.xml`,
 
 ## Opt-in (one-time per sibling)
 
-For each detected sibling **not** already in `linked_projects`, ask once (numbered options per `user-interaction`): include / decline / always / never-ask. Persist to `.agent-settings.local.yml` (gitignored per-machine layer — never committed `.agent-settings.yml`):
+For each detected sibling **not** already in `linked_projects`, ask once (numbered options per `user-interaction`): include / decline / always / never-ask. Persist to `agents/settings/.agent-settings.local.yml` (gitignored per-machine layer — never committed `.agent-settings.yml`):
 
 ```yaml
 linked_projects:

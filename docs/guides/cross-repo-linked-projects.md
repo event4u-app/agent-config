@@ -26,7 +26,7 @@ config and prompts **once** to opt it in:
 
 On the first turn (and on a new attachment) the agent asks per detected sibling:
 include / decline / always / never-ask. Your choice is stored **local-only** in
-`.agent-settings.local.yml` (gitignored, per-machine — see below). A declined
+`agents/settings/.agent-settings.local.yml` (gitignored, per-machine — see below). A declined
 sibling is never prompted again.
 
 Once a sibling is in scope, the agent proactively checks it for impact when a
@@ -38,7 +38,7 @@ loading its files wholesale. Large siblings (a real frontend easily exceeds
 
 Auto-detection is verified for Claude Code only. For Cursor, Augment, Copilot,
 or any editor without IDE attachment, add the sibling by hand to
-`.agent-settings.local.yml`:
+`agents/settings/.agent-settings.local.yml`:
 
 ~~~yaml
 linked_projects:
@@ -58,7 +58,7 @@ files wholesale; access specific files on demand.
 
 ## Keep it local, never committed
 
-`.agent-settings.local.yml` is **gitignored on purpose** — sibling paths are
+`agents/settings/.agent-settings.local.yml` is **gitignored on purpose** — sibling paths are
 per-developer and per-machine. The installer does **not** touch your
 `.gitignore` (decision D2 — you own your ignore file), so if your project does
 not already ignore it, add:

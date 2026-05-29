@@ -57,7 +57,7 @@ Build an **opt-in** auto-detection feature:
 1. **Detect** IDE-attached siblings from on-disk config (config-driven only;
    never arbitrary adjacent directories).
 2. **Opt-in once** per sibling; persist the choice **local-only** in
-   `.agent-settings.local.yml` (gitignored, per-machine — sibling paths differ
+   `agents/settings/.agent-settings.local.yml` (gitignored, per-machine — sibling paths differ
    per developer and must never be committed).
 3. **Behavioral directive** for in-scope siblings: proactively check cross-repo
    impact on relevant changes (API contract, shared types) and **warn**.
@@ -73,14 +73,14 @@ Build an **opt-in** auto-detection feature:
 
 ### Fork resolutions
 
-- **Fork A** — `.agent-settings.local.yml`, deepest cascade layer reusing `_deep_merge` (not a bespoke override).
+- **Fork A** — `agents/settings/.agent-settings.local.yml`, deepest cascade layer reusing `_deep_merge` (not a bespoke override).
 - **Fork B** — key `linked_projects` (avoids ADR-007 "scope"/"workspace", ADR-029 "multi-workspace").
 - **Fork C** — cross-cwd writes documented, never auto-configured; host permission gate applies.
 
 ## Consequences
 
 - New: detector (`scripts/_lib/linked_projects.py`), the
-  `.agent-settings.local.yml` cascade layer, a committed-local lint, and the
+  `agents/settings/.agent-settings.local.yml` cascade layer, a committed-local lint, and the
   `linked-projects-onboarding-gate` rule (tier-2b, **experimental**, **removable**).
 - The intra-repo module system (`enumerate_modules()`) is untouched.
 - Size never excludes a sibling — a real frontend (galawork-web ≈ 38k files)
@@ -88,7 +88,7 @@ Build an **opt-in** auto-detection feature:
   "skip >20k files" guardrail was corrected: it conflated Option C's
   file-inclusion cost with Option A, under which repo size is cost-irrelevant.
 - Per install decision **D2**, the installer does not touch the consumer
-  `.gitignore`; consumers gitignore `.agent-settings.local.yml` themselves
+  `.gitignore`; consumers gitignore `agents/settings/.agent-settings.local.yml` themselves
   (documented in the guide).
 
 ## Kill-switch

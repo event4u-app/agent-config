@@ -61,16 +61,19 @@ from . import user_global_paths
 logger = logging.getLogger(__name__)
 
 DEFAULT_PROJECT_FILE = ".agent-settings.yml"
-#: Per-directory, per-machine override file. Gitignored. Slots into the
-#: cascade immediately after its committed sibling (deepest-wins via
-#: ``_deep_merge``), so a developer's local values override the committed
-#: ones without ever being committed. Missing files are harmless (read as {}).
+#: Per-machine override file. Gitignored. A SINGLE project-level file living
+#: under ``agents/settings/`` (with the rest of the project's settings layer,
+#: not at the repo root). It is appended as the deepest cascade layer so a
+#: developer's local values override every committed ``.agent-settings.yml``
+#: without ever being committed. Missing file is harmless (read as {}).
 LOCAL_PROJECT_FILE = ".agent-settings.local.yml"
+#: Project-relative directory the local override lives in.
+LOCAL_PROJECT_SUBDIR = ("agents", "settings")
 
 
-def _with_local(path: Path) -> list[Path]:
-    """Return ``[path, <path's .local sibling>]`` — committed then local."""
-    return [path, path.with_name(LOCAL_PROJECT_FILE)]
+def _local_settings_path(project_root: Path) -> Path:
+    """Single local override: ``<root>/agents/settings/.agent-settings.local.yml``."""
+    return project_root.joinpath(*LOCAL_PROJECT_SUBDIR, LOCAL_PROJECT_FILE)
 
 
 DEFAULT_TEAM_FILE = ".agent-project-settings.yml"
@@ -427,12 +430,12 @@ def _resolve_cascade_paths(
     """
     if cwd is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return _with_local(legacy)
+        return [legacy, _local_settings_path(legacy.parent)]
 
     root = find_project_root(cwd)
     if root is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return _with_local(legacy)
+        return [legacy, _local_settings_path(legacy.parent)]
 
     cwd_resolved = cwd.resolve()
     # Build the chain root → … → cwd (shallowest first, deepest last).
@@ -447,8 +450,9 @@ def _resolve_cascade_paths(
             break
         cursor = parent
     chain.reverse()
-    # Per directory: committed file then its .local sibling (deepest-wins).
-    return [f for d in chain for f in _with_local(d / DEFAULT_PROJECT_FILE)]
+    # Committed cascade root → cwd, then the single project-level local override
+    # under agents/settings/ as the deepest (winning) layer.
+    return [d / DEFAULT_PROJECT_FILE for d in chain] + [_local_settings_path(root)]
 
 
 def load_agent_settings(
