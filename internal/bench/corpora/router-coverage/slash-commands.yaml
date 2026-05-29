@@ -1,0 +1,42 @@
+# Router-coverage corpus — slash-commands family
+#
+# Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
+# Exercises rules that fire on slash-command surfaces — command
+# suggestion, routing-to-canonical, telemetry-recording.
+
+version: 1
+corpus_id: router-coverage-slash-commands
+selection_accuracy_target: 0.0
+
+prompts:
+  - id: slash-commands-01
+    category: router-coverage
+    language: en
+    prompt: "I want to refine ticket PROJ-123 before sending it to engineering. Can you help?"
+    expected_skills: [refine-ticket]
+    replay_opaque_triggers: [command-suggestion-policy]  # router triggers are meta-phrases ("free-form prompt"/"command suggestion") + no command-type trigger; not matchable from a real user prompt
+    command: "/refine-ticket"
+
+  - id: slash-commands-02
+    category: router-coverage
+    language: en
+    prompt: "/create-pr please — open the PR for this branch."
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+    command: "/create-pr"
+
+  - id: slash-commands-03
+    category: router-coverage
+    language: en
+    prompt: "Run `/commit` to chunk the staged changes into logical commits."
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+    command: "/commit"
+
+  - id: slash-commands-04
+    category: router-coverage
+    language: en
+    prompt: "Use `/fix-ci` to diagnose the failing CI checks on the open PR."
+    expected_skills: []
+    intended_triggers: [slash-command-routing-policy]
+    command: "/fix-ci"

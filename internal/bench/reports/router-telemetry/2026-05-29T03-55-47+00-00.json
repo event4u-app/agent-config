@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "router-telemetry-v1",
-  "generated_at": "2026-05-29T04:28:52+00:00",
+  "generated_at": "2026-05-29T03:55:47+00:00",
   "config": {
     "router": "dist/router.json",
     "profile": "full",
@@ -67,7 +67,6 @@
     "docker-commands::{\"keyword\": \"artisan\"}": 1,
     "docker-commands::{\"keyword\": \"composer\"}": 1,
     "laravel-routing::{\"keyword\": \"artisan\"}": 1,
-    "php-coding::{\"file_pattern\": \"*.php\"}": 1,
     "cli-output-handling::{\"keyword\": \"composer\"}": 1,
     "engineering-safety-floor::{\"keyword\": \"migration\"}": 1,
     "framework-neutrality-in-generic-skills::{\"keyword\": \"php artisan\"}": 1,
@@ -90,14 +89,14 @@
       "downstream-changes": 1,
       "framework-neutrality-in-generic-skills": 6,
       "cli-output-handling": 3,
-      "provider-lifecycle-discipline": 1,
       "strategy-safety-floor": 3,
+      "provider-lifecycle-discipline": 1,
       "commit-conventions": 6,
       "invite-challenge": 3,
       "finance-safety-floor": 4,
       "skill-improvement-trigger": 1,
-      "security-sensitive-stop": 2,
       "markdown-safe-codeblocks": 8,
+      "security-sensitive-stop": 2,
       "domain-adoption-policy": 1,
       "augment-edit-discipline": 3,
       "rule-type-governance": 2,
@@ -109,15 +108,15 @@
     "tier_1": {
       "architecture": 4,
       "laravel-routing": 3,
-      "php-coding": 2,
+      "php-coding": 1,
       "augment-source-of-truth": 2,
       "skill-quality": 1,
       "copilot-routing": 1,
       "devcontainer-routing": 2,
       "symfony-routing": 2,
       "docker-commands": 1,
-      "no-roadmap-references": 4,
       "roadmap-progress-sync": 4,
+      "no-roadmap-references": 4,
       "slash-command-routing-policy": 3
     }
   },
@@ -153,11 +152,11 @@
       "unique_rules_activated": 9,
       "top_rules": [
         [
-          "architecture",
+          "domain-safety-pii",
           3
         ],
         [
-          "domain-safety-pii",
+          "architecture",
           3
         ],
         [
@@ -169,19 +168,19 @@
           1
         ],
         [
-          "php-coding",
-          1
-        ],
-        [
           "cli-output-handling",
           1
         ],
         [
-          "provider-lifecycle-discipline",
+          "php-coding",
           1
         ],
         [
           "strategy-safety-floor",
+          1
+        ],
+        [
+          "provider-lifecycle-discipline",
           1
         ],
         [
@@ -251,11 +250,11 @@
           1
         ],
         [
-          "skill-quality",
+          "domain-adoption-policy",
           1
         ],
         [
-          "domain-adoption-policy",
+          "skill-quality",
           1
         ],
         [
@@ -271,7 +270,7 @@
     {
       "corpus": "router-coverage:framework-routing",
       "prompts_replayed": 6,
-      "unique_rules_activated": 11,
+      "unique_rules_activated": 10,
       "top_rules": [
         [
           "devcontainer-routing",
@@ -298,10 +297,6 @@
           1
         ],
         [
-          "docker-commands",
-          1
-        ],
-        [
           "framework-neutrality-in-generic-skills",
           1
         ],
@@ -310,7 +305,11 @@
           1
         ],
         [
-          "php-coding",
+          "docker-commands",
+          1
+        ],
+        [
+          "security-sensitive-stop",
           1
         ]
       ]
@@ -336,7 +335,7 @@
       "unique_rules_activated": 7,
       "top_rules": [
         [
-          "no-roadmap-references",
+          "roadmap-ci-steps-policy",
           4
         ],
         [
@@ -348,12 +347,8 @@
           4
         ],
         [
-          "roadmap-ci-steps-policy",
+          "no-roadmap-references",
           4
-        ],
-        [
-          "rule-type-governance",
-          1
         ],
         [
           "framework-neutrality-in-generic-skills",
@@ -361,6 +356,10 @@
         ],
         [
           "augment-edit-discipline",
+          1
+        ],
+        [
+          "rule-type-governance",
           1
         ]
       ]
@@ -392,7 +391,6 @@
       "intended": [
         "augment-source-of-truth"
       ],
-      "replay_opaque": [],
       "hit": [
         "augment-source-of-truth"
       ],
@@ -406,13 +404,15 @@
       "corpus": "router-coverage:agent-docs-edits",
       "task": "agent-docs-edits-02",
       "intended": [
+        "augment-source-of-truth",
         "skill-quality"
       ],
-      "replay_opaque": [],
       "hit": [
         "skill-quality"
       ],
-      "missed_intended": [],
+      "missed_intended": [
+        "augment-source-of-truth"
+      ],
       "unintended_activations": [
         "augment-edit-discipline",
         "domain-adoption-policy",
@@ -423,12 +423,13 @@
     {
       "corpus": "router-coverage:agent-docs-edits",
       "task": "agent-docs-edits-03",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "telegraph-speak"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "telegraph-speak"
+      ],
       "unintended_activations": [
         "augment-edit-discipline",
         "framework-neutrality-in-generic-skills",
@@ -439,12 +440,15 @@
     {
       "corpus": "router-coverage:agent-docs-edits",
       "task": "agent-docs-edits-04",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
+        "ask-when-uncertain",
         "user-interaction"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "ask-when-uncertain",
+        "user-interaction"
+      ],
       "unintended_activations": [
         "improve-before-implement",
         "invite-challenge"
@@ -456,7 +460,6 @@
       "intended": [
         "augment-source-of-truth"
       ],
-      "replay_opaque": [],
       "hit": [
         "augment-source-of-truth"
       ],
@@ -468,12 +471,15 @@
     {
       "corpus": "router-coverage:agent-docs-edits",
       "task": "agent-docs-edits-06",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
+        "ask-when-uncertain",
         "user-interaction"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "ask-when-uncertain",
+        "user-interaction"
+      ],
       "unintended_activations": [
         "finance-safety-floor",
         "invite-challenge"
@@ -485,7 +491,6 @@
       "intended": [
         "copilot-routing"
       ],
-      "replay_opaque": [],
       "hit": [
         "copilot-routing"
       ],
@@ -498,7 +503,6 @@
       "intended": [
         "devcontainer-routing"
       ],
-      "replay_opaque": [],
       "hit": [
         "devcontainer-routing"
       ],
@@ -511,7 +515,6 @@
       "intended": [
         "symfony-routing"
       ],
-      "replay_opaque": [],
       "hit": [
         "symfony-routing"
       ],
@@ -527,12 +530,12 @@
         "docker-commands",
         "php-coding"
       ],
-      "replay_opaque": [],
       "hit": [
-        "docker-commands",
+        "docker-commands"
+      ],
+      "missed_intended": [
         "php-coding"
       ],
-      "missed_intended": [],
       "unintended_activations": [
         "cli-output-handling",
         "engineering-safety-floor",
@@ -546,7 +549,6 @@
       "intended": [
         "devcontainer-routing"
       ],
-      "replay_opaque": [],
       "hit": [
         "devcontainer-routing"
       ],
@@ -561,7 +563,6 @@
       "intended": [
         "symfony-routing"
       ],
-      "replay_opaque": [],
       "hit": [
         "symfony-routing"
       ],
@@ -573,12 +574,13 @@
     {
       "corpus": "router-coverage:git-surface",
       "task": "git-surface-01",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "no-attribution-footers"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "no-attribution-footers"
+      ],
       "unintended_activations": [
         "commit-conventions"
       ]
@@ -586,12 +588,13 @@
     {
       "corpus": "router-coverage:git-surface",
       "task": "git-surface-02",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "no-decorative-emojis-in-git-surfaces"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
       "unintended_activations": [
         "commit-conventions"
       ]
@@ -599,24 +602,27 @@
     {
       "corpus": "router-coverage:git-surface",
       "task": "git-surface-03",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "no-attribution-footers",
         "no-decorative-emojis-in-git-surfaces"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "no-attribution-footers",
+        "no-decorative-emojis-in-git-surfaces"
+      ],
       "unintended_activations": []
     },
     {
       "corpus": "router-coverage:git-surface",
       "task": "git-surface-04",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "no-decorative-emojis-in-git-surfaces"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "no-decorative-emojis-in-git-surfaces"
+      ],
       "unintended_activations": [
         "architecture",
         "commit-conventions"
@@ -628,7 +634,6 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "replay_opaque": [],
       "hit": [
         "roadmap-progress-sync"
       ],
@@ -645,7 +650,6 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "replay_opaque": [],
       "hit": [
         "roadmap-progress-sync"
       ],
@@ -660,13 +664,15 @@
       "corpus": "router-coverage:roadmap-ops",
       "task": "roadmap-ops-03",
       "intended": [
+        "augment-source-of-truth",
         "no-roadmap-references"
       ],
-      "replay_opaque": [],
       "hit": [
         "no-roadmap-references"
       ],
-      "missed_intended": [],
+      "missed_intended": [
+        "augment-source-of-truth"
+      ],
       "unintended_activations": [
         "augment-edit-discipline",
         "framework-neutrality-in-generic-skills",
@@ -682,7 +688,6 @@
       "intended": [
         "roadmap-progress-sync"
       ],
-      "replay_opaque": [],
       "hit": [
         "roadmap-progress-sync"
       ],
@@ -696,12 +701,13 @@
     {
       "corpus": "router-coverage:slash-commands",
       "task": "slash-commands-01",
-      "intended": [],
-      "replay_opaque": [
+      "intended": [
         "command-suggestion-policy"
       ],
       "hit": [],
-      "missed_intended": [],
+      "missed_intended": [
+        "command-suggestion-policy"
+      ],
       "unintended_activations": []
     },
     {
@@ -710,7 +716,6 @@
       "intended": [
         "slash-command-routing-policy"
       ],
-      "replay_opaque": [],
       "hit": [
         "slash-command-routing-policy"
       ],
@@ -725,7 +730,6 @@
       "intended": [
         "slash-command-routing-policy"
       ],
-      "replay_opaque": [],
       "hit": [
         "slash-command-routing-policy"
       ],
@@ -741,7 +745,6 @@
       "intended": [
         "slash-command-routing-policy"
       ],
-      "replay_opaque": [],
       "hit": [
         "slash-command-routing-policy"
       ],

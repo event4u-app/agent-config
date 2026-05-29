@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "value-v1",
-  "generated_at": "2026-05-29T04:36:04+00:00",
+  "generated_at": "2026-05-29T03:44:46+00:00",
   "reference_scale": {
     "requests": 1000,
     "avg_input_tokens": 8000,
@@ -28,12 +28,12 @@
       "id": "load",
       "label": "Mit Paket (Regeln laden) / With package (rule load)",
       "what_it_does": "Die immer-aktiven Regeln landen im Kontext jedes Requests.",
-      "token_delta": 8895,
-      "eur_delta": 24.5502,
-      "cumulative_pct": 111.188,
+      "token_delta": 8977,
+      "eur_delta": 24.77652,
+      "cumulative_pct": 112.213,
       "confidence": "measured",
       "source_report": "dist/router.json",
-      "footnote": "Kernel = 10 rules (31570 chars) + charter (4010 chars); tokens ≈ chars / 4."
+      "footnote": "Kernel = 10 rules (31899 chars) + charter (4010 chars); tokens ≈ chars / 4."
     },
     {
       "id": "condense",
@@ -41,7 +41,7 @@
       "what_it_does": "Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern.",
       "token_delta": -186,
       "eur_delta": -0.51336,
-      "cumulative_pct": 108.862,
+      "cumulative_pct": 109.888,
       "confidence": "measured",
       "source_report": "internal/bench/reports/telegraph-v2.json",
       "footnote": "Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~−4%) and are excluded from the rung — surfaced separately."
@@ -52,7 +52,7 @@
       "what_it_does": "rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg.",
       "token_delta": -593,
       "eur_delta": -1.63668,
-      "cumulative_pct": 101.45,
+      "cumulative_pct": 102.475,
       "confidence": "measured",
       "source_report": "internal/bench/reports/rtk/latest.json"
     },
@@ -62,7 +62,7 @@
       "what_it_does": "Telegraph-Stil zielt auf knappere Modell-Antworten.",
       "token_delta": 56,
       "eur_delta": 0.7728,
-      "cumulative_pct": 102.15,
+      "cumulative_pct": 103.175,
       "confidence": "measured",
       "source_report": "internal/bench/reports/telegraph-v1.json",
       "footnote": "Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht."
@@ -115,9 +115,9 @@
     }
   ],
   "totals": {
-    "cumulative_token_delta": 8172,
-    "cumulative_eur_delta": 22.5547,
-    "cumulative_pct": 102.15,
+    "cumulative_token_delta": 8254,
+    "cumulative_eur_delta": 22.781,
+    "cumulative_pct": 103.175,
     "net_verdict": "net-cost"
   },
   "notes": [

@@ -21,6 +21,12 @@ Trigger semantics implemented:
   | `path_prefix`  | prefix match against any path in `open_files` (optional context) |
   | `file_pattern` | fnmatch against any path in `open_files` (optional context)      |
 
+Rules a task expects to fire only via `intent` (or a router coverage
+gap) the static replay cannot see are declared in the corpus field
+`replay_opaque_triggers`. They surface in `intended_vs_observed_match`
+under `replay_opaque` and are excluded from both `missed_intended`
+(no false drift) and `unintended_activations`.
+
 Reports go to `internal/bench/reports/router-telemetry/<UTC>.json`
 with three blocks:
 
@@ -162,20 +168,43 @@ def _safe_yaml_load(path: Path) -> Optional[Dict[str, Any]]:
 
 def load_corpus_prompts(
     corpus_path: Path, sample_cap: int
-) -> List[Tuple[str, str]]:
-    """Return [(prompt_id, prompt_text), …] capped at sample_cap, sorted by id."""
+) -> List[Dict[str, Any]]:
+    """Return per-prompt entries capped at sample_cap, sorted by id.
+
+    Each entry: `{id, text, intended_triggers, open_files, command}`.
+    All context fields beyond id/text are optional; missing → defaults.
+    """
     data = _safe_yaml_load(corpus_path)
     if not data:
         return []
-    out: List[Tuple[str, str]] = []
+    out: List[Dict[str, Any]] = []
     # Track B uses `tasks:`, dev uses `prompts:`.
     for key in ("tasks", "prompts"):
         for entry in data.get(key, []) or []:
             pid = str(entry.get("id", ""))
             text = entry.get("prompt") or entry.get("text") or ""
+            intended = entry.get("intended_triggers") or []
+            opaque = entry.get("replay_opaque_triggers") or []
+            open_files = entry.get("open_files") or []
+            command = entry.get("command") or None
+            if not isinstance(intended, list):
+                intended = []
+            if not isinstance(opaque, list):
+                opaque = []
+            if not isinstance(open_files, list):
+                open_files = []
             if pid and text:
-                out.append((pid, str(text)))
-    out.sort(key=lambda x: x[0])
+                out.append(
+                    {
+                        "id": pid,
+                        "text": str(text),
+                        "intended_triggers": [str(t) for t in intended],
+                        "replay_opaque_triggers": [str(t) for t in opaque],
+                        "open_files": [str(p) for p in open_files],
+                        "command": str(command) if command else None,
+                    }
+                )
+    out.sort(key=lambda x: x["id"])
     return out[:sample_cap]
 
 
@@ -191,16 +220,27 @@ def aggregate_replay(
     """Replay every corpus through the router; aggregate hits."""
     per_trigger_hits: Dict[str, int] = {}
     per_rule_activations: Dict[str, Dict[str, int]] = {}
-    panel_b_untouchable: List[str] = []
     panel_b_seen_tier1: set = set()
     panel_b_seen_tier2: set = set()
     per_corpus_summary: List[Dict[str, Any]] = []
+    intended_vs_observed: List[Dict[str, Any]] = []
+    unintended_histogram: Dict[str, int] = {}
 
     for corpus_name, corpus_path in corpora:
         prompts = load_corpus_prompts(corpus_path, sample_cap)
         corpus_rule_hits: Dict[str, int] = {}
-        for pid, text in prompts:
-            result = match_prompt(router, text, profile=profile)
+        for entry in prompts:
+            pid = entry["id"]
+            text = entry["text"]
+            intended = entry["intended_triggers"]
+            opaque = entry["replay_opaque_triggers"]
+            result = match_prompt(
+                router,
+                text,
+                profile=profile,
+                open_files=entry["open_files"] or None,
+                command=entry["command"],
+            )
             for hit in result["matched_triggers"]:
                 key = f"{hit['rule']}::{json.dumps(hit['trigger'], sort_keys=True)}"
                 per_trigger_hits[key] = per_trigger_hits.get(key, 0) + 1
@@ -211,6 +251,7 @@ def aggregate_replay(
                     # Skip kernel — always-on by definition, no signal.
                     continue
                 seen_in_prompt.add((act["tier"], rid))
+            activated_ids = {rid for _t, rid in seen_in_prompt}
             for tier, rid in seen_in_prompt:
                 per_rule_activations.setdefault(tier, {})
                 per_rule_activations[tier][rid] = (
@@ -222,6 +263,31 @@ def aggregate_replay(
                         panel_b_seen_tier1.add(rid)
                     elif tier == "tier_2":
                         panel_b_seen_tier2.add(rid)
+            # Council R3 honesty floor: surface intended vs observed.
+            # `replay_opaque` rules fire at runtime only via `intent`
+            # triggers (or router gaps) the deterministic replay cannot
+            # see — they are NOT counted as `missed_intended` (that would
+            # be false drift) and NOT counted as `unintended_activations`.
+            if intended or opaque:
+                intended_set = set(intended)
+                opaque_set = set(opaque)
+                hit = sorted(intended_set & activated_ids)
+                miss = sorted(intended_set - activated_ids)
+                unintended = sorted(activated_ids - intended_set - opaque_set)
+                intended_vs_observed.append(
+                    {
+                        "corpus": corpus_name,
+                        "task": pid,
+                        "intended": sorted(intended),
+                        "replay_opaque": sorted(opaque),
+                        "hit": hit,
+                        "missed_intended": miss,
+                        "unintended_activations": unintended,
+                    }
+                )
+                # Council R3 #3: inter-rule conflict histogram.
+                for rid in unintended:
+                    unintended_histogram[rid] = unintended_histogram.get(rid, 0) + 1
         per_corpus_summary.append(
             {
                 "corpus": corpus_name,
@@ -240,6 +306,10 @@ def aggregate_replay(
         "panel_b_untouchable_rules": panel_b_untouchable,
         "panel_b_tier2_drivers": sorted(panel_b_seen_tier2),
         "per_corpus_summary": per_corpus_summary,
+        "intended_vs_observed_match": intended_vs_observed,
+        "unintended_activation_histogram": sorted(
+            unintended_histogram.items(), key=lambda x: -x[1]
+        ),
     }
 
 
@@ -354,15 +424,31 @@ def parse_args(argv: List[str]) -> argparse.Namespace:
     return p.parse_args(argv)
 
 
+def _default_corpora() -> List[Tuple[str, Path]]:
+    """The default manifest: original 3 corpora + every router-coverage file.
+
+    Phase 3 of road-to-corpus-expansion-evidence-based-cuts: adding a new
+    corpus file under `internal/bench/corpora/router-coverage/` no longer
+    requires editing this script — the manifest auto-discovers them.
+    """
+    corpora: List[Tuple[str, Path]] = [
+        ("ab-trackb", REPO_ROOT / TRACK_B_CORPUS_REL),
+        ("dev", REPO_ROOT / "tests/eval/corpus-dev.yaml"),
+        ("non-dev", REPO_ROOT / "tests/eval/corpus-non-dev.yaml"),
+    ]
+    coverage_dir = REPO_ROOT / "internal" / "bench" / "corpora" / "router-coverage"
+    if coverage_dir.is_dir():
+        for p in sorted(coverage_dir.glob("*.yaml")):
+            # Tag name: "router-coverage:<stem>" so the report distinguishes
+            # them from the original 3 corpora at a glance.
+            corpora.append((f"router-coverage:{p.stem}", p))
+    return corpora
+
+
 def main(argv: List[str] | None = None) -> int:
     args = parse_args(argv if argv is not None else sys.argv[1:])
     if not args.corpus:
-        # Default corpora: Track B + dev + non-dev.
-        corpora = [
-            ("ab-trackb", REPO_ROOT / TRACK_B_CORPUS_REL),
-            ("dev", REPO_ROOT / "tests/eval/corpus-dev.yaml"),
-            ("non-dev", REPO_ROOT / "tests/eval/corpus-non-dev.yaml"),
-        ]
+        corpora = _default_corpora()
     else:
         corpora = []
         for spec in args.corpus:

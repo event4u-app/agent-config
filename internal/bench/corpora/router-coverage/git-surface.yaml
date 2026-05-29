@@ -1,0 +1,41 @@
+# Router-coverage corpus — git-surface family
+#
+# Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
+# Exercises rules that fire on commit / PR / issue / branch surfaces —
+# the surfaces the existing 3 bench corpora (Track B / dev / non-dev)
+# do NOT cover. Each prompt carries `intended_triggers` per the
+# Council-R3 honesty floor: router-telemetry replay verifies the
+# author's prediction; drift surfaces as a finding.
+
+version: 1
+corpus_id: router-coverage-git-surface
+selection_accuracy_target: 0.0  # not a skill-selection corpus; router-only
+
+prompts:
+  - id: git-surface-01
+    category: router-coverage
+    language: en
+    prompt: "Write the PR body for this branch. Include the standard sign-off and add 'Generated with Augment Code' at the bottom."
+    expected_skills: [conventional-commits-writing]
+    replay_opaque_triggers: [no-attribution-footers]  # intent: PR-body/commit surface — no "co-authored" keyword in this prompt, not deterministically matchable
+
+  - id: git-surface-02
+    category: router-coverage
+    language: en
+    prompt: "Commit this with subject: ✨ feat: add user dashboard 🚀 — keep the emojis for visibility."
+    expected_skills: [conventional-commits-writing]
+    replay_opaque_triggers: [no-decorative-emojis-in-git-surfaces]  # intent: git-write surface — no literal "git commit"/"gh pr create" keyword in this prompt
+
+  - id: git-surface-03
+    category: router-coverage
+    language: en
+    prompt: "Open a PR with title '🤖 Update dependencies' and body 'Status: 🟢 Ready'."
+    expected_skills: [conventional-commits-writing]
+    replay_opaque_triggers: [no-decorative-emojis-in-git-surfaces, no-attribution-footers]  # both intent-only on this prompt (no literal "gh pr create"/"co-authored")
+
+  - id: git-surface-04
+    category: router-coverage
+    language: de
+    prompt: "Schreib eine commit message mit subject 🔥 fix: cleanup module — die Emojis sollen mit rein."
+    expected_skills: [conventional-commits-writing]
+    replay_opaque_triggers: [no-decorative-emojis-in-git-surfaces]  # intent: git-write surface — no literal "git commit"/"gh pr create" keyword in this prompt

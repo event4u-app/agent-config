@@ -1,0 +1,56 @@
+# Router-coverage corpus — agent-docs-edits family
+#
+# Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
+# Exercises rules that fire on edits to `.agent-src/` /
+# `.agent-src.uncondensed/` / skill files / condense operations.
+
+version: 1
+corpus_id: router-coverage-agent-docs-edits
+selection_accuracy_target: 0.0
+
+prompts:
+  - id: agent-docs-edits-01
+    category: router-coverage
+    language: en
+    prompt: "Edit this rule file to add a new trigger keyword `'webhook'`."
+    expected_skills: []
+    intended_triggers: [augment-source-of-truth]
+    open_files: [.agent-src/rules/some-rule.md]
+
+  - id: agent-docs-edits-02
+    category: router-coverage
+    language: en
+    prompt: "Update this skill — tighten the description and add an example."
+    expected_skills: [skill-writing]
+    intended_triggers: [skill-quality]  # augment-source-of-truth removed: it guards .agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
+    open_files: [.agent-src.uncondensed/skills/some-skill/SKILL.md]
+
+  - id: agent-docs-edits-03
+    category: router-coverage
+    language: en
+    prompt: "Condense this rule body to telegraph grammar — drop articles and shorten phrasing where unambiguous."
+    expected_skills: [condense-memory]
+    replay_opaque_triggers: [telegraph-speak]  # intent "any reply" — fires at runtime on every reply, never deterministically matchable
+    open_files: [.agent-src.uncondensed/rules/some-rule.md]
+
+  - id: agent-docs-edits-04
+    category: router-coverage
+    language: en
+    prompt: "I'm not sure which approach to take here — should I refactor first or add the feature first? Help me decide."
+    expected_skills: []
+    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
+
+  - id: agent-docs-edits-05
+    category: router-coverage
+    language: de
+    prompt: "Editiere diese Rule und füge einen neuen Trigger hinzu."
+    expected_skills: []
+    intended_triggers: [augment-source-of-truth]
+    open_files: [.agent-src/rules/foo.md]
+
+  - id: agent-docs-edits-06
+    category: router-coverage
+    language: en
+    prompt: "Two valid approaches exist here — caching with Redis vs in-process LRU. Which should we use?"
+    expected_skills: []
+    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)

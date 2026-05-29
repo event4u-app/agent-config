@@ -77,3 +77,38 @@ in an English `.md` file. Body text, example sentences, prompt templates,
 agent-rendered strings, and failure modes must be English. Reference
 established phrases abstractly later (e.g. "a standing autonomy directive")
 and link back to the anchor block.
+
+## Pre-send gate — filler-phrase blocklist
+
+The pre-send confirm step (Step 4 of the rule's gate) checks for
+language-of-target-mismatched opening phrases. The blocklist:
+
+- **English filler that must NOT open a German reply:** `Let me`,
+  `Now`, `Found`, `Confirmed`, `OK`, `Alright`, `Here's`, `So`.
+- **German filler that must NOT open an English reply:** `Lass mich`,
+  `Jetzt`, `Gefunden`, `Bestätigt`.
+
+If the first sentence starts with one of these in the wrong language,
+rewrite the whole reply.
+
+## CLI / icon spacing rules
+
+- Two spaces after `❌`, `✅`, `⚠️` in CLI output.
+- One space for other icons.
+- One blank line max; no double / triple blanks.
+- File ends with exactly one newline.
+
+## `.md` files — pre-save detection heuristic
+
+Before saving any `.md` under `.augment/`, `.agent-src/`,
+`.agent-src.uncondensed/`, or `agents/`, scan the body for:
+
+- Umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) **outside** fenced code,
+  paths, or `DE: … · EN: …` anchor blocks.
+- German function words: `für`, `nicht`, `dass`, `wenn`, `sollte`,
+  `werden`, `arbeite`, `selbstständig`, `jetzt`, `einfach`, `weiter`,
+  `lösche`, `frag`, `schreib`, `mach`.
+- Non-English quoted phrases in body text.
+
+Any hit → translate to English, OR move to a `DE: … · EN: …` anchor
+block (the only allowed German location).

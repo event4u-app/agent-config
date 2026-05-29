@@ -1,0 +1,43 @@
+# Router-coverage corpus — roadmap-ops family
+#
+# Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
+# Exercises rules that fire on roadmap edits / dashboard sync /
+# stable-vs-transient link discipline.
+
+version: 1
+corpus_id: router-coverage-roadmap-ops
+selection_accuracy_target: 0.0
+
+prompts:
+  - id: roadmap-ops-01
+    category: router-coverage
+    language: en
+    prompt: "Mark step 3 of phase 1 as done in this roadmap."
+    expected_skills: [roadmap-management]
+    intended_triggers: [roadmap-progress-sync]
+    open_files: [agents/roadmaps/road-to-some-feature.md]
+
+  - id: roadmap-ops-02
+    category: router-coverage
+    language: en
+    prompt: "Add a checkbox step under phase 2 and update the dashboard."
+    expected_skills: [roadmap-management]
+    intended_triggers: [roadmap-progress-sync]
+    open_files: [agents/roadmaps/active-thing.md]
+
+  - id: roadmap-ops-03
+    category: router-coverage
+    language: en
+    prompt: "In this rule, add a link to the active-thing roadmap as the source citation."
+    expected_skills: [rule-writing]
+    intended_triggers: [no-roadmap-references]  # augment-source-of-truth removed: guards .agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
+    open_files: [.agent-src.uncondensed/rules/some-rule.md, agents/roadmaps/active-thing.md]
+
+  - id: roadmap-ops-04
+    category: router-coverage
+    language: de
+    prompt: "Setze Step 2 in dieser Roadmap auf done und regeneriere das progress-dashboard."
+    expected_skills: [roadmap-management]
+    intended_triggers: [roadmap-progress-sync]
+    open_files: [agents/roadmaps/road-to-foo.md]
+    command: "/roadmap:process-step"

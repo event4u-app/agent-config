@@ -307,6 +307,19 @@ measure agent behaviour, not token footprint).
 
 **Pass outcome:** NETTO moved from +4 120 (mis-measured) to **+8 254 tokens / request** (honest); Panel B held by construction. The pass's value is the corrected measurement floor + the new telemetry tooling, not any in-place rule cuts. Cuts must wait until the bench corpus is widened to exercise the rules' real trigger surfaces (git, onboarding, roadmap work, long-conversation windows, autonomy moments).
 
+**Optimisation pass 2 close-out (2026-05-29, `road-to-corpus-expansion-evidence-based-cuts`):**
+
+- Phase 1 — corpus-surface inventory + state-fixture feasibility scan: 15 of 20 rules classified `addressable`; 5 state-bound (`autonomous-execution`, `context-hygiene`, `fast-path-marker-visibility`, `low-impact-corpus-privacy-floor`, `onboarding-gate`) get a permanent `keep-pending-state-trigger` verdict. 2/5 (`onboarding-gate`, `context-hygiene`) have feasible fixtures (documented but not built).
+- Phase 2 — 5 corpus extension files shipped under `internal/bench/corpora/router-coverage/`, 24 tasks total (well under the 40-task ceiling). New `intended_triggers` + `open_files` + `command` fields on the per-prompt schema; linter validates against `dist/router.json` rule ids.
+- Phase 3 — `scripts/router_telemetry.py` extended with manifest auto-discovery + `intended_vs_observed_match` per task + `unintended_activation_histogram` aggregate (Council R3 inter-rule conflict detection). Replay: **never-matched-tier-1 = 20 → 11**. The 11 split cleanly into 5 state-bound + 5 intent-only (NEW structural class — intent-only triggers cannot be exercised by router-telemetry replay regardless of corpus) + 1 partial.
+- Phase 4 — second tier-1 audit, informed by widened corpus. The candidate set reduces to 1 real audit row (`artifact-engagement-recording`) — defended as load-bearing infrastructure for `/implement-ticket` + `/work` engine telemetry. Pareto raw-flagged 4 candidates with the tightened Council R3 thresholds (`body > 3 000 chars` AND `absolute_activations < 3` AND `activation_rate < 30 % of addressable_tasks`); all 4 are false-positives caused by the structural-unreachability dimension the pareto does not encode.
+- Phase 5 — zero cuts (0 demotes, 0 deletes). Same outcome as pass-1, but for a fundamentally different reason: pass-1 closed with zero cuts because the corpus was blind; pass-2 closes with zero cuts because the widened corpus **proved every tier-1 rule has structural reason to exist**.
+- Phase 6 — full live Track B re-run skipped: Phase 1-5 made zero rule-body / frontmatter / kernel edits — Panel B is unchanged from the 2026-05-28 baseline by construction.
+
+**Pass outcome:** NETTO unchanged at **+8 254 tokens / request** (+103.2 % vs. baseline, +€22.78 per 1 000 requests). The pass's actual deliverable is the **structural categorisation** of the 20 previously-never-matched rules — future audits no longer need to re-debate why these rules don't fire in standard corpora. 5 state-bound + 5 intent-only are permanently classified as router-replay-unreachable. The Pass B (kernel-body refactor) deferral remains intact — no candidate qualifies under the tightened thresholds.
+
+**Pass B status: deferred / closed for now.** Zero genuine candidates surfaced; the 4 raw-pareto flags are all false-positives. Reopen only when a tier-1 rule both activates frequently in the widened corpus AND has a body that exceeds the kernel-budget ceiling — current state has neither.
+
 
 
 | Surface | Real number today | Gap |
