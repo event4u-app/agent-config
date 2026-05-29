@@ -802,6 +802,22 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.2.0](https://github.com/event4u-app/agent-config/compare/5.1.0...5.2.0) (2026-05-29)
+
+### Features
+
+* **ci:** reject sloppy commit subjects before they leak into the changelog ([26a94e9](https://github.com/event4u-app/agent-config/commit/26a94e9e0f07e862a135cfc96b742a999e7131ec))
+
+### Documentation
+
+* **adr:** land ADR-033 distribution-identity npm-primary ([63d38cf](https://github.com/event4u-app/agent-config/commit/63d38cf75df6506218cfc6bc17f0b5ba0c90fe9d))
+
+### Chores
+
+* **roadmaps:** flip distribution-identity Phase 1-3 + regen dashboard ([0885b9d](https://github.com/event4u-app/agent-config/commit/0885b9d4dda67a2439fc5292367249fa99766a02))
+
+Tests: 5186 (+26 since 5.1.0)
+
 ## [5.1.0](https://github.com/event4u-app/agent-config/compare/5.0.0...5.1.0) (2026-05-29)
 
 ### Features

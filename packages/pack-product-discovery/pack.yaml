@@ -8,4 +8,4 @@ owner:
 requires:
 - product-basic
 trust_level_default: professional
-version: 5.1.0
+version: 5.2.0
