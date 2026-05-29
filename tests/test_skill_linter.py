@@ -233,8 +233,12 @@ Some directives.
     assert any(issue.code == "missing_type" for issue in result.issues)
 
 
-def test_rule_missing_source_fails(tmp_path: Path) -> None:
-    path = write_file(
+def test_rule_omitted_source_is_defaulted_invalid_fails(tmp_path: Path) -> None:
+    """`source` carries the schema default `package` (abstraction-reduction),
+    so omitting it is valid — no `missing_source`. An invalid explicit value
+    still fails via the schema enum / `invalid_source` check."""
+    # Omitted source → the linter must NOT raise missing_source.
+    omitted = write_file(
         tmp_path,
         ".agent-src/rules/no-source.md",
         """---
@@ -246,10 +250,28 @@ type: "always"
 Some directives.
 """,
     )
+    result = lint_file(omitted)
+    assert not any(issue.code == "missing_source" for issue in result.issues)
 
-    result = lint_file(path)
-    assert result.status == "fail"
-    assert any(issue.code == "missing_source" for issue in result.issues)
+    # Invalid explicit source → still rejected.
+    bad = write_file(
+        tmp_path,
+        ".agent-src/rules/bad-source.md",
+        """---
+type: "always"
+source: "bogus"
+---
+
+# Bad Source Rule
+
+Some directives.
+""",
+    )
+    result_bad = lint_file(bad)
+    assert result_bad.status == "fail"
+    assert any(
+        issue.code in ("invalid_source", "schema_enum") for issue in result_bad.issues
+    )
 
 
 def test_rule_invalid_type_fails(tmp_path: Path) -> None:
