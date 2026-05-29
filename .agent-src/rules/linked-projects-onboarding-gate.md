@@ -35,7 +35,7 @@ install:
 
 **Iron Law.** IDE attached a sibling repo and it is not yet in `linked_projects` → prompt developer **once** to opt in, persist local-only, then proactively flag cross-repo impact — never bulk-include the sibling's files.
 
-Closes the **proactivity gap**: agent can already read/write a sibling, but does not *consider* one unless told — and the developer who most needs cross-repo awareness won't think to mention the sibling. Detection reads the relationship already encoded by attaching the repo in the IDE (zero-knowledge). See [`cross-repo-linked-projects`](../../docs/guides/cross-repo-linked-projects.md), ADR-032.
+Closes the **proactivity gap**: agent can already read/write a sibling, but does not *consider* one unless told — and the developer who most needs cross-repo awareness won't think to mention the sibling. Detection reads the relationship already encoded by attaching the repo in the IDE (zero-knowledge). See the cross-repo guide (`docs/guides/cross-repo-linked-projects.md`) and ADR-032.
 
 ## When this fires
 

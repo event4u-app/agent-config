@@ -42,9 +42,8 @@ This closes the **proactivity gap**: the agent can already read/write a sibling
 repo, but it does not *consider* one unless told — and the developer who most
 needs cross-repo awareness is precisely the one who won't think to mention the
 sibling. Detection reads the relationship the developer already encoded by
-attaching the repo in their IDE (zero-knowledge). See
-[`cross-repo-linked-projects`](../../docs/guides/cross-repo-linked-projects.md)
-and ADR-032.
+attaching the repo in their IDE (zero-knowledge). See the cross-repo guide
+(`docs/guides/cross-repo-linked-projects.md`) and ADR-032.
 
 ## When this fires
 
