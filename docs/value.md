@@ -81,4 +81,4 @@ Diese Seite ist eine **abgeleitete** Sicht — keine eigene Messung. Sie fasst d
 - Pending rungs contribute 0 to the cumulative until measured.
 - Reference scale: 1000 requests × 8000 input / 600 output tokens per request.
 
-_Last rendered: `2026-05-28T21:40:52+00:00`_
+_Last rendered: `2026-05-29T03:44:46+00:00`_
