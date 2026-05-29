@@ -43,6 +43,7 @@ one without the other.
 | Edit to `scripts/_lib/bench_telegraph*.py` | `telegraph` | report refreshed in same PR |
 | Edit to any rung source (frugality / telegraph / rtk / A/B) | `value` | `task value` re-renders `docs/value.md` in same PR |
 | Edit to `internal/bench/corpora/rtk/commands.yaml` | `rtk` | `scripts/bench_rtk_savings.py` refreshed in same PR |
+| Edit to `dist/router.json` or any rule frontmatter `triggers:` | `router-telemetry` | `task value:telemetry:replay` refreshes attribution map; required before any Phase 4 / Phase 5 cut |
 
 A PR that touches any of the cadence triggers without refreshing the
 corresponding report is rejected by reviewer convention (no CI gate yet

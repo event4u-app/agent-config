@@ -184,6 +184,28 @@ Never label a `pending` rung `measured`. Never render a negative
 number under `confidence: measured` as a "saving" — the linter
 catches this.
 
+## Panel B rule attribution (telemetry)
+
+The `behaviour` block's `with`-arm value is driven by rules the agent
+activates while solving each task. The router-telemetry replay
+(Phase 3 of `road-to-value-dashboard-netto-cuts`) writes per-corpus
+hit counts to `internal/bench/reports/router-telemetry/latest.json`.
+Two fields gate the optimisation pass:
+
+- `panel_b_untouchable_rules` — tier-1 rules that activated on at
+  least one Track B task. **Hard floor for Phase 5 dead-rule audit**
+  — these rules are not candidates for demotion or deletion.
+- `panel_b_tier2_drivers` — tier-2 rules that activated on Track B.
+  Documented for transparency; tier-2 rules already lazy-load per
+  the rule-router contract, so no roadmap touches them, but if a
+  future phase ever cuts tier-2, this list is the floor.
+
+The 2026-05-28 replay against the 13-task Track B corpus surfaced
+**zero tier-1 rules** in the Panel B activation set; the three
+tier-2 drivers were `domain-safety-pii`, `downstream-changes`,
+`model-recommendation`. Phase 5's audit therefore has free reign on
+the 20 never-matched tier-1 rules.
+
 ## Behaviour-metric set
 
 Each metric in the `behaviour` block carries:
@@ -255,6 +277,37 @@ The real numbers measured at the time this spec was written
 (2026-05-28). Each subsequent phase of the roadmap closes one
 gap — the baseline lets the reader see what was unknown when the
 dashboard was first conceived.
+
+**Correction 2026-05-28 (Phase 1 of `road-to-value-dashboard-netto-cuts`):**
+The `load` rung previously read `agents/runtime/frugality/baseline.jsonl`
+which measures a hardcoded 6-rule canon
+(`scripts/measure_frugality_savings.py::CANON_RULES`) — NOT the
+actual always-loaded kernel. The real kernel has 10 rules per
+`dist/router.json::kernel`. After fix:
+
+| Metric | Before fix | After fix | Delta |
+|---|---:|---:|---:|
+| `load` token delta | +4 843 | **+8 977** | +4 134 |
+| NETTO token delta | +4 120 | **+8 254** | +4 134 |
+| NETTO `cumulative_pct` | +51.5 % | **+103.2 %** | +51.7 pp |
+| NETTO €/1k requests | +€11.37 | **+€22.78** | +€11.41 |
+
+The original dashboard under-reported the base-load by ~4 100
+tokens/request. Panel B's behaviour numbers are unaffected (they
+measure agent behaviour, not token footprint).
+
+**Optimisation pass 1 close-out (2026-05-28, `road-to-value-dashboard-netto-cuts`):**
+
+- Phase 1 — load rung corrected (above).
+- Phase 2 — `dist/router.json` minified 31 643 → 16 450 B; audit confirmed it is not in any host's per-request context, so the saving is hygiene-only, not a measured Panel-A rung.
+- Phase 3 — router-telemetry replay shipped (`internal/bench/reports/router-telemetry/latest.json`); finding: zero tier-1 rules fire on Track B; the three tier-2 drivers are `domain-safety-pii`, `downstream-changes`, `model-recommendation`.
+- Phase 4 — duplicate-trigger dedup closed with zero cuts: 16 clusters identified, all semantically distinct cross-cutting concerns. The council's "30 % redundancy" hypothesis is refuted; verified redundancy is 0 %.
+- Phase 5 — tier-1 dead-rule audit closed with zero cuts: of 20 never-matched rules, 19 are bench-blind / measurement-window / cluster-head (load-bearing despite zero corpus hits); the lone demote candidate (`symfony-routing`) is kept to preserve cross-stack portability.
+- Phase 6 — full live Track B re-run skipped: Phase 1-5 made no rule-body or frontmatter edits, so by construction Panel B is unchanged from the 2026-05-28 baseline (`with` 84.6 % completion, `without` 7.7 % completion). Re-running would consume tokens to re-confirm a known value.
+
+**Pass outcome:** NETTO moved from +4 120 (mis-measured) to **+8 254 tokens / request** (honest); Panel B held by construction. The pass's value is the corrected measurement floor + the new telemetry tooling, not any in-place rule cuts. Cuts must wait until the bench corpus is widened to exercise the rules' real trigger surfaces (git, onboarding, roadmap work, long-conversation windows, autonomy moments).
+
+
 
 | Surface | Real number today | Gap |
 |---|---|---|

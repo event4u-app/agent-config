@@ -194,19 +194,33 @@ def build() -> dict:
     }
 
 
+PRETTY_PATH = OUT_PATH.with_suffix(".pretty.json")
+
+
 def main(argv: list[str]) -> int:
     out = build()
-    text = json.dumps(out, indent=2, sort_keys=False) + "\n"
+    # Default: minified (Phase 2 of road-to-value-dashboard-netto-cuts).
+    # `--pretty` writes the human-readable variant ONLY (no minified).
+    # The Python consumers in this repo (`lint_rule_budget`,
+    # `check_router`) use `json.load()` and are format-agnostic.
+    pretty_text = json.dumps(out, indent=2, sort_keys=False) + "\n"
+    minified_text = json.dumps(out, separators=(",", ":"), sort_keys=False) + "\n"
+    text = pretty_text if "--pretty" in argv else minified_text
+    target_path = PRETTY_PATH if "--pretty" in argv else OUT_PATH
     if "--check" in argv:
-        if not OUT_PATH.exists() or OUT_PATH.read_text(encoding="utf-8") != text:
+        if not OUT_PATH.exists() or OUT_PATH.read_text(encoding="utf-8") != minified_text:
             print("router.json out of date — run scripts/compile_router.py", file=sys.stderr)
             return 1
         print("✅  router.json is up to date")
         return 0
-    OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
-    OUT_PATH.write_text(text, encoding="utf-8")
+    target_path.parent.mkdir(parents=True, exist_ok=True)
+    target_path.write_text(text, encoding="utf-8")
     counts = (len(out["kernel"]), len(out["tier_1"]), len(out["tier_2"]))
-    print(f"✅  router.json — kernel={counts[0]}  tier-1={counts[1]}  tier-2={counts[2]}")
+    fmt = "pretty" if "--pretty" in argv else "minified"
+    print(
+        f"✅  {target_path.name} ({fmt}) — "
+        f"kernel={counts[0]}  tier-1={counts[1]}  tier-2={counts[2]}"
+    )
     return 0
 
 
