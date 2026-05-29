@@ -5,21 +5,12 @@ personas:
   - senior-engineer
   - product-owner
   - critical-challenger
-source: package
 domain: process
 recommended_for_user_types: [developer, founder]
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # tech-debt-tracker

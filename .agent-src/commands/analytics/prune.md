@@ -5,7 +5,6 @@ cluster: analytics
 sub: prune
 description: Drop events older than the 90-day retention window from the local analytics log. Atomic and idempotent.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "prune the analytics log, drop old events, clean up events.jsonl"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /analytics prune

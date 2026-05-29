@@ -5,7 +5,6 @@ cluster: module
 sub: create
 skills: [laravel]
 description: Create a new module from .module-template with interactive setup
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a new module, scaffold a module for X"
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /module create

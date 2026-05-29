@@ -4,8 +4,6 @@ role: Senior Engineer
 description: "The voice that thinks in years — architecture impact, coupling, blast radius, and decisions that are hard to undo."
 tier: core
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Senior Engineer

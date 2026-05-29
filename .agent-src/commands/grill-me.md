@@ -4,7 +4,6 @@ tier: 2
 description: Alias for /challenge-me — interactive grill-style interview that sharpens a fuzzy plan/idea into a copyable Markdown pitch
 cluster: challenge-me
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "grill me, grill me on this, grill me on this plan, grill me through this, grill me on the idea, grill me until it's clear, grill me hard"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /grill-me

@@ -5,7 +5,6 @@ cluster: feature
 sub: dev
 description: Full 7-phase feature development workflow for complex features.
 skills: [laravel, php-coder]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "build this feature end-to-end, run the full feature workflow"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature:dev

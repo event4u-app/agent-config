@@ -1,18 +1,14 @@
 ---
 name: laravel-migration
 description: "Use when creating a Laravel migration — table prefixes, column naming, multi-tenant awareness, php artisan make:migration. Other stacks: use stack-native migration tooling."
-source: package
 domain: engineering
 framework: laravel
 workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

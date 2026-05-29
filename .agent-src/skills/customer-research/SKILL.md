@@ -3,18 +3,14 @@ name: customer-research
 description: "Use when shaping a discovery slice — JTBD-framed interview guide, switch-event focus, verbatim quotes not summaries. Triggers on 'talk to users', 'why did they cancel', 'before we build X'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product]
 workspaces:
   - product
 packs:
   - product-discovery
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

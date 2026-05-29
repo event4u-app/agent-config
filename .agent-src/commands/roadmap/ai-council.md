@@ -5,7 +5,6 @@ cluster: roadmap
 sub: ai-council
 skills: [ai-council, agent-docs-writing, roadmap-management]
 description: Challenge a roadmap with the AI council (deep tier) and refactor from convergence findings. Wraps `/council default` pinned to `--input-mode roadmap --depth deep`; patches surface as numbered options.
-disable-model-invocation: true
 council_depth: deep
 suggestion:
   eligible: true
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /roadmap:ai-council

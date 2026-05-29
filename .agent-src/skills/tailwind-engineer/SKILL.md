@@ -3,20 +3,11 @@ name: tailwind-engineer
 description: "Use when writing or reviewing Tailwind CSS — utility-first, design-token discipline, no inline-style drift, responsive variants, dark mode — even on 'style this' or 'mach das hübsch'."
 personas:
   - frontend-engineer
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # tailwind-engineer

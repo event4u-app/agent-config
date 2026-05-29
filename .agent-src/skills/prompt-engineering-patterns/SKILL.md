@@ -1,21 +1,12 @@
 ---
 name: prompt-engineering-patterns
 description: "Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt."
-source: package
 domain: product
 status: active
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # prompt-engineering-patterns

@@ -4,7 +4,6 @@ tier: 2
 cluster: sync-gitignore
 sub: fix
 description: Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix .gitignore garbage, clean up legacy agent-config entries, my .gitignore has stale agent entries, /sync-gitignore is not picking up the right paths"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /sync-gitignore:fix

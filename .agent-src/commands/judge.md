@@ -4,7 +4,6 @@ tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff
 cluster: judge
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "judge this diff, review with verdict, run an implementer→judge loop, step-by-step judged execution"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /judge

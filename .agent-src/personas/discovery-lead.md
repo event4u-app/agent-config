@@ -4,8 +4,6 @@ role: Discovery Lead
 description: "The senior voice that owns the who and the problem — switch events named, hypotheses falsifiable, themes ranked by distinct people."
 tier: specialist
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Discovery Lead

@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Editing a token-optimizer-cited asset (cli-output-handling, rtk-output-filtering, token-efficiency, markitdown) — sync catalog same commit"
-source: package
 triggers:
   - keyword: "cli-output-handling"
   - keyword: "rtk-output-filtering"
@@ -20,14 +19,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Token Optimizer Maintenance

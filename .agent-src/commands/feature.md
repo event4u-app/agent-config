@@ -4,7 +4,6 @@ tier: 1
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
 cluster: feature
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "explore feature idea, plan a feature, refactor feature plan, roadmap a feature, full feature dev"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature

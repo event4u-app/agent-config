@@ -5,7 +5,6 @@ cluster: optimize
 sub: rtk
 skills: [agent-docs-writing]
 description: Create or optimize project-local rtk filters based on the actual toolchain
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Niche maintenance tool with no recurring NL trigger."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /optimize rtk

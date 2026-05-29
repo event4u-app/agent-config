@@ -3,21 +3,12 @@ type: "always"
 tier: "1"
 description: "User interrupts override the current task — STOP, complete new task in full, then ASK before resuming; never silently return to prior work"
 alwaysApply: true
-source: package
 load_context:
   - ../contexts/execution/interrupt-examples.md
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # User-Interrupt Priority

@@ -3,7 +3,6 @@ name: forecasting
 description: "Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [product, fiscal-period, customer-segment]
 recommended_for_user_types: [finance, founder]
@@ -11,13 +10,9 @@ workspaces:
   - finance
 packs:
   - finance-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

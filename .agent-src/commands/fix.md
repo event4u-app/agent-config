@@ -4,7 +4,6 @@ tier: 1
 description: Fix orchestrator — routes to ci, references, portability, seeder, pr-comments, pr-bot-comments, pr-developer-comments
 cluster: fix
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix CI, fix references, fix the broken seeder, fix PR comments, address bot review"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix

@@ -1,20 +1,11 @@
 ---
 name: performance
 description: "Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # performance

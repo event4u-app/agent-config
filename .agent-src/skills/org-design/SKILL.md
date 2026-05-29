@@ -3,20 +3,15 @@ name: org-design
 description: "Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -3,7 +3,6 @@ name: fundraising-narrative
 description: "Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 recommended_for_user_types: [founder]
@@ -11,13 +10,7 @@ workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

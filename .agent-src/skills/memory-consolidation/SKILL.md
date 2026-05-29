@@ -3,21 +3,12 @@ name: memory-consolidation
 description: "Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'."
 status: active
 tier: senior
-source: package
 domain: engineering
 context_spine: [repo]
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # memory-consolidation

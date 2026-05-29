@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting"
-source: package
 triggers:
   - intent: "writing a diff"
   - intent: "reviewing a diff"
@@ -12,14 +11,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Minimal Safe Diff

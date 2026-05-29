@@ -3,7 +3,6 @@ name: gtm-launch
 description: "Use when sequencing a launch — alpha / beta / GA waves, audience-by-wave logic, narrative beats per wave, engineering-readiness gates. Triggers on 'plan the launch', 'sequence GA'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage]
 recommended_for_user_types: [gtm, founder]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

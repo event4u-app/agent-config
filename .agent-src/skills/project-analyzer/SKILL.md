@@ -1,20 +1,11 @@
 ---
 name: project-analyzer
 description: "ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
-source: package
 domain: discovery
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # project-analyzer

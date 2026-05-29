@@ -5,8 +5,6 @@ description: "The senior voice that owns the pipeline and the forecast — stage
 tier: specialist
 wing: 3
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # RevOps

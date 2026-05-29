@@ -4,7 +4,6 @@ tier: 2
 cluster: challenge-me
 sub: with-docs
 description: "Doc-aware /challenge-me — 95%-confidence interview with session glossary vs CONTEXT.md, load-bearing claim-vs-code verification, optional CONTEXT.md patch + ADR candidates in the pitch."
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "challenge me against the docs, grill me with our context, grill me against the docs, grill me against CONTEXT.md, grill me with the project context, frag mich durch und prüf gegen CONTEXT.md, challenge plan with domain docs"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /challenge-me with-docs

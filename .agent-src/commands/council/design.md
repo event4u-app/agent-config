@@ -5,7 +5,6 @@ cluster: council
 sub: design
 skills: [ai-council]
 description: Run the council on a design document, ADR, or architecture proposal — surfaces hidden coupling, missing rollback, and sequencing risk before commitment.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council on this design, second opinion on the ADR, external review of architecture proposal"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council design

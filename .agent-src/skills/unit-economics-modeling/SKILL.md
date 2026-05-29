@@ -3,7 +3,6 @@ name: unit-economics-modeling
 description: "Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, fiscal-period]
 recommended_for_user_types: [founder, finance]
@@ -11,13 +10,9 @@ workspaces:
   - finance
 packs:
   - finance-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

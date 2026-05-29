@@ -4,7 +4,6 @@ tier: 1
 description: Memory orchestrator — routes to add, load, mine-session, promote, propose
 cluster: memory
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "add a memory entry, load all memories, promote a signal, propose a finding"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /memory

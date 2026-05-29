@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Creating a new skill/rule/command/guideline or significantly rewriting one — runs mandatory Understand → Research → Draft first"
-source: package
 triggers:
   - intent: "create new skill"
   - intent: "create new rule"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Artifact Drafting Protocol

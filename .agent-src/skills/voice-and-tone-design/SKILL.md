@@ -3,7 +3,6 @@ name: voice-and-tone-design
 description: "Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 recommended_for_user_types: [creator, consultant, gtm]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 
