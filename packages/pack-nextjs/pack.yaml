@@ -10,4 +10,4 @@ requires:
 - typescript
 - engineering-base
 trust_level_default: professional
-version: 4.9.0
+version: 5.0.0
