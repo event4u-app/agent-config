@@ -802,6 +802,39 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.1.0](https://github.com/event4u-app/agent-config/compare/5.0.0...5.1.0) (2026-05-29)
+
+### Features
+
+* **roadmap-progress:** surface pending Iron Law 3 deferrals in dashboard ([2f21a41](https://github.com/event4u-app/agent-config/commit/2f21a41c0ae09e003ddad4cf9184f3d1d359e87b))
+* **roadmaps:** document follow-up-roadmap shape + spawn procedure ([ea2b02f](https://github.com/event4u-app/agent-config/commit/ea2b02f34d895e0cdbb1a37d45897990a3282d0b))
+* **roadmaps:** add Iron Law 3 — block silent archive of [~] deferred items ([3b3d4ed](https://github.com/event4u-app/agent-config/commit/3b3d4edce67e1c04419bd2daf9a2d4b6d0e68dbe))
+* **rules:** add linked-projects-onboarding-gate (Option A, passive awareness) ([54cf6fc](https://github.com/event4u-app/agent-config/commit/54cf6fc16580f2d1084e96ae3d41b0b12fdb6c6e))
+* **settings:** add gitignored .agent-settings.local.yml cascade layer ([ca4185d](https://github.com/event4u-app/agent-config/commit/ca4185d8cc4d462b92d00f1520da4dcb1bde3fcf))
+* **linked-projects:** add IDE-attached sibling detector ([a0b4a99](https://github.com/event4u-app/agent-config/commit/a0b4a9968962343c7e768469008a6fa3144a736b))
+
+### Bug Fixes
+
+* **refs:** reference local file as basename, not project-rooted path ([dc626c4](https://github.com/event4u-app/agent-config/commit/dc626c49fe68d958ee425d67adce7d71d21c7098))
+* **settings:** re-mirror agent_settings.py to work_engine template copy ([6c1b7b1](https://github.com/event4u-app/agent-config/commit/6c1b7b1285ef3c15332f23c14a4e282c13dd6554))
+* **rules:** root-relative doc reference in linked-projects rule ([2a85cd2](https://github.com/event4u-app/agent-config/commit/2a85cd26b38ad92342ccc0171754bff145305fcb))
+
+### Documentation
+
+* **roadmap:** archive road-to-linked-projects-scope (all phases complete) ([e12b755](https://github.com/event4u-app/agent-config/commit/e12b755c938c210b234347d8f7f6905710a6eacf))
+* **roadmap:** road-to-linked-projects-scope (GO, Option A) + dashboard ([1d8d822](https://github.com/event4u-app/agent-config/commit/1d8d822dd29f962492b92ac570f28f6df13d1eb8))
+* **adr:** ADR-032 linked-projects scope GO (Option A) + cross-repo guide ([c49d53c](https://github.com/event4u-app/agent-config/commit/c49d53ce07ff5222b60f5d82a71226c459f7006f))
+
+### Refactoring
+
+* **settings:** relocate local override to agents/settings/.agent-settings.local.yml ([4f887ae](https://github.com/event4u-app/agent-config/commit/4f887ae863b588f66efbfdc585e52123a3e23400))
+
+### Chores
+
+* **index:** regenerate index + catalog for linked-projects rule ([66346cd](https://github.com/event4u-app/agent-config/commit/66346cd1f51795a2e42298b6b57452f39742ab79))
+
+Tests: 5160 (+23 since 5.0.0)
+
 ## [5.0.0](https://github.com/event4u-app/agent-config/compare/4.9.0...5.0.0) (2026-05-29)
 
 ### BREAKING CHANGES
