@@ -6,10 +6,10 @@
 
 ## Overall
 
-**42 / 124 steps done · 34%**
+**52 / 124 steps done · 42%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+█████████████████░░░░░░░░░░░░░░░░░░░░░░░   42%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 1 | 10 | 0 | 0 | █████████░ 91% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 4 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -38,13 +38,13 @@
 
 ### [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md)
 
-**Distribution identity — make npm-primary explicit, retire the stale registry** — 0 / 11 done (0%)
+**Distribution identity — make npm-primary explicit, retire the stale registry** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Decide and record the distribution identity | ⬜ not started | 2 | 0 | 0 | 0 | 0% |
-| 2 | Execute the decision on the consumer-facing surfaces | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Release-comms hygiene — commit-subject lint | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 1 | Decide and record the distribution identity | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Execute the decision on the consumer-facing surfaces | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Release-comms hygiene — commit-subject lint | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 

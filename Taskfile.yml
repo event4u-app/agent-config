@@ -90,6 +90,7 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
@@ -191,6 +192,7 @@ tasks:
       - task: check-examples-shape
       - task: lint-roadmap-complexity
       - task: lint-roadmap-ci-steps
+      - task: lint-commit-subjects
       - task: lint-discovery-vocab
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
