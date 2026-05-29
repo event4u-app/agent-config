@@ -72,8 +72,8 @@
 | 0 | Reproduce the failure deterministically | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 1 | Make `dispatch:hook` observable when prerequisites are missing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | First-run banner when the plugin is enabled but unscaffolded | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | `hooks:install --claude` — claude-only repair path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Pin the regenerator distribution path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Pin the regenerator distribution path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | `hooks:install --claude` — claude-only repair path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 5 | End-to-end validation on the witness consumer | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Lint guardrail against re-introduction of the gap | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
 
