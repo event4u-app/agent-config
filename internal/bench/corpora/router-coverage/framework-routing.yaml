@@ -1,0 +1,53 @@
+# Router-coverage corpus — framework-routing family
+#
+# Phase 2 of road-to-corpus-expansion-evidence-based-cuts.md.
+# Exercises cluster-disambiguator rules (copilot ↔ devcontainer,
+# laravel ↔ symfony, php-coder ↔ docker) per the ADR-architectural-
+# consensus-mechanism contract.
+
+version: 1
+corpus_id: router-coverage-framework-routing
+selection_accuracy_target: 0.0
+
+prompts:
+  - id: framework-routing-01
+    category: router-coverage
+    language: en
+    prompt: "Configure `copilot-instructions.md` for this project so Copilot follows the same style as our other AI tools."
+    expected_skills: [copilot-config]
+    intended_triggers: [copilot-routing]
+
+  - id: framework-routing-02
+    category: router-coverage
+    language: en
+    prompt: "Add a `devcontainer.json` for this repo so VS Code can spin up a consistent dev environment."
+    expected_skills: [devcontainer]
+    intended_triggers: [devcontainer-routing]
+
+  - id: framework-routing-03
+    category: router-coverage
+    language: en
+    prompt: "Create a Symfony Messenger handler `ProcessOrderHandler` that consumes `ProcessOrder` messages and updates the Doctrine entity."
+    expected_skills: [symfony-workflow]
+    intended_triggers: [symfony-routing]
+
+  - id: framework-routing-04
+    category: router-coverage
+    language: en
+    prompt: "Run `composer install` followed by `php artisan test` in this Laravel project to verify the migration."
+    expected_skills: [docker, quality-tools]
+    intended_triggers: [docker-commands, php-coding]
+
+  - id: framework-routing-05
+    category: router-coverage
+    language: de
+    prompt: "Wir brauchen ein devcontainer Setup mit dem korrekten PHP-Image für unsere Laravel-Codebase."
+    expected_skills: [devcontainer]
+    intended_triggers: [devcontainer-routing]
+
+  - id: framework-routing-06
+    category: router-coverage
+    language: en
+    prompt: "Make this Symfony Voter check the user's tenant. The voter currently uses Doctrine to look up the entity."
+    expected_skills: [symfony-workflow]
+    intended_triggers: [symfony-routing]
