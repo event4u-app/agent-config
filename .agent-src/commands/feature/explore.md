@@ -5,7 +5,6 @@ cluster: feature
 sub: explore
 skills: [laravel]
 description: Brainstorm and explore a feature idea before committing to a full plan
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "brainstorm this idea, explore this feature concept"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature explore

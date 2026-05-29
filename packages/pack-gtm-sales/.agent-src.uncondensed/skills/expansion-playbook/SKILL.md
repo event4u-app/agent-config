@@ -3,20 +3,15 @@ name: expansion-playbook
 description: "Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 workspaces:
   - gtm
 packs:
   - gtm-sales
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

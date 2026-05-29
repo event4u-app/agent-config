@@ -5,7 +5,6 @@ cluster: analytics
 sub: show
 description: Render top prompts, launcher → completion rate per role, average session length, and knowledge-source usage from the local analytics log.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "show analytics, top prompts last 30 days, which role launched what, completion rate per role"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /analytics show

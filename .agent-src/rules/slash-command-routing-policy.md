@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "User types a slash command like /create-pr, /commit, or pastes command file content"
-source: package
 triggers:
   - keyword: "/create-pr"
   - keyword: "/commit"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Slash Command Routing Policy

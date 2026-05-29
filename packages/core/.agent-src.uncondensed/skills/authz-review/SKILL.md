@@ -4,21 +4,12 @@ description: "Use when reviewing authorization end-to-end — route → gate →
 personas:
   - security-engineer
   - backend-architect
-source: package
 domain: quality
 recommended_for_user_types: [developer, ops]
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # authz-review

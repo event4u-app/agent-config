@@ -37,8 +37,13 @@ Beyond software: [`user-types/`](packages/core/.agent-src.uncondensed/user-types
 
 <p align="center">
   <a href="CHANGELOG.md">CHANGELOG</a> ·
+  <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup">Breaking changes</a> ·
   <a href="https://github.com/event4u-app/agent-config/releases/latest">Latest release</a> ·
   <a href="https://github.com/event4u-app/agent-config/discussions">Discussions</a>
+</p>
+
+<p align="center">
+  <sub>Distribution: <code>npm install @event4u/agent-config</code> · npm-primary per <a href="docs/decisions/ADR-033-distribution-identity-npm-primary.md">ADR-033</a>. Major bumps follow <a href="CONTRIBUTING.md#versioning-policy">semver</a>; each ships a <a href="CHANGELOG.md#breaking--v400-unified-setup-road-to-unified-setup"><code>### Breaking</code></a> entry.</sub>
 </p>
 
 ---

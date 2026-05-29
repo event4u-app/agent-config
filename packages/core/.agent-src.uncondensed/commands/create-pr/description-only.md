@@ -5,7 +5,6 @@ cluster: create-pr
 sub: description-only
 skills: [git-workflow]
 description: Generate a PR description as a copyable markdown block — used standalone or by create-pr
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "write a PR description, draft the PR text"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /create-pr:description-only

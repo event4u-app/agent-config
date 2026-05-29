@@ -3,7 +3,6 @@ name: stakeholder-tradeoff
 description: "Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [team, product]
 personas:
@@ -14,13 +13,9 @@ workspaces:
   - product
 packs:
   - product-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

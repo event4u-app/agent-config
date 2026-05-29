@@ -4,7 +4,6 @@ tier: 2
 cluster: video
 sub: storyboard
 description: Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
-disable-model-invocation: true
 personas: [hollywood-director]
 skills: [scene-expander, video-director, character-consistency]
 suggestion:
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /video:storyboard

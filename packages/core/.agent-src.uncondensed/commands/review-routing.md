@@ -3,7 +3,6 @@ name: review-routing
 tier: 2
 skills: [review-routing, reviewer-awareness]
 description: Compute reviewer roles and matched historical bug patterns for the current diff, using project-local ownership-map.yml and historical-bug-patterns.yml
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "who should review this, suggest reviewers for this PR"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # review-routing

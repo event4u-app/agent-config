@@ -3,7 +3,6 @@ name: editorial-calendar
 description: "Use when shaping cadence — evergreen / campaign / reactive split, beat-mapping across channel stages, content-debt management. Triggers on 'plan our content cadence', 'what should we publish'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage, funnel-stage]
 recommended_for_user_types: [creator]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

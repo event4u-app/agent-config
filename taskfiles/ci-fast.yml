@@ -354,6 +354,14 @@ tasks:
     desc: Forbid full-pipeline CI steps (task ci / make test / npm run check) in roadmaps when quality.local_auto_run=false (roadmap-ci-steps-policy rule)
     cmd: python3 scripts/lint_roadmap_ci_steps.py {{.QUIET_FLAG}}
 
+  lint-commit-subjects:
+    silent: true
+    desc: Reject sloppy commit subjects (< 10 chars after Conventional-Commits prefix, or blocklist tokens wip/leftover/temp/tmp/fixup) feeding the auto-generated changelog (ADR-033 + road-to-distribution-identity Phase 3)
+    cmd: |
+      python3 scripts/lint_commit_subjects.py \
+        --base "${LINT_BASE:-origin/main}" \
+        --head "${LINT_HEAD:-HEAD}" {{.QUIET_FLAG}}
+
   lint-discovery-vocab:
     silent: true
     desc: Validate config/discovery/{workspaces,packs}.yml against ADR-013 frozen vocabulary, cross-refs, and ADR-010 non-overlap (R3 Phase 1)
@@ -389,6 +397,11 @@ tasks:
     silent: true
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
+
+  lint-frontmatter-boilerplate:
+    silent: true
+    desc: Fail when an artefact carries a frontmatter field equal to its schema default (road-to-abstraction-reduction.md Phase 3 — omit it, the loader injects the default)
+    cmd: python3 scripts/lint_frontmatter_boilerplate.py {{.QUIET_FLAG}}
 
   lint-trust-coherence:
     silent: true

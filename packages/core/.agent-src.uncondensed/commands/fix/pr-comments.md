@@ -5,7 +5,6 @@ cluster: fix
 sub: pr-comments
 skills: [php-coder]
 description: Fix and reply to all open review comments (bots + human reviewers) on a GitHub PR
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix all PR review comments, resolve the review feedback"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix pr-comments

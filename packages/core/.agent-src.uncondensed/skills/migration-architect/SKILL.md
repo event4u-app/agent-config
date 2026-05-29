@@ -4,20 +4,11 @@ description: "Use when shaping a non-trivial migration — rollout phases, dual-
 personas:
   - backend-architect
   - senior-engineer
-source: package
 domain: process
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # migration-architect

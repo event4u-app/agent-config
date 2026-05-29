@@ -4,8 +4,6 @@ role: Backend Architect
 description: "The voice that watches service-layer boundaries — module seams, transaction scope, and the contracts a change widens or breaks."
 tier: specialist
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Backend Architect

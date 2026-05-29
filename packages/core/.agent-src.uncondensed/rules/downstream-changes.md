@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 alwaysApply: false
 description: "After EVERY code edit, find ALL downstream changes — callers, tests, imports, types, documentation"
-source: package
 triggers:
   - intent: "after code edit"
   - keyword: "callers"
@@ -13,14 +12,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Downstream Changes

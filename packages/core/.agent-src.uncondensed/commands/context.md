@@ -4,7 +4,6 @@ tier: 2
 description: Context orchestrator — routes to create, refactor
 cluster: context
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a context document, update an existing context, refactor a context file"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /context

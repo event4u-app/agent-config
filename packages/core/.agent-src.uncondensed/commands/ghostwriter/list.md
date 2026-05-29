@@ -5,7 +5,6 @@ cluster: ghostwriter
 sub: list
 skills: [ghostwriter]
 description: List captured ghostwriter profiles under agents/reference/ghostwriter/ as a numbered table with confidence, last-fetched, and stale-warning flags. Read-only.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "list ghostwriter profiles, show available public-figure voices, which ghostwriters do I have, ghostwriter inventory"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /ghostwriter:list

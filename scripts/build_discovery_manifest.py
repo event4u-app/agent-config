@@ -25,7 +25,12 @@ from typing import Any, Iterable
 import yaml
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from validate_frontmatter import _FRONTMATTER_RE, parse_frontmatter  # noqa: E402
+from validate_frontmatter import (  # noqa: E402
+    _FRONTMATTER_RE,
+    apply_schema_defaults,
+    load_schema,
+    parse_frontmatter,
+)
 from _lib.agent_src import artefact_roots, logical_relpath, resolve_logical, strip_source_prefix  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -146,11 +151,23 @@ def _trusted(path: Path) -> bool:
     return any(rel.startswith(r + "/") for r in TRUST_ROOTS)
 
 
-def _parse(path: Path) -> dict[str, Any] | None:
+# Discovery category → frontmatter schema name. `template` has no schema and
+# carries none of the defaulted fields, so it is left raw.
+_CATEGORY_SCHEMA = {"skill": "skill", "rule": "rule", "command": "command"}
+
+
+def _parse(path: Path, category: str | None = None) -> dict[str, Any] | None:
     text = path.read_text(encoding="utf-8", errors="replace")
     fm, _ = parse_frontmatter(text)
     if not isinstance(fm, dict):
         return None
+    # Inject schema defaults so an artefact that omits a field equal to its
+    # default (post abstraction-reduction migration) still presents the field
+    # to the required-key checks AND the drift checksum — keeping the checksum
+    # byte-stable across the migration (preflight Decision B).
+    schema_name = _CATEGORY_SCHEMA.get(category or "")
+    if schema_name is not None:
+        apply_schema_defaults(fm, load_schema(schema_name))
     return fm
 
 
@@ -252,7 +269,7 @@ def _build(strict: bool) -> tuple[dict[str, Any], list[dict[str, Any]]]:
         if rel in overrides:
             documented_unassigned.append({"path": rel, "category": category, "reason": overrides[rel]})
             continue
-        fm = _parse(path)
+        fm = _parse(path, category)
         payload, reason = _classify(fm, ws_ids, pack_ids)
         if reason is not None:
             unassigned.append({"path": rel, "category": category, "reason": reason})

@@ -5,8 +5,6 @@ description: "The senior voice that owns the post-signature value — time-to-fi
 tier: specialist
 wing: 3
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Customer Success Lead

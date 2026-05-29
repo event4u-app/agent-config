@@ -4,7 +4,6 @@ tier: 2
 cluster: agents
 sub: user
 description: Read-only render of .agent-user.md — prints the persona summary the host agent loads at session start.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "show user persona, render .agent-user.md, print who the user is"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents user show

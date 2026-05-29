@@ -3,7 +3,6 @@ name: pipeline-strategy
 description: "Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage]
 recommended_for_user_types: [gtm]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-sales
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

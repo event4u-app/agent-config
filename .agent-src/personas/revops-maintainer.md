@@ -4,8 +4,6 @@ role: RevOps Maintainer
 description: "The senior voice that owns contributor lifecycle and package adoption funnel — triage routing, release readiness, positioning anchored in evidence."
 tier: specialist
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # RevOps Maintainer

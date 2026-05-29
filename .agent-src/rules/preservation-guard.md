@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 alwaysApply: false
 description: "Merging/refactoring/condensing skills, rules, commands, or guidelines — prevent quality loss"
-source: package
 triggers:
   - intent: "merge skill"
   - intent: "condense rule"
@@ -17,14 +16,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Preservation Guard

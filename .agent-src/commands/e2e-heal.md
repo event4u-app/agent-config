@@ -3,7 +3,6 @@ name: e2e-heal
 tier: 2
 skills: [playwright-testing]
 description: Find, debug, and fix failing Playwright E2E tests
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix the failing E2E tests, playwright tests are red"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # e2e-heal

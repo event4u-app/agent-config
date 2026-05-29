@@ -1,20 +1,11 @@
 ---
 name: persona-writing
 description: "Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'."
-source: package
 domain: process
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: degrade -->

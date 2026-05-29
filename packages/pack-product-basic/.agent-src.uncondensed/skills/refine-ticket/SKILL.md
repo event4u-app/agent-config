@@ -8,7 +8,6 @@ personas:
   - stakeholder
   - critical-challenger
   - ai-agent
-source: package
 domain: product
 execution:
   type: assisted
@@ -18,13 +17,9 @@ workspaces:
   - product
 packs:
   - product-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

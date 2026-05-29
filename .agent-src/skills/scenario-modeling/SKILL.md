@@ -3,7 +3,6 @@ name: scenario-modeling
 description: "Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, fiscal-period, product]
 recommended_for_user_types: [founder, finance]
@@ -11,11 +10,6 @@ workspaces:
   - finance
 packs:
   - finance-advanced
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

@@ -5,7 +5,6 @@ cluster: judge
 sub: on-diff
 skills: [subagent-orchestration, verify-completion-evidence]
 description: Run a single change through an implementer→judge loop with a two-revision ceiling, then hand back to the user
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and judge skills; keep explicit."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /judge on-diff

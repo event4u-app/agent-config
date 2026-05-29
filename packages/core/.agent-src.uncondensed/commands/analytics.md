@@ -4,7 +4,6 @@ tier: 2
 description: Analytics orchestrator — routes to show, prune. Local-only workspace event log under `~/.event4u/agent-config/workspace/analytics/`.
 cluster: analytics
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "show my workspace analytics, top prompts last week, which role launched what, prune the analytics log"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /analytics

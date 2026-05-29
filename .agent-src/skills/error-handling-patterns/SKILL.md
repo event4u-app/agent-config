@@ -1,7 +1,6 @@
 ---
 name: error-handling-patterns
 description: "Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized."
-source: package
 domain: engineering
 status: active
 refresh_trigger: "≥30% of cited upstream pattern catalogues become deprecated, OR a new top-2 ecosystem (Python/JS/PHP/Go/Rust) ships a paradigm-shifting standard error model"
@@ -10,14 +9,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # error-handling-patterns

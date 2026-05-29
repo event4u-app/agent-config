@@ -3,7 +3,6 @@ name: forecast-accuracy
 description: "Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 recommended_for_user_types: [gtm, finance]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-sales
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

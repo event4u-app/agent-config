@@ -2,21 +2,12 @@
 type: "auto"
 tier: "1"
 description: "When telegraph.speak_scope != off — condense prose to telegraph grammar with carve-outs for numbered options, Iron-Law, code, paths, error markers"
-source: package
 triggers:
   - intent: "any reply"
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Telegraph Speak

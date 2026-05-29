@@ -20,7 +20,8 @@
     },
     "source": {
       "type": "string",
-      "enum": ["package", "project"]
+      "enum": ["package", "project"],
+      "default": "package"
     },
     "domain": {
       "type": "string",
@@ -140,6 +141,7 @@
     "lifecycle": {
       "type": "string",
       "enum": ["active", "deprecated", "experimental", "archived"],
+      "default": "active",
       "description": "ADR-013 lifecycle state."
     },
     "trust": {
@@ -147,9 +149,9 @@
       "additionalProperties": false,
       "required": ["level", "confidence", "human_review_required"],
       "properties": {
-        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"]},
-        "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-        "human_review_required": {"type": "boolean"}
+        "level": {"type": "string", "enum": ["core", "professional", "experimental", "advisory", "restricted"], "default": "core"},
+        "confidence": {"type": "string", "enum": ["high", "medium", "low"], "default": "high"},
+        "human_review_required": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 trust block. Vocabulary mirrored by scripts/lint_artefact_frontmatter.py."
     },
@@ -158,8 +160,8 @@
       "additionalProperties": false,
       "required": ["default", "removable"],
       "properties": {
-        "default": {"type": "boolean"},
-        "removable": {"type": "boolean"}
+        "default": {"type": "boolean", "default": true},
+        "removable": {"type": "boolean", "default": false}
       },
       "description": "ADR-013 install hints (default-on at consumer install; user-removable)."
     }

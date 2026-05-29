@@ -3,7 +3,6 @@ name: bug-fix
 tier: 1
 skills: [bug-analyzer, pest-testing]
 description: Plan and implement a bug fix — based on investigation, with quality checks and test verification
-disable-model-invocation: true
 council_depth: deep
 suggestion:
   eligible: true
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # bug-fix

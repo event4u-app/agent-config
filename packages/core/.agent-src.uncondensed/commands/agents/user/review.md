@@ -5,7 +5,6 @@ cluster: agents
 sub: user
 skills: [agents]
 description: List buffered observations from .agent-user.observations.jsonl with numbered options to inspect or accept individually.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "review user observations, see what the agent learned about me, list buffered persona updates"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents user review

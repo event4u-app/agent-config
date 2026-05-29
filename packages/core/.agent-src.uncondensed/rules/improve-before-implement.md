@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 description: "Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements"
 alwaysApply: false
-source: package
 council_depth: deep
 triggers:
   - intent: "implement feature"
@@ -17,14 +16,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Improve Before Implement

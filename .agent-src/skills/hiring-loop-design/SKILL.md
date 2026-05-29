@@ -3,20 +3,15 @@ name: hiring-loop-design
 description: "Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

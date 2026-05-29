@@ -3,7 +3,6 @@ name: jira-ticket
 tier: 1
 skills: [laravel]
 description: Read Jira ticket from branch name, analyze linked Sentry issues, implement feature or fix bug
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "implement the ticket on this branch, work on the Jira ticket from the branch"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # jira-ticket

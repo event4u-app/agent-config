@@ -4,8 +4,6 @@ role: AI Agent
 description: "The voice of the coding agent that will execute this plan — automation-readiness, missing context, and steps that fail on a fresh clone."
 tier: core
 mode: developer
-version: "1.0"
-source: package
 ---
 
 # AI Agent

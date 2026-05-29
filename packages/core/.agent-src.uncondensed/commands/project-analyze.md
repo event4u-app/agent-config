@@ -3,7 +3,6 @@ name: project-analyze
 tier: 1
 skills: [project-analyzer]
 description: Full project analysis — detect stack, inventory modules, audit docs, create missing contexts
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "analyze the project structure, do a full project audit"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # project-analyze

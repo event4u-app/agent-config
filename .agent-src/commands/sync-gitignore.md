@@ -3,7 +3,6 @@ name: sync-gitignore
 tier: 1
 cluster: sync-gitignore
 description: Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Settings sync — must be deliberate."
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /sync-gitignore

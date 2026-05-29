@@ -4,21 +4,12 @@ description: "Use during or right after an incident — frames severity, sets co
 personas:
   - senior-engineer
   - critical-challenger
-source: package
 domain: process
 recommended_for_user_types: [ops, developer]
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # incident-commander

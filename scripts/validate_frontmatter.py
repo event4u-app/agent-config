@@ -33,6 +33,7 @@ __all__ = [
     "validate",
     "load_schema",
     "parse_frontmatter",
+    "apply_schema_defaults",
 ]
 
 _FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---\n", re.DOTALL)
@@ -232,6 +233,75 @@ def load_schema(artefact_type: str) -> dict[str, Any]:
     data = json.loads(path.read_text(encoding="utf-8"))
     _SCHEMA_CACHE[artefact_type] = data
     return data
+
+
+# --- Schema-default injection ----------------------------------------------
+
+def _object_defaults(schema: dict[str, Any]) -> dict[str, Any]:
+    """Build the default value for an absent object property from the
+    ``default`` keywords declared on its sub-properties. Returns ``{}`` when
+    no sub-property declares a default (so the object is never fabricated).
+    """
+    out: dict[str, Any] = {}
+    for sub_key, sub_schema in (schema.get("properties") or {}).items():
+        if not isinstance(sub_schema, dict):
+            continue
+        if "default" in sub_schema:
+            out[sub_key] = sub_schema["default"]
+        elif sub_schema.get("type") == "object":
+            nested = _object_defaults(sub_schema)
+            if nested:
+                out[sub_key] = nested
+    return out
+
+
+def apply_schema_defaults(data: dict[str, Any], schema: dict[str, Any]) -> dict[str, Any]:
+    """Inject schema ``default`` values into ``data`` for absent keys, in place.
+
+    Mirrors the contract in
+    ``agents/evidence/analysis/abstraction-reduction-preflight.md``: a field
+    omitted on disk reads back as its schema default, so downstream consumers
+    that require the field present keep working unchanged after the
+    frontmatter-default migration (road-to-abstraction-reduction.md).
+
+    Behaviour:
+    - A scalar property with a ``default`` is injected when absent.
+    - An object property whose sub-properties declare defaults is, when absent,
+      reconstructed from those sub-defaults; when present (a dict), its absent
+      sub-keys are filled. Objects with no sub-defaults (e.g. ``execution``) are
+      never fabricated.
+    - Present values are never overwritten — injection only fills gaps.
+
+    Returns the same ``data`` dict for convenience. Non-dict input is returned
+    untouched.
+    """
+    if not isinstance(data, dict):
+        return data
+    for key, prop in (schema.get("properties") or {}).items():
+        if not isinstance(prop, dict):
+            continue
+        if "default" in prop:
+            data.setdefault(key, prop["default"])
+            continue
+        if prop.get("type") == "object":
+            if key in data and isinstance(data[key], dict):
+                _fill_object_defaults(data[key], prop)
+            elif key not in data:
+                reconstructed = _object_defaults(prop)
+                if reconstructed:
+                    data[key] = reconstructed
+    return data
+
+
+def _fill_object_defaults(obj: dict[str, Any], schema: dict[str, Any]) -> None:
+    """Fill absent sub-keys of a present object from sub-property defaults."""
+    for sub_key, sub_schema in (schema.get("properties") or {}).items():
+        if not isinstance(sub_schema, dict):
+            continue
+        if "default" in sub_schema:
+            obj.setdefault(sub_key, sub_schema["default"])
+        elif sub_schema.get("type") == "object" and isinstance(obj.get(sub_key), dict):
+            _fill_object_defaults(obj[sub_key], sub_schema)
 
 
 # --- Validator core (Draft-07 subset) --------------------------------------
@@ -476,6 +546,10 @@ def _main() -> int:
                 # Other tooling flags missing frontmatter; don't double-report.
                 continue
             schema = load_schema(artefact_type)
+            # Inject schema defaults before validation so artefacts that omit a
+            # field equal to its default still satisfy `required`
+            # (road-to-abstraction-reduction.md Phase 1).
+            apply_schema_defaults(data, schema)
             errors = validate(data, schema)
             fatal = [e for e in errors if e.severity == "error"]
             warnings = [e for e in errors if e.severity == "warning"]

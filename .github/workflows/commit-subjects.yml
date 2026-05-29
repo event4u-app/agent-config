@@ -1,0 +1,46 @@
+name: Commit subjects
+
+# Per ADR-033 + road-to-distribution-identity Phase 3 — reject sloppy
+# commit subjects on PRs before they leak into the auto-generated
+# CHANGELOG.md via scripts/release.py. Runs on every PR regardless of
+# touched paths; the gate is the PR's commit range vs. the base ref.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Cancel queued runs on push so only the latest range is checked.
+concurrency:
+  group: commit-subjects-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  lint:
+    name: lint commit subjects
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need the full history of the PR branch + the base ref so
+          # `git log base..head` returns the actual PR commits, not
+          # the shallow-default single commit.
+          fetch-depth: 0
+
+      - name: Fetch base ref
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch --no-tags origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}"
+
+      - name: Run commit-subject lint
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          python3 scripts/lint_commit_subjects.py \
+            --base "${BASE_SHA}" \
+            --head "${HEAD_SHA}"

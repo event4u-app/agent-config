@@ -5,7 +5,6 @@ cluster: ghostwriter
 sub: delete
 skills: [ghostwriter]
 description: Hard-delete a ghostwriter profile at agents/reference/ghostwriter/<slug>.md after a two-step confirmation. No backup, no soft delete — the file is gone after acceptance.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "delete ghostwriter profile, remove public-figure voice, drop ghostwriter, retire captured profile"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /ghostwriter:delete

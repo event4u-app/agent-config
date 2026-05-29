@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Posting comments on an open PR — refuses unsolicited progress / status / CI-fix narration unless personal.pr_progress_comments is true"
-source: package
 triggers:
   - intent: "post PR comment"
   - intent: "PR status update"
@@ -15,14 +14,6 @@ workspaces:
   - engineering
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # No Unsolicited PR Progress Comments

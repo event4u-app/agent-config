@@ -5,7 +5,6 @@ cluster: module
 sub: explore
 skills: [laravel, symfony-workflow, php-coder]
 description: Explore a module — load its structure, docs, and context into the current conversation
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "show me the X module, load the module context"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /module explore

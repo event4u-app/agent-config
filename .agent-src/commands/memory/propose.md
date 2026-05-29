@@ -5,7 +5,6 @@ cluster: memory
 sub: propose
 description: Append a provisional memory signal to the intake stream — the universal fallback for any producer (human or agent) to record a finding without committing to a curated entry.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Programmatic intake fallback — overlaps /memory-add; keep explicit."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /memory propose

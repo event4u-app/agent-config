@@ -4,7 +4,6 @@ tier: 2
 description: Challenge-me orchestrator — routes to vision, with-docs
 cluster: challenge-me
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "challenge me on this plan, grill me, grill me on this, grill me on this plan, grill me through this, grill me until it's clear, grill me hard, frag mich durch, dreh mich durch die Mangel, challenge against existing docs/glossary"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /challenge-me

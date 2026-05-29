@@ -25,7 +25,7 @@ log() { [ "$quiet" = "1" ] || printf '%s\n' "$*"; }
 result=$(python3 <<'PY'
 import os, sys, time, hashlib, pathlib, glob
 sys.path.insert(0, "scripts")
-from validate_frontmatter import parse_frontmatter, load_schema, validate
+from validate_frontmatter import parse_frontmatter, load_schema, validate, apply_schema_defaults
 from _lib.agent_src import artefact_roots
 
 # ADR-017: walk every source root, collect skill dirs by logical name.
@@ -60,6 +60,9 @@ for name in sample:
     if fm is None:
         failures.append(f"{name}: no frontmatter")
         continue
+    # Inject schema defaults before validating: artefacts may omit a field
+    # equal to its default (abstraction-reduction), injected at read time.
+    apply_schema_defaults(fm, schema)
     errs = validate(fm, schema)
     if errs:
         for e in errs:

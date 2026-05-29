@@ -2,7 +2,6 @@
 name: deep-reading-analyst
 description: "Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary."
 status: active
-source: package
 domain: discovery
 external_source: "https://github.com/ginobefun/deep-reading-analyst-skill/tree/26cd7dc9920e025d39751e396e707399022e49ef/src/deep-reading-analyst"
 refresh_trigger: "Upstream `ginobefun/deep-reading-analyst-skill` major rewrite (new framework added, dispatch table reshaped, or SHA pin invalidated by reference rename)."
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 > **Pinned upstream:** `ginobefun/deep-reading-analyst-skill` @ SHA `26cd7dc9` (MIT). Re-verify per upstream major rewrite. Reference modules below link to the same SHA.

@@ -5,7 +5,6 @@ cluster: override
 sub: create
 description: Creates a project-level override for a shared skill, rule, or command.
 skills: [override-management, agent-docs-writing]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "override this skill for the project, customize this rule locally"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /override create

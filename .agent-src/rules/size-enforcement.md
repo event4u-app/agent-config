@@ -3,7 +3,6 @@ type: "manual"
 tier: "mechanical-already"
 description: "Creating or editing rules, skills, commands, guidelines, AGENTS.md, or copilot-instructions.md — enforce size and scope limits"
 alwaysApply: false
-source: package
 triggers:
   - intent: "create rule"
   - intent: "create skill"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # size-enforcement

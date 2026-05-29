@@ -1,17 +1,13 @@
 ---
 name: react-native-setup
 description: "Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'."
-source: package
 domain: devops
 workspaces:
   - engineering
 packs:
   - react
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

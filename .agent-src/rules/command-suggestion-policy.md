@@ -2,7 +2,6 @@
 type: "auto"
 tier: "mechanical-already"
 description: "Prompt without /command matching an eligible slash command — surface matches as numbered options with as-is escape; never auto-executes"
-source: package
 triggers:
   - phrase: "free-form prompt"
   - phrase: "command suggestion"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Command Suggestion Policy

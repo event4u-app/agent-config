@@ -4,7 +4,6 @@ tier: 2
 cluster: research
 sub: deep
 description: "Read `outline.yaml`, research each item in batches, write per-item JSON validated against the project-local research-schema. No Python runtime, no `~/.claude/` paths."
-disable-model-invocation: true
 skills: [deep-reading-analyst]
 suggestion:
   eligible: true
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /research:deep

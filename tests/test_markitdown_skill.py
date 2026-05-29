@@ -63,7 +63,9 @@ def test_frontmatter_required_keys() -> None:
     fm, _ = _load_skill()
     assert fm["name"] == "markitdown"
     assert fm["tier"] == "senior"
-    assert fm["source"] == "package"
+    # `source` carries the schema default `package` and is omitted on disk
+    # post abstraction-reduction; it resolves to `package` at read time.
+    assert fm.get("source", "package") == "package"
     assert fm["status"] == "active"
     assert isinstance(fm["description"], str)
 

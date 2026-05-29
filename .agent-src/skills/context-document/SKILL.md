@@ -1,20 +1,11 @@
 ---
 name: context-document
 description: "Use when the user says "create context", "document this area", or wants a structured snapshot of a codebase area for agent orientation."
-source: package
 domain: process
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # context

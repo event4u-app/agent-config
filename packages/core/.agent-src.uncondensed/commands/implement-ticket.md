@@ -3,7 +3,6 @@ name: implement-ticket
 tier: 0
 skills: [refine-ticket, feature-planning]
 description: Drive a ticket end-to-end through refine → memory → analyze → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, block-on-ambiguity, no auto-git.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "implement this ticket, setze ticket X um, build PROJ-123"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # implement-ticket

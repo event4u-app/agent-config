@@ -33,6 +33,7 @@ from typing import Iterable, List, Literal, Optional
 # Sibling module — stdlib-only frontmatter schema validator.
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from validate_frontmatter import (  # noqa: E402
+    apply_schema_defaults,
     parse_frontmatter as parse_frontmatter_for_schema,
     load_schema,
     validate as validate_against_schema,
@@ -1511,11 +1512,10 @@ def lint_rule(path: Path, text: str) -> LintResult:
         elif rule_type not in VALID_RULE_TYPES:
             issues.append(Issue("error", "invalid_type", f"Invalid type '{rule_type}'; must be 'always', 'auto', or 'manual'"))
 
-        # source field
+        # source field — optional (schema default `package` injected at read);
+        # validate the value only when present.
         rule_source = extract_frontmatter_field(frontmatter, SOURCE_PATTERN)
-        if rule_source is None:
-            issues.append(Issue("error", "missing_source", "Frontmatter missing 'source' field (must be 'package' or 'project')"))
-        elif rule_source not in VALID_RULE_SOURCES:
+        if rule_source is not None and rule_source not in VALID_RULE_SOURCES:
             issues.append(Issue("error", "invalid_source", f"Invalid source '{rule_source}'; must be 'package' or 'project'"))
 
         # description required for auto rules
@@ -1689,12 +1689,10 @@ def lint_command(path: Path, text: str) -> LintResult:
         if not name_match or not name_match.group(1).strip():
             issues.append(Issue("error", "missing_name", "Frontmatter missing 'name' field"))
 
-        # disable-model-invocation field
+        # disable-model-invocation field — optional (schema default `true`
+        # injected at read); validate the value only when present.
         dmi_match = DISABLE_MODEL_PATTERN.search(frontmatter)
-        if not dmi_match:
-            issues.append(Issue("error", "missing_disable_model_invocation",
-                                "Frontmatter missing 'disable-model-invocation: true' (required for Claude Code)"))
-        elif dmi_match.group(1) != "true":
+        if dmi_match and dmi_match.group(1) != "true":
             issues.append(Issue("warning", "disable_model_invocation_false",
                                 "disable-model-invocation should be 'true' for commands"))
 
@@ -1839,6 +1837,11 @@ def lint_persona(path: Path, text: str) -> LintResult:
         "role": re.compile(r'^role:\s*"?(.+?)"?\s*$', re.MULTILINE),
         "description": re.compile(r'^description:\s*"?(.+?)"?\s*$', re.MULTILINE),
         "tier": re.compile(r'^tier:\s*"?(\w+)"?\s*$', re.MULTILINE),
+    }
+    # `version` (default "1.0") and `source` (default "package") carry schema
+    # defaults — they are injected at read time, so omitting them is valid.
+    # Validate the value only when present; never require presence.
+    optional_defaulted = {
         "version": re.compile(r'^version:\s*"?(.+?)"?\s*$', re.MULTILINE),
         "source": re.compile(r'^source:\s*"?(package|project)"?\s*$', re.MULTILINE),
     }
@@ -1848,6 +1851,10 @@ def lint_persona(path: Path, text: str) -> LintResult:
         if not value:
             issues.append(Issue("error", f"missing_{field}", f"Persona frontmatter must declare `{field}`"))
         else:
+            parsed[field] = value
+    for field, pattern in optional_defaulted.items():
+        value = extract_frontmatter_field(frontmatter, pattern)
+        if value:
             parsed[field] = value
 
     # id matches filename stem
@@ -3090,6 +3097,11 @@ def lint_frontmatter_schema(path: Path, text: str, artifact_type: str) -> List[I
         # Other linter checks already emit a missing-frontmatter error for
         # rules/commands/personas; avoid double-reporting here.
         return []
+
+    # Inject schema defaults before validating so artefacts that omit a field
+    # equal to its default (post abstraction-reduction migration) still satisfy
+    # `required` — mirrors validate_frontmatter's own loader path.
+    apply_schema_defaults(data, schema)
 
     issues: List[Issue] = []
     for error in validate_against_schema(data, schema):

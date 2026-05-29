@@ -5,8 +5,6 @@ description: "The senior voice that owns the org and the ladder — team shape d
 tier: specialist
 wing: 4
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # People Strategist

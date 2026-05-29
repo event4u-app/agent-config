@@ -3,7 +3,6 @@ name: data-handling-judgment
 description: "Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, product]
 recommended_for_user_types: [ops, finance]
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # data-handling-judgment

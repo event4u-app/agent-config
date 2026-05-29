@@ -3,20 +3,11 @@ name: blast-radius-analyzer
 description: "Use BEFORE editing shared code — enumerates every call site, event consumer, queue worker, API client, migration, and test that a planned change will touch, with a file:line citation per dependency."
 personas:
   - backend-architect
-source: package
 domain: discovery
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # blast-radius-analyzer

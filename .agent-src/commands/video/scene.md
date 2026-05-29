@@ -4,7 +4,6 @@ tier: 2
 cluster: video
 sub: scene
 description: Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation.
-disable-model-invocation: true
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, character-consistency, motion-choreographer]
 suggestion:
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /video:scene

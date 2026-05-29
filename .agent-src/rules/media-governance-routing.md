@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)"
-source: package
 triggers:
   - keyword: "/video:"
   - keyword: "/image:"
@@ -31,14 +30,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Media Governance Routing

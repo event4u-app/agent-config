@@ -5,7 +5,6 @@ cluster: council
 sub: debate
 skills: [ai-council]
 description: Multi-round council debate with progressive cost disclosure — each member produces a position, then rebuts the strongest opposing position in subsequent rounds. User confirms spend between rounds.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council debate on X, multi-round rebuttal, escalate council to debate mode, push the council to argue not synthesize"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council debate

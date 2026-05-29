@@ -4,7 +4,6 @@ tier: 2
 description: Tests orchestrator — routes to create, execute
 cluster: tests
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "write tests for these changes, run the test suite"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /tests

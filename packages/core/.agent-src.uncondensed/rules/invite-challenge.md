@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 description: "Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation"
 alwaysApply: false
-source: package
 council_depth: deep
 triggers:
   - intent: "complex plan"
@@ -18,14 +17,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # invite-challenge

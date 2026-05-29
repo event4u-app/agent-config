@@ -3,7 +3,6 @@ name: agent-status
 tier: 0
 skills: [agent-docs-writing]
 description: Show current conversation stats — message count, token costs, task progress, next freshness check.
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Pure status display; no natural-language trigger distinct from idle small-talk."
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agent-status

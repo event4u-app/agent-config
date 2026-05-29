@@ -1,17 +1,13 @@
 ---
 name: nextjs-patterns
 description: "Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - nextjs
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

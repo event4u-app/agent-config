@@ -5,8 +5,6 @@ description: "The senior voice that owns the second-order moves — build-vs-buy
 tier: specialist
 wing: 4
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Strategist

@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Drafts, logs, exports touching real customer/candidate data — redact direct IDs, use placeholders, flag re-identification on quasi-IDs"
-source: package
 triggers:
   - keyword: "support macro"
   - keyword: "ticket response"
@@ -45,14 +44,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Domain Safety — PII Redaction

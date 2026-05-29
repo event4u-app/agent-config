@@ -3,7 +3,6 @@ type: "always"
 tier: "3"
 description: "Language and tone — informal German Du, English code comments, .md files always English"
 alwaysApply: true
-source: package
 validator_ignore:
   - type: "substring"
     pattern: ".agent-src.uncondensed/"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Language and Tone

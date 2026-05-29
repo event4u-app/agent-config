@@ -3,21 +3,12 @@ name: playwright-architect
 description: "Use when shaping a Playwright suite — locator strategy, Page Object boundaries, fixture composition, flake-prevention architecture, CI-vs-local split — even on 'design our E2E tests'."
 personas:
   - frontend-engineer
-source: package
 domain: quality
 recommended_for_user_types: [developer]
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # playwright-architect

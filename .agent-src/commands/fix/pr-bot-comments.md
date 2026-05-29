@@ -5,7 +5,6 @@ cluster: fix
 sub: pr-bot-comments
 skills: [php-coder, quality-tools]
 description: Fix and reply to bot review comments (Copilot, Augment, Greptile, etc.) on a GitHub PR
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "address the Copilot/Greptile comments, fix the bot review feedback"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix pr-bot-comments

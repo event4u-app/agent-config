@@ -3,7 +3,6 @@ name: research
 tier: 2
 cluster: research
 description: "Preliminary research scaffolder — pick objects, define fields, emit `outline.yaml` + `fields.yaml` for downstream deep research. Use for surveys, benchmarks, tech selection, competitive scans."
-disable-model-invocation: true
 skills: [project-analyzer, deep-reading-analyst]
 suggestion:
   eligible: true
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /research

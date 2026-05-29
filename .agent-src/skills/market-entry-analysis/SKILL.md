@@ -3,20 +3,13 @@ name: market-entry-analysis
 description: "Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [customer-segment, regulatory-regime, product]
 workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

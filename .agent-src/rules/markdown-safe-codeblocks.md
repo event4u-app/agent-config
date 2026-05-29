@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 description: "Generating markdown with code blocks — prevent broken nesting"
 alwaysApply: false
-source: package
 triggers:
   - intent: "markdown with code blocks"
   - keyword: "triple backticks"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Markdown Safe Codeblocks

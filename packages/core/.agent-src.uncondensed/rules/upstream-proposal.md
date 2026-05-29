@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "After creating or improving a skill/rule/guideline/command — ask if it should be contributed upstream to the shared package"
-source: package
 triggers:
   - phrase: "after creating"
   - phrase: "after improving"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Upstream Proposal
