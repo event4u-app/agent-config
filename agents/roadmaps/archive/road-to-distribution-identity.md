@@ -39,7 +39,8 @@ Because `release.py` generates the changelog **from commit subjects**, a sloppy 
 - [x] Phase 1: distribution-identity ADR accepted with maintainer verdict; index regenerated; referenced from `docs/distribution/registries.md`. <!-- ADR-033 accepted; INDEX.md has 33 numbered ADRs; registries.md leads with `## Distribution channels — npm-primary` -->
 - [x] Phase 2: stale Packagist listing carries a deprecation/redirect signal (or dual-track is explicitly chosen and auto-sync is scoped); consumer breaking-change pointer added. <!-- registries.md § Packagist deprecation surfaces the human-owner action; README.md hero gained Breaking-changes link + distribution sub-line -->
 - [x] Phase 3: commit-subject CI lint shipped, green on clean history, red on a bad fixture. <!-- lint + workflow + 26-case test suite + Taskfile wiring landed -->
-- [ ] `task ci` green on each phase's PR; reference checker resolves all new links.
+- [x] `task ci` green on each phase's PR; reference checker resolves all new links. <!-- PR #290 — 41 checks · 37 success · 4 skipped · 0 fail · 2026-05-29 -->
+
 
 ## Notes
 
