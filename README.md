@@ -102,6 +102,17 @@ npx -y @event4u/agent-config init
 
 Migrating from a v1.x install? `npx @event4u/agent-config migrate` — full notes in [`docs/migration/v1-to-v2.md`](docs/migration/v1-to-v2.md).
 
+> **`npm error ETARGET` / `No matching version found for <dep>`?** Re-run with a
+> forced fresh metadata fetch:
+> ```bash
+> npx -y --prefer-online @event4u/agent-config init
+> ```
+> This happens when the project's `.npmrc` sets `prefer-offline=true` (or points
+> at a private-registry mirror): npm resolves our dependencies against stale
+> cached metadata that predates a recently published version. `--prefer-online`
+> bypasses the cache for this run; `npm cache verify` fixes it permanently for
+> that machine.
+
 ---
 
 ## What `agent-config` is — and what it isn't
