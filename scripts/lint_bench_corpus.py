@@ -69,14 +69,30 @@ def live_skills() -> set[str]:
     return slugs
 
 
-def live_rule_ids() -> set[str]:
-    """Return all rule ids known to dist/router.json (kernel + tier_1 + tier_2)."""
+def live_rule_ids() -> set[str] | None:
+    """Return all rule ids known to dist/router.json (kernel + tier_1 + tier_2).
+
+    Returns ``None`` (not an empty set) when the router is missing or
+    unparseable, signalling "cannot validate rule ids — skip the
+    unknown-trigger checks" rather than "every referenced id is unknown".
+    A missing router is expected on a fresh clone before ``task sync``;
+    returning an empty set there would falsely flag every intended /
+    opaque trigger as ``unknown_intended_trigger``.
+    """
     if not ROUTER_JSON.exists():
-        return set()
+        sys.stderr.write(
+            f"warning: {ROUTER_JSON.relative_to(REPO)} missing — skipping "
+            "trigger rule-id validation (run `task sync` to generate it)\n"
+        )
+        return None
     try:
         data = json.loads(ROUTER_JSON.read_text(encoding="utf-8"))
     except json.JSONDecodeError:
-        return set()
+        sys.stderr.write(
+            f"warning: {ROUTER_JSON.relative_to(REPO)} unparseable — "
+            "skipping trigger rule-id validation\n"
+        )
+        return None
     ids: set[str] = set()
     ids.update(data.get("kernel", []) or [])
     for tier in ("tier_1", "tier_2"):
@@ -158,24 +174,39 @@ def lint_corpus(path: Path, skills: set[str], rule_ids: set[str] | None = None) 
             if not isinstance(carve, list) or not carve:
                 errors.append(f"{loc}: missing_carve_out")
 
-        # router-coverage invariants (Council R3 honesty floor — pass-3 onwards)
+        # router-coverage invariants (Council R3 honesty floor).
+        # A task's trigger prediction lives in two buckets:
+        #   intended_triggers      — deterministically replayable (keyword /
+        #                            phrase / command / path with supplied
+        #                            open_files or command context).
+        #   replay_opaque_triggers — fires at runtime only via an `intent`
+        #                            trigger (or a router coverage gap) the
+        #                            static replay cannot verify. Declared so
+        #                            the telemetry reports it separately, not
+        #                            as false `missed_intended` drift.
+        # router-coverage requires at least one bucket non-empty.
         intended = p.get("intended_triggers")
-        if cat == "router-coverage":
-            if not isinstance(intended, list) or not intended:
-                errors.append(f"{loc}: missing_intended_triggers")
-            elif rule_ids is not None:
-                for rid in intended:
-                    if rid not in rule_ids:
-                        errors.append(f"{loc}: unknown_intended_trigger: {rid}")
-        elif intended is not None and rule_ids is not None:
-            # Field is optional on non-router-coverage corpora but if present
-            # it must still reference real rule ids.
-            if not isinstance(intended, list):
-                errors.append(f"{loc}: bad_intended_triggers_shape")
-            else:
-                for rid in intended:
-                    if rid not in rule_ids:
-                        errors.append(f"{loc}: unknown_intended_trigger: {rid}")
+        opaque = p.get("replay_opaque_triggers")
+        intended_list = intended if isinstance(intended, list) else []
+        opaque_list = opaque if isinstance(opaque, list) else []
+
+        if intended is not None and not isinstance(intended, list):
+            errors.append(f"{loc}: bad_intended_triggers_shape")
+        if opaque is not None and not isinstance(opaque, list):
+            errors.append(f"{loc}: bad_replay_opaque_triggers_shape")
+
+        if cat == "router-coverage" and not intended_list and not opaque_list:
+            errors.append(f"{loc}: missing_intended_triggers")
+
+        # A rule belongs to exactly one bucket — both is a contradiction.
+        for rid in sorted(set(intended_list) & set(opaque_list)):
+            errors.append(f"{loc}: trigger_in_both_buckets: {rid}")
+
+        # Every referenced id (either bucket) must be a real router rule id.
+        if rule_ids is not None:
+            for rid in intended_list + opaque_list:
+                if rid not in rule_ids:
+                    errors.append(f"{loc}: unknown_intended_trigger: {rid}")
 
     if REQUIRE_FULL and not is_legacy:
         for bucket, want in FULL_COUNTS.items():

@@ -21,6 +21,12 @@ Trigger semantics implemented:
   | `path_prefix`  | prefix match against any path in `open_files` (optional context) |
   | `file_pattern` | fnmatch against any path in `open_files` (optional context)      |
 
+Rules a task expects to fire only via `intent` (or a router coverage
+gap) the static replay cannot see are declared in the corpus field
+`replay_opaque_triggers`. They surface in `intended_vs_observed_match`
+under `replay_opaque` and are excluded from both `missed_intended`
+(no false drift) and `unintended_activations`.
+
 Reports go to `internal/bench/reports/router-telemetry/<UTC>.json`
 with three blocks:
 
@@ -178,10 +184,13 @@ def load_corpus_prompts(
             pid = str(entry.get("id", ""))
             text = entry.get("prompt") or entry.get("text") or ""
             intended = entry.get("intended_triggers") or []
+            opaque = entry.get("replay_opaque_triggers") or []
             open_files = entry.get("open_files") or []
             command = entry.get("command") or None
             if not isinstance(intended, list):
                 intended = []
+            if not isinstance(opaque, list):
+                opaque = []
             if not isinstance(open_files, list):
                 open_files = []
             if pid and text:
@@ -190,6 +199,7 @@ def load_corpus_prompts(
                         "id": pid,
                         "text": str(text),
                         "intended_triggers": [str(t) for t in intended],
+                        "replay_opaque_triggers": [str(t) for t in opaque],
                         "open_files": [str(p) for p in open_files],
                         "command": str(command) if command else None,
                     }
@@ -223,6 +233,7 @@ def aggregate_replay(
             pid = entry["id"]
             text = entry["text"]
             intended = entry["intended_triggers"]
+            opaque = entry["replay_opaque_triggers"]
             result = match_prompt(
                 router,
                 text,
@@ -253,16 +264,22 @@ def aggregate_replay(
                     elif tier == "tier_2":
                         panel_b_seen_tier2.add(rid)
             # Council R3 honesty floor: surface intended vs observed.
-            if intended:
+            # `replay_opaque` rules fire at runtime only via `intent`
+            # triggers (or router gaps) the deterministic replay cannot
+            # see — they are NOT counted as `missed_intended` (that would
+            # be false drift) and NOT counted as `unintended_activations`.
+            if intended or opaque:
                 intended_set = set(intended)
+                opaque_set = set(opaque)
                 hit = sorted(intended_set & activated_ids)
                 miss = sorted(intended_set - activated_ids)
-                unintended = sorted(activated_ids - intended_set)
+                unintended = sorted(activated_ids - intended_set - opaque_set)
                 intended_vs_observed.append(
                     {
                         "corpus": corpus_name,
                         "task": pid,
                         "intended": sorted(intended),
+                        "replay_opaque": sorted(opaque),
                         "hit": hit,
                         "missed_intended": miss,
                         "unintended_activations": unintended,
