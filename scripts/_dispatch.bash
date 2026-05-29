@@ -101,8 +101,12 @@ Tier 1 — power-user (release shape, audit, migration):
                              Usage: explain config | explain rule <name>
                                   | explain route "<text>"
                              Flags: --json | --project=<path>
-  migrate                    One-shot migration off legacy composer / npm install paths
-                             Flags: --dry-run (detect only)
+  migrate                    One-shot, opinionated migration off every legacy install /
+                             state shape — removes composer / npm package entries,
+                             deletes legacy symlinks + project-local config, migrates
+                             the v0 work-engine state file, refreshes .gitignore.
+                             Wizard recreates fresh config. Single flag: --dry-run
+                             (preview only). Contract: docs/contracts/migrate-command.md
   first-run                  Guided first-run setup — cost profile, settings, tooling
   keys:install-anthropic     Install the Anthropic API key for the AI Council
                              (interactive, /dev/tty only, writes ~/.config/agent-config/anthropic.key 0600)
@@ -138,10 +142,6 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              ~/.event4u/agent-config/ (the global-only consumer surface,
                              ADR-020). Idempotent; --force overwrites a non-empty global
                              file, --dry-run lists intended copies with zero writes.
-  migrate-to-global          One-shot legacy → global-only migration (Phase 5,
-                             road-to-global-only-install.md). Copy → verify → move →
-                             bridge. Runs lint_global_paths.py first. Flags:
-                             --dry-run, --force, --rollback, --skip-perms-gate.
   hooks:install              Install the combined pre-commit hook (roadmap-progress
                              + ADR-013 artefact frontmatter lint).
                              (use --print to dump it, --force to overwrite an existing hook)
@@ -156,8 +156,6 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                              Usage: hooks:replay --platform <name> --event <event>
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
-  migrate-state              Migrate a legacy .implement-ticket-state.json file
-                             to the v1 .work-state.json schema (preserves .bak)
   memory:lookup              Retrieve memory entries (text or JSON envelope)
   memory:signal              Append a provisional intake signal (memory proposal)
   memory:hash                Hash a memory entry (YAML or JSON stdin)
@@ -187,7 +185,7 @@ EOF
   if [[ "$tier" == "0" ]]; then
     cat <<'EOF'
 
-(Hidden: 15 Tier-1 + 26 Tier-2 commands. Run `./agent-config --help --tier=1`
+(Hidden: 15 Tier-1 + 24 Tier-2 commands. Run `./agent-config --help --tier=1`
 or `--tier=all` to see them. Tier criteria: docs/contracts/command-surface-tiers.md.)
 EOF
   fi
@@ -245,7 +243,6 @@ Examples (Tier 2):
   ./agent-config settings:check
   ./agent-config hooks:install
   ./agent-config hooks:replay --platform augment --event post_tool_use --payload post_tool_use --json
-  ./agent-config migrate-state
   ./agent-config memory:lookup --types domain-invariants --key billing
   ./agent-config memory:signal --type architecture-decision --path src/Foo.php --body "…"
   ./agent-config memory:check --path agents/memory
@@ -405,21 +402,6 @@ cmd_work() {
     return 1
   fi
   exec env PYTHONPATH="$engine_root" python3 -m work_engine "$@"
-}
-
-cmd_migrate_state() {
-  require_python3
-  local engine_root="$PACKAGE_ROOT/.agent-src/templates/scripts"
-  if [[ ! -d "$engine_root/work_engine/migration" ]]; then
-    echo "❌  agent-config: work_engine.migration module not found at $engine_root/work_engine/migration" >&2
-    echo "    Reinstall the package and retry." >&2
-    return 1
-  fi
-  # -W ignore::RuntimeWarning suppresses the known sys.modules notice from
-  # `python3 -m pkg.subpkg.module` when the parent package eagerly imports
-  # the submodule via its CLI module. The migration is non-invasive and
-  # the warning is cosmetic; suppressing here avoids touching the engine.
-  exec env PYTHONPATH="$engine_root" python3 -W ignore::RuntimeWarning -m work_engine.migration.v0_to_v1 "$@"
 }
 
 cmd_memory_lookup() {
@@ -858,21 +840,12 @@ cmd_settings_check() {
 # `agent-config settings:migrate` — lift project-local
 # .agent-settings.yml / .agent-user.yml into ~/.event4u/agent-config/.
 # Phase 2.4 of road-to-global-only-install.md. Read-only on the source —
-# the destructive move step is owned by `migrate-to-global` (Phase 5).
+# the destructive move step is owned by the unified `agent-config migrate`
+# (see docs/contracts/migrate-command.md).
 # Exit 0 success / no-op, 1 non-empty global without --force or parse error.
 cmd_settings_migrate() {
   require_python3
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_settings_migrate "$@"
-}
-
-# `agent-config migrate-to-global` — Phase 5.1 + 5.3 + 5.5 of
-# road-to-global-only-install.md. Order: copy → verify → move → bridge.
-# Runs the lint_global_paths.py permissions gate first (Phase 5.0 / A7).
-# Flags: --dry-run (zero writes), --force (overwrite non-empty global),
-# --rollback (reverse the latest .legacy-pre-global-only/<stamp>/ snapshot).
-cmd_migrate_to_global() {
-  require_python3
-  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_migrate_to_global "$@"
 }
 
 # `agent-config uninstall` — remove bridge markers (project) or lockfile
@@ -936,7 +909,6 @@ main() {
     first-run)               cmd_first_run "$@" ;;
     implement-ticket)        cmd_implement_ticket "$@" ;;
     work)                    cmd_work "$@" ;;
-    migrate-state)           cmd_migrate_state "$@" ;;
     memory:lookup)           cmd_memory_lookup "$@" ;;
     memory:signal)           cmd_memory_signal "$@" ;;
     memory:hash)             cmd_memory_hash "$@" ;;
@@ -968,7 +940,6 @@ main() {
     validate)                cmd_validate "$@" ;;
     settings:check)          cmd_settings_check "$@" ;;
     settings:migrate)        cmd_settings_migrate "$@" ;;
-    migrate-to-global)       cmd_migrate_to_global "$@" ;;
     uninstall)               cmd_uninstall "$@" ;;
     prune)                   cmd_prune "$@" ;;
     doctor)                  cmd_doctor "$@" ;;
