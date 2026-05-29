@@ -1,0 +1,25 @@
+{
+  "_fixture_doc": "Phase 6 fixture B — command line references `roadmap-progress-TYPO`, a subcommand that does NOT exist in scripts/_dispatch.bash. Expected: linter FAILS with `unknown_dispatcher_subcommand: 'roadmap-progress-TYPO'`.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/agent-config dispatch:hook --platform claude --event session_start"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/agent-config roadmap-progress-TYPO --invalid"
+          }
+        ]
+      }
+    ]
+  }
+}
