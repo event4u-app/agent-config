@@ -48,11 +48,42 @@ IS A RULE VIOLATION, NOT AN OVERSIGHT.
 
 `command:` triggers in this rule's frontmatter load it the moment any `/roadmap:process-*` command fires and keep it loaded for the whole run — independent of whether the agent is editing files under `agents/roadmaps/`. The loop carries its own deterministic flip-guard at [`roadmap-process-loop § 5b`](../contexts/execution/roadmap-process-loop.md#5b-flip-guard--deterministic) — defense-in-depth, not a substitute for the inline flip.
 
-**Step counts as done** when its code/doc change is written and saved AND the verification cited in the step has passed (fresh output in this reply or an earlier one).
+**Step counts as done** when code/doc saved AND verification cited in step passed (fresh output, this reply or earlier).
 
-**In-progress marker.** When a step takes more than one reply, mark it `[~]` the moment work starts — the user sees one row move `[ ] → [~] → [x]` instead of silent rows. `[~]` stays open for `count_open` but advances the phase percentage.
+**Glyph semantics** — single source of truth, aligned with `scripts/update_roadmap_progress.py` and [`roadmap-management`](../skills/roadmap-management/SKILL.md):
 
-**Dashboard regen cadence — opt-in batching.** The checkbox flip is non-batchable. The **subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` in `.agent-settings.yml` (`per_step` default · `every_5_steps` · `phase_boundary`). Run end, phase boundary, and any file-shape touch (rename / phase add / archive — Iron Law 1) always force an immediate regen regardless of cadence.
+| Glyph | Meaning | Counter |
+|---|---|---|
+| `[ ]` | open — planned, not done | `count_open` |
+| `[x]` | done — landed + verified | `count_done` |
+| `[~]` | deferred — planned, not happening **this** run; blocks archive (Iron Law 3) | `count_deferred` |
+| `[-]` | cancelled — scope dropped | `count_cancelled` |
+
+`[~]` is **not** "in-progress". Mid-reply work-in-flight has no checkbox change until step lands — normal `[ ] → [x]`.
+
+**Dashboard regen cadence — opt-in batching.** Checkbox flip is non-batchable. **Subprocess regen** (`./agent-config roadmap:progress`) is batchable per `roadmap.dashboard_regen_cadence` (`per_step` default · `every_5_steps` · `phase_boundary`). Run end, phase boundary, any file-shape touch (rename / phase add / archive — Iron Law 1) always force immediate regen regardless of cadence.
+
+## Iron Law 3 — no silent archive with unresolved deferred items
+
+```
+A ROADMAP WITH `[~]` DEFERRED ITEMS NEVER AUTO-ARCHIVES SILENTLY.
+SURFACE EVERY DEFERRED STEP. ASK USER WHAT HAPPENS TO THE PLAN.
+A SILENT ARCHIVE THAT BURIES PLANNED-FOR-LATER WORK
+IS A RULE VIOLATION, NOT A CONVENIENCE.
+```
+
+When closure check fires (`count_open == 0` and `count_deferred > 0`), agent MUST:
+
+1. Enumerate every `[~]` step (phase + step text + any inline `<!-- deferred: ... -->` annotation).
+2. Present numbered options (per [`user-interaction`](user-interaction.md)) — at minimum:
+   1. **Follow-up roadmap (draft)** — spawn `agents/roadmaps/road-to-<slug>.md` with `status: draft`, `parent_roadmap: <this-slug>`, deferred steps lifted verbatim into phases. Draft hidden from dashboard until flipped to `ready`.
+   2. **Follow-up roadmap (ready, blocked)** — spawn with `status: ready` (default), `parent_roadmap: <this-slug>`, plus body note `> Blocked until <condition>`. Dashboard surfaces it; execution waits.
+   3. **Keep in this archive** — confirm deferred items stay searchable in archived file; no follow-up. Records explicit decision-to-drop in same reply.
+   4. **Restore selected items to `[ ]`** — finish them in this roadmap before archive.
+   5. **Convert selected items to `[-]` cancelled** — drop with rationale recorded inline.
+3. Only after user resolves deferrals does `git mv` to `archive/` run. Dashboard regen happens after resolution.
+
+Migration mechanics (file naming, frontmatter, body shape, parent back-link) live in [`roadmap-management § Spawn follow-up from deferred items`](../skills/roadmap-management/SKILL.md). Rule owns obligation; skill owns procedure.
 
 ## Pre-send self-check — MANDATORY
 
@@ -66,9 +97,12 @@ Before sending any reply that landed roadmap work:
    - `phase_boundary` → only when this reply closes the phase or run.
    - Any file-shape touch (rename / phase add / archive) → yes, regardless of cadence.
    If yes and not run yet → run `./agent-config roadmap:progress`, then continue.
-4. Did `count_open` reach 0? If yes → `git mv` to `archive/` and regen again — same reply.
+4. Did `count_open` reach 0?
+   - **No** → continue normally.
+   - **Yes + `count_deferred == 0`** → `git mv` to `archive/` and regen again — same reply.
+   - **Yes + `count_deferred > 0`** → STOP. Run Iron Law 3 deferred-resolution flow (surface items + numbered options + wait). Archive only after resolution.
 
-Any "no" at step 2 → reply is incomplete. Do not send. A skipped step 3 regen is fine when cadence permits — checkbox truth lives in the markdown file.
+Any "no" at step 2 → reply is incomplete. Do not send. Skipped step 3 regen fine when cadence permits — checkbox truth lives in markdown file. Skipping deferred-resolution gate at step 4 is **never** acceptable; it is the canonical "lost-information" failure mode this rule exists to prevent.
 
 Long-form mechanics (failure-mode catalog, Copilot fallback, `[~]` vs `[ ]` semantics, hook + CI defence-in-depth) live in `guideline:agent-infra/roadmap-progress-mechanics`.
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
