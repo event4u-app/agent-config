@@ -1,7 +1,6 @@
 ---
 type: auto
 tier: "2b"
-source: package
 description: "Skill declares execution metadata — enforce safety constraints for assisted/automated execution types"
 triggers:
   - keyword: "execution"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Runtime Safety

@@ -398,6 +398,11 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-frontmatter-boilerplate:
+    silent: true
+    desc: Fail when an artefact carries a frontmatter field equal to its schema default (road-to-abstraction-reduction.md Phase 3 — omit it, the loader injects the default)
+    cmd: python3 scripts/lint_frontmatter_boilerplate.py {{.QUIET_FLAG}}
+
   lint-trust-coherence:
     silent: true
     desc: Enforce safety-floor / HRR-banner / kernel-trust coherence across the manifest (monorepo Phase 5.4, ADR-018)

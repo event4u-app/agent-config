@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 description: "Before coding/modifying/debugging — analyze first, verify with real tools, never guess or trial-and-error"
 alwaysApply: false
-source: package
 load_context:
   - ../contexts/communication/rules-auto/think-before-action-mechanics.md
 triggers:
@@ -14,14 +13,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # think-before-action

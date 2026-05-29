@@ -5,7 +5,6 @@ cluster: fix
 sub: ci
 skills: [github-ci, quality-tools]
 description: Fetch CI errors from GitHub Actions and fix them
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "CI is failing, fix the GitHub Actions errors, the pipeline is red"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix ci

@@ -5,7 +5,6 @@ cluster: judge
 sub: solo
 skills: [subagent-orchestration]
 description: Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Sibling of /review-changes — eligibility routed there; keep this explicit."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /judge solo

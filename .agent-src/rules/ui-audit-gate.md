@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 alwaysApply: false
 description: "Writing/editing UI — components, screens, layouts, design tokens — require existing-ui-audit findings first"
-source: package
 triggers:
   - path_prefix: "resources/views/"
   - path_prefix: "resources/js/"
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # UI Audit Gate

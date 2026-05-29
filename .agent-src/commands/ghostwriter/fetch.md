@@ -4,7 +4,6 @@ tier: 2
 cluster: ghostwriter
 sub: fetch
 description: Build or refresh a public-figure voice profile under agents/reference/ghostwriter/ from a URL or bare name; runs the public-figure attestation gate; delegates web-fetch/web-search to host.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fetch public figure writing voice, capture LinkedIn / blog / Substack style, build ghostwriter profile from name, refresh stale profile"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /ghostwriter:fetch

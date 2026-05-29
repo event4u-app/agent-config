@@ -3,20 +3,15 @@ name: comp-banding
 description: "Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, customer-segment, regulatory-regime]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -3,7 +3,6 @@ name: cost-report
 tier: 2
 description: Capture token cost from the active Claude Code session, append to the local sessions store, and surface the 50/75/90/100% budget alert ladder with cost-profile suggestions.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "check this session's token cost, see budget utilization, surface 50/75/90/100% alert ladder"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: noop -->

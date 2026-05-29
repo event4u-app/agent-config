@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Running PHP inside Docker — artisan, composer, phpstan, rector, ecs, phpunit, tests, migrations, any CLI tool"
-source: package
 triggers:
   - keyword: "docker"
   - keyword: "artisan"
@@ -14,14 +13,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Docker Commands

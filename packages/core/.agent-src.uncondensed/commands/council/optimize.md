@@ -5,7 +5,6 @@ cluster: council
 sub: optimize
 skills: [ai-council]
 description: Run the council on an optimization target — perf hot path, memory pattern, query, or an /optimize-* output — for ranked, evidence-based suggestions instead of generic advice.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council on this perf hot path, second opinion on this optimization, external review of /optimize output"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council optimize

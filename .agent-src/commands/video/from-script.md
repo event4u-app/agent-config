@@ -4,7 +4,6 @@ tier: 2
 cluster: video
 sub: from-script
 description: Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation.
-disable-model-invocation: true
 personas: [hollywood-director, ai-video-technical-director]
 skills: [scene-expander, video-director, pixar-storyteller, character-consistency, motion-choreographer]
 suggestion:
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /video:from-script

@@ -4,8 +4,6 @@ role: Stakeholder
 description: "The voice that asks why now, why this shape, and who pays the cost of the priority this displaces."
 tier: core
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Stakeholder

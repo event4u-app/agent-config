@@ -3,21 +3,12 @@ name: api-design
 description: "Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design."
 personas:
   - backend-architect
-source: package
 domain: engineering
 recommended_for_user_types: [developer, founder]
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # api-design

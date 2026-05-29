@@ -1,7 +1,6 @@
 ---
 name: "validate-feature-fit"
 description: "Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit"
-source: package
 domain: quality
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Validate Feature Fit

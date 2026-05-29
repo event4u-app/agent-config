@@ -3,7 +3,6 @@ name: set-cost-profile
 tier: 1
 description: Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Settings mutation — must be deliberate."
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: noop -->

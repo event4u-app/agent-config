@@ -4,7 +4,6 @@ tier: 2
 description: Module orchestrator — routes to create, explore
 cluster: module
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a new module, explore an existing module"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /module

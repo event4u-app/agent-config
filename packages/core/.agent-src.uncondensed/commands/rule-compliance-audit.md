@@ -3,7 +3,6 @@ name: rule-compliance-audit
 tier: 1
 skills: [rule-compliance-audit]
 description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "audit my rules, check rule trigger quality"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # rule-compliance-audit

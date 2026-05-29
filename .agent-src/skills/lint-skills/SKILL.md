@@ -1,7 +1,6 @@
 ---
 name: lint-skills
 description: "Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata."
-source: package
 domain: process
 execution:
   type: assisted
@@ -16,14 +15,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # lint-skills

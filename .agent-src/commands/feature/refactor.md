@@ -5,7 +5,6 @@ cluster: feature
 sub: refactor
 skills: [laravel, php-coder]
 description: Refine and update an existing feature plan through interactive discussion
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "update the feature plan, refine the feature spec"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature refactor

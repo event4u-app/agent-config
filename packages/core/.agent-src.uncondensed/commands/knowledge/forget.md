@@ -5,7 +5,6 @@ cluster: knowledge
 sub: forget
 description: Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "forget this ingest, drop the acme knowledge, remove the customer folder from agent memory"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /knowledge forget

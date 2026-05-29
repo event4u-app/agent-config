@@ -3,7 +3,6 @@ name: discovery-interview
 description: "Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product]
 recommended_for_user_types: [consultant, founder]
@@ -11,11 +10,8 @@ workspaces:
   - product
 packs:
   - product-discovery
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

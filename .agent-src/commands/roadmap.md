@@ -4,7 +4,6 @@ tier: 1
 description: Roadmap orchestrator — routes to create (authoring) and process-step / process-phase / process-full (autonomous execution).
 cluster: roadmap
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a roadmap, process a roadmap, work through a roadmap autonomously, plan or abarbeiten"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /roadmap

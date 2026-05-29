@@ -3,7 +3,6 @@ name: agent-handoff
 tier: 0
 skills: [agent-docs-writing]
 description: Generate a context summary for continuing work in a fresh chat. Replaces the session system.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "user asks for an agent handoff, fresh-chat summary, or context-summary to paste into a new chat"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agent-handoff

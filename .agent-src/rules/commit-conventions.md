@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Git commit format, branch naming, conventional commits, committing, pushing, creating PRs"
-source: package
 triggers:
   - keyword: "commit"
   - keyword: "branch"
@@ -13,14 +12,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Commit Conventions

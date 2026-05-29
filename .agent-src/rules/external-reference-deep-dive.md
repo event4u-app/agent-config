@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 description: "User names external repo/file/URL/artifact as reference — fetch the actual tree and inspect, never summarize from README or metadata"
 alwaysApply: false
-source: package
 triggers:
   - intent: "look at how X does it"
   - intent: "compare with reference repo"
@@ -19,14 +18,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # external-reference-deep-dive

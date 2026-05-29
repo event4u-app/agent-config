@@ -4,7 +4,6 @@ tier: 2
 cluster: orchestrate
 skills: [subagent-orchestration]
 description: Run a YAML pipeline defined under `.agent-config/orchestrations/` — chains personas / skills / commands / sub-agents per the orchestration-dsl-v1 contract
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "run a saved orchestration / pipeline / chain"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # orchestrate

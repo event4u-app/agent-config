@@ -3,20 +3,11 @@ name: markitdown
 description: "Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'."
 status: active
 tier: senior
-source: package
 domain: process
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 > **Pinned upstream:** `markitdown-mcp@0.0.1a4` (PyPI, released 2025-05-23, MIT, Beta). Re-verify per minor bump.

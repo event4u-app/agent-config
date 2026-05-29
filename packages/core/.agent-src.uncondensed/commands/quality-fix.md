@@ -3,7 +3,6 @@ name: quality-fix
 tier: 1
 skills: [quality-tools]
 description: Run quality pipeline (PHP and/or JS/TS) and fix all errors — auto-detects language from changed files
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix the quality errors — run the project's type-checker / linter / formatter and resolve every issue (PHPStan / tsc / mypy / golangci-lint / clippy / …)"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # quality-fix

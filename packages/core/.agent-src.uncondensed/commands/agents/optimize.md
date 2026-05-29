@@ -5,7 +5,6 @@ cluster: agents
 sub: optimize
 description: Refactor AGENTS.md to the Thin-Root contract (caps, pointer ratio, capability bullets, emergency-triage) and propagate to tool stubs. Suggest only, never auto-apply.
 skills: [agents-md-thin-root, copilot-agents-optimization, copilot-config, agent-docs-writing]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "refactor AGENTS.md, shrink AGENTS.md, capability bullets, thin-root, optimize agent layer"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents optimize

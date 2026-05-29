@@ -1,17 +1,13 @@
 ---
 name: artisan-commands
 description: "Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

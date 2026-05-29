@@ -3,7 +3,6 @@ type: "auto"
 tier: "1"
 alwaysApply: false
 description: "Debugging, fixing errors, or long conversations — 3-failure stop rule, tool-loop detection, fresh-chat triggers"
-source: package
 triggers:
   - intent: "long conversation"
   - intent: "tool loop"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Context Hygiene

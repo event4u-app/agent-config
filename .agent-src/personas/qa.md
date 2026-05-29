@@ -4,8 +4,6 @@ role: QA
 description: "The voice of the tester — failure scenarios, missing assertions, and the gap between 'the code runs' and 'the feature works'."
 tier: specialist
 mode: tester
-version: "1.0"
-source: package
 ---
 
 # QA

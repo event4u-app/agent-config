@@ -3,7 +3,6 @@ name: optimize-prompt
 tier: 2
 cluster: optimize
 description: "Optimize a raw prompt for ChatGPT, Claude, Gemini, or another AI via the 4-D methodology — BASIC vs DETAIL auto-detect, one clarifying question per turn, returns the polished prompt."
-disable-model-invocation: true
 skills: [prompt-optimizer]
 suggestion:
   eligible: true
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /optimize-prompt

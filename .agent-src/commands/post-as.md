@@ -4,7 +4,6 @@ tier: 2
 description: Consumer-facing write entry points — :me drafts in the maintainer's own voice from .agent-user.md (no disclosure); :ghostwriter is a thin alias for /ghostwriter:write (mandatory disclosure footer).
 cluster: post-as
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "write as me, post as me, draft in my voice, draft as ghostwriter, post-as alias"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /post-as

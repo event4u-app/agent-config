@@ -1,7 +1,6 @@
 ---
 name: check-refs
 description: "Use when verifying cross-references between skills, rules, commands, guidelines, and context documents are not broken after edits, renames, or deletions."
-source: package
 domain: process
 execution:
   type: assisted
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # check-refs

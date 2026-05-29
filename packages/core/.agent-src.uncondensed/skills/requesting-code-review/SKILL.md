@@ -3,20 +3,11 @@ name: requesting-code-review
 description: "Use when asking for a review or creating a PR — self-review first, frame the right context, test plan included — even when the user just says 'open a PR' or 'ready to merge'."
 personas:
   - critical-challenger
-source: package
 domain: process
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # requesting-code-review

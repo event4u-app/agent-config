@@ -3,7 +3,6 @@ name: condense
 tier: 1
 skills: []
 description: Condense .md files from .agent-src.uncondensed/ into telegraph format and write to .agent-src/
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Package-internal tooling; only the event4u/agent-config repo runs this."
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # condense

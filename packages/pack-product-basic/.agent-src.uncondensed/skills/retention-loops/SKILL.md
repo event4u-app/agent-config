@@ -3,20 +3,15 @@ name: retention-loops
 description: "Use when designing product-led retention — habit formation, trigger-action-reward, network vs single-user loops. Triggers on 'why don't users come back', 'design a habit loop'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, funnel-stage]
 workspaces:
   - product
 packs:
   - product-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -32,15 +32,22 @@ DEFAULT_MANIFEST = ROOT / "dist" / "discovery" / "discovery-manifest.json"
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 # Import the same hashing primitive the builder uses so normalisation
 # stays in lockstep with the generator. (ADR-015 §Phase 6.)
-from build_discovery_manifest import _artefact_checksum  # noqa: E402
-from validate_frontmatter import parse_frontmatter  # noqa: E402
+from build_discovery_manifest import _CATEGORY_SCHEMA, _artefact_checksum  # noqa: E402
+from validate_frontmatter import apply_schema_defaults, load_schema, parse_frontmatter  # noqa: E402
 
 
-def _frontmatter(path: Path) -> dict | None:
+def _frontmatter(path: Path, category: str | None = None) -> dict | None:
     if not path.exists():
         return None
     text = path.read_text(encoding="utf-8", errors="replace")
     fm, _ = parse_frontmatter(text)
+    # Inject the same schema defaults the builder injects, so the recomputed
+    # checksum matches the committed manifest byte-for-byte even when the
+    # artefact omits a defaulted field (preflight Decision B).
+    if isinstance(fm, dict):
+        schema_name = _CATEGORY_SCHEMA.get(category or "")
+        if schema_name is not None:
+            apply_schema_defaults(fm, load_schema(schema_name))
     return fm
 
 
@@ -64,7 +71,7 @@ def _check(manifest_path: Path) -> tuple[int, list[str]]:
         if not src.exists():
             errors.append(f"{rel}: source file missing")
             continue
-        actual = _artefact_checksum(src, _frontmatter(src))
+        actual = _artefact_checksum(src, _frontmatter(src, art.get("category")))
         if actual != recorded:
             errors.append(
                 f"{rel}: checksum drift "

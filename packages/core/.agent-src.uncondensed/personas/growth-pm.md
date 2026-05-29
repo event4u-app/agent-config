@@ -5,8 +5,6 @@ description: "The senior voice that owns the funnel and the loops — leaky-buck
 tier: specialist
 wing: 3
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Growth PM

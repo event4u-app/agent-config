@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Git history ops — never rebase/squash/amend without explicit request; once pushed, rewrites must pair with immediate re-push same turn"
-source: package
 triggers:
   - intent: "rebase the branch"
   - intent: "squash commits"
@@ -25,14 +24,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Git History Discipline

@@ -4,7 +4,6 @@ tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate
 cluster: council
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "external second opinion, cross-AI review, devil's advocate on a plan/roadmap/diff, council on PR/design/optimize, polling another model"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council

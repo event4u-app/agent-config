@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 description: "When roles.active_role is set — closing outputs must match mode contract and emit structured mode marker"
 alwaysApply: false
-source: package
 triggers:
   - keyword: "active_role"
   - keyword: "role-mode"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Role Mode Adherence

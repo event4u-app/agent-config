@@ -5,7 +5,6 @@ cluster: override
 sub: manage
 description: Reviews, updates, and refactors existing project-level overrides.
 skills: [override-management, agent-docs-writing]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "review my overrides, update the project overrides"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /override manage

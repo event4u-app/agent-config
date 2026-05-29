@@ -4,7 +4,6 @@ tier: 2
 cluster: chat-history
 sub: import
 description: Surface prior chat-history sessions as a numbered table, let the user pick one, read it silently, and emit a short summary plus a resume offer — selective, user-driven cross-session import
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "import a past session into the current chat, pull a prior session into context, pick a session to read"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 <!-- cloud_safe: noop -->
 

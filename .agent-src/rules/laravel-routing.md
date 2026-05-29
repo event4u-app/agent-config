@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Writing/reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to laravel skill"
-source: package
 triggers:
   - keyword: "laravel"
   - keyword: "artisan"
@@ -14,11 +13,8 @@ workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

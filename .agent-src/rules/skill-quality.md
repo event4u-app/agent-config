@@ -2,7 +2,6 @@
 type: "auto"
 tier: "mechanical-already"
 description: "Creating/editing/reviewing skills — minimum quality standard; every skill executable, validated, self-contained"
-source: package
 triggers:
   - path_prefix: ".agent-src.uncondensed/skills/"
 routes_to:
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Skill Quality

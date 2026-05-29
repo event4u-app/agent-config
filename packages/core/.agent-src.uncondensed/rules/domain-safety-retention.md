@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Data retention (finance, support/CRM) — name jurisdiction gap, default to longest floor, honor DSR/audit holds, never delete under inquiry"
-source: package
 triggers:
   - keyword: "retention policy"
   - keyword: "data retention"
@@ -30,14 +29,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Domain Safety — Data Retention

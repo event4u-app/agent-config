@@ -1,7 +1,6 @@
 ---
 name: skill-improvement-pipeline
 description: "ONLY when user explicitly requests: run the skill improvement pipeline after a learning was detected. Orchestrates capture, classify, create, validate, and apply."
-source: package
 domain: process
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # skill-improvement-pipeline

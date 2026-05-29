@@ -3,20 +3,15 @@ name: funnel-analysis
 description: "Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, funnel-stage]
 workspaces:
   - product
 packs:
   - product-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

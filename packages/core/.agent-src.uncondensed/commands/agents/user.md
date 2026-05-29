@@ -4,7 +4,6 @@ tier: 2
 cluster: agents
 sub: user
 description: User-persona file (.agent-user.md) — interview, render, and maintain who the user is and how they want to be addressed.
-disable-model-invocation: true
 type: orchestrator
 suggestion:
   eligible: true
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents user

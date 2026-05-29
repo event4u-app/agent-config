@@ -3,7 +3,6 @@ type: "auto"
 tier: "3"
 alwaysApply: false
 description: "Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend"
-source: package
 triggers:
   - intent: "PR title"
   - intent: "PR body"
@@ -17,14 +16,6 @@ workspaces:
   - engineering
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # No Decorative Emojis in Git Surfaces

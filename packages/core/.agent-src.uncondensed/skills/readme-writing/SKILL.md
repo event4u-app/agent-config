@@ -1,7 +1,6 @@
 ---
 name: readme-writing
 description: "Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience."
-source: package
 domain: process
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # readme-writing

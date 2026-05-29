@@ -3,7 +3,6 @@ name: runway-cognition
 description: "Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, fiscal-period, product]
 recommended_for_user_types: [founder, finance]
@@ -11,13 +10,9 @@ workspaces:
   - finance
 packs:
   - finance-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

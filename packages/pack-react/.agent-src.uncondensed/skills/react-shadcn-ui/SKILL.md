@@ -1,17 +1,13 @@
 ---
 name: react-shadcn-ui
 description: "Use when building React UI on shadcn/ui primitives + Tailwind — the apply/review/polish skill dispatched by `directives/ui/*` for the `react-shadcn` stack."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - react
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

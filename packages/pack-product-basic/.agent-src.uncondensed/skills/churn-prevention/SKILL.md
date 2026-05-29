@@ -3,20 +3,15 @@ name: churn-prevention
 description: "Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 workspaces:
   - product
 packs:
   - product-basic
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

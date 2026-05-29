@@ -5,7 +5,6 @@ cluster: knowledge
 sub: ingest
 description: Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "ingest this folder, add these PDFs to the agent, point the agent at my customer files, /knowledge:ingest <path>"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /knowledge ingest

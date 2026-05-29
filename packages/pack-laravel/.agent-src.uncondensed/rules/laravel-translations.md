@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization"
-source: package
 triggers:
   - path_prefix: "lang/"
   - keyword: "translation"
@@ -14,11 +13,8 @@ workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

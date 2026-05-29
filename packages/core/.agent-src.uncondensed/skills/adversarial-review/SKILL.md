@@ -3,21 +3,12 @@ name: adversarial-review
 description: "ONLY when user requests adversarial review, devil's advocate, stress-test, OR honest critique of finished work ('poke holes', 'be brutal', 'was hältst du davon') — NOT for routine code/design review."
 personas:
   - critical-challenger
-source: package
 domain: quality
 council_depth: deep
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Adversarial Review

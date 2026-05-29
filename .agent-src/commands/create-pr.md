@@ -4,7 +4,6 @@ tier: 1
 cluster: create-pr
 skills: [git-workflow]
 description: Create a GitHub PR with structured description from Jira ticket and code changes
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "open a PR, create a pull request, make a PR for this branch"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /create-pr
