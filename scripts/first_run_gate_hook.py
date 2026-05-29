@@ -134,6 +134,9 @@ def _cleanup_action_file(consumer_root: Path) -> None:
 
 
 def run(consumer_root: Path) -> int:
+    if os.environ.get("AGENT_CONFIG_REPLAY") == "1":
+        # Fixture-driven replay must not mutate state.
+        return 0
     if not _plugin_enabled(consumer_root):
         # Plugin not enabled — nothing to gate on. Silent.
         return 0

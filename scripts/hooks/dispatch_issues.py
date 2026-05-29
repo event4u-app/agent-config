@@ -28,6 +28,7 @@ the agent loop.
 from __future__ import annotations
 
 import json
+import os
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -61,7 +62,15 @@ def log_dispatch_issue(
     detail: str,
     resolution: str,
 ) -> None:
-    """Append one dispatch-issue line. Best-effort; never raises."""
+    """Append one dispatch-issue line. Best-effort; never raises.
+
+    No-op when `AGENT_CONFIG_REPLAY=1` is set — fixture-driven replay
+    must not mutate state (contract: `docs/contracts/hook-architecture-v1.md`
+    § Replay mode).
+    """
+    if os.environ.get("AGENT_CONFIG_REPLAY") == "1":
+        return
+
     if issue not in VALID_ISSUE:
         # Schema violation is a bug in the caller, not a runtime
         # failure — surface on stderr so it's noticed during dev, but

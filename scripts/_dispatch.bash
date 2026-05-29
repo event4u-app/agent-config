@@ -589,8 +589,8 @@ Three modes, picked by flag combination:
                       § Regenerator location). Idempotent.
 
   --claude --regen    Both. The minimal-viable-scaffolding fix path
-                      for marketplace-install consumers (Phase 4 of
-                      road-to-hooks-actually-fire-in-consumers).
+                      for marketplace-install consumers — see
+                      road-to-hooks-actually-fire-in-consumers Phase 4.
 
 Other flags:
   --print             Dump the legacy pre-commit hook script to stdout
