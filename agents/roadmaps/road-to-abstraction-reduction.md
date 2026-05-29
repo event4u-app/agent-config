@@ -18,10 +18,10 @@ complexity: structural
 
 The council's strongest blind spot: removing 8,400 lines of "redundant" frontmatter is only safe if no consumer assumes the fields are explicit. Audit first, factor second.
 
-- [ ] **Step 1:** Grep for explicit frontmatter accesses across the runtime + tooling layer. Patterns: `frontmatter.get("trust.level"`, `frontmatter["trust.level"]`, `fm.get("install.default"`, equivalent for every field in the 26-row list. Capture results in `agents/evidence/analysis/abstraction-reduction-preflight.md`.
-- [ ] **Step 2:** For each access site found, classify: (a) reads the field with a default fallback (safe), (b) reads the field without a default (requires the field to remain explicit OR the parser to inject defaults), (c) parses YAML directly outside the central loader (potential external-consumer risk — flag for follow-up).
-- [ ] **Step 3:** Survey published surfaces: skills/rules/commands exposed via `.claude/`, `.cursor/`, `.windsurf/`, npm package bin, MCP listing. Document whether any external consumer parses the frontmatter YAML directly vs. consuming the condensed runtime output. Append findings to the pre-flight doc.
-- [ ] **Step 4:** Decide per-field whether it is (a) safe to default (no external consumer depends on its explicit presence), (b) needs a parser-injected default first, or (c) must remain explicit. Record the per-field decision in the pre-flight doc.
+- [x] **Step 1:** Grep for explicit frontmatter accesses across the runtime + tooling layer. Patterns: `frontmatter.get("trust.level"`, `frontmatter["trust.level"]`, `fm.get("install.default"`, equivalent for every field in the 26-row list. Capture results in `agents/evidence/analysis/abstraction-reduction-preflight.md`.
+- [x] **Step 2:** For each access site found, classify: (a) reads the field with a default fallback (safe), (b) reads the field without a default (requires the field to remain explicit OR the parser to inject defaults), (c) parses YAML directly outside the central loader (potential external-consumer risk — flag for follow-up).
+- [x] **Step 3:** Survey published surfaces: skills/rules/commands exposed via `.claude/`, `.cursor/`, `.windsurf/`, npm package bin, MCP listing. Document whether any external consumer parses the frontmatter YAML directly vs. consuming the condensed runtime output. Append findings to the pre-flight doc.
+- [x] **Step 4:** Decide per-field whether it is (a) safe to default (no external consumer depends on its explicit presence), (b) needs a parser-injected default first, or (c) must remain explicit. Record the per-field decision in the pre-flight doc.
 
 **Exit criteria:** `abstraction-reduction-preflight.md` exists with the per-field classification. No field migrates to a default until classified.
 

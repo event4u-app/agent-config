@@ -6,17 +6,17 @@
 
 ## Overall
 
-**42 / 124 steps done · 34%**
+**46 / 124 steps done · 37%**
 
 ```text
-██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
+███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 18 | 4 | 0 | 0 | ██░░░░░░░░ 18% |
 | 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 4 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
@@ -27,11 +27,11 @@
 
 ### [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md)
 
-**Abstraction reduction — factor frontmatter boilerplate into contract defaults** — 0 / 22 done (0%)
+**Abstraction reduction — factor frontmatter boilerplate into contract defaults** — 4 / 22 done (18%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Schema-stability pre-flight | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 0 | Schema-stability pre-flight | ✅ done | 0 | 4 | 0 | 0 | 100% |
 | 1 | Contract-level defaults in schemas | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Migrate artefacts to omit defaulted fields | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
 | 3 | Lint that prevents the boilerplate from coming back | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
