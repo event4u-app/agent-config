@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "schema_id": "router-telemetry-v1",
-  "generated_at": "2026-05-29T04:28:52+00:00",
+  "generated_at": "2026-05-29T04:14:11+00:00",
   "config": {
     "router": "dist/router.json",
     "profile": "full",
@@ -90,14 +90,14 @@
       "downstream-changes": 1,
       "framework-neutrality-in-generic-skills": 6,
       "cli-output-handling": 3,
-      "provider-lifecycle-discipline": 1,
       "strategy-safety-floor": 3,
+      "provider-lifecycle-discipline": 1,
       "commit-conventions": 6,
       "invite-challenge": 3,
       "finance-safety-floor": 4,
       "skill-improvement-trigger": 1,
-      "security-sensitive-stop": 2,
       "markdown-safe-codeblocks": 8,
+      "security-sensitive-stop": 2,
       "domain-adoption-policy": 1,
       "augment-edit-discipline": 3,
       "rule-type-governance": 2,
@@ -169,19 +169,19 @@
           1
         ],
         [
-          "php-coding",
-          1
-        ],
-        [
           "cli-output-handling",
           1
         ],
         [
-          "provider-lifecycle-discipline",
+          "php-coding",
           1
         ],
         [
           "strategy-safety-floor",
+          1
+        ],
+        [
+          "provider-lifecycle-discipline",
           1
         ],
         [
@@ -235,11 +235,11 @@
           2
         ],
         [
-          "framework-neutrality-in-generic-skills",
+          "augment-edit-discipline",
           2
         ],
         [
-          "augment-edit-discipline",
+          "framework-neutrality-in-generic-skills",
           2
         ],
         [
@@ -251,11 +251,11 @@
           1
         ],
         [
-          "skill-quality",
+          "domain-adoption-policy",
           1
         ],
         [
-          "domain-adoption-policy",
+          "skill-quality",
           1
         ],
         [
@@ -294,11 +294,7 @@
           1
         ],
         [
-          "cli-output-handling",
-          1
-        ],
-        [
-          "docker-commands",
+          "engineering-safety-floor",
           1
         ],
         [
@@ -306,11 +302,15 @@
           1
         ],
         [
-          "engineering-safety-floor",
+          "php-coding",
           1
         ],
         [
-          "php-coding",
+          "cli-output-handling",
+          1
+        ],
+        [
+          "docker-commands",
           1
         ]
       ]
@@ -336,14 +336,6 @@
       "unique_rules_activated": 7,
       "top_rules": [
         [
-          "no-roadmap-references",
-          4
-        ],
-        [
-          "roadmap-progress-sync",
-          4
-        ],
-        [
           "markdown-safe-codeblocks",
           4
         ],
@@ -352,7 +344,15 @@
           4
         ],
         [
-          "rule-type-governance",
+          "no-roadmap-references",
+          4
+        ],
+        [
+          "roadmap-progress-sync",
+          4
+        ],
+        [
+          "augment-edit-discipline",
           1
         ],
         [
@@ -360,7 +360,7 @@
           1
         ],
         [
-          "augment-edit-discipline",
+          "rule-type-governance",
           1
         ]
       ]

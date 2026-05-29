@@ -23,15 +23,15 @@ Liest sich von oben nach unten. Positive Δ-Werte = das Paket *kostet* Tokens (R
 | Stufe | Was sie tut | Δ Tokens | Δ € (1k Req) | Kumulativ | Quelle |
 |---|---|---:|---:|---:|---|
 | **Ohne Paket / Without package** | Baseline — der nackte Request ohne Paket-Regeln. | +0 | +0.00 € | +0.00% | `n/a` · ✅ gemessen |
-| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +8 977 | +24.78 € | +112.21% | `dist/router.json` · ✅ gemessen |
-| | _Fußnote:_ Kernel = 10 rules (31899 chars) + charter (4010 chars); tokens ≈ chars / 4. | | | | |
-| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | -0.51 € | +109.89% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
+| Mit Paket (Regeln laden) / With package (rule load) | Die immer-aktiven Regeln landen im Kontext jedes Requests. ⚠️ erst teurer | +8 895 | +24.55 € | +111.19% | `dist/router.json` · ✅ gemessen |
+| | _Fußnote:_ Kernel = 10 rules (31570 chars) + charter (4010 chars); tokens ≈ chars / 4. | | | | |
+| + condense (Regeln eindampfen) / + condense (rule shrink) | Build-Schritt schrumpft Regel-Dateien vor dem Ausliefern. | -186 | -0.51 € | +108.86% | `internal/bench/reports/telegraph-v2.json` · ✅ gemessen |
 | | _Fußnote:_ Aggregate across non-Thin-Root categories; Thin-Root files (AGENTS.md variants) net negative (~−4%) and are excluded from the rung — surfaced separately. | | | | |
-| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | -1.64 € | +102.47% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
-| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +0.77 € | +103.17% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
+| + rtk (CLI-Output filtern) / + rtk (filter CLI output) | rtk schneidet verbose CLI-Ausgabe vor dem Modell-Input weg. | -593 | -1.64 € | +101.45% | `internal/bench/reports/rtk/latest.json` · ✅ gemessen |
+| + terse (Antworten knapper) / + terse (shorter replies) | Telegraph-Stil zielt auf knappere Modell-Antworten. | +56 | +0.77 € | +102.15% | `internal/bench/reports/telegraph-v1.json` · ✅ gemessen |
 | | _Fußnote:_ Honest: gemessener Median = -9.27% gegen 'sei knapp' — Telegraph liefert hier mehr Tokens, nicht weniger. Wir messen, wir verstecken nicht. | | | | |
 
-**NETTO: Mehrkosten** ⚠️ — **+8 254 Tokens / Request**, **+22.78 €** auf 1,000 Requests, kumulativ **+103.17%** vs. Baseline.
+**NETTO: Mehrkosten** ⚠️ — **+8 172 Tokens / Request**, **+22.55 €** auf 1,000 Requests, kumulativ **+102.15%** vs. Baseline.
 
 ## Panel B — Verhalten (mit vs. ohne)
 
@@ -81,4 +81,4 @@ Diese Seite ist eine **abgeleitete** Sicht — keine eigene Messung. Sie fasst d
 - Pending rungs contribute 0 to the cumulative until measured.
 - Reference scale: 1000 requests × 8000 input / 600 output tokens per request.
 
-_Last rendered: `2026-05-29T03:44:46+00:00`_
+_Last rendered: `2026-05-29T04:36:04+00:00`_
