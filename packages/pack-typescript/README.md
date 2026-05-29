@@ -5,7 +5,7 @@
 TypeScript-language patterns.
 
 - **id**: `typescript`
-- **version**: `5.0.0`
+- **version**: `5.1.0`
 - **owner**: engineering
 - **requires**: javascript, engineering-base
 - **artefacts**: 1
