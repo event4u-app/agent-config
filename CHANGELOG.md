@@ -802,6 +802,79 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.0.0](https://github.com/event4u-app/agent-config/compare/4.9.0...5.0.0) (2026-05-29)
+
+### BREAKING CHANGES
+
+* **migrate:** remove legacy migrate-state + migrate-to-global subcommands ([3c2976c](https://github.com/event4u-app/agent-config/commit/3c2976c23d264dd67f9388d46db0748268c0ffcc))
+
+### Features
+
+* **migrate:** unify cleanup actions into one opinionated command ([014867e](https://github.com/event4u-app/agent-config/commit/014867e36af4e24167944dc9518c10d1349d7a51))
+* **validate:** adopt severity-tiered errors + projection-roundtrip test (ADR-031) ([eafefa4](https://github.com/event4u-app/agent-config/commit/eafefa44bcc08c2c050edc360be361cf42e170bd))
+* **lint:** block re-introduction of the marketplace-install gap ([ebe29a6](https://github.com/event4u-app/agent-config/commit/ebe29a6b52de8fad31f0b1d0bad00fce57adf1ec))
+* **install:** add hooks:install --claude/--lifecycle/--regen flags ([a5b6798](https://github.com/event4u-app/agent-config/commit/a5b6798f96e9dadec93447383892907fdfeed625))
+* **hooks:** add first-run gate banner for unscaffolded consumers ([33baa0e](https://github.com/event4u-app/agent-config/commit/33baa0ed701acb3be7efdbfd73483a8e81e76982))
+* **hooks:** add dispatch-issues.jsonl observability layer ([7642b7a](https://github.com/event4u-app/agent-config/commit/7642b7af8147f4caa68817a12e0a875cab921840))
+* **bench:** add replay-opaque trigger bucket + linter rule-id robustness ([0f6c727](https://github.com/event4u-app/agent-config/commit/0f6c727ccfa201d874383cbb7be8ab232d3b20bc))
+* **bench-corpus:** ship 5 router-coverage extension corpora ([dccedb3](https://github.com/event4u-app/agent-config/commit/dccedb33697e0f924388b87b3ad8b66d027f9f97))
+* **telemetry:** manifest auto-discovery + intended-vs-observed + unintended_activations ([3d46bdc](https://github.com/event4u-app/agent-config/commit/3d46bdc31d46fd830b2138957b91670a8c3d527c))
+* **bench-corpus:** add intended_triggers + open_files + command fields ([6c97e51](https://github.com/event4u-app/agent-config/commit/6c97e51fba8e59fda8e56c3fc7fe6f9ac8774b60))
+* **value:** router-trigger telemetry + Panel B attribution ([c867411](https://github.com/event4u-app/agent-config/commit/c8674116591f0d0b4f8221f9f7d5fcebe28da077))
+* **taskfiles:** wire `task value*` targets + cadence row ([8b26a43](https://github.com/event4u-app/agent-config/commit/8b26a43af4dff4050084691fe8b2a6f036ce96ce))
+* **scripts:** lint docs/value.md for structural invariants ([370b0b0](https://github.com/event4u-app/agent-config/commit/370b0b00a44d086b7fe8f0a21b0a5d2d92fca98a))
+* **scripts:** render docs/value.md from value-v1 — the dashboard ([08c626a](https://github.com/event4u-app/agent-config/commit/08c626a07975b36958ef37222263f50cbd5dc196))
+* **bench:** capture first live A/B Track B with-vs-without run ([7de6445](https://github.com/event4u-app/agent-config/commit/7de64452a0368377ae1f72b87dd7e50a6a72e49e))
+* **scripts:** measure rtk's actual CLI-output token savings ([b51821e](https://github.com/event4u-app/agent-config/commit/b51821e31e7fb1be301a33f8c56bcebab2b49c51))
+* **scripts:** add value_ladder + value_report libs and unit tests ([5d1b8ba](https://github.com/event4u-app/agent-config/commit/5d1b8bad3058bbad66acc408c4b83df419d55a4a))
+
+### Bug Fixes
+
+* **deps:** relax runtime dependency floors so npx resolves under prefer-offline ([0f04673](https://github.com/event4u-app/agent-config/commit/0f0467353a40b4bf75ba3424b0e177d10ab802eb))
+* **hooks:** respect AGENT_CONFIG_REPLAY + fix dispatcher case-regex match ([b86c681](https://github.com/event4u-app/agent-config/commit/b86c68194e61dd6612d3b03ebdf799bc721fb53e))
+* **bench-corpus:** correct intended_triggers, mark intent-only rules replay-opaque ([669cdbf](https://github.com/event4u-app/agent-config/commit/669cdbffa37664654bc24da61457f1867fafcd1c))
+* **value:** load rung now measures the real kernel, not the canon ([6721090](https://github.com/event4u-app/agent-config/commit/6721090ad2d79199f28532a7f42cfcb9a08931dc))
+* **scripts:** reframe docs/benchmark.md Track A headline ([2766e22](https://github.com/event4u-app/agent-config/commit/2766e22f1a74a82d15a011e20ddb3758c36055cc))
+
+### Documentation
+
+* **roadmaps:** archive road-to-one-migrate-command (all phases done) ([626e7c1](https://github.com/event4u-app/agent-config/commit/626e7c1c1bfd21174a2df4d41f5dcaa76df776d9))
+* **migrate:** redirect cross-references to the unified contract ([557e64d](https://github.com/event4u-app/agent-config/commit/557e64de58dc0a0555f3a3b9fce1f0c6d0a8b13a))
+* **contracts:** lock unified migrate command behavior matrix ([5828cbc](https://github.com/event4u-app/agent-config/commit/5828cbc90195ed0af9771b8d0b1bd7e153d004b7))
+* **roadmaps:** add road-to-per-skill-model-autoswitch + regen dashboard ([3cdeeea](https://github.com/event4u-app/agent-config/commit/3cdeeea448a9d3492addf0e1171f4fe7e4aafeb0))
+* **roadmaps:** record step-completion notes on hooks-actually-fire archive ([7150557](https://github.com/event4u-app/agent-config/commit/715055778358d32233b5222496f03258b983626d))
+* **evidence:** reproduce + document marketplace-install hook gap ([cc5a557](https://github.com/event4u-app/agent-config/commit/cc5a5574e1bda89bfe8c2260ee163ee952d36019))
+* **roadmaps:** add road-to-hooks-actually-fire-in-consumers + council fixes ([1255842](https://github.com/event4u-app/agent-config/commit/1255842c7c28659d13532f27190b965857df38f7))
+* **roadmaps:** Phase 7 honesty-floor correction on corpus-expansion roadmap ([1def2eb](https://github.com/event4u-app/agent-config/commit/1def2eb34debb4dadb9d50025b8963954905e3c7))
+* **roadmaps:** mark Phase 6 checkboxes on archived corpus-expansion roadmap ([a5c0c11](https://github.com/event4u-app/agent-config/commit/a5c0c11e58616180e5485e78b76832b5db7f8610))
+* **roadmaps:** close road-to-corpus-expansion-evidence-based-cuts ([88c1644](https://github.com/event4u-app/agent-config/commit/88c1644dac99eeefad5031550d657c881cd87fe7))
+* **value:** pass-2 close-out — structural categorisation, 0 cuts ([389df66](https://github.com/event4u-app/agent-config/commit/389df66f13794ddd98884e55726da1eb2285d54a))
+* **roadmaps:** fold Round-3 council fixes into corpus-expansion plan ([25f6039](https://github.com/event4u-app/agent-config/commit/25f603967ac6193dedee1d761a9d0939dd94ced2))
+* **roadmaps:** plan corpus expansion + evidence-based tier-1 cuts ([f570b97](https://github.com/event4u-app/agent-config/commit/f570b973ba3caa26b329393724c0a364ae6a762b))
+* **roadmaps:** mark Phase 6 checkboxes on archived netto-cuts roadmap ([802da06](https://github.com/event4u-app/agent-config/commit/802da0685d42f7f3909c1df0ed29f349bd91e84f))
+* **roadmaps:** close road-to-value-dashboard-netto-cuts dashboard ([d1e5f25](https://github.com/event4u-app/agent-config/commit/d1e5f2527eb8cc5aed522d479b2a197bdc557604))
+* **value:** re-render dashboard with corrected NETTO + close-out summary ([b4ea133](https://github.com/event4u-app/agent-config/commit/b4ea1334e587bae6872aff15bab296d24c1a35b4))
+* **roadmaps:** add road-to-value-dashboard-netto-cuts ([3ed3ea7](https://github.com/event4u-app/agent-config/commit/3ed3ea77419e6d5320df05a09a30587f2a9d0437))
+* **roadmaps:** close road-to-readable-value-dashboard ([28afac2](https://github.com/event4u-app/agent-config/commit/28afac2ab67e3ca86637baa0dde2b140b1fbb9e6))
+* **contracts:** add value-dashboard-spec + value-report-schema ([46abebd](https://github.com/event4u-app/agent-config/commit/46abebdea378a782f56b3f9fefc0212f7163f321))
+
+### Refactoring
+
+* **kernel:** extract language-and-tone mechanics to guideline (−82 tok/req) ([f1cfeab](https://github.com/event4u-app/agent-config/commit/f1cfeabec63e02b03bfe5ce0a3e16a1e5445c46b))
+
+### Tests
+
+* **lint-agents-layout:** align consumer-warning assertion with unified migrate ([496af6c](https://github.com/event4u-app/agent-config/commit/496af6c8a66cf6c6accf3f1c13376340d44e1ca8))
+
+### Chores
+
+* **roadmaps:** regen dashboard after archiving hooks-actually-fire roadmap ([45a3ea7](https://github.com/event4u-app/agent-config/commit/45a3ea715ae4956f256aeaf20e11c36878711b0b))
+* **value:** refresh dashboard + telemetry snapshots after kernel cut ([e7653a1](https://github.com/event4u-app/agent-config/commit/e7653a1be4bacb7fb75e2bf9310d63bd3d5a5349))
+* **bench:** ship pass-2 audit artefacts under router-telemetry/ ([89b3900](https://github.com/event4u-app/agent-config/commit/89b3900f070a13cd02193733527b6ed943922d06))
+* **router:** minify dist/router.json by default + audit context loading ([d011333](https://github.com/event4u-app/agent-config/commit/d011333f1126ce636961906a3d070fd306458880))
+
+Tests: 5137 (+59 since 4.9.0)
+
 ## [4.9.0](https://github.com/event4u-app/agent-config/compare/4.8.0...4.9.0) (2026-05-28)
 
 ### Features
