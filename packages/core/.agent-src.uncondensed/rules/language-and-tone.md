@@ -49,26 +49,20 @@ Stays in source language: code blocks, command output, file contents, quoted too
 1. **Detect** — language of user's last chat message. Mixed → dominant; tie → German.
 2. **Scan** — every user-visible token per catalog above.
 3. **Rewrite** — wrong-language token → rewrite the whole reply.
-4. **Confirm** — first sentence in target language; recommendation label matches; no English filler-phrase opener (`Let me`, `Now`, `Found`, `Confirmed`, `OK`, `Alright`, `Here's`, `So`) when target is German; no German opener (`Lass mich`, `Jetzt`, `Gefunden`, `Bestätigt`) when target is English.
+4. **Confirm** — first sentence in target language; recommendation label matches; no wrong-language filler-phrase opener. Blocklist: [`language-and-tone-examples § Pre-send gate`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#pre-send-gate--filler-phrase-blocklist).
 
 ## Spelled out
 
 - German → informal "Du" (never "Sie"); capitalized at sentence start, lowercase otherwise.
 - Code blocks / command output / file contents / quoted tool output stay native; only surrounding prose mirrors.
 - Numbered options — `.md` source English; rendered reply translated at runtime.
+- Code comments in English. `.md` files in English (see below). Translate existing German `.md` files when touched.
 
 ## Slip handling
 
 Acknowledge **once** in the correct language ("Entschuldigung" / "Sorry"). Switch on the same reply. No re-explain in wrong language; no "from now on" promise.
 
-Examples + wrong-vs-correct: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
-
-## Other language rules
-
-- Code comments in English.
-- `.md` files in English (see below). Translate existing German `.md` files when touched.
-- Two spaces after `❌`, `✅`, `⚠️` in CLI; one space for other icons.
-- One blank line max; no double/triple blanks. File ends with exactly one newline.
+Examples + CLI spacing rules + wrong-vs-correct: [`language-and-tone-examples`](../../docs/guidelines/agent-infra/language-and-tone-examples.md).
 
 ## `.md` files — ALWAYS English
 
@@ -76,4 +70,4 @@ Every text inside `.md` under `.augment/`, `.agent-src/`, `.agent-src.uncondense
 
 **Labeled-anchor exception** — quoting German inside English prose is forbidden. Either translate, OR use a labeled `DE: … · EN: …` anchor block (only allowed location for German prose).
 
-**Detection heuristic** before saving: scan for umlauts (`ä`, `ö`, `ü`, `Ä`, `Ö`, `Ü`, `ß`) outside fenced code / paths / anchor blocks; German function words (`für`, `nicht`, `dass`, `wenn`, `sollte`, `werden`, `arbeite`, `selbstständig`, `jetzt`, `einfach`, `weiter`, `lösche`, `frag`, `schreib`, `mach`); non-English quoted phrases in body text. Hit → translate or move to `DE: … · EN: …` block.
+Pre-save detection heuristic (umlauts / German function words / non-English quoted phrases): [`language-and-tone-examples § pre-save detection`](../../docs/guidelines/agent-infra/language-and-tone-examples.md#md-files--pre-save-detection-heuristic).
