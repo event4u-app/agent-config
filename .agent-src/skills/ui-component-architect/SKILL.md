@@ -3,20 +3,11 @@ name: ui-component-architect
 description: "Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'."
 personas:
   - frontend-engineer
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # ui-component-architect

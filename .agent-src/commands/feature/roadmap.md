@@ -5,7 +5,6 @@ cluster: feature
 sub: roadmap
 skills: [agent-docs-writing]
 description: Generate implementation roadmap(s) from a feature plan and link them
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "turn this feature into a roadmap, generate the implementation roadmap"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature roadmap

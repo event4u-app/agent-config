@@ -1,20 +1,11 @@
 ---
 name: module-detect-on-the-fly
 description: "Use when editing a file under a module-shaped path (`Modules/*`, `packages/*`, `apps/*`, `internal/*`) while `modules.enabled` is `false` — asks the user once whether to enable the config."
-source: package
 domain: process
 workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # module-detect-on-the-fly

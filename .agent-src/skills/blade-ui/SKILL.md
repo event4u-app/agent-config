@@ -1,17 +1,13 @@
 ---
 name: blade-ui
 description: "Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

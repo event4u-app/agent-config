@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Suggesting reviewers or flagging risk hotspots — anchor in paths/risk + ownership-map + bug-patterns; medium/high needs primary + secondary"
-source: package
 triggers:
   - keyword: "reviewer"
   - phrase: "suggest reviewers"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Reviewer Awareness

@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "Editing files in .agent-src/ or .augment/ — source of truth is .agent-src.uncondensed/; never edit generated dirs directly"
-source: package
 load_context:
   - ../contexts/communication/rules-auto/augment-source-of-truth-mechanics.md
 triggers:
@@ -18,14 +17,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Source of Truth

@@ -4,8 +4,6 @@ role: Hollywood Director
 description: "Award-winning live-action director — names lens, lighting, blocking, and the negative constraints that separate cinema from stock footage."
 tier: specialist
 mode: developer
-version: "1.0"
-source: package
 ---
 
 # Hollywood Director

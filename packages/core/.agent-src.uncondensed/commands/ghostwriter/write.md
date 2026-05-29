@@ -4,7 +4,6 @@ tier: 2
 cluster: ghostwriter
 sub: write
 description: Draft a markdown post in the voice of a captured public-figure ghostwriter profile; appends the mandatory non-removable disclosure footer.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "draft post in style of public figure, write in someone's voice, ghostwriter draft, LinkedIn post in style of X"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /ghostwriter:write

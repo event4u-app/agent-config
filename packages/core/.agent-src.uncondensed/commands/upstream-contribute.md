@@ -3,7 +3,6 @@ name: upstream-contribute
 tier: 1
 skills: [upstream-contribute, skill-writing, learning-to-rule-or-skill]
 description: Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "contribute this back to agent-config, upstream this learning"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /upstream-contribute

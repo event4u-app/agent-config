@@ -3,7 +3,6 @@ name: voc-extract
 description: "Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product]
 recommended_for_user_types: [gtm, creator]
@@ -11,11 +10,8 @@ workspaces:
   - product
 packs:
   - product-discovery
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

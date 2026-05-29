@@ -5,7 +5,6 @@ cluster: memory
 sub: learn-low-impact
 skills: [ai-council, upstream-contribute]
 description: Preview validated low-impact entries that would be upstreamed to the package seed (default `--preview`); `--apply` opens a draft PR via `upstream-contribute` after re-redaction.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "upstream low-impact decisions, share validated council questions, contribute the learning corpus"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /memory learn-low-impact

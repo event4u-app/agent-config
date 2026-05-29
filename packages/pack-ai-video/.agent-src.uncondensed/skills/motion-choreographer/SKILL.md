@@ -3,7 +3,6 @@ name: motion-choreographer
 description: "Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'."
 personas:
   - ai-video-technical-director
-source: package
 domain: product
 workspaces:
   - small-business
@@ -12,8 +11,6 @@ packs:
 lifecycle: experimental
 trust:
   level: experimental
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

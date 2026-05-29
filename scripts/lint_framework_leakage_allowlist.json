@@ -1,53 +1,53 @@
 {
   "version": 1,
-  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly — first ask whether the file should be neutralized instead.",
+  "_doc": "Each entry: { file: relative path from repo root, lines: [int,...] | \"*\" for whole file, reason: short justification }. Use sparingly \u2014 first ask whether the file should be neutralized instead.",
   "entries": [
     {
       "file": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
       "lines": [
-        42,
-        104
+        33,
+        95
       ],
       "reason": "Cross-stack noise-segment enumeration (vendor + node_modules + dist/Modules) documenting the module-detection path filter"
     },
     {
       "file": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
       "lines": [
-        142,
-        143,
-        144,
-        164
+        133,
+        134,
+        135,
+        155
       ],
       "reason": "Multi-stack package-manager comparison table"
     },
     {
       "file": ".agent-src.uncondensed/skills/refine-prompt/SKILL.md",
       "lines": [
-        100,
-        102,
-        104,
-        149,
-        192,
-        281
+        91,
+        93,
+        95,
+        140,
+        183,
+        272
       ],
       "reason": "Project-detection enumeration listing all supported stacks"
     },
     {
       "file": ".agent-src.uncondensed/commands/analyze-reference-repo.md",
       "lines": [
-        62
+        53
       ],
       "reason": "Manifest-file enumeration across ecosystems"
     },
     {
       "file": ".agent-src.uncondensed/commands/optimize/augmentignore.md",
       "lines": "*",
-      "reason": "Per-stack augmentignore rules — by definition stack-aware"
+      "reason": "Per-stack augmentignore rules \u2014 by definition stack-aware"
     },
     {
       "file": ".agent-src.uncondensed/commands/optimize/rtk.md",
       "lines": "*",
-      "reason": "Per-tool rtk filter detection — by definition tool-aware"
+      "reason": "Per-tool rtk filter detection \u2014 by definition tool-aware"
     },
     {
       "file": ".agent-src.uncondensed/rules/framework-neutrality-in-generic-skills.md",
@@ -57,104 +57,103 @@
     {
       "file": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
       "lines": [
-        4,
-        11,
-        12,
-        66
+        2,
+        3,
+        57
       ],
       "reason": "Roadmap CI policy explicitly enumerates forbidden commands and trigger keywords"
     },
     {
       "file": ".agent-src.uncondensed/rules/architecture.md",
       "lines": [
-        31,
-        32,
-        38,
-        39,
-        74
+        22,
+        23,
+        29,
+        30,
+        65
       ],
       "reason": "Stack-routing pointers and cross-stack enumeration of validation/handler primitives"
     },
     {
       "file": ".agent-src.uncondensed/skills/api-endpoint/SKILL.md",
       "lines": [
-        53,
-        70
+        44,
+        61
       ],
       "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
     },
     {
       "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
       "lines": [
+        43,
+        44,
+        45,
         52,
-        53,
-        54,
-        61,
-        74,
-        75,
+        65,
+        66,
+        77,
         86,
-        95,
-        97,
-        99,
-        231
+        88,
+        90,
+        222
       ],
       "reason": "Cross-stack code-review checklist enumerates handler shape, validation, authz, ORM, escaping per framework"
     },
     {
       "file": ".agent-src.uncondensed/skills/security/SKILL.md",
       "lines": [
-        28,
-        35,
-        39,
+        19,
+        26,
+        30,
+        31,
         40,
-        49,
-        53,
-        60,
-        70,
-        88
+        44,
+        51,
+        61,
+        79
       ],
       "reason": "Cross-stack security review enumerates auth primitives (Policies, voters, guards, middleware) and config paths"
     },
     {
       "file": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
       "lines": [
-        65,
-        66,
-        67,
-        112,
-        189
+        56,
+        57,
+        58,
+        103,
+        180
       ],
       "reason": "Evidence-mapping table enumerates the type-checker / linter / refactor tool per stack including PHPStan, Rector, ECS"
     },
     {
       "file": ".agent-src.uncondensed/commands/tests/execute.md",
       "lines": "*",
-      "reason": "Multi-stack test runner dispatch (Pest/PHPUnit/Jest/pytest/cargo-test) — enumerates per-stack commands by design"
+      "reason": "Multi-stack test runner dispatch (Pest/PHPUnit/Jest/pytest/cargo-test) \u2014 enumerates per-stack commands by design"
     },
     {
       "file": ".agent-src.uncondensed/commands/tests/create.md",
       "lines": "*",
-      "reason": "Multi-stack test framework selection — enumerates Pest/PHPUnit/Jest/pytest options by design"
+      "reason": "Multi-stack test framework selection \u2014 enumerates Pest/PHPUnit/Jest/pytest options by design"
     },
     {
       "file": ".agent-src.uncondensed/commands/module/explore.md",
       "lines": "*",
-      "reason": "Multi-stack module detection (Laravel HMVC / Symfony bundles / DDD-lite) — enumerates per-stack patterns by design"
+      "reason": "Multi-stack module detection (Laravel HMVC / Symfony bundles / DDD-lite) \u2014 enumerates per-stack patterns by design"
     },
     {
       "file": ".agent-src.uncondensed/commands/package-test.md",
       "lines": "*",
-      "reason": "Multi-stack package linking (composer/npm/pip/cargo/go) — declared in skills frontmatter"
+      "reason": "Multi-stack package linking (composer/npm/pip/cargo/go) \u2014 declared in skills frontmatter"
     },
     {
       "file": ".agent-src.uncondensed/commands/package-reset.md",
       "lines": "*",
-      "reason": "Multi-stack package reset (composer/npm) — declared in skills frontmatter"
+      "reason": "Multi-stack package reset (composer/npm) \u2014 declared in skills frontmatter"
     },
     {
       "file": ".agent-src.uncondensed/skills/dependency-upgrade/SKILL.md",
       "lines": "*",
-      "reason": "Multi-stack dependency upgrade examples (composer/npm/pip) — declared stack-agnostic in description"
+      "reason": "Multi-stack dependency upgrade examples (composer/npm/pip) \u2014 declared stack-agnostic in description"
     },
     {
       "file": ".agent-src.uncondensed/skills/fe-design/SKILL.md",
@@ -174,7 +173,7 @@
     {
       "file": ".agent-src.uncondensed/commands/project-analyze.md",
       "lines": "*",
-      "reason": "Stack-detection templates show per-framework default outputs (Laravel/Standalone PHP/etc.) — multi-stack by design"
+      "reason": "Stack-detection templates show per-framework default outputs (Laravel/Standalone PHP/etc.) \u2014 multi-stack by design"
     },
     {
       "file": ".agent-src.uncondensed/commands/commit.md",
@@ -184,7 +183,7 @@
     {
       "file": ".agent-src.uncondensed/skills/test-driven-development/SKILL.md",
       "lines": "*",
-      "reason": "Multi-stack TDD examples — PHP/Pest and TypeScript/Jest sections both present"
+      "reason": "Multi-stack TDD examples \u2014 PHP/Pest and TypeScript/Jest sections both present"
     },
     {
       "file": ".agent-src.uncondensed/skills/context-authoring/SKILL.md",
@@ -219,7 +218,7 @@
     {
       "file": ".agent-src.uncondensed/skills/systematic-debugging/SKILL.md",
       "lines": "*",
-      "reason": "Debugging examples drawn from PHP project; the procedure is stack-agnostic (reproduce → isolate → hypothesize → verify)"
+      "reason": "Debugging examples drawn from PHP project; the procedure is stack-agnostic (reproduce \u2192 isolate \u2192 hypothesize \u2192 verify)"
     },
     {
       "file": ".agent-src.uncondensed/skills/testing-anti-patterns/SKILL.md",
@@ -324,7 +323,7 @@
     {
       "file": ".agent-src.uncondensed/commands/quality-fix.md",
       "lines": "*",
-      "reason": "Quality-fix dispatches per stack (PHPStan/ECS/Rector for PHP, tsc/biome for JS) — multi-stack by design"
+      "reason": "Quality-fix dispatches per stack (PHPStan/ECS/Rector for PHP, tsc/biome for JS) \u2014 multi-stack by design"
     },
     {
       "file": ".agent-src.uncondensed/commands/roadmap/create.md",
@@ -473,72 +472,103 @@
     },
     {
       "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
-      "lines": [235],
-      "reason": "Multi-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) — comparative example, no project mandate"
+      "lines": [
+        226
+      ],
+      "reason": "Multi-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) \u2014 comparative example, no project mandate"
     },
     {
       "file": ".agent-src.uncondensed/rules/architecture.md",
-      "lines": [80],
-      "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) — comparative example, no project mandate"
+      "lines": [
+        71
+      ],
+      "reason": "Multi-framework module-system enumeration (Laravel, Turborepo, NestJS, Go) \u2014 comparative example, no project mandate"
     },
     {
       "file": ".agent-src.uncondensed/skills/module-management/SKILL.md",
       "lines": "*",
-      "reason": "Canonical module-management skill — enumerates Laravel HMVC / Symfony DDD / Node / Python / Go carve-outs by design (road-to-configurable-modules Phase C)"
+      "reason": "Canonical module-management skill \u2014 enumerates Laravel HMVC / Symfony DDD / Node / Python / Go carve-outs by design (road-to-configurable-modules Phase C)"
     },
     {
       "file": ".agent-src.uncondensed/skills/context-document/SKILL.md",
-      "lines": [63, 64, 87],
-      "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs — comparative example, no mandate"
+      "lines": [
+        54,
+        55,
+        78
+      ],
+      "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs \u2014 comparative example, no mandate"
     },
     {
       "file": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
-      "lines": [28],
+      "lines": [
+        19
+      ],
       "reason": "Single Laravel-shape example showing how `{module_root}/{agent_folder}/roadmaps/` resolves on a Laravel HMVC project"
     },
     {
       "file": ".agent-src.uncondensed/rules/architecture.md",
-      "lines": [85],
+      "lines": [
+        76
+      ],
       "reason": "Single Laravel-shape example showing how `{module_root}/*/{agent_folder}/` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/rules/roadmap-ci-steps-policy.md",
-      "lines": [110],
+      "lines": [
+        101
+      ],
       "reason": "Single Laravel-shape example showing module-scoped roadmap path (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/context/create.md",
-      "lines": [61],
+      "lines": [
+        52
+      ],
       "reason": "Single Laravel-shape example for module-context target directory (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/context/refactor.md",
-      "lines": [35],
+      "lines": [
+        26
+      ],
       "reason": "Single Laravel-shape example for module-context discovery path (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/explore.md",
-      "lines": [131],
+      "lines": [
+        122
+      ],
       "reason": "Single Laravel-shape example showing how `enumerate_modules()` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/plan.md",
-      "lines": [150, 179, 263],
+      "lines": [
+        141,
+        170,
+        254
+      ],
       "reason": "Laravel-shape examples for module-scoped contexts and feature target paths (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/refactor.md",
-      "lines": [35],
+      "lines": [
+        26
+      ],
       "reason": "Single Laravel-shape example for module-feature discovery path (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/roadmap.md",
-      "lines": [35, 135],
+      "lines": [
+        26,
+        126
+      ],
       "reason": "Laravel-shape examples for module-feature/roadmap discovery and target paths (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/optimize/agents-dir.md",
-      "lines": [32],
+      "lines": [
+        23
+      ],
       "reason": "Single Laravel-shape example for per-module agents directory (road-to-configurable-modules Phase D)"
     }
   ]

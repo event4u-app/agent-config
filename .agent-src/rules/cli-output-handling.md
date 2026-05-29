@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Running verbose CLI output — git, tests, linters, docker, build tools, artisan, npm, composer. Wrap with rtk; tail/grep fallback"
-source: package
 triggers:
   - keyword: "git"
   - keyword: "phpstan"
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Cli Output Handling

@@ -5,7 +5,6 @@ cluster: chat-history
 sub: learn
 skills: [learning-to-rule-or-skill]
 description: Pick a prior chat-history session and mine it for project-improving learnings — runs learning-to-rule-or-skill on the picked session, drafts proposal(s) under agents/proposals/
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "extract a learning from a past session, mine chat-history for proposals, what did we learn last session, codify a pattern from a prior session"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 <!-- cloud_safe: noop -->
 

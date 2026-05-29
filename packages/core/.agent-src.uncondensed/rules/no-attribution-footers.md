@@ -3,7 +3,6 @@ type: "auto"
 tier: "3"
 alwaysApply: false
 description: "Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers"
-source: package
 triggers:
   - intent: "PR body"
   - intent: "commit message"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # No Attribution Footers

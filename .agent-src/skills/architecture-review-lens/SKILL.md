@@ -4,20 +4,11 @@ description: "Use when a diff may break system boundaries, dependency direction,
 personas:
   - backend-architect
   - senior-engineer
-source: package
 domain: quality
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # architecture-review-lens

@@ -4,8 +4,6 @@ role: Frontend Engineer
 description: "The voice that audits component lifecycle, reactive state, and the seam between server-rendered markup and client behavior."
 tier: specialist
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Frontend Engineer

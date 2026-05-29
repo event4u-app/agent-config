@@ -5,7 +5,6 @@ description: "The senior voice that owns the why and the what — outcomes named
 tier: specialist
 mode: product-owner
 version: "2.0"
-source: package
 ---
 
 # Product Owner

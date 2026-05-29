@@ -4,7 +4,6 @@ tier: 2
 description: Chat-history orchestrator — routes to show, import, learn
 cluster: chat-history
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "show chat-history status, inspect agents/runtime/.agent-chat-history log, import a prior session into the current chat, mine a prior session for project-improving learnings"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: noop -->

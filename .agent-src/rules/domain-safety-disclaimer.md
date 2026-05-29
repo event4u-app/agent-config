@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Advisory content (legal, medical, financial, consulting) — require matching 'not X advice' disclaimer; refuse diagnosis/dosage outright"
-source: package
 triggers:
   - keyword: "legal brief"
   - keyword: "contract redline"
@@ -40,14 +39,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Domain Safety — Advisory Disclaimer

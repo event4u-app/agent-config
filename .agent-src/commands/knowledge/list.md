@@ -5,7 +5,6 @@ cluster: knowledge
 sub: list
 description: List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "what knowledge has the agent ingested, list ingested folders, show knowledge memory, pin this ingest"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /knowledge list

@@ -5,7 +5,6 @@ cluster: context
 sub: refactor
 skills: [agent-docs-writing]
 description: Analyze, update, and extend an existing context document
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "update the context doc, refresh this context document"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /context refactor

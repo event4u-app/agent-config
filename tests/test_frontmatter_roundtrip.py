@@ -20,8 +20,14 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT / "scripts"))
 
 from check_condensation import extract_frontmatter  # noqa: E402
-from validate_frontmatter import parse_frontmatter  # noqa: E402
+from validate_frontmatter import apply_schema_defaults, load_schema, parse_frontmatter  # noqa: E402
 from _lib.agent_src import resolve_logical  # noqa: E402
+
+# Phase-1 keys that carry a schema default and MAY be omitted on disk
+# (abstraction-reduction migration); injected at read time.
+_DEFAULTED_KEYS = ("lifecycle", "trust", "install")
+# Phase-1 keys with no default — must stay byte-present in both layers.
+_REQUIRED_KEYS = ("workspaces", "packs")
 
 DST = REPO_ROOT / ".agent-src"
 
@@ -64,14 +70,39 @@ def test_frontmatter_block_present_on_both_layers(label, src, dst):
 
 @pytest.mark.parametrize("label,src,dst", _pairs(), ids=lambda x: x if isinstance(x, str) else "")
 def test_phase_1_keys_present_in_both_layers(label, src, dst):
-    """Every Phase-1 key parsed from source MUST also parse from condensed."""
+    """Every Phase-1 key MUST resolve identically in both layers.
+
+    Post abstraction-reduction, lifecycle/trust/install carry schema defaults
+    and may be omitted on disk; workspaces/packs have no default and must stay
+    byte-present. The condensation roundtrip keeps source and condensed
+    frontmatter byte-identical, so an omitted key is omitted in BOTH layers —
+    and after default injection every Phase-1 key resolves to the same value.
+    """
     src_parsed, _ = parse_frontmatter(src.read_text(encoding="utf-8"))
     dst_parsed, _ = parse_frontmatter(dst.read_text(encoding="utf-8"))
     assert isinstance(src_parsed, dict), f"{label}: source frontmatter unparseable"
     assert isinstance(dst_parsed, dict), f"{label}: condensed frontmatter unparseable"
-    for key in PHASE_1_KEYS:
+
+    # Non-defaulted keys must be byte-present in both layers.
+    for key in _REQUIRED_KEYS:
         assert key in src_parsed, f"{label}: source missing `{key}`"
         assert key in dst_parsed, f"{label}: condensed missing `{key}`"
+
+    # Roundtrip: each Phase-1 key must agree across layers before injection
+    # (present-and-equal, or absent in both).
+    for key in PHASE_1_KEYS:
+        assert (key in src_parsed) == (key in dst_parsed), (
+            f"{label}: `{key}` present in one layer only (src={key in src_parsed}, "
+            f"dst={key in dst_parsed})"
+        )
+
+    # After default injection, every Phase-1 key resolves identically.
+    schema = load_schema(label)
+    apply_schema_defaults(src_parsed, schema)
+    apply_schema_defaults(dst_parsed, schema)
+    for key in PHASE_1_KEYS:
+        assert key in src_parsed, f"{label}: `{key}` missing after defaults (src)"
+        assert key in dst_parsed, f"{label}: `{key}` missing after defaults (dst)"
         assert src_parsed[key] == dst_parsed[key], (
             f"{label}: key `{key}` diverged: {src_parsed[key]!r} vs {dst_parsed[key]!r}"
         )

@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Writing/reviewing Symfony — DI, bundles, Doctrine, Messenger, Security voters, console commands — route to symfony-workflow"
-source: package
 triggers:
   - keyword: "symfony"
   - keyword: "doctrine"
@@ -14,11 +13,8 @@ workspaces:
   - engineering
 packs:
   - symfony
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

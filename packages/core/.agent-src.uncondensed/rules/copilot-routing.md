@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Configuring GitHub Copilot — copilot-instructions.md, PR-review patterns, suggestion behavior — route to copilot-config"
-source: package
 triggers:
   - keyword: "copilot"
   - phrase: "copilot-instructions"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Copilot Routing

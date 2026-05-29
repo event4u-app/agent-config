@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Wiring DevContainers/Codespaces — devcontainer.json, images, VS Code features, port forwarding — route to the devcontainer skill"
-source: package
 triggers:
   - keyword: "devcontainer"
   - keyword: "codespaces"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Devcontainer Routing

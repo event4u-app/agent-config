@@ -4,7 +4,6 @@ tier: 1
 description: Optimize orchestrator — routes to skills, agents-dir, augmentignore, rtk-filters
 cluster: optimize
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "optimize my skills, manage agents directory, tune augmentignore, optimize rtk filters"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /optimize

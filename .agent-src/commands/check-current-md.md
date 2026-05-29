@@ -2,7 +2,6 @@
 name: check-current-md
 tier: 2
 description: Check the open .md file (or a passed path) for German outside DE:/EN: anchor blocks — umlauts, function words, untranslated quotes. Reports and offers fixes.
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Package-internal — only the event4u/agent-config repo runs this."
@@ -10,14 +9,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # check-current-md

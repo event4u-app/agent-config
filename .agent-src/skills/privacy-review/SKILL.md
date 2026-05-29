@@ -3,7 +3,6 @@ name: privacy-review
 description: "Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [regulatory-regime, customer-segment, product]
 recommended_for_user_types: [ops, finance, creator]
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # privacy-review

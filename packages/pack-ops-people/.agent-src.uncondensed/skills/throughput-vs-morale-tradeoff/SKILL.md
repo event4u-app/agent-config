@@ -3,20 +3,15 @@ name: throughput-vs-morale-tradeoff
 description: "Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -1,7 +1,6 @@
 ---
 name: conventional-commits-writing
 description: "Use when writing commit messages or squash-merge titles — `feat:`, `fix:`, `chore:`, scopes, breaking changes — even when the user just says 'commit this' without naming Conventional Commits."
-source: package
 domain: process
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # conventional-commits-writing

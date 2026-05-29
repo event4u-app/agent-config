@@ -5,7 +5,6 @@ cluster: memory
 sub: load
 description: Load ALL curated entries of a given memory type into the current context — opt-in full load for deep analysis, never auto-triggered
 skills: []
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Description states 'never auto-triggered' — opt-in deep-load only."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /memory load

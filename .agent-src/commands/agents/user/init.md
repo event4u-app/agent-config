@@ -4,7 +4,6 @@ tier: 2
 cluster: agents
 sub: user
 description: Interactive interview that creates the project-root .agent-user.md from the locked v1 schema (name, language, role, style, voice_sample).
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "User-persona bootstrap — only deliberately, never auto-suggested."
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents user init

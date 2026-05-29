@@ -3,7 +3,6 @@ type: "auto"
 tier: "3"
 description: "Whether to ask or act on a workflow step — trivial-vs-blocking, autonomy opt-in, commit default; Hard Floor non-destructive-by-default"
 alwaysApply: false
-source: package
 load_context:
   - ../contexts/execution/autonomy-detection.md
   - ../contexts/execution/autonomy-mechanics.md
@@ -16,14 +15,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Autonomous Execution

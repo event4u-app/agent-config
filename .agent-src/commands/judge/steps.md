@@ -5,7 +5,6 @@ cluster: judge
 sub: steps
 skills: [subagent-orchestration, verify-completion-evidence]
 description: Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Subagent orchestration — overlaps /work and /roadmap:process-*; keep explicit."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /judge steps

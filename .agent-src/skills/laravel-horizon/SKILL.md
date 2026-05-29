@@ -1,17 +1,13 @@
 ---
 name: laravel-horizon
 description: "Use when working with Laravel queues in production — Horizon dashboard, worker supervision, job metrics, balancing strategies — even when the user just says 'my jobs are piling up'."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

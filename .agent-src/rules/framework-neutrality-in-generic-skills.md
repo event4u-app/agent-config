@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Editing a generic skill/rule/command — block single-stack mandates; use language-agnostic procedures with carve-out pointers"
-source: package
 triggers:
   - path_prefix: ".agent-src.uncondensed/skills/"
   - path_prefix: ".agent-src.uncondensed/rules/"
@@ -33,14 +32,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # framework-neutrality-in-generic-skills

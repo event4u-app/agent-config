@@ -5,7 +5,6 @@ cluster: tests
 sub: execute
 skills: [pest-testing]
 description: Run PHP tests inside the Docker container
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "run the tests, execute the test suite"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /tests execute

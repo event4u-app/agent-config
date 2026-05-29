@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "First turn — if onboarding.onboarded is false in .agent-settings.yml, instruct dev to run `agent-config setup` before any request"
-source: package
 triggers:
   - phrase: "first turn"
   - keyword: "onboarding"
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Onboarding Gate

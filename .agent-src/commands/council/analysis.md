@@ -5,7 +5,6 @@ cluster: council
 sub: analysis
 skills: [ai-council]
 description: Run the council on a local analysis output (project-analyze, audit script, codebase scan) — critiques the analysis itself for dedup, evidence quality, and roadmap-readiness.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council on this analysis, critique the project-analyze output, second opinion on the audit findings, turn analysis into roadmap"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council analysis

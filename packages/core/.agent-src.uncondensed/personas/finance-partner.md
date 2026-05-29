@@ -5,8 +5,6 @@ description: "The senior voice that owns the cash and the model — unit economi
 tier: specialist
 wing: 4
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Finance Partner

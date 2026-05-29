@@ -5,7 +5,6 @@ cluster: roadmap
 sub: process-full
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process every open step across every phase of a roadmap until the file is fully closed. Largest execution scope of the /roadmap cluster — runs continuously across phase boundaries.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "process the whole roadmap, finish the roadmap, komplette roadmap abarbeiten"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /roadmap:process-full

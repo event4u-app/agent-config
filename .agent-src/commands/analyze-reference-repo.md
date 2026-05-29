@@ -3,7 +3,6 @@ name: analyze-reference-repo
 tier: 2
 skills: [project-analyzer, learning-to-rule-or-skill]
 description: Analyze an external reference repository (competitor, inspiration, peer) and produce a structured comparison + adoption plan for this project.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "look at how X does this, compare with that other repo, study this competitor's approach"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # analyze-reference-repo

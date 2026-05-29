@@ -3,7 +3,6 @@ name: launch-readiness
 description: "Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [team, product]
 recommended_for_user_types: [ops, developer, founder]
@@ -11,13 +10,7 @@ workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

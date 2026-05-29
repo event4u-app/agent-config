@@ -4,8 +4,6 @@ role: Critical Challenger
 description: "The voice that refuses easy answers and drags hidden complexity back into the open."
 tier: core
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Critical Challenger

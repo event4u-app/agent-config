@@ -3,7 +3,6 @@ name: sync-agent-settings
 tier: 1
 skills: [sync-agent-settings]
 description: Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Settings sync — must be deliberate."
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: noop -->

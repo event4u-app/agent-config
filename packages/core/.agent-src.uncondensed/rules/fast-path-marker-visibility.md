@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "Low-impact council fast-path dispatch — host MUST surface transparency marker verbatim in reply opening; never paraphrase"
-source: package
 triggers:
   - keyword: "low-impact council"
   - keyword: "fast-path"
@@ -17,14 +16,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Fast-Path Marker Visibility

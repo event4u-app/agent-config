@@ -6,17 +6,17 @@
 
 ## Overall
 
-**42 / 113 steps done · 37%**
+**52 / 102 steps done · 51%**
 
 ```text
-███████████████░░░░░░░░░░░░░░░░░░░░░░░░░   37%
+████████████████████░░░░░░░░░░░░░░░░░░░░   51%
 ```
 
 ## Open roadmaps
 
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
-| 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 1 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 1 | 10 | 0 | 0 | █████████░ 91% |
 | 2 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 | 3 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
@@ -24,16 +24,15 @@
 
 ## Per-roadmap phase breakdown
 
-### [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md)
+### [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md)
 
-**Abstraction reduction — factor frontmatter boilerplate into contract defaults** — 0 / 22 done (0%)
+**Distribution identity — make npm-primary explicit, retire the stale registry** — 10 / 11 done (91%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Schema-stability pre-flight | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Contract-level defaults in schemas | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | Migrate artefacts to omit defaulted fields | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Lint that prevents the boilerplate from coming back | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
+| 1 | Decide and record the distribution identity | ✅ done | 0 | 2 | 0 | 0 | 100% |
+| 2 | Execute the decision on the consumer-facing surfaces | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Release-comms hygiene — commit-subject lint | 🟡 in progress | 1 | 5 | 0 | 0 | 83% |
 
 ### [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md)
 

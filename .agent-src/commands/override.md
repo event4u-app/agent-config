@@ -4,7 +4,6 @@ tier: 2
 description: Override orchestrator — routes to create, manage
 cluster: override
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create an override, manage existing overrides, refactor an override"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /override

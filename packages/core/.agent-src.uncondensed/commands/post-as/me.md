@@ -5,7 +5,6 @@ cluster: post-as
 sub: me
 skills: [post-as]
 description: Draft a copyable markdown post in the maintainer's own voice (style source = .agent-user.md.voice_sample). No disclosure footer — the user is the author.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "write as me, draft in my own voice, post as myself, draft from .agent-user.md"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /post-as:me

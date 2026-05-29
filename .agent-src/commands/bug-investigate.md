@@ -3,7 +3,6 @@ name: bug-investigate
 tier: 1
 skills: [bug-analyzer, sentry-integration]
 description: Investigate a bug — auto-detect ticket from branch, gather Jira/Sentry/description context, trace root cause
-disable-model-invocation: true
 council_depth: deep
 suggestion:
   eligible: true
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # bug-investigate

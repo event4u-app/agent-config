@@ -2,7 +2,6 @@
 type: "auto"
 tier: "3"
 description: "Writing/reviewing PHP — strict types, naming, comparisons, early returns, Eloquent conventions"
-source: package
 triggers:
   - file_pattern: "*.php"
   - keyword: "phpstan"
@@ -13,11 +12,8 @@ workspaces:
   - engineering
 packs:
   - php
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

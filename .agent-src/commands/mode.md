@@ -2,7 +2,6 @@
 name: mode
 tier: 1
 description: Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts)
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Role-mode switch is a deliberate context change."
@@ -10,14 +9,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /mode

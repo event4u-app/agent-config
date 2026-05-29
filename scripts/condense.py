@@ -574,7 +574,12 @@ def _parse_trust_and_owner(fm_lines):
     prefix (`finance-basic` → `finance`), then the first workspace,
     then `unknown`.
     """
-    level = None
+    # Default to the schema default `core` so the HUMAN REVIEW banner still
+    # renders if a future artefact sets `human_review_required: true` while
+    # omitting the (defaulted) `trust.level` line (abstraction-reduction
+    # preflight Decision D). The banner only fires when `hrr` is true, so this
+    # never affects artefacts that omit the whole trust block.
+    level = "core"
     hrr = False
     packs: list[str] = []
     workspaces: list[str] = []

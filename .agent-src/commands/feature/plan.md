@@ -5,7 +5,6 @@ cluster: feature
 sub: plan
 skills: [feature-planning]
 description: Interactively plan a feature — research, discuss, and create a structured feature document
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "plan this feature, create a feature spec for X"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /feature plan

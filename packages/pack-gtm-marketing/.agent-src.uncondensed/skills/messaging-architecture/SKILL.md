@@ -3,7 +3,6 @@ name: messaging-architecture
 description: "Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 recommended_for_user_types: [creator, gtm, consultant]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

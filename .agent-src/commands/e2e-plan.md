@@ -3,7 +3,6 @@ name: e2e-plan
 tier: 2
 skills: [playwright-testing]
 description: Explore the application and create a structured E2E test plan in Markdown
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "plan E2E tests for this feature, what should we cover in playwright"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # e2e-plan

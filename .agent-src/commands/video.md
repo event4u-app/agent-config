@@ -4,7 +4,6 @@ tier: 2
 cluster: video
 description: Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch.
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a video from a script, render a single scene, build a storyboard, re-stitch existing clips, AI video pipeline"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /video

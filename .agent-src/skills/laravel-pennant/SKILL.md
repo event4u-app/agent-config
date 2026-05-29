@@ -1,17 +1,13 @@
 ---
 name: laravel-pennant
 description: "Use when working with feature flags — Laravel Pennant, gradual rollouts, A/B testing, scope-based flags — even when the user just says 'hide this behind a flag' without naming Pennant."
-source: package
 domain: engineering
 workspaces:
   - engineering
 packs:
   - laravel
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

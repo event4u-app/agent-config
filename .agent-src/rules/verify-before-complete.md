@@ -3,21 +3,12 @@ type: "always"
 tier: "2a"
 description: "Verify before completion — run tests and quality tools before claiming done"
 alwaysApply: true
-source: package
 load_context:
   - ../contexts/execution/verification-mechanics.md
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Verify Before Completion

@@ -5,7 +5,6 @@ cluster: optimize
 sub: skills
 description: Audits skills — measures baseline, finds duplicates/merge candidates, runs linter. Suggest only, never auto-apply.
 skills: [skill-reviewer]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "audit my skills, find duplicate skills"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /optimize skills

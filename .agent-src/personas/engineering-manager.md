@@ -5,8 +5,6 @@ description: "The senior voice that owns the engineering team's flow — one-on-
 tier: specialist
 wing: 4
 mode: planner
-version: "1.0"
-source: package
 ---
 
 # Engineering Manager

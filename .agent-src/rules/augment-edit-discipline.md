@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Editing .augment/ or .agent-src.uncondensed/ — keep files project-agnostic; sync counts and cross-refs on add/rename/delete"
-source: package
 triggers:
   - path_prefix: ".augment/"
   - path_prefix: ".agent-src.uncondensed/"
@@ -20,14 +19,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Augment Edit Discipline

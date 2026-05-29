@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "Any roadmap touch (file move, checkbox flip, phase change) regens dashboard same response; archive at 0 open"
-source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
   - command: "/roadmap:process-step"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Roadmap Progress Sync

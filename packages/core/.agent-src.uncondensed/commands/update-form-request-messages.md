@@ -4,7 +4,6 @@ tier: 2
 framework: laravel
 skills: [laravel-validation]
 description: "Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones."
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "sync the form request messages, update the validation messages"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # update-form-request-messages

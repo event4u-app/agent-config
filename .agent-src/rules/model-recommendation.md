@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT)"
-source: package
 triggers:
   - phrase: "switch task"
   - phrase: "new task"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Model Recommendation

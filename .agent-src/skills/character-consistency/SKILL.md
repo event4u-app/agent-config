@@ -3,7 +3,6 @@ name: character-consistency
 description: "Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'."
 personas:
   - hollywood-director
-source: package
 domain: product
 workspaces:
   - small-business
@@ -12,8 +11,6 @@ packs:
 lifecycle: experimental
 trust:
   level: experimental
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

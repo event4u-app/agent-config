@@ -3,7 +3,6 @@ name: competitive-positioning
 description: "Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product]
 recommended_for_user_types: [consultant, gtm, founder]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

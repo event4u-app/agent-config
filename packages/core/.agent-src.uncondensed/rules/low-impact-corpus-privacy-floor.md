@@ -2,7 +2,6 @@
 type: "auto"
 tier: "1"
 description: "Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus"
-source: package
 triggers:
   - path_prefix: "agents/decisions/low-impact-decisions"
   - keyword: "low-impact-decisions"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Low-Impact Corpus — Privacy Floor

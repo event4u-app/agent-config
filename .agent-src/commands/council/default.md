@@ -5,7 +5,6 @@ cluster: council
 sub: default
 skills: [ai-council]
 description: Default council lens — neutral framing, redacted context, advisory output only. Run `/council default <input>` for prompt/roadmap/diff/files; the cluster shows a menu when invoked bare.
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Default lens — invoked via /council dispatcher; no direct trigger."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council default

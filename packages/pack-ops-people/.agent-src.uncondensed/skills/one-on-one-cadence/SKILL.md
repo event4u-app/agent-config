@@ -3,20 +3,15 @@ name: one-on-one-cadence
 description: "Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

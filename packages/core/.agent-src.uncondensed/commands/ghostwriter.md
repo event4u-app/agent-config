@@ -4,7 +4,6 @@ tier: 2
 description: Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).
 cluster: ghostwriter
 type: orchestrator
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fetch a public figure's writing voice, write in someone's style, list ghostwriter profiles, refresh stale profile"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /ghostwriter

@@ -3,7 +3,6 @@ name: deal-qualification-meddic
 description: "Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment]
 recommended_for_user_types: [gtm]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-sales
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -3,7 +3,6 @@ type: "auto"
 tier: "2b"
 alwaysApply: false
 description: "IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes"
-source: package
 triggers:
   - intent: "work across two projects"
   - intent: "sibling repository"
@@ -25,9 +24,7 @@ lifecycle: experimental
 trust:
   level: experimental
   confidence: medium
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 
