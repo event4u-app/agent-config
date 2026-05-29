@@ -6,10 +6,10 @@
 
 ## Overall
 
-**42 / 133 steps done · 32%**
+**42 / 123 steps done · 34%**
 
 ```text
-█████████████░░░░░░░░░░░░░░░░░░░░░░░░░░░   32%
+██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
 ```
 
 ## Open roadmaps
@@ -19,7 +19,7 @@
 | 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 4 | [road-to-hooks-actually-fire-in-consumers.md](roadmaps/road-to-hooks-actually-fire-in-consumers.md) | 7 | 40 | 40 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -63,17 +63,16 @@
 | 8 | Single-user hardening — encryption at rest + secret hygiene | 🟡 in progress | 2 | 3 | 0 | 0 | 60% |
 | 9 | Honest team-deployment posture — what stays cancelled, what lands | 🟡 in progress | 12 | 4 | 0 | 0 | 25% |
 
-### [road-to-hooks-actually-fire-in-consumers.md](roadmaps/road-to-hooks-actually-fire-in-consumers.md)
+### [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md)
 
-**Hooks actually fire in consumer projects — close the marketplace-install gap** — 0 / 40 done (0%)
+**Road to Per-Skill Model Auto-Switch** — 0 / 30 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 0 | Reproduce the failure deterministically | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
-| 1 | Make `dispatch:hook` observable when prerequisites are missing | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 2 | First-run banner when the plugin is enabled but unscaffolded | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 3 | Pin the regenerator distribution path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | `hooks:install --claude` — claude-only repair path | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 5 | End-to-end validation on the witness consumer | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Lint guardrail against re-introduction of the gap | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 1 | Decide field transport + Claude projection shape | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 2 | Schema + frontmatter validation | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 3 | Generator: project the recommendation per tool | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 4 | Rewrite the `model-recommendation` rule so it acts | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 5 | Backfill recommendations across the corpus | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
+| 6 | Measure the saving | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
