@@ -560,26 +560,43 @@ cmd_chat_history_checkpoint() {
 cmd_hooks_install() {
   local force=false
   local print_only=false
+  local claude_mode=false
+  local regen_mode=false
   for arg in "$@"; do
     case "$arg" in
       --force)   force=true ;;
       --print)   print_only=true ;;
+      --claude|--lifecycle)  claude_mode=true ;;
+      --regen)               regen_mode=true ;;
       -h|--help)
         cat <<'HELP'
-agent-config hooks:install — install the combined pre-commit hook
-(roadmap-progress + ADR-013 artefact frontmatter lint).
+agent-config hooks:install — install hooks scaffolding.
 
-Usage:
-  ./agent-config hooks:install [--force] [--print]
+Three modes, picked by flag combination:
 
-Without flags: copies the hook to .git/hooks/pre-commit. Refuses to
-overwrite an existing pre-commit hook unless --force is given (the
-existing hook may already chain other tooling). Each concern only
-runs when relevant files are staged — zero overhead otherwise.
+  (no flag)           Install the legacy .git/hooks/pre-commit gate
+                      (roadmap-progress + ADR-013 frontmatter lint).
+                      Default for backwards compatibility.
 
-  --print   dump the hook script to stdout (for manual chaining into an
-            existing pre-commit script, husky, lefthook, etc.)
-  --force   overwrite an existing .git/hooks/pre-commit (DESTRUCTIVE)
+  --claude            Wire Claude Code lifecycle hooks: write
+  (--lifecycle alias) .claude/settings.json with the plugin enabled +
+                      ensure the ./agent-config symlink → scripts/agent-config
+                      at the consumer root. Idempotent.
+
+  --regen             Provision the roadmap-progress regenerator at
+                      .augment/scripts/update_roadmap_progress.py
+                      (canonical path per docs/contracts/hook-architecture-v1.md
+                      § Regenerator location). Idempotent.
+
+  --claude --regen    Both. The minimal-viable-scaffolding fix path
+                      for marketplace-install consumers (Phase 4 of
+                      road-to-hooks-actually-fire-in-consumers).
+
+Other flags:
+  --print             Dump the legacy pre-commit hook script to stdout
+                      (for manual chaining into husky / lefthook / etc.)
+  --force             Overwrite an existing .git/hooks/pre-commit (DESTRUCTIVE)
+
 HELP
         return 0 ;;
       *)
@@ -588,6 +605,30 @@ HELP
         return 2 ;;
     esac
   done
+
+  # Phase 4 of road-to-hooks-actually-fire-in-consumers: --claude
+  # and --regen are mutually compatible with each other but NOT with
+  # the legacy pre-commit mode. Routing:
+  if $claude_mode || $regen_mode; then
+    local rc=0
+    if $claude_mode; then
+      _hooks_install_claude_lifecycle || rc=$?
+    fi
+    if $regen_mode && [[ $rc -eq 0 ]]; then
+      _hooks_install_regenerator || rc=$?
+    fi
+    return $rc
+  fi
+
+  # Default-path guidance for callers who passed no flag at all (Phase 4
+  # Step 3 — make the new modes discoverable without breaking the
+  # legacy default behaviour).
+  if [[ $# -eq 0 ]]; then
+    echo "ℹ️   hooks:install: no flag given — installing the legacy" >&2
+    echo "    .git/hooks/pre-commit gate. Use --claude (or --lifecycle)" >&2
+    echo "    to wire Claude Code hooks, --regen to install the" >&2
+    echo "    regenerator. See --help for details." >&2
+  fi
 
   local hook_src
   hook_src="$(resolve_script ".agent-src/templates/hooks/pre-commit-roadmap-progress" ".augment/templates/hooks/pre-commit-roadmap-progress")" || return 1
@@ -628,6 +669,92 @@ HELP
   chmod +x "$target"
   echo "✅  hooks:install: pre-commit hook installed at $target"
   echo "    To uninstall: rm $target"
+}
+
+# Phase 4 of road-to-hooks-actually-fire-in-consumers — `--claude`
+# (and its `--lifecycle` alias) path. Writes the minimal-viable Claude
+# Code lifecycle wiring: enables the plugin in `.claude/settings.json`
+# (idempotent dict-merge) AND ensures `./agent-config` is executable
+# at the consumer root (symlink → scripts/agent-config in the package).
+_hooks_install_claude_lifecycle() {
+  local settings_dir="$CONSUMER_ROOT/.claude"
+  local settings_file="$settings_dir/settings.json"
+  mkdir -p "$settings_dir"
+
+  # Idempotent merge using python3 — bash JSON edits are unsafe with
+  # nested keys. Falls back to a fresh-write when the file is absent.
+  python3 - "$settings_file" <<'PY' || return 1
+import json
+import sys
+from pathlib import Path
+
+target = Path(sys.argv[1])
+data = {}
+if target.is_file():
+    try:
+        data = json.loads(target.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        print(f"❌  hooks:install --claude: existing {target} is not valid JSON ({exc})", file=sys.stderr)
+        sys.exit(1)
+    if not isinstance(data, dict):
+        print(f"❌  hooks:install --claude: existing {target} is not a JSON object", file=sys.stderr)
+        sys.exit(1)
+enabled = data.setdefault("enabledPlugins", {})
+if not isinstance(enabled, dict):
+    print(f"❌  hooks:install --claude: enabledPlugins in {target} is not an object", file=sys.stderr)
+    sys.exit(1)
+enabled["agent-config@event4u-agent-config"] = True
+target.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+print(f"✅  hooks:install --claude: enabled plugin in {target}")
+PY
+
+  # Symlink the package's agent-config wrapper into the consumer root.
+  # Idempotent — replace stale symlinks; skip if already correct.
+  local link="$CONSUMER_ROOT/agent-config"
+  local link_target
+  # The package script lives at <package_root>/scripts/agent-config.
+  # Try to resolve the package root via the dispatcher's own location.
+  local package_root
+  package_root="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")")"
+  link_target="$package_root/scripts/agent-config"
+
+  if [[ ! -e "$link_target" ]]; then
+    echo "⚠️   hooks:install --claude: package script not found at $link_target" >&2
+    echo "    Skipping symlink; the plugin-enable step succeeded." >&2
+    return 0
+  fi
+
+  if [[ -L "$link" ]]; then
+    local current
+    current="$(readlink "$link" 2>/dev/null || true)"
+    if [[ "$current" == "$link_target" ]]; then
+      echo "✅  hooks:install --claude: ./agent-config symlink already current"
+      return 0
+    fi
+    rm "$link"
+  elif [[ -e "$link" ]]; then
+    echo "⚠️   hooks:install --claude: ./agent-config exists but is not a symlink — leaving it alone" >&2
+    return 0
+  fi
+
+  if ln -s "$link_target" "$link" 2>/dev/null; then
+    echo "✅  hooks:install --claude: ./agent-config symlink → $link_target"
+  else
+    echo "⚠️   hooks:install --claude: could not create ./agent-config symlink" >&2
+    return 1
+  fi
+}
+
+# Phase 4 of road-to-hooks-actually-fire-in-consumers — `--regen` path.
+# Provisions the canonical regenerator via the shared helper module.
+# We invoke the script by path (not module form) so it works from any
+# CONSUMER_ROOT — module form requires the package's `scripts` dir to
+# be on PYTHONPATH which is not the case when invoked from a consumer.
+_hooks_install_regenerator() {
+  local package_root
+  package_root="$(dirname "$(dirname "$(readlink -f "${BASH_SOURCE[0]}" 2>/dev/null || echo "${BASH_SOURCE[0]}")")")"
+  python3 "$package_root/scripts/_lib/install_regenerator.py" "$CONSUMER_ROOT" "$package_root" 2>&1
+  return $?
 }
 
 # Wrap the interactive key installers under a stable CLI entry. The shell
