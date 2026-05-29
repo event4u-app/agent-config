@@ -12,7 +12,11 @@ Supported keywords: ``type``, ``required``, ``properties``,
 
 The goal is a **better error surface**: each violation comes back as a
 ``SchemaError`` with ``path`` (dotted JSON pointer), ``rule`` (the schema
-keyword that failed), and a human-readable message.
+keyword that failed), a human-readable message, and a ``severity``
+(``"error"`` = fatal / fails CI, ``"warning"`` = advisory). Structural
+keywords (``required``/``type``/``enum``/``pattern``/``additionalProperties``/
+``minItems``) are fatal; length keywords (``minLength``/``maxLength``) are
+advisory warnings. See ADR-031.
 """
 
 from __future__ import annotations
@@ -39,12 +43,14 @@ class SchemaError:
     path: str
     rule: str
     message: str
+    severity: str = "error"  # "error" (fatal, fails CI) | "warning" (advisory)
 
     def format(self, file: str | None = None, line: int | None = None) -> str:
         prefix = file or "<data>"
         if line is not None:
             prefix = f"{prefix}:{line}"
-        return f"{prefix} – {self.rule} at {self.path} – {self.message}"
+        marker = "⚠️ " if self.severity == "warning" else ""
+        return f"{prefix} – {marker}{self.rule} at {self.path} – {self.message}"
 
 
 # --- Frontmatter parser (stdlib-only, YAML subset) -------------------------
@@ -318,12 +324,14 @@ def _validate_string(data: str, schema: dict[str, Any], path: str, errors: list[
     pattern = schema.get("pattern")
     if pattern is not None and not re.search(pattern, data):
         errors.append(SchemaError(path, "pattern", f"Value {data!r} does not match /{pattern}/"))
+    # Length constraints are advisory (quality, not structural correctness):
+    # they surface as warnings, not fatal CI failures. See ADR-031.
     min_len = schema.get("minLength")
     if min_len is not None and len(data) < min_len:
-        errors.append(SchemaError(path, "minLength", f"String length {len(data)} < {min_len}"))
+        errors.append(SchemaError(path, "minLength", f"String length {len(data)} < {min_len}", severity="warning"))
     max_len = schema.get("maxLength")
     if max_len is not None and len(data) > max_len:
-        errors.append(SchemaError(path, "maxLength", f"String length {len(data)} > {max_len}"))
+        errors.append(SchemaError(path, "maxLength", f"String length {len(data)} > {max_len}", severity="warning"))
 
 
 def _validate_integer(data: int, schema: dict[str, Any], path: str, errors: list[SchemaError]) -> None:
@@ -458,6 +466,7 @@ def _main() -> int:
 
     total = 0
     failing = 0
+    warned = 0
     for root in roots:
         for artefact_type, path in _iter_artefacts(root):
             total += 1
@@ -468,14 +477,19 @@ def _main() -> int:
                 continue
             schema = load_schema(artefact_type)
             errors = validate(data, schema)
-            if errors:
+            fatal = [e for e in errors if e.severity == "error"]
+            warnings = [e for e in errors if e.severity == "warning"]
+            if fatal:
                 failing += 1
-                for error in errors:
-                    print(f"[{artefact_type}] {path}: {error.rule} at "
-                          f"{error.path} – {error.message}")
+            if warnings:
+                warned += 1
+            for error in errors:
+                marker = "⚠️ " if error.severity == "warning" else "❌ "
+                print(f"{marker}[{artefact_type}] {path}: {error.rule} at "
+                      f"{error.path} – {error.message}")
 
     print(f"\n== Frontmatter schema: {total} artefacts, "
-          f"{failing} failing ==")
+          f"{failing} failing, {warned} with warnings ==")
     return 1 if failing else 0
 
 

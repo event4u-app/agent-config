@@ -4,7 +4,8 @@ Phase 2.4 of ``agents/roadmaps/road-to-global-only-install.md``. Copies
 an existing project-local ``.agent-settings.yml`` / ``.agent-user.yml``
 into ``~/.event4u/agent-config/`` so the global-only consumer surface
 (ADR-020) can take over. Read-only on the source — the destructive
-``move`` step is owned by the Phase 5 ``migrate-to-global`` subcommand.
+``move`` step is owned by the unified ``agent-config migrate`` command
+(see ``docs/contracts/migrate-command.md``).
 
 Idempotent — refuses to overwrite a non-empty global file without
 ``--force``. ``--dry-run`` lists intended copies; zero writes; exit 0.

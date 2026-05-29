@@ -1,10 +1,11 @@
 # Migration — v1 → v2 (npx-only runtime)
 
-> **Status:** skeleton. The one-shot `npx @event4u/agent-config migrate`
-> is implemented in P3.5 of
-> [`road-to-portable-runtime-and-update-check`](../../agents/roadmaps/road-to-portable-runtime-and-update-check.md);
-> this document tracks the user-facing cutover contract so consumers can
-> rehearse the change before the command lands.
+> **Status:** active. The one-shot `npx @event4u/agent-config migrate`
+> is implemented in `scripts/_cli/cmd_migrate.py`; its action matrix +
+> exit-code contract live in
+> [`docs/contracts/migrate-command.md`](../contracts/migrate-command.md).
+> This document is the user-facing narrative; the contract is the
+> normative reference.
 
 ## Why this change
 
@@ -56,32 +57,44 @@ The per-tool glue (`.claude/`, `.cursor/`, `.clinerules/`,
 the source that writes them changed (from `vendor/` /
 `node_modules/` scripts to the npx-resolved runtime).
 
-## The `migrate` command — contract sketch
+## The `migrate` command
 
 ```bash
-npx @event4u/agent-config migrate              # interactive, default
-npx @event4u/agent-config migrate --dry-run    # plan only, no writes
-npx @event4u/agent-config migrate --yes        # non-interactive
+npx @event4u/agent-config migrate              # apply, real changes
+npx @event4u/agent-config migrate --dry-run    # plan only, zero writes
 ```
 
-Order of operations (locked once P3.5 lands):
+One opinionated command, one flag. The full action matrix +
+exit-code contract is documented in
+[`docs/contracts/migrate-command.md`](../contracts/migrate-command.md);
+the operations summary below is the narrative form.
 
-1. Detect pre-v2 markers: `composer.json` require entry,
-   `package.json` devDependency, `vendor/event4u/agent-config/`,
-   `node_modules/@event4u/agent-config/`, legacy `.gitignore` lines,
-   `~/.claude/{rules,skills}/event4u/` and siblings.
-2. Print the planned change set (file removals, file writes, pin
-   value). Stop here under `--dry-run`.
-3. Remove dependency entries via the appropriate package manager
-   (`composer remove`, `npm uninstall` / `pnpm remove` / `yarn remove`).
-4. Wipe the retired user-scope `event4u/` namespace dirs.
-5. Write / update `.agent-settings.yml` with the new shape +
-   `agent_config_version` pin.
-6. Re-run `sync-gitignore` to refresh the project `.gitignore` block.
-7. Print a one-screen post-migration verification list.
+Order of operations (fixed; foundation-first):
 
-Idempotency: each step is a no-op when the v1 marker is absent. Re-runs
-print *"already on v2 — nothing to do"* and exit 0.
+1. Detect every legacy signal in one pass: `composer.json` require
+   entry, `package.json` devDependency, managed symlinks pointing
+   into `vendor/` / `node_modules/`, v0
+   `.implement-ticket-state.json`, project-local `.agent-settings.yml`
+   / `.agent-user.yml` (flat or under `settings/`), empty
+   `agent-config/` shell.
+2. Under `--dry-run`, print the planned change set and stop with
+   exit 0.
+3. Strip the package entries from `package.json` / `composer.json`
+   in-place; preserve sibling keys + formatting.
+4. Purge legacy symlinks; preserve user-managed symlinks elsewhere
+   with a warning.
+5. Migrate `.implement-ticket-state.json` → `.work-state.json`
+   (renames the v0 source to `.bak`).
+6. **Hard-delete** legacy project-local config files. The wizard
+   (`agent-config setup`) recreates fresh global config on the next
+   run — deletion is the design, not a regression.
+7. Remove the empty `agent-config/` shell directory if present.
+8. Refresh the `.gitignore` agent-config managed block.
+9. Print a summary listing every action taken.
+
+Idempotency: re-running on a fully-migrated repo prints
+*"already migrated — nothing to do"* and exits 0 without touching
+the filesystem.
 
 ## Verification after migration
 

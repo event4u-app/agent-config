@@ -175,7 +175,8 @@ project-local `.agent-user.yml` / `.agent-settings.yml` into
 `~/.event4u/agent-config/`. Idempotent — refuses to overwrite a
 non-empty global file without `--force`. Order matches Phase 5
 amendment A2 (`copy → verify`; the destructive `move` step is owned by
-`migrate-to-global`, not this subcommand).
+the unified `agent-config migrate` command, not this subcommand — see
+`docs/contracts/migrate-command.md`).
 
 Flags:
 

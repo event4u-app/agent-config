@@ -89,9 +89,12 @@ intentionally pin an older version of the manifest.
 Under [ADR-020](../../decisions/ADR-020-global-only-consumer-scope.md)
 global is the only consumer scope. Consumers carrying a pre-2.5
 project-scope payload move to global with the one-shot
-`npx @event4u/agent-config migrate-to-global` subcommand — it copies
-each tool's project payload into the matching user-scope path, drops
-the bridge marker, and removes the legacy project artefacts.
+`npx @event4u/agent-config migrate` subcommand — it removes the
+legacy project artefacts in one opinionated pass (deletion-over-
+migration policy); the wizard recreates fresh global config on the
+next `agent-config setup`. See
+[docs/contracts/migrate-command.md](../../contracts/migrate-command.md)
+for the full action matrix.
 
 For maintainers running `AGENT_CONFIG_DEV_MODE=1`, project-scope
 re-installs remain available; the installer still detects scope

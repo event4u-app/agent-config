@@ -72,10 +72,11 @@ CONSUMER_EXPECTED_ENTRIES: frozenset[str] = frozenset(
 )
 
 MIGRATE_HINT = (
-    "Run `agent-config settings migrate` (or `npx @event4u/agent-config "
-    "migrate-to-global`) to move legacy project-scope artefacts under "
-    "`~/.event4u/agent-config/` and leave `agents/overrides/` + "
-    "`agents/.event4u-bridge.yml` as the only consumer-side files."
+    "Run `npx @event4u/agent-config migrate` to sweep legacy project-scope "
+    "artefacts in one pass. The unified `migrate` command (see "
+    "`docs/contracts/migrate-command.md`) leaves `agents/overrides/` + "
+    "`agents/.event4u-bridge.yml` as the only consumer-side files; the "
+    "wizard recreates fresh config on `agent-config setup`."
 )
 
 

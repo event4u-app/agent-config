@@ -3009,13 +3009,14 @@ CONSUMER_BRIDGE_MARKER_RELPATH = Path("agents") / ".event4u-bridge.yml"
 
 
 # ---------------------------------------------------------------------------
-# Phase 5.2 — migrate-to-global first-run hook
+# First-run migration hook
 # ---------------------------------------------------------------------------
 #
 # Legacy artefacts that signal a pre-ADR-020 install in the project root.
-# Same surface the ``migrate-to-global`` command detects (see
-# ``scripts/_cli/cmd_migrate_to_global.py``). Kept in sync intentionally so
-# the prompt and the migration tool agree on what counts as "legacy".
+# Same surface the unified ``migrate`` command detects (see
+# ``scripts/_cli/cmd_migrate.py`` and ``docs/contracts/migrate-command.md``).
+# Kept in sync intentionally so the prompt and the migration tool agree on
+# what counts as "legacy".
 MIGRATE_LEGACY_YAML_FILES = (".agent-settings.yml", ".agent-user.yml")
 MIGRATE_LEGACY_TOOL_DIRS = (".augment", ".claude", ".cursor")
 
@@ -3125,19 +3126,22 @@ def _detect_legacy_for_migration(project_root: Path) -> list[str]:
 
 
 def _prompt_migrate_to_global(project_root: Path, artefacts: list[str]) -> bool:
-    """Ask the user whether to run ``migrate-to-global`` now.
+    """Ask the user whether to run the unified ``migrate`` command now.
 
     Interactive TTY → ``[Y/n]`` prompt (Enter = yes). Non-interactive (CI
-    or no TTY) → auto-yes per roadmap Phase 5.2 contract. Three invalid
-    replies short-circuit to "no" (defensive, never blocks the install).
+    or no TTY) → auto-yes. Three invalid replies short-circuit to "no"
+    (defensive, never blocks the install). The function name is kept for
+    compatibility with the install flow; the legacy ``migrate-to-global``
+    command was collapsed into the unified ``migrate`` (see
+    ``docs/contracts/migrate-command.md``).
     """
     if not QUIET:
         print()
         warn("Legacy project-local artefacts detected — pre-ADR-020 layout:")
         for rel in artefacts:
             info(f"  {project_root / rel}")
-        info("ADR-020 ships consumer installs as global-only.")
-        info("`agent-config migrate-to-global` copies → verifies → moves them safely.")
+        info("The unified `agent-config migrate` sweeps these in one pass.")
+        info("The wizard recreates fresh config afterwards.")
 
     if not _is_interactive():
         if not QUIET:
@@ -3147,7 +3151,7 @@ def _prompt_migrate_to_global(project_root: Path, artefacts: list[str]) -> bool:
     attempts = 0
     while attempts < 3:
         try:
-            reply = _read_line("Run `agent-config migrate-to-global` now? [Y/n]: ")
+            reply = _read_line("Run `agent-config migrate` now? [Y/n]: ")
         except EOFError:
             return False
         if reply == "" or reply.lower() in ("y", "yes"):
@@ -3160,23 +3164,22 @@ def _prompt_migrate_to_global(project_root: Path, artefacts: list[str]) -> bool:
 
 
 def _run_migrate_to_global(project_root: Path) -> int:
-    """Invoke ``cmd_migrate_to_global._do_migrate`` against ``project_root``.
+    """Invoke the unified ``cmd_migrate`` against ``project_root``.
 
     Returns the migrator's exit code so the caller can abort the install
-    on failure. The perms gate is skipped because the install path runs
-    its own checks; surfacing two perm errors back-to-back would be
-    confusing for first-run users.
+    on failure. The function name is kept for compatibility with the
+    install flow; the legacy ``migrate-to-global`` command was collapsed
+    into the unified ``migrate`` (see ``docs/contracts/migrate-command.md``).
     """
     import importlib  # noqa: PLC0415 — local to keep startup lean.
 
     try:
-        cmd_mod = importlib.import_module("scripts._cli.cmd_migrate_to_global")
+        cmd_mod = importlib.import_module("scripts._cli.cmd_migrate")
     except ImportError as exc:
-        warn(f"migrate-to-global unavailable: {exc}")
+        warn(f"migrate unavailable: {exc}")
         return 1
 
-    install_mod = sys.modules[__name__]
-    return cmd_mod._do_migrate(project_root, force=False, install_mod=install_mod, out=sys.stdout)
+    return cmd_mod.main([], cwd=project_root, out=sys.stdout)
 
 
 def _format_global_root_for_marker(global_root: Path) -> str:
@@ -4976,9 +4979,10 @@ def main(argv: list[str]) -> int:
 
     try:
         if scope == "global":
-            # Phase 5.2 — first-run hook: when legacy artefacts live in the
-            # project tree, prompt before laying down the global surface so
-            # the user is not left with a dual-stack install.
+            # First-run hook: when legacy artefacts live in the project tree,
+            # prompt before laying down the global surface so the user is
+            # not left with a dual-stack install. Delegates to the unified
+            # `agent-config migrate` (see docs/contracts/migrate-command.md).
             artefacts = _detect_legacy_for_migration(detect_root)
             if artefacts and _prompt_migrate_to_global(detect_root, artefacts):
                 rc = _run_migrate_to_global(detect_root)

@@ -207,7 +207,10 @@ def test_cli_consumer_warnings_exit_zero(tmp_path: Path) -> None:
     res = _run_cli(tmp_path)
     assert res.returncode == 0, res.stdout + res.stderr
     assert "consumer-shape warnings" in res.stdout
-    assert "agent-config settings migrate" in res.stdout
+    # The hint points users at the unified `agent-config migrate` command
+    # (see docs/contracts/migrate-command.md). The historical
+    # `settings migrate` two-step was collapsed in road-to-one-migrate-command.
+    assert "@event4u/agent-config migrate" in res.stdout
 
 
 def test_cli_strict_flips_warnings_to_errors(tmp_path: Path) -> None:
