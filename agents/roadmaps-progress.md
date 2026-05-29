@@ -6,7 +6,7 @@
 
 ## Overall
 
-**42 / 119 steps done · 35%**
+**42 / 121 steps done · 35%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   35%
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
-| 2 | [road-to-corpus-expansion-evidence-based-cuts.md](roadmaps/road-to-corpus-expansion-evidence-based-cuts.md) | 6 | 26 | 26 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-corpus-expansion-evidence-based-cuts.md](roadmaps/road-to-corpus-expansion-evidence-based-cuts.md) | 6 | 28 | 28 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
 
@@ -38,13 +38,13 @@
 
 ### [road-to-corpus-expansion-evidence-based-cuts.md](roadmaps/road-to-corpus-expansion-evidence-based-cuts.md)
 
-**Corpus expansion → evidence-based tier-1 cuts** — 0 / 26 done (0%)
+**Corpus expansion → evidence-based tier-1 cuts** — 0 / 28 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Corpus-surface inventory + decision matrix | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 1 | Corpus-surface inventory + decision matrix | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Author the corpus extensions | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 3 | Telemetry replay against the widened corpus | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
+| 3 | Telemetry replay against the widened corpus | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 4 | Second tier-1 audit with the new evidence | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 5 | Apply the surviving cuts | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 | 6 | Final regression + close-out | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
