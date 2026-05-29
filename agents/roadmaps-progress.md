@@ -6,7 +6,7 @@
 
 ## Overall
 
-**42 / 123 steps done · 34%**
+**42 / 124 steps done · 34%**
 
 ```text
 ██████████████░░░░░░░░░░░░░░░░░░░░░░░░░░   34%
@@ -19,7 +19,7 @@
 | 1 | [road-to-abstraction-reduction.md](roadmaps/road-to-abstraction-reduction.md) | 4 | 22 | 22 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 2 | [road-to-distribution-identity.md](roadmaps/road-to-distribution-identity.md) | 3 | 11 | 11 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 3 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 4 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 30 | 30 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 4 | [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md) | 6 | 31 | 31 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 
 ---
 
@@ -65,14 +65,14 @@
 
 ### [road-to-per-skill-model-autoswitch.md](roadmaps/road-to-per-skill-model-autoswitch.md)
 
-**Road to Per-Skill Model Auto-Switch** — 0 / 30 done (0%)
+**Road to Per-Skill Model Auto-Switch** — 0 / 31 done (0%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Decide field transport + Claude projection shape | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 2 | Schema + frontmatter validation | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 3 | Generator: project the recommendation per tool | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 4 | Rewrite the `model-recommendation` rule so it acts | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
+| 4 | Rewrite the `model-recommendation` rule so it acts | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
 | 5 | Backfill recommendations across the corpus | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
 | 6 | Measure the saving | ⬜ not started | 4 | 0 | 0 | 0 | 0% |
 
