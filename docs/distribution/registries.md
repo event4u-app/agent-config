@@ -4,6 +4,35 @@ Track third-party registries / directories we want this package to surface in. S
 
 > **Authority** — Phase 2 of [`road-to-product-adoption.md`](../../agents/roadmaps/road-to-product-adoption.md). The autonomous roadmap pass cannot open PRs in third-party repos; this file is the handoff.
 
+## Distribution channels — npm-primary
+
+Per [`ADR-033`](../decisions/ADR-033-distribution-identity-npm-primary.md), the package is **npm-primary, Packagist deprecated-in-place**. Both lenses of the council deliberation (strategic / operational) converged on a single-channel posture: this is the canonical record of which registries we publish to vs. which we treat as legacy.
+
+| Channel | Status | Canonical install | Notes |
+|---|---|---|---|
+| npm — `@event4u/agent-config` | **Primary** | `npm install @event4u/agent-config` or `npx @event4u/agent-config install` | The release pipeline (`scripts/release.py`) runs `npm publish` exclusively; `package.json` is the source of truth for the published version. |
+| Packagist — `event4u/agent-config` | **Deprecated-in-place** | (do not install — see ADR-033) | The 1.0.4 listing is a legacy artefact from the pre-3.x repo namespace. No `composer.json` ships from this repo. Maintainer-side claim/archive action required (see below). |
+
+### Packagist deprecation — human-owner item
+
+The Packagist `event4u/agent-config` listing pins at 1.0.4 from a repository state that no longer exists. The autonomous pipeline cannot retire that listing — it requires a maintainer login at `packagist.org/packages/event4u/agent-config`. Two paths exist; either is acceptable per ADR-033.
+
+- [ ] **Claim + abandoned-flag the package.** Log in at packagist.org, claim the `event4u/agent-config` namespace, set the package to `abandoned` with the replacement pointer `event4u/agent-config` on npm (or the npm package URL as a body note where Packagist's abandoned-replacement field expects a Composer-namespace value, fall back to a `description` field redirect).
+- [ ] **OR: leave the listing as legacy + add a description-field redirect.** If claim is blocked or out of scope, edit the listing description to add a one-line `> Deprecated — install via npm: \`@event4u/agent-config\`` so any consumer who lands there sees the correct path.
+
+This item is **owner-owned**, not autonomous; the roadmap explicitly captures it as such (`road-to-distribution-identity.md` Phase 2 Step 1). Mark the chosen path with `[x]` once executed.
+
+### Breaking-change communication
+
+Major-version bumps are policy-correct per [`CONTRIBUTING.md § Versioning policy`](../../CONTRIBUTING.md) (semver — installer-layout changes are major). The auto-generated `CHANGELOG.md § Breaking` section is the **single source of truth** for breaking changes; [`ADR-027`](../decisions/ADR-027-changelog-machine-vs-manual.md) locks the machine-generated path.
+
+Consumers who see a major-version bump should follow:
+
+1. [`CHANGELOG.md § Breaking`](../../CHANGELOG.md#breaking) — the diff between the prior and the new major. Every breaking change carries a Conventional-Commits subject prefixed `feat!:` or with a `BREAKING CHANGE:` footer.
+2. The release-line link in the GitHub release entry for the new version (links the auto-generated changelog section).
+
+No bespoke `BREAKING_CHANGES.md` is maintained — the changelog is the authoritative surface.
+
 ## Submission status
 
 | # | Registry | URL | Submission shape | Status | PR link |
