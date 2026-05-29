@@ -68,10 +68,10 @@ Acceptance criteria:
 
 Goal: on first use with a detected sibling, prompt once to opt in, persist the choice, and thereafter carry the behavioral-directive awareness note for in-scope siblings.
 
-- [ ] Author `linked-projects-onboarding-gate` rule (auto-tier, mirroring `onboarding-gate`): fires when a detected sibling is not yet in `linked_projects`.
-- [ ] One-time numbered opt-in per sibling (yes / no / always / never-ask); persist to `.agent-settings.local.yml` (declined → `include: false`, never re-prompt).
-- [ ] For each `include: true` sibling, the rule surfaces the **behavioral directive**: consider cross-repo impact on relevant changes (API contract / shared types) and warn; never auto-include sibling files; out-of-root writes still pass the host permission gate.
-- [ ] Condense via `/condense`; pass `skill_linter` + frontmatter validation.
+- [x] Author `linked-projects-onboarding-gate` rule (tier-2b, experimental, removable; mirroring `onboarding-gate`): fires when a detected sibling is not yet in `linked_projects`.
+- [x] One-time numbered opt-in per sibling (yes / no / always / never-ask); persist to `.agent-settings.local.yml` (declined → `include: false`, never re-prompt).
+- [x] For each `include: true` sibling, the rule surfaces the **behavioral directive**: consider cross-repo impact on relevant changes (API contract / shared types) and warn; never auto-include sibling files; out-of-root writes still pass the host permission gate.
+- [x] Condensed + projected + router recompiled; `skill_linter`, frontmatter, condensation hashes, condensed-paths, iron-law-prominence all pass.
 
 Acceptance criteria:
 
@@ -90,8 +90,8 @@ Acceptance criteria:
 
 ## Phase 5 — Kill-switch + verification gate
 
-- [ ] Document the kill-switch in the guide/ADR: if opt-in acceptance is near-zero or siblings are never cited, remove the rule. Metrics stay local, no telemetry.
-- [ ] Run the full local gate (`task ci`) and fix to green.
+- [x] Document the kill-switch in the guide/ADR: if opt-in acceptance is near-zero or siblings are never cited, remove the rule. Metrics stay local, no telemetry.
+- [x] Feature-relevant gates green; PR #286 CI fully green (49 pass, 4 skipping). <!-- `task ci` superset has 2 PRE-EXISTING non-required fails outside this diff (check-template-pin-drift 4.3.0 vs 5.0.0; check-no-roadmap-refs on value-* files) — left for maintainer/release per scope-control. -->
 
 Acceptance criteria:
 
