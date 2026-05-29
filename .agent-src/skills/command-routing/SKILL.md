@@ -80,10 +80,11 @@ output — surface it as-is. The two flows are mutually exclusive at the
 state-file level: one `.work-state.json` carries one envelope at a
 time, and the engine refuses to switch mid-flight.
 
-A sibling subcommand `./agent-config migrate-state` upgrades a legacy
-`.implement-ticket-state.json` file to the v1 `.work-state.json`
-schema. The wrapper invokes it automatically when the legacy file is
-detected; agents should not bypass the dispatcher.
+Unified `./agent-config migrate` sweeps a legacy
+`.implement-ticket-state.json` file into the v1 `.work-state.json`
+schema as one cleanup step (see `docs/contracts/migrate-command.md`).
+Wrapper invokes it automatically when legacy file is detected;
+agents should not bypass the dispatcher.
 
 ## GitHub API: Replying to PR review comments
 

@@ -3,9 +3,10 @@
 
 Phase 5.0 / amendment A7 of road-to-global-only-install. Runs BEFORE
 any legacy snapshot write so a perms leak cannot be created by the
-migration itself: `agent-config migrate-to-global` is expected to call
-this script first, abort on any failure, and only then proceed with
-the copy → verify → move → bridge sequence.
+migration itself. Historically invoked by `agent-config migrate-to-global`;
+that command was collapsed into `agent-config migrate` (see
+`docs/contracts/migrate-command.md`). The audit now runs standalone via
+`agent-config doctor` or directly through this script.
 
 Policy source: scripts/expected_perms.json (parameterised so the policy
 can evolve without code changes).

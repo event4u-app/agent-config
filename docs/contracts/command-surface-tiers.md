@@ -105,7 +105,7 @@ unless `--tier=all`. Reachable by full name; not advertised.
    `context-hygiene:hook`, `hooks:install`, `hooks:status`).
 2. **Internal / programmatic.** Called by other scripts or by the
    work-engine, never typed by a human (`memory:*`,
-   `proposal:check`, `refine-ticket:detect`, `migrate-state`,
+   `proposal:check`, `refine-ticket:detect`,
    `telemetry:*`, `mcp:render`, `mcp:check`, `mcp:setup`,
    `mcp:run`, `roadmap:progress-check`).
 3. **Sub-command of a slash orchestrator** — the orchestrator is

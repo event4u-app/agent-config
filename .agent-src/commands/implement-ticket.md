@@ -59,12 +59,13 @@ Three cases, in this order:
   and `.work-state.json` does not. Migrate before doing anything else:
 
   ```bash
-  ./agent-config migrate-state
+  ./agent-config migrate
   ```
 
-  Writes `.work-state.json` and renames the source to
-  `.implement-ticket-state.json.bak`. Idempotent and safe to skip if
-  already done. After this, treat the run as **Resume**.
+  Unified `migrate` writes `.work-state.json`, renames source to
+  `.implement-ticket-state.json.bak`, sweeps other legacy install
+  artefacts (see `docs/contracts/migrate-command.md`). Idempotent and
+  safe to skip if already done. After this, treat the run as **Resume**.
 - **Fresh run** — no state file at all. Write the resolved ticket to
   `ticket.json` (id, title, body, acceptance_criteria) and pass it via
   `--ticket-file ticket.json`. Honour `roles.active_role` from

@@ -1,6 +1,6 @@
 {
   "$schema_version": "expected-perms/v1",
-  "$comment": "Expected POSIX modes for the global install tree. Consumed by scripts/lint_global_paths.py as an entry-gate for the migrate-to-global subcommand (road-to-global-only-install Phase 5.0 / A7). Octal modes are strings so JSON tooling never widens 0700 → 700.",
+  "$comment": "Expected POSIX modes for the global install tree. Consumed by scripts/lint_global_paths.py as a standalone perms audit (historically the entry-gate for the migrate-to-global subcommand; that command was collapsed into agent-config migrate — see docs/contracts/migrate-command.md). Octal modes are strings so JSON tooling never widens 0700 → 700.",
   "global_root": {
     "path": "~/.event4u/agent-config",
     "expected_mode": "0700",
