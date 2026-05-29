@@ -55,6 +55,7 @@ __pycache__/
 # kept for the migration window and gets deleted by scripts/install once
 # the YAML file has been written)
 .agent-settings.yml
+.agent-settings.local.yml
 .agent-settings
 .agent-settings.backup.key-value
 # Exception: the bundled stub for `agent-config init --minimal` is a

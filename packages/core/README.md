@@ -8,7 +8,7 @@ Core framework-neutral artefacts.
 - **version**: `5.0.0`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 367
+- **artefacts**: 368
 
 ## Commands (134)
 
@@ -191,7 +191,7 @@ Core framework-neutral artefacts.
 - **`strategist`** — The senior voice that owns the second-order moves — build-vs-buy, market-entry, moat, vision, contracts, privacy, data-handling under regulatory constraint.
 - **`tech-writer`** — The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin.
 
-## Rules (71)
+## Rules (72)
 
 - **`agent-authority`** — Priority Index for the four authority rules — Hard Floor → Permission Gate → Commit Default → Trivial-vs-Blocking; read first, route to canonical rule
 - **`analysis-skill-routing`** — When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis
@@ -225,6 +225,7 @@ Core framework-neutral artefacts.
 - **`improve-before-implement`** — Before implementing features or architectural changes — validate request against existing code, challenge weak requirements, suggest improvements
 - **`invite-challenge`** — Before executing a complex plan or non-trivial design — ask 'am I solving the right problem?' and pause for user confirmation
 - **`language-and-tone`** — Language and tone — informal German Du, English code comments, .md files always English
+- **`linked-projects-onboarding-gate`** — IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes
 - **`low-impact-corpus-privacy-floor`** — Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus
 - **`markdown-safe-codeblocks`** — Generating markdown with code blocks — prevent broken nesting
 - **`media-governance-routing`** — Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)

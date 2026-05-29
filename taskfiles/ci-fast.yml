@@ -518,6 +518,11 @@ tasks:
     desc: Stable artifacts must not cite specific files in agents/roadmaps/ (no-roadmap-references rule)
     cmd: python3 scripts/check_no_roadmap_refs.py
 
+  check-no-local-settings:
+    silent: true
+    desc: .agent-settings.local.yml (per-machine override layer) must never be committed
+    cmd: python3 scripts/check_no_local_settings_committed.py
+
   check-council-references:
     silent: true
     desc: Stable artifacts must not link specific files in agents/runtime/council/{questions,responses,sessions}/ (no-transient-references rule, council clause)

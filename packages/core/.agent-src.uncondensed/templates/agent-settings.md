@@ -436,6 +436,28 @@ telemetry:
       # Append-only JSONL log. Path is relative to the project root.
       # Always gitignored (see config/gitignore-block.txt).
       path: .agent-engagement.jsonl
+
+# --- Linked projects (cross-repo awareness, local-only) ---
+#
+# Sibling repositories the IDE has attached to this project (PhpStorm
+# .idea/modules.xml + vcs.xml, VS Code *.code-workspace). When a sibling is
+# opted in, the agent proactively considers cross-repo impact (API contract /
+# shared-type changes) and warns — it does NOT bulk-include the sibling's
+# files. See docs/guides/cross-repo-linked-projects.md and ADR-032.
+#
+# THIS KEY BELONGS IN `.agent-settings.local.yml` (in agents/settings/) (the per-machine, gitignored
+# override layer), NOT in the committed `.agent-settings.yml`: sibling paths
+# differ per developer and must never be committed. Each entry:
+#   - path:    absolute path to the sibling repo root (auto-filled by detection)
+#   - include: true = in scope (proactive awareness); false = declined, never
+#              re-prompted.
+# Detection auto-skips bloat dirs (node_modules/.git/dist/build/.venv/target);
+# a sibling over `max_files` is flagged `large` (awareness only), never excluded.
+linked_projects: []
+  # - path: /abs/path/to/sibling-repo
+  #   include: true
+# Optional ceiling for the `large` flag (does not exclude). Default 20000.
+linked_projects_max_files: 20000
 ```
 
 ## Settings Reference
@@ -509,6 +531,8 @@ the canonical narrative lives in
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
 | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
 | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
+| `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
+| `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 
 ### Rename-Map (migration)
 

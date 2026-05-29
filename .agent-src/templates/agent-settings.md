@@ -430,6 +430,20 @@ telemetry:
       # Append-only JSONL log. Path is relative to the project root.
       # Always gitignored (see config/gitignore-block.txt).
       path: .agent-engagement.jsonl
+
+# --- Linked projects (cross-repo awareness, local-only) ---
+# IDE-attached sibling repos in scope for proactive cross-repo awareness.
+# BELONGS IN `.agent-settings.local.yml` (in agents/settings/) (per-machine, gitignored) — sibling
+# paths differ per developer, never commit them. Each entry: path (absolute,
+# auto-filled by detection) + include (true = in scope, false = declined,
+# never re-prompted). Detection skips bloat dirs; a sibling over max_files is
+# flagged `large` (awareness only), never excluded. See ADR-032 +
+# docs/guides/cross-repo-linked-projects.md. Agent never bulk-includes sibling
+# files — passive awareness only.
+linked_projects: []
+  # - path: /abs/path/to/sibling-repo
+  #   include: true
+linked_projects_max_files: 20000   # ceiling for the `large` flag; never excludes
 ```
 
 ## Settings Reference
@@ -503,6 +517,8 @@ the canonical narrative lives in
 | `telemetry.artifact_engagement.record.consulted` | `true`, `false` | `true` | When `true`: record artefacts loaded into context. |
 | `telemetry.artifact_engagement.record.applied` | `true`, `false` | `true` | When `true`: record artefacts cited or driving a decision. |
 | `telemetry.artifact_engagement.output.path` | path | `.agent-engagement.jsonl` | Append-only JSONL log path, relative to the project root. Always gitignored. |
+| `linked_projects` | list of `{path, include}` | `[]` | IDE-attached sibling repos in scope for proactive cross-repo awareness. **Belongs in `.agent-settings.local.yml` (in agents/settings/)** (per-machine, gitignored). See [cross-repo guide](../../docs/guides/cross-repo-linked-projects.md) + ADR-032. |
+| `linked_projects_max_files` | integer | `20000` | File-count ceiling above which a detected sibling is flagged `large` (awareness only). Never excludes. |
 
 ### Rename-Map (migration)
 
