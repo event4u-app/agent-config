@@ -56,3 +56,12 @@ tasks:
     desc: |
       Structural lint on docs/value.md and the latest value-v1 JSON.
     cmd: python3 scripts/lint_value_dashboard.py {{.QUIET_FLAG}}
+
+  value:telemetry:replay:
+    silent: true
+    desc: |
+      Replay corpora (Track B + dev + non-dev by default; capped at
+      200 prompts/corpus) through the router-telemetry hook and emit
+      per-trigger / per-rule hit counts + the panel_b_untouchable list.
+      Pure-local, no API spend. Phase 3 of road-to-value-dashboard-netto-cuts.
+    cmd: python3 scripts/router_telemetry.py {{.QUIET_FLAG}}

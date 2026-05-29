@@ -98,6 +98,77 @@ def test_load_rung_pending_on_missing(ladder_mod, reference_scale, pricing_row_s
     assert "agents/runtime/frugality" in rung["source_report"]
 
 
+# ── New: load_rung_from_router (Phase 1 of netto-cuts) ──────────────────
+
+
+def test_load_rung_from_router_pending_on_missing(
+    ladder_mod, reference_scale, pricing_row_sonnet
+):
+    rung = ladder_mod.load_rung_from_router(
+        None, None, 0, reference_scale, pricing_row_sonnet
+    )
+    assert rung["id"] == "load"
+    assert rung["confidence"] == "pending"
+    assert rung["token_delta"] == 0
+    assert "dist/router.json" in rung["source_report"]
+
+
+def test_load_rung_from_router_pending_when_kernel_missing(
+    ladder_mod, reference_scale, pricing_row_sonnet
+):
+    """Router present but no kernel key → pending, not crash."""
+    rung = ladder_mod.load_rung_from_router(
+        {"schema_version": 1}, {}, 0, reference_scale, pricing_row_sonnet
+    )
+    assert rung["confidence"] == "pending"
+
+
+def test_load_rung_from_router_sums_kernel_chars(
+    ladder_mod, reference_scale, pricing_row_sonnet
+):
+    """Real kernel ID list + per-rule char map → measured token delta."""
+    router = {"kernel": ["rule-a", "rule-b", "rule-c"]}
+    rule_chars = {
+        "rule-a": 4000,
+        "rule-b": 8000,
+        "rule-c": 4000,
+        "unrelated-rule": 9999,  # must be ignored — not in kernel
+    }
+    charter_chars = 4000
+    rung = ladder_mod.load_rung_from_router(
+        router, rule_chars, charter_chars, reference_scale, pricing_row_sonnet
+    )
+    # kernel = 4000 + 8000 + 4000 = 16000; + charter 4000 = 20000; / 4 = 5000
+    assert rung["token_delta"] == 5000
+    assert rung["confidence"] == "measured"
+    assert rung["source_report"] == "dist/router.json"
+    # Footnote MUST name the kernel-rule count + charter chars for audit
+    assert "3 rules" in rung["footnote"]
+    assert "16000" in rung["footnote"]
+
+
+def test_load_rung_from_router_exceeds_old_frugality_baseline(
+    ladder_mod, reference_scale, pricing_row_sonnet
+):
+    """Regression guard: the bug-fix must produce a HIGHER baseline.
+
+    The old frugality canon measured ~4 843 tokens. The real
+    10-rule kernel must measure more — anything ≤ 4 843 means the bug
+    snuck back in.
+    """
+    # Synthesise a kernel that mirrors the real on-disk size:
+    # 10 rules × ~3200 chars ≈ 32k chars + charter 4k = 36k / 4 = 9000 tok.
+    router = {"kernel": [f"k{i}" for i in range(10)]}
+    rule_chars = {f"k{i}": 3200 for i in range(10)}
+    rung = ladder_mod.load_rung_from_router(
+        router, rule_chars, 4000, reference_scale, pricing_row_sonnet
+    )
+    assert rung["token_delta"] > 4843, (
+        "Phase 1 regression: load rung must exceed the old frugality "
+        f"canon's 4 843 tokens, got {rung['token_delta']}"
+    )
+
+
 def test_condense_rung_pending_on_missing(
     ladder_mod, reference_scale, pricing_row_sonnet
 ):
