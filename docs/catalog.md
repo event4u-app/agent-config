@@ -1,6 +1,6 @@
 # agent-config — Public Catalog
 
-Consumer-facing catalog of all **503 public artefacts** shipped by
+Consumer-facing catalog of all **504 public artefacts** shipped by
 this package. Internal package-maintenance rules and deprecation shims
 are excluded.
 
@@ -231,7 +231,7 @@ are excluded.
 | skill | [`voc-extract`](../.agent-src/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../.agent-src/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (76)
+## Rules (77)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -269,6 +269,7 @@ are excluded.
 | rule | [`language-and-tone`](../.agent-src/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../.agent-src/rules/laravel-routing.md) | auto | Writing/reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to laravel skill |
 | rule | [`laravel-translations`](../.agent-src/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization |
+| rule | [`linked-projects-onboarding-gate`](../.agent-src/rules/linked-projects-onboarding-gate.md) | auto | IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes |
 | rule | [`low-impact-corpus-privacy-floor`](../.agent-src/rules/low-impact-corpus-privacy-floor.md) | auto | Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus |
 | rule | [`markdown-safe-codeblocks`](../.agent-src/rules/markdown-safe-codeblocks.md) | auto | Generating markdown with code blocks — prevent broken nesting |
 | rule | [`media-governance-routing`](../.agent-src/rules/media-governance-routing.md) | auto | Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure) |

@@ -1,6 +1,6 @@
 # Agent-Config Internal Index
 
-Maintainer-facing index of all **504 artefacts** in this package.
+Maintainer-facing index of all **505 artefacts** in this package.
 Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 
 > **Regenerate:** `python3 scripts/generate_index.py`
@@ -231,7 +231,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | skill | [`voc-extract`](../packages/pack-product-discovery/.agent-src.uncondensed/skills/voc-extract/SKILL.md) |  | Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'. |
 | skill | [`voice-and-tone-design`](../packages/pack-gtm-marketing/.agent-src.uncondensed/skills/voice-and-tone-design/SKILL.md) |  | Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'. |
 
-## Rules (77)
+## Rules (78)
 
 | kind | name | type | description |
 |---|---|---|---|
@@ -270,6 +270,7 @@ Auto-generated from `.agent-src.uncondensed/` and `docs/guidelines/`.
 | rule | [`language-and-tone`](../packages/core/.agent-src.uncondensed/rules/language-and-tone.md) | always | Language and tone — informal German Du, English code comments, .md files always English |
 | rule | [`laravel-routing`](../packages/pack-laravel/.agent-src.uncondensed/rules/laravel-routing.md) | auto | Writing/reviewing Laravel code — controllers, Eloquent, Artisan, jobs, events, policies — route to laravel skill |
 | rule | [`laravel-translations`](../packages/pack-laravel/.agent-src.uncondensed/rules/laravel-translations.md) | auto | Laravel language files, translations, i18n, lang/de, lang/en, __() helper, localization |
+| rule | [`linked-projects-onboarding-gate`](../packages/core/.agent-src.uncondensed/rules/linked-projects-onboarding-gate.md) | auto | IDE-attached sibling repo detected — prompt once to opt it into proactive cross-repo awareness, persist local-only, then surface cross-repo impact on relevant changes |
 | rule | [`low-impact-corpus-privacy-floor`](../packages/core/.agent-src.uncondensed/rules/low-impact-corpus-privacy-floor.md) | auto | Writing/editing/upstreaming entries in agents/decisions/low-impact-decisions.md — non-bypassable privacy floor for the learning corpus |
 | rule | [`markdown-safe-codeblocks`](../packages/core/.agent-src.uncondensed/rules/markdown-safe-codeblocks.md) | auto | Generating markdown with code blocks — prevent broken nesting |
 | rule | [`media-governance-routing`](../packages/core/.agent-src.uncondensed/rules/media-governance-routing.md) | auto | Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure) |
