@@ -17,27 +17,28 @@ complexity: lightweight
 
 > **Human-input gate.** The npm-primary-vs-dual-track call is a maintainer decision; the roadmap drafts the ADR and surfaces the evidence, the maintainer confirms the verdict.
 
-- [ ] **Step 1:** Draft an ADR (next number in `docs/decisions/`, regen the index) — "Distribution identity: npm-primary". Capture the de-facto evidence (`package.json` 4.3.0, `release.py` npm publish, Composer surface frozen at 1.x) and the decision: is Composer/Packagist a supported channel or deprecated-in-place? Default proposal: **npm-primary, Packagist deprecated-in-place** unless the maintainer names a Composer-consuming project.
-- [ ] **Step 2:** Exit gate — ADR `Status: accepted` with the maintainer's confirmed verdict; index regenerated; the decision is referenced from `docs/distribution/registries.md`.
+- [x] **Step 1:** Draft an ADR (next number in `docs/decisions/`, regen the index) — "Distribution identity: npm-primary". Capture the de-facto evidence (`package.json` 4.3.0, `release.py` npm publish, Composer surface frozen at 1.x) and the decision: is Composer/Packagist a supported channel or deprecated-in-place? Default proposal: **npm-primary, Packagist deprecated-in-place** unless the maintainer names a Composer-consuming project. <!-- ADR-033 landed; council (claude-sonnet-4-5 + gpt-4o, 2026-05-29) converged on npm-primary + Packagist deprecated-in-place -->
+- [x] **Step 2:** Exit gate — ADR `Status: accepted` with the maintainer's confirmed verdict; index regenerated; the decision is referenced from `docs/distribution/registries.md`.
 
 ## Phase 2: Execute the decision on the consumer-facing surfaces
 
-- [ ] **Step 1:** If Phase 1 lands on "deprecated-in-place" — add a deprecation notice to the Packagist/Composer surface (composer.json `description` + an `abandoned`/replacement pointer to the npm package) so the stale 1.0.4 listing redirects consumers to the real install path. *(Registry-side claim/archive on Packagist itself is a maintainer login action — capture it as a human-owner step, not an autonomous push.)*
-- [ ] **Step 2:** Add a consumer "breaking changes at a glance" pointer — a short README/distribution note linking the `CHANGELOG.md § Breaking` section, so a consumer who sees a major bump has a one-click answer to "what broke / do I need to act". Reuses the existing changelog; no new `BREAKING_CHANGES.md` file unless the maintainer prefers one.
-- [ ] **Step 3:** Exit gate — `docs/distribution/registries.md` reflects the posture; reference checker green (no dangling links).
+- [x] **Step 1:** If Phase 1 lands on "deprecated-in-place" — add a deprecation notice to the Packagist/Composer surface (composer.json `description` + an `abandoned`/replacement pointer to the npm package) so the stale 1.0.4 listing redirects consumers to the real install path. *(Registry-side claim/archive on Packagist itself is a maintainer login action — capture it as a human-owner step, not an autonomous push.)* <!-- composer.json N/A in this repo (removed in pre-3.x npm pivot); human-owner Packagist claim/archive item captured in docs/distribution/registries.md § Packagist deprecation -->
+- [x] **Step 2:** Add a consumer "breaking changes at a glance" pointer — a short README/distribution note linking the `CHANGELOG.md § Breaking` section, so a consumer who sees a major bump has a one-click answer to "what broke / do I need to act". Reuses the existing changelog; no new `BREAKING_CHANGES.md` file unless the maintainer prefers one. <!-- README.md hero block gained `Breaking changes` link + distribution sub-line citing ADR-033 -->
+- [x] **Step 3:** Exit gate — `docs/distribution/registries.md` reflects the posture; reference checker green (no dangling links). <!-- registries.md now leads with `## Distribution channels — npm-primary` referencing ADR-033; `task check-refs` green -->
+
 
 ## Phase 3: Release-comms hygiene — commit-subject lint
 
 Because `release.py` generates the changelog **from commit subjects**, a sloppy subject ("commit leftovers" — the third such occurrence per feedback 13) becomes a sloppy public changelog line. This is the one hygiene item that ties directly to distribution.
 
-- [ ] **Step 1:** Add a CI lint that rejects PR commit subjects that are too short (< ~10 chars) or contain blocklist words (`leftover`, `wip`, `temp`, `fixup`). CI-enforced, not a local pre-commit hook (bypassable). Wire into the existing `task ci` lint tier.
-- [ ] **Step 2:** Exit gate — the lint runs in CI, passes on clean history, and fails on a deliberately bad fixture subject.
+- [x] **Step 1:** Add a CI lint that rejects PR commit subjects that are too short (< ~10 chars) or contain blocklist words (`leftover`, `wip`, `temp`, `fixup`). CI-enforced, not a local pre-commit hook (bypassable). Wire into the existing `task ci` lint tier. <!-- scripts/lint_commit_subjects.py + .github/workflows/commit-subjects.yml + Taskfile ci/ci-strict wiring landed -->
+- [x] **Step 2:** Exit gate — the lint runs in CI, passes on clean history, and fails on a deliberately bad fixture subject. <!-- 26 pytest cases in tests/test_lint_commit_subjects.py cover clean + short + blocklist + carve-out paths; all green locally -->
 
 ## Acceptance criteria
 
-- [ ] Phase 1: distribution-identity ADR accepted with maintainer verdict; index regenerated; referenced from `docs/distribution/registries.md`.
-- [ ] Phase 2: stale Packagist listing carries a deprecation/redirect signal (or dual-track is explicitly chosen and auto-sync is scoped); consumer breaking-change pointer added.
-- [ ] Phase 3: commit-subject CI lint shipped, green on clean history, red on a bad fixture.
+- [x] Phase 1: distribution-identity ADR accepted with maintainer verdict; index regenerated; referenced from `docs/distribution/registries.md`. <!-- ADR-033 accepted; INDEX.md has 33 numbered ADRs; registries.md leads with `## Distribution channels — npm-primary` -->
+- [x] Phase 2: stale Packagist listing carries a deprecation/redirect signal (or dual-track is explicitly chosen and auto-sync is scoped); consumer breaking-change pointer added. <!-- registries.md § Packagist deprecation surfaces the human-owner action; README.md hero gained Breaking-changes link + distribution sub-line -->
+- [x] Phase 3: commit-subject CI lint shipped, green on clean history, red on a bad fixture. <!-- lint + workflow + 26-case test suite + Taskfile wiring landed -->
 - [ ] `task ci` green on each phase's PR; reference checker resolves all new links.
 
 ## Notes
