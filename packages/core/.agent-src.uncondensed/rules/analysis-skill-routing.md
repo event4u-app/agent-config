@@ -2,7 +2,6 @@
 type: "manual"
 tier: "3"
 description: "When choosing an analysis skill, route to the narrowest matching skill instead of defaulting to broad analysis"
-source: package
 triggers:
   - keyword: "analyze"
   - keyword: "analysis"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Analysis Skill Routing

@@ -1,7 +1,6 @@
 ---
 name: token-optimizer
 description: "Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action."
-source: package
 domain: process
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Token Optimizer — decision tree + catalog

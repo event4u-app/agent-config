@@ -5,7 +5,6 @@ cluster: agents
 sub: audit
 description: Audit agent infrastructure — token overhead, rule triggers, AGENTS.md health, Capability-over-Structure adherence, stale references. Read-only, suggest-only, never auto-apply.
 skills: [copilot-agents-optimization, agents-audit, agent-docs-writing, agents-md-thin-root, quality-tools]
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "audit agent infrastructure, check rule triggers, verify AGENTS.md health, agent-layer health-check"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents audit

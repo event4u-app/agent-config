@@ -1,7 +1,6 @@
 ---
 name: skill-reviewer
 description: "Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations."
-source: package
 domain: quality
 execution:
   type: assisted
@@ -11,14 +10,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Skill Reviewer

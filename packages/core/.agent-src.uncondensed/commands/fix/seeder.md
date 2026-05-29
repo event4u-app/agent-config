@@ -5,7 +5,6 @@ cluster: fix
 sub: seeder
 skills: [eloquent]
 description: Scan seeder data files for broken foreign key references — find constants used without getReference() and fix them
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "the seeder is broken, foreign key errors in seeders"
@@ -15,14 +14,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix seeder

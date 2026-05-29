@@ -3,7 +3,6 @@ name: project-health
 tier: 1
 skills: [quality-tools]
 description: Quick project health check — show status of docs, modules, contexts, and roadmaps without creating anything
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "check project health, what's the state of my docs and modules"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # project-health

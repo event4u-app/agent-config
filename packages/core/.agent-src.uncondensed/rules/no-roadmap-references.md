@@ -3,7 +3,6 @@ type: "auto"
 tier: "mechanical-already"
 description: "Linking transient files (agents/roadmaps/, agents/runtime/council/*/) from a stable artifact — both layers expire; promote findings"
 alwaysApply: false
-source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
   - path_prefix: "agents/runtime/council/questions/"
@@ -21,14 +20,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # No Transient References from Stable Artifacts

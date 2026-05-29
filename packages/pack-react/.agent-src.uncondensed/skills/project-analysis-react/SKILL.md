@@ -1,17 +1,13 @@
 ---
 name: project-analysis-react
 description: "Use for deep React analysis: component tree, state flow, props flow, hooks usage, rendering behavior, and React-specific failure patterns."
-source: package
 domain: discovery
 workspaces:
   - engineering
 packs:
   - react
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

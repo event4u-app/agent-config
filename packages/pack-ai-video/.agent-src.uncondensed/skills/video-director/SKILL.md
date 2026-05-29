@@ -3,7 +3,6 @@ name: video-director
 description: "Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'."
 personas:
   - hollywood-director
-source: package
 domain: product
 workspaces:
   - small-business
@@ -12,8 +11,6 @@ packs:
 lifecycle: experimental
 trust:
   level: experimental
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

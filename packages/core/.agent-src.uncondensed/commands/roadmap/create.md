@@ -5,7 +5,6 @@ cluster: roadmap
 sub: create
 skills: [agent-docs-writing]
 description: Interactively create a new roadmap file in agents/roadmaps/
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "create a roadmap for X, plan this work as a roadmap"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /roadmap create

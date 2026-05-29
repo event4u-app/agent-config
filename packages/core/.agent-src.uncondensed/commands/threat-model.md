@@ -3,7 +3,6 @@ name: threat-model
 tier: 1
 skills: [threat-modeling, authz-review, security-sensitive-stop]
 description: Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
-disable-model-invocation: true
 council_depth: deep
 suggestion:
   eligible: true
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # threat-model

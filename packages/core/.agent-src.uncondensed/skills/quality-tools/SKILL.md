@@ -1,7 +1,6 @@
 ---
 name: quality-tools
 description: "Use when PHPStan, Rector, or ECS output appears — \"phpstan says mixed\", type errors, \"fix code style\", \"run rector\" — even when Eloquent/Laravel/model code is also mentioned."
-source: package
 domain: quality
 execution:
   type: assisted
@@ -12,14 +11,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # quality-tools

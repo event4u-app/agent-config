@@ -5,7 +5,6 @@ cluster: tests
 sub: create
 skills: [pest-testing]
 description: Write meaningful tests for the changes in the current branch
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "write tests for these changes, add tests for this branch"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /tests create

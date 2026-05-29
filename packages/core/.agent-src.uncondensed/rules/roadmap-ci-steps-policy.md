@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Authoring or executing roadmaps — forbid task ci / make test / npm run check steps when quality.local_auto_run is false; skip inline"
-source: package
 triggers:
   - path_prefix: "agents/roadmaps/"
   - path_prefix: "{module_root}/"  # resolved via modules.root_paths; Laravel shape: app/Modules/
@@ -29,14 +28,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Roadmap CI-Steps Policy

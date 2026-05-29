@@ -4,8 +4,6 @@ role: Security Engineer
 description: "The voice that reads every diff for OWASP-shaped failure modes, secret leakage, and trust-boundary crossings."
 tier: specialist
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Security Engineer

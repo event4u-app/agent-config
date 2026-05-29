@@ -5,7 +5,6 @@ cluster: council
 sub: pr
 skills: [ai-council]
 description: Pull a GitHub PR via gh CLI and run the council on the diff with a PR-specific neutrality preamble — read-only by default; comment posting is opt-in.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "council on PR #N, external review of pull request, second opinion on a PR"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /council pr

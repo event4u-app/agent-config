@@ -3,7 +3,6 @@ name: scene-expander
 description: "Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'."
 personas:
   - hollywood-director
-source: package
 domain: product
 workspaces:
   - small-business
@@ -12,8 +11,6 @@ packs:
 lifecycle: experimental
 trust:
   level: experimental
-  confidence: high
-  human_review_required: false
 install:
   default: false
   removable: true

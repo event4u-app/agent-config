@@ -4,8 +4,6 @@ role: Developer
 description: "The voice of the person who will actually implement this — grounded in edge cases, null values, and the failure modes prose hides."
 tier: core
 mode: developer
-version: "1.0"
-source: package
 ---
 
 # Developer

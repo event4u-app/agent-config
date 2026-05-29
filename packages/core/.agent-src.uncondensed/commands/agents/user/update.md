@@ -4,7 +4,6 @@ tier: 2
 cluster: agents
 sub: user
 description: Open .agent-user.md in the user's IDE for manual edit; validates schema and 100-line cap on save.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "edit user persona, update .agent-user.md, change nickname, change language, refresh voice sample"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /agents user update

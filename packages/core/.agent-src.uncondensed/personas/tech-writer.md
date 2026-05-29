@@ -4,8 +4,6 @@ role: Tech Writer
 description: "The senior voice that owns the said and the read — release narratives anchored in value, READMEs survivable by strangers, AGENTS.md thin."
 tier: specialist
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Tech Writer

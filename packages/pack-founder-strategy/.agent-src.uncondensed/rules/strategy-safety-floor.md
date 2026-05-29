@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Founder-strategy output (vision, positioning, competitive moats, market entry, OKR trees, build-vs-buy) — never issue final strategic call; surface trade-offs; human owns the decision"
-source: package
 triggers:
   - keyword: "vision"
   - keyword: "positioning"
@@ -33,14 +32,9 @@ workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
 trust:
   level: advisory
-  confidence: high
   human_review_required: true
-install:
-  default: true
-  removable: false
 ---
 
 # Strategy Safety Floor

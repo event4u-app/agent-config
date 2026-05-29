@@ -3,21 +3,12 @@ type: "always"
 tier: "safety-floor"
 description: "Commit policy — never commit and never ask about committing unless the user said so this turn, the roadmap authorizes it, or a commit command is invoked"
 alwaysApply: true
-source: package
 load_context:
   - contexts/authority/commit-mechanics.md
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Commit Policy

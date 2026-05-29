@@ -3,20 +3,13 @@ name: okr-tree-modeling
 description: "Use when decomposing a company objective into team OKRs, auditing a draft OKR tree, or stress-testing an existing one for measurability and laddering."
 status: active
 tier: senior
-source: package
 domain: product
 recommended_for_user_types: [founder]
 workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

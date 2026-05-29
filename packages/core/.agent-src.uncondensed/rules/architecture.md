@@ -3,7 +3,6 @@ type: "auto"
 tier: "3"
 alwaysApply: false
 description: "Architecture rules for new files, classes, controllers, modules, or structural decisions about project organization"
-source: package
 triggers:
   - keyword: "controller"
   - keyword: "service"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Architecture Rules

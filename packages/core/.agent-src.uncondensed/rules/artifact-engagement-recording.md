@@ -3,7 +3,6 @@ type: "auto"
 tier: "mechanical-already"
 alwaysApply: false
 description: "After a /implement-ticket or /work phase-step or full task — emit one telemetry:record call"
-source: package
 triggers:
   - phrase: "/implement-ticket"
   - phrase: "/work"
@@ -16,14 +15,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 <!-- cloud_safe: noop -->

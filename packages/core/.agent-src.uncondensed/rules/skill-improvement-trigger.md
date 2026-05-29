@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "After a meaningful task — trigger post-task learning capture if pipelines.skill_improvement is enabled"
-source: package
 triggers:
   - phrase: "after completing"
   - keyword: "improvement"
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Skill Improvement Trigger

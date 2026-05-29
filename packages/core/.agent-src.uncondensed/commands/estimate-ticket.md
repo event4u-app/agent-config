@@ -3,7 +3,6 @@ name: estimate-ticket
 tier: 1
 skills: [estimate-ticket]
 description: Estimate a Jira/Linear ticket before sprint planning — size + risk + split recommendation + uncertainty, sibling to /refine-ticket, ends with a close-prompt
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "how big is this ticket, estimate PROJ-123, should we split this"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # estimate-ticket

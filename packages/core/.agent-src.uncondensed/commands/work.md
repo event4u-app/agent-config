@@ -3,7 +3,6 @@ name: work
 tier: 0
 skills: [refine-prompt, command-routing]
 description: Drive a free-form prompt end-to-end through refine → score → plan → implement → test → verify → report — Option-A loop over the `work_engine` Python engine, confidence-band gated, no auto-git.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "build this, implement this, drive this end-to-end"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # work

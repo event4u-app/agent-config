@@ -3,20 +3,15 @@ name: perf-feedback-craft
 description: "Use when shaping feedback — situation-behavior-impact, growth-vs-corrective split, cadence design, ladder-of-inference checks. Triggers on 'how do I give this feedback', 'perf review shape'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, customer-segment, product]
 workspaces:
   - ops
 packs:
   - ops-people
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

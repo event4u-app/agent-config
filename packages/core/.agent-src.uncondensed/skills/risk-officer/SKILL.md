@@ -4,20 +4,11 @@ description: "Use when surfacing and prioritising risk before commit — blast-r
 personas:
   - critical-challenger
   - senior-engineer
-source: package
 domain: quality
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # risk-officer

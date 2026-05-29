@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Engineering output touching production, infra, security, data, or external systems — surface blast radius, name rollback path, never autonomous on Hard-Floor triggers"
-source: package
 triggers:
   - keyword: "production"
   - keyword: "deploy"
@@ -29,14 +28,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Engineering Safety Floor

@@ -3,7 +3,6 @@ type: "auto"
 tier: "2a"
 alwaysApply: false
 description: "Security-sensitive paths — auth, billing, tenants, secrets, uploads, webhooks, public endpoints — threat-model BEFORE editing"
-source: package
 triggers:
   - keyword: "auth"
   - keyword: "billing"
@@ -14,14 +13,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # Security-Sensitive Stop Rule

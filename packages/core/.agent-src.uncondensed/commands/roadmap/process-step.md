@@ -5,7 +5,6 @@ cluster: roadmap
 sub: process-step
 skills: [agent-docs-writing, ai-council, roadmap-management]
 description: Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "process the next step, do the next roadmap step, einen schritt abarbeiten"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /roadmap:process-step

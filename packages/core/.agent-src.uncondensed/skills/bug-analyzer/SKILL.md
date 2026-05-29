@@ -1,21 +1,12 @@
 ---
 name: bug-analyzer
 description: "Use when the user shares a Sentry error, Jira bug ticket, or error description and wants root cause analysis. Also for proactive bug hunting and code audits for hidden bugs."
-source: package
 domain: discovery
 council_depth: deep
 workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # bug-analyzer

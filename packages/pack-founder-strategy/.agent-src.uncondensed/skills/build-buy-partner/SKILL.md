@@ -3,20 +3,13 @@ name: build-buy-partner
 description: "Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'."
 status: active
 tier: senior
-source: package
 domain: process
 context_spine: [org-stage, product, customer-segment]
 workspaces:
   - founder
 packs:
   - founder-strategy
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

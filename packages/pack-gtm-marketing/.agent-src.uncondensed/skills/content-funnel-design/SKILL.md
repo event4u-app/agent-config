@@ -3,7 +3,6 @@ name: content-funnel-design
 description: "Use when mapping funnel-stage to content shape — conversion-pathway, content-as-system, leverage-point selection. Triggers on 'design our content funnel', 'why does mid-funnel leak'."
 status: active
 tier: senior
-source: package
 domain: product
 context_spine: [product, customer-segment, channel-stage, funnel-stage]
 recommended_for_user_types: [creator, gtm]
@@ -11,13 +10,9 @@ workspaces:
   - gtm
 packs:
   - gtm-marketing
-lifecycle: active
 trust:
   level: professional
-  confidence: high
-  human_review_required: false
 install:
-  default: true
   removable: true
 ---
 

@@ -5,7 +5,6 @@ cluster: memory
 sub: promote
 description: Promote an intake signal (or provisional proposal) into a curated memory entry — opens a PR and runs the admission gate.
 skills: [file-editor]
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Curation pipeline — overlaps /memory-add; keep explicit."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /memory promote

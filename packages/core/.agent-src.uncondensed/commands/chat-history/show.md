@@ -5,7 +5,6 @@ cluster: chat-history
 sub: show
 skills: [chat-history]
 description: Show the status of the persistent chat-history log — file size, entry count, header fingerprint, age, and the last few entries
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Status display only; no NL trigger distinct from 'show status'."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 <!-- cloud_safe: noop -->
 

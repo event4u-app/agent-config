@@ -5,7 +5,6 @@ tier: 2
 cluster: optimize
 sub: augmentignore
 description: Creates or updates .augmentignore based on the project's actual tech stack, large files, generated artifacts, and irrelevant agent skills/rules.
-disable-model-invocation: true
 suggestion:
   eligible: false
   rationale: "Niche maintenance tool with no recurring NL trigger."
@@ -13,14 +12,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 <!-- cloud_safe: noop -->
 

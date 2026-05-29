@@ -5,7 +5,6 @@ cluster: fix
 sub: pr-developer-comments
 skills: [php-coder]
 description: Fix and reply to human reviewer comments on a GitHub PR
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "fix the human reviewer comments, address the developer feedback"
@@ -14,14 +13,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # /fix pr-developer-comments

@@ -4,8 +4,6 @@ role: Eloquent Tamer
 description: "The voice that audits Eloquent for N+1, query-shape regressions, and ORM idioms that compile cleanly but melt the database."
 tier: specialist
 mode: reviewer
-version: "1.0"
-source: package
 ---
 
 # Eloquent Tamer

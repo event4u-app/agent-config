@@ -2,7 +2,6 @@
 type: "auto"
 tier: "2a"
 description: "Finance-pack output (runway, valuation, DCF, scenario, unit economics, forecasting) — never issue final invest/raise call; mandatory disclosure footer; sensitivity + counter-case required"
-source: package
 triggers:
   - keyword: "runway"
   - keyword: "burn"
@@ -35,14 +34,9 @@ workspaces:
 packs:
   - finance-basic
   - finance-advanced
-lifecycle: active
 trust:
   level: advisory
-  confidence: high
   human_review_required: true
-install:
-  default: true
-  removable: false
 ---
 
 # Finance Safety Floor

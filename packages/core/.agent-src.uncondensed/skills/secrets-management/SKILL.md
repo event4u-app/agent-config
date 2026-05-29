@@ -1,7 +1,6 @@
 ---
 name: secrets-management
 description: "Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized."
-source: package
 domain: devops
 status: active
 refresh_trigger: "A cited provider deprecates an auth method, OR External Secrets Operator ships a major version with breaking CRD changes, OR ≥30% of cited scanner tools change their gate semantics."
@@ -11,14 +10,6 @@ workspaces:
   - engineering
 packs:
   - engineering-base
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # secrets-management

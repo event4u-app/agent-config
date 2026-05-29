@@ -3,7 +3,6 @@ name: prepare-for-review
 tier: 1
 skills: [git-workflow, quality-tools]
 description: Prepare a PR branch for local review — updates main and merges the full branch chain so the branch is up to date
-disable-model-invocation: true
 suggestion:
   eligible: true
   trigger_description: "get this branch ready for review, rebase and prep for PR"
@@ -12,14 +11,6 @@ workspaces:
   - agent-config-maintainer
 packs:
   - meta
-lifecycle: active
-trust:
-  level: core
-  confidence: high
-  human_review_required: false
-install:
-  default: true
-  removable: false
 ---
 
 # prepare-for-review
