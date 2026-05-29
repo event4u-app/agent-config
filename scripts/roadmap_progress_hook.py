@@ -132,6 +132,29 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
 
     script = _resolve_regenerator(consumer_root)
     if script is None:
+        # Phase 1 of road-to-hooks-actually-fire-in-consumers: log
+        # dispatch issue directly (this hook runs as a subprocess from
+        # the universal dispatcher; routing through the dispatcher
+        # would add latency for no benefit).
+        try:
+            sys.path.insert(0, str(Path(__file__).resolve().parent / "hooks"))
+            from dispatch_issues import log_dispatch_issue  # noqa: PLC0415
+            log_dispatch_issue(
+                workspace_root=consumer_root,
+                hook="roadmap-progress",
+                issue="prerequisite_missing",
+                detail=(
+                    "update_roadmap_progress.py not found at any of: "
+                    ".augment/scripts/, .agent-src/scripts/, "
+                    ".agent-src.uncondensed/scripts/"
+                ),
+                resolution=(
+                    "./agent-config hooks:install --regen "
+                    "(or ./agent-config init)"
+                ),
+            )
+        except (ImportError, OSError):
+            pass  # observability never breaks the hook
         if verbose:
             print("roadmap-progress-hook: regenerator not found, skipping",
                   file=sys.stderr)

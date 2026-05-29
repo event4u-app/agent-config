@@ -1,0 +1,25 @@
+{
+  "_fixture_doc": "Phase 6 fixture A — every command resolves to a real dispatcher subcommand. The consumer side may or may not have scaffolding (./agent-config symlink, .augment/scripts/) — that's NOT the linter's concern. Expected: linter PASSES on this fixture.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/agent-config dispatch:hook --platform claude --event session_start --native-event SessionStart"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/agent-config dispatch:hook --platform claude --event post_tool_use --native-event PostToolUse"
+          }
+        ]
+      }
+    ]
+  }
+}

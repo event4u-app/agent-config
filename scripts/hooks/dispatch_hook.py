@@ -38,6 +38,7 @@ MANIFEST_PATH = REPO_ROOT / "scripts" / "hook_manifest.yaml"
 # hooks package state_io has changed (test isolation).
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from state_io import atomic_write_json, feedback_dir, is_replay_mode  # noqa: E402
+from dispatch_issues import log_dispatch_issue, fix_hint  # noqa: E402
 
 EXIT_ALLOW = 0
 EXIT_BLOCK = 1
@@ -234,6 +235,23 @@ def _run_concern(concern: dict, envelope: dict) -> tuple[int, str, str, int]:
     cmd = [sys.executable, str(script), *(concern.get("args") or [])]
     cmd.extend(["--platform", envelope.get("platform", "generic")])
     workspace = envelope.get("workspace_root") or str(Path.cwd())
+
+    # Phase 1 of road-to-hooks-actually-fire-in-consumers: surface
+    # script-not-found via dispatch-issues.jsonl rather than silently
+    # consuming the OSError.
+    if not script.exists():
+        log_dispatch_issue(
+            workspace_root=Path(workspace),
+            hook=str(concern.get("name") or concern.get("script") or "unknown"),
+            issue="script_not_found",
+            detail=f"concern script missing on disk: {script}",
+            resolution=fix_hint(),
+        )
+        # Still return as if the concern failed — fail-open behaviour
+        # depends on the concern's `fail_closed` flag, which the
+        # dispatcher handles downstream.
+        return (3, f"{concern.get('name')}: script missing: {script}", "", 0)
+
     started = time.monotonic()
     try:
         proc = subprocess.run(
@@ -247,6 +265,15 @@ def _run_concern(concern: dict, envelope: dict) -> tuple[int, str, str, int]:
         )
     except (OSError, subprocess.TimeoutExpired) as exc:
         elapsed = int((time.monotonic() - started) * 1000)
+        # Phase 1: also log execution-failed (subprocess errors) so the
+        # never-block contract keeps a trace.
+        log_dispatch_issue(
+            workspace_root=Path(workspace),
+            hook=str(concern.get("name") or "unknown"),
+            issue="execution_failed",
+            detail=f"{type(exc).__name__}: {exc}",
+            resolution=fix_hint(),
+        )
         return (3, f"{concern.get('name')}: {exc}", "", elapsed)
     elapsed = int((time.monotonic() - started) * 1000)
     return (proc.returncode, proc.stderr or "", proc.stdout or "", elapsed)

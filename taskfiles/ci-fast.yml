@@ -207,6 +207,15 @@ tasks:
     desc: Validate scripts/hook_manifest.yaml — concern scripts exist, platform/event names are known, no orphan trampolines
     cmd: python3 scripts/lint_hook_manifest.py
 
+  lint-marketplace-install:
+    silent: true
+    desc: |
+      Plugin-side completeness check (Phase 6 of road-to-hooks-actually-fire-in-consumers).
+      Every command in hooks/hooks.json must resolve to a real dispatcher
+      subcommand in scripts/_dispatch.bash. Does NOT check consumer-side
+      scaffolding — that's the runtime dispatch-issues.jsonl job.
+    cmd: python3 scripts/lint_marketplace_install_completeness.py
+
   lint-hook-concern-budget:
     silent: true
     desc: P3.3 — concerns-per-event budget + fail_closed Tier-1 gate. Warn-only until hooks.concern_budget.hard_fail flips

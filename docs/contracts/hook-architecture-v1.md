@@ -250,6 +250,39 @@ the flag are listed by `./agent-config hooks:doctor` as not
 replay-safe; replay tests assert no `agents/runtime/state/` mutation
 post-invocation.
 
+## Regenerator location — canonical path (Phase 3 of `road-to-hooks-actually-fire-in-consumers`)
+
+The `roadmap-progress` concern's resolver searches three locations
+for `update_roadmap_progress.py`. The **canonical consumer-side
+location is**:
+
+```
+<consumer_root>/.augment/scripts/update_roadmap_progress.py
+```
+
+Rationale:
+
+- The auto-generated `agents/roadmaps-progress.md` already cites
+  `.augment/scripts/update_roadmap_progress.py` in its header.
+- `install.py`'s existing tool projection lays down `.augment/`
+  unconditionally; piggy-backing on that directory means consumers
+  do not need a separate "scripts" install step.
+- The other two paths (`.agent-src/scripts/`,
+  `.agent-src.uncondensed/scripts/`) only populate in
+  source-checkouts of the package itself.
+
+Source-of-truth in the package: `packages/core/.agent-src.uncondensed/scripts/update_roadmap_progress.py`.
+Helper that copies source → consumer canonical:
+`scripts/_lib/install_regenerator.py`. Consumed by `install.py` and
+`hooks:install --regen`.
+
+The resolver in `scripts/roadmap_progress_hook.py::_resolve_regenerator`
+visits the canonical path FIRST; the other two are fallback for
+maintainer / dev workflows. On `return None` the resolver writes a
+`dispatch-issues.jsonl` entry (Phase 1 contract) with
+`prerequisite_missing` so the user can discover the gap via
+`./agent-config hooks:doctor`.
+
 ## Stability
 
 Beta. Breaking changes between v1 and v2 are allowed in a minor

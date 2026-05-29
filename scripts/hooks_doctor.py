@@ -111,16 +111,41 @@ def collect(project_root: Path, manifest: dict,
             "missing": needs_trampoline and not tpath.is_file(),
         })
 
+    # Phase 1 of road-to-hooks-actually-fire-in-consumers: surface
+    # the dispatch-issues log so users see hooks that tried and failed.
+    state_root = REPO_ROOT / STATE_DIR_DEFAULT
+    issues: list[dict] = []
+    try:
+        sys.path.insert(0, str(REPO_ROOT / "scripts" / "hooks"))
+        from dispatch_issues import read_dispatch_issues  # noqa: PLC0415
+        issues = read_dispatch_issues(REPO_ROOT)[-20:]  # last 20
+    except (ImportError, OSError):
+        issues = []
+
     return {
         "schema_version": 1,
         "platforms": matrix["platforms"],
         "concerns": concerns,
         "trampolines": trampolines,
+        "dispatch_issues": issues,
     }
 
 
 def _render_table(payload: dict) -> str:
-    lines: list[str] = [hooks_status._render_table(payload), ""]
+    lines: list[str] = []
+    # Phase 1 CTA — surfaces at the TOP when issues exist, so a user
+    # reading the report can't miss it.
+    if payload.get("dispatch_issues"):
+        n = len(payload["dispatch_issues"])
+        lines.append(
+            f"⚠️  Hooks tried to fire but couldn't ({n} entry"
+            f"{'ies' if n != 1 else 'y'} in dispatch-issues.jsonl) — "
+            "run `./agent-config hooks:install --claude --regen` "
+            "(or follow the per-concern hints below)"
+        )
+        lines.append("")
+    lines.append(hooks_status._render_table(payload))
+    lines.append("")
     lines.append("Concerns")
     lines.append("-" * 60)
     for c in payload["concerns"]:
@@ -138,6 +163,20 @@ def _render_table(payload: dict) -> str:
         marker = "❌ " if t["missing"] else ("·  " if not t["required"] else "✅ ")
         suffix = "" if t["required"] else "  (not required)"
         lines.append(f"{marker}{t['platform']:<9} {t['expected']}{suffix}")
+    # Dispatch-issues detail — last 20 grouped by concern.
+    if payload.get("dispatch_issues"):
+        lines.append("")
+        lines.append("Dispatch issues (last 20)")
+        lines.append("-" * 60)
+        grouped: dict[str, list[dict]] = {}
+        for entry in payload["dispatch_issues"]:
+            grouped.setdefault(entry.get("hook", "?"), []).append(entry)
+        for hook, entries in sorted(grouped.items()):
+            lines.append(f"⚠️  {hook}: {len(entries)} issue(s)")
+            # Show the most recent reason + resolution per concern.
+            latest = entries[-1]
+            lines.append(f"    {latest.get('issue')}: {latest.get('detail')}")
+            lines.append(f"    fix → {latest.get('resolution')}")
     return "\n".join(lines)
 
 
