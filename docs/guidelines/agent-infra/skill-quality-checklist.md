@@ -27,6 +27,31 @@ Every skill's YAML frontmatter MUST validate against `scripts/schemas/skill.sche
 Violations are reported by `scripts/skill_linter.py` as `schema_<rule>` errors
 and fail `python3 scripts/validate_frontmatter.py` and the full CI pipeline.
 
+### Omit fields equal to their schema default
+
+```
+NEVER write a frontmatter field whose value equals its schema `default`.
+OMIT IT — the loader injects the default at read time.
+```
+
+A field that carries the schema `default` (e.g. `trust.level: core`,
+`install.default: true`, `lifecycle: active`, `source: package`,
+`command.disable-model-invocation: true`) is redundant:
+`validate_frontmatter.apply_schema_defaults` injects it transparently for
+every consumer (validator, discovery manifest, drift checksum). Writing it
+anyway is boilerplate that `scripts/lint_frontmatter_boilerplate.py` rejects
+(wired into `task ci-fast`). To strip it across the tree, run
+`python3 scripts/migrate_frontmatter_defaults.py`. Background:
+`road-to-abstraction-reduction.md` +
+`agents/evidence/analysis/abstraction-reduction-preflight.md`.
+
+> **Changing a default is a breaking change.** The schema `default` is a
+> contract: artefacts that omit the field inherit whatever the default *is at
+> read time*. Flipping a default value (e.g. `lifecycle: active → deprecated`)
+> silently re-defaults every artefact that omits the field — so a default
+> change must pair with a re-run of `migrate_frontmatter_defaults.py` and an
+> explicit review of the affected artefacts.
+
 ## Description Triggering
 
 Claude routes skills by their frontmatter `description`. Pushy,
