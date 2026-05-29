@@ -128,6 +128,24 @@ Lock in the measured wins, confirm Panel B held against the full live corpus, ar
 
 **Rollback:** Phase 6 is observation-only. Regressions detected here → roll back the responsible cut(s) at Phase 5's per-rule level.
 
+---
+
+## Phase 7: Post-review honesty-floor refinement
+
+Reopened 2026-05-29 after an external review (Cursor) of the Phase 1–3 artefacts. The review's headline ("24/31 intended triggers miss the deterministic replay") was run against the **pre-commit WIP** snapshot — before commits `dccedb33` / `3d46bdc3` threaded `open_files`/`command` context through the replay (Phase 1 Step 2's planned context). Against the committed HEAD the miss rate was already 14/30, `never_matched_tier1=11`. Re-verification confirmed Phase 3/4's numbers and the **zero-cut verdict are unchanged**. What the review *did* surface — and what this phase fixes — is reporting honesty plus three small corpus-author errors. A cross-provider council round (Gemini, 2026-05-29) rejected the review's "loosen the matcher" option as an honesty-floor violation (regexing paths out of free prose = false positives); the adopted direction is "thread real context (already done) + mark intent-only rules replay-opaque".
+
+- [x] **Step 1 — replay-opaque bucket (telemetry + schema + linter + spec).** Intent-only rules (`telegraph-speak`, `user-interaction`, `no-attribution-footers`, `no-decorative-emojis-in-git-surfaces`, `command-suggestion-policy`) fire at runtime only via `intent` triggers the static replay cannot see. They previously showed as `missed_intended` — indistinguishable from real drift. Added a corpus field `replay_opaque_triggers`; `router_telemetry.py` reports it under `replay_opaque`, excluded from both `missed_intended` and `unintended_activations`; `lint_bench_corpus.py` validates shape + rule-id + mutual-exclusion with `intended_triggers`; `benchmark-corpus-spec.md` schema + invariant table updated. **Done.**
+- [x] **Step 2 — corpus-author fixes (A/B/C).** (A) Dropped `augment-source-of-truth` from `agent-docs-edits-02` + `roadmap-ops-03` — the rule guards `path_prefix: .agent-src/` (generated), never `.agent-src.uncondensed/` (the source you edit); it could not and should not fire there. (B) `framework-routing-04`: added a `*.php` `open_files` entry so `php-coding`'s `file_pattern` fires deterministically (the `php artisan test` prompt carries no `phpstan`/`ecs` keyword). (C) Dropped kernel `ask-when-uncertain` from `agent-docs-edits-04/06` — telemetry skips kernel by design, so it can never be attributed. **Done.**
+- [x] **Step 3 — linter robustness (F).** `live_rule_ids()` now returns `None` (not `set()`) with an stderr warning when `dist/router.json` is missing/unparseable, so a fresh clone before `task sync` skips rule-id validation instead of falsely flagging every trigger `unknown_intended_trigger`. **Done.**
+- [x] **Step 4 — re-verify.** `python3 scripts/lint_bench_corpus.py internal/bench/corpora/router-coverage/*.yaml` → 7 corpora clean (exit 0). Telemetry replay: **all 24 router-coverage tasks `[ok]`, 0 real drift** (16 deterministic hits + 8 replay-opaque declarations), `never_matched_tier1=11` unchanged → Phase 4's structural categorisation (5 state-bound + 5 intent-only) and zero-cut verdict hold. **Done.**
+
+**Rejected:** the review's "loosen the matcher" option (match `path_prefix` against prompt prose; treat any `/word` as a command) — council + analysis: it would claim activations a real host never makes, and is redundant once real context is threaded.
+**Not adopted (out of scope):** inventory-doc task-count cosmetics; the untracked local `.cursorrules`.
+
+**Exit criteria:** replay-opaque bucket lands across telemetry/schema/linter/spec; 0 false-drift tasks in `intended_vs_observed_match`; `never_matched_tier1` and the Phase 4 verdict unchanged; lint green.
+
+---
+
 ## Acceptance criteria
 
 - The widened corpus (≤ 5 new files, ≤ 40 new tasks total) activates at least 10 of the 20 previously-never-matched tier-1 rules — the corpus-blindness finding is structurally resolved.
