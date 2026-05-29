@@ -37,6 +37,7 @@ prompts:
     prompt: "Run `composer install` followed by `php artisan test` in this Laravel project to verify the migration."
     expected_skills: [docker, quality-tools]
     intended_triggers: [docker-commands, php-coding]
+    open_files: [app/Modules/Billing/CreateInvoice.php]  # *.php → php-coding file_pattern trigger (keyword phpstan/ecs absent)
 
   - id: framework-routing-05
     category: router-coverage

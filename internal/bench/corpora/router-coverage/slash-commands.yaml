@@ -14,7 +14,7 @@ prompts:
     language: en
     prompt: "I want to refine ticket PROJ-123 before sending it to engineering. Can you help?"
     expected_skills: [refine-ticket]
-    intended_triggers: [command-suggestion-policy]
+    replay_opaque_triggers: [command-suggestion-policy]  # router triggers are meta-phrases ("free-form prompt"/"command suggestion") + no command-type trigger; not matchable from a real user prompt
     command: "/refine-ticket"
 
   - id: slash-commands-02

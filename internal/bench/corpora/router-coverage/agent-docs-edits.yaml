@@ -22,7 +22,7 @@ prompts:
     language: en
     prompt: "Update this skill — tighten the description and add an example."
     expected_skills: [skill-writing]
-    intended_triggers: [skill-quality, augment-source-of-truth]
+    intended_triggers: [skill-quality]  # augment-source-of-truth removed: it guards .agent-src/ (generated), not .agent-src.uncondensed/ (the source you edit)
     open_files: [.agent-src.uncondensed/skills/some-skill/SKILL.md]
 
   - id: agent-docs-edits-03
@@ -30,7 +30,7 @@ prompts:
     language: en
     prompt: "Condense this rule body to telegraph grammar — drop articles and shorten phrasing where unambiguous."
     expected_skills: [condense-memory]
-    intended_triggers: [telegraph-speak]
+    replay_opaque_triggers: [telegraph-speak]  # intent "any reply" — fires at runtime on every reply, never deterministically matchable
     open_files: [.agent-src.uncondensed/rules/some-rule.md]
 
   - id: agent-docs-edits-04
@@ -38,7 +38,7 @@ prompts:
     language: en
     prompt: "I'm not sure which approach to take here — should I refactor first or add the feature first? Help me decide."
     expected_skills: []
-    intended_triggers: [user-interaction, ask-when-uncertain]
+    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
 
   - id: agent-docs-edits-05
     category: router-coverage
@@ -53,4 +53,4 @@ prompts:
     language: en
     prompt: "Two valid approaches exist here — caching with Redis vs in-process LRU. Which should we use?"
     expected_skills: []
-    intended_triggers: [user-interaction, ask-when-uncertain]
+    replay_opaque_triggers: [user-interaction]  # intent-only; ask-when-uncertain dropped (kernel — telemetry skips kernel, never attributable)
