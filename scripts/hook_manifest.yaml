@@ -45,16 +45,25 @@ concerns:
     script: scripts/minimal_safe_diff_hook.py
     args: []
     fail_closed: false
+  # Phase 2 of road-to-hooks-actually-fire-in-consumers — session_start
+  # gate that surfaces the marketplace-install-but-unscaffolded shape.
+  # Writes .augment/.first-run-action-needed.md + one stderr line so
+  # both file-browser users and lifecycle-log readers see the issue.
+  # Council R3 HIGH: stderr alone is invisible to the average user.
+  first-run-gate:
+    script: scripts/first_run_gate_hook.py
+    args: []
+    fail_closed: false
 
 platforms:
   augment:
-    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     post_tool_use:    [chat-history, roadmap-progress, context-hygiene, verify-before-complete, minimal-safe-diff]
 
   claude:
-    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -75,7 +84,7 @@ platforms:
   # Decision matrix + upstream blockers tracked in
   # agents/settings/contexts/chat-history-platform-hooks.md § Cowork.
   cowork:
-    session_start:    [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:    [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:      [chat-history]
     stop:             [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -89,7 +98,7 @@ platforms:
   # IDE-only — CLI-only users fall back to /checkpoint per
   # agents/settings/contexts/chat-history-platform-hooks.md.
   cursor:
-    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -104,7 +113,7 @@ platforms:
   # both map to session_start. TaskCancel maps to stop because the
   # session is interrupted with partial state (mirrors Augment Stop).
   cline:
-    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
@@ -123,7 +132,7 @@ platforms:
   # surface to record verification commands; documented limitation).
   # minimal-safe-diff is omitted entirely on Windsurf for the same reason.
   windsurf:
-    session_start:      [chat-history, onboarding-gate, verify-before-complete]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete]
 
@@ -138,7 +147,7 @@ platforms:
   # turn-check semantics. AfterAgent fires when the agent loop ends
   # — this is our `stop` slot.
   gemini:
-    session_start:      [chat-history, onboarding-gate, verify-before-complete, minimal-safe-diff]
+    session_start:      [chat-history, first-run-gate, onboarding-gate, verify-before-complete, minimal-safe-diff]
     session_end:        [chat-history]
     stop:               [chat-history, verify-before-complete]
     user_prompt_submit: [chat-history, verify-before-complete, minimal-safe-diff]
