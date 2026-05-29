@@ -61,6 +61,18 @@ from . import user_global_paths
 logger = logging.getLogger(__name__)
 
 DEFAULT_PROJECT_FILE = ".agent-settings.yml"
+#: Per-directory, per-machine override file. Gitignored. Slots into the
+#: cascade immediately after its committed sibling (deepest-wins via
+#: ``_deep_merge``), so a developer's local values override the committed
+#: ones without ever being committed. Missing files are harmless (read as {}).
+LOCAL_PROJECT_FILE = ".agent-settings.local.yml"
+
+
+def _with_local(path: Path) -> list[Path]:
+    """Return ``[path, <path's .local sibling>]`` — committed then local."""
+    return [path, path.with_name(LOCAL_PROJECT_FILE)]
+
+
 DEFAULT_TEAM_FILE = ".agent-project-settings.yml"
 USER_GLOBAL_FILENAME = "agent-settings.yml"
 
@@ -415,12 +427,12 @@ def _resolve_cascade_paths(
     """
     if cwd is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return [legacy]
+        return _with_local(legacy)
 
     root = find_project_root(cwd)
     if root is None:
         legacy = Path(project_path) if project_path else Path(DEFAULT_PROJECT_FILE)
-        return [legacy]
+        return _with_local(legacy)
 
     cwd_resolved = cwd.resolve()
     # Build the chain root → … → cwd (shallowest first, deepest last).
@@ -435,7 +447,8 @@ def _resolve_cascade_paths(
             break
         cursor = parent
     chain.reverse()
-    return [d / DEFAULT_PROJECT_FILE for d in chain]
+    # Per directory: committed file then its .local sibling (deepest-wins).
+    return [f for d in chain for f in _with_local(d / DEFAULT_PROJECT_FILE)]
 
 
 def load_agent_settings(
