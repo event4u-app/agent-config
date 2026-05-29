@@ -1,0 +1,1 @@
+../../.agent-src/rules/linked-projects-onboarding-gate.md
