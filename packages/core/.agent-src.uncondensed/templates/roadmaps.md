@@ -8,7 +8,8 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
 
 1. **Be precise and concise.** Aim for 500–1000 lines max. If larger, split into multiple files.
 2. **Checkboxes are mandatory, not decorative.** Every active roadmap MUST contain at least one `- [ ]` per non-intro phase. Decision tables, ICE matrices, and block-sequencing tables capture the *why*; checkboxes capture the *what to do next*. A roadmap without checkboxes is invisible to `agents/roadmaps-progress.md` — the dashboard cannot count it, the next reader thinks no work is planned. Enforced by [`roadmap-progress-sync`](../rules/roadmap-progress-sync.md) Iron Law #2.
-   - **Status is binary: `ready` (default) or `draft`.** New roadmaps are created **ready** unless the user explicitly says draft — `ready` is implicit and need not be written. Drafts declare it via frontmatter at the top of the file (`---\nstatus: draft\n---`) and are hidden from the dashboard until the flag is removed or flipped to `ready`. Use `draft` while the roadmap is still being authored, while waiting for upstream decisions, or as a capture-only synthesis that has not been promoted to executable phases. There are no other status values; legacy banners like `**Status: directional**` are removed.
+   - **Glyph semantics:** `[ ]` open · `[x]` done · `[~]` **deferred** (planned for later — blocks silent archive per `roadmap-progress-sync` Iron Law 3) · `[-]` **cancelled** (won't do — explicit drop). Pick `[~]` vs `[-]` honestly; the former carries follow-up-roadmap obligations, the latter does not. Optional inline annotations: `<!-- deferred: reason -->` / `<!-- cancelled: reason -->` on the same line.
+   - **Status is binary: `ready` (default) or `draft`.** New roadmaps are created **ready** unless the user explicitly says draft — `ready` is implicit and need not be written. Drafts declare it via frontmatter at the top of the file (`---\nstatus: draft\n---`) and are hidden from the dashboard until the flag is removed or flipped to `ready`. Use `draft` while the roadmap is still being authored, while waiting for upstream decisions, as a capture-only synthesis that has not been promoted to executable phases, or as a follow-up roadmap (see rule 17 below) that is not yet ready to surface. There are no other status values; legacy banners like `**Status: directional**` are removed.
 3. **State the goal first.** One sentence at the top — what is the outcome?
 4. **List prerequisites** — what must exist or be running before starting.
 5. **Reference existing code** — point to files, classes, or modules.
@@ -57,6 +58,27 @@ Templates for roadmap files stored in `agents/roadmaps/` or `{module_root}/{Modu
     `horizon_weeks` to a positive integer. Enforced by
     `task lint-roadmap-complexity` (plate-token detection skipped when
     `horizon_weeks > 0`).
+17. **Follow-up roadmaps from deferred items carry `parent_roadmap`.**
+    When a roadmap closes with `[~]` deferred items, the
+    [`roadmap-management`](../skills/roadmap-management/SKILL.md) skill
+    spawns a follow-up under `agents/roadmaps/road-to-<parent>-followup.md`.
+    The follow-up's frontmatter declares the back-link:
+    ```yaml
+    ---
+    complexity: lightweight
+    status: draft               # optional — hides from dashboard
+    parent_roadmap: <parent-slug>
+    ---
+    ```
+    The follow-up's body opens with a `## Context` block citing
+    `agents/roadmaps/archive/<parent>.md`. Deferred steps are copied
+    **verbatim** (with their original phase context) so the plan
+    survives the migration. If the follow-up is "ready but blocked"
+    rather than draft, omit `status:` and add a body note
+    `> Blocked until <condition>` — the dashboard surfaces the
+    roadmap, readers honor the body convention. Authoring contract:
+    [`roadmap-writing § 7`](../skills/roadmap-writing/SKILL.md);
+    spawn procedure: [`roadmap-management § Spawn follow-up`](../skills/roadmap-management/SKILL.md).
 
 ---
 

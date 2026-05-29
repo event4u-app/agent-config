@@ -99,6 +99,69 @@ phase is done) and **rollback** (what to revert if the phase fails).
 A phase without exit criteria is open-ended; a phase without
 rollback assumes success.
 
+### 6. Step-marker semantics — pick `[~]` (defer) vs `[-]` (cancel) honestly
+
+Difference carries load when authoring (and especially when rewriting
+mid-flight):
+
+| Glyph | Semantic | When to use |
+|---|---|---|
+| `[~]` | **deferred** — planned, will be done, just not in this roadmap | Scope-cut + clear intent to revisit. Triggers Iron Law 3 follow-up flow before archive — info preservation enforced. |
+| `[-]` | **cancelled** — won't be done at all | Scope rejected, design changed, replaced by another roadmap. Decision final; no follow-up implied. |
+
+Optional inline annotations on same line:
+
+```markdown
+- [~] Migrate bulk-import job to chunked dispatch. <!-- deferred: ops capacity in Q3 -->
+- [-] Wire SQS retry topic. <!-- cancelled: superseded by Lambda DLQ in road-to-event-bridge -->
+```
+
+Annotation for next human reader (and for migration procedure when
+[`roadmap-management`](../roadmap-management/SKILL.md) spawns a follow-up).
+Bare `[~]` / `[-]` allowed; annotated preferred.
+
+### 7. Follow-up roadmaps spawn from deferred items — frontmatter shape
+
+When parent roadmap closes with `[~]` items,
+[`roadmap-management`](../roadmap-management/SKILL.md) skill spawns a
+follow-up. Authors and reviewers must recognise the shape:
+
+```markdown
+---
+complexity: lightweight
+status: draft                      # optional — draft hides from dashboard
+parent_roadmap: <parent-slug>      # back-link to archived source
+---
+
+# Roadmap: Follow-up to <parent-title>
+
+> <One sentence: carried-over outcome.>
+
+## Context
+
+This roadmap collects items deferred from
+[`agents/roadmaps/archive/<parent-slug>.md`](../archive/<parent-slug>.md).
+{ … original phases preserved verbatim … }
+
+<!-- For option 2 (ready + blocked), add as body note, NOT in frontmatter: -->
+> Blocked until <condition>. Execution starts when condition clears.
+```
+
+Two states author picks between (mirrors Iron Law 3 numbered-options
+block in [`roadmap-progress-sync`](../../rules/roadmap-progress-sync.md)):
+
+- **`status: draft`** → hidden from `agents/roadmaps-progress.md` until
+  flipped. Use for items user wants captured but not surfaced to
+  active backlog yet.
+- **`status: ready` (default; omit key)** plus body `> Blocked until …`
+  note → visible in dashboard, execution gated by documented
+  condition. Blocking is body convention, not enforced by dashboard
+  generator — readers honor the note.
+
+Follow-up is **not** authored from scratch — deferred steps copied
+verbatim (with phase context). Preserves plan exactly as author
+originally wrote it.
+
 ## Output format
 
 A single Markdown file at `agents/roadmaps/{name}.md`:
