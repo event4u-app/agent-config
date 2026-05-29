@@ -45,12 +45,24 @@ corpus_id: <id>                         # short kebab-case identifier
 selection_accuracy_target: 0.60         # 0.0–1.0; runner exits non-zero below
 prompts:
   - id: <bucket>-<NN>                   # e.g. canonical-01, ambiguous-03
-    category: <bucket>                  # canonical | ambiguous | destructive | long-context
+    category: <bucket>                  # canonical | ambiguous | destructive | long-context | router-coverage
     user_type_candidates: [<slug>, ...] # optional; informational
     language: en                        # en | de — per language-and-tone
     prompt: "<text>"                    # the agent-facing prompt
     expected_skills: [<slug>, ...]      # ≥ 1 entry; non-empty
     expected_carve_outs: [<slug>, ...]  # required when category == destructive
+    intended_triggers: [<rule_id>, ...] # router-telemetry attribution — rule ids the
+                                        # corpus author expects to activate. Telemetry
+                                        # replay checks intended vs observed; drift
+                                        # surfaces as a finding, not silently passes.
+                                        # OPTIONAL on non-router-coverage corpora.
+                                        # (Council R3 honesty floor — pass-3 onwards.)
+    open_files: [<path>, ...]           # optional — paths the agent has "open" when
+                                        # the prompt fires. Used to drive `path_prefix`
+                                        # and `file_pattern` triggers in router replay.
+    command: "<slash-command>"          # optional — exact command invoked (e.g.
+                                        # `/roadmap:process-step`). Drives `command:`
+                                        # triggers in router replay.
     rubric:                             # optional structural assertion
       must_include: ["<phrase>", ...]   # all phrases must appear in output
       must_not_include: ["<phrase>", ...]
@@ -73,6 +85,8 @@ prompts:
 | `expected_skills` references an unknown skill slug | `unknown_skill` | `expected_skills: [imaginary]` |
 | `category == destructive` without `expected_carve_outs` | `missing_carve_out` | — |
 | Prompt text empty / whitespace-only | `empty_prompt` | — |
+| `intended_triggers` references a rule that doesn't exist in `dist/router.json` | `unknown_intended_trigger` | `intended_triggers: [no-such-rule]` |
+| `category == router-coverage` without `intended_triggers` | `missing_intended_triggers` | — |
 
 The linter MUST run with `--quiet` honour per the script-output
 convention and emit one violation per line in non-quiet mode.

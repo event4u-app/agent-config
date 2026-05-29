@@ -23,6 +23,7 @@ Flags:
 """
 from __future__ import annotations
 
+import json
 import re
 import sys
 from pathlib import Path
@@ -38,6 +39,8 @@ REQUIRE_FULL = "--require-full" in sys.argv
 
 REPO = Path(__file__).resolve().parents[1]
 CORPUS_DIR = REPO / "tests" / "eval"
+ROUTER_COVERAGE_DIR = REPO / "internal" / "bench" / "corpora" / "router-coverage"
+ROUTER_JSON = REPO / "dist" / "router.json"
 
 # Live skill directories live under every artefact root post-monorepo
 # Phase 4 (legacy + packages/*/.agent-src.uncondensed/skills/).
@@ -46,7 +49,7 @@ from _lib.agent_src import artefact_roots  # noqa: E402
 
 SKILLS_DIRS = [root / "skills" for root in artefact_roots() if (root / "skills").is_dir()]
 
-VALID_CATEGORIES = frozenset({"canonical", "ambiguous", "destructive", "long-context"})
+VALID_CATEGORIES = frozenset({"canonical", "ambiguous", "destructive", "long-context", "router-coverage"})
 # Non-dev corpus (pre-spec) uses legacy categories — accept them so the
 # new linter does not break that file. Migration is a follow-up.
 LEGACY_CATEGORIES = frozenset({"content", "consulting", "finance", "ops", "safety"})
@@ -66,7 +69,24 @@ def live_skills() -> set[str]:
     return slugs
 
 
-def lint_corpus(path: Path, skills: set[str]) -> list[str]:
+def live_rule_ids() -> set[str]:
+    """Return all rule ids known to dist/router.json (kernel + tier_1 + tier_2)."""
+    if not ROUTER_JSON.exists():
+        return set()
+    try:
+        data = json.loads(ROUTER_JSON.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return set()
+    ids: set[str] = set()
+    ids.update(data.get("kernel", []) or [])
+    for tier in ("tier_1", "tier_2"):
+        ids.update(
+            r.get("id") for r in (data.get(tier, []) or []) if r.get("id")
+        )
+    return ids
+
+
+def lint_corpus(path: Path, skills: set[str], rule_ids: set[str] | None = None) -> list[str]:
     errors: list[str] = []
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
@@ -121,7 +141,12 @@ def lint_corpus(path: Path, skills: set[str]) -> list[str]:
             errors.append(f"{loc}: empty_prompt")
 
         expected = p.get("expected_skills") or []
-        if not isinstance(expected, list) or not expected:
+        if not isinstance(expected, list):
+            errors.append(f"{loc}: bad_expected_shape")
+        elif not expected and cat != "router-coverage":
+            # router-coverage corpora can have empty expected_skills —
+            # the focus is rule-trigger activation, not skill selection.
+            # The intended_triggers field is the load-bearing assertion.
             errors.append(f"{loc}: empty_expected")
         else:
             for slug in expected:
@@ -132,6 +157,25 @@ def lint_corpus(path: Path, skills: set[str]) -> list[str]:
             carve = p.get("expected_carve_outs") or []
             if not isinstance(carve, list) or not carve:
                 errors.append(f"{loc}: missing_carve_out")
+
+        # router-coverage invariants (Council R3 honesty floor — pass-3 onwards)
+        intended = p.get("intended_triggers")
+        if cat == "router-coverage":
+            if not isinstance(intended, list) or not intended:
+                errors.append(f"{loc}: missing_intended_triggers")
+            elif rule_ids is not None:
+                for rid in intended:
+                    if rid not in rule_ids:
+                        errors.append(f"{loc}: unknown_intended_trigger: {rid}")
+        elif intended is not None and rule_ids is not None:
+            # Field is optional on non-router-coverage corpora but if present
+            # it must still reference real rule ids.
+            if not isinstance(intended, list):
+                errors.append(f"{loc}: bad_intended_triggers_shape")
+            else:
+                for rid in intended:
+                    if rid not in rule_ids:
+                        errors.append(f"{loc}: unknown_intended_trigger: {rid}")
 
     if REQUIRE_FULL and not is_legacy:
         for bucket, want in FULL_COUNTS.items():
@@ -147,14 +191,21 @@ def main() -> int:
         sys.stderr.write(f"error: corpus dir missing: {CORPUS_DIR}\n")
         return 2
     corpora = sorted(CORPUS_DIR.glob("corpus-*.yaml"))
+    # Phase 2 of road-to-corpus-expansion-evidence-based-cuts adds a second
+    # corpus tree under internal/bench/corpora/router-coverage/. Linter scans
+    # both with the same invariants — router-coverage corpora additionally
+    # require `intended_triggers` per prompt.
+    if ROUTER_COVERAGE_DIR.is_dir():
+        corpora.extend(sorted(ROUTER_COVERAGE_DIR.glob("*.yaml")))
     if not corpora:
         sys.stderr.write("error: no corpora found\n")
         return 2
 
     skills = live_skills()
+    rule_ids = live_rule_ids()
     all_errors: list[str] = []
     for path in corpora:
-        errs = lint_corpus(path, skills)
+        errs = lint_corpus(path, skills, rule_ids)
         if errs:
             all_errors.extend(errs)
         elif not QUIET:
