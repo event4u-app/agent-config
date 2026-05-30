@@ -297,6 +297,11 @@ npm install --save-dev @event4u/agent-memory
 |---|---|
 | **Augment CLI** · **Claude Code** · **Copilot CLI** | [Install →](docs/installation.md) — rules + skills + commands, marketplace-updated |
 
+Keep the global install current with `agent-config upgrade` (latest) or
+`agent-config refresh --global` (same-version re-install); `agent-config doctor`
+flags a missing-from-`PATH` binary or binary↔plugin version drift. See
+[getting-started § Keeping current](docs/getting-started.md#keeping-current).
+
 ### Cloud / Hosted-agent surfaces
 
 For platforms where the package's scripts cannot run, artefacts are built for paste-in or upload:

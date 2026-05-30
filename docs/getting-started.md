@@ -25,6 +25,29 @@ runs a bash payload sync and a Python bridge generator (Python 3 is
 recommended; without it the payload sync still runs). No Task or Make
 required for end users — those are contributor-only.
 
+> **PATH matters for hooks.** The Claude Code plugin resolves `agent-config`
+> from your `PATH`. If `npm install -g` did not put the npm global bin dir on
+> `PATH`, hooks (including the roadmap-progress dashboard) silently no-op.
+> Run `agent-config doctor` — it flags a missing-from-PATH binary and version
+> drift, with the fix for each.
+
+### Keeping current
+
+The suite is global-only (ADR-020) — refresh the global install and every
+project sees the new skills, rules, and hooks at once, no per-repo bump:
+
+```bash
+agent-config upgrade            # fetch + install the latest globally (binary + plugin)
+agent-config refresh --global   # idempotent re-install, same version (root + plugin)
+agent-config refresh --project  # refresh a project's minimal surface — bridge
+                                # marker, agents/overrides/, .gitignore (no wizard)
+agent-config doctor             # PATH, binary↔plugin version drift, bridge presence
+```
+
+The Claude marketplace plugin updates on Claude Code's own cadence,
+independent of npm; `doctor` surfaces binary↔plugin drift so you know when to
+update the plugin from the marketplace.
+
 ## Project CLI — `./agent-config`
 
 The installer writes `./agent-config` into your project root (gitignored)
