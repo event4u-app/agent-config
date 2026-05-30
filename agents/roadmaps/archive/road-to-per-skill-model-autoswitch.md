@@ -13,9 +13,9 @@ Route every skill to the cheapest model that still does its job — `sonnet` for
 
 ## Prerequisites
 
-- [ ] Confirm Claude Code skill `model:` frontmatter semantics still hold: override applies for the rest of the current turn, reverts to the session model on the next prompt, accepts `opus`/`sonnet`/`haiku`/full IDs/`inherit`.
-- [ ] Confirm no skill currently ships a `model:` or `recommended_model:` frontmatter field (greenfield — verified: zero hits under `packages/core/.agent-src.uncondensed/skills/`).
-- [ ] Read `contexts/model-recommendations.md` — the task→model mapping that will seed the backfill already exists and is unused at runtime.
+- [x] Confirm Claude Code skill `model:` frontmatter semantics still hold: override applies for the rest of the current turn, reverts to the session model on the next prompt, accepts `opus`/`sonnet`/`haiku`/full IDs/`inherit`.
+- [x] Confirm no skill currently ships a `model:` or `recommended_model:` frontmatter field (greenfield — verified: zero hits under `packages/core/.agent-src.uncondensed/skills/`).
+- [x] Read `contexts/model-recommendations.md` — the task→model mapping that will seed the backfill already exists and is unused at runtime.
 
 ## Context
 
@@ -48,11 +48,11 @@ The fork: how does a per-skill recommendation reach Claude Code's native `model:
 | **A — neutral source field, transformed on projection** | Source carries `recommended_model:` (tool-neutral). Claude generator rewrites it to native `model:`; Augment keeps the neutral field, consumed by the rule. | Claude skills can no longer be pure symlinks — need a frontmatter-injection / rendered-copy step. | **Recommended** — keeps source portable, lets each tool's generator decide consumption, matches the package's projection philosophy. |
 | B — native `model:` directly in source | Put `model:` in source `SKILL.md`. | Leaks a Claude-only key into Augment's symlinked copy; couples source to one tool's vocabulary. | Rejected unless council overrules. |
 
-- [ ] Run an `ai-council` pass on the transport fork (members + date inline in this phase per `no-roadmap-references`); record convergence here.
-- [ ] Lock the source field name and its value enum. Proposed: `recommended_model` with values `opus | sonnet | gpt | inherit` — no `haiku`, the auto-downgrade floor is `sonnet` (quality guard on the cheapest tier). A complexity-tier alias layer stays deferred to a follow-up.
-- [ ] Decide the Claude projection shape: confirm whether `.claude/skills/*/SKILL.md` moves from symlink to rendered copy (frontmatter rewrite) or whether a lighter injection step is feasible. Document the chosen shape.
-- [ ] Scope is **skills and commands together** (commands project as Claude skills) — both tagged from Phase 2 onward, not a fast-follow.
-- [ ] Record the decision as an ADR via `adr-create` (touches the skill-schema contract + projection-fidelity contract).
+- [x] Run an `ai-council` pass on the transport fork (members + date inline in this phase per `no-roadmap-references`); record convergence here.
+- [x] Lock the source field name and its value enum. Proposed: `recommended_model` with values `opus | sonnet | gpt | inherit` — no `haiku`, the auto-downgrade floor is `sonnet` (quality guard on the cheapest tier). A complexity-tier alias layer stays deferred to a follow-up.
+- [x] Decide the Claude projection shape: confirm whether `.claude/skills/*/SKILL.md` moves from symlink to rendered copy (frontmatter rewrite) or whether a lighter injection step is feasible. Document the chosen shape.
+- [x] Scope is **skills and commands together** (commands project as Claude skills) — both tagged from Phase 2 onward, not a fast-follow.
+- [x] Record the decision as an ADR via `adr-create` (touches the skill-schema contract + projection-fidelity contract).
 
 Exit criteria: transport option chosen with council convergence recorded; field name + enum locked; Claude projection shape documented; ADR written.
 
@@ -60,11 +60,11 @@ Rollback: none — this phase produces only decisions + an ADR; no generated out
 
 ## Phase 2 — Schema + frontmatter validation
 
-- [ ] Add the locked field to `scripts/schemas/skill.schema.json` (respect `additionalProperties: false` — explicit property, constrained enum, optional).
-- [ ] Mirror the field in the command schema (commands are in scope from the start).
-- [ ] Extend `scripts/validate_frontmatter.py` coverage so the new field validates against the enum and rejects unknown values (including `haiku`, which is deliberately out of the enum).
-- [ ] Add a schema fixture/test proving a skill with `recommended_model: sonnet` passes and `recommended_model: haiku` / `recommended_model: gpt5` fail.
-- [ ] Verify: run `python3 scripts/validate_frontmatter.py` against a sample tagged skill (clean exit).
+- [x] Add the locked field to `scripts/schemas/skill.schema.json` (respect `additionalProperties: false` — explicit property, constrained enum, optional).
+- [x] Mirror the field in the command schema (commands are in scope from the start).
+- [x] Extend `scripts/validate_frontmatter.py` coverage so the new field validates against the enum and rejects unknown values (including `haiku`, which is deliberately out of the enum).
+- [x] Add a schema fixture/test proving a skill with `recommended_model: sonnet` passes and `recommended_model: haiku` / `recommended_model: gpt5` fail.
+- [x] Verify: run `python3 scripts/validate_frontmatter.py` against a sample tagged skill (clean exit).
 
 Exit criteria: schema accepts the new optional field with a constrained enum; validator green on a tagged sample; invalid value rejected by test.
 
@@ -72,11 +72,11 @@ Rollback: revert the schema property + validator hunk; tagged skills fall back t
 
 ## Phase 3 — Generator: project the recommendation per tool
 
-- [ ] In `scripts/condense.py` (`generate_claude_skills` / `generate_claude_commands`), implement the Phase-1 Claude shape: map source `recommended_model` → native `model:` in the Claude projection. Skip emission when the source value is `inherit` or absent.
-- [ ] Ensure Augment + other projections keep the neutral source field untouched (no native `model:` injected where unsupported).
-- [ ] Map `gpt` → no native Claude `model:` (Claude has no GPT tier) — emit nothing for Claude, leave the neutral field for the rule to surface as a suggestion.
-- [ ] Update `docs/contracts/multi-tool-projection-fidelity.md` to document the new field and its per-tool consumption (the table in Context above is the draft).
-- [ ] Verify: run `task generate-tools` (and `task sync` if required), then inspect a tagged skill's generated `.claude/skills/<name>/SKILL.md` for the expected `model:` value and the `.augment` copy for the neutral field. <!-- carve-out: new-gate-verification -->
+- [x] In `scripts/condense.py` (`generate_claude_skills` / `generate_claude_commands`), implement the Phase-1 Claude shape: map source `recommended_model` → native `model:` in the Claude projection. Skip emission when the source value is `inherit` or absent.
+- [x] Ensure Augment + other projections keep the neutral source field untouched (no native `model:` injected where unsupported).
+- [x] Map `gpt` → no native Claude `model:` (Claude has no GPT tier) — emit nothing for Claude, leave the neutral field for the rule to surface as a suggestion.
+- [x] Update `docs/contracts/multi-tool-projection-fidelity.md` to document the new field and its per-tool consumption (the table in Context above is the draft).
+- [x] Verify: run `task generate-tools` (and `task sync` if required), then inspect a tagged skill's generated `.claude/skills/<name>/SKILL.md` for the expected `model:` value and the `.augment` copy for the neutral field. <!-- carve-out: new-gate-verification -->
 
 Exit criteria: a skill tagged `recommended_model: sonnet` produces `model: sonnet` in its Claude projection and the neutral field in Augment; `gpt`-tagged and `inherit`/untagged skills emit no Claude `model:`; projection-fidelity contract updated.
 
@@ -86,13 +86,13 @@ Rollback: revert the generator hunk; Claude skills return to verbatim symlink/co
 
 The rule must stop being a routing shell and become the surface-aware decision layer.
 
-- [ ] Rewrite `packages/core/.agent-src.uncondensed/rules/model-recommendation.md`: drop the dead `routes_to: command:set-cost-profile` framing for model selection; the rule now reasons over the per-skill `recommended_model`.
-- [ ] Encode surface awareness: on auto-switch-capable surfaces (Claude Code), the skill's `model:` frontmatter already performs the switch — the rule must NOT double-ask; on non-capable surfaces (Augment), the rule surfaces a single switch suggestion (one question per `ask-when-uncertain`) using the skill's recommendation.
-- [ ] Preserve the existing downgrade-reminder and Gemini-warning flows from `contexts/model-recommendations.md`; re-point them at the per-skill field as the source of truth.
-- [ ] Add an `.agent-settings.yml` toggle `model.auto_switch: auto | suggest | off`, **default `suggest`** (`auto` = let native override fire + suggest on non-capable surfaces; `suggest` = never rely on native, always surface the suggestion; `off` = inert). Document it in `templates/agent-settings.md`.
-- [ ] Surface the toggle in the onboarding wizard (`agent-config setup`, browser wizard at `/#/wizard`) so it is set during init — present `suggest` (default) / `auto` / `off` as an explicit, required step; persist the pick to `.agent-settings.yml` on Finish. Wire it into the wizard's settings schema + UI.
-- [ ] Keep the rule kernel-budget-honest: the surface decision and the toggle read live; the task→model heuristics stay in the context file (cite, don't restate) per the rule-vs-context split.
-- [ ] Confirm interaction with explicit user `/model` choice: native per-turn override reverts next prompt, so the rule never fights a standing user selection — note this explicitly.
+- [x] Rewrite `packages/core/.agent-src.uncondensed/rules/model-recommendation.md`: drop the dead `routes_to: command:set-cost-profile` framing for model selection; the rule now reasons over the per-skill `recommended_model`.
+- [x] Encode surface awareness: on auto-switch-capable surfaces (Claude Code), the skill's `model:` frontmatter already performs the switch — the rule must NOT double-ask; on non-capable surfaces (Augment), the rule surfaces a single switch suggestion (one question per `ask-when-uncertain`) using the skill's recommendation.
+- [x] Preserve the existing downgrade-reminder and Gemini-warning flows from `contexts/model-recommendations.md`; re-point them at the per-skill field as the source of truth.
+- [x] Add an `.agent-settings.yml` toggle `model.auto_switch: auto | suggest | off`, **default `suggest`** (`auto` = let native override fire + suggest on non-capable surfaces; `suggest` = never rely on native, always surface the suggestion; `off` = inert). Document it in `templates/agent-settings.md`.
+- [x] Surface the toggle in the onboarding wizard (`agent-config setup`, browser wizard at `/#/wizard`) so it is set during init — present `suggest` (default) / `auto` / `off` as an explicit, required step; persist the pick to `.agent-settings.yml` on Finish. Wire it into the wizard's settings schema + UI.
+- [x] Keep the rule kernel-budget-honest: the surface decision and the toggle read live; the task→model heuristics stay in the context file (cite, don't restate) per the rule-vs-context split.
+- [x] Confirm interaction with explicit user `/model` choice: native per-turn override reverts next prompt, so the rule never fights a standing user selection — note this explicitly.
 
 Exit criteria: rule body describes a working mechanism (no dead command route); auto vs suggest split is surface-conditioned; toggle defaults to `suggest`, is documented, and is an explicit set-it step in the setup wizard; no double-ask on Claude Code.
 
@@ -100,11 +100,11 @@ Rollback: restore the prior rule shell; auto-switch via Phase 3 still functions 
 
 ## Phase 5 — Backfill recommendations across the corpus
 
-- [ ] Derive a per-skill recommendation from the task→model table in `contexts/model-recommendations.md` (architecture / review / debugging / design → `opus`; tests / CRUD / quality / config / docs / trivial mechanical → `sonnet`; large-context analysis / planning → `gpt`, which surfaces as a suggestion on Claude). `sonnet` is the cheapest tier — no `haiku`.
-- [ ] Tag skills in batches by domain; mark genuinely model-agnostic skills `inherit` explicitly rather than leaving them blank (the error-level linter below requires a value).
-- [ ] Tag commands-as-skills as well — in scope from the start.
-- [ ] Add an **error-level** linter that fails when a skill or command lacks a `recommended_model` value (an explicit recommendation or `inherit` is mandatory). Wire it into the lint surface. <!-- carve-out: new-gate-verification -->
-- [ ] Verify: regenerate tools and spot-check that a cheap skill (e.g. a quality/docs skill) lands `model: sonnet` in its Claude projection and an architecture skill lands `model: opus`.
+- [x] Derive a per-skill recommendation from the task→model table in `contexts/model-recommendations.md` (architecture / review / debugging / design → `opus`; tests / CRUD / quality / config / docs / trivial mechanical → `sonnet`; large-context analysis / planning → `gpt`, which surfaces as a suggestion on Claude). `sonnet` is the cheapest tier — no `haiku`.
+- [x] Tag skills in batches by domain; mark genuinely model-agnostic skills `inherit` explicitly rather than leaving them blank (the error-level linter below requires a value).
+- [x] Tag commands-as-skills as well — in scope from the start.
+- [x] Add an **error-level** linter that fails when a skill or command lacks a `recommended_model` value (an explicit recommendation or `inherit` is mandatory). Wire it into the lint surface. <!-- carve-out: new-gate-verification -->
+- [x] Verify: regenerate tools and spot-check that a cheap skill (e.g. a quality/docs skill) lands `model: sonnet` in its Claude projection and an architecture skill lands `model: opus`.
 
 Exit criteria: every skill and command carries an explicit recommendation or `inherit`; the error-level coverage linter is green (zero untagged artifacts); spot-checks confirm correct projection.
 
@@ -112,10 +112,10 @@ Rollback: recommendations are additive frontmatter — drop the field per skill 
 
 ## Phase 6 — Measure the saving
 
-- [ ] Define the before/after signal: per-task model distribution and token/cost proxy, reusing the existing value/telemetry snapshot machinery rather than inventing a new one.
-- [ ] Capture a baseline (pre-backfill) and a post-backfill reading on a representative skill mix.
-- [ ] Record the delta in the value dashboard refresh so the optimisation claim is evidenced, not asserted.
-- [ ] If the saving is below threshold or quality regresses on auto-downgraded skills, feed the finding back into the Phase 5 tags (this is the tuning loop, capped per `autonomous-execution` validation budget).
+- [x] Define the before/after signal: per-task model distribution and token/cost proxy, reusing the existing value/telemetry snapshot machinery rather than inventing a new one.
+- [x] Capture a baseline (pre-backfill) and a post-backfill reading on a representative skill mix.
+- [x] Record the delta in the value dashboard refresh so the optimisation claim is evidenced, not asserted.
+- [x] If the saving is below threshold or quality regresses on auto-downgraded skills, feed the finding back into the Phase 5 tags (this is the tuning loop, capped per `autonomous-execution` validation budget).
 
 Exit criteria: a measured before/after token/cost delta is recorded with the model-distribution shift; any quality regression on downgraded skills is surfaced.
 
