@@ -802,6 +802,38 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 4.6.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.3.0](https://github.com/event4u-app/agent-config/compare/5.2.0...5.3.0) (2026-05-30)
+
+### Features
+
+* **ci:** lint frontmatter fields equal to their schema default ([3f56ed7](https://github.com/event4u-app/agent-config/commit/3f56ed74fae3fe20346130c790db2929093ae095))
+* **frontmatter:** add idempotent migrate_frontmatter_defaults script ([8c2d56d](https://github.com/event4u-app/agent-config/commit/8c2d56ddb17585540fef83589f5e3207e6583d4a))
+* **frontmatter:** inject schema defaults in discovery, checksum + condense consumers ([a69e51e](https://github.com/event4u-app/agent-config/commit/a69e51ef7b58d0f5e0eda2a600ce090ab203bef2))
+* **frontmatter:** declare schema defaults + inject them in the loader ([6de22ce](https://github.com/event4u-app/agent-config/commit/6de22ce9d89dc648b42b312e0694c621207ccad3))
+
+### Bug Fixes
+
+* **smoke:** inject schema defaults in skills smoke validation ([fc6524b](https://github.com/event4u-app/agent-config/commit/fc6524bc51f595de5a9173309fad17f321a7c892))
+* **lint:** re-anchor framework-leakage allowlist after frontmatter line shift ([13f5e5e](https://github.com/event4u-app/agent-config/commit/13f5e5ea7f933d5cb66550c4e90cd714c7683b87))
+* **frontmatter:** inject schema defaults in skill_linter; update frontmatter tests ([fff4b12](https://github.com/event4u-app/agent-config/commit/fff4b121fa318b0985a51287095b200b3d008642))
+
+### Documentation
+
+* **roadmap:** close + archive abstraction-reduction roadmap with evidence ([fcb8a33](https://github.com/event4u-app/agent-config/commit/fcb8a3322dcb2dc5f89c85c4132bab9286b2164a))
+* **roadmaps:** land Phase 0 preflight for frontmatter-defaults reduction ([70bd300](https://github.com/event4u-app/agent-config/commit/70bd300ef70f55344a22685545a21e2dc795d98b))
+
+### Refactoring
+
+* **frontmatter:** omit fields equal to their schema default across all artefacts ([bd8bc57](https://github.com/event4u-app/agent-config/commit/bd8bc57e104cc82a713f523f5f510e033688771f))
+
+### Chores
+
+* **frontmatter:** drop defaulted fields from the condensed .agent-src tree ([58e2c2a](https://github.com/event4u-app/agent-config/commit/58e2c2a6fc7cf7011e6c9b00801c9f8ff1412684))
+* **roadmaps:** archive road-to-distribution-identity — CI green on PR #290 ([2ffeb62](https://github.com/event4u-app/agent-config/commit/2ffeb6239697228541334c7e234554f77c6935aa))
+* **roadmaps:** flip Phase 0 checkboxes + regen dashboard ([070e33e](https://github.com/event4u-app/agent-config/commit/070e33e4fd704ec0257f4c5cf6a72052c97796d3))
+
+Tests: 5236 (+50 since 5.2.0)
+
 ## [5.2.0](https://github.com/event4u-app/agent-config/compare/5.1.0...5.2.0) (2026-05-29)
 
 ### Features
