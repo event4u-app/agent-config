@@ -72,11 +72,19 @@ EOF
 Tier 1 — power-user (release shape, audit, migration):
   update                     Update the agent_config_version pin in .agent-settings.yml
                              Flags: --check (read-only) | --to <version> (explicit pin)
+  upgrade                    Install the latest @event4u/agent-config globally
+                             (npm i -g) and refresh the global install + plugin.
+                             Flags: --check (report only) | --dry-run
+  refresh                    Idempotent re-install, no version change.
+                             --global (root + plugin) | --project (bridge
+                             marker + overrides + .gitignore). Scope required.
   versions                   List available @event4u/agent-config versions
                              on npm. Marks the current pin and latest.
                              Flags: --offline | --limit=N | --json
   global                     Install to user-scope paths (~/.claude/, ~/.cursor/, …)
                              Forwards to `scripts/install --global` (ADR-007).
+                             `refresh --global` is the clearer name for a re-run;
+                             `global` is retained as the original alias.
                              Flags: --tools=<list> | --ai=<list> | --yes | --force
   export                     Eject a tool's canonical content into a chosen path
                              (real file, no symlink). Idempotent; --force overrides
@@ -773,6 +781,16 @@ cmd_update() {
   exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_update "$@"
 }
 
+cmd_upgrade() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_upgrade "$@"
+}
+
+cmd_refresh() {
+  require_python3
+  exec env PYTHONPATH="$PACKAGE_ROOT" python3 -m scripts._cli.cmd_refresh "$@"
+}
+
 # `agent-config migrate` — one-shot migration off legacy composer / npm
 # install paths onto the npx-only runtime. See scripts/_cli/cmd_migrate.py
 # (P3.5 of road-to-portable-runtime-and-update-check.md).
@@ -932,6 +950,8 @@ main() {
     council:run)             cmd_council run "$@" ;;
     council:render)          cmd_council render "$@" ;;
     update)                  cmd_update "$@" ;;
+    upgrade)                 cmd_upgrade "$@" ;;
+    refresh)                 cmd_refresh "$@" ;;
     migrate)                 cmd_migrate "$@" ;;
     init)                    cmd_init "$@" ;;
     global)                  cmd_global "$@" ;;

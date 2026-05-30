@@ -49,7 +49,7 @@ import sys
 from pathlib import Path
 from typing import Any
 
-from scripts._lib import installed_tools
+from scripts._lib import installed_lock, installed_tools
 from scripts._lib.agent_settings import (
     PROJECT_ROOT_ENV,
     ROOT_OVERRIDE_ENV,
@@ -440,6 +440,7 @@ def _foreign_records(
 #: a runner below and an entry in :func:`_run_checks`.
 CHECK_IDS = (
     "scope",
+    "global-binary",
     "manifest-integrity",
     "lockfile-freshness",
     "bridge-drift",
@@ -584,6 +585,47 @@ def _check_lockfile_freshness(manifest: dict[str, Any]) -> dict[str, Any]:
         "id": "lockfile-freshness", "status": "ok",
         "message": f"manifest and package both at {current}",
         "remedy": "",
+    }
+
+
+def _check_global_binary(project_root: Path) -> dict[str, Any]:
+    """`agent-config` PATH resolution + global-install version parity.
+
+    The Claude plugin hook resolves `agent-config` from PATH (ADR-020
+    global-only); if it is missing, every PostToolUse hook fails silently —
+    this is the root cause of the "dashboard never updates" report. Version
+    drift between the binary on PATH and the global install root means the
+    plugin may emit a hook spec the installed binary predates.
+    """
+    binary = shutil.which("agent-config")
+    if not binary:
+        return {
+            "id": "global-binary", "status": "fail",
+            "message": "`agent-config` is not on PATH — Claude plugin hooks "
+                       "cannot resolve it (hooks silently no-op)",
+            "remedy": "npm install -g @event4u/agent-config, then re-run doctor",
+        }
+    lock = installed_lock.read_lockfile()
+    global_v = ""
+    if isinstance(lock, dict):
+        raw = lock.get("agent_config_version")
+        global_v = raw.strip().lstrip("v") if isinstance(raw, str) else ""
+    binary_v = (_current_package_version() or "").lstrip("v")
+    if global_v and binary_v and global_v != binary_v:
+        return {
+            "id": "global-binary", "status": "warn",
+            "message": f"version drift — binary {binary_v}, global install "
+                       f"{global_v}",
+            "remedy": "agent-config upgrade (refresh the global install + plugin)",
+        }
+    bridge = project_root / "agents" / ".event4u-bridge.yml"
+    bridge_note = "" if bridge.is_file() else " · no project bridge marker"
+    return {
+        "id": "global-binary", "status": "ok",
+        "message": f"on PATH ({binary}); version {binary_v or 'unknown'}"
+                   f"{bridge_note}",
+        "remedy": "" if not bridge_note else
+                  "agent-config refresh --project (scaffold the bridge marker)",
     }
 
 
@@ -1092,6 +1134,7 @@ def _run_checks(
     """
     runners: dict[str, Any] = {
         "scope": lambda: _check_scope(project_root),
+        "global-binary": lambda: _check_global_binary(project_root),
         "manifest-integrity": lambda: _check_manifest_integrity(manifest),
         "lockfile-freshness": lambda: _check_lockfile_freshness(manifest),
         "bridge-drift": lambda: _check_bridge_drift(
