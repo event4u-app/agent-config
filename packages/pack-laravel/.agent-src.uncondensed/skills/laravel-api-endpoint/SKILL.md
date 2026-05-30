@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: laravel-api-endpoint
 description: "Use when creating a new Laravel API endpoint — Controller, FormRequest, Resource, route, Policy, OpenAPI annotations — versioned route layout, single-action `__invoke` controllers."
 domain: engineering

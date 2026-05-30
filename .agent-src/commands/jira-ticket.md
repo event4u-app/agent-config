@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: jira-ticket
 tier: 1
 skills: [laravel]

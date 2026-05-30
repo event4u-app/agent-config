@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: expansion-playbook
 description: "Use when designing account-expansion mechanics — upsell vs cross-sell, expansion-trigger signals, NRR cognition. Triggers on 'lift NRR', 'when do we upsell vs cross-sell'."
 status: active

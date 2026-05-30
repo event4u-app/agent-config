@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: agent-status
 tier: 0
 skills: [agent-docs-writing]

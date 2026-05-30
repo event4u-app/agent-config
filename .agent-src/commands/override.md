@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: override
 tier: 2
 description: Override orchestrator — routes to create, manage

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: org-design
 description: "Use when shaping team structure — functional vs squad, span-of-control, reorg cost, Conway-aware boundaries. Triggers on 'should we reorg', 'how do we split this team'."
 status: active

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: "refine-ticket"
 description: "Refine a Jira/Linear ticket before planning — 'refine ticket', 'tighten AC on PROJ-123', 'ist das Ticket klar?' — rewritten ticket, Top-5 risks, persona voices, sub-skills orchestrated, close-prompt."
 personas:

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: council
 tier: 1
 description: Council orchestrator — routes to default, pr, design, optimize, analysis, debate

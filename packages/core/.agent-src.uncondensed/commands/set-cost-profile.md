@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: set-cost-profile
 tier: 1
 description: Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection

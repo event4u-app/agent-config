@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: project-analysis-laravel
 description: "Use for deep Laravel project analysis: boot flow, request lifecycle, container usage, Eloquent/data flow, async systems, and Laravel-specific failure patterns."
 domain: discovery

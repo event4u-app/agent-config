@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: repomix-packer
 description: "Use when packaging a codebase to a single AI-friendly file for LLM analysis — local or remote, XML/Markdown/JSON, token counting, gitignore filtering, peer-side `repomix` CLI."
 domain: process

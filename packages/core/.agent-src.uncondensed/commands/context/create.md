@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: context:create
 tier: 2
 cluster: context

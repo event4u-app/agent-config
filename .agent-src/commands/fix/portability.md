@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: fix:portability
 tier: 2
 cluster: fix

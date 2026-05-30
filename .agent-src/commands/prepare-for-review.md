@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: prepare-for-review
 tier: 1
 skills: [git-workflow, quality-tools]

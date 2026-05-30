@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: module:create
 tier: 2
 cluster: module

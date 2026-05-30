@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: module
 tier: 2
 description: Module orchestrator — routes to create, explore

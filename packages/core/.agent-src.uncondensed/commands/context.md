@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: context
 tier: 2
 description: Context orchestrator — routes to create, refactor

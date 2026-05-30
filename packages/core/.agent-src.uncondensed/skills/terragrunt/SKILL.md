@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: terragrunt
 description: "Use when working with Terragrunt — DRY multi-env configs, module dependencies, remote state orchestration — even when the user just says 'deploy this to staging and prod' without naming Terragrunt."
 domain: devops

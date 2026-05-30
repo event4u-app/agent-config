@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: post-as:me
 tier: 2
 cluster: post-as

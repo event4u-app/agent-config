@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: laravel-websocket
 description: "Use when building Laravel real-time features — Broadcasting events, ShouldBroadcast, private/presence channels, Echo client. For non-Laravel WebSockets, use the stack-native skill."
 domain: engineering

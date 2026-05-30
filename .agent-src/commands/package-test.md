@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: package-test
 tier: 2
 skills: [composer, npm, python-packages, go-modules, cargo-packages]

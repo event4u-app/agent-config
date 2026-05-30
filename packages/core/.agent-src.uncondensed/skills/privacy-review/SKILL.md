@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: privacy-review
 description: "Use when reviewing data flows, support macros, refund templates for GDPR/CCPA/HIPAA fit — regime, consent, PII redaction (email, order-id), breach triage. Triggers 'is this GDPR-safe', 'PII redact'."
 status: active

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: update-form-request-messages
 tier: 2
 framework: laravel

@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: database
 description: "Use when working with database architecture, MariaDB/MySQL tuning, indexing strategies, slow queries, or multi-connection patterns — even when the user just says 'this query is slow'."
 personas:

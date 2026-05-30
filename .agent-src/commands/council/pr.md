@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: council:pr
 tier: 2
 cluster: council

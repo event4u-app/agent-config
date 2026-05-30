@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: feature:dev
 tier: 2
 cluster: feature

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: fix:seeder
 tier: 2
 cluster: fix

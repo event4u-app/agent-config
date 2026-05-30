@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: laravel-reverb
 description: "Use when configuring Laravel Reverb — the first-party WebSocket server with Pusher protocol compatibility, horizontal scaling, and Pulse monitoring."
 domain: engineering

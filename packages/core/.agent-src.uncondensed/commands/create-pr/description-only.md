@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: create-pr:description-only
 tier: 1
 cluster: create-pr

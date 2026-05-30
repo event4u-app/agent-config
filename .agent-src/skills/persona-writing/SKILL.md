@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: persona-writing
 description: "Use when creating or editing a persona in .agent-src.uncondensed/personas/ — voice / focus / unique questions / output expectations — even when the user just says 'add a reviewer voice for X'."
 domain: process

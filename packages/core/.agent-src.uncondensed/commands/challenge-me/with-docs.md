@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: challenge-me:with-docs
 tier: 2
 cluster: challenge-me

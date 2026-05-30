@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: commit:in-chunks
 tier: 1
 cluster: commit

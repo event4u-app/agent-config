@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: challenge-me
 tier: 2
 description: Challenge-me orchestrator — routes to vision, with-docs

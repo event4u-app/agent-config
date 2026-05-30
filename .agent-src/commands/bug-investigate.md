@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: bug-investigate
 tier: 1
 skills: [bug-analyzer, sentry-integration]

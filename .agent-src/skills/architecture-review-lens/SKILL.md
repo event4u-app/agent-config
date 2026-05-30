@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: architecture-review-lens
 description: "Use when a diff may break system boundaries, dependency direction, or cross-service contracts — fifth judge dispatched by /review-changes alongside the four standard judges."
 personas:

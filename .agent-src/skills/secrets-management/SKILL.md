@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: secrets-management
 description: "Use when picking a secrets store, designing rotation, or wiring scanning gates — multi-cloud (Vault, AWS, Azure, GCP), CI, and Kubernetes — decision framework, provider deep-dives externalized."
 domain: devops

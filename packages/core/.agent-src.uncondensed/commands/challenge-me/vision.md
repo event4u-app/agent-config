@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: challenge-me:vision
 tier: 2
 cluster: challenge-me

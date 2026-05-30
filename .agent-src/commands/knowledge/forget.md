@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: knowledge:forget
 tier: 2
 cluster: knowledge

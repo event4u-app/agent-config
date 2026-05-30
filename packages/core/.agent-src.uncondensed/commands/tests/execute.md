@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: tests:execute
 tier: 2
 cluster: tests

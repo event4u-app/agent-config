@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: laravel-dto
 description: "Use when creating a Laravel/PHP DTO with the SimpleDto base class and attribute mapping. For DTOs in other stacks, use the stack-native skill (TypeScript, Python, Rust, Go)."
 domain: engineering

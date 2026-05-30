@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: market-entry-analysis
 description: "Use when sequencing market entry — geo / segment / vertical, beachhead selection, regulatory-delta. Triggers on 'should we enter market X', 'which segment first'."
 status: active

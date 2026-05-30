@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: commit
 tier: 0
 cluster: commit

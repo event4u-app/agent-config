@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: bug-fix
 tier: 1
 skills: [bug-analyzer, pest-testing]

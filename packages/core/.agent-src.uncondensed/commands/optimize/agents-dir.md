@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: optimize:agents-dir
 tier: 2
 cluster: optimize

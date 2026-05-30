@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: positioning-strategy
 description: "Use when locking the market frame — category, segment, alternative, point-of-view — before messaging, launch, or pricing rides on it. Triggers on 'who are we for', 'opposable audit'."
 status: active

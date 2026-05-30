@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: judge:solo
 tier: 2
 cluster: judge

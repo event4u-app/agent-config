@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: prompt-optimizer
 description: "Use when the user wants a prompt optimized for ChatGPT, Claude, Gemini, or another AI — 'make this prompt better', 'optimize for ChatGPT', 'rewrite my prompt' — even without saying 'optimize'."
 domain: product

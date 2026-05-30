@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: project-analysis-react
 description: "Use for deep React analysis: component tree, state flow, props flow, hooks usage, rendering behavior, and React-specific failure patterns."
 domain: discovery

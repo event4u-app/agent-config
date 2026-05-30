@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: feature
 tier: 1
 description: Feature orchestrator — routes to explore, plan, refactor, roadmap, dev
