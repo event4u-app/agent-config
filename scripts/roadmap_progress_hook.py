@@ -75,6 +75,26 @@ def _candidate_paths(payload: dict) -> list[str]:
     return out
 
 
+def _relativize(path: str, root: Path) -> str:
+    """Make an absolute path project-relative so the `agents/roadmaps/` prefix
+    check fires.
+
+    Claude Code passes an absolute `tool_input.file_path`
+    (`/Users/.../<repo>/agents/roadmaps/x.md`); Augment passes a repo-relative
+    one. Without this, an absolute path never matches the relative prefix and
+    the hook silently no-ops. Already-relative paths and out-of-tree paths are
+    returned unchanged — an out-of-tree roadmap correctly fails the prefix
+    check downstream.
+    """
+    p = Path(path)
+    if not p.is_absolute():
+        return path
+    try:
+        return str(p.resolve().relative_to(root.resolve()))
+    except (ValueError, OSError):
+        return path
+
+
 def _is_roadmap_touch(path: str) -> bool:
     """Return True if `path` is a roadmap file we should react to."""
     norm = path.lstrip("./").replace("\\", "/")
@@ -126,7 +146,7 @@ def run(stdin_text: str, *, consumer_root: Path, verbose: bool = False) -> int:
     if not isinstance(tool, str) or tool not in WRITE_TOOLS:
         return 0
 
-    paths = _candidate_paths(payload)
+    paths = [_relativize(p, consumer_root) for p in _candidate_paths(payload)]
     if not any(_is_roadmap_touch(p) for p in paths):
         return 0
 
@@ -188,10 +208,16 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--platform", default="generic",
                         help="informational platform tag (augment/claude/...)")
+    parser.add_argument("--project-dir", default="",
+                        help="project root override; falls back to cwd. The "
+                             "Claude plugin passes $CLAUDE_PROJECT_DIR so a "
+                             "globally-resolved binary (ADR-020) scans the "
+                             "right project's agents/roadmaps/.")
     parser.add_argument("--verbose", action="store_true",
                         help="emit one stderr line per invocation")
     args = parser.parse_args(argv)
-    return run(sys.stdin.read(), consumer_root=Path.cwd(), verbose=args.verbose)
+    root = Path(args.project_dir).expanduser() if args.project_dir else Path.cwd()
+    return run(sys.stdin.read(), consumer_root=root, verbose=args.verbose)
 
 
 if __name__ == "__main__":  # pragma: no cover

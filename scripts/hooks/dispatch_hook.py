@@ -349,7 +349,35 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--manifest", default=str(MANIFEST_PATH))
     parser.add_argument("--dry-run", action="store_true",
                         help="Resolve concerns and print plan; do not invoke them.")
+    parser.add_argument("--project-dir", default="",
+                        help="Project root the event fired in (the Claude "
+                             "plugin passes $CLAUDE_PROJECT_DIR). A globally "
+                             "resolved binary (ADR-020 global-only) has no "
+                             "implicit project context, so concerns are "
+                             "resolved relative to this directory.")
+    parser.add_argument("--min-version", type=int, default=0,
+                        help="Minimum hook-spec (manifest schema_version) the "
+                             "caller — typically the Claude marketplace plugin "
+                             "— was generated against. Plugin and binary update "
+                             "on independent cadences; when the binary's "
+                             "manifest is older than the plugin expects, warn "
+                             "(never block).")
     args = parser.parse_args(argv)
+
+    # Honour --project-dir: chdir so workspace_root (envelope) and every
+    # concern's cwd resolve consumer-local paths (agents/roadmaps/,
+    # agents/runtime/state/) against the project the event fired in, not the
+    # cwd a globally-installed binary happened to inherit. Fail loud (never
+    # block) when the path is bad — a wrong project root is a silent-no-op
+    # trap otherwise.
+    if args.project_dir:
+        project_dir = Path(args.project_dir).expanduser()
+        if project_dir.is_dir():
+            os.chdir(project_dir)
+        else:
+            sys.stderr.write(
+                f"dispatch_hook: --project-dir is not a directory: "
+                f"{project_dir} — resolving against cwd {Path.cwd()}\n")
 
     if args.event not in EVENT_VOCABULARY:
         sys.stderr.write(f"dispatch_hook: unknown event '{args.event}'; allowed: "
@@ -361,6 +389,17 @@ def main(argv: list[str] | None = None) -> int:
         sys.stderr.write(f"dispatch_hook: manifest missing at {manifest_path}\n")
         return EXIT_ALLOW
     manifest = _load_yaml(manifest_path)
+
+    # Plugin↔binary drift guard (never blocks). The Claude marketplace plugin
+    # embeds the hook-spec it was generated against; if this globally-installed
+    # binary carries an older manifest, surface a one-line upgrade hint.
+    if args.min_version:
+        local_spec = manifest.get("schema_version") or 0
+        if isinstance(local_spec, int) and local_spec < args.min_version:
+            sys.stderr.write(
+                f"dispatch_hook: plugin expects hook-spec >= {args.min_version} "
+                f"but this agent-config provides {local_spec}; "
+                f"run `agent-config upgrade`.\n")
 
     payload_text = "" if sys.stdin.isatty() else sys.stdin.read()
     _maybe_capture_payload(args, payload_text)

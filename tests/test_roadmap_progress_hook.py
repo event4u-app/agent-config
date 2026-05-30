@@ -147,3 +147,35 @@ def test_run_remote_path_variants(consumer_root: Path) -> None:
                      consumer_root=consumer_root)
         assert rc == 0
         assert marker.exists(), f"expected regen for path={path!r}"
+
+
+# --- absolute-path normalisation (Claude) --------------------------------
+
+def test_relativize_makes_absolute_project_relative(tmp_path: Path) -> None:
+    abs_path = str(tmp_path / "agents" / "roadmaps" / "x.md")
+    assert rph._relativize(abs_path, tmp_path) == "agents/roadmaps/x.md"
+
+
+def test_relativize_leaves_relative_untouched(tmp_path: Path) -> None:
+    assert rph._relativize("agents/roadmaps/x.md", tmp_path) == "agents/roadmaps/x.md"
+
+
+def test_relativize_leaves_out_of_tree_untouched(tmp_path: Path) -> None:
+    """An absolute path outside the project stays absolute → fails the
+    prefix check downstream (correct: a roadmap in another repo must not
+    trigger this project's dashboard)."""
+    other = str((tmp_path.parent / "elsewhere" / "agents" / "roadmaps" / "x.md"))
+    assert rph._relativize(other, tmp_path) == other
+
+
+def test_run_regenerates_on_absolute_claude_file_path(consumer_root: Path) -> None:
+    """Regression: Claude passes an ABSOLUTE tool_input.file_path; the old
+    relative-only prefix check missed it and the hook silently no-opped."""
+    abs_path = str(consumer_root / "agents" / "roadmaps" / "my-feature.md")
+    stdin = json.dumps({
+        "hook_event_name": "PostToolUse",
+        "tool_name": "Edit",                       # Claude write-tool name
+        "tool_input": {"file_path": abs_path},     # Claude uses file_path, absolute
+    })
+    assert rph.run(stdin, consumer_root=consumer_root) == 0
+    assert _marker(consumer_root).exists()
