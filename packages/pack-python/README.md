@@ -5,7 +5,7 @@
 Python-language patterns.
 
 - **id**: `python`
-- **version**: `5.4.1`
+- **version**: `5.5.0`
 - **owner**: engineering
 - **requires**: engineering-base
 - **artefacts**: 1

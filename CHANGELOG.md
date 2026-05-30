@@ -811,6 +811,43 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.5.0](https://github.com/event4u-app/agent-config/compare/5.4.1...5.5.0) (2026-05-31)
+
+### Features
+
+* /skill:preview — non-destructive skill dry-run ([03ce5fc](https://github.com/event4u-app/agent-config/commit/03ce5fc757f9b42226083627ad7380dd0d895ef7))
+* cross-repo retrieval + linked-projects:list (ADR-032 Option A) ([894e2e8](https://github.com/event4u-app/agent-config/commit/894e2e88c2a7e6744eb45a90907c634953aec0ec))
+* /skills:discover — local, explained skill recommender ([d887c56](https://github.com/event4u-app/agent-config/commit/d887c561514b019f2ae1a3eca068087f4ffee351))
+* meta-layer concept-surface audit tool + zero-cut evidence ([b4a7f3e](https://github.com/event4u-app/agent-config/commit/b4a7f3e5e87ab0c5aa4a820784fba09d8306284a))
+* **video:** add /video:from-song music-video command + register in cluster ([05752df](https://github.com/event4u-app/agent-config/commit/05752dfd0837759923bf02f3731fecfb81dec9e7))
+* **ai-video:** add probe-audio.sh hybrid audio segmentation ([41b4f8d](https://github.com/event4u-app/agent-config/commit/41b4f8dd57d1352df49bdc31bc81ea8e7e04f550))
+
+### Bug Fixes
+
+* classify command-cluster files as commands, not skills ([0fd25da](https://github.com/event4u-app/agent-config/commit/0fd25dad8f75cfb7021512e2905b23b24fea88c1))
+* **ai-video:** portability + regenerate stale derived for from-song ([9d728b8](https://github.com/event4u-app/agent-config/commit/9d728b88687a6c27dfa647dd233fb4412f7e8d5a))
+
+### Documentation
+
+* reword execution-type mentions to dodge check-refs false positive ([dc84ed0](https://github.com/event4u-app/agent-config/commit/dc84ed01d3aa6845a1e15674ed1ec3ff3bbfb9ce))
+* add discoverable BREAKING_CHANGES.md + major-bump rationale ([385b8a2](https://github.com/event4u-app/agent-config/commit/385b8a225b764cfe09a7e31640184140de4e07d9))
+* **roadmap:** avoid check-refs false-positive on pack name ([bd02ef0](https://github.com/event4u-app/agent-config/commit/bd02ef0b07d27653dbec4971b984d1d12b75ac5e))
+* **roadmap:** /video:from-song implementation roadmap + dashboard ([e4899c2](https://github.com/event4u-app/agent-config/commit/e4899c2c4f57b77bc62aa9187d4aa768ea6885f6))
+
+### Tests
+
+* **ai-video:** cover probe-audio segmentation + from-song registration ([9a58807](https://github.com/event4u-app/agent-config/commit/9a588071de1601337e6e65dc9b940b0a36dcfd42))
+
+### Chores
+
+* archive road-to-leaner-core-and-discovery (all phases complete) ([6b6b191](https://github.com/event4u-app/agent-config/commit/6b6b191f3b9ff328b9b7f3d6aa6eaf718e471934))
+* regenerate core pack manifest with skill/skill:preview commands ([9bd88c9](https://github.com/event4u-app/agent-config/commit/9bd88c9b7b18bdd16ef2c77066aa485d96fc2b2f))
+* register skills/skill/knowledge clusters + regen outputs ([1156566](https://github.com/event4u-app/agent-config/commit/1156566ad82647c596e47483d57b3fcb71f9a275))
+* bump command count 135 -> 136 in README badge + browse lines ([82c27c3](https://github.com/event4u-app/agent-config/commit/82c27c3383f53d29735784bae5fb86a151c19e39))
+* **ai-video:** regenerate manifests, counts, condensation hashes ([fe4dc28](https://github.com/event4u-app/agent-config/commit/fe4dc280437f209b31190a5117848feb92290015))
+
+Tests: 5336 (+65 since 5.4.1)
+
 ## [5.4.1](https://github.com/event4u-app/agent-config/compare/5.4.0...5.4.1) (2026-05-30)
 
 ### Documentation

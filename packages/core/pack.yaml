@@ -7,4 +7,4 @@ owner:
 - agent-config-maintainer
 requires: []
 trust_level_default: core
-version: 5.4.1
+version: 5.5.0
