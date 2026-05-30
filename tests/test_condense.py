@@ -814,7 +814,13 @@ class TestGeneratePluginHooks(unittest.TestCase):
         data = json.loads((self.tmpdir / "hooks" / "hooks.json").read_text())
         for native, groups in data["hooks"].items():
             cmd = groups[0]["hooks"][0]["command"]
-            self.assertIn('"$CLAUDE_PROJECT_DIR"/agent-config dispatch:hook', cmd)
+            # Binary resolves project-local-first, PATH-fallback (ADR-020):
+            # rooted at $CLAUDE_PROJECT_DIR when executable, else `agent-config`
+            # on PATH. The dispatch still passes --project-dir so a globally
+            # resolved binary scans the project the event fired in.
+            self.assertIn('BIN="$CLAUDE_PROJECT_DIR/agent-config"', cmd)
+            self.assertIn('"$BIN" dispatch:hook', cmd)
+            self.assertIn('--project-dir "$CLAUDE_PROJECT_DIR"', cmd)
             self.assertIn("--platform claude", cmd)
             self.assertIn(f"--native-event {native}", cmd)
 
