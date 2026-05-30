@@ -1,60 +1,66 @@
 # Model Recommendations
 
-Loaded by the `model-recommendation` rule when the agent detects a task type mismatch.
+Loaded by the `model-recommendation` rule. Expresses recommendations as
+**vendor-neutral capability tiers** (`lite | medium | high`, ADR-035), never
+vendor model names. Each agent resolves a tier to its own best model in that
+band; the package's only tier→model mapping is the Claude generator's
+(`high→opus`, `medium→sonnet`, `lite→haiku`).
 
-## Model Profiles (as of 2026-04)
+## Tier Profiles
 
-| Model | Alias | Strengths |
+| Tier | Band | Claude resolution | Use for |
+|---|---|---|---|
+| `high` | strongest reasoning | Opus | Architecture, refactoring, complex debugging, code review, design decisions, multi-file changes, large-scale analysis / research / planning |
+| `medium` | balanced daily | Sonnet (latest) | Daily coding, known-cause bug fixes, tests, single-layer features, quality checks, config, documentation, implementation after a `high`-tier plan |
+| `lite` | fastest / cheapest | Haiku | Trivial mechanical edits — formatting, one-line config, rote renames, boilerplate stamping |
+| `inherit` | — | (session model) | Genuinely model-agnostic / meta work |
+
+Long context is **orthogonal** to the tier (ADR-035): a skill that must read a
+very large input declares the optional `context: large` modifier *in addition*
+to its tier (e.g. `high` + `context: large` for large-codebase analysis). The
+tier is the reasoning band; `context: large` is the context-window need.
+
+## Task → Tier Mapping
+
+| Task Type | Tier | Why |
 |---|---|---|
-| Claude Opus | `opus` | Refactoring, architecture decisions, complex debugging, code review, multi-file changes, design patterns |
-| Claude Sonnet | `sonnet` | Daily coding, bug fixes, tests, simple features, quality checks, quick tasks |
-| GPT | `gpt` | Large-scale analysis, multi-step workflows, automation, research, planning |
-
-## Task → Model Mapping
-
-| Task Type | Recommended | Why |
-|---|---|---|
-| **Architecture / Refactoring** | `opus` | Deep structural reasoning, pattern recognition |
-| **Code review** | `opus` | Catches subtle issues, understands intent |
-| **Complex debugging** (unknown root cause, cross-layer) | `opus` | Follows chains across files and systems |
-| **Design decisions** | `opus` | Weighs trade-offs, considers long-term |
-| **Multi-file feature** (cross-domain / architecture relevant) | `opus` | Maintains coherence across layers |
-| **Debugging** (known issue, reproducible) | `sonnet` | Fast, efficient fixes |
-| **Write tests** | `sonnet` | Pattern-based, no deep reasoning required |
-| **Single-layer feature** (CRUD, same layer) | `sonnet` | Straightforward implementation |
-| **Quality checks** (PHPStan, ECS, Rector) | `sonnet` | Mechanical fixes, fast iteration |
-| **Config changes** | `sonnet` | Simple edits |
-| **Documentation** | `sonnet` | Clear writing, fast output |
-| **Implementation after Opus planning** | `sonnet` | Plan is done, execution is mechanical |
-| **Large codebase analysis** | `gpt` | Handles long context efficiently |
-| **Pattern search across files** | `gpt` | Efficient scanning and summarization |
-| **Agent workflows / automation** | `gpt` | Multi-step orchestration |
-| **Research / analysis** | `gpt` | Structured thinking, long context |
-| **Roadmap creation** | `gpt` | Planning and structured output |
+| **Architecture / Refactoring** | `high` | Deep structural reasoning, pattern recognition |
+| **Code review** | `high` | Catches subtle issues, understands intent |
+| **Complex debugging** (unknown root cause, cross-layer) | `high` | Follows chains across files and systems |
+| **Design decisions** | `high` | Weighs trade-offs, considers long-term |
+| **Multi-file feature** (cross-domain / architecture relevant) | `high` | Maintains coherence across layers |
+| **Large codebase analysis / research / planning** | `high` (+ `context: large`) | Strong reasoning over a long input |
+| **Debugging** (known issue, reproducible) | `medium` | Fast, efficient fixes |
+| **Write tests** | `medium` | Pattern-based, no deep reasoning required |
+| **Single-layer feature** (CRUD, same layer) | `medium` | Straightforward implementation |
+| **Quality checks** (linters, type-checks, formatters) | `medium` | Mechanical fixes, fast iteration |
+| **Config changes** | `medium` | Simple edits |
+| **Documentation** | `medium` | Clear writing, fast output |
+| **Implementation after a `high`-tier plan** | `medium` | Plan is done, execution is mechanical |
+| **Trivial mechanical** (formatting, one-line config, rote rename) | `lite` | No reasoning required; fastest tier suffices |
 
 ## Detection Heuristics
 
-| Signal | Task Type |
-|---|---|
-| "refactor", "restructure", "extract", "move to module" | Architecture / Refactoring |
-| PR review request | Code review |
-| "bug" with unclear cause or spanning multiple layers | Complex debugging |
-| "bug" with clear error and reproducible case | Debugging (known issue) |
-| "should I", "which approach", "what pattern" | Design decision |
-| Feature touching multiple domains/layers | Multi-file feature |
-| Feature within same layer (e.g. controller/service CRUD) | Single-layer feature |
-| "PHPStan", "ECS", "Rector" | Quality checks |
-| "config", "env", "docker", "CI" | Config changes |
-| "README", "docs", comments | Documentation |
-| "analyze project", "scan codebase" | Large codebase analysis |
-| /feature-plan, /roadmap-create, /project-analyze | Research / planning |
-| "automate", "workflow", "agent flow" | Agent workflows / automation |
-| Opus just finished architecture/refactoring/debugging | Implementation after Opus planning |
+| Signal | Task Type | Tier |
+|---|---|---|
+| "refactor", "restructure", "extract", "move to module" | Architecture / Refactoring | `high` |
+| PR review request | Code review | `high` |
+| "bug" with unclear cause or spanning multiple layers | Complex debugging | `high` |
+| "should I", "which approach", "what pattern" | Design decision | `high` |
+| Feature touching multiple domains/layers | Multi-file feature | `high` |
+| "analyze project", "scan codebase", research / roadmap creation | Large analysis / planning | `high` + `context: large` |
+| "bug" with clear error and reproducible case | Debugging (known) | `medium` |
+| Feature within same layer (controller/service CRUD) | Single-layer feature | `medium` |
+| linters / type-checks / formatters | Quality checks | `medium` |
+| "config", "env", "docker", "CI" | Config changes | `medium` |
+| "README", "docs", comments | Documentation | `medium` |
+| `high`-tier work just finished | Implementation phase | `medium` |
+| pure formatting / rote rename / boilerplate | Trivial mechanical | `lite` |
 
-## Senior Developer Mindset — for ALL models
+## Senior Developer Mindset — for ALL tiers
 
-These instructions apply regardless of the model. They help Sonnet and GPT
-produce opus-level quality by enforcing habits that weaker models skip by default.
+These instructions apply regardless of the tier. They help the `medium`/`lite`
+tiers produce `high`-tier-quality output by enforcing habits weaker models skip.
 
 ### Before writing code
 
@@ -63,80 +69,74 @@ produce opus-level quality by enforcing habits that weaker models skip by defaul
 - **Check for existing patterns.** Search the codebase for how similar things are done.
   Follow the existing pattern — do NOT invent a new one.
 - **Question assumptions.** If the user asks "add a method to X", verify that X is the right place.
-  A senior suggests a better location if appropriate.
 
 ### While writing code
 
 - **Consider downstream impact.** Every change affects callers, tests, types, and imports.
   Check them BEFORE presenting the result — not as an afterthought.
-- **Name things like a senior.** Variables, methods, classes — naming reveals understanding.
-  If you can't name it well, you don't understand it well enough yet.
-- **Handle edge cases.** Null checks, empty arrays, missing config — think about what can go wrong.
-  Don't write only the happy path.
+- **Name things like a senior.** Naming reveals understanding. If you can't name it well, you don't understand it well enough yet.
+- **Handle edge cases.** Null checks, empty arrays, missing config — don't write only the happy path.
 
 ### After writing code
 
-- **Self-review.** Before presenting code to the user, re-read it as if reviewing someone else's PR.
-  Would you approve it? If not, fix it first.
+- **Self-review.** Re-read it as if reviewing someone else's PR. Would you approve it?
 - **Verify, don't assume.** Run the test, check the output, read the error. "Should work" is not proof.
 
 ### When stuck
 
 - **Stop after 2 failed attempts.** Don't loop — rethink the approach or ask the user.
-- **Admit uncertainty.** "I'm not sure about X" is better than a confident wrong answer.
+- **Admit uncertainty.** "I'm not sure about X" beats a confident wrong answer.
 - **Ask one good question** instead of guessing three times.
 
 ## Cost Optimization
 
-- **Default to `sonnet`** — it's the cost-efficient workhorse.
-- **Escalate to `opus`** only when architecture, refactoring, or unclear debugging is involved.
-- **After Opus work** (architecture plan, refactoring design, root cause found):
-  → Recommend switching back to `sonnet` for impl.
-- **Use `gpt`** for large-scale analysis, searching across many files, or automation.
+- **Default to `medium`** — the cost-efficient daily workhorse.
+- **Escalate to `high`** only for architecture, refactoring, design, or unclear debugging.
+- **Drop to `lite`** for genuinely trivial mechanical work.
+- **After `high`-tier work** (architecture plan, refactoring design, root cause found):
+  → recommend switching back to `medium` for implementation.
 
 ## Recommendation Flow
 
 ### When to check
 
-- **At conversation start**: detect model from system prompt identity
-- **When task type clearly changes**: user switches from one category to another
-- **NOT on every message** — only on clear task boundaries
+- **At conversation start**: detect the active model from the system-prompt identity.
+- **When the task type clearly changes**: user switches from one category to another.
+- **NOT on every message** — only on clear task boundaries.
 
 ### When to recommend
 
-Only if ALL conditions are true:
-1. The detected task type maps to a DIFFERENT model than the detected model
-2. The mismatch is significant (e.g., sonnet doing architecture, not sonnet doing a slightly complex bug fix)
-3. You haven't already recommended for this task in this conversation
+Only if ALL are true:
+1. The detected task type maps to a DIFFERENT tier than the active model's band.
+2. The mismatch is significant (e.g. a `lite`/`medium` model doing architecture).
+3. You haven't already recommended for this task in this conversation.
 
 ### Switch confirmation flow
 
-When user says they switched:
-- Accept and continue. No follow-up question — trust the user.
-
-When user says they want to continue with the current model:
-- Accept immediately — no pushback.
-- Don't ask again until the task type changes significantly.
+- User says they switched → accept and continue, no follow-up. Trust the user.
+- User says they want to stay → accept immediately, no pushback. Don't ask again until the task type changes.
 
 ### Downgrade reminder
 
-After completing an opus-level task (architecture plan done, refactoring complete, root cause found),
-remind the user to switch back to sonnet for the impl phase:
+After completing a `high`-tier task (architecture plan done, refactoring complete,
+root cause found), remind the user to drop to the **`medium`** tier for the
+implementation phase:
 
 ```
 > 💡 The {architecture/debugging/design} phase is done.
-> For implementation, **sonnet** is more cost-efficient.
+> For implementation, your **medium**-tier model is more cost-efficient.
 >
-> 1. I've switched to sonnet — continue
-> 2. Stay on opus
+> 1. I've switched to the medium tier — continue
+> 2. Stay on the current model
 ```
 
 ### Gemini warning
 
-If detected model is `gemini`: Gemini is **not recommended** for this project.
-The codebase relies heavily on structured agent rules, skills, and conventions
-that Gemini handles poorly compared to Claude/GPT models.
+If the detected model is `gemini`: Gemini is **not recommended** for this
+project. The codebase relies heavily on structured agent rules, skills, and
+conventions that Gemini handles poorly compared to Claude / GPT-class models.
 
-- Suggest switching to the best model for the current task (opus/sonnet/gpt).
+- Suggest switching to the best model for the current task's **tier**
+  (`high`/`medium`/`lite` — resolved to the user's strongest/balanced/fastest model).
 - Show the same numbered options as for a regular mismatch.
 - If dismissed, repeat the warning **once more** — then accept the user's choice.
