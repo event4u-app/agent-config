@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: rule-refactor
 description: "Use when the rule set is over the Augment budget, when a new rule would breach it, or when asked to audit / merge / prune rules — runs the audit pipeline and proposes a verdict per rule."
 domain: process

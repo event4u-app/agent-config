@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: testing-anti-patterns
 description: "Use BEFORE writing or changing tests, adding mocks, or putting test-only methods on production classes — five Iron Laws and gates against mocking-the-mock, production pollution, silent partial mocks."
 domain: quality

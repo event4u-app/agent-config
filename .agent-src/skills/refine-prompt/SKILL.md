@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: "refine-prompt"
 description: "Reconstruct a free-form prompt into actionable AC + assumptions + confidence band before the engine plans — '/work \"…\"', 'baue X', 'ist der Prompt klar genug für die Engine?'."
 personas:

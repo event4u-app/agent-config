@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: retention-loops
 description: "Use when designing product-led retention — habit formation, trigger-action-reward, network vs single-user loops. Triggers on 'why don't users come back', 'design a habit loop'."
 status: active

@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: laravel-pennant
 description: "Use when working with feature flags — Laravel Pennant, gradual rollouts, A/B testing, scope-based flags — even when the user just says 'hide this behind a flag' without naming Pennant."
 domain: engineering

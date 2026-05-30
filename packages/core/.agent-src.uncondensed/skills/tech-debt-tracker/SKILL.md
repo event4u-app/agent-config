@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: tech-debt-tracker
 description: "Use when surfacing tech debt as trackable items — interest-vs-principal framing, prioritisation by carrying cost, repayment plan — even if the user just says 'this codebase is a mess'."
 personas:

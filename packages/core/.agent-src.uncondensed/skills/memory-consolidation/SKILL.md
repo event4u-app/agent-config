@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: memory-consolidation
 description: "Use when consolidating session signals into curated memory — four-phase loop ORIENT → GATHER → CONSOLIDATE → PRUNE. Triggers on 'mine my sessions', 'consolidate memory', 'review intake signals'."
 status: active

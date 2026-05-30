@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: agents:user-init
 tier: 2
 cluster: agents

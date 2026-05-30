@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: e2e-heal
 tier: 2
 skills: [playwright-testing]

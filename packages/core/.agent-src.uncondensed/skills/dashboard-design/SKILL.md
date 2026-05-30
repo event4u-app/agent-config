@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: dashboard-design
 description: "Use when designing monitoring dashboards — visualization selection, layout principles, observability strategies (RED/USE/Golden Signals), and data storytelling."
 domain: devops

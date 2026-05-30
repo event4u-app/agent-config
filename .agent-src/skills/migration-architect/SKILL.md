@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: migration-architect
 description: "Use when shaping a non-trivial migration — rollout phases, dual-write windows, cutover sequencing, deprecation cycles — hands off to the framework-specific migration skill for DDL once locked."
 personas:

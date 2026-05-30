@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: project-analyze
 tier: 1
 skills: [project-analyzer]

@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: project-analysis-zend-laminas
 description: "Use for deep Zend Framework or Laminas project analysis: bootstrap, config merge order, service manager, MVC flow, data layer, and migration-specific risks."
 domain: discovery

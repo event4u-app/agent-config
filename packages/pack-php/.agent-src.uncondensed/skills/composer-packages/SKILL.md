@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: composer-packages
 description: "Use when building or maintaining a Composer library — versioning, Laravel integration, autoloading, publishing to private registries — even when the user says 'release a new version'."
 domain: engineering

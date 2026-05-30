@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: mcp
 description: "Use when working with MCP (Model Context Protocol) servers — their tools, capabilities, and best practices for effective agent workflows."
 domain: process

@@ -398,10 +398,10 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
-  lint-recommended-model-coverage:
+  lint-model-tier-coverage:
     silent: true
-    desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-per-skill-model-autoswitch.md Phase 5 — explicit opus/sonnet/gpt or inherit required)
-    cmd: python3 scripts/lint_recommended_model_coverage.py {{.QUIET_FLAG}}
+    desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-model-capability-tiers.md — explicit lite/medium/high or inherit required (ADR-035))
+    cmd: python3 scripts/lint_model_tier_coverage.py {{.QUIET_FLAG}}
 
   lint-frontmatter-boilerplate:
     silent: true

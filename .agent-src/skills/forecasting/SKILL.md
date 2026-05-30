@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: forecasting
 description: "Use when constructing the finance-side forecast — top-down vs bottom-up shape, confidence bands, retro-loop. Triggers on 'build the forecast model', 'reconcile top-down with bottom-up'."
 status: active

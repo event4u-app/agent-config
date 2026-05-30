@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: project-analysis-node-express
 description: "Use for deep Node.js / Express project analysis: boot flow, middleware order, async behavior, data layer, auth/security, and Node-specific runtime failure patterns."
 domain: discovery

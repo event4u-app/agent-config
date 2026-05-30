@@ -1,12 +1,12 @@
 ---
 type: "auto"
 tier: "2a"
-description: "Starting a task, switching type, or invoking a skill/command that declares a recommended_model — switch (Claude) or suggest (Augment) the right model"
+description: "Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier"
 triggers:
   - phrase: "switch task"
   - phrase: "new task"
   - phrase: "which model"
-  - keyword: "recommended_model"
+  - keyword: "model_tier"
 load_context:
   - ../contexts/model-recommendations.md
 workspaces:
@@ -17,18 +17,21 @@ packs:
 
 # Model Recommendation
 
-**Iron Law.** When a skill or command carries a `recommended_model`, route the
-turn to that model — automatically where the surface supports a per-turn
-override, as a single suggestion where it does not. Never double-ask, never
-front-load the question.
+**Iron Law.** When a skill or command carries a `model_tier` (a vendor-neutral
+capability band), route the turn to **that agent's best model in that band** —
+automatically where the surface supports a per-turn override, as a single
+suggestion where it does not. Never recommend another vendor's model. Never
+double-ask, never front-load the question.
 
-## Source of truth — the per-skill field
+## Source of truth — the capability tier
 
-Each skill/command declares `recommended_model: opus | sonnet | gpt | inherit`
-(ADR-034). `inherit` means "no opinion, keep the session model". The task→model
-heuristics that seeded those tags live in
+Each skill/command declares `model_tier: lite | medium | high | inherit`
+(ADR-035) — a band, not a model. `inherit` = "no opinion, keep the session
+model". The task→tier heuristics live in
 [`contexts/model-recommendations.md`](../contexts/model-recommendations.md) —
-cite them, don't restate.
+cite them, don't restate. The **only** tier→model mapping the package maintains
+is the Claude generator's (`high→opus`, `medium→sonnet`, `lite→haiku`); every
+other agent resolves the band to its own line-up.
 
 ## Surface-aware behaviour
 
@@ -36,41 +39,40 @@ Read `model.auto_switch` from `.agent-settings.yml` (`auto | suggest | off`,
 default `suggest`) live, then:
 
 - **Claude Code / Desktop (native per-turn `model:` override).** When
-  `auto_switch: auto`, the rendered skill's native `model:` frontmatter already
-  performed the switch for this turn — **do NOT ask, do NOT re-state it**. When
-  `suggest`, no native key was emitted; surface the one-question suggestion
-  below using the skill's `recommended_model`.
-- **Augment and any surface without per-turn override.** There is no native
-  switch. When `auto_switch` is `auto` or `suggest`, surface **one** switch
-  suggestion (per [`ask-when-uncertain`](ask-when-uncertain.md)) using the
-  skill's `recommended_model`. Never auto-act — Augment cannot.
-- **`auto_switch: off`.** Inert. No native key is emitted and no suggestion is
-  surfaced.
-
-`gpt`-tagged artefacts never auto-switch on Claude (no Claude tier) — they
-surface as a suggestion on every surface.
+  `auto_switch: auto`, the rendered skill's native `model:` (mapped from the
+  tier by the generator) already performed the switch — **do NOT ask, do NOT
+  re-state it**. When `suggest`, no native key was emitted; surface the
+  one-question suggestion below using the skill's `model_tier`.
+- **Any surface without a per-turn override (Augment, etc.).** When
+  `auto_switch` is `auto` or `suggest`, surface **one** suggestion (per
+  [`ask-when-uncertain`](ask-when-uncertain.md)) naming the **tier** — the user
+  maps it to their agent's model. Do NOT name a specific vendor model; the
+  package keeps no per-vendor table. Never auto-act where the surface can't.
+- **`auto_switch: off`.** Inert. No native key, no suggestion.
 
 ## The suggestion (non-auto surfaces)
 
 Ask **last** — after context / domain clarification, never before the task is
-understood. One question:
+understood. Name the tier, not a vendor model:
 
 ```
-> 💡 This skill recommends **{recommended_model}** for {task type}.
+> 💡 This skill recommends the **{model_tier}** capability tier for {task type}.
 >
-> 1. Switch to {recommended_model} — continue
+> 1. Switch to your **{model_tier}**-tier model — continue
 > 2. Stay on the current model
 ```
 
-On "switched" → accept, continue, no follow-up. On "stay" → accept, no
-pushback; do not re-ask until the task type changes.
+(Tier → your model: `high` = your strongest reasoning model, `medium` = your
+balanced daily model, `lite` = your fastest/cheapest.) On "switched" → accept,
+continue. On "stay" → accept, no pushback; don't re-ask until the task type
+changes.
 
-## Preserved flows (re-pointed at the per-skill field)
+## Preserved flows (re-pointed at tiers)
 
-- **Downgrade reminder.** After an opus-level task (architecture / refactoring /
+- **Downgrade reminder.** After a `high`-tier task (architecture / refactoring /
   root-cause found), remind the user that the implementation phase is cheaper on
-  `sonnet` — using the next skill's `recommended_model` as the target. Full flow:
-  [`contexts/model-recommendations.md` § Downgrade reminder](../contexts/model-recommendations.md).
+  the **`medium`** tier — using the next skill's `model_tier` as the target.
+  Full flow: [`contexts/model-recommendations.md` § Downgrade reminder](../contexts/model-recommendations.md).
 - **Gemini warning.** Detected model `gemini` → surface the not-recommended
   warning once, then accept the user's choice. Flow:
   [`contexts/model-recommendations.md` § Gemini warning](../contexts/model-recommendations.md).

@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: review-routing
 description: "Use when preparing a PR description, suggesting reviewers, or flagging risk — produces owner-mapped roles plus historical bug-pattern matches from project-local YAML."
 domain: quality

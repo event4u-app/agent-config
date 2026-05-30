@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: onboarding-program
 description: "Use when shaping employee onboarding — time-to-productivity, role-by-role program, mentor pairing, 30/60/90 milestones. Triggers on 'design our onboarding', 'why are new hires ramping slow'."
 status: active

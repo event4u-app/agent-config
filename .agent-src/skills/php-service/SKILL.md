@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: php-service
 description: "Use when the user says 'create service', 'new service class', or needs a PHP service following SOLID principles with proper DI and repository usage."
 domain: engineering

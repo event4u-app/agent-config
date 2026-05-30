@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: project-analysis-symfony
 description: "Use for deep Symfony project analysis: kernel/bootstrap, container wiring, routing/request flow, Doctrine, security, Messenger, and Symfony-specific failure patterns."
 domain: discovery

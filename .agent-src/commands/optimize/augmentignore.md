@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 skills: [agent-docs-writing]
 name: optimize:augmentignore
 tier: 2

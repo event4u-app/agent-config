@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: council:optimize
 tier: 2
 cluster: council

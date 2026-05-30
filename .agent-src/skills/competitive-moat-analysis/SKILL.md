@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: competitive-moat-analysis
 description: "Use when mapping competitors, naming defensibility, and finding white-space — moat reasoning, where-to-play, where-not-to-play. Triggers on 'who are we competing with', 'what's our moat'."
 status: active

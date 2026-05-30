@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: ui-component-architect
 description: "Use when shaping a UI component tree — composition vs inheritance, slot patterns, prop API design, controlled vs uncontrolled, polymorphic — even on 'split this component'."
 personas:

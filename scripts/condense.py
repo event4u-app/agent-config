@@ -876,13 +876,15 @@ def _iter_commands():
         yield source_file, _command_slug(source_file)
 
 
-# --- Per-skill model auto-switch (ADR-034 / road-to-per-skill-model-autoswitch) ---
+# --- Per-skill model auto-switch (ADR-035 / road-to-model-capability-tiers) ---
 
-# Only these recommended_model values map to a native Claude `model:` key.
-# `gpt` has no Claude tier and `inherit` keeps the session model — both emit
-# nothing and stay pure symlinks.
-_CLAUDE_NATIVE_MODELS = {"opus", "sonnet"}
-_RECOMMENDED_MODEL_RE = re.compile(r'^recommended_model:\s*"?([a-z0-9-]+)"?\s*$', re.MULTILINE)
+# The SINGLE generator-owned tier→Claude-model mapping (ADR-035 § 3). Claude
+# Code is the only surface that consumes a native `model:`, so this is the only
+# place a capability tier resolves to a concrete model. `inherit`/absent emit
+# nothing and stay pure symlinks. Non-Claude agents never get a per-vendor
+# table — the rule surfaces the tier name as a suggestion.
+_TIER_TO_CLAUDE_MODEL = {"high": "opus", "medium": "sonnet", "lite": "haiku"}
+_MODEL_TIER_RE = re.compile(r'^model_tier:\s*"?([a-z]+)"?\s*$', re.MULTILINE)
 
 
 def _read_model_auto_switch() -> str:
@@ -908,8 +910,8 @@ def _read_model_auto_switch() -> str:
     return "suggest"
 
 
-def _recommended_model(skill_md: Path) -> str | None:
-    """Return the `recommended_model` frontmatter value, or None if absent."""
+def _model_tier(skill_md: Path) -> str | None:
+    """Return the `model_tier` frontmatter value, or None if absent."""
     if not skill_md.exists():
         return None
     text = skill_md.read_text(encoding="utf-8", errors="replace")
@@ -918,15 +920,17 @@ def _recommended_model(skill_md: Path) -> str | None:
     end = text.find("\n---\n", 4)
     if end == -1:
         return None
-    m = _RECOMMENDED_MODEL_RE.search(text[4:end])
+    m = _MODEL_TIER_RE.search(text[4:end])
     return m.group(1) if m else None
 
 
-def _render_native_model_md(src_md: Path, value: str) -> str:
-    """Rewrite the source `recommended_model: X` line to a native Claude
-    `model: X` key (ADR-034 § 1). The rest of the SKILL.md is byte-identical."""
+def _render_native_model_md(src_md: Path, tier: str) -> str:
+    """Rewrite the source `model_tier: <tier>` line to a native Claude
+    `model: <mapped>` key via the generator-owned mapping (ADR-035 § 3). The
+    rest of the SKILL.md is byte-identical."""
     text = src_md.read_text(encoding="utf-8")
-    return _RECOMMENDED_MODEL_RE.sub(f"model: {value}", text, count=1)
+    model = _TIER_TO_CLAUDE_MODEL[tier]
+    return _MODEL_TIER_RE.sub(f"model: {model}", text, count=1)
 
 
 def generate_claude_skills() -> int:
@@ -934,7 +938,7 @@ def generate_claude_skills() -> int:
 
     Default: a directory symlink → .agent-src/skills/<name> (verbatim).
     When `model.auto_switch: auto` AND a skill declares
-    `recommended_model: opus|sonnet`, the entry becomes a real directory whose
+    `model_tier: lite|medium|high`, the entry becomes a real directory whose
     sub-files are symlinked but whose SKILL.md is a rendered copy carrying a
     native Claude `model:` key (ADR-034 Option (b) — only model-bearing skills
     break the symlink). Idempotent: each entry is rebuilt from scratch.
@@ -971,7 +975,7 @@ def generate_claude_skills() -> int:
     for skill in skills:
         link = CLAUDE_SKILLS_DIR / skill
         src_dir = SKILLS_SOURCE / skill
-        value = _recommended_model(src_dir / "SKILL.md") if auto else None
+        value = _model_tier(src_dir / "SKILL.md") if auto else None
         # Rebuild from scratch for idempotency (symlink ↔ rendered-dir flips).
         if link.is_symlink():
             link.unlink()
@@ -979,7 +983,7 @@ def generate_claude_skills() -> int:
             shutil.rmtree(link)
         elif link.exists():
             link.unlink()
-        if value in _CLAUDE_NATIVE_MODELS:
+        if value in _TIER_TO_CLAUDE_MODEL:
             link.mkdir(parents=True)
             for entry in sorted(src_dir.iterdir()):
                 if entry.name == "SKILL.md":
@@ -1056,8 +1060,8 @@ def generate_claude_commands() -> int:
             skill_file.unlink()
 
         rel_path = source_file.relative_to(COMMANDS_SOURCE)
-        value = _recommended_model(source_file) if auto else None
-        if value in _CLAUDE_NATIVE_MODELS:
+        value = _model_tier(source_file) if auto else None
+        if value in _TIER_TO_CLAUDE_MODEL:
             # Render a copy carrying the native Claude model: key (ADR-034).
             skill_file.write_text(
                 _render_native_model_md(source_file, value), encoding="utf-8"

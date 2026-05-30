@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: rule-compliance-audit
 tier: 1
 skills: [rule-compliance-audit]

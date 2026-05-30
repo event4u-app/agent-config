@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: work
 tier: 0
 skills: [refine-prompt, command-routing]

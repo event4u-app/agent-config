@@ -1,5 +1,5 @@
 ---
-recommended_model: gpt
+model_tier: high
 name: project-analysis-nextjs
 description: "Use for deep Next.js analysis: server vs client boundaries, routing, data fetching, caching, rendering modes, and hydration/runtime issues."
 domain: discovery

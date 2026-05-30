@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
-"""Fail when a skill or command lacks a `recommended_model` value.
+"""Fail when a skill or command lacks a `model_tier` value.
 
-Phase 5 coverage gate of `road-to-per-skill-model-autoswitch.md` (ADR-034):
-every skill and command MUST declare an explicit `recommended_model`
+Phase 5 coverage gate of `road-to-model-capability-tiers.md` (ADR-035):
+every skill and command MUST declare an explicit `model_tier`
 (`opus | sonnet | gpt`) or `inherit`. An untagged artefact is an error — it
 leaves the per-skill model-switch surface with a silent gap. Run
-`python3 scripts/backfill_recommended_model.py` to seed missing tags.
+`python3 scripts/backfill_model_tier.py` to seed missing tags.
 
 The enum itself is validated by `scripts/validate_frontmatter.py`; this gate
 only enforces *presence* (an explicit decision was made for every artefact).
 
-CLI: python3 scripts/lint_recommended_model_coverage.py [--quiet]
+CLI: python3 scripts/lint_model_tier_coverage.py [--quiet]
 Exit: 0 clean · 1 at least one untagged skill/command.
 """
 from __future__ import annotations
@@ -49,23 +49,23 @@ def main(argv=None) -> int:
     for kind, path in _targets():
         total += 1
         fm, _ = parse_frontmatter(path.read_text(encoding="utf-8"))
-        if not isinstance(fm, dict) or not fm.get("recommended_model"):
+        if not isinstance(fm, dict) or not fm.get("model_tier"):
             missing.append((kind, path.relative_to(ROOT).as_posix()))
 
     if missing:
         for kind, rel in missing[:40]:
-            print(f"❌  [{kind}] {rel}: missing `recommended_model` "
-                  f"(set opus/sonnet/gpt or inherit)")
+            print(f"❌  [{kind}] {rel}: missing `model_tier` "
+                  f"(set lite/medium/high or inherit)")
         if len(missing) > 40:
             print(f"  ... and {len(missing) - 40} more")
         print(
-            f"\n== recommended_model coverage: {len(missing)}/{total} artefact(s) "
-            "untagged. Run `python3 scripts/backfill_recommended_model.py`. ==",
+            f"\n== model_tier coverage: {len(missing)}/{total} artefact(s) "
+            "untagged. Run `python3 scripts/backfill_model_tier.py`. ==",
             file=sys.stderr,
         )
         return 1
     if not args.quiet:
-        print(f"✅  lint-recommended-model-coverage: {total} artefact(s) tagged.")
+        print(f"✅  lint-model-tier-coverage: {total} artefact(s) tagged.")
     return 0
 
 

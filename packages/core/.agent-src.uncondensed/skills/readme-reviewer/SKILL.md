@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: readme-reviewer
 description: "Use when reviewing a README for accuracy, usability, and alignment with the actual repository. Detects invented content, broken setup steps, and structural issues."
 domain: quality

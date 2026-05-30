@@ -54,7 +54,7 @@ export const settingsSchema = z.object({
     }),
     model: z.object({
         auto_switch: modelAutoSwitch.default('suggest').describe(
-            'Per-skill model auto-switch (ADR-034). suggest (default) = never emit a native Claude model: key; the model-recommendation rule surfaces a one-question switch suggestion on every surface — your explicit /model choice is never silently overridden. auto = render a native Claude model: into opus/sonnet-tagged skills so Claude Code switches automatically for that turn (reverts next prompt), and suggest on surfaces without a native override. off = inert, no native key and no suggestion.',
+            'Per-skill model auto-switch (ADR-035). Skills declare a vendor-neutral model_tier (lite/medium/high); the generator maps it to a native Claude model (high→opus, medium→sonnet, lite→haiku). suggest (default) = never emit a native Claude model: key; the model-recommendation rule names the tier as a one-question suggestion on every surface — your explicit /model choice is never silently overridden. auto = render a native Claude model: into lite/medium/high-tier skills so Claude Code switches automatically for that turn (reverts next prompt), and suggest on surfaces without a native override. off = inert, no native key and no suggestion.',
         ),
     }).default({ auto_switch: 'suggest' }),
     personal: z.object({
