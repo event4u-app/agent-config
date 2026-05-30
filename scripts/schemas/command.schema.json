@@ -78,6 +78,11 @@
       "enum": ["deep"],
       "description": "Optional reasoning-depth marker for AI Council invocations triggered by this command. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis commands. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
+    "recommended_model": {
+      "type": "string",
+      "enum": ["opus", "sonnet", "gpt", "inherit"],
+      "description": "Tool-neutral per-command model recommendation (ADR-034 / road-to-per-skill-model-autoswitch.md). Commands project as Claude skills, so `opus`/`sonnet` produce a native Claude `model:` when model.auto_switch=auto; `gpt` and `inherit` emit no native model:. No `haiku` — `sonnet` is the cheapest tier."
+    },
     "suggestion": {
       "type": "object",
       "additionalProperties": false,
