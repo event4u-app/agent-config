@@ -9,4 +9,4 @@ requires:
 - javascript
 - engineering-base
 trust_level_default: professional
-version: 5.3.0
+version: 5.4.0
