@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: tests
 tier: 2
 description: Tests orchestrator — routes to create, execute

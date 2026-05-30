@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: package-reset
 tier: 2
 skills: [composer, npm]

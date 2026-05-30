@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: judge
 tier: 1
 description: Judge orchestrator — routes to solo, steps, on-diff

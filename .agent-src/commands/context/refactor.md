@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: context:refactor
 tier: 2
 cluster: context

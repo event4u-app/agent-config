@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: feature:explore
 tier: 2
 cluster: feature

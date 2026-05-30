@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: challenge-me:vision
 tier: 2
 cluster: challenge-me

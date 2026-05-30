@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: upstream-contribute
 tier: 1
 skills: [upstream-contribute, skill-writing, learning-to-rule-or-skill]

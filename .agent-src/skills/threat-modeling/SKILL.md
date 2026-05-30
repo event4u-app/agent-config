@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: threat-modeling
 description: "Use when adding auth, webhooks, uploads, queues, secrets, tenant boundaries, or public endpoints — produces trust boundaries + abuse cases mapped to files, BEFORE implementation."
 personas:

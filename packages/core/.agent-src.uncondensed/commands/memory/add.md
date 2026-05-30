@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: memory:add
 tier: 2
 cluster: memory

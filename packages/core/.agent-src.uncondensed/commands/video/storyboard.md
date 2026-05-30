@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: video:storyboard
 tier: 2
 cluster: video

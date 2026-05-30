@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: tests:execute
 tier: 2
 cluster: tests

@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: sync-gitignore
 tier: 1
 cluster: sync-gitignore

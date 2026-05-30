@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
-"""Backfill `recommended_model` on every skill and command (Phase 5 / ADR-034).
+"""Backfill / migrate `model_tier` on every skill and command (ADR-035).
 
-Derives a per-artefact recommendation from the task→model table in
-`contexts/model-recommendations.md`, conservatively:
+Vendor-neutral capability band `lite | medium | high | inherit` (replaces the
+concrete-model `recommended_model` from ADR-034). Behaviour per artefact:
 
-- **opus**   — deep structural reasoning: architecture, refactoring, review,
-               complex debugging, security/threat/authz, design decisions.
-- **gpt**    — large-context / planning / research / multi-file analysis.
-- **sonnet** — mechanical implementation, tests, quality, docs, config, infra
-               (the cheapest tier — no `haiku`).
-- **inherit**— genuinely model-agnostic / meta work; keep the session model.
+- **Has `recommended_model`** (ADR-034 legacy) → migrate via the value map
+  (`opus→high`, `sonnet→medium`, `gpt→high`, `inherit→inherit`) and rename the
+  key to `model_tier`. Same line count — no body shift.
+- **Already `model_tier`** → leave (idempotent).
+- **Untagged** → classify fresh from the task→tier heuristic
+  (`contexts/model-recommendations.md`): deep reasoning → high; mechanical /
+  impl / docs / tests / quality → medium; clearly-trivial → lite; meta /
+  ambiguous → inherit.
 
-Anything the classifier cannot confidently place lands on `inherit` (safe — the
-Phase 6 measurement + per-skill evals refine the tags later, per ADR-034). The
-field is written to BOTH the source artefact and its condensed `.agent-src`
-copy so the frontmatter stays byte-identical (the condensation roundtrip
-invariant); the Claude/Augment projections follow via `task generate-tools`.
+A small explicit `_LITE` set demotes obviously-trivial mechanical skills to the
+cheapest band; `_CONTEXT_LARGE` adds the orthogonal `context: large` modifier to
+genuinely long-context skills. Writes BOTH the source and its `.agent-src` copy
+(frontmatter stays byte-identical); refresh condensation hashes afterwards.
 
-CLI: python3 scripts/backfill_recommended_model.py [--dry-run]
+CLI: python3 scripts/backfill_model_tier.py [--dry-run]
 """
 from __future__ import annotations
 
@@ -34,22 +35,22 @@ from _lib.agent_src import artefact_roots  # noqa: E402
 ROOT = Path(__file__).resolve().parents[1]
 CONDENSED = ROOT / ".agent-src"
 
-# Substring signals on the artefact slug (highest precedence first).
-_OPUS = (
+# ADR-034 → ADR-035 value map.
+_MIGRATE = {"opus": "high", "sonnet": "medium", "gpt": "high", "inherit": "inherit"}
+
+# Fresh-classification slug signals (deep reasoning / large-analysis → high).
+_HIGH = (
     "architect", "refactor", "debug", "threat", "authz", "adversarial",
     "blast-radius", "defense-in-depth", "data-flow", "decision-record",
     "adr-create", "security-audit", "privacy-review", "review", "judge-",
     "bug-analyzer", "systematic-debugging", "incident", "risk-officer",
-    "migration-architect", "moat",
+    "migration-architect", "moat", "analysis", "analyze", "analyzer",
+    "research", "deep-reading", "repomix", "sequential-thinking",
+    "project-analysis", "universal-project", "market-entry",
+    "scenario-modeling", "forecast", "dcf-modeling", "unit-economics",
+    "funnel-analysis",
 )
-_GPT = (
-    "analysis", "analyze", "analyzer", "research", "deep-reading", "repomix",
-    "sequential-thinking", "project-analysis", "universal-project",
-    "market-entry", "scenario-modeling", "forecast", "dcf-modeling",
-    "unit-economics", "funnel-analysis", "performance-analysis",
-)
-# Mechanical / implementation signals.
-_SONNET = (
+_MEDIUM = (
     "test", "pest", "playwright", "lint", "quality-tools", "format", "docs",
     "readme-writing", "commit", "conventional", "css", "tailwind", "blade",
     "flux", "livewire", "form-handler", "api-endpoint", "api-testing",
@@ -61,87 +62,112 @@ _SONNET = (
     "php-coder", "php-service", "nextjs", "react", "symfony", "mcp",
     "devcontainer", "copilot", "module",
 )
-# Domain fallback when no slug signal matches.
 _DOMAIN_DEFAULT = {
-    "engineering": "sonnet",
-    "quality": "sonnet",
-    "devops": "sonnet",
-    "discovery": "gpt",
-    "product": "inherit",
-    "process": "inherit",
+    "engineering": "medium", "quality": "medium", "devops": "medium",
+    "discovery": "high", "product": "inherit", "process": "inherit",
 }
+
+# Clearly-trivial, no-reasoning mechanical skills → cheapest band.
+_LITE = {"file-editor", "md-language-check"}
+# Genuinely long-context skills → orthogonal context modifier (ADR-035).
+_CONTEXT_LARGE = {
+    "project-analysis-core", "project-analysis-hypothesis-driven",
+    "project-analyzer", "universal-project-analysis", "repomix-packer",
+    "deep-reading-analyst",
+}
+
+_RM_RE = re.compile(r'^recommended_model:[ \t]*"?[a-z0-9-]+"?[ \t]*$', re.MULTILINE)
+_MT_RE = re.compile(r'^model_tier:', re.MULTILINE)
+_CTX_RE = re.compile(r'^context:', re.MULTILINE)
 
 
 def _classify(slug: str, domain: str | None) -> str:
     s = slug.lower()
-    if any(k in s for k in _OPUS):
-        return "opus"
-    if any(k in s for k in _GPT):
-        return "gpt"
-    if any(k in s for k in _SONNET):
-        return "sonnet"
+    if s in _LITE:
+        return "lite"
+    if any(k in s for k in _HIGH):
+        return "high"
+    if any(k in s for k in _MEDIUM):
+        return "medium"
     return _DOMAIN_DEFAULT.get(domain or "", "inherit")
 
 
-def _inject(path: Path, value: str) -> bool:
-    """Insert `recommended_model: <value>` as the first frontmatter line if the
-    field is absent. Returns True if the file was changed."""
+def _resolve_tier(slug: str, fm: dict | None) -> str:
+    existing_mt = fm.get("model_tier") if isinstance(fm, dict) else None
+    if existing_mt:
+        tier = existing_mt
+    else:
+        existing_rm = fm.get("recommended_model") if isinstance(fm, dict) else None
+        if existing_rm:
+            tier = _MIGRATE.get(existing_rm, "inherit")
+        else:
+            tier = _classify(slug, fm.get("domain") if isinstance(fm, dict) else None)
+    return "lite" if slug in _LITE else tier
+
+
+def _apply(path: Path, tier: str, want_context: bool) -> bool:
     text = path.read_text(encoding="utf-8")
     if not text.startswith("---\n"):
         return False
     end = text.find("\n---\n", 4)
     if end == -1:
         return False
-    if re.search(r"^recommended_model:", text[4:end], re.MULTILINE):
-        return False
-    new = "---\nrecommended_model: " + value + "\n" + text[4:]
-    path.write_text(new, encoding="utf-8")
-    return True
+    fm, body = text[4:end], text[end:]
+    changed = False
+    if _MT_RE.search(fm):
+        pass  # already migrated — idempotent
+    elif _RM_RE.search(fm):
+        fm = _RM_RE.sub(f"model_tier: {tier}", fm, count=1)
+        changed = True
+    else:
+        fm = f"model_tier: {tier}\n" + fm
+        changed = True
+    if want_context and not _CTX_RE.search(fm):
+        fm = re.sub(r'(^model_tier:.*$)', r'\1\ncontext: large', fm, count=1, flags=re.MULTILINE)
+        changed = True
+    if changed:
+        path.write_text("---\n" + fm + body, encoding="utf-8")
+    return changed
 
 
-def _iter_targets():
-    """Yield (source_path, condensed_path, slug, domain, kind)."""
+def _iter():
     for root in artefact_roots():
-        # Skills
         sdir = root / "skills"
         if sdir.exists():
-            for skill_md in sorted(sdir.rglob("SKILL.md")):
-                slug = skill_md.parent.name
-                yield skill_md, CONDENSED / "skills" / slug / "SKILL.md", slug, "skill"
-        # Commands
+            for p in sorted(sdir.rglob("SKILL.md")):
+                slug = p.parent.name
+                yield p, CONDENSED / "skills" / slug / "SKILL.md", slug
         cdir = root / "commands"
         if cdir.exists():
-            for cmd in sorted(cdir.rglob("*.md")):
-                if cmd.name == "AGENTS.md":
+            for p in sorted(cdir.rglob("*.md")):
+                if p.name == "AGENTS.md":
                     continue
-                rel = cmd.relative_to(cdir)
+                rel = p.relative_to(cdir)
                 slug = "-".join(rel.with_suffix("").parts)
-                yield cmd, CONDENSED / "commands" / rel, slug, "command"
+                yield p, CONDENSED / "commands" / rel, slug
 
 
 def run(apply: bool) -> int:
     dist: Counter = Counter()
+    ctx = 0
     touched = 0
-    for src, cond, slug, kind in _iter_targets():
+    for src, cond, slug in _iter():
         fm, _ = parse_frontmatter(src.read_text(encoding="utf-8"))
-        domain = fm.get("domain") if isinstance(fm, dict) else None
-        existing = fm.get("recommended_model") if isinstance(fm, dict) else None
-        value = existing if existing else _classify(slug, domain)
-        dist[value] += 1
-        if existing:
-            continue
+        tier = _resolve_tier(slug, fm)
+        want_ctx = slug in _CONTEXT_LARGE
+        dist[tier] += 1
+        if want_ctx:
+            ctx += 1
         if apply:
-            changed = _inject(src, value)
+            if _apply(src, tier, want_ctx):
+                touched += 1
             if cond.exists():
-                _inject(cond, value)
-            touched += 1 if changed else 0
-        else:
-            touched += 1
-    verb = "would tag" if not apply else "tagged"
-    print(f"recommended_model backfill ({'dry-run' if not apply else 'apply'}):")
-    for model in ("opus", "sonnet", "gpt", "inherit"):
-        print(f"  {model:8s}: {dist[model]}")
-    print(f"  TOTAL artefacts: {sum(dist.values())} · {verb} {touched} newly")
+                _apply(cond, tier, want_ctx)
+    verb = "would set" if not apply else "set"
+    print(f"model_tier backfill ({'dry-run' if not apply else 'apply'}):")
+    for t in ("lite", "medium", "high", "inherit"):
+        print(f"  {t:8s}: {dist[t]}")
+    print(f"  context:large on {ctx} skills · {verb} {touched} newly · total {sum(dist.values())}")
     return 0
 
 

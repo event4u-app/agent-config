@@ -1,5 +1,5 @@
 ---
-recommended_model: sonnet
+model_tier: medium
 name: readme-writing
 description: "Use when creating, rewriting, or significantly improving a README based on the actual repository structure, commands, and intended audience."
 domain: process

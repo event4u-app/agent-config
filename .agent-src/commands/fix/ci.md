@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: fix:ci
 tier: 2
 cluster: fix

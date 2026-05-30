@@ -1,5 +1,5 @@
 ---
-recommended_model: inherit
+model_tier: inherit
 name: memory
 tier: 1
 description: Memory orchestrator — routes to add, load, mine-session, promote, propose

@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: judge:on-diff
 tier: 2
 cluster: judge

@@ -1,5 +1,5 @@
 ---
-recommended_model: opus
+model_tier: high
 name: systematic-debugging
 description: "Use when hitting a bug, test failure, crash, or unexpected behavior — enforces reproduce → isolate → hypothesize → verify before any fix — even when the user just says 'this is broken' or 'quick fix'."
 domain: discovery
