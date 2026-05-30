@@ -59,6 +59,19 @@ made by the user directly or by the agent on request, following the
 # custom   = ignore profile — every matrix value must be set explicitly.
 cost_profile: balanced
 
+# --- Per-skill model auto-switch (ADR-034) ---
+# How a skill's `recommended_model:` is applied per turn.
+#   suggest = (default) never emit a native Claude `model:` key; the
+#             model-recommendation rule surfaces a one-question switch
+#             suggestion on every surface. Your explicit /model choice is
+#             never silently overridden.
+#   auto    = render a native Claude `model:` into opus/sonnet-tagged skills
+#             so Claude Code switches automatically for that turn (reverts on
+#             the next prompt); suggest on surfaces without a native override.
+#   off     = inert — no native key, no suggestion.
+model:
+  auto_switch: suggest
+
 # --- Personal preferences ---
 personal:
   # IDE to use for opening files (code, phpstorm, cursor)
