@@ -73,6 +73,30 @@ The maintainer-side dev experience is preserved by the
 flag set, `scripts/install.py` treats the package repo as both source
 and project surface (Phase 3 contract).
 
+## Amendment — 2026-05-30 · user-content exception
+
+The original decision named `agents/overrides/` as "the single
+project-local exception". Field work on the global-only hook path
+(`road-to-self-update-and-global-hook-resolution`) clarified that a
+consumer also legitimately carries two **metadata** artefacts the
+tooling writes and maintains:
+
+- `agents/.event4u-bridge.yml` — the bridge marker (already mandated by
+  this ADR's Decision; restated here for completeness).
+- managed `agents/` entries in the project `.gitignore` — so runtime
+  artefacts under `agents/runtime/` stay untracked.
+
+These, together with `agents/overrides/`, are **user content +
+metadata pointers**, not distributed content. The global-only
+constraint applies to **distributed content** — skills, rules,
+commands, hooks, adapters, `.augment/`, `.claude/` — which is never
+written into a consumer repo. Consumer tooling (`agent-config
+refresh --project` and the wizard's apply step) may create and refresh
+the user-content / metadata surface without violating global-only.
+
+Forbidden, unchanged: writing any distributed content into the
+consumer repo outside `AGENT_CONFIG_DEV_MODE=1`.
+
 ## Alternatives considered
 
 - **Status quo (project default + global opt-in).** Keeps the drift
