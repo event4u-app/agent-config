@@ -1,16 +1,21 @@
 ---
 adr: 034
-status: accepted
+status: superseded
 date: 2026-05-30
 decision: per-skill-model-recommendation-transport
 supersedes: —
-superseded_by: —
+superseded_by: 035
 phase: per-skill-model-autoswitch
 type: structural
 review_date: 2026-08-30
 ---
 
 # ADR-034 — Per-skill model recommendation: neutral source field, native projection on Claude
+
+> **Superseded by [ADR-035](ADR-035-model-capability-tiers.md)** (2026-05-30).
+> The concrete-model field (`recommended_model: opus|sonnet|gpt`) recommended a
+> cross-vendor model to Claude users (`gpt`) and was version-brittle. ADR-035
+> replaces it with vendor-neutral capability tiers (`model_tier: lite|medium|high`).
 
 ## Status
 
