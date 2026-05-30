@@ -9,6 +9,7 @@ and asserts every changed file matches the version-bump allowlist:
   * `.claude-plugin/marketplace.json`
   * `packages/*/pack.yaml`
   * `packages/*/README.md`
+  * `docs/archive/CHANGELOG-pre-*.md`
 
 Exit codes:
 
@@ -40,6 +41,12 @@ ALLOWLIST_GLOBS = (
     ".claude-plugin/marketplace.json",
     "packages/*/pack.yaml",
     "packages/*/README.md",
+    # `scripts/release.py` auto-splits the CHANGELOG era before bumping
+    # (perform_split / plan_split in `_lib/changelog_eras.py`) whenever the
+    # current era body crosses CURRENT_ERA_BODY_CAP. The split emits a new
+    # `docs/archive/CHANGELOG-pre-X.Y.Z.md` — part of the release surface,
+    # so the shape gate must allow it. Test-enforced by test_changelog_eras.
+    "docs/archive/CHANGELOG-pre-*.md",
 )
 
 

@@ -63,6 +63,8 @@ Per-tool adapters MUST:
 3. Use `0644` permissions (world-readable, owner-writable). The marker contains no secrets.
 4. Skip the write under `AGENT_CONFIG_DEV_MODE=1` — maintainer dev installs never lay the bridge into the source repo (this repo's `agents/` directory is the project surface, not a consumer surface).
 
+The marker is (re-)written by the consumer install, by the wizard's apply step, and by `agent-config refresh --project` — which also scaffolds `agents/overrides/` and syncs the managed `agents/` block in `.gitignore` (the full minimal project surface, no wizard). `refresh --project` no-ops inside an agent-config checkout (same source-repo guard as rule 4).
+
 ## Per-tool anchor strategy
 
 Some AI tools only load rules when an anchor file is **inside** the workspace (Windsurf, Cline, Gemini-CLI). For those IDs, Phase 4.3 plants a thin pointer file under the tool's per-project directory whose body resolves to the bridge marker. Tools that load purely from user-scope (Claude Code, Cursor, Augment) read the marker once and need no per-tool file.

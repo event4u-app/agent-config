@@ -394,4 +394,18 @@ if ! $SKIP_BRIDGES; then
     run_bridges || RC=$?
 fi
 
+# Post-install PATH advisory. The Claude plugin hook resolves `agent-config`
+# from PATH on a global-only consumer (ADR-020); if it is unreachable every
+# PostToolUse hook silently no-ops — the documented "dashboard never updates"
+# failure. Advisory only: a bad PATH must not fail an otherwise-clean install.
+if [[ $RC -eq 0 ]] && ! command -v agent-config >/dev/null 2>&1; then
+    $QUIET || {
+        echo "  ⚠️   \`agent-config\` is not on your PATH." >&2
+        echo "      Claude plugin hooks resolve it from PATH; without it the" >&2
+        echo "      roadmap-progress dashboard (and other hooks) will not fire." >&2
+        echo "      Add your npm global bin dir (\`npm prefix -g\`/bin) to PATH," >&2
+        echo "      then verify with \`agent-config doctor\`." >&2
+    }
+fi
+
 exit $RC

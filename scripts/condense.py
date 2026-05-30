@@ -1192,8 +1192,12 @@ def generate_plugin_hooks() -> int:
     ``settings.local.json``. Claude Code merges plugin-scope and
     settings-scope hooks and dedups by command string.
 
-    The command is rooted at ``$CLAUDE_PROJECT_DIR`` so it resolves from
-    plugin scope regardless of cwd; the universal dispatcher then reads
+    The command resolves the binary project-local-first
+    (``$CLAUDE_PROJECT_DIR/agent-config`` when executable — maintainer dev-loop)
+    and falls back to ``agent-config`` on PATH (global-only consumer per
+    ADR-020, where the repo carries no wrapper). It always passes
+    ``--project-dir "$CLAUDE_PROJECT_DIR"`` so a globally resolved binary still
+    scans the project the event fired in. The universal dispatcher then reads
     ``scripts/hook_manifest.yaml`` at runtime to fan out to the active
     concerns (each a no-op when its feature is disabled).
     """
@@ -1204,6 +1208,7 @@ def generate_plugin_hooks() -> int:
         return 0
 
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    hook_spec = manifest.get("schema_version", 1)
     claude_events = manifest.get("platforms", {}).get("claude", {}) or {}
     aliases = manifest.get("native_event_aliases", {}).get("claude", {}) or {}
     # Reverse the native→agent-config map so we can emit native event names.
@@ -1216,9 +1221,17 @@ def generate_plugin_hooks() -> int:
         native = ac_to_native.get(ac_event)
         if native is None:
             continue
+        # Resolve the binary project-local-first, PATH-fallback: a maintainer
+        # dev-loop (or any repo carrying a project-local wrapper) uses its own
+        # ./agent-config; a global-only consumer (ADR-020 — nothing in the
+        # repo) falls back to the globally-installed `agent-config` on PATH.
+        # Either way pass --project-dir "$CLAUDE_PROJECT_DIR" so a globally
+        # resolved binary still scans the project the event fired in.
         command = (
-            '"$CLAUDE_PROJECT_DIR"/agent-config dispatch:hook '
-            f"--platform claude --event {ac_event} --native-event {native}"
+            'BIN="$CLAUDE_PROJECT_DIR/agent-config"; [ -x "$BIN" ] || BIN=agent-config; '
+            f'"$BIN" dispatch:hook --platform claude --event {ac_event} '
+            f'--native-event {native} --project-dir "$CLAUDE_PROJECT_DIR" '
+            f'--min-version {hook_spec}'
         )
         hooks[native] = [{"hooks": [{"type": "command", "command": command}]}]
 
