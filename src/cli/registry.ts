@@ -60,6 +60,7 @@ export const REGISTRY: readonly CommandEntry[] = [
     { name: 'keys:install-openai', disposition: 'delegate' },
     { name: 'first-run', disposition: 'delegate' },
     { name: 'memory:lookup', disposition: 'delegate' },
+    { name: 'linked-projects:list', disposition: 'delegate' },
     { name: 'memory:signal', disposition: 'delegate' },
     { name: 'memory:hash', disposition: 'delegate' },
     { name: 'memory:check', disposition: 'delegate' },

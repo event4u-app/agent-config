@@ -77,6 +77,13 @@ If it reports the name, cross-repo access works. An out-of-root edit will prompt
 for confirmation, then succeed — that is expected (the agent's permission gate
 still applies).
 
+## Next: pull context from a sibling
+
+Detection makes the agent *aware* of a sibling. To have it **read** targeted
+context from one — a shared type, an API contract, a config — without copying
+the sibling's files in, see [Cross-repo retrieval](cross-repo-retrieval.md)
+(`agent-config linked-projects:list` + `/knowledge:cross-repo`).
+
 ## Tell us what works
 
 Auto-detection is verified for Claude Code only. If you use Cursor, Augment, or

@@ -33,6 +33,7 @@ contract — input shapes, bounds, redaction defaults, storage layout.
 | `/knowledge ingest` | `commands/knowledge/ingest.md` | Walk a local path, redact, chunk, persist to `agents/memory/knowledge/<ingest-id>/` |
 | `/knowledge list` | `commands/knowledge/list.md` | List existing ingests (table or JSON); pin / unpin by id prefix |
 | `/knowledge forget` | `commands/knowledge/forget.md` | Drop a single ingest by id prefix (atomic, no partial state) |
+| `/knowledge cross-repo` | `commands/knowledge/cross-repo.md` | Targeted read-only retrieval over opted-in linked-project siblings (ADR-032 Option A) |
 
 Sub-command names match the locked contract in
 [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md).
@@ -48,6 +49,7 @@ Sub-command names match the locked contract in
    > 1. ingest — point at a local folder, `.zip`, or file
    > 2. list — show what's already ingested (`--pin` / `--unpin` to flag)
    > 3. forget — drop an ingest by id prefix
+   > 4. cross-repo — targeted read-only retrieval over opted-in siblings
 
 ## Rules
 

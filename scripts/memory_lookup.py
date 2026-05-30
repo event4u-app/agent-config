@@ -56,12 +56,21 @@ CURATED_TYPES = {
 # conflict rule still treats them as repo entries against operational.
 KNOWLEDGE_TYPE = "knowledge"
 
+# Cross-repo retrieval (road-to-leaner-core-and-discovery Phase 4). When this
+# type is requested AND opted-in linked-project siblings exist, matches from
+# scripts/cross_repo_retrieve.py are projected as `source="cross-repo"` Hits,
+# scored below curated/knowledge so cross-repo context never outranks the
+# project's own truth (mirrors the 0.85× knowledge discount, then floored
+# further). Opt-in by caller (type must be requested) + lazy import → existing
+# call sites and consumers without the script are unaffected.
+CROSS_REPO_TYPE = "cross-repo"
+
 
 @dataclass
 class Hit:
     id: str
     type: str
-    source: str            # "curated" | "intake" | "operational"
+    source: str            # "curated" | "intake" | "operational" | "knowledge" | "cross-repo"
     path: str              # file (or logical locator) that produced the hit
     score: float           # naive, content-match based [0..1]
     entry: dict = field(default_factory=dict)
@@ -416,6 +425,45 @@ def package_operational_provider() -> Optional[OperationalProvider]:
     return _cli_operational_provider
 
 
+def _cross_repo_hits(keys: list[str], limit: int) -> list[Hit]:
+    """Project cross-repo matches into discounted, tagged Hits.
+
+    Lazy + guarded: imports `cross_repo_retrieve` on demand and swallows any
+    failure (script absent in a consumer install, no opted-in siblings) so the
+    cross-repo type degrades to zero hits rather than breaking retrieval. Scores
+    sit below curated/knowledge (0.85× floor, then a small per-rank decrement)
+    so cross-repo context never outranks the project's own truth.
+    """
+    query = " ".join(k for k in keys if k).strip()
+    if not query:
+        return []
+    try:
+        import os
+        import sys as _sys
+        from pathlib import Path as _Path
+
+        here = _Path(__file__).resolve().parent
+        if str(here) not in _sys.path:
+            _sys.path.insert(0, str(here))
+        import cross_repo_retrieve  # type: ignore
+
+        result = cross_repo_retrieve.retrieve(_Path(os.getcwd()), query, None, limit)
+    except Exception:  # noqa: BLE001 — optional surface; never break retrieval
+        return []
+
+    hits: list[Hit] = []
+    for i, m in enumerate(result.get("matches", [])):
+        hits.append(Hit(
+            id=f"cross-repo:{m.get('source_repo', '')}:{m.get('path', '')}",
+            type=CROSS_REPO_TYPE,
+            source="cross-repo",
+            path=f"{m.get('source_repo', '')}/{m.get('path', '')}",
+            score=round(0.7 * 0.85 - i * 0.01, 4),
+            entry=m,
+        ))
+    return hits
+
+
 def retrieve(
     types: list[str],
     keys: list[str],
@@ -454,6 +502,9 @@ def retrieve(
                     score=base * 0.85,
                     entry=entry,
                 ))
+            continue
+        if mtype == CROSS_REPO_TYPE:
+            repo_hits.extend(_cross_repo_hits(keys, limit))
             continue
         if mtype not in CURATED_TYPES:
             continue
@@ -503,7 +554,7 @@ CONTRACT_VERSION = 1
 
 # Memory types this file-backed backend can answer. Types outside this
 # set map to `unknown_type` per the retrieval contract.
-_KNOWN_TYPES = CURATED_TYPES | {KNOWLEDGE_TYPE}
+_KNOWN_TYPES = CURATED_TYPES | {KNOWLEDGE_TYPE, CROSS_REPO_TYPE}
 
 
 def retrieve_v1(

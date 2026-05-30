@@ -1,0 +1,33 @@
+concept,surface_count,kinds,line_cost,last_touched,overlap,seeded,surfaces
+mcp,3,contract,615,2026-05-26,Y,,docs/contracts/mcp-cloud-scope.md; docs/contracts/mcp-discovery-phase-notice.md; docs/contracts/mcp-phase-1-scope.md
+context-spine,3,contract,424,2026-05-26,Y,,docs/contracts/adr-gtm-context-spine.md; docs/contracts/adr-wing4-context-spine.md; docs/contracts/context-spine.md
+user,3,contract,383,2026-05-26,Y,,docs/contracts/adr-install-user-type-axis.md; docs/contracts/adr-user-types-axis.md; docs/contracts/user-type-schema.md
+domain-safety,3,rule,354,2026-05-30,family,,.agent-src/rules/domain-safety-disclaimer.md; .agent-src/rules/domain-safety-pii.md; .agent-src/rules/domain-safety-retention.md
+command-suggestion,3,"context,contract,rule",342,2026-05-30,Y,,.agent-src/contexts/contracts/command-suggestion-flow.md; .agent-src/rules/command-suggestion-policy.md; docs/contracts/adr-command-suggestion.md
+floor-safety,3,rule,312,2026-05-30,family,,.agent-src/rules/engineering-safety-floor.md; .agent-src/rules/finance-safety-floor.md; .agent-src/rules/strategy-safety-floor.md
+quality-skill,3,"context,guideline,rule",305,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/skill-quality-mechanics.md; .agent-src/rules/skill-quality.md; docs/guidelines/agent-infra/skill-quality-checklist.md
+answers-direct,3,"contract,guideline,rule",282,2026-05-30,Y,,.agent-src/rules/direct-answers.md; docs/contracts/pilot/direct-answers.md; docs/guidelines/agent-infra/direct-answers-demos.md
+language-tone,3,"contract,guideline,rule",244,2026-05-30,Y,,.agent-src/rules/language-and-tone.md; docs/contracts/pilot/language-and-tone.md; docs/guidelines/agent-infra/language-and-tone-examples.md
+implement-ticket,2,contract,749,2026-05-26,Y,,docs/contracts/adr-implement-ticket-runtime.md; docs/contracts/implement-ticket-flow.md
+mental-models,2,"contract,guideline",652,2026-05-26,Y,,docs/contracts/mental-models.md; docs/guidelines/agent-infra/mental-models.md
+context-load,2,contract,481,2026-05-26,Y,,docs/contracts/load-context-budget-model.md; docs/contracts/load-context-schema.md
+artifact-engagement,2,"context,rule",306,2026-05-30,Y,,.agent-src/contexts/contracts/artifact-engagement-flow.md; .agent-src/rules/artifact-engagement-recording.md
+progress-roadmap,2,"guideline,rule",293,2026-05-30,Y,Y,.agent-src/rules/roadmap-progress-sync.md; docs/guidelines/agent-infra/roadmap-progress-mechanics.md
+installed-tools,2,"contract,guideline",288,2026-05-29,Y,,docs/contracts/installed-tools-lockfile.md; docs/guidelines/agent-infra/installed-tools-manifest.md
+settings-sync,2,contract,269,2026-05-18,Y,,docs/contracts/adr-settings-sync-engine.md; docs/contracts/settings-sync-yaml-subset.md
+cross-handoff,2,"contract,guideline",263,2026-05-26,Y,,docs/contracts/cross-wing-handoff.md; docs/guidelines/cross-role-handoff.md
+interaction-user,2,"context,rule",255,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/user-interaction-mechanics.md; .agent-src/rules/user-interaction.md
+before-complete,2,"guideline,rule",208,2026-05-30,Y,,.agent-src/rules/verify-before-complete.md; docs/guidelines/agent-infra/verify-before-complete-demos.md
+ask-uncertain,2,"guideline,rule",206,2026-05-30,Y,,.agent-src/rules/ask-when-uncertain.md; docs/guidelines/agent-infra/ask-when-uncertain-demos.md
+lifecycle-provider,2,"contract,rule",202,2026-05-30,Y,,.agent-src/rules/provider-lifecycle-discipline.md; docs/contracts/provider-lifecycle.md
+augment-source,2,"context,rule",175,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/augment-source-of-truth-mechanics.md; .agent-src/rules/augment-source-of-truth.md
+corpus-impact,2,"contract,rule",174,2026-05-30,Y,,.agent-src/rules/low-impact-corpus-privacy-floor.md; docs/contracts/low-impact-corpus-format.md
+mode-role,2,"guideline,rule",152,2026-05-30,Y,,.agent-src/rules/role-mode-adherence.md; docs/guidelines/agent-infra/role-mode-router.md
+action-before,2,"context,rule",141,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/think-before-action-mechanics.md; .agent-src/rules/think-before-action.md
+mcp-tool,2,contract,133,2026-05-25,Y,,docs/contracts/mcp-tool-inventory.md; docs/contracts/mcp-tool-stub-envelope.md
+efficiency-token,2,"context,rule",132,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/token-efficiency-mechanics.md; .agent-src/rules/token-efficiency.md
+command-routing,2,"context,rule",114,2026-05-30,Y,,.agent-src/contexts/communication/rules-auto/slash-command-routing-policy-mechanics.md; .agent-src/rules/slash-command-routing-policy.md
+gate-onboarding,2,rule,104,2026-05-30,family,,.agent-src/rules/linked-projects-onboarding-gate.md; .agent-src/rules/onboarding-gate.md
+governance-type,2,"guideline,rule",95,2026-05-30,Y,Y,.agent-src/rules/rule-type-governance.md; docs/guidelines/agent-infra/rule-type-governance.md
+coding-php,2,"guideline,rule",92,2026-05-30,Y,,.agent-src/rules/php-coding.md; docs/guidelines/php/php-coding-patterns.md
+agent-authority,2,"contract,rule",53,2026-05-30,Y,,.agent-src/rules/agent-authority.md; docs/contracts/pilot/agent-authority.md

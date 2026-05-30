@@ -533,12 +533,16 @@ def detect_artifact_type(path: Path, text: str) -> ArtifactType:
     path_str = str(path).lower()
     has_skill_heading = "## When to use" in text and "## Procedure" in text
 
-    # Skills take priority — /skills/commands/SKILL.md is a skill, not a command
+    # A file inside a /commands/ tree is a command — the commands tree wins,
+    # even for a cluster head literally named `skill.md` or a sub-command under
+    # a `skills/` cluster dir (e.g. /commands/skills/discover.md). The only
+    # /commands/ file that is NOT a command is a nested skill body, which is
+    # always `SKILL.md` (case-sensitive — command files are lowercase).
+    if "/commands/" in path_str and path.name != "SKILL.md":
+        return "command"
+    # Skills: a SKILL.md body, or anything under a /skills/ tree.
     if path.name.lower() == "skill.md" or "/skills/" in path_str:
         return "skill"
-    # Commands are flat .md files in /commands/ directories (not SKILL.md)
-    if "/commands/" in path_str and path.name.lower() != "skill.md":
-        return "command"
     if "/rules/" in path_str:
         return "rule"
     if "/guidelines/" in path_str:
