@@ -8,13 +8,14 @@ AI video pipeline.
 - **version**: `5.4.1`
 - **owner**: small-business
 - **requires**: —
-- **artefacts**: 6
+- **artefacts**: 7
 
-## Skills (6)
+## Skills (7)
 
 - **`canvas-design`** — Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'.
 - **`character-consistency`** — Use when a character must stay visually identical across AI video scenes — locks identity tokens (silhouette, palette, wardrobe, prop) in JSON. Triggers 'character lock', 'same character'.
 - **`motion-choreographer`** — Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'.
 - **`pixar-storyteller`** — Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'.
 - **`scene-expander`** — Use when expanding a one-line idea into the 12-block Cinematic Scene Blueprint — provider-agnostic, includes optional dialogue + ambient. Triggers 'expand this scene', 'blueprint for X'.
+- **`song-to-script`** — Use when an audio track must become a timed scene script for the AI video pipeline — maps song sections/energy to `## Scene N` blocks with per-scene duration, and (auto mode) infers mood and lyric lines for lip-sync. Triggers 'music video', 'from the song', 'cut to the beat'.
 - **`video-director`** — Use when turning a scene idea into the 11-block cinematic prompt for live-action AI video — lens, lighting, blocking, motion, negatives. Triggers 'cinematic prompt', 'film-grade scene'.
