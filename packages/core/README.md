@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `5.4.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 368
+- **artefacts**: 369
 
-## Commands (134)
+## Commands (135)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -140,8 +140,9 @@ Core framework-neutral artefacts.
 - **`threat-model`** — Run a pre-implementation threat model on a proposed change — enumerates abuse cases, trust boundaries, and authorization gaps before the first line of code is written
 - **`update-form-request-messages`** — Sync the messages() method of a FormRequest class — add missing entries, link them to language keys, and clean up stale ones.
 - **`upstream-contribute`** — Contribute a learning, skill, rule, or fix from a consumer project back to the shared agent-config package
-- **`video`** — Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch.
+- **`video`** — Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.
 - **`video:from-script`** — Drive a script end-to-end through the AI video pipeline — scenes → blueprint → image → operator pick → motion → video → stitch. Dry-run default; network calls require explicit per-turn confirmation.
+- **`video:from-song`** — Music-video from a song + reference images — accept or derive a timed scene script, optional character-lock, render, stitch, mux song as master track. Dry-run default; one batch gate for live calls.
 - **`video:scene`** — Render a single scene from a one-line idea — scene-expander → blueprint → image → operator pick → motion → video. Dry-run default; live calls require explicit per-turn confirmation.
 - **`video:stitch`** — Re-stitch existing clips in `<project>/scenes/*/` after operator edits — no re-render. ffmpeg concat driven by manifest.json.
 - **`video:storyboard`** — Image-only storyboard — script → scenes → blueprint → image render → contact-sheet PNG via ffmpeg montage. No video calls.
