@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `5.4.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 372
+- **artefacts**: 374
 
-## Commands (138)
+## Commands (140)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -132,6 +132,8 @@ Core framework-neutral artefacts.
 - **`roadmap:process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 - **`set-cost-profile`** — Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
+- **`skill`** — Single-skill orchestrator — routes to preview. Non-destructive "what will this skill do?" before you run it.
+- **`skill:preview`** — Non-destructive preview of a skill — its declared steps, execution type, allowed tools, and file/command targets — before you run it. Read-only, no execution.
 - **`skills`** — Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.
 - **`skills:discover`** — Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
