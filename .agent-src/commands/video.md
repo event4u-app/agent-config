@@ -3,7 +3,7 @@ model_tier: inherit
 name: video
 tier: 2
 cluster: video
-description: Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, scene, storyboard, stitch.
+description: Video-creation orchestrator — Hollywood-level AI video pipeline. Routes to from-script, from-song, scene, storyboard, stitch.
 type: orchestrator
 suggestion:
   eligible: true
@@ -19,31 +19,41 @@ packs:
 
 Top-level orchestrator for the `/video:*` family — multi-provider AI
 video creation. Reads provider keys + defaults from
-[`agents/.ai-video.xml`](../agents/templates/.ai-video.xml.example) (gitignored
+[`agents/.ai-video.xml`](../../agents/templates/.ai-video.xml.example) (gitignored
 real file; example shipped). Every subcommand is **dry-run by default**;
 network calls require explicit per-turn confirmation per the adapter
-contract under [`scripts/ai-video/lib/adapter-contract.md`](../scripts/ai-video/lib/adapter-contract.md).
+contract under [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md).
 
 ## Sub-commands
 
 | Sub-command | Routes to | Purpose |
 |---|---|---|
 | `/video:from-script <path>` | `commands/video/from-script.md` | Full pipeline: script → scenes → blueprint → images → operator pick → motion → video → stitch |
+| `/video:from-song <images-dir> <song>` | `commands/video/from-song.md` | Music-video: song + reference images → derived/briefed script → render → stitch → song muxed as master track |
 | `/video:scene "<idea>"` | `commands/video/scene.md` | Single-scene iteration without a full script |
 | `/video:storyboard <path>` | `commands/video/storyboard.md` | Image-only output; contact-sheet storyboard PNG via `ffmpeg` montage |
 | `/video:stitch <slug>` | `commands/video/stitch.md` | Re-stitches existing clips after operator edits, no re-render |
 
 ## Dispatch
 
-1. Parse `/video <sub-command> [args]`.
+1. Parse `/video <sub-command> [args]`. The sub-command is the first
+   token; match it against the table's exact sub-command names only. A
+   token that is a **file path** (contains `/`, `.`, or a known media
+   extension — e.g. `from-song.mp3`, `clip/from-song.wav`) is NOT a
+   sub-command: it belongs to `from-script` (a script path) or is a
+   mis-typed `/video:from-song` invocation. Never treat `from-song.mp3`
+   as the `from-song` sub-command, and never route a bare `from-song`
+   (no images-dir + song args) into `from-script` with the song as the
+   script. On this ambiguity → ask rather than best-guess.
 2. Look up the sub-command in the table above and execute its file
    verbatim with the remaining args.
 3. Unknown / missing sub-command → print the table and ask:
 
    > 1. from-script — full script → final video
-   > 2. scene — single-scene iteration
-   > 3. storyboard — image-only contact sheet
-   > 4. stitch — re-stitch existing clips
+   > 2. from-song — music video from a song + reference images
+   > 3. scene — single-scene iteration
+   > 4. storyboard — image-only contact sheet
+   > 5. stitch — re-stitch existing clips
 
 ## Rules
 
@@ -59,5 +69,5 @@ contract under [`scripts/ai-video/lib/adapter-contract.md`](../scripts/ai-video/
 
 ## See also
 
-- [`scripts/ai-video/lib/adapter-contract.md`](../scripts/ai-video/lib/adapter-contract.md) — provider adapter v1 contract
-- [`docs/contracts/command-clusters.md`](../docs/contracts/command-clusters.md) — `video` cluster registration
+- [`scripts/ai-video/lib/adapter-contract.md`](../../scripts/ai-video/lib/adapter-contract.md) — provider adapter v1 contract
+- [`docs/contracts/command-clusters.md`](../../docs/contracts/command-clusters.md) — `video` cluster registration
