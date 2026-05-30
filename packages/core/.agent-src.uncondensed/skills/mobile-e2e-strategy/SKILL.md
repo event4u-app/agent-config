@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: mobile-e2e-strategy
 description: "Use when picking a mobile E2E framework — Detox / Appium / Maestro / XCUITest / Espresso — or planning iOS Simulator / Android Emulator coverage in CI for RN, Expo, or native apps."
 domain: quality

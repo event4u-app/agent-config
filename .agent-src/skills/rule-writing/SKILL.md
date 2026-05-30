@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: rule-writing
 description: "Use when creating or editing a rule in .agent-src.uncondensed/rules/ — trigger wording, always vs auto classification, size budget — even when the user just says 'add a rule for X'."
 domain: process

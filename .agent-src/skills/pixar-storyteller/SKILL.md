@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: pixar-storyteller
 description: "Use when turning an idea into a Pixar-style animation prompt — character sheet, scene, image, video — anchored in emotional beat, want, obstacle. Triggers 'Pixar prompt', 'animated scene'."
 domain: product

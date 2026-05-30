@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: build-buy-partner
 description: "Use when deciding insource vs outsource vs acquire — integration-cost analysis, dependency-risk, optionality preservation. Triggers on 'should we build', 'buy vs partner'."
 status: active

@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: symfony-workflow
 description: "Writes Symfony PHP — DI container, bundles, Doctrine, Messenger, Security voters, console commands. For Laravel / Eloquent / Artisan use `laravel`. For framework-free PHP use `php-coder`."
 domain: engineering

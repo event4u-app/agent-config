@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: estimate-ticket
 tier: 1
 skills: [estimate-ticket]

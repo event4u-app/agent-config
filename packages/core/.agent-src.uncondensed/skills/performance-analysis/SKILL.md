@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: performance-analysis
 description: "ONLY when user explicitly requests: performance audit, bottleneck analysis, or N+1 query detection. NOT for regular feature work."
 domain: discovery

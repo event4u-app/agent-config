@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: laravel-middleware
 description: "Use when creating or modifying Laravel middleware — request/response filtering, groups, priority, terminable middleware, or route-level assignment."
 domain: engineering

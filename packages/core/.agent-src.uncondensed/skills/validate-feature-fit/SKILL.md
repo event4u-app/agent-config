@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: "validate-feature-fit"
 description: "Validate whether a feature request fits the existing codebase — check for duplicates, contradictions, scope creep, and architectural misfit"
 domain: quality

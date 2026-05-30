@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: review-changes
 tier: 1
 skills: [code-review, subagent-orchestration, judge-bug-hunter, judge-security-auditor, judge-test-coverage, judge-code-quality, architecture-review-lens, git-workflow]

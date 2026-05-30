@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: risk-officer
 description: "Use when surfacing and prioritising risk before commit — blast-radius framing, mitigations, residual-risk verdict — even if the user just says 'what could go wrong here?'."
 personas:

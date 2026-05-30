@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: voice-and-tone-design
 description: "Use when shaping brand voice — voice attributes, tone-by-context matrix, consistency review. Triggers on 'define our voice', 'why does our copy sound different on every surface'."
 status: active

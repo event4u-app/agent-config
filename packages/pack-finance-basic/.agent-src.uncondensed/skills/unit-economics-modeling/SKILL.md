@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: unit-economics-modeling
 description: "Use when modeling CAC, LTV, payback, contribution margin, or burn-multiple per customer — SaaS, marketplace, or transactional. Triggers on 'are we unit-economic', 'what is our LTV/CAC'."
 status: active

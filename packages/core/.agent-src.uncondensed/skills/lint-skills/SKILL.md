@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: lint-skills
 description: "Use when running the package's skill linter against all skills and rules to validate frontmatter, required sections, and execution metadata."
 domain: process

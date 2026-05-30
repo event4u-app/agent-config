@@ -398,6 +398,11 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-model-tier-coverage:
+    silent: true
+    desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-model-capability-tiers.md — explicit lite/medium/high or inherit required (ADR-035))
+    cmd: python3 scripts/lint_model_tier_coverage.py {{.QUIET_FLAG}}
+
   lint-frontmatter-boilerplate:
     silent: true
     desc: Fail when an artefact carries a frontmatter field equal to its schema default (road-to-abstraction-reduction.md Phase 3 — omit it, the loader injects the default)

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: ghostwriter
 tier: 2
 description: Ghostwriter cluster — fetch, write, list, show, and delete public-figure voice profiles (the third voice primitive alongside personas/ and .agent-user.md).

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: description-assist
 description: "Use when polishing a skill/rule/command/guideline frontmatter description — pushier phrasing, trigger coverage, undertrigger audit — even if the user just says 'make this pushier'."
 domain: process

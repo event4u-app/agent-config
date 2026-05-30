@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: chat-history
 tier: 2
 description: Chat-history orchestrator — routes to show, import, learn

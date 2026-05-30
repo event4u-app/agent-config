@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: override:manage
 tier: 2
 cluster: override

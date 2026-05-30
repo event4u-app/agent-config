@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: pipeline-strategy
 description: "Use when designing or auditing a sales pipeline — stage exit criteria, per-cell conversion, coverage reasoning, leak detection. Triggers on 'tighten our pipeline', 'where is the leak'."
 status: active

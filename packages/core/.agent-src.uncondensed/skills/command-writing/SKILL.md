@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: command-writing
 description: "Use when creating or editing a slash command in .agent-src.uncondensed/commands/ — frontmatter, numbered steps, safety gates — even when the user just says 'add a /command for X'."
 domain: process

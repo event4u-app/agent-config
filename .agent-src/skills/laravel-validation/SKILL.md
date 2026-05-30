@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: laravel-validation
 description: "Use when writing validation — Form Requests, rules, custom rule objects, request-boundary design — even when the user just says 'validate this input' or 'check the request' without naming it."
 domain: engineering

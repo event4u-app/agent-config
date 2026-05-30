@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: knowledge:ingest
 tier: 2
 cluster: knowledge

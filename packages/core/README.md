@@ -231,7 +231,7 @@ Core framework-neutral artefacts.
 - **`media-governance-routing`** — Generating AI video/image/voice — surface project-local media policies (likeness, style, public-figures, voice-cloning, disclosure)
 - **`minimal-safe-diff`** — Writing or reviewing a diff — smallest change that solves the problem; no drive-by edits, opportunistic refactors, or reformatting
 - **`missing-tool-handling`** — CLI tool needed for the task is not installed — ask before working around it; do NOT install silently
-- **`model-recommendation`** — Starting a task, switching type, or invoking a command — detect complexity, recommend optimal model (Opus/Sonnet/GPT)
+- **`model-recommendation`** — Starting a task, switching type, or invoking a skill/command that declares a model_tier — switch (Claude) or suggest (any agent) the right capability tier
 - **`no-attribution-footers`** — Generating PR/issue/comment/commit bodies — forbids 'Generated with', 'Co-authored by', 'Pull Request opened by' attribution footers
 - **`no-cheap-questions`** — No cheap questions — never ask what context answers, never offer Iron-Law-violating options, never stage no-trade-off choices; mode-independent (off / auto / on)
 - **`no-decorative-emojis-in-git-surfaces`** — Generating PR/issue/commit titles or PR/issue comments — forbids decorative emojis; allowed in PR/issue descriptions + commit bodies only when matched by an in-artifact legend

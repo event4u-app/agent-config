@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: one-on-one-cadence
 description: "Use when designing engineering 1:1s — cadence, agenda mix, growth-vs-blocker-vs-trust shape, cancellation anti-patterns. Triggers on 'fix my 1:1s', 'should I cancel 1:1s this week'."
 status: active

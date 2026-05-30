@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: php-coder
 description: "Writes or edits PHP code — controllers, classes, type hints, SOLID refactors, modern idioms — even without naming PHP. NOT for writing tests (use pest-testing) or explaining PHP concepts."
 domain: engineering

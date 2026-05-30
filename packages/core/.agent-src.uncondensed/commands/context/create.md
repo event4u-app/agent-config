@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: context:create
 tier: 2
 cluster: context

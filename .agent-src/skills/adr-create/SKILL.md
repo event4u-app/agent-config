@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: adr-create
 description: "Use when capturing an architectural decision — naming the file, picking the next ADR number, filling Status / Context / Decision / Consequences, and regenerating the index — even without saying 'ADR'."
 domain: process

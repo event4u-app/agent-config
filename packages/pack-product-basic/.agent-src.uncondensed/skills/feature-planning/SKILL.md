@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: feature-planning
 description: "Use when the user says "plan a feature", "brainstorm", "explore this idea", or wants to go from idea to structured plan and roadmap."
 domain: product

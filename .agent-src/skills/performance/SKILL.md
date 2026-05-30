@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: performance
 description: "Use when optimizing application performance — caching strategies, eager loading, query optimization, Redis patterns, or background job design."
 domain: engineering

@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: nextjs-patterns
 description: "Writes Next.js App Router code — Server Components, Server Actions, RSC boundaries, route handlers, caching, and streaming — matching framework conventions and project architecture."
 domain: engineering

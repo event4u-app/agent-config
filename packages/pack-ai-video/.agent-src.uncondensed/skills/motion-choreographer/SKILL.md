@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: motion-choreographer
 description: "Use when turning a locked still + blueprint into a provider-tuned motion prompt — camera, primary + secondary motion, physics, native-audio sync. Triggers 'motion prompt for Veo/Kling/Sora'."
 personas:

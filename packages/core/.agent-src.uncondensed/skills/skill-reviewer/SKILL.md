@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: skill-reviewer
 description: "Use when reviewing, auditing, or optimizing skills — validates against the 7 Skill Killers checklist and produces fix recommendations."
 domain: quality

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: video
 tier: 2
 cluster: video

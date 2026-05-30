@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: messaging-architecture
 description: "Use when shaping the primary message, supporting proofs, and audience-by-message matrix from a locked positioning frame — before any copy or launch beat. Triggers on 'tighten the message stack'."
 status: active

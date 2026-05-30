@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: fix:pr-developer-comments
 tier: 2
 cluster: fix

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: discovery-interview
 description: "Use when running discovery interviews — question-bank build, bias audit, insight extraction. Triggers on 'audit my guide', 'extract insights from transcript', 'is my hypothesis falsifiable'."
 status: active

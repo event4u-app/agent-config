@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: api-design
 description: "Use when designing APIs, planning endpoints, REST conventions, versioning, or deprecation — even when the user just says 'expose this as an endpoint' without naming API design."
 personas:

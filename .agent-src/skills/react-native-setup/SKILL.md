@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: react-native-setup
 description: "Use when setting up React Native or Expo dev environments — Xcode, Android Studio, CocoaPods, EAS, Metro, New Architecture — even when the user just says 'my RN build won't start'."
 domain: devops

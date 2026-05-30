@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: agents:user-review
 tier: 2
 cluster: agents

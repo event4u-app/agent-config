@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: memory:propose
 tier: 2
 cluster: memory

@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: multi-tenancy
 description: "Use when working with the multi-tenant architecture — customer DB switching, FQDN routing, tenant isolation, or cross-tenant operations."
 domain: engineering

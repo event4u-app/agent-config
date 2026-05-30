@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: decision-record
 description: "Use when locking a trade-off, structuring an ADR draft, or wiring supersession chains — frames options · trade-offs · consequences before the file is written by `adr-create`."
 status: active

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: agents
 tier: 1
 description: Agent-layer orchestrator — routes to init, optimize, audit. Covers AGENTS.md and its multi-tool stubs (CLAUDE.md, GEMINI.md, copilot-instructions.md, .cursorrules).

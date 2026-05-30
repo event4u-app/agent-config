@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: challenge-me:with-docs
 tier: 2
 cluster: challenge-me

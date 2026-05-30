@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: video:from-script
 tier: 2
 cluster: video

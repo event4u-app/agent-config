@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: data-flow-mapper
 description: "Use BEFORE editing code that touches user data — traces the value from entry → validation → transformation → storage → egress, every hop cited with file:line."
 domain: discovery

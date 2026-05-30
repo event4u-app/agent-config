@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: feature:refactor
 tier: 2
 cluster: feature

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: agent-status
 tier: 0
 skills: [agent-docs-writing]

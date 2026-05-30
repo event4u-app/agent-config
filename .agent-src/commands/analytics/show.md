@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: analytics:show
 tier: 2
 cluster: analytics

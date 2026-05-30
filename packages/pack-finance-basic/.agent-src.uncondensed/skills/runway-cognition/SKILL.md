@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: runway-cognition
 description: "Use when reasoning about cash runway — burn shape, fundraise triggers, layoff-vs-cut-vs-grow decisions. Triggers on 'how long do we have', 'should we raise', 'cut or grow'."
 status: active

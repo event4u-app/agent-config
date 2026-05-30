@@ -876,8 +876,72 @@ def _iter_commands():
         yield source_file, _command_slug(source_file)
 
 
+# --- Per-skill model auto-switch (ADR-035 / road-to-model-capability-tiers) ---
+
+# The SINGLE generator-owned tier→Claude-model mapping (ADR-035 § 3). Claude
+# Code is the only surface that consumes a native `model:`, so this is the only
+# place a capability tier resolves to a concrete model. `inherit`/absent emit
+# nothing and stay pure symlinks. Non-Claude agents never get a per-vendor
+# table — the rule surfaces the tier name as a suggestion.
+_TIER_TO_CLAUDE_MODEL = {"high": "opus", "medium": "sonnet", "lite": "haiku"}
+_MODEL_TIER_RE = re.compile(r'^model_tier:\s*"?([a-z]+)"?\s*$', re.MULTILINE)
+
+
+def _read_model_auto_switch() -> str:
+    """Read `model.auto_switch` from .agent-settings.yml.
+
+    Returns `auto` | `suggest` | `off`; default `suggest`. Only `auto` makes
+    the generator emit a native Claude `model:` key (ADR-034 § 4) — `suggest`
+    and `off` keep skills/commands as pure symlinks so the package never
+    silently overrides a user's explicit `/model` choice.
+    """
+    try:
+        from scripts._lib.agent_settings import load_agent_settings
+    except ImportError:  # pragma: no cover — script-style invocation
+        import sys as _sys
+        from pathlib import Path as _Path
+        _sys.path.insert(0, str(_Path(__file__).resolve().parent))
+        from _lib.agent_settings import load_agent_settings  # type: ignore[import-not-found]
+    data = load_agent_settings(project_path=SETTINGS_FILE)
+    model = data.get("model")
+    value = model.get("auto_switch") if isinstance(model, dict) else None
+    if isinstance(value, str) and value.strip().lower() in ("auto", "suggest", "off"):
+        return value.strip().lower()
+    return "suggest"
+
+
+def _model_tier(skill_md: Path) -> str | None:
+    """Return the `model_tier` frontmatter value, or None if absent."""
+    if not skill_md.exists():
+        return None
+    text = skill_md.read_text(encoding="utf-8", errors="replace")
+    if not text.startswith("---\n"):
+        return None
+    end = text.find("\n---\n", 4)
+    if end == -1:
+        return None
+    m = _MODEL_TIER_RE.search(text[4:end])
+    return m.group(1) if m else None
+
+
+def _render_native_model_md(src_md: Path, tier: str) -> str:
+    """Rewrite the source `model_tier: <tier>` line to a native Claude
+    `model: <mapped>` key via the generator-owned mapping (ADR-035 § 3). The
+    rest of the SKILL.md is byte-identical."""
+    text = src_md.read_text(encoding="utf-8")
+    model = _TIER_TO_CLAUDE_MODEL[tier]
+    return _MODEL_TIER_RE.sub(f"model: {model}", text, count=1)
+
+
 def generate_claude_skills() -> int:
-    """Create .claude/skills/ symlinks for ALL skills in .agent-src/skills/.
+    """Create .claude/skills/ entries for ALL skills in .agent-src/skills/.
+
+    Default: a directory symlink → .agent-src/skills/<name> (verbatim).
+    When `model.auto_switch: auto` AND a skill declares
+    `model_tier: lite|medium|high`, the entry becomes a real directory whose
+    sub-files are symlinked but whose SKILL.md is a rendered copy carrying a
+    native Claude `model:` key (ADR-034 Option (b) — only model-bearing skills
+    break the symlink). Idempotent: each entry is rebuilt from scratch.
     """
     if not SKILLS_SOURCE.exists():
         print("  ⚠️  .agent-src/skills/ not found — skipping skills", file=sys.stderr)
@@ -885,26 +949,58 @@ def generate_claude_skills() -> int:
 
     # All skill directories in .agent-src/skills/
     skills = sorted([d.name for d in SKILLS_SOURCE.iterdir() if d.is_dir()])
+    skill_set = set(skills)
     # All command slugs (to protect from stale cleanup)
     command_slugs = {slug for _, slug in _iter_commands()}
 
     CLAUDE_SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+    auto = _read_model_auto_switch() == "auto"
 
-    # Clean stale symlinks (but not converted commands or README)
+    # Clean stale entries (symlinks AND rendered skill dirs) — but never touch
+    # command dirs (real dir whose SKILL.md is a symlink) or the README.
     for item in CLAUDE_SKILLS_DIR.iterdir():
-        if item.is_symlink() and item.name not in skills and item.name not in command_slugs and item.name != "README.md":
+        if item.name in skill_set or item.name in command_slugs or item.name == "README.md":
+            continue
+        if item.is_symlink():
             item.unlink()
+        elif item.is_dir():
+            skill_md = item / "SKILL.md"
+            # A rendered skill dir has a *real* SKILL.md copy; a command dir has
+            # a SKILL.md *symlink* (left for generate_claude_commands to manage).
+            if skill_md.is_file() and not skill_md.is_symlink():
+                shutil.rmtree(item)
 
     count = 0
+    rendered = 0
     for skill in skills:
         link = CLAUDE_SKILLS_DIR / skill
-        if link.exists() or link.is_symlink():
+        src_dir = SKILLS_SOURCE / skill
+        value = _model_tier(src_dir / "SKILL.md") if auto else None
+        # Rebuild from scratch for idempotency (symlink ↔ rendered-dir flips).
+        if link.is_symlink():
             link.unlink()
-        rel_target = Path("../../.agent-src/skills") / skill
-        link.symlink_to(rel_target)
+        elif link.is_dir():
+            shutil.rmtree(link)
+        elif link.exists():
+            link.unlink()
+        if value in _TIER_TO_CLAUDE_MODEL:
+            link.mkdir(parents=True)
+            for entry in sorted(src_dir.iterdir()):
+                if entry.name == "SKILL.md":
+                    (link / "SKILL.md").write_text(
+                        _render_native_model_md(entry, value), encoding="utf-8"
+                    )
+                else:
+                    (link / entry.name).symlink_to(
+                        Path("../../../.agent-src/skills") / skill / entry.name
+                    )
+            rendered += 1
+        else:
+            link.symlink_to(Path("../../.agent-src/skills") / skill)
         count += 1
 
-    info(f"  ✅  Created {count} skill symlinks in .claude/skills/")
+    suffix = f" ({rendered} rendered with native model:)" if rendered else ""
+    info(f"  ✅  Created {count} skill entries in .claude/skills/{suffix}")
     return count
 
 
@@ -945,6 +1041,8 @@ def generate_claude_commands() -> int:
     current_slugs: set[str] = set()
     count = 0
     skipped = 0
+    rendered = 0
+    auto = _read_model_auto_switch() == "auto"
     for source_file, slug in _iter_commands():
         # Skip if a real skill with the same name exists — skill takes priority
         if slug in skill_names:
@@ -953,7 +1051,7 @@ def generate_claude_commands() -> int:
 
         current_slugs.add(slug)
 
-        # Create skill directory (real dir, symlinked SKILL.md inside)
+        # Create skill directory (real dir, SKILL.md symlinked or rendered)
         skill_dir = CLAUDE_SKILLS_DIR / slug
         skill_dir.mkdir(parents=True, exist_ok=True)
 
@@ -961,10 +1059,18 @@ def generate_claude_commands() -> int:
         if skill_file.exists() or skill_file.is_symlink():
             skill_file.unlink()
 
-        # Symlink: .claude/skills/{slug}/SKILL.md → ../../../.agent-src/commands/<rel-path>
         rel_path = source_file.relative_to(COMMANDS_SOURCE)
-        rel_target = Path("../../../.agent-src/commands") / rel_path
-        skill_file.symlink_to(rel_target)
+        value = _model_tier(source_file) if auto else None
+        if value in _TIER_TO_CLAUDE_MODEL:
+            # Render a copy carrying the native Claude model: key (ADR-034).
+            skill_file.write_text(
+                _render_native_model_md(source_file, value), encoding="utf-8"
+            )
+            rendered += 1
+        else:
+            # Symlink: .claude/skills/{slug}/SKILL.md → ../../../.agent-src/commands/<rel-path>
+            rel_target = Path("../../../.agent-src/commands") / rel_path
+            skill_file.symlink_to(rel_target)
         count += 1
 
     # Clean stale command skill directories — real dirs from removed commands.
@@ -976,14 +1082,20 @@ def generate_claude_commands() -> int:
         if item.name in skill_names or item.name in current_slugs:
             continue
         skill_md = item / "SKILL.md"
-        if skill_md.is_symlink():
+        # Stale command dir = exactly one SKILL.md, either symlinked (default)
+        # or a rendered copy (native-model command, ADR-034). Skill-render dirs
+        # are protected above (item.name in skill_names) and via the skills
+        # generator, so this only reaps removed commands.
+        if skill_md.is_symlink() or skill_md.is_file():
             entries = list(item.iterdir())
             if len(entries) == 1 and entries[0].name == "SKILL.md":
                 skill_md.unlink()
                 item.rmdir()
                 removed_dirs += 1
 
-    msg = f"  ✅  Created {count} command symlinks in .claude/skills/"
+    msg = f"  ✅  Created {count} command entries in .claude/skills/"
+    if rendered:
+        msg += f" ({rendered} rendered with native model:)"
     if skipped:
         msg += f" ({skipped} skipped — same-name skill exists)"
     if removed_dirs:

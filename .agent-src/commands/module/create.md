@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: module:create
 tier: 2
 cluster: module

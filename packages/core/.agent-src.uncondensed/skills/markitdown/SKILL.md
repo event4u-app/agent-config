@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: markitdown
 description: "Use when converting PDF, DOCX, XLSX, PPTX, EPUB, images, or audio to Markdown for LLM ingestion via the upstream markitdown-mcp server — 'extract this PDF', 'OCR this image', 'transcribe this audio'."
 status: active

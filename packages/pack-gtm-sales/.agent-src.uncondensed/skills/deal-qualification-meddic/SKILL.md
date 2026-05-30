@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: deal-qualification-meddic
 description: "Use when qualifying or disqualifying a single deal — MEDDIC slots with evidence, inversion test, disqualification heuristic. Triggers on 'is this deal real', 'should we walk away'."
 status: active

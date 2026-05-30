@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: throughput-vs-morale-tradeoff
 description: "Use when balancing eng-team velocity vs quality vs burnout — on-call load, focus fragmentation, reorg shock. Triggers on 'team is burning out', 'why is velocity dropping'."
 status: active

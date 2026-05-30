@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: project-docs
 description: "Use when looking for project-specific documentation. Knows which docs exist in agents/reference/docs/ and agents/settings/contexts/ and maps work areas to relevant docs."
 domain: process

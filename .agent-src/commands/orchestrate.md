@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: orchestrate
 tier: 2
 cluster: orchestrate

@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: terraform
 description: "Use when writing Terraform — AWS modules, resources, variables, outputs, remote state — even when the user just says 'provision this infra' or 'add an S3 bucket' without naming Terraform."
 domain: devops

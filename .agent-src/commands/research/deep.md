@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: research:deep
 tier: 2
 cluster: research

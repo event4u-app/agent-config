@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: module
 tier: 2
 description: Module orchestrator — routes to create, explore

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: agents:user
 tier: 2
 cluster: agents

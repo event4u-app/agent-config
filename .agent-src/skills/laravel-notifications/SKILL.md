@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: laravel-notifications
 description: "Use when sending notifications via mail, Slack, database, or custom channels — with queuing, on-demand recipients, and notification preferences."
 domain: engineering

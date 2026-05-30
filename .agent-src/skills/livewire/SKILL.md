@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: livewire
 description: "Use when the project's frontend stack is Livewire — dispatched by `directives/ui/{apply,review,polish}.py`. Covers reactive state, events, lifecycle hooks, and component/view separation."
 domain: engineering

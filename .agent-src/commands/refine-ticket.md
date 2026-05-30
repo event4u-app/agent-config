@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: refine-ticket
 tier: 1
 skills: [refine-ticket]

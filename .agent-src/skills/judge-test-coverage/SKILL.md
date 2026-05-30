@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: judge-test-coverage
 description: "Use when a diff may lack tests — missing assertions, uncovered branches, over-mocking, no regression test for a bug fix — dispatched by /review-changes, /do-and-judge, /judge, even without 'tests'."
 personas:

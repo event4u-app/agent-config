@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: skill-management
 description: "Use when condensing, decondenseing, refactoring, or improving existing skills. Covers the full skill lifecycle from verbose → sharp → maintained."
 source: project

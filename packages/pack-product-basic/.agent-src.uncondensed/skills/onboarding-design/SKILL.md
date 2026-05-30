@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: onboarding-design
 description: "Use when designing customer onboarding — time-to-first-value, milestone design, friction audit, drop-off diagnosis. Triggers on 'fix onboarding', 'why do new accounts churn fast'."
 status: active

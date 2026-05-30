@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: upstream-contribute
 description: "Use when a learning, new skill, rule improvement, or bug fix from a consumer project should be contributed back to the shared agent-config package."
 domain: process

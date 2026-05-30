@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: prompt-engineering-patterns
 description: "Use when designing production-LLM prompts — few-shot, chain-of-thought, system prompts, templates, self-verification — distinct from prompt-optimizer and refine-prompt."
 domain: product

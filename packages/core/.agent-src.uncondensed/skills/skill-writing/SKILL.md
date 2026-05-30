@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: skill-writing
 description: "Use when deciding 'should this be a skill or a rule?', creating/improving/reviewing agent skills, SKILL.md frontmatter, or procedure sections — even without saying 'skill-writing'."
 source: project

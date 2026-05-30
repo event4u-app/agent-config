@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: chat-history:import
 tier: 2
 cluster: chat-history

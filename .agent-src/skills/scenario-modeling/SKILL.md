@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: scenario-modeling
 description: "Use when constructing base / upside / downside scenarios — three-statement modeling, sensitivity analysis, optionality reasoning. Triggers on 'model the scenarios', 'what if growth halves'."
 status: active

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: hiring-loop-design
 description: "Use when shaping an engineering hiring loop — stages, take-home vs live, calibration, bar-raiser, signal-vs-noise audit. Triggers on 'design our interview loop', 'audit our hiring bar'."
 status: active

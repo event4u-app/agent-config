@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: fix:pr-bot-comments
 tier: 2
 cluster: fix

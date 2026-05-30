@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: voc-extract
 description: "Use when extracting Voice-of-Customer themes from existing artefacts — GH issues, PR threads, Sentry patterns. Triggers on 'what are users saying', 'recurring complaints', 'top themes'."
 status: active

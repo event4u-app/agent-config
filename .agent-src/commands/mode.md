@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: mode
 tier: 1
 description: Set the active role mode — prints the contract, lists default skills, and refuses work outside the contract (see role-contracts)

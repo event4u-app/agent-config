@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: forecast-accuracy
 description: "Use when constructing the forecast call — commit / best-case / pipeline categorisation, deal-level evidence test, accuracy retro-loop. Triggers on 'build the forecast', 'why does our commit miss'."
 status: active

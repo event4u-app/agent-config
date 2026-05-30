@@ -74,6 +74,25 @@ Cursor, Windsurf, Cline, Gemini, Copilot have **no native skill surface**. Skill
 | Cline | none |
 | Gemini, Copilot | listed only inside `AGENTS.md` / `GEMINI.md` digest |
 
+### 6. `model_tier:` fidelity (ADR-035)
+
+The vendor-neutral `model_tier: lite | medium | high | inherit` capability band
+projects differently per tool. The **generator owns the only tier→model mapping**
+(`high → opus`, `medium → sonnet`, `lite → haiku`); no other surface maps a tier
+to a concrete model.
+
+| Tool | Consumption |
+|---|---|
+| Claude | When `model.auto_switch: auto` AND the tier is `high`/`medium`/`lite`, the generator rewrites `model_tier: <tier>` to a **native `model:` key** (`high→opus`, `medium→sonnet`, `lite→haiku`) in the rendered `.claude/skills/<name>/SKILL.md` (sub-files stay symlinked; only `SKILL.md` is a rendered copy). `inherit`/absent emit nothing. `suggest` (default) / `off` emit nothing — pure symlink. |
+| Augment | Keeps the **neutral `model_tier:`** field (symlinked from `.agent-src/`); the `model-recommendation` rule names the tier as a one-question suggestion (Augment has no per-turn override). **No package-maintained per-vendor table** — the agent resolves the tier to its own model. |
+| Cursor / Windsurf / Cline / Gemini / Copilot | No skill surface — field is inert; if surfaced, the same suggestion-only contract applies. |
+
+The native Claude `model:` key exists **only** in the rendered Claude
+projection; the portable source and every other tool keep the neutral tier.
+No vendor model name leaves the band abstraction in source. The optional
+orthogonal `context: large` modifier is metadata only — it never changes the
+native `model:`. See ADR-035 and `road-to-model-capability-tiers.md`.
+
 ## Automated probe — `task lint-projection-fidelity`
 
 `scripts/probe_projection_fidelity.py` reads `tests/fixtures/projection_fidelity/fixtures.yml` and asserts the per-tool guarantees above against the actual projected trees. The fixture covers five representative artefacts:

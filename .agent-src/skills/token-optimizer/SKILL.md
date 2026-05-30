@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: token-optimizer
 description: "Use BEFORE any verbose CLI run, large file read, doc conversion, or near-context handoff — single decision tree keyed by intent that cites the canonical token-saving asset. Consult before the action."
 domain: process

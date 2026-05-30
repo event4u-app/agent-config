@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: defense-in-depth
 description: "Use when validation needs entry, business-logic, environment, and instrumentation guards so a bad value cannot reach the failure point — turns a local bug fix into a structural one."
 domain: quality

@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: devcontainer
 description: "Wire up DevContainers / GitHub Codespaces — `devcontainer.json`, container images, secrets, VS Code features, port forwarding. NOT for tuning Copilot itself (use `copilot-config`)."
 domain: devops

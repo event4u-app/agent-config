@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: launch-readiness
 description: "Use before merging a release-shaped PR — pre-merge checklist, rollout plan, rollback criteria, ops handoff. Triggers on 'ready to ship', 'launch checklist', 'rollout plan for X'."
 status: active

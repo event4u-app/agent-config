@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: blade-ui
 description: "Use when the project's frontend stack is Blade — dispatched by `directives/ui/{apply,review,polish}.py`. Covers views, components, partials, layouts, and view logic."
 domain: engineering

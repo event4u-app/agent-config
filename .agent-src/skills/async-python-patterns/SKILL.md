@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: async-python-patterns
 description: "Use when writing Python asyncio code — picking between gather / TaskGroup / wait, structured concurrency, timeouts, cancellation, sync-bridging — decision framework only, cookbook externalized."
 domain: engineering

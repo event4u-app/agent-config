@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: competitive-positioning
 description: "Use when comparing this package to a peer / competitor — ours-vs-theirs verdict table, axis selection, adoption queue. Triggers on 'how do we compare to X', 'should we adopt their pattern'."
 status: active

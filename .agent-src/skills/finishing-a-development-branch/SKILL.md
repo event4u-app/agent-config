@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: finishing-a-development-branch
 description: "Use when the feature is implementation-complete and the next step is 'ship it' — verifies, cleans up, and routes to merge/PR/park/discard — even when the user just says 'I'm done, what now?'."
 domain: process

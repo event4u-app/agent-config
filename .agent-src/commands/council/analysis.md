@@ -1,4 +1,5 @@
 ---
+model_tier: high
 name: council:analysis
 tier: 2
 cluster: council

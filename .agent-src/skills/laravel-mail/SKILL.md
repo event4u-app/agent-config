@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: laravel-mail
 description: "Use when building Laravel emails — Mailables, Markdown templates, queued sending, attachments, previews — even when the user says 'send this as an email' without naming Mailables."
 domain: engineering

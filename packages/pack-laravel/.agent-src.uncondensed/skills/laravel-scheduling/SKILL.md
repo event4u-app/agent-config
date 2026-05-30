@@ -1,4 +1,5 @@
 ---
+model_tier: medium
 name: laravel-scheduling
 description: "Use when configuring Laravel task scheduling — cron expressions, frequency helpers, overlap prevention, maintenance mode, or output handling."
 domain: engineering

@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: create-pr:description-only
 tier: 1
 cluster: create-pr

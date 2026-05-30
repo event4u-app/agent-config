@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: roadmap:process-phase
 tier: 2
 cluster: roadmap

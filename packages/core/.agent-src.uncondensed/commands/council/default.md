@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: council:default
 tier: 2
 cluster: council

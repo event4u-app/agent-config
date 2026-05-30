@@ -1,4 +1,5 @@
 ---
+model_tier: inherit
 name: sync-agent-settings
 tier: 1
 skills: [sync-agent-settings]
