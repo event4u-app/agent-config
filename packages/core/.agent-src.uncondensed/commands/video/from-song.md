@@ -292,9 +292,9 @@ push.
   from existing artefacts (skips completed scenes); a failed or aborted
   batch is recoverable this way without re-paying for finished scenes.
 - **Kill-switch.** Ships `lifecycle: experimental` · `install.default:
-  false`. Disable = remove the command + `song-to-script` skill and
-  re-run `task sync`; the `/video` orchestrator degrades gracefully on
-  an absent sub-command.
+  false`. Disable = remove the command + `song-to-script` skill (then
+  regenerate the projected tool trees); the `/video` orchestrator
+  degrades gracefully on an absent sub-command.
 
 ## Policies
 
