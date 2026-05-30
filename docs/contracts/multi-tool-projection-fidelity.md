@@ -74,6 +74,22 @@ Cursor, Windsurf, Cline, Gemini, Copilot have **no native skill surface**. Skill
 | Cline | none |
 | Gemini, Copilot | listed only inside `AGENTS.md` / `GEMINI.md` digest |
 
+### 6. `recommended_model:` fidelity (ADR-034)
+
+The tool-neutral `recommended_model: opus | sonnet | gpt | inherit` frontmatter
+field projects differently per tool:
+
+| Tool | Consumption |
+|---|---|
+| Claude | When `model.auto_switch: auto` AND the value is `opus`/`sonnet`, the generator rewrites it to a **native `model:` key** in the rendered `.claude/skills/<name>/SKILL.md` (the entry stops being a symlink: sub-files stay symlinked, only `SKILL.md` is a rendered copy). `gpt`/`inherit`/absent emit no native `model:`. When `auto_switch` is `suggest` (default) or `off`, nothing is emitted — the entry stays a pure symlink. |
+| Augment | Keeps the **neutral `recommended_model:`** field (symlinked from `.agent-src/`); the `model-recommendation` rule reads it and surfaces a one-question switch suggestion (Augment has no per-turn override). |
+| Cursor / Windsurf / Cline / Gemini / Copilot | No skill surface — field is inert. |
+
+The native Claude `model:` key exists **only** in the rendered Claude
+projection; the portable source and every other tool keep the neutral field.
+`gpt` has no Claude tier, so it never produces a native `model:` — it only
+surfaces as a suggestion. See ADR-034 and `road-to-per-skill-model-autoswitch.md`.
+
 ## Automated probe — `task lint-projection-fidelity`
 
 `scripts/probe_projection_fidelity.py` reads `tests/fixtures/projection_fidelity/fixtures.yml` and asserts the per-tool guarantees above against the actual projected trees. The fixture covers five representative artefacts:
