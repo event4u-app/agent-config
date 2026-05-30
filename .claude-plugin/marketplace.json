@@ -392,7 +392,12 @@
         "./.claude/skills/vision-articulation",
         "./.claude/skills/voc-extract",
         "./.claude/skills/voice-and-tone-design",
-        "./.claude/skills/work"
+        "./.claude/skills/work",
+        "./.claude/skills/knowledge-cross-repo",
+        "./.claude/skills/skill",
+        "./.claude/skills/skill-preview",
+        "./.claude/skills/skills",
+        "./.claude/skills/skills-discover"
       ]
     }
   ]

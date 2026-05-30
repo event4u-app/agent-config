@@ -6,10 +6,10 @@
 
 ## Overall
 
-**92 / 155 steps done · 59%**
+**127 / 153 steps done · 83%**
 
 ```text
-████████████████████████░░░░░░░░░░░░░░░░   59%
+█████████████████████████████████░░░░░░░   83%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-leaner-core-and-discovery.md](roadmaps/road-to-leaner-core-and-discovery.md) | 6 | 38 | 38 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
+| 2 | [road-to-leaner-core-and-discovery.md](roadmaps/road-to-leaner-core-and-discovery.md) | 6 | 38 | 1 | 35 | 0 | 2 | ██████████ 97% |
 | 3 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 5 | 24 | 4 | 20 | 0 | 0 | ████████░░ 83% |
 | 4 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
 
@@ -44,16 +44,16 @@
 
 ### [road-to-leaner-core-and-discovery.md](roadmaps/road-to-leaner-core-and-discovery.md)
 
-**Leaner core + discovery — close the post-5.x feedback gaps the package can actually act on** — 0 / 38 done (0%)
+**Leaner core + discovery — close the post-5.x feedback gaps the package can actually act on** — 35 / 36 done (97%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
-| 1 | Meta-system / abstraction audit — bounded, evidence-driven (P0) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 2 | Discoverable BREAKING_CHANGES.md + major-bump rationale (P1, cheap) | ⬜ not started | 3 | 0 | 0 | 0 | 0% |
-| 3 | Marketplace discovery / recommendation surface (P1) | ⬜ not started | 6 | 0 | 0 | 0 | 0% |
-| 4 | Cross-repo retrieval — turn the sibling graph into a read-only context layer (P1) | ⬜ not started | 7 | 0 | 0 | 0 | 0% |
-| 5 | Skill dry-run / preview mode (P1) | ⬜ not started | 5 | 0 | 0 | 0 | 0% |
-| 6 | Linked-projects visualization — gated, optional (P2) | ⬜ not started | 11 | 0 | 0 | 0 | 0% |
+| 1 | Meta-system / abstraction audit — bounded, evidence-driven (P0) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 2 | Discoverable BREAKING_CHANGES.md + major-bump rationale (P1, cheap) | ✅ done | 0 | 3 | 0 | 0 | 100% |
+| 3 | Marketplace discovery / recommendation surface (P1) | ✅ done | 0 | 6 | 0 | 0 | 100% |
+| 4 | Cross-repo retrieval — turn the sibling graph into a read-only context layer (P1) | ✅ done | 0 | 7 | 0 | 0 | 100% |
+| 5 | Skill dry-run / preview mode (P1) | ✅ done | 0 | 5 | 0 | 0 | 100% |
+| 6 | Linked-projects visualization — gated, optional (P2) | 🟡 in progress | 1 | 8 | 0 | 2 | 89% |
 
 ### [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md)
 

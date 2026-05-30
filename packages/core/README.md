@@ -8,9 +8,9 @@ Core framework-neutral artefacts.
 - **version**: `5.4.1`
 - **owner**: agent-config-maintainer
 - **requires**: —
-- **artefacts**: 369
+- **artefacts**: 372
 
-## Commands (135)
+## Commands (138)
 
 - **`agent-handoff`** — Generate a context summary for continuing work in a fresh chat. Replaces the session system.
 - **`agent-status`** — Show current conversation stats — message count, token costs, task progress, next freshness check.
@@ -84,6 +84,7 @@ Core framework-neutral artefacts.
 - **`judge:solo`** — Run a standalone judge on an existing diff or code change — no implementer, no revision loop, verdict only
 - **`judge:steps`** — Execute an ordered plan step by step with a judge gate between steps — stops on first failed verdict
 - **`knowledge`** — Knowledge orchestrator — routes to ingest, list, forget. Local-only file ingestion into the agent memory namespace.
+- **`knowledge:cross-repo`** — Targeted, read-only retrieval over opted-in linked-project siblings (ADR-032 Option A). Pulls a shared type / API contract / config without bulk-including sibling files.
 - **`knowledge:forget`** — Drop a knowledge ingest from `agents/memory/knowledge/` by id prefix. Atomic, no partial state. Pinning protects from LRU eviction, not from explicit forget — pinned ingests are dropped the same.
 - **`knowledge:ingest`** — Walk a local path (folder, .zip, single file), redact PII + secrets, chunk to 2 KB markdown, and persist into the agent memory namespace under `knowledge/<ingest-id>/`.
 - **`knowledge:list`** — List existing knowledge ingests in `agents/memory/knowledge/` (table or JSON); pin / unpin by id prefix to control LRU eviction.
@@ -131,6 +132,8 @@ Core framework-neutral artefacts.
 - **`roadmap:process-step`** — Autonomously process the single next open step of a roadmap and stop. Smallest execution scope of the /roadmap cluster — one step in, one step out.
 - **`rule-compliance-audit`** — Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules
 - **`set-cost-profile`** — Change the cost_profile in .agent-settings.yml — shows each profile's meaning and applies the selection
+- **`skills`** — Skill discovery orchestrator — routes to discover. Local, explained skill recommendations over the catalog + role shortlists + optional local analytics.
+- **`skills:discover`** — Recommend skills for a role — ranked by four explained classes (most-useful-for-role, related-to-current-task, recently-adopted, popular-in-role). Local-only; every result carries a why.
 - **`sync-agent-settings`** — Sync `.agent-settings.yml` against the current template + profile — adds new sections/keys, preserves user values, shows a diff before writing
 - **`sync-gitignore`** — Sync the `event4u/agent-config` block in the consumer project's .gitignore — adds missing entries, preserves user-added lines, shows a diff before writing
 - **`sync-gitignore:fix`** — Scrub legacy pre-`/agents/` patterns from the consumer's .gitignore (inside or outside the managed block) and re-sync the canonical entries
