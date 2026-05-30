@@ -99,9 +99,13 @@ telemetry.
 
 ## Open follow-ups
 
-- **Consumer detector reachability:** the detector lives in `scripts/_lib/`;
-  exposing it as an `agent-config` CLI subcommand for consumer installs is a
-  follow-up. Import-reachable in this repo / co-located maintainer setups today.
+- **Consumer detector reachability:** ✅ **Closed (2026-05-30, `road-to-leaner-core-and-discovery`
+  Phase 4).** The detector is now exposed as `agent-config linked-projects:list`
+  (`scripts/linked_projects_list.py`, registered in `src/cli/registry.ts` + `scripts/_dispatch.bash`),
+  wrapping `scripts/_lib/linked_projects.detect_linked_projects` + the `.agent-settings.local.yml`
+  opt-in cascade. Cross-repo *retrieval* over the opted-in siblings ships alongside it
+  (`/knowledge:cross-repo`, `scripts/cross_repo_retrieve.py`) per
+  [`cross-repo-retrieval`](../contracts/cross-repo-retrieval.md).
 - **Multi-agent verification:** only Claude Code was empirically validated.
   Cursor / Augment / Copilot are unverified — the guide's manual snippet covers
   them until an interactive per-IDE test is run.

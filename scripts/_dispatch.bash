@@ -165,6 +165,8 @@ Tier 2 — maintenance / internal (hooks, MCP, memory, telemetry):
                                     --payload <path|event-name> [--native-event <native>]
                                     [--manifest <path>] [--json] [--dry-run]
   memory:lookup              Retrieve memory entries (text or JSON envelope)
+  linked-projects:list       List opted-in IDE-attached sibling repos (path · detected_via · large)
+                             Flags: --all (show undecided too), --format json
   memory:signal              Append a provisional intake signal (memory proposal)
   memory:hash                Hash a memory entry (YAML or JSON stdin)
   memory:check               Validate memory YAML schema + staleness
@@ -416,6 +418,13 @@ cmd_memory_lookup() {
   require_python3
   local script
   script="$(resolve_template_script "memory_lookup.py")" || return 1
+  exec python3 "$script" "$@"
+}
+
+cmd_linked_projects_list() {
+  require_python3
+  local script
+  script="$(resolve_script "scripts/linked_projects_list.py")" || return 1
   exec python3 "$script" "$@"
 }
 
@@ -928,6 +937,7 @@ main() {
     implement-ticket)        cmd_implement_ticket "$@" ;;
     work)                    cmd_work "$@" ;;
     memory:lookup)           cmd_memory_lookup "$@" ;;
+    linked-projects:list)    cmd_linked_projects_list "$@" ;;
     memory:signal)           cmd_memory_signal "$@" ;;
     memory:hash)             cmd_memory_hash "$@" ;;
     memory:check)            cmd_memory_check "$@" ;;

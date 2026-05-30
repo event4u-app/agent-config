@@ -97,10 +97,10 @@ siblings are never cited, remove it — no telemetry, the signal is local.
 
 ## Follow-up (not yet shipped)
 
-- Consumer-install detector reachability: the detector lives in
-  `scripts/_lib/`; exposing it as an `agent-config` CLI subcommand for consumer
-  projects is a follow-up. In this repo and co-located maintainer setups it is
-  import-reachable today.
+- Consumer-install detector reachability: ✅ shipped 2026-05-30 — the detector is
+  now exposed as `agent-config linked-projects:list` (closes the ADR-032
+  follow-up); cross-repo retrieval over opted-in siblings ships as
+  `/knowledge:cross-repo`.
 - Multi-agent verification: only Claude Code was empirically validated
   (ADR-032). Cursor / Augment / Copilot behavior is unverified — the manual
   fallback in the guide covers them until tested.

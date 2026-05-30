@@ -73,7 +73,7 @@ Experimental, removable rule. If opt-in consistently declined or siblings never 
 
 ## Follow-up (not yet shipped)
 
-- Consumer-install detector reachability: detector lives in `scripts/_lib/`; exposing it as an `agent-config` CLI subcommand for consumers is a follow-up. Import-reachable in this repo / co-located maintainer setups today.
+- Consumer-install detector reachability: ✅ shipped 2026-05-30 — detector now exposed as `agent-config linked-projects:list` (closes ADR-032 follow-up); cross-repo retrieval over opted-in siblings ships as `/knowledge:cross-repo`.
 - Multi-agent verification: only Claude Code empirically validated (ADR-032). Cursor / Augment / Copilot unverified — manual fallback in the guide covers them until tested.
 
 Trigger-set above activates this routing under the `balanced` and `full` profiles.
