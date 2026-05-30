@@ -72,10 +72,15 @@
       "minLength": 1,
       "description": "Conditions under which the skill should be archived and replaced with a 50-line pointer (e.g. all referenced modules adopted as project-local guidelines, dispatch logic moved to a project-native router). Required when `external_source` is set."
     },
-    "recommended_model": {
+    "model_tier": {
       "type": "string",
-      "enum": ["opus", "sonnet", "gpt", "inherit"],
-      "description": "Tool-neutral per-skill model recommendation (ADR-034 / road-to-per-skill-model-autoswitch.md). `opus`/`sonnet` project to a native Claude `model:` when model.auto_switch=auto; `gpt` and `inherit` emit no native model: (gpt surfaces as a suggestion, inherit keeps the session model). Deliberately no `haiku` — `sonnet` is the cheapest tier. Consumed by the model-recommendation rule on surfaces without native override."
+      "enum": ["lite", "medium", "high", "inherit"],
+      "description": "Vendor-neutral capability band the skill needs (ADR-035). high/medium/lite project to a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) when model.auto_switch=auto; the generator owns that mapping exclusively. inherit keeps the session model. Non-Claude agents are suggestion-only — the model-recommendation rule names the tier and the agent resolves its own model. No vendor model names here."
+    },
+    "context": {
+      "type": "string",
+      "enum": ["large"],
+      "description": "Optional orthogonal modifier (ADR-035): the skill needs a large-context model regardless of reasoning tier (e.g. summarising a 500-page log). Sparse — most skills omit it. Metadata only; does not change the native Claude `model:` (the tier owns the model choice)."
     },
     "council_depth": {
       "type": "string",

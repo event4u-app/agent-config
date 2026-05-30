@@ -78,10 +78,15 @@
       "enum": ["deep"],
       "description": "Optional reasoning-depth marker for AI Council invocations triggered by this command. The only accepted value is 'deep'; omit the key for default depth (setting 'standard' is rejected — every frontmatter byte counts against the context window, and 'standard' is the implicit default). 'deep' instructs the host agent to pass --depth deep to council_cli, which floors rounds at max(ai_council.deep_min_rounds, ai_council.min_rounds). Use for architecture, refactoring, or bug-diagnosis commands. See .agent-src.uncondensed/skills/ai-council/SKILL.md."
     },
-    "recommended_model": {
+    "model_tier": {
       "type": "string",
-      "enum": ["opus", "sonnet", "gpt", "inherit"],
-      "description": "Tool-neutral per-command model recommendation (ADR-034 / road-to-per-skill-model-autoswitch.md). Commands project as Claude skills, so `opus`/`sonnet` produce a native Claude `model:` when model.auto_switch=auto; `gpt` and `inherit` emit no native model:. No `haiku` — `sonnet` is the cheapest tier."
+      "enum": ["lite", "medium", "high", "inherit"],
+      "description": "Vendor-neutral capability band the command needs (ADR-035). Commands project as Claude skills, so high/medium/lite produce a native Claude `model:` (high→opus, medium→sonnet, lite→haiku) when model.auto_switch=auto; the generator owns that mapping. inherit keeps the session model. Non-Claude agents are suggestion-only. No vendor model names here."
+    },
+    "context": {
+      "type": "string",
+      "enum": ["large"],
+      "description": "Optional orthogonal modifier (ADR-035): the command needs a large-context model regardless of reasoning tier. Sparse — most omit it. Metadata only; does not change the native Claude `model:`."
     },
     "suggestion": {
       "type": "object",
