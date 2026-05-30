@@ -811,6 +811,32 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.4.0](https://github.com/event4u-app/agent-config/compare/5.3.0...5.4.0) (2026-05-30)
+
+### Features
+
+* **backfill:** migrate 354 tags to model_tier + rename coverage gate ([e9fc491](https://github.com/event4u-app/agent-config/commit/e9fc49137bc360a25cad675a18f655be9f6fab94))
+* **schema:** replace recommended_model with vendor-neutral model_tier ([f6fc281](https://github.com/event4u-app/agent-config/commit/f6fc281c1e9adf6a51327433375d8e7d8d3e0a96))
+* **rule:** make model-recommendation tier-aware, suggestion-only off-Claude ([31d70b9](https://github.com/event4u-app/agent-config/commit/31d70b9bfbdd283742d546e6484400b595ec0174))
+* **generator:** map model_tier → native Claude model (single owned mapping) ([029c0d0](https://github.com/event4u-app/agent-config/commit/029c0d0f4c6cb2cb6b17f8c63652ef2cfe24a99e))
+* **backfill:** tag every skill + command with recommended_model + coverage gate ([acf7553](https://github.com/event4u-app/agent-config/commit/acf7553c8c975584228cfa32fb7320e1c095e174))
+* **rule:** rewrite model-recommendation to act on recommended_model ([46b7acd](https://github.com/event4u-app/agent-config/commit/46b7acd9e180979e454416acf939ca554075fd55))
+* **generator:** project recommended_model to native Claude model: key ([4f6d213](https://github.com/event4u-app/agent-config/commit/4f6d213a263f360ad0c63b64bbbd9a53ea4a36ea))
+* **schema:** add recommended_model frontmatter field for skills + commands ([2fa81a3](https://github.com/event4u-app/agent-config/commit/2fa81a38fb4fd0b52e23ca537374b4d0277da5d6))
+
+### Documentation
+
+* **roadmap:** close + archive model-capability-tiers roadmap with evidence ([c52ba67](https://github.com/event4u-app/agent-config/commit/c52ba676c406cb7127470a01f13a12db56d9a7c1))
+* **adr:** ADR-035 — vendor-neutral model capability tiers (supersedes ADR-034) ([efe656b](https://github.com/event4u-app/agent-config/commit/efe656b3d7d83dac910fc3e890bdfa8d9fd0a53b))
+* **roadmap:** close + archive per-skill-model-autoswitch roadmap with evidence ([5150b64](https://github.com/event4u-app/agent-config/commit/5150b640b205141557196e40d70f7c23a0b2530c))
+* **adr:** ADR-034 — per-skill model recommendation transport (Option A) ([9c18179](https://github.com/event4u-app/agent-config/commit/9c181790f7257841b4bf7aac6bf40d3c0adb6357))
+
+### Chores
+
+* update readme ([47cba5b](https://github.com/event4u-app/agent-config/commit/47cba5b5d7222b1c1b925041c30b82c06b815a10))
+
+Tests: 5249 (+13 since 5.3.0)
+
 # Era: pre-4.0.0 — archived
 
 > All entries from `3.2.0` and `3.3.0` live in
