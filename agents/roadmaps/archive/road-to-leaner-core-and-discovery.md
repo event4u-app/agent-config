@@ -97,7 +97,7 @@ The package has crossed the line where its own surface area is the dominant prod
 - [x] Phase 4: `agent-config linked-projects:list` + `/knowledge:cross-repo` ship; retrieval is read-only, opt-in-per-sibling, targeted-query-only; cross-repo source tagged + discounted in `memory_retrieve`; large-flagged siblings reject unscoped queries; secrets redacted across repos; ADR-032 CLI-reachability follow-up marked closed; ≥ 80 % branch on `cross_repo_retrieve.py`.
 - [x] Phase 5: `/skill:preview` ships; manual-execution skills render "instructional only", assisted-execution render proposed actions; malformed SKILL.md degrades gracefully; `docs/guides/skill-preview.md` documents the discover→preview→run loop.
 - [x] Phase 6: gate check recorded; if passed, read-only graph view ships on the workspace GUI with no new infra; if unmet, phase recorded `[-]` cancelled with reason.
-- [ ] Quality gates green across the arc — `task lint-skills`, `task lint-roadmap-complexity`, `task ci` on each phase's PR.
+- [x] Quality gates green across the arc — `task lint-skills`, `task lint-roadmap-complexity`, `task ci` on each phase's PR.
 - [x] No phase added a new always-loaded abstraction (self-check against Phase 1's premise).
 
 ## Notes
