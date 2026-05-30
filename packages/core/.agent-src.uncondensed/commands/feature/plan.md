@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: feature:plan
 tier: 2
 cluster: feature

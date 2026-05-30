@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: roadmap:process-full
 tier: 2
 cluster: roadmap

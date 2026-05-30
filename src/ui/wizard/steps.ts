@@ -108,7 +108,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
         id: 'cost',
         title: 'Cost profile and budgets',
         navLabel: 'Cost',
-        subtitle: 'Master switch for which rule tiers load, plus optional spending ceilings.',
+        subtitle: 'Master switch for which rule tiers load, optional spending ceilings, and per-skill model auto-switch.',
         kind: 'form',
         paths: [
             'cost_profile',
@@ -116,6 +116,7 @@ const CORE_WIZARD_STEPS: readonly WizardStep[] = [
             'cost.budgets.weekly',
             'cost.budgets.monthly',
             'cost.enforcement',
+            'model.auto_switch',
         ],
     },
     {

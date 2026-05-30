@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: eloquent
 description: "Use when writing Eloquent models, relationships, scopes, or queries via Model:: — 'fetch users with their orders'. NOT for PHPStan output, non-Eloquent services, or raw SQL questions."
 personas:

@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: fe-design
 description: "Reference for frontend-design heuristics — component architecture, layout patterns, form/table design, responsive strategy, a11y, UX principles. Stack-agnostic; cited by directives/ui/design.py."
 personas:

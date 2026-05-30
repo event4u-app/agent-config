@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: feature:refactor
 tier: 2
 cluster: feature

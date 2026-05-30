@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: doc-coauthoring
 description: "Use when co-authoring a PRD, design doc, RFC, decision doc, or technical spec — 3-stage flow (context → section-by-section → reader-test) — even if the user just says 'help me write this spec'."
 domain: process

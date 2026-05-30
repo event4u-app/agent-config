@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: optimize:skills
 tier: 2
 cluster: optimize

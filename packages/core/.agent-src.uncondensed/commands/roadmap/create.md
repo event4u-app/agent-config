@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: roadmap:create
 tier: 2
 cluster: roadmap

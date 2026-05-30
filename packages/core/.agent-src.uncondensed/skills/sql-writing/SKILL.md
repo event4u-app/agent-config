@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: sql-writing
 description: "Use when writing raw SQL — MariaDB/MySQL syntax, parameterization, raw migrations, seeders with `DB::statement` — even when the user just pastes a query and asks 'why is this slow' without naming SQL."
 domain: engineering

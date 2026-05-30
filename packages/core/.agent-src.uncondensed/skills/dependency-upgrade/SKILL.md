@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: dependency-upgrade
 description: "Use when upgrading dependencies — 'update framework X', 'bump runtime version', or 'upgrade packages'. Covers changelog review, breaking-change detection, and verification. Stack-agnostic."
 domain: engineering

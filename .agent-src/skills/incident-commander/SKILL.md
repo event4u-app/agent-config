@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: incident-commander
 description: "Use during or right after an incident — frames severity, sets comms cadence, drafts the post-mortem skeleton — even when the user just says 'production is down' or 'wir haben einen Vorfall'."
 personas:

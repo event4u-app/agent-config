@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: quality-fix
 tier: 1
 skills: [quality-tools]

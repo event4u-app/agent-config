@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: agents:user-update
 tier: 2
 cluster: agents

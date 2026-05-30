@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: canvas-design
 description: "Use when creating static visual art — posters, marketing visuals, brand assets, PDF/PNG design pieces — even if the user just says 'design a poster' or 'mach uns ein Visual'."
 domain: product

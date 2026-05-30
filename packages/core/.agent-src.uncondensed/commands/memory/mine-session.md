@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: memory:mine-session
 tier: 2
 cluster: memory

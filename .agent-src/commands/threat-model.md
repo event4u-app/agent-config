@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: threat-model
 tier: 1
 skills: [threat-modeling, authz-review, security-sensitive-stop]

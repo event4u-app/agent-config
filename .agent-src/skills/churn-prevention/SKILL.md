@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: churn-prevention
 description: "Use when designing churn defence — health-score signals, churn-cause split (involuntary / value / relationship / fit), early-warning loop. Triggers on 'why are accounts leaving'."
 status: active

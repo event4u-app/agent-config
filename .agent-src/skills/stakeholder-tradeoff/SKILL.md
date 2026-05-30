@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: stakeholder-tradeoff
 description: "Use when stakeholders pull a decision in different directions — frames each lens, builds a trade-off matrix, surfaces the cost of every choice — even if the user just says 'PO and ops disagree'."
 status: active

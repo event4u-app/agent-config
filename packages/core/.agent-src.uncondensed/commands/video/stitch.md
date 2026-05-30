@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: video:stitch
 tier: 2
 cluster: video

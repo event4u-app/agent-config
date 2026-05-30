@@ -27,6 +27,7 @@ const replyMethod = z.enum(['replies_endpoint', 'create_review_comment', 'auto']
 const confidenceBand = z.enum(['off', 'low', 'medium', 'high']);
 const onBlock = z.enum(['stop', 'ask', 'warn']);
 const onBlockFallback = z.enum(['stop', 'warn']);
+const modelAutoSwitch = z.enum(['auto', 'suggest', 'off']);
 
 export const settingsSchema = z.object({
     agent_config_version: z.string().default('').describe(
@@ -51,6 +52,11 @@ export const settingsSchema = z.object({
             'What happens when a budget hits 100%. advisory = show a banner, keep working (default — never blocks an active task). hard-stop = refuse further model calls until the budget resets or you raise the ceiling.',
         ),
     }),
+    model: z.object({
+        auto_switch: modelAutoSwitch.default('suggest').describe(
+            'Per-skill model auto-switch (ADR-034). suggest (default) = never emit a native Claude model: key; the model-recommendation rule surfaces a one-question switch suggestion on every surface — your explicit /model choice is never silently overridden. auto = render a native Claude model: into opus/sonnet-tagged skills so Claude Code switches automatically for that turn (reverts next prompt), and suggest on surfaces without a native override. off = inert, no native key and no suggestion.',
+        ),
+    }).default({ auto_switch: 'suggest' }),
     personal: z.object({
         ide: z.string().default('').describe(
             'CLI binary your IDE registers (code, code-insiders, phpstorm, cursor, windsurf, idea, subl, …). Used by the file-editor skill to open edited files. Leave empty to disable IDE integration.',

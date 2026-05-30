@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: github-ci
 description: "Use when working with GitHub Actions — workflow YAML, quality gates, test matrices, deployment triggers, reusable workflows — even when the user just says 'my CI is failing' or 'add a check'."
 domain: devops

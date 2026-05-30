@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: livewire-architect
 description: "Use when shaping a Livewire component before code — full-page vs partial, parent/child split, event flow, state-vs-props boundary, hydration cost — even on 'add this Livewire component'."
 personas:

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: override:create
 tier: 2
 cluster: override

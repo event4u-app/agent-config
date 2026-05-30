@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: rule-compliance-audit
 tier: 1
 description: Audit rule trigger quality, simulate activation, detect overlaps, and find never-activating rules

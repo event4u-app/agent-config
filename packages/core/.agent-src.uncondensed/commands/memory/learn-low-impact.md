@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: memory:learn-low-impact
 tier: 2
 cluster: memory

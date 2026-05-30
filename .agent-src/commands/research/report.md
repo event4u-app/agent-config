@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: research:report
 tier: 2
 cluster: research

@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: activation-design
 description: "Use when defining or auditing the activation event — aha-moment selection, retention correlation, falsifiable definition. Triggers on 'what is our aha moment', 'redefine activation'."
 status: active

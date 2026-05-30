@@ -95,6 +95,7 @@ tasks:
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
       - task: lint-frontmatter-boilerplate
+      - task: lint-recommended-model-coverage
       - task: lint-trust-coherence
       - task: validate-discovery-manifest
       - task: check-discovery-determinism
@@ -198,6 +199,7 @@ tasks:
       - task: lint-discovery-manifest
       - task: lint-artefact-frontmatter
       - task: lint-frontmatter-boilerplate
+      - task: lint-recommended-model-coverage
       - task: lint-trust-coherence
       - task: validate-discovery-manifest
       - task: check-discovery-determinism

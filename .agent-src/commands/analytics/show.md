@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: analytics:show
 tier: 2
 cluster: analytics

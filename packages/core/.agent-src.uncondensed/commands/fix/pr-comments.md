@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: fix:pr-comments
 tier: 2
 cluster: fix

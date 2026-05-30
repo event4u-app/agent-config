@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: optimize-prompt
 tier: 2
 cluster: optimize

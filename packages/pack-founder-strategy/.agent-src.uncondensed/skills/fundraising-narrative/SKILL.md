@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: fundraising-narrative
 description: "Use when shaping a capital-raise pitch — why-now / why-us / why-this framing, market-size reasoning, traction-story construction. Triggers on 'tighten the pitch', 'why-now is weak'."
 status: active

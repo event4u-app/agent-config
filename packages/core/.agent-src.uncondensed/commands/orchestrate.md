@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: orchestrate
 tier: 2
 cluster: orchestrate

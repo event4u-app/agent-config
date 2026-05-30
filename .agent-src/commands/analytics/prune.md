@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: analytics:prune
 tier: 2
 cluster: analytics

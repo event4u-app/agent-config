@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: readme-writing-package
 description: "Use when creating or rewriting a README for a reusable package or library. Focus on installability, minimal usage example, compatibility, and developer onboarding."
 domain: process

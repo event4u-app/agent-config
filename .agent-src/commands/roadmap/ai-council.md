@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: roadmap:ai-council
 tier: 2
 cluster: roadmap

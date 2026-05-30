@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: agents:user-review
 tier: 2
 cluster: agents

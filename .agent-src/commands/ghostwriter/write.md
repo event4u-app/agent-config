@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: ghostwriter:write
 tier: 2
 cluster: ghostwriter

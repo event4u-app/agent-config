@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: module:explore
 tier: 2
 cluster: module

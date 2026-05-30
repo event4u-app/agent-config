@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: post-as:ghostwriter
 tier: 2
 cluster: post-as

@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: context:refactor
 tier: 2
 cluster: context

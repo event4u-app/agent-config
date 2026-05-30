@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: deep-reading-analyst
 description: "Deep analysis of articles/long-form via thinking frameworks (SCQA, mental models, inversion) — 'analyze article', 'deep dive', 'extract insights', URL/text wanting depth not summary."
 status: active

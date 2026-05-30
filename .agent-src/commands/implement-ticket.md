@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: implement-ticket
 tier: 0
 skills: [refine-ticket, feature-planning]

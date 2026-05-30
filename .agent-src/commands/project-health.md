@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: project-health
 tier: 1
 skills: [quality-tools]

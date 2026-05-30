@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: sync-gitignore:fix
 tier: 2
 cluster: sync-gitignore

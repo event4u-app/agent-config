@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: form-handler
 description: "Use when designing or reviewing a form — validation timing, error display, submission lifecycle, optimistic UI, dirty/pristine state, idempotency — even on 'why does submit double-fire?'."
 personas:

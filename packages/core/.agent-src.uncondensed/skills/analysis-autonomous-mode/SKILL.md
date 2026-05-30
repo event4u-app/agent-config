@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: analysis-autonomous-mode
 description: "ONLY when user explicitly requests autonomous analysis, deep investigation, multi-step research, or 'dig into this end-to-end without asking me each step' — NOT for normal feature work."
 domain: discovery

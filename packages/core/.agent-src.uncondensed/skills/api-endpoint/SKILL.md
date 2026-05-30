@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: api-endpoint
 description: "Use when creating an API endpoint or HTTP route handler — detects the project stack and routes to the matching carve-out (laravel-api-endpoint, nextjs-patterns, symfony-workflow)."
 domain: engineering

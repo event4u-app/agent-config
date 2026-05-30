@@ -72,6 +72,11 @@
       "minLength": 1,
       "description": "Conditions under which the skill should be archived and replaced with a 50-line pointer (e.g. all referenced modules adopted as project-local guidelines, dispatch logic moved to a project-native router). Required when `external_source` is set."
     },
+    "recommended_model": {
+      "type": "string",
+      "enum": ["opus", "sonnet", "gpt", "inherit"],
+      "description": "Tool-neutral per-skill model recommendation (ADR-034 / road-to-per-skill-model-autoswitch.md). `opus`/`sonnet` project to a native Claude `model:` when model.auto_switch=auto; `gpt` and `inherit` emit no native model: (gpt surfaces as a suggestion, inherit keeps the session model). Deliberately no `haiku` — `sonnet` is the cheapest tier. Consumed by the model-recommendation rule on surfaces without native override."
+    },
     "council_depth": {
       "type": "string",
       "enum": ["deep"],

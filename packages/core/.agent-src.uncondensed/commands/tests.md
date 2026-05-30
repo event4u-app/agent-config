@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: tests
 tier: 2
 description: Tests orchestrator — routes to create, execute

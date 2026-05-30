@@ -5,37 +5,37 @@
     {
       "file": ".agent-src.uncondensed/skills/module-detect-on-the-fly/SKILL.md",
       "lines": [
-        33,
-        95
+        34,
+        96
       ],
       "reason": "Cross-stack noise-segment enumeration (vendor + node_modules + dist/Modules) documenting the module-detection path filter"
     },
     {
       "file": ".agent-src.uncondensed/skills/using-git-worktrees/SKILL.md",
       "lines": [
-        133,
         134,
         135,
-        155
+        136,
+        156
       ],
       "reason": "Multi-stack package-manager comparison table"
     },
     {
       "file": ".agent-src.uncondensed/skills/refine-prompt/SKILL.md",
       "lines": [
-        91,
-        93,
-        95,
-        140,
-        183,
-        272
+        92,
+        94,
+        96,
+        141,
+        184,
+        273
       ],
       "reason": "Project-detection enumeration listing all supported stacks"
     },
     {
       "file": ".agent-src.uncondensed/commands/analyze-reference-repo.md",
       "lines": [
-        53
+        54
       ],
       "reason": "Manifest-file enumeration across ecosystems"
     },
@@ -77,51 +77,51 @@
     {
       "file": ".agent-src.uncondensed/skills/api-endpoint/SKILL.md",
       "lines": [
-        44,
-        61
+        45,
+        62
       ],
       "reason": "Cross-stack validation primitive enumeration and pointer to laravel-api-endpoint carve-out"
     },
     {
       "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
       "lines": [
-        43,
         44,
         45,
-        52,
-        65,
+        46,
+        53,
         66,
-        77,
-        86,
-        88,
-        90,
-        222
+        67,
+        78,
+        87,
+        89,
+        91,
+        223
       ],
       "reason": "Cross-stack code-review checklist enumerates handler shape, validation, authz, ORM, escaping per framework"
     },
     {
       "file": ".agent-src.uncondensed/skills/security/SKILL.md",
       "lines": [
-        19,
-        26,
-        30,
+        20,
+        27,
         31,
-        40,
-        44,
-        51,
-        61,
-        79
+        32,
+        41,
+        45,
+        52,
+        62,
+        80
       ],
       "reason": "Cross-stack security review enumerates auth primitives (Policies, voters, guards, middleware) and config paths"
     },
     {
       "file": ".agent-src.uncondensed/skills/verify-completion-evidence/SKILL.md",
       "lines": [
-        56,
         57,
         58,
-        103,
-        180
+        59,
+        104,
+        181
       ],
       "reason": "Evidence-mapping table enumerates the type-checker / linter / refactor tool per stack including PHPStan, Rector, ECS"
     },
@@ -473,7 +473,7 @@
     {
       "file": ".agent-src.uncondensed/skills/code-review/SKILL.md",
       "lines": [
-        226
+        227
       ],
       "reason": "Multi-stack formatter enumeration (ECS, Prettier, Ruff, gofmt) \u2014 comparative example, no project mandate"
     },
@@ -492,16 +492,16 @@
     {
       "file": ".agent-src.uncondensed/skills/context-document/SKILL.md",
       "lines": [
-        54,
         55,
-        78
+        56,
+        79
       ],
       "reason": "Cross-stack target-directory examples (Laravel / Symfony) for module-scoped context docs \u2014 comparative example, no mandate"
     },
     {
       "file": ".agent-src.uncondensed/skills/roadmap-writing/SKILL.md",
       "lines": [
-        19
+        20
       ],
       "reason": "Single Laravel-shape example showing how `{module_root}/{agent_folder}/roadmaps/` resolves on a Laravel HMVC project"
     },
@@ -522,52 +522,52 @@
     {
       "file": ".agent-src.uncondensed/commands/context/create.md",
       "lines": [
-        52
+        53
       ],
       "reason": "Single Laravel-shape example for module-context target directory (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/context/refactor.md",
       "lines": [
-        26
+        27
       ],
       "reason": "Single Laravel-shape example for module-context discovery path (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/explore.md",
       "lines": [
-        122
+        123
       ],
       "reason": "Single Laravel-shape example showing how `enumerate_modules()` resolves on a Laravel HMVC project (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/plan.md",
       "lines": [
-        141,
-        170,
-        254
+        142,
+        171,
+        255
       ],
       "reason": "Laravel-shape examples for module-scoped contexts and feature target paths (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/refactor.md",
       "lines": [
-        26
+        27
       ],
       "reason": "Single Laravel-shape example for module-feature discovery path (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/feature/roadmap.md",
       "lines": [
-        26,
-        126
+        27,
+        127
       ],
       "reason": "Laravel-shape examples for module-feature/roadmap discovery and target paths (road-to-configurable-modules Phase D)"
     },
     {
       "file": ".agent-src.uncondensed/commands/optimize/agents-dir.md",
       "lines": [
-        23
+        24
       ],
       "reason": "Single Laravel-shape example for per-module agents directory (road-to-configurable-modules Phase D)"
     }

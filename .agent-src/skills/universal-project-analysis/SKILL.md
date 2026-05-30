@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: universal-project-analysis
 description: "ONLY when user asks for deep multi-pass codebase audit — orchestrator routing to `project-analysis-core` + framework-specific `project-analysis-*`. Single-pass scan → `project-analyzer`."
 domain: discovery

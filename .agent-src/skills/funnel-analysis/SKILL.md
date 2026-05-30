@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: funnel-analysis
 description: "Use when diagnosing where a SaaS or product funnel leaks — visitor → signup → activation → paid → retained — channel-agnostic, conversion-rate-driven."
 status: active

@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: analyze-reference-repo
 tier: 2
 skills: [project-analyzer, learning-to-rule-or-skill]

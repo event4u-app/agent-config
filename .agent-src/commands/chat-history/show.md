@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: chat-history:show
 tier: 2
 cluster: chat-history

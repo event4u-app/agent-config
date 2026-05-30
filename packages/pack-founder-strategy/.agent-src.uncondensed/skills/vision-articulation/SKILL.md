@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: vision-articulation
 description: "Use when articulating internal vision — where we're going / why now / why us, founder-mode anchor, distinct from fundraising pitch. Triggers on 'what's our vision', 'why are we doing this'."
 status: active

@@ -52,6 +52,18 @@ cost:
   #               start the turn until the budget is raised or reset.
   enforcement: advisory
 
+# --- Per-skill model auto-switch (ADR-034) ---
+# How a skill's `recommended_model:` is applied per turn:
+#   suggest = (default) never emit a native Claude `model:` key; the
+#             model-recommendation rule surfaces a one-question switch
+#             suggestion on every surface — never silently overrides /model.
+#   auto    = render a native Claude `model:` into opus/sonnet-tagged skills
+#             (Claude switches for that turn, reverts next prompt); suggest
+#             on surfaces without a native override.
+#   off     = inert — no native key, no suggestion.
+model:
+  auto_switch: suggest
+
 # --- Personal preferences ---
 personal:
   # IDE to use for opening files (code, phpstorm, cursor, …)

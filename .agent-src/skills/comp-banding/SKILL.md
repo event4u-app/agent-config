@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: comp-banding
 description: "Use when designing levels, comp bands, equity-vs-cash, geo adjustments, or raise vs promotion vs market correction. Triggers on 'set our comp bands', 'is this raise market'."
 status: active

@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: error-handling-patterns
 description: "Use when picking a failure-reporting strategy — exceptions vs Result types, recoverable vs not, retry / circuit-breaker / graceful degradation — decision framework only, catalogues externalized."
 domain: engineering

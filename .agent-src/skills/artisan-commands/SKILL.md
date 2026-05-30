@@ -1,4 +1,5 @@
 ---
+recommended_model: sonnet
 name: artisan-commands
 description: "Use when creating or modifying Artisan commands. Covers clear signatures, safe execution flow, helpful output, and project conventions for console tooling."
 domain: engineering

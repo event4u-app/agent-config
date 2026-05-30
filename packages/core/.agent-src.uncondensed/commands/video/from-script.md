@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: video:from-script
 tier: 2
 cluster: video

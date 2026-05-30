@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: project-analyzer
 description: "ONLY when user asks for single-pass tech-stack detection or `agents/evidence/analysis/` write-up. Deep multi-pass audit → `universal-project-analysis`. Raw primitives → `project-analysis-core`."
 domain: discovery

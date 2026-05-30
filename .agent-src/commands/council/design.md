@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: council:design
 tier: 2
 cluster: council

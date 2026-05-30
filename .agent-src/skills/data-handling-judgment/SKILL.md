@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: data-handling-judgment
 description: "Use when classifying data, setting retention, judging cross-border transfer, or shaping DSR workflow. Triggers on 'how long do we keep this', 'can this data go to the US'."
 status: active

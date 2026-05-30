@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: condense
 tier: 1
 skills: []

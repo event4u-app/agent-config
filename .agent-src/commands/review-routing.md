@@ -1,4 +1,5 @@
 ---
+recommended_model: opus
 name: review-routing
 tier: 2
 skills: [review-routing, reviewer-awareness]

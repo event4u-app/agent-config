@@ -398,6 +398,11 @@ tasks:
     desc: Validate the five ADR-013 discovery keys on every skill/rule/command/template (R3 Phase 6.1)
     cmd: python3 scripts/lint_artefact_frontmatter.py {{.QUIET_FLAG}}
 
+  lint-recommended-model-coverage:
+    silent: true
+    desc: Fail when a skill or command lacks a `recommended_model` value (ADR-034 / road-to-per-skill-model-autoswitch.md Phase 5 — explicit opus/sonnet/gpt or inherit required)
+    cmd: python3 scripts/lint_recommended_model_coverage.py {{.QUIET_FLAG}}
+
   lint-frontmatter-boilerplate:
     silent: true
     desc: Fail when an artefact carries a frontmatter field equal to its schema default (road-to-abstraction-reduction.md Phase 3 — omit it, the loader injects the default)

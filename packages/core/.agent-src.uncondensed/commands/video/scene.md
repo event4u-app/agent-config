@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: video:scene
 tier: 2
 cluster: video

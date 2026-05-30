@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: file-editor
 description: "Use when opening edited files in the user's IDE. Reads settings from .agent-settings.yml to determine IDE and whether auto-open is enabled."
 domain: process

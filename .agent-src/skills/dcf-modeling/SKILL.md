@@ -1,4 +1,5 @@
 ---
+recommended_model: gpt
 name: dcf-modeling
 description: "Wing-4 valuation cognition for a CFO / finance-partner. Use when a deal, internal investment, or board ask names DCF, intrinsic value, WACC, terminal value, or 'what's it worth on a 5-year hold'."
 status: active

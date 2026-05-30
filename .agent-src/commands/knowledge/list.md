@@ -1,4 +1,5 @@
 ---
+recommended_model: inherit
 name: knowledge:list
 tier: 2
 cluster: knowledge
