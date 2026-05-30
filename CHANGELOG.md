@@ -811,6 +811,18 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.4.1](https://github.com/event4u-app/agent-config/compare/5.4.0...5.4.1) (2026-05-30)
+
+### Documentation
+
+* **roadmap:** add road-to-leaner-core-and-discovery ([abf7074](https://github.com/event4u-app/agent-config/commit/abf7074913247a13c6c79b5be8c2ef49aba44aa4))
+
+### Tests
+
+* **condense:** assert new PATH-fallback hook command shape ([3e72789](https://github.com/event4u-app/agent-config/commit/3e727898e4ca4f66a3a7d414e48067950f6845e3))
+
+Tests: 5271 (+22 since 5.4.0)
+
 ## [5.4.0](https://github.com/event4u-app/agent-config/compare/5.3.0...5.4.0) (2026-05-30)
 
 ### Features
