@@ -7,7 +7,8 @@
 > avg **413 s** (3-OS × 2-Node matrix), `Tests` avg **218 s** (Linux + macOS
 > + Windows). Both trigger on `package.json`. Release PRs (`release/X.Y.Z`)
 > only touch `package.json`, `CHANGELOG.md`, `marketplace.json`,
-> `packages/*/pack.yaml`, `packages/*/README.md` — verified against PR #238
+> `packages/*/pack.yaml`, `packages/*/README.md`, and the CHANGELOG era
+> archive `docs/archive/CHANGELOG-pre-*.md` — verified against PR #238
 > (3.3.0). They cannot regress install or runtime behaviour by construction.
 
 ## Release-PR shape
@@ -23,6 +24,10 @@ hold:
    - `.claude-plugin/marketplace.json`
    - `packages/*/pack.yaml`
    - `packages/*/README.md`
+   - `docs/archive/CHANGELOG-pre-*.md` — emitted by `scripts/release.py`'s
+     automatic CHANGELOG era split (see `docs/contracts/CHANGELOG-conventions.md`
+     § Era splits) when the current era crosses its line cap on an
+     era-boundary release.
 
 Both predicates are enforced by `scripts/check_release_pr_shape.py`
 (stdlib-only, ≤ 150 LOC). The script exits 0 when both hold; non-zero with

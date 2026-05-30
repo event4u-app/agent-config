@@ -113,12 +113,46 @@ def test_pack_readme_only_passes(capsys: pytest.CaptureFixture[str]) -> None:
     assert code == 0
 
 
+def test_era_archive_release_passes(capsys: pytest.CaptureFixture[str]) -> None:
+    """An era-boundary release emits docs/archive/CHANGELOG-pre-X.Y.Z.md.
+
+    `scripts/release.py` auto-splits the CHANGELOG era before bumping, so the
+    archive file is part of the release surface and must be shape-clean.
+    Regression guard for the 5.4.0 release where the shape gate rejected the
+    release-script's own output (allowlist drift).
+    """
+    files = [
+        "package.json",
+        "CHANGELOG.md",
+        ".claude-plugin/marketplace.json",
+        "packages/core/pack.yaml",
+        "packages/core/README.md",
+        "docs/archive/CHANGELOG-pre-5.4.0.md",
+    ]
+    code, out = _check(files, capsys)
+    assert code == 0
+    assert "SHAPE-CLEAN" in out
+
+
+def test_unrelated_archive_file_fails(capsys: pytest.CaptureFixture[str]) -> None:
+    """Only the CHANGELOG era archive is allowed under docs/archive/."""
+    files = [
+        "package.json",
+        "docs/archive/some-other-doc.md",  # ← not a CHANGELOG era archive
+    ]
+    code, out = _check(files, capsys)
+    assert code == 1
+    assert "OUT-OF-SHAPE: docs/archive/some-other-doc.md" in out
+
+
 def test_matches_helper_rejects_unrelated_paths() -> None:
     """Spot-check the matcher: random project paths must not slip through."""
     assert not shape._matches("scripts/install.py")
     assert not shape._matches("tests/test_condense.py")
     assert not shape._matches(".github/workflows/tests.yml")
     assert not shape._matches("packages/core/installer/foo.ts")
+    assert not shape._matches("docs/archive/some-other-doc.md")
     assert shape._matches("package.json")
     assert shape._matches("packages/core/pack.yaml")
     assert shape._matches("packages/core/README.md")
+    assert shape._matches("docs/archive/CHANGELOG-pre-5.4.0.md")
