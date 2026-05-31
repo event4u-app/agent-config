@@ -37,7 +37,12 @@ from pathlib import Path
 from typing import List
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ROOT = REPO_ROOT / ".agent-src.uncondensed" / "commands"
+# Pre-monorepo: REPO_ROOT/.agent-src.uncondensed/commands. Post-move (ADR-017)
+# the core command surface lives under packages/core/.agent-src.uncondensed.
+# Fall back to the legacy path only if the packages layout is absent.
+_CORE_COMMANDS = REPO_ROOT / "packages" / "core" / ".agent-src.uncondensed" / "commands"
+_LEGACY_COMMANDS = REPO_ROOT / ".agent-src.uncondensed" / "commands"
+DEFAULT_ROOT = _CORE_COMMANDS if _CORE_COMMANDS.is_dir() else _LEGACY_COMMANDS
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 OUT_JSON = REPORT_DIR / "command-surface.json"
 OUT_MD = REPORT_DIR / "command-surface.md"
