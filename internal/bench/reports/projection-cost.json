@@ -1,0 +1,116 @@
+{
+  "description_catalog": {
+    "commands_core_source": {
+      "chars": 19524,
+      "entries": 140,
+      "tokens_claude": 5423,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 4881,
+      "tokens_gpt_exact": false
+    },
+    "skills_core_source": {
+      "chars": 23997,
+      "entries": 122,
+      "tokens_claude": 6666,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 5999,
+      "tokens_gpt_exact": false
+    },
+    "skills_projected": {
+      "chars": 60366,
+      "entries": 347,
+      "tokens_claude": 16768,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 15092,
+      "tokens_gpt_exact": false
+    }
+  },
+  "generated": "2026-05-31T08:30:08+00:00",
+  "longest_rules": [
+    {
+      "chars": 7556,
+      "id": "autonomous-execution",
+      "tokens_gpt": 1889
+    },
+    {
+      "chars": 7314,
+      "id": "domain-safety-disclaimer",
+      "tokens_gpt": 1828
+    },
+    {
+      "chars": 7184,
+      "id": "domain-adoption-policy",
+      "tokens_gpt": 1796
+    },
+    {
+      "chars": 6364,
+      "id": "roadmap-ci-steps-policy",
+      "tokens_gpt": 1591
+    },
+    {
+      "chars": 6315,
+      "id": "roadmap-progress-sync",
+      "tokens_gpt": 1579
+    },
+    {
+      "chars": 6278,
+      "id": "no-roadmap-references",
+      "tokens_gpt": 1570
+    },
+    {
+      "chars": 6255,
+      "id": "domain-safety-pii",
+      "tokens_gpt": 1564
+    },
+    {
+      "chars": 5779,
+      "id": "persona-governance",
+      "tokens_gpt": 1445
+    },
+    {
+      "chars": 5573,
+      "id": "framework-neutrality-in-generic-skills",
+      "tokens_gpt": 1393
+    },
+    {
+      "chars": 5565,
+      "id": "context-hygiene",
+      "tokens_gpt": 1391
+    }
+  ],
+  "rule_footprint": {
+    ".augment": {
+      "chars": 234692,
+      "files": 78,
+      "tokens_claude": 65192,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 58673,
+      "tokens_gpt_exact": false
+    },
+    ".claude": {
+      "chars": 234692,
+      "files": 78,
+      "tokens_claude": 65192,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 58673,
+      "tokens_gpt_exact": false
+    },
+    ".cursor": {
+      "chars": 234692,
+      "files": 78,
+      "tokens_claude": 65192,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 58673,
+      "tokens_gpt_exact": false
+    },
+    ".windsurfrules": {
+      "chars": 196510,
+      "files": 1,
+      "tokens_claude": 54586,
+      "tokens_claude_exact": false,
+      "tokens_gpt": 49128,
+      "tokens_gpt_exact": false
+    }
+  },
+  "token_method": "tokens_gpt: proxy (chars/4.0, tiktoken not installed); tokens_claude: proxy (chars/3.6)"
+}

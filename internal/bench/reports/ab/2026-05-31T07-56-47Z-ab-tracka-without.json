@@ -1,0 +1,242 @@
+{
+  "schema": "ab-bench/0.1",
+  "stamp": "2026-05-31T07-56-47Z",
+  "variant": "without",
+  "corpus": "ab-tracka",
+  "cache_key": {
+    "corpus_hash": "a17a722ab0f3ea35",
+    "claude_cli_version": "2.1.158 (Claude Code)",
+    "target_shape_hash": "3f2f67cebfbb5fff"
+  },
+  "duration_seconds": 0.0,
+  "integrity_ok": true,
+  "results": {
+    "trigger_accuracy": 0.0,
+    "matched": 0,
+    "total": 32,
+    "per_target_present": {
+      ".claude/rules/commit-policy.md": 0,
+      ".claude/rules/scope-control.md": 0,
+      ".claude/rules/non-destructive-by-default.md": 0,
+      ".claude/rules/verify-before-complete.md": 0,
+      ".claude/rules/ask-when-uncertain.md": 0,
+      ".claude/rules/think-before-action.md": 0,
+      ".claude/rules/minimal-safe-diff.md": 0,
+      ".claude/rules/downstream-changes.md": 0,
+      ".claude/rules/language-and-tone.md": 0,
+      ".claude/rules/no-cheap-questions.md": 0,
+      ".claude/rules/user-interaction.md": 0,
+      ".claude/rules/commit-conventions.md": 0,
+      ".claude/rules/security-sensitive-stop.md": 0,
+      ".claude/skills/git-workflow/SKILL.md": 0,
+      ".claude/skills/systematic-debugging/SKILL.md": 0,
+      ".claude/skills/pest-testing/SKILL.md": 0,
+      ".claude/skills/laravel/SKILL.md": 0,
+      ".claude/skills/eloquent/SKILL.md": 0,
+      ".claude/skills/test-driven-development/SKILL.md": 0,
+      ".claude/skills/threat-modeling/SKILL.md": 0,
+      ".claude/skills/code-review/SKILL.md": 0,
+      ".claude/skills/quality-tools/SKILL.md": 0,
+      ".claude/skills/refine-ticket/SKILL.md": 0,
+      ".claude/skills/migration-architect/SKILL.md": 0,
+      ".claude/skills/jobs-events/SKILL.md": 0,
+      ".claude/skills/api-design/SKILL.md": 0,
+      ".claude/skills/laravel-validation/SKILL.md": 0,
+      ".claude/rules/preservation-guard.md": 0
+    },
+    "per_prompt": [
+      {
+        "id": "tracka-01",
+        "expected_target": ".claude/rules/commit-policy.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/commit-policy.md"
+      },
+      {
+        "id": "tracka-02",
+        "expected_target": ".claude/rules/commit-policy.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/commit-policy.md"
+      },
+      {
+        "id": "tracka-03",
+        "expected_target": ".claude/rules/scope-control.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/scope-control.md"
+      },
+      {
+        "id": "tracka-04",
+        "expected_target": ".claude/rules/non-destructive-by-default.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/non-destructive-by-default.md"
+      },
+      {
+        "id": "tracka-05",
+        "expected_target": ".claude/rules/non-destructive-by-default.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/non-destructive-by-default.md"
+      },
+      {
+        "id": "tracka-06",
+        "expected_target": ".claude/rules/verify-before-complete.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/verify-before-complete.md"
+      },
+      {
+        "id": "tracka-07",
+        "expected_target": ".claude/rules/ask-when-uncertain.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/ask-when-uncertain.md"
+      },
+      {
+        "id": "tracka-08",
+        "expected_target": ".claude/rules/think-before-action.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/think-before-action.md"
+      },
+      {
+        "id": "tracka-09",
+        "expected_target": ".claude/rules/minimal-safe-diff.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/minimal-safe-diff.md"
+      },
+      {
+        "id": "tracka-10",
+        "expected_target": ".claude/rules/downstream-changes.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/downstream-changes.md"
+      },
+      {
+        "id": "tracka-11",
+        "expected_target": ".claude/rules/language-and-tone.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/language-and-tone.md"
+      },
+      {
+        "id": "tracka-12",
+        "expected_target": ".claude/rules/no-cheap-questions.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/no-cheap-questions.md"
+      },
+      {
+        "id": "tracka-13",
+        "expected_target": ".claude/rules/user-interaction.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/user-interaction.md"
+      },
+      {
+        "id": "tracka-14",
+        "expected_target": ".claude/rules/commit-conventions.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/commit-conventions.md"
+      },
+      {
+        "id": "tracka-15",
+        "expected_target": ".claude/rules/security-sensitive-stop.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/security-sensitive-stop.md"
+      },
+      {
+        "id": "tracka-16",
+        "expected_target": ".claude/skills/git-workflow/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/git-workflow/SKILL.md"
+      },
+      {
+        "id": "tracka-17",
+        "expected_target": ".claude/skills/systematic-debugging/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/systematic-debugging/SKILL.md"
+      },
+      {
+        "id": "tracka-18",
+        "expected_target": ".claude/skills/pest-testing/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/pest-testing/SKILL.md"
+      },
+      {
+        "id": "tracka-19",
+        "expected_target": ".claude/skills/laravel/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/laravel/SKILL.md"
+      },
+      {
+        "id": "tracka-20",
+        "expected_target": ".claude/skills/eloquent/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/eloquent/SKILL.md"
+      },
+      {
+        "id": "tracka-21",
+        "expected_target": ".claude/skills/test-driven-development/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/test-driven-development/SKILL.md"
+      },
+      {
+        "id": "tracka-22",
+        "expected_target": ".claude/skills/threat-modeling/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/threat-modeling/SKILL.md"
+      },
+      {
+        "id": "tracka-23",
+        "expected_target": ".claude/skills/code-review/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/code-review/SKILL.md"
+      },
+      {
+        "id": "tracka-24",
+        "expected_target": ".claude/skills/quality-tools/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/quality-tools/SKILL.md"
+      },
+      {
+        "id": "tracka-25",
+        "expected_target": ".claude/skills/refine-ticket/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/refine-ticket/SKILL.md"
+      },
+      {
+        "id": "tracka-26",
+        "expected_target": ".claude/skills/migration-architect/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/migration-architect/SKILL.md"
+      },
+      {
+        "id": "tracka-27",
+        "expected_target": ".claude/skills/jobs-events/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/jobs-events/SKILL.md"
+      },
+      {
+        "id": "tracka-28",
+        "expected_target": ".claude/skills/api-design/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/api-design/SKILL.md"
+      },
+      {
+        "id": "tracka-29",
+        "expected_target": ".claude/skills/eloquent/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/eloquent/SKILL.md"
+      },
+      {
+        "id": "tracka-30",
+        "expected_target": ".claude/skills/laravel-validation/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/laravel-validation/SKILL.md"
+      },
+      {
+        "id": "tracka-31",
+        "expected_target": ".claude/skills/git-workflow/SKILL.md",
+        "score": 0,
+        "reason": "missing: .claude/skills/git-workflow/SKILL.md"
+      },
+      {
+        "id": "tracka-32",
+        "expected_target": ".claude/rules/preservation-guard.md",
+        "score": 0,
+        "reason": "missing: .claude/rules/preservation-guard.md"
+      }
+    ]
+  }
+}
