@@ -333,9 +333,9 @@ def assemble_value_v1(
         "totals": totals,
         "notes": [
             (
-                "Token→€ conversion priced at "
-                f"{tier} rates from internal/bench/pricing.yaml "
-                f"(sourced_on={ref.get('pricing_sourced_on', '—')})."
+                "Cost is reported in tokens only — no € figure. Per-call API "
+                "pricing misleads subscription users; tokens are the "
+                "currency-neutral metric."
             ),
             "Pending rungs contribute 0 to the cumulative until measured.",
             (
