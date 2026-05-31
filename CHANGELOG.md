@@ -811,6 +811,53 @@ our recommendation order, not its support status.
 > that forces a new era split (`# Era: 5.5.x`, etc.) — see
 > [`docs/contracts/CHANGELOG-conventions.md § Era splits`](docs/contracts/CHANGELOG-conventions.md).
 
+## [5.6.0](https://github.com/event4u-app/agent-config/compare/5.5.0...5.6.0) (2026-05-31)
+
+### Features
+
+* **ai-video:** add /image command cluster (analyse/create/verify) ([9d53c81](https://github.com/event4u-app/agent-config/commit/9d53c81e3aed3549c4135a641e306a32fa224a68))
+* **ai-video:** add image-analyser + image-creator character-fidelity skills ([b76a4db](https://github.com/event4u-app/agent-config/commit/b76a4db19d537ad5443f2c920c4701a49d08e584))
+* **ai-video:** extend from-song + song-to-script + adapters; add media-sync-ground-truth rule ([dab9f0f](https://github.com/event4u-app/agent-config/commit/dab9f0f41e0d4b93eef423541269d54408bf36f4))
+* **kernel:** kernel-budget soak — trim commit-policy + scope-control, fences byte-identical (Phase 1) ([b0547f0](https://github.com/event4u-app/agent-config/commit/b0547f0207df6e057e2ff97283391ddad88fd2e3))
+* **schema:** tighten description caps + warning window (Phase 2.1); record 3.2 as obviated ([c65d3ae](https://github.com/event4u-app/agent-config/commit/c65d3ae8b569eb3507b83c31967231e64a31a742))
+* **projection:** thin rule-layer projection behind a flag — measured -35,845 GPT tok (Phase 3.1) ([d786363](https://github.com/event4u-app/agent-config/commit/d7863635ee342ab61210ed14b95eeb1fface9582))
+* **value:** drop the € comparison from the value dashboard — tokens only ([33f6fc8](https://github.com/event4u-app/agent-config/commit/33f6fc81e934ca426e5a4c82c37f41624228a636))
+* **bench:** drop the monetary cost comparison — report tokens only ([1a2d3ad](https://github.com/event4u-app/agent-config/commit/1a2d3ad6a177122f0249bb903b3d7d74d62676e1))
+* **audit:** unified audit:tokens analyzer + budget CI gate (Phase 0B.2/0B.4/1.3/1.4) ([c27061f](https://github.com/event4u-app/agent-config/commit/c27061fd47be600d79a5b0a8484a4061f9cdadfd))
+* **safety:** trigger-coverage MUST-LOAD floor + thin-projection kill-switch (Phase 2) ([b210e0b](https://github.com/event4u-app/agent-config/commit/b210e0b9f402e26c813d6fd45e85fdad42876c1d))
+* **budget:** add real-tokenizer measurement alongside chars (Phase 0B.1) ([1602d7f](https://github.com/event4u-app/agent-config/commit/1602d7f2f41a3d6b1069ad675583262542c970cf))
+
+### Bug Fixes
+
+* **ai-video:** add workspaces + packs to media-sync-ground-truth rule ([cebe846](https://github.com/event4u-app/agent-config/commit/cebe8465d5cc1b07c8426b91ab52c0fb07e79f5b))
+* sync command count to 145 in README badge + browse lines ([7a881e2](https://github.com/event4u-app/agent-config/commit/7a881e243fe73faad725050d684af682445c4eda))
+* **kernel:** restore 2nd 'Iron Law' mention in commit-policy (obligation-baseline regression from #310) ([693c287](https://github.com/event4u-app/agent-config/commit/693c28791cbe124942835c3b309ca72921ee13f5))
+* **tools:** repoint audit_auto_rules + audit_command_surface to packages/core (Phase 2.3) ([fae234c](https://github.com/event4u-app/agent-config/commit/fae234cfda21372adb493b259a47e8a9a00a0036))
+* **schema:** rule description cap 160 -> 190 (smoke gate treats over-cap as FAIL) ([72f05e0](https://github.com/event4u-app/agent-config/commit/72f05e02cca4e196e514d8f4f573ac9890f52583))
+* **kernel:** repoint iron_law_sha to packages/core layout (Iron-Law SHA gate was broken) ([aab5755](https://github.com/event4u-app/agent-config/commit/aab57558f7047fc21d0107dbab5aa3b49ebe4e2f))
+* **schema:** add lean_projection.mode to the settings schema (template-parity gate) ([51ed03e](https://github.com/event4u-app/agent-config/commit/51ed03ec9e74d4573b7da43a6b45804535986690))
+* **bench:** repoint bench_runner SKILLS_DIR to .agent-src for packages/core layout ([e183527](https://github.com/event4u-app/agent-config/commit/e183527c0efa4e3fe7dfb6a9df2c1e21534925a8))
+
+### Performance
+
+* **projection:** minimal thin entries — measured saving 35,845 -> 45,182 GPT tok (77%) ([b1aabe0](https://github.com/event4u-app/agent-config/commit/b1aabe05a9e68aa87a8396f3276530d480582dbe))
+
+### Documentation
+
+* **roadmap:** honest dispositions for remaining build-out items ([68e8bb5](https://github.com/event4u-app/agent-config/commit/68e8bb5ab3ec95c516707d9b8e0f2bfd6f7c5ec9))
+* **roadmap:** land Phase 0+2 of road-to-lean-initial-context; spawn build-out follow-up ([8b0bec2](https://github.com/event4u-app/agent-config/commit/8b0bec2efab7128fa4c45d186e3feea4ebd632f8))
+
+### Chores
+
+* update reports ([eb52977](https://github.com/event4u-app/agent-config/commit/eb52977cf398f6691e55fc063ba9f1b4f63f03b9))
+* regenerate index + catalog for image skills + /image cluster ([f71f024](https://github.com/event4u-app/agent-config/commit/f71f024dba491ff36c071d9fd25d372e39b0c9c2))
+* regenerate derived (router, marketplace, manifests, counts, command-surface) ([2fcc321](https://github.com/event4u-app/agent-config/commit/2fcc3214451bec3114dee0d55d7f03c0f3392ca0))
+* archive road-to-character-image-fidelity (complete) ([ef16067](https://github.com/event4u-app/agent-config/commit/ef16067c0636a0c8279922bbb160531efb477ddb))
+* track linter-debt roadmap + command-surface report (unrelated to lean-context) ([a52a604](https://github.com/event4u-app/agent-config/commit/a52a6048a55805e5a25b9dc68fd1e98091ba0fec))
+* **router:** regenerate stale dist/router.json from source ([af782fe](https://github.com/event4u-app/agent-config/commit/af782fe179d7ba573ec916e48ac0b9e3752cf6f5))
+
+Tests: 5375 (+39 since 5.5.0)
+
 ## [5.5.0](https://github.com/event4u-app/agent-config/compare/5.4.1...5.5.0) (2026-05-31)
 
 ### Features
