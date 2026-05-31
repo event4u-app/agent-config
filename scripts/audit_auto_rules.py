@@ -25,8 +25,24 @@ from pathlib import Path
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SRC_RULES = REPO_ROOT / ".agent-src.uncondensed" / "rules"
-PROJECTED_RULES = REPO_ROOT / ".augment" / "rules"
+sys.path.insert(0, str(REPO_ROOT / "scripts"))
+from _lib.agent_src import artefact_roots  # noqa: E402
+
+# Pre-monorepo this was REPO_ROOT/.agent-src.uncondensed/rules. Post-move
+# (ADR-017) source rules live under packages/*/.agent-src.uncondensed/rules.
+def _src_rule_paths() -> list[Path]:
+    paths: list[Path] = []
+    seen: set[str] = set()
+    for root in artefact_roots():
+        d = root / "rules"
+        if d.is_dir():
+            for p in sorted(d.glob("*.md")):
+                if p.name not in seen:
+                    seen.add(p.name)
+                    paths.append(p)
+    return paths
+
+PROJECTED_RULES = REPO_ROOT / ".agent-src" / "rules"
 REPORT_DIR = REPO_ROOT / "agents" / "reports"
 JSON_OUT = REPORT_DIR / "auto-rules-audit.json"
 MD_OUT = REPORT_DIR / "auto-rules-audit.md"
@@ -67,7 +83,7 @@ def _trigger_summary(triggers: list) -> dict:
 
 def collect() -> list[dict]:
     rules: list[dict] = []
-    for path in sorted(SRC_RULES.glob("*.md")):
+    for path in _src_rule_paths():
         text = path.read_text(encoding="utf-8")
         fm, body = _split_frontmatter(text)
         if fm.get("type") != "auto":
@@ -141,8 +157,8 @@ def render_markdown(rules: list[dict]) -> str:
 
 
 def main() -> int:
-    if not SRC_RULES.is_dir():
-        print(f"❌  Missing source dir: {SRC_RULES}", file=sys.stderr)
+    if not _src_rule_paths():
+        print("❌  No source rules found under any artefact root's rules/", file=sys.stderr)
         return 1
     rules = collect()
     REPORT_DIR.mkdir(parents=True, exist_ok=True)

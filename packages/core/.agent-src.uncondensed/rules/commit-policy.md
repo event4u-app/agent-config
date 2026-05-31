@@ -56,4 +56,4 @@ Roadmaps plan **work**, not commits — when creating a roadmap, never add commi
 ## See also
 
 - [`scope-control`](scope-control.md) — git-ops permission gate (push, merge, branch, PR, tag).
-- [`no-cheap-questions`](no-cheap-questions.md) · [`autonomous-execution`](autonomous-execution.md) · [`/commit`](../commands/commit.md) · [`/commit:in-chunks`](../commands/commit/in-chunks.md).
+- [`no-cheap-questions`](no-cheap-questions.md) — canonical Iron Law. · [`autonomous-execution`](autonomous-execution.md) · [`/commit`](../commands/commit.md) · [`/commit:in-chunks`](../commands/commit/in-chunks.md).

@@ -6,10 +6,10 @@
 
 ## Overall
 
-**99 / 149 steps done · 66%**
+**100 / 149 steps done · 67%**
 
 ```text
-██████████████████████████░░░░░░░░░░░░░░   66%
+███████████████████████████░░░░░░░░░░░░░   67%
 ```
 
 ## Open roadmaps
@@ -17,7 +17,7 @@
 | # | Roadmap | Phases | Steps | Open | Done | Deferred | Cancelled | Progress |
 |---|---|---:|---:|---:|---:|---:|---:|---|
 | 1 | [road-to-employee-product-and-external-proof.md](roadmaps/road-to-employee-product-and-external-proof.md) | 10 | 71 | 18 | 42 | 11 | 0 | ███████░░░ 70% |
-| 2 | [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md) | 3 | 18 | 10 | 7 | 1 | 0 | ████░░░░░░ 41% |
+| 2 | [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md) | 3 | 18 | 9 | 8 | 1 | 0 | █████░░░░░ 47% |
 | 3 | [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md) | 3 | 15 | 15 | 0 | 0 | 0 | ░░░░░░░░░░ 0% |
 | 4 | [road-to-self-update-and-global-hook-resolution.md](roadmaps/road-to-self-update-and-global-hook-resolution.md) | 5 | 24 | 4 | 20 | 0 | 0 | ████████░░ 83% |
 | 5 | [road-to-video-from-song.md](roadmaps/road-to-video-from-song.md) | 6 | 33 | 3 | 30 | 0 | 0 | █████████░ 91% |
@@ -45,12 +45,12 @@
 
 ### [road-to-lean-initial-context-buildout.md](roadmaps/road-to-lean-initial-context-buildout.md)
 
-**Road to Lean Initial Context — Build-out** — 7 / 17 done (41%)
+**Road to Lean Initial Context — Build-out** — 8 / 17 done (47%)
 
 | # | Phase | State | Open | Done | Deferred | Cancelled | % |
 |---|---|---|---:|---:|---:|---:|---:|
 | 1 | Kernel budget soak track (own PRs, ≥24h soak) | ✅ done | 0 | 4 | 0 | 0 | 100% |
-| 2 | Phase-1 certain wins (secondary lever) | 🟡 in progress | 6 | 1 | 0 | 0 | 14% |
+| 2 | Phase-1 certain wins (secondary lever) | 🟡 in progress | 5 | 2 | 0 | 0 | 29% |
 | 3 | Make the projection thin (dominant lever) | 🟡 in progress | 4 | 2 | 1 | 0 | 33% |
 
 ### [road-to-linter-debt-and-meta-subtraction.md](roadmaps/road-to-linter-debt-and-meta-subtraction.md)

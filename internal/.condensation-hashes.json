@@ -217,7 +217,7 @@
   "rules/cli-output-handling.md": "34f5757b4676ad6373879ba8b8d1bf96441a6c654aa471d3359ca828665faa12",
   "rules/command-suggestion-policy.md": "e43016ca32e7d671cce84fa1bf02d24abbd5ed5777ef8b1f77075eb5aaf38356",
   "rules/commit-conventions.md": "b0ccc9128cd36de9d587dd43a09c5b4cf7efaf1042301005d7e346670cd58e39",
-  "rules/commit-policy.md": "a30f1e8e83e788a4a5e8d87a14b78815538030c890dd768d2c7816cca7c08f50",
+  "rules/commit-policy.md": "d9fa208b54960f455df3d71e86fa036d0b6ae42cb34a4f4fffb7e668319d0bfb",
   "rules/context-hygiene.md": "9bc882a8ae5eda22ff03c10be4600441370347aa6899dd29fa606a5e577525c1",
   "rules/copilot-routing.md": "64d107d611d56f067701b9b387d82989e9c72b08f5d37d31f48d499809a5ee16",
   "rules/devcontainer-routing.md": "09eeef7117784bb43d8174d3ed54e2dd19a68dcc7f0f87f4058269659310471b",
