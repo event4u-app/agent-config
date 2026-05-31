@@ -1,0 +1,104 @@
+# Trigger-coverage corpus — Phase 2.1 deterministic MUST-LOAD floor.
+#
+# Each case asserts that, for a representative task `prompt`, the router
+# (dist/router.json) surfaces every rule in `expect`. Removing a trigger
+# from a rule's frontmatter (or demoting it wrong in Phase 3) makes the
+# matching case fail → the merge is blocked (Phase 2.2 CI gate).
+#
+# Seeded over the safety-critical and high-traffic rules named in the
+# roadmap (secrets, tenancy, commit/push gates, language-mirror,
+# verify-before-complete) plus the domain safety floors and routing rules.
+# Kernel rules (always-on) are covered too, so a regression that drops a
+# rule from the kernel set is caught.
+
+# --- Safety-critical: auth / tenancy / secrets ---
+- id: secrets-webhook-auth
+  prompt: "add a webhook secret to the billing service auth flow"
+  expect: [security-sensitive-stop]
+- id: tenancy-row-level
+  prompt: "scope this query by tenant id for per-tenant row-level security"
+  expect: [security-sensitive-stop]
+
+# --- Safety-critical: production / destructive git ---
+- id: prod-schema-migration
+  prompt: "run a schema change migration on production before the deploy"
+  expect: [engineering-safety-floor]
+- id: history-rewrite
+  prompt: "git rebase the feature branch and fixup the trailing commits"
+  expect: [git-history-discipline]
+
+# --- Safety-critical: data governance ---
+- id: pii-support-macro
+  prompt: "draft a Zendesk ticket response for the customer complaint"
+  expect: [domain-safety-pii]
+- id: data-retention
+  prompt: "what should our data retention policy be for support tickets"
+  expect: [domain-safety-retention]
+- id: legal-medical-disclaimer
+  prompt: "draft a legal brief and the terms of service for the new feature"
+  expect: [domain-safety-disclaimer]
+- id: finance-valuation
+  prompt: "model our runway and the DCF valuation for the board"
+  expect: [finance-safety-floor]
+- id: strategy-positioning
+  prompt: "define our positioning and competitive moat for market entry"
+  expect: [strategy-safety-floor]
+
+# --- Safety-critical: AI media generation ---
+- id: media-likeness
+  prompt: "generate a deepfake voice clone using a celebrity likeness"
+  expect: [media-governance-routing]
+
+# --- Git surfaces: commit / PR hygiene ---
+- id: commit-message
+  prompt: "write a commit message for this branch"
+  expect: [commit-conventions]
+- id: attribution-footer
+  prompt: "add a co-authored trailer to the commit message"
+  expect: [no-attribution-footers]
+- id: pr-title-emoji
+  prompt: "run gh pr create and put an emoji in the PR title"
+  expect: [no-decorative-emojis-in-git-surfaces]
+
+# --- High-traffic routing / engineering ---
+- id: laravel-stack
+  prompt: "build a Laravel Eloquent model backed by a FormRequest"
+  expect: [laravel-routing]
+- id: symfony-stack
+  prompt: "wire a Symfony Doctrine entity through the messenger bus"
+  expect: [symfony-routing]
+- id: docker-exec
+  prompt: "run composer install and artisan migrate inside docker"
+  expect: [docker-commands]
+- id: ui-component
+  prompt: "add a new component to the settings dashboard"
+  expect: [ui-audit-gate]
+- id: downstream-edit
+  prompt: "after this edit update all the callers and imports downstream"
+  expect: [downstream-changes]
+- id: missing-tool
+  prompt: "the yq command not found, looks like it is not installed"
+  expect: [missing-tool-handling]
+- id: think-first
+  prompt: "before coding this feature, analyze the existing flow"
+  expect: [think-before-action]
+- id: roadmap-ci-step
+  prompt: "add a roadmap step that runs task ci on every phase boundary"
+  expect: [roadmap-ci-steps-policy]
+- id: preservation
+  prompt: "condense this rule but preserve every Iron Law verbatim"
+  expect: [preservation-guard]
+- id: external-reference
+  prompt: "analyze how github.com/acme/widgets does it and use as a template"
+  expect: [external-reference-deep-dive]
+- id: cross-repo
+  prompt: "this change affects a sibling repo cross-repo contract"
+  expect: [linked-projects-onboarding-gate]
+
+# --- Kernel always-on (the floor must include these) ---
+- id: language-mirror
+  prompt: "kannst du das bitte auf Deutsch beantworten"
+  expect: [language-and-tone]
+- id: verify-complete
+  prompt: "is this task done and complete now"
+  expect: [verify-before-complete, commit-policy, scope-control]

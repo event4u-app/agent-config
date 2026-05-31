@@ -123,6 +123,45 @@ The host agent reads `dist/router.json` once per session. Per turn:
 No runtime profile resolution — the profile is fixed at session
 start, the router lookup is keyword/phrase/path/intent matching only.
 
+## Kill-switch — thin-projection rollback (lean-initial-context Phase 2.3)
+
+Phase 3 of the lean-initial-context migration makes the per-tool projector
+emit the kernel full-bodied and every non-kernel rule as a one-line
+router-resolved pointer. That is the suite's biggest behavioural change, so
+it ships behind a **single documented flip** that restores today's
+full-eager projection:
+
+```yaml
+# .agent-settings.yml
+lean_projection:
+  # thin     = kernel full-bodied + non-kernel rules as router pointers (Phase 3)
+  # eager-all = every rule body inlined into every projection (today's behaviour)
+  mode: eager-all   # DEFAULT until Phase 3.1 ships + its benchmark gate is green
+```
+
+Revert procedure (one flip, no code change): set `lean_projection.mode:
+eager-all`, run `task generate-tools` (regenerates `.claude/`, `.cursor/`,
+`.clinerules/`, `.windsurfrules`) + `task sync` (`.agent-src/`, `.augment/`).
+The thin projector (Phase 3.1) MUST honour this key; with it absent or
+`eager-all` the projector behaves exactly as today. Default stays
+`eager-all` so the migration is opt-in and reversible by one line.
+
+### Staleness guard — `src → dist`
+
+A projection or router that drifts from source silently re-introduces the
+eager bytes (or a missing pointer target). Three CI gates enforce
+`src == dist`, all already wired into `task ci`:
+
+- `task check-router` (`compile_router.py --check`) — `dist/router.json`
+  must equal a fresh compile from frontmatter `triggers:`/`routes_to:`.
+- `task check-artefact-checksums` — every artefact's committed checksum
+  must match its current source bytes.
+- `task lint-projection-fidelity` — the per-tool projections must match
+  what the projector would emit from source.
+
+The thin projector inherits all three: a thin projection whose recorded
+source hash ≠ current source fails CI before it can ship a stale pointer.
+
 ## Linter contract (Phase 3.3)
 
 `scripts/skill_linter.py` extension enforces:
