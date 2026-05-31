@@ -237,7 +237,7 @@ def pack(root: Path, out_dir: Path) -> dict[str, Any]:
     # R2 archival copy hashes deterministically.
     with open(out_dir / "content.json.gz", "wb") as raw:
         with gzip.GzipFile(
-            fileobj=raw, mode="wb", condenselevel=9, mtime=0
+            fileobj=raw, mode="wb", compresslevel=9, mtime=0
         ) as gz:
             gz.write(payload_bytes)
     (out_dir / "manifest.json").write_text(
